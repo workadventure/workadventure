@@ -35,6 +35,24 @@
     var CHEVRON_DOWN =
         '<svg class="name-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
 
+    // Tile-menu icons (Tabler), stroked via currentColor.
+    var SVG_OPEN =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+    var ICON_MIC_OFF =
+        SVG_OPEN + '<path d="M3 3l18 18"/><path d="M9 5a3 3 0 0 1 6 0v5a3 3 0 0 1 -.13 .874m-2 2a3 3 0 0 1 -3.87 -2.872v-1"/><path d="M5 10a7 7 0 0 0 10.846 5.85m2 -2a6.967 6.967 0 0 0 1.152 -3.85"/><path d="M8 21l8 0"/><path d="M12 17l0 4"/></svg>';
+    var ICON_CAM_OFF =
+        SVG_OPEN + '<path d="M3 3l18 18"/><path d="M15 11v-1l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -.675 .946"/><path d="M10 6h3a2 2 0 0 1 2 2v3m0 4v1a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-8a2 2 0 0 1 2 -2h1"/></svg>';
+    var ICON_BAN =
+        SVG_OPEN + '<path d="M18.364 5.636a9 9 0 1 0 0 12.728a9 9 0 0 0 0 -12.728z"/><path d="M5.636 5.636l12.728 12.728"/></svg>';
+    var ICON_CARD =
+        SVG_OPEN + '<path d="M3 5m0 3a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z"/><path d="M7 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M7 16.5c0 -1.5 1.5 -2.5 3 -2.5s3 1 3 2.5"/><path d="M15 8l4 0"/><path d="M15 12l3 0"/></svg>';
+    var ICON_ALERT =
+        SVG_OPEN + '<path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></svg>';
+    var ICON_VOL_ON =
+        SVG_OPEN + '<path d="M15 8a5 5 0 0 1 0 8"/><path d="M17.7 5a9 9 0 0 1 0 14"/><path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"/></svg>';
+    var ICON_VOL_OFF =
+        SVG_OPEN + '<path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"/><path d="M16 10l4 4m0 -4l-4 4"/></svg>';
+
     function byId(id) {
         return document.getElementById(id);
     }
@@ -108,6 +126,9 @@
     var tiles = new Map(); // tileKey → TileElement
     var tileKeyByTrackId = new Map(); // trackId → tileKey (rebuilt on every tile state)
     var pendingTracks = new Map(); // trackId → MediaStreamTrack parked until its tile lands
+    // Meeting-wide moderation permissions (from the WA renderer), gate the tile menu items.
+    var meetingCanModerate = false;
+    var meetingCanAskToMute = false;
 
     function computeInitials(name) {
         if (!name) return "?";
@@ -191,7 +212,8 @@
         avatarLayer.appendChild(avatarEl);
         container.appendChild(avatarLayer);
 
-        var nameChip = document.createElement("span");
+        var nameChip = document.createElement("button");
+        nameChip.type = "button";
         nameChip.className = "name-chip";
         var nameText = document.createElement("span");
         nameText.className = "name-text";
@@ -205,9 +227,15 @@
         this.wokaImg = wokaImg;
         this.nameChip = nameChip;
         this.nameText = nameText;
+        var self = this;
+        nameChip.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTileMenu(self, nameChip);
+        });
         this.update(meta);
     }
     TileElement.prototype.update = function (meta) {
+        this.meta = meta;
         var name = meta.name || (meta.isSelf ? "You" : "");
         var color = getColorByString(name);
         var textColor = getTextColorByBackgroundColor(color);
@@ -265,6 +293,7 @@
         this.container.classList.remove("has-video");
     };
     TileElement.prototype.destroy = function () {
+        if (tileMenuOpenFor === this) closeTileMenu();
         try {
             this.video.srcObject = null;
         } catch (e) {
@@ -329,6 +358,8 @@
     }
     function applyMeetingTiles(state) {
         if (!state || typeof state !== "object") return;
+        meetingCanModerate = state.canModerate === true;
+        meetingCanAskToMute = state.canAskToMute === true;
         var incoming = Array.isArray(state.tiles) ? state.tiles : [];
         var byKey = new Map();
         incoming.forEach(function (t) {
@@ -377,7 +408,159 @@
         tiles.clear();
         tileKeyByTrackId.clear();
         pendingTracks.clear();
+        closeTileMenu();
         updateVideoLayout();
+    }
+
+    // ── Tile action menu — parity with the app's ActionMediaBox ──────────────
+    var tileMenuEl = null;
+    var tileMenuOpenFor = null;
+    function onTileMenuOutside(e) {
+        if (tileMenuEl && !tileMenuEl.contains(e.target)) closeTileMenu();
+    }
+    function onTileMenuKey(e) {
+        if (e.key === "Escape") closeTileMenu();
+    }
+    function closeTileMenu() {
+        if (tileMenuEl) {
+            tileMenuEl.remove();
+            tileMenuEl = null;
+        }
+        tileMenuOpenFor = null;
+        document.removeEventListener("mousedown", onTileMenuOutside, true);
+        document.removeEventListener("keydown", onTileMenuKey, true);
+    }
+    function tileMenuItem(label, icon, opts) {
+        opts = opts || {};
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "tile-menu-item" + (opts.danger ? " danger" : "");
+        if (opts.disabled) b.disabled = true;
+        b.insertAdjacentHTML("afterbegin", icon);
+        var span = document.createElement("span");
+        span.textContent = label;
+        b.appendChild(span);
+        b.addEventListener("click", function (e) {
+            e.stopPropagation();
+            if (b.disabled) return;
+            opts.onClick();
+            closeTileMenu();
+        });
+        return b;
+    }
+    function tileAction(key, action, alsoFocus) {
+        return function () {
+            send({ type: "tile-action", tileKey: key, action: action });
+            if (alsoFocus) send({ type: "focus-main" });
+        };
+    }
+    function openTileMenu(tile, anchorEl) {
+        if (tileMenuOpenFor === tile) {
+            closeTileMenu();
+            return;
+        }
+        closeTileMenu();
+        var meta = tile.meta || {};
+        if (meta.isSelf) return; // no actions on your own tile, like the app
+        var key = tile.tileKey;
+
+        var menu = document.createElement("div");
+        menu.className = "tile-menu";
+
+        // Local volume: a slider + mute/unmute toggle (does not affect the meeting, only my playback).
+        var volRow = document.createElement("div");
+        volRow.className = "tile-menu-vol";
+        var muteBtn = document.createElement("button");
+        muteBtn.type = "button";
+        muteBtn.className = "tile-menu-mute";
+        var slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = "0";
+        slider.max = "1";
+        slider.step = "0.01";
+        slider.value = String(typeof meta.volume === "number" ? meta.volume : 1);
+        slider.className = "tile-menu-slider";
+        var paintMute = function () {
+            muteBtn.innerHTML = Number(slider.value) === 0 ? ICON_VOL_OFF : ICON_VOL_ON;
+        };
+        paintMute();
+        muteBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            slider.value = Number(slider.value) === 0 ? "1" : "0";
+            paintMute();
+            send({ type: "tile-volume", tileKey: key, value: Number(slider.value) });
+        });
+        slider.addEventListener("input", function (e) {
+            e.stopPropagation();
+            paintMute();
+            send({ type: "tile-volume", tileKey: key, value: Number(slider.value) });
+        });
+        volRow.appendChild(muteBtn);
+        volRow.appendChild(slider);
+        menu.appendChild(volRow);
+
+        var canMute = meetingCanModerate || meetingCanAskToMute;
+        if (canMute) {
+            menu.appendChild(
+                tileMenuItem(meetingCanModerate ? "Mute microphone" : "Ask to mute microphone", ICON_MIC_OFF, {
+                    disabled: meta.hasAudio === false,
+                    onClick: tileAction(key, "mute-audio"),
+                })
+            );
+        }
+        if (meetingCanModerate) {
+            menu.appendChild(
+                tileMenuItem("Mute everyone's microphone", ICON_MIC_OFF, { onClick: tileAction(key, "mute-audio-all") })
+            );
+        }
+        if (canMute) {
+            menu.appendChild(
+                tileMenuItem(meetingCanModerate ? "Turn off camera" : "Ask to turn off camera", ICON_CAM_OFF, {
+                    disabled: meta.hasVideo === false,
+                    onClick: tileAction(key, "mute-video"),
+                })
+            );
+        }
+        if (meetingCanModerate) {
+            menu.appendChild(
+                tileMenuItem("Turn off everyone's camera", ICON_CAM_OFF, { onClick: tileAction(key, "mute-video-all") })
+            );
+        }
+        if (meetingCanModerate) {
+            menu.appendChild(
+                tileMenuItem("Kick out of the meeting", ICON_BAN, { danger: true, onClick: tileAction(key, "kick") })
+            );
+        }
+        if (meta.hasVisitCard) {
+            menu.appendChild(tileMenuItem("Visit card", ICON_CARD, { onClick: tileAction(key, "visit-card", true) }));
+        }
+        menu.appendChild(
+            tileMenuItem("Block or report", ICON_ALERT, { danger: true, onClick: tileAction(key, "report", true) })
+        );
+
+        document.body.appendChild(menu);
+        tileMenuEl = menu;
+        tileMenuOpenFor = tile;
+        positionTileMenu(menu, anchorEl);
+        // Defer wiring the outside-click listener so the opening click doesn't immediately close it.
+        setTimeout(function () {
+            document.addEventListener("mousedown", onTileMenuOutside, true);
+            document.addEventListener("keydown", onTileMenuKey, true);
+        }, 0);
+    }
+    function positionTileMenu(menu, anchorEl) {
+        var r = anchorEl.getBoundingClientRect();
+        menu.style.visibility = "hidden";
+        var mw = menu.offsetWidth;
+        var mh = menu.offsetHeight;
+        var left = r.left;
+        var top = r.top - mh - 6; // prefer above the name chip
+        if (top < 6) top = r.bottom + 6; // otherwise drop below
+        if (left + mw > window.innerWidth - 6) left = window.innerWidth - mw - 6;
+        if (left < 6) left = 6;
+        menu.style.left = Math.round(left) + "px";
+        menu.style.top = Math.round(top) + "px";
+        menu.style.visibility = "";
     }
 
     // Serialize offer handling: two offers in quick succession would otherwise interleave and hit
