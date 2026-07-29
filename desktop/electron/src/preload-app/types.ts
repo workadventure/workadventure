@@ -32,6 +32,10 @@ export type DesktopPipTile = {
     isSelf: boolean;
     hasAudio: boolean;
     hasVideo: boolean;
+    /** Base64 data URL of the participant's Woka; optional — the tile falls back to a colour disc. */
+    woka?: string;
+    /** True while the participant is speaking (voice indicator) — drives the active-speaker border. */
+    speaking?: boolean;
 };
 
 /** A proximity-chat message mirrored into the floating desktop window. */
