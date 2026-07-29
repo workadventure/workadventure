@@ -24,6 +24,7 @@ export type HudCommand =
     | { type: "toggle-screenshare" }
     | { type: "pick-source"; sourceId: string; sourceName: string; displayId?: number }
     | { type: "focus-main" }
+    | { type: "toggle-tabs" }
     | { type: "annotation-toggle" }
     | { type: "annotation-set-tool"; tool: string }
     | { type: "annotation-set-color"; color: string }
