@@ -615,7 +615,13 @@ export default () => {
     // Main renderer → HUD windows
     ipcMain.on("app:hud:state-from-main", (event, state: unknown) => {
         if (!isFromMainRenderer(event)) return;
-        broadcastHudState(state);
+        // Inject the tab-strip state (a main-process setting, not known to the front) so the meeting
+        // bar's "Display tabs" toggle reflects reality.
+        const augmented =
+            state && typeof state === "object"
+                ? { ...(state as Record<string, unknown>), tabBarEnabled: settings.get("tab_bar_enabled") !== false }
+                : state;
+        broadcastHudState(augmented);
     });
 
     // Main renderer → companion panel. Separate channel/state from the presenter bars (different
