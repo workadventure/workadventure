@@ -56,7 +56,6 @@ class PresenterHudBridge {
     private subscriptions: Unsubscriber[] = [];
     private onCommandUnsub: (() => void) | undefined;
     private meetingBarOpen = false;
-    private annotationBarOpen = false;
     private lastSourceId: string | undefined;
 
     public start(): void {
@@ -90,11 +89,10 @@ class PresenterHudBridge {
             localAnnotationActiveStore.subscribe((active) => {
                 if (active) {
                     // Entering draw mode always re-shows annotations locally: drawing on a hidden
-                    // canvas would silently broadcast strokes the presenter cannot see.
+                    // canvas would silently broadcast strokes the presenter cannot see. The drawing
+                    // toolbar is now a panel of the meeting bar (driven by the pushed annotation
+                    // state), so there is no separate window to open/close here.
                     screenAnnotationLocallyHiddenStore.set(false);
-                    this.openAnnotationBar();
-                } else {
-                    this.closeAnnotationBar();
                 }
             }),
         );
@@ -126,7 +124,6 @@ class PresenterHudBridge {
         this.onCommandUnsub?.();
         this.onCommandUnsub = undefined;
         this.closeMeetingBar();
-        this.closeAnnotationBar();
     }
 
     private buildState(): DesktopPresenterHudState {
@@ -184,30 +181,6 @@ class PresenterHudBridge {
             api.closeMeetingBar().catch(() => {});
         }
         this.meetingBarOpen = false;
-    }
-
-    private openAnnotationBar(): void {
-        const api = getPresenterHudApi();
-        if (!api) {
-            return;
-        }
-        const source = get(activeScreenShareSourceStore);
-        api.openAnnotationBar({ displayId: source?.display_id, sourceId: source?.id })
-            .then((opened) => {
-                this.annotationBarOpen = opened;
-                if (opened) {
-                    this.pushState();
-                }
-            })
-            .catch(() => {});
-    }
-
-    private closeAnnotationBar(): void {
-        const api = getPresenterHudApi();
-        if (this.annotationBarOpen && api) {
-            api.closeAnnotationBar().catch(() => {});
-        }
-        this.annotationBarOpen = false;
     }
 
     private handleCommand(command: DesktopPipCommand): void {
