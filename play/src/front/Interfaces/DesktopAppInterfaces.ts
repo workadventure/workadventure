@@ -97,6 +97,7 @@ export type DesktopPipCommand =
     | { type: "annotation-set-tool"; tool: string }
     | { type: "annotation-set-color"; color: string }
     | { type: "annotation-undo" }
+    | { type: "annotation-redo" }
     | { type: "annotation-clear" }
     | { type: "annotation-toggle-local-hide" }
     | { type: "annotation-toggle-others" }

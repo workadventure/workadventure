@@ -32,6 +32,11 @@ class ScreenAnnotationManager {
     // Normalized teardown callbacks (rxjs Subscriptions and Svelte store unsubscribers).
     private unsubscribers: (() => void)[] = [];
     private elementCounter = 0;
+    // Local-user elements removed by undo, per screen-share target, so redo can re-add them. A
+    // fresh local stroke (or clearing the share) invalidates the stack — standard redo semantics.
+    private redoStacks = new Map<string, ScreenAnnotationElement[]>();
+    // True only while redo re-adds an element, so upsertElement doesn't then wipe the redo stack.
+    private isRedoing = false;
 
     // `screenSharingPeerRemoved` is passed in (rather than read from `space.spacePeerManager`)
     // because this runs from the SpacePeerManager constructor, before the Space has stored its
@@ -80,6 +85,7 @@ class ScreenAnnotationManager {
         this.unsubscribers.forEach((unsubscribe) => unsubscribe());
         this.unsubscribers = [];
         this.space = undefined;
+        this.redoStacks.clear();
         resetAllAnnotations();
     }
 
@@ -122,6 +128,11 @@ class ScreenAnnotationManager {
     }
 
     public upsertElement(targetUserId: string, element: ScreenAnnotationElement): void {
+        // A fresh local stroke invalidates any pending redo (remote strokes go straight to the
+        // store, so they never reach this method with someone else's authorUserId anyway).
+        if (!this.isRedoing && element.authorUserId === this.localUserId) {
+            this.redoStacks.delete(targetUserId);
+        }
         upsertAnnotationElement(targetUserId, element);
         this.emit(targetUserId, { $case: "upsertElement", upsertElement: element });
     }
@@ -141,6 +152,7 @@ class ScreenAnnotationManager {
     }
 
     public clearAll(targetUserId: string): void {
+        this.redoStacks.delete(targetUserId);
         clearAnnotations(targetUserId);
         this.emit(targetUserId, { $case: "clearAll", clearAll: true });
     }
@@ -159,9 +171,30 @@ class ScreenAnnotationManager {
         const elements = get(screenAnnotationElementsStore).get(targetUserId) ?? [];
         for (let i = elements.length - 1; i >= 0; i--) {
             if (elements[i].authorUserId === me) {
-                this.removeElement(targetUserId, elements[i].id);
+                const removed = elements[i];
+                this.removeElement(targetUserId, removed.id);
+                const stack = this.redoStacks.get(targetUserId) ?? [];
+                stack.push(removed);
+                this.redoStacks.set(targetUserId, stack);
                 return;
             }
+        }
+    }
+
+    /** Re-add the most recent element the LOCAL user undid on the given screen share (redo). */
+    public redoLastLocalElement(targetUserId: string): void {
+        if (!this.localUserId) {
+            return;
+        }
+        const element = this.redoStacks.get(targetUserId)?.pop();
+        if (!element) {
+            return;
+        }
+        this.isRedoing = true;
+        try {
+            this.upsertElement(targetUserId, element);
+        } finally {
+            this.isRedoing = false;
         }
     }
 }
