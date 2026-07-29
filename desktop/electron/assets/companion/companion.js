@@ -213,9 +213,8 @@
         var textColor = getTextColorByBackgroundColor(color);
         this.nameText.textContent = name;
         this.nameChip.style.display = name ? "" : "none";
-        // Name tag mirrors the app's UserTag: solid per-name colour + contrast text.
-        this.nameChip.style.background = color;
-        this.nameChip.style.color = textColor;
+        // Name tag uses the app's fixed colours (contrast, or the accent when speaking — driven by
+        // CSS from the is-speaking class), not a per-person colour.
         this.container.style.setProperty("--tile-bg", darken(color, 0.32));
         this.avatarEl.style.background = color;
         this.avatarEl.style.color = textColor;
