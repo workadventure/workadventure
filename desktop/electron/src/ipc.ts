@@ -43,6 +43,7 @@ import {
     setMeetingBarExpanded,
 } from "./hud-windows";
 import { getPinnedWorlds, getRecentWorlds, isWorldPinned, toggleWorldPin } from "./world-history";
+import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens } from "./screen-identify";
 
 const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection";
 // Compared on pathname only — the actual sender URL may carry a `?error=…` query when we bounce
@@ -299,6 +300,26 @@ export default () => {
         }));
         desktopCapturerCacheByFrame.set(frameKey, { at: Date.now(), result });
         return result;
+    });
+
+    // "Identify screens": pop a big-numbered, click-to-share overlay on every physical display and
+    // resolve the screen source the user clicks (null on Escape) — so a screen can be picked by
+    // clicking it directly instead of matching thumbnails. Only the active world renderer (the
+    // screen-share picker) may start it; the overlay windows themselves raise :pick / :cancel over
+    // their own preload (window.WAScreenPick), so those two are not gated on the main renderer.
+    ipcMain.handle("app:screen-identify:start", (event) => {
+        if (!isFromMainRenderer(event)) {
+            ElectronLog.warn("Rejected screen-identify request from non-main renderer");
+            return null;
+        }
+        return identifyScreens();
+    });
+    ipcMain.on("app:screen-identify:pick", (event) => {
+        // The sender is one of the overlay windows; the module maps its webContents id → display.
+        handleScreenIdentifyPick(event.sender.id);
+    });
+    ipcMain.on("app:screen-identify:cancel", () => {
+        handleScreenIdentifyCancel();
     });
 
     // ---- Desktop navigation (first-launch Landing + in-game world switcher) ----
