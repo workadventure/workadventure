@@ -628,40 +628,19 @@
         return row;
     }
 
-    function appendPeopleSection(label) {
-        var h = document.createElement("div");
-        h.className = "person-section";
-        h.textContent = label;
-        els.people.appendChild(h);
-    }
-
+    // The People view is just the connected users — a flat list (the "discussion bubble" belongs to
+    // the Chat list, not here).
     function renderPeople(users) {
         els.people.textContent = "";
         setEmpty(els.peopleEmpty, users.length === 0);
-        // Self first, then the current proximity "bubble" (grouped under a header, like the mockup),
-        // then everyone else online. The grouping only appears when someone is actually in the bubble.
         var selfName = "You";
-        var self = null;
-        var bubble = [];
-        var rest = [];
         for (var i = 0; i < users.length; i++) {
             var u = users[i];
-            if (u.isSelf) {
-                self = u;
-                if (u.name) selfName = u.name;
-            } else if (u.inBubble) {
-                bubble.push(u);
-            } else {
-                rest.push(u);
+            if (u.isSelf && u.name) {
+                selfName = u.name;
             }
+            els.people.appendChild(buildPersonRow(u));
         }
-        if (self) els.people.appendChild(buildPersonRow(self));
-        if (bubble.length) {
-            appendPeopleSection("Discussion bubble");
-            for (var b = 0; b < bubble.length; b++) els.people.appendChild(buildPersonRow(bubble[b]));
-            if (rest.length) appendPeopleSection("Online");
-        }
-        for (var r = 0; r < rest.length; r++) els.people.appendChild(buildPersonRow(rest[r]));
         // Header self name + people count badges.
         els.selfName.textContent = selfName;
         var count = users.length;
@@ -696,19 +675,6 @@
             name.className = "conv-name";
             name.textContent = c.name || "Conversation";
             top.appendChild(name);
-            var highlight = Number(c.highlightCount) || 0;
-            var unread = Number(c.unreadCount) || 0;
-            if (highlight > 0) {
-                var hl = document.createElement("span");
-                hl.className = "conv-badge hl";
-                hl.textContent = "@" + (highlight > 99 ? "99+" : highlight);
-                top.appendChild(hl);
-            } else if (unread > 0) {
-                var cnt = document.createElement("span");
-                cnt.className = "conv-badge count";
-                cnt.textContent = unread > 99 ? "99+" : String(unread);
-                top.appendChild(cnt);
-            }
             main.appendChild(top);
 
             if (c.preview) {
@@ -718,6 +684,22 @@
                 main.appendChild(pv);
             }
             row.appendChild(main);
+
+            // Unread indicator, right-aligned like the design: a green dot for unread, or the "@N"
+            // mention badge when there are highlights (mentions stay distinct from a plain unread).
+            var highlight = Number(c.highlightCount) || 0;
+            var unread = Number(c.unreadCount) || 0;
+            if (highlight > 0) {
+                var hl = document.createElement("span");
+                hl.className = "conv-badge hl";
+                hl.textContent = "@" + (highlight > 99 ? "99+" : highlight);
+                row.appendChild(hl);
+            } else if (unread > 0) {
+                var d = document.createElement("span");
+                d.className = "conv-unread-dot";
+                d.title = unread + (unread > 1 ? " unread messages" : " unread message");
+                row.appendChild(d);
+            }
             els.conversations.appendChild(row);
         }
     }

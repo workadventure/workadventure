@@ -471,10 +471,6 @@ class DesktopApi {
         const wokaCache = new Map<string, string>();
         const wokaInFlight = new Set<string>();
         const playerSig = new Map<string, string>(); // playerId → texture signature
-        const playerUuid = new Map<string, string>(); // playerId → user uuid
-        // Uuids of the current proximity "bubble" members (SpaceUser.uuid ↔ PlayerInterface.userUuid),
-        // used to group the People list under a "Discussion bubble" header like the mockup.
-        let bubbleUuids = new Set<string>();
         const wokaSignature = (textures: PlayerInterface["characterTextures"]): string =>
             textures.map((t) => t.id).join("|");
         const ensureWoka = (sig: string, textures: PlayerInterface["characterTextures"]): void => {
@@ -512,21 +508,19 @@ class DesktopApi {
                 status: availabilityToCompanionKey(get(availabilityStatusStore)),
                 isSelf: true,
             };
-            // Fill each row's Woka (from the cache — generation may finish after the list was built)
-            // and bubble membership at push time, since both change independently of the player list.
-            const usersWithMeta = latestOtherUsers.map((u) => {
+            // Fill each row's Woka from the cache at push time (generation may have finished after the
+            // player list was last built).
+            const usersWithWoka = latestOtherUsers.map((u) => {
                 const sig = playerSig.get(u.id);
                 const woka = sig ? wokaCache.get(sig) : undefined;
-                const uuid = playerUuid.get(u.id);
-                const inBubble = uuid ? bubbleUuids.has(uuid) : false;
-                return woka || inBubble ? { ...u, ...(woka ? { woka } : {}), ...(inBubble ? { inBubble } : {}) } : u;
+                return woka ? { ...u, woka } : u;
             });
             companion.pushState({
                 world: {
                     name: connectionManager.currentRoom?.roomName ?? "WorkAdventure",
                     participantCount: latestOtherUsers.length + 1,
                 },
-                users: [self, ...usersWithMeta],
+                users: [self, ...usersWithWoka],
                 conversations: sortCompanionConversations([
                     ...(latestNearby ? [latestNearby] : []),
                     ...latestMatrixConversations,
@@ -552,12 +546,10 @@ class DesktopApi {
         playersStore.subscribe((players) => {
             playerById.clear();
             playerSig.clear();
-            playerUuid.clear();
             const users: CompanionUser[] = [];
             for (const p of players.values()) {
                 const id = String(p.userId);
                 playerById.set(id, p);
-                playerUuid.set(id, p.userUuid);
                 const sig = wokaSignature(p.characterTextures);
                 playerSig.set(id, sig);
                 ensureWoka(sig, p.characterTextures);
@@ -634,7 +626,7 @@ class DesktopApi {
             let name = "";
             let messages: Readable<readonly ChatMessage[]> | undefined;
             if (id === NEARBY_ID) {
-                name = "Nearby";
+                name = "Discussion bubble";
                 try {
                     messages = gameManager.getCurrentGameScene().proximityChatRoomManager.resolveTargetRoom()?.messages;
                 } catch {
@@ -706,14 +698,10 @@ class DesktopApi {
         // Nearby proximity conversation summary. The manager is per-scene, so re-wire on every load.
         let proximityRoomUnsub: Unsubscriber | undefined;
         let nearbyMessagesUnsub: Unsubscriber | undefined;
-        let bubbleMembersUnsub: Unsubscriber | undefined;
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
         gameSceneIsLoadedStore.subscribe((loaded) => {
             nearbyMessagesUnsub?.();
             nearbyMessagesUnsub = undefined;
-            bubbleMembersUnsub?.();
-            bubbleMembersUnsub = undefined;
-            bubbleUuids = new Set();
             proximityRoomUnsub?.();
             proximityRoomUnsub = undefined;
             latestNearby = null;
@@ -730,9 +718,6 @@ class DesktopApi {
                     .proximityChatRoomManager.activeRoomStore.subscribe((room) => {
                         nearbyMessagesUnsub?.();
                         nearbyMessagesUnsub = undefined;
-                        bubbleMembersUnsub?.();
-                        bubbleMembersUnsub = undefined;
-                        bubbleUuids = new Set();
                         if (!room) {
                             latestNearby = null;
                             if (selectedConversationId === NEARBY_ID) {
@@ -741,17 +726,11 @@ class DesktopApi {
                             schedulePush();
                             return;
                         }
-                        // Track the bubble's members so the People list can group them (matched to
-                        // players by uuid). ForwardableStore, so this follows space join/leave.
-                        bubbleMembersUnsub = room.spaceUsersStore.subscribe((members) => {
-                            bubbleUuids = new Set(Array.from(members.values(), (m) => m.uuid));
-                            schedulePush();
-                        });
                         nearbyMessagesUnsub = room.messages.subscribe((msgs) => {
                             const last = msgs[msgs.length - 1];
                             latestNearby = {
                                 id: NEARBY_ID,
-                                name: "Nearby",
+                                name: "Discussion bubble",
                                 kind: "nearby",
                                 preview: last ? (get(last.content).body ?? "") : "",
                                 lastActivityAt: last?.date instanceof Date ? last.date.getTime() : 0,
