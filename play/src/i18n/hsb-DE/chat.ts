@@ -94,6 +94,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unavailable: "njesteji k dispoziciji",
         meeting: "W zasedanju",
         megaphone: "Wužiwa megafon",
+        sound_blocked: "Zwuk zablokowany",
     },
     logIn: "přizjewić",
     signIn: "Registrować abo přizjewić, zo hodźa so wšitke funkcije chata wužiwać!",

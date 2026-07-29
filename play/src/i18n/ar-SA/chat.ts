@@ -92,6 +92,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         busy: "مشغول",
         meeting: "في اجتماع",
         megaphone: "يستخدم مكبر الصوت",
+        sound_blocked: "الصوت محجوب",
     },
     logIn: "تسجيل الدخول",
     signIn: "سجل أو قم بتسجيل الدخول للاستمتاع بجميع ميزات الدردشة!",

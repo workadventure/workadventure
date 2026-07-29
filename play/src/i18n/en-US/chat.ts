@@ -92,6 +92,7 @@ const chat: BaseTranslation = {
         busy: "Busy",
         meeting: "In a meeting",
         megaphone: "Using the megaphone",
+        sound_blocked: "Sound blocked",
     },
     logIn: "Log in",
     signIn: "Register or log in to enjoy all the features of the chat !",

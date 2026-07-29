@@ -69,6 +69,8 @@
                 return $LL.chat.status.do_not_disturb();
             case AvailabilityStatus.BACK_IN_A_MOMENT:
                 return $LL.chat.status.back_in_a_moment();
+            case AvailabilityStatus.SOUND_BLOCKED:
+                return $LL.chat.status.sound_blocked();
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
             case AvailabilityStatus.LIVEKIT:

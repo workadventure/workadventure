@@ -26,6 +26,7 @@
                 $availabilityStatusStore === AvailabilityStatus.BUSY ||
                 $availabilityStatusStore === AvailabilityStatus.AWAY ||
                 $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+                $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
                 $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
                 $silentStore === true ||
                 ($cameraListStore !== undefined && $cameraListStore.length === 0)

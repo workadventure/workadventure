@@ -435,7 +435,7 @@ export const availabilityStatusStore = derived(
     ]) => {
         // Important: Statuses that should not switch to BUSY
         // must be checked BEFORE privacyShutdownStore to prevent switching to BUSY when privacy is enabled.
-        if ($audioPlaybackStore.size > 0 && !$browserNotificationStore) return AvailabilityStatus.BACK_IN_A_MOMENT;
+        if ($audioPlaybackStore.size > 0 && !$browserNotificationStore) return AvailabilityStatus.SOUND_BLOCKED;
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
@@ -518,6 +518,7 @@ export const mediaStreamConstraintsStore = derived(
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
             $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
             $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
             $availabilityStatusStore === AvailabilityStatus.BUSY;
         const shouldDisableMicrophoneForPrivacy =
             $privacyShutdownStore === true && !localUserStore.getMicrophonePrivacySettings();
@@ -1174,6 +1175,7 @@ export const localStreamStoreForPublishing = derived<
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
             $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
             $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
             $availabilityStatusStore === AvailabilityStatus.BUSY;
         const shouldMaskVideoForPublishing = isUnavailableStatus && $inBackgroundSettingsStore;
 

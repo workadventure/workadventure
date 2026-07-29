@@ -14,6 +14,9 @@ export class BasicStatusStrategy extends StatusStrategy {
 
     allowNotificationSound(): boolean {
         switch (this.status) {
+            // Sound being blocked, the notification could not play anyway, and trying
+            // would signal the block again.
+            case AvailabilityStatus.SOUND_BLOCKED:
             case AvailabilityStatus.SILENT:
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
