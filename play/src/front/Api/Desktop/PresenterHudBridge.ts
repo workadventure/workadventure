@@ -22,6 +22,7 @@ import {
     currentAnnotationColorStore,
     currentAnnotationToolStore,
     localAnnotationActiveStore,
+    screenAnnotationElementsStore,
     screenAnnotationEnabledStore,
     screenAnnotationLocallyHiddenStore,
     type AnnotationTool,
@@ -107,6 +108,8 @@ class PresenterHudBridge {
             currentAnnotationColorStore,
             screenAnnotationLocallyHiddenStore,
             screenAnnotationEnabledStore,
+            // Re-push when elements change so the bar's undo/redo enabled state stays live.
+            screenAnnotationElementsStore,
             presenterToolStore,
             cameraListStore,
             microphoneListStore,
@@ -138,6 +141,8 @@ class PresenterHudBridge {
                 color: get(currentAnnotationColorStore),
                 othersCanDraw: target ? get(screenAnnotationEnabledStore).get(target) === true : false,
                 locallyHidden: get(screenAnnotationLocallyHiddenStore),
+                canUndo: target ? screenAnnotationManager.canUndoLocal(target) : false,
+                canRedo: target ? screenAnnotationManager.canRedoLocal(target) : false,
             },
             presenterTool: get(presenterToolStore),
             devices: {
