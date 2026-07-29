@@ -479,8 +479,8 @@ button {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-/* Name tag: mirrors the app's UserTag — a solid per-name colour pill (set inline from
-   getColorByString), contrast text, bold, with a dropdown chevron, bottom-left. */
+/* Name tag: mirrors the app's UserName tag — the fixed contrast background (accent-blue while
+   speaking), bold white text, a dropdown chevron, bottom-left. Not a per-person colour. */
 .tile .name-chip {
     position: absolute;
     bottom: 6px;
@@ -496,6 +496,9 @@ button {
     font-weight: 700;
     line-height: 1.4;
     color: #fff;
+}
+.tile.is-speaking .name-chip {
+    background: var(--secondary);
 }
 .tile .name-chip .name-text {
     flex: 0 1 auto;
