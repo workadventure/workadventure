@@ -209,6 +209,8 @@ export type CompanionUser = {
     color?: string;
     isSelf: boolean;
     inBubble?: boolean;
+    /** Base64 data URL of the user's Woka avatar; optional — the panel falls back to a colour disc. */
+    woka?: string;
 };
 
 export type CompanionMessage = {
