@@ -89,6 +89,9 @@
         anEye.dataset.state = annotation.locallyHidden === true ? "off" : "on";
         anEye.classList.toggle("is-active", annotation.locallyHidden === true);
         anOthers.classList.toggle("is-active", annotation.othersCanDraw === true);
+        // Grey out undo / redo when there is nothing to undo / redo.
+        anUndo.disabled = annotation.canUndo !== true;
+        anRedo.disabled = annotation.canRedo !== true;
         // Presenter tools: highlight only the active one (in the "…" menu).
         var presenterTool = state.presenterTool || "none";
         miLaser.classList.toggle("is-active", presenterTool === "laser");
