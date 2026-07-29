@@ -721,8 +721,14 @@ export default () => {
         }));
     });
 
-    ipcMain.on("app:hud:set-expanded", (event, expanded: unknown) => {
-        setMeetingBarExpanded(event.sender, expanded === true);
+    ipcMain.on("app:hud:set-expanded", (event, payload: unknown) => {
+        // Back-compat: the renderer used to send a bare boolean; it now sends { expanded, height }.
+        const raw = (payload && typeof payload === "object" ? payload : { expanded: payload }) as {
+            expanded?: unknown;
+            height?: unknown;
+        };
+        const height = typeof raw.height === "number" ? raw.height : undefined;
+        setMeetingBarExpanded(event.sender, raw.expanded === true, height);
     });
     ipcMain.on("app:hud:ready", (event) => {
         markHudReady(event.sender);
