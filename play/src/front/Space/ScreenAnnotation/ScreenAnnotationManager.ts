@@ -181,6 +181,20 @@ class ScreenAnnotationManager {
         }
     }
 
+    /** Whether the local user has an element to undo on the given screen share. */
+    public canUndoLocal(targetUserId: string): boolean {
+        const me = this.localUserId;
+        if (!me) {
+            return false;
+        }
+        return (get(screenAnnotationElementsStore).get(targetUserId) ?? []).some((el) => el.authorUserId === me);
+    }
+
+    /** Whether the local user has an undone element to redo on the given screen share. */
+    public canRedoLocal(targetUserId: string): boolean {
+        return (this.redoStacks.get(targetUserId)?.length ?? 0) > 0;
+    }
+
     /** Re-add the most recent element the LOCAL user undid on the given screen share (redo). */
     public redoLastLocalElement(targetUserId: string): void {
         if (!this.localUserId) {
