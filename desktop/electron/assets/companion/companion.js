@@ -806,7 +806,9 @@
 
         var name = document.createElement("span");
         name.className = "person-name";
-        name.textContent = u.name || "Someone";
+        // In the people list you are just "You" (with the "you" chip); the real name lives in the
+        // status button up top.
+        name.textContent = u.isSelf ? "You" : u.name || "Someone";
         row.appendChild(name);
 
         if (u.isSelf) {
