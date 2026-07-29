@@ -76,6 +76,7 @@
             height: 22px;
             border-radius: 50%;
             border: 2px solid transparent;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25); /* keeps black/white visible on the dark bar */
             padding: 0;
             margin: 0 1px;
         }
@@ -89,20 +90,21 @@
 </head>
 <body>
     <div id="toolbar">
+        <button class="tb-btn" id="tb-undo" type="button" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg></button>
+        <div class="tb-sep"></div>
+        <button class="tb-btn" data-tool="text" type="button" title="Text" aria-label="Text"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 6h10"/><path d="M12 6v12"/></svg></button>
         <button class="tb-btn" data-tool="pen" type="button" title="Pen" aria-label="Pen"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg></button>
         <button class="tb-btn" data-tool="line" type="button" title="Line" aria-label="Line"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 19l14 -14"/></svg></button>
         <button class="tb-btn" data-tool="arrow" type="button" title="Arrow" aria-label="Arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0"/><path d="M15 16l4 -4"/><path d="M15 8l4 4"/></svg></button>
         <button class="tb-btn" data-tool="rect" type="button" title="Rectangle" aria-label="Rectangle"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 5h14v14h-14z"/></svg></button>
-        <button class="tb-btn" data-tool="text" type="button" title="Text" aria-label="Text"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 6h10"/><path d="M12 6v12"/></svg></button>
         <button class="tb-btn" data-tool="eraser" type="button" title="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 20h-10l-5 -5a1 1 0 0 1 0 -1.5l9 -9a1 1 0 0 1 1.5 0l5 5a1 1 0 0 1 0 1.5l-9 9"/></svg></button>
         <div class="tb-sep"></div>
         <button class="tb-color" data-color="#ff3b30" type="button" style="background:#ff3b30" title="Red" aria-label="Red"></button>
-        <button class="tb-color" data-color="#ffcc00" type="button" style="background:#ffcc00" title="Yellow" aria-label="Yellow"></button>
         <button class="tb-color" data-color="#34c759" type="button" style="background:#34c759" title="Green" aria-label="Green"></button>
         <button class="tb-color" data-color="#0a84ff" type="button" style="background:#0a84ff" title="Blue" aria-label="Blue"></button>
         <button class="tb-color" data-color="#ffffff" type="button" style="background:#ffffff" title="White" aria-label="White"></button>
+        <button class="tb-color" data-color="#000000" type="button" style="background:#000000" title="Black" aria-label="Black"></button>
         <div class="tb-sep"></div>
-        <button class="tb-btn" id="tb-undo" type="button" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg></button>
         <button class="tb-btn" id="tb-clear" type="button" title="Clear all" aria-label="Clear all"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-2a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v2"/></svg></button>
         <div class="tb-sep"></div>
         <button class="tb-btn" id="tb-eye" type="button" data-state="on" title="Hide annotations for me only (others keep drawing)" aria-label="Hide annotations locally">
