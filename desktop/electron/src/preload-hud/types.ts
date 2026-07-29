@@ -59,8 +59,12 @@ export type WorkAdventureHudApi = {
     sendCommand: (command: HudCommand) => void;
     /** Enumerate shareable screens/windows (for the direct screen-switch picker). */
     requestSources: () => Promise<HudSource[]>;
-    /** Grow/shrink the meeting bar window so the source picker fits (bottom edge stays anchored). */
-    setExpanded: (expanded: boolean) => void;
+    /**
+     * Grow/shrink the meeting bar window so a panel fits (bottom edge stays anchored). `height` is
+     * the target window height when expanding — a short panel (the annotation bar) passes a small
+     * value so the window doesn't blanket the shared screen with a click-catching transparent area.
+     */
+    setExpanded: (expanded: boolean, height?: number) => void;
     /** Signal the renderer has wired all its subscriptions and is ready to receive pushes. */
     ready: () => void;
 
