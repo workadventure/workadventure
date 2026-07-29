@@ -51,7 +51,7 @@
     var anTools = annotationPanel.querySelectorAll("[data-tool]");
     var anColors = annotationPanel.querySelectorAll("[data-color]");
     var anUndo = byId("an-undo");
-    var anClear = byId("an-clear");
+    var anRedo = byId("an-redo");
     var anEye = byId("an-eye");
     var anOthers = byId("an-others");
 
@@ -150,8 +150,8 @@
     anUndo.addEventListener("click", function () {
         api.sendCommand({ type: "annotation-undo" });
     });
-    anClear.addEventListener("click", function () {
-        api.sendCommand({ type: "annotation-clear" });
+    anRedo.addEventListener("click", function () {
+        api.sendCommand({ type: "annotation-redo" });
     });
     anEye.addEventListener("click", function () {
         api.sendCommand({ type: "annotation-toggle-local-hide" });
