@@ -79,11 +79,13 @@
 
         /* Device picker panel (shares the picker chrome). */
         #devices {
-            flex: 1;
+            align-self: center;
+            width: min(360px, calc(100% - 8px));
+            max-height: calc(100% - 8px);
             min-height: 0;
             display: none;
             flex-direction: column;
-            margin: 0 4px 8px;
+            margin: 0 0 8px;
             border-radius: 12px;
             background: var(--contrast);
             backdrop-filter: blur(8px);
@@ -91,7 +93,7 @@
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
         }
         #devices.visible { display: flex; }
-        .dv-body { flex: 1; overflow-y: auto; padding: 6px 8px 8px; }
+        .dv-body { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 8px 8px; }
         .dv-group {
             display: flex; align-items: center; gap: 6px;
             padding: 8px 4px 3px;
