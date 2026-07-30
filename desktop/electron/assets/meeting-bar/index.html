@@ -299,7 +299,8 @@
         .mn-item:hover { background: rgba(255, 255, 255, 0.10); }
         .mn-item.is-active { background: var(--secondary); }
         .mn-item.is-active:hover { background: var(--secondary-hover); }
-        .mn-ico { display: inline-flex; flex: 0 0 auto; }
+        /* Leading slot the width of the toggle switch, so action-icon rows align with toggle rows. */
+        .mn-ico { display: inline-flex; flex: 0 0 auto; width: 34px; justify-content: center; }
         .mn-ico svg {
             width: 18px; height: 18px;
             stroke: currentColor; fill: transparent;
@@ -429,14 +430,12 @@
     <!-- Overflow menu (grows the HUD window like the picker; anchored above the bar). -->
     <div id="menu" role="menu" aria-label="More options">
         <button class="mn-item" id="mn-laser" type="button" role="menuitemcheckbox" aria-checked="false">
-            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M12 12m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"/><path d="M12 3l0 2"/><path d="M3 12l2 0"/><path d="M12 19l0 2"/><path d="M19 12l2 0"/></svg></span>
-            <span class="mn-label">Cursor highlight</span>
             <span class="mn-toggle" aria-hidden="true"></span>
+            <span class="mn-label">Cursor highlight</span>
         </button>
         <button class="mn-item" id="mn-tabs" type="button" role="menuitemcheckbox" aria-checked="false">
-            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 5m0 1a1 1 0 0 1 1 -1h14a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-14a1 1 0 0 1 -1 -1z"/><path d="M4 9h16"/><path d="M9 5v4"/></svg></span>
-            <span class="mn-label">Display tabs</span>
             <span class="mn-toggle" aria-hidden="true"></span>
+            <span class="mn-label">Display tabs</span>
         </button>
         <div class="mn-sep"></div>
         <button class="mn-item" id="mn-switch" type="button">
@@ -444,7 +443,7 @@
             <span class="mn-label">Switch shared screen</span>
         </button>
         <button class="mn-item" id="mn-devices" type="button">
-            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z"/><path d="M3 6m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"/></svg></span>
+            <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"/><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M5 19h14a2 2 0 0 0 -2 -2h-10a2 2 0 0 0 -2 2"/></svg></span>
             <span class="mn-label">Change cam / mic</span>
         </button>
         <div class="mn-sep"></div>
@@ -464,9 +463,9 @@
         </button>
         <div class="an-sep"></div>
         <button class="an-btn" data-tool="pen" type="button" title="Free drawing" aria-label="Free drawing"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg></button>
-        <button class="an-btn" data-tool="text" type="button" title="Text" aria-label="Text"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 6h10"/><path d="M12 6v12"/></svg></button>
-        <button class="an-btn" data-tool="line" type="button" title="Line" aria-label="Line"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 19l14 -14"/></svg></button>
-        <button class="an-btn" data-tool="rect" type="button" title="Rectangle" aria-label="Rectangle"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 5h14v14h-14z"/></svg></button>
+        <button class="an-btn" data-tool="text" type="button" title="Text" aria-label="Text"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 7v-2h13v2"/><path d="M10 5v14"/><path d="M12 19h-4"/><path d="M15 13v-1h6v1"/><path d="M18 12v7"/><path d="M17 19h2"/></svg></button>
+        <button class="an-btn" data-tool="line" type="button" title="Line" aria-label="Line"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M18 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M7.5 16.5l9 -9"/></svg></button>
+        <button class="an-btn" data-tool="rect" type="button" title="Rectangle" aria-label="Rectangle"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M19 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M5 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M19 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M6 5h12"/><path d="M6 19h12"/><path d="M5 6v12"/><path d="M19 6v12"/></svg></button>
         <button class="an-btn" data-tool="eraser" type="button" title="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 20h-10l-5 -5a1 1 0 0 1 0 -1.5l9 -9a1 1 0 0 1 1.5 0l5 5a1 1 0 0 1 0 1.5l-9 9"/></svg></button>
         <div class="an-sep"></div>
         <button class="an-color" data-color="#ff3b30" type="button" style="background:#ff3b30" title="Red" aria-label="Red"></button>
