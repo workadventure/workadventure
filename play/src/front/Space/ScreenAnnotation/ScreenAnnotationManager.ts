@@ -172,10 +172,13 @@ class ScreenAnnotationManager {
         for (let i = elements.length - 1; i >= 0; i--) {
             if (elements[i].authorUserId === me) {
                 const removed = elements[i];
-                this.removeElement(targetUserId, removed.id);
+                // Push onto the redo stack BEFORE removing: removeElement notifies the element store
+                // synchronously, which re-pushes the HUD state — so canRedo must already be true by
+                // then, otherwise the redo button only lights up on the *next* undo.
                 const stack = this.redoStacks.get(targetUserId) ?? [];
                 stack.push(removed);
                 this.redoStacks.set(targetUserId, stack);
+                this.removeElement(targetUserId, removed.id);
                 return;
             }
         }
