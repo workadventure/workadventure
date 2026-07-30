@@ -15,6 +15,9 @@ import type { SpaceInterface } from "../SpaceInterface";
 
 type AnnotationOperation = NonNullable<ScreenAnnotationEvent["operation"]>;
 
+/** A reversible local-user action for the undo / redo history: a drawn stroke, or an erased one. */
+type UndoOp = { kind: "add" | "remove"; element: ScreenAnnotationElement };
+
 /**
  * Singleton in charge of synchronizing screen-sharing annotations across the members of a
  * proximity space.
@@ -32,11 +35,12 @@ class ScreenAnnotationManager {
     // Normalized teardown callbacks (rxjs Subscriptions and Svelte store unsubscribers).
     private unsubscribers: (() => void)[] = [];
     private elementCounter = 0;
-    // Local-user elements removed by undo, per screen-share target, so redo can re-add them. A
-    // fresh local stroke (or clearing the share) invalidates the stack — standard redo semantics.
-    private redoStacks = new Map<string, ScreenAnnotationElement[]>();
-    // True only while redo re-adds an element, so upsertElement doesn't then wipe the redo stack.
-    private isRedoing = false;
+    // Per-target undo / redo history of the LOCAL user's reversible actions (draw a stroke / erase
+    // one). undo reverses the last op, redo re-applies it; a fresh action clears the redo side.
+    // `replaying` suppresses recording while an undo/redo mutates the store.
+    private undoStacks = new Map<string, UndoOp[]>();
+    private redoStacks = new Map<string, UndoOp[]>();
+    private replaying = false;
 
     // `screenSharingPeerRemoved` is passed in (rather than read from `space.spacePeerManager`)
     // because this runs from the SpacePeerManager constructor, before the Space has stored its
@@ -59,6 +63,7 @@ class ScreenAnnotationManager {
         const screenSharingRemovedSubscription = screenSharingPeerRemoved.subscribe((streamable) => {
             if (streamable.spaceUserId) {
                 clearAnnotations(streamable.spaceUserId);
+                this.clearHistory(streamable.spaceUserId);
             }
         });
         this.unsubscribers.push(() => screenSharingRemovedSubscription.unsubscribe());
@@ -85,6 +90,7 @@ class ScreenAnnotationManager {
         this.unsubscribers.forEach((unsubscribe) => unsubscribe());
         this.unsubscribers = [];
         this.space = undefined;
+        this.undoStacks.clear();
         this.redoStacks.clear();
         resetAllAnnotations();
     }
@@ -111,6 +117,7 @@ class ScreenAnnotationManager {
                 break;
             case "clearAll":
                 clearAnnotations(target);
+                this.clearHistory(target);
                 break;
             case "annotationEnabled":
                 setAnnotationEnabled(target, operation.annotationEnabled);
@@ -128,11 +135,7 @@ class ScreenAnnotationManager {
     }
 
     public upsertElement(targetUserId: string, element: ScreenAnnotationElement): void {
-        // A fresh local stroke invalidates any pending redo (remote strokes go straight to the
-        // store, so they never reach this method with someone else's authorUserId anyway).
-        if (!this.isRedoing && element.authorUserId === this.localUserId) {
-            this.redoStacks.delete(targetUserId);
-        }
+        this.recordLocalOp(targetUserId, { kind: "add", element });
         upsertAnnotationElement(targetUserId, element);
         this.emit(targetUserId, { $case: "upsertElement", upsertElement: element });
     }
@@ -147,14 +150,27 @@ class ScreenAnnotationManager {
     }
 
     public removeElement(targetUserId: string, elementId: string): void {
+        // Capture the element BEFORE it leaves the store so an eraser removal can be undone (i.e.
+        // re-added). Transient drafts that were only broadcast (never stored) aren't found here, so
+        // dropping them doesn't pollute the undo history.
+        const element = (get(screenAnnotationElementsStore).get(targetUserId) ?? []).find((e) => e.id === elementId);
+        if (element) {
+            this.recordLocalOp(targetUserId, { kind: "remove", element });
+        }
         removeAnnotationElement(targetUserId, elementId);
         this.emit(targetUserId, { $case: "removeElementId", removeElementId: elementId });
     }
 
     public clearAll(targetUserId: string): void {
-        this.redoStacks.delete(targetUserId);
+        this.clearHistory(targetUserId);
         clearAnnotations(targetUserId);
         this.emit(targetUserId, { $case: "clearAll", clearAll: true });
+    }
+
+    /** Drop the local undo/redo history for a share whose annotations are being cleared or dropped. */
+    private clearHistory(targetUserId: string): void {
+        this.undoStacks.delete(targetUserId);
+        this.redoStacks.delete(targetUserId);
     }
 
     public setAnnotationEnabled(targetUserId: string, enabled: boolean): void {
@@ -162,57 +178,80 @@ class ScreenAnnotationManager {
         this.emit(targetUserId, { $case: "annotationEnabled", annotationEnabled: enabled });
     }
 
-    /** Remove the most recent element the LOCAL user drew on the given screen share (undo). */
-    public undoLastLocalElement(targetUserId: string): void {
-        const me = this.localUserId;
-        if (!me) {
+    /**
+     * Record a local user action on the undo history and drop the redo history. Successive updates
+     * of the same in-progress stroke collapse into one entry. No-op while replaying an undo/redo,
+     * for remote elements, or before the local user id is known.
+     */
+    private recordLocalOp(targetUserId: string, op: UndoOp): void {
+        if (this.replaying || !this.localUserId) {
             return;
         }
-        const elements = get(screenAnnotationElementsStore).get(targetUserId) ?? [];
-        for (let i = elements.length - 1; i >= 0; i--) {
-            if (elements[i].authorUserId === me) {
-                const removed = elements[i];
-                // Push onto the redo stack BEFORE removing: removeElement notifies the element store
-                // synchronously, which re-pushes the HUD state — so canRedo must already be true by
-                // then, otherwise the redo button only lights up on the *next* undo.
-                const stack = this.redoStacks.get(targetUserId) ?? [];
-                stack.push(removed);
-                this.redoStacks.set(targetUserId, stack);
-                this.removeElement(targetUserId, removed.id);
-                return;
+        // Any fresh local action invalidates the redo history — including erasing a remote peer's
+        // element, which isn't itself individually undoable (so it's not pushed onto the undo stack).
+        this.redoStacks.delete(targetUserId);
+        if (op.element.authorUserId !== this.localUserId) {
+            return;
+        }
+        const stack = this.undoStacks.get(targetUserId) ?? [];
+        const top = stack[stack.length - 1];
+        if (op.kind === "add" && top && top.kind === "add" && top.element.id === op.element.id) {
+            top.element = op.element; // same stroke being drawn — keep a single undo entry
+        } else {
+            stack.push(op);
+            this.undoStacks.set(targetUserId, stack);
+        }
+    }
+
+    /** Apply an op in the undo (reverse=true) or redo (reverse=false) direction, without recording it. */
+    private replayOp(targetUserId: string, op: UndoOp, reverse: boolean): void {
+        const add = reverse ? op.kind === "remove" : op.kind === "add";
+        this.replaying = true;
+        try {
+            if (add) {
+                this.upsertElement(targetUserId, op.element);
+            } else {
+                this.removeElement(targetUserId, op.element.id);
             }
+        } finally {
+            this.replaying = false;
         }
     }
 
-    /** Whether the local user has an element to undo on the given screen share. */
+    private pushOp(stacks: Map<string, UndoOp[]>, targetUserId: string, op: UndoOp): void {
+        const stack = stacks.get(targetUserId) ?? [];
+        stack.push(op);
+        stacks.set(targetUserId, stack);
+    }
+
+    /** Reverse the local user's last action (undo): un-draw a stroke, or restore an erased one. */
+    public undoLastLocalElement(targetUserId: string): void {
+        const op = this.undoStacks.get(targetUserId)?.pop();
+        if (!op) {
+            return;
+        }
+        // Move to the redo stack BEFORE mutating the store: the store change synchronously re-pushes
+        // the HUD state, so canRedo must already be true by then.
+        this.pushOp(this.redoStacks, targetUserId, op);
+        this.replayOp(targetUserId, op, true);
+    }
+
+    /** Re-apply the local user's last undone action (redo). */
+    public redoLastLocalElement(targetUserId: string): void {
+        const op = this.redoStacks.get(targetUserId)?.pop();
+        if (!op) {
+            return;
+        }
+        this.pushOp(this.undoStacks, targetUserId, op);
+        this.replayOp(targetUserId, op, false);
+    }
+
+    /** Whether the local user has an action to undo / redo on the given screen share. */
     public canUndoLocal(targetUserId: string): boolean {
-        const me = this.localUserId;
-        if (!me) {
-            return false;
-        }
-        return (get(screenAnnotationElementsStore).get(targetUserId) ?? []).some((el) => el.authorUserId === me);
+        return (this.undoStacks.get(targetUserId)?.length ?? 0) > 0;
     }
-
-    /** Whether the local user has an undone element to redo on the given screen share. */
     public canRedoLocal(targetUserId: string): boolean {
         return (this.redoStacks.get(targetUserId)?.length ?? 0) > 0;
-    }
-
-    /** Re-add the most recent element the LOCAL user undid on the given screen share (redo). */
-    public redoLastLocalElement(targetUserId: string): void {
-        if (!this.localUserId) {
-            return;
-        }
-        const element = this.redoStacks.get(targetUserId)?.pop();
-        if (!element) {
-            return;
-        }
-        this.isRedoing = true;
-        try {
-            this.upsertElement(targetUserId, element);
-        } finally {
-            this.isRedoing = false;
-        }
     }
 }
 
