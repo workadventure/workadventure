@@ -7,16 +7,14 @@ import { COMPANION_MIN_HEIGHT, COMPANION_MIN_WIDTH, normalizeCompanionBounds } f
 import { shouldProtectWindowFromCapture } from "./content-protection";
 
 /**
- * Presenter HUD windows (Zoom-style), placed on the SHARED display while screen sharing:
- *  - the "meeting bar": mic / camera / switch screen / stop share / annotate / back-to-app;
- *  - the "annotation bar": drawing tools, shown only while annotation mode is on.
- *
- * Both are frameless, always-on-top, draggable, and — crucially — content-protected
- * (`setContentProtection(true)`), so the presenter sees them but they are EXCLUDED from the
+ * Presenter HUD windows (Zoom-style), placed on the SHARED display while screen sharing. The
+ * "meeting bar" (mic / camera / switch screen / stop share / annotate, plus its "…" menu and the
+ * annotation toolbar panel) is frameless, always-on-top, draggable, and — crucially — content-
+ * protected (`setContentProtection(true)`), so the presenter sees it but it is EXCLUDED from the
  * captured pixels. Only the transparent annotation overlay (a separate window) is captured.
  */
 
-export type HudKind = "meeting-bar" | "annotation-bar" | "companion";
+export type HudKind = "meeting-bar" | "companion";
 
 type HudEntry = {
     window: BrowserWindow;
@@ -27,7 +25,6 @@ type HudEntry = {
 
 const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
     "meeting-bar": { width: 680, height: 76 },
-    "annotation-bar": { width: 700, height: 64 },
     // Interactive quick-access panel (People / Chat / Controls). Resizable; this is the initial size.
     companion: { width: 340, height: 480 },
 };
@@ -35,8 +32,6 @@ const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
 /** Meeting-bar height while the screen-switch source picker is open (bottom edge stays anchored). */
 const MEETING_BAR_EXPANDED_HEIGHT = 420;
 const HUD_MARGIN = 24;
-/** Vertical gap between the annotation bar and the meeting bar it stacks on top of. */
-const ANNOTATION_BAR_GAP = 10;
 
 const hudWindows = new Map<HudKind, HudEntry>();
 
@@ -115,13 +110,11 @@ function positionFor(kind: HudKind, display: Electron.Display): { x: number; y: 
             y: Math.round(area.y + area.height - height - HUD_MARGIN),
         };
     }
-    const x = Math.round(area.x + (area.width - width) / 2);
-    // Both presenter bars sit bottom-center (like Zoom's control bar). The annotation bar stacks
-    // directly ABOVE the meeting bar (one control cluster) rather than off at the top of the screen.
-    const meetingBar = HUD_SIZES["meeting-bar"];
-    const meetingBarY = area.y + area.height - meetingBar.height - HUD_MARGIN;
-    const y = kind === "meeting-bar" ? Math.round(meetingBarY) : Math.round(meetingBarY - height - ANNOTATION_BAR_GAP);
-    return { x, y };
+    // Meeting bar: bottom-centre, like Zoom's control bar.
+    return {
+        x: Math.round(area.x + (area.width - width) / 2),
+        y: Math.round(area.y + area.height - height - HUD_MARGIN),
+    };
 }
 
 export async function openHudWindow(kind: HudKind, displayId?: number): Promise<boolean> {
@@ -195,8 +188,8 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         newWindow.on("resize", scheduleSaveBounds);
         newWindow.on("move", scheduleSaveBounds);
     }
-    // Presenter bars (meeting-bar / annotation-bar) must stay out of the *shared* screen — viewers
-    // must not see the presenter's own controls. The companion is a normal utility panel, so it is
+    // The meeting bar must stay out of the *shared* screen — viewers must not see the presenter's
+    // own controls. The companion is a normal utility panel, so it is
     // never protected (it would otherwise be impossible to screenshot). Protection is also lifted in
     // development / with WA_ALLOW_WINDOW_CAPTURE=1 so the bars can be captured (see content-protection).
     if (kind !== "companion" && shouldProtectWindowFromCapture()) {
@@ -216,8 +209,8 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         // relativeLevel +1 lifts the HUD one layer above the transparent overlay window (which
         // also lives at "screen-saver"). Without this the overlay — opened asynchronously from
         // the draw-mode subscription — lands on top of the HUD and, once draw mode captures
-        // pointer events, the presenter can no longer click the meeting-bar / annotation-bar
-        // buttons: the clicks are absorbed by the overlay. macOS reads the relativeLevel; on
+        // pointer events, the presenter can no longer click the meeting-bar buttons: the clicks
+        // are absorbed by the overlay. macOS reads the relativeLevel; on
         // other platforms the second-layer bump is a no-op but the moveTop below still runs.
         newWindow.setAlwaysOnTop(true, "screen-saver", 1);
     } catch (error) {
@@ -277,18 +270,15 @@ export function closeHudWindow(kind: HudKind): void {
 
 export function closeAllHudWindows(): void {
     closeHudWindow("meeting-bar");
-    closeHudWindow("annotation-bar");
 }
 
 /**
- * Push the presenter state to the presenter-HUD windows (and replay it to late-opening ones — e.g.
- * the annotation bar opens after the meeting bar). Both presenter-bar kinds are pre-seeded so a bar
- * that opens after the broadcast still gets the state on ready. The companion panel is excluded — it
- * carries a different state shape, fed via sendHudState.
+ * Push the presenter state to the meeting-bar HUD window (pre-seeded so it still gets the state on
+ * ready if it opens after the broadcast). The companion panel is excluded — it carries a different
+ * state shape, fed via sendHudState.
  */
 export function broadcastHudState(state: unknown): void {
     lastStateByKind.set("meeting-bar", state);
-    lastStateByKind.set("annotation-bar", state);
     for (const [kind, entry] of hudWindows.entries()) {
         if (kind === "companion") {
             continue;

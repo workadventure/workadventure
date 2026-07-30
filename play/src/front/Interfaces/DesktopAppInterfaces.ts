@@ -204,14 +204,13 @@ export type DesktopPresenterHudState = {
 };
 
 /**
- * Drives the presenter HUD (Zoom-style meeting bar + separate annotation bar), placed on the
- * shared display. Commands raised by the bars reuse the {@link DesktopPipCommand} union.
+ * Drives the presenter HUD (Zoom-style meeting bar, with the annotation toolbar as one of its
+ * panels), placed on the shared display. Commands raised by the bar reuse the
+ * {@link DesktopPipCommand} union.
  */
 export type WorkAdventureDesktopHudApi = {
     openMeetingBar: (opts: { displayId?: number; sourceId?: string }) => Promise<boolean>;
     closeMeetingBar: () => Promise<void>;
-    openAnnotationBar: (opts: { displayId?: number; sourceId?: string }) => Promise<boolean>;
-    closeAnnotationBar: () => Promise<void>;
     pushState: (state: DesktopPresenterHudState) => void;
     onCommand: (callback: (command: DesktopPipCommand) => void) => () => void;
 };
