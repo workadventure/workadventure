@@ -2,7 +2,7 @@
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
     import { raisedHandsStore } from "../../Stores/PeerStore";
-    import { raisedHandsAdminVisibleStore } from "../../Stores/RaisedHandsStore";
+    import { raisedHandsAdminVisibleStore } from "../../Stores/RaisedHandsAdminVisibleStore";
     import Badge from "../UI/Badge.svelte";
     import RaiseHandIcon from "../Icons/RaiseHandIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
