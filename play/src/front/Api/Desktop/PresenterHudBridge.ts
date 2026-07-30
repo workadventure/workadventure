@@ -11,7 +11,10 @@ import {
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
+    usedCameraDeviceIdStore,
+    usedMicrophoneDeviceIdStore,
 } from "../../Stores/MediaStore";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import {
     activeScreenShareSourceStore,
     requestedScreenSharingState,
@@ -115,6 +118,8 @@ class PresenterHudBridge {
             microphoneListStore,
             requestedCameraDeviceIdStore,
             requestedMicrophoneDeviceIdStore,
+            usedCameraDeviceIdStore,
+            usedMicrophoneDeviceIdStore,
         ] as const;
         for (const store of pushOnChange) {
             this.subscriptions.push(store.subscribe(() => this.pushState()));
@@ -154,8 +159,8 @@ class PresenterHudBridge {
                     id: d.deviceId,
                     label: d.label || `Microphone ${i + 1}`,
                 })),
-                currentCameraId: get(requestedCameraDeviceIdStore),
-                currentMicrophoneId: get(requestedMicrophoneDeviceIdStore),
+                currentCameraId: get(usedCameraDeviceIdStore),
+                currentMicrophoneId: get(usedMicrophoneDeviceIdStore),
             },
         };
     }
@@ -275,11 +280,14 @@ class PresenterHudBridge {
                 break;
             }
             case "pick-device": {
-                // Same setter the in-app media settings use; the media machine re-acquires the stream.
+                // Same as the in-app media settings: set the requested device (the media machine
+                // re-acquires the stream) AND persist it as the preferred device.
                 if (command.kind === "camera") {
                     requestedCameraDeviceIdStore.set(command.deviceId);
+                    localUserStore.setPreferredVideoInputDevice(command.deviceId);
                 } else {
                     requestedMicrophoneDeviceIdStore.set(command.deviceId);
+                    localUserStore.setPreferredAudioInputDevice(command.deviceId);
                 }
                 break;
             }
