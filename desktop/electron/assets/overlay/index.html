@@ -24,9 +24,9 @@
             #overlay-canvas.draw {
                 cursor: crosshair;
             }
-            /* The annotation toolbar is a SEPARATE content-protected window (annotation-bar):
-               this overlay window is captured into the shared stream, so any UI drawn here
-               would leak to every viewer. Only the strokes belong here. */
+            /* The annotation toolbar lives in the content-protected meeting-bar window: this overlay
+               window is captured into the shared stream, so any UI drawn here would leak to every
+               viewer. Only the strokes belong here. */
         </style>
     </head>
     <body>
