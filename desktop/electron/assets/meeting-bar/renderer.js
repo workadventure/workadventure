@@ -97,9 +97,9 @@
         // Grey out undo / redo when there is nothing to undo / redo.
         anUndo.disabled = annotation.canUndo !== true;
         anRedo.disabled = annotation.canRedo !== true;
-        // Cursor highlight (laser) — the only presenter tool left in the "…" menu.
+        // Cursor highlight (laser) — the only presenter tool left in the "…" menu, shown as a switch.
         var presenterTool = state.presenterTool || "none";
-        miLaser.classList.toggle("is-active", presenterTool === "laser");
+        miLaser.setAttribute("aria-checked", presenterTool === "laser" ? "true" : "false");
         lastDevices = state.devices || null;
         if (devicesOpen) renderDevices();
         miTabs.setAttribute("aria-checked", state.tabBarEnabled === true ? "true" : "false");
@@ -212,12 +212,13 @@
             fn();
         };
     }
-    miLaser.addEventListener(
-        "click",
-        menuAction(function () {
-            api.sendCommand({ type: "presenter-set-tool", tool: "laser" });
-        })
-    );
+    miLaser.addEventListener("click", function () {
+        // Optimistic switch flip; the real state comes back in the pushed presenterTool.
+        var next = miLaser.getAttribute("aria-checked") !== "true";
+        miLaser.setAttribute("aria-checked", next ? "true" : "false");
+        api.sendCommand({ type: "presenter-set-tool", tool: "laser" });
+        closeMenu();
+    });
     miSwitch.addEventListener("click", function () {
         closeMenu();
         openPicker();
