@@ -622,16 +622,6 @@ export default () => {
     ipcMain.handle("app:hud:close-meeting-bar", () => {
         closeHudWindow("meeting-bar");
     });
-    ipcMain.handle("app:hud:open-annotation-bar", async (event, opts: unknown) => {
-        if (!isFromMainRenderer(event)) {
-            ElectronLog.warn("Rejected annotation-bar open from non-main renderer");
-            return false;
-        }
-        return openHudWindow("annotation-bar", await resolveHudDisplayId(opts));
-    });
-    ipcMain.handle("app:hud:close-annotation-bar", () => {
-        closeHudWindow("annotation-bar");
-    });
 
     // Main renderer → HUD windows
     ipcMain.on("app:hud:state-from-main", (event, state: unknown) => {
