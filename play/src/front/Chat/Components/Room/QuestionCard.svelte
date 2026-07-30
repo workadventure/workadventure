@@ -4,7 +4,7 @@
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
     import Button from "../../../Components/UI/Button.svelte";
     import Chip from "../../../Components/UI/Chip.svelte";
-    import { IconCheck, IconHelpCircle, IconList, IconLoader, IconTrash } from "@wa-icons";
+    import { IconCheck, IconHelpCircle, IconList, IconLoader, IconThumbUp, IconTrash } from "@wa-icons";
 
     interface Props {
         question: ChatQuestionItem;
@@ -16,6 +16,9 @@
     let isUpvoting = $state(false);
     let isMarkingAnswered = $state(false);
     let isDeleting = $state(false);
+
+    let cardBorderClass = $derived($questionState.isAnswered ? "border-success/30" : "border-white/10");
+    let statusAccentClass = $derived($questionState.isAnswered ? "bg-success" : "bg-warning");
 
     function toggleUpvote() {
         if (!$questionState.canUpvote || isUpvoting) {
@@ -67,16 +70,21 @@
 <div class="px-3">
     <div
         data-testid="questionCard"
-        class="question-card rounded-2xl bg-contrast/90 border border-solid border-white/10 p-4 max-w-2xl"
+        class="question-card relative overflow-hidden rounded-2xl bg-contrast/90 border border-solid p-4 max-w-2xl transition-colors {cardBorderClass}"
     >
+        <div class="absolute inset-y-0 left-0 w-1 {statusAccentClass}" aria-hidden="true"></div>
+
         <div class="flex flex-wrap items-center gap-2">
-            <Chip variant="warning" size="xs">
+            <Chip variant="warning" appearance="border" size="xs">
                 <IconHelpCircle font-size={12} class="mr-1" />
                 {$LL.chat.question.badge()}
             </Chip>
             {#if $questionState.isAnswered}
-                <span data-testid="questionAnsweredBadge">
-                    <Chip variant="success" size="xs">{$LL.chat.question.answered()}</Chip>
+                <span data-testid="questionAnsweredBadge" class="ms-auto">
+                    <Chip variant="success" appearance="border" size="xs">
+                        <IconCheck font-size={12} class="mr-1" />
+                        {$LL.chat.question.answered()}
+                    </Chip>
                 </span>
             {/if}
         </div>
@@ -103,7 +111,7 @@
                 onclick={toggleUpvote}
             >
                 {#snippet icon()}
-                    <span aria-hidden="true">👍</span>
+                    <IconThumbUp font-size={14} />
                 {/snippet}
                 <span data-testid="questionUpvoteCount">{$questionState.upvoteCount}</span>
             </Button>
