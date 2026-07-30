@@ -3,7 +3,6 @@
     import type { ChatQuestionItem } from "../../Connection/ChatConnection";
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
     import Button from "../../../Components/UI/Button.svelte";
-    import Chip from "../../../Components/UI/Chip.svelte";
     import { IconCheck, IconHelpCircle, IconList, IconLoader, IconThumbUp, IconTrash } from "@wa-icons";
 
     interface Props {
@@ -75,16 +74,19 @@
         <div class="absolute inset-y-0 left-0 w-1 {statusAccentClass}" aria-hidden="true"></div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <Chip variant="warning" appearance="border" size="xs">
-                <IconHelpCircle font-size={12} class="mr-1" />
+            <span
+                class="inline-flex h-6 items-center gap-1 rounded-md bg-warning/15 px-2 text-xs font-medium text-warning"
+            >
+                <IconHelpCircle font-size={12} />
                 {$LL.chat.question.badge()}
-            </Chip>
+            </span>
             {#if $questionState.isAnswered}
-                <span data-testid="questionAnsweredBadge" class="ms-auto">
-                    <Chip variant="success" appearance="border" size="xs">
-                        <IconCheck font-size={12} class="mr-1" />
-                        {$LL.chat.question.answered()}
-                    </Chip>
+                <span
+                    data-testid="questionAnsweredBadge"
+                    class="ms-auto inline-flex h-6 items-center gap-1 rounded-md bg-success/15 px-2 text-xs font-medium text-success"
+                >
+                    <IconCheck font-size={12} />
+                    {$LL.chat.question.answered()}
                 </span>
             {/if}
         </div>
