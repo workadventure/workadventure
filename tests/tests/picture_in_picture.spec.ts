@@ -62,8 +62,12 @@ test.describe("Picture In Picture", () => {
         await alicePage.mouse.move(300, 300);
         await bobPage.mouse.move(300, 300);
 
-        // Wait for the video call button to be visible
-        await expect(bobPage.getByTestId("pictureInPictureButtonDisabled")).toBeVisible({ timeout: 10_000 });
-        await expect(alicePage.getByTestId("pictureInPictureButtonDisabled")).toBeVisible({ timeout: 10_000 });
+        // The PiP button (enabled or disabled) is only rendered by the ActionBar while
+        // `$isInRemoteConversation` is true, which lags the peer-name visibility above —
+        // especially on WebKit, where the proximity conversation is slower to establish and
+        // there are no local media tiles to key off. Give it the same 20s budget as the
+        // connection waits above rather than the tight 10s that was flaking on WebKit.
+        await expect(bobPage.getByTestId("pictureInPictureButtonDisabled")).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByTestId("pictureInPictureButtonDisabled")).toBeVisible({ timeout: 20_000 });
     });
 });

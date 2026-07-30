@@ -198,23 +198,31 @@ class Menu {
         await this.expectButtonState(page, "microphone-button", "disabled");
     }
 
-    async expectButtonState(page: Page, buttonTestId: string, state: "normal" | "active" | "forbidden" | "disabled") {
+    async expectButtonState(
+        page: Page,
+        buttonTestId: string,
+        state: "normal" | "active" | "forbidden" | "disabled",
+        // Optional timeout for the underlying expect() calls. Useful on the login/load path
+        // where acquiring the (fake) media devices can take longer than the default expect
+        // timeout on slower browsers/CI, leaving the button transiently in the bg-danger state.
+        timeout?: number,
+    ) {
         const button = page.getByTestId(buttonTestId);
         switch (state) {
             case "normal":
-                await expect(button).not.toHaveClass(/bg-danger/);
+                await expect(button).not.toHaveClass(/bg-danger/, { timeout });
                 // Comment this line because when the user come in and audio context is suspended, the button is disabled and not visible
                 //await expect(button).not.toHaveClass(/opacity-50/);
-                await expect(button).not.toHaveClass(/bg-secondary/);
+                await expect(button).not.toHaveClass(/bg-secondary/, { timeout });
                 break;
             case "active":
-                await expect(button).toHaveClass(/bg-secondary/);
+                await expect(button).toHaveClass(/bg-secondary/, { timeout });
                 break;
             case "forbidden":
-                await expect(button).toHaveClass(/bg-danger/);
+                await expect(button).toHaveClass(/bg-danger/, { timeout });
                 break;
             case "disabled":
-                await expect(button).toHaveClass(/opacity-50/);
+                await expect(button).toHaveClass(/opacity-50/, { timeout });
                 break;
             default: {
                 const _exhaustiveCheck: never = state;
