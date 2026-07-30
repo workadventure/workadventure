@@ -4,8 +4,8 @@
     import { movementLockedStore } from "../../../Stores/MovementLockStore";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import LockIcon from "../../Icons/LockIcon.svelte";
-    import LockOpenIcon from "../../Icons/LockOpenIcon.svelte";
+    import WalkIcon from "../../Icons/WalkIcon.svelte";
+    import WalkOffIcon from "../../Icons/WalkOffIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
 
     // Only relevant on primarily-touch devices, where a stray tap on the canvas walks the avatar.
@@ -29,9 +29,9 @@
         desc={$LL.actionbar.help.movementLock.desc()}
     >
         {#if $movementLockedStore}
-            <LockIcon />
+            <WalkOffIcon />
         {:else}
-            <LockOpenIcon />
+            <WalkIcon />
         {/if}
     </ActionBarButton>
 {/if}
