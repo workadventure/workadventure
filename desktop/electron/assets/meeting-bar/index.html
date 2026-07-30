@@ -93,9 +93,16 @@
         #devices.visible { display: flex; }
         .dv-body { flex: 1; overflow-y: auto; padding: 6px 8px 8px; }
         .dv-group {
+            display: flex; align-items: center; gap: 6px;
             padding: 8px 4px 3px;
             font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
             text-transform: uppercase; color: var(--fg-muted);
+        }
+        .dv-group-ico { display: inline-flex; flex: 0 0 auto; }
+        .dv-group-ico svg {
+            width: 14px; height: 14px;
+            stroke: currentColor; fill: none;
+            stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
         }
         .dv-item {
             -webkit-app-region: no-drag;

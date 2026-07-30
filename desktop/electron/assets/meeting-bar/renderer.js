@@ -19,6 +19,10 @@
     };
     var ICON_CHECK =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>';
+    var ICON_CAMERA =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z"/><path d="M3 6m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"/></svg>';
+    var ICON_MIC =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M8 21l8 0"/><path d="M12 17l0 4"/></svg>';
 
     var btnMic = byId("bar-mic");
     var btnCam = byId("bar-cam");
@@ -344,7 +348,13 @@
         if (!list || list.length === 0) return;
         var head = document.createElement("div");
         head.className = "dv-group";
-        head.textContent = label;
+        var gico = document.createElement("span");
+        gico.className = "dv-group-ico";
+        gico.innerHTML = kind === "camera" ? ICON_CAMERA : ICON_MIC;
+        head.appendChild(gico);
+        var glabel = document.createElement("span");
+        glabel.textContent = label;
+        head.appendChild(glabel);
         dvBody.appendChild(head);
         list.forEach(function (device) {
             var row = document.createElement("button");
