@@ -12,11 +12,11 @@
         <header class="header">
             <div class="hdr-group hdr-nav">
                 <button class="icon-btn nav-btn" id="c-open-chat" type="button" data-active="false" title="Chat" aria-label="Chat">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1"/></svg>
                     <span class="nav-badge" id="c-chat-badge" hidden></span>
                 </button>
                 <button class="icon-btn nav-btn" id="c-open-people" type="button" data-active="false" title="People" aria-label="People">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/></svg>
                     <span class="nav-badge count" id="c-people-count" hidden>0</span>
                 </button>
             </div>
@@ -46,7 +46,7 @@
                 <button class="status-btn" id="c-status-btn" type="button" aria-haspopup="true" aria-expanded="false">
                     <span class="dot" id="c-self-dot" data-status="online"></span>
                     <span class="self-name" id="c-self-name">You</span>
-                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg>
                 </button>
             </div>
         </header>
@@ -82,7 +82,7 @@
                 <div class="view-head">
                     <span class="view-count" id="c-people-count-h">0</span>
                     <span class="view-title">Online users</span>
-                    <button class="icon-btn view-close" id="c-people-close" type="button" title="Close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                    <button class="icon-btn view-close" id="c-people-close" type="button" title="Close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
                 </div>
                 <div class="list" id="c-people"></div>
                 <div class="empty" id="c-people-empty">No one around yet.</div>
@@ -92,7 +92,7 @@
             <section class="view view-chat" id="c-view-chat" data-open="false">
                 <div class="view-head">
                     <span class="view-title" id="c-chat-title">Chat</span>
-                    <button class="icon-btn view-close" id="c-chat-close" type="button" title="Close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                    <button class="icon-btn view-close" id="c-chat-close" type="button" title="Close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
                 </div>
 
                 <div class="list conversations" id="c-conversations"></div>
@@ -101,11 +101,11 @@
                 <div class="conversation" id="c-conversation" hidden>
                     <div class="conversation-head">
                         <button class="icon-btn" id="c-conv-back" type="button" title="Back to conversations" aria-label="Back to conversations">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6l6 6"/></svg>
                         </button>
                         <div class="conversation-title" id="c-conv-title">Conversation</div>
                         <button class="icon-btn" id="c-conv-open-main" type="button" title="Open in WorkAdventure" aria-label="Open in WorkAdventure">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"/><path d="M11 13l9 -9"/><path d="M15 4h5v5"/></svg>
                         </button>
                     </div>
                     <div class="list messages" id="c-messages"></div>
@@ -113,7 +113,7 @@
                     <form class="composer" id="c-composer">
                         <input id="c-chat-input" type="text" autocomplete="off" placeholder="Message…" maxlength="2000" />
                         <button class="send-btn" type="submit" aria-label="Send">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14l11 -11"/><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"/></svg>
                         </button>
                     </form>
                 </div>
