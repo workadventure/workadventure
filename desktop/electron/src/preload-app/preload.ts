@@ -45,8 +45,6 @@ const screenOverlayApi: WorkAdventureDesktopOverlayApi = {
 const presenterHudApi: WorkAdventureDesktopHudApi = {
     openMeetingBar: (opts) => ipcRenderer.invoke("app:hud:open-meeting-bar", opts),
     closeMeetingBar: () => ipcRenderer.invoke("app:hud:close-meeting-bar"),
-    openAnnotationBar: (opts) => ipcRenderer.invoke("app:hud:open-annotation-bar", opts),
-    closeAnnotationBar: () => ipcRenderer.invoke("app:hud:close-annotation-bar"),
     pushState: (state) => ipcRenderer.send("app:hud:state-from-main", state),
     onCommand: (callback) => subscribe("app:hud:command-to-main", (command) => callback(command as DesktopPipCommand)),
 };
