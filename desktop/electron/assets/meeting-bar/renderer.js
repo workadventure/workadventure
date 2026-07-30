@@ -66,6 +66,8 @@
     var pickerKind = "screen";
     var lastSources = [];
     var lastDevices = null;
+    var lastCamEnabled = false;
+    var lastMicEnabled = false;
     // The annotation panel is a single short row; grow the window just enough to clear the pill so
     // the transparent area above it doesn't blanket (and swallow clicks over) the shared screen.
     var ANNOTATION_EXPAND_HEIGHT = 128;
@@ -80,6 +82,8 @@
         if (!state || typeof state !== "object") return;
         setBtnState(btnMic, state.micEnabled === true, true);
         setBtnState(btnCam, state.cameraEnabled === true, true);
+        lastMicEnabled = state.micEnabled === true;
+        lastCamEnabled = state.cameraEnabled === true;
         var annotation = state.annotation || {};
         setBtnState(btnAnnotate, annotation.active === true, false);
         // Annotation toolbar (a panel of this window): reflect the active tool / colour / toggles.
@@ -332,20 +336,31 @@
     }
 
     // ─────────── Camera / microphone picker (opened from the "…" menu) ───────────
+    function onDevicesOutside(e) {
+        if (devicesEl && !devicesEl.contains(e.target)) closeDevices();
+    }
     function openDevices() {
         if (pickerOpen) closePicker();
         devicesOpen = true;
         syncAnnotationPanel();
         devicesEl.classList.add("visible");
         renderDevices();
+        document.addEventListener("mousedown", onDevicesOutside, true);
     }
     function closeDevices() {
+        if (!devicesOpen) return;
         devicesOpen = false;
         devicesEl.classList.remove("visible");
+        document.removeEventListener("mousedown", onDevicesOutside, true);
         syncAnnotationPanel();
     }
-    function addDeviceGroup(label, list, currentId, kind) {
-        if (!list || list.length === 0) return;
+    function addDeviceNote(text) {
+        var note = document.createElement("div");
+        note.className = "dv-empty";
+        note.textContent = text;
+        dvBody.appendChild(note);
+    }
+    function addDeviceGroup(label, list, currentId, kind, enabled) {
         var head = document.createElement("div");
         head.className = "dv-group";
         var gico = document.createElement("span");
@@ -356,6 +371,16 @@
         glabel.textContent = label;
         head.appendChild(glabel);
         dvBody.appendChild(head);
+        var noun = kind === "camera" ? "camera" : "microphone";
+        // Distinguish "no selection because it's off" from "there really is no device".
+        if (!enabled) {
+            addDeviceNote("Your " + noun + " is off — turn it on to choose one.");
+            return;
+        }
+        if (!list || list.length === 0) {
+            addDeviceNote("No " + noun + " found.");
+            return;
+        }
         list.forEach(function (device) {
             var row = document.createElement("button");
             row.type = "button";
@@ -378,17 +403,9 @@
     function renderDevices() {
         if (!devicesOpen) return;
         var d = lastDevices || { cameras: [], microphones: [] };
-        var cams = d.cameras || [];
-        var mics = d.microphones || [];
         dvBody.innerHTML = "";
-        addDeviceGroup("Camera", cams, d.currentCameraId, "camera");
-        addDeviceGroup("Microphone", mics, d.currentMicrophoneId, "microphone");
-        if (cams.length === 0 && mics.length === 0) {
-            var empty = document.createElement("div");
-            empty.className = "dv-empty";
-            empty.textContent = "No devices available.";
-            dvBody.appendChild(empty);
-        }
+        addDeviceGroup("Camera", d.cameras || [], d.currentCameraId, "camera", lastCamEnabled);
+        addDeviceGroup("Microphone", d.microphones || [], d.currentMicrophoneId, "microphone", lastMicEnabled);
     }
     dvCancel.addEventListener("click", closeDevices);
 
