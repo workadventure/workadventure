@@ -124,6 +124,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Smetti di seguire",
             desc: "Puoi scegliere di smettere di seguire un utente in qualsiasi momento. Il tuo Woka smetterà quindi di seguirli, restituendoti la tua libertà di movimento.",
         },
+        movementLock: {
+            title: "Blocca movimento",
+            desc: "Impedisce che tocchi accidentali spostino il tuo personaggio. Tocca di nuovo per sbloccare.",
+        },
         lock: {
             title: "Blocca conversazione",
             desc: "Abilitando questa funzione, garantisci che nessuno possa unirsi alla discussione. Sei il padrone del tuo spazio, e solo quelli già presenti possono interagire.",

@@ -126,6 +126,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Nicht mehr folgen",
             desc: "Sie können jederzeit wählen, einem Benutzer nicht mehr zu folgen. Ihr Woka wird dann aufhören, ihnen zu folgen, und gibt Ihnen Ihre Bewegungsfreiheit zurück.",
         },
+        movementLock: {
+            title: "Bewegung sperren",
+            desc: "Verhindert, dass versehentliche Berührungen deine Figur bewegen. Tippe erneut zum Entsperren.",
+        },
         lock: {
             title: "Unterhaltung sperren",
             desc: "Durch Aktivierung dieser Funktion stellen Sie sicher, dass niemand der Diskussion beitreten kann. Sie sind der Herr Ihres Raums, und nur die bereits Anwesenden können interagieren.",

@@ -122,6 +122,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Demander à être suivi",
             desc: "Vous pouvez demander à un utilisateur de vous suivre, et si cette demande est acceptée, son Woka vous suivra automatiquement, établissant ainsi une connexion fluide.",
         },
+        movementLock: {
+            title: "Verrouiller les déplacements",
+            desc: "Empêche les touchers accidentels de déplacer votre personnage. Touchez à nouveau pour déverrouiller.",
+        },
         lock: {
             title: "Verrouiller la discussion",
             desc: "En activant cette fonctionnalité, vous garantissez que personne ne pourra rejoindre la discussion. Vous êtes maître de votre espace, et seules les personnes déjà présentes peuvent interagir.",

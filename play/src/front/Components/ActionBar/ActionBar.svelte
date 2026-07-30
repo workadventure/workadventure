@@ -25,6 +25,7 @@
     import ProfileMenu from "./MenuIcons/ProfileMenu.svelte";
     import VisibilityChecker from "./VisibilityChecker.svelte";
     import ContextualMenuItems from "./MenuIcons/ContextualMenuItems.svelte";
+    import MovementLockMenuItem from "./MenuIcons/MovementLockMenuItem.svelte";
     import CloseChatMenuItem from "./MenuIcons/CloseChatMenuItem.svelte";
     import SilentBlock from "./SilentBlock.svelte";
     import PictureInPictureMenuItem from "./MenuIcons/PictureInPictureMenuItem.svelte";
@@ -71,6 +72,12 @@
                     >
                         <div class="hidden @sm/actions:flex items-center">
                             <ContextualMenuItems />
+                        </div>
+
+                        <!-- Mobile-only "lock movement" toggle (self-gates to touch devices).
+                             Placed outside the @sm-hidden wrapper above so it stays visible on mobile. -->
+                        <div class="flex items-center">
+                            <MovementLockMenuItem />
                         </div>
 
                         <div>

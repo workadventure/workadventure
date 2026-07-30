@@ -123,6 +123,10 @@ const actionbar: BaseTranslation = {
             title: "Stop following",
             desc: "You can choose to unfollow a user at any time. Your Woka will then stop following them, giving you back your freedom of movement.",
         },
+        movementLock: {
+            title: "Lock movement",
+            desc: "Prevents accidental taps from moving your character. Tap again to unlock.",
+        },
         lock: {
             title: "Lock conversation",
             desc: "By enabling this feature, you ensure that no one can join the discussion. You are the master of your space, and only those already present can interact.",

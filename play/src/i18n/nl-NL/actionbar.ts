@@ -125,6 +125,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Stoppen met volgen",
             desc: "Je kunt er op elk moment voor kiezen om een gebruiker niet meer te volgen. Je Woka zal dan stoppen met volgen, waardoor je je bewegingsvrijheid terugkrijgt.",
         },
+        movementLock: {
+            title: "Beweging vergrendelen",
+            desc: "Voorkomt dat per ongeluk tikken je personage verplaatst. Tik nogmaals om te ontgrendelen.",
+        },
         lock: {
             title: "Gesprek vergrendelen",
             desc: "Door deze functie in te schakelen, zorg je ervoor dat niemand aan de discussie kan deelnemen. Je bent de meester van je ruimte, en alleen degenen die al aanwezig zijn, kunnen interacteren.",

@@ -101,6 +101,10 @@ class AnalyticsClient {
         this.posthog?.capture("wa_lockroom");
     }
 
+    lockMovement(): void {
+        this.posthog?.capture("wa_lock_movement");
+    }
+
     screenSharing(): void {
         this.posthog?.capture("wa-screensharing");
     }

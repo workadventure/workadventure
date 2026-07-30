@@ -122,6 +122,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "停止跟隨",
             desc: "您可以隨時選擇取消跟隨使用者。接著您的 Woka 將停止跟隨他們，恢復您移動的自由。",
         },
+        movementLock: {
+            title: "鎖定移動",
+            desc: "防止誤觸移動你的角色。再次點擊即可解鎖。",
+        },
         lock: {
             title: "鎖定對話",
             desc: "啟用此功能後，您可以確保沒有人能加入討論。您是您空間的主人，只有已經在裡面的人可以互動。",
