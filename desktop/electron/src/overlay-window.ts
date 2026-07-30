@@ -134,11 +134,10 @@ export function createOverlayWindow(opts: CreateOverlayOptions = {}): BrowserWin
     newWindow.once("ready-to-show", () => {
         if (!newWindow.isDestroyed()) {
             newWindow.showInactive();
-            // The overlay shares the "screen-saver" always-on-top level with the HUD bars. Since
-            // it is shown after them (opened asynchronously from the draw-mode subscription), it
+            // The overlay shares the "screen-saver" always-on-top level with the meeting bar. Since
+            // it is shown after it (opened asynchronously from the draw-mode subscription), it
             // would otherwise land on top and — once draw mode captures the mouse — swallow every
-            // click the presenter aims at the meeting-bar / annotation-bar. Re-raise the HUDs so
-            // they stay clickable.
+            // click the presenter aims at the meeting bar. Re-raise the HUDs so they stay clickable.
             raiseHudsToTop();
         }
     });
