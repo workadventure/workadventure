@@ -33,13 +33,10 @@
     var menu = byId("menu");
     var menuCaret = byId("mn-caret");
     var miLaser = byId("mn-laser");
-    var miSpotlight = byId("mn-spotlight");
-    var miLoupe = byId("mn-loupe");
     var miSwitch = byId("mn-switch");
     var miDevices = byId("mn-devices");
     var miTabs = byId("mn-tabs");
     var miSettings = byId("mn-settings");
-    var miBack = byId("mn-back");
 
     var picker = byId("picker");
     var pickerBody = byId("pk-body");
@@ -100,11 +97,9 @@
         // Grey out undo / redo when there is nothing to undo / redo.
         anUndo.disabled = annotation.canUndo !== true;
         anRedo.disabled = annotation.canRedo !== true;
-        // Presenter tools: highlight only the active one (in the "…" menu).
+        // Cursor highlight (laser) — the only presenter tool left in the "…" menu.
         var presenterTool = state.presenterTool || "none";
         miLaser.classList.toggle("is-active", presenterTool === "laser");
-        miSpotlight.classList.toggle("is-active", presenterTool === "spotlight");
-        miLoupe.classList.toggle("is-active", presenterTool === "loupe");
         lastDevices = state.devices || null;
         if (devicesOpen) renderDevices();
         miTabs.setAttribute("aria-checked", state.tabBarEnabled === true ? "true" : "false");
@@ -223,18 +218,6 @@
             api.sendCommand({ type: "presenter-set-tool", tool: "laser" });
         })
     );
-    miSpotlight.addEventListener(
-        "click",
-        menuAction(function () {
-            api.sendCommand({ type: "presenter-set-tool", tool: "spotlight" });
-        })
-    );
-    miLoupe.addEventListener(
-        "click",
-        menuAction(function () {
-            api.sendCommand({ type: "presenter-set-tool", tool: "loupe" });
-        })
-    );
     miSwitch.addEventListener("click", function () {
         closeMenu();
         openPicker();
@@ -251,12 +234,6 @@
         closeMenu();
     });
     miSettings.addEventListener(
-        "click",
-        menuAction(function () {
-            api.sendCommand({ type: "focus-main" });
-        })
-    );
-    miBack.addEventListener(
         "click",
         menuAction(function () {
             api.sendCommand({ type: "focus-main" });
