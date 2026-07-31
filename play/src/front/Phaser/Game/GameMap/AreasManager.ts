@@ -272,7 +272,7 @@ export class AreasManager {
                 this.onCollisionStateChanged?.();
             }
             if (isCurrentPlayerInside) {
-                this.ejectCurrentPlayerFromForbiddenArea();
+                this.ejectCurrentPlayerFromForbiddenArea(area);
             }
             return;
         }
@@ -290,11 +290,12 @@ export class AreasManager {
     }
 
     /**
-     * Actively moves the current player out of any restricted area they are not allowed to be in,
-     * to the nearest allowed position. Keeping a collider active is not enough to relocate someone
+     * Actively moves the current player out of a restricted area they are not allowed to be in, to
+     * the nearest allowed position, and shows the same "you don't have access" feedback as when the
+     * collider stops them at the edge. Keeping a collider active is not enough to relocate someone
      * who is *already* inside (e.g. they spawned there or the area became restricted around them).
      */
-    private ejectCurrentPlayerFromForbiddenArea(): void {
+    private ejectCurrentPlayerFromForbiddenArea(area: Area): void {
         const player = this.scene.CurrentPlayer;
         if (!player) {
             return;
@@ -304,6 +305,7 @@ export class AreasManager {
             this.userConnectedTags,
         );
         player.teleportTo(safePosition.x, safePosition.y);
+        area.displayBlockedFeedback();
     }
 
     /**

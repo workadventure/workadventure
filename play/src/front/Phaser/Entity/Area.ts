@@ -247,4 +247,20 @@ export class Area extends Rectangle {
             this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
         }
     }
+
+    /**
+     * Shows the same "blocked" feedback as bumping into the area with the collider (highlight +
+     * warning message). Used when the current player is ejected from an area they are not allowed to
+     * be in, so they get the same "you don't have access" message as when the collider stops them at
+     * the edge. Throttled via the same flag as {@link onCollideAction} to avoid duplicate messages.
+     */
+    public displayBlockedFeedback(): void {
+        if (this.userHasCollideWithArea) {
+            return;
+        }
+        this.userHasCollideWithArea = true;
+        this.highLightArea();
+        this.displayWarningMessageOnCollide();
+        this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
+    }
 }
