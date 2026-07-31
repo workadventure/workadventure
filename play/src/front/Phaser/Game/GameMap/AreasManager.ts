@@ -385,6 +385,15 @@ export class AreasManager {
     }
 
     /**
+     * Returns true if the current user is allowed to access the given area (has the rights, or can
+     * edit the map). Used to avoid applying an area's effects (meeting, co-website, ...) to a user
+     * who is not allowed in it and is about to be ejected.
+     */
+    public isCurrentUserHasAreaAccess(areaId: string): boolean {
+        return this.areaPermissions.isUserHasAreaAccess(areaId);
+    }
+
+    /**
      * Cleans up all subscriptions and resources.
      * Must be called when the AreasManager is no longer needed to prevent memory leaks.
      */
