@@ -40,7 +40,6 @@ export const SECRET_JITSI_KEY = env.SECRET_JITSI_KEY;
 export const BBB_URL = env.BBB_URL;
 export const BBB_SECRET = env.BBB_SECRET;
 export const ENABLE_MAP_EDITOR = env.ENABLE_MAP_EDITOR;
-export const ENABLE_AREA_ACCESS_ENFORCEMENT = env.ENABLE_AREA_ACCESS_ENFORCEMENT;
 export const HTTP_PORT = env.HTTP_PORT;
 export const GRPC_PORT = env.GRPC_PORT;
 export const MAX_PER_GROUP = env.MAX_PER_GROUP;

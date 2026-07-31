@@ -30,7 +30,6 @@ import {
     ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
     INTERNAL_MAP_STORAGE_URL,
-    ENABLE_AREA_ACCESS_ENFORCEMENT,
     JITSI_ISS,
     JITSI_URL,
     PUBLIC_MAP_STORAGE_PREFIX,
@@ -479,10 +478,10 @@ export class GameRoom implements BrothersFinder {
      * Server-authoritative access control for restricted (rights) areas.
      * Returns true if the user is allowed to occupy the given position, false if the position falls
      * inside a restricted area the user does not have the tags for. Map editors (`canEdit`) bypass
-     * the check. Short-circuited (O(1)) when enforcement is disabled or the map has no restricted area.
+     * the check. Short-circuited (O(1)) when the map has no restricted area.
      */
     public isPositionAllowedForUser(user: User, position: PointInterface): boolean {
-        if (!ENABLE_AREA_ACCESS_ENFORCEMENT || user.canEdit) {
+        if (user.canEdit) {
             return true;
         }
         const gameMapAreas = this.wamManager?.getWamFile().getGameMapAreas();
@@ -499,7 +498,7 @@ export class GameRoom implements BrothersFinder {
      *    moving within it (matching the front-end, which never punishes people already in the area).
      */
     private isMoveDeniedByAreaRestriction(user: User, oldPosition: PointInterface, newPosition: PointInterface): boolean {
-        if (!ENABLE_AREA_ACCESS_ENFORCEMENT || user.canEdit) {
+        if (user.canEdit) {
             return false;
         }
 
@@ -580,7 +579,7 @@ export class GameRoom implements BrothersFinder {
      * so a user can never spawn inside a forbidden area (e.g. a start layer placed inside one).
      */
     private sanitizeSpawnPosition(position: PointInterface, tags: string[], canEdit: boolean): PointInterface {
-        if (!ENABLE_AREA_ACCESS_ENFORCEMENT || canEdit) {
+        if (canEdit) {
             return position;
         }
         const gameMapAreas = this.wamManager?.getWamFile().getGameMapAreas();
@@ -599,9 +598,6 @@ export class GameRoom implements BrothersFinder {
      * when an area is updated (e.g. it just became restricted while people were standing in it).
      */
     private ejectUsersFromRestrictedArea(area: AreaData): void {
-        if (!ENABLE_AREA_ACCESS_ENFORCEMENT) {
-            return;
-        }
         const gameMapAreas = this.wamManager?.getWamFile().getGameMapAreas();
         if (!gameMapAreas) {
             return;
