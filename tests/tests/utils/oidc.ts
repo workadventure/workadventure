@@ -1,28 +1,12 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import Menu from "./menu";
-import { isMobile } from "./isMobile";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 import { dismissNoBrowserSoundInfoToast } from "./doNotDisturbInfoToast";
 
+// for oidcLogin to work on mobile you must open the burger menu before calling this function
 export async function oidcLogin(page: Page, userName = "User1", password = "pwd") {
-    const loginButton = page.getByRole("button", { name: "Login" });
-
-    // On mobile the "Login" button can overflow out of the action bar into the profile menu
-    // (e.g. when other action-bar buttons take up the available width). Try clicking it directly
-    // first; if it isn't reachable, open the profile menu and retry. On the dedicated login page
-    // (WA.nav.goToLogin()) the button is always directly visible, so the direct click succeeds.
-    if (isMobile(page)) {
-        try {
-            await loginButton.click({ timeout: 5_000 });
-        } catch {
-            await Menu.openMenu(page);
-            await loginButton.click();
-        }
-    } else {
-        await loginButton.click();
-    }
-
+    await page.getByRole("button", { name: "Login" }).click();
     await page.fill("#Input_Username", userName, {
         timeout: 40_000,
     });
