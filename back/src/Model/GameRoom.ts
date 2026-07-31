@@ -1,7 +1,7 @@
 import path from "path";
 import * as Sentry from "@sentry/node";
 import { Metadata } from "@grpc/grpc-js";
-import type { WAMFileFormat, AreaData, AreaDataProperty } from "@workadventure/map-editor";
+import type { WAMFileFormat, AreaData, AreaDataProperty, GameMapAreas } from "@workadventure/map-editor";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
@@ -30,6 +30,7 @@ import {
     ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
     INTERNAL_MAP_STORAGE_URL,
+    ENABLE_AREA_ACCESS_ENFORCEMENT,
     JITSI_ISS,
     JITSI_URL,
     PUBLIC_MAP_STORAGE_PREFIX,
@@ -95,6 +96,22 @@ export class GameRoom implements BrothersFinder {
     // Ephemeral variables attached to area properties (not persisted)
     private readonly areaPropertyVariablesManager = new AreaPropertyVariablesManager();
     private readonly wamManager?: WamManager;
+
+    /**
+     * Cached answer to "does this room's map contain any access-restricted (rights) area?".
+     * `undefined` means "not computed yet". Invalidated whenever an area is updated or deleted,
+     * so the per-move access check stays O(1) on maps without restricted areas.
+     */
+    private restrictedAreasPresent: boolean | undefined;
+
+    /**
+     * Cached answer to "does this room's map contain any lockable or max-users area?".
+     * Same lifecycle as {@link restrictedAreasPresent}: gates the per-move lock/max-users check.
+     */
+    private dynamicRestrictionAreasPresent: boolean | undefined;
+
+    /** Minimum delay (ms) between two position corrections sent to the same user on denied moves. */
+    private static readonly POSITION_CORRECTION_THROTTLE_MS = 1000;
     private versionNumber = 1;
     private nextUserId = 1;
 
@@ -139,6 +156,16 @@ export class GameRoom implements BrothersFinder {
 
         if (initialWam) {
             this.wamManager = new WamManager(initialWam);
+
+            // React to live map edition. No need to unsubscribe: WamManager.destroy() completes these streams.
+            // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
+            this.wamManager.areaUpdated$.subscribe((event) => {
+                this.invalidateAreaRestrictionCaches();
+                // If the area just became restricted, eject users who are inside it without the rights.
+                this.ejectUsersFromRestrictedArea(event.area);
+            });
+            // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
+            this.wamManager.areaDeleted$.subscribe(() => this.invalidateAreaRestrictionCaches());
         }
 
         // A zone is 10 sprites wide.
@@ -277,7 +304,13 @@ export class GameRoom implements BrothersFinder {
         if (positionMessage === undefined) {
             throw new Error("Missing position message");
         }
-        const position = ProtobufUtils.toPointInterface(positionMessage);
+        // Never let a user spawn inside a restricted area they cannot access (e.g. a start layer
+        // placed inside one, or a forged join position): move the spawn just outside if needed.
+        const position = this.sanitizeSpawnPosition(
+            ProtobufUtils.toPointInterface(positionMessage),
+            joinRoomMessage.tag,
+            joinRoomMessage.canEdit,
+        );
 
         // Check if there's a stale connection from the same browser tab and kill it immediately
         // This prevents "ghost" users appearing when a user reconnects after a network disruption
@@ -424,9 +457,212 @@ export class GameRoom implements BrothersFinder {
 
     public updatePosition(user: User, userPosition: PointInterface): void {
         const oldPosition = user.getPosition();
+
+        if (this.isMoveDeniedByAreaRestriction(user, oldPosition, userPosition)) {
+            // The user is trying to move into an area they are not allowed to enter (missing rights,
+            // or the area is locked / full). We do NOT apply the move: the illegal position is never
+            // stored on the server nor broadcast through the PositionNotifier, so the user never
+            // appears inside the area for anyone else, and never joins any group/meeting tied to it.
+            // A tampered client that dropped its local collider is therefore only fooling its own
+            // screen. We re-sync the (possibly desynced) client back to the server-authoritative
+            // position.
+            this.sendPositionCorrection(user);
+            return;
+        }
+
         user.setPosition(userPosition);
         this.updateUserGroup(user);
         this._userMoveStream.next({ user, oldPosition });
+    }
+
+    /**
+     * Server-authoritative access control for restricted (rights) areas.
+     * Returns true if the user is allowed to occupy the given position, false if the position falls
+     * inside a restricted area the user does not have the tags for. Map editors (`canEdit`) bypass
+     * the check. Short-circuited (O(1)) when enforcement is disabled or the map has no restricted area.
+     */
+    public isPositionAllowedForUser(user: User, position: PointInterface): boolean {
+        if (!ENABLE_AREA_ACCESS_ENFORCEMENT || user.canEdit) {
+            return true;
+        }
+        const gameMapAreas = this.wamManager?.getWamFile().getGameMapAreas();
+        if (!gameMapAreas || !this.hasRestrictedAreas(gameMapAreas)) {
+            return true;
+        }
+        return gameMapAreas.getForbiddenAreasOnPosition(position, user.tags).length === 0;
+    }
+
+    /**
+     * Decides whether a move must be denied because of an area restriction:
+     *  - rights: a restricted area the user lacks the tags for is always off-limits;
+     *  - lock / max-users: blocked only when *entering* from outside — a user already inside may keep
+     *    moving within it (matching the front-end, which never punishes people already in the area).
+     */
+    private isMoveDeniedByAreaRestriction(user: User, oldPosition: PointInterface, newPosition: PointInterface): boolean {
+        if (!ENABLE_AREA_ACCESS_ENFORCEMENT || user.canEdit) {
+            return false;
+        }
+
+        // Rights: a restricted area the user lacks the tags for is always off-limits.
+        if (!this.isPositionAllowedForUser(user, newPosition)) {
+            return true;
+        }
+
+        // Lock / max-users: block only when *entering* from outside — a user already inside may keep
+        // moving within it (matching the front-end, which never punishes people already in the area).
+        const gameMapAreas = this.wamManager?.getWamFile().getGameMapAreas();
+        if (!gameMapAreas || !this.hasDynamicRestrictionAreas(gameMapAreas)) {
+            return false;
+        }
+        for (const area of gameMapAreas.getPlayerAreasOnPosition(newPosition)) {
+            if (this.getAreaDynamicBlockReason(area) !== null && !gameMapAreas.isPlayerInsideArea(area.id, oldPosition)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Returns "locked"/"maxUsers" if the area's runtime state currently blocks entry, else null. */
+    private getAreaDynamicBlockReason(area: AreaData): "locked" | "maxUsers" | null {
+        for (const property of area.properties) {
+            if (
+                property.type === "lockableAreaPropertyData" &&
+                this.getAreaPropertyVariable(area.id, property.id, "lock") === "true"
+            ) {
+                return "locked";
+            }
+            if (
+                property.type === "maxUsersInAreaPropertyData" &&
+                this.getAreaPropertyVariable(area.id, property.id, "maxUsersReached") === "true"
+            ) {
+                return "maxUsers";
+            }
+        }
+        return null;
+    }
+
+    /** Cached "map has at least one rights-restricted area" gate. */
+    private hasRestrictedAreas(gameMapAreas: GameMapAreas): boolean {
+        if (this.restrictedAreasPresent === undefined) {
+            this.restrictedAreasPresent = gameMapAreas.hasRestrictedAreas();
+        }
+        return this.restrictedAreasPresent;
+    }
+
+    /** Cached "map has at least one lockable or max-users area" gate. */
+    private hasDynamicRestrictionAreas(gameMapAreas: GameMapAreas): boolean {
+        if (this.dynamicRestrictionAreasPresent === undefined) {
+            this.dynamicRestrictionAreasPresent = false;
+            for (const area of gameMapAreas.getAreas().values()) {
+                if (
+                    area.properties.some(
+                        (property) =>
+                            property.type === "lockableAreaPropertyData" ||
+                            property.type === "maxUsersInAreaPropertyData",
+                    )
+                ) {
+                    this.dynamicRestrictionAreasPresent = true;
+                    break;
+                }
+            }
+        }
+        return this.dynamicRestrictionAreasPresent;
+    }
+
+    private invalidateAreaRestrictionCaches(): void {
+        this.restrictedAreasPresent = undefined;
+        this.dynamicRestrictionAreasPresent = undefined;
+    }
+
+    /**
+     * Returns a spawn position that respects area restrictions: if the requested position falls
+     * inside a restricted area the user cannot access, it is moved just outside. Called at join time
+     * so a user can never spawn inside a forbidden area (e.g. a start layer placed inside one).
+     */
+    private sanitizeSpawnPosition(position: PointInterface, tags: string[], canEdit: boolean): PointInterface {
+        if (!ENABLE_AREA_ACCESS_ENFORCEMENT || canEdit) {
+            return position;
+        }
+        const gameMapAreas = this.wamManager?.getWamFile().getGameMapAreas();
+        if (!gameMapAreas || !this.hasRestrictedAreas(gameMapAreas)) {
+            return position;
+        }
+        if (gameMapAreas.getForbiddenAreasOnPosition(position, tags).length === 0) {
+            return position;
+        }
+        const safe = gameMapAreas.getNearestAllowedPosition(position, tags);
+        return { ...position, x: safe.x, y: safe.y };
+    }
+
+    /**
+     * Ejects every user currently inside the given area who lacks the rights to be there. Called
+     * when an area is updated (e.g. it just became restricted while people were standing in it).
+     */
+    private ejectUsersFromRestrictedArea(area: AreaData): void {
+        if (!ENABLE_AREA_ACCESS_ENFORCEMENT) {
+            return;
+        }
+        const gameMapAreas = this.wamManager?.getWamFile().getGameMapAreas();
+        if (!gameMapAreas) {
+            return;
+        }
+        for (const user of this.users.values()) {
+            if (user.canEdit || gameMapAreas.hasAreaAccess(area, user.tags)) {
+                continue;
+            }
+            if (gameMapAreas.isPlayerInsideArea(area.id, user.getPosition())) {
+                this.ejectUserFromRestrictedArea(user);
+            }
+        }
+    }
+
+    /**
+     * Relocates a single user to the nearest position outside the restricted area(s) they cannot
+     * access, and re-syncs their client there. No-op if the user is a map editor or is not actually
+     * inside a forbidden area.
+     */
+    public ejectUserFromRestrictedArea(user: User): void {
+        if (user.canEdit) {
+            return;
+        }
+        const gameMapAreas = this.wamManager?.getWamFile().getGameMapAreas();
+        if (!gameMapAreas) {
+            return;
+        }
+        const currentPosition = user.getPosition();
+        if (gameMapAreas.getForbiddenAreasOnPosition(currentPosition, user.tags).length === 0) {
+            return;
+        }
+        const safe = gameMapAreas.getNearestAllowedPosition(currentPosition, user.tags);
+        const safePosition: PointInterface = { ...currentPosition, x: safe.x, y: safe.y, moving: false };
+        user.setPosition(safePosition);
+        this.updateUserGroup(user);
+        this.writePositionCorrection(user, safePosition);
+    }
+
+    /**
+     * Re-syncs a client to the server-authoritative position after a denied move, using the existing
+     * MoveToPositionMessage channel. Throttled: a tampered client may spam forbidden moves, but an
+     * honest desynced client only needs an occasional nudge. The illegal position is dropped
+     * regardless of whether a correction is actually sent.
+     */
+    private sendPositionCorrection(user: User): void {
+        const now = Date.now();
+        if (now - user.lastPositionCorrectionAt < GameRoom.POSITION_CORRECTION_THROTTLE_MS) {
+            return;
+        }
+        user.lastPositionCorrectionAt = now;
+        this.writePositionCorrection(user, user.getPosition());
+    }
+
+    /** Sends a MoveToPositionMessage instructing the client to move to the given position. */
+    private writePositionCorrection(user: User, position: PointInterface): void {
+        user.write({
+            $case: "moveToPositionMessage",
+            moveToPositionMessage: {
+                position: ProtobufUtils.toPositionMessage(position),
+            },
+        });
     }
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {

@@ -84,6 +84,10 @@ export class AreasManager {
         }
         areaToUpdate.updateArea(updatedArea);
         this.updateMapEditorOptionForSpecificAreas();
+        // Recompute the collider so a live change of rights (e.g. an area that just became
+        // restricted) is enforced immediately for already-connected clients, and the current player
+        // is ejected if they no longer have access.
+        this.updateAreaCollision(updatedArea.id);
 
         const userUUID = localUserStore.getLocalUser()?.uuid;
         const personalAreaData = get(this._personalAreaDataStore);
@@ -256,31 +260,50 @@ export class AreasManager {
         // Check if current player is already inside the area
         const isCurrentPlayerInside = this.isCurrentPlayerInArea(areaId);
 
-        // Check if area is locked
-        const isLocked = this.isAreaLocked(areaId);
         area.updateArea(area.areaData);
-        // If area is locked (unlock when empty is handled by the back on user leave)
-        if (isLocked) {
-            // If area is locked and current player is not inside, block entry
-            // Users already inside can still exit
-            // Lock takes priority over access permissions
-            if (!isCurrentPlayerInside) {
-                if (area.updateCollision(true)) {
-                    this.onCollisionStateChanged?.();
-                }
-                return;
+
+        const blockReason = this.getAreaBlockReason(areaId);
+
+        // Access rights are a hard boundary: a user without access must never remain inside the
+        // area. Unlike lock/max-users, there is no "already inside" exemption — we keep the collider
+        // active and actively push the player back out if they are inside.
+        if (blockReason === "noAccess") {
+            if (area.updateCollision(true)) {
+                this.onCollisionStateChanged?.();
             }
+            if (isCurrentPlayerInside) {
+                this.ejectCurrentPlayerFromForbiddenArea();
+            }
+            return;
         }
 
-        // If current player is already inside the area, don't activate collide for them
-        // This avoids showing error message to people already inside when area becomes blocked
-        // But still block new entrants if area is full
-        const shouldCollide = this.shouldAreaCollide(areaId) && !isCurrentPlayerInside;
+        // Locked or full areas (and the lock priority over max-users) are handled by
+        // getAreaBlockReason, which already returns null when the current player is inside. They
+        // block new entrants only: a user already inside can keep moving and leave, so we do not
+        // activate the collider for them.
+        const shouldCollide = blockReason !== null && !isCurrentPlayerInside;
 
         // Update the area with the new collision state
         if (area.updateCollision(shouldCollide)) {
             this.onCollisionStateChanged?.();
         }
+    }
+
+    /**
+     * Actively moves the current player out of any restricted area they are not allowed to be in,
+     * to the nearest allowed position. Keeping a collider active is not enough to relocate someone
+     * who is *already* inside (e.g. they spawned there or the area became restricted around them).
+     */
+    private ejectCurrentPlayerFromForbiddenArea(): void {
+        const player = this.scene.CurrentPlayer;
+        if (!player) {
+            return;
+        }
+        const safePosition = this.gameMapAreas.getNearestAllowedPosition(
+            { x: player.x, y: player.y },
+            this.userConnectedTags,
+        );
+        player.teleportTo(safePosition.x, safePosition.y);
     }
 
     /**

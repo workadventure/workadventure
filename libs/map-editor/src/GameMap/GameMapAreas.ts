@@ -164,6 +164,98 @@ export class GameMapAreas {
         return areaRightTags.some((tag) => userConnectedTags.includes(tag));
     }
 
+    /**
+     * Returns true if the map contains at least one area with an *active* access restriction
+     * (a restrictedRightsPropertyData with a non-empty tag list).
+     * Used as a cheap gate before running the per-position access check: on a map without any
+     * restricted area, callers can skip the (more costly) position lookup entirely.
+     */
+    public hasRestrictedAreas(): boolean {
+        for (const area of this.areas.values()) {
+            if (this.getAreaRightPropertyData(area) !== undefined) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns the areas overlapping the given player position, applying the Woka Y offset so the
+     * notion of "inside" matches the front-end (the Woka feet).
+     */
+    public getPlayerAreasOnPosition(position: { x: number; y: number }): AreaData[] {
+        return this.getAreasOnPosition(position, this.areasPositionOffsetY);
+    }
+
+    /**
+     * Returns the restricted areas overlapping the given player position that the user is NOT
+     * allowed to access, based on their connected tags. An empty array means the position is
+     * allowed for this user.
+     *
+     * The player Y offset is applied so the notion of "inside" matches the front-end (the Woka
+     * feet), avoiding boundary mismatches when this is used for server-side enforcement.
+     */
+    public getForbiddenAreasOnPosition(position: { x: number; y: number }, userConnectedTags: string[]): AreaData[] {
+        return this.getPlayerAreasOnPosition(position).filter((area) => !this.hasAreaAccess(area, userConnectedTags));
+    }
+
+    /**
+     * If the given player position lies inside one or more restricted areas the user cannot access,
+     * returns the nearest position just outside them (accounting for the Woka Y offset). Otherwise
+     * returns the position unchanged. Used to eject a user who ended up inside a forbidden area
+     * (spawned there, or the area became restricted around them).
+     *
+     * Each iteration pushes the position out of the closest edge of one blocking area; a few
+     * iterations resolve the uncommon case of overlapping restricted areas. Best-effort: the
+     * returned position is guaranteed outside unless the iteration cap is reached.
+     */
+    public getNearestAllowedPosition(
+        position: { x: number; y: number },
+        userConnectedTags: string[],
+        maxIterations = 4,
+    ): { x: number; y: number } {
+        let current = { x: position.x, y: position.y };
+        for (let i = 0; i < maxIterations; i++) {
+            const forbidden = this.getForbiddenAreasOnPosition(current, userConnectedTags);
+            if (forbidden.length === 0) {
+                return current;
+            }
+            current = this.pushPositionOutOfArea(current, forbidden[0]);
+        }
+        return current;
+    }
+
+    /**
+     * Pushes a position just outside the closest edge of the given area, accounting for the Woka Y
+     * offset (the "inside" test compares `y + offset` against the rectangle). A 1px margin is enough
+     * to clear the inclusive boundary; only the axis of the closest edge is moved.
+     */
+    private pushPositionOutOfArea(
+        position: { x: number; y: number },
+        area: AreaData,
+    ): { x: number; y: number } {
+        const margin = 1;
+        const offsetY = this.areasPositionOffsetY;
+        const checkY = position.y + offsetY;
+
+        const distanceToLeft = position.x - area.x + margin;
+        const distanceToRight = area.x + area.width - position.x + margin;
+        const distanceToTop = checkY - area.y + margin;
+        const distanceToBottom = area.y + area.height - checkY + margin;
+
+        const minDistance = Math.min(distanceToLeft, distanceToRight, distanceToTop, distanceToBottom);
+        if (minDistance === distanceToLeft) {
+            return { x: area.x - margin, y: position.y };
+        }
+        if (minDistance === distanceToRight) {
+            return { x: area.x + area.width + margin, y: position.y };
+        }
+        if (minDistance === distanceToTop) {
+            return { x: position.x, y: area.y - offsetY - margin };
+        }
+        return { x: position.x, y: area.y + area.height - offsetY + margin };
+    }
+
     public isOverlappingArea(areaId: string): boolean {
         const area = this.getArea(areaId);
         if (area === undefined) {

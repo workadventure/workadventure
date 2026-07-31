@@ -55,6 +55,12 @@ export const EnvironmentVariables = z.object({
     ENABLE_MAP_EDITOR: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Enable the built-in map editor. Defaults to false"),
+    ENABLE_AREA_ACCESS_ENFORCEMENT: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe(
+            "Enable server-side enforcement of restricted-area access: a user without the required " +
+                "tags cannot occupy a restricted area, even with a tampered client. Defaults to true",
+        ),
     HTTP_PORT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 8080))
         .describe("HTTP port for the back service. Defaults to 8080"),

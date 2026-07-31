@@ -41,6 +41,12 @@ export class User implements Movable, CustomJsonReplacerInterface {
      */
     public readonly queryMessageAbortControllers = new Map<number, AbortController>();
 
+    /**
+     * Timestamp (ms) of the last position correction sent to this user after a denied move into a
+     * restricted area. Used to throttle corrections against a client spamming forbidden positions.
+     */
+    public lastPositionCorrectionAt = 0;
+
     public constructor(
         public id: number,
         public readonly uuid: string,
