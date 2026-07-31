@@ -372,6 +372,19 @@ export class AreasManager {
     }
 
     /**
+     * Returns true if the current user is allowed to occupy the given position, i.e. it is not
+     * inside a restricted area they lack the tags for. Map editors are always allowed. Used by the
+     * scripting API to reject a teleport/move into a forbidden area with a clear error, instead of
+     * letting the server silently pull the player back. The server remains the enforcement boundary.
+     */
+    public isPositionAllowedForCurrentUser(x: number, y: number): boolean {
+        if (this.userCanEdit) {
+            return true;
+        }
+        return this.gameMapAreas.getForbiddenAreasOnPosition({ x, y }, this.userConnectedTags).length === 0;
+    }
+
+    /**
      * Cleans up all subscriptions and resources.
      * Must be called when the AreasManager is no longer needed to prevent memory leaks.
      */
