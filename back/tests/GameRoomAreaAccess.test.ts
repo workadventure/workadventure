@@ -60,7 +60,12 @@ function writtenMessageCases(socket: ReturnType<typeof createMockUserSocket>): s
         .map((chunk) => chunk.message.$case);
 }
 
-function joinMessage(uuid: string, x: number, y: number, opts?: { tags?: string[]; canEdit?: boolean }): JoinRoomMessage {
+function joinMessage(
+    uuid: string,
+    x: number,
+    y: number,
+    opts?: { tags?: string[]; canEdit?: boolean },
+): JoinRoomMessage {
     return JoinRoomMessage.fromPartial({
         userUuid: uuid,
         IPAddress: "10.0.0.2",

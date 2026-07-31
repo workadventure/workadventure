@@ -497,7 +497,11 @@ export class GameRoom implements BrothersFinder {
      *  - lock / max-users: blocked only when *entering* from outside — a user already inside may keep
      *    moving within it (matching the front-end, which never punishes people already in the area).
      */
-    private isMoveDeniedByAreaRestriction(user: User, oldPosition: PointInterface, newPosition: PointInterface): boolean {
+    private isMoveDeniedByAreaRestriction(
+        user: User,
+        oldPosition: PointInterface,
+        newPosition: PointInterface,
+    ): boolean {
         if (user.canEdit) {
             return false;
         }
@@ -514,7 +518,10 @@ export class GameRoom implements BrothersFinder {
             return false;
         }
         for (const area of gameMapAreas.getPlayerAreasOnPosition(newPosition)) {
-            if (this.getAreaDynamicBlockReason(area) !== null && !gameMapAreas.isPlayerInsideArea(area.id, oldPosition)) {
+            if (
+                this.getAreaDynamicBlockReason(area) !== null &&
+                !gameMapAreas.isPlayerInsideArea(area.id, oldPosition)
+            ) {
                 return true;
             }
         }

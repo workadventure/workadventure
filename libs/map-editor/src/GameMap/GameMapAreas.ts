@@ -230,10 +230,7 @@ export class GameMapAreas {
      * offset (the "inside" test compares `y + offset` against the rectangle). A 1px margin is enough
      * to clear the inclusive boundary; only the axis of the closest edge is moved.
      */
-    private pushPositionOutOfArea(
-        position: { x: number; y: number },
-        area: AreaData,
-    ): { x: number; y: number } {
+    private pushPositionOutOfArea(position: { x: number; y: number }, area: AreaData): { x: number; y: number } {
         const margin = 1;
         const offsetY = this.areasPositionOffsetY;
         const checkY = position.y + offsetY;

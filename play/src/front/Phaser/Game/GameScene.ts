@@ -3559,7 +3559,9 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("movePlayerTo", async (message) => {
-            if (this.gameMapFrontWrapper.areasManager?.isPositionAllowedForCurrentUser(message.x, message.y) === false) {
+            if (
+                this.gameMapFrontWrapper.areasManager?.isPositionAllowedForCurrentUser(message.x, message.y) === false
+            ) {
                 throw new Error(
                     "WA.player.moveTo: the target position is inside a restricted area the user does not have access to.",
                 );
@@ -3568,7 +3570,9 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("teleportPlayerTo", (message) => {
-            if (this.gameMapFrontWrapper.areasManager?.isPositionAllowedForCurrentUser(message.x, message.y) === false) {
+            if (
+                this.gameMapFrontWrapper.areasManager?.isPositionAllowedForCurrentUser(message.x, message.y) === false
+            ) {
                 throw new Error(
                     "WA.player.teleport: the target position is inside a restricted area the user does not have access to.",
                 );

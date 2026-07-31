@@ -47,10 +47,13 @@ async function getPosition(page: Page): Promise<{ x: number; y: number }> {
 }
 
 test.describe("Restricted area access is enforced against the scripting API @oidc @nomobile @nowebkit", () => {
-    test.beforeEach("Skip where unsupported: mobile (no map editor) and WebKit (camera/mic)", ({ page, browserName }) => {
-        test.skip(isMobile(page), "Map editor is not available on mobile");
-        test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
-    });
+    test.beforeEach(
+        "Skip where unsupported: mobile (no map editor) and WebKit (camera/mic)",
+        ({ page, browserName }) => {
+            test.skip(isMobile(page), "Map editor is not available on mobile");
+            test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
+        },
+    );
 
     test("WA.player.teleport into a restricted area is rejected and the player stays out", async ({
         browser,
