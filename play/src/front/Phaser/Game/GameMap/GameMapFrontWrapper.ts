@@ -488,8 +488,14 @@ export class GameMapFrontWrapper {
         const maxTextureSize = this.getMaxTextureSize();
         const layerWidth = layer.width ?? this.getMap().width;
         const layerHeight = layer.height ?? this.getMap().height;
+        const layerWidthPixels = layerWidth !== undefined ? layerWidth * this.phaserMap.tileWidth : undefined;
+        const layerHeightPixels = layerHeight !== undefined ? layerHeight * this.phaserMap.tileHeight : undefined;
         const tilesets = this.getLayerTilesetMetadata(phaserLayer);
         const exceedsMaxLayerTextureSize =
+            maxTextureSize !== undefined &&
+            ((layerWidthPixels !== undefined && layerWidthPixels > maxTextureSize) ||
+                (layerHeightPixels !== undefined && layerHeightPixels > maxTextureSize));
+        const exceedsMaxLayerDataTextureSize =
             maxTextureSize !== undefined &&
             ((layerWidth !== undefined && layerWidth > maxTextureSize) ||
                 (layerHeight !== undefined && layerHeight > maxTextureSize));
@@ -508,9 +514,10 @@ export class GameMapFrontWrapper {
             uniqueTileIndexCount: renderingDecision.tileIndicesCount,
             layerWidthTiles: layerWidth,
             layerHeightTiles: layerHeight,
-            layerWidthPixels: layerWidth !== undefined ? layerWidth * this.phaserMap.tileWidth : undefined,
-            layerHeightPixels: layerHeight !== undefined ? layerHeight * this.phaserMap.tileHeight : undefined,
+            layerWidthPixels,
+            layerHeightPixels,
             exceedsMaxLayerTextureSize,
+            exceedsMaxLayerDataTextureSize,
             exceedsMaxTilesetTextureSize,
             maxTextureSize,
             opacity: layer.opacity,
@@ -1111,19 +1118,6 @@ export class GameMapFrontWrapper {
             }
             const implementationAfter = this.getLayerImplementationName(phaserLayer);
             const implementationChanged = implementationBefore !== implementationAfter;
-            if (this.isGpuTilemapLayer(phaserLayer) || implementationChanged) {
-                console.info(`[TilemapDebug] putTile applied on layer "${layer}".`, {
-                    tile,
-                    tileIndex: tile === null ? -1 : tileIndex,
-                    x,
-                    y,
-                    implementationBefore,
-                    implementationAfter,
-                    implementationChanged,
-                    regeneratedLayerDataTexture: this.isGpuTilemapLayer(phaserLayer),
-                    phaserTileWasCreated,
-                });
-            }
             if (implementationChanged) {
                 console.warn(`[TilemapDebug] Layer "${layer}" implementation changed during putTile.`, {
                     implementationBefore,
@@ -1132,6 +1126,8 @@ export class GameMapFrontWrapper {
                     tileIndex: tile === null ? -1 : tileIndex,
                     x,
                     y,
+                    regeneratedLayerDataTexture: this.isGpuTilemapLayer(phaserLayer),
+                    phaserTileWasCreated,
                 });
             }
             this.invalidateCollisionGrid({ modifiedLayer: phaserLayer });
