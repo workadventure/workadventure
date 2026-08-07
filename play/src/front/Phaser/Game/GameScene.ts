@@ -3343,6 +3343,10 @@ ${escapedMessage}
         });
         this.iframeSubscriptionList.push(
             iframeListener.setTilesStream.subscribe((eventTiles) => {
+                console.info("[TilemapDebug] setTiles event received.", {
+                    tileCount: eventTiles.length,
+                    layers: [...new Set(eventTiles.map((eventTile) => eventTile.layer))],
+                });
                 for (const eventTile of eventTiles) {
                     this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }

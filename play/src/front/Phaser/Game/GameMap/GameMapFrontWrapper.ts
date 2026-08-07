@@ -38,6 +38,11 @@ type RenderableTilemapLayer = TilemapLayer | TilemapGPULayer;
 type TileAnimationData = {
     animation?: Array<{ duration?: number }>;
 };
+type LayerRenderingDecision = {
+    gpuTileset?: Tileset;
+    reason: string;
+    tileIndicesCount?: number;
+};
 
 const TILED_TILE_FLIP_FLAGS = 0xe0000000;
 const TILE_ANIMATION_REFRESH_FALLBACK_MS = 100;
@@ -160,12 +165,14 @@ export class GameMapFrontWrapper {
         this.existingTileIndex = terrains.length > 0 ? terrains[0].firstgid : -1;
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
+        this.logRendererDiagnostics();
 
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
             if (layer.type === "tilelayer") {
-                const phaserLayer = this.createRenderableLayer(layer, terrains);
+                const { phaserLayer, renderingDecision } = this.createRenderableLayer(layer, terrains);
                 if (phaserLayer) {
+                    this.logLayerCreation(layer, phaserLayer, renderingDecision);
                     this.phaserLayers.push(
                         phaserLayer
                             .setDepth(depth)
@@ -219,6 +226,7 @@ export class GameMapFrontWrapper {
         }
         this.entitiesCollisionLayer = phaserBlankCollisionsLayer;
         this.entitiesCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true }).setVisible(false);
+        this.logCollisionLayerCreation("__entitiesCollisionLayer", this.entitiesCollisionLayer);
 
         this.phaserLayers.push(this.entitiesCollisionLayer);
 
@@ -228,52 +236,101 @@ export class GameMapFrontWrapper {
         }
         this.areasCollisionLayer = phaserBlankCollisionsLayer2;
         this.areasCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true }).setVisible(false);
+        this.logCollisionLayerCreation("__areasCollisionLayer", this.areasCollisionLayer);
 
         this.phaserLayers.push(this.areasCollisionLayer);
     }
 
-    private createRenderableLayer(layer: ITiledMapTileLayer, terrains: Array<Tileset>): RenderableTilemapLayer | null {
-        const gpuTileset = this.getGpuTilesetForLayer(layer, terrains);
+    private createRenderableLayer(
+        layer: ITiledMapTileLayer,
+        terrains: Array<Tileset>,
+    ): {
+        phaserLayer: RenderableTilemapLayer | null;
+        renderingDecision: LayerRenderingDecision;
+    } {
+        const renderingDecision = this.getLayerRenderingDecision(layer, terrains);
 
-        return this.phaserMap.createLayer(
-            layer.name,
-            gpuTileset ?? terrains,
-            (layer.x || 0) * 32,
-            (layer.y || 0) * 32,
-            gpuTileset !== undefined,
-        );
+        return {
+            phaserLayer: this.phaserMap.createLayer(
+                layer.name,
+                renderingDecision.gpuTileset ?? terrains,
+                (layer.x || 0) * 32,
+                (layer.y || 0) * 32,
+                renderingDecision.gpuTileset !== undefined,
+            ),
+            renderingDecision,
+        };
     }
 
-    private getGpuTilesetForLayer(layer: ITiledMapTileLayer, terrains: Array<Tileset>): Tileset | undefined {
-        if (
-            terrains.length === 0 ||
-            !(this.scene.game.renderer instanceof WebGLRenderer) ||
-            this.getMap().orientation !== "orthogonal"
-        ) {
-            return undefined;
+    private getLayerRenderingDecision(layer: ITiledMapTileLayer, terrains: Array<Tileset>): LayerRenderingDecision {
+        if (terrains.length === 0) {
+            return {
+                reason: "No tilesets are available on the map.",
+            };
+        }
+
+        if (!(this.scene.game.renderer instanceof WebGLRenderer)) {
+            return {
+                reason: `Renderer ${this.scene.game.renderer.constructor.name} is not WebGL.`,
+            };
+        }
+
+        if (this.getMap().orientation !== "orthogonal") {
+            return {
+                reason: `Map orientation is "${this.getMap().orientation}" instead of "orthogonal".`,
+            };
         }
 
         const tileIndices = this.getLayerTileIndices(layer);
         if (!tileIndices) {
-            return undefined;
+            return {
+                reason: "Layer data is not a flat numeric array.",
+            };
+        }
+
+        if (tileIndices.size === 0) {
+            return {
+                reason: "Layer contains no non-empty tiles.",
+                tileIndicesCount: 0,
+            };
         }
 
         let layerTileset: Tileset | undefined;
         for (const tileIndex of tileIndices) {
             const tileset = terrains.find((terrain) => terrain.containsTileIndex(tileIndex));
             if (!tileset) {
-                return undefined;
+                return {
+                    reason: `Tile index ${tileIndex} does not belong to any tileset.`,
+                    tileIndicesCount: tileIndices.size,
+                };
             }
             if (tileset.tileWidth !== this.phaserMap.tileWidth || tileset.tileHeight !== this.phaserMap.tileHeight) {
-                return undefined;
+                return {
+                    reason: `Tileset "${tileset.name}" tile size ${tileset.tileWidth}x${tileset.tileHeight} does not match map tile size ${this.phaserMap.tileWidth}x${this.phaserMap.tileHeight}.`,
+                    tileIndicesCount: tileIndices.size,
+                };
             }
             if (layerTileset && layerTileset !== tileset) {
-                return undefined;
+                return {
+                    reason: `Layer references several tilesets ("${layerTileset.name}" and "${tileset.name}").`,
+                    tileIndicesCount: tileIndices.size,
+                };
             }
             layerTileset = tileset;
         }
 
-        return layerTileset;
+        if (!layerTileset) {
+            return {
+                reason: "Layer does not resolve to a tileset.",
+                tileIndicesCount: tileIndices.size,
+            };
+        }
+
+        return {
+            gpuTileset: layerTileset,
+            reason: `Layer only uses tileset "${layerTileset.name}".`,
+            tileIndicesCount: tileIndices.size,
+        };
     }
 
     private getLayerTileIndices(layer: ITiledMapTileLayer): Set<number> | undefined {
@@ -345,6 +402,122 @@ export class GameMapFrontWrapper {
 
     private isGpuTilemapLayer(layer: RenderableTilemapLayer): layer is TilemapGPULayer {
         return "generateLayerDataTexture" in layer;
+    }
+
+    private getLayerImplementationName(layer: RenderableTilemapLayer): "TilemapLayer" | "TilemapGPULayer" {
+        return this.isGpuTilemapLayer(layer) ? "TilemapGPULayer" : "TilemapLayer";
+    }
+
+    private getLayerTilesetMetadata(layer: RenderableTilemapLayer): Array<{
+        name: string;
+        firstgid: number;
+        tileWidth: number;
+        tileHeight: number;
+        imageWidth?: number;
+        imageHeight?: number;
+    }> {
+        return this.getTilesetsForLayer(layer).map((tileset) => ({
+            name: tileset.name,
+            firstgid: tileset.firstgid,
+            tileWidth: tileset.tileWidth,
+            tileHeight: tileset.tileHeight,
+            imageWidth: tileset.image?.width,
+            imageHeight: tileset.image?.height,
+        }));
+    }
+
+    private getMaxTextureSize(): number | undefined {
+        if (!(this.scene.game.renderer instanceof WebGLRenderer)) {
+            return undefined;
+        }
+
+        return this.scene.game.renderer.gl.getParameter(this.scene.game.renderer.gl.MAX_TEXTURE_SIZE) as number;
+    }
+
+    private logRendererDiagnostics(): void {
+        const map = this.getMap();
+
+        if (!(this.scene.game.renderer instanceof WebGLRenderer)) {
+            console.info("[TilemapDebug] Map renderer is not WebGL.", {
+                rendererType: this.scene.game.renderer.constructor.name,
+                mapWidthTiles: map.width,
+                mapHeightTiles: map.height,
+                tileWidth: this.phaserMap.tileWidth,
+                tileHeight: this.phaserMap.tileHeight,
+                orientation: map.orientation,
+                userAgent: navigator.userAgent,
+                devicePixelRatio: window.devicePixelRatio ?? 1,
+            });
+            return;
+        }
+
+        const gl = this.scene.game.renderer.gl;
+        const debugRendererInfo = gl.getExtension("WEBGL_debug_renderer_info");
+
+        console.info("[TilemapDebug] WebGL capabilities.", {
+            rendererType: this.scene.game.renderer.constructor.name,
+            webglVersion: gl.getParameter(gl.VERSION) as string,
+            shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION) as string,
+            vendor: debugRendererInfo
+                ? (gl.getParameter(debugRendererInfo.UNMASKED_VENDOR_WEBGL) as string)
+                : ((gl.getParameter(gl.VENDOR) as string) ?? "unknown"),
+            renderer: debugRendererInfo
+                ? (gl.getParameter(debugRendererInfo.UNMASKED_RENDERER_WEBGL) as string)
+                : ((gl.getParameter(gl.RENDERER) as string) ?? "unknown"),
+            maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE) as number,
+            maxRenderbufferSize: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) as number,
+            maxTextureImageUnits: gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) as number,
+            maxCombinedTextureImageUnits: gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS) as number,
+            mapWidthTiles: map.width,
+            mapHeightTiles: map.height,
+            mapWidthPixels: map.width ? map.width * this.phaserMap.tileWidth : undefined,
+            mapHeightPixels: map.height ? map.height * this.phaserMap.tileHeight : undefined,
+            tileWidth: this.phaserMap.tileWidth,
+            tileHeight: this.phaserMap.tileHeight,
+            orientation: map.orientation,
+            userAgent: navigator.userAgent,
+            devicePixelRatio: window.devicePixelRatio ?? 1,
+        });
+    }
+
+    private logLayerCreation(
+        layer: ITiledMapTileLayer,
+        phaserLayer: RenderableTilemapLayer,
+        renderingDecision: LayerRenderingDecision,
+    ): void {
+        const maxTextureSize = this.getMaxTextureSize();
+        const layerWidth = layer.width ?? this.getMap().width;
+        const layerHeight = layer.height ?? this.getMap().height;
+        const couldOverflowGpuTexture =
+            maxTextureSize !== undefined &&
+            ((layerWidth !== undefined && layerWidth > maxTextureSize) ||
+                (layerHeight !== undefined && layerHeight > maxTextureSize));
+
+        console.info(`[TilemapDebug] Layer "${layer.name}" initialized.`, {
+            implementation: this.getLayerImplementationName(phaserLayer),
+            requestedGpuLayer: renderingDecision.gpuTileset !== undefined,
+            gpuDecision: renderingDecision.reason,
+            uniqueTileIndexCount: renderingDecision.tileIndicesCount,
+            layerWidthTiles: layerWidth,
+            layerHeightTiles: layerHeight,
+            layerWidthPixels: layerWidth !== undefined ? layerWidth * this.phaserMap.tileWidth : undefined,
+            layerHeightPixels: layerHeight !== undefined ? layerHeight * this.phaserMap.tileHeight : undefined,
+            exceedsMaxTextureSize: couldOverflowGpuTexture,
+            maxTextureSize,
+            opacity: layer.opacity,
+            visible: layer.visible,
+            parallaxx: layer.parallaxx,
+            parallaxy: layer.parallaxy,
+            tilesets: this.getLayerTilesetMetadata(phaserLayer),
+        });
+    }
+
+    private logCollisionLayerCreation(layerName: string, layer: TilemapLayer): void {
+        console.info(`[TilemapDebug] Collision layer "${layerName}" initialized.`, {
+            implementation: this.getLayerImplementationName(layer),
+            visible: layer.visible,
+            tilesets: this.getLayerTilesetMetadata(layer),
+        });
     }
 
     public initialize(): Promise<void> {
@@ -896,10 +1069,13 @@ export class GameMapFrontWrapper {
     public putTile(tile: string | number | null, x: number, y: number, layer: string): void {
         const phaserLayer = this.findPhaserLayer(layer);
         if (phaserLayer) {
+            const implementationBefore = this.getLayerImplementationName(phaserLayer);
+            let tileIndex: number | undefined;
+            let phaserTileWasCreated = false;
             if (tile === null) {
                 phaserLayer.putTileAt(-1, x, y);
             } else {
-                const tileIndex = this.gameMap.getIndexForTileType(tile);
+                tileIndex = this.gameMap.getIndexForTileType(tile);
                 if (tileIndex === undefined) {
                     console.error("The tile '" + tile + "' that you want to place doesn't exist.");
                     return;
@@ -912,6 +1088,7 @@ export class GameMapFrontWrapper {
                 }
                 this.gameMap.putTileInFlatLayer(tileIndex, x, y, layer);
                 const phaserTile = phaserLayer.putTileAt(tileIndex, x, y);
+                phaserTileWasCreated = phaserTile !== null;
                 if (phaserTile !== null) {
                     for (const property of this.gameMap.getTileProperty(tileIndex)) {
                         if (property.name === GameMapProperties.COLLIDES && property.value) {
@@ -922,6 +1099,29 @@ export class GameMapFrontWrapper {
             }
             if (this.isGpuTilemapLayer(phaserLayer)) {
                 phaserLayer.generateLayerDataTexture();
+            }
+            const implementationAfter = this.getLayerImplementationName(phaserLayer);
+            const implementationChanged = implementationBefore !== implementationAfter;
+            console.info(`[TilemapDebug] putTile applied on layer "${layer}".`, {
+                tile,
+                tileIndex: tile === null ? -1 : tileIndex,
+                x,
+                y,
+                implementationBefore,
+                implementationAfter,
+                implementationChanged,
+                regeneratedLayerDataTexture: this.isGpuTilemapLayer(phaserLayer),
+                phaserTileWasCreated,
+            });
+            if (implementationChanged) {
+                console.warn(`[TilemapDebug] Layer "${layer}" implementation changed during putTile.`, {
+                    implementationBefore,
+                    implementationAfter,
+                    tile,
+                    tileIndex: tile === null ? -1 : tileIndex,
+                    x,
+                    y,
+                });
             }
             this.invalidateCollisionGrid({ modifiedLayer: phaserLayer });
         } else {
