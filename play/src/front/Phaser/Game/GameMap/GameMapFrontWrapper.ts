@@ -515,8 +515,8 @@ export class GameMapFrontWrapper {
             maxTextureSize,
             opacity: layer.opacity,
             visible: layer.visible,
-            parallaxx: layer.parallaxx,
-            parallaxy: layer.parallaxy,
+            parallaxX: layer.parallaxx,
+            parallaxY: layer.parallaxy,
             tilesets,
         });
     }
@@ -1111,17 +1111,19 @@ export class GameMapFrontWrapper {
             }
             const implementationAfter = this.getLayerImplementationName(phaserLayer);
             const implementationChanged = implementationBefore !== implementationAfter;
-            console.info(`[TilemapDebug] putTile applied on layer "${layer}".`, {
-                tile,
-                tileIndex: tile === null ? -1 : tileIndex,
-                x,
-                y,
-                implementationBefore,
-                implementationAfter,
-                implementationChanged,
-                regeneratedLayerDataTexture: this.isGpuTilemapLayer(phaserLayer),
-                phaserTileWasCreated,
-            });
+            if (this.isGpuTilemapLayer(phaserLayer) || implementationChanged) {
+                console.info(`[TilemapDebug] putTile applied on layer "${layer}".`, {
+                    tile,
+                    tileIndex: tile === null ? -1 : tileIndex,
+                    x,
+                    y,
+                    implementationBefore,
+                    implementationAfter,
+                    implementationChanged,
+                    regeneratedLayerDataTexture: this.isGpuTilemapLayer(phaserLayer),
+                    phaserTileWasCreated,
+                });
+            }
             if (implementationChanged) {
                 console.warn(`[TilemapDebug] Layer "${layer}" implementation changed during putTile.`, {
                     implementationBefore,
