@@ -421,8 +421,8 @@ export class GameMapFrontWrapper {
             firstgid: tileset.firstgid,
             tileWidth: tileset.tileWidth,
             tileHeight: tileset.tileHeight,
-            imageWidth: tileset.image?.width,
-            imageHeight: tileset.image?.height,
+            imageWidth: tileset.image?.source[0]?.width,
+            imageHeight: tileset.image?.source[0]?.height,
         }));
     }
 
@@ -488,10 +488,18 @@ export class GameMapFrontWrapper {
         const maxTextureSize = this.getMaxTextureSize();
         const layerWidth = layer.width ?? this.getMap().width;
         const layerHeight = layer.height ?? this.getMap().height;
-        const couldOverflowGpuTexture =
+        const tilesets = this.getLayerTilesetMetadata(phaserLayer);
+        const exceedsMaxLayerTextureSize =
             maxTextureSize !== undefined &&
             ((layerWidth !== undefined && layerWidth > maxTextureSize) ||
                 (layerHeight !== undefined && layerHeight > maxTextureSize));
+        const exceedsMaxTilesetTextureSize =
+            maxTextureSize !== undefined &&
+            tilesets.some(
+                (tileset) =>
+                    (tileset.imageWidth !== undefined && tileset.imageWidth > maxTextureSize) ||
+                    (tileset.imageHeight !== undefined && tileset.imageHeight > maxTextureSize),
+            );
 
         console.info(`[TilemapDebug] Layer "${layer.name}" initialized.`, {
             implementation: this.getLayerImplementationName(phaserLayer),
@@ -502,13 +510,14 @@ export class GameMapFrontWrapper {
             layerHeightTiles: layerHeight,
             layerWidthPixels: layerWidth !== undefined ? layerWidth * this.phaserMap.tileWidth : undefined,
             layerHeightPixels: layerHeight !== undefined ? layerHeight * this.phaserMap.tileHeight : undefined,
-            exceedsMaxTextureSize: couldOverflowGpuTexture,
+            exceedsMaxLayerTextureSize,
+            exceedsMaxTilesetTextureSize,
             maxTextureSize,
             opacity: layer.opacity,
             visible: layer.visible,
             parallaxx: layer.parallaxx,
             parallaxy: layer.parallaxy,
-            tilesets: this.getLayerTilesetMetadata(phaserLayer),
+            tilesets,
         });
     }
 
