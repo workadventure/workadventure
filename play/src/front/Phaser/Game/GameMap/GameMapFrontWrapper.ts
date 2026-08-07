@@ -1073,6 +1073,11 @@ export class GameMapFrontWrapper {
         return this.phaserLayers.filter((l) => l.layer.name.includes(groupName));
     }
 
+    public getPhaserLayerImplementation(layerName: string): "TilemapLayer" | "TilemapGPULayer" | undefined {
+        const layer = this.findPhaserLayer(layerName);
+        return layer ? this.getLayerImplementationName(layer) : undefined;
+    }
+
     public addTerrain(terrain: Tileset): void {
         for (const phaserLayer of this.phaserLayers) {
             if (this.isGpuTilemapLayer(phaserLayer)) {
@@ -1085,9 +1090,7 @@ export class GameMapFrontWrapper {
     public putTile(tile: string | number | null, x: number, y: number, layer: string): void {
         const phaserLayer = this.findPhaserLayer(layer);
         if (phaserLayer) {
-            const implementationBefore = this.getLayerImplementationName(phaserLayer);
             let tileIndex: number | undefined;
-            let phaserTileWasCreated = false;
             if (tile === null) {
                 phaserLayer.putTileAt(-1, x, y);
             } else {
@@ -1104,7 +1107,6 @@ export class GameMapFrontWrapper {
                 }
                 this.gameMap.putTileInFlatLayer(tileIndex, x, y, layer);
                 const phaserTile = phaserLayer.putTileAt(tileIndex, x, y);
-                phaserTileWasCreated = phaserTile !== null;
                 if (phaserTile !== null) {
                     for (const property of this.gameMap.getTileProperty(tileIndex)) {
                         if (property.name === GameMapProperties.COLLIDES && property.value) {
@@ -1115,20 +1117,6 @@ export class GameMapFrontWrapper {
             }
             if (this.isGpuTilemapLayer(phaserLayer)) {
                 phaserLayer.generateLayerDataTexture();
-            }
-            const implementationAfter = this.getLayerImplementationName(phaserLayer);
-            const implementationChanged = implementationBefore !== implementationAfter;
-            if (implementationChanged) {
-                console.warn(`[TilemapDebug] Layer "${layer}" implementation changed during putTile.`, {
-                    implementationBefore,
-                    implementationAfter,
-                    tile,
-                    tileIndex: tile === null ? -1 : tileIndex,
-                    x,
-                    y,
-                    regeneratedLayerDataTexture: this.isGpuTilemapLayer(phaserLayer),
-                    phaserTileWasCreated,
-                });
             }
             this.invalidateCollisionGrid({ modifiedLayer: phaserLayer });
         } else {
