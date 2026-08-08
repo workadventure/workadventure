@@ -1,8 +1,76 @@
 diff --git a/node_modules/phaser/dist/phaser.esm.js b/node_modules/phaser/dist/phaser.esm.js
-index 07a961e..3d9a420 100644
+index 07a961e..9e4cbf5 100644
 --- a/node_modules/phaser/dist/phaser.esm.js
 +++ b/node_modules/phaser/dist/phaser.esm.js
-@@ -208333,6 +208333,16 @@ module.exports = [
+@@ -208266,15 +208266,22 @@ module.exports = [
+     '#pragma phaserTemplate(features)',
+     '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+     'precision highp float;',
++    '#define WA_DATA_PRECISION highp',
+     '#else',
+     'precision mediump float;',
++    '#define WA_DATA_PRECISION mediump',
+     '#endif',
+     '/* Redefine MAX_ANIM_FRAMES to support animations with different frame numbers. */',
+     '#define MAX_ANIM_FRAMES 0',
+     '#pragma phaserTemplate(fragmentDefine)',
+     'uniform vec2 uResolution;',
+     'uniform sampler2D uMainSampler;',
+-    'uniform sampler2D uLayerSampler;',
++    '// WA patch: uLayerSampler carries PACKED INTEGER DATA (tile index + flag bits), not colour.',
++    '// GLSL ES 1.00 defaults fragment-shader samplers to `lowp` (4.5.3), whose only guarantee is',
++    '// 8-bit absolute precision. GPUs that honour lowp literally (Adreno 740/750 - S23, S23 Ultra,',
++    '// Z Fold 7) quantise the fetched bytes, so `texel.a * 255.0` lands near 15.94 instead of 16.0',
++    '// and the empty-tile test below fails. Force full precision on the data samplers.',
++    'uniform WA_DATA_PRECISION sampler2D uLayerSampler;',
+     'uniform vec2 uMainResolution;',
+     'uniform vec2 uLayerResolution;',
+     'uniform float uTileColumns;',
+@@ -208282,7 +208289,7 @@ module.exports = [
+     'uniform float uAlpha;',
+     'uniform float uTime;',
+     '#if MAX_ANIM_FRAMES > 0',
+-    'uniform sampler2D uAnimSampler;',
++    'uniform WA_DATA_PRECISION sampler2D uAnimSampler;',
+     'uniform vec2 uAnimResolution;',
+     '#endif',
+     'varying vec2 outTexCoord;',
+@@ -208292,9 +208299,17 @@ module.exports = [
+     '{',
+     '    return uMainResolution;',
+     '}',
++    '// WA patch: snap a UNORM8 texel back to the exact 0-255 byte values it was uploaded with.',
++    '// Any sub-ULP drift in the sampler survives the * 256^n weighting below as an error of',
++    '// hundreds, so decode from rounded bytes rather than from the raw fetched floats.',
++    'vec4 texelBytes (vec4 texel)',
++    '{',
++    '    return floor(texel * 255.0 + 0.5);',
++    '}',
+     'float floatTexel (vec4 texel)',
+     '{',
+-    '    return texel.r * 255.0 + (texel.g * 255.0 * 256.0) + (texel.b * 255.0 * 256.0 * 256.0) + (texel.a * 255.0 * 256.0 * 256.0 * 256.0);',
++    '    vec4 b = texelBytes(texel);',
++    '    return b.r + (b.g * 256.0) + (b.b * 256.0 * 256.0) + (b.a * 256.0 * 256.0 * 256.0);',
+     '}',
+     'struct Tile',
+     '{',
+@@ -208311,10 +208326,13 @@ module.exports = [
+     '    vec2 tile = floor(texelCoord);',
+     '    vec2 uv = fract(texelCoord);',
+     '    uv.y = 1.0 - uv.y;',
+-    '    vec4 texel = texture2D(uLayerSampler, (tile + 0.5) / uLayerResolution) * 255.0;',
++    '    vec4 texel = texelBytes(texture2D(uLayerSampler, (tile + 0.5) / uLayerResolution));',
+     '    float flags = texel.a;',
+     '    /* Check for empty tile flag in bit 28. */',
+-    '    if (flags == 16.0)',
++    '    /* WA patch: test the bit, do not compare the whole byte for equality. `flags == 16.0` was */',
++    '    /* bit-exact float equality on a sampled value, so the tiniest precision drift turned every */',
++    '    /* empty cell into tile 0 of the tileset, which then painted over every layer beneath it. */',
++    '    if (mod(flags, 32.0) >= 16.0)',
+     '    {',
+     '        return Tile(',
+     '            0.0,',
+@@ -208333,6 +208351,16 @@ module.exports = [
      '    /* Bit 29 is animation. */',
      '    bool animated = mod(flags, 64.0) > 31.0;',
      '    #endif',
@@ -19,7 +87,7 @@ index 07a961e..3d9a420 100644
      '    if (flipX)',
      '    {',
      '        uv.x = 1.0 - uv.x;',
-@@ -208488,6 +208498,9 @@ module.exports = [
+@@ -208488,6 +208516,9 @@ module.exports = [
      '{',
      '    vec2 layerTexCoord = outTexCoord;',
      '    Tile tile = getLayerData(layerTexCoord);',
@@ -29,7 +97,7 @@ index 07a961e..3d9a420 100644
      '    Samples samples = getFinalSamples(tile, layerTexCoord);',
      '    vec4 fragColor = samples.color;',
      '    #pragma phaserTemplate(declareSamples)',
-@@ -208526,7 +208539,11 @@ module.exports = [
+@@ -208526,7 +208557,11 @@ module.exports = [
      '{',
      '    gl_Position = uProjectionMatrix * vec4(inPosition, 1.0, 1.0);',
      '    outTexCoord = inTexCoord;',
@@ -42,7 +110,7 @@ index 07a961e..3d9a420 100644
      '    #pragma phaserTemplate(vertexProcess)',
      '}',
  ].join('\n');
-@@ -243957,6 +243974,19 @@ var TilemapGPULayer = new Class({
+@@ -243957,6 +243992,19 @@ var TilemapGPULayer = new Class({
                  {
                      index |= 0x20000000;
                  }
@@ -62,7 +130,7 @@ index 07a961e..3d9a420 100644
                  if (tile.index === -1)
                  {
                      // Set the fourth bit to 1 to indicate an empty tile.
-@@ -246698,7 +246728,11 @@ var Tileset = new Class({
+@@ -246698,7 +246746,11 @@ var Tileset = new Class({
                  var animationDuration = tileDatum.animationDuration;
  
                  // This index maps to an animation, not a single tile.
@@ -76,10 +144,78 @@ index 07a961e..3d9a420 100644
                  // This animation points to a run of frames.
                  animations.push([ animationDuration, animFrames.length ]);
 diff --git a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
-index 8f3f66c..b5875e4 100644
+index 8f3f66c..b2966b9 100644
 --- a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
 +++ b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
-@@ -72,6 +72,16 @@ module.exports = [
+@@ -5,15 +5,22 @@ module.exports = [
+     '#pragma phaserTemplate(features)',
+     '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+     'precision highp float;',
++    '#define WA_DATA_PRECISION highp',
+     '#else',
+     'precision mediump float;',
++    '#define WA_DATA_PRECISION mediump',
+     '#endif',
+     '/* Redefine MAX_ANIM_FRAMES to support animations with different frame numbers. */',
+     '#define MAX_ANIM_FRAMES 0',
+     '#pragma phaserTemplate(fragmentDefine)',
+     'uniform vec2 uResolution;',
+     'uniform sampler2D uMainSampler;',
+-    'uniform sampler2D uLayerSampler;',
++    '// WA patch: uLayerSampler carries PACKED INTEGER DATA (tile index + flag bits), not colour.',
++    '// GLSL ES 1.00 defaults fragment-shader samplers to `lowp` (4.5.3), whose only guarantee is',
++    '// 8-bit absolute precision. GPUs that honour lowp literally (Adreno 740/750 - S23, S23 Ultra,',
++    '// Z Fold 7) quantise the fetched bytes, so `texel.a * 255.0` lands near 15.94 instead of 16.0',
++    '// and the empty-tile test below fails. Force full precision on the data samplers.',
++    'uniform WA_DATA_PRECISION sampler2D uLayerSampler;',
+     'uniform vec2 uMainResolution;',
+     'uniform vec2 uLayerResolution;',
+     'uniform float uTileColumns;',
+@@ -21,7 +28,7 @@ module.exports = [
+     'uniform float uAlpha;',
+     'uniform float uTime;',
+     '#if MAX_ANIM_FRAMES > 0',
+-    'uniform sampler2D uAnimSampler;',
++    'uniform WA_DATA_PRECISION sampler2D uAnimSampler;',
+     'uniform vec2 uAnimResolution;',
+     '#endif',
+     'varying vec2 outTexCoord;',
+@@ -31,9 +38,17 @@ module.exports = [
+     '{',
+     '    return uMainResolution;',
+     '}',
++    '// WA patch: snap a UNORM8 texel back to the exact 0-255 byte values it was uploaded with.',
++    '// Any sub-ULP drift in the sampler survives the * 256^n weighting below as an error of',
++    '// hundreds, so decode from rounded bytes rather than from the raw fetched floats.',
++    'vec4 texelBytes (vec4 texel)',
++    '{',
++    '    return floor(texel * 255.0 + 0.5);',
++    '}',
+     'float floatTexel (vec4 texel)',
+     '{',
+-    '    return texel.r * 255.0 + (texel.g * 255.0 * 256.0) + (texel.b * 255.0 * 256.0 * 256.0) + (texel.a * 255.0 * 256.0 * 256.0 * 256.0);',
++    '    vec4 b = texelBytes(texel);',
++    '    return b.r + (b.g * 256.0) + (b.b * 256.0 * 256.0) + (b.a * 256.0 * 256.0 * 256.0);',
+     '}',
+     'struct Tile',
+     '{',
+@@ -50,10 +65,13 @@ module.exports = [
+     '    vec2 tile = floor(texelCoord);',
+     '    vec2 uv = fract(texelCoord);',
+     '    uv.y = 1.0 - uv.y;',
+-    '    vec4 texel = texture2D(uLayerSampler, (tile + 0.5) / uLayerResolution) * 255.0;',
++    '    vec4 texel = texelBytes(texture2D(uLayerSampler, (tile + 0.5) / uLayerResolution));',
+     '    float flags = texel.a;',
+     '    /* Check for empty tile flag in bit 28. */',
+-    '    if (flags == 16.0)',
++    '    /* WA patch: test the bit, do not compare the whole byte for equality. `flags == 16.0` was */',
++    '    /* bit-exact float equality on a sampled value, so the tiniest precision drift turned every */',
++    '    /* empty cell into tile 0 of the tileset, which then painted over every layer beneath it. */',
++    '    if (mod(flags, 32.0) >= 16.0)',
+     '    {',
+     '        return Tile(',
+     '            0.0,',
+@@ -72,6 +90,16 @@ module.exports = [
      '    /* Bit 29 is animation. */',
      '    bool animated = mod(flags, 64.0) > 31.0;',
      '    #endif',
@@ -96,7 +232,7 @@ index 8f3f66c..b5875e4 100644
      '    if (flipX)',
      '    {',
      '        uv.x = 1.0 - uv.x;',
-@@ -227,6 +237,9 @@ module.exports = [
+@@ -227,6 +255,9 @@ module.exports = [
      '{',
      '    vec2 layerTexCoord = outTexCoord;',
      '    Tile tile = getLayerData(layerTexCoord);',
@@ -107,7 +243,7 @@ index 8f3f66c..b5875e4 100644
      '    vec4 fragColor = samples.color;',
      '    #pragma phaserTemplate(declareSamples)',
 diff --git a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-vert.js b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-vert.js
-index 83dc1e9..e65229a 100644
+index 83dc1e9..6ef0b12 100644
 --- a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-vert.js
 +++ b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-vert.js
 @@ -21,7 +21,11 @@ module.exports = [
@@ -123,8 +259,115 @@ index 83dc1e9..e65229a 100644
      '    #pragma phaserTemplate(vertexProcess)',
      '}',
  ].join('\n');
+diff --git a/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag b/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag
+index c5a0357..8581114 100644
+--- a/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag
++++ b/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag
+@@ -7,8 +7,10 @@
+ 
+ #ifdef GL_FRAGMENT_PRECISION_HIGH
+ precision highp float;
++#define WA_DATA_PRECISION highp
+ #else
+ precision mediump float;
++#define WA_DATA_PRECISION mediump
+ #endif
+ 
+ /* Redefine MAX_ANIM_FRAMES to support animations with different frame numbers. */
+@@ -18,7 +20,12 @@ precision mediump float;
+ 
+ uniform vec2 uResolution;
+ uniform sampler2D uMainSampler;
+-uniform sampler2D uLayerSampler;
++// WA patch: uLayerSampler carries PACKED INTEGER DATA (tile index + flag bits), not colour.
++// GLSL ES 1.00 defaults fragment-shader samplers to `lowp` (4.5.3), whose only guarantee is
++// 8-bit absolute precision. GPUs that honour lowp literally (Adreno 740/750 - S23, S23 Ultra,
++// Z Fold 7) quantise the fetched bytes, so `texel.a * 255.0` lands near 15.94 instead of 16.0
++// and the empty-tile test below fails. Force full precision on the data samplers.
++uniform WA_DATA_PRECISION sampler2D uLayerSampler;
+ uniform vec2 uMainResolution;
+ uniform vec2 uLayerResolution;
+ uniform float uTileColumns;
+@@ -27,7 +34,7 @@ uniform float uAlpha;
+ uniform float uTime;
+ 
+ #if MAX_ANIM_FRAMES > 0
+-uniform sampler2D uAnimSampler;
++uniform WA_DATA_PRECISION sampler2D uAnimSampler;
+ uniform vec2 uAnimResolution;
+ #endif
+ 
+@@ -42,10 +49,20 @@ vec2 getTexRes ()
+     return uMainResolution;
+ }
+ 
++// WA patch: snap a UNORM8 texel back to the exact 0-255 byte values it was uploaded with.
++// Any sub-ULP drift in the sampler survives the * 256^n weighting below as an error of
++// hundreds, so decode from rounded bytes rather than from the raw fetched floats.
++vec4 texelBytes (vec4 texel)
++{
++    return floor(texel * 255.0 + 0.5);
++}
++
+ // Convert a vec4 texel to a float.
+ float floatTexel (vec4 texel)
+ {
+-    return texel.r * 255.0 + (texel.g * 255.0 * 256.0) + (texel.b * 255.0 * 256.0 * 256.0) + (texel.a * 255.0 * 256.0 * 256.0 * 256.0);
++    vec4 b = texelBytes(texel);
++
++    return b.r + (b.g * 256.0) + (b.b * 256.0 * 256.0) + (b.a * 256.0 * 256.0 * 256.0);
+ }
+ 
+ struct Tile
+@@ -67,12 +84,15 @@ Tile getLayerData (vec2 coord)
+     // Invert Y, as textures are flipped in GL.
+     uv.y = 1.0 - uv.y;
+ 
+-    vec4 texel = texture2D(uLayerSampler, (tile + 0.5) / uLayerResolution) * 255.0;
++    vec4 texel = texelBytes(texture2D(uLayerSampler, (tile + 0.5) / uLayerResolution));
+ 
+     float flags = texel.a;
+ 
+     /* Check for empty tile flag in bit 28. */
+-    if (flags == 16.0)
++    /* WA patch: test the bit, don't compare the whole byte for equality. `flags == 16.0` was */
++    /* bit-exact float equality on a sampled value, so the tiniest precision drift turned every */
++    /* empty cell into tile 0 of the tileset, which then painted over every layer beneath it. */
++    if (mod(flags, 32.0) >= 16.0)
+     {
+         return Tile(
+             0.0,
+@@ -95,6 +115,17 @@ Tile getLayerData (vec2 coord)
+     bool animated = mod(flags, 64.0) > 31.0;
+     #endif
+ 
++    /* Bits 24-25 hold the tile rotation as a 0-3 quadrant (0/90/180/270 deg). */
++    float rotQuad = mod(flags, 4.0);
++    if (rotQuad > 0.5)
++    {
++        vec2 c = uv - 0.5;
++        float ang = -rotQuad * 1.5707963267948966;
++        float cs = cos(ang);
++        float sn = sin(ang);
++        uv = vec2(cs * c.x - sn * c.y, sn * c.x + cs * c.y) + 0.5;
++    }
++
+     if (flipX)
+     {
+         uv.x = 1.0 - uv.x;
+@@ -301,6 +332,10 @@ void main ()
+     vec2 layerTexCoord = outTexCoord;
+     Tile tile = getLayerData(layerTexCoord);
+ 
++    // WA patch: empty cells must be transparent. Without this, empty tiles sample tile 0 of the
++    // tileset (opaque for most tilesets) and paint over whatever is drawn beneath the layer.
++    if (tile.empty) { discard; }
++
+     Samples samples = getFinalSamples(tile, layerTexCoord);
+ 
+     vec4 fragColor = samples.color;
 diff --git a/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.vert b/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.vert
-index f0976f0..9b03dd8 100644
+index f0976f0..5f57a80 100644
 --- a/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.vert
 +++ b/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.vert
 @@ -31,7 +31,11 @@ void main ()
@@ -141,7 +384,7 @@ index f0976f0..9b03dd8 100644
      #pragma phaserTemplate(vertexProcess)
  }
 diff --git a/node_modules/phaser/src/tilemaps/TilemapGPULayer.js b/node_modules/phaser/src/tilemaps/TilemapGPULayer.js
-index 272bb1c..a895ab8 100644
+index 272bb1c..14ee08e 100644
 --- a/node_modules/phaser/src/tilemaps/TilemapGPULayer.js
 +++ b/node_modules/phaser/src/tilemaps/TilemapGPULayer.js
 @@ -217,6 +217,19 @@ var TilemapGPULayer = new Class({
@@ -165,7 +408,7 @@ index 272bb1c..a895ab8 100644
                  {
                      // Set the fourth bit to 1 to indicate an empty tile.
 diff --git a/node_modules/phaser/src/tilemaps/Tileset.js b/node_modules/phaser/src/tilemaps/Tileset.js
-index 5447865..cea245f 100644
+index 5447865..188aea1 100644
 --- a/node_modules/phaser/src/tilemaps/Tileset.js
 +++ b/node_modules/phaser/src/tilemaps/Tileset.js
 @@ -614,7 +614,11 @@ var Tileset = new Class({
