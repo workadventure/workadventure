@@ -10,7 +10,7 @@ import {
 import { resetAllStatusStoreExcept } from "../../Rules/StatusRules/statusChangerFunctions";
 import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
-import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { requestedScreenSharingState, screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
 import { activePictureInPictureStore, askPictureInPictureActivatingStore } from "../../Stores/PeerStore";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
@@ -463,7 +463,7 @@ class DesktopApi {
             micEnabled: false,
             cameraEnabled: false,
             screenSharing: false,
-            canScreenShare: true,
+            canScreenShare: false,
             inMeeting: false,
             pipOpen: false,
             status: "online",
@@ -587,12 +587,16 @@ class DesktopApi {
                 requestedStatusStore,
                 availabilityStatusStore,
                 activePictureInPictureStore,
+                screenSharingAvailableStore,
             ],
-            ([$inMeeting, $mic, $cam, $share, $requested, $availability, $pipOpen]): CompanionMedia => ({
+            ([$inMeeting, $mic, $cam, $share, $requested, $availability, $pipOpen, $canShare]): CompanionMedia => ({
                 micEnabled: Boolean($mic),
                 cameraEnabled: Boolean($cam),
                 screenSharing: Boolean($share),
-                canScreenShare: true,
+                // Mirror the app's own ActionBar gating (it renders ScreenSharingMenuItem behind
+                // screenSharingAvailableStore) so the companion cannot offer a share that the app
+                // itself would not: sharing needs a bubble/live-stream, not just being in a world.
+                canScreenShare: Boolean($canShare),
                 inMeeting: Boolean($inMeeting),
                 pipOpen: Boolean($pipOpen),
                 status: requestedStatusToKey($requested),
