@@ -1,4 +1,4 @@
-import { app, clipboard, nativeImage, Tray, Menu, type NativeImage } from "electron";
+import { app, nativeImage, Tray, Menu, type NativeImage } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 import { showAboutWindow } from "electron-util";
@@ -6,7 +6,7 @@ import { showAboutWindow } from "electron-util";
 import * as autoUpdater from "./auto-updater";
 import * as log from "./log";
 import settings from "./settings";
-import { createWindow, getWindow, loadDesktopTarget } from "./window";
+import { createWindow, getWindow } from "./window";
 import { emitCameraToggle, emitMuteToggle, emitSetStatus } from "./ipc";
 import { createPinnedWorldMenuItems, createRecentWorldMenuItems, openNativeWorldSwitcher } from "./native-menu";
 import { onWorldHistoryChange } from "./world-history";
@@ -19,7 +19,6 @@ import {
     type TrayStatus,
 } from "./presence";
 import { isCompanionVisible, toggleCompanion } from "./companion-controller";
-import { stripSensitiveQueryParams } from "./desktop-url-policy";
 
 let tray: Tray | undefined;
 
@@ -186,13 +185,6 @@ function drawTrayStatusImage(status: TrayStatus): NativeImage {
     }
 }
 
-function copyCurrentWorldUrl(): void {
-    const safe = stripSensitiveQueryParams(settings.get("last_room_url"));
-    if (safe) {
-        clipboard.writeText(safe);
-    }
-}
-
 function updateTrayContextMenu() {
     if (!tray) {
         return;
@@ -204,15 +196,16 @@ function updateTrayContextMenu() {
     const inWorld = status !== "offline";
     const media = getMediaState();
     const shortcuts = settings.get("shortcuts");
-    const lastRoomUrl = settings.get("last_room_url");
 
+    // Kept deliberately short: a menu-bar status item is glanced at mid-meeting, so only the things
+    // worth reaching for with a window hidden stay at the top level (status, mic, camera, companion,
+    // show/hide). World switching and diagnostics are real but rare, so they collapse into submenus;
+    // both also exist in the application menu, which is unreachable while the window is hidden.
     const trayContextMenu = Menu.buildFromTemplate([
         {
+            // The live status IS the label, so this one row both reports and changes it (it used to
+            // be a disabled header plus a separate "Set status" row saying the same thing twice).
             label: TRAY_STATUS_LABEL[status],
-            enabled: false,
-        },
-        {
-            label: "Set status",
             enabled: inWorld,
             submenu: buildStatusSubmenuItems(),
         },
@@ -239,11 +232,6 @@ function updateTrayContextMenu() {
             click() {
                 emitCameraToggle();
             },
-        },
-        {
-            label: "Copy current world URL",
-            enabled: Boolean(lastRoomUrl),
-            click: copyCurrentWorldUrl,
         },
         {
             label: "Companion panel",
@@ -275,45 +263,52 @@ function updateTrayContextMenu() {
             },
         },
         {
-            label: "Change world…",
-            click: openNativeWorldSwitcher,
-        },
-        {
-            label: "Pinned worlds",
-            submenu: createPinnedWorldMenuItems(),
-        },
-        {
-            label: "Recent worlds",
-            submenu: createRecentWorldMenuItems(),
-        },
-        { type: "separator" },
-        {
-            label: "Check for updates",
-            click() {
-                void autoUpdater.manualRequestUpdateCheck();
-            },
-        },
-        {
-            label: "Open Logs",
-            click() {
-                void log.openLog();
-            },
-        },
-        {
-            label: "Open Portal",
-            click() {
-                void loadDesktopTarget(settings.get("portal_url"));
-            },
+            label: "Worlds",
+            submenu: [
+                {
+                    label: "Change world…",
+                    click: openNativeWorldSwitcher,
+                },
+                { type: "separator" },
+                {
+                    label: "Pinned worlds",
+                    submenu: createPinnedWorldMenuItems(),
+                },
+                {
+                    label: "Recent worlds",
+                    submenu: createRecentWorldMenuItems(),
+                },
+            ],
         },
         { type: "separator" },
         {
-            label: "About",
-            click() {
-                showAboutWindow({
-                    icon: path.join(assetsDirectory, "icons", "logo.png"),
-                    copyright: "Copyright © WorkAdventure",
-                });
-            },
+            label: "Help",
+            submenu: [
+                {
+                    label: "Check for updates",
+                    click() {
+                        void autoUpdater.manualRequestUpdateCheck();
+                    },
+                },
+                {
+                    // Support-only, but this is the ONLY entry point to the log file in the app, so
+                    // it gets demoted rather than dropped.
+                    label: "Open Logs",
+                    click() {
+                        void log.openLog();
+                    },
+                },
+                {
+                    // Duplicated in the macOS app menu, but absent everywhere on Windows/Linux.
+                    label: "About",
+                    click() {
+                        showAboutWindow({
+                            icon: path.join(assetsDirectory, "icons", "logo.png"),
+                            copyright: "Copyright © WorkAdventure",
+                        });
+                    },
+                },
+            ],
         },
         {
             label: "Quit",
