@@ -647,6 +647,14 @@ export async function createWindow(initialUrl?: string) {
             closeAllHudWindows();
             stopPresenterCursor();
             stopCompanion();
+            // Presence is a single global describing the ACTIVE tab, and only the active renderer is
+            // allowed to push it. Left alone it would still describe the tab we just left, so a
+            // later blur would re-arm the companion for a meeting the visible tab isn't in — and the
+            // panel would come back showing the previous world's People list. Clear it, then ask the
+            // newly-active world for its own state: it pushes only on change, so without the request
+            // it would stay blank until something there happened to move.
+            resetPresence();
+            getActiveWorldContents()?.send("app:request-presence");
         });
     }
     // The tab strip is pinned to the top and reserves space; world views sit below it.
