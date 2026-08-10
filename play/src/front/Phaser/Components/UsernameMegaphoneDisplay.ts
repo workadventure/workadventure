@@ -87,11 +87,16 @@ export class UsernameMegaphoneDisplay {
         );
 
         this.animation.onfinish = () => {
-            this.animation = undefined;
             if (!show) {
                 this.element.style.opacity = "0";
                 this.element.style.display = "none";
             }
+            // Release the animation's hold on the element now that the inline styles above describe
+            // the resting state. A finished `fill: "forwards"` animation keeps applying its last
+            // keyframe, and an animation effect outranks inline styles, so leaving it in place would
+            // pin the icon collapsed and transparent: every later show() would set the right inline
+            // styles and still paint nothing.
+            this.stopAnimation();
         };
     }
 
