@@ -1,22 +1,24 @@
 /**
- * A small "✋" badge displayed next to the player's name when they raised their hand in a meeting.
- * It mirrors the behaviour of {@link UsernameMegaphoneDisplay}: a DOM element living inside the
- * username flex container, animated in and out.
+ * A small raised-hand badge displayed next to the player's name when they raised their hand in a
+ * meeting. It mirrors the behaviour of {@link UsernameMegaphoneDisplay}: a DOM element living inside
+ * the username flex container, animated in and out. The icon is the same "hand-stop" glyph used by
+ * RaiseHandIcon.svelte, so the feature looks identical wherever it appears.
  */
 export class UsernameRaisedHandDisplay {
-    public readonly element: HTMLSpanElement;
+    public readonly element: HTMLImageElement;
 
     private shown = false;
     private animation?: Animation;
 
     constructor() {
-        this.element = document.createElement("span");
-        this.element.textContent = "✋";
+        this.element = document.createElement("img");
+        this.element.src = "/resources/icons/icon_raise_hand.svg";
+        this.element.alt = "";
+        this.element.draggable = false;
         this.element.setAttribute("aria-hidden", "true");
         this.element.style.display = "none";
         this.element.style.flex = "0 0 auto";
-        this.element.style.lineHeight = "1";
-        this.element.style.fontSize = `calc(11px * var(--username-dom-scale, 1))`;
+        this.element.style.height = "75%";
         this.element.style.marginLeft = `calc(-2px * var(--username-dom-scale, 1))`;
         this.element.style.opacity = "0";
         this.element.style.pointerEvents = "none";
