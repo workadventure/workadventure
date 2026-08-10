@@ -17,6 +17,8 @@ import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
+import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
+import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Shortcut } from "./UserInputManager";
 
@@ -122,6 +124,14 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
 
         if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
+            return;
+        }
+
+        // While in a proximity bubble on a touch device, movement is joystick-only: ignore tap-to-move
+        // so a stray tap can't accidentally walk the player out of the conversation. The joystick (and
+        // keyboard) still move the player deliberately. Placed after the activatable handling above so
+        // tapping objects still works. Reading the store here keeps normal tap-to-move untouched elsewhere.
+        if (touchScreenManager.primaryTouchDevice && get(currentPlayerGroupIdStore) !== undefined) {
             return;
         }
 
