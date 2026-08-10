@@ -282,6 +282,7 @@ interface PositionCoordinates {
 
 const WORLD_SPACE_NAME = "allWorldUser";
 const debug = Debug("GameScene");
+const tilemapDebug = Debug("tilemap");
 
 export class GameScene extends DirtyScene {
     Terrains: Array<Tileset>;
@@ -3344,7 +3345,7 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.setTilesStream.subscribe((eventTiles) => {
                 const layers = [...new Set(eventTiles.map((eventTile) => eventTile.layer))];
-                console.info("[TilemapDebug] setTiles event received.", {
+                tilemapDebug("setTiles event received. %o", {
                     tileCount: eventTiles.length,
                     layers,
                     layerImplementations: Object.fromEntries(

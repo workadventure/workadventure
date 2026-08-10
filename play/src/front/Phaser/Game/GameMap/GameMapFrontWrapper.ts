@@ -9,6 +9,7 @@ import type {
 } from "@workadventure/map-editor";
 import { AreaCoordinates, GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
+import Debug from "debug";
 import type {
     ITiledMap,
     ITiledMapLayer,
@@ -43,6 +44,8 @@ type LayerRenderingDecision = {
     reason: string;
     tileIndicesCount?: number;
 };
+
+const debug = Debug("tilemap");
 
 const TILED_TILE_FLIP_FLAGS = 0xe0000000;
 const TILE_ANIMATION_REFRESH_FALLBACK_MS = 100;
@@ -438,7 +441,7 @@ export class GameMapFrontWrapper {
         const map = this.getMap();
 
         if (!(this.scene.game.renderer instanceof WebGLRenderer)) {
-            console.info("[TilemapDebug] Map renderer is not WebGL.", {
+            debug("Map renderer is not WebGL. %o", {
                 rendererType: this.scene.game.renderer.constructor.name,
                 mapWidthTiles: map.width,
                 mapHeightTiles: map.height,
@@ -454,7 +457,7 @@ export class GameMapFrontWrapper {
         const gl = this.scene.game.renderer.gl;
         const debugRendererInfo = gl.getExtension("WEBGL_debug_renderer_info");
 
-        console.info("[TilemapDebug] WebGL capabilities.", {
+        debug("WebGL capabilities. %o", {
             rendererType: this.scene.game.renderer.constructor.name,
             webglVersion: gl.getParameter(gl.VERSION) as string,
             shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION) as string,
@@ -507,7 +510,7 @@ export class GameMapFrontWrapper {
                     (tileset.imageHeight !== undefined && tileset.imageHeight > maxTextureSize),
             );
 
-        console.info(`[TilemapDebug] Layer "${layer.name}" initialized.`, {
+        debug(`Layer "${layer.name}" initialized. %o`, {
             implementation: this.getLayerImplementationName(phaserLayer),
             requestedGpuLayer: renderingDecision.gpuTileset !== undefined,
             gpuDecision: renderingDecision.reason,
@@ -529,7 +532,7 @@ export class GameMapFrontWrapper {
     }
 
     private logCollisionLayerCreation(layerName: string, layer: TilemapLayer): void {
-        console.info(`[TilemapDebug] Collision layer "${layerName}" initialized.`, {
+        debug(`Collision layer "${layerName}" initialized. %o`, {
             implementation: this.getLayerImplementationName(layer),
             visible: layer.visible,
             tilesets: this.getLayerTilesetMetadata(layer),
@@ -1090,11 +1093,10 @@ export class GameMapFrontWrapper {
     public putTile(tile: string | number | null, x: number, y: number, layer: string): void {
         const phaserLayer = this.findPhaserLayer(layer);
         if (phaserLayer) {
-            let tileIndex: number | undefined;
             if (tile === null) {
                 phaserLayer.putTileAt(-1, x, y);
             } else {
-                tileIndex = this.gameMap.getIndexForTileType(tile);
+                const tileIndex = this.gameMap.getIndexForTileType(tile);
                 if (tileIndex === undefined) {
                     console.error("The tile '" + tile + "' that you want to place doesn't exist.");
                     return;
