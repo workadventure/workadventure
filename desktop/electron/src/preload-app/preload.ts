@@ -93,6 +93,11 @@ const api: WorkAdventureDesktopApi = {
     onCameraToggle: (callback) => {
         ipcRenderer.on("app:on-camera-toggle", callback);
     },
+    onRequestPresence: (callback) => {
+        const listener = () => callback();
+        ipcRenderer.on("app:request-presence", listener);
+        return () => ipcRenderer.removeListener("app:request-presence", listener);
+    },
     getWindowState: () => ipcRenderer.invoke("app:getWindowState"),
     onWindowStateChange: (callback) => {
         const listener = (_event: Electron.IpcRendererEvent, state: DesktopWindowState) => callback(state);
