@@ -25,7 +25,7 @@ import {
 import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
-import { stopCompanion, updateCompanion } from "./companion-controller";
+import { onMainWindowBlur, onMainWindowFocus, stopCompanion, updateCompanion } from "./companion-controller";
 import { resetPresence } from "./presence";
 import { stopPresenterCursor } from "./presenter-cursor";
 import {
@@ -556,6 +556,15 @@ function configureNavigationSecurity(webContents: Electron.WebContents, config: 
 
     window.webContents.on("did-navigate", (event, url) => {
         rememberWorldUrl(url);
+        // A full navigation replaces the document, so the presence this world pushed (in a meeting,
+        // People list, mic/cam) describes a world that is gone. Nothing else clears it until the
+        // main window closes, which used to leave the tray and the companion showing the previous
+        // world's state until the new renderer connected. Only the visible tab drives them, so a
+        // background tab reloading must not wipe the active world's state.
+        if (isActiveWorldContents(webContents)) {
+            resetPresence();
+            stopCompanion();
+        }
     });
 
     // WorkAdventure is a SPA — travelling between rooms/worlds inside a session updates the URL
@@ -677,14 +686,23 @@ export async function createWindow(initialUrl?: string) {
     // close PiP defensively here: doing so would wipe manually-opened PiP whenever the user
     // clicks back onto the main app, AND the destroy-in-flight also races with the utility
     // window's loadFile, spraying ERR_FAILED logs and occasionally taking the whole app down.
-    // Any of these can change whether the main window is focused, which is the trigger for the
-    // companion panel (shown while backgrounded in a world).
+    // Any of these can change whether the main window is focused, which feeds the companion panel's
+    // visibility. Focus and blur are split out because they are edges, not just state: blurring
+    // *during a meeting* is one of the two triggers that arm the companion's auto-show, and
+    // focusing ends the away-session. Hide/minimize deliberately keep the plain re-evaluation —
+    // treating them as a blur would arm the panel every time the window is tucked away.
     const onWindowStateEvent = () => {
         emitDesktopWindowStateChange();
         updateCompanion();
     };
-    mainWindow.on("focus", onWindowStateEvent);
-    mainWindow.on("blur", onWindowStateEvent);
+    mainWindow.on("focus", () => {
+        emitDesktopWindowStateChange();
+        onMainWindowFocus();
+    });
+    mainWindow.on("blur", () => {
+        emitDesktopWindowStateChange();
+        onMainWindowBlur();
+    });
     mainWindow.on("show", onWindowStateEvent);
     mainWindow.on("hide", onWindowStateEvent);
     mainWindow.on("minimize", onWindowStateEvent);
