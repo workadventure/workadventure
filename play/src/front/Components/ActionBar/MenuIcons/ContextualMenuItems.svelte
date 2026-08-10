@@ -17,7 +17,6 @@
     import FollowMenuItem from "./FollowMenuItem.svelte";
     import EmojiMenuItem from "./EmojiMenuItem.svelte";
     import LockDiscussionMenuItem from "./LockDiscussionMenuItem.svelte";
-    import MovementLockMenuItem from "./MovementLockMenuItem.svelte";
     import MusicMenuItem from "./MusicMenuItem.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import MegaphoneMenuItem from "./MegaphoneMenuItem.svelte";
@@ -56,10 +55,6 @@
 
     <FollowMenuItem />
 {/if}
-
-<!-- Mobile "lock movement" toggle. Self-gates to touch devices; on phones it lands in the
-     profile (burger) menu with the other contextual actions rather than crowding the action bar. -->
-<MovementLockMenuItem />
 
 {#if $currentPlayerLockableAreasStore.length > 0 || ($bottomActionBarVisibilityStore && !$inLivekitStore && $currentPlayerGroupLockStateStore !== undefined) || $onboardingStore === "lockBubble"}
     <LockDiscussionMenuItem />
