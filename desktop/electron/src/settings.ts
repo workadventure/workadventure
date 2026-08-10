@@ -34,10 +34,15 @@ const defaultSettings: SettingsData = {
     world_history: [],
     pinned_worlds: [],
     shortcuts: {
-        mute_toggle: "",
-        camera_toggle: "",
-        // Opt-in like the others: no default global accelerator (avoids OS-wide conflicts); the tray
-        // "Companion panel" item toggles it without a shortcut.
+        // Global (work while another app has focus) — that is the point: muting during a meeting
+        // usually happens while the user is in some other window. Three-modifier chords are all but
+        // unclaimed on macOS/Windows, so registering them OS-wide steals nothing well-known. Notably
+        // NOT Cmd+Shift+A / Cmd+Shift+V (Zoom's combos): those are Finder's Go→Applications and
+        // paste-as-plain-text in Chrome/Slack/VS Code, which a global grab would shadow everywhere.
+        mute_toggle: "CommandOrControl+Alt+Shift+M",
+        camera_toggle: "CommandOrControl+Alt+Shift+C",
+        // Opt-in, unlike the two above: no default global accelerator; the tray "Companion panel"
+        // item toggles it without a shortcut.
         companion_toggle: "",
     },
 };
