@@ -343,6 +343,12 @@ export type WorkAdventureDesktopApi = {
         requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
         statusLocked?: boolean;
     }) => void;
+    /**
+     * Main asks this renderer to re-send its presence. The shell keeps one global presence for the
+     * active tab and clears it on a tab switch, so a world that only pushes on change needs this to
+     * re-sync when it becomes active again. Returns an unsubscriber.
+     */
+    onRequestPresence?: (callback: () => void) => () => void;
     /** Subscribe to availability changes requested from the tray "Set status" submenu. */
     onSetStatus?: (callback: (status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb") => void) => () => void;
     /** Set the current world's display name on the active tab. */

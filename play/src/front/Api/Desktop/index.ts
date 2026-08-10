@@ -394,6 +394,13 @@ class DesktopApi {
             presenceStore.subscribe((presence) => {
                 setPresence(presence);
             });
+            // Presence in the desktop shell is a single global describing the *active* tab, but this
+            // store only fires on change — so after the shell clears it (a tab switch), this world's
+            // state would stay missing until something here happened to change. Answer the shell's
+            // request with the current value so switching back re-syncs immediately.
+            window.WAD.onRequestPresence?.(() => {
+                setPresence(get(presenceStore));
+            });
         }
 
         // Apply availability changes requested from the tray "Set status" submenu. Uses the same
