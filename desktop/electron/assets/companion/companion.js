@@ -1029,15 +1029,25 @@
         els.hdrMic.classList.toggle("is-forbidden", !media.micEnabled);
         els.hdrCam.dataset.state = media.cameraEnabled ? "on" : "off";
         els.hdrCam.classList.toggle("is-forbidden", !media.cameraEnabled);
-        // Share: single icon; active (sharing) turns it secondary-blue.
+        // Share: single icon; active (sharing) turns it secondary-blue. Sharing needs a bubble, so
+        // the button stays disabled outside one — except while a share is already running, so the
+        // presenter can always stop it even if availability flipped underneath them.
         els.hdrShare.classList.toggle("is-active", media.screenSharing === true);
         els.hdrShare.disabled = !media.canScreenShare && !media.screenSharing;
-        els.hdrShare.title = media.screenSharing ? "Stop sharing your screen" : "Share your screen";
+        els.hdrShare.title = media.screenSharing
+            ? "Stop sharing your screen"
+            : els.hdrShare.disabled
+              ? "Join a meeting to share your screen"
+              : "Share your screen";
         els.hdrShare.setAttribute("aria-label", els.hdrShare.title);
         // Picture-in-picture: single icon; active turns it secondary-blue. Only meaningful in a meeting.
         els.hdrPip.classList.toggle("is-active", media.pipOpen === true);
         els.hdrPip.disabled = !media.inMeeting;
-        els.hdrPip.title = media.pipOpen ? "Close picture-in-picture" : "Picture-in-picture";
+        els.hdrPip.title = media.pipOpen
+            ? "Close picture-in-picture"
+            : els.hdrPip.disabled
+              ? "Join a meeting to open picture-in-picture"
+              : "Picture-in-picture";
         els.hdrPip.setAttribute("aria-label", els.hdrPip.title);
 
         // Self status dot + status dropdown current/locked.
