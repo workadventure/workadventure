@@ -1,0 +1,58 @@
+name: "Install Playwright"
+description: "Installs Playwright browsers and their system dependencies, hardened against transient apt/CDN failures."
+
+inputs:
+  browser:
+    description: "Browser to install (firefox, chromium, webkit, ...)."
+    required: true
+  working-directory:
+    description: "Directory the Playwright dependencies are installed in."
+    required: false
+    default: "tests"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Drop apt repositories Playwright does not need
+      shell: bash
+      run: |
+        # `playwright install --with-deps` runs `apt-get update`, and apt exits non-zero when ANY configured
+        # repository fails to fetch — which aborts the whole step and kills the entire shard. The Google
+        # Chrome repository preinstalled on the runner is the observed offender:
+        #
+        #   E: Failed to fetch https://dl.google.com/linux/chrome-stable/deb/.../Packages.gz
+        #      File has unexpected size (1403 != 1407). Mirror sync in progress?
+        #   E: Some index files failed to download.
+        #   Failed to install browsers / Error: Installation process exited with code: 100
+        #
+        # Nothing here needs it: the browsers come from Playwright's own CDN and `--with-deps` only pulls
+        # Ubuntu system libraries. It would only matter for the branded `chrome`/`msedge` channels, which
+        # this repo does not use (they are commented out in tests/playwright.config.ts).
+        #
+        # Matched by content rather than by filename so this keeps working across runner image changes and
+        # the newer deb822 `.sources` format.
+        matches="$(sudo grep -rl "dl\.google\.com" /etc/apt/sources.list.d/ 2>/dev/null || true)"
+        if [ -n "$matches" ]; then
+          echo "Removing unused apt repositories:"
+          echo "$matches"
+          echo "$matches" | sudo xargs -r rm -f
+        fi
+
+    - name: Install Playwright browsers
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        # The remaining Ubuntu mirrors and Playwright's browser CDN can still fail transiently, so retry
+        # rather than lose a 20 minute shard to a blip.
+        for attempt in 1 2 3; do
+          if npx playwright install --with-deps ${{ inputs.browser }}; then
+            exit 0
+          fi
+          if [ "$attempt" -lt 3 ]; then
+            delay=$((attempt * 15))
+            echo "::warning::playwright install failed (attempt ${attempt}/3), retrying in ${delay}s"
+            sleep "$delay"
+          fi
+        done
+        echo "::error::playwright install failed after 3 attempts"
+        exit 1

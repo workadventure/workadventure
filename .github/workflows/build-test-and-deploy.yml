@@ -211,8 +211,9 @@ jobs:
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        run: npx playwright install --with-deps ${{ matrix.browser }}
-        working-directory: tests
+        uses: ./.github/actions/install-playwright
+        with:
+          browser: ${{ matrix.browser }}
       - name: Set up virtual audio output for Firefox
         if: ${{ contains(matrix.project, 'firefox') }}
         run: |
@@ -504,8 +505,9 @@ jobs:
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        run: npx playwright install --with-deps chromium
-        working-directory: tests
+        uses: ./.github/actions/install-playwright
+        with:
+          browser: chromium
       - name: 'Setup .env file'
         run: cp .env.prod.template .env
         working-directory: contrib/docker
@@ -888,8 +890,9 @@ jobs:
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        run: npx playwright install --with-deps chromium
-        working-directory: tests
+        uses: ./.github/actions/install-playwright
+        with:
+          browser: chromium
 
       - name: "Install Room Api client dependencies"
         run: npm ci
