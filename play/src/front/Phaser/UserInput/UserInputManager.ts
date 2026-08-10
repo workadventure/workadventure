@@ -84,6 +84,12 @@ export class UserInputManager {
     private joystickForceThreshold = 60;
     private joystickForceAccuX = 0;
     private joystickForceAccuY = 0;
+    // Screen-space dead-zone: the finger must drag at least this far (in screen pixels) from the
+    // touch-down point before the joystick moves the avatar. Prevents a stray tap / micro-drift from
+    // nudging the player. Screen-space keeps it consistent regardless of camera zoom. Tune on preview.
+    private joystickDeadZoneScreenPx = 30;
+    private joystickPointerDownScreen: { x: number; y: number } | undefined;
+    private joystickDragEngaged = false;
 
     public userInputHandler: UserInputHandlerInterface;
     private enableUserInputsStoreUnsubscribe: Unsubscriber;
@@ -285,8 +291,20 @@ export class UserInputManager {
         if (this.isInputDisabled) {
             return eventsMap;
         }
+        // Joystick dead-zone: only move once the finger has dragged past the screen-space threshold
+        // from where it first touched. Until then a tap / micro-drift produces no movement.
+        if (!this.joystickDragEngaged && this.joystickPointerDownScreen) {
+            const activePointer = this.scene.input.activePointer;
+            const dragDistance = Math.hypot(
+                activePointer.x - this.joystickPointerDownScreen.x,
+                activePointer.y - this.joystickPointerDownScreen.y,
+            );
+            if (dragDistance >= this.joystickDeadZoneScreenPx) {
+                this.joystickDragEngaged = true;
+            }
+        }
         this.joystickEvents.forEach((value, key) => {
-            if (value && this.joystick) {
+            if (value && this.joystick && this.joystickDragEngaged) {
                 switch (key) {
                     case UserInputEvent.MoveUp:
                     case UserInputEvent.MoveDown:
@@ -307,7 +325,7 @@ export class UserInputManager {
                 }
             }
         });
-        eventsMap.set(UserInputEvent.JoystickMove, this.joystickEvents.any());
+        eventsMap.set(UserInputEvent.JoystickMove, this.joystickDragEngaged && this.joystickEvents.any());
         this.keysCode.forEach((d) => {
             if (d.keyInstance?.isDown) {
                 // Fix mac keyboard issue
@@ -360,6 +378,10 @@ export class UserInputManager {
         this.scene.input.on(Phaser.Input.Events.POINTER_UP, (pointer: Pointer, gameObjects: GameObject[]) => {
             this.userInputHandler.handlePointerUpEvent(pointer, gameObjects);
 
+            // Reset the joystick dead-zone for the next gesture.
+            this.joystickPointerDownScreen = undefined;
+            this.joystickDragEngaged = false;
+
             // Disable focus on iframe (need by Firefox)
             if (pointer.downElement?.nodeName === "CANVAS" && document.activeElement instanceof HTMLIFrameElement) {
                 document.activeElement.blur();
@@ -379,6 +401,9 @@ export class UserInputManager {
             // Let's only display the joystick if there is one finger on the screen
             if (pointer.event instanceof TouchEvent && pointer.event.touches.length === 1) {
                 this.joystick?.showAt(pointer.x, pointer.y);
+                // Start the dead-zone: the avatar won't move until the finger drags far enough from here.
+                this.joystickPointerDownScreen = { x: pointer.x, y: pointer.y };
+                this.joystickDragEngaged = false;
             } else {
                 this.joystick?.hide(30_000);
             }
