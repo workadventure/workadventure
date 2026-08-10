@@ -84,10 +84,11 @@ export class UserInputManager {
     private joystickForceThreshold = 60;
     private joystickForceAccuX = 0;
     private joystickForceAccuY = 0;
-    // Screen-space dead-zone: the finger must drag at least this far (in screen pixels) from the
-    // touch-down point before the joystick moves the avatar. Prevents a stray tap / micro-drift from
-    // nudging the player. Screen-space keeps it consistent regardless of camera zoom. Tune on preview.
-    private joystickDeadZoneScreenPx = 30;
+    // Screen-space dead-zone: the finger must drag at least this far from the touch-down point before
+    // the joystick moves the avatar. Prevents a stray tap / micro-drift from nudging the player.
+    // The game canvas runs at device resolution (the joystick sizes are likewise scaled by
+    // devicePixelRatio), so this is expressed in CSS pixels and scaled to device pixels. Tune on preview.
+    private joystickDeadZoneScreenPx = 35 * window.devicePixelRatio;
     private joystickPointerDownScreen: { x: number; y: number } | undefined;
     private joystickDragEngaged = false;
 
