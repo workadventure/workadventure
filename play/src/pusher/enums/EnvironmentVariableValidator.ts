@@ -218,7 +218,7 @@ export const EnvironmentVariables = z.object({
         .describe("JWT claim to use as the username. Defaults to 'preferred_username'"),
     OPENID_LOCALE_CLAIM: z.string().optional().describe("JWT claim to use for user locale. Defaults to 'locale'"),
     OPENID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional().describe(
-        "Policy for avatar naming: 'user_input' or 'openid_nickname'",
+        "Policy for avatar naming: 'user_input', 'allow_override_opid', or 'force_opid'",
     ),
     OPENID_TAGS_CLAIM: z.string().optional().describe("JWT claim containing user tags/roles"),
 
