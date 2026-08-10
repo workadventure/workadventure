@@ -47,6 +47,23 @@ const defaultSettings: SettingsData = {
     },
 };
 
+/**
+ * Keep only the accelerators a user actually configured, so persisted blanks don't mask a new
+ * default. Every install that ran a build before mic/camera had default bindings has
+ * `mute_toggle: ""` on disk, and `""` is a present key — a plain spread would let it win over the
+ * default forever and ship the feature to new profiles only. A blank can only mean "never set":
+ * the shortcut-editing UI is unreachable in this shell, so nothing can deliberately clear one.
+ */
+function configuredShortcuts(persisted: Partial<SettingsData["shortcuts"]> | undefined) {
+    const configured: Partial<SettingsData["shortcuts"]> = {};
+    for (const [name, accelerator] of Object.entries(persisted || {})) {
+        if (typeof accelerator === "string" && accelerator.length > 0) {
+            configured[name as keyof SettingsData["shortcuts"]] = accelerator;
+        }
+    }
+    return configured;
+}
+
 async function init() {
     let _settings = await Settings.get();
     if (Object.keys(_settings).length === 0) {
@@ -60,7 +77,7 @@ async function init() {
         ...persistedSettings,
         shortcuts: {
             ...defaultSettings.shortcuts,
-            ...(persistedSettings.shortcuts || {}),
+            ...configuredShortcuts(persistedSettings.shortcuts),
         },
     };
     settings.portal_url = normalizePersistedPortalUrl(process.env.WA_DESKTOP_PORTAL_URL || settings.portal_url);
