@@ -385,6 +385,13 @@ export type WorkAdventureDesktopApi = {
         statusLocked?: boolean;
     }) => void;
     /**
+     * Main asks this renderer to re-send its presence. Presence in the shell is a single global
+     * describing the *active* tab, and it is cleared whenever the active tab changes; since the
+     * renderer only pushes on change, without this the newly-active world's state would be missing
+     * until something in it happened to change. Returns an unsubscriber.
+     */
+    onRequestPresence?: (callback: () => void) => () => void;
+    /**
      * Subscribe to status changes requested from the tray "Set status" submenu. The renderer maps
      * the key back to an AvailabilityStatus and applies it. Returns an unsubscriber.
      */
