@@ -470,6 +470,9 @@ export class GameRoom implements BrothersFinder {
         }
 
         user.setPosition(userPosition);
+        // This position passed the area checks above, so it is a safe place to send the user back to
+        // if an area later becomes restricted around them.
+        user.lastAllowedPosition = userPosition;
         this.updateUserGroup(user);
         this._userMoveStream.next({ user, oldPosition });
     }
@@ -596,7 +599,22 @@ export class GameRoom implements BrothersFinder {
         if (gameMapAreas.getForbiddenAreasOnPosition(position, tags).length === 0) {
             return position;
         }
-        const safe = gameMapAreas.getNearestAllowedPosition(position, tags);
+        const safe = gameMapAreas.findNearestAllowedPosition(position, tags);
+        if (safe === undefined) {
+            // Restricted areas enclose the requested spawn position on every side. There is no
+            // server-side notion of a start position to fall back on (start layers are resolved by
+            // the client from the map), and inventing a point could put the user out of the map or
+            // inside a wall. Keep the requested position — the user is confined to it, since every
+            // subsequent move into a forbidden position is denied — and surface the map problem.
+            console.error(
+                "Could not find a position outside the restricted areas for the spawn position",
+                position,
+                "in room",
+                this._roomUrl,
+                ": the map's restricted areas leave no way out. Check the map configuration.",
+            );
+            return position;
+        }
         return { ...position, x: safe.x, y: safe.y };
     }
 
@@ -623,6 +641,11 @@ export class GameRoom implements BrothersFinder {
      * Relocates a single user to the nearest position outside the restricted area(s) they cannot
      * access, and re-syncs their client there. No-op if the user is a map editor or is not actually
      * inside a forbidden area.
+     *
+     * Destination, in order of preference: the nearest position the shared helper could verify as
+     * allowed, then the last position the server itself validated for this user (which the rights
+     * change may have invalidated too, hence the re-check). If neither is available the user is left
+     * in place rather than moved to an unverified position — see below.
      */
     public ejectUserFromRestrictedArea(user: User): void {
         if (user.canEdit) {
@@ -636,11 +659,46 @@ export class GameRoom implements BrothersFinder {
         if (gameMapAreas.getForbiddenAreasOnPosition(currentPosition, user.tags).length === 0) {
             return;
         }
-        const safe = gameMapAreas.getNearestAllowedPosition(currentPosition, user.tags);
+        const safe =
+            gameMapAreas.findNearestAllowedPosition(currentPosition, user.tags) ??
+            this.getLastAllowedPositionIfStillAllowed(user, gameMapAreas);
+        if (safe === undefined) {
+            // The geometry gives no way out and the user has no validated position to return to
+            // (they have not moved since joining). Moving them anywhere else would be guesswork, so
+            // leave them where they are: the enforcement still denies every move that would take
+            // them deeper into a forbidden area, and they can walk out on their own.
+            console.error(
+                "Could not eject user",
+                user.id,
+                "from a restricted area in room",
+                this._roomUrl,
+                ": no allowed position found around",
+                currentPosition,
+                ". Check the map configuration.",
+            );
+            return;
+        }
         const safePosition: PointInterface = { ...currentPosition, x: safe.x, y: safe.y, moving: false };
         user.setPosition(safePosition);
+        user.lastAllowedPosition = safePosition;
         this.updateUserGroup(user);
         this.writePositionCorrection(user, safePosition);
+    }
+
+    /**
+     * The last position the server accepted for this user, if the current area rights still allow it.
+     * Undefined when the user has not moved since joining, or when the rights change that triggered
+     * the ejection also made that position forbidden.
+     */
+    private getLastAllowedPositionIfStillAllowed(user: User, gameMapAreas: GameMapAreas): PointInterface | undefined {
+        const lastAllowedPosition = user.lastAllowedPosition;
+        if (
+            lastAllowedPosition === undefined ||
+            gameMapAreas.getForbiddenAreasOnPosition(lastAllowedPosition, user.tags).length > 0
+        ) {
+            return undefined;
+        }
+        return lastAllowedPosition;
     }
 
     /**

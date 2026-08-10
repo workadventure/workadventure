@@ -123,22 +123,50 @@ describe("GameMapAreas access enforcement helpers", () => {
         });
     });
 
-    describe("getNearestAllowedPosition", () => {
+    describe("findNearestAllowedPosition", () => {
         it("moves a user inside a forbidden area to a position that is no longer forbidden", () => {
             const areas = new GameMapAreas(createWam([createRestrictedArea(["admin"], [])]));
-            const safe = areas.getNearestAllowedPosition(INSIDE, ["guest"]);
+            const safe = areas.findNearestAllowedPosition(INSIDE, ["guest"]);
             expect(safe).not.toEqual(INSIDE);
-            expect(areas.getForbiddenAreasOnPosition(safe, ["guest"])).toHaveLength(0);
+            expect(safe && areas.getForbiddenAreasOnPosition(safe, ["guest"])).toEqual([]);
         });
 
         it("leaves an already-allowed position unchanged (user has the tag)", () => {
             const areas = new GameMapAreas(createWam([createRestrictedArea(["admin"], [])]));
-            expect(areas.getNearestAllowedPosition(INSIDE, ["admin"])).toEqual(INSIDE);
+            expect(areas.findNearestAllowedPosition(INSIDE, ["admin"])).toEqual(INSIDE);
         });
 
         it("leaves a position outside any restricted area unchanged", () => {
             const areas = new GameMapAreas(createWam([createRestrictedArea(["admin"], [])]));
-            expect(areas.getNearestAllowedPosition(OUTSIDE, ["guest"])).toEqual(OUTSIDE);
+            expect(areas.findNearestAllowedPosition(OUTSIDE, ["guest"])).toEqual(OUTSIDE);
+        });
+
+        it("escapes overlapping restricted areas, where exiting one lands inside the other", () => {
+            // The restricted area spans x ∈ [100, 200]; this second one overlaps its right edge and
+            // extends further right. From x = 195 the closest exit of each area is on the X axis and
+            // lands inside the other one, so exiting them one at a time never converges.
+            const areas = new GameMapAreas(
+                createWam([
+                    createRestrictedArea(["admin"], []),
+                    { ...createRestrictedArea(["admin"], []), id: "restricted-area-2", x: 190, width: 100 },
+                ]),
+            );
+            const safe = areas.findNearestAllowedPosition({ x: 195, y: 150 }, ["guest"]);
+            expect(safe && areas.getForbiddenAreasOnPosition(safe, ["guest"])).toEqual([]);
+        });
+
+        it("returns undefined rather than a forbidden position when restricted areas enclose the player", () => {
+            // Four restricted areas sealing every exit of the central one, on both axes.
+            const areas = new GameMapAreas(
+                createWam([
+                    createRestrictedArea(["admin"], []),
+                    { ...createRestrictedArea(["admin"], []), id: "left", x: 0, width: 100 },
+                    { ...createRestrictedArea(["admin"], []), id: "right", x: 200, width: 100 },
+                    { ...createRestrictedArea(["admin"], []), id: "top", y: 0, height: 100 },
+                    { ...createRestrictedArea(["admin"], []), id: "bottom", y: 200, height: 100 },
+                ]),
+            );
+            expect(areas.findNearestAllowedPosition(INSIDE, ["guest"])).toBeUndefined();
         });
     });
 });

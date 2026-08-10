@@ -300,11 +300,15 @@ export class AreasManager {
         if (!player) {
             return;
         }
-        const safePosition = this.gameMapAreas.getNearestAllowedPosition(
+        const safePosition = this.gameMapAreas.findNearestAllowedPosition(
             { x: player.x, y: player.y },
             this.userConnectedTags,
         );
-        player.teleportTo(safePosition.x, safePosition.y);
+        if (safePosition !== undefined) {
+            player.teleportTo(safePosition.x, safePosition.y);
+        }
+        // No allowed position around the player: do not teleport them somewhere arbitrary, the back
+        // would refuse it anyway. The collider keeps them from going deeper; just show the feedback.
         area.displayBlockedFeedback();
     }
 

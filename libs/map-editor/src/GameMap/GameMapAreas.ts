@@ -201,56 +201,76 @@ export class GameMapAreas {
 
     /**
      * If the given player position lies inside one or more restricted areas the user cannot access,
-     * returns the nearest position just outside them (accounting for the Woka Y offset). Otherwise
-     * returns the position unchanged. Used to eject a user who ended up inside a forbidden area
-     * (spawned there, or the area became restricted around them).
+     * returns the nearest position that is *verified* to be allowed. Returns the position unchanged
+     * when it is already allowed. Used to eject a user who ended up inside a forbidden area (spawned
+     * there, or the area became restricted around them).
      *
-     * Each iteration pushes the position out of the closest edge of one blocking area; a few
-     * iterations resolve the uncommon case of overlapping restricted areas. Best-effort: the
-     * returned position is guaranteed outside unless the iteration cap is reached.
+     * Returns `undefined` when no allowed position was found around the blocking areas (a map where
+     * restricted areas fully enclose the position). Callers must handle that case: they are the ones
+     * holding the context needed to decide (a last known good position, the map start position, or
+     * simply not moving the player) — this helper deliberately never invents a position.
+     *
+     * Candidates are the four exits of each blocking area, plus the four exits of their bounding box
+     * (which is what clears overlapping or nested restricted areas, where exiting a single one can
+     * land inside another). Every candidate is checked with `getForbiddenAreasOnPosition`, the same
+     * predicate the server enforces moves with, so a returned position can never be rejected
+     * afterwards by the enforcement it feeds.
      */
-    public getNearestAllowedPosition(
+    public findNearestAllowedPosition(
         position: { x: number; y: number },
         userConnectedTags: string[],
-        maxIterations = 4,
-    ): { x: number; y: number } {
-        let current = { x: position.x, y: position.y };
-        for (let i = 0; i < maxIterations; i++) {
-            const forbidden = this.getForbiddenAreasOnPosition(current, userConnectedTags);
-            if (forbidden.length === 0) {
-                return current;
-            }
-            current = this.pushPositionOutOfArea(current, forbidden[0]);
+    ): { x: number; y: number } | undefined {
+        const blockingAreas = this.getForbiddenAreasOnPosition(position, userConnectedTags);
+        if (blockingAreas.length === 0) {
+            return { x: position.x, y: position.y };
         }
-        return current;
+
+        const candidates = blockingAreas.flatMap((area) => this.getExitPositions(position, area));
+        candidates.push(...this.getExitPositions(position, this.getBoundingBox(blockingAreas)));
+
+        let nearest: { x: number; y: number } | undefined;
+        let nearestDistance = Number.POSITIVE_INFINITY;
+        for (const candidate of candidates) {
+            if (this.getForbiddenAreasOnPosition(candidate, userConnectedTags).length > 0) {
+                continue;
+            }
+            const distance = (candidate.x - position.x) ** 2 + (candidate.y - position.y) ** 2;
+            if (distance < nearestDistance) {
+                nearest = candidate;
+                nearestDistance = distance;
+            }
+        }
+        return nearest;
     }
 
     /**
-     * Pushes a position just outside the closest edge of the given area, accounting for the Woka Y
-     * offset (the "inside" test compares `y + offset` against the rectangle). A 1px margin is enough
-     * to clear the inclusive boundary; only the axis of the closest edge is moved.
+     * The four positions just outside the given rectangle's edges, keeping the other axis unchanged,
+     * and accounting for the Woka Y offset (the "inside" test compares `y + offset` against the
+     * rectangle). A 1px margin is enough to clear the inclusive boundary.
      */
-    private pushPositionOutOfArea(position: { x: number; y: number }, area: AreaData): { x: number; y: number } {
+    private getExitPositions(
+        position: { x: number; y: number },
+        rectangle: { x: number; y: number; width: number; height: number },
+    ): { x: number; y: number }[] {
         const margin = 1;
         const offsetY = this.areasPositionOffsetY;
-        const checkY = position.y + offsetY;
+        return [
+            { x: rectangle.x - margin, y: position.y },
+            { x: rectangle.x + rectangle.width + margin, y: position.y },
+            { x: position.x, y: rectangle.y - offsetY - margin },
+            { x: position.x, y: rectangle.y + rectangle.height - offsetY + margin },
+        ];
+    }
 
-        const distanceToLeft = position.x - area.x + margin;
-        const distanceToRight = area.x + area.width - position.x + margin;
-        const distanceToTop = checkY - area.y + margin;
-        const distanceToBottom = area.y + area.height - checkY + margin;
-
-        const minDistance = Math.min(distanceToLeft, distanceToRight, distanceToTop, distanceToBottom);
-        if (minDistance === distanceToLeft) {
-            return { x: area.x - margin, y: position.y };
-        }
-        if (minDistance === distanceToRight) {
-            return { x: area.x + area.width + margin, y: position.y };
-        }
-        if (minDistance === distanceToTop) {
-            return { x: position.x, y: area.y - offsetY - margin };
-        }
-        return { x: position.x, y: area.y + area.height - offsetY + margin };
+    private getBoundingBox(areas: AreaData[]): { x: number; y: number; width: number; height: number } {
+        const x = Math.min(...areas.map((area) => area.x));
+        const y = Math.min(...areas.map((area) => area.y));
+        return {
+            x,
+            y,
+            width: Math.max(...areas.map((area) => area.x + area.width)) - x,
+            height: Math.max(...areas.map((area) => area.y + area.height)) - y,
+        };
     }
 
     public isOverlappingArea(areaId: string): boolean {
