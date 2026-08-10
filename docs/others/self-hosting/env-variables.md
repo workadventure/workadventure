@@ -43,7 +43,7 @@ Environment variables for the Play service (frontend and pusher).
 | `OPENID_PROMPT` | No | OpenID Connect prompt parameter (e.g., 'login', 'consent') |
 | `OPENID_USERNAME_CLAIM` | No | JWT claim to use as the username. Defaults to 'preferred_username' |
 | `OPENID_LOCALE_CLAIM` | No | JWT claim to use for user locale. Defaults to 'locale' |
-| `OPENID_WOKA_NAME_POLICY` | No | Policy for avatar naming: 'user_input' or 'openid_nickname' |
+| `OPENID_WOKA_NAME_POLICY` | No | Policy for avatar naming: 'user_input', 'allow_override_opid', or 'force_opid' |
 | `OPENID_TAGS_CLAIM` | No | JWT claim containing user tags/roles |
 | `DISABLE_ANONYMOUS` | No | If true, anonymous users cannot access the platform. Defaults to false |
 | `PROMETHEUS_AUTHORIZATION_TOKEN` | No | The token to access the Prometheus metrics. |
