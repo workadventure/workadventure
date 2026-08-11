@@ -5,6 +5,17 @@ export default [
     playwright.configs['flat/recommended'],
     ...generateConfig(import.meta.dirname),
     {
+        // `projectService` resolves files through a tsconfig and this package has none, so the root-level
+        // config file belongs to no project and fails to parse ("was not found by the project service").
+        // That makes it unlintable, and therefore uncommittable through the lint-staged pre-commit hook.
+        files: ["*.config.ts"],
+        languageOptions: {
+            parserOptions: {
+                projectService: { allowDefaultProject: ["*.config.ts"] },
+            },
+        },
+    },
+    {
         rules: {
             ...playwright.configs['flat/recommended'].rules,
             // Allow conditional skips with a reason message
