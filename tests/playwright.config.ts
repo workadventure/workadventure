@@ -37,13 +37,22 @@ const config: PlaywrightTestConfig = {
         /* Base URL to use in actions like `await page.goto('/')`. */
         baseURL: process.env.PLAY_URL ?? "http://play.workadventure.localhost/",
 
-        /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-        trace:
-            process.env.NO_FLAKY === "true"
-                ? "retain-on-failure"
-                : process.env.CI
-                  ? "on-first-retry"
-                  : "retain-on-failure",
+        /*
+         * Keep a trace of the attempt that actually FAILED. See https://playwright.dev/docs/trace-viewer
+         *
+         * This was 'on-first-retry' in CI, which records only the retry — and since a flaky test passes on
+         * retry by definition, the attempt that failed shipped no trace at all. That left flaky CI failures
+         * to be diagnosed from the text call log alone, which is a good way to mistake whatever the log
+         * happens to mention for the actual cause.
+         *
+         * 'retain-on-first-failure' records the first run of each test and keeps it only when that run
+         * failed, so a flake leaves behind a trace of the failure itself while passing tests cost nothing.
+         * It also covers NO_FLAKY, where retries are disabled and there is only ever one run.
+         */
+        trace: "retain-on-first-failure",
+        /* A trace shows the DOM; a screenshot shows what actually rendered, which is the question whenever a
+           test times out waiting for UI that should have been there. Only kept for failures. */
+        screenshot: "only-on-failure",
         navigationTimeout: 60_000,
 
         // Emulates the user locale. See https://playwright.dev/docs/api/class-browsertype#browsertypelaunchoptions
