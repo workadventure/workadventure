@@ -46,12 +46,27 @@ const config: PlaywrightTestConfig = {
          * happens to mention for the actual cause.
          *
          * 'retain-on-first-failure' records the first run of each test and keeps it only when that run
-         * failed, so a flake leaves behind a trace of the failure itself while passing tests cost nothing.
-         * It also covers NO_FLAKY, where retries are disabled and there is only ever one run.
+         * failed, so a flake leaves behind a trace of the failure itself. It also covers NO_FLAKY, where
+         * retries are disabled and there is only ever one run.
+         *
+         * `snapshots: false` is what keeps this affordable. Recording has to happen on every first run,
+         * since we cannot know in advance which one will fail, and at the default settings that cost
+         * +23.5% of test time on the chromium 1/4 shard. Benchmarking the trace options separately shows
+         * the cost is almost entirely DOM snapshots, not screenshots:
+         *
+         *   off                                25.3s
+         *   screenshots + snapshots            42.3s   (+67%)
+         *   snapshots only (screenshots off)   42.6s   (+68%)
+         *   screenshots only (snapshots off)   26.5s   (+5%)
+         *
+         * Dropping snapshots loses the time-travel DOM viewer but keeps what a flaky timeout is actually
+         * diagnosed from: the action timeline with timings, the screencast, network, console and sources.
+         * Page structure at the moment of failure is still covered by the screenshot below and by the
+         * error-context.md that Playwright writes alongside it.
          */
-        trace: "retain-on-first-failure",
-        /* A trace shows the DOM; a screenshot shows what actually rendered, which is the question whenever a
-           test times out waiting for UI that should have been there. Only kept for failures. */
+        trace: { mode: "retain-on-first-failure", screenshots: true, snapshots: false, sources: true },
+        /* A screenshot shows what actually rendered, which is the question whenever a test times out waiting
+           for UI that should have been there. Only kept for failures. */
         screenshot: "only-on-failure",
         navigationTimeout: 60_000,
 
