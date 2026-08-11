@@ -300,7 +300,7 @@ jobs:
       - name: Upload test-map
         run: sleep 5 && npm run upload-test-map
         working-directory: map-storage
-      - name: Check for no-flaky label
+      - name: Check PR labels
         id: check-no-flaky
         if: github.event_name == 'pull_request'
         run: |
@@ -309,12 +309,21 @@ jobs:
           else
             echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
           fi
+          # Traces always record DOM snapshots off by default, because they cost ~23% of test time while
+          # the rest of a trace costs ~1%. Add the "full-trace" label when hunting a specific flake and the
+          # time-travel DOM viewer is worth that price.
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'full-trace') }}" == "true" ]]; then
+            echo "has_full_trace_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run Playwright tests
         run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow${{ matrix.ignoreTags && matrix.ignoreTags != '' && format('|{0}', matrix.ignoreTags) || '' }}"
         working-directory: tests
         env:
           RENDERER_MODE: ${{ matrix.renderer }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+          FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
           IS_FORK: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
       - name: Display docker compose logs on failure
         run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs
@@ -561,7 +570,7 @@ jobs:
           sleep 10
           npm run upload-test-map-single-domain
         working-directory: map-storage
-      - name: Check for no-flaky label
+      - name: Check PR labels
         id: check-no-flaky
         if: github.event_name == 'pull_request'
         run: |
@@ -570,6 +579,14 @@ jobs:
           else
             echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
           fi
+          # Traces always record DOM snapshots off by default, because they cost ~23% of test time while
+          # the rest of a trace costs ~1%. Add the "full-trace" label when hunting a specific flake and the
+          # time-travel DOM viewer is worth that price.
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'full-trace') }}" == "true" ]]; then
+            echo "has_full_trace_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
         run: npm run test-single-domain-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
@@ -577,6 +594,7 @@ jobs:
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+          FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
       - name: Display docker compose logs on failure
         run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml logs
         if: failure()
@@ -909,7 +927,7 @@ jobs:
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip *
         working-directory: map-storage
 
-      - name: Check for no-flaky label
+      - name: Check PR labels
         id: check-no-flaky
         if: github.event_name == 'pull_request'
         run: |
@@ -917,6 +935,14 @@ jobs:
             echo "has_no_flaky_label=true" >> $GITHUB_OUTPUT
           else
             echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
+          fi
+          # Traces always record DOM snapshots off by default, because they cost ~23% of test time while
+          # the rest of a trace costs ~1%. Add the "full-trace" label when hunting a specific flake and the
+          # time-travel DOM viewer is worth that price.
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'full-trace') }}" == "true" ]]; then
+            echo "has_full_trace_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
           fi
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
@@ -931,6 +957,7 @@ jobs:
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+          FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

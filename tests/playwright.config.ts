@@ -59,12 +59,27 @@ const config: PlaywrightTestConfig = {
          *   snapshots only (screenshots off)   42.6s   (+68%)
          *   screenshots only (snapshots off)   26.5s   (+5%)
          *
+         * Confirmed against CI rather than only the benchmark: on the 55 tests that passed in four
+         * comparable chromium 1/4 runs, snapshots on cost +23.5% while snapshots off cost +1.0%, the latter
+         * being inside the run-to-run noise between two baseline runs.
+         *
          * Dropping snapshots loses the time-travel DOM viewer but keeps what a flaky timeout is actually
          * diagnosed from: the action timeline with timings, the screencast, network, console and sources.
          * Page structure at the moment of failure is still covered by the screenshot below and by the
          * error-context.md that Playwright writes alongside it.
+         *
+         * When that is not enough — you are hunting a specific flake and want the DOM viewer back — add the
+         * "full-trace" label to the PR and re-run. Keeping the cheap trace as the floor rather than making
+         * all tracing opt-in matters because these flakes are roughly 1 in 8 and non-deterministic: a label
+         * requires knowing in advance which run will fail, so on its own it would leave the common case
+         * (a flake on an unrelated PR) with no trace at all.
          */
-        trace: { mode: "retain-on-first-failure", screenshots: true, snapshots: false, sources: true },
+        trace: {
+            mode: "retain-on-first-failure",
+            screenshots: true,
+            snapshots: process.env.FULL_TRACE === "true",
+            sources: true,
+        },
         /* A screenshot shows what actually rendered, which is the question whenever a test times out waiting
            for UI that should have been there. Only kept for failures. */
         screenshot: "only-on-failure",
