@@ -967,6 +967,31 @@ export class SocketManager {
         this.cleanupRoomIfEmpty(room);
     }
 
+    /**
+     * Removes many zone listeners at once.
+     *
+     * Compared to calling removeZoneListener in a loop, the room is resolved only once and the room cleanup is
+     * only attempted once. It also lets callers get rid of a Promise.all over an unbounded number of zones
+     * (Promise.all throws a RangeError above 2^21 elements).
+     */
+    async removeZoneListeners(
+        call: RoomSocket,
+        roomId: string,
+        zones: Iterable<{ x: number; y: number }>,
+    ): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
+        if (!room) {
+            console.warn("In removeZoneListeners, could not find room with id '" + roomId + "'");
+            return;
+        }
+
+        // GameRoom.removeZoneListener is synchronous, so no Promise juggling is needed here.
+        for (const zone of zones) {
+            room.removeZoneListener(call, zone.x, zone.y);
+        }
+        this.cleanupRoomIfEmpty(room);
+    }
+
     async addRoomListener(call: RoomSocket, roomId: string) {
         const room = await this.getOrCreateRoom(roomId);
         if (!room) {
