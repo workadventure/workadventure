@@ -18,6 +18,14 @@
                 font-weight: 200 700;
                 font-display: swap;
             }
+            /* Bebas Neue is not otherwise used in this repo, so it is vendored here like the rest
+               (SIL Open Font License 1.1). Caps-only by design. */
+            @font-face {
+                font-family: "Bebas Neue";
+                src: url("./fonts/bebas-neue-latin-400-normal.woff2") format("woff2");
+                font-weight: 400;
+                font-display: swap;
+            }
             /* Roboto Condensed is the design system's `--font-main`
                (@workadventure/design-system/src/theme.css), so the body text uses it too. */
             @font-face {
@@ -312,7 +320,7 @@
                 /* 68/198 of the design tile, as a share so it tracks the tile at any size. */
                 height: 34.4%;
                 /* Puts the label's optical centre on the solid block's centre. */
-                padding-bottom: clamp(7px, 0.72vw, 10px);
+                padding-bottom: clamp(5px, 0.53vw, 7.5px);
                 /* Solid where it has to hide the name and URL, then fading out above so the band
                    melts into the map instead of cutting it with a hard line. The stop sits just
                    above the copy, which ends ~34px up. */
@@ -322,13 +330,20 @@
                     var(--primary) 64%,
                     rgba(91, 95, 240, 0) 100%
                 );
-                font-family: Oswald, Roboto, sans-serif;
-                font-size: clamp(13px, 1.15vw, 16px);
-                font-weight: 500;
-                letter-spacing: 0.04em;
-                text-transform: uppercase;
+                /* Paragraph/LG — Roboto Condensed 18/28, no tracking, sentence case. */
+                font-size: clamp(14px, 1.25vw, var(--text-lg));
+                font-weight: 400;
+                line-height: calc(var(--text-lg-line) / var(--text-lg));
+                letter-spacing: 0;
                 opacity: 0;
                 transition: opacity 140ms ease;
+            }
+
+            /* 6x12 chevron, 2px stroke. Drawn as SVG so the stroke stays crisp at any tile size. */
+            .world-hover svg {
+                flex: 0 0 auto;
+                width: 6px;
+                height: 12px;
             }
 
             .world:hover .world-hover,
@@ -378,20 +393,24 @@
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
             }
 
+            /* Bebas Neue 28/39, Regular, no tracking. `uppercase` is redundant for Bebas (it has
+               no lowercase glyphs) but keeps the look if the face ever falls back to Arial. */
             .choice h2 {
-                margin: 0 0 8px;
-                font-family: Oswald, Roboto, sans-serif;
-                font-size: 17px;
-                font-weight: 500;
-                letter-spacing: 0.04em;
+                margin: 0 0 10px;
+                font-family: "Bebas Neue", "Roboto Condensed", Arial, sans-serif;
+                font-size: clamp(21px, 1.95vw, 28px);
+                font-weight: 400;
+                line-height: calc(39 / 28);
+                letter-spacing: 0;
                 text-transform: uppercase;
             }
 
+            /* Paragraph/LG — Roboto Condensed 18/28. */
             .choice p {
                 margin: 0;
                 color: var(--text-muted);
-                font-size: 13px;
-                line-height: 1.5;
+                font-size: clamp(14px, 1.25vw, var(--text-lg));
+                line-height: calc(var(--text-lg-line) / var(--text-lg));
             }
 
             .or {
@@ -499,9 +518,9 @@
                 min-height: 16px;
             }
 
-            /* Stack before the pair gets squeezed: below ~1000px the ratio-derived height is no
-               longer tall enough for the Join card's field + button, and the copy spills out. */
-            @media (max-width: 1000px) {
+            /* Stack before the pair gets squeezed: below ~1100px the ratio-derived height is no
+               longer tall enough for the Join card at 28/39 + 18/28, and the copy spills out. */
+            @media (max-width: 1100px) {
                 .choices {
                     flex-direction: column;
                     align-items: stretch;
