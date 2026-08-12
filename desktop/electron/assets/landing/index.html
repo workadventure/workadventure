@@ -274,8 +274,16 @@
                 align-items: center;
                 justify-content: center;
                 gap: 6px;
-                height: 40px;
-                background: var(--primary);
+                height: 56px;
+                /* Solid where it has to hide the name and URL, then fading out above so the band
+                   melts into the map instead of cutting it with a hard line. The stop sits just
+                   above the copy, which ends ~34px up. */
+                background: linear-gradient(
+                    to top,
+                    var(--primary) 0%,
+                    var(--primary) 64%,
+                    rgba(91, 95, 240, 0) 100%
+                );
                 font-family: Oswald, Roboto, sans-serif;
                 font-size: 14px;
                 font-weight: 500;
