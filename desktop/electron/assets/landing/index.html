@@ -159,7 +159,8 @@
                 position: relative;
                 flex: 0 0 auto;
                 width: 208px;
-                height: 108px;
+                /* 16:9 — a map preview is a picture of a screen, so it keeps a screen's ratio. */
+                aspect-ratio: 16 / 9;
                 padding: 0;
                 overflow: hidden;
                 background: none;
@@ -260,19 +261,23 @@
                 color: #f5c451;
             }
 
+            /* Hovering swaps only the caption strip — the map stays visible above it, so the tile
+               still shows which world you are about to open while it offers the action. Opaque and
+               sized to cover the name/URL exactly, so they don't ghost through the label. */
             .world-hover {
                 position: absolute;
-                inset: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
                 z-index: 1;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 gap: 6px;
-                /* Opaque: the overlay replaces the tile rather than tinting it, so the name and URL
-                   underneath don't ghost through the label. */
+                height: 40px;
                 background: var(--primary);
                 font-family: Oswald, Roboto, sans-serif;
-                font-size: 15px;
+                font-size: 14px;
                 font-weight: 500;
                 letter-spacing: 0.04em;
                 text-transform: uppercase;
