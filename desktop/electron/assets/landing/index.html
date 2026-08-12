@@ -28,7 +28,8 @@
             :root {
                 color-scheme: dark;
                 --bg: #0c1626;
-                --card: #16233c;
+                /* Translucent so the backdrop-blur behind it actually reads as glass. */
+                --card: rgba(22, 35, 60, 0.72);
                 --card-border: rgba(255, 255, 255, 0.07);
                 --text: #ffffff;
                 --text-muted: #93a3ba;
@@ -67,7 +68,8 @@
             .page {
                 display: flex;
                 flex-direction: column;
-                width: min(1180px, 100%);
+                /* Sized against the 1440x1024 design frame. */
+                width: min(1340px, 100%);
                 min-height: 100%;
                 margin: 0 auto;
                 padding: clamp(28px, 6vh, 72px) clamp(20px, 5vw, 72px);
@@ -140,7 +142,7 @@
                browsed, so wrapping them into a block would make the page feel like a directory. */
             .world-row {
                 display: flex;
-                gap: 10px;
+                gap: 24px;
                 overflow-x: auto;
                 padding-bottom: 6px;
                 scrollbar-width: thin;
@@ -158,9 +160,10 @@
             .world {
                 position: relative;
                 flex: 0 0 auto;
-                width: 208px;
-                /* 16:9 — a map preview is a picture of a screen, so it keeps a screen's ratio. */
-                aspect-ratio: 16 / 9;
+                /* 345x198 on the 1440x1024 design frame. Ratio kept as the literal pair rather than
+                   rounded to 16:9 — it is 1.742, and at this size the difference is visible. */
+                width: 345px;
+                aspect-ratio: 345 / 198;
                 padding: 0;
                 overflow: hidden;
                 background: none;
@@ -191,7 +194,7 @@
                 inset: 0;
                 background-image: linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
                     linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px);
-                background-size: 26px 26px;
+                background-size: 40px 40px;
                 background-position: var(--ox) var(--oy);
             }
 
@@ -204,12 +207,12 @@
 
             .world-copy {
                 position: absolute;
-                right: 10px;
-                bottom: 8px;
-                left: 10px;
+                right: 14px;
+                bottom: 10px;
+                left: 14px;
                 display: flex;
                 flex-direction: column;
-                gap: 1px;
+                gap: 2px;
                 min-width: 0;
             }
 
@@ -221,27 +224,27 @@
             }
 
             .world-name {
-                font-size: 12px;
+                font-size: 15px;
                 font-weight: 700;
             }
 
             .world-url {
                 color: rgba(255, 255, 255, 0.62);
-                font-size: 9px;
+                font-size: 10px;
             }
 
             /* The whole tile is the open button, so the pin sits above it rather than inside it —
                nesting a button in a button is invalid and swallows the click. */
             .world-pin {
                 position: absolute;
-                top: 6px;
-                left: 6px;
+                top: 8px;
+                left: 8px;
                 z-index: 2;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 26px;
-                height: 26px;
+                width: 30px;
+                height: 30px;
                 padding: 0;
                 background: none;
                 border: 0;
@@ -278,9 +281,9 @@
                 align-items: flex-end;
                 justify-content: center;
                 gap: 6px;
-                height: 56px;
-                /* Puts the label's optical centre on the solid block's centre (~18px up). */
-                padding-bottom: 8px;
+                height: 68px;
+                /* Puts the label's optical centre on the solid block's centre (~22px up). */
+                padding-bottom: 10px;
                 /* Solid where it has to hide the name and URL, then fading out above so the band
                    melts into the map instead of cutting it with a hard line. The stop sits just
                    above the copy, which ends ~34px up. */
@@ -291,7 +294,7 @@
                     rgba(91, 95, 240, 0) 100%
                 );
                 font-family: Oswald, Roboto, sans-serif;
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: 500;
                 letter-spacing: 0.04em;
                 text-transform: uppercase;
@@ -318,16 +321,23 @@
             .choices {
                 display: flex;
                 align-items: stretch;
+                /* 22 + 80 (the OR column) + 22 = the 124px the design leaves between the cards. */
                 gap: 22px;
             }
 
             .choice {
                 display: flex;
-                flex: 1 1 0;
+                /* 534x287 on the 1440x1024 design frame; shrink only when the window is too narrow
+                   to hold the pair. */
+                flex: 0 1 534px;
                 flex-direction: column;
-                max-width: 420px;
-                padding: 22px 24px 20px;
+                min-height: 287px;
+                padding: 26px 28px 24px;
+                /* Frosted over the background rather than a flat fill — the design's glass card.
+                   8px is Tailwind's default `backdrop-blur`, which the mockup uses. */
                 background: var(--card);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
                 border: 1px solid var(--card-border);
                 border-radius: var(--radius);
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
@@ -352,7 +362,8 @@
             .or {
                 display: flex;
                 align-items: center;
-                flex: 0 0 auto;
+                justify-content: center;
+                flex: 0 0 80px;
                 color: var(--text-muted);
                 font-size: 11px;
                 letter-spacing: 0.12em;
