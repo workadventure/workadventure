@@ -91,17 +91,23 @@
 
         var hover = document.createElement("span");
         hover.className = "world-hover";
+        // Label and chevron share a row of their own so they centre against EACH OTHER. Left as
+        // direct children of the band they would both align to its bottom edge, which lines the
+        // chevron up with the text's line box (28px tall) rather than with the letters.
+        var hoverRow = document.createElement("span");
+        hoverRow.className = "world-hover-row";
         var hoverLabel = document.createElement("span");
         hoverLabel.textContent = "Explore";
-        hover.appendChild(hoverLabel);
+        hoverRow.appendChild(hoverLabel);
         // 6x12 chevron with a 2px stroke, per the design. The path spans x=1..5 so the stroke's
         // 1px half-width lands exactly on the viewBox edges instead of being clipped.
-        hover.insertAdjacentHTML(
+        hoverRow.insertAdjacentHTML(
             "beforeend",
             '<svg viewBox="0 0 6 12" fill="none" stroke="currentColor" stroke-width="2" ' +
                 'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
                 '<path d="M1 1l4 5l-4 5"/></svg>'
         );
+        hover.appendChild(hoverRow);
         card.appendChild(hover);
 
         card.addEventListener("click", function () {
