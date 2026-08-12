@@ -7,17 +7,16 @@
         return;
     }
 
+    var page = document.getElementById("page");
     var form = document.getElementById("join-form");
     var input = document.getElementById("world-url");
     var joinBtn = document.getElementById("join-btn");
     var createBtn = document.getElementById("create-btn");
     var errorEl = document.getElementById("join-error");
     var createErrorEl = document.getElementById("create-error");
-    var recentSection = document.getElementById("recent-worlds");
-    var recentList = document.getElementById("recent-list");
+    var recentSection = document.getElementById("recent");
+    var worldRow = document.getElementById("world-row");
     var recentErrorEl = document.getElementById("recent-error");
-    var pinnedSection = document.getElementById("pinned-worlds");
-    var pinnedList = document.getElementById("pinned-list");
 
     function showError(element, message) {
         element.textContent = message || "";
@@ -41,45 +40,64 @@
     // Star (filled = pinned, outline = not). Inline SVG so the sandboxed page needs no assets.
     function pinIconSvg(filled) {
         return (
-            '<svg viewBox="0 0 24 24" width="16" height="16" fill="' +
+            '<svg viewBox="0 0 24 24" width="15" height="15" fill="' +
             (filled ? "currentColor" : "none") +
             '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
             '<path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z"/></svg>'
         );
     }
 
-    function buildWorldItem(world, listEl) {
-        var row = document.createElement("div");
-        row.className = "recent-item";
-        row.title = world.url;
+    // No map image exists for an arbitrary world, so each tile gets a stable look derived from its
+    // URL: same world, same colour and grid offset on every launch, and two worlds are very
+    // unlikely to collide. Cheap stand-in for the real art, and it never leaves a card blank.
+    function hashString(value) {
+        var hash = 0;
+        for (var i = 0; i < value.length; i++) {
+            hash = (hash << 5) - hash + value.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash);
+    }
 
-        var open = document.createElement("button");
-        open.type = "button";
-        open.className = "recent-open";
+    function buildWorldCard(world) {
+        var card = document.createElement("button");
+        card.type = "button";
+        card.className = "world";
+        card.title = world.url;
+
+        var hash = hashString(world.url);
+        var art = document.createElement("span");
+        art.className = "world-art";
+        art.style.setProperty("--h", String(hash % 360));
+        art.style.setProperty("--ox", (hash % 26) + "px");
+        art.style.setProperty("--oy", ((hash >> 5) % 26) + "px");
+        card.appendChild(art);
+
+        var scrim = document.createElement("span");
+        scrim.className = "world-scrim";
+        card.appendChild(scrim);
 
         var copy = document.createElement("span");
-        copy.className = "recent-copy";
+        copy.className = "world-copy";
         var name = document.createElement("span");
-        name.className = "recent-name";
+        name.className = "world-name";
         name.textContent = world.label;
         var url = document.createElement("span");
-        url.className = "recent-url";
+        url.className = "world-url";
         url.textContent = world.url;
         copy.appendChild(name);
         copy.appendChild(url);
+        card.appendChild(copy);
 
-        var action = document.createElement("span");
-        action.className = "recent-action";
-        action.textContent = "Open";
-        open.appendChild(copy);
-        open.appendChild(action);
+        var hover = document.createElement("span");
+        hover.className = "world-hover";
+        hover.textContent = "Explore ›";
+        card.appendChild(hover);
 
-        open.addEventListener("click", function () {
+        card.addEventListener("click", function () {
             showError(recentErrorEl, "");
-            Array.prototype.forEach.call(document.querySelectorAll(".recent-item button"), function (b) {
-                b.setAttribute("disabled", "disabled");
-            });
-            action.textContent = "Opening...";
+            setWorldsBusy(true);
+            hover.textContent = "Opening…";
             api.joinWorld(world.url)
                 .then(function (result) {
                     if (!result || !result.ok) {
@@ -89,72 +107,98 @@
                 .catch(function (err) {
                     console.warn("landing.joinWorld rejected", err);
                     showError(recentErrorEl, (err && err.message) || "Failed to join world.");
-                    Array.prototype.forEach.call(document.querySelectorAll(".recent-item button"), function (b) {
-                        b.removeAttribute("disabled");
-                    });
-                    action.textContent = "Open";
+                    setWorldsBusy(false);
+                    hover.textContent = "Explore ›";
                 });
         });
-        row.appendChild(open);
 
-        // Pin toggle (only when the API supports it).
-        if (typeof api.togglePin === "function") {
-            var pin = document.createElement("button");
-            pin.type = "button";
-            pin.className = "recent-pin" + (world.pinned ? " is-pinned" : "");
-            pin.setAttribute("aria-label", world.pinned ? "Unpin world" : "Pin world");
-            pin.title = world.pinned ? "Unpin" : "Pin";
-            pin.innerHTML = pinIconSvg(Boolean(world.pinned));
-            pin.addEventListener("click", function (event) {
-                event.stopPropagation();
-                api.togglePin(world.url)
-                    .then(function () {
-                        refreshWorlds();
-                    })
-                    .catch(function (err) {
-                        console.warn("landing.togglePin rejected", err);
-                    });
-            });
-            row.appendChild(pin);
-        }
-
-        listEl.appendChild(row);
+        return card;
     }
 
-    function renderInto(listEl, sectionEl, worlds) {
-        listEl.innerHTML = "";
-        if (!Array.isArray(worlds)) {
-            return;
-        }
-        worlds.forEach(function (world) {
-            if (world && typeof world.url === "string" && typeof world.label === "string") {
-                buildWorldItem(world, listEl);
-            }
+    function setWorldsBusy(busy) {
+        Array.prototype.forEach.call(worldRow.querySelectorAll("button"), function (btn) {
+            btn.disabled = busy;
         });
-        if (sectionEl) {
-            sectionEl.toggleAttribute("hidden", listEl.childElementCount === 0);
+    }
+
+    // The pin sits OUTSIDE the tile button (a button cannot nest inside a button) and is layered
+    // over it, so it stays clickable without opening the world.
+    function buildPin(world) {
+        var pin = document.createElement("button");
+        pin.type = "button";
+        pin.className = "world-pin" + (world.pinned ? " is-pinned" : "");
+        pin.setAttribute("aria-label", world.pinned ? "Unpin world" : "Pin world");
+        pin.title = world.pinned ? "Unpin" : "Pin";
+        pin.innerHTML = pinIconSvg(Boolean(world.pinned));
+        pin.addEventListener("click", function (event) {
+            event.stopPropagation();
+            api.togglePin(world.url)
+                .then(function () {
+                    refreshWorlds();
+                })
+                .catch(function (err) {
+                    console.warn("landing.togglePin rejected", err);
+                });
+        });
+        return pin;
+    }
+
+    function isWorld(world) {
+        return world && typeof world.url === "string" && typeof world.label === "string";
+    }
+
+    // Pinned worlds lead the row, then the rest in recency order; a pinned world must not appear
+    // twice when it is also recent.
+    function mergeWorlds(pinned, recent) {
+        var seen = Object.create(null);
+        var merged = [];
+        function push(world, forcePinned) {
+            if (!isWorld(world) || seen[world.url]) {
+                return;
+            }
+            seen[world.url] = true;
+            merged.push({ url: world.url, label: world.label, pinned: forcePinned || Boolean(world.pinned) });
         }
+        (Array.isArray(pinned) ? pinned : []).forEach(function (world) {
+            push(world, true);
+        });
+        (Array.isArray(recent) ? recent : []).forEach(function (world) {
+            push(world, false);
+        });
+        return merged;
+    }
+
+    function renderWorlds(worlds) {
+        worldRow.textContent = "";
+        worlds.forEach(function (world) {
+            var wrap = document.createElement("div");
+            wrap.style.position = "relative";
+            wrap.style.flex = "0 0 auto";
+            wrap.appendChild(buildWorldCard(world));
+            if (typeof api.togglePin === "function") {
+                wrap.appendChild(buildPin(world));
+            }
+            worldRow.appendChild(wrap);
+        });
+        var hasWorlds = worlds.length > 0;
+        recentSection.toggleAttribute("hidden", !hasWorlds);
+        // Drives the two layouts (top-left vs centred) from a single source of truth.
+        page.dataset.state = hasWorlds ? "has-worlds" : "empty";
     }
 
     function refreshWorlds() {
-        if (typeof api.getRecentWorlds === "function") {
-            api.getRecentWorlds()
-                .then(function (worlds) {
-                    renderInto(recentList, recentSection, worlds);
-                })
-                .catch(function (err) {
-                    console.warn("landing.getRecentWorlds rejected", err);
-                });
-        }
-        if (typeof api.getPinnedWorlds === "function") {
-            api.getPinnedWorlds()
-                .then(function (worlds) {
-                    renderInto(pinnedList, pinnedSection, worlds);
-                })
-                .catch(function (err) {
-                    console.warn("landing.getPinnedWorlds rejected", err);
-                });
-        }
+        var getRecent =
+            typeof api.getRecentWorlds === "function" ? api.getRecentWorlds() : Promise.resolve([]);
+        var getPinned =
+            typeof api.getPinnedWorlds === "function" ? api.getPinnedWorlds() : Promise.resolve([]);
+        Promise.all([getPinned, getRecent])
+            .then(function (results) {
+                renderWorlds(mergeWorlds(results[0], results[1]));
+            })
+            .catch(function (err) {
+                console.warn("landing: failed to load worlds", err);
+                renderWorlds([]);
+            });
     }
 
     form.addEventListener("submit", function (event) {
@@ -167,7 +211,7 @@
         }
         showError(errorEl, "");
         joinBtn.setAttribute("disabled", "disabled");
-        joinBtn.textContent = "Opening...";
+        joinBtn.textContent = "Opening…";
         api.joinWorld(url)
             .then(function (result) {
                 if (!result || !result.ok) {
