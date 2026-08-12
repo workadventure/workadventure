@@ -58,6 +58,8 @@
                    variables so the tiles quote the same tokens the rest of the product does. */
                 --text-lg: 18px;
                 --text-lg-line: 28px;
+                --text-sm: 14px;
+                --text-sm-line: 24px;
                 --text-xs: 13px;
                 --text-xs-line: 20px;
                 font-family: "Roboto Condensed", Arial, ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -411,12 +413,14 @@
                 text-transform: uppercase;
             }
 
-            /* Paragraph/LG — Roboto Condensed 18/28. */
+            /* Paragraph/SM — 14/24. Not LG: at 18px the Create description needs 530px against
+               476px of card, so it wrapped. 16px does fit, but by 5px, which any font fallback or
+               copy tweak would eat — SM keeps it on one line with room to spare. */
             .choice p {
                 margin: 0;
                 color: var(--text-muted);
-                font-size: clamp(14px, 1.25vw, var(--text-lg));
-                line-height: calc(var(--text-lg-line) / var(--text-lg));
+                font-size: clamp(12px, 0.98vw, var(--text-sm));
+                line-height: calc(var(--text-sm-line) / var(--text-sm));
             }
 
             .or {
