@@ -18,10 +18,18 @@
                 font-weight: 200 700;
                 font-display: swap;
             }
+            /* Roboto Condensed is the design system's `--font-main`
+               (@workadventure/design-system/src/theme.css), so the body text uses it too. */
             @font-face {
-                font-family: "Roboto";
-                src: url("./fonts/roboto-latin-400-normal.woff2") format("woff2");
+                font-family: "Roboto Condensed";
+                src: url("./fonts/roboto-condensed-latin-400-normal.woff2") format("woff2");
                 font-weight: 400;
+                font-display: swap;
+            }
+            @font-face {
+                font-family: "Roboto Condensed";
+                src: url("./fonts/roboto-condensed-latin-700-normal.woff2") format("woff2");
+                font-weight: 700;
                 font-display: swap;
             }
 
@@ -38,7 +46,13 @@
                 --danger: #ff8c78;
                 --focus: rgba(139, 143, 255, 0.5);
                 --radius: 14px;
-                font-family: Roboto, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                /* Design-system type scale (@workadventure/design-system/src/theme.css). Kept as
+                   variables so the tiles quote the same tokens the rest of the product does. */
+                --text-lg: 18px;
+                --text-lg-line: 28px;
+                --text-xs: 13px;
+                --text-xs-line: 20px;
+                font-family: "Roboto Condensed", Arial, ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
             }
 
             * {
@@ -214,6 +228,15 @@
                 flex-direction: column;
                 gap: 2px;
                 min-width: 0;
+                transition: opacity 140ms ease;
+            }
+
+            /* The Explore band REPLACES the caption rather than covering it. Hiding it outright
+               means the band keeps a generous fade instead of having to be opaque all the way up
+               to the name — at 18/28 + 13/20 the caption is taller than the band's solid part. */
+            .world:hover .world-copy,
+            .world:focus-visible .world-copy {
+                opacity: 0;
             }
 
             .world-name,
@@ -223,14 +246,19 @@
                 white-space: nowrap;
             }
 
+            /* Paragraph/LG — 18/28, Regular, white. */
             .world-name {
-                font-size: clamp(12px, 1.05vw, 15px);
-                font-weight: 700;
+                color: #fff;
+                font-size: clamp(14px, 1.25vw, var(--text-lg));
+                font-weight: 400;
+                line-height: calc(var(--text-lg-line) / var(--text-lg));
             }
 
+            /* Paragraph/XS — 13/20. */
             .world-url {
                 color: rgba(255, 255, 255, 0.62);
-                font-size: clamp(9px, 0.7vw, 10px);
+                font-size: clamp(11px, 0.9vw, var(--text-xs));
+                line-height: calc(var(--text-xs-line) / var(--text-xs));
             }
 
             /* The whole tile is the open button, so the pin sits above it rather than inside it —
