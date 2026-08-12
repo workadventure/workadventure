@@ -68,11 +68,12 @@
             .page {
                 display: flex;
                 flex-direction: column;
-                /* Sized against the 1440x1024 design frame. */
+                /* Sized against the 1440x1024 design frame, but everything below scales with the
+                   viewport and keeps the design's RATIOS rather than its exact pixels. */
                 width: min(1340px, 100%);
                 min-height: 100%;
                 margin: 0 auto;
-                padding: clamp(28px, 6vh, 72px) clamp(20px, 5vw, 72px);
+                padding: clamp(28px, 5vh, 64px) clamp(20px, 5vw, 72px) clamp(48px, 9vh, 104px);
             }
 
             main {
@@ -97,19 +98,17 @@
                 justify-content: center;
             }
 
+            /* No width cap: the headline is meant to sit on ONE line, and the fluid size keeps it
+               there down to narrow windows. `balance` only kicks in once it genuinely has to wrap. */
             h1 {
-                max-width: 15ch;
                 margin: 0;
                 font-family: Oswald, Roboto, sans-serif;
-                font-size: clamp(30px, 3.4vw, 46px);
+                font-size: clamp(24px, 3.2vw, 46px);
                 font-weight: 500;
                 line-height: 1.05;
                 letter-spacing: 0.005em;
                 text-transform: uppercase;
-            }
-
-            .page[data-state="empty"] h1 {
-                max-width: none;
+                text-wrap: balance;
             }
 
             .intro p {
@@ -142,7 +141,7 @@
                browsed, so wrapping them into a block would make the page feel like a directory. */
             .world-row {
                 display: flex;
-                gap: 24px;
+                gap: clamp(14px, 1.7vw, 24px);
                 overflow-x: auto;
                 padding-bottom: 6px;
                 scrollbar-width: thin;
@@ -160,9 +159,10 @@
             .world {
                 position: relative;
                 flex: 0 0 auto;
-                /* 345x198 on the 1440x1024 design frame. Ratio kept as the literal pair rather than
-                   rounded to 16:9 — it is 1.742, and at this size the difference is visible. */
-                width: 345px;
+                /* 345x198 on the 1440x1024 design frame. The ratio is held exactly (kept as the
+                   literal pair — 1.742 rounded to 16:9 is visible at this size) while the width
+                   scales with the viewport, so the row keeps its shape on any window. */
+                width: clamp(232px, 24vw, 345px);
                 aspect-ratio: 345 / 198;
                 padding: 0;
                 overflow: hidden;
@@ -207,9 +207,9 @@
 
             .world-copy {
                 position: absolute;
-                right: 14px;
-                bottom: 10px;
-                left: 14px;
+                right: clamp(10px, 1vw, 14px);
+                bottom: clamp(7px, 0.72vw, 10px);
+                left: clamp(10px, 1vw, 14px);
                 display: flex;
                 flex-direction: column;
                 gap: 2px;
@@ -224,13 +224,13 @@
             }
 
             .world-name {
-                font-size: 15px;
+                font-size: clamp(12px, 1.05vw, 15px);
                 font-weight: 700;
             }
 
             .world-url {
                 color: rgba(255, 255, 255, 0.62);
-                font-size: 10px;
+                font-size: clamp(9px, 0.7vw, 10px);
             }
 
             /* The whole tile is the open button, so the pin sits above it rather than inside it —
@@ -281,9 +281,10 @@
                 align-items: flex-end;
                 justify-content: center;
                 gap: 6px;
-                height: 68px;
-                /* Puts the label's optical centre on the solid block's centre (~22px up). */
-                padding-bottom: 10px;
+                /* 68/198 of the design tile, as a share so it tracks the tile at any size. */
+                height: 34.4%;
+                /* Puts the label's optical centre on the solid block's centre. */
+                padding-bottom: clamp(7px, 0.72vw, 10px);
                 /* Solid where it has to hide the name and URL, then fading out above so the band
                    melts into the map instead of cutting it with a hard line. The stop sits just
                    above the copy, which ends ~34px up. */
@@ -294,7 +295,7 @@
                     rgba(91, 95, 240, 0) 100%
                 );
                 font-family: Oswald, Roboto, sans-serif;
-                font-size: 16px;
+                font-size: clamp(13px, 1.15vw, 16px);
                 font-weight: 500;
                 letter-spacing: 0.04em;
                 text-transform: uppercase;
@@ -322,17 +323,23 @@
                 display: flex;
                 align-items: stretch;
                 /* 22 + 80 (the OR column) + 22 = the 124px the design leaves between the cards. */
-                gap: 22px;
+                gap: clamp(12px, 1.7vw, 22px);
             }
 
             .choice {
                 display: flex;
-                /* 534x287 on the 1440x1024 design frame; shrink only when the window is too narrow
-                   to hold the pair. */
-                flex: 0 1 534px;
+                /* 534x287 on the design frame. The pair shares the row and caps at that width, and
+                   the ratio drives the height — so the cards keep their shape as the window
+                   changes. `min-height` is the floor for when copy wraps at narrow widths. */
+                flex: 1 1 0;
                 flex-direction: column;
-                min-height: 287px;
-                padding: 26px 28px 24px;
+                max-width: 534px;
+                aspect-ratio: 534 / 287;
+                /* Deliberately 0: with an aspect-ratio, ANY min-height also imposes a min-WIDTH
+                   (height x ratio), which pushed the pair wider than the viewport and scrolled the
+                   page sideways. Below the breakpoint the cards stack and the ratio is dropped. */
+                min-height: 0;
+                padding: clamp(18px, 1.9vw, 26px) clamp(20px, 2vw, 28px) clamp(16px, 1.7vw, 24px);
                 /* Frosted over the background rather than a flat fill — the design's glass card.
                    8px is Tailwind's default `backdrop-blur`, which the mockup uses. */
                 background: var(--card);
@@ -363,7 +370,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                flex: 0 0 80px;
+                flex: 0 0 clamp(34px, 5.5vw, 80px);
                 color: var(--text-muted);
                 font-size: 11px;
                 letter-spacing: 0.12em;
@@ -371,7 +378,7 @@
             }
 
             .field {
-                margin-top: 18px;
+                margin-top: clamp(10px, 1.4vw, 18px);
             }
 
             .field label {
@@ -409,7 +416,7 @@
                 display: flex;
                 justify-content: flex-end;
                 margin-top: auto;
-                padding-top: 16px;
+                padding-top: clamp(8px, 1.3vw, 16px);
             }
 
             .btn {
@@ -464,16 +471,27 @@
                 min-height: 16px;
             }
 
-            @media (max-width: 900px) {
+            /* Stack before the pair gets squeezed: below ~1000px the ratio-derived height is no
+               longer tall enough for the Join card's field + button, and the copy spills out. */
+            @media (max-width: 1000px) {
                 .choices {
                     flex-direction: column;
                     align-items: stretch;
                 }
                 .choice {
                     max-width: none;
+                    /* Stacked, the cards are full-width: holding the ratio would make them
+                       absurdly tall, so height goes back to following the content. `flex` has to
+                       be reset too — in a column the 1 1 0 basis applies to HEIGHT and would
+                       collapse each card to nothing. */
+                    flex: 0 0 auto;
+                    aspect-ratio: auto;
+                    min-height: 0;
                 }
                 .or {
+                    flex-basis: auto;
                     justify-content: center;
+                    padding: 2px 0;
                 }
             }
 
