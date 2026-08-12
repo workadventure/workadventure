@@ -316,7 +316,6 @@
                    lands it where the name it replaces used to sit. */
                 align-items: flex-end;
                 justify-content: center;
-                gap: 6px;
                 /* 68/198 of the design tile, as a share so it tracks the tile at any size. */
                 height: 34.4%;
                 /* Puts the label's optical centre on the solid block's centre. */
@@ -339,8 +338,15 @@
                 transition: opacity 140ms ease;
             }
 
+            /* The label and the chevron centre against each other here, not against the band. */
+            .world-hover-row {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
             /* 6x12 chevron, 2px stroke. Drawn as SVG so the stroke stays crisp at any tile size. */
-            .world-hover svg {
+            .world-hover-row svg {
                 flex: 0 0 auto;
                 width: 6px;
                 height: 12px;
