@@ -271,10 +271,16 @@
                 left: 0;
                 z-index: 1;
                 display: flex;
-                align-items: center;
+                /* Centred on the SOLID part, not on the box: the top third of this band is the
+                   fade, so centring in the full height would float the label above the block of
+                   colour and read as misaligned. Bottom-aligned with padding instead, which also
+                   lands it where the name it replaces used to sit. */
+                align-items: flex-end;
                 justify-content: center;
                 gap: 6px;
                 height: 56px;
+                /* Puts the label's optical centre on the solid block's centre (~18px up). */
+                padding-bottom: 8px;
                 /* Solid where it has to hide the name and URL, then fading out above so the band
                    melts into the map instead of cutting it with a hard line. The stop sits just
                    above the copy, which ends ~34px up. */
