@@ -425,7 +425,7 @@
             }
 
             .field {
-                margin-top: clamp(10px, 1.4vw, 18px);
+                margin-top: clamp(6px, 1vw, 14px);
             }
 
             .field label {
@@ -463,22 +463,31 @@
                 display: flex;
                 justify-content: flex-end;
                 margin-top: auto;
-                padding-top: clamp(8px, 1.3vw, 16px);
+                padding-top: clamp(4px, 0.8vw, 12px);
             }
 
+            /* 96x64 on the design frame, 12px top/bottom padding, 10px gap; scaled down with the
+               rest rather than pinned, so the pair keeps its proportions on smaller windows. */
             .btn {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                min-height: 32px;
-                padding: 0 14px;
+                gap: 10px;
+                width: clamp(78px, 6.7vw, 96px);
+                height: clamp(50px, 4.45vw, 64px);
+                /* Only the vertical padding is specified; the horizontal is kept small so both
+                   labels sit on ONE line. At 10px, "Create world" wrapped while "Open world" did
+                   not, and the mismatched pair read as a bug. */
+                padding: 12px 4px;
                 color: #fff;
                 background: var(--primary);
                 border: 1px solid transparent;
                 border-radius: 8px;
                 cursor: pointer;
-                font-size: 12px;
-                font-weight: 500;
+                font-size: clamp(13px, 1.1vw, 16px);
+                font-weight: 400;
+                line-height: 1.2;
+                text-align: center;
                 transition: background-color 140ms ease;
             }
 
@@ -497,8 +506,8 @@
             }
 
             .error {
-                min-height: 16px;
-                margin-top: 8px;
+                min-height: 15px;
+                margin-top: 4px;
                 color: var(--danger);
                 font-size: 12px;
                 line-height: 1.4;
