@@ -91,13 +91,24 @@
 
         var hover = document.createElement("span");
         hover.className = "world-hover";
-        hover.textContent = "Explore ›";
+        var hoverLabel = document.createElement("span");
+        hoverLabel.textContent = "Explore";
+        hover.appendChild(hoverLabel);
+        // 6x12 chevron with a 2px stroke, per the design. The path spans x=1..5 so the stroke's
+        // 1px half-width lands exactly on the viewBox edges instead of being clipped.
+        hover.insertAdjacentHTML(
+            "beforeend",
+            '<svg viewBox="0 0 6 12" fill="none" stroke="currentColor" stroke-width="2" ' +
+                'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                '<path d="M1 1l4 5l-4 5"/></svg>'
+        );
         card.appendChild(hover);
 
         card.addEventListener("click", function () {
             showError(recentErrorEl, "");
             setWorldsBusy(true);
-            hover.textContent = "Opening…";
+            // Only the label changes — writing to `hover` itself would wipe the chevron.
+            hoverLabel.textContent = "Opening…";
             api.joinWorld(world.url)
                 .then(function (result) {
                     if (!result || !result.ok) {
@@ -108,7 +119,7 @@
                     console.warn("landing.joinWorld rejected", err);
                     showError(recentErrorEl, (err && err.message) || "Failed to join world.");
                     setWorldsBusy(false);
-                    hover.textContent = "Explore ›";
+                    hoverLabel.textContent = "Explore";
                 });
         });
 
