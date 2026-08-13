@@ -29,7 +29,27 @@ const RETRY_MAX_DELAY_MS = 5_000;
  * reject events whose properties exceed its own bound; capping client-side
  * avoids round-tripping multi-MB junk through the queue.
  */
-const MAX_EVENT_PROPERTIES_BYTES = 8 * 1024;
+export const MAX_EVENT_PROPERTIES_BYTES = 8 * 1024;
+
+/**
+ * Serialized size of a properties bag, or undefined when it cannot be serialized.
+ *
+ * Byte length, not string length: `.length` counts UTF-16 code units, which
+ * undercounts multi-byte characters and lets a CJK payload through at up to ~3x
+ * the intended cap.
+ *
+ * Exported because the cap has to be applied at every point that *retains* a
+ * client-supplied payload, not only at the one that queues it — see
+ * AnalyticsReportMessageHandler, where an open control frame is held in memory
+ * until its interval closes.
+ */
+export function serializedPropertiesBytes(properties: unknown): number | undefined {
+    try {
+        return Buffer.byteLength(JSON.stringify(properties ?? {}), "utf8");
+    } catch {
+        return undefined;
+    }
+}
 
 export type AnalyticsEventSource = "front" | "pusher" | "media";
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
@@ -309,27 +329,22 @@ export class AnalyticsEventsQueue {
         // Bound the per-event properties payload. The admin API will reject
         // oversized events with 422; capping here keeps the in-memory queue
         // from being filled with multi-MB junk.
-        try {
-            // Byte length, not string length: `.length` counts UTF-16 code units, which
-            // undercounts multi-byte characters and lets a CJK payload through at up to
-            // ~3x the intended cap.
-            const serializedPropertiesLength = Buffer.byteLength(JSON.stringify(event.properties ?? {}), "utf8");
-            if (serializedPropertiesLength > MAX_EVENT_PROPERTIES_BYTES) {
-                console.warn("Analytics event dropped", {
-                    reason: "properties exceed max bytes",
-                    eventName: event.eventName,
-                    eventId: event.eventId,
-                    bytes: serializedPropertiesLength,
-                    maxBytes: MAX_EVENT_PROPERTIES_BYTES,
-                });
-                return undefined;
-            }
-        } catch (error) {
+        const serializedPropertiesLength = serializedPropertiesBytes(event.properties);
+        if (serializedPropertiesLength === undefined) {
             console.warn("Analytics event dropped", {
                 reason: "properties not serializable",
                 eventName: event.eventName,
                 eventId: event.eventId,
-                error: error instanceof Error ? error.message : String(error),
+            });
+            return undefined;
+        }
+        if (serializedPropertiesLength > MAX_EVENT_PROPERTIES_BYTES) {
+            console.warn("Analytics event dropped", {
+                reason: "properties exceed max bytes",
+                eventName: event.eventName,
+                eventId: event.eventId,
+                bytes: serializedPropertiesLength,
+                maxBytes: MAX_EVENT_PROPERTIES_BYTES,
             });
             return undefined;
         }
