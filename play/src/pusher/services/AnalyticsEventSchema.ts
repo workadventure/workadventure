@@ -1,4 +1,23 @@
 import { z } from "zod";
+import {
+    MAX_EVENT_ID_LENGTH,
+    MAX_EVENT_NAME_LENGTH,
+    MAX_TIMESTAMP_MS,
+    isAnalyticsEventSource,
+} from "@workadventure/messages";
+
+// The taxonomy and its bounds are a contract shared with the front, so they live
+// in @workadventure/messages. Re-exported here so every pusher-side importer keeps
+// a single place to reach for.
+export {
+    MAX_EVENT_ID_LENGTH,
+    MAX_EVENT_NAME_LENGTH,
+    MAX_TIMESTAMP_MS,
+    TIMED_EVENT_END_REASONS,
+    isAnalyticsEventSource,
+    isClientAnalyticsEventSource,
+} from "@workadventure/messages";
+export type { AnalyticsEventSourceSchema, TimedEventEndReason } from "@workadventure/messages";
 
 /**
  * Validation of the analytics event envelope reported by a client.
@@ -33,27 +52,6 @@ import { z } from "zod";
  * client costs everyone else's events in the same batch.
  */
 
-export const isAnalyticsEventSource = z.enum(["front", "pusher", "media"]);
-export type AnalyticsEventSourceSchema = z.infer<typeof isAnalyticsEventSource>;
-
-/**
- * Sources a socket may legitimately claim. "pusher" is backend-only: it marks
- * events the pusher synthesized itself, and the admin trusts it to decide what
- * may be projected into connection sessions.
- */
-export const isClientAnalyticsEventSource = isAnalyticsEventSource.extract(["front", "media"]);
-
-/** Mirrors the admin's `max:255` on eventName / eventId. */
-export const MAX_EVENT_NAME_LENGTH = 255;
-export const MAX_EVENT_ID_LENGTH = 255;
-
-/**
- * Largest value `new Date(ms)` can represent. `z.number()` alone would accept
- * 1e300, which yields an Invalid Date downstream — and clientEventTimeMs is a
- * uint64 on the wire, so a client really can send one.
- */
-export const MAX_TIMESTAMP_MS = 8.64e15;
-
 export const isAnalyticsEventInput = z.object({
     eventName: z.string().min(1).max(MAX_EVENT_NAME_LENGTH),
     source: isAnalyticsEventSource,
@@ -61,31 +59,3 @@ export const isAnalyticsEventInput = z.object({
     eventId: z.string().min(1).max(MAX_EVENT_ID_LENGTH),
     properties: z.record(z.unknown()),
 });
-
-/**
- * Why a timed event ends. Enum-constrained on purpose, and named `endReason`
- * rather than `reason`: the anonymization allowlist is keyed on the property key
- * alone, not on (eventName, key), and `reason` is already **free text** on the
- * experience-issue events (AnalyticsEventCatalog). Allow-listing `reason` to let
- * this one through would un-strip free-form text on those unrelated families for
- * every world that opted out of user-level activity. Mirrors `disconnectReason`.
- */
-export const TIMED_EVENT_END_REASONS = [
-    // Stated by the client when it closes its own interval. `type_changed` is the
-    // one consumers cannot do without: it means one conversation was split because
-    // its type changed, so a bubble that became a meeting reports two intervals and
-    // has to be stitched on time rather than by id.
-    "closed_by_client",
-    "left_conversation",
-    "left_area",
-    "type_changed",
-    "status_changed",
-    "cleanup",
-    // Forced by the pusher, when the client never got to say anything.
-    "socket_closed",
-    "join_failed",
-    "pusher_shutdown",
-    "pusher_crashed",
-    "other",
-] as const;
-export type TimedEventEndReason = (typeof TIMED_EVENT_END_REASONS)[number];

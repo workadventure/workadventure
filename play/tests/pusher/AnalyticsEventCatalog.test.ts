@@ -14,7 +14,7 @@ import {
     mediaVideoQualitySampleEvent,
     meetingProviderChangedEvent,
     userDisconnectedEvent,
-} from "../../src/pusher/services/AnalyticsEventCatalog";
+} from "@workadventure/messages";
 import { TIMED_EVENT_NAMES } from "../../src/pusher/services/AnalyticsTimedEventTracker";
 
 /** Reads the `properties` sub-schema off a catalog entry. */
