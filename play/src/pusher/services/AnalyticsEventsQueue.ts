@@ -16,6 +16,7 @@ import {
     ANALYTICS_MAX_QUEUE_SIZE,
     ANALYTICS_TIMEOUT_MS,
 } from "../enums/EnvironmentVariable";
+import { registerDrainableService } from "./ShutdownDrains";
 
 const SCHEMA_VERSION = 1;
 const RETRY_JITTER_MIN_MS = 50;
@@ -688,3 +689,12 @@ function buildDefaultConfig(): AnalyticsEventsQueueConfig {
 }
 
 export const analyticsEventsQueue = new AnalyticsEventsQueue(buildDefaultConfig());
+
+// Declared here rather than listed in server.ts: what this queue holds and how it
+// lets go of it is this file's business, and a service that forgets to say so
+// loses its buffer on every deploy without anything failing.
+registerDrainableService({
+    name: "the generic analytics queue",
+    drain: (timeoutMs) => analyticsEventsQueue.drain(timeoutMs),
+    stop: () => analyticsEventsQueue.stop(),
+});

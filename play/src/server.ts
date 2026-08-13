@@ -19,7 +19,7 @@ import {
     DRAIN_TIMEOUT_MS,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
-import { analyticsEventsQueue } from "./pusher/services/AnalyticsEventsQueue";
+import { runDrains } from "./pusher/services/ShutdownDrains";
 import { analyticsPresenceTracker } from "./pusher/services/AnalyticsPresenceTracker";
 import { analyticsTimedEventTracker } from "./pusher/services/AnalyticsTimedEventTracker";
 
@@ -100,25 +100,19 @@ const shutdown = (reason: string, endReason: "pusher_shutdown" | "pusher_crashed
         `${reason}: closed ${closedTimedEvents} timed event(s) and ${closedConnections} connection(s), draining analytics queues before exit…`,
     );
 
-    const drains: [string, Promise<void>][] = [
-        ["generic analytics", analyticsEventsQueue.drain(DRAIN_TIMEOUT_MS).finally(() => analyticsEventsQueue.stop())],
-    ];
-    (async () => {
-        // allSettled never rejects, so each drain has to be inspected individually:
-        // a rejected one would otherwise be dropped silently on the way out.
-        const results = await Promise.allSettled(drains.map(([, drain]) => drain));
-        results.forEach((result, index) => {
-            if (result.status === "rejected") {
-                console.error(`Error while draining the ${drains[index][0]} queue during shutdown`, result.reason);
-            }
-        });
-    })()
-        .catch((error) => {
-            console.error("Error while draining analytics queues during shutdown", error);
-        })
-        .finally(() => {
+    // Both arms exit, on purpose. runDrains already inspects every result and logs
+    // the failures by name, so the rejection arm should be unreachable — but this is
+    // the path that ends the process, and the one outcome worse than a lost buffer
+    // is a replica that never exits and gets SIGKILLed with its sockets still open.
+    // The version this replaces had a .catch() on a Promise.allSettled, which cannot
+    // reject: it read as this guarantee without being one.
+    runDrains(DRAIN_TIMEOUT_MS).then(
+        () => process.exit(exitCode),
+        (error: unknown) => {
+            console.error("Unexpected error while draining during shutdown", error);
             process.exit(exitCode);
-        });
+        },
+    );
 };
 
 process.once("SIGTERM", (signal) => shutdown(`Received ${signal}`, "pusher_shutdown", 0));
