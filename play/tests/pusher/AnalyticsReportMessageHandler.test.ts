@@ -7,6 +7,7 @@ vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/push
 
 import type { SocketData } from "../../src/pusher/models/Websocket/SocketData";
 import type { AnalyticsEventInput, AnalyticsEventsQueue } from "../../src/pusher/services/AnalyticsEventsQueue";
+import { MAX_EVENT_PROPERTIES_BYTES } from "../../src/pusher/services/AnalyticsEventsQueue";
 import {
     MAX_EVENTS_PER_REPORT_MESSAGE,
     processAnalyticsReportMessage,
@@ -411,5 +412,92 @@ describe("processAnalyticsReportMessage", () => {
         // Grepping the admin for timed_event.* finds nothing, and that is the point:
         // these frames drive the tracker and must never reach the pipeline themselves.
         expect(queue.enqueueEvent).not.toHaveBeenCalled();
+    });
+});
+
+describe("control frame payload bounds", () => {
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+        warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+        warnSpy.mockRestore();
+    });
+
+    it("refuses an open frame whose properties blow the 8 KiB cap", () => {
+        // An open frame is RETAINED until its interval closes, and the queue's own
+        // cap never sees it — so without this the frame is a memory-pinning
+        // primitive: 32 handles x a 16 MiB websocket frame, held until disconnect.
+        const queue = newQueue();
+        const tracker = newTracker();
+        processAnalyticsReportMessage(
+            {
+                events: [
+                    controlFrame("timed_event.open", {
+                        handle: "h1",
+                        eventName: "area.dwell",
+                        properties: { areaId: "a", areaName: "b", blob: "x".repeat(9 * 1024) },
+                    }),
+                ],
+            },
+            newSocketData(),
+            queue,
+            tracker,
+        );
+
+        expect(tracker.open).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith(
+            "Timed event open dropped: properties too large or not serializable",
+            expect.objectContaining({ eventName: "area.dwell" }),
+        );
+    });
+
+    it("measures the cap in UTF-8 bytes, not UTF-16 code units", () => {
+        // 5000 CJK characters: under the cap by `.length`, three times over it in
+        // bytes. Same trap the queue's cap already documents.
+        const blob = "世".repeat(5000);
+        expect(blob.length).toBeLessThan(MAX_EVENT_PROPERTIES_BYTES);
+
+        const queue = newQueue();
+        const tracker = newTracker();
+        processAnalyticsReportMessage(
+            {
+                events: [
+                    controlFrame("timed_event.open", {
+                        handle: "h1",
+                        eventName: "area.dwell",
+                        properties: { areaId: "a", areaName: "b", blob },
+                    }),
+                ],
+            },
+            newSocketData(),
+            queue,
+            tracker,
+        );
+
+        expect(tracker.open).not.toHaveBeenCalled();
+    });
+
+    it("still accepts an open frame of a reasonable size", () => {
+        const queue = newQueue();
+        const tracker = newTracker();
+        processAnalyticsReportMessage(
+            {
+                events: [
+                    controlFrame("timed_event.open", {
+                        handle: "h1",
+                        eventName: "area.dwell",
+                        properties: { areaId: "meeting-room", areaName: "Meeting room" },
+                    }),
+                ],
+            },
+            newSocketData(),
+            queue,
+            tracker,
+        );
+
+        expect(tracker.open).toHaveBeenCalledTimes(1);
     });
 });
