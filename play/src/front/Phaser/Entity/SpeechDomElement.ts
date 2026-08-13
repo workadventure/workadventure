@@ -2,6 +2,7 @@ import * as Phaser from "phaser";
 import { get } from "svelte/store";
 import { marked } from "marked";
 import LL from "../../../i18n/i18n-svelte";
+import { sanitizeHtml } from "../../Utils/HtmlSanitizer";
 
 import DOMElement = Phaser.GameObjects.DOMElement;
 
@@ -160,15 +161,17 @@ export class SpeechDomElement extends DOMElement {
         const textMarked = marked.parse(textTransformed);
         const span = document.createElement("span");
 
+        // The text can come from the map (or from the map editor): the Markdown rendering keeps the HTML
+        // it contains, so it must be sanitized before reaching the "innerHTML" sink.
         if (textMarked instanceof Promise) {
             textMarked
                 .then((resolvedText) => {
-                    span.innerHTML = resolvedText;
+                    span.innerHTML = sanitizeHtml(resolvedText);
                     this.wireEscapeHintListener(span);
                 })
                 .catch((e) => console.error(e));
         } else {
-            span.innerHTML = textMarked;
+            span.innerHTML = sanitizeHtml(textMarked);
         }
         span.id = `spanText-${id}`;
         span.classList.add("characterTriggerAction", "speech-dom-inner", `speech-dom-inner--${type}`);

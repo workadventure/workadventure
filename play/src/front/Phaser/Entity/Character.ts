@@ -582,7 +582,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.cancelPreviousEmote();
         const emoteY = -45;
         const span = document.createElement("span");
-        span.innerHTML = emote;
+        // The emote comes from another player: it is plain text (an emoji) and must never be interpreted as HTML.
+        span.textContent = emote;
         this.emote = new DOMElement(this.scene, -1, 0, span, "z-index:10;");
         this.emote.setAlpha(0);
         this.add(this.emote);
