@@ -10,11 +10,10 @@ import { MAX_EVENT_ID_LENGTH, MAX_TIMESTAMP_MS, TIMED_EVENT_END_REASONS } from "
  * `AnalyticsEventSchema.isAnalyticsEventInput` validates the envelope on the hot
  * path and stays deliberately permissive: `eventName` is an opaque bounded
  * string. That is load-bearing, not an oversight. The pipeline is designed to let
- * a newer front ship an event family before admin knows about it —
- * `analyticsMetricCategoryForEvent` (AnalyticsEventsQueue) prefix-matches with a
- * default bucket, and the admin's AnalyticsEventsService logs-and-accepts unknown
- * names on purpose. It is not hypothetical either: 23 of the names the front
- * emits today are already unknown to the admin's allowlist.
+ * a newer front ship an event family before admin knows about it — the admin's
+ * AnalyticsEventsService logs-and-accepts unknown names on purpose. It is not
+ * hypothetical either: 23 of the names the front emits today are already unknown
+ * to the admin's allowlist.
  *
  * So do NOT wire this catalog in as a validation gate. A strict union over
  * `eventName` would drop a seventh of the taxonomy outright, and a strict
@@ -35,11 +34,12 @@ import { MAX_EVENT_ID_LENGTH, MAX_TIMESTAMP_MS, TIMED_EVENT_END_REASONS } from "
  * `tabId`, `clientEventTime` and `pusherReceivedAt` in `normalizeEvent`; those are
  * envelope columns, not per-event properties, and are absent below on purpose.
  *
- * Anonymization is worth knowing when adding a field: for a world that opted out
- * of `user_level_activity`, numbers and booleans always survive, but a **string**
- * survives only if its key is in `ANONYMOUS_SAFE_PROPERTY_KEYS`
- * (AnalyticsEventsQueue). A new free-form string field will silently vanish for
- * those worlds unless it is added there too.
+ * Anonymization is worth knowing when adding a field, but it is not applied here:
+ * the admin owns it end to end and applies it at ingestion
+ * (AnalyticsMetricsPolicyService::anonymizeEvent). For a world that opted out of
+ * `user_level_activity`, numbers and booleans always survive, but a **string**
+ * survives only if its key is on the admin's allowlist — a new free-form string
+ * field will silently vanish for those worlds unless it is added there too.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -231,7 +231,7 @@ export const mediaVideoQualitySampleEvent = defineEvent(
         remoteUserUuid: z
             .string()
             .nullable()
-            .describe("The other party. Pseudonymized for worlds that opted out of user-level activity."),
+            .describe("The other party. Pseudonymized admin-side for worlds that opted out of user-level activity."),
         remoteSpaceUserId: z.string().describe("The other party's space-scoped id."),
         spaceName: z
             .string()
@@ -439,7 +439,7 @@ export const statusDwellEvent = defineEvent(
         .extend({
             endReason: z.enum(TIMED_EVENT_END_REASONS).describe("Why the status period ended, or what ended it."),
         }),
-    "Time the user held one availability status, measured by the pusher between status changes and closed at disconnect. Gated per world by the user_level_activity policy: without opt-in the pusher pseudonymizes it, so no named per-member timeline is stored.",
+    "Time the user held one availability status, measured by the pusher between status changes and closed at disconnect. Gated per world by the user_level_activity policy the admin applies at ingestion: without opt-in it is pseudonymized there, so no named per-member timeline is stored.",
     "pusher",
 );
 
@@ -720,7 +720,7 @@ export const cowebsiteOpenedEvent = defineEvent(
             .nullable()
             .optional()
             .describe(
-                "The document's name. Deliberately NOT in ANONYMOUS_SAFE_PROPERTY_KEYS, so a world that opts out of user-level activity stops sending it — and the internal Kiosk does not project it, so only the world's own back-office sees it.",
+                "The document's name. Deliberately absent from the admin's anonymization allowlist, so a world that opts out of user-level activity has it stripped at ingestion — and the internal Kiosk does not project it, so only the world's own back-office sees it.",
             ),
         fileExtension: z
             .string()

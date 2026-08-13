@@ -9,10 +9,9 @@ import { z } from "zod";
  * 1. `eventName` is an opaque bounded string, never a `z.enum` or a
  *    `z.discriminatedUnion`. Unknown event names are a supported, load-bearing
  *    case: the pipeline is designed to let a newer front ship an event family
- *    before admin knows about it. `analyticsMetricCategoryForEvent`
- *    (AnalyticsEventsQueue) prefix-matches and falls back to a default bucket,
- *    and the admin's AnalyticsEventsService logs-and-accepts unknown names for
- *    exactly this reason. This is not hypothetical: 23 of the ~163 names the
+ *    before admin knows about it: the admin's AnalyticsEventsService
+ *    logs-and-accepts unknown names for exactly this reason, and buckets them
+ *    into a default category. This is not hypothetical: 23 of the ~163 names the
  *    front emits today are already unknown to the admin's allowlist, so a strict
  *    union would silently drop a seventh of the taxonomy.
  *

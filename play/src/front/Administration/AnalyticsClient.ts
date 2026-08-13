@@ -954,12 +954,11 @@ class AnalyticsClient {
             triggerProperty: context.triggerProperty ?? "other",
             // Which documents a world opens is a metric its own administrator asks
             // for, so the name is reported as its own field rather than smuggled
-            // inside a URL. It is deliberately NOT in the anonymization allowlist
-            // (AnalyticsEventsQueue.ANONYMOUS_SAFE_PROPERTY_KEYS): document names are
-            // frequently sensitive (NDA-acme.pdf, salary-2026.xlsx), so a world that
-            // opts out of user-level activity stops sending them, and the internal
-            // Kiosk does not project the column at all — only the world's own
-            // back-office shows it.
+            // inside a URL. It is deliberately absent from the admin's anonymization
+            // allowlist: document names are frequently sensitive (NDA-acme.pdf,
+            // salary-2026.xlsx), so a world that opts out of user-level activity has
+            // them stripped at ingestion, and the internal Kiosk does not project the
+            // column at all — only the world's own back-office shows it.
             fileName: context.fileName ?? this.getFileNameFromUrl(rawTargetUrl),
             fileExtension,
             areaId: context.areaId,

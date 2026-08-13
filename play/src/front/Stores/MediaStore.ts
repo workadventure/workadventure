@@ -457,9 +457,9 @@ export const availabilityStatusStore = derived(
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
 availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
     // Time-in-status is reported as a `status.dwell` timed event, gated per world by
-    // the `user_level_activity` policy: without opt-in the pusher pseudonymizes it,
-    // so no named per-member timeline is stored. The enum key name ("ONLINE", …) is
-    // sent, low-cardinality and non-PII, so it survives that pseudonymization.
+    // the `user_level_activity` policy the admin applies at ingestion: without opt-in
+    // it is pseudonymized there, so no named per-member timeline is stored. The enum
+    // key name ("ONLINE", …) is sent, low-cardinality and non-PII, so it survives.
     analyticsClient.statusChanged(AvailabilityStatus[newStatus] ?? String(newStatus));
     try {
         statusChanger.changeStatusTo(newStatus);

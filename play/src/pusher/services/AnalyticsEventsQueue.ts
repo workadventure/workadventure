@@ -1,4 +1,3 @@
-import { createHmac } from "crypto";
 import axios, { isAxiosError } from "axios";
 import {
     VideoQualityRelayProtocol,
@@ -7,11 +6,10 @@ import {
     type VideoQualityReportMessage,
     type VideoQualitySampleMessage,
 } from "@workadventure/messages";
-import type { AnalyticsMetricCategory, SocketData } from "../models/Websocket/SocketData";
+import type { SocketData } from "../models/Websocket/SocketData";
 import {
     ADMIN_API_TOKEN,
     ADMIN_API_URL,
-    ANALYTICS_PSEUDONYMIZATION_SECRET,
     VIDEO_ANALYTICS_FLUSH_INTERVAL_MS,
     VIDEO_ANALYTICS_MAX_BATCH_SIZE,
     VIDEO_ANALYTICS_MAX_QUEUE_SIZE,
@@ -30,50 +28,6 @@ const RETRY_MAX_DELAY_MS = 5_000;
  * avoids round-tripping multi-MB junk through the queue.
  */
 const MAX_EVENT_PROPERTIES_BYTES = 8 * 1024;
-
-/**
- * When a world opts out of `user_level_activity`, event `properties` are reduced
- * to a privacy-safe allowlist rather than filtered through a denylist (which
- * silently leaks any PII-bearing key we forget to enumerate — e.g. remoteUserUuid,
- * remoteSpaceUserId, spaceName, free-form names). Numeric/boolean values are never
- * PII and are always kept; among strings only these low-cardinality enums and
- * opaque grouping ids are preserved. Mirrors the admin-side
- * AnalyticsMetricsPolicyService allowlist so both anonymization gates agree.
- */
-const ANONYMOUS_SAFE_PROPERTY_KEYS = new Set<string>([
-    "areaId",
-    "conversationId",
-    "id",
-    "conversationType",
-    "meetingType",
-    "meetingProvider",
-    "mediaKind",
-    "inviteType",
-    "provider",
-    "status",
-    "triggerProperty",
-    "fileExtension",
-    // session lifecycle timestamps + reason (from AnalyticsPresenceTracker's
-    // user.disconnected): non-PII behavioural data the admin turns into
-    // connection_sessions rows. Must stay in sync with the admin allowlist —
-    // stripping them here would silently drop every anonymized world's sessions.
-    "connectedAt",
-    "disconnectedAt",
-    "disconnectReason",
-    // Interval bounds + reason for every timed event (AnalyticsTimedEventTracker).
-    // Pusher-generated ISO instants and an enum: non-PII by construction. Without
-    // these, an anonymized world's conversations would arrive with a durationSeconds
-    // (numbers always survive) but no interval to allocate it over — every query that
-    // needs the start would silently read nothing.
-    //
-    // `endReason`, deliberately NOT `reason`: this allowlist is keyed on the property
-    // key alone, not on (eventName, key), and `reason` is free text on the
-    // experience-issue events (AnalyticsEventCatalog). Allow-listing `reason` to let
-    // this one through would un-strip free-form text on those unrelated families.
-    "startedAt",
-    "endedAt",
-    "endReason",
-]);
 
 export type AnalyticsEventSource = "front" | "pusher" | "media";
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
@@ -118,8 +72,6 @@ export type AnalyticsEventsQueueConfig = {
     maxQueueSize: number;
     maxBatchSize: number;
     pusherInstanceId: string;
-    /** Must match the admin's. Absent ⇒ worlds that opted out report nothing. */
-    pseudonymizationSecret?: string;
 };
 
 export type AnalyticsEventsQueueStats = {
@@ -128,7 +80,6 @@ export type AnalyticsEventsQueueStats = {
     droppedInvalid: number;
     droppedByWorldSettings: number;
     droppedAfterSendFailure: number;
-    droppedMissingPseudonymizationSecret: number;
     batchesSent: number;
     eventsSent: number;
     flushErrors: number;
@@ -150,8 +101,6 @@ export class AnalyticsEventsQueue {
     private droppedInvalid = 0;
     private droppedByWorldSettings = 0;
     private droppedAfterSendFailure = 0;
-    private droppedMissingPseudonymizationSecret = 0;
-    private warnedAboutMissingSecret = false;
     private batchesSent = 0;
     private eventsSent = 0;
     private flushErrors = 0;
@@ -220,40 +169,21 @@ export class AnalyticsEventsQueue {
             return;
         }
 
+        // The only privacy gate left on this side, and it is a bandwidth
+        // optimisation rather than a guarantee: a world that turned analytics off
+        // has nothing worth shipping. Category filtering and anonymization belong
+        // to the admin, which owns the policy and applies it at ingestion
+        // (AnalyticsEventsService::filterEvents). Duplicating them here bought
+        // nothing and could only drift.
         if (socketData.analyticsEventsEnabled === false) {
             this.droppedByWorldSettings += 1;
             return;
         }
 
-        const category = analyticsMetricCategoryForEvent(event.eventName);
-        if (socketData.analyticsMetricsPolicy?.categories?.[category] === false) {
-            this.droppedByWorldSettings += 1;
-            return;
-        }
-
-        let normalizedEvent = this.normalizeEvent(event, socketData, this.now().toISOString());
+        const normalizedEvent = this.normalizeEvent(event, socketData, this.now().toISOString());
         if (!normalizedEvent) {
             this.droppedInvalid += 1;
             return;
-        }
-
-        // Must stay after normalizeEvent, never before it: normalizeEvent enriches
-        // the event from socketData, so anonymizing last is what guarantees the
-        // allowlist sees the *final* properties. Anonymizing first would let
-        // anything added during normalization through unfiltered.
-        if (socketData.analyticsMetricsPolicy?.categories?.user_level_activity === false) {
-            const secret = this.config.pseudonymizationSecret;
-            // Fail closed. Without a secret we cannot produce a pseudonym the
-            // world's administrator is unable to recompute from their own user
-            // list, and this world asked precisely not to be tracked at user
-            // level. Emitting anything here would hand over identifiers under a
-            // label that promises they are anonymous.
-            if (secret === undefined || secret === "") {
-                this.droppedMissingPseudonymizationSecret += 1;
-                this.warnOnceAboutMissingSecret();
-                return;
-            }
-            normalizedEvent = anonymizeEvent(normalizedEvent, secret);
         }
 
         if (this.queue.length >= this.config.maxQueueSize) {
@@ -309,26 +239,10 @@ export class AnalyticsEventsQueue {
             droppedInvalid: this.droppedInvalid,
             droppedByWorldSettings: this.droppedByWorldSettings,
             droppedAfterSendFailure: this.droppedAfterSendFailure,
-            droppedMissingPseudonymizationSecret: this.droppedMissingPseudonymizationSecret,
             batchesSent: this.batchesSent,
             eventsSent: this.eventsSent,
             flushErrors: this.flushErrors,
         };
-    }
-
-    /**
-     * Once per process: a world opting out is a normal, per-event condition, so
-     * warning each time would bury the operator in a log line per event while
-     * telling them nothing new.
-     */
-    private warnOnceAboutMissingSecret(): void {
-        if (this.warnedAboutMissingSecret) {
-            return;
-        }
-        this.warnedAboutMissingSecret = true;
-        console.warn(
-            "Analytics events dropped: ANALYTICS_PSEUDONYMIZATION_SECRET is not set, so worlds that opted out of user-level activity cannot be pseudonymized. Set it (to the same value as the admin) to collect analytics for those worlds.",
-        );
     }
 
     private hasAdminApiConfig(): boolean {
@@ -674,91 +588,6 @@ function isRequiredString(value: string | undefined): value is string {
     return value !== undefined && value.length > 0;
 }
 
-function analyticsMetricCategoryForEvent(eventName: string): AnalyticsMetricCategory {
-    if (
-        eventName === "user.connected" ||
-        eventName === "user.disconnected" ||
-        eventName.startsWith("session.") ||
-        eventName.startsWith("status.")
-    ) {
-        return "presence_sessions";
-    }
-
-    if (
-        eventName.startsWith("conversation.") ||
-        eventName.startsWith("bubble.") ||
-        eventName.startsWith("meeting.") ||
-        eventName.startsWith("chat.") ||
-        eventName.startsWith("megaphone.")
-    ) {
-        return "collaboration_activity";
-    }
-
-    if (
-        eventName === "media.permission_denied" ||
-        eventName === "media.device_error" ||
-        eventName === "media.quality_issue" ||
-        eventName.startsWith("media.") ||
-        eventName.startsWith("map_loading.") ||
-        eventName.startsWith("asset.") ||
-        eventName.startsWith("websocket.") ||
-        eventName.startsWith("front.") ||
-        eventName.startsWith("performance.")
-    ) {
-        return "quality_diagnostics";
-    }
-
-    return "workspace_actions";
-}
-
-function anonymizeEvent(event: AnalyticsEvent, secret: string): AnalyticsEvent {
-    return {
-        ...event,
-        userUuid: anonymousIdentifier(event.world, event.userUuid, secret),
-        userId: null,
-        spaceUserId: anonymousIdentifier(event.world, event.spaceUserId, secret),
-        clientIp: null,
-        tabId: null,
-        properties: anonymizeProperties(event.properties),
-    };
-}
-
-function anonymizeProperties(properties: JsonObject): JsonObject {
-    const safe: JsonObject = {};
-    for (const [key, value] of Object.entries(properties)) {
-        // Numbers and booleans carry counts/durations/flags, never PII.
-        if (value === null || typeof value === "number" || typeof value === "boolean") {
-            safe[key] = value;
-            continue;
-        }
-        // Among strings, keep only the explicitly allow-listed non-PII keys.
-        if (typeof value === "string" && ANONYMOUS_SAFE_PROPERTY_KEYS.has(key)) {
-            safe[key] = value;
-        }
-        // Everything else (free-form strings, URLs, nested arrays/objects,
-        // unknown keys) is intentionally dropped.
-    }
-    return safe;
-}
-
-/**
- * Pseudonymizes an identifier for a world that opted out of user-level activity.
- *
- * Keyed HMAC, not a salted hash. The previous version hashed with the legal
- * template version as its "salt" — a constant that lives in this repository and
- * is shipped to the pusher inside the policy itself. That protected nobody: the
- * party this anonymization exists to defend users *against* is the world's own
- * administrator, and they hold the list of user uuids. Hashing that list with a
- * public constant re-identifies every "anonymous" row. A secret the tenant does
- * not have makes the pseudonym actually opaque to them.
- *
- * The world is still part of the message so the same user is a different
- * pseudonym in each world, which stops cross-world correlation.
- */
-function anonymousIdentifier(world: string, identifier: string, secret: string): string {
-    return `anonymous:${createHmac("sha256", secret).update(`${world}|${identifier}`).digest("hex")}`;
-}
-
 function toStreamCategory(streamCategory: VideoQualityStreamCategory): "video" | "screenSharing" | undefined {
     if (streamCategory === VideoQualityStreamCategory.VIDEO_QUALITY_STREAM_CATEGORY_VIDEO) {
         return "video";
@@ -807,7 +636,6 @@ function buildDefaultConfig(): AnalyticsEventsQueueConfig {
         maxQueueSize: VIDEO_ANALYTICS_MAX_QUEUE_SIZE,
         maxBatchSize: VIDEO_ANALYTICS_MAX_BATCH_SIZE,
         pusherInstanceId: process.env.HOSTNAME || process.env.SERVER_NAME || "pusher",
-        pseudonymizationSecret: ANALYTICS_PSEUDONYMIZATION_SECRET,
     };
 }
 
