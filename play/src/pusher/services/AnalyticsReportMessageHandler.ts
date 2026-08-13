@@ -11,6 +11,7 @@ import {
 } from "@workadventure/messages";
 import type { SocketData } from "../models/Websocket/SocketData";
 import type { AnalyticsEventInput, AnalyticsEventsQueue } from "./AnalyticsEventsQueue";
+import { MAX_EVENT_PROPERTIES_BYTES, serializedPropertiesBytes } from "./AnalyticsEventsQueue";
 import type { AnalyticsTimedEventTracker } from "./AnalyticsTimedEventTracker";
 import { analyticsTimedEventTracker } from "./AnalyticsTimedEventTracker";
 
@@ -190,6 +191,25 @@ function handleControlFrame(
                     path: issue.path.join("."),
                     code: issue.code,
                 })),
+                reporterUserUuid: socketData.userUuid,
+            });
+            return;
+        }
+
+        // The same 8 KiB cap normalizeEvent applies, but applied here because this
+        // is where a client-supplied payload starts being RETAINED: an open frame is
+        // held until its interval closes, and the queue's cap never sees it. With a
+        // 16 MiB websocket frame and MAX_OPEN_TIMED_EVENTS_PER_CONNECTION handles,
+        // one socket could otherwise pin hundreds of MiB until it disconnects.
+        // Passthrough on openProperties means the schema check above does not bound
+        // this either — it validates the fields the catalog declares, not the ones it
+        // does not.
+        const propertiesBytes = serializedPropertiesBytes(parsed.data.properties);
+        if (propertiesBytes === undefined || propertiesBytes > MAX_EVENT_PROPERTIES_BYTES) {
+            console.warn("Timed event open dropped: properties too large or not serializable", {
+                eventName: parsed.data.eventName,
+                bytes: propertiesBytes,
+                maxBytes: MAX_EVENT_PROPERTIES_BYTES,
                 reporterUserUuid: socketData.userUuid,
             });
             return;
