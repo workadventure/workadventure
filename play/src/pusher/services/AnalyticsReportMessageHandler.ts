@@ -1,8 +1,10 @@
 import { z } from "zod";
 import type { AnalyticsEventName, AnalyticsEventReportMessage } from "@workadventure/messages";
 import {
+    ANALYTICS_EVENTS,
     ANALYTICS_EVENT_CATALOG,
     MAX_EVENT_ID_LENGTH,
+    TIMED_ANALYTICS_EVENT_NAMES,
     TIMED_EVENT_END_REASONS,
     isClientAnalyticsEventSource,
 } from "@workadventure/messages";
@@ -30,9 +32,15 @@ const TIMED_EVENT_OPEN = "timed_event.open";
 const TIMED_EVENT_CLOSE = "timed_event.close";
 const CONTROL_EVENT_NAMES = new Set([TIMED_EVENT_OPEN, TIMED_EVENT_CLOSE]);
 
+/**
+ * Opening an interval asks the pusher to emit a row signed `source: "pusher"`,
+ * which the admin trusts — so the name is constrained to the catalog's timed
+ * events rather than accepted as a string. This enum is the whole gate: the
+ * tracker's `open()` takes the narrowed type and no longer re-checks.
+ */
 const isTimedEventOpen = z.object({
     handle: z.string().min(1).max(MAX_EVENT_ID_LENGTH),
-    eventName: z.string().min(1).max(MAX_EVENT_ID_LENGTH),
+    eventName: z.enum(TIMED_ANALYTICS_EVENT_NAMES),
     properties: z.record(z.unknown()).default({}),
 });
 
@@ -163,6 +171,23 @@ function handleControlFrame(
             });
             return;
         }
+        // Validate the payload the client opened with, not just the name. The row
+        // the tracker eventually emits is this payload plus the interval bounds, so
+        // checking it here is what makes that row catalog-shaped by construction
+        // rather than only when it reaches the admin.
+        const openProperties = ANALYTICS_EVENTS[parsed.data.eventName].openProperties.safeParse(parsed.data.properties);
+        if (!openProperties.success) {
+            console.warn("Timed event open dropped: payload does not match the catalog", {
+                eventName: parsed.data.eventName,
+                issues: openProperties.error.issues.map((issue) => ({
+                    path: issue.path.join("."),
+                    code: issue.code,
+                })),
+                reporterUserUuid: socketData.userUuid,
+            });
+            return;
+        }
+
         tracker.open(parsed.data.handle, parsed.data.eventName, parsed.data.properties, socketData);
         return;
     }
