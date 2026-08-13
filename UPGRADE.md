@@ -2,6 +2,28 @@
 
 This document provides instructions for upgrading WorkAdventure between versions.
 
+## Analytics environment variables renamed (BREAKING CHANGE)
+
+Video quality samples used to travel through their own queue and their own
+`VIDEO_ANALYTICS_*` settings. They now ride the single generic analytics queue, so
+the settings lost their `VIDEO_` prefix:
+
+| Before | After |
+| --- | --- |
+| `VIDEO_ANALYTICS_FLUSH_INTERVAL_MS` | `ANALYTICS_FLUSH_INTERVAL_MS` |
+| `VIDEO_ANALYTICS_TIMEOUT_MS` | `ANALYTICS_TIMEOUT_MS` |
+| `VIDEO_ANALYTICS_MAX_QUEUE_SIZE` | `ANALYTICS_MAX_QUEUE_SIZE` |
+| `VIDEO_ANALYTICS_MAX_BATCH_SIZE` | `ANALYTICS_MAX_BATCH_SIZE` |
+
+**The old names are not read any more, and nothing warns you about it.** If you set
+any of them, rename them in your `.env` or deployment configuration before
+upgrading — otherwise the pusher silently falls back to the defaults (10000 ms,
+2000 ms, 10000 events, 1000 events). If you never set them, there is nothing to do.
+
+The `api/analytics/video-quality-batch` admin capability is retired along with its
+endpoint. An admin that implements the generic `api/analytics/events-batch`
+endpoint receives video quality samples as `media.video_quality.sample` events.
+
 ## Upgrading from v1.27.2 to v1.27.3
 
 ### TURN Credentials Architecture Change (BREAKING CHANGE)

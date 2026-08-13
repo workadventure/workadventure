@@ -16,7 +16,7 @@ import {
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
     PUSHER_WS_PORT,
-    ANALYTICS_DRAIN_TIMEOUT_MS,
+    DRAIN_TIMEOUT_MS,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
 import { analyticsEventsQueue } from "./pusher/services/AnalyticsEventsQueue";
@@ -101,10 +101,7 @@ const shutdown = (reason: string, endReason: "pusher_shutdown" | "pusher_crashed
     );
 
     const drains: [string, Promise<void>][] = [
-        [
-            "generic analytics",
-            analyticsEventsQueue.drain(ANALYTICS_DRAIN_TIMEOUT_MS).finally(() => analyticsEventsQueue.stop()),
-        ],
+        ["generic analytics", analyticsEventsQueue.drain(DRAIN_TIMEOUT_MS).finally(() => analyticsEventsQueue.stop())],
     ];
     (async () => {
         // allSettled never rejects, so each drain has to be inspected individually:
