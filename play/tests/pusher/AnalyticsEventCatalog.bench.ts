@@ -5,7 +5,7 @@ import { analyticsEventCatalogUnion } from "@workadventure/messages";
 /**
  * Does validating against the catalog cost too much to sit on the hot path?
  *
- * AnalyticsEventSchema argued at length that it must not, and the number it
+ * The catalog doc-block argued at length that it must not, and the number it
  * quoted (~134x) is real — but it measured a *recursive* `z.lazy` JSON schema,
  * where the cost comes from unbounded nesting depth. A discriminated union is a
  * different machine: `Map.get` on the discriminator, then exactly one member

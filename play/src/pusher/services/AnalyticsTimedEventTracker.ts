@@ -1,7 +1,7 @@
+import type { TimedEventEndReason } from "@workadventure/messages";
 import type { SocketData } from "../models/Websocket/SocketData";
 import { analyticsEventsQueue, type AnalyticsEventInput } from "./AnalyticsEventsQueue";
 import { analyticsConnectionId } from "./AnalyticsConnectionId";
-import type { TimedEventEndReason } from "./AnalyticsEventSchema";
 
 type AnalyticsEventQueue = {
     enqueueEvent(event: AnalyticsEventInput, socketData: SocketData): void;
@@ -10,18 +10,14 @@ type AnalyticsEventQueue = {
 /**
  * The only event names a client may ask the pusher to synthesize.
  *
- * This is a **security** allowlist, not a taxonomy gate — the distinction matters,
- * because AnalyticsEventCatalog says at length that `eventName` must stay an opaque
- * string so a newer front can ship an event family before admin knows about it.
- * That rule is about the front↔admin skew and still holds for ordinary events.
- *
- * This is a different problem: `timed_event.open` asks the pusher to emit a row
- * **signed `source: "pusher"`**. Without an allowlist a client opens one named
- * `user.disconnected` and the pusher forges it a connection session — exactly the
- * hole PUSHER_RESERVED_EVENT_NAMES was added to close. Front and pusher are the
- * same `play` service and deploy together, so the only skew this can cause is a tab
- * from a new replica reconnecting to an old one mid-deploy; the degraded outcome is
- * a rejected open, i.e. what an unknown name already does today.
+ * This is a **security** allowlist, and it is narrower than the catalog on
+ * purpose. The catalog says which events exist; this says which ones a *client*
+ * may ask the pusher to synthesize — a much smaller set, because
+ * `timed_event.open` makes the pusher emit a row **signed `source: "pusher"`**.
+ * Without it a client opens one named `user.disconnected` and the pusher forges it
+ * a connection session. The catalog gate in AnalyticsReportMessageHandler cannot
+ * close this hole: it checks events a client *reports*, and a control frame is not
+ * one — it is an instruction, deliberately absent from the catalog.
  */
 export const TIMED_EVENT_NAMES = new Set<string>([
     "conversation.ended",
