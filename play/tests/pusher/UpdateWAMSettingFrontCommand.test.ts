@@ -35,7 +35,7 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
             },
             [],
             "https://some-room-url.test",
-            "test-uuid"
+            "test-uuid",
         );
         await command.execute();
         const undoCommand = command.getUndoCommand();
@@ -72,7 +72,7 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
             },
             [],
             "https://some-room-url.test",
-            "test-recording-uuid"
+            "test-recording-uuid",
         );
         await command.execute();
         const undoCommand = command.getUndoCommand();

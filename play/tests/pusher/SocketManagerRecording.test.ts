@@ -39,7 +39,7 @@ describe("SocketManager recording queries", () => {
         await expect(
             manager.handleStartRecording(client, "world.space-name", {
                 signal: new AbortController().signal,
-            })
+            }),
         ).rejects.toThrow("You are not allowed to record");
         expect(querySend).not.toHaveBeenCalled();
     });
@@ -82,7 +82,7 @@ describe("SocketManager recording queries", () => {
             {
                 signal,
                 timeout: 60_000,
-            }
+            },
         );
         expect(querySend).toHaveBeenNthCalledWith(
             2,
@@ -96,7 +96,7 @@ describe("SocketManager recording queries", () => {
             {
                 signal,
                 timeout: 60_000,
-            }
+            },
         );
     });
 });

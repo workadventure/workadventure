@@ -154,6 +154,43 @@ describe("processAnalyticsReportMessage", () => {
         expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
     });
 
+    it("refuses to open a timed event the client may not have synthesized", () => {
+        // The open frame is the one place a client still names an event as a free
+        // string. Without this the frame is a name-forging primitive: the pusher
+        // would emit `user.disconnected` signed source "pusher", which the admin
+        // projects straight into analytics_connection_sessions.
+        const queue = newQueue();
+        const tracker = newTracker();
+        processAnalyticsReportMessage(
+            { events: [controlFrame("timed_event.open", { handle: "h1", eventName: "user.disconnected" })] },
+            newSocketData(),
+            queue,
+            tracker,
+        );
+
+        expect(tracker.open).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith("Timed event open dropped: malformed control frame", expect.any(Object));
+    });
+
+    it("refuses to open a timed event whose payload does not match the catalog", () => {
+        // area.dwell declares areaId and areaName. An open frame missing them would
+        // otherwise produce a stored row the catalog does not describe.
+        const queue = newQueue();
+        const tracker = newTracker();
+        processAnalyticsReportMessage(
+            { events: [controlFrame("timed_event.open", { handle: "h1", eventName: "area.dwell" })] },
+            newSocketData(),
+            queue,
+            tracker,
+        );
+
+        expect(tracker.open).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith(
+            "Timed event open dropped: payload does not match the catalog",
+            expect.objectContaining({ eventName: "area.dwell" }),
+        );
+    });
+
     it("drops an event whose name is not in the catalog", () => {
         const queue = newQueue();
         processAnalyticsReportMessage(
@@ -332,7 +369,11 @@ describe("processAnalyticsReportMessage", () => {
                     controlFrame("timed_event.open", {
                         handle: "conversation.ended:h1",
                         eventName: "conversation.ended",
-                        properties: { conversationType: "meeting" },
+                        properties: {
+                            schemaVersion: 1,
+                            conversationId: "group:3",
+                            conversationType: "meeting",
+                        },
                     }),
                     controlFrame("timed_event.close", { handle: "conversation.ended:h1" }),
                 ],

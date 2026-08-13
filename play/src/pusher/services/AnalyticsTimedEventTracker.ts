@@ -1,4 +1,4 @@
-import type { TimedEventEndReason } from "@workadventure/messages";
+import type { TimedAnalyticsEventName, TimedEventEndReason } from "@workadventure/messages";
 import type { SocketData } from "../models/Websocket/SocketData";
 import { analyticsEventsQueue, type AnalyticsEventInput } from "./AnalyticsEventsQueue";
 import { analyticsConnectionId } from "./AnalyticsConnectionId";
@@ -6,25 +6,6 @@ import { analyticsConnectionId } from "./AnalyticsConnectionId";
 type AnalyticsEventQueue = {
     enqueueEvent(event: AnalyticsEventInput, socketData: SocketData): void;
 };
-
-/**
- * The only event names a client may ask the pusher to synthesize.
- *
- * This is a **security** allowlist, and it is narrower than the catalog on
- * purpose. The catalog says which events exist; this says which ones a *client*
- * may ask the pusher to synthesize — a much smaller set, because
- * `timed_event.open` makes the pusher emit a row **signed `source: "pusher"`**.
- * Without it a client opens one named `user.disconnected` and the pusher forges it
- * a connection session. The catalog gate in AnalyticsReportMessageHandler cannot
- * close this hole: it checks events a client *reports*, and a control frame is not
- * one — it is an instruction, deliberately absent from the catalog.
- */
-export const TIMED_EVENT_NAMES = new Set<string>([
-    "conversation.ended",
-    "area.dwell",
-    "meeting.screenshare.ended",
-    "status.dwell",
-]);
 
 /**
  * Bounds the per-socket map. A client that opens handles and never closes them
@@ -93,18 +74,14 @@ export class AnalyticsTimedEventTracker {
      */
     public open(
         handle: string,
-        eventName: string,
+        // Narrowed to the names built with `timedEvent` in the catalog. The runtime
+        // check that used to live here is now the `z.enum(TIMED_ANALYTICS_EVENT_NAMES)`
+        // in the control-frame schema, which is the only way in — so the compiler
+        // enforces here what the schema enforces at the boundary.
+        eventName: TimedAnalyticsEventName,
         properties: Record<string, unknown>,
         socketData: SocketData,
     ): boolean {
-        if (!TIMED_EVENT_NAMES.has(eventName)) {
-            console.warn("Timed event rejected: name is not openable by a client", {
-                eventName: eventName.slice(0, 64),
-                reporterUserUuid: socketData.userUuid,
-            });
-            return false;
-        }
-
         const connectionId = analyticsConnectionId(socketData);
         let open = this.openByConnection.get(connectionId);
         if (!open) {
