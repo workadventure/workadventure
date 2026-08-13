@@ -1,5 +1,7 @@
 import { generateSchema } from "@anatine/zod-openapi";
 import {
+    analyticsEvent,
+    analyticsEventsBatch,
     isAdminApiData,
     isErrorApiErrorData,
     isErrorApiRedirectData,
@@ -39,6 +41,12 @@ class SwaggerGenerator {
         return {
             definitions: {
                 AdminApiData: generateSchema(isAdminApiData),
+                // The union, not its 166 members: @anatine/zod-openapi renders a
+                // ZodDiscriminatedUnion as one `oneOf` + `discriminator` node, whereas
+                // registering members one by one (as ErrorApiData does, with four)
+                // would put 166 definitions at the top level.
+                AnalyticsEvent: generateSchema(analyticsEvent),
+                AnalyticsEventsBatch: generateSchema(analyticsEventsBatch),
                 Capabilities: generateSchema(isCapabilities),
                 CompanionTextureCollectionList: generateSchema(CompanionTextureCollection.array()),
                 CompanionDetail: generateSchema(CompanionDetail),
