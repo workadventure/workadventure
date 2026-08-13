@@ -10,10 +10,10 @@ import type { SocketData } from "../models/Websocket/SocketData";
 import {
     ADMIN_API_TOKEN,
     ADMIN_API_URL,
-    VIDEO_ANALYTICS_FLUSH_INTERVAL_MS,
-    VIDEO_ANALYTICS_MAX_BATCH_SIZE,
-    VIDEO_ANALYTICS_MAX_QUEUE_SIZE,
-    VIDEO_ANALYTICS_TIMEOUT_MS,
+    ANALYTICS_FLUSH_INTERVAL_MS,
+    ANALYTICS_MAX_BATCH_SIZE,
+    ANALYTICS_MAX_QUEUE_SIZE,
+    ANALYTICS_TIMEOUT_MS,
 } from "../enums/EnvironmentVariable";
 
 const SCHEMA_VERSION = 1;
@@ -630,10 +630,10 @@ function buildDefaultConfig(): AnalyticsEventsQueueConfig {
     return {
         adminApiUrl: ADMIN_API_URL,
         adminApiToken: ADMIN_API_TOKEN,
-        flushIntervalMs: VIDEO_ANALYTICS_FLUSH_INTERVAL_MS,
-        timeoutMs: VIDEO_ANALYTICS_TIMEOUT_MS,
-        maxQueueSize: VIDEO_ANALYTICS_MAX_QUEUE_SIZE,
-        maxBatchSize: VIDEO_ANALYTICS_MAX_BATCH_SIZE,
+        flushIntervalMs: ANALYTICS_FLUSH_INTERVAL_MS,
+        timeoutMs: ANALYTICS_TIMEOUT_MS,
+        maxQueueSize: ANALYTICS_MAX_QUEUE_SIZE,
+        maxBatchSize: ANALYTICS_MAX_BATCH_SIZE,
         pusherInstanceId: process.env.HOSTNAME || process.env.SERVER_NAME || "pusher",
     };
 }
