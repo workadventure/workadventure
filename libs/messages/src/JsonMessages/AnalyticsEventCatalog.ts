@@ -33,24 +33,62 @@ export const MAX_TIMESTAMP_MS = 8.64e15;
  * world that opted out of user-level activity. Mirrors `disconnectReason`.
  */
 export const TIMED_EVENT_END_REASONS = [
-  // Stated by the client when it closes its own interval. `type_changed` is the
-  // one consumers cannot do without: it means one conversation was split because
-  // its type changed, so a bubble that became a meeting reports two intervals and
-  // has to be stitched on time rather than by id.
+  // ---- Stated by the client ----
+  /** The client closed the interval normally. */
   "closed_by_client",
-  "left_conversation",
-  "left_area",
+  /**
+   * Not "why the client stopped" but "this row is half a conversation": the
+   * conversation's type changed, so a bubble that became a meeting reports two
+   * intervals under two ids that have to be stitched on time. Collapsing this into
+   * closed_by_client would make every meeting-from-a-bubble count as two
+   * conversations, which is a data-correctness loss rather than a simplification.
+   */
   "type_changed",
-  "status_changed",
-  "cleanup",
-  // Forced by the pusher, when the client never got to say anything.
+  /**
+   * A re-open replaced a handle that was still live, i.e. the matching leave never
+   * arrived. Kept distinct because these are exactly the intervals whose *start* is
+   * not trustworthy: merging them into closed_by_client would make a walk-through
+   * that lost its leave indistinguishable from a clean one, and those inflate
+   * durations.
+   */
+  "superseded",
+  // ---- Forced by the pusher, when the client never got to say anything ----
   "socket_closed",
   "join_failed",
   "pusher_shutdown",
   "pusher_crashed",
-  "other",
 ] as const;
 export type TimedEventEndReason = (typeof TIMED_EVENT_END_REASONS)[number];
+
+/** The subset a client may state; the rest are the pusher's to decide. */
+export type ClientTimedEventEndReason = Extract<
+  TimedEventEndReason,
+  "closed_by_client" | "type_changed" | "superseded"
+>;
+
+/**
+ * Reasons that existed before the set was trimmed, mapped to their replacement.
+ *
+ * `left_conversation`, `left_area`, `status_changed` and `cleanup` only ever
+ * appeared on the one event whose name already said the same thing, so they
+ * carried no information and collapse into `closed_by_client`. `other` was
+ * documented as pusher-forced but was in fact emitted by the front on the
+ * stale-handle path, which is what `superseded` now names.
+ *
+ * Here for the deploy window: a tab loaded before this change still sends the old
+ * strings, and mapping them beats losing the interval. Historical rows keep the
+ * old values forever, so anything querying them has to accept both.
+ */
+export const LEGACY_TIMED_EVENT_END_REASONS: Record<
+  string,
+  TimedEventEndReason
+> = {
+  left_conversation: "closed_by_client",
+  left_area: "closed_by_client",
+  status_changed: "closed_by_client",
+  cleanup: "closed_by_client",
+  other: "superseded",
+};
 
 /**
  * One schema per analytics event, with every field `.describe()`d so the catalog

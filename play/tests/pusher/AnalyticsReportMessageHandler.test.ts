@@ -154,6 +154,41 @@ describe("processAnalyticsReportMessage", () => {
         expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
     });
 
+    it.each([
+        ["left_conversation", "closed_by_client"],
+        ["left_area", "closed_by_client"],
+        ["status_changed", "closed_by_client"],
+        ["cleanup", "closed_by_client"],
+        ["other", "superseded"],
+    ])("translates the retired end reason %s into %s", (legacy, expected) => {
+        // A tab loaded before the reason set was trimmed still sends the old string.
+        // Mapping it beats losing the interval — and beats `.catch()`-ing it into a
+        // bucket that would make a stale-handle close look like a clean one.
+        const queue = newQueue();
+        const tracker = newTracker();
+        processAnalyticsReportMessage(
+            { events: [controlFrame("timed_event.close", { handle: "h1", endReason: legacy })] },
+            newSocketData(),
+            queue,
+            tracker,
+        );
+
+        expect(tracker.close).toHaveBeenCalledWith("h1", expect.anything(), expected);
+    });
+
+    it("falls back to closed_by_client for a reason it has never heard of", () => {
+        const queue = newQueue();
+        const tracker = newTracker();
+        processAnalyticsReportMessage(
+            { events: [controlFrame("timed_event.close", { handle: "h1", endReason: "nonsense" })] },
+            newSocketData(),
+            queue,
+            tracker,
+        );
+
+        expect(tracker.close).toHaveBeenCalledWith("h1", expect.anything(), "closed_by_client");
+    });
+
     it("refuses to open a timed event the client may not have synthesized", () => {
         // The open frame is the one place a client still names an event as a free
         // string. Without this the frame is a name-forging primitive: the pusher
@@ -323,12 +358,14 @@ describe("processAnalyticsReportMessage", () => {
      * where they can disagree in silence.
      *
      * The front states why it closed an interval; the pusher parses that string
-     * against an enum and coerces anything unknown to "other" rather than losing the
-     * interval. That coercion is right, but it means a reason the front actually sends
-     * and the enum does not list is destroyed with no error anywhere -- which is
-     * exactly what happened to every front-initiated close until this test existed.
+     * against an enum and coerces anything unknown rather than losing the interval.
+     * That coercion is right, but it means a reason the front actually sends and the
+     * enum does not list is destroyed with no error anywhere -- which is exactly what
+     * happened to every front-initiated close until this test existed. The front's
+     * `close()` is typed to ClientTimedEventEndReason now, so these three are the
+     * complete set it can send.
      */
-    it.each(["left_conversation", "type_changed", "cleanup"])(
+    it.each(["closed_by_client", "type_changed", "superseded"])(
         "keeps the reason the front actually sends: %s",
         (endReason) => {
             const queue = newQueue();
@@ -344,20 +381,6 @@ describe("processAnalyticsReportMessage", () => {
             expect(tracker.close).toHaveBeenCalledWith("conversation.ended:h1", expect.any(Object), endReason);
         },
     );
-
-    it("coerces a reason it does not know rather than dropping the interval", () => {
-        const queue = newQueue();
-        const tracker = newTracker();
-
-        processAnalyticsReportMessage(
-            { events: [controlFrame("timed_event.close", { handle: "h1", endReason: "wharrgarbl" })] },
-            newSocketData(),
-            queue,
-            tracker,
-        );
-
-        expect(tracker.close).toHaveBeenCalledWith("h1", expect.any(Object), "other");
-    });
 
     it("treats the control frames as instructions, never as events", () => {
         const queue = newQueue();

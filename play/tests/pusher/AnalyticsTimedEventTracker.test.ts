@@ -52,7 +52,7 @@ describe("AnalyticsTimedEventTracker", () => {
         // The phantom: a "remote" conversation opened for two milliseconds while a
         // meeting tore down, then closed. It carried no duration but used to count.
         now += 2;
-        tracker.close("h1", socketData, "left_conversation");
+        tracker.close("h1", socketData, "closed_by_client");
 
         expect(queue.enqueueEvent).not.toHaveBeenCalled();
     });

@@ -1,11 +1,14 @@
-import type { AnalyticsEventReportMessage } from "@workadventure/messages";
+import type {
+    AnalyticsEventReportMessage,
+    ClientTimedEventEndReason,
+    TimedAnalyticsEventName,
+    TimedAnalyticsEventOpenProperties,
+} from "@workadventure/messages";
 import { v4 as uuidv4 } from "uuid";
-
-type TimedEventProperties = Record<string, string | number | boolean | null | undefined>;
 
 export type TimedAnalyticsEventHandle = {
     /** Idempotent: closing twice reports one interval, not two. */
-    close(endReason?: string): void;
+    close(endReason?: ClientTimedEventEndReason): void;
 };
 
 /**
@@ -26,9 +29,9 @@ export type TimedAnalyticsEventHandle = {
  * processAnalyticsReportMessage and never reach the queue. Grepping the admin for
  * `timed_event.open` finds nothing, on purpose.
  */
-export function openTimedAnalyticsEvent(
-    eventName: string,
-    properties: TimedEventProperties,
+export function openTimedAnalyticsEvent<N extends TimedAnalyticsEventName>(
+    eventName: N,
+    properties: TimedAnalyticsEventOpenProperties<N>,
     sendReport: (message: AnalyticsEventReportMessage) => void,
 ): TimedAnalyticsEventHandle {
     const handle = `${eventName}:${uuidv4()}`;
@@ -47,7 +50,7 @@ export function openTimedAnalyticsEvent(
     });
 
     return {
-        close(endReason?: string): void {
+        close(endReason?: ClientTimedEventEndReason): void {
             if (closed) {
                 return;
             }
