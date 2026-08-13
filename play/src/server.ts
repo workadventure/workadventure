@@ -17,11 +17,9 @@ import {
     SENTRY_ENVIRONMENT,
     PUSHER_WS_PORT,
     ANALYTICS_DRAIN_TIMEOUT_MS,
-    VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
 import { analyticsEventsQueue } from "./pusher/services/AnalyticsEventsQueue";
-import { videoQualityAnalyticsQueue } from "./pusher/services/VideoQualityAnalyticsQueue";
 import { analyticsPresenceTracker } from "./pusher/services/AnalyticsPresenceTracker";
 import { analyticsTimedEventTracker } from "./pusher/services/AnalyticsTimedEventTracker";
 
@@ -106,12 +104,6 @@ const shutdown = (reason: string, endReason: "pusher_shutdown" | "pusher_crashed
         [
             "generic analytics",
             analyticsEventsQueue.drain(ANALYTICS_DRAIN_TIMEOUT_MS).finally(() => analyticsEventsQueue.stop()),
-        ],
-        [
-            "video-quality analytics",
-            videoQualityAnalyticsQueue
-                .drain(VIDEO_ANALYTICS_DRAIN_TIMEOUT_MS)
-                .finally(() => videoQualityAnalyticsQueue.stop()),
         ],
     ];
     (async () => {

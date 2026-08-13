@@ -29,7 +29,6 @@ import {
     SpaceDestroyedError,
     UserAlreadyAddedInSpaceError,
 } from "../models/SpaceValidationErrors";
-import { videoQualityAnalyticsQueue } from "../services/VideoQualityAnalyticsQueue";
 import { analyticsEventsQueue } from "../services/AnalyticsEventsQueue";
 import { processAnalyticsReportMessage } from "../services/AnalyticsReportMessageHandler";
 import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
@@ -357,7 +356,10 @@ export class IoSocketController {
                         world: "",
                         chatID,
                         canRecord: false,
-                        analyticsEventsEnabled: true,
+                        // No admin, so there is nobody to report analytics to. This
+                        // placeholder is only used until fetchMemberDataByUuid answers;
+                        // when it never does, denying is the right default.
+                        analyticsEventsEnabled: false,
                     };
 
                     let characterTextures: WokaDetail[];
@@ -1115,14 +1117,6 @@ export class IoSocketController {
                                 break;
                             }
                             case "videoQualityReportMessage": {
-                                /*debug(
-                                    "Received video quality report with %d samples",
-                                    message.message.videoQualityReportMessage.samples.length,
-                                );*/
-                                videoQualityAnalyticsQueue.enqueueReport(
-                                    message.message.videoQualityReportMessage,
-                                    socket.getUserData(),
-                                );
                                 analyticsEventsQueue.enqueueVideoQualityReport(
                                     message.message.videoQualityReportMessage,
                                     socket.getUserData(),
