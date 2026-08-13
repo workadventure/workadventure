@@ -3,6 +3,7 @@ import type { AnalyticsEventName, AnalyticsEventReportMessage } from "@workadven
 import {
     ANALYTICS_EVENTS,
     ANALYTICS_EVENT_CATALOG,
+    LEGACY_TIMED_EVENT_END_REASONS,
     MAX_EVENT_ID_LENGTH,
     TIMED_ANALYTICS_EVENT_NAMES,
     TIMED_EVENT_END_REASONS,
@@ -46,9 +47,15 @@ const isTimedEventOpen = z.object({
 
 const isTimedEventClose = z.object({
     handle: z.string().min(1).max(MAX_EVENT_ID_LENGTH),
-    // Anything outside the enum becomes "other" rather than being rejected: an
-    // unknown reason is not worth losing the interval's duration over.
-    endReason: z.enum(TIMED_EVENT_END_REASONS).catch("other").default("closed_by_client"),
+    // A tab loaded before the reason set was trimmed still sends the old strings,
+    // so translate them rather than dropping them on the floor. Anything still
+    // unknown after that becomes `closed_by_client` rather than being rejected: an
+    // unrecognised reason is not worth losing the interval's duration over.
+    endReason: z
+        .string()
+        .default("closed_by_client")
+        .transform((reason) => LEGACY_TIMED_EVENT_END_REASONS[reason] ?? reason)
+        .pipe(z.enum(TIMED_EVENT_END_REASONS).catch("closed_by_client")),
 });
 
 /**

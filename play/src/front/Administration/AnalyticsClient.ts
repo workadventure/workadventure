@@ -294,7 +294,7 @@ class AnalyticsClient {
             return;
         }
 
-        this.openScreenShares.get(screenShareSessionId)?.close("other");
+        this.openScreenShares.get(screenShareSessionId)?.close("superseded");
         this.openScreenShares.set(
             screenShareSessionId,
             openTimedAnalyticsEvent(
@@ -311,7 +311,7 @@ class AnalyticsClient {
      * pipeline.
      */
     screenSharingEnded(screenShareSessionId: string): void {
-        this.openScreenShares.get(screenShareSessionId)?.close("left_conversation");
+        this.openScreenShares.get(screenShareSessionId)?.close("closed_by_client");
         this.openScreenShares.delete(screenShareSessionId);
     }
 
@@ -608,7 +608,7 @@ class AnalyticsClient {
         // overwriting would leave an interval nothing could ever close, and the
         // pusher would only close it when the socket died — dating a walk-through
         // to the end of the session.
-        this.openAreas.get(id)?.close("other");
+        this.openAreas.get(id)?.close("superseded");
         this.openAreas.set(
             id,
             openTimedAnalyticsEvent("area.dwell", { areaId: id, areaName: name }, this.sendTimedEventReport),
@@ -617,7 +617,7 @@ class AnalyticsClient {
 
     leaveArea(id: string, name: string): void {
         this.posthog?.capture(`wa_map-editor_leaver_area`, { id, name });
-        this.openAreas.get(id)?.close("left_area");
+        this.openAreas.get(id)?.close("closed_by_client");
         this.openAreas.delete(id);
     }
 
@@ -633,7 +633,7 @@ class AnalyticsClient {
         }
 
         this.currentStatus = status;
-        this.openStatus?.close("status_changed");
+        this.openStatus?.close("closed_by_client");
         this.openStatus = openTimedAnalyticsEvent("status.dwell", { status }, this.sendTimedEventReport);
     }
 

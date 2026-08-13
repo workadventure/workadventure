@@ -79,7 +79,7 @@ const timedEvent = {
         startedAt: "2026-04-24T12:00:00.000Z",
         endedAt: "2026-04-24T12:02:30.000Z",
         durationSeconds: 150,
-        endReason: "left_conversation",
+        endReason: "closed_by_client",
     },
 };
 
