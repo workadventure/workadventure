@@ -305,11 +305,6 @@ class AnalyticsClient {
         );
     }
 
-    /**
-     * The caller no longer passes a duration, and cannot: the pusher measures the
-     * interval. This used to take a client-computed durationSeconds straight into the
-     * pipeline.
-     */
     screenSharingEnded(screenShareSessionId: string): void {
         this.openScreenShares.get(screenShareSessionId)?.close("closed_by_client");
         this.openScreenShares.delete(screenShareSessionId);
