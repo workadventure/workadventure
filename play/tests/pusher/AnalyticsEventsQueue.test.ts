@@ -279,7 +279,9 @@ describe("AnalyticsEventsQueue", () => {
         const batch = post.mock.calls[0][1] as AnalyticsEventsBatch;
         expect(batch.events[0]).toMatchObject({
             eventName: "media.video_quality.sample",
-            source: "media",
+            // "pusher": the sample is synthesized here, never reported by a socket.
+            // The admin drops this name unless the source says so.
+            source: "pusher",
             clientEventTime: "2026-04-24T12:00:05.000Z",
             properties: expect.objectContaining({
                 streamId: "stream-id",
