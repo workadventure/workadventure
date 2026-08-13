@@ -52,7 +52,7 @@ describe("subscribeToConversationAnalytics", () => {
                     conversationId: expect.any(String),
                     conversationType: "remote",
                 }),
-            })
+            }),
         );
     });
 
@@ -69,7 +69,7 @@ describe("subscribeToConversationAnalytics", () => {
         // A close that does not match an open is dropped by the pusher, so a mismatched
         // handle here would silently lose the whole conversation.
         expect(closed(sendReport)[0].properties.handle).toBe(opened(sendReport)[0].properties.handle);
-        expect(closed(sendReport)[0].properties.endReason).toBe("left_conversation");
+        expect(closed(sendReport)[0].properties.endReason).toBe("closed_by_client");
     });
 
     /**
@@ -238,7 +238,7 @@ describe("subscribeToConversationAnalytics", () => {
         expect(closed(sendReport).map((event) => event.properties.endReason)).toEqual([
             "type_changed",
             "type_changed",
-            "left_conversation",
+            "closed_by_client",
         ]);
         // The two bubble legs share the group id — they are the same bubble, resumed.
         expect(ids[0]).toBe("group:42");
@@ -258,7 +258,7 @@ describe("subscribeToConversationAnalytics", () => {
         unsubscribe();
 
         expect(closed(sendReport)).toHaveLength(1);
-        expect(closed(sendReport)[0].properties.endReason).toBe("cleanup");
+        expect(closed(sendReport)[0].properties.endReason).toBe("closed_by_client");
     });
 
     it("emits meeting provider changes while a meeting stays active", () => {
@@ -274,7 +274,7 @@ describe("subscribeToConversationAnalytics", () => {
         meetingProvider.set("jitsi");
 
         const providerChangedEvent = sentEvents(sendReport).find(
-            (event) => event.eventName === "meeting.provider_changed"
+            (event) => event.eventName === "meeting.provider_changed",
         );
 
         expect(providerChangedEvent?.properties.previousMeetingProvider).toEqual("livekit");

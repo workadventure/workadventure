@@ -1,5 +1,5 @@
 import type { Readable, Unsubscriber } from "svelte/store";
-import type { AnalyticsEventReportMessage } from "@workadventure/messages";
+import type { AnalyticsEventReportMessage, ClientTimedEventEndReason } from "@workadventure/messages";
 import { v4 as uuidv4 } from "uuid";
 import { hasCapability } from "../Connection/Capabilities";
 import type { TimedAnalyticsEventHandle } from "../Administration/TimedAnalyticsEvent";
@@ -105,7 +105,7 @@ export function subscribeToConversationAnalytics(
             sendReport,
         );
     };
-    const endConversation = (endReason?: string): void => {
+    const endConversation = (endReason?: ClientTimedEventEndReason): void => {
         // Asking to close is all the front does: the pusher times the interval on its
         // own clock and emits the single row. If this never runs — tab closed, network
         // dropped — the pusher closes it from the socket lifecycle instead.
@@ -187,7 +187,7 @@ export function subscribeToConversationAnalytics(
             startConversation();
             return;
         } else if (!value && inConversation) {
-            endConversation("left_conversation");
+            endConversation("closed_by_client");
         }
         inConversation = value;
     });
@@ -198,7 +198,7 @@ export function subscribeToConversationAnalytics(
         // this last conversation.ended reaches the pusher — send() silently drops
         // frames once the socket is manually closed. Remote or abnormal closes never
         // run this at all; AnalyticsPresenceTracker covers those server-side.
-        endConversation("cleanup");
+        endConversation("closed_by_client");
         unsubscribe();
         unsubscribeGroupId?.();
         unsubscribeMeeting?.();

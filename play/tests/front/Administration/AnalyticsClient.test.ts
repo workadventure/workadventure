@@ -154,11 +154,11 @@ describe("AnalyticsClient admin analytics sink", () => {
             expect.objectContaining({
                 eventName: "area.dwell",
                 properties: { areaId: "area-1", areaName: "Focus room" },
-            })
+            }),
         );
         // Same handle, or the pusher drops the close and the visit is lost.
         expect(closed?.properties.handle).toBe(opened?.properties.handle);
-        expect(closed?.properties.endReason).toBe("left_area");
+        expect(closed?.properties.endReason).toBe("closed_by_client");
     });
 
     it("closes an area left open rather than orphaning it", () => {
@@ -222,7 +222,7 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(opens.map((event) => event.properties.eventName)).toEqual(["status.dwell", "status.dwell"]);
         expect(opens.map((event) => event.properties.properties.status)).toEqual(["ONLINE", "BUSY"]);
         expect(closes).toHaveLength(1);
-        expect(closes[0].properties.endReason).toBe("status_changed");
+        expect(closes[0].properties.endReason).toBe("closed_by_client");
         // The BUSY open pairs with the ONLINE close by handle, or the pusher drops it.
         expect(closes[0].properties.handle).toBe(opens[0].properties.handle);
     });
@@ -245,7 +245,7 @@ describe("AnalyticsClient admin analytics sink", () => {
             expect.objectContaining({
                 eventName: "meeting.screenshare.ended",
                 properties: { screenShareSessionId: "screen-share-session-1", hasAudio: true },
-            })
+            }),
         );
         expect(closed?.properties.handle).toBe(opened?.properties.handle);
         // The caller cannot state a duration anymore: it used to send
