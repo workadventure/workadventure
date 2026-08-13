@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { ANALYTICS_EVENT_CATALOG, TIMED_ANALYTICS_EVENT_NAMES, analyticsEventNameOf } from "@workadventure/messages";
+import { generateSchema } from "@anatine/zod-openapi";
+import {
+    ANALYTICS_EVENT_CATALOG,
+    TIMED_ANALYTICS_EVENT_NAMES,
+    analyticsEvent,
+    analyticsEventNameOf,
+    analyticsEventsBatch,
+} from "@workadventure/messages";
 
 /** Reads the `properties` sub-schema off a catalog entry. */
 function propertiesOf(schema: z.ZodDiscriminatedUnionOption<"eventName">): z.ZodTypeAny {
@@ -312,3 +319,30 @@ function unwrapDescription(schema: z.ZodTypeAny): string | undefined {
 
     return undefined;
 }
+
+describe("Swagger rendering", () => {
+    it("renders the catalog as one discriminated oneOf, not 166 definitions", () => {
+        // Guards two things at once: that registering the union (rather than its
+        // members, as ErrorApiData does) still produces something a reader can use,
+        // and that an @anatine/zod-openapi upgrade has not quietly changed how it
+        // handles ZodDiscriminatedUnion.
+        const schema = generateSchema(analyticsEvent) as {
+            oneOf?: unknown[];
+            discriminator?: { propertyName?: string };
+        };
+
+        expect(schema.discriminator?.propertyName).toBe("eventName");
+        expect(schema.oneOf).toHaveLength(Object.keys(ANALYTICS_EVENT_CATALOG).length);
+    });
+
+    it("publishes the batch envelope the pusher actually posts", () => {
+        const schema = generateSchema(analyticsEventsBatch) as { properties?: Record<string, unknown> };
+
+        expect(Object.keys(schema.properties ?? {}).sort()).toEqual([
+            "events",
+            "pusherInstanceId",
+            "schemaVersion",
+            "sentAt",
+        ]);
+    });
+});

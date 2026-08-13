@@ -4,6 +4,7 @@ export * from "./protobuf-transformers/transformers";
 
 export * from "./JsonMessages/AdminApiData";
 export * from "./JsonMessages/AnalyticsEventCatalog";
+export * from "./JsonMessages/AnalyticsEventsBatch";
 export * from "./JsonMessages/ApiVersion";
 export * from "./JsonMessages/ApplicationDefinitionInterface";
 export * from "./JsonMessages/CapabilitiesData";
