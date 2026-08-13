@@ -56,21 +56,30 @@ export type TimedEventEndReason = (typeof TIMED_EVENT_END_REASONS)[number];
  * One schema per analytics event, with every field `.describe()`d so the catalog
  * can be turned into documentation.
  *
- * ## This is documentation and types — NOT the runtime gate
+ * ## This IS the runtime gate
  *
- * `AnalyticsEventSchema.isAnalyticsEventInput` validates the envelope on the hot
- * path and stays deliberately permissive: `eventName` is an opaque bounded
- * string. That is load-bearing, not an oversight. The pipeline is designed to let
- * a newer front ship an event family before admin knows about it — the admin's
- * AnalyticsEventsService logs-and-accepts unknown names on purpose. It is not
- * hypothetical either: 23 of the names the front emits today are already unknown
- * to the admin's allowlist.
+ * It did not use to be, and the reasoning that kept it out is worth recording,
+ * because only one half of it survived measurement.
  *
- * So do NOT wire this catalog in as a validation gate. A strict union over
- * `eventName` would drop a seventh of the taxonomy outright, and a strict
- * `properties` shape would additionally drop any known event whose payload a
- * newer front has extended — the exact rolling-deploy case the permissive
- * envelope exists to survive.
+ * The skew argument was: a newer front must be able to ship an event family
+ * before admin knows about it, and 23 of the names the front emits today are
+ * already unknown to the admin's allowlist. That is true — but it is about the
+ * front↔ADMIN gap, and the admin is a separate deployment that logs-and-accepts
+ * unknown names for exactly that reason. This catalog sits between the front and
+ * the pusher, which ship from the same `play/` image and cannot skew. The
+ * argument does not transfer.
+ *
+ * The performance argument was that a union costs ~134x a flat parse. That figure
+ * was measured on a recursive `z.lazy` JSON schema, where the cost is nesting
+ * depth. A discriminated union is a `Map.get` plus exactly one member parse:
+ * remeasured at 2.4x, and 64-deep nesting neither throws nor recurses. See
+ * `play/tests/pusher/AnalyticsEventCatalog.bench.ts` for the numbers, including
+ * the one that did survive — a discriminator MISS costs 11x, so callers look the
+ * name up here before handing it to the union.
+ *
+ * What stays open is the payload: `properties` is `passthrough()`, so a known
+ * event whose payload a newer front extended keeps its extra fields. Only the
+ * event *name* is closed.
  *
  * What it is for:
  * - documentation: every event and field carries a description, ready for a
@@ -1014,7 +1023,9 @@ export const ANALYTICS_EVENTS = {
         .describe("The map rectangle the popup is anchored to."),
       id: z
         .number()
-        .describe("The popup's id, as assigned by the scripting API (OpenPopupEvent.popupId)."),
+        .describe(
+          "The popup's id, as assigned by the scripting API (OpenPopupEvent.popupId).",
+        ),
     }),
     description: "A scripted popup was opened.",
   }),
