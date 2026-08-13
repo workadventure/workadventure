@@ -6,15 +6,7 @@ import { z } from "zod";
 // when the vars are absent. Same stub every other pusher test uses.
 vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
 
-import {
-    ANALYTICS_EVENT_CATALOG,
-    analyticsEventNameOf,
-    conversationEndedEvent,
-    cowebsiteOpenedEvent,
-    mediaVideoQualitySampleEvent,
-    meetingProviderChangedEvent,
-    userDisconnectedEvent,
-} from "@workadventure/messages";
+import { ANALYTICS_EVENT_CATALOG, analyticsEventNameOf } from "@workadventure/messages";
 import { TIMED_EVENT_NAMES } from "../../src/pusher/services/AnalyticsTimedEventTracker";
 
 /** Reads the `properties` sub-schema off a catalog entry. */
@@ -160,7 +152,7 @@ describe("AnalyticsEventCatalog", () => {
     it("validates the real payload of a timed event", () => {
         // Shape taken from AnalyticsPresenceTracker's emitter: the catalog is only
         // worth reading if it matches what actually goes on the wire.
-        const parsed = userDisconnectedEvent.safeParse({
+        const parsed = ANALYTICS_EVENT_CATALOG["user.disconnected"].safeParse({
             eventName: "user.disconnected",
             source: "pusher",
             clientEventTimeMs: Date.parse("2026-04-24T12:02:30.000Z"),
@@ -178,7 +170,7 @@ describe("AnalyticsEventCatalog", () => {
     });
 
     it("validates the real payload of a conversation ending", () => {
-        const parsed = conversationEndedEvent.safeParse({
+        const parsed = ANALYTICS_EVENT_CATALOG["conversation.ended"].safeParse({
             eventName: "conversation.ended",
             // The pusher synthesizes this one: a client saying "conversation.ended"
             // is refused, precisely so nobody can claim a duration.
@@ -201,9 +193,9 @@ describe("AnalyticsEventCatalog", () => {
     });
 
     it("validates the real payload of a video quality sample", () => {
-        const parsed = mediaVideoQualitySampleEvent.safeParse({
+        const parsed = ANALYTICS_EVENT_CATALOG["media.video_quality.sample"].safeParse({
             eventName: "media.video_quality.sample",
-            source: "media",
+            source: "pusher",
             clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
             eventId: "reporter-uuid:stream-id:1",
             properties: {
@@ -236,7 +228,7 @@ describe("AnalyticsEventCatalog", () => {
         // One emitter, one shape. AnalyticsClient used to carry a second, never-called
         // method emitting this same name with the meeting context instead — the shapes
         // would have diverged the day anyone called it.
-        const parsed = meetingProviderChangedEvent.safeParse({
+        const parsed = ANALYTICS_EVENT_CATALOG["meeting.provider_changed"].safeParse({
             eventName: "meeting.provider_changed",
             source: "front",
             clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
@@ -256,7 +248,7 @@ describe("AnalyticsEventCatalog", () => {
 
     it("validates a cowebsite opening reported the way the front now sends it", () => {
         // Origin only, document name on its own field — see AnalyticsClient.
-        const parsed = cowebsiteOpenedEvent.safeParse({
+        const parsed = ANALYTICS_EVENT_CATALOG["cowebsite.opened"].safeParse({
             eventName: "cowebsite.opened",
             source: "front",
             clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),

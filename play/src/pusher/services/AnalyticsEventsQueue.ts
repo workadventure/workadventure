@@ -382,7 +382,12 @@ export class AnalyticsEventsQueue {
 
         return {
             eventName: "media.video_quality.sample",
-            source: "media",
+            // "pusher", not "media": this event is synthesized here from a
+            // videoQualityReportMessage, never reported directly by a socket. The
+            // admin lists it in PUSHER_ONLY_EVENT_NAMES and drops it unless the
+            // source says pusher, so "media" meant every sample was discarded on
+            // arrival.
+            source: "pusher",
             clientEventTimeMs: clientEventDate.getTime(),
             eventId: `${socketData.userUuid}:${sample.streamId}:${sample.sampleSeq ?? clientEventDate.getTime()}`,
             properties: {
