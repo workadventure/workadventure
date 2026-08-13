@@ -14,7 +14,6 @@ const login: DeepPartial<Translation["login"]> = {
     termsOfUse: "wužiwanske wuměnjenja",
     privacyPolicy: "wozjewjenje wo škiće datow",
     cookiePolicy: "cookie směrnicy",
-    analyticsNotice: "analyzowe směrnicy",
     continue: "pokročować",
     genericError: "Zmólka jo póstawała",
 };
