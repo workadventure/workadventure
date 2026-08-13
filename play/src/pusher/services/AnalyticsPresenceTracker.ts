@@ -1,5 +1,6 @@
 import type { SocketData } from "../models/Websocket/SocketData";
 import { analyticsEventsQueue, type AnalyticsEventInput } from "./AnalyticsEventsQueue";
+import { analyticsConnectionId } from "./AnalyticsConnectionId";
 
 type AnalyticsEventQueue = {
     enqueueEvent(event: AnalyticsEventInput, socketData: SocketData): void;
@@ -26,6 +27,31 @@ type OpenConnection = {
  * dropped rather than reported with a wrong duration (see trackDisconnected).
  * closeAll() exists to keep that from happening on the one restart path we do
  * control — a graceful shutdown.
+ *
+ * ## Why this is not AnalyticsTimedEventTracker
+ *
+ * It looks like one — a connection-keyed map, an idempotent open, an unpaired
+ * close that is dropped, a closeAll — and the two deliberately mirror each other's
+ * conventions. They share `analyticsConnectionId` so they can never disagree on
+ * what identifies a socket. But folding this into the generic tracker would change
+ * three behaviours the admin depends on:
+ *
+ * 1. **Property names.** AnalyticsEventsClickHouseRepository::toConnectionSessionRows
+ *    reads `connectedAt` / `disconnectedAt` / `durationSeconds` verbatim off
+ *    user.disconnected, and `continue`s — silently — when the first two are not
+ *    strings. The generic tracker emits `startedAt` / `endedAt`, so a merge would
+ *    make every connection session vanish with nothing failing anywhere.
+ * 2. **user.connected.** A session reports two events, one at each end; the timed
+ *    tracker emits only on close, because an interval that never closes is an
+ *    interval that never happened. A session is not: presence at connect time is
+ *    itself the datum.
+ * 3. **MIN_TIMED_EVENT_DURATION_MS.** Sub-second intervals are transition churn
+ *    and are dropped. A sub-second *session* is a real connection — someone whose
+ *    tab died on load — and dropping it undercounts connections rather than
+ *    removing noise.
+ *
+ * Any of the three is fixable; all three together mean the merge is a behaviour
+ * change wearing the clothes of a simplification, so it is not one.
  */
 export class AnalyticsPresenceTracker {
     private readonly openConnections = new Map<string, OpenConnection>();
@@ -37,7 +63,7 @@ export class AnalyticsPresenceTracker {
 
     public trackConnected(socketData: SocketData): void {
         const connectedAtMs = this.nowMs();
-        const connectionId = this.connectionId(socketData);
+        const connectionId = analyticsConnectionId(socketData);
         // Idempotent on purpose: re-tracking a live connection would move its
         // connectedAt forward and shorten every duration derived from it.
         if (this.openConnections.has(connectionId)) {
@@ -65,7 +91,7 @@ export class AnalyticsPresenceTracker {
     }
 
     public trackDisconnected(socketData: SocketData, disconnectReason: DisconnectReason): void {
-        const connectionId = this.connectionId(socketData);
+        const connectionId = analyticsConnectionId(socketData);
         const open = this.openConnections.get(connectionId);
         // Unpaired disconnect: the matching connect was never seen (pusher
         // restarted mid-session, or the connection predates this instance).
@@ -124,15 +150,6 @@ export class AnalyticsPresenceTracker {
             },
             open.socketData,
         );
-    }
-
-    // tabId is what keeps two tabs of the same user in the same room apart. When
-    // it is missing the fallback collapses them onto one id, so their connects
-    // and disconnects interleave on a single pairing and only one session is
-    // reported — acceptable, but it is why tabId is preferred rather than a
-    // stylistic choice.
-    private connectionId(socketData: SocketData): string {
-        return socketData.tabId || `${socketData.userUuid}:${socketData.roomId}`;
     }
 }
 
