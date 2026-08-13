@@ -1012,7 +1012,9 @@ export const ANALYTICS_EVENTS = {
       targetRectangle: z
         .string()
         .describe("The map rectangle the popup is anchored to."),
-      id: z.string().describe("The popup's id."),
+      id: z
+        .number()
+        .describe("The popup's id, as assigned by the scripting API (OpenPopupEvent.popupId)."),
     }),
     description: "A scripted popup was opened.",
   }),
@@ -1274,6 +1276,26 @@ export type AnalyticsEventName = keyof typeof ANALYTICS_EVENTS;
 export type AnalyticsEventProperties<N extends AnalyticsEventName> = z.input<
   (typeof ANALYTICS_EVENTS)[N]["properties"]
 >;
+
+/** Keys of `T` that a caller cannot omit. */
+type RequiredKeys<T> = {
+  [K in keyof T]-?: Record<never, never> extends Pick<T, K> ? never : K;
+}[keyof T];
+
+/**
+ * The properties argument for event `N`, optional when the event has none that
+ * are required — which is the case for the ~94 bare signals, whose call sites
+ * read `track("menu.opened")` with no second argument.
+ *
+ * The naive test (`Record<string, never> extends P`) does not work: `never` is
+ * assignable to everything, so it also matches events that do have required
+ * fields. Probing the required keys is what actually distinguishes them.
+ */
+export type AnalyticsEventArgs<N extends AnalyticsEventName> = [
+  RequiredKeys<AnalyticsEventProperties<N>>,
+] extends [never]
+  ? [properties?: AnalyticsEventProperties<N>]
+  : [properties: AnalyticsEventProperties<N>];
 
 /**
  * Wraps a definition in the envelope that travels on the wire.

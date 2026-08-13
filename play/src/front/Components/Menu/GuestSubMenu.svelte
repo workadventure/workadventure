@@ -91,8 +91,10 @@
         const input = document.getElementById("input-share-link");
         if (input) {
             const value = getLink();
-            // Analytics Client
-            analyticsClient.inviteCopyLinkWalk(value);
+            // Report the option, not the link it produces: the event records whether
+            // walk-to-me is on. The link carries the entry point and, when the option
+            // is on, the player's coordinates — none of which this event is about.
+            analyticsClient.inviteCopyLinkWalk(walkAutomatically);
 
             (input as HTMLInputElement).value = value;
         }

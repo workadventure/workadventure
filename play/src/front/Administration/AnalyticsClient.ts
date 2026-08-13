@@ -1,12 +1,18 @@
 import type { PostHog } from "@posthog/types";
-import type { AnalyticsEventReportMessage } from "@workadventure/messages";
+// Types only: ANALYTICS_EVENTS is ~166 live Zod schemas, and a value import would
+// land the whole catalog in the browser bundle for no runtime benefit.
+import type {
+    AnalyticsEventArgs,
+    AnalyticsEventName,
+    AnalyticsEventProperties,
+    AnalyticsEventReportMessage,
+} from "@workadventure/messages";
 import type { Emoji } from "../Stores/Utils/emojiSchema";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { hasCapability } from "../Connection/Capabilities";
 import type { TimedAnalyticsEventHandle } from "./TimedAnalyticsEvent";
 import { openTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
 
-type AdminAnalyticsProperties = Record<string, string | number | boolean | null | undefined>;
 type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
 type AdminAnalyticsEvent = AnalyticsEventReportMessage["events"][number];
 type MeetingAnalyticsProperties = {
@@ -102,11 +108,20 @@ class AnalyticsClient {
         this.flushPendingAdminEvents();
     }
 
-    private trackAdminEvent(eventName: string, properties: AdminAnalyticsProperties = {}): void {
+    /**
+     * The single choke point every admin analytics event goes through.
+     *
+     * Generic over the event name so the catalog checks both halves of the call:
+     * an unknown name and a property the event does not declare are both compile
+     * errors here, rather than an event the admin silently drops months later.
+     * The properties argument is optional for the bare signals, which declare none.
+     */
+    private trackAdminEvent<N extends AnalyticsEventName>(eventName: N, ...args: AnalyticsEventArgs<N>): void {
         if (!this.canSendAdminAnalytics()) {
             return;
         }
 
+        const [properties = {}] = args;
         const clientEventTimeMs = Date.now();
         const event = {
             eventName,
@@ -476,7 +491,7 @@ class AnalyticsClient {
         this.inviteSent("copy_link");
     }
 
-    inviteCopyLinkWalk(value: string): void {
+    inviteCopyLinkWalk(value: boolean): void {
         this.posthog?.capture("wa_menu_invite_copylink_walk", { checkbox: value });
         this.trackAdminEvent("invite.walk_link_option_changed", { value });
     }
@@ -936,7 +951,7 @@ class AnalyticsClient {
     private buildCowebsiteOpenedProperties(
         url: URL,
         context: CowebsiteOpenedAnalyticsContext,
-    ): AdminAnalyticsProperties {
+    ): AnalyticsEventProperties<"cowebsite.opened"> {
         const rawTargetUrl = context.targetUrl ?? url.toString();
         const fileExtension = this.normalizeFileExtension(
             context.fileExtension ?? this.getFileExtensionFromUrl(rawTargetUrl),
