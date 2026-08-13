@@ -71,21 +71,12 @@ describe("AnalyticsTimedEventTracker", () => {
         expect(queue.enqueueEvent.mock.calls[0][0].properties.durationSeconds).toBe(1);
     });
 
-    it("rejects opening a name the client is not allowed to have synthesized", () => {
-        const queue = { enqueueEvent: vi.fn() };
-        const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-        const tracker = new AnalyticsTimedEventTracker(queue);
-        const socketData = socketDataFixture();
-
-        // Without this guard the open frame is a name-forging primitive: the pusher
-        // would emit `user.disconnected` signed source "pusher", which the admin
-        // projects straight into analytics_connection_sessions.
-        expect(tracker.open("h1", "user.disconnected", {}, socketData)).toBe(false);
-        tracker.close("h1", socketData);
-
-        expect(queue.enqueueEvent).not.toHaveBeenCalled();
-        consoleWarn.mockRestore();
-    });
+    // "rejects opening a name the client is not allowed to have synthesized" used to
+    // live here. `open()` now takes TimedAnalyticsEventName, so passing
+    // "user.disconnected" is a compile error and the case is unreachable through the
+    // public API. The behaviour it guarded — the open frame as a name-forging
+    // primitive — is asserted at the boundary that still accepts a string, in
+    // AnalyticsReportMessageHandler.test.ts.
 
     it("drops a close with no matching open", () => {
         const queue = { enqueueEvent: vi.fn() };

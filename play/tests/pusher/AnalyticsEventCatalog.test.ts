@@ -1,13 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-// TIMED_EVENT_NAMES lives next to the tracker, which pulls AnalyticsEventsQueue and
-// therefore the real environment validation at import time — that calls process.exit
-// when the vars are absent. Same stub every other pusher test uses.
-vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/pusherEnvironmentVariableMock"));
-
-import { ANALYTICS_EVENT_CATALOG, analyticsEventNameOf } from "@workadventure/messages";
-import { TIMED_EVENT_NAMES } from "../../src/pusher/services/AnalyticsTimedEventTracker";
+import { ANALYTICS_EVENT_CATALOG, TIMED_ANALYTICS_EVENT_NAMES, analyticsEventNameOf } from "@workadventure/messages";
 
 /** Reads the `properties` sub-schema off a catalog entry. */
 function propertiesOf(schema: z.ZodDiscriminatedUnionOption<"eventName">): z.ZodTypeAny {
@@ -60,7 +54,7 @@ function extractEmittedEventNames(): Set<string> {
     // Exact, not scraped: the pusher's own allowlist for client-requested timed
     // events. These names are never literals at an emit site — the pusher emits
     // whatever the client asked for, once it is in this set.
-    const names = new Set<string>(TIMED_EVENT_NAMES);
+    const names = new Set<string>(TIMED_ANALYTICS_EVENT_NAMES);
 
     for (const source of Object.values(EMITTER_SOURCES)) {
         for (const [, name] of source.matchAll(
@@ -113,12 +107,44 @@ describe("AnalyticsEventCatalog", () => {
 
     it("only asks the pusher to time events it will accept", () => {
         // The front names the interval it wants; the pusher emits it only if the name
-        // is in TIMED_EVENT_NAMES. Ask for one that is not and the pusher silently
+        // is derived from the catalog. Ask for one that is not and the pusher silently
         // rejects the open — the interval simply never appears, with nothing failing.
         const requested = extractTimedEventRequests();
 
         expect(requested.size).toBeGreaterThan(0);
-        expect([...requested].filter((name) => !TIMED_EVENT_NAMES.has(name)).sort()).toEqual([]);
+        const openable = new Set<string>(TIMED_ANALYTICS_EVENT_NAMES);
+        expect([...requested].filter((name) => !openable.has(name)).sort()).toEqual([]);
+    });
+
+    it("exposes exactly four client-openable timed events", () => {
+        // A canary, not a tautology. TIMED_ANALYTICS_EVENT_NAMES is derived from the
+        // catalog, so adding a `timedEvent` entry silently widens the set of rows a
+        // *client* can ask the pusher to sign with source "pusher" — the admin
+        // projects several of those straight into connection sessions. Widening it
+        // should be a deliberate act that updates this list, not a side effect of
+        // documenting a new event.
+        expect([...TIMED_ANALYTICS_EVENT_NAMES].sort()).toEqual([
+            "area.dwell",
+            "conversation.ended",
+            "meeting.screenshare.ended",
+            "status.dwell",
+        ]);
+    });
+
+    it("keeps the open payload and the stored payload of a timed event in step", () => {
+        // A timed event declares what the client opens with; the pusher adds the
+        // interval bounds and the reason. Both halves have to end up in the stored
+        // shape, or the row the tracker emits is not the row the catalog documents.
+        const stored = propertiesOf(ANALYTICS_EVENT_CATALOG["area.dwell"]);
+        expect(stored).toBeInstanceOf(z.ZodObject);
+        expect(Object.keys((stored as z.AnyZodObject).shape).sort()).toEqual([
+            "areaId",
+            "areaName",
+            "durationSeconds",
+            "endReason",
+            "endedAt",
+            "startedAt",
+        ]);
     });
 
     it("describes every event and every property field", () => {

@@ -317,6 +317,38 @@ function signal(
   return { description, source: "front", properties: noProperties };
 }
 
+/**
+ * An interval the client opens and asks to have closed, which the pusher then
+ * measures and emits as one row.
+ *
+ * These have two shapes, and conflating them is how the front ended up passing
+ * something the pusher would reject: `openProperties` is what the client sends
+ * with `timed_event.open`, while `properties` is what is finally stored — the
+ * same fields plus the interval bounds and the reason, all of which the pusher
+ * adds on its own clock. Declaring the first and deriving the second keeps them
+ * from drifting.
+ *
+ * `source` is always "pusher" here, which is exactly why the set of names a
+ * client may open has to stay narrow: opening one is asking the pusher to sign a
+ * row. TIMED_ANALYTICS_EVENT_NAMES is derived from these entries.
+ */
+function timedEvent<P extends z.AnyZodObject>(def: {
+  openProperties: P;
+  description: string;
+  endReasonDescription: string;
+}): AnalyticsEventDefinition & { readonly openProperties: P } {
+  return {
+    description: def.description,
+    source: "pusher",
+    openProperties: def.openProperties,
+    properties: def.openProperties.merge(timedEventProperties).extend({
+      endReason: z
+        .enum(TIMED_EVENT_END_REASONS)
+        .describe(def.endReasonDescription),
+    }),
+  };
+}
+
 /* -------------------------------------------------------------------------- */
 /*                        Presence — pusher-synthesized                       */
 /* -------------------------------------------------------------------------- */
@@ -377,19 +409,12 @@ export const ANALYTICS_EVENTS = {
     source: "pusher",
   }),
 
-  "conversation.ended": event({
-    properties: conversationContextProperties
-      .merge(timedEventProperties)
-      .extend({
-        endReason: z
-          .enum(TIMED_EVENT_END_REASONS)
-          .describe(
-            "Why the interval ended. `type_changed` means one conversation was split because its type changed — a bubble that became a meeting reports two conversations, so stitch on time rather than assuming one id per conversation. The `socket_closed` / `pusher_*` values mean the client never got to say, and the pusher closed it.",
-          ),
-      }),
+  "conversation.ended": timedEvent({
+    openProperties: conversationContextProperties,
+    endReasonDescription:
+      "Why the interval ended. `type_changed` means one conversation was split because its type changed — a bubble that became a meeting reports two conversations, so stitch on time rather than assuming one id per conversation. The `socket_closed` / `pusher_*` values mean the client never got to say, and the pusher closed it.",
     description:
       "A conversation, measured. Emitted by the pusher when the interval closes — never by the client, which cannot state a duration — and timestamped at its end.",
-    source: "pusher",
   }),
 
   "media.video_quality.sample": event({
@@ -560,21 +585,18 @@ export const ANALYTICS_EVENTS = {
       "A meeting switched media backend mid-session, reported with the conversation it happened in. Despite the `meeting.` prefix this belongs to the conversation family: ConversationAnalytics owns the transition and is the only emitter.",
   }),
 
-  "meeting.screenshare.ended": event({
-    properties: timedEventProperties.extend({
+  "meeting.screenshare.ended": timedEvent({
+    openProperties: z.object({
       screenShareSessionId: z
         .string()
         .describe("Identifies the share this interval measures."),
       hasAudio: z
         .boolean()
         .describe("Whether the shared screen carried audio."),
-      endReason: z
-        .enum(TIMED_EVENT_END_REASONS)
-        .describe("Why the share stopped, or what stopped it."),
     }),
+    endReasonDescription: "Why the share stopped, or what stopped it.",
     description:
       "A screen share, measured. One row per share, emitted by the pusher when the interval closes and timestamped at its end. There is no matching `.started`: the interval carries its own start.",
-    source: "pusher",
   }),
 
   "meeting.layout_changed": event({
@@ -639,35 +661,24 @@ export const ANALYTICS_EVENTS = {
     description: "The user toggled the walk-to-me option on an invite link.",
   }),
 
-  "area.dwell": event({
-    properties: areaProperties.merge(timedEventProperties).extend({
-      endReason: z
-        .enum(TIMED_EVENT_END_REASONS)
-        .describe("Why the dwell ended, or what ended it."),
-    }),
+  "area.dwell": timedEvent({
+    openProperties: areaProperties,
+    endReasonDescription: "Why the dwell ended, or what ended it.",
     description:
       "Time the user spent inside an area. One row per visit, emitted by the pusher when the interval closes and timestamped at its end. This replaced an area.entered/area.left pair that the admin re-paired with a window function over every event in the room.",
-    source: "pusher",
   }),
 
-  "status.dwell": event({
-    properties: z
-      .object({
-        status: z
-          .string()
-          .describe(
-            "Availability status held during this period (ONLINE, BUSY, DO_NOT_DISTURB, BACK_IN_A_MOMENT, …).",
-          ),
-      })
-      .merge(timedEventProperties)
-      .extend({
-        endReason: z
-          .enum(TIMED_EVENT_END_REASONS)
-          .describe("Why the status period ended, or what ended it."),
-      }),
+  "status.dwell": timedEvent({
+    openProperties: z.object({
+      status: z
+        .string()
+        .describe(
+          "Availability status held during this period (ONLINE, BUSY, DO_NOT_DISTURB, BACK_IN_A_MOMENT, …).",
+        ),
+    }),
+    endReasonDescription: "Why the status period ended, or what ended it.",
     description:
       "Time the user held one availability status, measured by the pusher between status changes and closed at disconnect. Gated per world by the user_level_activity policy the admin applies at ingestion: without opt-in it is pseudonymized there, so no named per-member timeline is stored.",
-    source: "pusher",
   }),
 
   "map_editor.area.lock.toggled": event({
@@ -1287,6 +1298,35 @@ export type AnalyticsEventName = keyof typeof ANALYTICS_EVENTS;
 export type AnalyticsEventProperties<N extends AnalyticsEventName> = z.input<
   (typeof ANALYTICS_EVENTS)[N]["properties"]
 >;
+
+/** The events a client may ask the pusher to time, i.e. those built by `timedEvent`. */
+export type TimedAnalyticsEventName = {
+  [N in AnalyticsEventName]: (typeof ANALYTICS_EVENTS)[N] extends {
+    openProperties: z.AnyZodObject;
+  }
+    ? N
+    : never;
+}[AnalyticsEventName];
+
+/** What the client sends with `timed_event.open` for event `N`. */
+export type TimedAnalyticsEventOpenProperties<
+  N extends TimedAnalyticsEventName,
+> = z.input<(typeof ANALYTICS_EVENTS)[N]["openProperties"]>;
+
+/**
+ * The allowlist for `timed_event.open`, derived rather than hand-maintained.
+ *
+ * Narrower than the catalog on purpose: opening one of these asks the pusher to
+ * emit a row signed `source: "pusher"`, which the admin trusts. Adding a
+ * `timedEvent` entry therefore widens what a client may ask for — the catalog
+ * test asserts the exact contents so that never happens unnoticed.
+ */
+export const TIMED_ANALYTICS_EVENT_NAMES = Object.entries(ANALYTICS_EVENTS)
+  .filter(([, definition]) => "openProperties" in definition)
+  .map(([eventName]) => eventName) as [
+  TimedAnalyticsEventName,
+  ...TimedAnalyticsEventName[],
+];
 
 /** Keys of `T` that a caller cannot omit. */
 type RequiredKeys<T> = {
