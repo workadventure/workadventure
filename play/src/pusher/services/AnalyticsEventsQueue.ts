@@ -3,6 +3,7 @@ import {
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
     VideoQualityTransportType,
+    type AnalyticsEventsBatchPayload,
     type VideoQualityReportMessage,
     type VideoQualitySampleMessage,
 } from "@workadventure/messages";
@@ -57,10 +58,13 @@ export type AnalyticsEvent = {
     properties: JsonObject;
 };
 
-export type AnalyticsEventsBatch = {
-    schemaVersion: typeof SCHEMA_VERSION;
-    sentAt: string;
-    pusherInstanceId: string;
+/**
+ * Derived from the schema Swagger publishes, rather than written out again here:
+ * the two used to be separate declarations that could disagree without anything
+ * noticing. `events` is narrowed back to the pusher's own AnalyticsEvent, whose
+ * `properties` is a JsonObject rather than the contract's looser record.
+ */
+export type AnalyticsEventsBatch = Omit<AnalyticsEventsBatchPayload, "events"> & {
     events: AnalyticsEvent[];
 };
 
@@ -475,6 +479,46 @@ export class AnalyticsEventsQueue {
         return status >= 400 && status < 500;
     }
 
+    /**
+     * @openapi
+     * /api/analytics/events-batch:
+     *   post:
+     *     tags: ["AdminAPI"]
+     *     description: >
+     *       Accepts a batch of analytics events collected by one pusher instance.
+     *       Every event conforms to the shared catalog (AnalyticsEvent): `eventName`
+     *       is a closed set the pusher validates against before sending, and `source`
+     *       is pinned per event — `pusher` marks events the pusher synthesized itself,
+     *       which a socket may never claim and which the admin projects into
+     *       connection sessions. `properties` is passthrough, so a newer front may add
+     *       fields to a known event without a lockstep deploy.
+     *       Best-effort: the pusher retries transient failures and splits a rejected
+     *       batch to isolate the offending events, so ingestion should be idempotent
+     *       on `eventId`.
+     *     security:
+     *      - Bearer: []
+     *     consumes:
+     *      - "application/json"
+     *     produces:
+     *      - "application/json"
+     *     parameters:
+     *      - name: "payload"
+     *        in: "body"
+     *        required: true
+     *        schema:
+     *          $ref: '#/definitions/AnalyticsEventsBatch'
+     *     responses:
+     *       202:
+     *         description: Batch accepted
+     *       401:
+     *         description: Unauthorized
+     *       413:
+     *         description: Batch too large
+     *       422:
+     *         description: >
+     *           Invalid payload. The pusher responds by re-sending the batch one event
+     *           at a time to isolate the offending events — see sendEventsIndividually.
+     */
     private async postBatch(batch: AnalyticsEventsBatch, deadline?: number): Promise<void> {
         if (!this.endpointUrl || this.config.adminApiToken === undefined) {
             return;
