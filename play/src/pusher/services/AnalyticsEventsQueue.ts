@@ -362,8 +362,7 @@ export class AnalyticsEventsQueue {
         }
 
         // Reject samples attributed to a space the socket has not joined, so a
-        // client cannot spoof spaceName / remote-user attribution. This restores
-        // the membership check the legacy VideoQualityAnalyticsQueue enforced.
+        // client cannot spoof spaceName / remote-user attribution.
         //
         // No "only check when the socket has joined something" escape hatch: that
         // made the guard opt-out by simply never joining a space, and a socket with

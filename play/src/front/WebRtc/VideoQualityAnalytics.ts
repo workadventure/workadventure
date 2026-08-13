@@ -9,7 +9,11 @@ import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import { hasCapability } from "../Connection/Capabilities";
 
 const VIDEO_ANALYTICS_SEND_INTERVAL_MS = 5_000;
-const VIDEO_QUALITY_ANALYTICS_CAPABILITY = "api/analytics/video-quality-batch";
+// Video quality samples ride the generic analytics pipeline: the pusher turns each
+// one into a `media.video_quality.sample` event. Gating on the retired
+// `api/analytics/video-quality-batch` capability would mean an admin that only
+// advertises the generic endpoint receives no samples at all.
+const ANALYTICS_EVENTS_CAPABILITY = "api/analytics/events-batch";
 
 export type VideoQualityAnalyticsContext = {
     streamId: string;
@@ -29,7 +33,7 @@ export function subscribeToVideoQualityAnalytics(
     context: VideoQualityAnalyticsContext,
     sendReport: (message: VideoQualityReportMessage) => void,
 ): Unsubscriber {
-    if (hasCapability(VIDEO_QUALITY_ANALYTICS_CAPABILITY) !== "v1") {
+    if (hasCapability(ANALYTICS_EVENTS_CAPABILITY) !== "v1") {
         return () => {};
     }
 
