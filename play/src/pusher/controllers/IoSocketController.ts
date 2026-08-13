@@ -357,7 +357,6 @@ export class IoSocketController {
                         chatID,
                         canRecord: false,
                         analyticsEventsEnabled: true,
-                        analyticsMetricsPolicy: undefined,
                     };
 
                     let characterTextures: WokaDetail[];
@@ -471,7 +470,6 @@ export class IoSocketController {
                         tabId: query.tabId,
                         attendeesState: false,
                         analyticsEventsEnabled: userData.analyticsEventsEnabled ?? true,
-                        analyticsMetricsPolicy: userData.analyticsMetricsPolicy,
                         queryAbortControllers: new Map<number, AbortController>(),
                         canRecord: userData.canRecord ?? false,
                     };

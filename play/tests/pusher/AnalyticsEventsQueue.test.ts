@@ -23,7 +23,6 @@ const baseConfig: AnalyticsEventsQueueConfig = {
     maxQueueSize: 10,
     maxBatchSize: 10,
     pusherInstanceId: "pusher-test",
-    pseudonymizationSecret: "test-pseudonymization-secret",
 };
 
 describe("AnalyticsEventsQueue", () => {
@@ -114,134 +113,6 @@ describe("AnalyticsEventsQueue", () => {
             eventsSent: 0,
             queueSize: 0,
         });
-    });
-
-    it("does not queue events from disabled analytics metric categories", async () => {
-        const post = vi.fn().mockResolvedValue(undefined);
-        const queue = new AnalyticsEventsQueue(baseConfig, post);
-        queue.setEnabled(true);
-
-        queue.enqueueEvent(
-            {
-                eventName: "chat.message_sent",
-                source: "front",
-                clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
-                eventId: "event-id",
-                properties: {},
-            },
-            socketData({
-                analyticsMetricsPolicy: analyticsMetricsPolicy({
-                    collaboration_activity: false,
-                }),
-            }),
-        );
-        await queue.flush();
-
-        expect(post).not.toHaveBeenCalled();
-        expect(queue.getStats()).toMatchObject({
-            droppedByWorldSettings: 1,
-            eventsSent: 0,
-            queueSize: 0,
-        });
-    });
-
-    it("drops anonymized worlds' events entirely when no pseudonymization secret is configured", async () => {
-        const post = vi.fn().mockResolvedValue(undefined);
-        const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-        const queue = new AnalyticsEventsQueue({ ...baseConfig, pseudonymizationSecret: undefined }, post);
-        queue.setEnabled(true);
-
-        // Fail closed: with no secret the pseudonym would be one the world's own
-        // administrator could recompute from their user list, which is exactly what
-        // this world opted out of. Sending nothing beats sending identifiers under a
-        // label that claims they are anonymous.
-        queue.enqueueEvent(
-            event("event-id"),
-            socketData({ analyticsMetricsPolicy: analyticsMetricsPolicy({ user_level_activity: false }) }),
-        );
-        await queue.flush();
-
-        expect(post).not.toHaveBeenCalled();
-        expect(queue.getStats()).toMatchObject({ droppedMissingPseudonymizationSecret: 1 });
-
-        consoleWarn.mockRestore();
-    });
-
-    it("still reports worlds that did not opt out when no pseudonymization secret is configured", async () => {
-        const post = vi.fn().mockResolvedValue(undefined);
-        const queue = new AnalyticsEventsQueue({ ...baseConfig, pseudonymizationSecret: undefined }, post);
-        queue.setEnabled(true);
-
-        // The secret only gates anonymized worlds; everyone else is unaffected.
-        queue.enqueueEvent(event("event-id"), socketData());
-        await queue.flush();
-
-        expect(post).toHaveBeenCalledTimes(1);
-        expect(queue.getStats()).toMatchObject({ droppedMissingPseudonymizationSecret: 0 });
-    });
-
-    it("derives the pseudonym from the secret, so it cannot be recomputed without it", async () => {
-        const pseudonymFor = async (pseudonymizationSecret: string): Promise<string> => {
-            const post = vi.fn().mockResolvedValue(undefined);
-            const queue = new AnalyticsEventsQueue({ ...baseConfig, pseudonymizationSecret }, post);
-            queue.setEnabled(true);
-            queue.enqueueEvent(
-                event("event-id"),
-                socketData({ analyticsMetricsPolicy: analyticsMetricsPolicy({ user_level_activity: false }) }),
-            );
-            await queue.flush();
-
-            return (post.mock.calls[0][1] as AnalyticsEventsBatch).events[0].userUuid;
-        };
-
-        // The whole point of keying the HMAC: the previous implementation salted with
-        // a constant published in this repository, so anyone holding the world's user
-        // list could hash it and undo the anonymization.
-        const [withSecret, withOtherSecret, sameSecretAgain] = await Promise.all([
-            pseudonymFor("secret-a"),
-            pseudonymFor("secret-b"),
-            pseudonymFor("secret-a"),
-        ]);
-
-        expect(withSecret).not.toEqual(withOtherSecret);
-        // …but stable for a given secret, or distinct-user counts would be nonsense.
-        expect(withSecret).toEqual(sameSecretAgain);
-        expect(withSecret).toMatch(/^anonymous:[a-f0-9]{64}$/);
-    });
-
-    it("anonymizes event identifiers when user-level activity metrics are disabled", async () => {
-        const post = vi.fn().mockResolvedValue(undefined);
-        const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
-        queue.setEnabled(true);
-
-        queue.enqueueEvent(
-            {
-                eventName: "user.connected",
-                source: "pusher",
-                clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
-                eventId: "event-id",
-                properties: {
-                    connectionId: "connection-id",
-                },
-            },
-            socketData({
-                analyticsMetricsPolicy: analyticsMetricsPolicy({
-                    user_level_activity: false,
-                }),
-            }),
-        );
-        await queue.flush();
-
-        const batch = post.mock.calls[0][1] as AnalyticsEventsBatch;
-        expect(batch.events[0]).toMatchObject({
-            eventName: "user.connected",
-            userId: null,
-            tabId: null,
-            clientIp: null,
-            properties: {},
-        });
-        expect(batch.events[0].userUuid).toMatch(/^anonymous:/);
-        expect(batch.events[0].spaceUserId).toMatch(/^anonymous:/);
     });
 
     it("drops the oldest events when the queue is full", async () => {
@@ -453,31 +324,6 @@ describe("AnalyticsEventsQueue", () => {
         expect(post).not.toHaveBeenCalled();
         expect(queue.getStats().droppedInvalid).toBe(1);
     });
-
-    it("drops remote-user identifiers and free-form properties from video samples when user-level activity is disabled", async () => {
-        const post = vi.fn().mockResolvedValue(undefined);
-        const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
-        queue.setEnabled(true);
-
-        queue.enqueueVideoQualityReport(
-            { samples: [videoQualitySample()] },
-            socketData({
-                analyticsMetricsPolicy: analyticsMetricsPolicy({ user_level_activity: false }),
-            }),
-        );
-        await queue.flush();
-
-        const props = (post.mock.calls[0][1] as AnalyticsEventsBatch).events[0].properties;
-        // identity / free-form strings stripped
-        expect(props.remoteUserUuid).toBeUndefined();
-        expect(props.remoteSpaceUserId).toBeUndefined();
-        expect(props.spaceName).toBeUndefined();
-        expect(props.streamId).toBeUndefined();
-        expect(props.connectionId).toBeUndefined();
-        // numeric quality metrics preserved
-        expect(props.fps).toBe(24.5);
-        expect(props.jitter).toBe(0.07);
-    });
 });
 
 function event(eventId: string, eventName = "user.connected") {
@@ -501,24 +347,8 @@ function socketData(overrides: Partial<SocketData> & { analyticsEventsEnabled?: 
         spaces: new Set(["world.space"]),
         tabId: "tab-id",
         analyticsEventsEnabled: true,
-        analyticsMetricsPolicy: analyticsMetricsPolicy(),
         ...overrides,
     } as SocketData;
-}
-
-function analyticsMetricsPolicy(categories: Partial<Record<string, boolean>> = {}) {
-    return {
-        schemaVersion: 1,
-        legalTemplateVersion: "2026-06-23.v1",
-        categories: {
-            presence_sessions: true,
-            collaboration_activity: true,
-            workspace_actions: true,
-            quality_diagnostics: true,
-            user_level_activity: true,
-            ...categories,
-        },
-    };
 }
 
 function videoQualitySample(overrides: Partial<VideoQualitySampleMessage> = {}): VideoQualitySampleMessage {
