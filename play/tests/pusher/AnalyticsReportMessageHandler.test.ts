@@ -62,10 +62,12 @@ describe("processAnalyticsReportMessage", () => {
         warnSpy.mockRestore();
     });
 
-    it("forwards a normal-sized batch of front and media events to the queue", () => {
+    it("forwards a normal-sized batch of catalogued events to the queue", () => {
         const queue = newQueue();
         processAnalyticsReportMessage(
-            { events: [buildEvent({ source: "front" }), buildEvent({ source: "media", eventId: "event-2" })] },
+            {
+                events: [buildEvent(), buildEvent({ eventName: "menu.opened", eventId: "event-2" })],
+            },
             newSocketData(),
             queue,
         );
@@ -139,10 +141,12 @@ describe("processAnalyticsReportMessage", () => {
         },
     );
 
-    it("keeps accepting other media.* events: only the exact reserved name is closed", () => {
+    it("keeps accepting other media.* events: only the synthesized name is closed", () => {
         const queue = newQueue();
+        // The `media.` prefix is not blanket-reserved — the front legitimately emits
+        // plenty of them. Only the names the catalog pins to source "pusher" are.
         processAnalyticsReportMessage(
-            { events: [buildEvent({ source: "media", eventName: "media.camera.enabled" })] },
+            { events: [buildEvent({ eventName: "media.camera.toggled" })] },
             newSocketData(),
             queue,
         );
@@ -150,20 +154,76 @@ describe("processAnalyticsReportMessage", () => {
         expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
     });
 
-    it.each([
-        ["eventName", { eventName: "a".repeat(256) }],
-        ["eventId", { eventId: "b".repeat(256) }],
-    ])("drops events whose %s exceeds the 255 chars the admin accepts", (_label, overrides) => {
+    it("drops an event whose name is not in the catalog", () => {
         const queue = newQueue();
-        // The admin validator caps both at 255 and answers 422. That 422 makes the
-        // queue re-send the whole batch one event at a time, and a throttled run
-        // then counts the rest as send failures that are never requeued — so one
-        // oversized name from one client costs everyone else's events in the batch.
-        // Drop it here instead.
-        processAnalyticsReportMessage({ events: [buildEvent(overrides)] }, newSocketData(), queue);
+        processAnalyticsReportMessage(
+            { events: [buildEvent({ eventName: "totally.made.up" })] },
+            newSocketData(),
+            queue,
+        );
 
         expect(queue.enqueueEvent).not.toHaveBeenCalled();
-        expect(warnSpy).toHaveBeenCalledWith("Analytics event dropped: malformed envelope", expect.any(Object));
+        expect(warnSpy).toHaveBeenCalledWith(
+            "Analytics event dropped: unknown event name",
+            expect.objectContaining({ eventName: "totally.made.up" }),
+        );
+    });
+
+    it("distinguishes an unknown name from a forged backend name in the logs", () => {
+        // Two different problems: one is a client that is out of date or wrong, the
+        // other is a client claiming an event the admin trusts. Collapsing them into
+        // one log line loses the only signal that separates noise from an attempt.
+        const queue = newQueue();
+        processAnalyticsReportMessage(
+            { events: [buildEvent({ eventName: "totally.made.up" }), buildEvent({ eventName: "user.disconnected" })] },
+            newSocketData(),
+            queue,
+        );
+
+        expect(warnSpy).toHaveBeenCalledWith(
+            "Analytics event dropped: unknown event name",
+            expect.objectContaining({ eventName: "totally.made.up" }),
+        );
+        expect(warnSpy).toHaveBeenCalledWith(
+            "Analytics event dropped: event name is reserved for the backend",
+            expect.objectContaining({ eventName: "user.disconnected" }),
+        );
+    });
+
+    it("drops a catalogued event whose required property is missing", () => {
+        const queue = newQueue();
+        // room.visited declares a required roomId. Before the catalog was the gate,
+        // this reached the admin and was rejected there — with a 422 that cost the
+        // rest of the batch a one-by-one resend.
+        processAnalyticsReportMessage(
+            { events: [{ ...buildEvent({ eventName: "room.visited" }), properties: {} }] },
+            newSocketData(),
+            queue,
+        );
+
+        expect(queue.enqueueEvent).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith(
+            "Analytics event dropped: payload does not match the catalog",
+            expect.objectContaining({ eventName: "room.visited" }),
+        );
+    });
+
+    it("keeps an unknown property on a catalogued event", () => {
+        const queue = newQueue();
+        // The rolling-deploy case: a long-lived tab running a newer front sends a
+        // field this pusher's catalog does not declare yet. `passthrough()` is what
+        // stops that field being silently dropped on the way to the admin — only the
+        // event NAME is closed, not its payload.
+        processAnalyticsReportMessage(
+            {
+                events: [{ ...buildEvent({ eventName: "menu.opened" }), properties: { somethingNewer: "keep me" } }],
+            },
+            newSocketData(),
+            queue,
+        );
+
+        expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
+        expect(queue.enqueueEvent.mock.calls[0][0].properties).toMatchObject({ somethingNewer: "keep me" });
     });
 
     it("drops events whose properties are not an object", () => {
@@ -177,15 +237,20 @@ describe("processAnalyticsReportMessage", () => {
         expect(queue.enqueueEvent).not.toHaveBeenCalled();
     });
 
-    it("accepts an event sitting exactly on the length limit", () => {
+    it("drops events whose eventId exceeds the 255 chars the admin accepts", () => {
         const queue = newQueue();
-        processAnalyticsReportMessage(
-            { events: [buildEvent({ eventName: "c".repeat(255), eventId: "d".repeat(255) })] },
-            newSocketData(),
-            queue,
-        );
+        // The admin validator caps eventId at 255 and answers 422. That 422 makes the
+        // queue re-send the whole batch one event at a time, and a throttled run then
+        // counts the rest as send failures that are never requeued — so one oversized
+        // id from one client costs everyone else's events in the batch. The event
+        // NAME no longer needs this guard: an over-long name is simply not catalogued.
+        processAnalyticsReportMessage({ events: [buildEvent({ eventId: "b".repeat(256) })] }, newSocketData(), queue);
 
-        expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
+        expect(queue.enqueueEvent).not.toHaveBeenCalled();
+        expect(warnSpy).toHaveBeenCalledWith(
+            "Analytics event dropped: payload does not match the catalog",
+            expect.any(Object),
+        );
     });
 
     it("drops events with an unknown source value", () => {
@@ -236,11 +301,11 @@ describe("processAnalyticsReportMessage", () => {
                 { events: [controlFrame("timed_event.close", { handle: "conversation.ended:h1", endReason })] },
                 newSocketData(),
                 queue,
-                tracker
+                tracker,
             );
 
             expect(tracker.close).toHaveBeenCalledWith("conversation.ended:h1", expect.any(Object), endReason);
-        }
+        },
     );
 
     it("coerces a reason it does not know rather than dropping the interval", () => {
@@ -251,7 +316,7 @@ describe("processAnalyticsReportMessage", () => {
             { events: [controlFrame("timed_event.close", { handle: "h1", endReason: "wharrgarbl" })] },
             newSocketData(),
             queue,
-            tracker
+            tracker,
         );
 
         expect(tracker.close).toHaveBeenCalledWith("h1", expect.any(Object), "other");
@@ -274,7 +339,7 @@ describe("processAnalyticsReportMessage", () => {
             },
             newSocketData(),
             queue,
-            tracker
+            tracker,
         );
 
         expect(tracker.open).toHaveBeenCalledTimes(1);

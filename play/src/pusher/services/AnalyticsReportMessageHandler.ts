@@ -1,15 +1,15 @@
 import { z } from "zod";
-import type { AnalyticsEventReportMessage } from "@workadventure/messages";
-import type { SocketData } from "../models/Websocket/SocketData";
-import type { AnalyticsEventInput, AnalyticsEventsQueue } from "./AnalyticsEventsQueue";
+import type { AnalyticsEventName, AnalyticsEventReportMessage } from "@workadventure/messages";
 import {
+    ANALYTICS_EVENT_CATALOG,
     MAX_EVENT_ID_LENGTH,
     TIMED_EVENT_END_REASONS,
-    isAnalyticsEventInput,
     isClientAnalyticsEventSource,
-} from "./AnalyticsEventSchema";
+} from "@workadventure/messages";
+import type { SocketData } from "../models/Websocket/SocketData";
+import type { AnalyticsEventInput, AnalyticsEventsQueue } from "./AnalyticsEventsQueue";
 import type { AnalyticsTimedEventTracker } from "./AnalyticsTimedEventTracker";
-import { analyticsTimedEventTracker, TIMED_EVENT_NAMES } from "./AnalyticsTimedEventTracker";
+import { analyticsTimedEventTracker } from "./AnalyticsTimedEventTracker";
 
 /**
  * Maximum number of analytics events a single websocket message may carry.
@@ -18,32 +18,6 @@ import { analyticsTimedEventTracker, TIMED_EVENT_NAMES } from "./AnalyticsTimedE
  * could otherwise saturate it in one go and evict everyone else's events).
  */
 export const MAX_EVENTS_PER_REPORT_MESSAGE = 100;
-
-/**
- * Event names the backend synthesizes itself, which a socket must never be able
- * to forge. Guarding the source alone is not enough: these are the names the
- * admin gives special meaning to, and it keys that meaning off the name.
- *
- * `user.connected` / `user.disconnected` are emitted by AnalyticsPresenceTracker
- * and are projected by the admin into `analytics_connection_sessions`, taking
- * `connectedAt` / `disconnectedAt` / `durationSeconds` straight from the event
- * properties. A client sending one of these under source "front" would therefore
- * write session rows of its own choosing and inflate the world's connection time
- * and risk score. `media.video_quality.sample` is likewise synthesized from
- * videoQualityReportMessage, not reported directly.
- *
- * The `media.` prefix as such stays open — the front legitimately emits other
- * `media.*` events; only this exact name is reserved.
- */
-const PUSHER_SYNTHESIZED_EVENT_NAMES = ["user.connected", "user.disconnected", "media.video_quality.sample"];
-
-/**
- * Names a socket may not send directly. The timed-event names join the list for the
- * same reason: the pusher is their sole emitter (it measures the interval on its own
- * clock), so one arriving from a client is either a mistake or an attempt to claim a
- * duration.
- */
-const PUSHER_RESERVED_EVENT_NAMES = new Set([...PUSHER_SYNTHESIZED_EVENT_NAMES, ...TIMED_EVENT_NAMES]);
 
 /**
  * Control frames. They ride the analytics event channel because it already carries a
@@ -105,25 +79,36 @@ export function processAnalyticsReportMessage(
             continue;
         }
 
-        if (PUSHER_RESERVED_EVENT_NAMES.has(event.eventName)) {
-            console.warn("Analytics event dropped: event name is reserved for the backend", {
-                eventName: event.eventName,
-                eventId: event.eventId,
-                source: event.source,
-                reporterUserUuid: socketData.userUuid,
-            });
+        // Before the catalog lookup: the control frames are deliberately absent
+        // from it — they are instructions to the tracker, not events — so checking
+        // the catalog first would reject them as unknown names.
+        if (CONTROL_EVENT_NAMES.has(event.eventName)) {
+            handleControlFrame(event.eventName, event.properties, socketData, tracker);
             continue;
         }
 
-        if (CONTROL_EVENT_NAMES.has(event.eventName)) {
-            handleControlFrame(event.eventName, event.properties, socketData, tracker);
+        // Look the name up before parsing, rather than handing the whole envelope
+        // to the catalog union. Both reach the same verdict, but a discriminator
+        // miss makes zod build an issue enumerating all 166 expected names — ~8.8 KB
+        // of error object, 11x the cost of a successful parse, paid on exactly the
+        // events a strict gate rejects. A property lookup costs nothing.
+        // See AnalyticsEventCatalog.bench.ts.
+        const schema = ANALYTICS_EVENT_CATALOG[event.eventName as AnalyticsEventName] as
+            | (typeof ANALYTICS_EVENT_CATALOG)[AnalyticsEventName]
+            | undefined;
+        if (!schema) {
+            console.warn("Analytics event dropped: unknown event name", {
+                eventName: typeof event.eventName === "string" ? event.eventName.slice(0, 64) : typeof event.eventName,
+                eventId: typeof event.eventId === "string" ? event.eventId.slice(0, 64) : typeof event.eventId,
+                reporterUserUuid: socketData.userUuid,
+            });
             continue;
         }
 
         // `properties` is `any` here: the proto declares it as google.protobuf.Value,
         // so nothing has checked its shape yet. Everything below the envelope is
         // validated here rather than cast.
-        const parsed = isAnalyticsEventInput.safeParse({
+        const parsed = schema.safeParse({
             eventName: event.eventName,
             source: event.source,
             clientEventTimeMs: event.clientEventTimeMs,
@@ -131,24 +116,31 @@ export function processAnalyticsReportMessage(
             properties: event.properties ?? {},
         });
         if (!parsed.success) {
-            console.warn("Analytics event dropped: malformed envelope", {
-                eventName: typeof event.eventName === "string" ? event.eventName.slice(0, 64) : typeof event.eventName,
-                eventId: typeof event.eventId === "string" ? event.eventId.slice(0, 64) : typeof event.eventId,
-                issues: parsed.error.issues.map((issue) => ({ path: issue.path.join("."), code: issue.code })),
-                reporterUserUuid: socketData.userUuid,
-            });
+            // A failure on `source` is not a malformed payload: the catalog pins
+            // each event's source, so this is a socket claiming a name the pusher
+            // synthesizes — user.connected, conversation.ended and friends, which
+            // the admin projects into connection sessions straight from their
+            // properties. Worth its own line; the reserved-name list this replaces
+            // existed to produce it.
+            const forgedSource = parsed.error.issues.some(
+                (issue) => issue.path[0] === "source" && issue.code === "invalid_literal",
+            );
+            console.warn(
+                forgedSource
+                    ? "Analytics event dropped: event name is reserved for the backend"
+                    : "Analytics event dropped: payload does not match the catalog",
+                {
+                    eventName: event.eventName,
+                    eventId: typeof event.eventId === "string" ? event.eventId.slice(0, 64) : typeof event.eventId,
+                    source: event.source,
+                    issues: parsed.error.issues.map((issue) => ({ path: issue.path.join("."), code: issue.code })),
+                    reporterUserUuid: socketData.userUuid,
+                },
+            );
             continue;
         }
 
-        queue.enqueueEvent(
-            {
-                ...parsed.data,
-                // Sound because google.protobuf.Value can only carry JSON — see
-                // AnalyticsEventSchema for why this is not a recursive schema.
-                properties: parsed.data.properties as AnalyticsEventInput["properties"],
-            },
-            socketData,
-        );
+        queue.enqueueEvent(parsed.data as AnalyticsEventInput, socketData);
     }
 }
 
