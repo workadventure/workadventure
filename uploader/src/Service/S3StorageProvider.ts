@@ -9,6 +9,7 @@ import {
     AWS_SECRET_ACCESS_KEY,
     UPLOADER_AWS_SIGNED_URL_EXPIRATION
 } from "../Enum/EnvironmentVariable";
+import {mimeTypeManager} from "./MimeType";
 import type {StorageProvider} from "./StorageProvider";
 import type {TargetDevice} from "./TargetDevice";
 
@@ -23,18 +24,15 @@ export class S3StorageProvider implements StorageProvider {
     }
 
     async upload(fileUuid: string, chunks: Buffer, mimeType:string|undefined): Promise<string> {
-        let uploadParams: S3.Types.PutObjectRequest = {
+        // The content type is sent by the client along the file, so it is never stored as is:
+        // an object stored as "text/html" would run script if it were ever served directly.
+        const uploadParams: S3.Types.PutObjectRequest = {
             Bucket: `${AWS_BUCKET ?? ''}`,
             Key: fileUuid,
-            Body: chunks
+            Body: chunks,
+            ContentType: mimeTypeManager.getSafeMimeType(mimeType),
+            ContentDisposition: "attachment"
         };
-
-        if(mimeType !== undefined){
-            uploadParams = {
-                ...uploadParams,
-                ContentType: mimeType,
-            };
-        }
 
         //upload file in data
         await this.S3().upload(uploadParams,  (err, data)  => {
@@ -61,7 +59,16 @@ export class S3StorageProvider implements StorageProvider {
     }
 
     private async getExternalDownloadLink(fileId: string): Promise<string> {
-        const params = {Bucket: AWS_BUCKET, Key: fileId, Expires: UPLOADER_AWS_SIGNED_URL_EXPIRATION};
+        // Download happens on the S3 origin, out of reach of our own headers, so the response
+        // headers are overridden in the signed URL itself. This also neutralizes objects that
+        // were stored with a dangerous content type before this was enforced on upload.
+        const params = {
+            Bucket: AWS_BUCKET,
+            Key: fileId,
+            Expires: UPLOADER_AWS_SIGNED_URL_EXPIRATION,
+            ResponseContentType: mimeTypeManager.getSafeMimeTypeByFileName(fileId),
+            ResponseContentDisposition: "attachment"
+        };
         return await this.S3().getSignedUrlPromise('getObject', params);
     }
 

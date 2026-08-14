@@ -1,5 +1,13 @@
-const ENABLE_CHAT_UPLOAD = process.env.ENABLE_CHAT_UPLOAD || true;
+// Note: this used to be `process.env.ENABLE_CHAT_UPLOAD || true`, which is truthy for the string
+// "false" too, so uploads could not be disabled at all on a self-hosted instance.
+const ENABLE_CHAT_UPLOAD = !["false", "0"].includes((process.env.ENABLE_CHAT_UPLOAD ?? "true").toLowerCase());
 const UPLOAD_MAX_FILESIZE = process.env.UPLOAD_MAX_FILESIZE;
+
+// Ceiling applied when UPLOAD_MAX_FILESIZE is not set or is not a number (the size is then only
+// enforced by the admin API, which can answer once the whole file has been received).
+const DEFAULT_MAX_UPLOAD_SIZE = 100 * 1024 * 1024;
+const parsedMaxUploadSize = parseInt(UPLOAD_MAX_FILESIZE ?? "");
+export const MAX_UPLOAD_SIZE = parsedMaxUploadSize > 0 ? parsedMaxUploadSize : DEFAULT_MAX_UPLOAD_SIZE;
 const ADMIN_API_URL = process.env.ADMIN_API_URL;
 
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;

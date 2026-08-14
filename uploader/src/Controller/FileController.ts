@@ -9,13 +9,20 @@ import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferExceptio
 import {
   ADMIN_API_URL,
   ENABLE_CHAT_UPLOAD,
+  MAX_UPLOAD_SIZE,
   UPLOAD_MAX_FILESIZE,
   UPLOADER_URL,
 } from "../Enum/EnvironmentVariable";
 import { HttpResponseDevice } from "./HttpResponseDevice";
 
+// Uploaded files are buffered in memory, so an upload must never be allowed to grow unbounded.
+// UPLOAD_MAX_FILESIZE was only ever checked once the whole file had been read, and never at all
+// for audio messages.
 const upload = multer({
   storage: multer.memoryStorage(),
+  limits: {
+    fileSize: MAX_UPLOAD_SIZE,
+  },
 });
 
 class DisabledChat extends Error {}
@@ -43,7 +50,6 @@ export class FileController {
     this.downloadAudioMessage();
     this.downloadFile();
     this.uploadFile();
-    this.deleteUploadedFile();
     this.ping();
   }
 
@@ -82,7 +88,8 @@ export class FileController {
       uploaderService
         .getTemp(id)
         .then((buffer) => {
-          const targetDevice = new HttpResponseDevice(id, response);
+          // Audio messages are played by an <audio> element, they are not downloaded.
+          const targetDevice = new HttpResponseDevice(id, response, false);
           return targetDevice.copyFromBuffer(Buffer.from(buffer ?? ""));
         })
         .catch((e) => {
@@ -200,16 +207,6 @@ export class FileController {
         }
         throw err;
       }
-    });
-  }
-
-  deleteUploadedFile() {
-    this.App.delete("/upload-file/:fileId", (request, response) => {
-      (async () => {
-        const fileId = decodeURI(request.params["fileId"]);
-        await uploaderService.deleteFileById(fileId);
-        return response.json({ message: "ok", id: fileId });
-      })().catch((e) => console.error(e));
     });
   }
 

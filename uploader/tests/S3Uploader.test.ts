@@ -5,8 +5,8 @@ import {MinioContainer} from "@testcontainers/minio";
 import AWS from "aws-sdk";
 import {describe, expect, vi, it, beforeAll, beforeEach, afterAll, afterEach} from 'vitest';
 import {PLAY_URL} from "../src/Enum/EnvironmentVariable";
-import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
-import startTestServer from "./startTestServer";
+import {uploadHtmlFileTest, uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
+import startTestServer, {stopTestServer} from "./startTestServer";
 import isPortReachable from "./utils/isPortReachable";
 
 const MINIO_IMAGE = "minio/minio:RELEASE.2025-09-07T16-13-09Z";
@@ -87,16 +87,7 @@ describe("S3 Uploader tests", () => {
     })
 
     afterAll(async ()=> {
-        if (server) {
-            const serverToKill = server;
-            const promise = new Promise(resolve => {
-                serverToKill.on("exit", ()=> {
-                    resolve(0)
-                })
-            });
-            serverToKill.kill("SIGKILL")
-            await promise;
-        }
+        await stopTestServer(server)
         if (minioContainer) {
             const stream = await minioContainer.logs();
             stream
@@ -126,6 +117,12 @@ describe("S3 Uploader tests", () => {
                 }
             })
         })
+    })
+
+    it("should not serve an uploaded html file as html", async ()=> {
+        // The download is a redirect to a presigned URL, so the content type and the disposition
+        // are overridden in the signed URL itself.
+        await uploadHtmlFileTest(UPLOADER_URL);
     })
 
     it("should upload multiple files to S3", async ()=> {

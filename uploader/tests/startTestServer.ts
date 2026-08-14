@@ -9,6 +9,9 @@ export default function(env: Record<string, string | number>) {
             ...env
         },
         cwd: fileURLToPath(new URL("../", import.meta.url)),
+        // Own process group: "npm run" spawns the server through a shell, and killing the shell
+        // alone leaves the server behind, holding the port for every subsequent run.
+        detached: true,
     });
     let stderr = "";
 
@@ -27,8 +30,26 @@ export default function(env: Record<string, string | number>) {
         console.error('Failed to start subprocess.', err);
     });
     return testServer;
-    /*return fork("tests/testServer.ts", {
-        execArgv: ["yarn"],
-        env: env
-    })*/
+}
+
+/**
+ * Kills the test server and everything it spawned, and waits for it to be gone.
+ */
+export async function stopTestServer(testServer: ChildProcessWithoutNullStreams | undefined): Promise<void> {
+    if (!testServer?.pid) {
+        return;
+    }
+
+    const exited = new Promise((resolve) => {
+        testServer.on("exit", () => resolve(0));
+    });
+
+    try {
+        process.kill(-testServer.pid, "SIGKILL");
+    } catch {
+        // The process group is already gone.
+        return;
+    }
+
+    await exited;
 }

@@ -1,4 +1,5 @@
 import {v4} from "uuid";
+import {mimeTypeManager} from "./MimeType";
 import type { StorageProvider} from "./StorageProvider";
 import {storageProviderService, tempProviderService} from "./StorageProviderService";
 import type {TempStorageProvider} from "./TempStorageProvider";
@@ -9,7 +10,10 @@ class UploaderService{
     }
 
     async uploadFile(fileName: string, chunks: Buffer, mimeType?: string): Promise<string>{
-        const fileUuid = `${v4()}.${fileName.split('.').pop()}`;
+        // The extension ends up in the storage key and in the download URL, and it is picked from
+        // the name of the uploaded file, so it must be sanitized.
+        const extension = mimeTypeManager.getExtensionByFileName(fileName);
+        const fileUuid = extension ? `${v4()}.${extension}` : v4();
 
         return this.storageProvider.upload(fileUuid, chunks, mimeType)
     }
