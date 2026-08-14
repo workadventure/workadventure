@@ -13,7 +13,7 @@ import { proxyFiles } from "./FileFetcher/FileFetcher";
 import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
 import { passportStrategies } from "./Services/Authentication";
-import { mapPathUsingDomain } from "./Services/PathMapper";
+import { decodeStoragePath, mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
 import {
     SENTRY_DSN,
@@ -103,14 +103,19 @@ for (const passportStrategy of passportStrategies) {
 app.use(passport.initialize());
 
 app.get(/.*\.wam$/, (req, res, next) => {
-    const wamPath = req.path;
     const domain = req.hostname;
-    if (wamPath.includes("..") || domain.includes("..")) {
+    if (req.path.includes("..") || domain.includes("..")) {
         res.status(400).send("Invalid request");
         return;
     }
-    const key = mapPathUsingDomain(wamPath, domain);
-
+    // `req.path` is percent-encoded while storage keys are literal, so it has to be decoded.
+    let key: string;
+    try {
+        key = mapPathUsingDomain(decodeStoragePath(req.path), domain);
+    } catch {
+        res.status(400).send("Invalid request");
+        return;
+    }
     res.setHeader("Content-Type", "application/json");
     // Let's disable any kind of cache (we allow for a 5 seconds cache just to avoid spamming the server and
     // to allow a CDN to take over the load). 5 seconds is ok, because it is lower than the 30 seconds of
