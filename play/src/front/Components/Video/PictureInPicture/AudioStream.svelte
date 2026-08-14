@@ -6,7 +6,7 @@
     import { signalAudioPlaybackBlocked } from "../../../Stores/AudioPlaybackStore";
     import { userActivationManager } from "../../../Stores/UserActivationStore";
     import { audioContextManager } from "../../../WebRtc/AudioContextManager";
-    import { usedSpeakerDeviceIdStore } from "../../../Stores/MediaStore";
+    import { applySinkId } from "../../../WebRtc/AudioOutputManager";
 
     interface Props {
         streamStore: Readable<MediaStream | undefined>;
@@ -37,56 +37,18 @@
         }
     });
 
-    let lastRequestedDeviceId: string | undefined;
-
-    async function safeSetSinkId(deviceId: string, el: HTMLAudioElement) {
-        if (destroyed) {
-            return false;
-        }
-        if (lastRequestedDeviceId === deviceId) {
-            return true;
-        }
-        if (typeof el.setSinkId !== "function") {
-            return false;
-        }
-        lastRequestedDeviceId = deviceId;
-        try {
-            debug("Setting output device to ", deviceId);
-            await el.setSinkId(deviceId);
-            debug("Output device set to ", deviceId);
-            // Report what was actually applied, so the settings UI can tell a selection that took
-            // effect from one the browser refused. This duplicates AudioOutputManager.applySinkId
-            // for now; both collapse into it once this component is migrated onto the manager.
-            usedSpeakerDeviceIdStore.set(deviceId);
-            return true;
-        } catch (e) {
-            if (destroyed) {
-                return false;
-            }
-
-            Sentry.captureException(e);
-            if (e instanceof DOMException && e.name === "AbortError") {
-                // An error occurred while setting the sinkId. Let's fall back to default.
-                console.warn("Error setting the audio output device. We fallback to default.");
-
-                try {
-                    lastRequestedDeviceId = "";
-                    await el.setSinkId("");
-                } catch (e) {
-                    console.error("Error resetting the audio output device: ", e);
-                }
-
-                onselectoutputaudiodeviceerror?.();
-                return false;
-            }
-            console.error("Error setting the audio output device: ", e);
-            return false;
+    async function setOutputDevice(deviceId: string, el: HTMLAudioElement): Promise<void> {
+        const outcome = await applySinkId(el, deviceId);
+        // Only a device that vanished is worth reporting: on a browser without the Audio Output
+        // Devices API, resetting the user's selection would throw away a valid preference.
+        if (outcome === "fell-back-to-default" && !destroyed) {
+            onselectoutputaudiodeviceerror?.();
         }
     }
 
     $effect(() => {
         if (outputDeviceId && audioElement) {
-            safeSetSinkId(outputDeviceId, audioElement).catch((e) => {
+            setOutputDevice(outputDeviceId, audioElement).catch((e) => {
                 console.error("Error setting the audio output device: ", e);
                 Sentry.captureException(e);
             });
@@ -232,7 +194,7 @@
         (async () => {
             if (outputDeviceId && audioElement) {
                 // Because of a bug in Chrome, we need to wait for setSinkId to resolve before setting the srcObject.
-                await safeSetSinkId(outputDeviceId, audioElement);
+                await setOutputDevice(outputDeviceId, audioElement);
                 if (destroyed || !audioElement) {
                     return;
                 }

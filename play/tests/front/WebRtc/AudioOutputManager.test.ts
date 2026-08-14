@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { get } from "svelte/store";
-import { applySinkId, getBubbleSoundUrl } from "../../../src/front/WebRtc/AudioOutputManager";
+import {
+    applySinkId,
+    bindAudioContextOutput,
+    bindAudioOutput,
+    getBubbleSoundUrl,
+} from "../../../src/front/WebRtc/AudioOutputManager";
 import { speakerSelectedStore, usedSpeakerDeviceIdStore } from "../../../src/front/Stores/MediaStore";
 
 /**
@@ -28,7 +33,7 @@ describe("applySinkId", () => {
     it("routes the element to the requested device", async () => {
         const { el, setSinkId } = createMediaElement();
 
-        await expect(applySinkId(el, "device-1")).resolves.toBe(true);
+        await expect(applySinkId(el, "device-1")).resolves.toBe("applied");
         expect(setSinkId).toHaveBeenCalledWith("device-1");
     });
 
@@ -68,28 +73,28 @@ describe("applySinkId", () => {
     it("applies the empty string, which means 'system default'", async () => {
         const { el, setSinkId } = createMediaElement("device-1");
 
-        await expect(applySinkId(el, "")).resolves.toBe(true);
+        await expect(applySinkId(el, "")).resolves.toBe("applied");
         expect(setSinkId).toHaveBeenCalledWith("");
     });
 
     it("does nothing when no device is requested", async () => {
         const { el, setSinkId } = createMediaElement();
 
-        await expect(applySinkId(el, undefined)).resolves.toBe(false);
+        await expect(applySinkId(el, undefined)).resolves.toBe("failed");
         expect(setSinkId).not.toHaveBeenCalled();
     });
 
     it("skips the call when the sink is already the right one", async () => {
         const { el, setSinkId } = createMediaElement("device-1");
 
-        await expect(applySinkId(el, "device-1")).resolves.toBe(true);
+        await expect(applySinkId(el, "device-1")).resolves.toBe("applied");
         expect(setSinkId).not.toHaveBeenCalled();
     });
 
     it("reports failure instead of throwing on a browser without setSinkId", async () => {
         const el = { sinkId: undefined } as unknown as HTMLMediaElement;
 
-        await expect(applySinkId(el, "device-1")).resolves.toBe(false);
+        await expect(applySinkId(el, "device-1")).resolves.toBe("unsupported");
     });
 
     it("falls back to the system default when the device vanished", async () => {
@@ -99,9 +104,82 @@ describe("applySinkId", () => {
             .mockResolvedValueOnce(undefined);
         const { el, setSinkId } = createMediaElement("", failing);
 
-        await expect(applySinkId(el, "device-1")).resolves.toBe(false);
+        await expect(applySinkId(el, "device-1")).resolves.toBe("fell-back-to-default");
         expect(setSinkId).toHaveBeenNthCalledWith(1, "device-1");
         expect(setSinkId).toHaveBeenNthCalledWith(2, "");
+    });
+
+    it("serializes concurrent calls on the same element", async () => {
+        const order: string[] = [];
+        const slow = vi.fn<(id: string) => Promise<void>>().mockImplementation(async (id: string) => {
+            order.push(`start:${id}`);
+            // A longer first call: without serialization the second would settle first and the
+            // element would end up on the wrong device.
+            await new Promise((resolve) => {
+                setTimeout(resolve, id === "device-1" ? 20 : 0);
+            });
+            order.push(`end:${id}`);
+        });
+        const { el } = createMediaElement("", slow);
+
+        await Promise.all([applySinkId(el, "device-1"), applySinkId(el, "device-2")]);
+
+        expect(order).toEqual(["start:device-1", "end:device-1", "start:device-2", "end:device-2"]);
+    });
+
+    it("keeps serving later calls after one rejects", async () => {
+        const failing = vi
+            .fn<(id: string) => Promise<void>>()
+            .mockRejectedValueOnce(new DOMException("nope", "NotFoundError"))
+            .mockResolvedValueOnce(undefined);
+        const { el } = createMediaElement("", failing);
+
+        const first = applySinkId(el, "device-1");
+        const second = applySinkId(el, "device-2");
+
+        await expect(first).resolves.toBe("failed");
+        // A rejected task must not wedge the queue for every element that follows.
+        await expect(second).resolves.toBe("applied");
+    });
+});
+
+describe("bindAudioOutput", () => {
+    it("applies the selection and re-applies it on every change", async () => {
+        speakerSelectedStore.set("device-1");
+        const { el, setSinkId } = createMediaElement();
+
+        const unsubscribe = bindAudioOutput(el);
+        await vi.waitFor(() => expect(setSinkId).toHaveBeenCalledWith("device-1"));
+
+        speakerSelectedStore.set("device-2");
+        await vi.waitFor(() => expect(setSinkId).toHaveBeenCalledWith("device-2"));
+
+        unsubscribe();
+        speakerSelectedStore.set("device-3");
+        await new Promise((resolve) => {
+            setTimeout(resolve, 10);
+        });
+        expect(setSinkId).not.toHaveBeenCalledWith("device-3");
+    });
+});
+
+describe("bindAudioContextOutput", () => {
+    it("routes the context and follows the selection", async () => {
+        speakerSelectedStore.set("device-1");
+        const setSinkId = vi.fn<(id: string) => Promise<void>>(() => Promise.resolve());
+        const context = { setSinkId } as unknown as AudioContext;
+
+        const unsubscribe = bindAudioContextOutput(context);
+        await vi.waitFor(() => expect(setSinkId).toHaveBeenCalledWith("device-1"));
+
+        unsubscribe();
+    });
+
+    it("is a no-op on a browser without AudioContext.setSinkId", () => {
+        const context = {} as unknown as AudioContext;
+
+        // Must not throw: Firefox and Safari have no AudioContext sink selection at all.
+        expect(() => bindAudioContextOutput(context)()).not.toThrow();
     });
 });
 
