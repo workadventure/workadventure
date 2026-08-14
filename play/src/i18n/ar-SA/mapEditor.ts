@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "تم حذف هذه الخريطة",
         deletePromptSubtitle: "تم قطع اتصالك بهذه الغرفة.",
         deletePromptDetails: "لن تؤدي إعادة التحميل إلى استعادة هذه الخريطة لأنها لم تعد موجودة.",
+        editionFailed: "تعذر حفظ التغيير الذي أجريته، وتم التراجع عنه.",
     },
     sideBar: {
         areaEditor: "تحرير المنطقة", // Fläche bearbeiten

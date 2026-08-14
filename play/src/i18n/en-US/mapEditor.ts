@@ -6,6 +6,7 @@ const mapEditor: BaseTranslation = {
         deletePrompt: "This map has been deleted",
         deletePromptSubtitle: "You have been disconnected from this room.",
         deletePromptDetails: "Refreshing will not restore this map because it no longer exists.",
+        editionFailed: "Your change could not be saved and has been undone.",
     },
     sideBar: {
         areaEditor: "Area editor tool",

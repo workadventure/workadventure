@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "Diese Karte wurde gelöscht",
         deletePromptSubtitle: "Du wurdest von diesem Raum getrennt.",
         deletePromptDetails: "Ein Neuladen stellt diese Karte nicht wieder her, da sie nicht mehr existiert.",
+        editionFailed: "Deine Änderung konnte nicht gespeichert werden und wurde rückgängig gemacht.",
     },
     sideBar: {
         areaEditor: "Fläche bearbeiten",
