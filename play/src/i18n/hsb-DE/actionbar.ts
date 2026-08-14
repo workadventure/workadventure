@@ -54,6 +54,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         ignore: "Ignorować",
     },
     speaker: {
+        test: "Awdiowuchod testować",
         disabled: "Waš wótřerěčak je deaktiwowany",
         activate: "Waš wótřerěčak aktiwěrować",
         noDevices: "Žane wótřerěčakowe graty namakane",

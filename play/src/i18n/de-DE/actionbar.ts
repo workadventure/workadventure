@@ -56,6 +56,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         ignore: "Ignorieren",
     },
     speaker: {
+        test: "Audioausgabe testen",
         disabled: "Ihr Lautsprecher ist deaktiviert",
         activate: "Lautsprecher aktivieren",
         noDevices: "Kein Lautsprecher gefunden",

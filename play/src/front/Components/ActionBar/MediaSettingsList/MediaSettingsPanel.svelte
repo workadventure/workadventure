@@ -20,6 +20,7 @@
     import { cameraPermissionStateStore, microphonePermissionStateStore } from "../../../Stores/MediaStatusStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { playTestSound } from "../../../WebRtc/AudioOutputManager";
     import { noiseSuppressionEnabledStore, noiseSuppressionStateStore } from "../../../Stores/NoiseSuppressionStore";
     import { handleOpenMenuEvent, settingsSubMenuTargetStore, SubMenusInterface } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -29,7 +30,7 @@
     import SectionDivider from "./SectionDivider.svelte";
     import SectionTitle from "./SectionTitle.svelte";
     import DeviceListItem from "./DeviceListItem.svelte";
-    import { IconCamera, IconHeadphones, IconMicrophoneOn, IconSettings } from "@wa-icons";
+    import { IconCamera, IconHeadphones, IconMicrophoneOn, IconSettings, IconUnMute } from "@wa-icons";
 
     interface Props {
         oncameraselected?: () => void;
@@ -52,6 +53,10 @@
     function selectSpeaker(deviceId: string) {
         localUserStore.setSpeakerDeviceId(deviceId);
         speakerSelectedStore.set(deviceId);
+    }
+
+    function testSpeaker() {
+        playTestSound($speakerSelectedStore).catch((e) => console.error(e));
     }
 
     function cameraClick(): void {
@@ -286,6 +291,20 @@
                 <IconHeadphones font-size="14" />
                 {$LL.actionbar.subtitle.speaker()}
             </div>
+            {#snippet actions()}
+                {#if $speakerListStore && $speakerListStore.length > 0}
+                    <button
+                        type="button"
+                        data-testid="speaker-test-button"
+                        class="flex h-7 w-7 items-center justify-center rounded text-white/50 hover:bg-white/10 hover:text-white"
+                        aria-label={$LL.actionbar.speaker.test()}
+                        title={$LL.actionbar.speaker.test()}
+                        onclick={testSpeaker}
+                    >
+                        <IconUnMute font-size="14" />
+                    </button>
+                {/if}
+            {/snippet}
         </SectionTitle>
         {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
             {#each $speakerListStore as speaker, index (index)}

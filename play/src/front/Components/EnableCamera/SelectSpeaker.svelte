@@ -77,9 +77,22 @@
                         </div>
                     </div>
                     {#if selectedDevice === speaker.deviceId}
-                        <Button variant="secondary" square class="self-end" type="button">
+                        <Button
+                            variant="secondary"
+                            square
+                            class="self-end"
+                            type="button"
+                            aria-label={$LL.actionbar.speaker.test()}
+                            title={$LL.actionbar.speaker.test()}
+                            onclick={(event) => {
+                                // Stop the click from bubbling to the parent card, which would
+                                // re-select the device instead of only testing it.
+                                event.stopPropagation();
+                                event.preventDefault();
+                                onplaysound?.(speaker.deviceId);
+                            }}
+                        >
                             {#snippet icon()}
-                                <!-- TODO HUGO -->
                                 <IconUnMute font-size="20" />
                             {/snippet}
                         </Button>

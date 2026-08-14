@@ -58,6 +58,7 @@ const actionbar: BaseTranslation = {
         ignore: "Ignorar",
     },
     speaker: {
+        test: "Testar a saída de áudio",
         disabled: "Seu alto-falante está desabilitado",
         activate: "Ativar seu alto-falante",
         noDevices: "Nenhum dispositivo de alto-falante encontrado",

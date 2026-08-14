@@ -20,6 +20,7 @@
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { playTestSound } from "../../WebRtc/AudioOutputManager";
 
     import bgMap from "../images/map-exemple.png";
     import Button from "../UI/Button.svelte";
@@ -41,7 +42,6 @@
 
     let selectedCamera: string | undefined = $state(undefined);
     let selectedMicrophone: string | undefined = $state(undefined);
-    const sound = new Audio("/resources/objects/webrtc-in.mp3");
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
@@ -141,7 +141,6 @@
         requestedMicrophoneState.enableMicrophone();
 
         batchGetUserMediaStore.commitChanges();
-        sound.load();
     });
 
     function handleSelectCamera(deviceId: string | undefined) {
@@ -185,8 +184,8 @@
         speakerSelectedStore.set(deviceId);
     }
 
-    function playSoundClick() {
-        sound.play().catch((e) => console.error(e));
+    function playSoundClick(deviceId: string | undefined) {
+        playTestSound(deviceId).catch((e) => console.error(e));
     }
     /* eslint-disable svelte/no-at-html-tags */
 </script>
