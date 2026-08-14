@@ -123,7 +123,7 @@ if (typeof window !== "undefined" && typeof window.matchMedia === "undefined") {
     });
 }
 
-// jsdom does not implement CanvasRenderingContext2D; Phaser expects it during import.
+// jsdom does not implement CanvasRenderingContext2D; Phaser expects it when a test imports it.
 // Provide a minimal stub so canvas feature detection does not crash in tests.
 const createStubContext = () => {
     const data = new Uint8ClampedArray([0, 0, 0, 255]);
@@ -142,5 +142,9 @@ HTMLCanvasElement.prototype.getContext = function getContext() {
     return createStubContext();
 };
 
-const PhaserModule = await import("phaser");
-globalThis.Phaser = PhaserModule.default ?? PhaserModule;
+// Note: do not import Phaser here. Setup files run once per test file and, with `isolate: true`,
+// in a fresh module registry every time, so a global import re-evaluates Phaser's 8.8 MB bundle
+// for each of the ~100 test files. That dominated both the runtime and the peak memory of the
+// suite, and made CI runners exceed their memory limit (SIGKILL / exit 137).
+// Modules that need Phaser import it themselves; the few tests that also need `globalThis.Phaser`
+// set it at the top of their own file (see src/front/Space/tests/*.test.ts).
