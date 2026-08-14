@@ -32,8 +32,19 @@ export function isFirefox(): boolean {
     return window.navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
 }
 
+/**
+ * Detects Safari without going through `getNavigatorType`, which throws on any user agent that is
+ * none of Firefox / Chrome / Safari (embedded browsers, webviews). This one must never throw: it is
+ * called at module evaluation time (see `speakerSelectionSupported` in MediaStore), where an
+ * exception would take the whole media pipeline down with it.
+ *
+ * Every Chromium browser also carries "Safari" in its user agent, hence the exclusions. On iOS,
+ * Chrome and Firefox are WebKit under the hood and share Safari's limitations, but they are covered
+ * by `isIOS()` rather than here.
+ */
 export function isSafari(): boolean {
-    return getNavigatorType() === NavigatorType.safari;
+    const userAgent = window.navigator.userAgent;
+    return /Safari/i.test(userAgent) && !/Chrome|Chromium|Android|CriOS|FxiOS|EdgiOS|OPiOS/i.test(userAgent);
 }
 
 export function isMac(): boolean {

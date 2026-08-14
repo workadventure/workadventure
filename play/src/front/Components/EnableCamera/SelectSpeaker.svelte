@@ -67,7 +67,9 @@
                         </div>
                         <div class="space-y-1 min-w-0">
                             <div class="text-lg bold truncate leading-tight">
-                                {StringUtils.normalizeDeviceName(speaker.label)}
+                                {speaker.label
+                                    ? StringUtils.normalizeDeviceName(speaker.label)
+                                    : $LL.actionbar.speaker.unnamedDevice({ index: index + 1 })}
                             </div>
                             {#if selectedDevice === speaker.deviceId}
                                 <Chip>{$LL.camera.active()}</Chip>

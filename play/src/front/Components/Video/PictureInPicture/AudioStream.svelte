@@ -6,6 +6,7 @@
     import { signalAudioPlaybackBlocked } from "../../../Stores/AudioPlaybackStore";
     import { userActivationManager } from "../../../Stores/UserActivationStore";
     import { audioContextManager } from "../../../WebRtc/AudioContextManager";
+    import { usedSpeakerDeviceIdStore } from "../../../Stores/MediaStore";
 
     interface Props {
         streamStore: Readable<MediaStream | undefined>;
@@ -53,6 +54,10 @@
             debug("Setting output device to ", deviceId);
             await el.setSinkId(deviceId);
             debug("Output device set to ", deviceId);
+            // Report what was actually applied, so the settings UI can tell a selection that took
+            // effect from one the browser refused. This duplicates AudioOutputManager.applySinkId
+            // for now; both collapse into it once this component is migrated onto the manager.
+            usedSpeakerDeviceIdStore.set(deviceId);
             return true;
         } catch (e) {
             if (destroyed) {

@@ -56,6 +56,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         test: "Audio-uitvoer testen",
+        unnamedDevice: "Audio-uitvoer {index}",
+        loading: "Audio-uitvoerapparaten zoeken…",
+        unsupported:
+            "In deze browser kun je geen audio-uitvoer kiezen. Het geluid speelt af op het apparaat dat in je systeeminstellingen is geselecteerd.",
+        fallbackInUse:
+            "Je browser heeft dit apparaat geweigerd. Het geluid speelt af op het standaardapparaat van het systeem.",
         disabled: "Je luidspreker is uitgeschakeld",
         activate: "Activeer je luidspreker",
         noDevices: "Geen luidsprekerapparaat gevonden",

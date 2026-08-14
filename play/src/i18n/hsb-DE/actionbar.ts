@@ -55,6 +55,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         test: "Awdiowuchod testować",
+        unnamedDevice: "Awdiowuchod {index}",
+        loading: "Pyta so za awdiowuchodami …",
+        unsupported:
+            "Tutón wobhladowak njedowoluje wuběr awdiowuchoda. Zynk so přez grat wothrawa, kotryž je w systemowych nastajenjach wubrany.",
+        fallbackInUse: "Twój wobhladowak je tutón grat wotpokazał. Zynk so přez standardny grat systema wothrawa.",
         disabled: "Waš wótřerěčak je deaktiwowany",
         activate: "Waš wótřerěčak aktiwěrować",
         noDevices: "Žane wótřerěčakowe graty namakane",

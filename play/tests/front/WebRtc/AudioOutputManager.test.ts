@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { get } from "svelte/store";
 import { applySinkId, getBubbleSoundUrl } from "../../../src/front/WebRtc/AudioOutputManager";
+import { speakerSelectedStore, usedSpeakerDeviceIdStore } from "../../../src/front/Stores/MediaStore";
 
 /**
  * jsdom implements neither setSinkId nor play(), so each test builds the element behaviour it needs.
@@ -28,6 +30,39 @@ describe("applySinkId", () => {
 
         await expect(applySinkId(el, "device-1")).resolves.toBe(true);
         expect(setSinkId).toHaveBeenCalledWith("device-1");
+    });
+
+    it("reports the device that was actually applied", async () => {
+        usedSpeakerDeviceIdStore.set(undefined);
+        const { el } = createMediaElement();
+
+        await applySinkId(el, "device-1");
+
+        expect(get(usedSpeakerDeviceIdStore)).toBe("device-1");
+    });
+
+    it("forgets the applied device as soon as another one is picked", () => {
+        usedSpeakerDeviceIdStore.set("device-1");
+
+        speakerSelectedStore.set("device-2");
+
+        // Otherwise the settings panel would compare a stale value against the new selection and
+        // claim a fallback that never happened.
+        expect(get(usedSpeakerDeviceIdStore)).toBeUndefined();
+    });
+
+    it("reports the system default when it had to fall back", async () => {
+        usedSpeakerDeviceIdStore.set(undefined);
+        const failing = vi
+            .fn<(id: string) => Promise<void>>()
+            .mockRejectedValueOnce(new DOMException("device is gone", "AbortError"))
+            .mockResolvedValueOnce(undefined);
+        const { el } = createMediaElement("", failing);
+
+        await applySinkId(el, "device-1");
+
+        // The settings panel compares this to the selection to warn that the browser refused it.
+        expect(get(usedSpeakerDeviceIdStore)).toBe("");
     });
 
     it("applies the empty string, which means 'system default'", async () => {
