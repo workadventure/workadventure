@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "Este mapa ha sido eliminado",
         deletePromptSubtitle: "Te has desconectado de esta sala.",
         deletePromptDetails: "Actualizar no restaurará este mapa porque ya no existe.",
+        editionFailed: "No se ha podido guardar tu cambio y se ha deshecho.",
     },
     sideBar: {
         areaEditor: "Herramienta de edición de zonas",
