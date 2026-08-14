@@ -7,7 +7,7 @@ import type { AreaData } from "@workadventure/map-editor";
 import { WAMFileFormat } from "@workadventure/map-editor";
 import { fileSystem } from "../fileSystem";
 import { PATH_PREFIX, SECRET_KEY } from "../Enum/EnvironmentVariable";
-import { mapPathUsingDomainWithPrefix } from "./PathMapper";
+import { mapPathUsingUrl } from "./PathMapper";
 
 const AuthTokenData = z.object({
     wamUrl: z.string().url(),
@@ -59,7 +59,7 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
 
 async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
     const parsedUrl = new URL(jwt.wamUrl);
-    const mapPath = mapPathUsingDomainWithPrefix(parsedUrl.pathname, parsedUrl.hostname);
+    const mapPath = mapPathUsingUrl(parsedUrl);
 
     const test = await getAndCheckWamFile(mapPath, url);
 

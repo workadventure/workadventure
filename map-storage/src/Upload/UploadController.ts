@@ -20,7 +20,7 @@ import * as Sentry from "@sentry/node";
 import bodyParser from "body-parser";
 import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import axios from "axios";
-import { mapPath } from "../Services/PathMapper";
+import { decodeStoragePath, mapPath } from "../Services/PathMapper";
 import { ENTITY_COLLECTION_URLS, MAX_UNCOMPRESSED_SIZE, WAM_TEMPLATE_URL } from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
 import { uploadDetector } from "../Services/UploadDetector";
@@ -288,10 +288,18 @@ export class UploadController {
                     // Get the uploaded file
                     const file = req.file;
 
-                    const filePath = req.path;
-
-                    if (filePath.includes("..")) {
+                    if (req.path.includes("..")) {
                         // Attempt to override filesystem. That' a hack!
+                        res.status(400).send("Invalid path");
+                        return;
+                    }
+
+                    // `req.path` is percent-encoded while storage keys are literal (the ZIP upload
+                    // writes the entry names as-is), so decode to write under the same key.
+                    let filePath: string;
+                    try {
+                        filePath = decodeStoragePath(req.path);
+                    } catch {
                         res.status(400).send("Invalid path");
                         return;
                     }
@@ -413,10 +421,18 @@ export class UploadController {
          */
         this.app.patch(/.*\.wam$/, passportAuthenticator, (req, res, next) => {
             (async () => {
-                const filePath = req.path;
-
-                if (filePath.includes("..")) {
+                if (req.path.includes("..")) {
                     // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid path");
+                    return;
+                }
+
+                // `req.path` is percent-encoded while storage keys are literal, so decode to patch
+                // the file that was actually written at upload time.
+                let filePath: string;
+                try {
+                    filePath = decodeStoragePath(req.path);
+                } catch {
                     res.status(400).send("Invalid path");
                     return;
                 }
@@ -678,10 +694,16 @@ export class UploadController {
     private deleteFile() {
         this.app.delete("/{*splat}", passportAuthenticator, (req, res, next) => {
             (async () => {
-                const filePath = req.path;
-
-                if (filePath.includes("..")) {
+                if (req.path.includes("..")) {
                     // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid path");
+                    return;
+                }
+
+                let filePath: string;
+                try {
+                    filePath = decodeStoragePath(req.path);
+                } catch {
                     res.status(400).send("Invalid path");
                     return;
                 }

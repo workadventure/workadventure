@@ -33,7 +33,7 @@ import { ModifyCustomEntityMapStorageCommand } from "./Commands/Entity/ModifyCus
 import { UploadEntityMapStorageCommand } from "./Commands/Entity/UploadEntityMapStorageCommand";
 import { entitiesManager } from "./EntitiesManager";
 import { mapsManager } from "./MapsManager";
-import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
+import { mapPathUsingUrl } from "./Services/PathMapper";
 import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
 import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
 import { DeleteEntityMapStorageCommand } from "./Commands/Entity/DeleteEntityMapStorageCommand";
@@ -65,11 +65,18 @@ const mapStorageServer: MapStorageServer = {
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
         callback: sendUnaryData<Empty>,
     ): void {
-        const wamUrl = call.request.wamUrl;
-        const url = new URL(wamUrl);
-        const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
-        mapsManager.clearAfterUpload(wamKey);
-        callback(null);
+        try {
+            const wamUrl = call.request.wamUrl;
+            const url = new URL(wamUrl);
+            const wamKey = mapPathUsingUrl(url);
+            mapsManager.clearAfterUpload(wamKey);
+            callback(null);
+        } catch (e: unknown) {
+            const error = asError(e);
+            console.error(`[${new Date().toISOString()}] An error occurred in handleClearAfterUpload`, e);
+            Sentry.captureException(e);
+            callback({ name: "MapStorageError", message: error.message }, null);
+        }
     },
     handleUpdateMapToNewestMessage(
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,
@@ -77,7 +84,7 @@ const mapStorageServer: MapStorageServer = {
     ): void {
         try {
             const mapUrl = new URL(call.request.mapKey);
-            const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
+            const mapKey = mapPathUsingUrl(mapUrl);
             const updateMapToNewestMessage = call.request.updateMapToNewestMessage;
             if (!updateMapToNewestMessage) {
                 callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
@@ -114,7 +121,7 @@ const mapStorageServer: MapStorageServer = {
 
             // The mapKey is the complete URL to the map. Let's map it to our virtual path.
             const mapUrl = new URL(call.request.mapKey);
-            const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
+            const mapKey = mapPathUsingUrl(mapUrl);
 
             await mapsManager.waitForLock(mapKey, async () => {
                 const editMapCommandMessage = call.request.editMapCommandMessage;
