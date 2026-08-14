@@ -3,6 +3,7 @@
     import { onDestroy } from "svelte";
     import { get } from "svelte/store";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import type { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
     import type { CategoryTag, SelectableTag } from "../../../Stores/MapEditorStore";
@@ -29,6 +30,22 @@
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
     const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
     const MOST_USED_CATEGORY_LIMIT = 12;
+
+    // Users who only got the map editor through a zone tag or a personal area may upload their own
+    // custom entities, but must not be able to rename or delete somebody else's: the custom entity
+    // collection is shared by every map of the domain. The server enforces this too.
+    const userCanEditMap = gameManager.getCurrentGameScene().connection?.userCanEdit ?? false;
+    const localUserUuid = localUserStore.getLocalUser()?.uuid;
+
+    function canEditCustomEntity(entityPrefab: EntityPrefab): boolean {
+        if (entityPrefab.type !== "Custom") {
+            return false;
+        }
+        if (userCanEditMap) {
+            return true;
+        }
+        return entityPrefab.ownerId !== undefined && entityPrefab.ownerId === localUserUuid;
+    }
 
     let pickedEntity: EntityPrefab | undefined = $state(undefined);
     let pickedEntityVariant: EntityVariant | undefined = $state(undefined);
@@ -329,7 +346,7 @@
                                 {onPickItem}
                             />
                         </div>
-                        {#if pickedEntity.type === "Custom"}
+                        {#if canEditCustomEntity(pickedEntity)}
                             <Button
                                 variant="secondary"
                                 dataTestId="editEntity"

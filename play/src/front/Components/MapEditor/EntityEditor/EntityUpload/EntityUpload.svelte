@@ -6,6 +6,7 @@
     import type { EntityPrefab } from "@workadventure/map-editor";
     import { Direction, ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
     import LL from "../../../../../i18n/i18n-svelte";
+    import { localUserStore } from "../../../../Connection/LocalUserStore";
     import { mapEditorEntityUploadEventStore, selectCategoryStore } from "../../../../Stores/MapEditorStore";
     import CustomEntityEditionForm from "../CustomEntityEditionForm/CustomEntityEditionForm.svelte";
     import { IconCloudUpload } from "@wa-icons";
@@ -76,6 +77,9 @@
                 collisionGrid: customEditedEntity.collisionGrid,
                 depthOffset: customEditedEntity.depthOffset,
                 color: "",
+                // Lets us edit and delete our own upload without waiting for the round trip to
+                // map-storage, which overwrites this with the authenticated user UUID anyway.
+                ownerId: localUserStore.getLocalUser()?.uuid,
             });
         }
     }
