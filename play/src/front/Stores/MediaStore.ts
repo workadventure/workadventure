@@ -1290,15 +1290,27 @@ export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined
                 devicesNotLoaded.set(false);
             })
             .catch((e) => {
+                // Do not rethrow: this runs in a floating promise chain, so a rethrow would only
+                // surface as an unhandled rejection. Enumerating before any permission is granted
+                // makes this path common enough to matter.
                 console.error(e);
                 devicesNotLoaded.set(false);
-                throw e;
             });
     };
+
+    // Enumerate straight away, without waiting for a successful getUserMedia. Audio *output*
+    // selection needs no permission, so a user who joins with both microphone and camera off (the
+    // default, and unavoidable in a silent zone) would otherwise never get a device list at all.
+    // Labels come back empty until permission is granted; the UI falls back to a generic name.
+    if (navigator.mediaDevices) {
+        queryDeviceList();
+    }
 
     const unsubscribe = localStreamStore.subscribe((streamResult) => {
         if (streamResult && streamResult.type === "success" && streamResult.stream !== undefined) {
             if (deviceListCanBeQueried === false) {
+                // Re-enumerate now that permission was granted: this is the pass that fills in the
+                // device labels.
                 queryDeviceList();
                 deviceListCanBeQueried = true;
             }
@@ -1371,21 +1383,54 @@ export const microphoneButtonHelpContextStore = derived(
     },
 );
 
+/**
+ * Whether this browser lets us pick an audio output device at all.
+ *
+ * Livekit does not support audio output device selection on Safari
+ * Code: https://github.com/livekit/client-sdk-js/blob/dbaf7a9b784114728857a447734bc5d5453345b4/src/room/utils.ts#L144C1-L153C2
+ * And it seems there is no plan to support it. Issue: https://github.com/livekit/components-js/issues/1216
+ * Because the audio output selector should work in full-mesh WebRTC AND in Livekit, we have to support the same
+ * features in both modes. So we disable audio output device selection on Safari here.
+ */
+export const speakerSelectionSupported = !isSafari() && !isIOS();
+
+/**
+ * The audio output devices to choose from.
+ *
+ * `undefined` means "not enumerated yet" and nothing else: an unsupported browser yields an empty
+ * list, not `undefined`. The UI needs to tell those two apart to explain itself instead of
+ * rendering an empty section.
+ */
 export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
     if ($deviceListStore === undefined) {
         return undefined;
     }
 
-    // Livekit does not support audio output device selection on Safari
-    // Code: https://github.com/livekit/client-sdk-js/blob/dbaf7a9b784114728857a447734bc5d5453345b4/src/room/utils.ts#L144C1-L153C2
-    // And it seems there is no plan to support it. Issue: https://github.com/livekit/components-js/issues/1216
-    // Because the audio output selector should work in full-mesh WebRTC AND in Livekit, we have to support the same
-    // features in both modes. So we disable audio output device selection on Safari here.
-    if (isSafari() || isIOS()) {
-        return;
+    if (!speakerSelectionSupported) {
+        return [];
     }
 
     return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audiooutput"));
+});
+
+export const speakerSelectedStore = writable<string | undefined>(localUserStore.getSpeakerDeviceId() ?? undefined);
+
+/**
+ * The output device that was actually applied, as reported by `setSinkId`.
+ *
+ * Mirrors `usedCameraDeviceIdStore` / `usedMicrophoneDeviceIdStore`. It stays `undefined` until
+ * something plays, since nothing routes audio before then; once set, a value differing from
+ * `speakerSelectedStore` means the browser refused the selection and fell back.
+ */
+export const usedSpeakerDeviceIdStore: Writable<string | undefined> = writable();
+
+// A freshly picked device has not been applied to anything yet. Without this reset the previous
+// value would linger and read as a mismatch, so the UI would claim the browser refused a device it
+// never even tried.
+// This is a singleton so no need to unsubscribe
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+speakerSelectedStore.subscribe(() => {
+    usedSpeakerDeviceIdStore.set(undefined);
 });
 
 export const selectDefaultSpeaker = () => {
@@ -1400,7 +1445,7 @@ export const selectDefaultSpeaker = () => {
 // This is a singleton so no need to unsubscribe
 //eslint-disable-next-line svelte/no-ignored-unsubscribe
 speakerListStore.subscribe((devices) => {
-    if (devices === undefined) {
+    if (devices === undefined || !speakerSelectionSupported) {
         return;
     }
     // if the previous speaker used isn`t defined in the list, apply default speaker
@@ -1410,8 +1455,6 @@ speakerListStore.subscribe((devices) => {
         selectDefaultSpeaker();
     }
 });
-
-export const speakerSelectedStore = writable<string | undefined>(localUserStore.getSpeakerDeviceId() ?? undefined);
 
 let previousMediaDevices: MediaDeviceInfo[] | undefined = undefined;
 

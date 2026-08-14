@@ -55,6 +55,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         test: "오디오 출력 테스트",
+        unnamedDevice: "오디오 출력 {index}",
+        loading: "오디오 출력을 찾는 중…",
+        unsupported:
+            "이 브라우저에서는 오디오 출력을 선택할 수 없습니다. 시스템 설정에서 선택한 장치로 소리가 재생됩니다.",
+        fallbackInUse: "브라우저가 이 장치를 거부했습니다. 시스템 기본 장치로 소리가 재생됩니다.",
         disabled: "스피커가 비활성화되어 있습니다",
         activate: "스피커 활성화",
         noDevices: "사용 가능한 스피커 장치를 찾을 수 없습니다",

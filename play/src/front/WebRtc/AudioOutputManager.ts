@@ -2,6 +2,7 @@ import Debug from "debug";
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
 import { bubbleSoundStore } from "../Stores/AudioManagerStore";
+import { usedSpeakerDeviceIdStore } from "../Stores/MediaStore";
 
 const debug = Debug("AudioOutput");
 
@@ -38,12 +39,14 @@ export async function applySinkId(el: HTMLMediaElement, deviceId: string | undef
         return false;
     }
     if (el.sinkId === deviceId) {
+        usedSpeakerDeviceIdStore.set(deviceId);
         return true;
     }
 
     try {
         await el.setSinkId(deviceId);
         debug("Audio output set to %s", deviceId);
+        usedSpeakerDeviceIdStore.set(deviceId);
         return true;
     } catch (e) {
         Sentry.captureException(e);
@@ -53,6 +56,7 @@ export async function applySinkId(el: HTMLMediaElement, deviceId: string | undef
             console.warn("Error setting the audio output device. We fallback to default.", e);
             try {
                 await el.setSinkId("");
+                usedSpeakerDeviceIdStore.set("");
             } catch (fallbackError) {
                 console.error("Error resetting the audio output device: ", fallbackError);
             }

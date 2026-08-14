@@ -59,6 +59,12 @@ const actionbar: BaseTranslation = {
     },
     speaker: {
         test: "Testar a saída de áudio",
+        unnamedDevice: "Saída de áudio {index}",
+        loading: "Procurando saídas de áudio…",
+        unsupported:
+            "Este navegador não permite escolher a saída de áudio. O som é reproduzido no dispositivo selecionado nas configurações do sistema.",
+        fallbackInUse:
+            "Seu navegador recusou este dispositivo. O som está sendo reproduzido no dispositivo padrão do sistema.",
         disabled: "Seu alto-falante está desabilitado",
         activate: "Ativar seu alto-falante",
         noDevices: "Nenhum dispositivo de alto-falante encontrado",

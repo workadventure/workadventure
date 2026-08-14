@@ -53,6 +53,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         test: "測試音訊輸出",
+        unnamedDevice: "音訊輸出 {index}",
+        loading: "正在尋找音訊輸出…",
+        unsupported: "此瀏覽器不支援選擇音訊輸出。聲音會透過系統設定中選取的裝置播放。",
+        fallbackInUse: "瀏覽器拒絕了該裝置。聲音正透過系統預設裝置播放。",
         disabled: "您的喇叭已停用",
         activate: "啟用您的喇叭",
         noDevices: "找不到喇叭裝置",
