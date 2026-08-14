@@ -2,8 +2,10 @@ import Debug from "debug";
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
 import type { Unsubscriber } from "svelte/store";
-import { bubbleSoundStore } from "../Stores/AudioManagerStore";
-import { speakerSelectedStore, usedSpeakerDeviceIdStore } from "../Stores/MediaStore";
+import { localUserStore } from "../Connection/LocalUserStore";
+// Imported from the leaf store module, not MediaStore: this module is reached from
+// AudioContextManager, which MediaStore pulls in through SoundMeter.
+import { speakerSelectedStore, usedSpeakerDeviceIdStore } from "../Stores/AudioOutputStore";
 
 const debug = Debug("AudioOutput");
 
@@ -193,7 +195,9 @@ async function runTestSound(deviceId: string | undefined): Promise<void> {
     }
     const el = testAudioElement;
 
-    const url = getBubbleSoundUrl(get(bubbleSoundStore));
+    // Read from local storage rather than bubbleSoundStore: that store lives in AudioManagerStore,
+    // which is not a leaf, and both are always written together.
+    const url = getBubbleSoundUrl(localUserStore.getBubbleSound());
     if (testAudioElementUrl !== url) {
         testAudioElementUrl = url;
         el.src = url;

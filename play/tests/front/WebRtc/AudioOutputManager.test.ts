@@ -6,7 +6,9 @@ import {
     bindAudioOutput,
     getBubbleSoundUrl,
 } from "../../../src/front/WebRtc/AudioOutputManager";
-import { speakerSelectedStore, usedSpeakerDeviceIdStore } from "../../../src/front/Stores/MediaStore";
+// Imported from the leaf store module, like the manager itself: pulling in MediaStore here would
+// drag along the whole media graph for no reason.
+import { speakerSelectedStore, usedSpeakerDeviceIdStore } from "../../../src/front/Stores/AudioOutputStore";
 
 /**
  * jsdom implements neither setSinkId nor play(), so each test builds the element behaviour it needs.
@@ -192,7 +194,7 @@ describe("playTestSound", () => {
     /** Every URL assigned to the element, to detect a reload on every click. */
     let assignedSources: string[];
     let playTestSound: (deviceId: string | undefined) => Promise<void>;
-    let bubbleSoundStore: { set: (value: "ding" | "wobble") => void };
+    let localUserStore: { setBubbleSound: (value: "ding" | "wobble") => void };
 
     beforeEach(async () => {
         calls = [];
@@ -239,7 +241,7 @@ describe("playTestSound", () => {
         // to get a fresh one instead of leaking sink state across cases.
         vi.resetModules();
         ({ playTestSound } = await import("../../../src/front/WebRtc/AudioOutputManager"));
-        ({ bubbleSoundStore } = await import("../../../src/front/Stores/AudioManagerStore"));
+        ({ localUserStore } = await import("../../../src/front/Connection/LocalUserStore"));
     });
 
     it("sets the sink before starting playback", async () => {
@@ -250,7 +252,7 @@ describe("playTestSound", () => {
     });
 
     it("plays the bubble sound the user configured", async () => {
-        bubbleSoundStore.set("wobble");
+        localUserStore.setBubbleSound("wobble");
 
         await playTestSound("device-1");
 
