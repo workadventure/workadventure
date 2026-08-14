@@ -95,6 +95,7 @@ export class EntitiesCollectionsManager {
                                 color: entity.color,
                                 collisionGrid: entity.collisionGrid,
                                 type: entity.type,
+                                ownerId: entity.ownerId,
                             });
                             entity.tags.forEach((tag: string) => tagSet.add(tag));
                         });
