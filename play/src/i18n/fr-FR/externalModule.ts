@@ -90,6 +90,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupCancel: "Annuler",
         isSyncronized: "Synchronisé avec Google",
         popupScopeToSyncMeet: "Créer des réunions en ligne",
+        popupScopeToSyncMeetHelp: "Nécessaire pour créer des réunions dans les zones Google Meet.",
         openingMeet: "Ouverture de Google Meet... 🙏",
         unableJoinMeet: "Impossible de rejoindre Google Meet 😭",
         googleMeetPopupWaiting: {
@@ -101,6 +102,10 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             error: "Les paramètres de votre Google Workspace ne vous permettent pas de créer un Meet.",
             errorExplain:
                 "Pas d'inquiétude, vous pouvez toujours rejoindre une réunion lorsque quelqu'un partage un lien 🙏",
+            missingScope: "Aucune réunion n’a été créée : votre compte Google n’autorise pas la création de réunions.",
+            missingScopeExplain:
+                "Attendez qu’un participant la crée, ou reconnectez-vous en autorisant la création de réunions.",
+            reconnect: "Reconnecter Google",
         },
         popupScopeIsConnectedButton: "Se déconnecter",
         popupScopeIsConnectedExplainText:

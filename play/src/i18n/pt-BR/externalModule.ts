@@ -86,6 +86,7 @@ const externalModule: BaseTranslation = {
         popupCancel: "Cancelar",
         isSyncronized: "Sincronizado com Google",
         popupScopeToSyncMeet: "Criar reuniões online",
+        popupScopeToSyncMeetHelp: "Required to create meetings in Google Meet areas.",
         openingMeet: "Abrindo Google Meet... 🙏",
         unableJoinMeet: "Não foi possível entrar no Google Meet 😭",
         googleMeetPopupWaiting: {
@@ -97,6 +98,9 @@ const externalModule: BaseTranslation = {
             error: "As configurações do seu Google Workspace não permitem criar um Meet.",
             errorExplain:
                 "Não se preocupe, você ainda pode participar de reuniões quando alguém compartilhar um link 🙏",
+            missingScope: "No meeting was created: your Google account has not granted meeting creation.",
+            missingScopeExplain: "Wait for a participant who can create it, or reconnect and allow meeting creation.",
+            reconnect: "Reconnect Google",
         },
         popupScopeIsConnectedButton: "Sair",
         popupScopeIsConnectedExplainText: "Você já está conectado, clique no botão para fazer logout e reconectar.",
