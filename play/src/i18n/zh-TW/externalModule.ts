@@ -17,6 +17,19 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             "Teams 是一款 Microsoft 365 應用程式，可協助您的團隊保持聯繫並井然有序。您可以在一個地方聊天、開會、通話和協作 😍",
         buttonSync: "同步 Teams 🚀",
         buttonConnect: "連線 Teams 🚀",
+        meetingPopupWaiting: {
+            title: "Teams Microsoft Meetings 🎉",
+            subtitle: "The Teams Meeting is not created yet... is in progress 💪",
+            guestExplain:
+                "Please connect to the platform to create a Teams Online Meeting or ask the owner to create it for you 🚀",
+            guestError: "You are not connected and cannot create Teams Online Meeting 😭",
+            missingScope: "No meeting was created: your Microsoft account is not allowed to create meetings.",
+            missingScopeExplain:
+                "Wait for a participant who can create it, or reconnect — if your administrator has just enabled it, reconnecting is enough.",
+            error: "The Teams meeting could not be created.",
+            errorExplain: "No worries, you can still join meetings when someone else creates one 🙏",
+            reconnect: "Reconnect Teams",
+        },
     },
     discord: {
         integration: "整合",
