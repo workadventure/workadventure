@@ -282,6 +282,11 @@ export const EntityRawPrefab = z.object({
     color: z.string(),
     collisionGrid: CollisionGrid.optional(),
     depthOffset: z.number().optional(),
+    // UUID of the user who uploaded this custom entity. Stamped by map-storage from the
+    // authenticated user UUID, never from the client. Undefined on the built-in ("Default")
+    // collections and on custom entities uploaded before this field existed: those can only be
+    // modified or deleted by a user with map edit rights.
+    ownerId: z.string().optional(),
 });
 
 export const EntityPrefabType = z.union([z.literal("Default"), z.literal("Custom")]);
