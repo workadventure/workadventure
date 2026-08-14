@@ -35,7 +35,9 @@ export function decodeStoragePath(pathname: string): string {
                 // is then already the literal storage key, so keep it untouched.
                 return segment;
             }
-            if (decoded === ".." || decoded.includes("/")) {
+            // A backslash is a separator for path.normalize() on Windows, so an encoded one would
+            // otherwise let a segment normalize its way out of the domain directory.
+            if (decoded === ".." || decoded.includes("/") || decoded.includes("\\")) {
                 throw new Error("Invalid path provided");
             }
             return decoded;
