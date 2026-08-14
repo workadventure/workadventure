@@ -17,6 +17,20 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             "Teams est une application Microsoft 365 qui aide votre équipe à rester connectée et organisée. Vous pouvez discuter, rencontrer, appeler et collaborer au même endroit 😍",
         buttonSync: "Synchroniser Teams 🚀",
         buttonConnect: "Ouvrir Teams 🚀",
+        meetingPopupWaiting: {
+            title: "Teams Microsoft Meetings 🎉",
+            subtitle: "La réunion Teams n’est pas encore créée… c’est en cours 💪",
+            guestExplain:
+                "Veuillez vous connecter à la plateforme pour créer une réunion Teams, ou demandez au propriétaire d’en créer une pour vous 🚀",
+            guestError: "Vous n’êtes pas connecté, vous ne pouvez donc pas créer de réunion Teams 😭",
+            missingScope:
+                "Aucune réunion n’a été créée : votre compte Microsoft n’est pas autorisé à créer des réunions.",
+            missingScopeExplain:
+                "Attendez qu’un participant la crée, ou reconnectez-vous — si votre administrateur vient de l’activer, une reconnexion suffit.",
+            error: "La réunion Teams n’a pas pu être créée.",
+            errorExplain: "Pas d’inquiétude, vous pouvez toujours rejoindre une réunion créée par quelqu’un d’autre 🙏",
+            reconnect: "Reconnecter Teams",
+        },
     },
     discord: {
         integration: "INTÉGRATION",
