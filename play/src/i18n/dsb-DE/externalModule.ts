@@ -74,6 +74,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupCancel: "Pśetergnuś",
         isSyncronized: "Z Google synchronizěrowany",
         popupScopeToSyncMeet: "Online-ześělenja napóraś",
+        popupScopeToSyncMeetHelp: "Required to create meetings in Google Meet areas.",
         openingMeet: "Google Meet se wótwórijo... 🙏",
         unableJoinMeet: "Njamóžośo k Google Meet pśiźoś 😭",
         googleMeetPopupWaiting: {
@@ -84,6 +85,9 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
                 "Pšosym pśizjawśo se na platformje, aby Google Meet napórał, abo pšosćo wóbsebnika, aby za was jaden napórał 🚀",
             error: "Nastajenja wašogo Google Workspace njedowóluju wam Meet napóraś.",
             errorExplain: "Žedne starosći, móžośo wósebnje na ześělenja pśiźoś, gaž něchten drugi wótkaz źěli 🙏",
+            missingScope: "No meeting was created: your Google account has not granted meeting creation.",
+            missingScopeExplain: "Wait for a participant who can create it, or reconnect and allow meeting creation.",
+            reconnect: "Reconnect Google",
         },
         popupScopeIsConnectedButton: "Wótzjawiś",
         popupScopeIsConnectedExplainText: "Sćo južo zwězany, klikniśo na tłocašk, aby se wótzjawił a znowego zwězał.",

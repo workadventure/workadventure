@@ -75,6 +75,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupCancel: "Annuleren",
         isSyncronized: "Gesynchroniseerd met Google",
         popupScopeToSyncMeet: "Online vergaderingen maken",
+        popupScopeToSyncMeetHelp: "Required to create meetings in Google Meet areas.",
         openingMeet: "Google Meet openen... 🙏",
         unableJoinMeet: "Kan niet deelnemen aan Google Meet 😭",
         googleMeetPopupWaiting: {
@@ -86,6 +87,9 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             error: "Uw Google Workspace-instellingen staan het maken van een Meet niet toe.",
             errorExplain:
                 "Geen zorgen, u kunt nog steeds deelnemen aan vergaderingen wanneer iemand anders een link deelt 🙏",
+            missingScope: "No meeting was created: your Google account has not granted meeting creation.",
+            missingScopeExplain: "Wait for a participant who can create it, or reconnect and allow meeting creation.",
+            reconnect: "Reconnect Google",
         },
         popupScopeIsConnectedButton: "Uitloggen",
         popupScopeIsConnectedExplainText:
