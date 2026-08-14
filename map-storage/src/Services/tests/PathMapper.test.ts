@@ -41,6 +41,9 @@ describe("decodeStoragePath", () => {
 
     it("rejects a segment that decodes to a path separator", () => {
         expect(() => decodeStoragePath("/foo%2Fbar/my-map.wam")).toThrow("Invalid path provided");
+        // path.normalize() treats a backslash as a separator on Windows.
+        expect(() => decodeStoragePath("/foo%5Cbar/my-map.wam")).toThrow("Invalid path provided");
+        expect(() => decodeStoragePath("/%2E%2E%5Cother/my-map.wam")).toThrow("Invalid path provided");
     });
 
     it("rejects directory traversal, encoded or not", () => {

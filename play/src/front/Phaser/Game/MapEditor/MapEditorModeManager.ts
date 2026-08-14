@@ -343,7 +343,9 @@ export class MapEditorModeManager {
                         // The server refused the command, so the optimistic local state is now wrong.
                         // Roll back every pending command: the ones the server did accept come back
                         // through this same stream and are re-applied as remote commands.
-                        Sentry.captureException(new Error(`Map edition command rejected by the server: ${reason}`));
+                        // Nothing is reported here: map-storage already logged the cause with its
+                        // original stack, and a refusal is also the expected answer to a command the
+                        // user was not allowed to run.
                         await this.revertPendingCommands();
                         warningMessageStore.addWarningMessage(get(LL).mapEditor.map.editionFailed());
                     }
