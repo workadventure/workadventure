@@ -57,6 +57,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localMicrophoneTrack: LocalAudioTrack | undefined;
     private screenShareUpdateQueue: Promise<void> = Promise.resolve();
     private mediaTrackUpdateQueue: Promise<void> = Promise.resolve();
+    private audioOutputUpdateQueue: Promise<void> = Promise.resolve();
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
     private unregisterAudioPlaybackRetry: Unsubscriber | undefined;
@@ -191,6 +192,24 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         const width = settings.width || 1280;
         const height = settings.height || 720;
         return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare));
+    }
+
+    /**
+     * Serialized like the track updates below. The selection can emit twice in a row — the fallback
+     * to a default speaker followed by the restore of the persisted preference on the next
+     * `devicechange` — and two overlapping `switchActiveDevice` calls can settle out of order,
+     * leaving the room on the device the user did not pick.
+     *
+     * An empty string is a meaningful value here: it means "system default".
+     */
+    private queueAudioOutputUpdate(deviceId: string): void {
+        this.audioOutputUpdateQueue = this.audioOutputUpdateQueue
+            .then(() => this.room?.switchActiveDevice("audiooutput", deviceId))
+            .then(() => undefined)
+            .catch((err) => {
+                console.error("An error occurred while switching active device", err);
+                Sentry.captureException(err);
+            });
     }
 
     private queueCameraTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
@@ -333,12 +352,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         this.unsubscribers.push(
             this.speakerDeviceIdStore.subscribe((deviceId) => {
-                if (!deviceId) return;
+                if (deviceId === undefined) return;
 
-                this.room?.switchActiveDevice("audiooutput", deviceId).catch((err) => {
-                    console.error("An error occurred while switching active device", err);
-                    Sentry.captureException(err);
-                });
+                this.queueAudioOutputUpdate(deviceId);
             }),
         );
 

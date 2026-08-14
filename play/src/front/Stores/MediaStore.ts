@@ -1409,17 +1409,24 @@ export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
 
 export const selectDefaultSpeaker = () => {
     const devices = get(speakerListStore);
-    if (devices !== undefined && devices.length > 0) {
-        speakerSelectedStore.set(devices[0].deviceId);
-    } else {
-        speakerSelectedStore.set("");
-    }
+    const deviceId = devices !== undefined && devices.length > 0 ? devices[0].deviceId : "";
+    // Persist the fallback too. Otherwise the subscriber below restores the previous preference on
+    // the next devicechange, and a device that always fails setSinkId gets re-applied in a loop:
+    // apply, fail, fall back, restore, apply again.
+    localUserStore.setSpeakerDeviceId(deviceId);
+    speakerSelectedStore.set(deviceId);
 };
 
 // This is a singleton so no need to unsubscribe
 //eslint-disable-next-line svelte/no-ignored-unsubscribe
 speakerListStore.subscribe((devices) => {
     if (devices === undefined || !speakerSelectionSupported) {
+        return;
+    }
+    // An empty list is "we cannot see the outputs yet", not "the chosen device is gone": browsers
+    // report no audio output before permission is granted. Falling back here would persist an empty
+    // selection and destroy a perfectly valid stored preference before it ever got a chance.
+    if (devices.length === 0) {
         return;
     }
     // if the previous speaker used isn`t defined in the list, apply default speaker
@@ -1515,29 +1522,6 @@ localStreamStore.subscribe((streamResult) => {
         }
     }
 });
-
-// When the stream is initialized, the new sound constraint is recreated and the first speaker is set.
-// If the user did not select the new speaker, the first new speaker cannot be selected automatically.
-// It is ok to not unsubscribe to this store because it is a singleton.
-// // eslint-disable-next-line svelte/no-ignored-unsubscribe
-/*speakerSelectedStore.subscribe((speaker) => {
-    const oldValue = localUserStore.getSpeakerDeviceId();
-    const currentValue = speaker;
-    const speakerList = get(speakerListStore);
-    const oldDevice =
-        oldValue && speakerList
-            ? speakerList.find((mediaDeviceInfo) => mediaDeviceInfo.deviceId == oldValue)
-            : undefined;
-    if (
-        oldDevice !== undefined &&
-        speakerList !== undefined &&
-        currentValue !== oldDevice.deviceId &&
-        speakerList.find((value) => value.deviceId == oldValue)
-    ) {
-        console.warn("speakerSelectedStore.subscribe", oldValue, currentValue, oldDevice.deviceId);
-        speakerSelectedStore.set(oldDevice.deviceId);
-    }
-});*/
 
 function createVideoQualityStore() {
     const { subscribe, set } = writable<VideoQualitySetting>(localUserStore.getVideoQuality());
