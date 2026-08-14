@@ -48,14 +48,18 @@ export class CustomEntityCollectionService {
         return;
     }
 
+    public async getEntity(id: string): Promise<EntityRawPrefab | undefined> {
+        const customEntityCollection = await this.getCollection();
+        return customEntityCollection.collection.find((entity) => entity.id === id);
+    }
+
     public async modifyEntity(modifyCustomEntityMessage: ModifyCustomEntityMessage) {
         const { id, name, tags, depthOffset } = modifyCustomEntityMessage;
         let collisionGrid = undefined;
         if (modifyCustomEntityMessage.collisionGrid) {
             collisionGrid = CollisionGrid.parse(modifyCustomEntityMessage.collisionGrid);
         }
-        const customEntityCollectionFileContent = await this.readOrCreateEntitiesCollectionFile();
-        const customEntityCollection = EntityCollectionRaw.parse(JSON.parse(customEntityCollectionFileContent));
+        const customEntityCollection = await this.getCollection();
         const indexOfEntityToModify = customEntityCollection.collection.findIndex((entity) => entity.id === id);
         if (indexOfEntityToModify !== -1) {
             const entityToModify = customEntityCollection.collection[indexOfEntityToModify];
@@ -77,8 +81,7 @@ export class CustomEntityCollectionService {
 
     public async deleteEntity(deleteCustomEntityMessage: DeleteCustomEntityMessage) {
         const { id } = deleteCustomEntityMessage;
-        const customEntityCollectionFileContent = await this.readOrCreateEntitiesCollectionFile();
-        const customEntityCollection = EntityCollectionRaw.parse(JSON.parse(customEntityCollectionFileContent));
+        const customEntityCollection = await this.getCollection();
         const customEntityToDelete = customEntityCollection.collection.find((entity) => entity.id === id);
         customEntityCollection.collection = customEntityCollection.collection.filter(
             (customEntity) => customEntity.id !== id,
@@ -110,18 +113,24 @@ export class CustomEntityCollectionService {
         return fileSystem.readFileAsString(entityCollectionFileVirtualPath);
     }
 
+    private async getCollection(): Promise<EntityCollectionRaw> {
+        return EntityCollectionRaw.parse(JSON.parse(await this.readOrCreateEntitiesCollectionFile()));
+    }
+
     private mapEntityFromUploadEntityMessageToEntityRawPrefab(
         uploadEntityMessage: UploadEntityMessage,
     ): EntityRawPrefab {
         return EntityRawPrefab.parse({
             ...uploadEntityMessage,
             direction: mapCustomEntityDirectionToDirection(uploadEntityMessage.direction),
+            // MapStorageServer overwrites ownerId with the authenticated user UUID before we get
+            // here, so this is the server-side value and never what the client sent.
+            ownerId: uploadEntityMessage.ownerId,
         });
     }
 
     private async addEntityInEntityCollectionFile(entityToAddInCollection: EntityRawPrefab) {
-        const customEntityCollectionFileContent = await this.readOrCreateEntitiesCollectionFile();
-        const customEntityCollection = EntityCollectionRaw.parse(JSON.parse(customEntityCollectionFileContent));
+        const customEntityCollection = await this.getCollection();
         customEntityCollection.collection.push(entityToAddInCollection);
         this.lock = this.lock.then(async () => {
             await fileSystem.writeStringAsFile(
