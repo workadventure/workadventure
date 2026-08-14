@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import type { Writable } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
@@ -42,3 +42,37 @@ export const usedSpeakerDeviceIdStore: Writable<string | undefined> = writable()
 speakerSelectedStore.subscribe(() => {
     usedSpeakerDeviceIdStore.set(undefined);
 });
+
+/**
+ * Selects the first available output, or the system default when there is none.
+ *
+ * The choice is persisted: the device list subscriber restores the stored preference on every
+ * enumeration, so a fallback that only touched the store would be undone on the next
+ * `devicechange` and re-applied endlessly against a device that keeps failing.
+ */
+export function applyDefaultSpeaker(devices: MediaDeviceInfo[] | undefined): void {
+    const deviceId = devices !== undefined && devices.length > 0 ? devices[0].deviceId : "";
+    localUserStore.setSpeakerDeviceId(deviceId);
+    speakerSelectedStore.set(deviceId);
+}
+
+/**
+ * Keeps the selection pointing at a device that actually exists, called on every enumeration.
+ */
+export function reconcileSpeakerSelection(devices: MediaDeviceInfo[] | undefined): void {
+    if (devices === undefined || !speakerSelectionSupported) {
+        return;
+    }
+    // An empty list is "we cannot see the outputs yet", not "the chosen device is gone": browsers
+    // report no audio output before permission is granted. Falling back here would persist an empty
+    // selection and destroy a perfectly valid stored preference before it ever got a chance.
+    if (devices.length === 0) {
+        return;
+    }
+
+    const selected = get(speakerSelectedStore);
+    if (devices.some((device) => device.deviceId === selected)) {
+        return;
+    }
+    applyDefaultSpeaker(devices);
+}
