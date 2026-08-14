@@ -38,7 +38,7 @@
 
     <div class="flex items-center justify-center w-full">
         <div class="flex flex-wrap items-center justify-center w-full">
-            {#each deviceList as speaker, index (index)}
+            {#each deviceList as speaker, index (speaker.deviceId)}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
