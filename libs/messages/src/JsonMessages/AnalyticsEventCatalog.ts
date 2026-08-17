@@ -33,26 +33,23 @@ export const MAX_TIMESTAMP_MS = 8.64e15;
  * world that opted out of user-level activity. Mirrors `disconnectReason`.
  */
 export const TIMED_EVENT_END_REASONS = [
-  // ---- Stated by the client ----
-  /** The client closed the interval normally. */
+  /**
+   * The one thing a client may say: it closed the interval. Why it closed is not
+   * recorded, because every value the client used to send restated something the
+   * event already carried — the name said `area.dwell`, so `left_area` added
+   * nothing.
+   *
+   * Where a reason did carry information, that information moved to where it
+   * belongs. A conversation that splits because its type changed used to report
+   * `type_changed` on the closing row, leaving consumers to correlate the halves on
+   * time; the *next* conversation now declares `continuesFrom`, which is the actual
+   * link rather than a hint that one exists.
+   */
   "closed_by_client",
-  /**
-   * Not "why the client stopped" but "this row is half a conversation": the
-   * conversation's type changed, so a bubble that became a meeting reports two
-   * intervals under two ids that have to be stitched on time. Collapsing this into
-   * closed_by_client would make every meeting-from-a-bubble count as two
-   * conversations, which is a data-correctness loss rather than a simplification.
-   */
-  "type_changed",
-  /**
-   * A re-open replaced a handle that was still live, i.e. the matching leave never
-   * arrived. Kept distinct because these are exactly the intervals whose *start* is
-   * not trustworthy: merging them into closed_by_client would make a walk-through
-   * that lost its leave indistinguishable from a clean one, and those inflate
-   * durations.
-   */
-  "superseded",
   // ---- Forced by the pusher, when the client never got to say anything ----
+  // These are not client-side reasons and do not collapse: they are the pusher
+  // recording that nobody closed the interval, which is a different fact from a
+  // clean close and the only way to tell a crash from a departure.
   "socket_closed",
   "join_failed",
   "pusher_shutdown",
@@ -60,10 +57,10 @@ export const TIMED_EVENT_END_REASONS = [
 ] as const;
 export type TimedEventEndReason = (typeof TIMED_EVENT_END_REASONS)[number];
 
-/** The subset a client may state; the rest are the pusher's to decide. */
+/** All a client may state; the rest are the pusher's to decide. */
 export type ClientTimedEventEndReason = Extract<
   TimedEventEndReason,
-  "closed_by_client" | "type_changed" | "superseded"
+  "closed_by_client"
 >;
 
 /**
@@ -87,7 +84,11 @@ export const LEGACY_TIMED_EVENT_END_REASONS: Record<
   left_area: "closed_by_client",
   status_changed: "closed_by_client",
   cleanup: "closed_by_client",
-  other: "superseded",
+  other: "closed_by_client",
+  // Both were briefly client-statable before the client stopped stating reasons.
+  // A tab from that window still sends them.
+  type_changed: "closed_by_client",
+  superseded: "closed_by_client",
 };
 
 /**
@@ -278,6 +279,12 @@ const conversationContextProperties = z.object({
     .enum(["livekit", "jitsi", "webrtc"])
     .optional()
     .describe("Media backend in use; absent for a remote conversation."),
+  continuesFrom: z
+    .string()
+    .optional()
+    .describe(
+      "The conversationId this one continues, when a single uninterrupted conversation changed type — a bubble that became a meeting reports two intervals under two ids. Absent on a conversation that started fresh. Follow this to reassemble the whole thing; without it two halves look like two conversations.",
+    ),
 });
 
 /** The eight `settings.*.changed` events that report a single new value. */

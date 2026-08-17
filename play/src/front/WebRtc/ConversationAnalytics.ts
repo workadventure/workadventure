@@ -1,5 +1,5 @@
 import type { Readable, Unsubscriber } from "svelte/store";
-import type { AnalyticsEventReportMessage, ClientTimedEventEndReason } from "@workadventure/messages";
+import type { AnalyticsEventReportMessage } from "@workadventure/messages";
 import { v4 as uuidv4 } from "uuid";
 import { hasCapability } from "../Connection/Capabilities";
 import type { TimedAnalyticsEventHandle } from "../Administration/TimedAnalyticsEvent";
@@ -90,6 +90,7 @@ export function subscribeToConversationAnalytics(
     };
     const startConversation = (
         nextConversationType = conversationTypeFromState(inMeeting, conversationGroupId),
+        continuesFrom?: string,
     ): void => {
         conversationType = nextConversationType;
         conversationId = conversationIdFromState(conversationType, conversationGroupId) ?? uuidv4();
@@ -101,23 +102,24 @@ export function subscribeToConversationAnalytics(
                 meetingSessionId: conversationType === "meeting" ? conversationId : undefined,
                 conversationType,
                 meetingProvider: meetingProviderFromConversationType(conversationType, meetingProvider),
+                continuesFrom,
             },
             sendReport,
         );
     };
-    const endConversation = (endReason?: ClientTimedEventEndReason): void => {
+    const endConversation = (): void => {
         // Asking to close is all the front does: the pusher times the interval on its
         // own clock and emits the single row. If this never runs — tab closed, network
         // dropped — the pusher closes it from the socket lifecycle instead.
-        openConversation?.close(endReason);
+        openConversation?.close();
         openConversation = undefined;
         conversationId = undefined;
     };
-    // Changing type mid-conversation is reported as ended("type_changed") followed
-    // by a fresh started, so a single uninterrupted conversation from the user's
-    // point of view can span several conversationIds (e.g. a bubble that turns
-    // into a meeting). Consumers must stitch those on time rather than assume one
-    // id per conversation.
+    // A conversation that changes type is reported as two intervals under two ids,
+    // so one uninterrupted conversation from the user's point of view (a bubble that
+    // turns into a meeting) spans several conversationIds. The second one carries
+    // `continuesFrom`, which is the link itself — consumers follow it instead of
+    // correlating the halves on time, and no reason has to travel on the close.
     const transitionConversationType = (nextConversationType: ConversationType): void => {
         if (!inConversation) {
             conversationType = nextConversationType;
@@ -130,8 +132,9 @@ export function subscribeToConversationAnalytics(
             return;
         }
 
-        endConversation("type_changed");
-        startConversation(nextConversationType);
+        const previousConversationId = conversationId;
+        endConversation();
+        startConversation(nextConversationType, previousConversationId);
     };
     // Order matters. Svelte fires a subscriber immediately with the current value,
     // so the stores describing *what kind* of conversation this is must be read
@@ -187,7 +190,7 @@ export function subscribeToConversationAnalytics(
             startConversation();
             return;
         } else if (!value && inConversation) {
-            endConversation("closed_by_client");
+            endConversation();
         }
         inConversation = value;
     });
@@ -198,7 +201,7 @@ export function subscribeToConversationAnalytics(
         // this last conversation.ended reaches the pusher — send() silently drops
         // frames once the socket is manually closed. Remote or abnormal closes never
         // run this at all; AnalyticsPresenceTracker covers those server-side.
-        endConversation("closed_by_client");
+        endConversation();
         unsubscribe();
         unsubscribeGroupId?.();
         unsubscribeMeeting?.();

@@ -294,7 +294,11 @@ class AnalyticsClient {
             return;
         }
 
-        this.openScreenShares.get(screenShareSessionId)?.close("superseded");
+        // A live handle here means the matching stop never arrived, so this
+        // interval's END is the arrival of the next one rather than a real stop.
+        // The client no longer states why it closed, so that is not distinguishable
+        // downstream — see the note on TIMED_EVENT_END_REASONS.
+        this.openScreenShares.get(screenShareSessionId)?.close();
         this.openScreenShares.set(
             screenShareSessionId,
             openTimedAnalyticsEvent(
@@ -603,7 +607,7 @@ class AnalyticsClient {
         // overwriting would leave an interval nothing could ever close, and the
         // pusher would only close it when the socket died — dating a walk-through
         // to the end of the session.
-        this.openAreas.get(id)?.close("superseded");
+        this.openAreas.get(id)?.close();
         this.openAreas.set(
             id,
             openTimedAnalyticsEvent("area.dwell", { areaId: id, areaName: name }, this.sendTimedEventReport),
