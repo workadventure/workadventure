@@ -191,10 +191,15 @@ message AnalyticsEventMessage {
   string source = 2;
   uint64 clientEventTimeMs = 3;
   string eventId = 4;
-  // A flat bag of key/value pairs describing this one event. The pusher only requires that it be an
-  // object (AnalyticsEventSchema.isAnalyticsEventInput). The per-event shapes are catalogued in
-  // AnalyticsEventCatalog, which documents them but deliberately does not gate them: an event family
-  // has to be able to ship before the admin knows about it.
+  // A flat bag of key/value pairs describing this one event. Its shape is declared per event in
+  // AnalyticsEventCatalog (@workadventure/messages), which the pusher enforces: an event name it
+  // does not carry is dropped, and so is a payload missing a field the entry requires. The payload
+  // stays passthrough, so a newer front may add fields to a known event without a lockstep deploy —
+  // only the event NAME is closed.
+  //
+  // Note this is deliberately NOT how high-frequency samples travel: VideoQualityReportMessage keeps
+  // its own strongly-typed shape rather than paying Value's per-sample field names and untyped
+  // numbers, and being pusher-synthesized is what lets the admin trust its source.
   google.protobuf.Value properties = 5;
 }
 
