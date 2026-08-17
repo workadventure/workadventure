@@ -27,6 +27,7 @@ import type { ITiledPlace } from "../GameMapPropertiesListener";
 import type { GameScene } from "../GameScene";
 import { EntitiesManager } from "./EntitiesManager";
 import { AreasManager } from "./AreasManager";
+import { getTileLayerStats, isWorthRenderingOnGpu } from "./TilemapGpuLayerEligibility";
 
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import TilemapGPULayer = Phaser.Tilemaps.TilemapGPULayer;
@@ -39,7 +40,6 @@ type TileAnimationData = {
     animation?: Array<{ duration?: number }>;
 };
 
-const TILED_TILE_FLIP_FLAGS = 0xe0000000;
 const TILE_ANIMATION_REFRESH_FALLBACK_MS = 100;
 
 export type DynamicArea = {
@@ -253,13 +253,13 @@ export class GameMapFrontWrapper {
             return undefined;
         }
 
-        const tileIndices = this.getLayerTileIndices(layer);
-        if (!tileIndices) {
+        const layerStats = getTileLayerStats(layer.data);
+        if (!layerStats || !isWorthRenderingOnGpu(layerStats)) {
             return undefined;
         }
 
         let layerTileset: Tileset | undefined;
-        for (const tileIndex of tileIndices) {
+        for (const tileIndex of layerStats.tileIndices) {
             const tileset = terrains.find((terrain) => terrain.containsTileIndex(tileIndex));
             if (!tileset) {
                 return undefined;
@@ -274,24 +274,6 @@ export class GameMapFrontWrapper {
         }
 
         return layerTileset;
-    }
-
-    private getLayerTileIndices(layer: ITiledMapTileLayer): Set<number> | undefined {
-        if (!Array.isArray(layer.data)) {
-            return undefined;
-        }
-
-        const tileIndices = new Set<number>();
-        for (const tileId of layer.data) {
-            if (typeof tileId !== "number") {
-                return undefined;
-            }
-            const tileIndex = tileId & ~TILED_TILE_FLIP_FLAGS;
-            if (tileIndex > 0) {
-                tileIndices.add(tileIndex);
-            }
-        }
-        return tileIndices;
     }
 
     public getTileAnimationRefreshDelay(): number | undefined {
