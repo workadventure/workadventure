@@ -20,7 +20,6 @@ import {
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
 import { runDrains } from "./pusher/services/ShutdownDrains";
-import { analyticsPresenceTracker } from "./pusher/services/AnalyticsPresenceTracker";
 import { analyticsTimedEventTracker } from "./pusher/services/AnalyticsTimedEventTracker";
 
 // In production, the current working directory is "dist".
@@ -88,16 +87,16 @@ const shutdown = (reason: string, endReason: "pusher_shutdown" | "pusher_crashed
     }
     shuttingDown = true;
 
-    // Close BEFORE draining, not after: both closeAll() calls only enqueue, so
-    // draining first would leave their events behind.
+    // Close BEFORE draining, not after: closeAll() only enqueues, so draining first
+    // would leave its events behind.
     //
-    // Timed events before connection sessions, deliberately: both read the clock as
-    // they go, and the admin drops an interval whose end falls outside its session.
-    // Same ordering as SocketManager.leaveRoom.
+    // Sessions are intervals too and close in the same pass — last, so that an
+    // interval never ends after the session containing it. That ordering used to be
+    // this file's job, spelled out as two calls in a fixed order; it now belongs to
+    // the tracker, which is the only thing that knows which handle is a session.
     const closedTimedEvents = analyticsTimedEventTracker.closeAll(endReason);
-    const closedConnections = analyticsPresenceTracker.closeAll();
     console.info(
-        `${reason}: closed ${closedTimedEvents} timed event(s) and ${closedConnections} connection(s), draining analytics queues before exit…`,
+        `${reason}: closed ${closedTimedEvents} timed event(s), sessions included, draining analytics queues before exit…`,
     );
 
     // Both arms exit, on purpose. runDrains already inspects every result and logs
