@@ -215,6 +215,15 @@ const userMoved5SecondsAgoStore = readable(false, function start(set) {
  */
 export const devicesNotLoaded = writable(true);
 
+/**
+ * True once devices were enumerated *after* a successful getUserMedia, i.e. with permission.
+ *
+ * Before that, browsers report an empty list rather than the devices they are not allowed to
+ * disclose. Reading that as "this machine has no microphone" is wrong, and it is what made the
+ * microphone button render as permanently disabled on WebKit.
+ */
+export const devicesEnumeratedWithPermission = writable(false);
+
 const deviceChanged10SecondsAgoStore = readable(false, function start(set) {
     let timeout: NodeJS.Timeout | null = null;
 
@@ -1291,20 +1300,25 @@ export const localVoiceIndicatorStore = derived<Readable<number[] | undefined>, 
 export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined, function start(set) {
     let deviceListCanBeQueried = false;
 
-    const queryDeviceList = () => {
+    const queryDeviceList = (withPermission: boolean) => {
         // Note: so far, we are ignoring any failures.
         navigator.mediaDevices
             .enumerateDevices()
             .then((mediaDeviceInfos) => {
                 set(mediaDeviceInfos);
-                devicesNotLoaded.set(false);
+                if (withPermission) {
+                    devicesEnumeratedWithPermission.set(true);
+                    devicesNotLoaded.set(false);
+                }
             })
             .catch((e) => {
                 // Do not rethrow: this runs in a floating promise chain, so a rethrow would only
                 // surface as an unhandled rejection. Enumerating before any permission is granted
                 // makes this path common enough to matter.
                 console.error(e);
-                devicesNotLoaded.set(false);
+                if (withPermission) {
+                    devicesNotLoaded.set(false);
+                }
             });
     };
 
@@ -1313,39 +1327,53 @@ export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined
     // default, and unavoidable in a silent zone) would otherwise never get a device list at all.
     // Labels come back empty until permission is granted; the UI falls back to a generic name.
     if (navigator.mediaDevices) {
-        queryDeviceList();
+        queryDeviceList(false);
     }
 
     const unsubscribe = localStreamStore.subscribe((streamResult) => {
         if (streamResult && streamResult.type === "success" && streamResult.stream !== undefined) {
             if (deviceListCanBeQueried === false) {
                 // Re-enumerate now that permission was granted: this is the pass that fills in the
-                // device labels.
-                queryDeviceList();
+                // device labels, and the only one whose result can be trusted for inputs.
+                queryDeviceList(true);
                 deviceListCanBeQueried = true;
             }
         }
     });
 
+    const onDeviceChange = () => queryDeviceList(deviceListCanBeQueried);
+
     if (navigator.mediaDevices) {
-        navigator.mediaDevices.addEventListener("devicechange", queryDeviceList);
+        navigator.mediaDevices.addEventListener("devicechange", onDeviceChange);
     }
 
     return function stop() {
         unsubscribe();
         if (navigator.mediaDevices) {
-            navigator.mediaDevices.removeEventListener("devicechange", queryDeviceList);
+            navigator.mediaDevices.removeEventListener("devicechange", onDeviceChange);
         }
     };
 });
 
-export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
-    if ($deviceListStore === undefined) {
-        return undefined;
-    }
+export const cameraListStore = derived(
+    [deviceListStore, devicesEnumeratedWithPermission],
+    ([$deviceListStore, $devicesEnumeratedWithPermission]) => {
+        if ($deviceListStore === undefined) {
+            return undefined;
+        }
 
-    return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "videoinput"));
-});
+        // Only the enumeration that follows a granted permission says anything meaningful about
+        // inputs: before that the browser hides what it may not disclose, and an empty list would
+        // read as "this machine has no microphone". Several places in the UI rely on `undefined` to
+        // mean "we do not know yet" and pick a disabled control over a permission prompt otherwise.
+        // Audio *outputs* are different, which is why speakerListStore uses the early pass.
+        if (!$devicesEnumeratedWithPermission) {
+            return undefined;
+        }
+
+        return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "videoinput"));
+    },
+);
 
 /**
  * Context for the camera action-bar tooltip when the camera is off: permission denied vs no usable device.
@@ -1366,13 +1394,25 @@ export const cameraButtonHelpContextStore = derived(
     },
 );
 
-export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
-    if ($deviceListStore === undefined) {
-        return undefined;
-    }
+export const microphoneListStore = derived(
+    [deviceListStore, devicesEnumeratedWithPermission],
+    ([$deviceListStore, $devicesEnumeratedWithPermission]) => {
+        if ($deviceListStore === undefined) {
+            return undefined;
+        }
 
-    return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audioinput"));
-});
+        // Only the enumeration that follows a granted permission says anything meaningful about
+        // inputs: before that the browser hides what it may not disclose, and an empty list would
+        // read as "this machine has no microphone". Several places in the UI rely on `undefined` to
+        // mean "we do not know yet" and pick a disabled control over a permission prompt otherwise.
+        // Audio *outputs* are different, which is why speakerListStore uses the early pass.
+        if (!$devicesEnumeratedWithPermission) {
+            return undefined;
+        }
+
+        return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audioinput"));
+    },
+);
 
 /**
  * Context for the microphone action-bar tooltip when the mic is off: permission denied vs no usable device.
