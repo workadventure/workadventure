@@ -69,7 +69,9 @@ describe("subscribeToConversationAnalytics", () => {
         // A close that does not match an open is dropped by the pusher, so a mismatched
         // handle here would silently lose the whole conversation.
         expect(closed(sendReport)[0].properties.handle).toBe(opened(sendReport)[0].properties.handle);
-        expect(closed(sendReport)[0].properties.endReason).toBe("closed_by_client");
+        // The client states no reason at all — the pusher defaults it. Sending one
+        // only ever restated what the event name already said.
+        expect(closed(sendReport)[0].properties.endReason).toBeUndefined();
     });
 
     /**
@@ -236,10 +238,18 @@ describe("subscribeToConversationAnalytics", () => {
         // socket death and dated to the disconnect, not to the transition.
         expect(closed(sendReport).map((event) => event.properties.handle)).toEqual(handles);
         expect(closed(sendReport).map((event) => event.properties.endReason)).toEqual([
-            "type_changed",
-            "type_changed",
-            "closed_by_client",
+            undefined,
+            undefined,
+            undefined,
         ]);
+        // The link that replaced `type_changed`: each leg after the first names the
+        // one it continues, so the whole conversation reassembles by following ids
+        // rather than by correlating three rows on time. The first leg started
+        // fresh, so it names nobody.
+        const continuations = opened(sendReport).map((event) => event.properties.properties.continuesFrom);
+        expect(continuations[0]).toBeUndefined();
+        expect(continuations[1]).toBe(ids[0]);
+        expect(continuations[2]).toBe(ids[1]);
         // The two bubble legs share the group id — they are the same bubble, resumed.
         expect(ids[0]).toBe("group:42");
         expect(ids[2]).toBe("group:42");
@@ -258,7 +268,7 @@ describe("subscribeToConversationAnalytics", () => {
         unsubscribe();
 
         expect(closed(sendReport)).toHaveLength(1);
-        expect(closed(sendReport)[0].properties.endReason).toBe("closed_by_client");
+        expect(closed(sendReport)[0].properties.endReason).toBeUndefined();
     });
 
     it("emits meeting provider changes while a meeting stays active", () => {
