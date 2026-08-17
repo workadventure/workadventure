@@ -8,6 +8,7 @@ import {
     analyticsEvent,
     analyticsEventNameOf,
     analyticsEventsBatch,
+    timedAnalyticsEventDefinition,
 } from "@workadventure/messages";
 
 /** Reads the `properties` sub-schema off a catalog entry. */
@@ -31,7 +32,6 @@ const EMITTER_SOURCES = import.meta.glob<string>(
     [
         "../../src/front/Administration/AnalyticsClient.ts",
         "../../src/front/WebRtc/ConversationAnalytics.ts",
-        "../../src/pusher/services/AnalyticsPresenceTracker.ts",
         "../../src/pusher/services/AnalyticsEventsQueue.ts",
     ],
     { query: "?raw", import: "default", eager: true },
@@ -58,10 +58,22 @@ function extractTimedEventRequests(): Set<string> {
  * grows, and a regex demanding `("` silently matches almost nothing.
  */
 function extractEmittedEventNames(): Set<string> {
-    // Exact, not scraped: the pusher's own allowlist for client-requested timed
-    // events. These names are never literals at an emit site — the pusher emits
-    // whatever the client asked for, once it is in this set.
-    const names = new Set<string>(TIMED_ANALYTICS_EVENT_NAMES);
+    // Exact, not scraped: every interval the tracker emits, plus the row some of
+    // them emit when they OPEN. None of these appear as a literal at an emit site —
+    // the tracker emits whatever it was asked to hold, and reads the rest off the
+    // catalog entry. Sessions are the reason this covers more than the
+    // client-openable set.
+    const names = new Set<string>();
+    for (const eventName of Object.keys(ANALYTICS_EVENT_CATALOG)) {
+        const timed = timedAnalyticsEventDefinition(eventName);
+        if (!timed) {
+            continue;
+        }
+        names.add(eventName);
+        if (timed.opensWith) {
+            names.add(timed.opensWith);
+        }
+    }
 
     for (const source of Object.values(EMITTER_SOURCES)) {
         for (const [, name] of source.matchAll(
@@ -183,18 +195,22 @@ describe("AnalyticsEventCatalog", () => {
     });
 
     it("validates the real payload of a timed event", () => {
-        // Shape taken from AnalyticsPresenceTracker's emitter: the catalog is only
-        // worth reading if it matches what actually goes on the wire.
+        // Shape taken from the tracker's emitter: the catalog is only worth reading
+        // if it matches what actually goes on the wire. A session declares its own
+        // field names — connectedAt / disconnectedAt rather than startedAt / endedAt
+        // — because the admin reads them verbatim.
         const parsed = ANALYTICS_EVENT_CATALOG["user.disconnected"].safeParse({
             eventName: "user.disconnected",
             source: "pusher",
             clientEventTimeMs: Date.parse("2026-04-24T12:02:30.000Z"),
-            eventId: "tab-id:disconnected:1777032150000",
+            eventId: "tab-id:connection:1777032150000",
             properties: {
                 connectionId: "tab-id",
                 connectedAt: "2026-04-24T12:00:00.000Z",
                 disconnectedAt: "2026-04-24T12:02:30.000Z",
-                disconnectReason: "client_closed",
+                // `socket_closed`, not the old `client_closed`: sessions now draw
+                // from the one shared reason vocabulary.
+                disconnectReason: "socket_closed",
                 durationSeconds: 150,
             },
         });

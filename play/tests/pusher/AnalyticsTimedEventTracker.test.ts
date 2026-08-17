@@ -6,9 +6,9 @@ import type { SocketData } from "../../src/pusher/models/Websocket/SocketData";
 import type { AnalyticsEventInput } from "../../src/pusher/services/AnalyticsEventsQueue";
 import {
     AnalyticsTimedEventTracker,
+    CONNECTION_SESSION_HANDLE,
     MAX_OPEN_TIMED_EVENTS_PER_CONNECTION,
 } from "../../src/pusher/services/AnalyticsTimedEventTracker";
-import { AnalyticsPresenceTracker } from "../../src/pusher/services/AnalyticsPresenceTracker";
 
 describe("AnalyticsTimedEventTracker", () => {
     it("reports one row per interval, timed on the pusher's clock", () => {
@@ -163,17 +163,17 @@ describe("AnalyticsTimedEventTracker", () => {
             }),
         };
         let now = Date.parse("2026-04-24T12:00:00.000Z");
-        const timed = new AnalyticsTimedEventTracker(queue, () => now);
-        const presence = new AnalyticsPresenceTracker(queue, () => now);
+        const tracker = new AnalyticsTimedEventTracker(queue, () => now);
         const socketData = socketDataFixture();
 
-        presence.trackConnected(socketData);
-        timed.open("h1", "conversation.ended", {}, socketData);
+        // Session opened FIRST, so insertion order alone would emit it first.
+        tracker.open(CONNECTION_SESSION_HANDLE, "user.disconnected", { connectionId: "tab-id" }, socketData);
+        tracker.open("h1", "conversation.ended", {}, socketData);
         now = Date.parse("2026-04-24T12:05:00.000Z");
 
-        // Same order as SocketManager.leaveRoom and server.ts.
-        timed.closeAll("pusher_shutdown");
-        presence.closeAll();
+        // One pass, sessions last — the ordering two trackers used to provide by
+        // being called in sequence from SocketManager.leaveRoom and server.ts.
+        tracker.closeAll("pusher_shutdown");
 
         expect(calls).toEqual(["user.connected", "conversation.ended", "user.disconnected"]);
         const ended = queue.enqueueEvent.mock.calls[1][0].properties;

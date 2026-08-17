@@ -370,17 +370,110 @@ function signal(
  * client may open has to stay narrow: opening one is asking the pusher to sign a
  * row. TIMED_ANALYTICS_EVENT_NAMES is derived from these entries.
  */
-function timedEvent<P extends z.AnyZodObject>(def: {
+/** How an interval's three synthesized fields are named on the wire. */
+export type TimedEventIntervalFields = {
+  readonly start: string;
+  readonly end: string;
+  readonly reason: string;
+};
+
+const DEFAULT_INTERVAL_FIELDS: TimedEventIntervalFields = {
+  start: "startedAt",
+  end: "endedAt",
+  reason: "endReason",
+};
+
+/**
+ * Intervals shorter than this are dropped as transition churn.
+ *
+ * Leaving a meeting flips the conversation type for a millisecond, producing a
+ * 0-second phantom that carried no duration but still counted as a conversation.
+ * Per-event because it is a judgement about *that* event's noise floor, not a law:
+ * a sub-second connection session is a real connection (a tab that died on load),
+ * so dropping it would undercount rather than denoise.
+ */
+export const MIN_TIMED_EVENT_DURATION_MS = 1000;
+
+export type TimedEventOptions<P extends z.AnyZodObject> = {
+  /**
+   * Who may open it. `client` events are what `timed_event.open` accepts — and
+   * opening one asks the pusher to sign a row `source: "pusher"`, which the admin
+   * trusts, so that set stays deliberately small. `pusher` events are opened by
+   * the server against a lifecycle it observes itself; a socket may never ask.
+   */
+  openableBy: "client" | "pusher";
   openProperties: P;
   description: string;
   endReasonDescription: string;
-}): AnalyticsEventDefinition & { readonly openProperties: P } {
+  /**
+   * Renames the three fields the pusher fills in. Sessions predate the generic
+   * vocabulary and the admin reads `connectedAt` / `disconnectedAt` verbatim off
+   * them, so they keep their own names rather than the storage being migrated to
+   * suit an internal refactor.
+   */
+  intervalFields?: TimedEventIntervalFields;
+  minDurationMs?: number;
+  /**
+   * An event emitted when the interval OPENS, in addition to the row emitted when
+   * it closes. Only sessions need this: presence at connect time is itself a
+   * datum, whereas an interval that never closes never happened.
+   */
+  opensWith?: string;
+};
+
+export type TimedAnalyticsEventDefinition<
+  P extends z.AnyZodObject = z.AnyZodObject,
+  O extends "client" | "pusher" = "client" | "pusher",
+> = AnalyticsEventDefinition & {
+  readonly openProperties: P;
+  // Generic over the literal, not widened to the union: `TimedAnalyticsEventName`
+  // filters on it, and a widened `"client" | "pusher"` matches neither branch —
+  // which silently yields `never` and lets the front open anything, or nothing.
+  readonly openableBy: O;
+  readonly intervalFields: TimedEventIntervalFields;
+  readonly minDurationMs: number;
+  readonly opensWith?: string;
+};
+
+/**
+ * An interval someone opens and asks to have closed, which the pusher measures on
+ * its own clock and emits as one row.
+ *
+ * Two shapes, and conflating them is how a payload can be accepted at open and
+ * rejected at store: `openProperties` is what the opener sends, `properties` is
+ * what is finally written — the same fields plus the interval, which only the
+ * pusher can fill in. Declaring the first and deriving the second keeps them in
+ * step.
+ */
+function timedEvent<P extends z.AnyZodObject, O extends "client" | "pusher">(
+  def: TimedEventOptions<P> & { openableBy: O },
+): TimedAnalyticsEventDefinition<P, O> {
+  const fields = def.intervalFields ?? DEFAULT_INTERVAL_FIELDS;
+
   return {
     description: def.description,
     source: "pusher",
+    openableBy: def.openableBy,
     openProperties: def.openProperties,
-    properties: def.openProperties.merge(timedEventProperties).extend({
-      endReason: z
+    intervalFields: fields,
+    minDurationMs: def.minDurationMs ?? MIN_TIMED_EVENT_DURATION_MS,
+    opensWith: def.opensWith,
+    properties: def.openProperties.extend({
+      [fields.start]: z
+        .string()
+        .datetime()
+        .describe("ISO-8601 instant the interval began."),
+      [fields.end]: z
+        .string()
+        .datetime()
+        .describe("ISO-8601 instant the interval ended."),
+      durationSeconds: z
+        .number()
+        .nonnegative()
+        .describe(
+          "Length of the interval in seconds, reported so nothing has to pair rows.",
+        ),
+      [fields.reason]: z
         .enum(TIMED_EVENT_END_REASONS)
         .describe(def.endReasonDescription),
     }),
@@ -421,33 +514,40 @@ export const ANALYTICS_EVENTS = {
     source: "pusher",
   }),
 
-  "user.disconnected": event({
-    properties: timedEventProperties
-      .omit({ startedAt: true, endedAt: true })
-      .extend({
-        connectionId: z
-          .string()
-          .describe("Matches the connectionId of the paired user.connected."),
-        connectedAt: z
-          .string()
-          .datetime()
-          .describe("ISO-8601 instant the socket joined."),
-        disconnectedAt: z
-          .string()
-          .datetime()
-          .describe("ISO-8601 instant the socket went away."),
-        disconnectReason: z
-          .enum(["client_closed", "join_failed", "pusher_shutdown"])
-          .describe(
-            "`pusher_shutdown` means the pusher closed it during a graceful restart, not the user leaving.",
-          ),
-      }),
+  // A session IS an interval, and is declared as one. What makes it look special
+  // is only what it declares: it keeps its own field names because the admin reads
+  // them verbatim, it emits a row at both ends rather than only at the close, and
+  // it has no minimum duration because a sub-second connection is a real
+  // connection. None of those are properties of sessions as such — they are
+  // options any interval could take.
+  "user.disconnected": timedEvent({
+    // Never "client": opening one asks the pusher to sign a connection session,
+    // which the admin projects into analytics_connection_sessions straight from
+    // these properties. A socket asking for one would be inventing its own
+    // connection time.
+    openableBy: "pusher",
+    opensWith: "user.connected",
+    intervalFields: {
+      start: "connectedAt",
+      end: "disconnectedAt",
+      reason: "disconnectReason",
+    },
+    // A tab that dies during load is a connection that happened. Dropping it would
+    // undercount connections rather than remove noise.
+    minDurationMs: 0,
+    openProperties: z.object({
+      connectionId: z
+        .string()
+        .describe("Matches the connectionId of the paired user.connected."),
+    }),
+    endReasonDescription:
+      "`pusher_shutdown` means the pusher closed it during a graceful restart, not the user leaving. `socket_closed` is the ordinary case: the socket went away.",
     description:
       "A user's socket left a room, carrying the finished session. This is what the admin projects into analytics_connection_sessions, so it is the source of truth for connection time. A disconnect whose connect was never seen is dropped rather than reported with a guessed duration.",
-    source: "pusher",
   }),
 
   "conversation.ended": timedEvent({
+    openableBy: "client",
     openProperties: conversationContextProperties,
     endReasonDescription:
       "Why the interval ended. `type_changed` means one conversation was split because its type changed — a bubble that became a meeting reports two conversations, so stitch on time rather than assuming one id per conversation. The `socket_closed` / `pusher_*` values mean the client never got to say, and the pusher closed it.",
@@ -624,6 +724,7 @@ export const ANALYTICS_EVENTS = {
   }),
 
   "meeting.screenshare.ended": timedEvent({
+    openableBy: "client",
     openProperties: z.object({
       screenShareSessionId: z
         .string()
@@ -700,6 +801,7 @@ export const ANALYTICS_EVENTS = {
   }),
 
   "area.dwell": timedEvent({
+    openableBy: "client",
     openProperties: areaProperties,
     endReasonDescription: "Why the dwell ended, or what ended it.",
     description:
@@ -707,6 +809,7 @@ export const ANALYTICS_EVENTS = {
   }),
 
   "status.dwell": timedEvent({
+    openableBy: "client",
     openProperties: z.object({
       status: z
         .string()
@@ -1337,8 +1440,8 @@ export type AnalyticsEventProperties<N extends AnalyticsEventName> = z.input<
   (typeof ANALYTICS_EVENTS)[N]["properties"]
 >;
 
-/** The events a client may ask the pusher to time, i.e. those built by `timedEvent`. */
-export type TimedAnalyticsEventName = {
+/** Every interval the pusher measures, whoever opens it. */
+export type AnyTimedAnalyticsEventName = {
   [N in AnalyticsEventName]: (typeof ANALYTICS_EVENTS)[N] extends {
     openProperties: z.AnyZodObject;
   }
@@ -1346,21 +1449,57 @@ export type TimedAnalyticsEventName = {
     : never;
 }[AnalyticsEventName];
 
-/** What the client sends with `timed_event.open` for event `N`. */
+/**
+ * The intervals a *client* may ask the pusher to open.
+ *
+ * Deliberately narrower than the set of timed events, and that gap is the whole
+ * security property: opening one makes the pusher emit a row signed
+ * `source: "pusher"`, which the admin trusts enough to project into connection
+ * sessions. Sessions themselves are timed events too, and must never be in here —
+ * a socket that could open its own session would be inventing its connection time.
+ */
+export type TimedAnalyticsEventName = {
+  [N in AnyTimedAnalyticsEventName]: (typeof ANALYTICS_EVENTS)[N] extends {
+    openableBy: "client";
+  }
+    ? N
+    : never;
+}[AnyTimedAnalyticsEventName];
+
+/** What the opener sends for event `N`. */
 export type TimedAnalyticsEventOpenProperties<
-  N extends TimedAnalyticsEventName,
+  N extends AnyTimedAnalyticsEventName,
 > = z.input<(typeof ANALYTICS_EVENTS)[N]["openProperties"]>;
+
+function isTimedDefinition(
+  definition: AnalyticsEventDefinition,
+): definition is TimedAnalyticsEventDefinition {
+  return "openProperties" in definition;
+}
+
+/** Reads the interval options off a catalog entry, or undefined if it is not timed. */
+export function timedAnalyticsEventDefinition(
+  eventName: string,
+): TimedAnalyticsEventDefinition | undefined {
+  const definition = (
+    ANALYTICS_EVENTS as Record<string, AnalyticsEventDefinition | undefined>
+  )[eventName];
+
+  return definition && isTimedDefinition(definition) ? definition : undefined;
+}
 
 /**
  * The allowlist for `timed_event.open`, derived rather than hand-maintained.
  *
- * Narrower than the catalog on purpose: opening one of these asks the pusher to
- * emit a row signed `source: "pusher"`, which the admin trusts. Adding a
- * `timedEvent` entry therefore widens what a client may ask for — the catalog
- * test asserts the exact contents so that never happens unnoticed.
+ * Adding a `timedEvent` entry with `openableBy: "client"` widens what a socket may
+ * ask for, so the catalog test pins the exact contents — widening should be a
+ * deliberate act, not a side effect of documenting a new event.
  */
 export const TIMED_ANALYTICS_EVENT_NAMES = Object.entries(ANALYTICS_EVENTS)
-  .filter(([, definition]) => "openProperties" in definition)
+  .filter(
+    ([, definition]) =>
+      isTimedDefinition(definition) && definition.openableBy === "client",
+  )
   .map(([eventName]) => eventName) as [
   TimedAnalyticsEventName,
   ...TimedAnalyticsEventName[],
