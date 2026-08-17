@@ -160,7 +160,9 @@ describe("processAnalyticsReportMessage", () => {
         ["left_area", "closed_by_client"],
         ["status_changed", "closed_by_client"],
         ["cleanup", "closed_by_client"],
-        ["other", "superseded"],
+        ["other", "closed_by_client"],
+        ["type_changed", "closed_by_client"],
+        ["superseded", "closed_by_client"],
     ])("translates the retired end reason %s into %s", (legacy, expected) => {
         // A tab loaded before the reason set was trimmed still sends the old string.
         // Mapping it beats losing the interval — and beats `.catch()`-ing it into a
@@ -363,25 +365,22 @@ describe("processAnalyticsReportMessage", () => {
      * That coercion is right, but it means a reason the front actually sends and the
      * enum does not list is destroyed with no error anywhere -- which is exactly what
      * happened to every front-initiated close until this test existed. The front's
-     * `close()` is typed to ClientTimedEventEndReason now, so these three are the
-     * complete set it can send.
+     * `close()` is typed to ClientTimedEventEndReason now, which is a single value:
+     * the client says it closed the interval and nothing more.
      */
-    it.each(["closed_by_client", "type_changed", "superseded"])(
-        "keeps the reason the front actually sends: %s",
-        (endReason) => {
-            const queue = newQueue();
-            const tracker = newTracker();
+    it.each(["closed_by_client"])("keeps the reason the front actually sends: %s", (endReason) => {
+        const queue = newQueue();
+        const tracker = newTracker();
 
-            processAnalyticsReportMessage(
-                { events: [controlFrame("timed_event.close", { handle: "conversation.ended:h1", endReason })] },
-                newSocketData(),
-                queue,
-                tracker,
-            );
+        processAnalyticsReportMessage(
+            { events: [controlFrame("timed_event.close", { handle: "conversation.ended:h1", endReason })] },
+            newSocketData(),
+            queue,
+            tracker,
+        );
 
-            expect(tracker.close).toHaveBeenCalledWith("conversation.ended:h1", expect.any(Object), endReason);
-        },
-    );
+        expect(tracker.close).toHaveBeenCalledWith("conversation.ended:h1", expect.any(Object), endReason);
+    });
 
     it("treats the control frames as instructions, never as events", () => {
         const queue = newQueue();
