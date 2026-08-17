@@ -1,4 +1,5 @@
-import type { TimedAnalyticsEventName, TimedEventEndReason } from "@workadventure/messages";
+import type { AnyTimedAnalyticsEventName, TimedEventEndReason } from "@workadventure/messages";
+import { timedAnalyticsEventDefinition } from "@workadventure/messages";
 import type { SocketData } from "../models/Websocket/SocketData";
 import { analyticsEventsQueue, type AnalyticsEventInput } from "./AnalyticsEventsQueue";
 import { analyticsConnectionId } from "./AnalyticsConnectionId";
@@ -16,22 +17,16 @@ type AnalyticsEventQueue = {
 export const MAX_OPEN_TIMED_EVENTS_PER_CONNECTION = 32;
 
 /**
- * Intervals shorter than this are dropped, not emitted.
+ * The handle a connection session is filed under.
  *
- * They are transition churn, not collaboration. Leaving a meeting flips the
- * conversation type for a millisecond: the front closes the meeting as
- * `type_changed` and opens a "remote" conversation that it closes 1-2ms later as
- * `left_conversation` — a 0-second phantom. Those phantoms carried no duration but
- * still counted as distinct conversations, inflating conversation counts (and, when
- * a solo user bounced in and out of a meeting zone, dominating them). A sub-second
- * area dwell (walking through) or screenshare (an instant mis-toggle) is the same
- * kind of noise. Nothing real is lost: a sub-second interval contributes ~0 seconds
- * to every duration metric by construction.
+ * Fixed rather than generated: there is exactly one session per connection, so the
+ * handle carries no information — and a fixed one makes `open()`'s idempotency do
+ * the work the presence tracker needed a separate flag for.
  */
-export const MIN_TIMED_EVENT_DURATION_MS = 1000;
+export const CONNECTION_SESSION_HANDLE = "connection";
 
 type OpenTimedEvent = {
-    eventName: string;
+    eventName: AnyTimedAnalyticsEventName;
     startedAtMs: number;
     properties: Record<string, unknown>;
     socketData: SocketData;
@@ -78,7 +73,7 @@ export class AnalyticsTimedEventTracker {
         // check that used to live here is now the `z.enum(TIMED_ANALYTICS_EVENT_NAMES)`
         // in the control-frame schema, which is the only way in — so the compiler
         // enforces here what the schema enforces at the boundary.
-        eventName: TimedAnalyticsEventName,
+        eventName: AnyTimedAnalyticsEventName,
         properties: Record<string, unknown>,
         socketData: SocketData,
     ): boolean {
@@ -103,7 +98,32 @@ export class AnalyticsTimedEventTracker {
             return false;
         }
 
-        open.set(handle, { eventName, startedAtMs: this.nowMs(), properties, socketData });
+        const startedAtMs = this.nowMs();
+        open.set(handle, { eventName, startedAtMs, properties, socketData });
+
+        // Most intervals report nothing until they close — an interval that never
+        // closes never happened. A session is the exception it declares itself to
+        // be: presence at connect time is a datum in its own right, so it emits a
+        // row at each end.
+        const definition = timedAnalyticsEventDefinition(eventName);
+        if (definition?.opensWith) {
+            this.queue.enqueueEvent(
+                {
+                    eventName: definition.opensWith,
+                    source: "pusher",
+                    clientEventTimeMs: startedAtMs,
+                    // Deterministic, unlike a uuid-suffixed client id: a retried batch
+                    // re-sends this exact id and the backend dedupes on it instead of
+                    // counting the open twice.
+                    eventId: `${connectionId}:${handle}:opened:${startedAtMs}`,
+                    properties: {
+                        ...(properties as AnalyticsEventInput["properties"]),
+                        [definition.intervalFields.start]: new Date(startedAtMs).toISOString(),
+                    },
+                },
+                socketData,
+            );
+        }
 
         return true;
     }
@@ -141,7 +161,7 @@ export class AnalyticsTimedEventTracker {
         }
 
         const closed = open.size;
-        for (const [handle, entry] of open) {
+        for (const [handle, entry] of sessionsLast(open)) {
             this.emit(connectionId, handle, entry, endReason);
         }
         this.openByConnection.delete(connectionId);
@@ -158,7 +178,7 @@ export class AnalyticsTimedEventTracker {
     public closeAll(endReason: TimedEventEndReason = "pusher_shutdown"): number {
         let closed = 0;
         for (const [connectionId, open] of this.openByConnection) {
-            for (const [handle, entry] of open) {
+            for (const [handle, entry] of sessionsLast(open)) {
                 this.emit(connectionId, handle, entry, endReason);
                 closed += 1;
             }
@@ -170,11 +190,13 @@ export class AnalyticsTimedEventTracker {
 
     private emit(connectionId: string, handle: string, entry: OpenTimedEvent, endReason: TimedEventEndReason): void {
         const endedAtMs = this.nowMs();
+        const definition = timedAnalyticsEventDefinition(entry.eventName);
+        const fields = definition?.intervalFields ?? { start: "startedAt", end: "endedAt", reason: "endReason" };
 
-        if (endedAtMs - entry.startedAtMs < MIN_TIMED_EVENT_DURATION_MS) {
-            // Transition churn, not a real interval — see MIN_TIMED_EVENT_DURATION_MS.
-            // Dropped rather than emitted so it never reaches a count; its ~0 duration
-            // means no metric loses anything.
+        // Per-event, from the catalog. Transition churn for a conversation is a real
+        // connection for a session, so the threshold is a property of the event
+        // rather than a law of intervals.
+        if (endedAtMs - entry.startedAtMs < (definition?.minDurationMs ?? 0)) {
             return;
         }
 
@@ -191,17 +213,45 @@ export class AnalyticsTimedEventTracker {
                 // Deterministic: a retried batch re-sends this exact id and the backend
                 // dedupes on it instead of counting the interval twice.
                 eventId: `${connectionId}:${handle}:${endedAtMs}`,
+                // Computed keys widen the literal to an index signature, which JsonObject
+                // is not; the values below are all strings and numbers.
                 properties: {
                     ...entry.properties,
-                    startedAt: new Date(entry.startedAtMs).toISOString(),
-                    endedAt: new Date(endedAtMs).toISOString(),
-                    durationSeconds: Math.max(0, (endedAtMs - entry.startedAtMs) / 1000),
-                    endReason,
-                },
+                    [fields.start]: new Date(entry.startedAtMs).toISOString(),
+                    [fields.end]: new Date(endedAtMs).toISOString(),
+                    // Sessions have always reported whole seconds; other intervals keep
+                    // their fractional precision. Rounding everything would coarsen
+                    // existing metrics, and rounding nothing would change the column the
+                    // admin already stores for sessions.
+                    durationSeconds:
+                        entry.eventName === "user.disconnected"
+                            ? Math.max(0, Math.round((endedAtMs - entry.startedAtMs) / 1000))
+                            : Math.max(0, (endedAtMs - entry.startedAtMs) / 1000),
+                    [fields.reason]: endReason,
+                } as AnalyticsEventInput["properties"],
             },
             entry.socketData,
         );
     }
+}
+
+/**
+ * Orders a connection's open intervals so sessions are emitted last.
+ *
+ * Load-bearing, and invisible if you get it wrong: the admin attributes an
+ * interval to the session containing it, and drops one whose end falls even a
+ * millisecond after its session's disconnect. Both timestamps are read from the
+ * same clock as this loop runs, so the emission order *is* the timestamp order.
+ * This is the invariant server.ts and SocketManager used to get by calling two
+ * trackers in a fixed order; with one tracker it has to live here.
+ */
+function sessionsLast(open: Map<string, OpenTimedEvent>): [string, OpenTimedEvent][] {
+    const entries = [...open];
+
+    return [
+        ...entries.filter(([, entry]) => entry.eventName !== "user.disconnected"),
+        ...entries.filter(([, entry]) => entry.eventName === "user.disconnected"),
+    ];
 }
 
 export const analyticsTimedEventTracker = new AnalyticsTimedEventTracker();
