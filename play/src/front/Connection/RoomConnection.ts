@@ -2183,7 +2183,16 @@ export class RoomConnection implements RoomConnection {
 
         if (!this.isRoomJoined && !force) {
             this.eventBeforeRoomJoinedQueue.push(message);
-            Sentry.captureMessage("RoomConnection: Event before room joined queue: " + message.message?.$case);
+            // Expected startup race: the queue is replayed as soon as roomJoinedMessage arrives, so
+            // nothing is lost. Reporting it as an event cost ~19k Sentry events a month for a case
+            // that is handled by design. A breadcrumb keeps the information in the timeline of a real
+            // error instead, at no quota cost.
+            Sentry.addBreadcrumb({
+                category: "room-connection",
+                level: "info",
+                message: "Event queued before room joined",
+                data: { case: message.message?.$case },
+            });
             return;
         }
 
