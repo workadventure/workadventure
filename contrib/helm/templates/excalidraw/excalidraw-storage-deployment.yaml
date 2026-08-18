@@ -1,0 +1,89 @@
+{{- if .Values.excalidraw.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-excalidraw-storage
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: excalidraw-storage
+spec:
+  {{- if not .Values.excalidraw.excalidrawStorage.autoscaling.enabled }}
+  replicas: {{ .Values.excalidraw.excalidrawStorage.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: excalidraw-storage
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ (include (print $.Template.BasePath "/excalidraw/excalidraw-storage-env.yaml") .) | sha256sum }}
+        checksum/secret: {{ (include (print $.Template.BasePath "/excalidraw/excalidraw-storage-secret-env.yaml") .) | sha256sum }}
+        {{- if .Values.forceRedeploy }}
+        forceRedeploy: {{ randAlphaNum 10 | quote }}
+        {{- end }}
+        {{- with .Values.excalidraw.excalidrawStorage.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: excalidraw-storage
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.excalidraw.excalidrawStorage.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-excalidraw-storage
+          securityContext:
+            {{- toYaml .Values.excalidraw.excalidrawStorage.securityContext | nindent 12 }}
+          image: "{{ .Values.excalidraw.excalidrawStorage.image.repository }}:{{ .Values.excalidraw.excalidrawStorage.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.excalidraw.excalidrawStorage.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-excalidraw-storage
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-excalidraw-storage
+            {{- if .Values.excalidraw.excalidrawStorage.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.excalidraw.excalidrawStorage.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.excalidraw.excalidrawStorage.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.excalidraw.excalidrawStorage.externalSecretName }}
+            {{- end }}
+          {{- if .Values.excalidraw.excalidrawStorage.extraEnvVars }}
+          env:
+            {{- include "common.tplvalues.render" (dict "value" .Values.excalidraw.excalidrawStorage.extraEnvVars "context" $) | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.excalidraw.excalidrawStorage.service.port }}
+              protocol: TCP
+{{/*          livenessProbe:*/}}
+{{/*            httpGet:*/}}
+{{/*              path: /*/}}
+{{/*              port: http*/}}
+{{/*          readinessProbe:*/}}
+{{/*            httpGet:*/}}
+{{/*              path: /*/}}
+{{/*              port: http*/}}
+          resources:
+            {{- toYaml .Values.excalidraw.excalidrawStorage.resources | nindent 12 }}
+      {{- with .Values.excalidraw.excalidrawStorage.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.excalidraw.excalidrawStorage.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.excalidraw.excalidrawStorage.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
