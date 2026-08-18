@@ -20,6 +20,7 @@ import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
 
 import { gameManager } from "../Phaser/Game/GameManager";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
 import type { ClosePopupEvent } from "./Events/ClosePopupEvent";
@@ -708,10 +709,6 @@ class IframeListener {
         if (pathname.endsWith(".html")) {
             iframe.src = scriptUrl;
         } else {
-            // We are putting a sandbox on this script because it will run in the same domain as the main website.
-            iframe.sandbox.add("allow-scripts");
-            iframe.sandbox.add("allow-top-navigation-by-user-activation");
-
             const hostname = scriptUrlObj.hostname;
             const isLocalhost = hostname === "localhost" || hostname.endsWith(".localhost");
 
@@ -719,9 +716,17 @@ class IframeListener {
             // which provides a secure sandboxed environment
             if (isLocalhost) {
                 // Use the pusher /local-script endpoint
+
+                // Important: the /local-script can no longer be sandboxed with "allow-scripts" because sandboxed iframes
+                // have a "null" origin and iframes with a "null" origin cannot be allowed to access localhost resources anymore
+                // (the browser white-lists domains allowed to access localhost, but "null" is not a domain and is not white-listed).
                 const encodedScriptUrl = encodeURIComponent(scriptUrl);
-                iframe.src = `/local-script?script=${encodedScriptUrl}`;
+                iframe.src = new URL(`/local-script?script=${encodedScriptUrl}`, ABSOLUTE_PUSHER_URL).toString();
             } else {
+                // We are putting a sandbox on this script because it will run in the same domain as the main website.
+                iframe.sandbox.add("allow-scripts");
+                iframe.sandbox.add("allow-top-navigation-by-user-activation");
+
                 // For non-localhost scripts, use the original inline srcdoc method
                 // Note: we define the base URL to be the same as the script URL to fix some issues with some scripts using Vite.
                 const scriptUrlBase = scriptUrlObj.protocol + "//" + scriptUrlObj.host;
