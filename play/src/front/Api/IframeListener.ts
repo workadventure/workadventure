@@ -708,6 +708,11 @@ class IframeListener {
         if (pathname.endsWith(".html")) {
             iframe.src = scriptUrl;
         } else {
+            // We are putting a sandbox on this script because it will run in the same domain as the main website.
+            // Without "allow-same-origin", the sandbox gives the iframe an opaque/unique origin and prevents same-origin access.
+            iframe.sandbox.add("allow-scripts");
+            iframe.sandbox.add("allow-top-navigation-by-user-activation");
+
             const hostname = scriptUrlObj.hostname;
             const isLocalhost = hostname === "localhost" || hostname.endsWith(".localhost");
 
@@ -716,16 +721,21 @@ class IframeListener {
             if (isLocalhost) {
                 // Use the pusher /local-script endpoint
 
-                // Important: the /local-script can no longer be sandboxed with "allow-scripts" because sandboxed iframes
-                // have a "null" origin and iframes with a "null" origin cannot be allowed to access localhost resources anymore
+                // Important: the /local-script can no longer have a "null" origin because iframes with a "null" origin
+                // cannot be allowed to access localhost resources anymore
                 // (the browser white-lists domains allowed to access localhost, but "null" is not a domain and is not white-listed).
+                // So for "localhost" scripts, we make an exception and inherit the origin of the main page.
+                // This gives scripts run through Vite local server extra privileges, but there is no other way to make
+                // it work with the new browser security rules.
+                // Note: combined with allow-scripts, a localhost map script with "allow-same-origin" can access
+                // parent/main-origin storage and remove the sandbox entirely. However, the scripts are coming
+                // from localhost and are typically running on the developer's machine, so we assume the developer is
+                // trusted and can run scripts with full privileges in the "play" domain.
+                iframe.sandbox.add("allow-same-origin");
+
                 const encodedScriptUrl = encodeURIComponent(scriptUrl);
                 iframe.src = `/local-script?script=${encodedScriptUrl}`;
             } else {
-                // We are putting a sandbox on this script because it will run in the same domain as the main website.
-                iframe.sandbox.add("allow-scripts");
-                iframe.sandbox.add("allow-top-navigation-by-user-activation");
-
                 // For non-localhost scripts, use the original inline srcdoc method
                 // Note: we define the base URL to be the same as the script URL to fix some issues with some scripts using Vite.
                 const scriptUrlBase = scriptUrlObj.protocol + "//" + scriptUrlObj.host;
