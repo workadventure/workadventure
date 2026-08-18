@@ -20,7 +20,6 @@ import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
 
 import { gameManager } from "../Phaser/Game/GameManager";
-import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
 import type { ClosePopupEvent } from "./Events/ClosePopupEvent";
@@ -721,7 +720,7 @@ class IframeListener {
                 // have a "null" origin and iframes with a "null" origin cannot be allowed to access localhost resources anymore
                 // (the browser white-lists domains allowed to access localhost, but "null" is not a domain and is not white-listed).
                 const encodedScriptUrl = encodeURIComponent(scriptUrl);
-                iframe.src = new URL(`/local-script?script=${encodedScriptUrl}`, ABSOLUTE_PUSHER_URL).toString();
+                iframe.src = `/local-script?script=${encodedScriptUrl}`;
             } else {
                 // We are putting a sandbox on this script because it will run in the same domain as the main website.
                 iframe.sandbox.add("allow-scripts");
