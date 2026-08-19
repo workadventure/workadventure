@@ -155,6 +155,13 @@ jobs:
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
+      # Booting the stack is the longest step of the setup and it needs nothing from npm, so it runs
+      # in the background while the toolchain installs. "Wait for WorkAdventure" below collects it.
+      - name: Start WorkAdventure
+        if: env.IS_FORK != 'true'
+        run: |
+          nohup bash -c 'docker compose $COMPOSE_FILES up -d --scale egress=2 > /tmp/compose-up.log 2>&1; echo $? > /tmp/compose-up.status' > /dev/null 2>&1 &
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -241,13 +248,31 @@ jobs:
           docker image load --input /tmp/map-storage.tar.gz
           docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
-      # Starting this earlier, in the background, so it would overlap the installs above was measured
-      # to be much slower rather than faster: `playwright install --with-deps` spends its time in
-      # apt, and having seventeen legs pull the compose images at the same moment starved it —
-      # the step went from ~40s to between 96s and 25 minutes depending on the leg. Both halves of
-      # the setup are network-bound, so they do not overlap for free. See PR #6443.
+      # A fork only has its images once the artifacts are loaded, so its stack starts here instead.
       - name: Start WorkAdventure
-        run: docker compose $COMPOSE_FILES up -d --scale egress=2
+        if: env.IS_FORK == 'true'
+        run: |
+          docker compose $COMPOSE_FILES up -d --scale egress=2
+          echo 0 > /tmp/compose-up.status
+
+      # `up -d` returns once the everything_started gate has seen map-storage and synapse healthy,
+      # so waiting on it is waiting on a usable stack.
+      - name: Wait for WorkAdventure
+        run: |
+          for _ in $(seq 1 120); do
+            if [ -f /tmp/compose-up.status ]; then
+              break
+            fi
+            sleep 5
+          done
+          if [ -f /tmp/compose-up.log ]; then
+            cat /tmp/compose-up.log
+          fi
+          if [ ! -f /tmp/compose-up.status ]; then
+            echo "The stack did not finish starting within 10 minutes."
+            exit 1
+          fi
+          exit "$(cat /tmp/compose-up.status)"
 
       - name: Upload test-map
         run: sleep 5 && npm run upload-test-map
