@@ -1,3 +1,8 @@
+import {
+    FLOOR_HOLDERS_METADATA_KEY,
+    RAISED_HANDS_METADATA_KEY,
+    parseStoredSpaceMetadata,
+} from "@workadventure/shared-utils";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
@@ -45,16 +50,14 @@ import type {
 } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 
-const raisedHandsSchema = z.array(z.object({ spaceUserId: z.string(), name: z.string(), at: z.number() }));
+// Shapes come from the shared space-metadata catalogue, which is also what the back validates against, so
+// there is a single definition of what a raised hand or a floor holder looks like.
 function parseRaisedHands(value: unknown): RaisedHand[] {
-    const result = raisedHandsSchema.safeParse(value);
-    return result.success ? result.data : [];
+    return parseStoredSpaceMetadata(RAISED_HANDS_METADATA_KEY, value) ?? [];
 }
 
-const floorHoldersSchema = z.array(z.object({ spaceUserId: z.string(), name: z.string() }));
 function parseFloorHolders(value: unknown): FloorSpeaker[] {
-    const result = floorHoldersSchema.safeParse(value);
-    return result.success ? result.data : [];
+    return parseStoredSpaceMetadata(FLOOR_HOLDERS_METADATA_KEY, value) ?? [];
 }
 import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
@@ -242,8 +245,8 @@ export class Space implements SpaceInterface {
         // The raised-hands queue lives in the space metadata (broadcast to all members, unlike SpaceUser),
         // so it reaches every participant including a megaphone speaker without seeAttendees.
         this.raisedHandsStore = readable<RaisedHand[]>([], (set) => {
-            set(parseRaisedHands(this.getMetadata().get("raisedHands")));
-            const subscription = this.observeMetadataProperty("raisedHands").subscribe((value) => {
+            set(parseRaisedHands(this.getMetadata().get(RAISED_HANDS_METADATA_KEY)));
+            const subscription = this.observeMetadataProperty(RAISED_HANDS_METADATA_KEY).subscribe((value) => {
                 set(parseRaisedHands(value));
             });
             return () => subscription.unsubscribe();
@@ -256,8 +259,8 @@ export class Space implements SpaceInterface {
         this.speakingUsersStore = readable<FloorSpeaker[]>([], (set) => {
             const compute = (value: unknown) =>
                 set(parseFloorHolders(value).filter((entry) => entry.spaceUserId !== this._mySpaceUserId));
-            compute(this.getMetadata().get("floorHolders"));
-            const subscription = this.observeMetadataProperty("floorHolders").subscribe(compute);
+            compute(this.getMetadata().get(FLOOR_HOLDERS_METADATA_KEY));
+            const subscription = this.observeMetadataProperty(FLOOR_HOLDERS_METADATA_KEY).subscribe(compute);
             return () => subscription.unsubscribe();
         });
 

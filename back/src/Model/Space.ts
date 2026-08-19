@@ -17,6 +17,12 @@ import {
     RemoveSpaceUserMessage,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
+import type { FloorHolderEntry, RaisedHandEntry, StoredSpaceMetadata } from "@workadventure/shared-utils";
+import {
+    FLOOR_HOLDERS_METADATA_KEY,
+    RAISED_HANDS_METADATA_KEY,
+    parseStoredSpaceMetadata,
+} from "@workadventure/shared-utils";
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
@@ -28,13 +34,6 @@ import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ManagedRecordingState } from "./RecordingManager";
 import { metadataProcessor } from "./MetadataProcessorInit";
-import type { FloorHolderEntry, RaisedHandEntry } from "./RaisedHandsMetadataProcessor";
-import {
-    FLOOR_HOLDERS_METADATA_KEY,
-    RAISED_HANDS_METADATA_KEY,
-    floorHoldersSchema,
-    raisedHandsQueueSchema,
-} from "./RaisedHandsMetadataProcessor";
 
 const debug = Debug("space");
 
@@ -724,8 +723,13 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
     }
 
-    public getMetadataValue(key: string): unknown {
-        return this.metadata.get(key);
+    /**
+     * Reads a metadata value back, validated against the shared catalogue so the caller gets the type the
+     * key declares instead of `unknown`. Returns undefined when the stored value does not match, and hands
+     * back scripting API metadata (keys the catalogue does not describe) untouched.
+     */
+    public getMetadataValue<K extends string>(key: K): StoredSpaceMetadata<K> | undefined {
+        return parseStoredSpaceMetadata(key, this.metadata.get(key));
     }
 
     /**
@@ -775,15 +779,15 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return list;
     }
 
-    // Both lists are written only by the two methods above, so parsing is a safety net: `.catch([])` means an
+    // Both lists are written only by the two methods above, so the catalogue check is a safety net: an
     // unparseable value (nothing we ever stored) restarts from an empty list instead of throwing. Each call
     // returns a fresh array, so the caller can mutate it before storing it back.
     private raisedHandsQueue(): RaisedHandEntry[] {
-        return raisedHandsQueueSchema.parse(this.metadata.get(RAISED_HANDS_METADATA_KEY));
+        return this.getMetadataValue(RAISED_HANDS_METADATA_KEY) ?? [];
     }
 
     private floorHolders(): FloorHolderEntry[] {
-        return floorHoldersSchema.parse(this.metadata.get(FLOOR_HOLDERS_METADATA_KEY));
+        return this.getMetadataValue(FLOOR_HOLDERS_METADATA_KEY) ?? [];
     }
 
     public getSpaceName(): string {
