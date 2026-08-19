@@ -4,10 +4,12 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
-    import { inLivekitStore } from "../../../Stores/MediaStore";
+    import { inLivekitStore, isSpeakerStore } from "../../../Stores/MediaStore";
+    import { inExternalServiceStore } from "../../../Stores/MyMediaStore";
+    import { isInRemoteConversation } from "../../../Stores/StreamableCollectionStore";
     import { onboardingStore } from "../../../Stores/OnboardingStore";
     import { followStateStore } from "../../../Stores/FollowStore";
-    import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
+    import { givenFloorSpaceStore, requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
     import { currentPlayerLockableAreasStore } from "../../../Stores/CurrentPlayerAreaLockStore";
     import { currentPlayerGroupLockStateStore } from "../../../Stores/CurrentPlayerGroupStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -20,6 +22,7 @@
     import MusicMenuItem from "./MusicMenuItem.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import MegaphoneMenuItem from "./MegaphoneMenuItem.svelte";
+    import RaiseHandMenuItem from "./RaiseHandMenuItem.svelte";
     import RecordingMenuItem from "./RecordingMenuItem.svelte";
     import { createRecordingMenuStateStore } from "./RecordingMenuUtils";
 
@@ -66,6 +69,13 @@
 
 {#if $requestedMegaphoneStore}
     <MegaphoneMenuItem />
+{/if}
+
+<!-- Single control for the whole "ask to speak" lifecycle: shown to raise the hand while in a conversation and
+     not yet a speaker, and kept on stage (green "live" state) once the floor is granted so the user can hand it
+     back. Hidden for genuine zone speakers (a speaker without a granted floor). -->
+{#if !$inExternalServiceStore && (($isInRemoteConversation && !$isSpeakerStore) || $givenFloorSpaceStore !== undefined)}
+    <RaiseHandMenuItem />
 {/if}
 
 {#if inProfileMenu}
