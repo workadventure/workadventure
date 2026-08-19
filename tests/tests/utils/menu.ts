@@ -10,10 +10,17 @@ class Menu {
         await expect(page.locator("#chat.chatWindow")).toBeVisible();
     }
 
+    // The "Map editor" menu entry is a toggle, and the old assertion (the sub-menu closing) was true in both
+    // directions — so calling this while the editor was already open silently closed it, and the next click on
+    // the side bar raced its exit animation. Guard on the side bar instead, and assert it is really there.
     async openMapEditor(page: Page) {
-        await page.getByTestId("map-menu").click({ timeout: 30_000 });
-        await page.getByRole("button", { name: "Map editor" }).click();
-        await expect(page.getByRole("button", { name: "Map editor" })).toBeHidden();
+        const mapEditorSideBar = page.locator("section.side-bar-container .side-bar");
+        if (!(await mapEditorSideBar.isVisible())) {
+            await page.getByTestId("map-menu").click({ timeout: 30_000 });
+            await page.getByRole("button", { name: "Map editor" }).click();
+            await expect(page.getByRole("button", { name: "Map editor" })).toBeHidden();
+        }
+        await expect(mapEditorSideBar).toBeVisible();
     }
 
     async openMapExplorer(page: Page) {
@@ -92,6 +99,9 @@ class Menu {
         //await page.locator('.map-editor .configure-my-room .close-window').click();
         await page.getByTestId("closeMapEditorButton").click();
         await expect(page.locator("#map-editor-container .configure-my-room .close-window")).toBeHidden();
+        // Wait for the side bar to actually leave (it plays an exit animation), so that a later openMapEditor
+        // does not mistake the fading side bar for an already-open editor.
+        await expect(page.locator("section.side-bar-container .side-bar")).toBeHidden();
     }
 
     async clickSendGlobalMessage(page: Page) {
@@ -237,8 +247,10 @@ class Menu {
         await expect(page.getByRole("button", { name: "Continue without webcam" })).toBeVisible();
     }
 
+    // Closes the "Configure my room" panel only — the map editor itself stays open.
     async closeMapEditorConfigureMyRoomPopUp(page: Page) {
         await page.locator(".configure-my-room button.close-window").first().click();
+        await expect(page.locator(".configure-my-room")).toBeHidden();
     }
 
     async openEmoji(page: Page) {
