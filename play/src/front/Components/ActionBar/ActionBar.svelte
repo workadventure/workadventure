@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { isSpeakerStore, silentStore } from "../../Stores/MediaStore";
-    import { givenFloorSpaceStore } from "../../Stores/MegaphoneStore";
+    import { silentStore } from "../../Stores/MediaStore";
 
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
@@ -19,7 +18,6 @@
     import MediaSettingsList from "./MediaSettingsList/MediaSettingsList.svelte";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
-    import RaiseHandMenuItem from "./MenuIcons/RaiseHandMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
     import UserListMenuItem from "./MenuIcons/UserListMenuItem.svelte";
@@ -129,16 +127,11 @@
                                 {/if}
                                 <!-- NAV : SCREENSHARING END -->
 
-                                <!-- NAV : RAISE HAND START -->
-                                <!-- Single control for the whole lifecycle: shown to raise the hand while in a
-                                     conversation and not yet a speaker, and kept on stage (green "live" state) once
-                                     the floor is granted so the user can hand it back. Hidden for genuine zone
-                                     speakers (speaker without a granted floor). -->
-                                {#if !$inExternalServiceStore && (($isInRemoteConversation && !$isSpeakerStore) || $givenFloorSpaceStore !== undefined)}
-                                    <RaiseHandMenuItem />
-                                {/if}
-                                <!-- NAV : RAISE HAND END -->
-                                <!-- Host-side management of raised hands is the docked RaisedHandsDock (top-right),
+                                <!-- The raise-hand button lives in ContextualMenuItems, not here: the hardware group
+                                     cannot shrink, and a sixth button in it squeezes the right bar until the profile
+                                     menu is clipped out of reach on a narrow (mobile) bar. ContextualMenuItems moves
+                                     into the profile menu below the @sm/actions breakpoint instead.
+                                     Host-side management of raised hands is the docked RaisedHandsDock (top-right),
                                      mounted in MainLayout — no longer an action-bar button. -->
                             </div>
                         </div>
@@ -147,18 +140,11 @@
             {/snippet}
 
             {#snippet right()}
-                <!-- z-[2] (applied to this flex item — no `position`) keeps the profile menu and its
-                     "action-user" trigger above the centre controls: on a narrow mobile bar the extra raise-hand
-                     button can overflow into this area, and the centre group's own z-[1] would otherwise intercept
-                     clicks meant for the profile menu.
-                     Do NOT add `position: relative` here: it would make #action-wrapper the containing block for the
-                     right buttons' floating-ui dropdowns (map menu → "Éditer la carte", profile menu…), which live
-                     inside the right bar's overflow-hidden and would then be clipped — the map editor and menus
-                     silently fail to open (clicks fall through to the game canvas). -->
-                <div
-                    id="action-wrapper"
-                    class="z-[2] flex flex-1 justify-end gap-1 @md/actions:gap-2 @xl/actions:gap-4"
-                >
+                <!-- Do NOT add `position: relative` here: it would make #action-wrapper the containing block for
+                     the right buttons' floating-ui dropdowns (map menu → "Éditer la carte", profile menu…), which
+                     live inside the right bar's overflow-hidden and would then be clipped — the map editor and
+                     menus silently fail to open (clicks fall through to the game canvas). -->
+                <div id="action-wrapper" class="flex flex-1 justify-end gap-1 @md/actions:gap-2 @xl/actions:gap-4">
                     <div class="flex flex-row flex-0 gap-0">
                         {#if rightDiv}
                             {#each $rightActionBarMenuItems as button, index (button.id)}
