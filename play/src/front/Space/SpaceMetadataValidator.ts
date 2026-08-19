@@ -1,5 +1,11 @@
-import z from "zod";
+import type z from "zod";
+import { RECORDING_METADATA_KEY, recordingMetadataSchema } from "@workadventure/shared-utils";
 
+/**
+ * Keys whose *initial* value should not be replayed to the observers when joining a space (an "idle"
+ * recording is not an event worth reacting to). The shapes themselves live in the shared space-metadata
+ * catalogue (@workadventure/shared-utils), which the back validates against too.
+ */
 export const spaceMetadataValidator: Map<
     string,
     {
@@ -8,23 +14,11 @@ export const spaceMetadataValidator: Map<
     }
 > = new Map();
 
-const recordingStatusSchema = z.enum(["idle", "starting", "recording", "stopping"]);
-
-export const recordingSchema = z
-    .object({
-        recording: z.boolean(),
-        recorder: z.string().optional().nullable(),
-        status: recordingStatusSchema.optional(),
-    })
-    .transform((value) => ({
-        recording: value.recording,
-        recorder: value.recorder ?? null,
-        status: value.status ?? (value.recording ? "recording" : "idle"),
-    }));
+export const recordingSchema = recordingMetadataSchema;
 
 export type recordingValidator = z.infer<typeof recordingSchema>;
 
-spaceMetadataValidator.set("recording", {
+spaceMetadataValidator.set(RECORDING_METADATA_KEY, {
     schema: recordingSchema,
     shouldSkipInitialValueFunction: (value: unknown) => {
         const result = recordingSchema.safeParse(value);
