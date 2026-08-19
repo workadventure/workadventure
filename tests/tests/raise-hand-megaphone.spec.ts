@@ -156,6 +156,8 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(speaker, 5 * 32, 5 * 32);
 
         // Configure the room-level (global) megaphone, then remove the tag restriction so everyone can use it.
+        // Both saves happen in a single "Configure my room" session: closing the popup leaves the map editor
+        // open, so reopening it would toggle the editor *off* and the next click would race its exit animation.
         await Menu.openMapEditor(speaker);
         await MapEditor.openConfigureMyRoom(speaker);
         await ConfigureMyRoom.selectMegaphoneItemInCMR(speaker);
@@ -165,18 +167,17 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneAddNewRights(speaker, "example");
         await Megaphone.megaphoneSave(speaker);
         await Megaphone.isCorrectlySaved(speaker);
-        await Menu.closeMapEditorConfigureMyRoomPopUp(speaker);
+        // The save button stays disabled on "Megaphone settings saved" for 3.5s; wait for it to go back to
+        // "Save" before saving again.
+        await expect(speaker.getByRole("button", { name: "Megaphone settings saved" })).toBeHidden();
 
-        await Menu.openMapEditor(speaker);
-        await MapEditor.openConfigureMyRoom(speaker);
-        await ConfigureMyRoom.selectMegaphoneItemInCMR(speaker);
         await Megaphone.megaphoneRemoveRights(speaker, "example");
         await Megaphone.megaphoneSave(speaker);
         await Megaphone.isCorrectlySaved(speaker);
         await Menu.closeMapEditorConfigureMyRoomPopUp(speaker);
 
-        // Add a SEPARATE map speaker zone (a different space than the global megaphone).
-        await Menu.openMapEditor(speaker);
+        // Add a SEPARATE map speaker zone (a different space than the global megaphone). The map editor is
+        // still open here, so we go straight to the area editor.
         await MapEditor.openAreaEditor(speaker);
         await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 1 * 32 }, { x: 4 * 32, y: 3 * 32 });
         await AreaEditor.addProperty(speaker, "speakerMegaphone");
