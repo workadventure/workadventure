@@ -1,6 +1,12 @@
 import { MetadataProcessor } from "./MetadataProcessor";
 import { processProximityPollMetadata, proximityPollMetadataPrefixes } from "./ProximityPollMetadataProcessor";
 import { processProximityQAMetadata, proximityQAMetadataPrefixes } from "./ProximityQAMetadataProcessor";
+import {
+    FLOOR_HOLDERS_METADATA_KEY,
+    RAISED_HANDS_METADATA_KEY,
+    processFloorHoldersMetadata,
+    processRaisedHandsMetadata,
+} from "./RaisedHandsMetadataProcessor";
 
 export const metadataProcessor = new MetadataProcessor();
 
@@ -18,14 +24,8 @@ for (const prefix of proximityPollMetadataPrefixes) {
 
 // The client only sends its own intent ({ raised: boolean }); the server computes the authoritative,
 // ordered queue (stamping the timestamp and name, using the trusted senderId). See Space.applyRaisedHand.
-metadataProcessor.registerMetadataProcessor("raisedHands", (value, senderId, space) => {
-    const raised = typeof value === "object" && value !== null && (value as { raised?: unknown }).raised === true;
-    return Promise.resolve(space.applyRaisedHand(senderId, raised));
-});
+metadataProcessor.registerMetadataProcessor(RAISED_HANDS_METADATA_KEY, processRaisedHandsMetadata);
 
 // The client only reports whether it currently holds a granted floor ({ holds: boolean }); the server keeps the
 // authoritative list of floor holders (only users given the floor, never the hosts). See Space.applyFloorHolder.
-metadataProcessor.registerMetadataProcessor("floorHolders", (value, senderId, space) => {
-    const holds = typeof value === "object" && value !== null && (value as { holds?: unknown }).holds === true;
-    return Promise.resolve(space.applyFloorHolder(senderId, holds));
-});
+metadataProcessor.registerMetadataProcessor(FLOOR_HOLDERS_METADATA_KEY, processFloorHoldersMetadata);
