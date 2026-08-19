@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { processProximityPollMetadata } from "../src/Model/ProximityPollMetadataProcessor";
+import type { ProximityPollDefinitionMetadata, StoredSpaceMetadata } from "@workadventure/shared-utils";
+import { parseStoredSpaceMetadata } from "@workadventure/shared-utils";
+import {
+    processProximityPollDefinitionMetadata,
+    processProximityPollDeleteMetadata,
+    processProximityPollEndMetadata,
+    processProximityPollVoteMetadata,
+} from "../src/Model/ProximityPollMetadataProcessor";
 
 describe("ProximityPollMetadataProcessor", () => {
     it("should accept poll creation when sender identity matches", async () => {
@@ -8,7 +15,12 @@ describe("ProximityPollMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityPollMetadata("proximityPoll:poll-1", createPollDefinition(), "space-user-1", space),
+            processProximityPollDefinitionMetadata(
+                "proximityPoll:poll-1",
+                createPollDefinition(),
+                "space-user-1",
+                space,
+            ),
         ).resolves.toMatchObject({ id: "poll-1" });
     });
 
@@ -18,7 +30,12 @@ describe("ProximityPollMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityPollMetadata("proximityPoll:spoofed-poll", createPollDefinition(), "space-user-1", space),
+            processProximityPollDefinitionMetadata(
+                "proximityPoll:spoofed-poll",
+                createPollDefinition(),
+                "space-user-1",
+                space,
+            ),
         ).rejects.toThrow("Poll metadata key does not match payload");
     });
 
@@ -29,7 +46,7 @@ describe("ProximityPollMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityPollMetadata(
+            processProximityPollVoteMetadata(
                 "proximityPollVote:poll-1:bob-uuid",
                 { pollId: "poll-1", voterId: "bob-uuid", answerIds: ["answer-1"], updatedAt: 11 },
                 "space-user-1",
@@ -45,7 +62,7 @@ describe("ProximityPollMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityPollMetadata(
+            processProximityPollEndMetadata(
                 "proximityPollEnd:poll-1",
                 { pollId: "poll-1", senderId: "other-uuid", closedAt: 12 },
                 "space-user-1",
@@ -53,7 +70,7 @@ describe("ProximityPollMetadataProcessor", () => {
             ),
         ).rejects.toThrow("Only poll creators can close a poll");
         await expect(
-            processProximityPollMetadata(
+            processProximityPollDeleteMetadata(
                 "proximityPollDelete:poll-1",
                 { pollId: "poll-1", senderId: "other-uuid", deletedAt: 13 },
                 "space-user-1",
@@ -70,7 +87,7 @@ describe("ProximityPollMetadataProcessor", () => {
 
         // The poll was stored with the creator's uuid, but the creator acts with their spaceUserId.
         await expect(
-            processProximityPollMetadata(
+            processProximityPollEndMetadata(
                 "proximityPollEnd:poll-1",
                 { pollId: "poll-1", senderId: "space-user-1", closedAt: 12 },
                 "space-user-1",
@@ -78,7 +95,7 @@ describe("ProximityPollMetadataProcessor", () => {
             ),
         ).resolves.toMatchObject({ pollId: "poll-1" });
         await expect(
-            processProximityPollMetadata(
+            processProximityPollDeleteMetadata(
                 "proximityPollDelete:poll-1",
                 { pollId: "poll-1", senderId: "space-user-1", deletedAt: 13 },
                 "space-user-1",
@@ -94,7 +111,7 @@ describe("ProximityPollMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityPollMetadata(
+            processProximityPollVoteMetadata(
                 "proximityPollVote:poll-1:alice-uuid",
                 { pollId: "poll-1", voterId: "alice-uuid", answerIds: ["answer-1", "answer-2"], updatedAt: 11 },
                 "space-user-1",
@@ -110,7 +127,7 @@ describe("ProximityPollMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityPollMetadata(
+            processProximityPollVoteMetadata(
                 "proximityPollVote:poll-1:alice-uuid",
                 { pollId: "poll-1", voterId: "alice-uuid", answerIds: ["unknown-answer"], updatedAt: 11 },
                 "space-user-1",
@@ -120,7 +137,7 @@ describe("ProximityPollMetadataProcessor", () => {
     });
 });
 
-function createPollDefinition() {
+function createPollDefinition(): ProximityPollDefinitionMetadata {
     return {
         id: "poll-1",
         question: "Which option?",
@@ -145,6 +162,9 @@ function createSpace({
 }) {
     return {
         getUser: (spaceUserId: string) => (spaceUserId === sender.spaceUserId ? sender : undefined),
-        getMetadataValue: (key: string) => metadata.get(key),
+        // Same catalogue check as the real Space, so the fake cannot hand back a shape the processor
+        // could never receive in production.
+        getMetadataValue: <K extends string>(key: K): StoredSpaceMetadata<K> | undefined =>
+            parseStoredSpaceMetadata(key, metadata.get(key)),
     };
 }

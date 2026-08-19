@@ -1,41 +1,43 @@
-import { z } from "zod";
+import type { z } from "zod";
+import {
+    PROXIMITY_QA_ANSWER_PREFIX,
+    PROXIMITY_QA_DELETE_PREFIX,
+    PROXIMITY_QA_QUESTION_PREFIX,
+    PROXIMITY_QA_UPVOTE_PREFIX,
+    proximityQAAnswerMetadataSchema,
+    proximityQADeleteMetadataSchema,
+    proximityQAQuestionMetadataSchema,
+    proximityQAUpvoteMetadataSchema,
+} from "@workadventure/shared-utils";
 
-const PROXIMITY_QA_QUESTION_PREFIX = "proximityQaQuestion:";
-const PROXIMITY_QA_UPVOTE_PREFIX = "proximityQaUpvote:";
-const PROXIMITY_QA_ANSWER_PREFIX = "proximityQaAnswer:";
-const PROXIMITY_QA_DELETE_PREFIX = "proximityQaDelete:";
+// The keys, the payload shapes and their upper bounds live in the shared space-metadata catalogue
+// (@workadventure/shared-utils), which is what the back validates incoming metadata against. What stays here
+// is the presentation side: turning the raw metadata into the Q&A state the chat UI renders.
+export {
+    PROXIMITY_QA_ANSWER_PREFIX,
+    PROXIMITY_QA_DELETE_PREFIX,
+    PROXIMITY_QA_QUESTION_PREFIX,
+    PROXIMITY_QA_UPVOTE_PREFIX,
+    getProximityQAAnswerMetadataKey,
+    getProximityQADeleteMetadataKey,
+    getProximityQAQuestionMetadataKey,
+    getProximityQAUpvoteMetadataKey,
+    proximityQAAnswerMetadataSchema,
+    proximityQADeleteMetadataSchema,
+    proximityQAQuestionMetadataSchema,
+    proximityQAUpvoteMetadataSchema,
+} from "@workadventure/shared-utils";
+export type {
+    ProximityQAAnswerMetadata,
+    ProximityQADeleteMetadata,
+    ProximityQAQuestionMetadata,
+    ProximityQAUpvoteMetadata,
+} from "@workadventure/shared-utils";
 
-export const proximityQAQuestionMetadataSchema = z.object({
-    id: z.string().min(1),
-    body: z.string().min(1),
-    senderId: z.string().min(1),
-    senderName: z.string().optional(),
-    createdAt: z.number().int(),
-});
-
-export const proximityQAUpvoteMetadataSchema = z.object({
-    questionId: z.string().min(1),
-    voterId: z.string().min(1),
-    upvoted: z.boolean(),
-    updatedAt: z.number().int(),
-});
-
-export const proximityQAAnswerMetadataSchema = z.object({
-    questionId: z.string().min(1),
-    moderatorId: z.string().min(1),
-    answeredAt: z.number().int(),
-});
-
-export const proximityQADeleteMetadataSchema = z.object({
-    questionId: z.string().min(1),
-    senderId: z.string().min(1),
-    deletedAt: z.number().int(),
-});
-
-export type ProximityQAQuestionMetadata = z.infer<typeof proximityQAQuestionMetadataSchema>;
-export type ProximityQAUpvoteMetadata = z.infer<typeof proximityQAUpvoteMetadataSchema>;
-export type ProximityQAAnswerMetadata = z.infer<typeof proximityQAAnswerMetadataSchema>;
-export type ProximityQADeleteMetadata = z.infer<typeof proximityQADeleteMetadataSchema>;
+type ProximityQAQuestionMetadata = z.infer<typeof proximityQAQuestionMetadataSchema>;
+type ProximityQAUpvoteMetadata = z.infer<typeof proximityQAUpvoteMetadataSchema>;
+type ProximityQAAnswerMetadata = z.infer<typeof proximityQAAnswerMetadataSchema>;
+type ProximityQADeleteMetadata = z.infer<typeof proximityQADeleteMetadataSchema>;
 
 export type ParsedProximityQAMetadata = {
     questions: ProximityQAQuestionMetadata[];
@@ -57,22 +59,6 @@ export type ProximityQAState = {
     canDelete: boolean;
     canMarkAnswered: boolean;
 };
-
-export function getProximityQAQuestionMetadataKey(questionId: string): string {
-    return `${PROXIMITY_QA_QUESTION_PREFIX}${questionId}`;
-}
-
-export function getProximityQAUpvoteMetadataKey(questionId: string, voterId: string): string {
-    return `${PROXIMITY_QA_UPVOTE_PREFIX}${questionId}:${voterId}`;
-}
-
-export function getProximityQAAnswerMetadataKey(questionId: string): string {
-    return `${PROXIMITY_QA_ANSWER_PREFIX}${questionId}`;
-}
-
-export function getProximityQADeleteMetadataKey(questionId: string): string {
-    return `${PROXIMITY_QA_DELETE_PREFIX}${questionId}`;
-}
 
 export function parseProximityQAMetadata(metadata: Map<string, unknown>): ParsedProximityQAMetadata {
     const questions: ProximityQAQuestionMetadata[] = [];
