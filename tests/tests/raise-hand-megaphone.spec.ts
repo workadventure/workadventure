@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import Map from "./utils/map";
 import AreaEditor from "./utils/map-editor/areaEditor";
@@ -14,6 +15,25 @@ test.setTimeout(240_000); // Map editor + LiveKit promotion can be slow, especia
 test.use({
     baseURL: map_storage_url,
 });
+
+// AreaEditor.drawArea drags on the Phaser canvas, and the drag occasionally does not register: the canvas is
+// still settling right after drawArea toggles the camera preview off and back on for an area near the top of
+// the screen. No area then gets created or selected, the property list never appears, and the following
+// addProperty times out on its test id. The same race fails map_editor_megaphone_speaker_zone.spec.ts on
+// master, so draw again instead of inheriting the flake.
+async function drawAreaWithProperties(
+    page: Page,
+    topLeft: { x: number; y: number },
+    bottomRight: { x: number; y: number },
+): Promise<void> {
+    await AreaEditor.drawArea(page, topLeft, bottomRight);
+    // A property button only exists while an area is selected, so it tells us the drag landed.
+    if (await page.getByTestId("speakerMegaphone").isVisible()) {
+        return;
+    }
+    await AreaEditor.drawArea(page, topLeft, bottomRight);
+    await expect(page.getByTestId("speakerMegaphone")).toBeVisible();
+}
 
 // This test covers the webinar gap that the proximity raise-hand test cannot: a megaphone speaker whose podium
 // has "See attendees" OFF does not receive listeners' SpaceUser, so the listener has no video tile for the
@@ -41,10 +61,10 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await using speaker = await getPage(browser, "Admin1", Map.url("empty"));
         await Menu.openMapEditor(speaker);
         await MapEditor.openAreaEditor(speaker);
-        await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
+        await drawAreaWithProperties(speaker, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(speaker, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(speaker, podiumName, false, false);
-        await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
+        await drawAreaWithProperties(speaker, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(speaker, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(speaker, podiumName.toLowerCase());
         await Menu.closeMapEditor(speaker);
@@ -104,10 +124,10 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await using speaker = await getPage(browser, "Admin1", Map.url("empty"));
         await Menu.openMapEditor(speaker);
         await MapEditor.openAreaEditor(speaker);
-        await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
+        await drawAreaWithProperties(speaker, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
         await AreaEditor.addProperty(speaker, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(speaker, podiumName, false, false);
-        await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
+        await drawAreaWithProperties(speaker, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
         await AreaEditor.addProperty(speaker, "listenerMegaphone");
         await AreaEditor.setMatchingPodiumZoneProperty(speaker, podiumName.toLowerCase());
         await Menu.closeMapEditor(speaker);
@@ -179,7 +199,7 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         // Add a SEPARATE map speaker zone (a different space than the global megaphone). The map editor is
         // still open here, so we go straight to the area editor.
         await MapEditor.openAreaEditor(speaker);
-        await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 1 * 32 }, { x: 4 * 32, y: 3 * 32 });
+        await drawAreaWithProperties(speaker, { x: 1 * 32, y: 1 * 32 }, { x: 4 * 32, y: 3 * 32 });
         await AreaEditor.addProperty(speaker, "speakerMegaphone");
         await AreaEditor.setPodiumNameProperty(
             speaker,
