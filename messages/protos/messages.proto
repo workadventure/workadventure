@@ -1759,10 +1759,8 @@ message SpaceUser{
   google.protobuf.StringValue chatID = 17; // used
   bool showVoiceIndicator = 18;
   bool attendeesState = 19;
-  // Raise-hand state is NOT stored per-user here: it lives in the space metadata key "raisedHands"
-  // (broadcast to all members, incl. a megaphone speaker without seeAttendees). Field numbers 20 and 21
-  // are reserved to avoid reuse.
-  reserved 20, 21;
+  // Raise-hand state is NOT stored per-user here: it lives in the space metadata key "raisedHands",
+  // which is broadcast to all members, including a megaphone speaker without seeAttendees.
 }
 
 /*message PartialSpaceUser{

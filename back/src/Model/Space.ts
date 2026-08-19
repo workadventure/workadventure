@@ -28,6 +28,13 @@ import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ManagedRecordingState } from "./RecordingManager";
 import { metadataProcessor } from "./MetadataProcessorInit";
+import type { FloorHolderEntry, RaisedHandEntry } from "./RaisedHandsMetadataProcessor";
+import {
+    FLOOR_HOLDERS_METADATA_KEY,
+    RAISED_HANDS_METADATA_KEY,
+    floorHoldersSchema,
+    raisedHandsQueueSchema,
+} from "./RaisedHandsMetadataProcessor";
 
 const debug = Debug("space");
 
@@ -223,22 +230,14 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
             // Remove the leaving user from the raised-hands queue (metadata) if present, so it does not keep
             // a ghost entry, and broadcast the updated queue to everyone.
-            const raisedHandsQueue = this.metadata.get("raisedHands");
-            if (
-                Array.isArray(raisedHandsQueue) &&
-                (raisedHandsQueue as { spaceUserId?: unknown }[]).some((entry) => entry?.spaceUserId === spaceUserId)
-            ) {
-                this.publishMetadata({ raisedHands: this.applyRaisedHand(spaceUserId, false) });
+            if (this.raisedHandsQueue().some((entry) => entry.spaceUserId === spaceUserId)) {
+                this.publishMetadata({ [RAISED_HANDS_METADATA_KEY]: this.applyRaisedHand(spaceUserId, false) });
             }
 
             // Same cleanup for the floor-holders list, so a user who leaves while holding the floor does not stay
             // in the host's "take back" panel forever.
-            const floorHolders = this.metadata.get("floorHolders");
-            if (
-                Array.isArray(floorHolders) &&
-                (floorHolders as { spaceUserId?: unknown }[]).some((entry) => entry?.spaceUserId === spaceUserId)
-            ) {
-                this.publishMetadata({ floorHolders: this.applyFloorHolder(spaceUserId, false) });
+            if (this.floorHolders().some((entry) => entry.spaceUserId === spaceUserId)) {
+                this.publishMetadata({ [FLOOR_HOLDERS_METADATA_KEY]: this.applyFloorHolder(spaceUserId, false) });
             }
 
             if (this.isPublishing(user)) {
@@ -738,13 +737,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
      * (the back is single-threaded), avoiding lost updates when several listeners raise their hand at once.
      * The timestamp and name are stamped server-side, and the identity is the trusted senderId.
      */
-    public applyRaisedHand(senderId: string, raised: boolean): { spaceUserId: string; name: string; at: number }[] {
-        const current = this.metadata.get("raisedHands");
-        const queue = Array.isArray(current)
-            ? (current as { spaceUserId: string; name: string; at: number }[]).filter(
-                  (entry) => entry != undefined && typeof entry.spaceUserId === "string",
-              )
-            : [];
+    public applyRaisedHand(senderId: string, raised: boolean): RaisedHandEntry[] {
+        const queue = this.raisedHandsQueue();
         const existingIndex = queue.findIndex((entry) => entry.spaceUserId === senderId);
         if (raised) {
             if (existingIndex === -1) {
@@ -754,7 +748,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         } else if (existingIndex !== -1) {
             queue.splice(existingIndex, 1);
         }
-        this.metadata.set("raisedHands", queue);
+        this.metadata.set(RAISED_HANDS_METADATA_KEY, queue);
         return queue;
     }
 
@@ -767,13 +761,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
      * even without seeAttendees, and a promoted guest can only ever act on other granted guests, not the host.
      * Synchronous so read-modify-write is atomic; identity is the trusted senderId.
      */
-    public applyFloorHolder(senderId: string, holds: boolean): { spaceUserId: string; name: string }[] {
-        const current = this.metadata.get("floorHolders");
-        const list = Array.isArray(current)
-            ? (current as { spaceUserId: string; name: string }[]).filter(
-                  (entry) => entry != undefined && typeof entry.spaceUserId === "string",
-              )
-            : [];
+    public applyFloorHolder(senderId: string, holds: boolean): FloorHolderEntry[] {
+        const list = this.floorHolders();
         const existingIndex = list.findIndex((entry) => entry.spaceUserId === senderId);
         if (holds) {
             if (existingIndex === -1) {
@@ -782,8 +771,19 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         } else if (existingIndex !== -1) {
             list.splice(existingIndex, 1);
         }
-        this.metadata.set("floorHolders", list);
+        this.metadata.set(FLOOR_HOLDERS_METADATA_KEY, list);
         return list;
+    }
+
+    // Both lists are written only by the two methods above, so parsing is a safety net: `.catch([])` means an
+    // unparseable value (nothing we ever stored) restarts from an empty list instead of throwing. Each call
+    // returns a fresh array, so the caller can mutate it before storing it back.
+    private raisedHandsQueue(): RaisedHandEntry[] {
+        return raisedHandsQueueSchema.parse(this.metadata.get(RAISED_HANDS_METADATA_KEY));
+    }
+
+    private floorHolders(): FloorHolderEntry[] {
+        return floorHoldersSchema.parse(this.metadata.get(FLOOR_HOLDERS_METADATA_KEY));
     }
 
     public getSpaceName(): string {
