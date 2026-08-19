@@ -382,7 +382,9 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
     const endMock = vi.fn();
 
     return {
-        getUserData: vi.fn(() => socketData),
+        // the framework hands the upgrade request to every handler, and this service keeps its
+        // socket data on it
+        req: { socketData },
         send: sendMock,
         sendMock,
         ping: vi.fn(),

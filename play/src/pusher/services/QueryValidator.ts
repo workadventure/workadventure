@@ -1,6 +1,5 @@
 import type { z, ZodObject, ZodRawShape } from "zod";
 import type { Request, Response } from "express";
-import type { HttpRequest, HttpResponse, us_socket_context_t } from "uWebSockets.js";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 
 function validateObject<T extends ZodObject<ZodRawShape>>(
@@ -44,53 +43,36 @@ export function validatePostQuery<T extends ZodObject<ZodRawShape>>(
 }
 
 /**
- * Either validates the query and returns the parsed query data (according to the validator passed in parameter)
- * or fills the response with a HTTP 400 message and returns undefined.
+ * The same for a websocket upgrade. The query is the one the request already parsed, so this is
+ * the same validation as above; only the failure differs, because a socket carries its error to
+ * the client over the connection rather than as a 400 nobody would read.
  */
 export function validateWebsocketQuery<T extends ZodObject<ZodRawShape>>(
-    req: HttpRequest,
-    res: HttpResponse,
-    context: us_socket_context_t,
+    req: Request,
     validator: T,
-): z.infer<T> | undefined {
-    const urlSearchParams = new URLSearchParams(req.getQuery());
-    const params: Record<string, string | string[]> = {};
-    for (const key of [...new Set(urlSearchParams.keys())]) {
-        const values = urlSearchParams.getAll(key);
-        params[key] = values.length > 1 ? values : values[0];
-    }
-    const result = validator.safeParse(params);
+): { success: true; data: z.infer<T> } | { success: false; failure: UpgradeFailedData } {
+    const result = validator.safeParse(req.query);
 
     if (result.success) {
-        return result.data;
-    } else {
-        const messages = result.error.issues.map((issue) => "Parameter " + issue.path + ": " + issue.message);
-
-        const websocketKey = req.getHeader("sec-websocket-key");
-        const websocketProtocol = req.getHeader("sec-websocket-protocol");
-        const websocketExtensions = req.getHeader("sec-websocket-extensions");
-
-        res.cork(() => {
-            res.upgrade(
-                {
-                    rejected: true,
-                    reason: "error",
-                    error: {
-                        status: "error",
-                        type: "error",
-                        title: "400 Bad Request",
-                        subtitle: "Something wrong happened while connecting!",
-                        image: "",
-                        code: "WS_BAD_REQUEST",
-                        details: messages.join("\n"),
-                    },
-                } satisfies UpgradeFailedData,
-                websocketKey,
-                websocketProtocol,
-                websocketExtensions,
-                context,
-            );
-        });
-        return undefined;
+        return { success: true, data: result.data };
     }
+
+    const messages = result.error.issues.map((issue) => "Parameter " + issue.path + ": " + issue.message);
+
+    return {
+        success: false,
+        failure: {
+            rejected: true,
+            reason: "error",
+            error: {
+                status: "error",
+                type: "error",
+                title: "400 Bad Request",
+                subtitle: "Something wrong happened while connecting!",
+                image: "",
+                code: "WS_BAD_REQUEST",
+                details: messages.join("\n"),
+            },
+        },
+    };
 }

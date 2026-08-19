@@ -57,7 +57,8 @@ import { PusherRoom } from "../models/PusherRoom";
 import type { SocketData, BackConnection } from "../models/Websocket/SocketData";
 
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
-import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
+import type { AdminConnection, AdminSocket } from "../models/Websocket/AdminSocketData";
+import { adminDataOf } from "../models/Websocket/AdminSocketData";
 import { EMBEDDED_DOMAINS_WHITELIST, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from "../enums/EnvironmentVariable";
 import type { SpaceInterface } from "../models/Space";
 import { Space } from "../models/Space";
@@ -76,7 +77,6 @@ import type { PusherWebSocket } from "./PusherWebSocket";
 
 const debug = Debug("socket");
 
-export type AdminSocket = WebSocket<AdminSocketData>;
 export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 
 export class SocketManager implements ZoneEventListener {
@@ -101,7 +101,7 @@ export class SocketManager implements ZoneEventListener {
 
     async handleAdminRoom(client: AdminSocket, roomId: string): Promise<void> {
         const apiClient = await apiClientRepository.getClient(roomId, GRPC_MAX_MESSAGE_SIZE);
-        const socketData = client.getUserData();
+        const socketData = adminDataOf(client);
         const adminRoomStream = apiClient.adminRoom();
         if (!socketData.adminConnections) {
             socketData.adminConnections = new Map<string, AdminConnection>();
@@ -226,7 +226,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     leaveAdminRoom(socket: AdminSocket): void {
-        for (const adminConnection of socket.getUserData().adminConnections?.values() ?? []) {
+        for (const adminConnection of adminDataOf(socket).adminConnections?.values() ?? []) {
             adminConnection.end();
         }
     }
@@ -547,7 +547,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     private closeAdminWebsocketConnection(client: AdminSocket, code: number, reason: string): void {
-        client.getUserData().disconnecting = true;
+        adminDataOf(client).disconnecting = true;
         client.end(code, reason);
     }
 

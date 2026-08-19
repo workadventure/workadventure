@@ -3,7 +3,7 @@ import type { AnswerMessage, CompanionDetail, ErrorApiData, WokaDetail } from "@
 import { apiVersionHash, noUndefined } from "@workadventure/messages";
 import { errors } from "jose";
 import * as Sentry from "@sentry/node";
-import type { TemplatedApp, WebSocket } from "uWebSockets.js";
+import type express from "fulmine.js";
 import { asError } from "catch-unknown";
 import Debug from "debug";
 import { AxiosError } from "axios";
@@ -19,6 +19,7 @@ import {
     SOCKET_IDLE_TIMER,
 } from "../enums/EnvironmentVariable";
 import type { AdminSocketData } from "../models/Websocket/AdminSocketData";
+import { adminDataOf } from "../models/Websocket/AdminSocketData";
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
@@ -32,7 +33,7 @@ import {
 import { videoQualityAnalyticsQueue } from "../services/VideoQualityAnalyticsQueue";
 import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
 import { AdminWebSocketBackpressureWriter } from "../services/AdminWebSocketBackpressureWriter";
-import type { PusherWebSocket } from "../services/PusherWebSocket";
+import type { PusherWebSocket, SocketRequest } from "../services/PusherWebSocket";
 
 type PendingAnswerMessage = Omit<AnswerMessage, "answer"> & { answer?: AnswerMessage["answer"] };
 
@@ -62,9 +63,9 @@ export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidDat
 
 export class IoSocketController {
     private readonly roomSocketController: PusherRoomSocketController;
-    private readonly adminSocketWriters = new WeakMap<WebSocket<AdminSocketData>, AdminWebSocketBackpressureWriter>();
+    private readonly adminSocketWriters = new WeakMap<express.FulmineSocket, AdminWebSocketBackpressureWriter>();
 
-    constructor(private readonly app: TemplatedApp) {
+    constructor(private readonly app: express.FulmineApplication) {
         // Global handler for unhandled Promises
         // The listener never needs to be removed, because we are in a singleton that is never destroyed.
         // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
@@ -82,34 +83,22 @@ export class IoSocketController {
     }
 
     adminRoomSocket(): void {
-        this.app.ws<AdminSocketData>("/ws/admin/rooms", {
+        this.app.ws("/ws/admin/rooms", {
             maxBackpressure: PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES,
-            upgrade: (res, req, context) => {
-                const websocketKey = req.getHeader("sec-websocket-key");
-                const websocketProtocol = req.getHeader("sec-websocket-protocol");
-                const websocketExtensions = req.getHeader("sec-websocket-extensions");
-
-                res.cork(() => {
-                    res.upgrade<AdminSocketData>(
-                        {
-                            adminConnections: new Map(),
-                            disconnecting: false,
-                            sendMessage: () => {
-                                return;
-                            },
-                        },
-                        websocketKey,
-                        websocketProtocol,
-                        websocketExtensions,
-                        context,
-                    );
-                });
+            upgrade: (req: SocketRequest<AdminSocketData>) => {
+                req.socketData = {
+                    adminConnections: new Map(),
+                    disconnecting: false,
+                    sendMessage: () => {
+                        return;
+                    },
+                };
             },
             open: (ws) => {
                 console.info(
                     "Admin socket connect to client on " + Buffer.from(ws.getRemoteAddressAsText()).toString(),
                 );
-                ws.getUserData().disconnecting = false;
+                adminDataOf(ws).disconnecting = false;
                 const writer = new AdminWebSocketBackpressureWriter(ws, {
                     maxQueuedMessages: 1_000,
                     maxQueuedBytes: PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES,
@@ -122,7 +111,7 @@ export class IoSocketController {
                     },
                 });
                 this.adminSocketWriters.set(ws, writer);
-                ws.getUserData().sendMessage = (message) => {
+                adminDataOf(ws).sendMessage = (message) => {
                     writer.send(message);
                 };
             },
@@ -141,7 +130,7 @@ export class IoSocketController {
                         }
                         Sentry.captureException(`Invalid message received. ${JSON.stringify(message)}`);
                         console.error("Invalid message received.", message);
-                        ws.getUserData().sendMessage(
+                        adminDataOf(ws).sendMessage(
                             JSON.stringify({
                                 type: "Error",
                                 data: {
@@ -161,7 +150,7 @@ export class IoSocketController {
                         data = await jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
                         console.error("Admin socket access refused for token: " + token, e);
-                        ws.getUserData().sendMessage(
+                        adminDataOf(ws).sendMessage(
                             JSON.stringify({
                                 type: "Error",
                                 data: {
@@ -186,7 +175,7 @@ export class IoSocketController {
                             ).toString()} listening of : \n${JSON.stringify(notAuthorizedRoom)}`;
                             Sentry.captureException(errorMessage);
                             console.error(errorMessage);
-                            ws.getUserData().sendMessage(
+                            adminDataOf(ws).sendMessage(
                                 JSON.stringify({
                                     type: "Error",
                                     data: {
@@ -241,7 +230,7 @@ export class IoSocketController {
             },
             close: (ws) => {
                 try {
-                    ws.getUserData().disconnecting = true;
+                    adminDataOf(ws).disconnecting = true;
                     this.adminSocketWriters.get(ws)?.close("target_closed");
                     this.adminSocketWriters.delete(ws);
                     socketManager.leaveAdminRoom(ws);

@@ -1,4 +1,4 @@
-import type { TemplatedApp, HttpResponse, HttpRequest, us_socket_context_t } from "uWebSockets.js";
+import type express from "fulmine.js";
 import {
     type ClientToServerMessage,
     PusherToFrontWebSocketMessage,
@@ -11,7 +11,7 @@ import { CLIENT_DISCONNECTION_RETENTION_MS } from "../enums/EnvironmentVariable"
 import type { ConnectingSocketData } from "../models/Websocket/SocketData";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { PusherWebSocket } from "./PusherWebSocket";
-import type { RawSocket } from "./PusherWebSocket";
+import type { RawSocket, SocketRequest } from "./PusherWebSocket";
 import { validateWebsocketQuery } from "./QueryValidator";
 import { getClientIpFromXForwardedFor } from "./ClientIp";
 
@@ -56,6 +56,11 @@ type RoomWsConfig<TQuery extends RoomWsQuery> = {
     close: CloseHandler;
 };
 
+/** What the upgrade hook left on the request, which the socket carries for its whole life. */
+function socketDataOf(ws: express.FulmineSocket): ConnectingSocketData | UpgradeFailedData {
+    return (ws.req as SocketRequest).socketData;
+}
+
 type WebSocketContext = {
     socket?: PusherWebSocket;
     clientLastReceivedNonce?: number;
@@ -66,7 +71,7 @@ export class PusherRoomSocketController {
     private readonly contextByTabKey = new Map<string, WebSocketContext>();
     private readonly contextCleanupTimeoutsByTabKey = new Map<string, ReturnType<typeof setTimeout>>();
 
-    public constructor(private readonly app: TemplatedApp) {}
+    public constructor(private readonly app: express.FulmineApplication) {}
 
     private getOrCreateWrapper(rawSocket: RawSocket): PusherWebSocket {
         const existingWrapper = this.wrappersBySocket.get(rawSocket);
@@ -76,39 +81,6 @@ export class PusherRoomSocketController {
         const wrapper = new PusherWebSocket(rawSocket);
         this.wrappersBySocket.set(rawSocket, wrapper);
         return wrapper;
-    }
-
-    private rejectWithInternalError(
-        res: HttpResponse,
-        req: HttpRequest,
-        context: us_socket_context_t,
-        details: string,
-    ): void {
-        const websocketKey = req.getHeader("sec-websocket-key");
-        const websocketProtocol = req.getHeader("sec-websocket-protocol");
-        const websocketExtensions = req.getHeader("sec-websocket-extensions");
-
-        res.cork(() => {
-            res.upgrade(
-                {
-                    rejected: true,
-                    reason: "error",
-                    error: {
-                        status: "error",
-                        type: "error",
-                        title: "500 Internal Server Error",
-                        subtitle: "Something wrong happened while connecting!",
-                        image: "",
-                        code: "internal_error",
-                        details,
-                    },
-                } satisfies UpgradeFailedData,
-                websocketKey,
-                websocketProtocol,
-                websocketExtensions,
-                context,
-            );
-        });
     }
 
     private parseReconnectNonce(rawValue: string | undefined, key: string): number | undefined {
@@ -144,25 +116,6 @@ export class PusherRoomSocketController {
         return true;
     }
 
-    private upgradeSocket(
-        aborted: boolean,
-        res: HttpResponse,
-        data: ConnectingSocketData | UpgradeFailedData,
-        websocketKey: string,
-        websocketProtocol: string,
-        websocketExtensions: string,
-        context: us_socket_context_t,
-    ) {
-        if (aborted) {
-            // If the response points to nowhere, don't attempt an upgrade
-            return;
-        }
-
-        res.cork(() => {
-            res.upgrade(data, websocketKey, websocketProtocol, websocketExtensions, context);
-        });
-    }
-
     private clearContextCleanup(tabId: string): void {
         const timeout = this.contextCleanupTimeoutsByTabKey.get(tabId);
         if (!timeout) {
@@ -174,30 +127,26 @@ export class PusherRoomSocketController {
     }
 
     public ws<TQuery extends RoomWsQuery>(path: string, config: RoomWsConfig<TQuery>): void {
-        this.app.ws<ConnectingSocketData | UpgradeFailedData>(path, {
+        this.app.ws(path, {
             idleTimeout: config.idleTimeout,
             maxPayloadLength: config.maxPayloadLength,
             maxBackpressure: config.maxBackpressure,
-            upgrade: (res, req, context) => {
-                (async () => {
-                    const upgradeAborted = { aborted: false };
-
-                    res.onAborted(() => {
-                        upgradeAborted.aborted = true;
-                    });
-
-                    const query = validateWebsocketQuery(req, res, context, config.queryValidator);
-                    if (query === undefined) {
+            // The handshake is the framework's: the key, the protocol and the extensions, the cork
+            // and the abort are handled there. What is left here is what this service decides, and
+            // it decides it with the same request and response every HTTP route gets. Leaving
+            // `socketData` unset refuses the socket, so no path can silently leave a client hanging.
+            upgrade: async (req: SocketRequest, res) => {
+                try {
+                    const validated = validateWebsocketQuery(req, config.queryValidator);
+                    if (!validated.success) {
+                        req.socketData = validated.failure;
                         return;
                     }
-
-                    const websocketKey = req.getHeader("sec-websocket-key");
-                    const websocketProtocol = req.getHeader("sec-websocket-protocol");
-                    const websocketExtensions = req.getHeader("sec-websocket-extensions");
-                    const urlSearchParams = new URLSearchParams(req.getQuery());
+                    const query = validated.data;
+                    const websocketProtocol = req.get("sec-websocket-protocol") ?? "";
 
                     const clientLastReceivedNonce = this.parseReconnectNonce(
-                        urlSearchParams.get("lastReceivedNonce") ?? undefined,
+                        typeof req.query.lastReceivedNonce === "string" ? req.query.lastReceivedNonce : undefined,
                         "lastReceivedNonce",
                     );
                     const tabContext = this.contextByTabKey.get(query.tabId);
@@ -207,64 +156,57 @@ export class PusherRoomSocketController {
                         this.canReplaceTransportWithoutUpgrade(query, websocketProtocol, tabContext)
                     ) {
                         tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
-                        this.upgradeSocket(
-                            upgradeAborted.aborted,
-                            res,
-                            { ...tabContext.socket.getUserData() },
-                            websocketKey,
-                            websocketProtocol,
-                            websocketExtensions,
-                            context,
-                        );
+                        req.socketData = { ...tabContext.socket.getUserData() };
                         return;
                     }
-                    const ipAddress = getClientIpFromXForwardedFor(req.getHeader("x-forwarded-for"));
+
                     await config.upgrade({
                         query,
                         request: {
-                            method: req.getMethod(),
-                            url: req.getUrl(),
-                            ipAddress,
-                            locale: req.getHeader("accept-language"),
+                            method: req.method,
+                            url: req.path,
+                            ipAddress: getClientIpFromXForwardedFor(req.get("x-forwarded-for") ?? ""),
+                            locale: req.get("accept-language") ?? "",
                             token: websocketProtocol,
                         },
-                        isAborted: () => upgradeAborted.aborted,
+                        isAborted: () => res.aborted === true,
                         upgrade: (data) => {
                             const tabContext = this.contextByTabKey.get(query.tabId) ?? {};
                             tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
                             this.contextByTabKey.set(query.tabId, tabContext);
-
-                            this.upgradeSocket(
-                                upgradeAborted.aborted,
-                                res,
-                                data,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context,
-                            );
+                            req.socketData = data;
                         },
                         reject: (data) => {
-                            this.upgradeSocket(
-                                upgradeAborted.aborted,
-                                res,
-                                data,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context,
-                            );
+                            req.socketData = data;
                         },
                     });
-                })().catch((e) => {
+
+                    if (req.socketData === undefined && res.aborted !== true) {
+                        // neither upgraded nor rejected: refuse rather than open a socket whose
+                        // data nothing set
+                        res.sendStatus(500);
+                    }
+                } catch (e) {
                     Sentry.captureException(e);
                     console.error(e);
-                    this.rejectWithInternalError(res, req, context, asError(e).message);
-                });
+                    req.socketData = {
+                        rejected: true,
+                        reason: "error",
+                        error: {
+                            status: "error",
+                            type: "error",
+                            title: "500 Internal Server Error",
+                            subtitle: "Something wrong happened while connecting!",
+                            image: "",
+                            code: "internal_error",
+                            details: asError(e).message,
+                        },
+                    } satisfies UpgradeFailedData;
+                }
             },
             open: (ws) => {
                 (async () => {
-                    const socketData = ws.getUserData();
+                    const socketData = socketDataOf(ws);
 
                     if (socketData.rejected === true) {
                         const errorMessage = await config.rejectedOpen(socketData);
@@ -327,7 +269,7 @@ export class PusherRoomSocketController {
                 });
             },
             message: (ws, arrayBuffer) => {
-                if (ws.getUserData().rejected === true) {
+                if (socketDataOf(ws).rejected === true) {
                     ws.end(1008, "Connection rejected");
                     return;
                 }
@@ -352,7 +294,7 @@ export class PusherRoomSocketController {
                 });
             },
             drain: (ws) => {
-                if (ws.getUserData().rejected === true) {
+                if (socketDataOf(ws).rejected === true) {
                     return;
                 }
 
@@ -364,7 +306,7 @@ export class PusherRoomSocketController {
                 socket.handleDrain();
             },
             close: (ws, code, message) => {
-                const socketData = ws.getUserData();
+                const socketData = socketDataOf(ws);
                 if (socketData.rejected === true) {
                     return;
                 }

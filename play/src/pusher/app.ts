@@ -1,10 +1,8 @@
 import fs from "fs";
-import type { Application } from "express";
-import express from "express";
+import express from "fulmine.js";
 import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
 import cors from "cors";
-import uWebsockets from "uWebSockets.js";
 import { adminApi } from "./services/AdminApi";
 import { IoSocketController } from "./controllers/IoSocketController";
 import { AuthenticateController } from "./controllers/AuthenticateController";
@@ -20,6 +18,7 @@ import {
     ENABLE_OPENAPI_ENDPOINT,
     PROMETHEUS_PORT,
     GRPC_MAX_MESSAGE_SIZE,
+    PUSHER_HTTP_PORT,
 } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
@@ -37,12 +36,12 @@ import { videoQualityAnalyticsQueue } from "./services/VideoQualityAnalyticsQueu
 const VIDEO_QUALITY_ANALYTICS_CAPABILITY = "api/analytics/video-quality-batch";
 
 class App {
-    private readonly app: Application;
-    private readonly websocketApp: uWebsockets.TemplatedApp;
-    private readonly prometheusWebserver: Application | undefined;
+    private readonly app: express.FulmineApplication;
+    private readonly prometheusWebserver: express.FulmineApplication | undefined;
 
     constructor() {
-        this.websocketApp = uWebsockets.App();
+        // One application for both: the websocket routes are registered on it with app.ws(), so
+        // the upgrade is decided by the same request and response objects the HTTP routes get.
         this.app = express();
 
         // LiveKit webhooks must keep the raw body for signature verification in the back; register before express.json().
@@ -89,7 +88,7 @@ class App {
         }
 
         // Socket controllers
-        new IoSocketController(this.websocketApp);
+        new IoSocketController(this.app);
 
         // Http controllers
         new AuthenticateController(this.app);
@@ -212,16 +211,17 @@ class App {
         });
     }
 
+    /**
+     * The same application on a second port, so PUSHER_WS_PORT keeps meaning what it meant and
+     * nothing in front of this service has to be reconfigured. Both ports now serve both the HTTP
+     * routes and the websockets; a deployment that wants one port can point them at the same
+     * number, and this listens once.
+     */
     public listenWebSocket(port: number): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.websocketApp.listen(port, (token) => {
-                if (token) {
-                    resolve();
-                } else {
-                    reject(new Error(`Error starting WorkAdventure Pusher on port ${port}!`));
-                }
-            });
-        });
+        if (port === PUSHER_HTTP_PORT) {
+            return Promise.resolve();
+        }
+        return this.listenWebServer(port);
     }
 
     public listenPrometheusPort(): Promise<void> {

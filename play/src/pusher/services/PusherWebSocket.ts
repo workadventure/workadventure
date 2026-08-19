@@ -1,4 +1,5 @@
 import type { WebSocket } from "uWebSockets.js";
+import type { Request } from "express";
 import {
     FrontToPusherWebSocketMessage,
     PusherToFrontWebSocketMessage,
@@ -13,7 +14,17 @@ import { NoncedMessageStore } from "../../common/NoncedMessageStore";
 
 import type { SocketData } from "../models/Websocket/SocketData";
 
-export type RawSocket = WebSocket<SocketData>;
+import type { ConnectingSocketData } from "../models/Websocket/SocketData";
+import type { UpgradeFailedData } from "../controllers/IoSocketController";
+
+/**
+ * The request the upgrade hook was given, carrying what this service decided about the socket.
+ * uWS keeps whatever the handshake attached for the life of the connection, and the framework
+ * attaches the request, so this is where the socket data lives now.
+ */
+export type SocketRequest<T = ConnectingSocketData | UpgradeFailedData> = Request & { socketData: T };
+
+export type RawSocket = WebSocket<{ req: SocketRequest<SocketData> }> & { req: SocketRequest<SocketData> };
 
 export class PusherWebSocket {
     private static readonly KEEP_ALIVE_INTERVAL_MS = 25_000;
@@ -42,7 +53,7 @@ export class PusherWebSocket {
     }
 
     public getUserData(): SocketData {
-        return this.socket.getUserData();
+        return this.socket.req.socketData;
     }
 
     public send(message: ServerToClientMessage): ReturnType<RawSocket["send"]> {
@@ -180,7 +191,7 @@ export class PusherWebSocket {
     }
 
     public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number): boolean {
-        const socketData = this.socket.getUserData();
+        const socketData = this.socket.req.socketData;
         console.info(
             `Replacing WebSocket transport for user ${socketData.userUuid} on tab ${socketData.tabId} (lastReceivedNonce=${clientLastReceivedNonce})`,
         );
@@ -211,8 +222,8 @@ export class PusherWebSocket {
         }
 
         const previousSocket = this.socket;
-        const previousSocketData = previousSocket.getUserData();
-        const newSocketData = newSocket.getUserData();
+        const previousSocketData = previousSocket.req.socketData;
+        const newSocketData = newSocket.req.socketData;
 
         if (previousSocketData.userUuid !== newSocketData.userUuid) {
             console.warn(
