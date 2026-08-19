@@ -454,20 +454,28 @@ export class GameManager {
      * Currently, this logs out from the Matrix client.
      */
     public async logout(): Promise<void> {
-        if (this._chatConnection) {
-            try {
-                this._chatConnection.clearListener();
-                await this._chatConnection.destroy();
-                if (this.chatVisibilitySubscription) {
-                    this.chatVisibilitySubscription();
-                }
-                this.clearChatDataFromLocalStorage();
-                this._chatConnection = undefined;
-                this.chatConnectionPromise = undefined;
-            } catch (e) {
-                console.error("Chat connection not closed properly : ", e);
-                Sentry.captureException(e);
+        if (!this._chatConnection) {
+            return;
+        }
+
+        try {
+            this._chatConnection.clearListener();
+            await this._chatConnection.destroy();
+        } catch (e) {
+            // destroy() ends up calling POST /logout, which fails with a 401 when the Matrix session is
+            // already dead - exactly when the local cleanup below matters most. It must therefore run in
+            // every case: leaving the Matrix user id behind makes MatrixClientWrapper skip its
+            // clearStores() branch on the next login, restoring the broken session (stale sync token and
+            // crypto store) instead of starting over.
+            console.error("Chat connection not closed properly : ", e);
+            Sentry.captureException(e);
+        } finally {
+            if (this.chatVisibilitySubscription) {
+                this.chatVisibilitySubscription();
             }
+            this.clearChatDataFromLocalStorage();
+            this._chatConnection = undefined;
+            this.chatConnectionPromise = undefined;
         }
     }
 
