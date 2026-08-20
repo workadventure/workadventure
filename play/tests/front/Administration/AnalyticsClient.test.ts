@@ -254,6 +254,54 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(JSON.stringify(events)).not.toContain("durationSeconds");
     });
 
+    it("reopens a panel that was still open when the socket went away", () => {
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+        const firstSocket = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(firstSocket);
+        analyticsClient.chatPanelVisibilityChanged(true);
+
+        // The reconnect. The pusher has already closed the first interval itself as
+        // socket_closed, and the handle we hold is spent.
+        analyticsClient.setAdminAnalyticsSender(undefined);
+        const secondSocket = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(secondSocket);
+
+        // A boolean has no rising edge: chatVisibilityStore is still true, so nothing
+        // fires. Without reopening here the panel would stay invisible for the rest of
+        // the tab's life.
+        const reopened = secondSocket.mock.calls
+            .flatMap(([message]) => message.events)
+            .filter((event) => event.eventName === "timed_event.open");
+        expect(reopened).toHaveLength(1);
+        expect(reopened[0].properties.eventName).toBe("chat.panel.dwell");
+
+        // And it is a NEW interval, not the spent handle: closing it must pair with
+        // the reopened one, or the pusher drops it and the whole visit is lost.
+        analyticsClient.chatPanelVisibilityChanged(false);
+        const closes = secondSocket.mock.calls
+            .flatMap(([message]) => message.events)
+            .filter((event) => event.eventName === "timed_event.close");
+        expect(closes).toHaveLength(1);
+        expect(closes[0].properties.handle).toBe(reopened[0].properties.handle);
+    });
+
+    it("stops reopening a panel the user closed while disconnected", () => {
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+        analyticsClient.setAdminAnalyticsSender(vi.fn());
+        analyticsClient.chatPanelVisibilityChanged(true);
+        analyticsClient.setAdminAnalyticsSender(undefined);
+        analyticsClient.chatPanelVisibilityChanged(false);
+
+        const secondSocket = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(secondSocket);
+
+        expect(secondSocket).not.toHaveBeenCalled();
+    });
+
     it("measures a megaphone broadcast as one interval, however often the state repeats", () => {
         const sendAdmin = vi.fn();
         analyticsClient.setAdminAnalyticsSender(sendAdmin);
