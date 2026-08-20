@@ -238,7 +238,7 @@
     }
 </script>
 
-<!-- Always mounted: it owns the "E" shortcut, which has to work before the wheel is on screen. -->
+<!-- Always mounted: it owns the "G" shortcut, which has to work before the wheel is on screen. -->
 <WokaEmoteWheel />
 
 <!-- Components ordered by z-index -->

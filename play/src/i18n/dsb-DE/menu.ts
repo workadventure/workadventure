@@ -185,6 +185,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openUserList: "Lisćinu wužywarjow wótcyniś",
         toggleMapEditor: "Kartowy editor pokazaś/schowaś",
         rotatePlayer: "Grajaka wobwjertowaś",
+        wokaEmoteWheel: "Kólaso emotow",
         emote1: "Emocion 1",
         emote2: "Emocion 2",
         emote3: "Emocion 3",
