@@ -31,7 +31,7 @@ function propertiesOf(schema: z.ZodDiscriminatedUnionOption<"eventName">): z.Zod
 const EMITTER_SOURCES = import.meta.glob<string>(
     [
         "../../src/front/Administration/AnalyticsClient.ts",
-        "../../src/front/WebRtc/ConversationAnalytics.ts",
+        "../../src/front/WebRtc/JitsiMeetingAnalytics.ts",
         "../../src/pusher/services/AnalyticsEventsQueue.ts",
     ],
     { query: "?raw", import: "default", eager: true },
@@ -144,7 +144,7 @@ describe("AnalyticsEventCatalog", () => {
         // documenting a new event.
         expect([...TIMED_ANALYTICS_EVENT_NAMES].sort()).toEqual([
             "area.dwell",
-            "conversation.ended",
+            "meeting.ended",
             "meeting.screenshare.ended",
             "status.dwell",
         ]);
@@ -218,19 +218,19 @@ describe("AnalyticsEventCatalog", () => {
         expect(parsed.success).toBe(true);
     });
 
-    it("validates the real payload of a conversation ending", () => {
-        const parsed = ANALYTICS_EVENT_CATALOG["conversation.ended"].safeParse({
-            eventName: "conversation.ended",
-            // The pusher synthesizes this one: a client saying "conversation.ended"
+    it("validates the real payload of a meeting ending", () => {
+        const parsed = ANALYTICS_EVENT_CATALOG["meeting.ended"].safeParse({
+            eventName: "meeting.ended",
+            // The pusher synthesizes this one: a client saying "meeting.ended"
             // is refused, precisely so nobody can claim a duration.
             source: "pusher",
             clientEventTimeMs: Date.parse("2026-04-24T12:02:30.000Z"),
-            eventId: "conversation.ended:group:42:1777032150000",
+            eventId: "tab-id:meeting.ended:uuid:1777032150000",
             properties: {
-                schemaVersion: 1,
-                conversationId: "group:42",
-                conversationType: "spontaneous_bubble",
+                // webrtc is what makes this a spontaneous bubble rather than a
+                // meeting area — the distinction conversationType used to carry.
                 meetingProvider: "webrtc",
+                meetingId: "world.space",
                 endReason: "closed_by_client",
                 startedAt: "2026-04-24T12:00:00.000Z",
                 endedAt: "2026-04-24T12:02:30.000Z",
@@ -267,28 +267,6 @@ describe("AnalyticsEventCatalog", () => {
                 frameHeight: 720,
                 mimeType: "video/VP8",
                 sampleSeq: 1,
-            },
-        });
-
-        expect(parsed.success).toBe(true);
-    });
-
-    it("validates a provider change the way ConversationAnalytics actually sends it", () => {
-        // One emitter, one shape. AnalyticsClient used to carry a second, never-called
-        // method emitting this same name with the meeting context instead — the shapes
-        // would have diverged the day anyone called it.
-        const parsed = ANALYTICS_EVENT_CATALOG["meeting.provider_changed"].safeParse({
-            eventName: "meeting.provider_changed",
-            source: "front",
-            clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
-            eventId: "meeting.provider_changed:conv-1:1777032005000",
-            properties: {
-                schemaVersion: 1,
-                conversationId: "conv-1",
-                meetingSessionId: "conv-1",
-                conversationType: "meeting",
-                meetingProvider: "livekit",
-                previousMeetingProvider: "jitsi",
             },
         });
 

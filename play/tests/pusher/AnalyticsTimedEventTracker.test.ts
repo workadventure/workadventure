@@ -17,21 +17,22 @@ describe("AnalyticsTimedEventTracker", () => {
         const tracker = new AnalyticsTimedEventTracker(queue, () => now);
         const socketData = socketDataFixture();
 
-        tracker.open("h1", "conversation.ended", { conversationId: "group:5" }, socketData);
+        tracker.open("h1", "area.dwell", { areaId: "focus-room", areaName: "Focus room" }, socketData);
         now = Date.parse("2026-04-24T12:02:30.000Z");
         tracker.close("h1", socketData);
 
         expect(queue.enqueueEvent).toHaveBeenCalledTimes(1);
         expect(queue.enqueueEvent).toHaveBeenCalledWith(
             expect.objectContaining({
-                eventName: "conversation.ended",
+                eventName: "area.dwell",
                 // The client never reports a duration: it is measured here, on both
                 // ends. With sampling, faking an hour took 60 forged events; with a
                 // client-sent scalar it would take one.
                 source: "pusher",
                 clientEventTimeMs: Date.parse("2026-04-24T12:02:30.000Z"),
                 properties: expect.objectContaining({
-                    conversationId: "group:5",
+                    areaId: "focus-room",
+                    areaName: "Focus room",
                     startedAt: "2026-04-24T12:00:00.000Z",
                     endedAt: "2026-04-24T12:02:30.000Z",
                     durationSeconds: 150,
@@ -48,9 +49,9 @@ describe("AnalyticsTimedEventTracker", () => {
         const tracker = new AnalyticsTimedEventTracker(queue, () => now);
         const socketData = socketDataFixture();
 
-        tracker.open("h1", "conversation.ended", { conversationId: "group:5" }, socketData);
-        // The phantom: a "remote" conversation opened for two milliseconds while a
-        // meeting tore down, then closed. It carried no duration but used to count.
+        tracker.open("h1", "area.dwell", { areaId: "focus-room", areaName: "Focus room" }, socketData);
+        // The phantom: an area entered and left within two milliseconds while
+        // walking past it. It carried no duration but used to count.
         now += 2;
         tracker.close("h1", socketData, "closed_by_client");
 
@@ -63,7 +64,7 @@ describe("AnalyticsTimedEventTracker", () => {
         const tracker = new AnalyticsTimedEventTracker(queue, () => now);
         const socketData = socketDataFixture();
 
-        tracker.open("h1", "conversation.ended", { conversationId: "group:5" }, socketData);
+        tracker.open("h1", "area.dwell", { areaId: "focus-room", areaName: "Focus room" }, socketData);
         now += 1000;
         tracker.close("h1", socketData);
 
@@ -94,9 +95,9 @@ describe("AnalyticsTimedEventTracker", () => {
         const tracker = new AnalyticsTimedEventTracker(queue, () => now);
         const socketData = socketDataFixture();
 
-        tracker.open("h1", "conversation.ended", {}, socketData);
+        tracker.open("h1", "area.dwell", {}, socketData);
         now = Date.parse("2026-04-24T12:01:00.000Z");
-        expect(tracker.open("h1", "conversation.ended", {}, socketData)).toBe(false);
+        expect(tracker.open("h1", "area.dwell", {}, socketData)).toBe(false);
         now = Date.parse("2026-04-24T12:02:00.000Z");
         tracker.close("h1", socketData);
 
@@ -109,10 +110,14 @@ describe("AnalyticsTimedEventTracker", () => {
         const tracker = new AnalyticsTimedEventTracker(queue);
         const socketData = socketDataFixture();
 
-        // A user can be in a conversation, inside an area and screensharing at the
+        // A user can be in two areas, a meeting and a screen share at the
         // same time — handles keep them apart, so no interval is ever swallowed.
-        expect(tracker.open("h1", "conversation.ended", { conversationId: "a" }, socketData)).toBe(true);
-        expect(tracker.open("h2", "conversation.ended", { conversationId: "b" }, socketData)).toBe(true);
+        expect(
+            tracker.open("h1", "area.dwell", { areaId: "a", areaName: "A" }, socketData),
+        ).toBe(true);
+        expect(
+            tracker.open("h2", "area.dwell", { areaId: "b", areaName: "B" }, socketData),
+        ).toBe(true);
 
         expect(tracker.closeConnection(socketData, "socket_closed")).toBe(2);
     });
@@ -124,11 +129,11 @@ describe("AnalyticsTimedEventTracker", () => {
         const socketData = socketDataFixture();
 
         for (let i = 0; i < MAX_OPEN_TIMED_EVENTS_PER_CONNECTION; i++) {
-            expect(tracker.open(`h${i}`, "conversation.ended", {}, socketData)).toBe(true);
+            expect(tracker.open(`h${i}`, "area.dwell", {}, socketData)).toBe(true);
         }
         // The map is heap held per connection; a client that opens and never closes
         // would otherwise grow it without limit.
-        expect(tracker.open("one-too-many", "conversation.ended", {}, socketData)).toBe(false);
+        expect(tracker.open("one-too-many", "area.dwell", {}, socketData)).toBe(false);
 
         consoleWarn.mockRestore();
     });
@@ -140,8 +145,8 @@ describe("AnalyticsTimedEventTracker", () => {
         const leaving = socketDataFixture({ tabId: "tab-leaving" });
         const staying = socketDataFixture({ tabId: "tab-staying" });
 
-        tracker.open("h1", "conversation.ended", {}, leaving);
-        tracker.open("h2", "conversation.ended", {}, staying);
+        tracker.open("h1", "area.dwell", {}, leaving);
+        tracker.open("h2", "area.dwell", {}, staying);
         now += 1000;
 
         expect(tracker.closeConnection(leaving, "socket_closed")).toBe(1);
@@ -153,7 +158,7 @@ describe("AnalyticsTimedEventTracker", () => {
 
     it("closes intervals before connection sessions, so an interval never outlives its session", () => {
         // THE ordering that defuses the admin's session join: it attributes a
-        // conversation to the session containing it, and an interval ending even one
+        // meeting to the session containing it, and an interval ending even one
         // millisecond after its session's disconnect is dropped outright — a silent
         // zero on the headline metric. Probed against ClickHouse: 30 minutes → 0s.
         const calls: string[] = [];
@@ -168,16 +173,18 @@ describe("AnalyticsTimedEventTracker", () => {
 
         // Session opened FIRST, so insertion order alone would emit it first.
         tracker.open(CONNECTION_SESSION_HANDLE, "user.disconnected", { connectionId: "tab-id" }, socketData);
-        tracker.open("h1", "conversation.ended", {}, socketData);
+        tracker.open("h1", "meeting.ended", {}, socketData);
         now = Date.parse("2026-04-24T12:05:00.000Z");
 
         // One pass, sessions last — the ordering two trackers used to provide by
         // being called in sequence from SocketManager.leaveRoom and server.ts.
         tracker.closeAll("pusher_shutdown");
 
-        expect(calls).toEqual(["user.connected", "conversation.ended", "user.disconnected"]);
-        const ended = queue.enqueueEvent.mock.calls[1][0].properties;
-        const disconnected = queue.enqueueEvent.mock.calls[2][0].properties;
+        // meeting.started rides the open, the way user.connected does — both are
+        // `opensWith` rows, and both land before anything closes.
+        expect(calls).toEqual(["user.connected", "meeting.started", "meeting.ended", "user.disconnected"]);
+        const ended = queue.enqueueEvent.mock.calls[2][0].properties;
+        const disconnected = queue.enqueueEvent.mock.calls[3][0].properties;
         expect(timestampOf(ended, "endedAt")).toBeLessThanOrEqual(timestampOf(disconnected, "disconnectedAt"));
     });
 
@@ -188,8 +195,8 @@ describe("AnalyticsTimedEventTracker", () => {
         const first = socketDataFixture({ tabId: "tab-1" });
         const second = socketDataFixture({ tabId: "tab-2", userUuid: "other-uuid" });
 
-        tracker.open("h1", "conversation.ended", {}, first);
-        tracker.open("h2", "conversation.ended", {}, second);
+        tracker.open("h1", "area.dwell", {}, first);
+        tracker.open("h2", "area.dwell", {}, second);
         now += 1000;
         tracker.closeAll();
 
