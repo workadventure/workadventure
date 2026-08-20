@@ -34,8 +34,6 @@ import { LocalScriptController } from "./controllers/LocalScriptController";
 import { LivekitWebhookController } from "./controllers/LivekitWebhookController";
 import { analyticsEventsQueue } from "./services/AnalyticsEventsQueue";
 
-const ANALYTICS_EVENTS_CAPABILITY = "api/analytics/events-batch";
-
 class App {
     private readonly app: Application;
     private readonly websocketApp: uWebsockets.TemplatedApp;
@@ -193,7 +191,7 @@ class App {
             const capabilities = await adminApi.initialise();
             companionListController.setCompanionService(CompanionService.get(capabilities));
             wokaListController.setWokaService(WokaService.get(capabilities));
-            analyticsEventsQueue.setEnabled(capabilities[ANALYTICS_EVENTS_CAPABILITY] === "v1");
+            analyticsEventsQueue.setEnabled(capabilities["api/analytics/events-batch"] === "v1");
         } catch (error) {
             console.error("Failed to initialize: problem getting AdminAPI capabilities", error);
             Sentry.captureException(`Failed to initialized companion and woka services : ${error}`);

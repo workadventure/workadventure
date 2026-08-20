@@ -47,7 +47,6 @@ type ExperienceIssueProperties = {
     count?: number;
 };
 
-const ANALYTICS_EVENTS_CAPABILITY = "api/analytics/events-batch";
 const MAX_PENDING_ADMIN_EVENTS = 100;
 
 declare global {
@@ -169,7 +168,7 @@ class AnalyticsClient {
     };
 
     private canSendAdminAnalytics(): boolean {
-        return "capabilities" in window && hasCapability(ANALYTICS_EVENTS_CAPABILITY) === "v1";
+        return "capabilities" in window && hasCapability("api/analytics/events-batch") === "v1";
     }
 
     private flushPendingAdminEvents(): void {
