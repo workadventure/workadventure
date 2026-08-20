@@ -69,7 +69,13 @@
                 proximityChatRoom.unreadNotificationCount.set(0);
             }
         }
-        analyticsClient.openedChat();
+        // toggleChat() has already flipped the store, so this reads the NEW state.
+        // Reporting unconditionally counted the click that CLOSES the panel as an
+        // opening too, which is why menu_opened_chat has always run at roughly twice
+        // the real figure.
+        if ($chatVisibilityStore) {
+            analyticsClient.openedChat();
+        }
     }}
     classList="group/btn-message-circle rounded-r-lg pe-2 {last ? '' : '@sm/actions:rounded-r-none @sm/actions:pe-0'}"
     tooltipTitle={$LL.actionbar.help.chat.title()}
