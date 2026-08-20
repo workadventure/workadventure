@@ -17,6 +17,12 @@ import {
     RemoveSpaceUserMessage,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
+import type { FloorHolderEntry, RaisedHandEntry, StoredSpaceMetadata } from "@workadventure/shared-utils";
+import {
+    FLOOR_HOLDERS_METADATA_KEY,
+    RAISED_HANDS_METADATA_KEY,
+    parseStoredSpaceMetadata,
+} from "@workadventure/shared-utils";
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
@@ -220,6 +226,18 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             usersToNotifyList.delete(spaceUserId);
 
             usersList.delete(spaceUserId);
+
+            // Remove the leaving user from the raised-hands queue (metadata) if present, so it does not keep
+            // a ghost entry, and broadcast the updated queue to everyone.
+            if (this.raisedHandsQueue().some((entry) => entry.spaceUserId === spaceUserId)) {
+                this.publishMetadata({ [RAISED_HANDS_METADATA_KEY]: this.applyRaisedHand(spaceUserId, false) });
+            }
+
+            // Same cleanup for the floor-holders list, so a user who leaves while holding the floor does not stay
+            // in the host's "take back" panel forever.
+            if (this.floorHolders().some((entry) => entry.spaceUserId === spaceUserId)) {
+                this.publishMetadata({ [FLOOR_HOLDERS_METADATA_KEY]: this.applyFloorHolder(spaceUserId, false) });
+            }
 
             if (this.isPublishing(user)) {
                 this._nbPublishers--;
@@ -705,8 +723,71 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
     }
 
-    public getMetadataValue(key: string): unknown {
-        return this.metadata.get(key);
+    /**
+     * Reads a metadata value back, validated against the shared catalogue so the caller gets the type the
+     * key declares instead of `unknown`. Returns undefined when the stored value does not match, and hands
+     * back scripting API metadata (keys the catalogue does not describe) untouched.
+     */
+    public getMetadataValue<K extends string>(key: K): StoredSpaceMetadata<K> | undefined {
+        return parseStoredSpaceMetadata(key, this.metadata.get(key));
+    }
+
+    /**
+     * Adds or removes a user from the "raised hands" queue stored in the space metadata, server-authoritatively.
+     *
+     * This is the single source of truth for who raised their hand: the queue is stored in metadata (which is
+     * broadcast to ALL members regardless of role, unlike SpaceUser) so that a megaphone speaker without the
+     * seeAttendees option still receives it. This method is synchronous so that read-modify-write is atomic
+     * (the back is single-threaded), avoiding lost updates when several listeners raise their hand at once.
+     * The timestamp and name are stamped server-side, and the identity is the trusted senderId.
+     */
+    public applyRaisedHand(senderId: string, raised: boolean): RaisedHandEntry[] {
+        const queue = this.raisedHandsQueue();
+        const existingIndex = queue.findIndex((entry) => entry.spaceUserId === senderId);
+        if (raised) {
+            if (existingIndex === -1) {
+                queue.push({ spaceUserId: senderId, name: this.getUser(senderId)?.name ?? "", at: Date.now() });
+                queue.sort((a, b) => a.at - b.at);
+            }
+        } else if (existingIndex !== -1) {
+            queue.splice(existingIndex, 1);
+        }
+        this.metadata.set(RAISED_HANDS_METADATA_KEY, queue);
+        return queue;
+    }
+
+    /**
+     * Adds or removes a user from the "floor holders" list stored in the space metadata, server-authoritatively.
+     *
+     * This list contains only the users who were GIVEN the floor after raising their hand (self-reported by the
+     * holder via { holds: boolean }), never the original speakers/hosts. Like the raised-hands queue it lives in
+     * metadata (broadcast to ALL members regardless of role), so the host panel can offer taking the floor back
+     * even without seeAttendees, and a promoted guest can only ever act on other granted guests, not the host.
+     * Synchronous so read-modify-write is atomic; identity is the trusted senderId.
+     */
+    public applyFloorHolder(senderId: string, holds: boolean): FloorHolderEntry[] {
+        const list = this.floorHolders();
+        const existingIndex = list.findIndex((entry) => entry.spaceUserId === senderId);
+        if (holds) {
+            if (existingIndex === -1) {
+                list.push({ spaceUserId: senderId, name: this.getUser(senderId)?.name ?? "" });
+            }
+        } else if (existingIndex !== -1) {
+            list.splice(existingIndex, 1);
+        }
+        this.metadata.set(FLOOR_HOLDERS_METADATA_KEY, list);
+        return list;
+    }
+
+    // Both lists are written only by the two methods above, so the catalogue check is a safety net: an
+    // unparseable value (nothing we ever stored) restarts from an empty list instead of throwing. Each call
+    // returns a fresh array, so the caller can mutate it before storing it back.
+    private raisedHandsQueue(): RaisedHandEntry[] {
+        return this.getMetadataValue(RAISED_HANDS_METADATA_KEY) ?? [];
+    }
+
+    private floorHolders(): FloorHolderEntry[] {
+        return this.getMetadataValue(FLOOR_HOLDERS_METADATA_KEY) ?? [];
     }
 
     public getSpaceName(): string {

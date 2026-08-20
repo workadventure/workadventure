@@ -1,52 +1,46 @@
-import { z } from "zod";
+import type { z } from "zod";
+import {
+    PROXIMITY_POLL_DEFINITION_PREFIX,
+    PROXIMITY_POLL_DELETE_PREFIX,
+    PROXIMITY_POLL_END_PREFIX,
+    PROXIMITY_POLL_VOTE_PREFIX,
+    proximityPollDefinitionMetadataSchema,
+    proximityPollDeleteMetadataSchema,
+    proximityPollEndMetadataSchema,
+    proximityPollVoteMetadataSchema,
+} from "@workadventure/shared-utils";
 import type { ChatPollKind, ChatPollState } from "../ChatConnection";
 
-const PROXIMITY_POLL_DEFINITION_PREFIX = "proximityPoll:";
-const PROXIMITY_POLL_VOTE_PREFIX = "proximityPollVote:";
-const PROXIMITY_POLL_END_PREFIX = "proximityPollEnd:";
-const PROXIMITY_POLL_DELETE_PREFIX = "proximityPollDelete:";
+// The keys, the payload shapes and their upper bounds live in the shared space-metadata catalogue
+// (@workadventure/shared-utils), which is what the back validates incoming metadata against -- so the front
+// never accepts something the server would have rejected, nor builds something it would reject. What stays
+// here is the presentation side: turning the raw metadata into the poll state the chat UI renders.
+export {
+    PROXIMITY_POLL_DEFINITION_PREFIX,
+    PROXIMITY_POLL_DELETE_PREFIX,
+    PROXIMITY_POLL_END_PREFIX,
+    PROXIMITY_POLL_VOTE_PREFIX,
+    getProximityPollDefinitionMetadataKey,
+    getProximityPollDeleteMetadataKey,
+    getProximityPollEndMetadataKey,
+    getProximityPollVoteMetadataKey,
+    proximityPollDefinitionMetadataSchema,
+    proximityPollDeleteMetadataSchema,
+    proximityPollEndMetadataSchema,
+    proximityPollVoteMetadataSchema,
+} from "@workadventure/shared-utils";
+export type {
+    ProximityPollAnswerMetadata,
+    ProximityPollDefinitionMetadata,
+    ProximityPollDeleteMetadata,
+    ProximityPollEndMetadata,
+    ProximityPollVoteMetadata,
+} from "@workadventure/shared-utils";
 
-const proximityPollAnswerMetadataSchema = z.object({
-    id: z.string().min(1),
-    text: z.string().min(1),
-});
-
-export const proximityPollDefinitionMetadataSchema = z.object({
-    id: z.string().min(1),
-    question: z.string().min(1),
-    kind: z.enum(["open", "closed"]),
-    answers: z.array(proximityPollAnswerMetadataSchema).min(2),
-    maxSelections: z.number().int().min(1),
-    senderId: z.string().min(1),
-    senderName: z.string().optional(),
-    createdAt: z.number().int(),
-});
-
-export const proximityPollVoteMetadataSchema = z.object({
-    pollId: z.string().min(1),
-    voterId: z.string().min(1),
-    answerIds: z.array(z.string().min(1)),
-    updatedAt: z.number().int(),
-});
-
-export const proximityPollEndMetadataSchema = z.object({
-    pollId: z.string().min(1),
-    senderId: z.string().min(1),
-    closingMessage: z.string().optional(),
-    closedAt: z.number().int(),
-});
-
-export const proximityPollDeleteMetadataSchema = z.object({
-    pollId: z.string().min(1),
-    senderId: z.string().min(1),
-    deletedAt: z.number().int(),
-});
-
-export type ProximityPollAnswerMetadata = z.infer<typeof proximityPollAnswerMetadataSchema>;
-export type ProximityPollDefinitionMetadata = z.infer<typeof proximityPollDefinitionMetadataSchema>;
-export type ProximityPollVoteMetadata = z.infer<typeof proximityPollVoteMetadataSchema>;
-export type ProximityPollEndMetadata = z.infer<typeof proximityPollEndMetadataSchema>;
-export type ProximityPollDeleteMetadata = z.infer<typeof proximityPollDeleteMetadataSchema>;
+type ProximityPollDefinitionMetadata = z.infer<typeof proximityPollDefinitionMetadataSchema>;
+type ProximityPollVoteMetadata = z.infer<typeof proximityPollVoteMetadataSchema>;
+type ProximityPollEndMetadata = z.infer<typeof proximityPollEndMetadataSchema>;
+type ProximityPollDeleteMetadata = z.infer<typeof proximityPollDeleteMetadataSchema>;
 
 export type ParsedProximityPollMetadata = {
     polls: ProximityPollDefinitionMetadata[];
@@ -59,22 +53,6 @@ type PollSelection = {
     answerIds: string[];
     spoiled: boolean;
 };
-
-export function getProximityPollDefinitionMetadataKey(pollId: string): string {
-    return `${PROXIMITY_POLL_DEFINITION_PREFIX}${pollId}`;
-}
-
-export function getProximityPollVoteMetadataKey(pollId: string, voterId: string): string {
-    return `${PROXIMITY_POLL_VOTE_PREFIX}${pollId}:${voterId}`;
-}
-
-export function getProximityPollEndMetadataKey(pollId: string): string {
-    return `${PROXIMITY_POLL_END_PREFIX}${pollId}`;
-}
-
-export function getProximityPollDeleteMetadataKey(pollId: string): string {
-    return `${PROXIMITY_POLL_DELETE_PREFIX}${pollId}`;
-}
 
 export function parseProximityPollMetadata(metadata: Map<string, unknown>): ParsedProximityPollMetadata {
     const polls: ProximityPollDefinitionMetadata[] = [];

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { processProximityQAMetadata } from "../src/Model/ProximityQAMetadataProcessor";
+import type { StoredSpaceMetadata } from "@workadventure/shared-utils";
+import { parseStoredSpaceMetadata } from "@workadventure/shared-utils";
+import {
+    processProximityQAAnswerMetadata,
+    processProximityQADeleteMetadata,
+    processProximityQAQuestionMetadata,
+    processProximityQAUpvoteMetadata,
+} from "../src/Model/ProximityQAMetadataProcessor";
 
 describe("ProximityQAMetadataProcessor", () => {
     it("should accept question creation when sender identity matches", async () => {
@@ -8,7 +15,7 @@ describe("ProximityQAMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityQAMetadata(
+            processProximityQAQuestionMetadata(
                 "proximityQaQuestion:question-1",
                 {
                     id: "question-1",
@@ -40,7 +47,7 @@ describe("ProximityQAMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityQAMetadata(
+            processProximityQAUpvoteMetadata(
                 "proximityQaUpvote:question-1:author-uuid",
                 { questionId: "question-1", voterId: "author-uuid", upvoted: true, updatedAt: 11 },
                 "space-user-1",
@@ -67,7 +74,7 @@ describe("ProximityQAMetadataProcessor", () => {
 
         // The question was stored with the author's uuid, but the author upvotes with their spaceUserId.
         await expect(
-            processProximityQAMetadata(
+            processProximityQAUpvoteMetadata(
                 "proximityQaUpvote:question-1:space-user-1",
                 { questionId: "question-1", voterId: "space-user-1", upvoted: true, updatedAt: 11 },
                 "space-user-1",
@@ -94,7 +101,7 @@ describe("ProximityQAMetadataProcessor", () => {
 
         // The question was stored with the author's uuid, but the author deletes with their spaceUserId.
         await expect(
-            processProximityQAMetadata(
+            processProximityQADeleteMetadata(
                 "proximityQaDelete:question-1",
                 { questionId: "question-1", senderId: "space-user-1", deletedAt: 13 },
                 "space-user-1",
@@ -109,7 +116,7 @@ describe("ProximityQAMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityQAMetadata(
+            processProximityQAQuestionMetadata(
                 "proximityQaQuestion:spoofed-question",
                 {
                     id: "question-1",
@@ -140,7 +147,7 @@ describe("ProximityQAMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityQAMetadata(
+            processProximityQAAnswerMetadata(
                 "proximityQaAnswer:question-1",
                 { questionId: "question-1", moderatorId: "moderator-uuid", answeredAt: 12 },
                 "space-user-1",
@@ -148,7 +155,7 @@ describe("ProximityQAMetadataProcessor", () => {
             ),
         ).resolves.toMatchObject({ questionId: "question-1" });
         await expect(
-            processProximityQAMetadata(
+            processProximityQADeleteMetadata(
                 "proximityQaDelete:question-1",
                 { questionId: "question-1", senderId: "moderator-uuid", deletedAt: 13 },
                 "space-user-1",
@@ -174,7 +181,7 @@ describe("ProximityQAMetadataProcessor", () => {
         });
 
         await expect(
-            processProximityQAMetadata(
+            processProximityQAAnswerMetadata(
                 "proximityQaAnswer:question-1",
                 { questionId: "question-1", moderatorId: "speaker-uuid", answeredAt: 12 },
                 "space-user-1",
@@ -182,7 +189,7 @@ describe("ProximityQAMetadataProcessor", () => {
             ),
         ).resolves.toMatchObject({ questionId: "question-1" });
         await expect(
-            processProximityQAMetadata(
+            processProximityQADeleteMetadata(
                 "proximityQaDelete:question-1",
                 { questionId: "question-1", senderId: "speaker-uuid", deletedAt: 13 },
                 "space-user-1",
@@ -201,6 +208,9 @@ function createSpace({
 }) {
     return {
         getUser: (spaceUserId: string) => (spaceUserId === sender.spaceUserId ? sender : undefined),
-        getMetadataValue: (key: string) => metadata.get(key),
+        // Same catalogue check as the real Space, so the fake cannot hand back a shape the processor
+        // could never receive in production.
+        getMetadataValue: <K extends string>(key: K): StoredSpaceMetadata<K> | undefined =>
+            parseStoredSpaceMetadata(key, metadata.get(key)),
     };
 }

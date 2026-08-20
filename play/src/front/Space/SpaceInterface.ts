@@ -11,8 +11,22 @@ import type {
 } from "@workadventure/messages";
 import type { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
+import type { FloorHolderEntry, RaisedHandEntry } from "@workadventure/shared-utils";
 import type { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import type { VideoBox } from "./VideoBox";
+
+/**
+ * An entry of the "raised hands" queue, stored in the space metadata (key "raisedHands"), ordered by `at`.
+ * Carries the name because a megaphone speaker without seeAttendees has no SpaceUser for the listeners.
+ * The shape comes from the shared space-metadata catalogue, so front and back cannot drift apart.
+ */
+export type RaisedHand = RaisedHandEntry;
+
+/**
+ * A user who currently holds the floor (is streaming as a speaker, `megaphoneState === true`) in a meeting.
+ * Used by the host panel to offer taking the floor back. Carries the name for the same reason as RaisedHand.
+ */
+export type FloorSpeaker = FloorHolderEntry;
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
@@ -69,6 +83,10 @@ export interface SpaceInterface {
     watchInitSpaceUsersMessage(): Observable<InitSpaceUsersMessage>;
     videoStreamStore: Readable<Map<string, VideoBox>>;
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
+    /** Ordered queue of users who raised their hand in this space, derived from the space metadata. */
+    readonly raisedHandsStore: Readable<RaisedHand[]>;
+    /** Users (other than the local user) who currently hold the floor in this space (megaphoneState === true). */
+    readonly speakingUsersStore: Readable<FloorSpeaker[]>;
 
     allVideoStreamStore: MapStore<string, VideoBox>;
     allScreenShareStreamStore: MapStore<string, VideoBox>;
