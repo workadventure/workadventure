@@ -10,6 +10,7 @@ import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
 import { customMatrixLogger } from "./CustomMatrixLogger";
 import { clearMatrixStores } from "./MatrixStoreCleanup";
+import { initialSyncAwareFetch } from "./MatrixInitialSyncFetch";
 // Inline worker (bundled as a same-origin blob) that drives matrix-js-sdk's IndexedDB store off the
 // main thread. See matrixIndexedDbWorker.ts for why the entry script and `?worker&inline` are needed.
 import MatrixIndexedDbWorker from "./matrixIndexedDbWorker?worker&inline";
@@ -145,6 +146,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 //VerificationMethod.Reciprocate,
             ],
             timelineSupport: true,
+            fetchFn: initialSyncAwareFetch,
         };
 
         if (this.clientClosed) {

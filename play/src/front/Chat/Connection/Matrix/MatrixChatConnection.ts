@@ -825,6 +825,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             threadSupport: true,
             //Detached to prevent using listener on localIdReplaced for each event
             pendingEventOrdering: PendingEventOrdering.Detached,
+            // Without this, the initial sync carries the complete member list of every joined room. A world
+            // creates one Matrix room per area, so a long-standing member of a busy world ends up with a
+            // response the homeserver needs minutes to build - past the 80s the SDK is willing to wait
+            // (BUFFER_PERIOD_MS in matrix-js-sdk's sync.ts), after which it aborts and starts over, forever.
+            // The full member list is now fetched per room, when something actually needs to display it.
+            lazyLoadMembers: true,
         });
 
         try {
