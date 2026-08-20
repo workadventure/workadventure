@@ -105,6 +105,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Emoji pokazaś",
             desc: "Wurazśo, kak se cuśo, z jano jadnym klikom z emoji-reakcijami. Jano tknjenje a hyś!",
         },
+        wokaEmote: {
+            title: "Emote wótegraś",
+            desc: "Daśo swójomu Woka skokaś, rejowaś abo se wobrośiś. Źaržćo E, aby kólaso wócynił, a pušććo, aby wótegrał.",
+        },
         audioManager: {
             title: "Głośnosć wokolnych zwukow",
             desc: "Konfigurěrujśo awdijowu głośnosć, kliknjo how.",
@@ -215,6 +219,18 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Njamajo hyšći wósobinske pisanje blidko",
         errorMoving: "Wósobinske pisanje blidko njejo se docyło",
         errorUnclaiming: "Wósobinske pisanje blidko njejo se wótpórało",
+    },
+    wokaEmote: {
+        wheelTitle: "Kólaso emotow",
+        hint: "Wubjeŕśo emote",
+        names: {
+            jump: "Skok",
+            spin: "Wobrót",
+            dance: "Reja",
+            nope: "Ně",
+            love: "Wutšoba",
+            afk: "Njepśitomny",
+        },
     },
 };
 

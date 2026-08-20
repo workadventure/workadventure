@@ -1,0 +1,235 @@
+import type { WokaEmoteId } from "@workadventure/shared-utils";
+import { WOKA_EMOTE_IDS } from "@workadventure/shared-utils";
+
+/**
+ * Recipes for the animated Woka emotes.
+ *
+ * A Woka spritesheet holds 12 frames and nothing more (3 walk frames × 4 directions), and worlds may
+ * upload their own, so an emote can only ever reorder those frames and move the layer sprites around.
+ * Every recipe below therefore sticks to what a Phaser tween can express: an offset, a scale, an
+ * angle, and a frame index. Nothing here needs a single new pixel.
+ *
+ * Emotes that change the Woka's *posture* rather than its position — sitting, clapping, waving —
+ * cannot be expressed this way and are deliberately absent: they need drawn frames.
+ */
+
+/** Idle frame of each direction, as laid out by getPlayerAnimations(). */
+const DOWN = 1;
+const LEFT = 4;
+const RIGHT = 7;
+const UP = 10;
+/** First walk frame, the one where the Woka has both feet off its resting pose. */
+const STRIDE = 0;
+
+export interface WokaEmoteState {
+    /** Frame index inside the 12-frame spritesheet. */
+    frame: number;
+    /** Horizontal offset, in sprite pixels. */
+    x: number;
+    /** Vertical offset, in sprite pixels. Negative is up. */
+    y: number;
+    /** Rotation in degrees, applied around the Woka's feet. */
+    angle: number;
+    scaleX: number;
+    scaleY: number;
+}
+
+export interface WokaEmoteDefinition {
+    id: WokaEmoteId;
+    /** How long the animation runs, in milliseconds. */
+    duration: number;
+    /** Glyph shown in the emote wheel. */
+    icon: string;
+    /**
+     * Optional emoji played in the speech-bubble that already exists for emoji emotes. Several
+     * animations only read as intended with it: a slow breath is just a slow breath until a 💤
+     * floats above the Woka.
+     */
+    bubble?: string;
+    sample: (elapsed: number) => Partial<WokaEmoteState>;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Easing and timing helpers. Kept pure so they can be unit-tested without Phaser. */
+/* -------------------------------------------------------------------------- */
+
+export type EaseName = "linear" | "quadIn" | "quadOut" | "bounceOut";
+
+const EASES: Record<EaseName, (t: number) => number> = {
+    linear: (t) => t,
+    quadIn: (t) => t * t,
+    quadOut: (t) => 1 - (1 - t) * (1 - t),
+    bounceOut: (t) => {
+        const n = 7.5625;
+        const d = 2.75;
+        if (t < 1 / d) return n * t * t;
+        if (t < 2 / d) return n * (t -= 1.5 / d) * t + 0.75;
+        if (t < 2.5 / d) return n * (t -= 2.25 / d) * t + 0.9375;
+        return n * (t -= 2.625 / d) * t + 0.984375;
+    },
+};
+
+export interface TrackSegment {
+    /** Absolute time, in milliseconds, at which this segment ends. */
+    at: number;
+    to: number;
+    ease?: EaseName;
+}
+
+/**
+ * Interpolates a single property along a series of segments, the way a chained Phaser tween would.
+ */
+export function track(elapsed: number, from: number, segments: TrackSegment[]): number {
+    let previous = from;
+    let start = 0;
+    for (const segment of segments) {
+        if (elapsed >= segment.at) {
+            previous = segment.to;
+            start = segment.at;
+            continue;
+        }
+        const duration = segment.at - start;
+        const progress = duration <= 0 ? 1 : (elapsed - start) / duration;
+        const eased = EASES[segment.ease ?? "linear"](Math.max(0, Math.min(1, progress)));
+        return previous + (segment.to - previous) * eased;
+    }
+    return previous;
+}
+
+/** A sine oscillation of the given period, in milliseconds. */
+export function oscillate(elapsed: number, period: number): number {
+    return Math.sin((elapsed / period) * Math.PI * 2);
+}
+
+/**
+ * A swell between 0 and 1 that starts and ends at 0 over each period. Recipes use it rather than a
+ * raw sine so that an emote always begins and ends on the Woka's resting pose: anything else shows
+ * up as a snap when the animation hands the frames back to the idle loop.
+ */
+export function swell(elapsed: number, period: number): number {
+    return (1 - Math.cos((elapsed / period) * Math.PI * 2)) / 2;
+}
+
+/** Picks an entry of `values`, switching every `period` milliseconds. */
+export function stepThrough<T>(elapsed: number, period: number, values: T[]): T {
+    return values[Math.floor(elapsed / period) % values.length];
+}
+
+/* -------------------------------------------------------------------------- */
+/* The catalogue itself                                                        */
+/* -------------------------------------------------------------------------- */
+
+const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
+    jump: {
+        id: "jump",
+        duration: 860,
+        icon: "🤸",
+        sample: (t) => ({
+            frame: t > 140 && t < 640 ? STRIDE : DOWN,
+            y: track(t, 0, [
+                { at: 140, to: 0 },
+                { at: 400, to: -15, ease: "quadOut" },
+                { at: 760, to: 0, ease: "bounceOut" },
+            ]),
+            scaleY: track(t, 1, [
+                { at: 140, to: 0.84, ease: "quadOut" },
+                { at: 400, to: 1.1, ease: "quadOut" },
+                { at: 700, to: 0.9, ease: "quadIn" },
+                { at: 860, to: 1, ease: "quadOut" },
+            ]),
+            scaleX: track(t, 1, [
+                { at: 140, to: 1.12, ease: "quadOut" },
+                { at: 400, to: 0.93, ease: "quadOut" },
+                { at: 700, to: 1.08, ease: "quadIn" },
+                { at: 860, to: 1, ease: "quadOut" },
+            ]),
+        }),
+    },
+
+    spin: {
+        id: "spin",
+        duration: 940,
+        icon: "🌀",
+        sample: (t) => ({
+            // Cycling the four directions is a real pirouette: the sprite already holds every angle.
+            frame: t < 760 ? stepThrough(t, 95, [DOWN, LEFT, UP, RIGHT]) : DOWN,
+            y: -2 * swell(t, 940),
+            scaleX: 1 - 0.06 * swell(t, 470),
+        }),
+    },
+
+    dance: {
+        id: "dance",
+        duration: 2160, // three 720ms bars
+        icon: "🕺",
+        bubble: "🎵",
+        sample: (t) => {
+            const facingRight = Math.floor(t / 180) % 2 === 1;
+            const swing = Math.abs(oscillate(t, 360));
+            return {
+                frame: facingRight ? RIGHT : LEFT,
+                y: -swing * 3,
+                angle: (facingRight ? 7 : -7) * swing,
+                scaleY: 1 + 0.04 * swing,
+            };
+        },
+    },
+
+    nope: {
+        id: "nope",
+        duration: 700,
+        icon: "🙅",
+        sample: (t) => ({
+            frame: stepThrough(t, 160, [LEFT, RIGHT]),
+            x: oscillate(t, 160) * 3 * Math.max(0, 1 - t / 700),
+        }),
+    },
+
+    love: {
+        id: "love",
+        duration: 1600,
+        icon: "❤️",
+        bubble: "❤️",
+        sample: (t) => {
+            const pulse = oscillate(t, 400);
+            return {
+                frame: DOWN,
+                scaleX: 1 + 0.04 * pulse,
+                scaleY: 1 + 0.04 * pulse,
+                y: -Math.abs(oscillate(t, 800)) * 1.5,
+            };
+        },
+    },
+
+    afk: {
+        id: "afk",
+        duration: 2400,
+        icon: "💤",
+        bubble: "💤",
+        sample: (t) => ({
+            frame: DOWN,
+            y: 1.5 * swell(t, 2400),
+            scaleY: 1 - 0.03 * swell(t, 2400),
+        }),
+    },
+};
+
+export const WOKA_EMOTES: WokaEmoteDefinition[] = WOKA_EMOTE_IDS.map((id) => DEFINITIONS[id]);
+
+export function getWokaEmote(id: WokaEmoteId): WokaEmoteDefinition {
+    return DEFINITIONS[id];
+}
+
+/** Fills in the properties a recipe left untouched, so callers always get a complete state. */
+export function sampleWokaEmote(definition: WokaEmoteDefinition, elapsed: number): WokaEmoteState {
+    const clamped = Math.max(0, Math.min(elapsed, definition.duration));
+    const partial = definition.sample(clamped);
+    return {
+        frame: partial.frame ?? DOWN,
+        x: partial.x ?? 0,
+        y: partial.y ?? 0,
+        angle: partial.angle ?? 0,
+        scaleX: partial.scaleX ?? 1,
+        scaleY: partial.scaleY ?? 1,
+    };
+}

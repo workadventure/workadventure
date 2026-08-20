@@ -109,6 +109,10 @@ const actionbar: BaseTranslation = {
             title: "Exibir um emoji",
             desc: "Expresse como você se sente com apenas um clique usando reações emoji. Apenas toque e vá!",
         },
+        wokaEmote: {
+            title: "Reproduzir um emote",
+            desc: "Faça seu Woka pular, dançar ou girar. Segure E para abrir a roda e solte para reproduzir.",
+        },
         audioManager: {
             title: "Volume dos sons ambiente",
             desc: "Controle o volume dos sons ambiente para uma experiência personalizada e confortável.",
@@ -219,6 +223,18 @@ const actionbar: BaseTranslation = {
         errorNotFound: "Você ainda não tem uma mesa pessoal",
         errorMoving: "Não foi possível chegar à sua mesa pessoal",
         errorUnclaiming: "Não foi possível liberar sua mesa pessoal",
+    },
+    wokaEmote: {
+        wheelTitle: "Roda de emotes",
+        hint: "Escolha um emote",
+        names: {
+            jump: "Pular",
+            spin: "Pirueta",
+            dance: "Dançar",
+            nope: "Não",
+            love: "Coração",
+            afk: "Ausente",
+        },
     },
 };
 

@@ -104,6 +104,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "絵文字を表示",
             desc: "絵文字のリアクションを使用して、ワンクリックで気持ちを表現できます。タップするだけです！",
         },
+        wokaEmote: {
+            title: "エモートを再生",
+            desc: "Woka をジャンプ・ダンス・回転させます。E を長押しでホイールを開き、離すと再生します。",
+        },
         audioManager: {
             title: "環境音の音量",
             desc: "ここをクリックしてオーディオ音量を設定します。",
@@ -214,6 +218,18 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "まだ個人デスクがありません",
         errorMoving: "個人デスクに到達できません",
         errorUnclaiming: "個人デスクを解放できません",
+    },
+    wokaEmote: {
+        wheelTitle: "エモートホイール",
+        hint: "エモートを選択",
+        names: {
+            jump: "ジャンプ",
+            spin: "スピン",
+            dance: "ダンス",
+            nope: "いいえ",
+            love: "ハート",
+            afk: "離席中",
+        },
     },
 };
 

@@ -105,6 +105,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Emoji pokazać",
             desc: "Wurazće, kak so čuće, z jenož jednym klikom z emoji-reakcijemi. Jenož tknjenje a hić!",
         },
+        wokaEmote: {
+            title: "Emote wothrać",
+            desc: "Dajće swojemu Woka skakać, rejwać abo so wobroćić. Držće E, zo byšće koleso wočinili, a pušćće, zo byšće wothrali.",
+        },
         audioManager: {
             title: "Hłošnosć wokolnych zwukow",
             desc: "Konfigurujće awdijowu hłošnosć, kliknje tu.",
@@ -215,6 +219,18 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Nimaće hišće wosobinske pisaće blidko",
         errorMoving: "Wosobinske pisaće blidko njeje so docpěło",
         errorUnclaiming: "Wosobinske pisaće blidko njeje so wotwołało",
+    },
+    wokaEmote: {
+        wheelTitle: "Koleso emotow",
+        hint: "Wubjerće emote",
+        names: {
+            jump: "Skok",
+            spin: "Wobrót",
+            dance: "Reja",
+            nope: "Ně",
+            love: "Wutroba",
+            afk: "Njepřitomny",
+        },
     },
 };
 

@@ -84,7 +84,7 @@ import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
 import { emitError, endUserConnectionWithReason } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
-import { isValidEmote } from "./EmoteValidator";
+import { isValidEmote, isValidWokaEmote } from "./EmoteValidator";
 
 const debug = Debug("socketmanager");
 
@@ -1248,13 +1248,17 @@ export class SocketManager {
     }
 
     handleEmoteEventMessage(room: GameRoom, user: User, emotePromptMessage: EmotePromptMessage) {
-        // The emote is relayed to every player nearby: refuse anything that is not an emoji.
-        if (!isValidEmote(emotePromptMessage.emote)) {
+        // The emote is relayed to every player nearby: refuse anything that is not an emoji, or an
+        // animation identifier this version of the back knows about.
+        const { emote, wokaEmoteId } = emotePromptMessage;
+        const valid = wokaEmoteId === undefined ? isValidEmote(emote) : isValidWokaEmote(wokaEmoteId, emote);
+        if (!valid) {
             debug("Invalid emote received. Dropping message.");
             return;
         }
         room.emitEmoteEvent(user, {
-            emote: emotePromptMessage.emote,
+            emote,
+            wokaEmoteId,
             actorUserId: user.id,
         });
     }

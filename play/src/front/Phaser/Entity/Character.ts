@@ -3,6 +3,7 @@ import type { Unsubscriber, Readable } from "svelte/store";
 import { get, readable } from "svelte/store";
 import type { CancelablePromise } from "cancelable-promise";
 import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
+import type { WokaEmoteId } from "@workadventure/shared-utils";
 import { SayMessageType, AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { defaultWoka, Deferred, type Movable, type PositionInterface } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
@@ -15,6 +16,8 @@ import type { GameScene } from "../Game/GameScene";
 import { Companion } from "../Companion/Companion";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
+import { WokaEmoteAnimator } from "../Game/Emote/WokaEmoteAnimator";
+import { getWokaEmote } from "../Game/Emote/WokaEmoteCatalog";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 
@@ -69,6 +72,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     public companion?: Companion;
     private emote: DOMElement | null = null;
     private emoteTween: Tween | null = null;
+    private wokaEmote: WokaEmoteAnimator | null = null;
     private texts: Map<string, DOMElement> = new Map();
     private textsToBuild = new Map();
     scene: GameScene;
@@ -378,6 +382,11 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     protected playAnimation(direction: PositionMessage_Direction, moving: boolean): void {
         if (this.invisible) return;
+        if (this.wokaEmote) {
+            // Walking away is how you cancel an emote; standing still lets it keep the frames.
+            if (!moving) return;
+            this.stopWokaEmote();
+        }
         for (const [texture, sprite] of this.sprites.entries()) {
             if (!sprite.anims) {
                 console.error("ANIMS IS NOT DEFINED!!!");
@@ -585,6 +594,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     destroy(): void {
+        this.wokaEmote?.destroy();
+        this.wokaEmote = null;
         this.usernameDisplay?.destroy();
         if (this.scene) {
             this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
@@ -609,6 +620,28 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.emote.setAlpha(0);
         this.add(this.emote);
         this.createStartTransition(emoteY);
+    }
+
+    /**
+     * Plays an animated emote: the Woka itself performs it, as opposed to playEmote() which only
+     * shows an emoji above its head. Some emotes use both.
+     */
+    playWokaEmote(emoteId: WokaEmoteId): void {
+        this.stopWokaEmote();
+        const definition = getWokaEmote(emoteId);
+        if (definition.bubble) {
+            this.playEmote(definition.bubble);
+        }
+        this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, definition, () => this.stopWokaEmote());
+        this.wokaEmote.start();
+    }
+
+    stopWokaEmote(): void {
+        if (!this.wokaEmote) return;
+        this.wokaEmote.destroy();
+        this.wokaEmote = null;
+        // Hand the frames back to the idle animation.
+        this.playAnimation(this._lastDirection, false);
     }
 
     playText(

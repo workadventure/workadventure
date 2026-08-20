@@ -87,6 +87,8 @@ import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore } from "../../Stores/EmoteStore";
+import { wokaEmoteStore } from "../../Stores/WokaEmoteStore";
+import { getWokaEmote } from "./Emote/WokaEmoteCatalog";
 import {
     jitsiParticipantsCountStore,
     userIsAdminStore,
@@ -2594,6 +2596,16 @@ export class GameScene extends DirtyScene {
                     this.CurrentPlayer?.playEmote(emote.emoji);
                     this.connection?.emitEmoteEvent(emote.emoji);
                     emoteStore.set(null);
+                }
+            }),
+        );
+
+        this.unsubscribers.push(
+            wokaEmoteStore.subscribe((wokaEmoteId) => {
+                if (wokaEmoteId && get(enableUserInputsStore)) {
+                    this.CurrentPlayer?.playWokaEmote(wokaEmoteId);
+                    this.connection?.emitWokaEmoteEvent(wokaEmoteId, getWokaEmote(wokaEmoteId).bubble ?? "");
+                    wokaEmoteStore.set(null);
                 }
             }),
         );

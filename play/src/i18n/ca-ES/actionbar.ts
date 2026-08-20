@@ -105,6 +105,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Mostrar un emoji",
             desc: "Expressa com et sents amb un sol clic utilitzant reaccions emoji. Només toca i ja està!",
         },
+        wokaEmote: {
+            title: "Reproduir una emote",
+            desc: "Fes que el teu Woka salti, balli o giri. Mantén premuda la E per obrir la roda i deixa-la anar per reproduir.",
+        },
         audioManager: {
             title: "Volum dels sons ambientals",
             desc: "Configureu el volum d'àudio fent clic aquí.",
@@ -215,6 +219,18 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Encara no teniu un escriptori personal",
         errorMoving: "No es pot arribar al vostre escriptori personal",
         errorUnclaiming: "No es pot alliberar el vostre escriptori personal",
+    },
+    wokaEmote: {
+        wheelTitle: "Roda d'emotes",
+        hint: "Tria una emote",
+        names: {
+            jump: "Saltar",
+            spin: "Pirueta",
+            dance: "Ballar",
+            nope: "No",
+            love: "Cor",
+            afk: "Absent",
+        },
     },
 };
 
