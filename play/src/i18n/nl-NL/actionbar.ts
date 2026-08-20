@@ -243,6 +243,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             jump: "Springen",
             spin: "Draai",
             dance: "Dansen",
+            celebrate: "Vieren",
             nope: "Nee",
             love: "Hart",
             afk: "Afwezig",
