@@ -84,7 +84,7 @@ integration. This user will be used by WorkAdventure to create rooms and invite 
 You can create a new user in Synapse using the `register_new_matrix_user` script:
 
 ```
-register_new_matrix_user -u @admin-wa:myserver.com -p mypassword -c /etc/matrix-synapse/homeserver.yaml -a http://localhost:8008
+register_new_matrix_user -u admin-wa -p mypassword -c /etc/matrix-synapse/homeserver.yaml -a http://localhost:8008
 ```
 
 See https://manpages.debian.org/testing/matrix-synapse/register_new_matrix_user.1.en.html
