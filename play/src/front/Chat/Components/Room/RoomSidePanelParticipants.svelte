@@ -78,7 +78,7 @@
                 <div class="animate-[spin_2s_linear_infinite] text-white/80">
                     <IconLoader font-size="2em" />
                 </div>
-                <p class="text-sm text-white/60">{$LL.chat.createRoom.loadingCreation()}</p>
+                <p class="text-sm text-white/60">{$LL.chat.loadingUsers()}</p>
             </div>
         {:else if membersLoadingError}
             <div class="flex flex-col items-center justify-center gap-3 py-8 px-2 text-center">
