@@ -1084,6 +1084,28 @@ export const ANALYTICS_EVENTS = {
     description: "The user submitted feedback. Content is never collected.",
   }),
 
+  "external_module.calendar.dwell": timedEvent({
+    openableBy: "client",
+    openProperties: z.object({}),
+    // A panel opened and shut inside a second is a bounce, and the bounce is the
+    // signal. Nothing here is transition churn to be denoised away.
+    minDurationMs: 0,
+    endReasonDescription:
+      "`socket_closed` and the `pusher_*` values mean the tab went away with the panel still open.",
+    description:
+      "How long the Calendar side panel stayed open. Separate names rather than one event with a `module` property, because the admin's anonymization allowlist is keyed on the property KEY: in a world that opted out of user-level activity a discriminant in the payload is stripped and the two panels become indistinguishable. The name survives.",
+  }),
+  "external_module.todo_list.dwell": timedEvent({
+    openableBy: "client",
+    openProperties: z.object({}),
+    // A panel opened and shut inside a second is a bounce, and the bounce is the
+    // signal. Nothing here is transition churn to be denoised away.
+    minDurationMs: 0,
+    endReasonDescription:
+      "`socket_closed` and the `pusher_*` values mean the tab went away with the panel still open.",
+    description:
+      "How long the Todo list side panel stayed open. See external_module.calendar.dwell for why this is a name rather than a property.",
+  }),
   "external_module.chat_band.clicked": event({
     properties: z.object({
       externalModuleName: z
@@ -1206,6 +1228,17 @@ export const ANALYTICS_EVENTS = {
     "The user started a chat from the user list.",
   ),
   "chat.message_list_opened": signal("The user opened the message list."),
+  "chat.panel.dwell": timedEvent({
+    openableBy: "client",
+    openProperties: z.object({}),
+    // A panel opened and shut inside a second is a bounce, and the bounce is the
+    // signal. Nothing here is transition churn to be denoised away.
+    minDurationMs: 0,
+    endReasonDescription:
+      "`socket_closed` and the `pusher_*` values mean the tab went away with the panel still open.",
+    description:
+      "How long the chat side panel stayed open. A different population from `chat.opened`, which counts only the explicit clicks on the chat button: the panel also opens on its own, from a proximity conversation, a notification or a map property. Neither is a denominator for the other.",
+  }),
   "chat.opened": signal("The user opened the chat."),
   "conversation.participant_added": signal(
     "Someone joined the user's conversation.",
