@@ -31,6 +31,7 @@ import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
 import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
+import { analyticsClient } from "../../../Administration/AnalyticsClient";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -336,6 +337,11 @@ export class MapEditorModeManager {
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
                     const reason = editMapCommandMessage.editMapMessage.message.errorCommandMessage.reason;
                     logger("ErrorCommandMessage received", reason);
+                    // The only place a map editor edit is known to have failed. The
+                    // commands themselves send fire-and-forget, so this is where the
+                    // failure analytics belongs — reporting it next to the send would
+                    // have counted every rejected edit as a success.
+                    analyticsClient.mapEditorSaveFailed(reason);
                     const command = this.pendingCommands.find(
                         (command) => command.commandId === editMapCommandMessage.id,
                     );

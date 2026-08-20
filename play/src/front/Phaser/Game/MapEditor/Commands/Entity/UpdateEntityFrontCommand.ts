@@ -43,10 +43,9 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         const entity = this.entitiesManager.getEntities().get(this.entityId);
         if (!entity) {
             console.error("Entity not found");
-            analyticsClient.mapEditorSaveFailed("entity", "entity_not_found");
+            analyticsClient.mapEditorSaveFailed("entity_not_found");
             return;
         }
-        analyticsClient.mapEditorSaveStarted("entity");
         roomConnection.emitMapEditorModifyEntity(
             this.commandId,
             this.entityId,
@@ -61,7 +60,6 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
             },
         );
         analyticsClient.mapEditorEntityUpdated(this.newConfig.prefabRef?.id);
-        analyticsClient.mapEditorSaveSucceeded("entity");
     }
 
     private handleEntityUpdate(config: Partial<WAMEntityData>): void {
