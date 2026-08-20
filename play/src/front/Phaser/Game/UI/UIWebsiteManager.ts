@@ -20,7 +20,7 @@ class UIWebsiteManager {
                 website.url = new URL(websiteEvent.url, gameManager.getCurrentGameScene().getMapUrl()).toString();
 
                 // Analytics tracking for new website
-                analyticsClient.openedWebsite(new URL(websiteEvent.url));
+                analyticsClient.scriptingWebsiteOpened(new URL(websiteEvent.url));
             }
 
             if (websiteEvent.visible !== undefined) {
@@ -84,7 +84,7 @@ class UIWebsiteManager {
         uiWebsitesStore.add(newWebsite);
 
         // Analytics tracking opening a website
-        analyticsClient.openedWebsite(new URL(websiteConfig.url));
+        analyticsClient.scriptingWebsiteOpened(new URL(websiteConfig.url));
         return newWebsite;
     }
 

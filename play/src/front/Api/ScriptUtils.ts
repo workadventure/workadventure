@@ -11,7 +11,7 @@ class ScriptUtils {
         window.open(url);
 
         // Analytics tracking for opening a new tab
-        analyticsClient.openedWebsite(new URL(url));
+        analyticsClient.scriptingWebsiteOpened(new URL(url));
     }
 
     public goToPage(url: string) {
@@ -25,7 +25,7 @@ class ScriptUtils {
         }
         // Analytics tracking for opening a new tab
         if (urlPattern.test(urlToTrack)) {
-            analyticsClient.openedWebsite(new URL(urlToTrack));
+            analyticsClient.scriptingWebsiteOpened(new URL(urlToTrack));
         }
 
         window.location.href = url;

@@ -90,7 +90,7 @@ export class EmbeddedWebsiteManager {
                     website.iframe.src = absoluteUrl;
 
                     // Analytics tracking for new url website
-                    analyticsClient.openedWebsite(newUrl);
+                    analyticsClient.scriptingWebsiteOpened(newUrl);
                 }
 
                 if (embeddedWebsiteEvent.visible !== undefined) {

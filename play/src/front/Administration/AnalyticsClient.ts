@@ -93,6 +93,8 @@ class AnalyticsClient {
      */
     private readonly openPanels = new Map<PanelIntervalName, TimedAnalyticsEventHandle>();
     private readonly livePanels = new Set<PanelIntervalName>();
+    /** Open cowebsite visits, by cowebsite id: several can be open side by side. */
+    private readonly openCowebsites = new Map<string, TimedAnalyticsEventHandle>();
     private currentStatus: string | undefined;
     private previousRoomId: string | undefined;
 
@@ -134,6 +136,7 @@ class AnalyticsClient {
             this.currentStatus = undefined;
             // The handles go; `livePanels` deliberately does not — see its docblock.
             this.openPanels.clear();
+            this.openCowebsites.clear();
         } else {
             for (const eventName of this.livePanels) {
                 this.openPanel(eventName);
@@ -445,12 +448,49 @@ class AnalyticsClient {
         this.trackAdminEvent("auth.logout_clicked");
     }
 
-    openedWebsite(url: URL, context: CowebsiteOpenedAnalyticsContext = {}): void {
+    /**
+     * Opens the interval that measures one cowebsite visit.
+     *
+     * Keyed by the cowebsite's id, because several can be open side by side and each
+     * closes on its own — unlike a screen share or a broadcast, this map earns itself.
+     */
+    openedWebsite(coWebsiteId: string, url: URL, context: CowebsiteOpenedAnalyticsContext = {}): void {
         // Origin only before it reaches PostHog too: cowebsite URLs carry auth tokens
         // in the query/hash and the document name in the path. The admin sink does the
         // same via buildCowebsiteOpenedProperties; keep both in sync.
         this.posthog?.capture("wa_opened_website", { url: this.stripUrlToOrigin(url) });
-        this.trackAdminEvent("cowebsite.opened", this.buildCowebsiteOpenedProperties(url, context));
+        if (!this.canSendAdminAnalytics()) {
+            return;
+        }
+
+        // A live handle for this id means the close never arrived; end that visit here
+        // rather than stranding it until the socket dies.
+        this.openCowebsites.get(coWebsiteId)?.close();
+        this.openCowebsites.set(
+            coWebsiteId,
+            openTimedAnalyticsEvent(
+                "cowebsite.closed",
+                this.buildCowebsiteOpenedProperties(url, context),
+                this.sendTimedEventReport,
+            ),
+        );
+    }
+
+    closedWebsite(coWebsiteId: string): void {
+        this.openCowebsites.get(coWebsiteId)?.close();
+        this.openCowebsites.delete(coWebsiteId);
+    }
+
+    /**
+     * A URL the scripting API put on screen somewhere the app does not own: a browser
+     * tab, a navigation away, a UI panel, an in-map iframe. None of them is a
+     * cowebsite, and all five used to report `cowebsite.opened` with no context —
+     * landing as triggerProperty `other` and diluting every per-area cowebsite figure.
+     * PostHog keeps seeing them under the same name it always has.
+     */
+    scriptingWebsiteOpened(url: URL): void {
+        this.posthog?.capture("wa_opened_website", { url: this.stripUrlToOrigin(url) });
+        this.trackAdminEvent("scripting.website_opened", { url: this.stripUrlToOrigin(url) });
     }
 
     menuCredit(): void {
@@ -871,9 +911,11 @@ class AnalyticsClient {
         this.posthog?.capture("wa_copy_cowebsite_link");
         this.trackAdminEvent("cowebsite.link_copied");
     }
+    // PostHog only. `cowebsite.closed` is now the end of an interval the store opens
+    // and closes, so reporting it from the close BUTTON would both duplicate it and
+    // miss the fifteen other ways a cowebsite goes away.
     closeCowebsite(): void {
         this.posthog?.capture("wa_close_cowebsite");
-        this.trackAdminEvent("cowebsite.closed");
     }
     fullScreenCowebsite(): void {
         this.posthog?.capture("wa_fullscreen_cowebsite");

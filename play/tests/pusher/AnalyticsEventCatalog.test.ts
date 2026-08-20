@@ -134,7 +134,7 @@ describe("AnalyticsEventCatalog", () => {
         expect([...requested].filter((name) => !openable.has(name)).sort()).toEqual([]);
     });
 
-    it("exposes exactly eight client-openable timed events", () => {
+    it("exposes exactly nine client-openable timed events", () => {
         // A canary, not a tautology. TIMED_ANALYTICS_EVENT_NAMES is derived from the
         // catalog, so adding a `timedEvent` entry silently widens the set of rows a
         // *client* can ask the pusher to sign with source "pusher" — the admin
@@ -144,6 +144,7 @@ describe("AnalyticsEventCatalog", () => {
         expect([...TIMED_ANALYTICS_EVENT_NAMES].sort()).toEqual([
             "area.dwell",
             "chat.panel.dwell",
+            "cowebsite.closed",
             "external_module.calendar.dwell",
             "external_module.todo_list.dwell",
             "meeting.ended",
@@ -293,11 +294,15 @@ describe("AnalyticsEventCatalog", () => {
 
     it("validates a cowebsite opening reported the way the front now sends it", () => {
         // Origin only, document name on its own field — see AnalyticsClient.
+        //
+        // `pusher`, not `front`: a cowebsite visit is an interval now, so the front
+        // asks for it and the pusher signs both ends. A socket claiming this name is
+        // refused, which is what stops a client inventing a visit length.
         const parsed = ANALYTICS_EVENT_CATALOG["cowebsite.opened"].safeParse({
             eventName: "cowebsite.opened",
-            source: "front",
+            source: "pusher",
             clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
-            eventId: "cowebsite.opened:1777032005000:abc",
+            eventId: "tab-id:cowebsite.closed:uuid:opened:1777032005000",
             properties: {
                 url: "https://acme.tld",
                 targetUrl: "https://acme.tld",
@@ -306,6 +311,35 @@ describe("AnalyticsEventCatalog", () => {
                 fileName: "handbook.pdf",
                 fileExtension: "pdf",
                 schemaVersion: 1,
+            },
+        });
+
+        expect(parsed.success).toBe(true);
+    });
+
+    it("carries the whole opening context onto the closing row of a cowebsite visit", () => {
+        // The tracker spreads the open payload onto the close, so the row that has the
+        // duration also has the area, the media kind and the file. "How long did people
+        // spend on PDFs opened from the Docs zone" becomes one predicate, not a join.
+        const parsed = ANALYTICS_EVENT_CATALOG["cowebsite.closed"].safeParse({
+            eventName: "cowebsite.closed",
+            source: "pusher",
+            clientEventTimeMs: Date.parse("2026-04-24T12:05:05.000Z"),
+            eventId: "tab-id:cowebsite.closed:uuid:1777032305000",
+            properties: {
+                url: "https://acme.tld",
+                targetUrl: "https://acme.tld",
+                mediaKind: "pdf",
+                triggerProperty: "openLink",
+                fileName: "handbook.pdf",
+                fileExtension: "pdf",
+                areaId: "docs-zone",
+                areaName: "Docs zone",
+                schemaVersion: 1,
+                startedAt: "2026-04-24T12:00:05.000Z",
+                endedAt: "2026-04-24T12:05:05.000Z",
+                durationSeconds: 300,
+                endReason: "closed_by_client",
             },
         });
 

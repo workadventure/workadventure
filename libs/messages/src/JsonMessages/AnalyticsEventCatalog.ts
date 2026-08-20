@@ -236,6 +236,54 @@ const meetingContextProperties = z.object({
     .describe("Which media backend carried the meeting."),
 });
 
+const cowebsiteOpenedProperties = z.object({
+  url: z
+    .string()
+    .describe(
+      "Origin only. The query and hash carry auth tokens, and the path carries the document name — which is reported separately as fileName so it can be gated on its own.",
+    ),
+  targetUrl: z
+    .string()
+    .describe("Origin of the opened target, reduced the same way as url."),
+  mediaKind: z
+    .enum([
+      "pdf",
+      "image",
+      "video",
+      "audio",
+      "document",
+      "presentation",
+      "spreadsheet",
+      "website",
+      "other",
+    ])
+    .describe(
+      "What kind of thing was opened, inferred in the browser from the full URL.",
+    ),
+  triggerProperty: z
+    .enum(["openLink", "openWebsite", "other"])
+    .describe("What caused the cowebsite to open."),
+  fileName: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      "The document's name. Deliberately absent from the admin's anonymization allowlist, so a world that opts out of user-level activity has it stripped at ingestion — and the internal Kiosk does not project it, so only the world's own back-office sees it.",
+    ),
+  fileExtension: z
+    .string()
+    .nullable()
+    .optional()
+    .describe(
+      "Extension derived in the browser from the full URL, so only the extension leaves it.",
+    ),
+  areaId: z.string().optional().describe("Area the cowebsite was opened from."),
+  areaName: z.string().optional().describe("Human-readable area name."),
+  schemaVersion: z
+    .number()
+    .describe("Payload version for the cowebsite family."),
+});
+
 /** The eight `settings.*.changed` events that report a single new value. */
 const settingValueProperties = z.object({
   value: z.string().describe("The setting's new value, as the UI reports it."),
@@ -980,6 +1028,18 @@ export const ANALYTICS_EVENTS = {
     description: "The user changed the fullscreen setting.",
   }),
 
+  "scripting.website_opened": event({
+    properties: z.object({
+      url: z
+        .string()
+        .describe(
+          "Origin only. The query and hash carry auth tokens, and the path is not the app's to report.",
+        ),
+    }),
+    description:
+      "The scripting API put a URL on screen somewhere the app does not own: a browser tab (WA.nav.openTab), a navigation away (WA.nav.goToPage), a UI panel (WA.ui.website) or an in-map embedded website. None of these is a cowebsite, and all five used to report `cowebsite.opened` with no context at all — landing as triggerProperty `other` and diluting every per-area figure computed from that event.",
+  }),
+
   "settings.ask_website.changed": event({
     properties: settingValueProperties,
     description: "The user changed the ask-before-opening-a-website setting.",
@@ -1005,58 +1065,10 @@ export const ANALYTICS_EVENTS = {
   }),
 
   "cowebsite.opened": event({
-    properties: z.object({
-      url: z
-        .string()
-        .describe(
-          "Origin only. The query and hash carry auth tokens, and the path carries the document name — which is reported separately as fileName so it can be gated on its own.",
-        ),
-      targetUrl: z
-        .string()
-        .describe("Origin of the opened target, reduced the same way as url."),
-      mediaKind: z
-        .enum([
-          "pdf",
-          "image",
-          "video",
-          "audio",
-          "document",
-          "presentation",
-          "spreadsheet",
-          "website",
-          "other",
-        ])
-        .describe(
-          "What kind of thing was opened, inferred in the browser from the full URL.",
-        ),
-      triggerProperty: z
-        .enum(["openLink", "openWebsite", "other"])
-        .describe("What caused the cowebsite to open."),
-      fileName: z
-        .string()
-        .nullable()
-        .optional()
-        .describe(
-          "The document's name. Deliberately absent from the admin's anonymization allowlist, so a world that opts out of user-level activity has it stripped at ingestion — and the internal Kiosk does not project it, so only the world's own back-office sees it.",
-        ),
-      fileExtension: z
-        .string()
-        .nullable()
-        .optional()
-        .describe(
-          "Extension derived in the browser from the full URL, so only the extension leaves it.",
-        ),
-      areaId: z
-        .string()
-        .optional()
-        .describe("Area the cowebsite was opened from."),
-      areaName: z.string().optional().describe("Human-readable area name."),
-      schemaVersion: z
-        .number()
-        .describe("Payload version for the cowebsite family."),
-    }),
+    properties: cowebsiteOpenedProperties,
     description:
-      "The user opened a cowebsite — a document, app or website embedded in the world.",
+      "The user opened a cowebsite — a document, app or website embedded in the world. Emitted by the pusher when the visit's interval opens, so it pairs one-to-one with the cowebsite.closed that ends it.",
+    source: "pusher",
   }),
 
   "onboarding.woka_validated": event({
@@ -1243,7 +1255,26 @@ export const ANALYTICS_EVENTS = {
   "conversation.participant_added": signal(
     "Someone joined the user's conversation.",
   ),
-  "cowebsite.closed": signal("The user closed a cowebsite."),
+  // A cowebsite is open for as long as it is open, and that was never reported:
+  // `cowebsite.closed` was emitted from exactly one place — the tab's close button —
+  // against sixteen call sites that remove one, so the close count was near zero and
+  // any ratio built on it was fiction. Both ends now come from the store, and the
+  // pusher measures the time between them.
+  //
+  // The properties ride the interval, so the closing row carries the whole context —
+  // mediaKind, area, fileName — alongside the duration, without a join.
+  "cowebsite.closed": timedEvent({
+    openableBy: "client",
+    opensWith: "cowebsite.opened",
+    openProperties: cowebsiteOpenedProperties,
+    // A document glanced at and shut inside a second is a real interaction, and the
+    // bounce is exactly the thing worth seeing. Also mandatory with opensWith.
+    minDurationMs: 0,
+    endReasonDescription:
+      "`socket_closed` and the `pusher_*` values mean the tab went away with the cowebsite still open.",
+    description:
+      "A cowebsite visit, measured. One row per cowebsite when it closes, carrying the context it was opened with plus how long it stayed open.",
+  }),
   "cowebsite.fullscreen_opened": signal("The user put a cowebsite fullscreen."),
   "cowebsite.link_copied": signal("The user copied a cowebsite's link."),
   "cowebsite.opened_in_new_tab": signal(
