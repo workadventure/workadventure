@@ -254,6 +254,36 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(JSON.stringify(events)).not.toContain("durationSeconds");
     });
 
+    it("gives each meeting its own handle, so closing one leaves the others open", () => {
+        const sendAdmin = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+
+        // SpaceRegistry keeps several spaces live at once. This used to be a single
+        // global provider store, so leaving one space ended the meeting of every
+        // other one — the handle is per-caller precisely to make that impossible.
+        const first = analyticsClient.openMeeting({ meetingProvider: "webrtc", meetingId: "space-a" });
+        const second = analyticsClient.openMeeting({ meetingProvider: "livekit", meetingId: "space-b" });
+        first?.close();
+
+        const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
+        const opens = events.filter((event) => event.eventName === "timed_event.open");
+        const closes = events.filter((event) => event.eventName === "timed_event.close");
+
+        expect(opens.map((event) => event.properties.properties.meetingId)).toEqual(["space-a", "space-b"]);
+        expect(closes).toHaveLength(1);
+        expect(closes[0].properties.handle).toBe(opens[0].properties.handle);
+
+        second?.close();
+        expect(
+            sendAdmin.mock.calls
+                .flatMap(([message]) => message.events)
+                .filter((event) => event.eventName === "timed_event.close"),
+        ).toHaveLength(2);
+    });
+
     it("enriches cowebsite openings coming from world properties", () => {
         const sendAdmin = vi.fn();
         analyticsClient.setAdminAnalyticsSender(sendAdmin);

@@ -365,21 +365,22 @@ describe("processAnalyticsReportMessage", () => {
      * That coercion is right, but it means a reason the front actually sends and the
      * enum does not list is destroyed with no error anywhere -- which is exactly what
      * happened to every front-initiated close until this test existed. The front's
-     * `close()` is typed to ClientTimedEventEndReason now, which is a single value:
-     * the client says it closed the interval and nothing more.
+     * The front cannot send a reason at all any more; the pusher defaults to
+     * `closed_by_client`. Kept as a table so a tab from before that change, which
+     * still sends the string, is covered.
      */
     it.each(["closed_by_client"])("keeps the reason the front actually sends: %s", (endReason) => {
         const queue = newQueue();
         const tracker = newTracker();
 
         processAnalyticsReportMessage(
-            { events: [controlFrame("timed_event.close", { handle: "conversation.ended:h1", endReason })] },
+            { events: [controlFrame("timed_event.close", { handle: "meeting.ended:h1", endReason })] },
             newSocketData(),
             queue,
             tracker,
         );
 
-        expect(tracker.close).toHaveBeenCalledWith("conversation.ended:h1", expect.any(Object), endReason);
+        expect(tracker.close).toHaveBeenCalledWith("meeting.ended:h1", expect.any(Object), endReason);
     });
 
     it("treats the control frames as instructions, never as events", () => {
@@ -390,15 +391,14 @@ describe("processAnalyticsReportMessage", () => {
             {
                 events: [
                     controlFrame("timed_event.open", {
-                        handle: "conversation.ended:h1",
-                        eventName: "conversation.ended",
+                        handle: "meeting.ended:h1",
+                        eventName: "meeting.ended",
                         properties: {
-                            schemaVersion: 1,
-                            conversationId: "group:3",
-                            conversationType: "meeting",
+                            meetingProvider: "livekit",
+                            meetingId: "world.space",
                         },
                     }),
-                    controlFrame("timed_event.close", { handle: "conversation.ended:h1" }),
+                    controlFrame("timed_event.close", { handle: "meeting.ended:h1" }),
                 ],
             },
             newSocketData(),

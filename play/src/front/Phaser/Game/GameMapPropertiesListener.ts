@@ -24,6 +24,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
 import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
+import { jitsiMeetingEnded, jitsiMeetingStarted } from "../../WebRtc/JitsiMeetingAnalytics";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 
 import type { Area } from "../Entity/Area";
@@ -152,6 +153,7 @@ export class GameMapPropertiesListener {
                 */
                 coWebsites.keepOnly((coWebsite) => !(coWebsite instanceof JitsiCoWebsite));
                 inJitsiStore.set(false);
+                jitsiMeetingEnded();
                 if (newValue === undefined) {
                     return;
                 }
@@ -194,6 +196,7 @@ export class GameMapPropertiesListener {
                 }
 
                 inJitsiStore.set(true);
+                jitsiMeetingStarted(roomName);
 
                 const isJitsiConfig = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_CONFIG));
                 const isJitsiInterfaceConfig = z

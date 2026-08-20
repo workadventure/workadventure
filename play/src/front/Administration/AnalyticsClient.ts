@@ -15,10 +15,11 @@ import { openTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
 
 type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
 type AdminAnalyticsEvent = AnalyticsEventReportMessage["events"][number];
+export type MeetingProvider = "livekit" | "jitsi" | "webrtc";
 type MeetingAnalyticsProperties = {
+    meetingProvider: MeetingProvider;
     meetingId?: string;
     roomId?: string;
-    meetingProvider?: "livekit" | "jitsi" | "webrtc";
 };
 type CowebsiteMediaKind =
     | "pdf"
@@ -833,19 +834,23 @@ class AnalyticsClient {
         this.trackAdminEvent("file.drag_dropped");
     }
 
-    meetingStarted(properties: MeetingAnalyticsProperties = {}): void {
-        this.trackAdminEvent("meeting.started", properties);
-    }
+    /**
+     * Opens a meeting and hands back the only way to close it.
+     *
+     * The handle goes to the caller rather than into a map here, because the two
+     * callers have different lifetimes: Jitsi is a single global state, while a
+     * SpacePeerManager belongs to one space and several can be live at once. A
+     * handle whose socket has gone away is spent — the pusher closes the interval
+     * itself as `socket_closed` — so a late close is dropped as unpaired rather
+     * than reported twice.
+     */
+    openMeeting(properties: MeetingAnalyticsProperties): TimedAnalyticsEventHandle | undefined {
+        if (!this.canSendAdminAnalytics()) {
+            return undefined;
+        }
 
-    meetingEnded(properties: MeetingAnalyticsProperties = {}): void {
-        this.trackAdminEvent("meeting.ended", properties);
+        return openTimedAnalyticsEvent("meeting.ended", properties, this.sendTimedEventReport);
     }
-
-    // meeting.provider_changed is emitted by ConversationAnalytics, which owns the
-    // provider transition and reports it with the conversation's context. A second
-    // emitter lived here with a different payload for the same event name; nothing
-    // ever called it, so it was only ever going to give the event two shapes the
-    // day someone did.
 
     sessionStarted(roomId?: string): void {
         this.trackAdminEvent("session.started", { roomId, schemaVersion: 1 });

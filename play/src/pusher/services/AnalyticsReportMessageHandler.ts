@@ -134,7 +134,7 @@ export function processAnalyticsReportMessage(
         if (!parsed.success) {
             // A failure on `source` is not a malformed payload: the catalog pins
             // each event's source, so this is a socket claiming a name the pusher
-            // synthesizes — user.connected, conversation.ended and friends, which
+            // synthesizes — user.connected, meeting.ended and friends, which
             // the admin projects into connection sessions straight from their
             // properties. Worth its own line; the reserved-name list this replaces
             // existed to produce it.

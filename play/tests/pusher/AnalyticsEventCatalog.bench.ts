@@ -68,14 +68,13 @@ const richEvent = {
 };
 
 const timedEvent = {
-    eventName: "conversation.ended",
+    eventName: "meeting.ended",
     source: "pusher",
     clientEventTimeMs: 1777032150000,
-    eventId: "tab:conv:1777032150000",
+    eventId: "tab:meeting:1777032150000",
     properties: {
-        schemaVersion: 1,
-        conversationId: "group:3",
-        conversationType: "spontaneous_bubble",
+        meetingProvider: "webrtc",
+        meetingId: "world.space",
         startedAt: "2026-04-24T12:00:00.000Z",
         endedAt: "2026-04-24T12:02:30.000Z",
         durationSeconds: 150,

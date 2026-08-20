@@ -30,7 +30,7 @@ export const analyticsStoredEvent = extendApi(
     eventName: extendApi(z.string(), {
       description:
         "The event's name, from the shared catalog. The pusher rejects names it does not carry.",
-      example: "conversation.ended",
+      example: "meeting.ended",
     }),
     source: extendApi(isAnalyticsEventSource, {
       description:

@@ -970,13 +970,15 @@ export class RoomConnection implements RoomConnection {
 
     public closeConnection(): void {
         // Run cleanup BEFORE closing the socket. The cleanup callbacks flush the
-        // end-of-session/conversation analytics (session.ended, conversation.ended),
+        // end-of-session analytics (session.ended),
         // and WorkAdventureWebSocket.send() silently drops messages once the socket
         // is manually closed (manuallyClosed=true / readyState !== OPEN). Emitting
         // them while the socket is still OPEN lets the browser flush the frames
         // ahead of the close handshake. `_closed` is set afterwards so send() is not
         // blocked during this flush. (Remote/abnormal closes still can't deliver
-        // these — the pusher presence tracker remains the source of truth there.)
+        // these — the pusher's timed-event tracker remains the source of truth
+        // there, and it is what closes any meeting, area or screen-share interval
+        // whose owner never got to.)
         //
         // The finally guarantees the socket is still closed (and `_closed` set) even
         // if a cleanup callback throws — otherwise a throwing callback would leave a

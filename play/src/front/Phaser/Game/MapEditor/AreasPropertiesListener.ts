@@ -55,6 +55,7 @@ import {
     requestedMicrophoneState,
     silentStore,
 } from "../../../Stores/MediaStore";
+import { jitsiMeetingEnded, jitsiMeetingStarted } from "../../../WebRtc/JitsiMeetingAnalytics";
 import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
@@ -969,6 +970,7 @@ export class AreasPropertiesListener {
             }
 
             inJitsiStore.set(true);
+            jitsiMeetingStarted(roomName);
 
             const coWebsite = new JitsiCoWebsite(
                 parsedUrl,
@@ -1324,6 +1326,7 @@ export class AreasPropertiesListener {
          */
         coWebsites.keepOnly((coWebsite) => !(coWebsite instanceof JitsiCoWebsite));
         inJitsiStore.set(false);
+        jitsiMeetingEnded();
     }
 
     private handlePersonalAreaPropertyOnLeave(property: PersonalAreaPropertyData, area?: Area): void {
