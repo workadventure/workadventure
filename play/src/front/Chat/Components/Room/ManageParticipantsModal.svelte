@@ -91,7 +91,7 @@
                     <div class="animate-[spin_2s_linear_infinite] text-white/80">
                         <IconLoader font-size="2em" />
                     </div>
-                    <p class="text-sm text-white/60">{$LL.chat.createRoom.loadingCreation()}</p>
+                    <p class="text-sm text-white/60">{$LL.chat.loadingUsers()}</p>
                 </div>
             {:else if membersLoadingError}
                 <div class="flex flex-col items-center justify-center gap-3 py-8">
@@ -105,7 +105,7 @@
                     <div class="animate-[spin_2s_linear_infinite] text-white/80">
                         <IconLoader font-size="2em" />
                     </div>
-                    <p class="text-sm text-white/60">{$LL.chat.createRoom.loadingCreation()}</p>
+                    <p class="text-sm text-white/60">{$LL.chat.loading()}</p>
                 </div>
             {:else}
                 {#if invitationToRoomError}
@@ -152,7 +152,7 @@
     {/snippet}
     {#snippet action()}
         {#if sendingInvitationsToRoom}
-            <p class="text-sm text-white/70">{$LL.chat.createRoom.loadingCreation()}</p>
+            <p class="text-sm text-white/70">{$LL.chat.loading()}</p>
         {:else}
             <Button variant="secondary" class="flex-1" onclick={() => modals.close()}>
                 {$LL.chat.manageRoomUsers.buttons.cancel()}
