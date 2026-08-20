@@ -1,10 +1,20 @@
 import { derived, get, readable, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
+import type { CowebsiteOpenedAnalyticsContext } from "../Administration/AnalyticsClient";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 export function createCoWebsiteStore() {
     const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
 
-    const add = (coWebsite: CoWebsite, position?: number) => {
+    /**
+     * Every cowebsite in the app is opened through here, which is why the
+     * `cowebsite.opened` event is reported here and nowhere else. The callers used
+     * to report it themselves, right after calling this — five of them, each
+     * rebuilding the same context literal, and seven other call sites that simply
+     * forgot. What a caller still owns is the context it alone knows: which area
+     * triggered the open, and through which property.
+     */
+    const add = (coWebsite: CoWebsite, position?: number, analyticsContext: CowebsiteOpenedAnalyticsContext = {}) => {
         if (position || position === 0) {
             update((currentArray) => {
                 const newArray = [...currentArray];
@@ -28,6 +38,8 @@ export function createCoWebsiteStore() {
                 coWebsiteRatio.set(0.5);
             }
         }
+
+        analyticsClient.openedWebsite(coWebsite.getUrl(), analyticsContext);
     };
 
     const remove = (coWebsite: CoWebsite) => {

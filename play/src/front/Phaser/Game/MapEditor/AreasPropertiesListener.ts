@@ -812,17 +812,15 @@ export class AreasPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsites.add(coWebsite);
-
-            //user in zone to open cowesite with only icon
-            inOpenWebsite.set(true);
-
-            analyticsClient.openedWebsite(new URL(url, this.scene.mapUrlFile), {
+            coWebsites.add(coWebsite, undefined, {
                 targetUrl: this.toCanonicalCowebsiteTargetUrl(property.link ?? ""),
                 triggerProperty: "openWebsite",
                 areaId: areaData?.id,
                 areaName: areaData?.name,
             });
+
+            //user in zone to open cowesite with only icon
+            inOpenWebsite.set(true);
         }
         if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
             this.openCoWebsiteFunction(property, coWebsiteOpen, actionId, {
@@ -1467,21 +1465,18 @@ export class AreasPropertiesListener {
 
         coWebsiteOpen.coWebsite = coWebsite;
 
-        coWebsites.add(coWebsite);
-
-        this.loadCoWebsiteFunction(coWebsite, actionId);
-
-        //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
-        inOpenWebsite.set(true);
-
-        // analytics event for open website
-        analyticsClient.openedWebsite(url, {
+        coWebsites.add(coWebsite, undefined, {
             targetUrl: analyticsContext.targetUrl ?? url.toString(),
             triggerProperty:
                 analyticsContext.triggerProperty ?? (property.type === "openFile" ? "openLink" : "openWebsite"),
             areaId: analyticsContext.areaId,
             areaName: analyticsContext.areaName,
         });
+
+        this.loadCoWebsiteFunction(coWebsite, actionId);
+
+        //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
+        inOpenWebsite.set(true);
     }
 
     private toCanonicalCowebsiteTargetUrl(link: string): string {
@@ -1972,17 +1967,15 @@ export class AreasPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsites.add(coWebsite);
-
-            //user in zone to open cowesite with only icon
-            inOpenWebsite.set(true);
-
-            analyticsClient.openedWebsite(imageUrl, {
+            coWebsites.add(coWebsite, undefined, {
                 targetUrl: this.toCanonicalCowebsiteTargetUrl(initialProperty.link ?? ""),
                 triggerProperty: "openLink",
                 areaId: areaData.id,
                 areaName: areaData.name,
             });
+
+            //user in zone to open cowesite with only icon
+            inOpenWebsite.set(true);
         }
         if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
             this.openCoWebsiteFunction(property, coWebsiteOpen, actionId, {
