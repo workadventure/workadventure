@@ -134,7 +134,7 @@ describe("AnalyticsEventCatalog", () => {
         expect([...requested].filter((name) => !openable.has(name)).sort()).toEqual([]);
     });
 
-    it("exposes exactly five client-openable timed events", () => {
+    it("exposes exactly eight client-openable timed events", () => {
         // A canary, not a tautology. TIMED_ANALYTICS_EVENT_NAMES is derived from the
         // catalog, so adding a `timedEvent` entry silently widens the set of rows a
         // *client* can ask the pusher to sign with source "pusher" — the admin
@@ -143,6 +143,9 @@ describe("AnalyticsEventCatalog", () => {
         // documenting a new event.
         expect([...TIMED_ANALYTICS_EVENT_NAMES].sort()).toEqual([
             "area.dwell",
+            "chat.panel.dwell",
+            "external_module.calendar.dwell",
+            "external_module.todo_list.dwell",
             "meeting.ended",
             "meeting.screenshare.ended",
             "megaphone.ended",
