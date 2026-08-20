@@ -149,6 +149,21 @@ describe("AnalyticsEventCatalog", () => {
         ]);
     });
 
+    it("never lets an interval that reports at both ends drop only its closing row", () => {
+        // The tracker enqueues the `opensWith` row unconditionally when the interval
+        // OPENS, while minDurationMs is applied only when it CLOSES. Pair the two and
+        // every sub-threshold interval emits an open with no close — the orphan this
+        // whole design exists to remove, and a silent drift between two counters the
+        // admin reads side by side. The invariant is cheap; discovering the violation
+        // in ClickHouse three months later is not.
+        const offenders = Object.keys(ANALYTICS_EVENT_CATALOG)
+            .map((eventName) => timedAnalyticsEventDefinition(eventName))
+            .filter((definition) => definition?.opensWith && definition.minDurationMs !== 0)
+            .map((definition) => definition?.opensWith);
+
+        expect(offenders).toEqual([]);
+    });
+
     it("keeps the open payload and the stored payload of a timed event in step", () => {
         // A timed event declares what the client opens with; the pusher adds the
         // interval bounds and the reason. Both halves have to end up in the stored
