@@ -414,6 +414,12 @@ export type ChatTimelineItem =
           id: string;
           date: Date | null;
           poll: ChatPollItem;
+      }
+    | {
+          kind: "question";
+          id: string;
+          date: Date | null;
+          question: ChatQuestionItem;
       };
 
 export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";

@@ -27,6 +27,7 @@
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
     import PollCard from "./PollCard.svelte";
+    import QuestionCard from "./QuestionCard.svelte";
     import TypingUsers from "./TypingUsers.svelte";
     import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
     import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconInfoCircle } from "@wa-icons";
@@ -715,6 +716,8 @@
                             <MessageSystem message={item.timelineItem.message} />
                         {:else if item.timelineItem.kind === "poll"}
                             <PollCard poll={item.timelineItem.poll} />
+                        {:else if item.timelineItem.kind === "question"}
+                            <QuestionCard question={item.timelineItem.question} />
                         {:else}
                             <Message
                                 message={item.timelineItem.message}

@@ -1,11 +1,12 @@
 import { derived, readable, type Readable } from "svelte/store";
-import type { ChatMessage, ChatPollItem, ChatTimelineItem } from "../ChatConnection";
+import type { ChatMessage, ChatPollItem, ChatQuestionItem, ChatTimelineItem } from "../ChatConnection";
 
 export function createProximityTimelineItemsStore(
     messages: Readable<readonly ChatMessage[]>,
     polls: Readable<readonly ChatPollItem[]> = readable([]),
+    questions: Readable<readonly ChatQuestionItem[]> = readable([]),
 ): Readable<readonly ChatTimelineItem[]> {
-    return derived([messages, polls], ([$messages, $polls]) => {
+    return derived([messages, polls, questions], ([$messages, $polls, $questions]) => {
         const messageItems = Array.from($messages, mapMessageToTimelineItem);
         const pollItems = Array.from($polls, (poll): ChatTimelineItem => {
             return {
@@ -15,8 +16,16 @@ export function createProximityTimelineItemsStore(
                 poll,
             };
         });
+        const questionItems = Array.from($questions, (question): ChatTimelineItem => {
+            return {
+                kind: "question",
+                id: question.id,
+                date: question.date,
+                question,
+            };
+        });
 
-        return [...messageItems, ...pollItems].sort(compareTimelineItemsByDate);
+        return [...messageItems, ...pollItems, ...questionItems].sort(compareTimelineItemsByDate);
     });
 }
 
