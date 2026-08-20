@@ -34,6 +34,33 @@ export interface WokaEmoteState {
     scaleY: number;
 }
 
+/**
+ * A trickle of little glyphs floating away from the Woka: the notes of a dance, the hearts of a
+ * cheer, the zzz of an absence. They are DOM elements holding an emoji, like the emoji bubble that
+ * already exists — no spritesheet needed, and they scale with the camera on their own.
+ */
+export interface WokaEmoteParticleSpec {
+    glyph: string;
+    /** Emit a batch every N milliseconds, for as long as the emote runs. */
+    everyMs?: number;
+    /** ...or emit a batch at each of these instants. Use one or the other. */
+    at?: number[];
+    /** Glyphs per batch. */
+    count: number;
+    /** How long one glyph lives, in milliseconds. */
+    life: number;
+    /** Vertical speed in sprite pixels per millisecond. Negative rises. */
+    riseSpeed: number;
+    /** Horizontal spread of the spawn point, in sprite pixels. */
+    spread: number;
+    /** Sideways drift in sprite pixels per millisecond. */
+    drift?: number;
+    /** Downward pull, for anything that is thrown rather than floating. */
+    gravity?: number;
+    /** Height above the Woka's feet where the glyphs appear. */
+    originY?: number;
+}
+
 export interface WokaEmoteDefinition {
     id: WokaEmoteId;
     /** How long the animation runs, in milliseconds. */
@@ -46,6 +73,8 @@ export interface WokaEmoteDefinition {
      * floats above the Woka.
      */
     bubble?: string;
+    /** Glyphs floating off the Woka while it performs. Played instead of `bubble` when present. */
+    particles?: WokaEmoteParticleSpec[];
     sample: (elapsed: number) => Partial<WokaEmoteState>;
 }
 
@@ -163,6 +192,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         duration: 2160, // three 720ms bars
         icon: "🕺",
         bubble: "🎵",
+        particles: [{ glyph: "🎵", everyMs: 360, count: 1, life: 900, riseSpeed: -0.026, spread: 10, drift: 0.004 }],
         sample: (t) => {
             const facingRight = Math.floor(t / 180) % 2 === 1;
             const swing = Math.abs(oscillate(t, 360));
@@ -171,6 +201,44 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
                 y: -swing * 3,
                 angle: (facingRight ? 7 : -7) * swing,
                 scaleY: 1 + 0.04 * swing,
+            };
+        },
+    },
+
+    celebrate: {
+        id: "celebrate",
+        duration: 1400, // two 700ms hops
+        icon: "🎉",
+        // The confetti of the mock-up would need a pixel-art sheet that does not exist yet; until it
+        // does, the bubble carries the celebration and the body carries the energy.
+        bubble: "🎉",
+        particles: [
+            {
+                glyph: "🎉",
+                at: [60, 740],
+                count: 5,
+                life: 600,
+                riseSpeed: -0.05,
+                spread: 16,
+                drift: 0.03,
+                gravity: 0.00012,
+                originY: 30,
+            },
+        ],
+        sample: (t) => {
+            const hop = t % 700;
+            return {
+                frame: hop > 60 && hop < 480 ? STRIDE : DOWN,
+                y: track(hop, 0, [
+                    { at: 60, to: 0 },
+                    { at: 300, to: -11, ease: "quadOut" },
+                    { at: 620, to: 0, ease: "bounceOut" },
+                ]),
+                scaleY: track(hop, 1, [
+                    { at: 60, to: 0.88, ease: "quadOut" },
+                    { at: 300, to: 1.08, ease: "quadOut" },
+                    { at: 620, to: 1, ease: "quadOut" },
+                ]),
             };
         },
     },
@@ -190,6 +258,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         duration: 1600,
         icon: "❤️",
         bubble: "❤️",
+        particles: [{ glyph: "❤️", everyMs: 300, count: 1, life: 700, riseSpeed: -0.024, spread: 9, drift: 0.003 }],
         sample: (t) => {
             const pulse = oscillate(t, 400);
             return {
@@ -206,6 +275,18 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         duration: 2400,
         icon: "💤",
         bubble: "💤",
+        particles: [
+            {
+                glyph: "💤",
+                everyMs: 600,
+                count: 1,
+                life: 1000,
+                riseSpeed: -0.016,
+                spread: 4,
+                drift: 0.006,
+                originY: 26,
+            },
+        ],
         sample: (t) => ({
             frame: DOWN,
             y: 1.5 * swell(t, 2400),

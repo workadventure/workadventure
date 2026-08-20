@@ -229,6 +229,7 @@ const actionbar: BaseTranslation = {
             jump: "Pular",
             spin: "Pirueta",
             dance: "Dançar",
+            celebrate: "Comemorar",
             nope: "Não",
             love: "Coração",
             afk: "Ausente",
