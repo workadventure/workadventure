@@ -227,6 +227,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             jump: "점프",
             spin: "회전",
             dance: "춤",
+            celebrate: "축하",
             nope: "아니요",
             love: "하트",
             afk: "자리 비움",

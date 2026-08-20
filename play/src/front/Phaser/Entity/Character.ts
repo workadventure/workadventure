@@ -629,10 +629,12 @@ export abstract class Character extends Container implements OutlineableInterfac
     playWokaEmote(emoteId: WokaEmoteId): void {
         this.stopWokaEmote();
         const definition = getWokaEmote(emoteId);
-        if (definition.bubble) {
+        // The bubble is the fallback for emotes with nothing floating off them; showing both would
+        // put a big emoji on top of the little ones saying the same thing.
+        if (definition.bubble && !definition.particles) {
             this.playEmote(definition.bubble);
         }
-        this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, definition, () => this.stopWokaEmote());
+        this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, this, definition, () => this.stopWokaEmote());
         this.wokaEmote.start();
     }
 
