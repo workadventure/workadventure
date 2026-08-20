@@ -30,9 +30,7 @@ export class CreateEntityFrontCommand extends CreateEntityCommand implements Fro
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        analyticsClient.mapEditorSaveStarted("entity");
         roomConnection.emitMapEditorCreateEntity(this.commandId, this.entityId, this.entityData, this.entityDimensions);
         analyticsClient.mapEditorEntityAdded(this.entityData.prefabRef?.id);
-        analyticsClient.mapEditorSaveSucceeded("entity");
     }
 }
