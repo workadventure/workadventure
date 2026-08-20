@@ -1292,9 +1292,34 @@ export const ANALYTICS_EVENTS = {
   "meeting.video.muted_for_everybody": signal(
     "A moderator turned off everyone's camera.",
   ),
-  "megaphone.ended": signal("A megaphone broadcast ended."),
+  // A broadcast is an interval, and the two halves used to be two loose signals with
+  // nothing carrying the time between them — while the SaaS seeder already fabricated
+  // a `durationSeconds` for it, which is a fair summary of how obviously it was
+  // missing. `megaphone.opened` is a different thing and stays a click: it means the
+  // panel was opened, not that anything was broadcast.
+  "megaphone.ended": timedEvent({
+    openableBy: "client",
+    opensWith: "megaphone.started",
+    openProperties: z.object({}),
+    // Mandatory with opensWith — see the note on meeting.ended.
+    minDurationMs: 0,
+    endReasonDescription:
+      "`socket_closed` and the `pusher_*` values mean nobody closed it: the tab went away mid-broadcast, or the pusher restarted.",
+    description:
+      "A megaphone broadcast, measured. One row per broadcast, emitted by the pusher when the interval closes and timestamped at its end. Only one broadcast can be live per connection, so it carries no id of its own.",
+  }),
   "megaphone.opened": signal("The user opened the megaphone."),
-  "megaphone.started": signal("A megaphone broadcast started."),
+  "megaphone.started": event({
+    properties: z.object({
+      startedAt: z
+        .string()
+        .datetime()
+        .describe("ISO-8601 instant the broadcast began."),
+    }),
+    description:
+      "A megaphone broadcast began. Emitted by the pusher when the interval opens, so it pairs one-to-one with the megaphone.ended that closes it.",
+    source: "pusher",
+  }),
   "menu.chat.opened": signal("The user opened the chat from the menu."),
   "menu.contact.opened": signal("The user opened the contact page."),
   "menu.credit.opened": signal("The user opened the credits."),

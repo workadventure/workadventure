@@ -254,6 +254,34 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(JSON.stringify(events)).not.toContain("durationSeconds");
     });
 
+    it("measures a megaphone broadcast as one interval, however often the state repeats", () => {
+        const sendAdmin = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+
+        // The caller is a store subscription, so it re-reports a state it is already
+        // in whenever an unrelated input of the derived changes. A second open would
+        // restart the clock and lose the time already broadcast.
+        analyticsClient.megaphoneBroadcastChanged(true);
+        analyticsClient.megaphoneBroadcastChanged(true);
+        analyticsClient.megaphoneBroadcastChanged(false);
+        // And a close with nothing open is not a broadcast of length zero.
+        analyticsClient.megaphoneBroadcastChanged(false);
+
+        const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
+        const opens = events.filter((event) => event.eventName === "timed_event.open");
+        const closes = events.filter((event) => event.eventName === "timed_event.close");
+
+        expect(opens).toHaveLength(1);
+        expect(opens[0].properties).toEqual(expect.objectContaining({ eventName: "megaphone.ended", properties: {} }));
+        expect(closes).toHaveLength(1);
+        expect(closes[0].properties.handle).toBe(opens[0].properties.handle);
+        // The pusher measures it; the client cannot claim a length.
+        expect(JSON.stringify(events)).not.toContain("durationSeconds");
+    });
+
     it("gives each meeting its own handle, so closing one leaves the others open", () => {
         const sendAdmin = vi.fn();
         analyticsClient.setAdminAnalyticsSender(sendAdmin);
