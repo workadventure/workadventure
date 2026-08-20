@@ -62,8 +62,9 @@ class AnalyticsClient {
     private pendingAdminEvents: AdminAnalyticsEvent[] = [];
     /** Open intervals, by the thing they are measuring. Closing is by the same key. */
     private openAreas = new Map<string, TimedAnalyticsEventHandle>();
-    /** A screen share and an availability status are each a single continuous state, so one handle, not a map. */
+    /** A screen share, a broadcast and an availability status are each a single continuous state, so one handle, not a map. */
     private openScreenShare: TimedAnalyticsEventHandle | undefined;
+    private openMegaphoneBroadcast: TimedAnalyticsEventHandle | undefined;
     private openStatus: TimedAnalyticsEventHandle | undefined;
     private currentStatus: string | undefined;
     private previousRoomId: string | undefined;
@@ -102,6 +103,7 @@ class AnalyticsClient {
             // from a dead socket, which the pusher drops as unpaired.
             this.openAreas.clear();
             this.openScreenShare = undefined;
+            this.openMegaphoneBroadcast = undefined;
             this.openStatus = undefined;
             this.currentStatus = undefined;
         }
@@ -552,14 +554,37 @@ class AnalyticsClient {
         this.trackAdminEvent("megaphone.opened");
     }
 
+    // The two clicks. `megaphone.started` / `megaphone.ended` are no longer reported
+    // from here: they are the two ends of one interval, opened and closed by
+    // megaphoneBroadcastChanged() below from the broadcast state itself. PostHog keeps
+    // its own click-shaped view.
     startMegaphone(): void {
         this.posthog?.capture("wa_start_megaphone");
-        this.trackAdminEvent("megaphone.started");
     }
 
     stopMegaphone(): void {
         this.posthog?.capture("wa_stop_megaphone");
-        this.trackAdminEvent("megaphone.ended");
+    }
+
+    /**
+     * Opens or closes the megaphone broadcast interval.
+     *
+     * Driven by the state rather than by the start/stop buttons, because a broadcast
+     * ends through more paths than it starts through — see the derivation in
+     * MegaphoneStore. One broadcast at a time, so one handle and no id.
+     */
+    megaphoneBroadcastChanged(live: boolean): void {
+        if (!live) {
+            this.openMegaphoneBroadcast?.close();
+            this.openMegaphoneBroadcast = undefined;
+            return;
+        }
+
+        if (this.openMegaphoneBroadcast || !this.canSendAdminAnalytics()) {
+            return;
+        }
+
+        this.openMegaphoneBroadcast = openTimedAnalyticsEvent("megaphone.ended", {}, this.sendTimedEventReport);
     }
 
     toggleMapEditor(open: boolean): void {
