@@ -1,6 +1,5 @@
 import type {
     AnalyticsEventReportMessage,
-    ClientTimedEventEndReason,
     TimedAnalyticsEventName,
     TimedAnalyticsEventOpenProperties,
 } from "@workadventure/messages";
@@ -8,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export type TimedAnalyticsEventHandle = {
     /** Idempotent: closing twice reports one interval, not two. */
-    close(endReason?: ClientTimedEventEndReason): void;
+    close(): void;
 };
 
 /**
@@ -50,7 +49,7 @@ export function openTimedAnalyticsEvent<N extends TimedAnalyticsEventName>(
     });
 
     return {
-        close(endReason?: ClientTimedEventEndReason): void {
+        close(): void {
             if (closed) {
                 return;
             }
@@ -63,7 +62,7 @@ export function openTimedAnalyticsEvent<N extends TimedAnalyticsEventName>(
                         source: "front",
                         clientEventTimeMs: Date.now(),
                         eventId: `timed-close:${handle}`,
-                        properties: endReason === undefined ? { handle } : { handle, endReason },
+                        properties: { handle },
                     },
                 ],
             });
