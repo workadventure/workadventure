@@ -158,7 +158,8 @@ describe("AnalyticsClient admin analytics sink", () => {
         );
         // Same handle, or the pusher drops the close and the visit is lost.
         expect(closed?.properties.handle).toBe(opened?.properties.handle);
-        expect(closed?.properties.endReason).toBe("closed_by_client");
+        // The close states only the handle: the pusher decides the reason.
+        expect(closed?.properties.endReason).toBeUndefined();
     });
 
     it("closes an area left open rather than orphaning it", () => {
@@ -222,7 +223,7 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(opens.map((event) => event.properties.eventName)).toEqual(["status.dwell", "status.dwell"]);
         expect(opens.map((event) => event.properties.properties.status)).toEqual(["ONLINE", "BUSY"]);
         expect(closes).toHaveLength(1);
-        expect(closes[0].properties.endReason).toBe("closed_by_client");
+        expect(closes[0].properties.endReason).toBeUndefined();
         // The BUSY open pairs with the ONLINE close by handle, or the pusher drops it.
         expect(closes[0].properties.handle).toBe(opens[0].properties.handle);
     });
@@ -234,8 +235,8 @@ describe("AnalyticsClient admin analytics sink", () => {
             "api/analytics/events-batch": "v1",
         };
 
-        analyticsClient.screenSharingStarted("screen-share-session-1", true);
-        analyticsClient.screenSharingEnded("screen-share-session-1");
+        analyticsClient.screenSharingStarted(true);
+        analyticsClient.screenSharingEnded();
 
         const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
         const opened = events.find((event) => event.eventName === "timed_event.open");
@@ -244,7 +245,7 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(opened?.properties).toEqual(
             expect.objectContaining({
                 eventName: "meeting.screenshare.ended",
-                properties: { screenShareSessionId: "screen-share-session-1", hasAudio: true },
+                properties: { hasAudio: true },
             }),
         );
         expect(closed?.properties.handle).toBe(opened?.properties.handle);

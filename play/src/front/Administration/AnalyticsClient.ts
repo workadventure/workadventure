@@ -61,8 +61,8 @@ class AnalyticsClient {
     private pendingAdminEvents: AdminAnalyticsEvent[] = [];
     /** Open intervals, by the thing they are measuring. Closing is by the same key. */
     private openAreas = new Map<string, TimedAnalyticsEventHandle>();
-    private openScreenShares = new Map<string, TimedAnalyticsEventHandle>();
-    /** Availability status is a single continuous state, so one handle, not a map. */
+    /** A screen share and an availability status are each a single continuous state, so one handle, not a map. */
+    private openScreenShare: TimedAnalyticsEventHandle | undefined;
     private openStatus: TimedAnalyticsEventHandle | undefined;
     private currentStatus: string | undefined;
     private previousRoomId: string | undefined;
@@ -100,7 +100,7 @@ class AnalyticsClient {
             // keeping them would mean a later visit to the same area closes a handle
             // from a dead socket, which the pusher drops as unpaired.
             this.openAreas.clear();
-            this.openScreenShares.clear();
+            this.openScreenShare = undefined;
             this.openStatus = undefined;
             this.currentStatus = undefined;
         }
@@ -288,7 +288,7 @@ class AnalyticsClient {
         this.trackAdminEvent("meeting.screenshare.toggled");
     }
 
-    screenSharingStarted(screenShareSessionId: string, hasAudio: boolean): void {
+    screenSharingStarted(hasAudio: boolean): void {
         if (!this.canSendAdminAnalytics()) {
             return;
         }
@@ -297,20 +297,17 @@ class AnalyticsClient {
         // interval's END is the arrival of the next one rather than a real stop.
         // The client no longer states why it closed, so that is not distinguishable
         // downstream — see the note on TIMED_EVENT_END_REASONS.
-        this.openScreenShares.get(screenShareSessionId)?.close();
-        this.openScreenShares.set(
-            screenShareSessionId,
-            openTimedAnalyticsEvent(
-                "meeting.screenshare.ended",
-                { screenShareSessionId, hasAudio },
-                this.sendTimedEventReport,
-            ),
+        this.openScreenShare?.close();
+        this.openScreenShare = openTimedAnalyticsEvent(
+            "meeting.screenshare.ended",
+            { hasAudio },
+            this.sendTimedEventReport,
         );
     }
 
-    screenSharingEnded(screenShareSessionId: string): void {
-        this.openScreenShares.get(screenShareSessionId)?.close("closed_by_client");
-        this.openScreenShares.delete(screenShareSessionId);
+    screenSharingEnded(): void {
+        this.openScreenShare?.close();
+        this.openScreenShare = undefined;
     }
 
     follow(): void {
@@ -615,7 +612,7 @@ class AnalyticsClient {
 
     leaveArea(id: string, name: string): void {
         this.posthog?.capture(`wa_map-editor_leaver_area`, { id, name });
-        this.openAreas.get(id)?.close("closed_by_client");
+        this.openAreas.get(id)?.close();
         this.openAreas.delete(id);
     }
 
@@ -631,7 +628,7 @@ class AnalyticsClient {
         }
 
         this.currentStatus = status;
-        this.openStatus?.close("closed_by_client");
+        this.openStatus?.close();
         this.openStatus = openTimedAnalyticsEvent("status.dwell", { status }, this.sendTimedEventReport);
     }
 
@@ -858,16 +855,8 @@ class AnalyticsClient {
         this.trackAdminEvent("session.ended", { roomId, schemaVersion: 1 });
     }
 
-    mapEditorSaveStarted(scope?: string): void {
-        this.trackAdminEvent("map_editor.save.started", { scope });
-    }
-
-    mapEditorSaveSucceeded(scope?: string, durationMs?: number): void {
-        this.trackAdminEvent("map_editor.save.succeeded", { scope, durationMs });
-    }
-
-    mapEditorSaveFailed(scope?: string, reason?: string, durationMs?: number): void {
-        this.trackAdminEvent("map_editor.save.failed", { scope, reason, durationMs });
+    mapEditorSaveFailed(reason?: string): void {
+        this.trackAdminEvent("map_editor.save.failed", { reason });
     }
 
     mapEditorEntityAdded(entityType?: string): void {

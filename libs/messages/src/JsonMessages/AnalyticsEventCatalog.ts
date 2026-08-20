@@ -34,10 +34,10 @@ export const MAX_TIMESTAMP_MS = 8.64e15;
  */
 export const TIMED_EVENT_END_REASONS = [
   /**
-   * The one thing a client may say: it closed the interval. Why it closed is not
-   * recorded, because every value the client used to send restated something the
-   * event already carried — the name said `area.dwell`, so `left_area` added
-   * nothing.
+   * The client asked for the interval to be closed. It is the *default* rather
+   * than something a client states: the front cannot send a reason at all any
+   * more, because every value it used to send restated something the event
+   * already carried — the name said `area.dwell`, so `left_area` added nothing.
    *
    * Where a reason did carry information, that information moved to where it
    * belongs. A conversation that splits because its type changed used to report
@@ -56,12 +56,6 @@ export const TIMED_EVENT_END_REASONS = [
   "pusher_crashed",
 ] as const;
 export type TimedEventEndReason = (typeof TIMED_EVENT_END_REASONS)[number];
-
-/** All a client may state; the rest are the pusher's to decide. */
-export type ClientTimedEventEndReason = Extract<
-  TimedEventEndReason,
-  "closed_by_client"
->;
 
 /**
  * Reasons that existed before the set was trimmed, mapped to their replacement.
@@ -733,16 +727,13 @@ export const ANALYTICS_EVENTS = {
   "meeting.screenshare.ended": timedEvent({
     openableBy: "client",
     openProperties: z.object({
-      screenShareSessionId: z
-        .string()
-        .describe("Identifies the share this interval measures."),
       hasAudio: z
         .boolean()
         .describe("Whether the shared screen carried audio."),
     }),
     endReasonDescription: "Why the share stopped, or what stopped it.",
     description:
-      "A screen share, measured. One row per share, emitted by the pusher when the interval closes and timestamped at its end. There is no matching `.started`: the interval carries its own start.",
+      "A screen share, measured. One row per share, emitted by the pusher when the interval closes and timestamped at its end. There is no matching `.started`: the interval carries its own start. Only one share can be live at a time, so the interval needs no id of its own — the connection it rides identifies it.",
   }),
 
   "meeting.layout_changed": event({
@@ -880,31 +871,12 @@ export const ANALYTICS_EVENTS = {
     description: "The user opened an application from the map editor.",
   }),
 
-  "map_editor.save.started": event({
-    properties: z.object({
-      scope: z.string().optional().describe("What was being saved."),
-    }),
-    description: "A map editor save began.",
-  }),
-
-  "map_editor.save.succeeded": event({
-    properties: z.object({
-      scope: z.string().optional().describe("What was saved."),
-      durationMs: z.number().optional().describe("How long the save took."),
-    }),
-    description: "A map editor save completed.",
-  }),
-
   "map_editor.save.failed": event({
     properties: z.object({
-      scope: z.string().optional().describe("What was being saved."),
       reason: z.string().optional().describe("Why the save failed."),
-      durationMs: z
-        .number()
-        .optional()
-        .describe("How long the attempt took before failing."),
     }),
-    description: "A map editor save failed.",
+    description:
+      "The map-storage refused an edit. There is no matching `.started`/`.succeeded`: a map editor command is sent fire-and-forget, so the front only ever learns about the failures — count these against the `map_editor.area.*` / `map_editor.entity.*` events to get an edit failure rate.",
   }),
 
   "map_editor.entity.added": event({
