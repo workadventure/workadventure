@@ -3,6 +3,7 @@ import Debug from "debug";
 import { writable } from "svelte/store";
 import type { LazyPictureStore } from "../../../../Stores/PictureStore";
 import type { UserProviderMerger } from "../../../UserProviderMerger/UserProviderMerger";
+import { matrixMediaAuthService } from "../MatrixMediaAuthService";
 import { resolveDirectMessagePeerAvatarUrl } from "./WaMatrixProfileService";
 
 const debug = Debug("MatrixChatConnection");
@@ -69,7 +70,15 @@ export class MatrixAvatarProfile {
         matrixClient: MatrixClient,
         mergerContext: UserProviderMerger | undefined,
     ): string | undefined {
-        const http = roomMember.getAvatarUrl(baseUrl, 96, 96, "scale", false, false);
+        const http = roomMember.getAvatarUrl(
+            baseUrl,
+            96,
+            96,
+            "scale",
+            false,
+            false,
+            matrixMediaAuthService.isEnabledForTagSrc(),
+        );
         const avatarUrl = resolveDirectMessagePeerAvatarUrl(
             matrixUserId,
             http ?? undefined,
