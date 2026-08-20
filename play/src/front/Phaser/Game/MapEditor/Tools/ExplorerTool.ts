@@ -40,6 +40,8 @@ export class ExplorerTool implements MapEditorTool {
     private mapExplorationEntitiesSubscribe: Unsubscriber | undefined;
     private enableUserInputsStoreSubscribe: Unsubscriber | undefined;
     private zoomLevelBeforeExplorerMode: number | undefined;
+    /** Whether activate() has run. clear() is a no-op until it has — see clear(). */
+    private activated = false;
 
     private keyDownHandler = (event: KeyboardEvent) => {
         if (!get(enableUserInputsStore)) return;
@@ -157,6 +159,16 @@ export class ExplorerTool implements MapEditorTool {
     }
 
     public clear(): void {
+        // A tool that was never activated has nothing to clear, and reporting that it
+        // closed is how every scene teardown recorded an exploration nobody started:
+        // MapEditorModeManager builds all its tools up front and destroys all of them
+        // (destroy() -> clear()), so this ran even for a user who never opened the
+        // explorer.
+        if (!this.activated) {
+            return;
+        }
+        this.activated = false;
+
         // Put analytics for exploration mode
         analyticsClient.closeExplorationMode();
 
@@ -225,6 +237,8 @@ export class ExplorerTool implements MapEditorTool {
         mapExplorationAreasStore.set(undefined);
     }
     public activate(): void {
+        this.activated = true;
+
         // Put analytics for exploration mode
         analyticsClient.openExplorationMode();
 
