@@ -8,11 +8,19 @@ export function createCoWebsiteStore() {
 
     /**
      * Every cowebsite in the app is opened through here, which is why the
-     * `cowebsite.opened` event is reported here and nowhere else. The callers used
-     * to report it themselves, right after calling this — five of them, each
-     * rebuilding the same context literal, and seven other call sites that simply
-     * forgot. What a caller still owns is the context it alone knows: which area
-     * triggered the open, and through which property.
+     * `cowebsite.opened` event is reported here. The callers used to report it
+     * themselves, right after calling this — five of them, each rebuilding the same
+     * context literal, and seven other call sites that simply forgot. What a caller
+     * still owns is the context it alone knows: which area triggered the open, and
+     * through which property.
+     *
+     * Not the only emitter, though: `WA.nav.openTab`, `WA.nav.goToPage`,
+     * `WA.ui.website` and embedded websites still report `cowebsite.opened`
+     * directly, and none of them opens a cowebsite — they open a browser tab, a
+     * navigation, or an iframe this store never sees. They pass no context, so they
+     * land as `triggerProperty: "other"` and dilute every per-area figure computed
+     * from this event. Giving them their own name is a question about what the
+     * event means, and is deliberately left open.
      */
     const add = (coWebsite: CoWebsite, position?: number, analyticsContext: CowebsiteOpenedAnalyticsContext = {}) => {
         if (position || position === 0) {

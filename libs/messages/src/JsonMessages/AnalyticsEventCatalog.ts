@@ -667,6 +667,15 @@ export const ANALYTICS_EVENTS = {
   "meeting.ended": timedEvent({
     openableBy: "client",
     opensWith: "meeting.started",
+    // Mandatory alongside opensWith, not a judgement about meetings: the tracker
+    // enqueues the opening row the moment the interval opens, and only the CLOSING
+    // row is subject to this threshold. A non-zero value would therefore emit a
+    // `meeting.started` with no `meeting.ended` for every sub-threshold meeting —
+    // manufacturing the orphan the whole timed-event design exists to remove, and
+    // silently drifting the two counters the admin reads apart. A meeting that
+    // lasted 300ms is a meeting that happened; `durationSeconds` is there for
+    // anything that wants to filter it out.
+    minDurationMs: 0,
     // meetingProvider spelled out rather than `.required()` on the shared shape:
     // required() rebuilds the field and drops its .describe().
     openProperties: meetingContextProperties.extend({
