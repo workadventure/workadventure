@@ -14,7 +14,8 @@
     const DEAD_ZONE = 48;
     /** Below this, a press on the shortcut is a tap that leaves the wheel open rather than a hold. */
     const HOLD_THRESHOLD = 250;
-    const SHORTCUT = "e";
+    // "e" toggles the map editor; "g" for gesture is free in both keyboard layouts.
+    const SHORTCUT = "g";
 
     /** Half the wheel's footprint, used to keep it clear of the screen edges. */
     const HALF_FOOTPRINT = RADIUS + 48;
@@ -188,8 +189,6 @@
         tabindex="-1"
         aria-label={$LL.actionbar.wokaEmote.wheelTitle()}
     >
-        <div class="absolute inset-0 bg-contrast/40 backdrop-blur-[2px]"></div>
-
         <!-- Positioner: sits on the Woka, or on the middle of the screen while it is unknown. -->
         <div
             class="absolute -translate-x-1/2 -translate-y-1/2"

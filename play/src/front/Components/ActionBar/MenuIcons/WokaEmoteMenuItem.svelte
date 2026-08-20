@@ -17,7 +17,7 @@
     onclick={toggle}
     classList="group/btn-woka-emote"
     tooltipTitle={$LL.actionbar.help.wokaEmote.title()}
-    tooltipShortcuts={["E"]}
+    tooltipShortcuts={["G"]}
     state={$wokaEmoteWheelVisibleStore ? "active" : "normal"}
     dataTestId="woka-emote-btn"
     desc={$LL.actionbar.help.wokaEmote.desc()}
