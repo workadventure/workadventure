@@ -30,7 +30,7 @@ type CowebsiteMediaKind =
     | "spreadsheet"
     | "website"
     | "other";
-type CowebsiteOpenedAnalyticsContext = {
+export type CowebsiteOpenedAnalyticsContext = {
     targetUrl?: string;
     mediaKind?: CowebsiteMediaKind;
     triggerProperty?: "openLink" | "openWebsite" | "other";

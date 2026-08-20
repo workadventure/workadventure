@@ -652,20 +652,17 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsites.add(coWebsite);
-
-            loadCoWebsiteFunction();
-
-            //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
-            inOpenWebsite.set(true);
-
-            // analytics event for open website
-            analyticsClient.openedWebsite(url, {
+            coWebsites.add(coWebsite, undefined, {
                 targetUrl: url.toString(),
                 triggerProperty: "openWebsite",
                 areaId: place.id !== undefined ? String(place.id) : undefined,
                 areaName: typeof place.name === "string" ? place.name : undefined,
             });
+
+            loadCoWebsiteFunction();
+
+            //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
+            inOpenWebsite.set(true);
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
@@ -731,17 +728,15 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsites.add(coWebsite);
-
-            //user in zone to open cowesite with only icone
-            inOpenWebsite.set(true);
-
-            analyticsClient.openedWebsite(new URL(urlStr, this.scene.mapUrlFile), {
+            coWebsites.add(coWebsite, undefined, {
                 targetUrl: new URL(urlStr, this.scene.mapUrlFile).toString(),
                 triggerProperty: "openWebsite",
                 areaId: place.id !== undefined ? String(place.id) : undefined,
                 areaName: typeof place.name === "string" ? place.name : undefined,
             });
+
+            //user in zone to open cowesite with only icone
+            inOpenWebsite.set(true);
         }
 
         if (!websiteTriggerProperty || websiteTriggerProperty === ON_ACTION_TRIGGER_ENTER) {
