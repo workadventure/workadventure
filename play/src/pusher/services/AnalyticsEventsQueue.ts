@@ -283,16 +283,23 @@ export class AnalyticsEventsQueue {
         socketData: SocketData,
         pusherReceivedAt: string,
     ): AnalyticsEvent | undefined {
+        // The event itself is already validated: everything a socket reports is
+        // parsed against its catalog schema in processAnalyticsReportMessage, which
+        // pins the name, the source, the event id and the timestamp far more tightly
+        // than a hand-rolled check could — and the two callers that skip the handler
+        // (AnalyticsTimedEventTracker and the video-quality conversion below) build
+        // their events here, in typed code. What is checked below is what the catalog
+        // does *not* see: the socket context, which never travels in the message, and
+        // the size of `properties`, which every catalog schema lets through under
+        // `.passthrough()`.
         if (
-            !isRequiredString(event.eventName) ||
-            !isRequiredString(event.eventId) ||
             !isRequiredString(socketData.userUuid) ||
             !isRequiredString(socketData.spaceUserId) ||
             !isRequiredString(socketData.world) ||
             !isRequiredString(socketData.roomId)
         ) {
             console.warn("Analytics event dropped", {
-                reason: "missing required event or socket context",
+                reason: "missing required socket context",
                 eventName: event.eventName,
                 eventId: event.eventId,
                 reporterUserUuid: socketData.userUuid,
@@ -302,33 +309,6 @@ export class AnalyticsEventsQueue {
             return undefined;
         }
 
-        // Defense-in-depth: front-side controllers are expected to enforce the
-        // source whitelist, but reject anything else here so a misbehaving
-        // client cannot impersonate a backend source by editing its payload.
-        if (event.source !== "front" && event.source !== "pusher" && event.source !== "media") {
-            console.warn("Analytics event dropped", {
-                reason: "invalid source",
-                eventName: event.eventName,
-                eventId: event.eventId,
-                source: event.source,
-            });
-            return undefined;
-        }
-
-        const clientEventDate = new Date(event.clientEventTimeMs);
-        if (isNaN(clientEventDate.getTime())) {
-            console.warn("Analytics event dropped", {
-                reason: "invalid clientEventTimeMs",
-                eventName: event.eventName,
-                eventId: event.eventId,
-                clientEventTimeMs: event.clientEventTimeMs,
-            });
-            return undefined;
-        }
-
-        // Bound the per-event properties payload. The admin API will reject
-        // oversized events with 422; capping here keeps the in-memory queue
-        // from being filled with multi-MB junk.
         const serializedPropertiesLength = serializedPropertiesBytes(event.properties);
         if (serializedPropertiesLength === undefined) {
             console.warn("Analytics event dropped", {
@@ -352,7 +332,7 @@ export class AnalyticsEventsQueue {
         return {
             eventName: event.eventName,
             source: event.source,
-            clientEventTime: clientEventDate.toISOString(),
+            clientEventTime: new Date(event.clientEventTimeMs).toISOString(),
             pusherReceivedAt,
             eventId: event.eventId,
             userUuid: socketData.userUuid,
