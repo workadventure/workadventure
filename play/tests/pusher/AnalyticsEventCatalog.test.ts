@@ -31,7 +31,6 @@ function propertiesOf(schema: z.ZodDiscriminatedUnionOption<"eventName">): z.Zod
 const EMITTER_SOURCES = import.meta.glob<string>(
     [
         "../../src/front/Administration/AnalyticsClient.ts",
-        "../../src/front/WebRtc/JitsiMeetingAnalytics.ts",
         "../../src/pusher/services/AnalyticsEventsQueue.ts",
     ],
     { query: "?raw", import: "default", eager: true },
