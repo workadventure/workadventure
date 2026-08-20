@@ -951,6 +951,23 @@ class LocalUserStore {
         return localStorage.getItem(matrixLoginToken);
     }
 
+    /**
+     * Forgets everything that identifies the current Matrix session.
+     *
+     * Called on logout, and whenever the homeserver tells us the session is dead: credentials left behind
+     * are replayed on the next page load, and MatrixClientWrapper only resets its stores when the stored
+     * user id differs from the one it just logged in with - so a leftover user id would restore the broken
+     * session instead of starting over. The device id is deliberately kept: it is stored per user and the
+     * next login overwrites it with the one the homeserver hands out.
+     */
+    clearMatrixSession() {
+        this.setMatrixLoginToken(null);
+        this.setMatrixUserId(null);
+        this.setMatrixAccessToken(null);
+        this.setMatrixRefreshToken(null);
+        this.setMatrixAccessTokenExpireDate(null);
+    }
+
     //TODO : Remove duplicate code (getMatrixUserId) and change matrix id to chatID in localStorage
     getChatId(): string | null {
         return localStorage.getItem(matrixUserId);

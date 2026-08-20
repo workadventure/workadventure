@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 
 import type { ICreateClientOpts, MatrixClient, SecretStorage } from "matrix-js-sdk";
-import { createClient, IndexedDBCryptoStore, IndexedDBStore } from "matrix-js-sdk";
+import { createClient, IndexedDBCryptoStore, IndexedDBStore, MatrixError } from "matrix-js-sdk";
 
 import type { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
@@ -9,6 +9,7 @@ import type { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
 import { customMatrixLogger } from "./CustomMatrixLogger";
+import { clearMatrixStores } from "./MatrixStoreCleanup";
 // Inline worker (bundled as a same-origin blob) that drives matrix-js-sdk's IndexedDB store off the
 // main thread. See matrixIndexedDbWorker.ts for why the entry script and `?worker&inline` are needed.
 import MatrixIndexedDbWorker from "./matrixIndexedDbWorker?worker&inline";
@@ -154,7 +155,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         this.client = this._createClient(matrixCreateClientOpts);
 
         if (oldMatrixUserId !== matrixUserId) {
-            await this.client.clearStores();
+            await clearMatrixStores(this.client);
         }
 
         return this.client;
@@ -241,8 +242,22 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 deviceId: device_id,
             };
         } catch (e) {
-            console.error("Invalid login token", e);
-            throw new InvalidLoginTokenError("Invalid login token");
+            if (e instanceof MatrixError) {
+                // The homeserver answered, so the login token has been spent (an m.login.token is single use)
+                // or was rejected outright. Either way it must never be replayed: the branch that exchanges it
+                // runs before the stored access token is even looked at, so keeping a dead token here would
+                // make every later initMatrixClient() fail on it - locking the user out of the chat for good,
+                // even though perfectly valid credentials are sitting in local storage.
+                this.localUserStore.setMatrixLoginToken(null);
+                console.error("Invalid login token", e);
+                throw new InvalidLoginTokenError("Invalid login token");
+            }
+
+            // No answer from the homeserver (network failure, CORS, aborted request): the token was most
+            // likely never seen and stays usable, so keep it for the next attempt and report what really
+            // happened instead of blaming the token.
+            console.error("Unable to exchange the Matrix login token", e);
+            throw e;
         }
     }
 

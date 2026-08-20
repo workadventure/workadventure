@@ -21,7 +21,7 @@ import { LoginSceneName } from "../Login/LoginScene";
 import { PwaInstallSceneName } from "../Login/PwaInstallScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EmptySceneName } from "../Login/EmptyScene";
-import { gameSceneIsLoadedStore, waitForGameSceneStore } from "../../Stores/GameSceneStore";
+import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
@@ -395,6 +395,18 @@ export class GameManager {
         return this.matrixServerUrl;
     }
 
+    /**
+     * Whether the room the player is currently in allows the chat.
+     *
+     * `gameSceneStore` holds the running scene only once it finished loading. During the very first load the
+     * scene is still starting up - it is the one asking for the chat connection - so we fall back on the
+     * start room, which is precisely the room that scene is loading.
+     */
+    private async isChatEnabledOnCurrentRoom(): Promise<boolean> {
+        const room = get(gameSceneStore)?.room ?? (await this.currentStartedRoomPromise);
+        return room.isChatEnabled;
+    }
+
     public async getChatConnection(): Promise<ChatConnectionInterface> {
         if (this.chatConnectionPromise) {
             return this.chatConnectionPromise;
@@ -402,45 +414,35 @@ export class GameManager {
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
 
-        if (matrixServerUrl && get(userIsConnected)) {
-            this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
-
-            const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
-
-            matrixClientPromise.catch((e) => {
-                if (e instanceof InvalidLoginTokenError) {
-                    loginTokenErrorStore.set(true);
-                }
-            });
-
-            const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
-            this._chatConnection = matrixChatConnection;
-
-            this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
-            isMatrixChatEnabledStore.set(true);
-
-            try {
-                const gameScene = await waitForGameSceneStore();
-
-                if (gameScene.room.isChatEnabled) {
-                    return this.chatConnectionPromise;
-                }
-            } catch (e) {
-                console.error(e);
-                Sentry.captureException(e);
-            }
-
-            matrixChatConnection.destroy().catch((e) => {
-                console.error(e);
-                Sentry.captureException(e);
-            });
-            return new VoidChatConnection();
-        } else {
+        // The chat setting is checked *before* the client is built, on purpose. Opening a Matrix session on a
+        // room where the chat is disabled used to mean a full connection and initial sync, immediately
+        // followed by destroy() - which is a real /logout. The homeserver then revoked the access token that
+        // is still stored locally, so every later room with the chat enabled restored that dead token and got
+        // nothing but M_UNKNOWN_TOKEN. Not opening the session at all leaves nothing to tear down.
+        if (!matrixServerUrl || !get(userIsConnected) || !(await this.isChatEnabledOnCurrentRoom())) {
             // No matrix connection? Let's fill the gap with a "void" object
             this._chatConnection = new VoidChatConnection();
             isMatrixChatEnabledStore.set(false);
             return this._chatConnection;
         }
+
+        this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
+
+        const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
+
+        matrixClientPromise.catch((e) => {
+            if (e instanceof InvalidLoginTokenError) {
+                loginTokenErrorStore.set(true);
+            }
+        });
+
+        const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
+        this._chatConnection = matrixChatConnection;
+
+        this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
+        isMatrixChatEnabledStore.set(true);
+
+        return this.chatConnectionPromise;
     }
     get chatConnection(): ChatConnectionInterface {
         if (!this._chatConnection) {
@@ -480,10 +482,7 @@ export class GameManager {
     }
 
     private clearChatDataFromLocalStorage(): void {
-        localUserStore.setMatrixLoginToken(null);
-        localUserStore.setMatrixUserId(null);
-        localUserStore.setMatrixAccessToken(null);
-        localUserStore.setMatrixRefreshToken(null);
+        localUserStore.clearMatrixSession();
     }
 
     public async loadWokaData(): Promise<WokaData> {
