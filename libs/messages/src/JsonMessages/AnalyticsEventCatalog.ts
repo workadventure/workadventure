@@ -39,11 +39,10 @@ export const TIMED_EVENT_END_REASONS = [
    * more, because every value it used to send restated something the event
    * already carried — the name said `area.dwell`, so `left_area` added nothing.
    *
-   * Where a reason did carry information, that information moved to where it
-   * belongs. A conversation that splits because its type changed used to report
-   * `type_changed` on the closing row, leaving consumers to correlate the halves on
-   * time; the *next* conversation now declares `continuesFrom`, which is the actual
-   * link rather than a hint that one exists.
+   * The one value that did carry information, `type_changed`, was a symptom: a
+   * conversation was split whenever a derived store changed its mind about what
+   * kind of conversation it was. Meetings are now opened where they start, so
+   * there is no derivation to change its mind and nothing to report.
    */
   "closed_by_client",
   // ---- Forced by the pusher, when the client never got to say anything ----
@@ -180,8 +179,8 @@ const noProperties = z
  *
  * This is the shape the pipeline settled on for durations: it leaves no orphan
  * "start" to reconcile when a tab dies or a pusher restarts, and a consumer reads
- * the duration straight off the event. `user.disconnected` and
- * `conversation.ended` both use it.
+ * the duration straight off the event. `user.disconnected` and `meeting.ended`
+ * both use it.
  */
 export const timedEventProperties = z.object({
   startedAt: z
@@ -235,50 +234,6 @@ const meetingContextProperties = z.object({
     .enum(["livekit", "jitsi", "webrtc"])
     .optional()
     .describe("Which media backend carried the meeting."),
-});
-
-/**
- * Shared by every `conversation.*` event.
- *
- * How well `conversationId` correlates across participants depends on the type,
- * and anything querying these has to account for it: a spontaneous bubble is
- * keyed on the server-assigned group id (`group:<n>`), so every participant
- * reports the *same* id — but meetings and remote conversations have no shared
- * handle, so each client falls back to a locally generated uuid and two
- * participants in one meeting report *different* ids.
- *
- * `group:<n>` is also only unique per room: the back's counter is static per
- * process, so ids repeat across rooms, replicas and restarts. Count these on
- * (world, room, conversationId), never on the bare id.
- */
-const conversationContextProperties = z.object({
-  schemaVersion: z
-    .literal(1)
-    .describe("Payload version for the conversation family."),
-  conversationId: z
-    .string()
-    .describe(
-      "`group:<n>` for a spontaneous bubble (shared between participants, unique only per room), otherwise a per-client uuid.",
-    ),
-  meetingSessionId: z
-    .string()
-    .optional()
-    .describe("Set to the conversationId when conversationType is `meeting`."),
-  conversationType: z
-    .enum(["spontaneous_bubble", "meeting", "remote"])
-    .describe(
-      "Bubble formed by walking up to someone, a meeting area, or a remote conversation.",
-    ),
-  meetingProvider: z
-    .enum(["livekit", "jitsi", "webrtc"])
-    .optional()
-    .describe("Media backend in use; absent for a remote conversation."),
-  continuesFrom: z
-    .string()
-    .optional()
-    .describe(
-      "The conversationId this one continues, when a single uninterrupted conversation changed type — a bubble that became a meeting reports two intervals under two ids. Absent on a conversation that started fresh. Follow this to reassemble the whole thing; without it two halves look like two conversations.",
-    ),
 });
 
 /** The eight `settings.*.changed` events that report a single new value. */
@@ -387,9 +342,10 @@ const DEFAULT_INTERVAL_FIELDS: TimedEventIntervalFields = {
 /**
  * Intervals shorter than this are dropped as transition churn.
  *
- * Leaving a meeting flips the conversation type for a millisecond, producing a
- * 0-second phantom that carried no duration but still counted as a conversation.
- * Per-event because it is a judgement about *that* event's noise floor, not a law:
+ * Switching media backend can open and close a meeting within a millisecond,
+ * producing a 0-second phantom that carried no duration but still counted as a
+ * meeting. Per-event because it is a judgement about *that* event's noise floor,
+ * not a law:
  * a sub-second connection session is a real connection (a tab that died on load),
  * so dropping it would undercount rather than denoise.
  */
@@ -547,15 +503,6 @@ export const ANALYTICS_EVENTS = {
       "A user's socket left a room, carrying the finished session. This is what the admin projects into analytics_connection_sessions, so it is the source of truth for connection time. A disconnect whose connect was never seen is dropped rather than reported with a guessed duration.",
   }),
 
-  "conversation.ended": timedEvent({
-    openableBy: "client",
-    openProperties: conversationContextProperties,
-    endReasonDescription:
-      "Why the interval ended. `type_changed` means one conversation was split because its type changed — a bubble that became a meeting reports two conversations, so stitch on time rather than assuming one id per conversation. The `socket_closed` / `pusher_*` values mean the client never got to say, and the pusher closed it.",
-    description:
-      "A conversation, measured. Emitted by the pusher when the interval closes — never by the client, which cannot state a duration — and timestamped at its end.",
-  }),
-
   "media.video_quality.sample": event({
     properties: z.object({
       streamId: z.string().describe("The WebRTC stream this sample measures."),
@@ -703,25 +650,36 @@ export const ANALYTICS_EVENTS = {
 
   "meeting.started": event({
     properties: meetingContextProperties,
-    description: "A meeting started.",
-  }),
-
-  "meeting.ended": event({
-    properties: meetingContextProperties,
     description:
-      "A meeting ended. Carries no duration — pair it with meeting.started on time, or read conversation.ended for measured collaboration time.",
+      "A meeting began. Emitted by the pusher when a client opens the interval, so it pairs one-to-one with the meeting.ended that closes it.",
+    source: "pusher",
   }),
 
-  "meeting.provider_changed": event({
-    properties: conversationContextProperties.extend({
-      previousMeetingProvider: z
+  // A conversation IS a meeting: a spontaneous bubble is a WebRTC meeting, a
+  // meeting area is a LiveKit or Jitsi one. Reporting them as two families meant
+  // deriving "am I in a conversation" from three global stores in
+  // ConnectionManager, then deriving the provider from two more, then splitting
+  // one uninterrupted conversation into several rows whenever that derivation
+  // changed its mind. The interval is now opened where the meeting is actually
+  // started — the Jitsi property listeners, and SpacePeerManager's strategy
+  // switch — which is also where its provider is known for certain, so there is
+  // nothing left to detect a change of.
+  "meeting.ended": timedEvent({
+    openableBy: "client",
+    opensWith: "meeting.started",
+    // meetingProvider spelled out rather than `.required()` on the shared shape:
+    // required() rebuilds the field and drops its .describe().
+    openProperties: meetingContextProperties.extend({
+      meetingProvider: z
         .enum(["livekit", "jitsi", "webrtc"])
         .describe(
-          "Provider in use before the switch; meetingProvider carries the one switched to.",
+          "Which media backend carried the meeting, and therefore what kind of meeting it was: `webrtc` is a spontaneous bubble, `livekit` and `jitsi` are meeting areas.",
         ),
     }),
+    endReasonDescription:
+      "`socket_closed` and the `pusher_*` values mean the client never got to close it — a tab closed mid-meeting, or the pusher restarted.",
     description:
-      "A meeting switched media backend mid-session, reported with the conversation it happened in. Despite the `meeting.` prefix this belongs to the conversation family: ConversationAnalytics owns the transition and is the only emitter.",
+      "A meeting, measured. One row per meeting, emitted by the pusher when the interval closes and timestamped at its end. `meetingProvider` is what tells a spontaneous bubble (`webrtc`) from a meeting area (`livekit` / `jitsi`).",
   }),
 
   "meeting.screenshare.ended": timedEvent({
