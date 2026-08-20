@@ -367,36 +367,67 @@ describe("AnalyticsClient admin analytics sink", () => {
             "api/analytics/events-batch": "v1",
         };
 
-        analyticsClient.openedWebsite(new URL("https://example.com/secured/file.pdf?token=secret#frag"), {
-            targetUrl: "https://example.com/files/file.pdf?sas=otherSecret",
-            triggerProperty: "openLink",
-            areaId: "docs-zone",
-            areaName: "Docs zone",
-        });
+        analyticsClient.openedWebsite(
+            "cowebsite-1",
+            new URL("https://example.com/secured/file.pdf?token=secret#frag"),
+            {
+                targetUrl: "https://example.com/files/file.pdf?sas=otherSecret",
+                triggerProperty: "openLink",
+                areaId: "docs-zone",
+                areaName: "Docs zone",
+            },
+        );
 
         // The URL is reduced to its origin: query and hash carry auth tokens, and the
         // path would only be a second, unfiltered copy of the document name. The name
         // is reported once, as its own field, so anonymization and the Kiosk can each
         // drop that single field.
+        // The context now rides the interval: the pusher emits cowebsite.opened when it
+        // opens and repeats the whole payload on cowebsite.closed with the duration.
         expect(sendAdmin).toHaveBeenCalledWith({
             events: [
                 expect.objectContaining({
-                    eventName: "cowebsite.opened",
+                    eventName: "timed_event.open",
                     source: "front",
-                    properties: {
-                        url: "https://example.com",
-                        targetUrl: "https://example.com",
-                        mediaKind: "pdf",
-                        triggerProperty: "openLink",
-                        fileName: "file.pdf",
-                        fileExtension: "pdf",
-                        areaId: "docs-zone",
-                        areaName: "Docs zone",
-                        schemaVersion: 1,
-                    },
+                    properties: expect.objectContaining({
+                        eventName: "cowebsite.closed",
+                        properties: {
+                            url: "https://example.com",
+                            targetUrl: "https://example.com",
+                            mediaKind: "pdf",
+                            triggerProperty: "openLink",
+                            fileName: "file.pdf",
+                            fileExtension: "pdf",
+                            areaId: "docs-zone",
+                            areaName: "Docs zone",
+                            schemaVersion: 1,
+                        },
+                    }),
                 }),
             ],
         });
+    });
+
+    it("measures each cowebsite separately, so closing one leaves the others open", () => {
+        const sendAdmin = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+
+        // Several cowebsites sit side by side and each closes on its own, which is why
+        // this one is keyed by id where a screen share or a broadcast is not.
+        analyticsClient.openedWebsite("cowebsite-1", new URL("https://a.example"));
+        analyticsClient.openedWebsite("cowebsite-2", new URL("https://b.example"));
+        analyticsClient.closedWebsite("cowebsite-1");
+
+        const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
+        const opens = events.filter((event) => event.eventName === "timed_event.open");
+        const closes = events.filter((event) => event.eventName === "timed_event.close");
+
+        expect(opens).toHaveLength(2);
+        expect(closes).toHaveLength(1);
+        expect(closes[0].properties.handle).toBe(opens[0].properties.handle);
     });
 
     it("reports the document name only in fileName, never inside the urls", () => {
@@ -406,11 +437,12 @@ describe("AnalyticsClient admin analytics sink", () => {
             "api/analytics/events-batch": "v1",
         };
 
-        analyticsClient.openedWebsite(new URL("https://acme.tld/legal/NDA-acme-2026.pdf"), {
+        analyticsClient.openedWebsite("cowebsite-1", new URL("https://acme.tld/legal/NDA-acme-2026.pdf"), {
             targetUrl: "https://acme.tld/hr/salary-2026.xlsx",
         });
 
-        const properties = sendAdmin.mock.calls[0][0].events[0].properties as Record<string, unknown>;
+        const openFrame = sendAdmin.mock.calls[0][0].events[0].properties as Record<string, unknown>;
+        const properties = openFrame.properties as Record<string, unknown>;
         // The name lives in exactly one field — that is the whole point. A single
         // field can be dropped by the anonymization allowlist and by the Kiosk
         // projection; a name buried in a URL cannot.
@@ -427,19 +459,22 @@ describe("AnalyticsClient admin analytics sink", () => {
             "api/analytics/events-batch": "v1",
         };
 
-        analyticsClient.openedWebsite(new URL("https://example.com/workadventure"), {
+        analyticsClient.openedWebsite("cowebsite-1", new URL("https://example.com/workadventure"), {
             triggerProperty: "other",
         });
 
         expect(sendAdmin).toHaveBeenCalledWith({
             events: [
                 expect.objectContaining({
-                    eventName: "cowebsite.opened",
+                    eventName: "timed_event.open",
                     source: "front",
                     properties: expect.objectContaining({
-                        targetUrl: "https://example.com",
-                        mediaKind: "website",
-                        triggerProperty: "other",
+                        eventName: "cowebsite.closed",
+                        properties: expect.objectContaining({
+                            targetUrl: "https://example.com",
+                            mediaKind: "website",
+                            triggerProperty: "other",
+                        }),
                     }),
                 }),
             ],
