@@ -811,8 +811,15 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.client.on(UserEvent.Presence, this.handleUserPresence);
         this.client.on(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
         this.client.on(HttpApiEvent.SessionLoggedOut, this.handleSessionLoggedOut);
-        await this.client.store.startup();
 
+        // Crypto first, and only then the sync store. Every sign-in mints a new device id while the rust
+        // crypto store keeps the previous one, so `initRustCrypto()` regularly fails with "the account in
+        // the store doesn't match the account in the constructor" and has to clear the stores before
+        // retrying. Clearing them closes and deletes the sync store's database - and `IndexedDBStore.startup()`
+        // returns early once it has run, so it never reconnects. Starting the store first therefore left it
+        // dead for the rest of the session: every command failed with "the database connection is closing",
+        // the SDK degraded to an in-memory store, and nothing was persisted - so the next page load had no
+        // sync token and paid for a full initial sync all over again.
         try {
             await this.client.initRustCrypto();
         } catch (error) {
@@ -820,6 +827,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             await clearMatrixStores(this.client);
             await this.client.initRustCrypto();
         }
+
+        await this.client.store.startup();
 
         await this.client.startClient({
             threadSupport: true,

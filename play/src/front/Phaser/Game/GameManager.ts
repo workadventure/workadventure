@@ -58,6 +58,7 @@ export class GameManager {
     private visitCardUrl: string | null = null;
     private matrixServerUrl: string | undefined = undefined;
     private chatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
+    private pendingChatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
     private matrixClientWrapper: MatrixClientWrapper | undefined;
     private _chatConnection: ChatConnectionInterface | undefined;
     private chatVisibilitySubscription: Unsubscriber | undefined;
@@ -407,11 +408,33 @@ export class GameManager {
         return room.isChatEnabled;
     }
 
-    public async getChatConnection(): Promise<ChatConnectionInterface> {
-        if (this.chatConnectionPromise) {
-            return this.chatConnectionPromise;
+    /**
+     * A Matrix session belongs to the user, not to the caller, so at most one may ever be opened: two
+     * clients in the same tab would fight over the same IndexedDB databases, which matrix-js-sdk warns
+     * leads to data corruption and decryption failures.
+     *
+     * Several callers ask for the connection while a scene starts up - the loading sequence and the world
+     * space join, at least - and deciding whether to open one has to await the room. The in-flight promise
+     * is therefore memoised synchronously: were the memoisation to happen only after that await, every
+     * caller arriving in the meantime would start a client of its own.
+     *
+     * A void connection is deliberately not memoised, so that a room where the chat is disabled does not
+     * settle the question for the rest of the session.
+     */
+    public getChatConnection(): Promise<ChatConnectionInterface> {
+        const alreadyRequested = this.chatConnectionPromise ?? this.pendingChatConnectionPromise;
+        if (alreadyRequested) {
+            return alreadyRequested;
         }
 
+        this.pendingChatConnectionPromise = this.openChatConnection().finally(() => {
+            this.pendingChatConnectionPromise = undefined;
+        });
+
+        return this.pendingChatConnectionPromise;
+    }
+
+    private async openChatConnection(): Promise<ChatConnectionInterface> {
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
 
         // The chat setting is checked *before* the client is built, on purpose. Opening a Matrix session on a
@@ -478,6 +501,7 @@ export class GameManager {
             this.clearChatDataFromLocalStorage();
             this._chatConnection = undefined;
             this.chatConnectionPromise = undefined;
+            this.pendingChatConnectionPromise = undefined;
         }
     }
 
