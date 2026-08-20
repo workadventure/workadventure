@@ -76,7 +76,6 @@ import { matrixProvider } from "./MatrixProvider";
 import RecordingService from "./RecordingService";
 import type { PusherWebSocket } from "./PusherWebSocket";
 import { analyticsTimedEventTracker, CONNECTION_SESSION_HANDLE } from "./AnalyticsTimedEventTracker";
-import { analyticsConnectionId } from "./AnalyticsConnectionId";
 
 const debug = Debug("socket");
 
@@ -276,7 +275,7 @@ export class SocketManager implements ZoneEventListener {
                             analyticsTimedEventTracker.open(
                                 CONNECTION_SESSION_HANDLE,
                                 "user.disconnected",
-                                { connectionId: analyticsConnectionId(socketData) },
+                                { connectionId: socketData.tabId },
                                 socketData,
                             );
                             break;

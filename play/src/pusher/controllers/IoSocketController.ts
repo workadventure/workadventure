@@ -275,7 +275,7 @@ export class IoSocketController {
                 roomName: z.string(),
                 cameraState: z.string().transform((val) => val === "true"),
                 microphoneState: z.string().transform((val) => val === "true"),
-                tabId: z.string(),
+                tabId: z.string().min(1),
                 connectionId: z.string().optional(),
             }),
             upgrade: async ({ query, request, isAborted, upgrade, reject }) => {

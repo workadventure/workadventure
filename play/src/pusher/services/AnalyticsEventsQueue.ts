@@ -361,7 +361,7 @@ export class AnalyticsEventsQueue {
             clientIp: socketData.ipAddress || null,
             world: socketData.world,
             roomId: socketData.roomId,
-            tabId: socketData.tabId ?? null,
+            tabId: socketData.tabId,
             properties: event.properties,
         };
     }
