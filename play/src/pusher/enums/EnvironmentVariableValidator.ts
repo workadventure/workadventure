@@ -344,6 +344,11 @@ export const EnvironmentVariables = z.object({
         .describe(
             "An approximation of the maximum number of videos displayed at once. If there are more videos to display, the user will have to scroll. The number of videos can sometimes be slightly greater (MAX_DISPLAYED_VIDEOS + number of videos to display % number of videos per row). This is useful to avoid overloading the Livekit server when a lot of people are in the same room.",
         ),
+    MAX_SPEAKERS_BEFORE_AUTOMUTE: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 6))
+        .describe(
+            "Microphone auto-mute threshold. When a user enters a communication space (proximity bubble, meeting room or podium) that already has at least this many other participants with their microphone on, the user's microphone is automatically muted on entry (a toast warns them; they can unmute manually afterwards). Only affects the moment of joining/going live — it never mutes a user who is already in the space. Defaults to 6. Set to 0 to disable auto-muting.",
+        ),
     NODE_ENV: z.string().optional().describe("Node.js environment: 'development', 'production', or 'test'"),
     CONTACT_URL: AbsoluteOrRelativeUrl.optional().describe("URL for users to contact support or administrators"),
     POSTHOG_API_KEY: z.string().optional().describe("PostHog API key for analytics tracking"),

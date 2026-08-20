@@ -464,7 +464,7 @@ export class SocketManager implements ZoneEventListener {
         filterType: FilterType,
         propertiesToSync: string[],
         options: { signal: AbortSignal },
-    ): Promise<void> {
+    ): Promise<number> {
         const socketData = client.getUserData();
 
         let space: SpaceInterface | undefined = this.spaces.get(spaceName);
@@ -506,9 +506,12 @@ export class SocketManager implements ZoneEventListener {
             }
         }
 
+        // Number of other users already publishing audio when this user joined (reported by the back),
+        // returned to the client so it can auto-mute before publishing in an already-crowded space.
+        let activeMicrophoneCount = 0;
         const joinPromise = (async () => {
             try {
-                await space.forwarder.registerUser(client, filterType);
+                activeMicrophoneCount = await space.forwarder.registerUser(client, filterType);
                 if (options.signal.aborted) {
                     // The user has aborted the request, we should not add them to the space
                     await space.forwarder.unregisterUser(client);
@@ -544,6 +547,8 @@ export class SocketManager implements ZoneEventListener {
                 }
             });
         });
+
+        return activeMicrophoneCount;
     }
 
     private closeAdminWebsocketConnection(client: AdminSocket, code: number, reason: string): void {

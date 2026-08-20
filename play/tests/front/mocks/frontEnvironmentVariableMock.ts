@@ -15,6 +15,7 @@ export const ENABLE_MAP_EDITOR = false;
 export const MAX_USERNAME_LENGTH = 10;
 export const MAX_PER_GROUP = 4;
 export const MAX_DISPLAYED_VIDEOS = 16;
+export const MAX_SPEAKERS_BEFORE_AUTOMUTE = 0;
 export const LIVEKIT_PIXEL_DENSITY = 2 / 3;
 export const NODE_ENV = "test";
 export const CONTACT_URL: string | undefined = undefined;
