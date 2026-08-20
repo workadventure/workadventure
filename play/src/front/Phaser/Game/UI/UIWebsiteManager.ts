@@ -4,6 +4,7 @@ import type { CreateUIWebsiteEvent, ModifyUIWebsiteEvent, UIWebsiteEvent } from 
 import { iframeListener } from "../../../Api/IframeListener";
 import { uiWebsitesStore } from "../../../Stores/UIWebsiteStore";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
+import { gameManager } from "../GameManager";
 
 class UIWebsiteManager {
     constructor() {
@@ -16,7 +17,7 @@ class UIWebsiteManager {
             }
 
             if (websiteEvent.url) {
-                website.url = websiteEvent.url;
+                website.url = new URL(websiteEvent.url, gameManager.getCurrentGameScene().getMapUrl()).toString();
 
                 // Analytics tracking for new website
                 analyticsClient.openedWebsite(new URL(websiteEvent.url));
@@ -78,6 +79,8 @@ class UIWebsiteManager {
             allowPolicy: websiteConfig.allowPolicy ?? "",
             allowApi: websiteConfig.allowApi ?? false,
         };
+        // If a relative URL is passed, it is relative to the TMJ file.
+        websiteConfig.url = new URL(websiteConfig.url, gameManager.getCurrentGameScene().getMapUrl()).toString();
         uiWebsitesStore.add(newWebsite);
 
         // Analytics tracking opening a website
