@@ -204,6 +204,7 @@ import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import type { RenderableTilemapLayer } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
 import { OutlineManager } from "./UI/OutlineManager";
@@ -348,6 +349,11 @@ export class GameScene extends DirtyScene {
     private entityPermissions: EntityPermissions | undefined;
     private entityPermissionsDeferred: Deferred<EntityPermissions> = new Deferred();
     private gameMapFrontWrapper!: GameMapFrontWrapper;
+    /**
+     * Player-vs-tile Arcade colliders, per tile layer, so that the collision can follow a layer
+     * when its game object is replaced (GPU layer demoted to a CPU layer).
+     */
+    private layerColliders = new Map<RenderableTilemapLayer, Phaser.Physics.Arcade.Collider>();
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
@@ -1171,6 +1177,7 @@ export class GameScene extends DirtyScene {
 
         this.connection?.closeConnection();
         this.outlineManager?.clear();
+        this.layerColliders.clear();
         this.tileAnimationRefreshEvent?.remove(false);
         this.tileAnimationRefreshEvent = undefined;
         this.userInputManager?.destroy();
@@ -3999,6 +4006,7 @@ ${escapedMessage}
     }
 
     private createCollisionWithPlayer() {
+        this.layerColliders.clear();
         //add collision layer
         for (const phaserLayer of this.gameMapFrontWrapper.phaserLayers) {
             // Area blocking is handled by Area game objects/colliders.
@@ -4007,25 +4015,45 @@ ${escapedMessage}
                 continue;
             }
 
-            this.physics.add.collider(
-                this.CurrentPlayer,
-                phaserLayer,
-                (
-                    object1: Body | StaticBody | Tile | Phaser.Types.Physics.Arcade.GameObjectWithBody,
-                    object2: Body | StaticBody | Tile | Phaser.Types.Physics.Arcade.GameObjectWithBody,
-                ) => {},
-            );
-            phaserLayer.setCollisionByProperty({ collides: true });
-            if (DEBUG_MODE) {
-                //debug code to see the collision hitbox of the object in the top layer
-                phaserLayer.renderDebug(this.add.graphics(), {
-                    tileColor: null, //non-colliding tiles
-                    collidingTileColor: new Color(243, 134, 48, 200), // Colliding tiles,
-                    faceColor: new Color(40, 39, 37, 255), // Colliding face edges
-                });
-            }
-            //});
+            this.addLayerCollider(phaserLayer);
         }
+    }
+
+    private addLayerCollider(phaserLayer: RenderableTilemapLayer): void {
+        const collider = this.physics.add.collider(
+            this.CurrentPlayer,
+            phaserLayer,
+            (
+                object1: Body | StaticBody | Tile | Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                object2: Body | StaticBody | Tile | Phaser.Types.Physics.Arcade.GameObjectWithBody,
+            ) => {},
+        );
+        this.layerColliders.set(phaserLayer, collider);
+        phaserLayer.setCollisionByProperty({ collides: true });
+        if (DEBUG_MODE) {
+            //debug code to see the collision hitbox of the object in the top layer
+            phaserLayer.renderDebug(this.add.graphics(), {
+                tileColor: null, //non-colliding tiles
+                collidingTileColor: new Color(243, 134, 48, 200), // Colliding tiles,
+                faceColor: new Color(40, 39, 37, 255), // Colliding face edges
+            });
+        }
+    }
+
+    /**
+     * Called when a tile layer game object has been replaced by another one rendering the same
+     * LayerData (a GPU layer demoted to a CPU layer after a scripting mutation). Moves the
+     * player collision from the old (destroyed) layer to the new one.
+     */
+    public onTileLayerReplaced(oldLayer: RenderableTilemapLayer, newLayer: RenderableTilemapLayer): void {
+        const collider = this.layerColliders.get(oldLayer);
+        if (collider === undefined) {
+            // Colliders have not been created yet; createCollisionWithPlayer will pick up the new layer.
+            return;
+        }
+        collider.destroy();
+        this.layerColliders.delete(oldLayer);
+        this.addLayerCollider(newLayer);
     }
 
     private createCurrentPlayer(startPosition: PositionInterface) {
