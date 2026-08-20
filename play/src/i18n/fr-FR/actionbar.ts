@@ -110,6 +110,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Lever la main",
             desc: "Signalez que vous souhaitez prendre la parole. Votre main levée s’affiche sur la carte et sur votre vidéo, pour que chacun sache à qui c’est le tour.",
         },
+        wokaEmote: {
+            title: "Jouer une emote",
+            desc: "Faites sauter, danser ou tourner votre Woka. Maintenez E pour ouvrir la roue, relâchez pour jouer.",
+        },
         audioManager: {
             title: "Volume des sons ambiants",
             desc: "Réglez le volume des sons d'ambiance de la carte (musique, bruitages).",
@@ -234,6 +238,18 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Vous n'avez pas encore de bureau personnel",
         errorMoving: "Impossible d'atteindre votre bureau personnel",
         errorUnclaiming: "Impossible de libérer votre bureau personnel",
+    },
+    wokaEmote: {
+        wheelTitle: "Roue des emotes",
+        hint: "Choisissez une emote",
+        names: {
+            jump: "Sauter",
+            spin: "Pirouette",
+            dance: "Danser",
+            nope: "Non",
+            love: "Cœur",
+            afk: "Absent",
+        },
     },
 };
 

@@ -112,6 +112,10 @@ const actionbar: BaseTranslation = {
             title: "Levantar a mão",
             desc: "Sinalize que você quer falar. Sua mão levantada aparece no mapa e no seu vídeo, para que todos saibam de quem é a vez.",
         },
+        wokaEmote: {
+            title: "Reproduzir um emote",
+            desc: "Faça seu Woka pular, dançar ou girar. Segure E para abrir a roda e solte para reproduzir.",
+        },
         audioManager: {
             title: "Volume dos sons ambiente",
             desc: "Controle o volume dos sons ambiente para uma experiência personalizada e confortável.",
@@ -234,6 +238,18 @@ const actionbar: BaseTranslation = {
         errorNotFound: "Você ainda não tem uma mesa pessoal",
         errorMoving: "Não foi possível chegar à sua mesa pessoal",
         errorUnclaiming: "Não foi possível liberar sua mesa pessoal",
+    },
+    wokaEmote: {
+        wheelTitle: "Roda de emotes",
+        hint: "Escolha um emote",
+        names: {
+            jump: "Pular",
+            spin: "Pirueta",
+            dance: "Dançar",
+            nope: "Não",
+            love: "Coração",
+            afk: "Ausente",
+        },
     },
 };
 

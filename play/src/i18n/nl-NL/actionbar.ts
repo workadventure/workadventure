@@ -109,6 +109,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Hand opsteken",
             desc: "Geef aan dat je iets wilt zeggen. Je opgestoken hand wordt op de kaart en op je video getoond, zodat iedereen weet wie er aan de beurt is.",
         },
+        wokaEmote: {
+            title: "Een emote afspelen",
+            desc: "Laat je Woka springen, dansen of draaien. Houd E ingedrukt om het wiel te openen en laat los om af te spelen.",
+        },
         audioManager: {
             title: "Volume van omgevingsgeluiden",
             desc: "Configureer het audiovolume door hier te klikken.",
@@ -231,6 +235,18 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "U heeft nog geen persoonlijk bureau",
         errorMoving: "Kan uw persoonlijke bureau niet bereiken",
         errorUnclaiming: "Kan uw persoonlijke bureau niet vrijgeven",
+    },
+    wokaEmote: {
+        wheelTitle: "Emote-wiel",
+        hint: "Kies een emote",
+        names: {
+            jump: "Springen",
+            spin: "Draai",
+            dance: "Dansen",
+            nope: "Nee",
+            love: "Hart",
+            afk: "Afwezig",
+        },
     },
 };
 

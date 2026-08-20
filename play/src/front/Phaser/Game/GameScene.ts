@@ -100,6 +100,8 @@ import {
 } from "../../Stores/RaiseHandZoneSettingsStore";
 import { raisedHandPlayerIdsStore } from "../../Stores/RaisedHandsStore";
 import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
+import { wokaEmoteStore } from "../../Stores/WokaEmoteStore";
+import { getWokaEmote } from "./Emote/WokaEmoteCatalog";
 import {
     jitsiParticipantsCountStore,
     userIsAdminStore,
@@ -2737,6 +2739,16 @@ export class GameScene extends DirtyScene {
             ).subscribe((zoneForbidsRaiseHand) => {
                 if (zoneForbidsRaiseHand && get(requestedHandRaiseState).raised) {
                     requestedHandRaiseState.lowerHand();
+                }
+            }),
+        );
+
+        this.unsubscribers.push(
+            wokaEmoteStore.subscribe((wokaEmoteId) => {
+                if (wokaEmoteId && get(enableUserInputsStore)) {
+                    this.CurrentPlayer?.playWokaEmote(wokaEmoteId);
+                    this.connection?.emitWokaEmoteEvent(wokaEmoteId, getWokaEmote(wokaEmoteId).bubble ?? "");
+                    wokaEmoteStore.set(null);
                 }
             }),
         );

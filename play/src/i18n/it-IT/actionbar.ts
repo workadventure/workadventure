@@ -108,6 +108,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Alza la mano",
             desc: "Segnala che vuoi parlare. La tua mano alzata viene mostrata sulla mappa e sul tuo video, così tutti sanno a chi tocca.",
         },
+        wokaEmote: {
+            title: "Riprodurre un'emote",
+            desc: "Fai saltare, ballare o girare il tuo Woka. Tieni premuto E per aprire la ruota e rilascia per riprodurre.",
+        },
         audioManager: {
             title: "Volume dei suoni ambientali",
             desc: "Configura il volume dell'audio facendo clic qui.",
@@ -230,6 +234,18 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Non hai ancora una scrivania personale",
         errorMoving: "Impossibile raggiungere la tua scrivania personale",
         errorUnclaiming: "Impossibile liberare la tua scrivania personale",
+    },
+    wokaEmote: {
+        wheelTitle: "Ruota delle emote",
+        hint: "Scegli un'emote",
+        names: {
+            jump: "Salto",
+            spin: "Piroetta",
+            dance: "Ballo",
+            nope: "No",
+            love: "Cuore",
+            afk: "Assente",
+        },
     },
 };
 

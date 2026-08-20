@@ -107,6 +107,10 @@ const actionbar: BaseTranslation = {
             title: "Raise your hand",
             desc: "Signal that you want to speak. Your raised hand is shown on the map and on your video, so everyone knows whose turn is next.",
         },
+        wokaEmote: {
+            title: "Play an emote",
+            desc: "Make your Woka jump, dance or spin. Hold E to open the wheel, release to play.",
+        },
         audioManager: {
             title: "Ambient sounds volume",
             desc: "Configure the audio volume to click here.",
@@ -229,6 +233,18 @@ const actionbar: BaseTranslation = {
         errorNotFound: "You don't have a personal desk yet",
         errorMoving: "Unable to reach your personal desk",
         errorUnclaiming: "Unable to unclaim your personal desk",
+    },
+    wokaEmote: {
+        wheelTitle: "Emote wheel",
+        hint: "Pick an emote",
+        names: {
+            jump: "Jump",
+            spin: "Spin",
+            dance: "Dance",
+            nope: "Nope",
+            love: "Heart",
+            afk: "Away",
+        },
     },
 };
 export default actionbar;

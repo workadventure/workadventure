@@ -108,6 +108,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "손 들기",
             desc: "발언하고 싶다는 것을 알립니다. 든 손은 지도와 내 영상에 표시되어 누구 차례인지 모두가 알 수 있습니다.",
         },
+        wokaEmote: {
+            title: "이모트 재생",
+            desc: "Woka를 점프하거나 춤추거나 회전시킵니다. E를 길게 눌러 휠을 열고 놓으면 재생됩니다.",
+        },
         audioManager: {
             title: "주변 소리 볼륨",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
@@ -230,6 +234,18 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "아직 개인 책상이 없습니다",
         errorMoving: "개인 책상에 도달할 수 없습니다",
         errorUnclaiming: "개인 책상을 해제할 수 없습니다",
+    },
+    wokaEmote: {
+        wheelTitle: "이모트 휠",
+        hint: "이모트를 선택하세요",
+        names: {
+            jump: "점프",
+            spin: "회전",
+            dance: "춤",
+            nope: "아니요",
+            love: "하트",
+            afk: "자리 비움",
+        },
     },
 };
 export default actionbar;
