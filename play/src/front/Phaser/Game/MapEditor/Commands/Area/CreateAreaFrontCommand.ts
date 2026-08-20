@@ -37,9 +37,7 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        analyticsClient.mapEditorSaveStarted("area");
         roomConnection.emitMapEditorCreateArea(this.commandId, this.areaConfig);
         analyticsClient.mapEditorAreaCreated(this.areaConfig.name);
-        analyticsClient.mapEditorSaveSucceeded("area");
     }
 }

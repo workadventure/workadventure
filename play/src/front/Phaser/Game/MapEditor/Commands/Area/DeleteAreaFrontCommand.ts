@@ -46,9 +46,7 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        analyticsClient.mapEditorSaveStarted("area");
         roomConnection.emitMapEditorDeleteArea(this.commandId, this.areaId);
         analyticsClient.mapEditorAreaRemoved(this.areaConfig?.name);
-        analyticsClient.mapEditorSaveSucceeded("area");
     }
 }
