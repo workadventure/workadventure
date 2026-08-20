@@ -2,7 +2,6 @@ import type { AnyTimedAnalyticsEventName, TimedEventEndReason } from "@workadven
 import { timedAnalyticsEventDefinition } from "@workadventure/messages";
 import type { SocketData } from "../models/Websocket/SocketData";
 import { analyticsEventsQueue, type AnalyticsEventInput } from "./AnalyticsEventsQueue";
-import { analyticsConnectionId } from "./AnalyticsConnectionId";
 
 type AnalyticsEventQueue = {
     enqueueEvent(event: AnalyticsEventInput, socketData: SocketData): void;
@@ -77,7 +76,7 @@ export class AnalyticsTimedEventTracker {
         properties: Record<string, unknown>,
         socketData: SocketData,
     ): boolean {
-        const connectionId = analyticsConnectionId(socketData);
+        const connectionId = socketData.tabId;
         let open = this.openByConnection.get(connectionId);
         if (!open) {
             open = new Map<string, OpenTimedEvent>();
@@ -130,7 +129,7 @@ export class AnalyticsTimedEventTracker {
 
     /** Closes one interval the client asked to close. */
     public close(handle: string, socketData: SocketData, endReason: TimedEventEndReason = "closed_by_client"): void {
-        const connectionId = analyticsConnectionId(socketData);
+        const connectionId = socketData.tabId;
         const open = this.openByConnection.get(connectionId);
         const entry = open?.get(handle);
         // Unpaired close: no trustworthy startedAt, so no event rather than a bogus
@@ -154,7 +153,7 @@ export class AnalyticsTimedEventTracker {
      * @returns how many were closed.
      */
     public closeConnection(socketData: SocketData, endReason: TimedEventEndReason): number {
-        const connectionId = analyticsConnectionId(socketData);
+        const connectionId = socketData.tabId;
         const open = this.openByConnection.get(connectionId);
         if (!open) {
             return 0;

@@ -274,7 +274,11 @@ export class IoSocketController {
                 roomName: z.string(),
                 cameraState: z.string().transform((val) => val === "true"),
                 microphoneState: z.string().transform((val) => val === "true"),
-                tabId: z.string(),
+                // Non-empty: the tab id is the key both the pusher's reconnection state
+                // (contextByTabKey) and the back's stale-connection kill (GameRoom.usersByTabKey)
+                // are stored under, and both skip an empty string — two tabs sending one would
+                // share a slot rather than replace each other.
+                tabId: z.string().min(1),
             }),
             upgrade: async ({ query, request, isAborted, upgrade, reject }) => {
                 debug(

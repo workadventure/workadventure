@@ -69,6 +69,4 @@ export type SocketData = ConnectingSocketData & {
     name: string;
     viewport: ViewportInterface;
     availabilityStatus: AvailabilityStatus;
-    // Unique identifier for the browser tab, used to detect reconnections from the same tab
-    tabId: string | undefined;
 };
