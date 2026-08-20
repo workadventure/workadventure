@@ -53,18 +53,25 @@
         openedMenuStore.closeAll();
     }
 
+    // Both of these are toggles, so the analytics call has to come AFTER the flip and
+    // read the new state. Reporting first counted the click that closes the panel as
+    // an opening too.
     function openExternalModuleCalendar() {
-        analyticsClient.openExternalModuleCalendar();
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
         isTodoListVisibleStore.set(false);
+        if ($isCalendarVisibleStore) {
+            analyticsClient.openExternalModuleCalendar();
+        }
         mapEditorModeStore.switchMode(false);
         openedMenuStore.closeAll();
     }
 
     function openExternalModuleTodoList() {
-        analyticsClient.openExternalModuleTodoList();
         isTodoListVisibleStore.set(!$isTodoListVisibleStore);
         isCalendarVisibleStore.set(false);
+        if ($isTodoListVisibleStore) {
+            analyticsClient.openExternalModuleTodoList();
+        }
         mapEditorModeStore.switchMode(false);
         openedMenuStore.closeAll();
     }
