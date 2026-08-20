@@ -34,7 +34,6 @@ export const requestedScreenSharingState = createRequestedScreenSharingState();
 
 let currentStream: MediaStream | undefined = undefined;
 let screenSharingRequestId = 0;
-let screenSharingAnalyticsSessionId: string | undefined;
 let previousScreenSharingHadStream = false;
 
 /**
@@ -375,22 +374,14 @@ screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
     const hasStream = !!stream;
 
     if (hasStream && !previousScreenSharingHadStream) {
-        screenSharingAnalyticsSessionId = `screenshare:${Date.now()}:${Math.random().toString(36).slice(2)}`;
-        analyticsClient.screenSharingStarted(
-            screenSharingAnalyticsSessionId,
-            (stream?.getAudioTracks().length ?? 0) > 0,
-        );
+        analyticsClient.screenSharingStarted((stream?.getAudioTracks().length ?? 0) > 0);
     }
 
-    if (!hasStream && previousScreenSharingHadStream && screenSharingAnalyticsSessionId) {
+    if (!hasStream && previousScreenSharingHadStream) {
         // No duration, and no clock read: the pusher measures the interval. This used
         // to report max(1, round(now - startedAt)) — a floor that turned a share
         // cancelled in 200ms into a reported second.
-        analyticsClient.screenSharingEnded(screenSharingAnalyticsSessionId);
-    }
-
-    if (!hasStream) {
-        screenSharingAnalyticsSessionId = undefined;
+        analyticsClient.screenSharingEnded();
     }
 
     previousScreenSharingHadStream = hasStream;
