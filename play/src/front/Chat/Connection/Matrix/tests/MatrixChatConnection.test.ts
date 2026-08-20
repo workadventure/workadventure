@@ -351,6 +351,7 @@ describe("MatrixChatConnection", () => {
             expect(mockStartClient).toHaveBeenCalledWith({
                 threadSupport: true,
                 pendingEventOrdering: PendingEventOrdering.Detached,
+                lazyLoadMembers: true,
             });
         });
     });

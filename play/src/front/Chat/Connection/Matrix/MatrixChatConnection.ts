@@ -16,6 +16,7 @@ import {
     ClientEvent,
     EventTimeline,
     EventType,
+    HttpApiEvent,
     MatrixError,
     PendingEventOrdering,
     PushRuleActionName,
@@ -51,6 +52,7 @@ import type {
 } from "../ChatConnection";
 import { retargetSelectedRoomIfReplaced, selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
+import { loginTokenErrorStore } from "../../../Stores/ChatStore";
 import { currentPlayerWokaStore } from "../../../Stores/CurrentPlayerWokaStore";
 import LL from "../../../../i18n/i18n-svelte";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
@@ -62,6 +64,7 @@ import { matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { hasValidViaEntries } from "./MatrixSpaceRelations";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
+import { clearMatrixStores } from "./MatrixStoreCleanup";
 import {
     pushLocalWokaAndNameToMatrixProfile,
     syncWokaAvatarToMatrixProfileOnWokaChange,
@@ -93,6 +96,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private handleAccountDataEvent: (event: MatrixEvent) => void;
     private handleUserPresence: (event: MatrixEvent | undefined, user: User) => void;
     private handleVerificationRequestReceived: (request: VerificationRequest) => void;
+    private handleSessionLoggedOut: (error: MatrixError) => void;
     private directRoomsUnreadAggregateUnsubscriber: Unsubscriber | undefined;
     private statusUnsubscriber: Unsubscriber | undefined;
     private wokaAvatarMatrixSyncUnsubscriber: Unsubscriber | undefined;
@@ -272,6 +276,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.handleAccountDataEvent = this.onAccountDataEvent.bind(this);
         this.handleUserPresence = this.onUserPresenceEvent.bind(this);
         this.handleVerificationRequestReceived = this.onVerificationRequestReceived.bind(this);
+        this.handleSessionLoggedOut = this.onSessionLoggedOut.bind(this);
 
         this.statusUnsubscriber = this.statusStore.subscribe((status: AvailabilityStatus) => {
             this.setPresence(status);
@@ -573,7 +578,10 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             this.attachWokaAvatarMatrixSync();
             this.attachDisplayNameMatrixSync();
         } catch (error) {
-            this.connectionStatus.set("OFFLINE");
+            // "OFFLINE" is what a deliberate stop looks like, and the chat panel renders nothing at all for
+            // it: a failed init would leave the user staring at an empty panel with no hint that anything
+            // went wrong. "ON_ERROR" at least shows the connection error banner.
+            this.connectionStatus.set("ON_ERROR");
             console.error(error);
             Sentry.captureException(error);
         }
@@ -802,19 +810,36 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
         this.client.on(UserEvent.Presence, this.handleUserPresence);
         this.client.on(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
-        await this.client.store.startup();
+        this.client.on(HttpApiEvent.SessionLoggedOut, this.handleSessionLoggedOut);
 
+        // Crypto first, and only then the sync store. Every sign-in mints a new device id while the rust
+        // crypto store keeps the previous one, so `initRustCrypto()` regularly fails with "the account in
+        // the store doesn't match the account in the constructor" and has to clear the stores before
+        // retrying. Clearing them closes and deletes the sync store's database - and `IndexedDBStore.startup()`
+        // returns early once it has run, so it never reconnects. Starting the store first therefore left it
+        // dead for the rest of the session: every command failed with "the database connection is closing",
+        // the SDK degraded to an in-memory store, and nothing was persisted - so the next page load had no
+        // sync token and paid for a full initial sync all over again.
         try {
             await this.client.initRustCrypto();
-        } catch {
-            await this.client.clearStores();
+        } catch (error) {
+            console.error("Unable to initialize the Matrix crypto. Clearing the stores before retrying.", error);
+            await clearMatrixStores(this.client);
             await this.client.initRustCrypto();
         }
+
+        await this.client.store.startup();
 
         await this.client.startClient({
             threadSupport: true,
             //Detached to prevent using listener on localIdReplaced for each event
             pendingEventOrdering: PendingEventOrdering.Detached,
+            // Without this, the initial sync carries the complete member list of every joined room. A world
+            // creates one Matrix room per area, so a long-standing member of a busy world ends up with a
+            // response the homeserver needs minutes to build - past the 80s the SDK is willing to wait
+            // (BUFFER_PERIOD_MS in matrix-js-sdk's sync.ts), after which it aborts and starts over, forever.
+            // The full member list is now fetched per room, when something actually needs to display it.
+            lazyLoadMembers: true,
         });
 
         try {
@@ -822,6 +847,22 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         } catch (error) {
             console.error("Failed to wait initial sync:", error);
         }
+    }
+
+    /**
+     * The homeserver rejected our access token with M_UNKNOWN_TOKEN and matrix-js-sdk could not refresh it.
+     *
+     * Nothing in this session can recover from that - the sync loop will keep failing - and the dead
+     * credentials would be replayed on every later page load, so drop them: the next login then starts from
+     * a clean store. The UI switches to the "reconnect" prompt, whose button goes through the OpenID flow,
+     * the only place a fresh Matrix login token is minted.
+     */
+    private onSessionLoggedOut(error: MatrixError): void {
+        console.error("The Matrix session is no longer valid: ", error);
+        Sentry.captureException(error);
+        localUserStore.clearMatrixSession();
+        this.connectionStatus.set("ON_ERROR");
+        loginTokenErrorStore.set(true);
     }
 
     private onVerificationRequestReceived(request: VerificationRequest) {
@@ -2071,6 +2112,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.client?.off(ClientEvent.AccountData, this.handleAccountDataEvent);
         this.client?.off(UserEvent.Presence, this.handleUserPresence);
         this.client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
+        this.client?.off(HttpApiEvent.SessionLoggedOut, this.handleSessionLoggedOut);
         if (this.directRoomsUnreadAggregateUnsubscriber) {
             this.directRoomsUnreadAggregateUnsubscriber();
             this.directRoomsUnreadAggregateUnsubscriber = undefined;

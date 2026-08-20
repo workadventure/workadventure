@@ -494,7 +494,15 @@ export class MatrixChatRoom
         }
 
         this.debugInitialization("members");
-        this.membersInitializationPromise = Promise.resolve()
+        // With lazy loading, /sync only carries the heroes, the senders seen in the timeline and
+        // ourselves, so the full list has to be fetched before it can be shown. This is a no-op when
+        // lazy loading is off, and a failure is not worth an empty panel: fall back on whatever the
+        // sync did carry.
+        this.membersInitializationPromise = this.matrixRoom
+            .loadMembersIfNeeded()
+            .catch((error: unknown) => {
+                console.error("Failed to load the full member list of room", this.id, error);
+            })
             .then(() => {
                 this.initializeMembers();
                 this.startHandlingChatRoomInitializedEvents();
@@ -1989,7 +1997,13 @@ export class MatrixChatRoom
             return "direct";
         }
 
-        if (members.length > 2) {
+        // Taken from the room summary rather than from `members.length`: under lazy loading the latter
+        // counts the member events that happen to be loaded, not the people in the room, so a large group
+        // would show up with two loaded members and get filed as a direct message. The counts fall back on
+        // counting members when the server sends no summary, which is what happens without lazy loading.
+        const memberCount = this.matrixRoom.getJoinedMemberCount() + this.matrixRoom.getInvitedMemberCount();
+
+        if (memberCount > 2) {
             return "multiple";
         }
 
@@ -1999,7 +2013,7 @@ export class MatrixChatRoom
             (member) => directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id),
         );
 
-        if (isDirectBasedOnRoomData || members.length === 2 || this.isRoomCreatedAsDirect()) {
+        if (isDirectBasedOnRoomData || memberCount === 2 || this.isRoomCreatedAsDirect()) {
             return "direct";
         }
 
