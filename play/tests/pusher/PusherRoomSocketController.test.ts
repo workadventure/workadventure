@@ -147,9 +147,14 @@ describe("PusherRoomSocketController reconnect retention", () => {
         vi.useFakeTimers();
 
         const open = vi.fn();
-        const controller = createController((handlers) => {
-            registeredHandlers = handlers;
-        }, open);
+        const close = vi.fn();
+        const controller = createController(
+            (handlers) => {
+                registeredHandlers = handlers;
+            },
+            open,
+            close,
+        );
 
         const initialSocket = createSocket({ tabId: "tab-1" });
         await registeredHandlers?.open(initialSocket);
@@ -161,6 +166,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
         const reconnectSocket = createSocket({ tabId: "tab-1" });
         await registeredHandlers?.open(reconnectSocket);
+        await flushMicrotasks();
 
         expect(open).toHaveBeenCalledTimes(2);
         expect(getEndMock(reconnectSocket)).not.toHaveBeenCalledWith(
@@ -168,19 +174,24 @@ describe("PusherRoomSocketController reconnect retention", () => {
             "Cannot replace socket: previous connection not retained",
         );
         expect(getContextMap(controller).get("tab-1")?.socket).not.toBe(initialWrapper);
+        // Discarding the context cancels the retention timeout, so this is the last chance to tear the
+        // socket down. Forgetting it instead would leak its back connection.
+        expect(close).toHaveBeenCalledWith(initialWrapper, 1008, expect.any(String));
+        expect(initialWrapper.isPermanentlyDisconnected()).toBe(true);
     });
 
     it("creates a fresh logical connection when the retained room state disappeared", async () => {
         vi.useFakeTimers();
 
         const open = vi.fn();
+        const close = vi.fn();
         const canReplaceTransport = vi.fn().mockReturnValue(false);
         const controller = createController(
             (handlers) => {
                 registeredHandlers = handlers;
             },
             open,
-            vi.fn(),
+            close,
             vi.fn(),
             canReplaceTransport,
         );
@@ -194,6 +205,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
         const reconnectSocket = createSocket({ tabId: "tab-1" });
         await registeredHandlers?.open(reconnectSocket);
+        await flushMicrotasks();
 
         expect(canReplaceTransport).toHaveBeenCalledWith(initialWrapper);
         expect(open).toHaveBeenCalledTimes(2);
@@ -202,6 +214,11 @@ describe("PusherRoomSocketController reconnect retention", () => {
             "Cannot replace socket: previous connection not retained",
         );
         expect(getContextMap(controller).get("tab-1")?.socket).not.toBe(initialWrapper);
+        // Same requirement as above, on the path where the room state is gone rather than the socket.
+        expect(close).toHaveBeenCalledWith(initialWrapper, 1008, expect.any(String));
+        expect(initialWrapper.isPermanentlyDisconnected()).toBe(true);
+        // The old transport was still open here, so it must be closed too once the cleanup has run.
+        expect(getEndMock(initialSocket)).toHaveBeenCalledWith(1008, expect.any(String));
     });
 
     it("runs logical cleanup when no replacement arrives before retention expires", async () => {

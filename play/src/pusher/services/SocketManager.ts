@@ -179,6 +179,9 @@ export class SocketManager implements ZoneEventListener {
     // concurrent getOrCreateRoom calls reuse a single PusherRoom instead of racing to create competing
     // instances during the async init().
     private creatingRooms: Map<string, Promise<PusherRoom>> = new Map<string, Promise<PusherRoom>>();
+    // Guard (c), see the reconnection race guards note above: sockets with a recovery in flight, so a client
+    // streaming viewports does not queue one recovery (and one report) per frame while the room is coming back.
+    private recoveringSockets: Set<PusherWebSocket> = new Set<PusherWebSocket>();
     private spaces: Map<string, SpaceInterface> = new Map<string, SpaceInterface>();
 
     constructor(private _spaceConnection = new SpaceConnection()) {
@@ -440,7 +443,7 @@ export class SocketManager implements ZoneEventListener {
             streamToBack.write(pusherToBackMessage);
 
             const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
-            pusherRoom.join(client);
+            this.joinRoomIfStillConnected(client, pusherRoom);
         } catch (e) {
             Sentry.captureException(e);
             console.error(`An error occurred on "connect_to_room" event`, e);
@@ -510,7 +513,7 @@ export class SocketManager implements ZoneEventListener {
             streamToBack.write(pusherToBackMessage);
 
             const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
-            pusherRoom.join(client);
+            this.joinRoomIfStillConnected(client, pusherRoom);
         } catch (e) {
             Sentry.captureException(e);
             console.error(`An error occurred on "join_room" event`, e);
@@ -720,7 +723,7 @@ export class SocketManager implements ZoneEventListener {
                     return;
                 }
 
-                console.error(" In SET_VIEWPORT, could not find world with id '", socketData.roomId, "'");
+                console.error("In SET_VIEWPORT, could not find world with id '", socketData.roomId, "'");
                 Sentry.captureException("In SET_VIEWPORT, could not find world with id ' " + socketData.roomId);
                 return;
             }
@@ -739,8 +742,20 @@ export class SocketManager implements ZoneEventListener {
      * the room is back, and subsequent viewports find the room normally. Concurrent recoveries for the same
      * room are safe because getOrCreateRoom coalesces them (guard b) and join()/setViewport() are idempotent.
      * The isDisconnecting() re-check after the await avoids touching a socket cleaned up in the meantime.
+     *
+     * Recovering is silent for the user, so it MUST NOT be silent for us: this guard only catches the race,
+     * it does not remove it. Every recovery is reported (once, at warning level) so the frequency of the
+     * underlying race stays measurable and the follow-up epoch/generation-token fix can be validated. Without
+     * this report we would simply have replaced the "could not find world" Sentry error by nothing at all.
      */
     private recoverMissingRoom(client: PusherWebSocket): void {
+        // A client sends viewports continuously, so without this in-flight guard every frame until the room
+        // is back would queue another recovery (and another report) for the same socket.
+        if (this.recoveringSockets.has(client)) {
+            return;
+        }
+        this.recoveringSockets.add(client);
+
         const socketData = client.getUserData();
         this.getOrCreateRoom(socketData.roomId)
             .then((room) => {
@@ -749,11 +764,36 @@ export class SocketManager implements ZoneEventListener {
                 }
                 room.join(client);
                 room.setViewport(client, socketData.viewport);
+
+                const message = `Recreated missing room '${socketData.roomId}' for live socket of user '${socketData.userUuid}'`;
+                console.warn(message);
+                Sentry.captureMessage(message, "warning");
             })
             .catch((e) => {
                 Sentry.captureException(`Failed to recreate missing room for live socket: ${e}`);
                 console.error("Failed to recreate missing room for live socket", e);
+            })
+            .finally(() => {
+                this.recoveringSockets.delete(client);
             });
+    }
+
+    /**
+     * Join `pusherRoom` unless `client` was torn down while the room was still initializing.
+     *
+     * `getOrCreateRoom()` awaits `room.init()`, so a full cleanup can complete between the two. Joining
+     * afterwards would register a listener that nothing will ever remove: `cleanupSocket()` already ran and
+     * ignores an already-disconnecting socket, so `leaveRoom()` is never called again for it.
+     * We still run the empty-room check when bailing out, because the `leaveRoom()` that raced us could not
+     * see this room (it was not in the `rooms` map yet) and therefore never released it.
+     */
+    private joinRoomIfStillConnected(client: PusherWebSocket, pusherRoom: PusherRoom): void {
+        if (client.isDisconnecting()) {
+            this.deleteRoomIfEmpty(pusherRoom);
+            return;
+        }
+
+        pusherRoom.join(client);
     }
 
     handleUserMovesMessage(client: PusherWebSocket, userMovesMessage: UserMovesMessage): void {
