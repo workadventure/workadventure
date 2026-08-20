@@ -8,7 +8,7 @@
  * frames are reordered. The recipes live in the front (WokaEmoteCatalog); only the identifiers are
  * shared, because the back has to reject anything it does not recognise before relaying it.
  */
-export const WOKA_EMOTE_IDS = ["jump", "spin", "dance", "nope", "love", "afk"] as const;
+export const WOKA_EMOTE_IDS = ["jump", "spin", "dance", "celebrate", "nope", "love", "afk"] as const;
 
 export type WokaEmoteId = (typeof WOKA_EMOTE_IDS)[number];
 

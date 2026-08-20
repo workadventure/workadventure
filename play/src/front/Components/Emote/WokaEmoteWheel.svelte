@@ -25,6 +25,7 @@
                 jump: $LL.actionbar.wokaEmote.names.jump(),
                 spin: $LL.actionbar.wokaEmote.names.spin(),
                 dance: $LL.actionbar.wokaEmote.names.dance(),
+                celebrate: $LL.actionbar.wokaEmote.names.celebrate(),
                 nope: $LL.actionbar.wokaEmote.names.nope(),
                 love: $LL.actionbar.wokaEmote.names.love(),
                 afk: $LL.actionbar.wokaEmote.names.afk(),
