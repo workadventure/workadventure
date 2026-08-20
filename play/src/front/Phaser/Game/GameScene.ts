@@ -92,6 +92,8 @@ import { emoteStore } from "../../Stores/EmoteStore";
 import { isHandRaisedStore, requestedHandRaiseState } from "../../Stores/RaiseHandStore";
 import { raisedHandPlayerIdsStore } from "../../Stores/RaisedHandsStore";
 import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
+import { wokaEmoteStore } from "../../Stores/WokaEmoteStore";
+import { getWokaEmote } from "./Emote/WokaEmoteCatalog";
 import {
     jitsiParticipantsCountStore,
     userIsAdminStore,
@@ -2736,6 +2738,16 @@ export class GameScene extends DirtyScene {
         // A zone whose option says no needs no safety net: the hand is raised per space, so walking into such a
         // zone leaves the hand raised elsewhere (e.g. in the bubble) alone, and a space the hand is up in stays
         // offered by the button so it can still be lowered (see raiseHandSpacesStore).
+
+        this.unsubscribers.push(
+            wokaEmoteStore.subscribe((wokaEmoteId) => {
+                if (wokaEmoteId && get(enableUserInputsStore)) {
+                    this.CurrentPlayer?.playWokaEmote(wokaEmoteId);
+                    this.connection?.emitWokaEmoteEvent(wokaEmoteId, getWokaEmote(wokaEmoteId).bubble ?? "");
+                    wokaEmoteStore.set(null);
+                }
+            }),
+        );
 
         this.unsubscribers.push(
             followUsersColorStore.subscribe((color) => {
