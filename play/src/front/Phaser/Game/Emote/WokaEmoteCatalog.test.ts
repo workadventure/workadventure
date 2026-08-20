@@ -82,3 +82,36 @@ describe("the catalogue", () => {
         }
     });
 });
+
+describe("the particle emitters", () => {
+    it("uses either a period or a list of instants, never both", () => {
+        for (const definition of WOKA_EMOTES) {
+            for (const spec of definition.particles ?? []) {
+                expect(Boolean(spec.everyMs) !== Boolean(spec.at)).toBe(true);
+            }
+        }
+    });
+
+    // A glyph still floating when the body is done leaves the Woka frozen on its last frame.
+    it("never emits a glyph that would outlive the emote", () => {
+        for (const definition of WOKA_EMOTES) {
+            for (const spec of definition.particles ?? []) {
+                const lastEmission = spec.at
+                    ? Math.max(...spec.at)
+                    : definition.duration - spec.life - (spec.everyMs ?? 0);
+                expect(lastEmission + spec.life).toBeLessThanOrEqual(definition.duration);
+            }
+        }
+    });
+
+    it("emits something visible", () => {
+        for (const definition of WOKA_EMOTES) {
+            for (const spec of definition.particles ?? []) {
+                expect(spec.glyph.length).toBeGreaterThan(0);
+                expect(spec.count).toBeGreaterThan(0);
+                expect(spec.life).toBeGreaterThan(0);
+                expect(spec.riseSpeed).toBeLessThan(0); // les glyphes montent
+            }
+        }
+    });
+});
