@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-    import { fade, scale } from "svelte/transition";
+    import { fade } from "svelte/transition";
     import LL from "../../../i18n/i18n-svelte";
     import { WOKA_EMOTES } from "../../Phaser/Game/Emote/WokaEmoteCatalog";
     import { wheelSliceAt, wheelSlicePosition } from "../../Phaser/Game/Emote/WokaEmoteGeometry";
@@ -27,6 +27,8 @@
     /** Where the Woka sits on screen. Undefined until the first frame, or when there is no scene. */
     let anchor: { x: number; y: number } | undefined = $state(undefined);
     let trackingFrame: number | undefined;
+    /** Drives the slices outwards from the Woka when the wheel opens. */
+    let deployed = $state(false);
 
     // The camera follows the player, but not exactly: it stops at the edges of the map, and a
     // cowebsite shrinks the canvas. Centring on the viewport would leave the wheel off the Woka in
@@ -82,8 +84,11 @@
     function open(withShortcut: boolean): void {
         openedWithShortcutAt = withShortcut ? Date.now() : null;
         selected = null;
+        deployed = false;
         startTracking();
         wokaEmoteWheelVisibleStore.set(true);
+        // One frame later, so the slices have a collapsed position to travel out from.
+        requestAnimationFrame(() => (deployed = true));
     }
 
     function close(): void {
@@ -198,7 +203,6 @@
                 bind:this={wheelElement}
                 class="relative"
                 style="width: {RADIUS * 2 + 96}px; height: {RADIUS * 2 + 96}px;"
-                transition:scale={{ duration: 140, start: 0.85 }}
             >
                 <!-- Under the ring, not in the middle of it: the middle is where the Woka stands. -->
                 <div
@@ -210,27 +214,35 @@
 
                 {#each items as item, index (item.definition.id)}
                     {@const position = wheelSlicePosition(index, WOKA_EMOTES.length, RADIUS)}
-                    <button
-                        type="button"
-                        class="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center
-                           justify-center gap-0.5 rounded-full border transition-all duration-150 pointer-events-auto
-                           {selected === index
-                            ? 'border-white bg-secondary scale-110'
-                            : 'border-white/20 bg-contrast/80 hover:border-white/60'}"
-                        style="margin-left: {position.x}px; margin-top: {position.y}px;"
-                        data-testid="woka-emote-{item.definition.id}"
-                        aria-label={item.label}
-                        aria-pressed={selected === index}
-                        onmouseenter={() => (selected = index)}
-                        onfocus={() => (selected = index)}
-                        onclick={(event) => {
-                            event.stopPropagation();
-                            play(index);
-                        }}
+                    <!-- The slice travels out of the Woka rather than appearing around it. -->
+                    <div
+                        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                        style="margin-left: {deployed ? position.x : 0}px; margin-top: {deployed
+                            ? position.y
+                            : 0}px; opacity: {deployed ? 1 : 0}; transition: margin 260ms
+                            cubic-bezier(0.2, 0.9, 0.3, 1) {index * 25}ms, opacity 180ms linear {index * 25}ms;"
                     >
-                        <span class="text-2xl leading-none">{item.definition.icon}</span>
-                        <span class="text-white/50 text-[10px] leading-none">{index + 1}</span>
-                    </button>
+                        <button
+                            type="button"
+                            class="flex h-16 w-16 flex-col items-center justify-center gap-0.5 rounded-full border
+                           transition-colors duration-150 pointer-events-auto
+                           {selected === index
+                                ? 'border-white bg-secondary scale-110'
+                                : 'border-white/20 bg-contrast/80 hover:border-white/60'}"
+                            data-testid="woka-emote-{item.definition.id}"
+                            aria-label={item.label}
+                            aria-pressed={selected === index}
+                            onmouseenter={() => (selected = index)}
+                            onfocus={() => (selected = index)}
+                            onclick={(event) => {
+                                event.stopPropagation();
+                                play(index);
+                            }}
+                        >
+                            <span class="text-2xl leading-none">{item.definition.icon}</span>
+                            <span class="text-white/50 text-[10px] leading-none">{index + 1}</span>
+                        </button>
+                    </div>
                 {/each}
             </div>
         </div>

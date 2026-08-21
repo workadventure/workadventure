@@ -1,5 +1,6 @@
 import type { WokaEmoteId } from "@workadventure/shared-utils";
 import { WOKA_EMOTE_IDS } from "@workadventure/shared-utils";
+import type { WokaEmoteGlyphName } from "./WokaEmoteGlyphs";
 
 /**
  * Recipes for the animated Woka emotes.
@@ -36,11 +37,11 @@ export interface WokaEmoteState {
 
 /**
  * A trickle of little glyphs floating away from the Woka: the notes of a dance, the hearts of a
- * cheer, the zzz of an absence. They are DOM elements holding an emoji, like the emoji bubble that
- * already exists — no spritesheet needed, and they scale with the camera on their own.
+ * cheer, the zzz of an absence. They are pixel art drawn as SVG (see WokaEmoteGlyphs), on the same
+ * grid as the sprites — no spritesheet to commission, and they scale with the camera on their own.
  */
 export interface WokaEmoteParticleSpec {
-    glyph: string;
+    glyph: WokaEmoteGlyphName;
     /** Emit a batch every N milliseconds, for as long as the emote runs. */
     everyMs?: number;
     /** ...or emit a batch at each of these instants. Use one or the other. */
@@ -192,7 +193,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         duration: 2160, // three 720ms bars
         icon: "🕺",
         bubble: "🎵",
-        particles: [{ glyph: "🎵", everyMs: 360, count: 1, life: 900, riseSpeed: -0.026, spread: 10, drift: 0.004 }],
+        particles: [{ glyph: "note", everyMs: 360, count: 1, life: 900, riseSpeed: -0.026, spread: 10, drift: 0.004 }],
         sample: (t) => {
             const facingRight = Math.floor(t / 180) % 2 === 1;
             const swing = Math.abs(oscillate(t, 360));
@@ -214,7 +215,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         bubble: "🎉",
         particles: [
             {
-                glyph: "🎉",
+                glyph: "confetti",
                 at: [60, 740],
                 count: 5,
                 life: 600,
@@ -258,7 +259,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         duration: 1600,
         icon: "❤️",
         bubble: "❤️",
-        particles: [{ glyph: "❤️", everyMs: 300, count: 1, life: 700, riseSpeed: -0.024, spread: 9, drift: 0.003 }],
+        particles: [{ glyph: "heart", everyMs: 300, count: 1, life: 700, riseSpeed: -0.024, spread: 9, drift: 0.003 }],
         sample: (t) => {
             const pulse = oscillate(t, 400);
             return {
@@ -277,7 +278,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         bubble: "💤",
         particles: [
             {
-                glyph: "💤",
+                glyph: "zzz",
                 everyMs: 600,
                 count: 1,
                 life: 1000,
