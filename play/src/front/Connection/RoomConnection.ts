@@ -53,6 +53,7 @@ import type {
     PrivateSpaceEvent,
     UpdateSpaceUserPusherToFrontMessage,
     AddSpaceUserMessage,
+    AnalyticsEventReportMessage,
     RemoveSpaceUserPusherToFrontMessage,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
@@ -102,6 +103,7 @@ import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout
 import type { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { ENABLE_MAP_EDITOR, UPLOADER_URL, WOKA_SPEED } from "../Enum/EnvironmentVariable";
 import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
@@ -115,6 +117,7 @@ import { duplicateUserConnectedStore, shouldShowDuplicateUserPopup } from "../St
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { isSpeakerStore, requestedMicrophoneState, requestedCameraState } from "../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../Stores/MegaphoneStore";
+import { stopMegaphoneLive } from "../Components/ActionBar/MenuIcons/megaphoneActions";
 import {
     inviteUserActivated,
     mapEditorActivated,
@@ -149,6 +152,7 @@ export class RoomConnection implements RoomConnection {
     public readonly websocketReconnectingStream: Observable<boolean>;
     private userId: number | null = null;
     private _closed = false;
+    private readonly cleanupCallbacks: Array<() => void> = [];
     private tags: string[] = [];
     private canEdit = false;
 
@@ -326,6 +330,12 @@ export class RoomConnection implements RoomConnection {
 
         this.socket = new WorkAdventureWebSocket(url, subProtocols);
         this.websocketReconnectingStream = this.socket.reconnectingStream;
+        const reconnectingSubscription = this.websocketReconnectingStream.subscribe((isReconnecting) => {
+            if (isReconnecting) {
+                analyticsClient.trackAdminEvent("websocket.reconnecting");
+            }
+        });
+        this.onCleanup(() => reconnectingSubscription.unsubscribe());
 
         this.socket.onopen = () => {
             console.info("Socket has been opened");
@@ -465,6 +475,18 @@ export class RoomConnection implements RoomConnection {
                                 case "kickOffMessage": {
                                     if (subMessage.kickOffMessage.userId !== this.userId?.toString()) break;
 
+                                    // Being kicked off the stage ends the broadcast, and
+                                    // only this path knows it — neither megaphone button
+                                    // is involved. Without going through the same stop,
+                                    // requestedMegaphoneStore stays true and the action
+                                    // bar keeps offering to stop a broadcast that is
+                                    // already over.
+                                    if (
+                                        get(currentLiveStreamingSpaceStore)?.getName() ===
+                                        subMessage.kickOffMessage.spaceName
+                                    ) {
+                                        stopMegaphoneLive();
+                                    }
                                     isSpeakerStore.set(false);
                                     currentLiveStreamingSpaceStore.set(undefined);
                                     const scene = gameManager.getCurrentGameScene();
@@ -788,6 +810,9 @@ export class RoomConnection implements RoomConnection {
             this._roomJoinedPromise.reject(event);
         }
         if (event.code !== 1000) {
+            analyticsClient.trackAdminEvent("websocket.connection_lost", {
+                reason: event.reason || String(event.code),
+            });
             Sentry.captureMessage(
                 "WebSocket closed by remote side. Code: " +
                     event.code +
@@ -801,10 +826,15 @@ export class RoomConnection implements RoomConnection {
     };
 
     private handleSocketError = (event: Event) => {
+        analyticsClient.trackAdminEvent("websocket.connection_lost", { reason: event.type });
         this._websocketErrorStream.next(event);
     };
 
     private cleanupConnection(isNormalClosure: boolean) {
+        for (const callback of this.cleanupCallbacks.splice(0)) {
+            callback();
+        }
+
         // Cleanup queries:
         for (const query of this.queries.values()) {
             query.reject(new ConnectionClosedError("Socket closed"));
@@ -954,9 +984,27 @@ export class RoomConnection implements RoomConnection {
     }
 
     public closeConnection(): void {
-        this.socket?.close(1000, "Room connection closed");
-        this.cleanupConnection(true);
-        this._closed = true;
+        // Run cleanup BEFORE closing the socket. The cleanup callbacks flush the
+        // end-of-session analytics (session.ended),
+        // and WorkAdventureWebSocket.send() silently drops messages once the socket
+        // is manually closed (manuallyClosed=true / readyState !== OPEN). Emitting
+        // them while the socket is still OPEN lets the browser flush the frames
+        // ahead of the close handshake. `_closed` is set afterwards so send() is not
+        // blocked during this flush. (Remote/abnormal closes still can't deliver
+        // these — the pusher's timed-event tracker remains the source of truth
+        // there, and it is what closes any meeting, area or screen-share interval
+        // whose owner never got to.)
+        //
+        // The finally guarantees the socket is still closed (and `_closed` set) even
+        // if a cleanup callback throws — otherwise a throwing callback would leave a
+        // live, listener-attached socket behind that could auto-reconnect a room the
+        // user already left.
+        try {
+            this.cleanupConnection(true);
+        } finally {
+            this.socket?.close(1000, "Room connection closed");
+            this._closed = true;
+        }
     }
 
     public sharePosition(
@@ -2181,6 +2229,19 @@ export class RoomConnection implements RoomConnection {
                 videoQualityReportMessage: message,
             },
         });
+    }
+
+    public emitAnalyticsEventReport(message: AnalyticsEventReportMessage): void {
+        this.send({
+            message: {
+                $case: "analyticsEventReportMessage",
+                analyticsEventReportMessage: message,
+            },
+        });
+    }
+
+    public onCleanup(callback: () => void): void {
+        this.cleanupCallbacks.push(callback);
     }
 
     // "force" bypasses pre-join queuing for messages that must be sent before the room is joined (e.g. joinRoomFrontMessage).

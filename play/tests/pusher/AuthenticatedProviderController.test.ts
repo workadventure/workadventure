@@ -52,7 +52,7 @@ class FakeRequest {
     params: object = {};
     constructor(
         public query: { [key: string]: string } = {},
-        private headers: { [key: string]: string } = { Authorization: NOT_A_SECRET }
+        private headers: { [key: string]: string } = { Authorization: NOT_A_SECRET },
     ) {}
     header(header: string): string {
         return this.headers[header];
@@ -77,7 +77,7 @@ export class JWTTokenManagerMock {
         identifier: string,
         _accessToken?: string,
         username?: string,
-        _locale?: string
+        _locale?: string,
     ): Promise<string> {
         return new Promise((resolve) => {
             resolve("");

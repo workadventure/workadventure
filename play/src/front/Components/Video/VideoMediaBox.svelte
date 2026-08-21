@@ -269,7 +269,7 @@
 
     function highlightPeer() {
         highlightedEmbedScreen.highlight(videoBox);
-        analyticsClient.pinMeetingAction();
+        analyticsClient.trackAdminEvent("meeting.participant.pinned");
         window.focus();
     }
 

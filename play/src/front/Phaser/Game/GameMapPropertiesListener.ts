@@ -24,6 +24,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
 import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
+import { jitsiMeetingEnded, jitsiMeetingStarted } from "../../WebRtc/JitsiMeetingAnalytics";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 
 import type { Area } from "../Entity/Area";
@@ -152,6 +153,7 @@ export class GameMapPropertiesListener {
                 */
                 coWebsites.keepOnly((coWebsite) => !(coWebsite instanceof JitsiCoWebsite));
                 inJitsiStore.set(false);
+                jitsiMeetingEnded();
                 if (newValue === undefined) {
                     return;
                 }
@@ -194,6 +196,7 @@ export class GameMapPropertiesListener {
                 }
 
                 inJitsiStore.set(true);
+                jitsiMeetingStarted(roomName);
 
                 const isJitsiConfig = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_CONFIG));
                 const isJitsiInterfaceConfig = z
@@ -448,6 +451,10 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
+            for (const area of newAreas) {
+                analyticsClient.enterAreaMapEditor(area.id, area.name);
+            }
+
             if (this.gameMapFrontWrapper.areasManager === undefined) {
                 return;
             }
@@ -461,6 +468,10 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
+            for (const area of oldAreas) {
+                analyticsClient.leaveAreaMapEditor(area.id, area.name);
+            }
+
             if (
                 this.gameMapFrontWrapper.areasManager == undefined ||
                 this.gameMapFrontWrapper.areasManager.getAreaById == undefined
@@ -644,15 +655,17 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsites.add(coWebsite);
+            coWebsites.add(coWebsite, undefined, {
+                targetUrl: url.toString(),
+                triggerProperty: "openWebsite",
+                areaId: place.id !== undefined ? String(place.id) : undefined,
+                areaName: typeof place.name === "string" ? place.name : undefined,
+            });
 
             loadCoWebsiteFunction();
 
             //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
             inOpenWebsite.set(true);
-
-            // analytics event for open website
-            analyticsClient.openedWebsite(url);
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
@@ -718,7 +731,12 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsites.add(coWebsite);
+            coWebsites.add(coWebsite, undefined, {
+                targetUrl: new URL(urlStr, this.scene.mapUrlFile).toString(),
+                triggerProperty: "openWebsite",
+                areaId: place.id !== undefined ? String(place.id) : undefined,
+                areaName: typeof place.name === "string" ? place.name : undefined,
+            });
 
             //user in zone to open cowesite with only icone
             inOpenWebsite.set(true);

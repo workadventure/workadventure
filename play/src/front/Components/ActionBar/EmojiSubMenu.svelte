@@ -276,7 +276,7 @@
                         onmouseleave={() => (showSayBubbleTooltip = false)}
                         onclick={() => {
                             popupStore.addPopup(SayPopUp, { type: "say" }, "say");
-                            analyticsClient.openSayBubble();
+                            analyticsClient.trackAdminEvent("bubble.say.opened");
                         }}
                         data-testid="say-bubble-button"
                     >
@@ -299,7 +299,7 @@
                         onmouseleave={() => (showThinkBubbleTooltip = false)}
                         onclick={() => {
                             popupStore.addPopup(SayPopUp, { type: "think" }, "say");
-                            analyticsClient.openThinkBubble();
+                            analyticsClient.trackAdminEvent("bubble.think.opened");
                         }}
                         data-testid="think-bubble-button"
                     >

@@ -251,6 +251,12 @@ class LocalAdmin implements AdminInterface {
             world: "localWorld",
             applications,
             canRecord,
+            // LocalAdmin is the no-admin-backoffice path, so there is nothing to
+            // report analytics to. Deny explicitly rather than omitting it: the
+            // field is optional and the queue gates on `=== false`, so leaving it
+            // undefined would fail *open* the day LocalAdmin advertises the
+            // analytics capability.
+            analyticsEventsEnabled: false,
         };
     }
 

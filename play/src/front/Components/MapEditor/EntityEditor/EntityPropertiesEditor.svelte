@@ -54,7 +54,7 @@
 
     function onAddProperty(type: EntityDataPropertiesKeys, subtype?: string) {
         if ($mapEditorSelectedEntityStore) {
-            analyticsClient.addMapEditorProperty("entity", type || "unknown");
+            analyticsClient.trackAdminEvent("map_editor.property.added", { name: type || "unknown", type: "entity" });
             const property = getPropertyFromType(type, subtype);
             $mapEditorSelectedEntityStore.addProperty(property);
 
@@ -65,7 +65,7 @@
 
     function onAddSpecificProperty(app: ApplicationDefinitionInterface) {
         if (!$mapEditorSelectedEntityStore) return;
-        analyticsClient.addMapEditorProperty("entity", app.name);
+        analyticsClient.trackAdminEvent("map_editor.property.added", { name: app.name, type: "entity" });
         const property: EntityDataProperty = {
             id: uuid(),
             type: "openWebsite",
@@ -247,7 +247,10 @@
 
     function onDeleteProperty(id: string) {
         if ($mapEditorSelectedEntityStore) {
-            analyticsClient.removeMapEditorProperty("entity", properties.find((p) => p.id === id)?.type || "unknown");
+            analyticsClient.trackAdminEvent("map_editor.property.removed", {
+                name: properties.find((p) => p.id === id)?.type || "unknown",
+                type: "entity",
+            });
             $mapEditorSelectedEntityStore.deleteProperty(id);
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();

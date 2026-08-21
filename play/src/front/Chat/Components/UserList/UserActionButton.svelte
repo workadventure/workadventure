@@ -70,7 +70,7 @@
     const iAmAdmin = connection?.hasTag("admin");
 
     const goTo = (type: string, playUri: string, uuid: string) => {
-        analyticsClient.goToUser();
+        analyticsClient.trackAdminEvent("user.go_to_clicked");
 
         if (type === "room") {
             scriptUtils.goToPage(`${playUri}#moveToUser=${uuid}`);
@@ -126,7 +126,7 @@
     });
 
     const showBusinessCard = (visitCardUrl: string | undefined) => {
-        analyticsClient.showBusinessCard();
+        analyticsClient.trackAdminEvent("user.business_card.opened");
 
         // If woka menu is open, close it
         if ($wokaMenuStore) {
@@ -153,7 +153,7 @@
         }
 
         // Track the open woka menu action
-        analyticsClient.openWokaMenu();
+        analyticsClient.trackAdminEvent("user.woka_menu.opened");
 
         const currentScerne = gameManager.getCurrentGameScene();
 

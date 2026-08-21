@@ -1,10 +1,27 @@
 import { derived, get, readable, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
+import type { CowebsiteOpenedAnalyticsContext } from "../Administration/AnalyticsClient";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 export function createCoWebsiteStore() {
-    const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
+    const { subscribe, update } = writable<Array<CoWebsite>>([]);
 
-    const add = (coWebsite: CoWebsite, position?: number) => {
+    /**
+     * Every cowebsite in the app is opened through here, which is why the
+     * `cowebsite.opened` event is reported here. The callers used to report it
+     * themselves, right after calling this — five of them, each rebuilding the same
+     * context literal, and seven other call sites that simply forgot. What a caller
+     * still owns is the context it alone knows: which area triggered the open, and
+     * through which property.
+     *
+     * It really is the only emitter now: `WA.nav.openTab`, `WA.nav.goToPage`,
+     * `WA.ui.website` and embedded websites used to report `cowebsite.opened` too,
+     * and none of them opens a cowebsite — they open a browser tab, a navigation, or
+     * an iframe this store never sees. They report `scripting.website_opened`
+     * instead, so the per-area figures computed from this event stop being diluted by
+     * context-less rows.
+     */
+    const add = (coWebsite: CoWebsite, position?: number, analyticsContext: CowebsiteOpenedAnalyticsContext = {}) => {
         if (position || position === 0) {
             update((currentArray) => {
                 const newArray = [...currentArray];
@@ -28,30 +45,56 @@ export function createCoWebsiteStore() {
                 coWebsiteRatio.set(0.5);
             }
         }
+
+        analyticsClient.openedWebsite(coWebsite.getId(), coWebsite.getUrl(), analyticsContext);
+    };
+
+    /**
+     * Closes the analytics interval of every cowebsite that just went away.
+     *
+     * By diff rather than by the caller telling us, because three of the four removal
+     * functions do not know what they removed: keepOnly() takes a predicate,
+     * removeAll() and empty() take nothing. Sixteen call sites remove a cowebsite and
+     * exactly one of them used to report a close, which is why cowebsite.closed sat
+     * near zero.
+     */
+    const closeRemoved = (before: Array<CoWebsite>, after: Array<CoWebsite>) => {
+        const kept = new Set(after.map((coWebsite) => coWebsite.getId()));
+        for (const coWebsite of before) {
+            if (!kept.has(coWebsite.getId())) {
+                analyticsClient.closedWebsite(coWebsite.getId());
+            }
+        }
+    };
+
+    const removeMatching = (keep: (coWebsite: CoWebsite) => boolean) => {
+        update((currentArray) => {
+            const remaining = currentArray.filter(keep);
+            closeRemoved(currentArray, remaining);
+            return remaining;
+        });
     };
 
     const remove = (coWebsite: CoWebsite) => {
-        update((currentArray) =>
-            currentArray.filter((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId()),
-        );
+        removeMatching((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId());
     };
 
     const removeAll = () => {
-        set([]);
+        removeMatching(() => false);
     };
 
     /**
      * Only keep the cowebsites matching the predicate.
      */
     const keepOnly = (predicate: (coWebsite: CoWebsite) => boolean) => {
-        update((currentArray) => currentArray.filter(predicate));
+        removeMatching(predicate);
     };
 
     const findById = (id: string) => {
         return get({ subscribe }).find((coWebsite) => coWebsite.getId() === id);
     };
 
-    const empty = () => set([]);
+    const empty = () => removeMatching(() => false);
 
     return {
         subscribe,

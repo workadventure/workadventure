@@ -6,37 +6,69 @@ import "google/protobuf/struct.proto";
 import "google/protobuf/empty.proto";
 
 message VariableRequest {
+    // Full URL of the room, e.g. "https://play.workadventu.re/@/my-organization/my-world/my-room".
     string room = 1;
+    // Name of the variable, as declared by a variable object in the map.
     string name = 2;
 }
 
 message SaveVariableRequest {
+    // Full URL of the room, e.g. "https://play.workadventu.re/@/my-organization/my-world/my-room".
     string room = 1;
+    // Name of the variable. It must be declared by a variable object in the map, otherwise the call fails:
+    // the map is the only place variables can be created, so a caller cannot invent new ones.
     string name = 2;
+    // Any JSON value. It is stored serialized and handed back to readVariable/listenVariable as-is.
+    // Writing the value the variable already holds is a no-op: no listener is notified.
     google.protobuf.Value value = 3;
 }
 
 message EventRequest {
+    // Full URL of the room, e.g. "https://play.workadventu.re/@/my-organization/my-world/my-room".
     string room = 1;
+    // Name of the event to listen to. Only events dispatched under this exact name are streamed.
     string name = 2;
 }
 
 message EventResponse {
+    // The payload the sender attached to the event, verbatim.
     google.protobuf.Value data = 1;
+    // The id, within that room, of the player who dispatched the event from the scripting API.
+    // Absent when the event came from the Room API itself, so a caller can tell its own broadcasts
+    // apart from players'.
     optional int32 senderId = 2;
 }
 
 message DispatchEventRequest {
+    // Full URL of the room, e.g. "https://play.workadventu.re/@/my-organization/my-world/my-room".
     string room = 1;
+    // Name of the event. Only players and listeners subscribed to this exact name receive it.
     string name = 2;
+    // Any JSON value. It reaches the recipients untouched; the server never reads it.
     google.protobuf.Value data = 3;
+    // Who receives the event. Leave empty to reach every player in the room.
+    //
+    // Listing ids narrows it to those players *and stops listenToEvent from seeing the event at all*:
+    // a targeted event goes to the named players' clients only, never to Room API listeners. Ids are the
+    // per-room player ids carried by EventResponse.senderId; ids that are not in the room are skipped
+    // silently.
     repeated int32 targetUserIds = 4;
 }
 
+/**
+ * The public Room API, published to npm as @workadventure/room-api-client.
+ *
+ * Every call carries the API key in the `X-API-Key` gRPC metadata and names the room it acts on; both are
+ * checked before anything else runs. Without an admin, the key must equal ROOM_API_SECRET_KEY and the room
+ * must sit under FRONT_URL; with one, the admin authorizes each room.
+ *
+ * Callers here are trusted more than players: the tag permissions a map declares on its variables
+ * (readableBy / writableBy) do not apply to this API. It reads and writes every variable of the room.
+ */
 service RoomApi {
-    rpc readVariable(VariableRequest) returns (google.protobuf.Value); // Get the current value of the given variable
-    rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value); // Listen to value updates for a given variable
+    rpc readVariable(VariableRequest) returns (google.protobuf.Value); // Get the current value of the given variable. Returns nothing if the variable was never set and the map declares no default for it.
+    rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value); // Listen to value updates for a given variable. The current value is not replayed on subscribe: the first message is the next write that actually changes the value.
     rpc saveVariable(SaveVariableRequest) returns (google.protobuf.Empty); // Set the value of the given variable
-    rpc broadcastEvent(DispatchEventRequest) returns (google.protobuf.Empty); // Dispatch an event to all users in the room
+    rpc broadcastEvent(DispatchEventRequest) returns (google.protobuf.Empty); // Dispatch an event to all users in the room. Succeeds without doing anything if nobody is in the room: events are not queued for later.
     rpc listenToEvent(EventRequest) returns (stream EventResponse); // Listen to events dispatched in the room
 }

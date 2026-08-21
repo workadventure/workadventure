@@ -15,7 +15,7 @@ describe("createDelayedUnsubscribeStore", () => {
     it("should throw an error if delayForUnsubscribe is negative", () => {
         const store = writable(0);
         expect(() => createDelayedUnsubscribeStore(store, -100)).toThrow(
-            "delayForUnsubscribe must be a non-negative number"
+            "delayForUnsubscribe must be a non-negative number",
         );
     });
 

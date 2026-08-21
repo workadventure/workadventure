@@ -29,7 +29,8 @@ import {
     SpaceDestroyedError,
     UserAlreadyAddedInSpaceError,
 } from "../models/SpaceValidationErrors";
-import { videoQualityAnalyticsQueue } from "../services/VideoQualityAnalyticsQueue";
+import { analyticsEventsQueue } from "../services/AnalyticsEventsQueue";
+import { processAnalyticsReportMessage } from "../services/AnalyticsReportMessageHandler";
 import { PusherRoomSocketController } from "../services/PusherRoomSocketController";
 import { AdminWebSocketBackpressureWriter } from "../services/AdminWebSocketBackpressureWriter";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
@@ -273,7 +274,11 @@ export class IoSocketController {
                 roomName: z.string(),
                 cameraState: z.string().transform((val) => val === "true"),
                 microphoneState: z.string().transform((val) => val === "true"),
-                tabId: z.string(),
+                // Non-empty: the tab id is the key both the pusher's reconnection state
+                // (contextByTabKey) and the back's stale-connection kill (GameRoom.usersByTabKey)
+                // are stored under, and both skip an empty string — two tabs sending one would
+                // share a slot rather than replace each other.
+                tabId: z.string().min(1),
             }),
             upgrade: async ({ query, request, isAborted, upgrade, reject }) => {
                 debug(
@@ -354,6 +359,10 @@ export class IoSocketController {
                         world: "",
                         chatID,
                         canRecord: false,
+                        // No admin, so there is nobody to report analytics to. This
+                        // placeholder is only used until fetchMemberDataByUuid answers;
+                        // when it never does, denying is the right default.
+                        analyticsEventsEnabled: false,
                     };
 
                     let characterTextures: WokaDetail[];
@@ -466,6 +475,7 @@ export class IoSocketController {
                         cameraState,
                         tabId: query.tabId,
                         attendeesState: false,
+                        analyticsEventsEnabled: userData.analyticsEventsEnabled ?? true,
                         queryAbortControllers: new Map<number, AbortController>(),
                         canRecord: userData.canRecord ?? false,
                     };
@@ -1097,13 +1107,17 @@ export class IoSocketController {
                                 break;
                             }
                             case "videoQualityReportMessage": {
-                                /*debug(
-                                    "Received video quality report with %d samples",
-                                    message.message.videoQualityReportMessage.samples.length,
-                                );*/
-                                videoQualityAnalyticsQueue.enqueueReport(
+                                analyticsEventsQueue.enqueueVideoQualityReport(
                                     message.message.videoQualityReportMessage,
                                     socket.getUserData(),
+                                );
+                                break;
+                            }
+                            case "analyticsEventReportMessage": {
+                                processAnalyticsReportMessage(
+                                    message.message.analyticsEventReportMessage,
+                                    socket.getUserData(),
+                                    analyticsEventsQueue,
                                 );
                                 break;
                             }

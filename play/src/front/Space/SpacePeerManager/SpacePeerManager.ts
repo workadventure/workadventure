@@ -16,6 +16,8 @@ import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintS
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
+import type { TimedAnalyticsEventHandle } from "../../Administration/TimedAnalyticsEvent";
 import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
@@ -134,6 +136,14 @@ export class SpacePeerManager {
 
     private _communicationState: ICommunicationState;
     private _toFinalizeState: ICommunicationState | undefined;
+    /**
+     * The meeting this space is currently carrying, if any.
+     *
+     * Per instance, not global: SpaceRegistry keeps several spaces live at once,
+     * so a single shared value meant leaving one space ended the meeting of every
+     * other one.
+     */
+    private openMeeting: TimedAnalyticsEventHandle | undefined;
 
     private readonly _effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
 
@@ -200,6 +210,7 @@ export class SpacePeerManager {
 
                 // create factory for the new state instead of creating the state directly ?
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
+                    this.startMeetingAnalytics("webrtc");
                     this._communicationState = new WebRTCState(
                         this.space,
                         this._streamableSubjects,
@@ -207,6 +218,7 @@ export class SpacePeerManager {
                         this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
+                    this.startMeetingAnalytics("livekit");
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
@@ -214,6 +226,7 @@ export class SpacePeerManager {
                         this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else {
+                    this.endMeetingAnalytics();
                     console.error("Unknown communication strategy: " + message.switchMessage.strategy);
                     Sentry.captureMessage("Unknown communication strategy: " + message.switchMessage.strategy);
                 }
@@ -550,6 +563,26 @@ export class SpacePeerManager {
         this.metadataSubscription.unsubscribe();
         this.cancelPendingRecorderNameResolution(this.space.getName());
         this._recordingStore.removeSpace(this.space.getName());
+        this.endMeetingAnalytics();
+    }
+
+    /**
+     * A strategy switch is where a meeting actually starts, and the only place its
+     * media backend is known for certain. `webrtc` is a spontaneous bubble,
+     * `livekit` a meeting area; the space name is the meeting id, so every
+     * participant of one meeting reports the same one.
+     */
+    private startMeetingAnalytics(meetingProvider: "webrtc" | "livekit"): void {
+        this.endMeetingAnalytics();
+        this.openMeeting = analyticsClient.openMeeting({
+            meetingProvider,
+            meetingId: this.space.getName(),
+        });
+    }
+
+    private endMeetingAnalytics(): void {
+        this.openMeeting?.close();
+        this.openMeeting = undefined;
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {

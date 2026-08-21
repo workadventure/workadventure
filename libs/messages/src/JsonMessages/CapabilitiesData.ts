@@ -35,8 +35,8 @@ export const isCapabilities = z.object({
       "The API can provide ICE server configurations (including TURN servers and credentials) for WebRTC connections.",
     example: "v1",
   }),
-  "api/analytics/video-quality-batch": extendApi(z.optional(z.string()), {
-    description: "Means the api accepts video quality analytics batches.",
+  "api/analytics/events-batch": extendApi(z.optional(z.string()), {
+    description: "Means the api accepts generic analytics event batches.",
     example: "v1",
   }),
 });
