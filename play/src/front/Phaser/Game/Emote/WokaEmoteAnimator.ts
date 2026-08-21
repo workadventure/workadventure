@@ -87,7 +87,7 @@ export class WokaEmoteAnimator {
     }
 
     /**
-     * Draws the floor mark once and slips it under the layer sprites. It is added at index 0 so the
+     * Creates the floor mark and slips it under the layer sprites. It is added at index 0 so the
      * Woka stands on it rather than behind it.
      */
     private createGround(): void {
@@ -96,12 +96,6 @@ export class WokaEmoteAnimator {
             return;
         }
         const graphics = new Graphics(this.scene);
-        graphics.lineStyle(spec.thickness ?? 1, spec.color, 1);
-        for (const [from, to] of spec.arcs) {
-            graphics.beginPath();
-            graphics.arc(0, 0, spec.radius, Phaser.Math.DegToRad(from), Phaser.Math.DegToRad(to));
-            graphics.strokePath();
-        }
         graphics.setPosition(0, spec.offsetY ?? FEET_OFFSET);
         this.container.addAt(graphics, 0);
         this.ground = graphics;
@@ -113,11 +107,21 @@ export class WokaEmoteAnimator {
             return;
         }
         const state = spec.sample(Math.min(Math.max(this.elapsed, 0), this.definition.duration));
-        const scale = state.scale ?? 1;
-        // Squashed on the vertical axis, because the map is not seen from directly above.
-        this.ground.setScale(scale, scale * (spec.flatten ?? 0.42));
+        const turn = state.angle ?? 0;
+        // The ring lies flat on the floor: it turns in the floor plane, and only then is squashed
+        // to screen because the map is not seen from directly above. Phaser scales before it
+        // rotates, so setAngle() would tilt the flattened ellipse instead of spinning it flat —
+        // the turn is baked into the path and the transform is left to do the squashing alone.
+        this.ground.clear();
+        this.ground.lineStyle(spec.thickness ?? 1, spec.color, 1);
+        for (const [from, to] of spec.arcs) {
+            this.ground.beginPath();
+            this.ground.arc(0, 0, spec.radius, Phaser.Math.DegToRad(from + turn), Phaser.Math.DegToRad(to + turn));
+            this.ground.strokePath();
+        }
+        const size = state.scale ?? 1;
+        this.ground.setScale(size, size * (spec.flatten ?? 0.42));
         this.ground.setAlpha(state.alpha ?? 1);
-        this.ground.setAngle(state.angle ?? 0);
     }
 
     private emitParticles(from: number, to: number): void {
