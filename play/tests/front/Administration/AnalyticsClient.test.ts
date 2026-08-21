@@ -254,13 +254,13 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(JSON.stringify(events)).not.toContain("durationSeconds");
     });
 
-    it("reopens a panel that was still open when the socket went away", () => {
+    it("reopens a broadcast that was still live when the socket went away", () => {
         window.capabilities = {
             "api/analytics/events-batch": "v1",
         };
         const firstSocket = vi.fn();
         analyticsClient.setAdminAnalyticsSender(firstSocket);
-        analyticsClient.chatPanelVisibilityChanged(true);
+        analyticsClient.startMegaphone();
 
         // The reconnect. The pusher has already closed the first interval itself as
         // socket_closed, and the handle we hold is spent.
@@ -268,18 +268,17 @@ describe("AnalyticsClient admin analytics sink", () => {
         const secondSocket = vi.fn();
         analyticsClient.setAdminAnalyticsSender(secondSocket);
 
-        // A boolean has no rising edge: chatVisibilityStore is still true, so nothing
-        // fires. Without reopening here the panel would stay invisible for the rest of
-        // the tab's life.
+        // Nothing fires a second start: the broadcast never stopped. Without reopening
+        // here it would stay invisible for the rest of the tab's life.
         const reopened = secondSocket.mock.calls
             .flatMap(([message]) => message.events)
             .filter((event) => event.eventName === "timed_event.open");
         expect(reopened).toHaveLength(1);
-        expect(reopened[0].properties.eventName).toBe("chat.panel.dwell");
+        expect(reopened[0].properties.eventName).toBe("megaphone.ended");
 
         // And it is a NEW interval, not the spent handle: closing it must pair with
         // the reopened one, or the pusher drops it and the whole visit is lost.
-        analyticsClient.chatPanelVisibilityChanged(false);
+        analyticsClient.stopMegaphone();
         const closes = secondSocket.mock.calls
             .flatMap(([message]) => message.events)
             .filter((event) => event.eventName === "timed_event.close");
@@ -287,14 +286,14 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(closes[0].properties.handle).toBe(reopened[0].properties.handle);
     });
 
-    it("stops reopening a panel the user closed while disconnected", () => {
+    it("stops reopening a broadcast the user ended while disconnected", () => {
         window.capabilities = {
             "api/analytics/events-batch": "v1",
         };
         analyticsClient.setAdminAnalyticsSender(vi.fn());
-        analyticsClient.chatPanelVisibilityChanged(true);
+        analyticsClient.startMegaphone();
         analyticsClient.setAdminAnalyticsSender(undefined);
-        analyticsClient.chatPanelVisibilityChanged(false);
+        analyticsClient.stopMegaphone();
 
         const secondSocket = vi.fn();
         analyticsClient.setAdminAnalyticsSender(secondSocket);
