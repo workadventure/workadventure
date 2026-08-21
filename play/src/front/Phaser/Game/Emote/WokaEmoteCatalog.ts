@@ -150,6 +150,84 @@ export function stepThrough<T>(elapsed: number, period: number, values: T[]): T 
 /* -------------------------------------------------------------------------- */
 
 const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
+    nod: {
+        id: "nod",
+        duration: 700,
+        icon: "🙂",
+        // The mirror of `nope`: same shake, turned through ninety degrees. A catalogue that can say
+        // no and not yes is half a vocabulary.
+        sample: (t) => ({
+            frame: DOWN,
+            y: 3.5 * swell(t, 350),
+            scaleY: 1 - 0.05 * swell(t, 350),
+        }),
+    },
+
+    question: {
+        id: "question",
+        duration: 1400,
+        icon: "❓",
+        // Here the tilt is the message rather than a stand-in for a missing arm: a head leans when
+        // it does not understand.
+        particles: [
+            {
+                glyph: "question",
+                at: [120],
+                count: 1,
+                life: 1100,
+                riseSpeed: -0.005,
+                spread: 2,
+                drift: 0.001,
+                originY: 26,
+            },
+        ],
+        sample: (t) => ({
+            frame: DOWN,
+            angle: 10 * oscillate(t, 1400),
+            y: -swell(t, 1400),
+        }),
+    },
+
+    laugh: {
+        id: "laugh",
+        duration: 1100,
+        icon: "😂",
+        sample: (t) => {
+            const damping = Math.max(0, 1 - t / 1100);
+            const beat = oscillate(t, 140);
+            return {
+                frame: DOWN,
+                // Vertical, where `nope` shakes sideways. That is what tells the two apart at 32px.
+                y: -Math.abs(beat) * 2.5 * damping,
+                angle: beat * 4 * damping,
+                scaleY: 1 + 0.03 * Math.abs(beat) * damping,
+            };
+        },
+    },
+
+    moonwalk: {
+        id: "moonwalk",
+        duration: 1600,
+        icon: "🕴",
+        // Walk frames run backwards while the Woka slides the other way, then it walks back to where
+        // it started. Nothing new is drawn; the existing frames just play in reverse.
+        sample: (t) =>
+            t < 1100
+                ? { frame: stepThrough(t, 110, [8, 7, 6, 7]), x: -16 * (t / 1100) }
+                : { frame: stepThrough(t - 1100, 110, [6, 7, 8, 7]), x: -16 * (1 - (t - 1100) / 500) },
+    },
+
+    runInPlace: {
+        id: "runInPlace",
+        duration: 1200,
+        icon: "🏃",
+        sample: (t) => ({
+            frame: stepThrough(t, 60, [STRIDE, DOWN, 2, DOWN]),
+            y: -Math.abs(oscillate(t, 120)) * 1.5,
+            x: oscillate(t, 120) * Math.max(0, 1 - t / 1200),
+        }),
+    },
+
     jump: {
         id: "jump",
         duration: 860,

@@ -8,7 +8,25 @@
  * frames are reordered. The recipes live in the front (WokaEmoteCatalog); only the identifiers are
  * shared, because the back has to reject anything it does not recognise before relaying it.
  */
-export const WOKA_EMOTE_IDS = ["jump", "spin", "dance", "celebrate", "nope", "love", "afk"] as const;
+/*
+ * The order is the order of the wheel, and it groups by register: answers, then moods, then motion,
+ * then the away state. A wheel is aimed roughly, so a near miss should land on something that means
+ * roughly the same thing.
+ */
+export const WOKA_EMOTE_IDS = [
+    "nod",
+    "nope",
+    "question",
+    "laugh",
+    "love",
+    "celebrate",
+    "dance",
+    "moonwalk",
+    "runInPlace",
+    "jump",
+    "spin",
+    "afk",
+] as const;
 
 export type WokaEmoteId = (typeof WOKA_EMOTE_IDS)[number];
 
