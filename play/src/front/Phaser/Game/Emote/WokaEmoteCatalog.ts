@@ -62,6 +62,27 @@ export interface WokaEmoteParticleSpec {
     originY?: number;
 }
 
+/**
+ * A ring drawn on the floor, under the Woka. The floating glyphs are DOM elements and therefore
+ * always render above the canvas, so anything meant to be *under* the character has to be drawn by
+ * Phaser instead — which is what this describes.
+ */
+export interface WokaEmoteGroundSpec {
+    /** Stroke colour, as a Phaser hex number. */
+    color: number;
+    /** Radius at scale 1, in sprite pixels. */
+    radius: number;
+    /** Stroke width, in sprite pixels. */
+    thickness?: number;
+    /** How squashed the circle is: the floor is seen at an angle, never head-on. */
+    flatten?: number;
+    /** Arcs to draw, in degrees. Gaps are what makes the rotation visible — a full ring cannot spin. */
+    arcs: [number, number][];
+    /** Height of the floor above the sprite origin. Defaults to the feet. */
+    offsetY?: number;
+    sample: (elapsed: number) => { scale?: number; alpha?: number; angle?: number };
+}
+
 export interface WokaEmoteDefinition {
     id: WokaEmoteId;
     /** How long the animation runs, in milliseconds. */
@@ -76,6 +97,8 @@ export interface WokaEmoteDefinition {
     bubble?: string;
     /** Glyphs floating off the Woka while it performs. Played instead of `bubble` when present. */
     particles?: WokaEmoteParticleSpec[];
+    /** A mark left on the floor under the Woka, for emotes whose energy goes downwards. */
+    ground?: WokaEmoteGroundSpec;
     sample: (elapsed: number) => Partial<WokaEmoteState>;
 }
 
@@ -273,6 +296,24 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         id: "spin",
         duration: 940,
         icon: "🌀",
+        // Two opposing arcs rather than a closed ring: a circle looks identical however far it has
+        // turned, so a full ring would widen without ever reading as a spin.
+        ground: {
+            color: 0x56eaff,
+            radius: 11,
+            thickness: 1,
+            flatten: 0.42,
+            arcs: [
+                [10, 130],
+                [190, 310],
+            ],
+            sample: (t) => ({
+                scale: 0.55 + 1.05 * (t / 940),
+                // Gone by the end: the emote hands the Woka back exactly as it found it.
+                alpha: 0.75 * Math.max(0, 1 - t / 940),
+                angle: (t / 940) * 540,
+            }),
+        },
         sample: (t) => ({
             // Cycling the four directions is a real pirouette: the sprite already holds every angle.
             frame: t < 760 ? stepThrough(t, 95, [DOWN, LEFT, UP, RIGHT]) : DOWN,
