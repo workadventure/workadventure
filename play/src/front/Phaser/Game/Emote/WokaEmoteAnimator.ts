@@ -2,6 +2,7 @@ import * as Phaser from "phaser";
 import type { WokaEmoteDefinition, WokaEmoteParticleSpec } from "./WokaEmoteCatalog";
 import { sampleWokaEmote } from "./WokaEmoteCatalog";
 import { feetAnchoredOffset } from "./WokaEmoteGeometry";
+import { buildGlyphSvg } from "./WokaEmoteGlyphs";
 
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
@@ -31,6 +32,8 @@ export class WokaEmoteAnimator {
     private readonly onSceneUpdate: (time: number, delta: number) => void;
 
     private readonly particles: Particle[] = [];
+    /** Cycles the confetti through the palette instead of drawing them all the same colour. */
+    private spawnCount = 0;
     private readonly firedBatches = new Set<string>();
 
     constructor(
@@ -105,9 +108,8 @@ export class WokaEmoteAnimator {
     private spawnBatch(spec: WokaEmoteParticleSpec): void {
         for (let i = 0; i < spec.count; i++) {
             const span = document.createElement("span");
-            // The glyph is picked from the catalogue, never from anything a remote player sent.
-            span.textContent = spec.glyph;
-            span.style.fontSize = "10px";
+            // The markup is built from the glyph tables alone; nothing a remote player sent reaches it.
+            span.innerHTML = buildGlyphSvg(spec.glyph, this.spawnCount++);
             const element = new DOMElement(this.scene, 0, 0, span, "z-index:10;pointer-events:none;");
             this.container.add(element);
             this.particles.push({
