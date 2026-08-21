@@ -626,27 +626,17 @@ class AnalyticsClient {
         this.trackAdminEvent("megaphone.opened");
     }
 
-    // The two clicks. `megaphone.started` / `megaphone.ended` are no longer reported
-    // from here: they are the two ends of one interval, opened and closed by
-    // megaphoneBroadcastChanged() below from the broadcast state itself. PostHog keeps
-    // its own click-shaped view.
+    // The two ends of one interval, opened and closed where the broadcast is started
+    // and stopped — startMegaphoneLive / stopMegaphoneLive. Everything that ends a
+    // broadcast goes through the second one, including being kicked off the stage.
     startMegaphone(): void {
         this.posthog?.capture("wa_start_megaphone");
+        this.panelStateChanged("megaphone.ended", true);
     }
 
     stopMegaphone(): void {
         this.posthog?.capture("wa_stop_megaphone");
-    }
-
-    /**
-     * Opens or closes the megaphone broadcast interval.
-     *
-     * Driven by the state rather than by the start/stop buttons, because a broadcast
-     * ends through more paths than it starts through — see the derivation in
-     * MegaphoneStore.
-     */
-    megaphoneBroadcastChanged(live: boolean): void {
-        this.panelStateChanged("megaphone.ended", live);
+        this.panelStateChanged("megaphone.ended", false);
     }
 
     /**

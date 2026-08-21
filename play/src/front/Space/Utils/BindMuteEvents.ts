@@ -6,6 +6,7 @@ import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import LL from "../../../i18n/i18n-svelte";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
+import { stopMegaphoneLive } from "../../Components/ActionBar/MenuIcons/megaphoneActions";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { popupStore } from "../../Stores/PopupStore";
@@ -95,6 +96,12 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
     // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
     space.observePrivateEvent("kickOffUser").subscribe((event) => {
+        // See RoomConnection's kickOffMessage: the stop has to go through the same
+        // function the button does, or the broadcast stays "live" as far as the action
+        // bar and the analytics interval are concerned.
+        if (get(currentLiveStreamingSpaceStore)?.getName() === space.getName()) {
+            stopMegaphoneLive();
+        }
         isSpeakerStore.set(false);
         currentLiveStreamingSpaceStore.set(undefined);
 

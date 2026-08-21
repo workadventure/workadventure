@@ -117,6 +117,7 @@ import { duplicateUserConnectedStore, shouldShowDuplicateUserPopup } from "../St
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { isSpeakerStore, requestedMicrophoneState, requestedCameraState } from "../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../Stores/MegaphoneStore";
+import { stopMegaphoneLive } from "../Components/ActionBar/MenuIcons/megaphoneActions";
 import {
     inviteUserActivated,
     mapEditorActivated,
@@ -474,6 +475,18 @@ export class RoomConnection implements RoomConnection {
                                 case "kickOffMessage": {
                                     if (subMessage.kickOffMessage.userId !== this.userId?.toString()) break;
 
+                                    // Being kicked off the stage ends the broadcast, and
+                                    // only this path knows it — neither megaphone button
+                                    // is involved. Without going through the same stop,
+                                    // requestedMegaphoneStore stays true and the action
+                                    // bar keeps offering to stop a broadcast that is
+                                    // already over.
+                                    if (
+                                        get(currentLiveStreamingSpaceStore)?.getName() ===
+                                        subMessage.kickOffMessage.spaceName
+                                    ) {
+                                        stopMegaphoneLive();
+                                    }
                                     isSpeakerStore.set(false);
                                     currentLiveStreamingSpaceStore.set(undefined);
                                     const scene = gameManager.getCurrentGameScene();
