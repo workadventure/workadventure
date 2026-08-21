@@ -9,7 +9,10 @@
     import { getCurrentPlayerScreenPosition } from "../../Utils/GameToBrowserCoordinates";
 
     /** Distance from the centre to the middle of a slice, in pixels. */
-    const RADIUS = 112;
+    // Twelve slices need more circumference than six: at the old radius the buttons overlapped.
+    const MAX_RADIUS = 148;
+    /** Never wider than the screen it opens on: a full wheel is ~2×(radius+48) across. */
+    const MIN_RADIUS = 84;
     /** Inside this radius the pointer selects nothing, so the wheel can be dismissed by aiming at its centre. */
     const DEAD_ZONE = 48;
     /** Below this, a press on the shortcut is a tap that leaves the wheel open rather than a hold. */
@@ -17,9 +20,14 @@
     // "e" toggles the map editor; "g" for gesture is free in both keyboard layouts.
     const SHORTCUT = "g";
 
-    /** Half the wheel's footprint, used to keep it clear of the screen edges. */
-    const HALF_FOOTPRINT = RADIUS + 48;
     const EDGE_MARGIN = 8;
+    /** Grown or shrunk to fit the viewport; recomputed on every tracking frame, so it follows resizes. */
+    let radius = $state(MAX_RADIUS);
+
+    function fittingRadius(): number {
+        const smallestSide = Math.min(window.innerWidth, window.innerHeight);
+        return Math.max(MIN_RADIUS, Math.min(MAX_RADIUS, smallestSide / 2 - 64));
+    }
 
     let selected: number | null = $state(null);
     let wheelElement: HTMLElement | undefined = $state(undefined);
@@ -34,16 +42,18 @@
     // cowebsite shrinks the canvas. Centring on the viewport would leave the wheel off the Woka in
     // both cases, so it is anchored to the Woka itself and clamped to stay fully on screen.
     function trackWoka(): void {
+        radius = fittingRadius();
+        const halfFootprint = radius + 48;
         const position = getCurrentPlayerScreenPosition();
         anchor = position
             ? {
                   x: Math.min(
-                      Math.max(position.x, HALF_FOOTPRINT + EDGE_MARGIN),
-                      window.innerWidth - HALF_FOOTPRINT - EDGE_MARGIN,
+                      Math.max(position.x, halfFootprint + EDGE_MARGIN),
+                      window.innerWidth - halfFootprint - EDGE_MARGIN,
                   ),
                   y: Math.min(
-                      Math.max(position.y, HALF_FOOTPRINT + EDGE_MARGIN),
-                      window.innerHeight - HALF_FOOTPRINT - EDGE_MARGIN,
+                      Math.max(position.y, halfFootprint + EDGE_MARGIN),
+                      window.innerHeight - halfFootprint - EDGE_MARGIN,
                   ),
               }
             : undefined;
@@ -73,6 +83,11 @@
                 jump: $LL.actionbar.wokaEmote.names.jump(),
                 spin: $LL.actionbar.wokaEmote.names.spin(),
                 dance: $LL.actionbar.wokaEmote.names.dance(),
+                nod: $LL.actionbar.wokaEmote.names.nod(),
+                question: $LL.actionbar.wokaEmote.names.question(),
+                laugh: $LL.actionbar.wokaEmote.names.laugh(),
+                moonwalk: $LL.actionbar.wokaEmote.names.moonwalk(),
+                runInPlace: $LL.actionbar.wokaEmote.names.runInPlace(),
                 celebrate: $LL.actionbar.wokaEmote.names.celebrate(),
                 nope: $LL.actionbar.wokaEmote.names.nope(),
                 love: $LL.actionbar.wokaEmote.names.love(),
@@ -159,8 +174,9 @@
                 play(selected);
                 break;
             default: {
+                // Only the first nine have a key that can be typed on its own.
                 const digit = Number(event.key);
-                if (Number.isInteger(digit) && digit >= 1 && digit <= WOKA_EMOTES.length) {
+                if (Number.isInteger(digit) && digit >= 1 && digit <= Math.min(9, WOKA_EMOTES.length)) {
                     event.preventDefault();
                     play(digit - 1);
                 }
@@ -202,7 +218,7 @@
             <div
                 bind:this={wheelElement}
                 class="relative"
-                style="width: {RADIUS * 2 + 96}px; height: {RADIUS * 2 + 96}px;"
+                style="width: {radius * 2 + 96}px; height: {radius * 2 + 96}px;"
             >
                 <!-- Under the ring, not in the middle of it: the middle is where the Woka stands. -->
                 <div
@@ -213,7 +229,7 @@
                 </div>
 
                 {#each items as item, index (item.definition.id)}
-                    {@const position = wheelSlicePosition(index, WOKA_EMOTES.length, RADIUS)}
+                    {@const position = wheelSlicePosition(index, WOKA_EMOTES.length, radius)}
                     <!-- The slice travels out of the Woka rather than appearing around it. -->
                     <div
                         class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -224,7 +240,7 @@
                     >
                         <button
                             type="button"
-                            class="flex h-16 w-16 flex-col items-center justify-center gap-0.5 rounded-full border
+                            class="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-full border
                            transition-colors duration-150 pointer-events-auto
                            {selected === index
                                 ? 'border-white bg-secondary scale-110'
@@ -240,7 +256,9 @@
                             }}
                         >
                             <span class="text-2xl leading-none">{item.definition.icon}</span>
-                            <span class="text-white/50 text-[10px] leading-none">{index + 1}</span>
+                            {#if index < 9}
+                                <span class="text-white/50 text-[10px] leading-none">{index + 1}</span>
+                            {/if}
                         </button>
                     </div>
                 {/each}
