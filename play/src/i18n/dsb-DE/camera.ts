@@ -23,6 +23,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Pśistup ku kamerje a mikrofonoju musy se zwóliś we browseru.",
         cameraContent: "Pśistup ku kamerje musy se zwóliś we browseru.",
         microphoneContent: "Pśistup ku mikrofonoju musy se zwóliś we browseru.",
+        safariContent:
+            'Wócyń Safari > Nastajenja za toś to websedło… (abo Safari > Nastajenja > Websedła > Kamera / Mikrofon), staj toś to sedło na "Zwóliś" a zacytaj bok znowa.',
         firefoxContent:
             'Klikni na bublin "Te nastajenja zachowaś", aby njemusali kuždy raz wótnowotki to zwólenje we Firefoxu aktiwěrowaś',
         allow: "Webcam zwóliś",

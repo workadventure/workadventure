@@ -23,6 +23,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Ha de permetre accés a la càmera i el micròfon al navegador.",
         cameraContent: "Ha de permetre accés a la càmera al navegador.",
         microphoneContent: "Ha de permetre accés al micròfon al navegador.",
+        safariContent:
+            'Obriu Safari > Configuració per a aquest lloc web… (o Safari > Configuració > Llocs web > Càmera / Micròfon), definiu aquest lloc com a "Permet" i actualitzeu la pàgina.',
         firefoxContent:
             'Si us plau, feu clic a la caixa "Recordar aquesta decisió", si no voleu que Firefox sigui demanant autorització.',
         allow: "Permetre la webcam",
