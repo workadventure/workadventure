@@ -1,4 +1,4 @@
-import type { SpaceUser, MeetingConnectionRestartMessage } from "@workadventure/messages";
+import { FilterType, type SpaceUser, type MeetingConnectionRestartMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { v4 as uuidv4 } from "uuid";
 import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -104,6 +104,17 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     public deleteUser(user: SpaceUser): void {
         if (!this.usersToNotify.has(user.spaceUserId)) {
             this.shutdownAllConnections(user);
+        } else {
+            // The user left the filter but is still watching the space (e.g. an attendee that lost
+            // their role): shut down the connections their new state no longer allows.
+            for (const peer of this.getOtherKnownUsers(user.spaceUserId)) {
+                if (
+                    this.hasAnyExistingConnection(user.spaceUserId, peer.spaceUserId) &&
+                    !this.canEstablishConnection(user, peer)
+                ) {
+                    this.shutdownConnection(user.spaceUserId, peer.spaceUserId);
+                }
+            }
         }
 
         for (const userToNotify of this.usersToNotify.values()) {
@@ -158,8 +169,25 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public updateUser(user: SpaceUser): void {
-        // TODO: remove the handleUserMediaUpdate function after testing
-        //this.handleUserMediaUpdate(user);
+        // The connection topology only depends on a field (role) in the feedback filter. Everywhere
+        // else it is driven solely by add/delete, so an update never has to touch it.
+        if (this._space.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            return;
+        }
+        for (const peer of this.getOtherKnownUsers(user.spaceUserId)) {
+            const hasExistingConnection = this.hasAnyExistingConnection(user.spaceUserId, peer.spaceUserId);
+            if (hasExistingConnection && !this.canEstablishConnection(user, peer)) {
+                this.shutdownConnection(user.spaceUserId, peer.spaceUserId);
+                continue;
+            }
+            if (
+                !hasExistingConnection &&
+                this.isPairInConnectionMatrix(user.spaceUserId, peer.spaceUserId) &&
+                this.canEstablishConnection(user, peer)
+            ) {
+                this.establishConnection(user, peer);
+            }
+        }
     }
     private shutdownConnection(user: string, otherUser: string): void {
         try {
@@ -187,9 +215,40 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
-        const hasExisting = this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId);
+        const hasExisting = this.hasAnyExistingConnection(user1.spaceUserId, user2.spaceUserId);
         // Only establish if we need media connection AND don't already have one
-        return !hasExisting;
+        return !hasExisting && this.canEstablishConnection(user1, user2);
+    }
+
+    private canEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
+        if (this._space.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            return true;
+        }
+
+        // The user objects we hold (especially in usersToNotify) can be stale copies: read the roles
+        // from the canonical, up-to-date objects.
+        const freshUser1 = this.getFreshUser(user1);
+        const freshUser2 = this.getFreshUser(user2);
+
+        // P2P is only allowed between feedback participants when one of them is a speaker
+        return (
+            (freshUser1.megaphoneState && this.hasFeedbackStreamingRole(freshUser2)) ||
+            (freshUser2.megaphoneState && this.hasFeedbackStreamingRole(freshUser1))
+        );
+    }
+
+    private hasFeedbackStreamingRole(user: SpaceUser): boolean {
+        return user.megaphoneState || user.attendeesState;
+    }
+
+    /**
+     * Connections are only ever created between a user in the filter and a user watching the space.
+     */
+    private isPairInConnectionMatrix(userId1: string, userId2: string): boolean {
+        return (
+            (this.users.has(userId1) && this.usersToNotify.has(userId2)) ||
+            (this.usersToNotify.has(userId1) && this.users.has(userId2))
+        );
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
@@ -208,6 +267,24 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     private hasExistingConnection(userId1: string, userId2: string): boolean {
         return this._connections.hasConnection(userId1, userId2);
+    }
+
+    private hasAnyExistingConnection(userId1: string, userId2: string): boolean {
+        return this.hasExistingConnection(userId1, userId2) || this.hasExistingConnection(userId2, userId1);
+    }
+
+    private getOtherKnownUsers(userId: string): SpaceUser[] {
+        const knownUsers = new Map<string, SpaceUser>([...this.usersToNotify, ...this.users]);
+        knownUsers.delete(userId);
+        return Array.from(knownUsers.values());
+    }
+
+    private getKnownUser(userId: string): SpaceUser | undefined {
+        return this.users.get(userId) ?? this._space.getUser(userId) ?? this.usersToNotify.get(userId);
+    }
+
+    private getFreshUser(user: SpaceUser): SpaceUser {
+        return this.getKnownUser(user.spaceUserId) ?? user;
     }
 
     private sendWebRTCStart(senderId: string, receiverId: string, isInitiator: boolean, connectionId: string): void {
@@ -248,13 +325,15 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): Promise<void> {
+        this.users = users;
+        this.usersToNotify = usersToNotify;
         users.forEach((user1) => {
             usersToNotify.forEach((user2) => {
                 if (user1.spaceUserId === user2.spaceUserId) {
                     return;
                 }
                 try {
-                    if (!this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId)) {
+                    if (this.shouldEstablishConnection(user1, user2)) {
                         this.establishConnection(user1, user2);
                         return;
                     }
@@ -298,6 +377,15 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             meetingConnectionRestartMessage.connectionId !== undefined &&
             meetingConnectionRestartMessage.connectionId !== existingConnectionId
         ) {
+            return;
+        }
+
+        // The peers may no longer be allowed to talk P2P (e.g. a feedback attendee lost their
+        // role): tear the connection down instead of restarting it.
+        const sender = this.getKnownUser(senderUserId);
+        const receiver = this.getKnownUser(receiverId);
+        if (!sender || !receiver || !this.canEstablishConnection(sender, receiver)) {
+            this.shutdownConnection(senderUserId, receiverId);
             return;
         }
 
