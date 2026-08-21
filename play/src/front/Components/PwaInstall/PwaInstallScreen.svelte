@@ -26,7 +26,7 @@
 
     onMount(() => {
         unsubscribePwa = initPwaInstallUiListeners();
-        analyticsClient.pwaInstallPromptShown(detectIos());
+        analyticsClient.trackAdminEvent("pwa.install_prompt_shown", { isIos: detectIos() });
 
         gameManager.currentStartedRoomPromise
             .then((room) => {
@@ -209,7 +209,7 @@
                         type="button"
                         class="!bg-white/10 !text-lg !text-white hover:!bg-white/20"
                         onclick={() => {
-                            analyticsClient.pwaContinueInBrowserClick();
+                            analyticsClient.trackAdminEvent("pwa.continue_in_browser_clicked");
                             handleContinue();
                         }}
                         dataTestId="pwa-install-skip"

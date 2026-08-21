@@ -544,7 +544,7 @@
             onResize={onResizeHandler}
             onResizeEnd={() => {
                 resizeInProgress = false;
-                analyticsClient.resizeCameraLayout();
+                analyticsClient.trackAdminEvent("meeting.camera_layout_resized");
 
                 // We need to recalculate the layout to take into account the new container width
                 const layout = calculateOptimalLayout(containerWidth, containerHeight);

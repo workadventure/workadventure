@@ -21,7 +21,7 @@ describe("AnalyticsClient admin analytics sink", () => {
         analyticsClient.setAdminAnalyticsSender(sendAdmin);
         window.capabilities = {};
 
-        analyticsClient.openSayBubble();
+        analyticsClient.trackAdminEvent("bubble.say.opened");
 
         expect(sendAdmin).not.toHaveBeenCalled();
     });
@@ -35,7 +35,7 @@ describe("AnalyticsClient admin analytics sink", () => {
         };
         window.posthog = { capture } as never;
 
-        analyticsClient.addMapEditorProperty("area", "openWebsite");
+        analyticsClient.trackAdminEvent("map_editor.property.added", { name: "openWebsite", type: "area" });
 
         expect(capture).toHaveBeenCalledWith("wa_map-editor_add_property", {
             name: "openWebsite",
@@ -84,8 +84,8 @@ describe("AnalyticsClient admin analytics sink", () => {
             "api/analytics/events-batch": "v1",
         };
 
-        analyticsClient.lockDiscussion();
-        analyticsClient.chatMessageSent("room");
+        analyticsClient.trackAdminEvent("bubble.lock.toggled");
+        analyticsClient.trackAdminEvent("chat.message_sent", { chatContext: "room" });
 
         expect(sendAdmin).toHaveBeenCalledWith({
             events: [
@@ -115,8 +115,8 @@ describe("AnalyticsClient admin analytics sink", () => {
             "api/analytics/events-batch": "v1",
         };
 
-        analyticsClient.openSayBubble();
-        analyticsClient.openThinkBubble();
+        analyticsClient.trackAdminEvent("bubble.say.opened");
+        analyticsClient.trackAdminEvent("bubble.think.opened");
 
         expect(sendAdmin).toHaveBeenCalledWith({
             events: [
@@ -488,7 +488,7 @@ describe("AnalyticsClient admin analytics sink", () => {
         window.capabilities = {};
         window.posthog = { capture } as never;
 
-        analyticsClient.openSayBubble();
+        analyticsClient.trackAdminEvent("bubble.say.opened");
 
         // PostHog predates this pipeline and is the only sink on a world whose pusher
         // does not advertise the capability. Folding it behind the gate would switch
@@ -507,7 +507,7 @@ describe("AnalyticsClient admin analytics sink", () => {
 
         // Added with the new pipeline: no postHogKey in the catalog, so reporting it
         // must not invent PostHog volume that never existed.
-        analyticsClient.chatMessageSent("proximity");
+        analyticsClient.trackAdminEvent("chat.message_sent", { chatContext: "proximity" });
 
         expect(capture).not.toHaveBeenCalled();
         expect(sendAdmin).toHaveBeenCalledWith({

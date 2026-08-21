@@ -22,7 +22,7 @@ function createBackgroundConfigStore() {
             update((config) => {
                 const newConfig = { ...config, mode };
                 localUserStore.setBackgroundMode(mode);
-                analyticsClient.settingBackground(mode);
+                analyticsClient.trackAdminEvent("settings.background.changed", { backgroundType: mode });
                 return newConfig;
             });
         },

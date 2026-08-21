@@ -341,7 +341,7 @@ export class MapEditorModeManager {
                     // commands themselves send fire-and-forget, so this is where the
                     // failure analytics belongs — reporting it next to the send would
                     // have counted every rejected edit as a success.
-                    analyticsClient.mapEditorSaveFailed(reason);
+                    analyticsClient.trackAdminEvent("map_editor.save.failed", { reason });
                     const command = this.pendingCommands.find(
                         (command) => command.commandId === editMapCommandMessage.id,
                     );

@@ -411,7 +411,7 @@
 
     function onAddProperty(type: AreaDataPropertiesKeys, subtype?: string) {
         if ($mapEditorSelectedAreaPreviewStore) {
-            analyticsClient.addMapEditorProperty("area", type || "unknown");
+            analyticsClient.trackAdminEvent("map_editor.property.added", { name: type || "unknown", type: "area" });
             const property = getPropertyFromType(type, subtype);
             $mapEditorSelectedAreaPreviewStore.addProperty(property);
 
@@ -428,7 +428,7 @@
 
     function onAddSpecificProperty(app: ApplicationDefinitionInterface) {
         if (!$mapEditorSelectedAreaPreviewStore) return;
-        analyticsClient.addMapEditorProperty("entity", app.name);
+        analyticsClient.trackAdminEvent("map_editor.property.added", { name: app.name, type: "entity" });
         const property: OpenWebsitePropertyData = {
             id: uuid(),
             type: "openWebsite",
@@ -456,10 +456,10 @@
 
     function onDeleteProperty(id: string, removeAreaEntities?: boolean) {
         if ($mapEditorSelectedAreaPreviewStore) {
-            analyticsClient.removeMapEditorProperty(
-                "area",
-                properties.find((property) => property.id === id)?.type || "unknown",
-            );
+            analyticsClient.trackAdminEvent("map_editor.property.removed", {
+                name: properties.find((property) => property.id === id)?.type || "unknown",
+                type: "area",
+            });
             $mapEditorSelectedAreaPreviewStore.deleteProperty(id, removeAreaEntities);
             // refresh properties
             properties = $mapEditorSelectedAreaPreviewStore.getProperties();

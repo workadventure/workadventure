@@ -163,7 +163,7 @@
 
     function changeFullscreen() {
         // Analytics Client
-        analyticsClient.settingFullscreen(fullscreen ? "true" : "false");
+        analyticsClient.trackAdminEvent("settings.fullscreen.changed", { value: fullscreen ? "true" : "false" });
 
         const body = HtmlUtils.querySelectorOrFail("body");
         if (body) {
@@ -178,7 +178,7 @@
 
     function changeNotification() {
         // Analytics Client
-        analyticsClient.settingNotification(notification ? "true" : "false");
+        analyticsClient.trackAdminEvent("settings.notification.changed", { value: notification ? "true" : "false" });
 
         if (Notification.permission === "granted") {
             localUserStore.setNotification(notification);
@@ -200,7 +200,9 @@
 
     function changePictureInPicture() {
         // Analytics Client
-        analyticsClient.settingPictureInPicture(allowPictureInPicture ? "true" : "false");
+        analyticsClient.trackAdminEvent("settings.picture_in_picture.changed", {
+            value: allowPictureInPicture ? "true" : "false",
+        });
 
         localUserStore.setAllowPictureInPicture(allowPictureInPicture);
     }
@@ -215,21 +217,27 @@
 
     function changeForceCowebsiteTrigger() {
         // Analytics Client
-        analyticsClient.settingAskWebsite(forceCowebsiteTrigger ? "true" : "false");
+        analyticsClient.trackAdminEvent("settings.ask_website.changed", {
+            value: forceCowebsiteTrigger ? "true" : "false",
+        });
 
         localUserStore.setForceCowebsiteTrigger(forceCowebsiteTrigger);
     }
 
     function changeIgnoreFollowRequests() {
         // Analytics Client
-        analyticsClient.settingRequestFollow(ignoreFollowRequests ? "true" : "false");
+        analyticsClient.trackAdminEvent("settings.request_follow.changed", {
+            value: ignoreFollowRequests ? "true" : "false",
+        });
 
         localUserStore.setIgnoreFollowRequests(ignoreFollowRequests);
     }
 
     function changeDecreaseAudioPlayerVolumeWhileTalking() {
         // Analytics Client
-        analyticsClient.settingDecreaseAudioVolume(decreaseAudioPlayerVolumeWhileTalking ? "true" : "false");
+        analyticsClient.trackAdminEvent("settings.decrease_audio_volume.changed", {
+            value: decreaseAudioPlayerVolumeWhileTalking ? "true" : "false",
+        });
 
         localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
     }
@@ -241,7 +249,9 @@
 
     function changeCameraPrivacySettings() {
         // Analytics Client
-        analyticsClient.settingMicrophone(valueCameraPrivacySettings ? "true" : "false");
+        analyticsClient.trackAdminEvent("settings.microphone.changed", {
+            value: valueCameraPrivacySettings ? "true" : "false",
+        });
 
         if (valueCameraPrivacySettings !== previewCameraPrivacySettings) {
             previewCameraPrivacySettings = valueCameraPrivacySettings;
@@ -251,7 +261,9 @@
 
     function changeMicrophonePrivacySettings() {
         // Analytics Client
-        analyticsClient.settingCamera(valueMicrophonePrivacySettings ? "true" : "false");
+        analyticsClient.trackAdminEvent("settings.camera.changed", {
+            value: valueMicrophonePrivacySettings ? "true" : "false",
+        });
 
         if (valueMicrophonePrivacySettings !== previewMicrophonePrivacySettings) {
             previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
@@ -260,7 +272,7 @@
     }
 
     function updateVolumeProximityDiscussion() {
-        analyticsClient.settingAudioVolume();
+        analyticsClient.trackAdminEvent("settings.audio_volume.opened");
         localUserStore.setVolumeProximityDiscussion(volumeProximityDiscussion);
         volumeProximityDiscussionStore.set(volumeProximityDiscussion);
     }

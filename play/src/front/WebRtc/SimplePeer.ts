@@ -286,7 +286,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     this.clearRetryState(user.userId);
                 });
 
-                this._analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
+                this._analyticsClient.trackAdminEvent("conversation.participant_added");
 
                 resolve(peer);
             })().catch((e) => {

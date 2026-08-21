@@ -50,7 +50,11 @@
                     <p class="text-gray-400 w-full text-center pt-2">
                         {$LL.chat.requiresLoginForChat()}
                     </p>
-                    <Button class="light flex items-center w-1/2" href="/login" onclick={() => analyticsClient.login()}>
+                    <Button
+                        class="light flex items-center w-1/2"
+                        href="/login"
+                        onclick={() => analyticsClient.trackAdminEvent("auth.login_clicked")}
+                    >
                         {$LL.menu.profile.login()}</Button
                     >
                 </div>

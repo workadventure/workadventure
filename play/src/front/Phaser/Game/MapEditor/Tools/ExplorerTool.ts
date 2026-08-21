@@ -170,7 +170,7 @@ export class ExplorerTool implements MapEditorTool {
         this.activated = false;
 
         // Put analytics for exploration mode
-        analyticsClient.closeExplorationMode();
+        analyticsClient.trackAdminEvent("map_explorer.closed");
 
         // Restore controls of the scene
         this.scene.userInputManager.restoreControls("explorerTool");
@@ -240,7 +240,7 @@ export class ExplorerTool implements MapEditorTool {
         this.activated = true;
 
         // Put analytics for exploration mode
-        analyticsClient.openExplorationMode();
+        analyticsClient.trackAdminEvent("map_explorer.opened");
 
         // Active store of map exploration mode
         mapExplorationModeStore.set(true);

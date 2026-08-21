@@ -672,9 +672,9 @@ function classifyMediaAccessError(error: unknown): MediaAccessIssue | null {
 
 function trackMediaAccessIssue(kind: MediaDeviceAnalyticsKind, issue: MediaAccessIssue | null): void {
     if (issue === "permission_denied") {
-        analyticsClient.mediaPermissionDenied(kind, issue);
+        analyticsClient.trackAdminEvent("media.permission_denied", { kind, reason: issue });
     } else if (issue === "no_device") {
-        analyticsClient.mediaDeviceError(kind, issue);
+        analyticsClient.trackAdminEvent("media.device_error", { kind, reason: issue });
     }
 }
 
@@ -699,7 +699,10 @@ async function runRawStreamUpdate(
     generation: number,
 ): Promise<{ video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints }> {
     if (navigator.mediaDevices === undefined) {
-        analyticsClient.mediaDeviceError("camera_microphone", "media_devices_unavailable");
+        analyticsClient.trackAdminEvent("media.device_error", {
+            kind: "camera_microphone",
+            reason: "media_devices_unavailable",
+        });
         if (window.location.protocol === "http:") {
             setIfCurrent({
                 type: "error",
@@ -840,7 +843,10 @@ async function runRawStreamUpdate(
             hideHelpCameraSettings();
         } catch (e) {
             if (isOverConstrainedError(e) && e.constraint === "deviceId") {
-                analyticsClient.mediaDeviceError("camera_microphone", "device_constraint");
+                analyticsClient.trackAdminEvent("media.device_error", {
+                    kind: "camera_microphone",
+                    reason: "device_constraint",
+                });
                 console.info(
                     "Could not access the requested microphone or webcam. Falling back to default microphone and webcam",
                     newConstraints,

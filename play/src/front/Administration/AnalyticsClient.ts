@@ -10,7 +10,6 @@ import type {
 // same table used to live on the catalog entries, which pulled ~166 live Zod
 // schemas into the browser to look one up.
 import { POSTHOG_EVENT_KEYS } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
-import type { Emoji } from "../Stores/Utils/emojiSchema";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { hasCapability } from "../Connection/Capabilities";
 import type { TimedAnalyticsEventHandle } from "./TimedAnalyticsEvent";
@@ -100,10 +99,6 @@ class AnalyticsClient {
         return window.posthog;
     }
 
-    public get posthogInstance(): PostHog | undefined {
-        return window.posthog;
-    }
-
     public get isEnabled(): boolean {
         return this.isEnabled_;
     }
@@ -132,22 +127,24 @@ class AnalyticsClient {
     /**
      * The single choke point every analytics event goes through — both sinks.
      *
-     * Generic over the event name so the catalog checks both halves of the call:
-     * an unknown name and a property the event does not declare are both compile
-     * errors here, rather than an event the admin silently drops months later.
+     * Called straight from the code that does the thing. There used to be a method
+     * here per event — 133 of them, each a name and a signature wrapping this one
+     * line — so reading what a button reported meant opening this file and finding
+     * `menuCredit()` to learn it sends `menu.credit.opened`. The event name at the
+     * point of use says that without the hop, and 133 names stopped being invented.
+     *
+     * Generic over the event name so the catalog checks both halves of the call: an
+     * unknown name and a property the event does not declare are both compile errors
+     * at the call site, rather than an event the admin silently drops months later.
      * The properties argument is optional for the bare signals, which declare none.
      *
      * PostHog is fed from the same call, by looking the event up in
-     * POSTHOG_EVENT_KEYS. Every method below used to name its event twice — once per
-     * sink — which is 123 opportunities for the two names to drift; that map is now
-     * the only place a PostHog name is written down.
-     *
-     * Except for the six events two UI paths reach under two PostHog names, which a
-     * map keyed by event cannot express. Those are absent from POSTHOG_EVENT_KEYS and
-     * capture PostHog themselves, on the line above their call to this — one line per
-     * sink, where the two names are read together.
+     * POSTHOG_EVENT_KEYS — the only place a PostHog name is written down, bar the
+     * methods left below. Those reach two PostHog names for one event, which a map
+     * keyed by event cannot express, so they capture on their own line; keeping them
+     * here is what keeps `posthog.capture("wa_…")` out of the call sites.
      */
-    private trackAdminEvent<N extends AnalyticsEventName>(eventName: N, ...args: AnalyticsEventArgs<N>): void {
+    public trackAdminEvent<N extends AnalyticsEventName>(eventName: N, ...args: AnalyticsEventArgs<N>): void {
         const [properties = {}] = args;
 
         // Ahead of the capability gate, and deliberately: PostHog is the sink that
@@ -228,36 +225,12 @@ class AnalyticsClient {
         this.trackAdminEvent("auth.user_identified", { roomId });
     }
 
-    loggedWithSso(): void {
-        this.trackAdminEvent("auth.logged_sso");
-    }
-
-    loggedWithToken(): void {
-        this.trackAdminEvent("auth.logged_token");
-    }
-
     enteredRoom(roomId: string, roomGroup: string | null): void {
         this.trackAdminEvent("room.visited", { roomId, roomGroup });
         if (this.previousRoomId && this.previousRoomId !== roomId) {
             this.trackAdminEvent("room.changed", { fromRoomId: this.previousRoomId, toRoomId: roomId });
         }
         this.previousRoomId = roomId;
-    }
-
-    openedMenu(): void {
-        this.trackAdminEvent("menu.opened");
-    }
-
-    launchEmote(emote: Emoji): void {
-        this.trackAdminEvent("emote.launched", { name: emote.name });
-    }
-
-    editEmote(): void {
-        this.trackAdminEvent("emote.edit_opened");
-    }
-
-    clickOnCustomButton(id: string, label?: string, toolTip?: string, imageSrc?: string) {
-        this.trackAdminEvent("custom_button.clicked", { id, label });
     }
 
     enteredJitsi(roomName: string, roomId: string): void {
@@ -268,51 +241,6 @@ class AnalyticsClient {
     enteredMeetingRoom(roomName: string, roomId: string): void {
         this.posthog?.capture("wa-entered-meeting-room", { roomId });
         this.trackAdminEvent("meeting.area_entered", { roomId });
-    }
-
-    validationName(): void {
-        this.trackAdminEvent("onboarding.name_validated");
-    }
-
-    validationWoka(scene: string): void {
-        this.trackAdminEvent("onboarding.woka_validated", { scene });
-    }
-
-    validationVideo(): void {
-        this.trackAdminEvent("onboarding.video_validated");
-    }
-
-    /** New feature analytics **/
-    openedChat(): void {
-        this.trackAdminEvent("chat.opened");
-    }
-
-    chatMessageSent(chatContext?: "proximity" | "room"): void {
-        this.trackAdminEvent("chat.message_sent", { chatContext });
-    }
-
-    openInvite(): void {
-        this.trackAdminEvent("invite.opened");
-    }
-
-    inviteSent(inviteType?: string): void {
-        this.trackAdminEvent("invite.sent", { inviteType });
-    }
-
-    inviteAccepted(inviteType?: string): void {
-        this.trackAdminEvent("invite.accepted", { inviteType });
-    }
-
-    lockDiscussion(): void {
-        this.trackAdminEvent("bubble.lock.toggled");
-    }
-
-    lockArea(areaId: string, areaName: string | undefined, locked: boolean): void {
-        this.trackAdminEvent("map_editor.area.lock.toggled", { areaId, areaName, locked });
-    }
-
-    screenSharing(): void {
-        this.trackAdminEvent("meeting.screenshare.toggled");
     }
 
     screenSharingStarted(hasAudio: boolean): void {
@@ -337,18 +265,6 @@ class AnalyticsClient {
         this.openScreenShare = undefined;
     }
 
-    follow(): void {
-        this.trackAdminEvent("user.follow_requested");
-    }
-
-    camera(): void {
-        this.trackAdminEvent("media.camera.toggled");
-    }
-
-    microphone(): void {
-        this.trackAdminEvent("media.microphone.toggled");
-    }
-
     retryConnectionWebRtc(): void {
         this.posthog?.capture("wa_retry_connection_webrtc", { meetingProvider: "webrtc" });
         this.trackAdminEvent("media.connection_retry", { meetingProvider: "webrtc" });
@@ -357,66 +273,6 @@ class AnalyticsClient {
     retryConnectionLivekit(): void {
         this.posthog?.capture("wa_retry_connection_livekit", { meetingProvider: "livekit" });
         this.trackAdminEvent("media.connection_retry", { meetingProvider: "livekit" });
-    }
-
-    openBackgroundSettings(): void {
-        this.trackAdminEvent("settings.background.opened");
-    }
-
-    selectCamera(): void {
-        this.trackAdminEvent("settings.camera.selected");
-    }
-
-    selectMicrophone(): void {
-        this.trackAdminEvent("settings.microphone.selected");
-    }
-
-    selectSpeaker(): void {
-        this.trackAdminEvent("settings.speaker.selected");
-    }
-
-    settingMicrophone(value: string): void {
-        this.trackAdminEvent("settings.microphone.changed", { value });
-    }
-
-    settingBackground(background: string): void {
-        this.trackAdminEvent("settings.background.changed", { backgroundType: background });
-    }
-
-    settingCamera(value: string): void {
-        this.trackAdminEvent("settings.camera.changed", { value });
-    }
-
-    settingNotification(value: string): void {
-        this.trackAdminEvent("settings.notification.changed", { value });
-    }
-
-    settingPictureInPicture(value: string): void {
-        this.trackAdminEvent("settings.picture_in_picture.changed", { value });
-    }
-
-    settingFullscreen(value: string): void {
-        this.trackAdminEvent("settings.fullscreen.changed", { value });
-    }
-
-    settingAskWebsite(value: string): void {
-        this.trackAdminEvent("settings.ask_website.changed", { value });
-    }
-
-    settingRequestFollow(value: string): void {
-        this.trackAdminEvent("settings.request_follow.changed", { value });
-    }
-
-    settingDecreaseAudioVolume(value: string): void {
-        this.trackAdminEvent("settings.decrease_audio_volume.changed", { value });
-    }
-
-    login(): void {
-        this.trackAdminEvent("auth.login_clicked");
-    }
-
-    logout(): void {
-        this.trackAdminEvent("auth.logout_clicked");
     }
 
     /**
@@ -468,29 +324,9 @@ class AnalyticsClient {
         this.trackAdminEvent("scripting.website_opened", { url: this.stripUrlToOrigin(url) });
     }
 
-    menuCredit(): void {
-        this.trackAdminEvent("menu.credit.opened");
-    }
-
     menuProfile(): void {
         this.posthog?.capture("wa_menu_profile");
         this.trackAdminEvent("profile.opened");
-    }
-
-    menuSetting() {
-        this.trackAdminEvent("settings.opened");
-    }
-
-    menuChat(): void {
-        this.trackAdminEvent("menu.chat.opened");
-    }
-
-    menuCustom(name: string): void {
-        this.trackAdminEvent("menu.custom.opened", { name });
-    }
-
-    menuShortcuts(): void {
-        this.trackAdminEvent("menu.shortcuts.opened");
     }
 
     globalMessage(): void {
@@ -498,86 +334,14 @@ class AnalyticsClient {
         this.trackAdminEvent("global_message.opened");
     }
 
-    sendGlocalTextMessage(): void {
-        this.trackAdminEvent("global_message.text_sent");
-    }
-
-    sendGlobalSoundMessage(): void {
-        this.trackAdminEvent("global_message.sound_sent");
-    }
-
     reportIssue(): void {
         this.posthog?.capture("wa_menu_report", { feedbackSource: "external_report_url" });
         this.trackAdminEvent("feedback.opened", { feedbackSource: "external_report_url" });
     }
 
-    feedbackOpened(feedbackSource: "sentry" | "external_report_url" = "sentry"): void {
-        this.trackAdminEvent("feedback.opened", { feedbackSource });
-    }
-
-    feedbackSubmitted(feedbackSource: "sentry" | "external_report_url" = "sentry", hasScreenshot?: boolean): void {
-        this.trackAdminEvent("feedback.submitted", { feedbackSource, hasScreenshot });
-    }
-
-    menuContact(): void {
-        this.trackAdminEvent("menu.contact.opened");
-    }
-
     inviteCopyLink(): void {
         this.posthog?.capture("wa_menu_invite_copylink", { inviteType: "copy_link" });
         this.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
-    }
-
-    inviteCopyLinkWalk(value: boolean): void {
-        this.trackAdminEvent("invite.walk_link_option_changed", { value });
-    }
-
-    editCompanion(): void {
-        this.trackAdminEvent("profile.companion_edit_opened");
-    }
-
-    editCamera(): void {
-        this.trackAdminEvent("profile.camera_edit_opened");
-    }
-
-    editName(): void {
-        this.trackAdminEvent("profile.name_edit_opened");
-    }
-
-    editWoka(): void {
-        this.trackAdminEvent("profile.woka_edit_opened");
-    }
-
-    goToPersonalDesk(): void {
-        this.trackAdminEvent("personal_desk.entered");
-    }
-
-    unclaimPersonalDesk(): void {
-        this.trackAdminEvent("personal_desk.unclaimed");
-    }
-
-    selectWoka(): void {
-        this.trackAdminEvent("onboarding.woka_selected");
-    }
-
-    selectCompanion(): void {
-        this.trackAdminEvent("onboarding.companion_selected");
-    }
-
-    selectCustomWoka(): void {
-        this.trackAdminEvent("onboarding.custom_woka_selected");
-    }
-
-    layoutPresentChange(): void {
-        this.trackAdminEvent("meeting.layout_changed", { layout: "presentation" });
-    }
-
-    addNewParticipant(peerId: string, userId: string, uuid: string): void {
-        this.trackAdminEvent("conversation.participant_added");
-    }
-
-    openMegaphone(): void {
-        this.trackAdminEvent("megaphone.opened");
     }
 
     // The two ends of one interval, opened and closed where the broadcast is started
@@ -608,32 +372,6 @@ class AnalyticsClient {
         }
 
         this.openMegaphoneBroadcast = openTimedAnalyticsEvent("megaphone.ended", {}, this.sendTimedEventReport);
-    }
-
-    toggleMapEditor(open: boolean): void {
-        this.trackAdminEvent(open ? "map_editor.opened" : "map_editor.closed");
-    }
-
-    addMapEditorProperty(type: string, propertyName: string): void {
-        // 8 decembre 2023: this event is not used anymore
-        // this.posthog?.capture(`wa_map-editor_${type}_add_${propertyName}_property`);
-        this.trackAdminEvent("map_editor.property.added", { name: propertyName, type });
-    }
-
-    removeMapEditorProperty(type: string, propertyName: string): void {
-        // 8 decembre 2023: this event is not used anymore
-        // this.posthog?.capture(`wa_map-editor_${type}_remove_${propertyName}_property`);
-        this.trackAdminEvent("map_editor.property.removed", { name: propertyName, type });
-    }
-
-    openMapEditorTool(toolName: string): void {
-        // 8 decembre 2023: this event is not used anymore
-        // this.posthog?.capture(`wa_map-editor_open_${toolName}`);
-        this.trackAdminEvent("map_editor.tool.opened", { name: toolName });
-    }
-
-    clickPropertyMapEditor(name: string, style?: string): void {
-        this.trackAdminEvent("map_editor.property.clicked", { name, style });
     }
 
     // enterArea/leaveArea keep their own posthog.capture for the same reason megaphone
@@ -686,163 +424,21 @@ class AnalyticsClient {
         this.leaveArea(id, name);
     }
 
-    turnTestSuccess(protocol: string | null): void {
-        this.trackAdminEvent("media.turn_test.succeeded", { protocol });
-    }
-
-    turnTestFailure(): void {
-        this.trackAdminEvent("media.turn_test.failed");
-    }
-    turnTestTimeout(): void {
-        this.trackAdminEvent("media.turn_test.timeout");
-    }
-
-    noVideoStreamReceived(): void {
-        this.trackAdminEvent("media.video_stream_missing");
-    }
-
-    moreActionMetting(): void {
-        this.trackAdminEvent("meeting.actions.opened");
-    }
-
-    pinMeetingAction(): void {
-        this.trackAdminEvent("meeting.participant.pinned");
-    }
-
-    muteMicrophoneMeetingAction(): void {
-        this.trackAdminEvent("meeting.microphone.muted");
-    }
-
-    muteMicrophoneEverybodyMeetingAction(): void {
-        this.trackAdminEvent("meeting.microphone.muted_for_everybody");
-    }
-
-    muteVideoMeetingAction(): void {
-        this.trackAdminEvent("meeting.video.muted");
-    }
-    muteVideoEverybodyMeetingAction(): void {
-        this.trackAdminEvent("meeting.video.muted_for_everybody");
-    }
-
-    kickoffMeetingAction(): void {
-        this.trackAdminEvent("meeting.participant.kicked");
-    }
-
-    sendPrivateMessageMeetingAction(): void {
-        this.trackAdminEvent("meeting.private_message.clicked");
-    }
-
-    reportMeetingAction(): void {
-        this.trackAdminEvent("meeting.report.clicked");
-    }
-
-    openExplorationMode(): void {
-        this.trackAdminEvent("map_explorer.opened");
-    }
-
-    closeExplorationMode(): void {
-        this.trackAdminEvent("map_explorer.closed");
-    }
-
-    openedRoomList(): void {
-        this.trackAdminEvent("room_list.opened");
-    }
-
-    clickedRoomListRoom(roomId?: string): void {
-        this.trackAdminEvent("room_list.room_clicked", { roomId });
-    }
-
-    openedPopup(targetRectangle: string, id: number): void {
-        this.trackAdminEvent("popup.opened", { targetRectangle, id });
-    }
-
     openGlobalMessage(): void {
         this.posthog?.capture("wa_action_globalmessage");
         this.trackAdminEvent("global_message.opened");
     }
 
-    openGlobalAudio(): void {
-        this.trackAdminEvent("global_audio.opened");
-    }
-
-    openExternalModuleCalendar(): void {
-        this.trackAdminEvent("external_module.calendar_opened");
-    }
-
-    openExternalModuleTodoList(): void {
-        this.trackAdminEvent("external_module.todo_list_opened");
-    }
-
-    openExternalModule(): void {
-        this.trackAdminEvent("external_module.opened");
-    }
-
-    settingAudioVolume(): void {
-        this.trackAdminEvent("settings.audio_volume.opened");
-    }
-
-    openPicker(applicationName: string): void {
-        this.trackAdminEvent("map_editor.application_picker.opened", { applicationName });
-    }
-
-    openApplicationWithoutPicker(applicationName: string): void {
-        this.trackAdminEvent("map_editor.application.opened", { applicationName });
-    }
-
-    openCowebsiteInNewTab(): void {
-        this.trackAdminEvent("cowebsite.opened_in_new_tab");
-    }
-    copyCowebsiteLink(): void {
-        this.trackAdminEvent("cowebsite.link_copied");
-    }
     // PostHog only. `cowebsite.closed` is now the end of an interval the store opens
     // and closes, so reporting it from the close BUTTON would both duplicate it and
     // miss the fifteen other ways a cowebsite goes away.
     closeCowebsite(): void {
         this.posthog?.capture("wa_close_cowebsite");
     }
-    fullScreenCowebsite(): void {
-        this.trackAdminEvent("cowebsite.fullscreen_opened");
-    }
-    switchCowebsite(): void {
-        this.trackAdminEvent("cowebsite.switched");
-    }
     openProfileMenu(): void {
         this.posthog?.capture("wa_open_profile_menu");
         this.trackAdminEvent("profile.opened");
     }
-    filterInMapExplorer(): void {
-        this.trackAdminEvent("map_explorer.filtered");
-    }
-    resizeCameraLayout(): void {
-        this.trackAdminEvent("meeting.camera_layout_resized");
-    }
-    openUserList(): void {
-        this.trackAdminEvent("user_list.opened");
-    }
-    openMessageList(): void {
-        this.trackAdminEvent("chat.message_list_opened");
-    }
-
-    sendMessageFromUserList(): void {
-        this.trackAdminEvent("chat.message_from_user_list_clicked");
-    }
-    createMatrixRoom(): void {
-        this.trackAdminEvent("chat.matrix_room.created");
-    }
-    createMatrixFolder(): void {
-        this.trackAdminEvent("chat.matrix_folder.created");
-    }
-    startMatrixEncryptionConfiguration(): void {
-        this.trackAdminEvent("chat.matrix_encryption_configuration.started");
-    }
-    externalModuleChatBandClick(externalModuleName: string, action: string): void {
-        this.trackAdminEvent("external_module.chat_band.clicked", { externalModuleName, action });
-    }
-    dragDropFile() {
-        this.trackAdminEvent("file.drag_dropped");
-    }
-
     /**
      * Opens a meeting and hands back the only way to close it.
      *
@@ -861,42 +457,6 @@ class AnalyticsClient {
         return openTimedAnalyticsEvent("meeting.ended", properties, this.sendTimedEventReport);
     }
 
-    sessionStarted(roomId?: string): void {
-        this.trackAdminEvent("session.started", { roomId, schemaVersion: 1 });
-    }
-
-    sessionEnded(roomId?: string): void {
-        this.trackAdminEvent("session.ended", { roomId, schemaVersion: 1 });
-    }
-
-    mapEditorSaveFailed(reason?: string): void {
-        this.trackAdminEvent("map_editor.save.failed", { reason });
-    }
-
-    mapEditorEntityAdded(entityType?: string): void {
-        this.trackAdminEvent("map_editor.entity.added", { entityType });
-    }
-
-    mapEditorEntityRemoved(entityType?: string): void {
-        this.trackAdminEvent("map_editor.entity.removed", { entityType });
-    }
-
-    mapEditorEntityUpdated(entityType?: string): void {
-        this.trackAdminEvent("map_editor.entity.updated", { entityType });
-    }
-
-    mapEditorAreaCreated(areaType?: string): void {
-        this.trackAdminEvent("map_editor.area.created", { areaType });
-    }
-
-    mapEditorAreaUpdated(areaType?: string): void {
-        this.trackAdminEvent("map_editor.area.updated", { areaType });
-    }
-
-    mapEditorAreaRemoved(areaType?: string): void {
-        this.trackAdminEvent("map_editor.area.removed", { areaType });
-    }
-
     mapLoadingStarted(mapUrl?: string): void {
         // Strip query string / fragment so map/WAM/room URLs carrying access
         // tokens are not shipped as analytics, mirroring the cowebsite URL handling.
@@ -905,36 +465,42 @@ class AnalyticsClient {
         });
     }
 
-    mapLoadingSucceeded(durationMs?: number): void {
-        this.trackAdminEvent("map_loading.succeeded", { durationMs });
+    /**
+     * The eight nobody calls.
+     *
+     * Every other single-statement method here went into its call site. These have no
+     * call site to go into: no caller in this repo, and none in the SaaS one either.
+     *
+     * They are kept because the catalog entry is the contract rather than the caller.
+     * `media.quality_issue`, `performance.issue` and `front.critical_error` are read by
+     * the SaaS dashboards, which have shown zero from the day they were written because
+     * nothing on this side has ever emitted them. `feedback.opened` and
+     * `feedback.submitted` describe the Sentry feedback dialog, of which only the
+     * external-report-URL path is wired. The last three are UI that lost its button.
+     *
+     * Note what keeps them upright: the catalog test scrapes the emitters for literals,
+     * and this file is one of them — so an event named here reads as emitted whether or
+     * not anything calls it. That is exactly why these eight were invisible until the
+     * rest moved out, and why a ninth added here would be invisible too.
+     */
+    editEmote(): void {
+        this.trackAdminEvent("emote.edit_opened");
     }
 
-    mapLoadingFailed(reason?: string, durationMs?: number): void {
-        this.trackAdminEvent("map_loading.failed", { reason, durationMs });
+    openBackgroundSettings(): void {
+        this.trackAdminEvent("settings.background.opened");
     }
 
-    worldEntered(durationMs?: number): void {
-        this.trackAdminEvent("world.entered", { durationMs });
+    feedbackOpened(feedbackSource: "sentry" | "external_report_url" = "sentry"): void {
+        this.trackAdminEvent("feedback.opened", { feedbackSource });
     }
 
-    tileOrAssetError(kind: "tile" | "asset", reason?: string): void {
-        this.trackAdminEvent("asset.error", { kind, reason });
+    feedbackSubmitted(feedbackSource: "sentry" | "external_report_url" = "sentry", hasScreenshot?: boolean): void {
+        this.trackAdminEvent("feedback.submitted", { feedbackSource, hasScreenshot });
     }
 
-    websocketReconnecting(): void {
-        this.trackAdminEvent("websocket.reconnecting");
-    }
-
-    websocketConnectionLost(reason?: string): void {
-        this.trackAdminEvent("websocket.connection_lost", { reason });
-    }
-
-    mediaPermissionDenied(kind: "camera" | "microphone" | "camera_microphone", reason?: string): void {
-        this.trackAdminEvent("media.permission_denied", { kind, reason });
-    }
-
-    mediaDeviceError(kind: "camera" | "microphone" | "camera_microphone", reason?: string): void {
-        this.trackAdminEvent("media.device_error", { kind, reason });
+    selectCustomWoka(): void {
+        this.trackAdminEvent("onboarding.custom_woka_selected");
     }
 
     mediaQualityIssue(properties: ExperienceIssueProperties = {}): void {
@@ -1107,71 +673,6 @@ class AnalyticsClient {
             console.debug("Unable to classify cowebsite URL", error);
             return false;
         }
-    }
-    openSayBubble(): void {
-        this.trackAdminEvent("bubble.say.opened");
-    }
-    openThinkBubble(): void {
-        this.trackAdminEvent("bubble.think.opened");
-    }
-    clickTopOpenMapExplorer(): void {
-        this.trackAdminEvent("map_explorer.top_button_clicked");
-    }
-    clickCenterToUser(): void {
-        this.trackAdminEvent("map_explorer.center_to_user_clicked");
-    }
-    clickToZoomIn(): void {
-        this.trackAdminEvent("map_explorer.zoom_in_clicked");
-    }
-    clickToZoomOut(): void {
-        this.trackAdminEvent("map_explorer.zoom_out_clicked");
-    }
-    clickPictureInPicture(open: boolean): void {
-        this.trackAdminEvent("meeting.picture_in_picture.toggled", { open });
-    }
-    goToUser(): void {
-        this.trackAdminEvent("user.go_to_clicked");
-    }
-    showBusinessCard(): void {
-        this.trackAdminEvent("user.business_card.opened");
-    }
-    reportUser(): void {
-        this.trackAdminEvent("user.report.clicked");
-    }
-    openWokaMenu(): void {
-        this.trackAdminEvent("user.woka_menu.opened");
-    }
-
-    recordingStart(): void {
-        this.trackAdminEvent("recording.started");
-    }
-
-    recordingStop(): void {
-        this.trackAdminEvent("recording.stopped");
-    }
-
-    openedRecordingList(): void {
-        this.trackAdminEvent("recording.list_opened");
-    }
-
-    /** Web app install prompt analytics */
-    pwaInstallPromptShown(isIos: boolean): void {
-        this.trackAdminEvent("pwa.install_prompt_shown", { isIos });
-    }
-
-    pwaInstallClick(): void {
-        this.trackAdminEvent("pwa.install_clicked");
-    }
-
-    pwaContinueInBrowserClick(): void {
-        this.trackAdminEvent("pwa.continue_in_browser_clicked");
-    }
-
-    pwaInstallOutcome(outcome: "accepted" | "dismissed"): void {
-        this.trackAdminEvent("pwa.install_outcome", { outcome });
-    }
-    pwaInstallFromProfileMenuClick(): void {
-        this.trackAdminEvent("pwa.install_from_profile_menu_clicked");
     }
     // PostHog only: the pusher owns socket lifecycle in the new pipeline (user.connected
     // / user.disconnected), so there is no front-side event for these to report.

@@ -74,7 +74,7 @@
         // opening too, which is why menu_opened_chat has always run at roughly twice
         // the real figure.
         if ($chatVisibilityStore) {
-            analyticsClient.openedChat();
+            analyticsClient.trackAdminEvent("chat.opened");
         }
     }}
     classList="group/btn-message-circle rounded-r-lg pe-2 {last ? '' : '@sm/actions:rounded-r-none @sm/actions:pe-0'}"

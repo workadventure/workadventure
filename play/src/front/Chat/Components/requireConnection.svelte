@@ -32,7 +32,7 @@
         <a
             class="flex justify-center rounded-lg h-10 bg-secondary hover:bg-secondary-800 hover:no-underline hover:text-white no-underline transition-all items-center my-4 text-base px-8 text-white"
             href="/login"
-            onclick={() => analyticsClient.login()}
+            onclick={() => analyticsClient.trackAdminEvent("auth.login_clicked")}
         >
             {#if buttonLabel}
                 {@render buttonLabel()}

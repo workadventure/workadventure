@@ -115,7 +115,10 @@
                         class="text-nowrap w-full h-full !bg-white/10 hover:!bg-white/20 {action.style ??
                             ''} {buttonsLayout === 'column' ? 'mx-2' : ''}"
                         onclick={(event) => {
-                            analyticsClient.clickPropertyMapEditor(action.actionName, action.style);
+                            analyticsClient.trackAdminEvent("map_editor.property.clicked", {
+                                name: action.actionName,
+                                style: action.style,
+                            });
                             event.preventDefault();
                             Promise.resolve(action.callback()).catch((error) => {
                                 console.error("Failed to run action", error);

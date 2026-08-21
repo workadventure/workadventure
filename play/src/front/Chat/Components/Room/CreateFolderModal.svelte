@@ -52,7 +52,7 @@
             }
         } finally {
             loadingFolderCreation = false;
-            analyticsClient.createMatrixFolder();
+            analyticsClient.trackAdminEvent("chat.matrix_folder.created");
         }
     }
 

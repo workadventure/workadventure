@@ -27,13 +27,37 @@ function propertiesOf(schema: z.ZodDiscriminatedUnionOption<"eventName">): z.Zod
  * time, so this needs neither a working cwd (jsdom reports "/") nor
  * import.meta.url (it does not survive the transform).
  *
- * TimedAnalyticsEvent.ts is deliberately absent: it names the `timed_event.*`
- * control frames, which the handler intercepts and never enqueues.
+ * The whole of `src/front`, because that is where the names live now. AnalyticsClient
+ * used to carry one method per event, so scraping that single file found every name;
+ * those methods went into their call sites and the literals went with them. Inlining
+ * ~5 MB of source into this test's bundle is what it costs to keep the two assertions
+ * below — and a catalog nobody checks is worth less.
  */
 const EMITTER_SOURCES = import.meta.glob<string>(
-    ["../../src/front/Administration/AnalyticsClient.ts", "../../src/pusher/services/AnalyticsEventsQueue.ts"],
+    ["../../src/front/**/*.{ts,svelte}", "../../src/pusher/services/AnalyticsEventsQueue.ts"],
     { query: "?raw", import: "default", eager: true },
 );
+
+/**
+ * The pusher's queue names its events in object literals rather than through
+ * `trackAdminEvent`, so it needs a pattern of its own — and that pattern has to stay
+ * scoped here. Let it loose over `src/front` and it matches TimedAnalyticsEvent.ts,
+ * whose `timed_event.open`/`.close` are control frames the handler intercepts and
+ * never enqueues: catalogued they are not, and emitted they are not either.
+ */
+const QUEUE_SOURCES = Object.entries(EMITTER_SOURCES)
+    .filter(([path]) => path.includes("AnalyticsEventsQueue"))
+    .map(([, source]) => source);
+
+/**
+ * Emitted from the other repository.
+ *
+ * The SaaS repo's `external-modules/` reaches analyticsClient for the Teams and
+ * Discord integrations, and these two events have no caller on this side. Nothing
+ * here can read that source, so without naming them the catalog reads as documenting
+ * two dead entries.
+ */
+const EMITTED_FROM_EXTERNAL_MODULES = ["external_module.opened", "external_module.chat_band.clicked"];
 
 /** The names the front asks the pusher to time, e.g. openTimedAnalyticsEvent("area.dwell", …). */
 function extractTimedEventRequests(): Set<string> {
@@ -73,19 +97,26 @@ function extractEmittedEventNames(): Set<string> {
         }
     }
 
+    for (const name of EMITTED_FROM_EXTERNAL_MODULES) {
+        names.add(name);
+    }
+
     for (const source of Object.values(EMITTER_SOURCES)) {
         for (const [, name] of source.matchAll(
             /(?:trackAdminEvent|openTimedAnalyticsEvent)\(\s*"([a-z][a-z0-9_.]*)"/g,
         )) {
             names.add(name);
         }
-        // trackAdminEvent(open ? "map_editor.opened" : "map_editor.closed")
+        // trackAdminEvent(!$mapEditorModeStore ? "map_editor.opened" : "map_editor.closed")
         for (const [, whenTrue, whenFalse] of source.matchAll(
-            /trackAdminEvent\(\s*\w+\s*\?\s*"([a-z][a-z0-9_.]*)"\s*:\s*"([a-z][a-z0-9_.]*)"/g,
+            /trackAdminEvent\(\s*[^"()]+\?\s*"([a-z][a-z0-9_.]*)"\s*:\s*"([a-z][a-z0-9_.]*)"/g,
         )) {
             names.add(whenTrue);
             names.add(whenFalse);
         }
+    }
+
+    for (const source of QUEUE_SOURCES) {
         for (const [, name] of source.matchAll(/eventName:\s*"([a-z][a-z0-9_.]*)"/g)) {
             names.add(name);
         }

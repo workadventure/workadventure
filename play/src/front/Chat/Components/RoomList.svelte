@@ -104,7 +104,7 @@
         } catch (error) {
             console.error("Failed to initChatConnectionEncryption", error);
         }
-        analyticsClient.startMatrixEncryptionConfiguration();
+        analyticsClient.trackAdminEvent("chat.matrix_encryption_configuration.started");
     }
 
     const isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;

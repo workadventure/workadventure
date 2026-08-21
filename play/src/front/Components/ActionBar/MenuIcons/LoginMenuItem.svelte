@@ -13,7 +13,7 @@
     let { first = undefined, last = undefined, classList = undefined }: Props = $props();
 
     function goToLogin() {
-        analyticsClient.login();
+        analyticsClient.trackAdminEvent("auth.login_clicked");
         window.location.href = "/login";
     }
 </script>

@@ -12,7 +12,7 @@
     let { isOpen }: Props = $props();
 
     const goToLoginPage = () => {
-        analyticsClient.login();
+        analyticsClient.trackAdminEvent("auth.login_clicked");
         window.location.href = "/login";
     };
 </script>

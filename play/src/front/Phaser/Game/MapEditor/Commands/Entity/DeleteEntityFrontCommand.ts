@@ -49,6 +49,6 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
 
     public emitEvent(roomConnection: RoomConnection): void {
         roomConnection.emitMapEditorDeleteEntity(this.commandId, this.entityId);
-        analyticsClient.mapEditorEntityRemoved(this.entityData?.prefabRef?.id);
+        analyticsClient.trackAdminEvent("map_editor.entity.removed", { entityType: this.entityData?.prefabRef?.id });
     }
 }

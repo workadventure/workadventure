@@ -332,7 +332,7 @@ export class RoomConnection implements RoomConnection {
         this.websocketReconnectingStream = this.socket.reconnectingStream;
         const reconnectingSubscription = this.websocketReconnectingStream.subscribe((isReconnecting) => {
             if (isReconnecting) {
-                analyticsClient.websocketReconnecting();
+                analyticsClient.trackAdminEvent("websocket.reconnecting");
             }
         });
         this.onCleanup(() => reconnectingSubscription.unsubscribe());
@@ -810,7 +810,9 @@ export class RoomConnection implements RoomConnection {
             this._roomJoinedPromise.reject(event);
         }
         if (event.code !== 1000) {
-            analyticsClient.websocketConnectionLost(event.reason || String(event.code));
+            analyticsClient.trackAdminEvent("websocket.connection_lost", {
+                reason: event.reason || String(event.code),
+            });
             Sentry.captureMessage(
                 "WebSocket closed by remote side. Code: " +
                     event.code +
@@ -824,7 +826,7 @@ export class RoomConnection implements RoomConnection {
     };
 
     private handleSocketError = (event: Event) => {
-        analyticsClient.websocketConnectionLost(event.type);
+        analyticsClient.trackAdminEvent("websocket.connection_lost", { reason: event.type });
         this._websocketErrorStream.next(event);
     };
 

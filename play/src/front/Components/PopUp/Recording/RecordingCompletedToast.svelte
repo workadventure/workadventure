@@ -15,7 +15,7 @@
     let { toastUuid }: Props = $props();
 
     function openRecordingList() {
-        analyticsClient.openedRecordingList();
+        analyticsClient.trackAdminEvent("recording.list_opened");
         showRecordingList.set(true);
         recordingStore.hideCompletedPopup();
     }

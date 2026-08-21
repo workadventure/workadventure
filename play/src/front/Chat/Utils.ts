@@ -64,7 +64,7 @@ export const sendRedirectPricing = () => {
 };
 
 export const sendLogin = () => {
-    analyticsClient.login();
+    analyticsClient.trackAdminEvent("auth.login_clicked");
     window.location.href = "/login";
 };
 
@@ -82,7 +82,7 @@ export const openDirectChatRoom = async (chatID: string) => {
         let room = await chatConnection.getDirectRoomFor(chatID);
         if (!room) room = await chatConnection.createDirectRoom(chatID);
         if (!room) throw new Error("Failed to create room");
-        analyticsClient.createMatrixRoom();
+        analyticsClient.trackAdminEvent("chat.matrix_room.created");
 
         if (get(room.myMembership) === "invite") {
             room.joinRoom().catch((error: unknown) => console.error(error));

@@ -45,7 +45,7 @@
     }
 
     function showRoomList() {
-        analyticsClient.openedRoomList();
+        analyticsClient.trackAdminEvent("room_list.opened");
         resetChatVisibility();
         resetModalVisibility();
 
@@ -60,7 +60,7 @@
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
         isTodoListVisibleStore.set(false);
         if ($isCalendarVisibleStore) {
-            analyticsClient.openExternalModuleCalendar();
+            analyticsClient.trackAdminEvent("external_module.calendar_opened");
         }
         mapEditorModeStore.switchMode(false);
         openedMenuStore.closeAll();
@@ -70,7 +70,7 @@
         isTodoListVisibleStore.set(!$isTodoListVisibleStore);
         isCalendarVisibleStore.set(false);
         if ($isTodoListVisibleStore) {
-            analyticsClient.openExternalModuleTodoList();
+            analyticsClient.trackAdminEvent("external_module.todo_list_opened");
         }
         mapEditorModeStore.switchMode(false);
         openedMenuStore.closeAll();
@@ -93,7 +93,7 @@
     <ActionBarButton
         classList="group/btn-recording-list"
         onclick={() => {
-            analyticsClient.openedRecordingList();
+            analyticsClient.trackAdminEvent("recording.list_opened");
             $showRecordingList = true;
             openedMenuStore.closeAll();
         }}
