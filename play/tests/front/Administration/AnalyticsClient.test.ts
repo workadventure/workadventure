@@ -309,14 +309,14 @@ describe("AnalyticsClient admin analytics sink", () => {
             "api/analytics/events-batch": "v1",
         };
 
-        // The caller is a store subscription, so it re-reports a state it is already
-        // in whenever an unrelated input of the derived changes. A second open would
-        // restart the clock and lose the time already broadcast.
-        analyticsClient.megaphoneBroadcastChanged(true);
-        analyticsClient.megaphoneBroadcastChanged(true);
-        analyticsClient.megaphoneBroadcastChanged(false);
+        // startMegaphoneLive is reachable twice without an intervening stop (the modal
+        // and the action bar both call it). A second open would restart the clock and
+        // lose the time already broadcast.
+        analyticsClient.startMegaphone();
+        analyticsClient.startMegaphone();
+        analyticsClient.stopMegaphone();
         // And a close with nothing open is not a broadcast of length zero.
-        analyticsClient.megaphoneBroadcastChanged(false);
+        analyticsClient.stopMegaphone();
 
         const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
         const opens = events.filter((event) => event.eventName === "timed_event.open");
