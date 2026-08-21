@@ -157,7 +157,7 @@
     function locateUser() {
         if (chatUser == undefined || chatUser.uuid == undefined) return;
         // Track the open woka menu action
-        analyticsClient.openWokaMenu();
+        analyticsClient.trackAdminEvent("user.woka_menu.opened");
 
         const currentScerne = gameManager.getCurrentGameScene();
 
@@ -181,7 +181,7 @@
     function talkToUser() {
         if (chatUser == undefined) return;
         // Track the talk to user action
-        analyticsClient.goToUser();
+        analyticsClient.trackAdminEvent("user.go_to_clicked");
 
         if (isInTheSameMap) {
             connection?.emitAskPosition(chatUser.uuid ?? "", chatUser.playUri ?? "", AskPositionMessage_AskType.MOVE);

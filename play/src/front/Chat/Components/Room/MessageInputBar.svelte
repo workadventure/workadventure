@@ -192,7 +192,9 @@
         // send message
         if (messageToSend.trim().length !== 0) {
             room?.sendMessage(messageToSend);
-            analyticsClient.chatMessageSent(room instanceof ProximityChatRoom ? "proximity" : "room");
+            analyticsClient.trackAdminEvent("chat.message_sent", {
+                chatContext: room instanceof ProximityChatRoom ? "proximity" : "room",
+            });
             if (messageInput) {
                 messageInput.innerText = "";
             }

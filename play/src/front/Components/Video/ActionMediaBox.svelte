@@ -31,7 +31,7 @@
     let moreActionOpened = $state(false);
 
     function muteAudio(spaceUser: SpaceUserExtended) {
-        analyticsClient.muteMicrophoneMeetingAction();
+        analyticsClient.trackAdminEvent("meeting.microphone.muted");
         spaceUser.emitPrivateEvent({
             $case: "muteAudio",
             muteAudio: {
@@ -42,7 +42,7 @@
     }
 
     function muteAudioEveryBody(spaceUser: SpaceUserExtended) {
-        analyticsClient.muteMicrophoneEverybodyMeetingAction();
+        analyticsClient.trackAdminEvent("meeting.microphone.muted_for_everybody");
         spaceUser.space.emitPublicMessage({
             $case: "muteAudioForEverybody",
             muteAudioForEverybody: {},
@@ -51,7 +51,7 @@
     }
 
     function muteVideo(spaceUser: SpaceUserExtended) {
-        analyticsClient.muteVideoMeetingAction();
+        analyticsClient.trackAdminEvent("meeting.video.muted");
         spaceUser.emitPrivateEvent({
             $case: "muteVideo",
             muteVideo: {
@@ -62,7 +62,7 @@
     }
 
     function muteVideoEveryBody(spaceUser: SpaceUserExtended) {
-        analyticsClient.muteVideoEverybodyMeetingAction();
+        analyticsClient.trackAdminEvent("meeting.video.muted_for_everybody");
         spaceUser.space.emitPublicMessage({
             $case: "muteVideoForEverybody",
             muteVideoForEverybody: {},
@@ -78,7 +78,7 @@
     }*/
 
     function kickoff(spaceUser: SpaceUserExtended) {
-        analyticsClient.kickoffMeetingAction();
+        analyticsClient.trackAdminEvent("meeting.participant.kicked");
         spaceUser.emitPrivateEvent({
             $case: "kickOffUser",
             kickOffUser: {},
@@ -92,13 +92,13 @@
     }
 
     function openBlockOrReportPopup(spaceUser: SpaceUserExtended) {
-        analyticsClient.reportMeetingAction();
+        analyticsClient.trackAdminEvent("meeting.report.clicked");
         showReportScreenStore.set({ userUuid: spaceUser.uuid, userName: spaceUser.name });
         close();
     }
 
     function visitCard(spaceUser: SpaceUserExtended) {
-        analyticsClient.sendPrivateMessageMeetingAction();
+        analyticsClient.trackAdminEvent("meeting.private_message.clicked");
         requestVisitCardsStore.set(spaceUser.visitCardUrl ?? null);
         close();
     }
@@ -114,7 +114,7 @@
     onclick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        analyticsClient.moreActionMetting();
+        analyticsClient.trackAdminEvent("meeting.actions.opened");
         toggleActionMenu(!moreActionOpened);
     }}
     role="button"
@@ -258,7 +258,7 @@
     <!--        onclick={(event) => {-->
     <!--            event.preventDefault();-->
     <!--            event.stopPropagation();-->
-    <!--            analyticsClient.sendPrivateMessageMeetingAction();-->
+    <!--            analyticsClient.trackAdminEvent("meeting.private_message.clicked");-->
     <!--            sendPrivateMessage();-->
     <!--        }}-->
     <!--    >-->
@@ -273,7 +273,7 @@
             onclick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                analyticsClient.sendPrivateMessageMeetingAction();
+                analyticsClient.trackAdminEvent("meeting.private_message.clicked");
                 visitCard(spaceUser);
             }}
         >

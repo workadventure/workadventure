@@ -29,7 +29,11 @@
     function lockAreaClick(entry: LockableAreaEntry) {
         const newLockState = !entry.lockState;
         setAreaPropertyLockState(entry.areaId, entry.propertyId, newLockState);
-        analyticsClient.lockArea(entry.areaId, entry.areaName, newLockState);
+        analyticsClient.trackAdminEvent("map_editor.area.lock.toggled", {
+            areaId: entry.areaId,
+            areaName: entry.areaName,
+            locked: newLockState,
+        });
         if (newLockState) {
             const areasManager = gameManager.getCurrentGameScene().getGameMapFrontWrapper().areasManager;
             areasManager?.flashAreaAsLocked(entry.areaId);
@@ -100,7 +104,7 @@
             if (!showPicker) {
                 const entry = lockableAreas[0];
                 if (canLockEntry(entry)) {
-                    analyticsClient.lockDiscussion();
+                    analyticsClient.trackAdminEvent("bubble.lock.toggled");
                     lockAreaClick(entry);
                 }
                 return;
@@ -114,7 +118,7 @@
                 if (!triggerElement) {
                     return;
                 }
-                analyticsClient.lockDiscussion();
+                analyticsClient.trackAdminEvent("bubble.lock.toggled");
                 closeFloatingUi = showFloatingUi(
                     triggerElement,
                     LockableAreaPicker,
@@ -132,7 +136,7 @@
                         onselectgrouplock:
                             $currentPlayerGroupLockStateStore !== undefined
                                 ? () => {
-                                      analyticsClient.lockDiscussion();
+                                      analyticsClient.trackAdminEvent("bubble.lock.toggled");
                                       lockGroupClick();
                                   }
                                 : undefined,
@@ -146,7 +150,7 @@
         }
 
         if (showGroupLock) {
-            analyticsClient.lockDiscussion();
+            analyticsClient.trackAdminEvent("bubble.lock.toggled");
             lockGroupClick();
         }
     }
