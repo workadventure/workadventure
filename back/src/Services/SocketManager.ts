@@ -1251,14 +1251,17 @@ export class SocketManager {
         // The emote is relayed to every player nearby: refuse anything that is not an emoji, or an
         // animation identifier this version of the back knows about.
         const { emote, wokaEmoteId } = emotePromptMessage;
-        const valid = wokaEmoteId === undefined ? isValidEmote(emote) : isValidWokaEmote(wokaEmoteId, emote);
-        if (!valid) {
-            debug("Invalid emote received. Dropping message.");
+        const knownWokaEmote = wokaEmoteId !== undefined && isValidWokaEmote(wokaEmoteId, emote);
+        // An identifier this back has never heard of costs the sender its animation, not its emote:
+        // the emoji that travels with it is still relayed. A front deployed ahead of the back would
+        // otherwise play the emote for its own player and stay silent for everybody else.
+        if (!knownWokaEmote && !isValidEmote(emote)) {
+            debug("Invalid emote received (id: %s). Dropping message.", wokaEmoteId ?? "none");
             return;
         }
         room.emitEmoteEvent(user, {
             emote,
-            wokaEmoteId,
+            wokaEmoteId: knownWokaEmote ? wokaEmoteId : undefined,
             actorUserId: user.id,
         });
     }

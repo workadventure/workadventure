@@ -88,7 +88,6 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore } from "../../Stores/EmoteStore";
 import { wokaEmoteStore } from "../../Stores/WokaEmoteStore";
-import { getWokaEmote } from "./Emote/WokaEmoteCatalog";
 import {
     jitsiParticipantsCountStore,
     userIsAdminStore,
@@ -204,6 +203,7 @@ import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
 import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
+import { getWokaEmote } from "./Emote/WokaEmoteCatalog";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -2603,8 +2603,12 @@ export class GameScene extends DirtyScene {
         this.unsubscribers.push(
             wokaEmoteStore.subscribe((wokaEmoteId) => {
                 if (wokaEmoteId && get(enableUserInputsStore)) {
+                    const definition = getWokaEmote(wokaEmoteId);
                     this.CurrentPlayer?.playWokaEmote(wokaEmoteId);
-                    this.connection?.emitWokaEmoteEvent(wokaEmoteId, getWokaEmote(wokaEmoteId).bubble ?? "");
+                    // The wheel icon rides along as the emoji fallback. Clients that know the animation
+                    // ignore it; a back that does not know the identifier relays it as a plain bubble
+                    // instead of dropping the emote for everyone but us.
+                    this.connection?.emitWokaEmoteEvent(wokaEmoteId, definition.bubble ?? definition.icon);
                     wokaEmoteStore.set(null);
                 }
             }),
