@@ -1,12 +1,13 @@
 import * as Phaser from "phaser";
 import type { WokaEmoteDefinition, WokaEmoteParticleSpec } from "./WokaEmoteCatalog";
 import { sampleWokaEmote } from "./WokaEmoteCatalog";
-import { feetAnchoredOffset } from "./WokaEmoteGeometry";
+import { FEET_OFFSET, feetAnchoredOffset } from "./WokaEmoteGeometry";
 import { buildGlyphSvg } from "./WokaEmoteGlyphs";
 
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import Graphics = Phaser.GameObjects.Graphics;
 
 interface Particle {
     element: DOMElement;
@@ -35,6 +36,7 @@ export class WokaEmoteAnimator {
     /** Cycles the confetti through the palette instead of drawing them all the same colour. */
     private spawnCount = 0;
     private readonly firedBatches = new Set<string>();
+    private ground: Graphics | undefined;
 
     constructor(
         private readonly scene: Phaser.Scene & { markDirty: () => void },
@@ -51,6 +53,7 @@ export class WokaEmoteAnimator {
         for (const sprite of this.sprites.values()) {
             sprite.anims.stop();
         }
+        this.createGround();
         this.step(0);
         this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.onSceneUpdate);
     }
@@ -63,6 +66,7 @@ export class WokaEmoteAnimator {
         this.elapsed += delta;
         this.emitParticles(previous, this.elapsed);
         this.moveParticles(delta);
+        this.stepGround();
         const state = sampleWokaEmote(this.definition, this.elapsed);
         const offset = feetAnchoredOffset(state);
 
@@ -80,6 +84,40 @@ export class WokaEmoteAnimator {
             this.finished = true;
             this.onComplete();
         }
+    }
+
+    /**
+     * Draws the floor mark once and slips it under the layer sprites. It is added at index 0 so the
+     * Woka stands on it rather than behind it.
+     */
+    private createGround(): void {
+        const spec = this.definition.ground;
+        if (!spec) {
+            return;
+        }
+        const graphics = new Graphics(this.scene);
+        graphics.lineStyle(spec.thickness ?? 1, spec.color, 1);
+        for (const [from, to] of spec.arcs) {
+            graphics.beginPath();
+            graphics.arc(0, 0, spec.radius, Phaser.Math.DegToRad(from), Phaser.Math.DegToRad(to));
+            graphics.strokePath();
+        }
+        graphics.setPosition(0, spec.offsetY ?? FEET_OFFSET);
+        this.container.addAt(graphics, 0);
+        this.ground = graphics;
+    }
+
+    private stepGround(): void {
+        const spec = this.definition.ground;
+        if (!spec || !this.ground) {
+            return;
+        }
+        const state = spec.sample(Math.min(Math.max(this.elapsed, 0), this.definition.duration));
+        const scale = state.scale ?? 1;
+        // Squashed on the vertical axis, because the map is not seen from directly above.
+        this.ground.setScale(scale, scale * (spec.flatten ?? 0.42));
+        this.ground.setAlpha(state.alpha ?? 1);
+        this.ground.setAngle(state.angle ?? 0);
     }
 
     private emitParticles(from: number, to: number): void {
@@ -150,6 +188,8 @@ export class WokaEmoteAnimator {
             particle.element.destroy();
         }
         this.particles.length = 0;
+        this.ground?.destroy();
+        this.ground = undefined;
         for (const sprite of this.sprites.values()) {
             sprite.setPosition(0, 0);
             sprite.setScale(1, 1);
