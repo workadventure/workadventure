@@ -42,7 +42,7 @@
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
     "aws-sdk": "^2.1185.0",
-    "axios": "^1.16.1",
+    "axios": "^1.18.0",
     "body-parser": "^2.2.2",
     "catch-unknown": "^2.0.0",
     "cors": "^2.8.6",
