@@ -15,17 +15,6 @@ class AreaLivekit {
     };
 
     public entityPositionInArea: Coordinates = { x: 4 * 32, y: 3 * 32 };
-    public entityPositionOutsideArea: Coordinates = { x: 6 * 32, y: 6 * 32 };
-
-    public entityPositionInArea = {
-        x: this.entityPositionInArea.x + 10,
-        y: this.entityPositionInArea.y - 16,
-    };
-
-    public mouseCoordinatesToClickOnEntityOutsideArea = {
-        x: this.entityPositionOutsideArea.x + 10,
-        y: this.entityPositionOutsideArea.y,
-    };
 
     async openAreaEditorAndAddAreaLivekit(page: Page, startWithAudioMuted = false, startWithVideoMuted = false) {
         await Menu.openMapEditor(page);
