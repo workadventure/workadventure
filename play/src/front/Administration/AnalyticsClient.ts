@@ -13,20 +13,6 @@ import { hasCapability } from "../Connection/Capabilities";
 import type { TimedAnalyticsEventHandle } from "./TimedAnalyticsEvent";
 import { openTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
 
-/**
- * The intervals that measure "a panel is open" or "a broadcast is live".
- *
- * All of the same shape: a single on/off state, at most one live at a time, no
- * properties to carry — the name says which one it is. They are listed here rather
- * than handled one field apiece because they share the reconnection problem solved
- * in `openPanels` / `livePanels`.
- */
-type PanelIntervalName =
-    | "megaphone.ended"
-    | "chat.panel.dwell"
-    | "external_module.calendar.dwell"
-    | "external_module.todo_list.dwell";
-
 type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
 type AdminAnalyticsEvent = AnalyticsEventReportMessage["events"][number];
 export type MeetingProvider = "livekit" | "jitsi" | "webrtc";
@@ -79,20 +65,17 @@ class AnalyticsClient {
     /** A screen share and an availability status are each a single continuous state, so one handle, not a map. */
     private openScreenShare: TimedAnalyticsEventHandle | undefined;
     private openStatus: TimedAnalyticsEventHandle | undefined;
+    private openMegaphoneBroadcast: TimedAnalyticsEventHandle | undefined;
     /**
-     * The panels and broadcasts currently held open, and which of them the app
-     * believes it is *in*.
+     * Whether a broadcast is live, as opposed to whether we hold a handle for it.
      *
-     * Two collections rather than one, because they answer different questions and
-     * only one of them survives a disconnect. The handles are spent the moment the
-     * socket dies — the pusher closes those intervals itself as `socket_closed` — but
-     * the state is still true, and a boolean has no rising edge. Without the second
-     * set, a panel open across a reconnect would stay invisible for the rest of the
-     * tab's life; with it, setAdminAnalyticsSender reopens each one against the new
-     * socket.
+     * The two come apart across a reconnect: the handle is spent the moment the
+     * socket dies — the pusher closes the interval itself as `socket_closed` — but
+     * the broadcast is still running and nothing fires a second start. Without this,
+     * a broadcast spanning a reconnect would stay invisible for the rest of the
+     * tab's life; with it, setAdminAnalyticsSender reopens it against the new socket.
      */
-    private readonly openPanels = new Map<PanelIntervalName, TimedAnalyticsEventHandle>();
-    private readonly livePanels = new Set<PanelIntervalName>();
+    private megaphoneBroadcastLive = false;
     /** Open cowebsite visits, by cowebsite id: several can be open side by side. */
     private readonly openCowebsites = new Map<string, TimedAnalyticsEventHandle>();
     private currentStatus: string | undefined;
@@ -134,13 +117,11 @@ class AnalyticsClient {
             this.openScreenShare = undefined;
             this.openStatus = undefined;
             this.currentStatus = undefined;
-            // The handles go; `livePanels` deliberately does not — see its docblock.
-            this.openPanels.clear();
+            // The handle goes; `megaphoneBroadcastLive` deliberately does not.
+            this.openMegaphoneBroadcast = undefined;
             this.openCowebsites.clear();
-        } else {
-            for (const eventName of this.livePanels) {
-                this.openPanel(eventName);
-            }
+        } else if (this.megaphoneBroadcastLive) {
+            this.openMegaphoneBroadcastInterval();
         }
         this.flushPendingAdminEvents();
     }
@@ -631,60 +612,26 @@ class AnalyticsClient {
     // broadcast goes through the second one, including being kicked off the stage.
     startMegaphone(): void {
         this.posthog?.capture("wa_start_megaphone");
-        this.panelStateChanged("megaphone.ended", true);
+        this.megaphoneBroadcastLive = true;
+        this.openMegaphoneBroadcastInterval();
     }
 
     stopMegaphone(): void {
         this.posthog?.capture("wa_stop_megaphone");
-        this.panelStateChanged("megaphone.ended", false);
+        this.megaphoneBroadcastLive = false;
+        this.openMegaphoneBroadcast?.close();
+        this.openMegaphoneBroadcast = undefined;
     }
 
-    /**
-     * How long the chat side panel stayed open.
-     *
-     * A different population from `chat.opened`, which counts the four explicit
-     * clicks: the panel also opens on its own — a proximity conversation starting, a
-     * notification, a map property, an area. Both are worth having and neither is a
-     * denominator for the other, which is why they keep separate names rather than
-     * one becoming the other's opening row.
-     */
-    chatPanelVisibilityChanged(visible: boolean): void {
-        this.panelStateChanged("chat.panel.dwell", visible);
-    }
-
-    externalModulePanelVisibilityChanged(module: "calendar" | "todo_list", visible: boolean): void {
-        this.panelStateChanged(
-            module === "calendar" ? "external_module.calendar.dwell" : "external_module.todo_list.dwell",
-            visible,
-        );
-    }
-
-    /**
-     * The one place a panel interval opens or closes.
-     *
-     * Callers are store subscriptions, so they re-report a state they are already in
-     * whenever anything else the store derives from changes. Opening again would
-     * restart the clock and lose the time already spent, so a live panel ignores a
-     * repeated open — and a close with nothing open is not a zero-length panel.
-     */
-    private panelStateChanged(eventName: PanelIntervalName, live: boolean): void {
-        if (!live) {
-            this.livePanels.delete(eventName);
-            this.openPanels.get(eventName)?.close();
-            this.openPanels.delete(eventName);
+    private openMegaphoneBroadcastInterval(): void {
+        // startMegaphoneLive is reachable twice without an intervening stop — the modal
+        // and the action bar both reach it. Reopening would restart the clock and lose
+        // the time already broadcast.
+        if (this.openMegaphoneBroadcast || !this.canSendAdminAnalytics()) {
             return;
         }
 
-        this.livePanels.add(eventName);
-        this.openPanel(eventName);
-    }
-
-    private openPanel(eventName: PanelIntervalName): void {
-        if (this.openPanels.has(eventName) || !this.canSendAdminAnalytics()) {
-            return;
-        }
-
-        this.openPanels.set(eventName, openTimedAnalyticsEvent(eventName, {}, this.sendTimedEventReport));
+        this.openMegaphoneBroadcast = openTimedAnalyticsEvent("megaphone.ended", {}, this.sendTimedEventReport);
     }
 
     toggleMapEditor(open: boolean): void {
