@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { WOKA_EMOTE_IDS } from "@workadventure/shared-utils";
 import { WOKA_EMOTES, getWokaEmote, sampleWokaEmote, swell, track } from "./WokaEmoteCatalog";
+import { buildGlyphSvg, isWokaEmoteGlyphName } from "./WokaEmoteGlyphs";
 
 /** The spritesheet holds exactly 12 frames; asking Phaser for anything else renders nothing. */
 const FRAME_COUNT = 12;
@@ -107,11 +108,37 @@ describe("the particle emitters", () => {
     it("emits something visible", () => {
         for (const definition of WOKA_EMOTES) {
             for (const spec of definition.particles ?? []) {
-                expect(spec.glyph.length).toBeGreaterThan(0);
+                expect(isWokaEmoteGlyphName(spec.glyph)).toBe(true);
                 expect(spec.count).toBeGreaterThan(0);
                 expect(spec.life).toBeGreaterThan(0);
                 expect(spec.riseSpeed).toBeLessThan(0); // les glyphes montent
             }
         }
+    });
+});
+
+describe("the pixel glyphs", () => {
+    it("draws every glyph the catalogue asks for", () => {
+        for (const definition of WOKA_EMOTES) {
+            for (const spec of definition.particles ?? []) {
+                const svg = buildGlyphSvg(spec.glyph);
+                expect(svg.startsWith("<svg")).toBe(true);
+                expect(svg.includes("<rect")).toBe(true);
+            }
+        }
+    });
+
+    it("gives confetti a different colour on each spawn", () => {
+        const first = buildGlyphSvg("confetti", 0);
+        const second = buildGlyphSvg("confetti", 1);
+        expect(first === second).toBe(false);
+    });
+
+    it("keeps a fixed colour for the glyphs that have one", () => {
+        expect(buildGlyphSvg("heart", 0)).toBe(buildGlyphSvg("heart", 7));
+    });
+
+    it("rejects a name that is not in the table", () => {
+        expect(isWokaEmoteGlyphName("sparkles")).toBe(false);
     });
 });
