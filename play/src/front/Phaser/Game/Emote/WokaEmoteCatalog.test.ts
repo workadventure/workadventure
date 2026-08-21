@@ -84,6 +84,22 @@ describe("the catalogue", () => {
     });
 });
 
+describe("the emoji fallback", () => {
+    // The wheel icon is what a back that does not know the identifier relays in the emote's place,
+    // and that back only accepts emoji. An icon that is not one would make the emote vanish for
+    // every player but its own — which is exactly the failure this fallback exists to prevent.
+    const EMOJI_ONLY = /^(?:\p{Extended_Pictographic}|\p{Emoji_Component})+$/u;
+
+    it("gives every emote an icon the back would accept as an emoji", () => {
+        for (const definition of WOKA_EMOTES) {
+            const fallback = definition.bubble ?? definition.icon;
+            expect(fallback.length).toBeGreaterThan(0);
+            expect(fallback.length).toBeLessThanOrEqual(32); // MAX_EMOTE_LENGTH
+            expect(EMOJI_ONLY.test(fallback)).toBe(true);
+        }
+    });
+});
+
 describe("the particle emitters", () => {
     it("uses either a period or a list of instants, never both", () => {
         for (const definition of WOKA_EMOTES) {
