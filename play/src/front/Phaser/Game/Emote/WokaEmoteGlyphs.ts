@@ -7,7 +7,7 @@
  * with crisp edges so they never blur when the camera zooms.
  */
 
-export type WokaEmoteGlyphName = "heart" | "note" | "spark" | "zzz" | "confetti";
+export type WokaEmoteGlyphName = "heart" | "note" | "spark" | "zzz" | "question" | "confetti";
 
 interface PixelGlyph {
     /** Fixed colour, or undefined to draw each instance in a different palette colour. */
@@ -35,6 +35,10 @@ const PIXEL_GLYPHS: Record<WokaEmoteGlyphName, PixelGlyph> = {
     zzz: {
         color: "#928ebb",
         rows: ["xxxxx", "   x ", "  x  ", " x   ", "xxxxx"],
+    },
+    question: {
+        color: "#f9e81e",
+        rows: [" xxx ", "x   x", "    x", "   x ", "  x  ", "     ", "  x  "],
     },
     confetti: {
         rows: ["xx", "xx"],
