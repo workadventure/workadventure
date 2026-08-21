@@ -15,6 +15,10 @@ import type { RawSocket } from "./PusherWebSocket";
 import { validateWebsocketQuery } from "./QueryValidator";
 import { getClientIpFromXForwardedFor } from "./ClientIp";
 
+// Close code reported when a retained logical connection is discarded in favour of a new connection from the
+// same tab. 1008 (policy violation) matches the other "cannot reuse this socket" paths of this controller.
+const DISCARDED_CONTEXT_CLOSE_CODE = 1008;
+
 type UpgradeContext<TQuery> = {
     query: TQuery;
     request: {
@@ -34,6 +38,7 @@ type OpenHandler = (socket: PusherWebSocket) => void | Promise<void>;
 // The rejected open handler should return the unique error message that will be sent over the websocket before closing it.
 type RejectedOpenHandler = (socketData: UpgradeFailedData) => ServerToClientMessage | Promise<ServerToClientMessage>;
 type ReconnectHandler = (socket: PusherWebSocket) => void | Promise<void>;
+type CanReplaceTransportHandler = (socket: PusherWebSocket) => boolean;
 type MessageHandler = (socket: PusherWebSocket, message: ClientToServerMessage) => void | Promise<void>;
 type CloseHandler = (socket: PusherWebSocket, code: number, reason: string) => void | Promise<void>;
 
@@ -52,6 +57,7 @@ type RoomWsConfig<TQuery extends RoomWsQuery> = {
     open: OpenHandler;
     rejectedOpen: RejectedOpenHandler;
     reconnect: ReconnectHandler;
+    canReplaceTransport?: CanReplaceTransportHandler;
     message: MessageHandler;
     close: CloseHandler;
 };
@@ -127,8 +133,17 @@ export class PusherRoomSocketController {
         query: TQuery,
         websocketProtocol: string,
         tabContext: WebSocketContext | undefined,
+        canReplaceTransport: CanReplaceTransportHandler | undefined,
     ): tabContext is WebSocketContext & { socket: PusherWebSocket } {
-        if (!tabContext?.socket || tabContext.socket.isDisconnecting()) {
+        if (!tabContext?.socket) {
+            return false;
+        }
+
+        if (tabContext.socket.isDisconnecting()) {
+            return false;
+        }
+
+        if (canReplaceTransport && !canReplaceTransport(tabContext.socket)) {
             return false;
         }
 
@@ -173,6 +188,43 @@ export class PusherRoomSocketController {
         this.contextCleanupTimeoutsByTabKey.delete(tabId);
     }
 
+    /**
+     * Drop a retained logical connection that cannot serve the reconnection currently being opened, because it
+     * is already tearing down or because the server-side state it depends on is gone.
+     *
+     * The retained context is kept alive by a pending retention timeout whose job is exactly "if no transport
+     * comes back for this socket, close it for good". We now know no transport ever will, so we run that
+     * teardown immediately instead of merely cancelling the timeout — dropping the last reference to the socket
+     * without closing it would leak its back gRPC stream and leave a ghost user in the back's GameRoom.
+     *
+     * Order matters: `config.close()` must run before `end()`, because `end()` flags the socket as
+     * disconnecting and the cleanup ignores an already-disconnecting socket. `end()` is a no-op when the
+     * transport is already gone, which is the usual case here.
+     */
+    private discardRetainedContext<TQuery extends RoomWsQuery>(
+        tabId: string,
+        socket: PusherWebSocket,
+        config: RoomWsConfig<TQuery>,
+        reason: string,
+    ): void {
+        this.clearContextCleanup(tabId);
+        if (this.contextByTabKey.get(tabId)?.socket === socket) {
+            this.contextByTabKey.delete(tabId);
+        }
+        socket.markPermanentlyDisconnected();
+
+        Promise.resolve(config.close(socket, DISCARDED_CONTEXT_CLOSE_CODE, reason))
+            .catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            })
+            .finally(() => {
+                if (!socket.isDisconnecting()) {
+                    socket.end(DISCARDED_CONTEXT_CLOSE_CODE, reason);
+                }
+            });
+    }
+
     public ws<TQuery extends RoomWsQuery>(path: string, config: RoomWsConfig<TQuery>): void {
         this.app.ws<ConnectingSocketData | UpgradeFailedData>(path, {
             idleTimeout: config.idleTimeout,
@@ -204,7 +256,12 @@ export class PusherRoomSocketController {
 
                     if (
                         clientLastReceivedNonce !== undefined &&
-                        this.canReplaceTransportWithoutUpgrade(query, websocketProtocol, tabContext)
+                        this.canReplaceTransportWithoutUpgrade(
+                            query,
+                            websocketProtocol,
+                            tabContext,
+                            config.canReplaceTransport,
+                        )
                     ) {
                         tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
                         this.upgradeSocket(
@@ -282,15 +339,28 @@ export class PusherRoomSocketController {
                     const rawSocket = ws as unknown as RawSocket;
 
                     const tabId = socketData.tabId;
-                    const context = this.contextByTabKey.get(tabId);
-                    const clientLastReceivedNonce = context?.clientLastReceivedNonce;
+                    let context = this.contextByTabKey.get(tabId);
+                    let clientLastReceivedNonce = context?.clientLastReceivedNonce;
 
-                    if (context?.socket && clientLastReceivedNonce !== undefined && !context.socket.isDisconnecting()) {
-                        console.info("[PusherRoomSocketController] attempting transport replacement", {
+                    if (context?.socket?.isDisconnecting()) {
+                        this.discardRetainedContext(
                             tabId,
-                            userUuid: socketData.userUuid,
-                            clientLastReceivedNonce,
-                        });
+                            context.socket,
+                            config,
+                            "Logical connection already closed, superseded by a new connection from the same tab",
+                        );
+                        context = undefined;
+                        clientLastReceivedNonce = undefined;
+                    } else if (context?.socket && config.canReplaceTransport?.(context.socket) === false) {
+                        this.discardRetainedContext(
+                            tabId,
+                            context.socket,
+                            config,
+                            "Server-side room state is gone, superseded by a new connection from the same tab",
+                        );
+                        context = undefined;
+                        clientLastReceivedNonce = undefined;
+                    } else if (context?.socket && clientLastReceivedNonce !== undefined) {
                         try {
                             const replaced = context.socket.replaceSocket(rawSocket, clientLastReceivedNonce);
 
@@ -334,6 +404,10 @@ export class PusherRoomSocketController {
 
                 const rawSocket = ws as unknown as RawSocket;
                 const socket = this.getOrCreateWrapper(rawSocket);
+                if (socket.isDisconnecting()) {
+                    ws.end(1008, "Connection already closed");
+                    return;
+                }
 
                 let message;
                 try {
