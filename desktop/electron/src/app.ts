@@ -1,14 +1,55 @@
+import path from "path";
 import { app, BrowserWindow, globalShortcut } from "electron";
 
-import { createWindow, getWindow } from "./window";
+import { createWindow, getWindow, openDeepLinkTarget } from "./window";
 import { createTray } from "./tray";
+import { startIdleMonitor } from "./idle-monitor";
+import { startCompanionController } from "./companion-controller";
+import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
 import { updateAutoLaunch } from "./auto-launch";
 import ipc from "./ipc";
 import settings from "./settings";
 import { setLogLevel } from "./log";
-import "./serve"; // prepare custom url scheme
 import { loadShortcuts } from "./shortcuts";
+import { DESKTOP_APP_NAME } from "./app-name-policy";
+import { createDefaultProtocolClientArgs } from "./protocol-client-policy";
+import {
+    extractDesktopAuthCallback,
+    extractDesktopTargetFromDeepLink,
+    type DesktopAuthCallback,
+} from "./desktop-url-policy";
+
+let pendingProtocolTarget: string | DesktopAuthCallback | undefined;
+
+app.setName(DESKTOP_APP_NAME);
+
+function getProtocolUrl(argv: string[]) {
+    return argv.find((arg) => arg.startsWith("workadventure://"));
+}
+
+function queueProtocolUrl(rawUrl?: string) {
+    if (!rawUrl) {
+        return;
+    }
+
+    pendingProtocolTarget =
+        extractDesktopAuthCallback(rawUrl) || extractDesktopTargetFromDeepLink(rawUrl) || pendingProtocolTarget;
+}
+
+function registerProtocolHandler() {
+    const args = createDefaultProtocolClientArgs({
+        defaultApp: Boolean(process.defaultApp),
+        argv: process.argv,
+        cwd: process.cwd(),
+    });
+    if (args.length > 0) {
+        app.setAsDefaultProtocolClient("workadventure", process.execPath, args);
+        return;
+    }
+
+    app.setAsDefaultProtocolClient("workadventure");
+}
 
 async function init() {
     const appLock = app.requestSingleInstanceLock();
@@ -19,9 +60,15 @@ async function init() {
         return;
     }
 
-    app.on("second-instance", () => {
+    queueProtocolUrl(getProtocolUrl(process.argv));
+    registerProtocolHandler();
+
+    app.on("second-instance", (event, argv) => {
+        queueProtocolUrl(getProtocolUrl(argv));
+        const target = pendingProtocolTarget;
+        pendingProtocolTarget = undefined;
         // re-create window if closed
-        void createWindow();
+        void openDeepLinkTarget(target);
 
         const mainWindow = getWindow();
 
@@ -32,6 +79,16 @@ async function init() {
             }
 
             mainWindow.focus();
+        }
+    });
+
+    app.on("open-url", (event, url) => {
+        event.preventDefault();
+        queueProtocolUrl(url);
+        if (app.isReady()) {
+            const target = pendingProtocolTarget;
+            pendingProtocolTarget = undefined;
+            void openDeepLinkTarget(target);
         }
     });
 
@@ -49,13 +106,38 @@ async function init() {
         // load ipc handler
         ipc();
 
-        // Don't show the app in the doc
-        // if (app.dock) {
-        //   app.dock.hide();
-        // }
+        // In development (unpackaged) the macOS dock shows the default Electron icon — the bundle's
+        // .icns is only applied to a packaged .app. Set it explicitly so dev matches the shipped icon.
+        if (process.platform === "darwin" && !app.isPackaged) {
+            app.dock?.setIcon(path.join(__dirname, "..", "assets", "icons", "logo.png"));
+        }
 
-        await createWindow();
+        const initialProtocolTarget = pendingProtocolTarget;
+        pendingProtocolTarget = undefined;
+        if (typeof initialProtocolTarget === "string") {
+            await createWindow(initialProtocolTarget);
+        } else {
+            await createWindow();
+            if (initialProtocolTarget) {
+                await openDeepLinkTarget(initialProtocolTarget);
+            }
+        }
+        createNativeApplicationMenu();
         createTray();
+
+        // Auto-away + notification hush: forward system idle transitions to the renderer, which
+        // flips the WA availability to "away" and back. presence.setIdle (called inside) also
+        // drives the tray status dot.
+        startIdleMonitor((idle) => {
+            const mainWindow = getWindow();
+            if (mainWindow && !mainWindow.webContents.isDestroyed()) {
+                mainWindow.webContents.send("app:on-system-idle", idle);
+            }
+        });
+
+        // The unified Companion auto-shows (People / Chat / Controls) whenever the main window is
+        // backgrounded in a world; also toggled from the tray + optional global shortcut.
+        startCompanionController();
 
         loadShortcuts();
     });
