@@ -1691,8 +1691,21 @@ export class SocketManager implements ZoneEventListener {
 }
 
 // Verify that the domain of the url in parameter is in the white list of embeddable domains defined in the .env file (EMBEDDED_DOMAINS_WHITELIST)
+// Matching is on the host only: a substring test would let https://evil.com/?x=trusted.com through.
 const verifyUrlAsDomainInWhiteList = (url: string) => {
-    return EMBEDDED_DOMAINS_WHITELIST.some((domain) => url.includes(domain));
+    let hostname: string;
+    try {
+        hostname = new URL(url).hostname.toLowerCase();
+    } catch {
+        return false;
+    }
+    return EMBEDDED_DOMAINS_WHITELIST.some((domain) => {
+        const allowedDomain = domain.trim().toLowerCase();
+        if (allowedDomain === "") {
+            return false;
+        }
+        return hostname === allowedDomain || hostname.endsWith(`.${allowedDomain}`);
+    });
 };
 
 export const socketManager = new SocketManager();
