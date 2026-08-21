@@ -4,9 +4,11 @@ import { get } from "svelte/store";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
+import { movementLockedStore } from "../../Stores/MovementLockStore";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import LL from "../../../i18n/i18n-svelte";
+import type { GameScene } from "../Game/GameScene";
 
 import Key = Phaser.Input.Keyboard.Key;
 import Pointer = Phaser.Input.Pointer;
@@ -35,7 +37,7 @@ export enum UserInputEvent {
 
 // The reason why the controls are disabled
 // The MessageEventSource type means the controls where disabled by the scripting API in the related iframe
-type DisableControlsReason = "store" | "explorerTool" | "errorScreen" | MessageEventSource;
+type DisableControlsReason = "store" | "explorerTool" | "errorScreen" | "movementLock" | MessageEventSource;
 
 export interface Shortcut {
     key: string;
@@ -87,6 +89,7 @@ export class UserInputManager {
 
     public userInputHandler: UserInputHandlerInterface;
     private enableUserInputsStoreUnsubscribe: Unsubscriber;
+    private movementLockedStoreUnsubscribe: Unsubscriber;
     private readonly disableControlsReasons: Set<DisableControlsReason> = new Set();
 
     constructor(scene: Phaser.Scene, userInputHandler: UserInputHandlerInterface) {
@@ -106,6 +109,18 @@ export class UserInputManager {
                 this.restoreControls("store");
             } else {
                 this.disableControls("store");
+            }
+        });
+
+        // Intentional "lock my movement" toggle (mobile): disables keyboard + joystick and, together
+        // with the tap-to-move guard in GameSceneUserInputHandler, pins the avatar in place.
+        this.movementLockedStoreUnsubscribe = movementLockedStore.subscribe((locked) => {
+            if (locked) {
+                this.disableControls("movementLock");
+                // Disabling controls does not cancel an already-running tap-to-move path, so stop it explicitly.
+                (this.scene as GameScene).CurrentPlayer?.finishFollowingPath(true);
+            } else {
+                this.restoreControls("movementLock");
             }
         });
     }
@@ -342,6 +357,7 @@ export class UserInputManager {
 
     destroy(): void {
         this.enableUserInputsStoreUnsubscribe();
+        this.movementLockedStoreUnsubscribe();
         this.joystick?.destroy();
         this.joystick = undefined;
     }

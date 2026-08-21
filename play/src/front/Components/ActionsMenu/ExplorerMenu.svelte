@@ -5,6 +5,10 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { BUTTON_ZOOM_FACTOR_PER_SECOND, BUTTON_ZOOM_STEP_FACTOR } from "../../Phaser/Game/CameraZoomUtils";
+    import { movementLockedStore } from "../../Stores/MovementLockStore";
+    import { touchScreenManager } from "../../Touch/TouchScreenManager";
+    import WalkIcon from "../Icons/WalkIcon.svelte";
+    import WalkOffIcon from "../Icons/WalkOffIcon.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { IconFocusCentered, IconMapSearch, IconMinus, IconPlus } from "@wa-icons";
 
@@ -107,6 +111,11 @@
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.CloseMapEditor);
     }
 
+    function toggleMovementLock() {
+        analyticsClient.lockMovement();
+        movementLockedStore.toggle();
+    }
+
     onDestroy(() => {
         stopZoom();
     });
@@ -180,6 +189,30 @@
                     class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >
                     {$LL.mapEditor.explorer.showMyLocation()}
+                </div>
+            </div>
+        {/if}
+
+        {#if touchScreenManager.primaryTouchDevice}
+            <!-- Lock/unlock the local player's movement: on mobile, avoids a stray tap walking the avatar. -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div
+                class="group flex justify-center items-center p-1 rounded cursor-pointer {$movementLockedStore
+                    ? 'bg-white/30'
+                    : 'hover:bg-white/30'}"
+                data-testid="movement-lock-button"
+                onclick={toggleMovementLock}
+            >
+                {#if $movementLockedStore}
+                    <WalkOffIcon />
+                {:else}
+                    <WalkIcon />
+                {/if}
+                <div
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
+                >
+                    {$LL.actionbar.help.movementLock.title()}
                 </div>
             </div>
         {/if}

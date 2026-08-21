@@ -17,6 +17,7 @@ import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
+import { movementLockedStore } from "../../Stores/MovementLockStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Shortcut } from "./UserInputManager";
 
@@ -122,6 +123,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
 
         if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
+            return;
+        }
+
+        // Movement is intentionally locked (e.g. the mobile "lock movement" toggle): ignore tap-to-move.
+        // Placed after the activatable handling above so interacting with objects still works while locked.
+        if (get(movementLockedStore)) {
             return;
         }
 

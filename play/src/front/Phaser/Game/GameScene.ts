@@ -85,6 +85,7 @@ import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
+import { movementLockedStore } from "../../Stores/MovementLockStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore } from "../../Stores/EmoteStore";
 import {
@@ -649,6 +650,9 @@ export class GameScene extends DirtyScene {
         this.input.topOnly = false;
         this.preloading = false;
         this.cleanupDone = false;
+
+        // The movement lock is transient: always start a (re)entered room unlocked.
+        movementLockedStore.unlock();
 
         this.bindSceneEventHandlers();
 
