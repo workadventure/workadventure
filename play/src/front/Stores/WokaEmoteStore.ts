@@ -19,6 +19,10 @@ export function playWokaEmote(emoteId: WokaEmoteId): void {
     wokaEmoteStore.set(emoteId);
 }
 
-export function toggleWokaEmoteWheel(): void {
-    wokaEmoteWheelVisibleStore.update((visible) => !visible);
+/**
+ * The wheel places itself around the Woka and animates its slices outwards, and it owns that setup:
+ * callers only ask for it to be on screen.
+ */
+export function openWokaEmoteWheel(): void {
+    wokaEmoteWheelVisibleStore.set(true);
 }

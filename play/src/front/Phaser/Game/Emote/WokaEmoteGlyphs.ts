@@ -7,7 +7,7 @@
  * with crisp edges so they never blur when the camera zooms.
  */
 
-export type WokaEmoteGlyphName = "heart" | "note" | "spark" | "zzz" | "question" | "confetti";
+export type WokaEmoteGlyphName = "heart" | "note" | "spark" | "zzz" | "question" | "confetti" | "laugh";
 
 interface PixelGlyph {
     /** Fixed colour, or undefined to draw each instance in a different palette colour. */
@@ -42,6 +42,12 @@ const PIXEL_GLYPHS: Record<WokaEmoteGlyphName, PixelGlyph> = {
     },
     confetti: {
         rows: ["xx", "xx"],
+    },
+    // Lettering rather than a face: at seven pixels wide a smiley is a blob, whereas "HA" is
+    // legible and reads as laughter the same way `zzz` reads as sleep.
+    laugh: {
+        color: "#f9e81e",
+        rows: ["x x  x ", "x x x x", "xxx xxx", "x x x x", "x x x x"],
     },
 };
 

@@ -108,7 +108,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         wokaEmote: {
             title: "تشغيل إيماءة",
-            desc: "اجعل الـ Woka يقفز أو يرقص أو يدور. اضغط مع الاستمرار على E لفتح العجلة وأفلته للتشغيل.",
+            desc: "اجعل الـ Woka يقفز أو يرقص أو يدور. اضغط مع الاستمرار على G لفتح العجلة وأفلته للتشغيل.",
         },
         audioManager: {
             title: "حجم الأصوات المحيطة",
@@ -234,6 +234,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorUnclaiming: "تعذر تحرير مكتبك الشخصي",
     },
     wokaEmote: {
+        button: "إيماءات",
         wheelTitle: "عجلة الإيماءات",
         hint: "اختر إيماءة",
         names: {

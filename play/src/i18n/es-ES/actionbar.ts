@@ -110,7 +110,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         wokaEmote: {
             title: "Reproducir un emote",
-            desc: "Haz que tu Woka salte, baile o gire. Mantén pulsada la E para abrir la rueda y suéltala para reproducir.",
+            desc: "Haz que tu Woka salte, baile o gire. Mantén pulsada la G para abrir la rueda y suéltala para reproducir.",
         },
         audioManager: {
             title: "Volumen de sonidos ambientales",
@@ -236,6 +236,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorUnclaiming: "No se puede liberar su escritorio personal",
     },
     wokaEmote: {
+        button: "Emotes",
         wheelTitle: "Rueda de emotes",
         hint: "Elige un emote",
         names: {
