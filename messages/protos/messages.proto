@@ -355,6 +355,10 @@ message UploadEntityMessage {
   string color = 7;
   optional google.protobuf.Value collisionGrid = 8;
   optional int32 depthOffset = 9;
+  // UUID of the user who uploaded the entity. Always overwritten by map-storage with the
+  // authenticated user UUID: any value sent by the client is discarded. It is sent back in the
+  // broadcast copy of the command so every client knows who owns the asset.
+  optional string ownerId = 10;
 }
 
 message UploadFileMessage {
