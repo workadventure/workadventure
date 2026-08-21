@@ -4,7 +4,7 @@ import type { CowebsiteOpenedAnalyticsContext } from "../Administration/Analytic
 import { analyticsClient } from "../Administration/AnalyticsClient";
 
 export function createCoWebsiteStore() {
-    const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
+    const { subscribe, update } = writable<Array<CoWebsite>>([]);
 
     /**
      * Every cowebsite in the app is opened through here, which is why the
