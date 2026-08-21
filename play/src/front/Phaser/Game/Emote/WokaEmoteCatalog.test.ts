@@ -133,6 +133,42 @@ describe("the particle emitters", () => {
     });
 });
 
+describe("the floor marks", () => {
+    it("draws arcs that leave a gap, or the rotation would be invisible", () => {
+        for (const definition of WOKA_EMOTES) {
+            const ground = definition.ground;
+            if (!ground) continue;
+            expect(ground.radius).toBeGreaterThan(0);
+            const covered = ground.arcs.reduce((total, [from, to]) => {
+                expect(to).toBeGreaterThan(from);
+                return total + (to - from);
+            }, 0);
+            expect(covered).toBeLessThan(360);
+        }
+    });
+
+    it("fades out by the end, so the Woka is handed back unmarked", () => {
+        for (const definition of WOKA_EMOTES) {
+            const ground = definition.ground;
+            if (!ground) continue;
+            expect(ground.sample(definition.duration).alpha ?? 1).toBeCloseTo(0);
+        }
+    });
+
+    it("never turns the ring inside out", () => {
+        for (const definition of WOKA_EMOTES) {
+            const ground = definition.ground;
+            if (!ground) continue;
+            for (let t = 0; t <= definition.duration; t += definition.duration / 20) {
+                const state = ground.sample(t);
+                expect(state.scale ?? 1).toBeGreaterThan(0);
+                expect(state.alpha ?? 1).toBeGreaterThanOrEqual(0);
+                expect(state.alpha ?? 1).toBeLessThanOrEqual(1);
+            }
+        }
+    });
+});
+
 describe("the pixel glyphs", () => {
     it("draws every glyph the catalogue asks for", () => {
         for (const definition of WOKA_EMOTES) {
