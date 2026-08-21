@@ -23,6 +23,7 @@ import LL, { locale } from "../../../i18n/i18n-svelte";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import type { Streamable } from "../Streamable";
 import { deriveSwitchStore } from "../../Stores/InterruptorStore";
+import { playNotificationSound } from "../../WebRtc/AudioOutputManager";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -637,33 +638,19 @@ export class SpacePeerManager {
      * by the GameScene.
      */
     private playRecordingStartSound(): void {
-        try {
-            const currentLocale = get(locale);
-            const audioPath = `./static/audio/recording/${currentLocale}_recording-start.mp3`;
-            const audio = new Audio(audioPath);
-            audio.volume = 0.1;
-            audio.play().catch((error) => {
-                console.warn("Error playing recording start sound:", error);
-            });
-        } catch (error) {
-            console.warn("Error initializing recording start sound:", error);
-        }
+        const currentLocale = get(locale);
+        playNotificationSound(`./static/audio/recording/${currentLocale}_recording-start.mp3`, 0.1).catch((error) => {
+            console.warn("Error playing recording start sound:", error);
+        });
     }
 
     /**
      * Plays the recording stop sound based on the current locale.
      */
     private playRecordingStopSound(): void {
-        try {
-            const currentLocale = get(locale);
-            const audioPath = `./static/audio/recording/${currentLocale}_recording-end.mp3`;
-            const audio = new Audio(audioPath);
-            audio.volume = 0.1;
-            audio.play().catch((error) => {
-                console.warn("Error playing recording stop sound:", error);
-            });
-        } catch (error) {
-            console.warn("Error initializing recording stop sound:", error);
-        }
+        const currentLocale = get(locale);
+        playNotificationSound(`./static/audio/recording/${currentLocale}_recording-end.mp3`, 0.1).catch((error) => {
+            console.warn("Error playing recording stop sound:", error);
+        });
     }
 }

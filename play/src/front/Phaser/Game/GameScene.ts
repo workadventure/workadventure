@@ -116,6 +116,7 @@ import {
     requestedMicrophoneState,
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
+import { bindAudioContextOutput } from "../../WebRtc/AudioOutputManager";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { toastStore } from "../../Stores/ToastStoreSingleton";
@@ -507,6 +508,14 @@ export class GameScene extends DirtyScene {
         this.load.audio("meeting-out", "/resources/objects/meeting-out.wav");
 
         this.sound.pauseOnBlur = false;
+
+        // Bubble, meeting and notification sounds go through Phaser's own AudioContext, bypassing
+        // every media element, so they need routing of their own or they always land on the system
+        // default output. Absent when Phaser falls back to its HTML5 audio manager.
+        const phaserAudioContext = (this.sound as Partial<Phaser.Sound.WebAudioSoundManager>).context;
+        if (phaserAudioContext) {
+            this.unsubscribers.push(bindAudioContextOutput(phaserAudioContext));
+        }
 
         this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: { src: string }) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)

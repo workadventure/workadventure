@@ -54,6 +54,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         ignore: "Ignora",
     },
     speaker: {
+        test: "Prova l'uscita audio",
+        unnamedDevice: "Uscita audio {index}",
+        loading: "Ricerca delle uscite audio…",
+        unsupported:
+            "Questo browser non consente di scegliere l'uscita audio. L'audio viene riprodotto sul dispositivo selezionato nelle impostazioni di sistema.",
+        fallbackInUse:
+            "Il browser ha rifiutato questo dispositivo. L'audio viene riprodotto sul dispositivo predefinito del sistema.",
         disabled: "Il tuo altoparlante è disabilitato",
         activate: "Attiva il tuo altoparlante",
         noDevices: "Nessun dispositivo altoparlante trovato",

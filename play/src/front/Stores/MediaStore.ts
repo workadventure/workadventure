@@ -6,7 +6,7 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import * as Sentry from "@sentry/svelte";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
+import { isIOS } from "../WebRtc/DeviceUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
@@ -49,8 +49,18 @@ import {
 } from "./LocalStreamTypes";
 import { NoiseSuppressionController } from "./NoiseSuppressionController";
 import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
+import {
+    applyDefaultSpeaker,
+    reconcileSpeakerSelection,
+    speakerSelectedStore,
+    speakerSelectionSupported,
+} from "./AudioOutputStore";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
+
+// Re-exported so callers keep a single entry point for media stores, while the definitions live in
+// a leaf module that AudioOutputManager can import without closing a cycle.
+export { speakerSelectedStore, speakerSelectionSupported, usedSpeakerDeviceIdStore } from "./AudioOutputStore";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
@@ -204,6 +214,15 @@ const userMoved5SecondsAgoStore = readable(false, function start(set) {
  * A store awaiting the loading of devices information.
  */
 export const devicesNotLoaded = writable(true);
+
+/**
+ * True once devices were enumerated *after* a successful getUserMedia, i.e. with permission.
+ *
+ * Before that, browsers report an empty list rather than the devices they are not allowed to
+ * disclose. Reading that as "this machine has no microphone" is wrong, and it is what made the
+ * microphone button render as permanently disabled on WebKit.
+ */
+export const devicesEnumeratedWithPermission = writable(false);
 
 const deviceChanged10SecondsAgoStore = readable(false, function start(set) {
     let timeout: NodeJS.Timeout | null = null;
@@ -1281,49 +1300,80 @@ export const localVoiceIndicatorStore = derived<Readable<number[] | undefined>, 
 export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined, function start(set) {
     let deviceListCanBeQueried = false;
 
-    const queryDeviceList = () => {
+    const queryDeviceList = (withPermission: boolean) => {
         // Note: so far, we are ignoring any failures.
         navigator.mediaDevices
             .enumerateDevices()
             .then((mediaDeviceInfos) => {
                 set(mediaDeviceInfos);
-                devicesNotLoaded.set(false);
+                if (withPermission) {
+                    devicesEnumeratedWithPermission.set(true);
+                    devicesNotLoaded.set(false);
+                }
             })
             .catch((e) => {
+                // Do not rethrow: this runs in a floating promise chain, so a rethrow would only
+                // surface as an unhandled rejection. Enumerating before any permission is granted
+                // makes this path common enough to matter.
                 console.error(e);
-                devicesNotLoaded.set(false);
-                throw e;
+                if (withPermission) {
+                    devicesNotLoaded.set(false);
+                }
             });
     };
+
+    // Enumerate straight away, without waiting for a successful getUserMedia. Audio *output*
+    // selection needs no permission, so a user who joins with both microphone and camera off (the
+    // default, and unavoidable in a silent zone) would otherwise never get a device list at all.
+    // Labels come back empty until permission is granted; the UI falls back to a generic name.
+    if (navigator.mediaDevices) {
+        queryDeviceList(false);
+    }
 
     const unsubscribe = localStreamStore.subscribe((streamResult) => {
         if (streamResult && streamResult.type === "success" && streamResult.stream !== undefined) {
             if (deviceListCanBeQueried === false) {
-                queryDeviceList();
+                // Re-enumerate now that permission was granted: this is the pass that fills in the
+                // device labels, and the only one whose result can be trusted for inputs.
+                queryDeviceList(true);
                 deviceListCanBeQueried = true;
             }
         }
     });
 
+    const onDeviceChange = () => queryDeviceList(deviceListCanBeQueried);
+
     if (navigator.mediaDevices) {
-        navigator.mediaDevices.addEventListener("devicechange", queryDeviceList);
+        navigator.mediaDevices.addEventListener("devicechange", onDeviceChange);
     }
 
     return function stop() {
         unsubscribe();
         if (navigator.mediaDevices) {
-            navigator.mediaDevices.removeEventListener("devicechange", queryDeviceList);
+            navigator.mediaDevices.removeEventListener("devicechange", onDeviceChange);
         }
     };
 });
 
-export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
-    if ($deviceListStore === undefined) {
-        return undefined;
-    }
+export const cameraListStore = derived(
+    [deviceListStore, devicesEnumeratedWithPermission],
+    ([$deviceListStore, $devicesEnumeratedWithPermission]) => {
+        if ($deviceListStore === undefined) {
+            return undefined;
+        }
 
-    return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "videoinput"));
-});
+        // Only the enumeration that follows a granted permission says anything meaningful about
+        // inputs: before that the browser hides what it may not disclose, and an empty list would
+        // read as "this machine has no microphone". Several places in the UI rely on `undefined` to
+        // mean "we do not know yet" and pick a disabled control over a permission prompt otherwise.
+        // Audio *outputs* are different, which is why speakerListStore uses the early pass.
+        if (!$devicesEnumeratedWithPermission) {
+            return undefined;
+        }
+
+        return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "videoinput"));
+    },
+);
 
 /**
  * Context for the camera action-bar tooltip when the camera is off: permission denied vs no usable device.
@@ -1344,13 +1394,25 @@ export const cameraButtonHelpContextStore = derived(
     },
 );
 
-export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
-    if ($deviceListStore === undefined) {
-        return undefined;
-    }
+export const microphoneListStore = derived(
+    [deviceListStore, devicesEnumeratedWithPermission],
+    ([$deviceListStore, $devicesEnumeratedWithPermission]) => {
+        if ($deviceListStore === undefined) {
+            return undefined;
+        }
 
-    return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audioinput"));
-});
+        // Only the enumeration that follows a granted permission says anything meaningful about
+        // inputs: before that the browser hides what it may not disclose, and an empty list would
+        // read as "this machine has no microphone". Several places in the UI rely on `undefined` to
+        // mean "we do not know yet" and pick a disabled control over a permission prompt otherwise.
+        // Audio *outputs* are different, which is why speakerListStore uses the early pass.
+        if (!$devicesEnumeratedWithPermission) {
+            return undefined;
+        }
+
+        return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audioinput"));
+    },
+);
 
 /**
  * Context for the microphone action-bar tooltip when the mic is off: permission denied vs no usable device.
@@ -1371,47 +1433,34 @@ export const microphoneButtonHelpContextStore = derived(
     },
 );
 
+/**
+ * The audio output devices to choose from.
+ *
+ * `undefined` means "not enumerated yet" and nothing else: an unsupported browser yields an empty
+ * list, not `undefined`. The UI needs to tell those two apart to explain itself instead of
+ * rendering an empty section.
+ */
 export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
     if ($deviceListStore === undefined) {
         return undefined;
     }
 
-    // Livekit does not support audio output device selection on Safari
-    // Code: https://github.com/livekit/client-sdk-js/blob/dbaf7a9b784114728857a447734bc5d5453345b4/src/room/utils.ts#L144C1-L153C2
-    // And it seems there is no plan to support it. Issue: https://github.com/livekit/components-js/issues/1216
-    // Because the audio output selector should work in full-mesh WebRTC AND in Livekit, we have to support the same
-    // features in both modes. So we disable audio output device selection on Safari here.
-    if (isSafari() || isIOS()) {
-        return;
+    if (!speakerSelectionSupported) {
+        return [];
     }
 
     return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audiooutput"));
 });
 
 export const selectDefaultSpeaker = () => {
-    const devices = get(speakerListStore);
-    if (devices !== undefined && devices.length > 0) {
-        speakerSelectedStore.set(devices[0].deviceId);
-    } else {
-        speakerSelectedStore.set("");
-    }
+    applyDefaultSpeaker(get(speakerListStore));
 };
 
 // This is a singleton so no need to unsubscribe
 //eslint-disable-next-line svelte/no-ignored-unsubscribe
 speakerListStore.subscribe((devices) => {
-    if (devices === undefined) {
-        return;
-    }
-    // if the previous speaker used isn`t defined in the list, apply default speaker
-    const previousSpeakerId = get(speakerSelectedStore);
-    const previousAudioOutputDevice = devices.find((device) => device.deviceId === previousSpeakerId);
-    if (previousAudioOutputDevice === undefined) {
-        selectDefaultSpeaker();
-    }
+    reconcileSpeakerSelection(devices);
 });
-
-export const speakerSelectedStore = writable<string | undefined>(localUserStore.getSpeakerDeviceId() ?? undefined);
 
 let previousMediaDevices: MediaDeviceInfo[] | undefined = undefined;
 
@@ -1498,29 +1547,6 @@ localStreamStore.subscribe((streamResult) => {
         }
     }
 });
-
-// When the stream is initialized, the new sound constraint is recreated and the first speaker is set.
-// If the user did not select the new speaker, the first new speaker cannot be selected automatically.
-// It is ok to not unsubscribe to this store because it is a singleton.
-// // eslint-disable-next-line svelte/no-ignored-unsubscribe
-/*speakerSelectedStore.subscribe((speaker) => {
-    const oldValue = localUserStore.getSpeakerDeviceId();
-    const currentValue = speaker;
-    const speakerList = get(speakerListStore);
-    const oldDevice =
-        oldValue && speakerList
-            ? speakerList.find((mediaDeviceInfo) => mediaDeviceInfo.deviceId == oldValue)
-            : undefined;
-    if (
-        oldDevice !== undefined &&
-        speakerList !== undefined &&
-        currentValue !== oldDevice.deviceId &&
-        speakerList.find((value) => value.deviceId == oldValue)
-    ) {
-        console.warn("speakerSelectedStore.subscribe", oldValue, currentValue, oldDevice.deviceId);
-        speakerSelectedStore.set(oldDevice.deviceId);
-    }
-});*/
 
 function createVideoQualityStore() {
     const { subscribe, set } = writable<VideoQualitySetting>(localUserStore.getVideoQuality());
