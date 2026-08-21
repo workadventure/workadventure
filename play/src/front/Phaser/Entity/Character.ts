@@ -185,7 +185,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.playerName,
                 playerNameOutlineColor,
             );
-            this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
+            this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true);
             this.usernameDisplay.setPlayerDepth(this.depth);
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
@@ -327,7 +327,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         if (availabilityStatus !== AvailabilityStatus.UNCHANGED) {
             this.availabilityStatus = availabilityStatus;
         }
-        this.usernameDisplay?.setAvailabilityStatus(availabilityStatus, instant, false);
+        this.usernameDisplay?.setAvailabilityStatus(availabilityStatus, instant);
     }
 
     public getAvailabilityStatus() {

@@ -2,6 +2,7 @@ import * as Phaser from "phaser";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
+import { PLAYER_NAME_GAP, PLAYER_NAME_HEIGHT } from "./UsernameDisplaySizes";
 import { UsernameMegaphoneDisplay } from "./UsernameMegaphoneDisplay";
 import { UsernameStatusDisplay } from "./UsernameStatusDisplay";
 
@@ -9,14 +10,10 @@ const CORRECTION_RATE = 0.65; // When one game pixel is smaller than one screen 
 const USERNAME_FONT_FAMILY = "Roboto";
 const USERNAME_FONT_SIZE = 10;
 const USERNAME_FONT_WEIGHT = 500;
-const USERNAME_SIZE_ANIMATION_DURATION = 375;
-const USERNAME_SIZE_ANIMATION_EASING = "cubic-bezier(0.2, 0, 0, 1)";
 
 const PLAYER_NAME_BACKGROUND_COLOR = "rgba(27, 42, 65, 0.5)";
 const PLAYER_NAME_BACKGROUND_RADIUS = 8;
-const PLAYER_NAME_HEIGHT = 14;
 const PLAYER_NAME_PADDING = 4;
-const PLAYER_NAME_GAP = 4;
 
 type Position = { x: number; y: number };
 
@@ -30,7 +27,6 @@ export class UsernameDisplay {
     private displayScale: number;
     private readonly statusDisplay: UsernameStatusDisplay;
     private readonly megaphoneDisplay: UsernameMegaphoneDisplay;
-    private sizeAnimation: Animation | undefined;
 
     private readonly onZoomChanged = (zoomModifier: number): void => {
         this.displayScale = this.getDisplayScale(zoomModifier);
@@ -88,15 +84,6 @@ export class UsernameDisplay {
         return Math.max(zoomModifier > 0 ? CORRECTION_RATE / zoomModifier : 1, 1);
     }
 
-    private showMegaphone(show = true, forceClose = false): void {
-        if (show === this.megaphoneDisplay.isShown()) {
-            return;
-        }
-        this.animateSizeChange(() => {
-            this.megaphoneDisplay.show(show, forceClose);
-        }, show);
-    }
-
     public setPlayerNameOutlineColor(outlineColor: number | undefined): void {
         if (this.playerNameOutlineColor === outlineColor) {
             return;
@@ -106,9 +93,14 @@ export class UsernameDisplay {
         this.updateUsernameBackgroundColor(outlineColor);
     }
 
-    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false, forceClose = false): void {
+    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false): void {
         this.statusDisplay.setAvailabilityStatus(availabilityStatus, instant);
-        this.showMegaphone(availabilityStatus === AvailabilityStatus.SPEAKER, forceClose);
+        if (availabilityStatus === AvailabilityStatus.UNCHANGED) {
+            // UNCHANGED is 0, so it would compare unequal to SPEAKER and hide the megaphone, while
+            // the status dot correctly ignores it.
+            return;
+        }
+        this.megaphoneDisplay.show(availabilityStatus === AvailabilityStatus.SPEAKER, instant);
     }
 
     public getAvailabilityStatus(): AvailabilityStatus {
@@ -136,7 +128,6 @@ export class UsernameDisplay {
     }
 
     public destroy(): void {
-        this.stopSizeAnimation();
         this.element.remove();
         this.statusDisplay.destroy();
         this.megaphoneDisplay.destroy();
@@ -158,49 +149,6 @@ export class UsernameDisplay {
             x: this.x,
             y: this.y - (PLAYER_NAME_HEIGHT / 2) * this.displayScale,
         };
-    }
-
-    private animateSizeChange(changeElement: () => void, megaphoneShownAfterChange: boolean): void {
-        this.stopSizeAnimation();
-
-        const previousWidth = this.element.offsetWidth;
-        changeElement();
-        const nextWidth = megaphoneShownAfterChange ? this.element.offsetWidth : this.measureWidthWithoutMegaphone();
-
-        if (previousWidth === nextWidth) {
-            return;
-        }
-
-        this.element.style.overflow = "hidden";
-        this.element.style.width = `${previousWidth}px`;
-
-        this.sizeAnimation = this.element.animate([{ width: `${previousWidth}px` }, { width: `${nextWidth}px` }], {
-            duration: USERNAME_SIZE_ANIMATION_DURATION,
-            easing: USERNAME_SIZE_ANIMATION_EASING,
-        });
-
-        this.sizeAnimation.onfinish = () => {
-            this.sizeAnimation = undefined;
-            this.element.style.overflow = "";
-            this.element.style.width = "";
-        };
-    }
-
-    private stopSizeAnimation(): void {
-        this.sizeAnimation?.cancel();
-        this.sizeAnimation = undefined;
-        this.element.style.overflow = "";
-        this.element.style.width = "";
-    }
-
-    private measureWidthWithoutMegaphone(): number {
-        const previousDisplay = this.megaphoneDisplay.element.style.display;
-
-        this.megaphoneDisplay.element.style.display = "none";
-        const width = this.element.offsetWidth;
-        this.megaphoneDisplay.element.style.display = previousDisplay;
-
-        return width;
     }
 
     private createPlayerNameElement(): HTMLParagraphElement {
