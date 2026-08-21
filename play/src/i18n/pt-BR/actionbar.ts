@@ -107,7 +107,7 @@ const actionbar: BaseTranslation = {
         },
         wokaEmote: {
             title: "Reproduzir um emote",
-            desc: "Faça seu Woka pular, dançar ou girar. Segure E para abrir a roda e solte para reproduzir.",
+            desc: "Faça seu Woka pular, dançar ou girar. Segure G para abrir a roda e solte para reproduzir.",
         },
         audioManager: {
             title: "Volume dos sons ambiente",
@@ -223,6 +223,7 @@ const actionbar: BaseTranslation = {
         errorUnclaiming: "Não foi possível liberar sua mesa pessoal",
     },
     wokaEmote: {
+        button: "Emotes",
         wheelTitle: "Roda de emotes",
         hint: "Escolha um emote",
         names: {
