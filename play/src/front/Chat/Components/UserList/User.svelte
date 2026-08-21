@@ -88,7 +88,7 @@
     function openWokaMenu() {
         if (user.uuid == undefined) return;
         // Track the open woka menu action
-        analyticsClient.openWokaMenu();
+        analyticsClient.trackAdminEvent("user.woka_menu.opened");
 
         const currentScene = gameManager.getCurrentGameScene();
 
@@ -215,7 +215,7 @@
                                         },
                                     });
                                 });
-                                analyticsClient.sendMessageFromUserList();
+                                analyticsClient.trackAdminEvent("chat.message_from_user_list_clicked");
                             }}
                         >
                             <IconSend font-size="16" />

@@ -43,7 +43,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         const entity = this.entitiesManager.getEntities().get(this.entityId);
         if (!entity) {
             console.error("Entity not found");
-            analyticsClient.mapEditorSaveFailed("entity_not_found");
+            analyticsClient.trackAdminEvent("map_editor.save.failed", { reason: "entity_not_found" });
             return;
         }
         roomConnection.emitMapEditorModifyEntity(
@@ -59,7 +59,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
                 height: entity.height,
             },
         );
-        analyticsClient.mapEditorEntityUpdated(this.newConfig.prefabRef?.id);
+        analyticsClient.trackAdminEvent("map_editor.entity.updated", { entityType: this.newConfig.prefabRef?.id });
     }
 
     private handleEntityUpdate(config: Partial<WAMEntityData>): void {

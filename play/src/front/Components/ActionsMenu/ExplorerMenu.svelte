@@ -61,9 +61,9 @@
             direction === "in" ? BUTTON_ZOOM_FACTOR_PER_SECOND : 1 / BUTTON_ZOOM_FACTOR_PER_SECOND;
 
         if (direction === "in") {
-            analyticsClient.clickToZoomIn();
+            analyticsClient.trackAdminEvent("map_explorer.zoom_in_clicked");
         } else {
-            analyticsClient.clickToZoomOut();
+            analyticsClient.trackAdminEvent("map_explorer.zoom_out_clicked");
         }
 
         cameraManager?.smoothZoomByFactor(zoomFactor);
@@ -94,14 +94,14 @@
     }
 
     function openMapExplorer() {
-        analyticsClient.clickTopOpenMapExplorer();
+        analyticsClient.trackAdminEvent("map_explorer.top_button_clicked");
 
         mapEditorModeStore.switchMode(true);
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
     }
 
     function centerToUser() {
-        analyticsClient.clickCenterToUser();
+        analyticsClient.trackAdminEvent("map_explorer.center_to_user_clicked");
 
         mapEditorModeStore.switchMode(false);
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.CloseMapEditor);

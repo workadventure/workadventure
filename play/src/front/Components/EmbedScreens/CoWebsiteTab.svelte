@@ -26,14 +26,14 @@
 
     function select() {
         onclick?.();
-        analyticsClient.switchCowebsite();
+        analyticsClient.trackAdminEvent("cowebsite.switched");
     }
 
     function copyUrl() {
         const url = coWebsite.getUrl().toString();
 
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
-        analyticsClient.copyCowebsiteLink();
+        analyticsClient.trackAdminEvent("cowebsite.link_copied");
         oncopy?.();
         popupStore.addPopup(PopUpCopyUrl, {}, "popupCopyUrl");
     }
@@ -42,7 +42,7 @@
         const url = coWebsite.getUrl().toString();
 
         window.open(url, "_blank");
-        analyticsClient.openCowebsiteInNewTab();
+        analyticsClient.trackAdminEvent("cowebsite.opened_in_new_tab");
         if (coWebsite.shouldCloseOnOpenInNewTab()) closeTab();
     }
 </script>

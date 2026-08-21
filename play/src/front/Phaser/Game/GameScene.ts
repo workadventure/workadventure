@@ -565,7 +565,10 @@ export class GameScene extends DirtyScene {
             //once preloading is over, we don't want loading errors to crash the game, so we need to disable this behavior after preloading.
             //if SpriteSheetFile (WOKA file) don't display error and give an access for user
             if (this.preloading && !(file instanceof Phaser.Loader.FileTypes.SpriteSheetFile)) {
-                analyticsClient.tileOrAssetError("asset", file?.src ?? this.originalMapUrl);
+                analyticsClient.trackAdminEvent("asset.error", {
+                    kind: "asset",
+                    reason: file?.src ?? this.originalMapUrl,
+                });
                 //remove loader in progress
                 this.handleErrorAndCleanup(
                     new Error('Cannot load "' + (file?.src ?? this.originalMapUrl) + '"'),
@@ -1056,8 +1059,8 @@ export class GameScene extends DirtyScene {
 
         this.mapLoadSucceededAnalyticsSent = true;
         const durationMs = this.getWorldLoadDurationMs();
-        analyticsClient.mapLoadingSucceeded(durationMs);
-        analyticsClient.worldEntered(durationMs);
+        analyticsClient.trackAdminEvent("map_loading.succeeded", { durationMs });
+        analyticsClient.trackAdminEvent("world.entered", { durationMs });
     }
 
     private trackMapLoadingFailure(reason: string): void {
@@ -1066,7 +1069,7 @@ export class GameScene extends DirtyScene {
         }
 
         this.mapLoadFailedAnalyticsSent = true;
-        analyticsClient.mapLoadingFailed(reason, this.getWorldLoadDurationMs());
+        analyticsClient.trackAdminEvent("map_loading.failed", { reason, durationMs: this.getWorldLoadDurationMs() });
     }
 
     public getMapUrl(): string {
@@ -2881,7 +2884,10 @@ ${escapedMessage}
                 this.popUpElements.set(openPopupEvent.popupId, domElement);
 
                 // Analytics tracking for popups
-                analyticsClient.openedPopup(openPopupEvent.targetObject, openPopupEvent.popupId);
+                analyticsClient.trackAdminEvent("popup.opened", {
+                    targetRectangle: openPopupEvent.targetObject,
+                    id: openPopupEvent.popupId,
+                });
             }),
         );
 
@@ -3967,7 +3973,7 @@ ${escapedMessage}
 
         try {
             await this.moveTo({ x: centerX, y: centerY }, true, WOKA_SPEED * 2.5);
-            analyticsClient.goToPersonalDesk();
+            analyticsClient.trackAdminEvent("personal_desk.entered");
         } catch (error) {
             console.warn("Error while moving to personal desk", error);
             warningMessageStore.addWarningMessage(get(LL).actionbar.personalDesk.errorMoving(), { closable: true });

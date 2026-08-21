@@ -112,7 +112,7 @@
                 }
             }
         }
-        analyticsClient.filterInMapExplorer();
+        analyticsClient.trackAdminEvent("map_explorer.filtered");
     }
 
     function addFilter(filterName: string) {
@@ -249,7 +249,7 @@
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
 
         // Close map editor to walk on the entity or zone
-        analyticsClient.toggleMapEditor(!$mapEditorModeStore);
+        analyticsClient.trackAdminEvent(!$mapEditorModeStore ? "map_editor.opened" : "map_editor.closed");
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
 
         // Close the modal

@@ -78,15 +78,15 @@
                     break;
                 case SubMenusInterface.settings:
                     activeComponent = SettingsSubMenu;
-                    analyticsClient.menuSetting();
+                    analyticsClient.trackAdminEvent("settings.opened");
                     break;
                 case SubMenusInterface.aboutRoom:
                     activeComponent = AboutRoomSubMenu;
-                    analyticsClient.menuCredit();
+                    analyticsClient.trackAdminEvent("menu.credit.opened");
                     break;
                 case SubMenusInterface.contact:
                     activeComponent = ContactSubMenu;
-                    analyticsClient.menuContact();
+                    analyticsClient.trackAdminEvent("menu.contact.opened");
                     break;
                 case SubMenusInterface.globalMessages:
                     activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
@@ -98,11 +98,11 @@
                     break;
                 case SubMenusInterface.chat:
                     activeComponent = ChatSubMenu;
-                    analyticsClient.menuChat();
+                    analyticsClient.trackAdminEvent("menu.chat.opened");
                     break;
                 case SubMenusInterface.shortcuts:
                     activeComponent = ShortcutSubMenu;
-                    analyticsClient.menuShortcuts();
+                    analyticsClient.trackAdminEvent("menu.shortcuts.opened");
                     break;
                 case SubMenusInterface.help:
                     activeComponent = HelpSubMenu;
@@ -110,7 +110,7 @@
             }
         } else {
             // Save custom menu click for analytics
-            analyticsClient.menuCustom(menu.key);
+            analyticsClient.trackAdminEvent("menu.custom.opened", { name: menu.key });
 
             const customMenu = customMenuIframe.get(menu.key);
             if (customMenu !== undefined) {

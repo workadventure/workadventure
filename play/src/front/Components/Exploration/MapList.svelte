@@ -78,7 +78,7 @@
     function clickRoom(roomUrl: string, roomName: string) {
         isMoving.set(true);
         roomNameSelected.set(roomName);
-        analyticsClient.clickedRoomListRoom(roomUrl);
+        analyticsClient.trackAdminEvent("room_list.room_clicked", { roomId: roomUrl });
         // Use the room url to join the room
         scriptUtils.goToPage(roomUrl);
     }

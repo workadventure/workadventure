@@ -21,7 +21,9 @@
 
     function pictureInPictureClick() {
         // Analytics
-        analyticsClient.clickPictureInPicture(!$askPictureInPictureActivatingStore);
+        analyticsClient.trackAdminEvent("meeting.picture_in_picture.toggled", {
+            open: !$askPictureInPictureActivatingStore,
+        });
 
         // Create request to the navigateur to enter picture in picture mode
         onclick?.();

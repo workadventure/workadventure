@@ -94,7 +94,7 @@ export class InviteManager {
 
     public handleAccept(request: MeetingInvitationRequestReceivedMessage): void {
         this.connection.emitMeetingInvitationResponse(true, request.senderUserUuid);
-        analyticsClient.inviteAccepted("meeting");
+        analyticsClient.trackAdminEvent("invite.accepted", { inviteType: "meeting" });
         // TODO: Change emitAskPosition to a server query to allow for error handling
         // NOTE: For now, if the user leaves while their position is being requested, nothing happens
         this.connection.emitAskPosition(
@@ -137,7 +137,7 @@ export class InviteManager {
         }
 
         this.connection.emitMeetingInvitationRequest(receiverUserUuid, receiverUserId);
-        analyticsClient.inviteSent("meeting");
+        analyticsClient.trackAdminEvent("invite.sent", { inviteType: "meeting" });
         return true;
     }
 

@@ -111,7 +111,7 @@
 
         const mapEditorModeManager = scene.getMapEditorModeManager();
 
-        analyticsClient.dragDropFile();
+        analyticsClient.trackAdminEvent("file.drag_dropped");
         mapEditorModeStore.switchMode(true);
         mapEditorModeManager.equipTool(EditorToolName.EntityEditor);
         mapEditorEntityFileDroppedStore.set(true);

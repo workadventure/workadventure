@@ -6,7 +6,7 @@
     import PopUpContainer from "./PopUpContainer.svelte";
 
     function goToLogin() {
-        analyticsClient.login();
+        analyticsClient.trackAdminEvent("auth.login_clicked");
         window.location.href = "/login";
         popupStore.removePopup("popupConnect");
     }
