@@ -10,6 +10,8 @@ import {
     analyticsEventsBatch,
     timedAnalyticsEventDefinition,
 } from "@workadventure/messages";
+// Deliberately not re-exported through the barrel — see AnalyticsPostHogKeys.ts.
+import { POSTHOG_EVENT_KEYS } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
 
 /** Reads the `properties` sub-schema off a catalog entry. */
 function propertiesOf(schema: z.ZodDiscriminatedUnionOption<"eventName">): z.ZodTypeAny {
@@ -29,10 +31,7 @@ function propertiesOf(schema: z.ZodDiscriminatedUnionOption<"eventName">): z.Zod
  * control frames, which the handler intercepts and never enqueues.
  */
 const EMITTER_SOURCES = import.meta.glob<string>(
-    [
-        "../../src/front/Administration/AnalyticsClient.ts",
-        "../../src/pusher/services/AnalyticsEventsQueue.ts",
-    ],
+    ["../../src/front/Administration/AnalyticsClient.ts", "../../src/pusher/services/AnalyticsEventsQueue.ts"],
     { query: "?raw", import: "default", eager: true },
 );
 
@@ -78,6 +77,13 @@ function extractEmittedEventNames(): Set<string> {
         for (const [, name] of source.matchAll(
             /(?:trackAdminEvent|openTimedAnalyticsEvent)\(\s*"([a-z][a-z0-9_.]*)"/g,
         )) {
+            names.add(name);
+        }
+        // trackAdminEventAs("wa_menu_profile", "profile.opened") — the PostHog name
+        // comes first, so the event is the SECOND literal. These are the events two UI
+        // paths reach under two PostHog names, which POSTHOG_EVENT_KEYS cannot express;
+        // miss them here and the catalog reads as documenting dead entries.
+        for (const [, name] of source.matchAll(/trackAdminEventAs\(\s*"[^"]*",\s*"([a-z][a-z0-9_.]*)"/g)) {
             names.add(name);
         }
         // trackAdminEvent(open ? "map_editor.opened" : "map_editor.closed")
@@ -387,5 +393,32 @@ describe("Swagger rendering", () => {
             "schemaVersion",
             "sentAt",
         ]);
+    });
+});
+
+describe("POSTHOG_EVENT_KEYS", () => {
+    it("maps only events the catalog knows", () => {
+        // The type says this already — a key that is not an AnalyticsEventName does not
+        // compile. Asserted at runtime too because the failure it guards is silent: a
+        // renamed event leaves a mapping that matches nothing, and the front simply
+        // stops reporting it to PostHog with nothing to notice.
+        const catalogued = new Set(Object.keys(ANALYTICS_EVENT_CATALOG));
+
+        expect(
+            Object.keys(POSTHOG_EVENT_KEYS)
+                .filter((name) => !catalogued.has(name))
+                .sort(),
+        ).toEqual([]);
+    });
+
+    it("gives each PostHog name to exactly one event", () => {
+        // Two events sharing a name double-count it in PostHog, and the two are
+        // indistinguishable once there. The events that genuinely need one name per UI
+        // path go through trackAdminEventAs instead, which is why none of them is here.
+        const names = Object.values(POSTHOG_EVENT_KEYS);
+        const duplicated = names.filter((name, index) => names.indexOf(name) !== index);
+
+        expect(names.length).toBeGreaterThan(100);
+        expect([...new Set(duplicated)].sort()).toEqual([]);
     });
 });
