@@ -13,8 +13,10 @@ export const wokaEmoteStore = writable<WokaEmoteId | null>(null);
 
 export function playWokaEmote(emoteId: WokaEmoteId): void {
     analyticsClient.launchWokaEmote(emoteId);
-    wokaEmoteStore.set(emoteId);
+    // The wheel closes first: while it is open the game inputs are off, and GameScene refuses to
+    // play an emote it believes the player cannot have asked for.
     wokaEmoteWheelVisibleStore.set(false);
+    wokaEmoteStore.set(emoteId);
 }
 
 export function toggleWokaEmoteWheel(): void {
