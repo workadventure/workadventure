@@ -29,8 +29,9 @@ import type { AnalyticsEventName } from "./AnalyticsEventCatalog";
  * - The six events two different UI paths reach under two different PostHog names
  *   — opening the profile from the menu (`wa_menu_profile`) or from the profile
  *   button (`wa_open_profile_menu`), entering a Jitsi meeting area or a LiveKit
- *   one, and so on. One key per event cannot say that, so those pass their name to
- *   `trackAdminEventAs` at the call site: `meeting.area_entered`,
+ *   one, and so on. One key per event cannot say that, so each of those methods
+ *   captures PostHog itself, on the line above its `trackAdminEvent` — one line
+ *   per sink, both names read together: `meeting.area_entered`,
  *   `media.connection_retry`, `profile.opened`, `global_message.opened`,
  *   `feedback.opened` and `invite.sent`.
  *

@@ -141,31 +141,20 @@ class AnalyticsClient {
      * POSTHOG_EVENT_KEYS. Every method below used to name its event twice — once per
      * sink — which is 123 opportunities for the two names to drift; that map is now
      * the only place a PostHog name is written down.
+     *
+     * Except for the six events two UI paths reach under two PostHog names, which a
+     * map keyed by event cannot express. Those are absent from POSTHOG_EVENT_KEYS and
+     * capture PostHog themselves, on the line above their call to this — one line per
+     * sink, where the two names are read together.
      */
     private trackAdminEvent<N extends AnalyticsEventName>(eventName: N, ...args: AnalyticsEventArgs<N>): void {
-        this.trackAdminEventAs(POSTHOG_EVENT_KEYS[eventName], eventName, ...args);
-    }
-
-    /**
-     * `trackAdminEvent` with the PostHog name given here instead of by the map.
-     *
-     * For the six events two different UI paths reach — opening the profile from the
-     * menu and from the profile button, entering a Jitsi area and a LiveKit one, and
-     * so on. They are one event to this pipeline and two to PostHog, so the name
-     * cannot live in a map keyed by event; POSTHOG_EVENT_KEYS names the six and
-     * leaves them out.
-     */
-    private trackAdminEventAs<N extends AnalyticsEventName>(
-        postHogKey: string | undefined,
-        eventName: N,
-        ...args: AnalyticsEventArgs<N>
-    ): void {
         const [properties = {}] = args;
 
         // Ahead of the capability gate, and deliberately: PostHog is the sink that
         // predates this pipeline, and on a world whose pusher does not advertise
         // api/analytics/events-batch it is the only one there is. Gating it on that
         // capability would switch analytics off for every such world.
+        const postHogKey = POSTHOG_EVENT_KEYS[eventName];
         if (postHogKey) {
             this.posthog?.capture(postHogKey, properties);
         }
@@ -272,11 +261,13 @@ class AnalyticsClient {
     }
 
     enteredJitsi(roomName: string, roomId: string): void {
-        this.trackAdminEventAs("wa-entered-jitsi", "meeting.area_entered", { roomId, meetingProvider: "jitsi" });
+        this.posthog?.capture("wa-entered-jitsi", { roomId, meetingProvider: "jitsi" });
+        this.trackAdminEvent("meeting.area_entered", { roomId, meetingProvider: "jitsi" });
     }
 
     enteredMeetingRoom(roomName: string, roomId: string): void {
-        this.trackAdminEventAs("wa-entered-meeting-room", "meeting.area_entered", { roomId });
+        this.posthog?.capture("wa-entered-meeting-room", { roomId });
+        this.trackAdminEvent("meeting.area_entered", { roomId });
     }
 
     validationName(): void {
@@ -359,13 +350,13 @@ class AnalyticsClient {
     }
 
     retryConnectionWebRtc(): void {
-        this.trackAdminEventAs("wa_retry_connection_webrtc", "media.connection_retry", { meetingProvider: "webrtc" });
+        this.posthog?.capture("wa_retry_connection_webrtc", { meetingProvider: "webrtc" });
+        this.trackAdminEvent("media.connection_retry", { meetingProvider: "webrtc" });
     }
 
     retryConnectionLivekit(): void {
-        this.trackAdminEventAs("wa_retry_connection_livekit", "media.connection_retry", {
-            meetingProvider: "livekit",
-        });
+        this.posthog?.capture("wa_retry_connection_livekit", { meetingProvider: "livekit" });
+        this.trackAdminEvent("media.connection_retry", { meetingProvider: "livekit" });
     }
 
     openBackgroundSettings(): void {
@@ -482,7 +473,8 @@ class AnalyticsClient {
     }
 
     menuProfile(): void {
-        this.trackAdminEventAs("wa_menu_profile", "profile.opened");
+        this.posthog?.capture("wa_menu_profile");
+        this.trackAdminEvent("profile.opened");
     }
 
     menuSetting() {
@@ -502,7 +494,8 @@ class AnalyticsClient {
     }
 
     globalMessage(): void {
-        this.trackAdminEventAs("wa_menu_globalmessage", "global_message.opened");
+        this.posthog?.capture("wa_menu_globalmessage");
+        this.trackAdminEvent("global_message.opened");
     }
 
     sendGlocalTextMessage(): void {
@@ -514,7 +507,8 @@ class AnalyticsClient {
     }
 
     reportIssue(): void {
-        this.trackAdminEventAs("wa_menu_report", "feedback.opened", { feedbackSource: "external_report_url" });
+        this.posthog?.capture("wa_menu_report", { feedbackSource: "external_report_url" });
+        this.trackAdminEvent("feedback.opened", { feedbackSource: "external_report_url" });
     }
 
     feedbackOpened(feedbackSource: "sentry" | "external_report_url" = "sentry"): void {
@@ -530,7 +524,8 @@ class AnalyticsClient {
     }
 
     inviteCopyLink(): void {
-        this.trackAdminEventAs("wa_menu_invite_copylink", "invite.sent", { inviteType: "copy_link" });
+        this.posthog?.capture("wa_menu_invite_copylink", { inviteType: "copy_link" });
+        this.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
     }
 
     inviteCopyLinkWalk(value: boolean): void {
@@ -762,7 +757,8 @@ class AnalyticsClient {
     }
 
     openGlobalMessage(): void {
-        this.trackAdminEventAs("wa_action_globalmessage", "global_message.opened");
+        this.posthog?.capture("wa_action_globalmessage");
+        this.trackAdminEvent("global_message.opened");
     }
 
     openGlobalAudio(): void {
@@ -812,7 +808,8 @@ class AnalyticsClient {
         this.trackAdminEvent("cowebsite.switched");
     }
     openProfileMenu(): void {
-        this.trackAdminEventAs("wa_open_profile_menu", "profile.opened");
+        this.posthog?.capture("wa_open_profile_menu");
+        this.trackAdminEvent("profile.opened");
     }
     filterInMapExplorer(): void {
         this.trackAdminEvent("map_explorer.filtered");

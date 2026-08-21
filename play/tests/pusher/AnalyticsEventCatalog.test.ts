@@ -79,13 +79,6 @@ function extractEmittedEventNames(): Set<string> {
         )) {
             names.add(name);
         }
-        // trackAdminEventAs("wa_menu_profile", "profile.opened") — the PostHog name
-        // comes first, so the event is the SECOND literal. These are the events two UI
-        // paths reach under two PostHog names, which POSTHOG_EVENT_KEYS cannot express;
-        // miss them here and the catalog reads as documenting dead entries.
-        for (const [, name] of source.matchAll(/trackAdminEventAs\(\s*"[^"]*",\s*"([a-z][a-z0-9_.]*)"/g)) {
-            names.add(name);
-        }
         // trackAdminEvent(open ? "map_editor.opened" : "map_editor.closed")
         for (const [, whenTrue, whenFalse] of source.matchAll(
             /trackAdminEvent\(\s*\w+\s*\?\s*"([a-z][a-z0-9_.]*)"\s*:\s*"([a-z][a-z0-9_.]*)"/g,
@@ -414,7 +407,7 @@ describe("POSTHOG_EVENT_KEYS", () => {
     it("gives each PostHog name to exactly one event", () => {
         // Two events sharing a name double-count it in PostHog, and the two are
         // indistinguishable once there. The events that genuinely need one name per UI
-        // path go through trackAdminEventAs instead, which is why none of them is here.
+        // path capture PostHog in their own method instead, which is why none is here.
         const names = Object.values(POSTHOG_EVENT_KEYS);
         const duplicated = names.filter((name, index) => names.indexOf(name) !== index);
 

@@ -529,8 +529,11 @@ describe("AnalyticsClient admin analytics sink", () => {
 
         // One event to this pipeline, two to PostHog — which is why the name cannot
         // live on the catalog entry for these six.
-        expect(capture).toHaveBeenNthCalledWith(1, "wa_menu_profile", {});
-        expect(capture).toHaveBeenNthCalledWith(2, "wa_open_profile_menu", {});
+        // Bare, with no properties object: these two capture PostHog on their own
+        // line rather than through the map, and follow the shape every other explicit
+        // capture in the client uses.
+        expect(capture).toHaveBeenNthCalledWith(1, "wa_menu_profile");
+        expect(capture).toHaveBeenNthCalledWith(2, "wa_open_profile_menu");
         expect(sendAdmin).toHaveBeenCalledTimes(2);
         expect(sendAdmin).toHaveBeenNthCalledWith(1, {
             events: [expect.objectContaining({ eventName: "profile.opened" })],
