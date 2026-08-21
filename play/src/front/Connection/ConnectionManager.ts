@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/svelte";
-import { derived, get } from "svelte/store";
+import { get } from "svelte/store";
 import type { ErrorApiErrorData, ErrorApiRetryData, ErrorApiUnauthorizedData } from "@workadventure/messages";
 import { isRegisterData, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
 import axios, { AxiosError, isAxiosError } from "axios";
