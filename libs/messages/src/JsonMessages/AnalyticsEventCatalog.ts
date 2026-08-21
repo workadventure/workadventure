@@ -128,6 +128,12 @@ export const LEGACY_TIMED_EVENT_END_REASONS: Record<
  * error. `event({...})` for one that carries properties, `signal("…")` for a bare
  * one. Anything that emits it then type-checks against this entry.
  *
+ * Nothing here mentions PostHog, deliberately: the front reports to it as well, and
+ * the name each event carries there lives in `AnalyticsPostHogKeys.ts`, which
+ * imports nothing from this file but a type. Putting it back on the entry would put
+ * these ~166 Zod schemas in the browser bundle to look up a string. A new event
+ * belongs in that map only if PostHog already knew it under some other name.
+ *
  * ## Reading the shapes
  *
  * `properties` here is only what the *call site* passes. The pusher enriches every

@@ -479,4 +479,64 @@ describe("AnalyticsClient admin analytics sink", () => {
             ],
         });
     });
+
+    // The PostHog name now comes off the catalog rather than a second call at the
+    // call site, which puts every capture behind trackAdminEvent. These pin the two
+    // ways that fold could quietly change what PostHog receives.
+    it("captures to PostHog even without the admin analytics capability", () => {
+        const capture = vi.fn();
+        window.capabilities = {};
+        window.posthog = { capture } as never;
+
+        analyticsClient.openSayBubble();
+
+        // PostHog predates this pipeline and is the only sink on a world whose pusher
+        // does not advertise the capability. Folding it behind the gate would switch
+        // analytics off for all of them.
+        expect(capture).toHaveBeenCalledWith("wa_say_bubble_open", {});
+    });
+
+    it("leaves PostHog alone for events it never knew", () => {
+        const sendAdmin = vi.fn();
+        const capture = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+        window.posthog = { capture } as never;
+
+        // Added with the new pipeline: no postHogKey in the catalog, so reporting it
+        // must not invent PostHog volume that never existed.
+        analyticsClient.chatMessageSent("proximity");
+
+        expect(capture).not.toHaveBeenCalled();
+        expect(sendAdmin).toHaveBeenCalledWith({
+            events: [expect.objectContaining({ eventName: "chat.message_sent" })],
+        });
+    });
+
+    it("keeps the two PostHog names of an event two UI paths reach", () => {
+        const sendAdmin = vi.fn();
+        const capture = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+        window.posthog = { capture } as never;
+
+        analyticsClient.menuProfile();
+        analyticsClient.openProfileMenu();
+
+        // One event to this pipeline, two to PostHog — which is why the name cannot
+        // live on the catalog entry for these six.
+        expect(capture).toHaveBeenNthCalledWith(1, "wa_menu_profile", {});
+        expect(capture).toHaveBeenNthCalledWith(2, "wa_open_profile_menu", {});
+        expect(sendAdmin).toHaveBeenCalledTimes(2);
+        expect(sendAdmin).toHaveBeenNthCalledWith(1, {
+            events: [expect.objectContaining({ eventName: "profile.opened" })],
+        });
+        expect(sendAdmin).toHaveBeenNthCalledWith(2, {
+            events: [expect.objectContaining({ eventName: "profile.opened" })],
+        });
+    });
 });
