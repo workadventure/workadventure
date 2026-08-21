@@ -23,6 +23,8 @@ export class Area extends Rectangle {
     private userHasCollideWithArea = false;
     private highlightTimeOut: undefined | NodeJS.Timeout = undefined;
     private collideTimeOut: undefined | NodeJS.Timeout = undefined;
+    private blockedFeedbackDisplayed = false;
+    private blockedFeedbackTimeOut: undefined | NodeJS.Timeout = undefined;
 
     constructor(
         public readonly scene: GameScene,
@@ -93,6 +95,9 @@ export class Area extends Rectangle {
         }
         if (this.collideTimeOut !== undefined) {
             clearTimeout(this.collideTimeOut);
+        }
+        if (this.blockedFeedbackTimeOut !== undefined) {
+            clearTimeout(this.blockedFeedbackTimeOut);
         }
     }
 
@@ -246,5 +251,25 @@ export class Area extends Rectangle {
             this.displayWarningMessageOnCollide();
             this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
         }
+    }
+
+    /**
+     * Shows the same "blocked" feedback as bumping into the area with the collider (highlight +
+     * warning message). Used when the current player is ejected from an area they are not allowed to
+     * be in, so they get the same "you don't have access" message as when the collider stops them at
+     * the edge.
+     *
+     * This uses its own throttle rather than `userHasCollideWithArea`: that flag is set by
+     * {@link applyCollider} whenever the collider is added while the player is inside — which is
+     * exactly the ejection case — so reusing it would suppress the message every time.
+     */
+    public displayBlockedFeedback(): void {
+        if (this.blockedFeedbackDisplayed) {
+            return;
+        }
+        this.blockedFeedbackDisplayed = true;
+        this.highLightArea();
+        this.displayWarningMessageOnCollide();
+        this.blockedFeedbackTimeOut = setTimeout(() => (this.blockedFeedbackDisplayed = false), 3000);
     }
 }
