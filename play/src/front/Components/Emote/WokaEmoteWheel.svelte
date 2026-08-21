@@ -96,20 +96,31 @@
         })),
     );
 
-    function open(withShortcut: boolean): void {
-        openedWithShortcutAt = withShortcut ? Date.now() : null;
+    // The wheel is opened from the action bar as well as from the shortcut, so the setup hangs off
+    // the store rather than off a local open(). Opened from the button it used to skip this and end
+    // up in the middle of the screen with every slice still collapsed on the centre.
+    $effect(() => {
+        if (!$wokaEmoteWheelVisibleStore) {
+            openedWithShortcutAt = null;
+            selected = null;
+            deployed = false;
+            stopTracking();
+            return;
+        }
         selected = null;
         deployed = false;
         startTracking();
-        wokaEmoteWheelVisibleStore.set(true);
         // One frame later, so the slices have a collapsed position to travel out from.
-        requestAnimationFrame(() => (deployed = true));
+        const frame = requestAnimationFrame(() => (deployed = true));
+        return () => cancelAnimationFrame(frame);
+    });
+
+    function open(withShortcut: boolean): void {
+        openedWithShortcutAt = withShortcut ? Date.now() : null;
+        wokaEmoteWheelVisibleStore.set(true);
     }
 
     function close(): void {
-        openedWithShortcutAt = null;
-        selected = null;
-        stopTracking();
         wokaEmoteWheelVisibleStore.set(false);
     }
 
@@ -118,10 +129,8 @@
             close();
             return;
         }
+        // playWokaEmote closes the wheel itself, which tears the tracking down through the effect.
         playWokaEmote(WOKA_EMOTES[index].id);
-        openedWithShortcutAt = null;
-        selected = null;
-        stopTracking();
     }
 
     /** Turns the pointer position into the slice it is aiming at. */
