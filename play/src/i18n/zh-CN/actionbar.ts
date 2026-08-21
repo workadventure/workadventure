@@ -105,7 +105,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         wokaEmote: {
             title: "播放表情",
-            desc: "让你的 Woka 跳跃、跳舞或旋转。按住 E 打开轮盘，松开即可播放。",
+            desc: "让你的 Woka 跳跃、跳舞或旋转。按住 G 打开轮盘，松开即可播放。",
         },
         audioManager: {
             title: "环境声音音量",
@@ -219,6 +219,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorUnclaiming: "无法释放您的个人办公桌",
     },
     wokaEmote: {
+        button: "表情动作",
         wheelTitle: "表情轮盘",
         hint: "选择一个表情",
         names: {

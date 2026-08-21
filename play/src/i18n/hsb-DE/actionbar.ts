@@ -107,7 +107,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         wokaEmote: {
             title: "Emote wothrać",
-            desc: "Dajće swojemu Woka skakać, rejwać abo so wobroćić. Držće E, zo byšće koleso wočinili, a pušćće, zo byšće wothrali.",
+            desc: "Dajće swojemu Woka skakać, rejwać abo so wobroćić. Držće G, zo byšće koleso wočinili, a pušćće, zo byšće wothrali.",
         },
         audioManager: {
             title: "Hłošnosć wokolnych zwukow",
@@ -221,6 +221,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorUnclaiming: "Wosobinske pisaće blidko njeje so wotwołało",
     },
     wokaEmote: {
+        button: "Emotes",
         wheelTitle: "Koleso emotow",
         hint: "Wubjerće emote",
         names: {

@@ -106,7 +106,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         wokaEmote: {
             title: "エモートを再生",
-            desc: "Woka をジャンプ・ダンス・回転させます。E を長押しでホイールを開き、離すと再生します。",
+            desc: "Woka をジャンプ・ダンス・回転させます。G を長押しでホイールを開き、離すと再生します。",
         },
         audioManager: {
             title: "環境音の音量",
@@ -220,6 +220,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorUnclaiming: "個人デスクを解放できません",
     },
     wokaEmote: {
+        button: "エモート",
         wheelTitle: "エモートホイール",
         hint: "エモートを選択",
         names: {

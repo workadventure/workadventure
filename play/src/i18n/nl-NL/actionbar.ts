@@ -108,7 +108,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         wokaEmote: {
             title: "Een emote afspelen",
-            desc: "Laat je Woka springen, dansen of draaien. Houd E ingedrukt om het wiel te openen en laat los om af te spelen.",
+            desc: "Laat je Woka springen, dansen of draaien. Houd G ingedrukt om het wiel te openen en laat los om af te spelen.",
         },
         audioManager: {
             title: "Volume van omgevingsgeluiden",
@@ -222,6 +222,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorUnclaiming: "Kan uw persoonlijke bureau niet vrijgeven",
     },
     wokaEmote: {
+        button: "Emotes",
         wheelTitle: "Emote-wiel",
         hint: "Kies een emote",
         names: {

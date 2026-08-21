@@ -16,7 +16,6 @@
     import AppsMenuItem from "./AppsMenuItem.svelte";
     import FollowMenuItem from "./FollowMenuItem.svelte";
     import EmojiMenuItem from "./EmojiMenuItem.svelte";
-    import WokaEmoteMenuItem from "./WokaEmoteMenuItem.svelte";
     import LockDiscussionMenuItem from "./LockDiscussionMenuItem.svelte";
     import MusicMenuItem from "./MusicMenuItem.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
@@ -48,7 +47,6 @@
 
 {#if !inProfileMenu}
     <EmojiMenuItem />
-    <WokaEmoteMenuItem />
     <AppsMenuItem />
 {/if}
 

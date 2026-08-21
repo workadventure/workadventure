@@ -106,7 +106,7 @@ const actionbar: BaseTranslation = {
         },
         wokaEmote: {
             title: "Play an emote",
-            desc: "Make your Woka jump, dance or spin. Hold E to open the wheel, release to play.",
+            desc: "Make your Woka jump, dance or spin. Hold G to open the wheel, release to play.",
         },
         audioManager: {
             title: "Ambient sounds volume",
@@ -220,6 +220,7 @@ const actionbar: BaseTranslation = {
         errorUnclaiming: "Unable to unclaim your personal desk",
     },
     wokaEmote: {
+        button: "Emotes",
         wheelTitle: "Emote wheel",
         hint: "Pick an emote",
         names: {

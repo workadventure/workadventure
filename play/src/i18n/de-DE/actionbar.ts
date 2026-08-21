@@ -109,7 +109,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         wokaEmote: {
             title: "Ein Emote abspielen",
-            desc: "Lass deinen Woka springen, tanzen oder sich drehen. Halte E gedrückt, um das Rad zu öffnen, und lass los zum Abspielen.",
+            desc: "Lass deinen Woka springen, tanzen oder sich drehen. Halte G gedrückt, um das Rad zu öffnen, und lass los zum Abspielen.",
         },
         audioManager: {
             title: "Lautstärke der Umgebungsgeräusche",
@@ -223,6 +223,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorUnclaiming: "Ihr persönlicher Schreibtisch konnte nicht freigegeben werden",
     },
     wokaEmote: {
+        button: "Emotes",
         wheelTitle: "Emote-Rad",
         hint: "Wähle ein Emote",
         names: {

@@ -107,7 +107,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         wokaEmote: {
             title: "Reproduir una emote",
-            desc: "Fes que el teu Woka salti, balli o giri. Mantén premuda la E per obrir la roda i deixa-la anar per reproduir.",
+            desc: "Fes que el teu Woka salti, balli o giri. Mantén premuda la G per obrir la roda i deixa-la anar per reproduir.",
         },
         audioManager: {
             title: "Volum dels sons ambientals",
@@ -221,6 +221,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorUnclaiming: "No es pot alliberar el vostre escriptori personal",
     },
     wokaEmote: {
+        button: "Emotes",
         wheelTitle: "Roda d'emotes",
         hint: "Tria una emote",
         names: {

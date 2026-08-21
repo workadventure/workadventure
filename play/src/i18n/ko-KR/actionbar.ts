@@ -107,7 +107,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         wokaEmote: {
             title: "이모트 재생",
-            desc: "Woka를 점프하거나 춤추거나 회전시킵니다. E를 길게 눌러 휠을 열고 놓으면 재생됩니다.",
+            desc: "Woka를 점프하거나 춤추거나 회전시킵니다. G를 길게 눌러 휠을 열고 놓으면 재생됩니다.",
         },
         audioManager: {
             title: "주변 소리 볼륨",
@@ -221,6 +221,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorUnclaiming: "개인 책상을 해제할 수 없습니다",
     },
     wokaEmote: {
+        button: "이모트",
         wheelTitle: "이모트 휠",
         hint: "이모트를 선택하세요",
         names: {

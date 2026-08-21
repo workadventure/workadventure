@@ -192,6 +192,21 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         id: "laugh",
         duration: 1100,
         icon: "😂",
+        // A body that bounces on the spot is not, on its own, readable as laughter: `celebrate` and
+        // `jump` bounce too. The three "HA" puffs are what names the emote, and they leave the head
+        // in the rhythm of the shake.
+        particles: [
+            {
+                glyph: "laugh",
+                at: [60, 300, 540],
+                count: 1,
+                life: 560,
+                riseSpeed: -0.022,
+                spread: 6,
+                drift: 0.007,
+                originY: 26,
+            },
+        ],
         sample: (t) => {
             const damping = Math.max(0, 1 - t / 1100);
             const beat = oscillate(t, 140);
