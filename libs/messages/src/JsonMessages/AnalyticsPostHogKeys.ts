@@ -18,22 +18,20 @@ import type { AnalyticsEventName } from "./AnalyticsEventCatalog";
  * a renamed or deleted event is a compile error rather than a mapping that
  * silently stops matching anything.
  *
- * ## Absent means "not a PostHog event", which covers three things
+ * ## Absent means "not a PostHog event", which covers two things
  *
  * - An event added with this pipeline, which PostHog never knew. Adding a key here
  *   would invent volume rather than migrate it, so leave it out.
- * - An event whose PostHog counterpart is not one event: `cowebsite.opened`,
- *   `area.dwell` and `megaphone.ended` are intervals, reported once when they
- *   close, while PostHog counts an open and a close separately. AnalyticsClient
- *   captures those itself, where the interval is opened and closed.
- * - The six events two different UI paths reach under two different PostHog names
- *   — opening the profile from the menu (`wa_menu_profile`) or from the profile
- *   button (`wa_open_profile_menu`), entering a Jitsi meeting area or a LiveKit
- *   one, and so on. One key per event cannot say that, so each of those methods
- *   captures PostHog itself, on the line above its `trackAdminEvent` — one line
- *   per sink, both names read together: `meeting.area_entered`,
- *   `media.connection_retry`, `profile.opened`, `global_message.opened`,
- *   `feedback.opened` and `invite.sent`.
+ * - An interval, whose PostHog counterpart is not one event: `cowebsite.closed`,
+ *   `area.dwell` and `megaphone.ended` are opened and closed by the user, and
+ *   PostHog counts both ends while the admin gets one row when it finishes.
+ *   AnalyticsClient captures those itself, where the interval is opened and closed
+ *   — and it has to, because the two do not coincide: a stale area handle closing
+ *   is not someone leaving, and a broadcast reopened after a reconnect is not
+ *   someone pressing start.
+ *
+ * The events two UI paths reach under two names are NOT in that list: they used to
+ * be, and they are now ordinary entries in the discriminated form below.
  *
  * ## What PostHog receives
  *
@@ -45,7 +43,35 @@ import type { AnalyticsEventName } from "./AnalyticsEventCatalog";
  * PostHog counterpart, and requiring a key for every event would mean inventing
  * one for each new event added.
  */
-export const POSTHOG_EVENT_KEYS: Partial<Record<AnalyticsEventName, string>> = {
+/**
+ * What an event travels under in PostHog: one name, or the several it takes
+ * depending on one of its own declared properties.
+ *
+ * The discriminated form is for the events two UI paths reach under two names.
+ * `profile.opened` is one event to this pipeline and two to PostHog — the profile
+ * opened from the menu, and from the profile button — which a bare event→name map
+ * cannot say. What can say it is the event's own property: the value the caller
+ * already passes picks the name, so nothing at the call site has to know a PostHog
+ * name exists at all.
+ *
+ * `whenAbsent` covers an optional discriminator — walking into a meeting area with
+ * no `meetingProvider` is the LiveKit room, which PostHog has always counted under
+ * a name of its own. A value with no entry in `byValue` is simply not a PostHog
+ * event: `feedback.opened` from the Sentry dialog never was one.
+ */
+type PostHogEventKey =
+  | string
+  | {
+      /** The declared property whose value picks the name. */
+      on: string;
+      byValue: Record<string, string>;
+      /** Used when the property is absent, for the optional discriminators. */
+      whenAbsent?: string;
+    };
+
+export const POSTHOG_EVENT_KEYS: Partial<
+  Record<AnalyticsEventName, PostHogEventKey>
+> = {
   "auth.logged_sso": "wa-logged-sso",
   "auth.logged_token": "wa-logged-token",
   "auth.login_clicked": "wa_login",
@@ -80,14 +106,27 @@ export const POSTHOG_EVENT_KEYS: Partial<Record<AnalyticsEventName, string>> = {
   "external_module.opened": "wa-opened-external-module",
   "external_module.todo_list_opened": "wa-opened-external-module-todolist",
 
+  "feedback.opened": {
+    on: "feedbackSource",
+    byValue: { external_report_url: "wa_menu_report" },
+  },
+
   "file.drag_dropped": "wa_drag_drop_file",
 
   "global_audio.opened": "wa_action_globalaudio",
 
+  "global_message.opened": {
+    on: "source",
+    byValue: { menu: "wa_menu_globalmessage", action_bar: "wa_action_globalmessage" },
+  },
   "global_message.sound_sent": "wa_menu_globalmessage_sound",
   "global_message.text_sent": "wa_menu_globalmessage_send",
 
   "invite.opened": "wa-opened-invite",
+  "invite.sent": {
+    on: "inviteType",
+    byValue: { copy_link: "wa_menu_invite_copylink" },
+  },
   "invite.walk_link_option_changed": "wa_menu_invite_copylink_walk",
 
   "map_editor.application.opened": "wa_map-editor_open_application",
@@ -108,6 +147,13 @@ export const POSTHOG_EVENT_KEYS: Partial<Record<AnalyticsEventName, string>> = {
   "map_explorer.zoom_out_clicked": "wa_click_to_zoom_out",
 
   "media.camera.toggled": "wa_camera",
+  "media.connection_retry": {
+    on: "meetingProvider",
+    byValue: {
+      webrtc: "wa_retry_connection_webrtc",
+      livekit: "wa_retry_connection_livekit",
+    },
+  },
   "media.microphone.toggled": "wa_microphone",
   "media.turn_test.failed": "wa_turn_test_failure",
   "media.turn_test.succeeded": "wa_turn_test_success",
@@ -115,6 +161,11 @@ export const POSTHOG_EVENT_KEYS: Partial<Record<AnalyticsEventName, string>> = {
   "media.video_stream_missing": "wa_no_video_stream_received",
 
   "meeting.actions.opened": "wa_more_meeting_action",
+  "meeting.area_entered": {
+    on: "meetingProvider",
+    byValue: { jitsi: "wa-entered-jitsi" },
+    whenAbsent: "wa-entered-meeting-room",
+  },
   "meeting.camera_layout_resized": "wa_resize_camera_layout",
   "meeting.layout_changed": "wa_layout_present",
   "meeting.microphone.muted": "wa_mute_microphone_meeting_action",
@@ -153,6 +204,10 @@ export const POSTHOG_EVENT_KEYS: Partial<Record<AnalyticsEventName, string>> = {
   "profile.camera_edit_opened": "wa_edit_camera",
   "profile.companion_edit_opened": "wa_edit_companion",
   "profile.name_edit_opened": "wa_edit_name",
+  "profile.opened": {
+    on: "source",
+    byValue: { menu: "wa_menu_profile", profile_button: "wa_open_profile_menu" },
+  },
   "profile.woka_edit_opened": "wa_edit_woka",
 
   "pwa.continue_in_browser_clicked": "wa_pwa_continue_in_browser_click",
@@ -196,3 +251,25 @@ export const POSTHOG_EVENT_KEYS: Partial<Record<AnalyticsEventName, string>> = {
 
   "user_list.opened": "wa_open_user_list",
 };
+
+/**
+ * The PostHog name for one reported event, or undefined when it has none.
+ *
+ * Takes the properties, not just the name, because for the discriminated entries
+ * that is where the answer lives — see PostHogEventKey. Callers pass what they were
+ * going to send anyway, so no site has to know which shape its event uses.
+ */
+export function postHogEventKey(
+  eventName: AnalyticsEventName,
+  properties: Record<string, unknown>,
+): string | undefined {
+  const key = POSTHOG_EVENT_KEYS[eventName];
+  if (key === undefined || typeof key === "string") {
+    return key;
+  }
+
+  const discriminator = properties[key.on];
+  return discriminator === undefined
+    ? key.whenAbsent
+    : key.byValue[String(discriminator)];
+}

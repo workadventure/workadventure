@@ -9,7 +9,7 @@ import type {
 // module's only import is a type, so what lands in the bundle is 117 strings. The
 // same table used to live on the catalog entries, which pulled ~166 live Zod
 // schemas into the browser to look one up.
-import { POSTHOG_EVENT_KEYS } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
+import { postHogEventKey } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { hasCapability } from "../Connection/Capabilities";
 import type { TimedAnalyticsEventHandle } from "./TimedAnalyticsEvent";
@@ -151,7 +151,7 @@ class AnalyticsClient {
         // predates this pipeline, and on a world whose pusher does not advertise
         // api/analytics/events-batch it is the only one there is. Gating it on that
         // capability would switch analytics off for every such world.
-        const postHogKey = POSTHOG_EVENT_KEYS[eventName];
+        const postHogKey = postHogEventKey(eventName, properties);
         if (postHogKey) {
             this.posthog?.capture(postHogKey, properties);
         }
@@ -233,16 +233,6 @@ class AnalyticsClient {
         this.previousRoomId = roomId;
     }
 
-    enteredJitsi(roomName: string, roomId: string): void {
-        this.posthog?.capture("wa-entered-jitsi", { roomId, meetingProvider: "jitsi" });
-        this.trackAdminEvent("meeting.area_entered", { roomId, meetingProvider: "jitsi" });
-    }
-
-    enteredMeetingRoom(roomName: string, roomId: string): void {
-        this.posthog?.capture("wa-entered-meeting-room", { roomId });
-        this.trackAdminEvent("meeting.area_entered", { roomId });
-    }
-
     screenSharingStarted(hasAudio: boolean): void {
         if (!this.canSendAdminAnalytics()) {
             return;
@@ -263,16 +253,6 @@ class AnalyticsClient {
     screenSharingEnded(): void {
         this.openScreenShare?.close();
         this.openScreenShare = undefined;
-    }
-
-    retryConnectionWebRtc(): void {
-        this.posthog?.capture("wa_retry_connection_webrtc", { meetingProvider: "webrtc" });
-        this.trackAdminEvent("media.connection_retry", { meetingProvider: "webrtc" });
-    }
-
-    retryConnectionLivekit(): void {
-        this.posthog?.capture("wa_retry_connection_livekit", { meetingProvider: "livekit" });
-        this.trackAdminEvent("media.connection_retry", { meetingProvider: "livekit" });
     }
 
     /**
@@ -322,26 +302,6 @@ class AnalyticsClient {
      */
     scriptingWebsiteOpened(url: URL): void {
         this.trackAdminEvent("scripting.website_opened", { url: this.stripUrlToOrigin(url) });
-    }
-
-    menuProfile(): void {
-        this.posthog?.capture("wa_menu_profile");
-        this.trackAdminEvent("profile.opened");
-    }
-
-    globalMessage(): void {
-        this.posthog?.capture("wa_menu_globalmessage");
-        this.trackAdminEvent("global_message.opened");
-    }
-
-    reportIssue(): void {
-        this.posthog?.capture("wa_menu_report", { feedbackSource: "external_report_url" });
-        this.trackAdminEvent("feedback.opened", { feedbackSource: "external_report_url" });
-    }
-
-    inviteCopyLink(): void {
-        this.posthog?.capture("wa_menu_invite_copylink", { inviteType: "copy_link" });
-        this.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
     }
 
     // The two ends of one interval, opened and closed where the broadcast is started
@@ -424,20 +384,11 @@ class AnalyticsClient {
         this.leaveArea(id, name);
     }
 
-    openGlobalMessage(): void {
-        this.posthog?.capture("wa_action_globalmessage");
-        this.trackAdminEvent("global_message.opened");
-    }
-
     // PostHog only. `cowebsite.closed` is now the end of an interval the store opens
     // and closes, so reporting it from the close BUTTON would both duplicate it and
     // miss the fifteen other ways a cowebsite goes away.
     closeCowebsite(): void {
         this.posthog?.capture("wa_close_cowebsite");
-    }
-    openProfileMenu(): void {
-        this.posthog?.capture("wa_open_profile_menu");
-        this.trackAdminEvent("profile.opened");
     }
     /**
      * Opens a meeting and hands back the only way to close it.

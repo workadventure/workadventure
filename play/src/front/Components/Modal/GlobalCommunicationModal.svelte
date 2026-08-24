@@ -97,7 +97,7 @@
         displayedMegaphoneScreenStore.set(false);
         inputSendTextActive = true;
         uploadAudioActive = false;
-        analyticsClient.openGlobalMessage();
+        analyticsClient.trackAdminEvent("global_message.opened", { source: "action_bar" });
     }
 
     function activateUploadAudio() {

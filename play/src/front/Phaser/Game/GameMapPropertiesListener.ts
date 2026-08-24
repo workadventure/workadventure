@@ -244,7 +244,10 @@ export class GameMapPropertiesListener {
                 //     console.error(err);
                 // });
 
-                analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
+                analyticsClient.trackAdminEvent("meeting.area_entered", {
+                    roomId: this.scene.roomUrl,
+                    meetingProvider: "jitsi",
+                });
 
                 popupStore.removePopup("jitsi");
                 // TODO: this is the old new way of doing popups

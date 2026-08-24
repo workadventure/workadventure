@@ -574,7 +574,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         if (reason === DisconnectReason.STATE_MISMATCH || reason === DisconnectReason.JOIN_FAILURE) {
-            analyticsClient.retryConnectionLivekit();
+            analyticsClient.trackAdminEvent("media.connection_retry", { meetingProvider: "livekit" });
             this.space.emitBackEvent({
                 event: {
                     $case: "meetingConnectionRestartMessage",
