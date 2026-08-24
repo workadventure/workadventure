@@ -107,6 +107,7 @@
             hideToolText: $LL.actionbar.issueReport.hideToolText(),
             isRequiredLabel: "",
             onFormOpen: () => {
+                analyticsClient.trackAdminEvent("feedback.opened", { feedbackSource: "sentry" });
                 gameManager.getCurrentGameScene().userInputManager.disableControls("store");
                 gameManager.getCurrentGameScene().userInputManager.disableRightClick();
                 openedMenuStore.close("profileMenu");
@@ -117,6 +118,10 @@
                 form?.close();
             },
             onSubmitSuccess: () => {
+                // No hasScreenshot: the form allows one but tells us nothing about it
+                // here, and the property is optional precisely so it can be left out
+                // rather than guessed.
+                analyticsClient.trackAdminEvent("feedback.submitted", { feedbackSource: "sentry" });
                 gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
                 gameManager.getCurrentGameScene().userInputManager.restoreRightClick();
                 form?.close();

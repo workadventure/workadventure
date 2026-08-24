@@ -66,6 +66,7 @@
             closeFloatingUi?.();
             closeFloatingUi = undefined;
         } else if (triggerElement) {
+            analyticsClient.trackAdminEvent("emote.edit_opened");
             closeFloatingUi = showFloatingUi(
                 triggerElement,
                 LazyEmote,
