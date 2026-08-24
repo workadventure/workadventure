@@ -20,7 +20,11 @@ vi.mock("../../../Stores/MenuStore", () => ({
 }));
 
 vi.mock("../../../Administration/AnalyticsClient", () => ({
-    analyticsClient: { openInvite: vi.fn() },
+    // The component reports its event by name now, so the mock has to carry the one
+    // entry point rather than the method that used to wrap it. A mock that lists
+    // method names goes stale silently: the call throws at runtime, the click handler
+    // never reaches showFloatingUi, and the failure reads as "No popup was registered".
+    analyticsClient: { trackAdminEvent: vi.fn() },
 }));
 
 vi.mock("../../Menu/GuestSubMenu.svelte", () => ({
