@@ -296,43 +296,27 @@ class AnalyticsClient {
     }
 
     /**
-     * The eight nobody calls.
+     * The three with nothing to report them.
      *
-     * Every other single-statement method here went into its call site. These have no
-     * call site to go into: no caller in this repo, and none in the SaaS one either.
+     * Five of the eight that used to sit here had a call site all along — the emote
+     * editor's pencil, the background settings tab, the Woka customiser's finish
+     * button and the two ends of the Sentry feedback dialog — and they now report
+     * from it, like every other event. These three are different in kind: nothing
+     * detects what they describe. There is no long-task observer, no error boundary,
+     * no WebRTC stats threshold, so there is no line to move anywhere.
      *
-     * They are kept because the catalog entry is the contract rather than the caller.
-     * `media.quality_issue`, `performance.issue` and `front.critical_error` are read by
-     * the SaaS dashboards, which have shown zero from the day they were written because
-     * nothing on this side has ever emitted them. `feedback.opened` and
-     * `feedback.submitted` describe the Sentry feedback dialog, of which only the
-     * external-report-URL path is wired. The last three are UI that lost its button.
+     * That matters more than it looks, because the SaaS reads all three. They feed
+     * the Kiosk's issue counters, which have therefore shown zero since the day they
+     * were written — and a zero that means "never wired" is indistinguishable there
+     * from a zero that means "no problems". Either the detectors get written or the
+     * columns go; leaving them is the one option that keeps a dashboard lying.
      *
-     * Note what keeps them upright: the catalog test scrapes the emitters for literals,
-     * and this file is one of them — so an event named here reads as emitted whether or
-     * not anything calls it. That is exactly why these eight were invisible until the
-     * rest moved out, and why a ninth added here would be invisible too.
+     * Note what keeps these methods upright meanwhile: the catalog test scrapes the
+     * emitters for literals and this file is one of them, so an event named here
+     * reads as emitted whether or not anything calls it. That is exactly why the
+     * eight stayed invisible until the rest moved out, and why a ninth added here
+     * would be invisible too.
      */
-    editEmote(): void {
-        this.trackAdminEvent("emote.edit_opened");
-    }
-
-    openBackgroundSettings(): void {
-        this.trackAdminEvent("settings.background.opened");
-    }
-
-    feedbackOpened(feedbackSource: "sentry" | "external_report_url" = "sentry"): void {
-        this.trackAdminEvent("feedback.opened", { feedbackSource });
-    }
-
-    feedbackSubmitted(feedbackSource: "sentry" | "external_report_url" = "sentry", hasScreenshot?: boolean): void {
-        this.trackAdminEvent("feedback.submitted", { feedbackSource, hasScreenshot });
-    }
-
-    selectCustomWoka(): void {
-        this.trackAdminEvent("onboarding.custom_woka_selected");
-    }
-
     mediaQualityIssue(properties: ExperienceIssueProperties = {}): void {
         this.trackAdminEvent("media.quality_issue", properties);
     }
