@@ -11,23 +11,47 @@ export type TimedAnalyticsEventHandle = {
 };
 
 /**
- * Every interval currently open, so the front can drop them all when the socket dies.
+ * Every interval currently open, so the front can act on all of them when the socket
+ * goes and comes back.
  *
  * A handle used to be dropped by whoever held it — AnalyticsClient cleared its own
  * fields on disconnect. That stops working the moment a handle lives with the thing
  * it measures: CoWebsiteStore has no idea a socket exists, and should not learn.
- *
- * Spending a handle rather than deleting it is what makes that safe. The holder keeps
- * its reference and closes it whenever the user actually closes the thing; the close
- * is then a no-op, because the pusher already ended that interval as `socket_closed`
- * and a second close would travel over the new socket to be dropped as unpaired.
  */
-const liveIntervals = new Set<() => void>();
+const openIntervals = new Set<SocketAwareInterval>();
 
-/** The socket went away: every open interval is already ended, on the pusher's side. */
+type SocketAwareInterval = {
+    socketGone(): void;
+    socketBack(): void;
+};
+
+/**
+ * The socket went away. Every interval it carried has already been ended by the
+ * pusher as `socket_closed`, so the frames are spent whatever the holder does next.
+ */
 export function forgetOpenTimedAnalyticsEvents(): void {
-    for (const spend of [...liveIntervals]) {
-        spend();
+    for (const interval of [...openIntervals]) {
+        interval.socketGone();
+    }
+}
+
+/**
+ * A socket is back. Intervals opened with `reopenOnReconnect` start measuring again,
+ * against the new socket and under a new pusher-side handle.
+ *
+ * This exists because a reconnect ends an interval that the user never ended. Nothing
+ * fires a second "start" — the broadcast never stopped, the user is still standing in
+ * the area, still sharing their screen — so without this the rest of that stay is
+ * invisible for the lifetime of the tab. It used to be a boolean on AnalyticsClient
+ * that did this for the megaphone alone; the other four had the same hole and nobody
+ * had noticed.
+ *
+ * A stay spanning a reconnect therefore lands as two rows rather than one truncated
+ * one. The durations still sum to the truth; the count of intervals goes up.
+ */
+export function resumeOpenTimedAnalyticsEvents(): void {
+    for (const interval of [...openIntervals]) {
+        interval.socketBack();
     }
 }
 
@@ -53,33 +77,62 @@ export function openTimedAnalyticsEvent<N extends TimedAnalyticsEventName>(
     eventName: N,
     properties: TimedAnalyticsEventOpenProperties<N>,
     sendReport: (message: AnalyticsEventReportMessage) => void,
+    { reopenOnReconnect = false }: { reopenOnReconnect?: boolean } = {},
 ): TimedAnalyticsEventHandle {
-    const handle = `${eventName}:${uuidv4()}`;
+    let handle = "";
     let closed = false;
-    const spend = (): void => {
-        closed = true;
-        liveIntervals.delete(spend);
-    };
-    liveIntervals.add(spend);
+    // Whether an open frame of ours is outstanding on the CURRENT socket. It goes
+    // false the moment that socket dies, without the interval being closed: the
+    // pusher has ended it, but the thing being measured is still happening.
+    let measuring = false;
 
-    sendReport({
-        events: [
-            {
-                eventName: "timed_event.open",
-                source: "front",
-                clientEventTimeMs: Date.now(),
-                eventId: `timed-open:${handle}`,
-                properties: { handle, eventName, properties },
-            },
-        ],
-    });
+    const emitOpen = (): void => {
+        handle = `${eventName}:${uuidv4()}`;
+        measuring = true;
+        sendReport({
+            events: [
+                {
+                    eventName: "timed_event.open",
+                    source: "front",
+                    clientEventTimeMs: Date.now(),
+                    eventId: `timed-open:${handle}`,
+                    properties: { handle, eventName, properties },
+                },
+            ],
+        });
+    };
+
+    const interval: SocketAwareInterval = {
+        socketGone(): void {
+            measuring = false;
+            if (!reopenOnReconnect) {
+                // Nothing will reopen it, so the holder's eventual close must be a
+                // no-op rather than a frame sent over the next socket for an interval
+                // the pusher already recorded — it would be dropped there as unpaired.
+                closed = true;
+                openIntervals.delete(interval);
+            }
+        },
+        socketBack(): void {
+            if (!closed && !measuring) {
+                emitOpen();
+            }
+        },
+    };
+
+    openIntervals.add(interval);
+    emitOpen();
 
     return {
         close(): void {
             if (closed) {
                 return;
             }
-            spend();
+            closed = true;
+            openIntervals.delete(interval);
+            if (!measuring) {
+                return;
+            }
 
             sendReport({
                 events: [
