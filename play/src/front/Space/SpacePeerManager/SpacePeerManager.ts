@@ -574,7 +574,7 @@ export class SpacePeerManager {
      */
     private startMeetingAnalytics(meetingProvider: "webrtc" | "livekit"): void {
         this.endMeetingAnalytics();
-        this.openMeeting = analyticsClient.openMeeting({
+        this.openMeeting = analyticsClient.openTimedEvent("meeting.ended", {
             meetingProvider,
             meetingId: this.space.getName(),
         });

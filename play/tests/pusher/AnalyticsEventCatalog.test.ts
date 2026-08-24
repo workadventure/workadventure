@@ -60,11 +60,19 @@ const QUEUE_SOURCES = Object.entries(EMITTER_SOURCES)
  */
 const EMITTED_FROM_EXTERNAL_MODULES = ["external_module.opened", "external_module.chat_band.clicked"];
 
-/** The names the front asks the pusher to time, e.g. openTimedAnalyticsEvent("area.dwell", …). */
+/**
+ * The names the front asks the pusher to time, e.g. openTimedEvent("area.dwell", …).
+ *
+ * Both spellings: the literal used to sit on the low-level `openTimedAnalyticsEvent`
+ * because one client method called it by name, and now every name is passed to
+ * `openTimedEvent` from the code that owns the interval. Matching only the first is
+ * how this check went vacuous the day that method left — which the size guard below
+ * caught, and is the reason it is there.
+ */
 function extractTimedEventRequests(): Set<string> {
     const names = new Set<string>();
     for (const source of Object.values(EMITTER_SOURCES)) {
-        for (const [, name] of source.matchAll(/openTimedAnalyticsEvent\(\s*"([a-z][a-z0-9_.]*)"/g)) {
+        for (const [, name] of source.matchAll(/openTimed(?:Analytics)?Event\(\s*"([a-z][a-z0-9_.]*)"/g)) {
             names.add(name);
         }
     }

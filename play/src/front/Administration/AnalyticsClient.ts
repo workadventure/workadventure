@@ -28,12 +28,6 @@ import {
 
 type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
 type AdminAnalyticsEvent = AnalyticsEventReportMessage["events"][number];
-export type MeetingProvider = "livekit" | "jitsi" | "webrtc";
-type MeetingAnalyticsProperties = {
-    meetingProvider: MeetingProvider;
-    meetingId?: string;
-    roomId?: string;
-};
 type ExperienceIssueProperties = {
     category?: string;
     reason?: string;
@@ -286,24 +280,6 @@ class AnalyticsClient {
     closeCowebsite(): void {
         this.posthog?.capture("wa_close_cowebsite");
     }
-    /**
-     * Opens a meeting and hands back the only way to close it.
-     *
-     * The handle goes to the caller rather than into a map here, because the two
-     * callers have different lifetimes: Jitsi is a single global state, while a
-     * SpacePeerManager belongs to one space and several can be live at once. A
-     * handle whose socket has gone away is spent — the pusher closes the interval
-     * itself as `socket_closed` — so a late close is dropped as unpaired rather
-     * than reported twice.
-     */
-    openMeeting(properties: MeetingAnalyticsProperties): TimedAnalyticsEventHandle | undefined {
-        if (!this.canSendAdminAnalytics()) {
-            return undefined;
-        }
-
-        return openTimedAnalyticsEvent("meeting.ended", properties, this.sendTimedEventReport);
-    }
-
     mapLoadingStarted(mapUrl?: string): void {
         // Strip query string / fragment so map/WAM/room URLs carrying access
         // tokens are not shipped as analytics, mirroring the cowebsite URL handling.

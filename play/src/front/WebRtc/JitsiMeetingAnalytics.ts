@@ -15,7 +15,7 @@ export function jitsiMeetingStarted(roomName: string): void {
     // A live handle here means the matching leave never ran, so this interval's
     // end is the arrival of the next meeting rather than a real departure.
     jitsiMeetingEnded();
-    openMeeting = analyticsClient.openMeeting({ meetingProvider: "jitsi", meetingId: roomName });
+    openMeeting = analyticsClient.openTimedEvent("meeting.ended", { meetingProvider: "jitsi", meetingId: roomName });
 }
 
 export function jitsiMeetingEnded(): void {
