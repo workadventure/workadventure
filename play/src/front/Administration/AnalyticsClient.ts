@@ -23,12 +23,6 @@ import {
 
 type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
 type AdminAnalyticsEvent = AnalyticsEventReportMessage["events"][number];
-type ExperienceIssueProperties = {
-    category?: string;
-    reason?: string;
-    durationMs?: number;
-    count?: number;
-};
 
 const MAX_PENDING_ADMIN_EVENTS = 100;
 
@@ -287,46 +281,13 @@ class AnalyticsClient {
     closeCowebsite(): void {
         this.posthog?.capture("wa_close_cowebsite");
     }
+
     mapLoadingStarted(mapUrl?: string): void {
         // Strip query string / fragment so map/WAM/room URLs carrying access
         // tokens are not shipped as analytics, mirroring the cowebsite URL handling.
         this.trackAdminEvent("map_loading.started", {
             mapUrl: mapUrl ? stripUrlSensitiveParts(mapUrl) : undefined,
         });
-    }
-
-    /**
-     * The three with nothing to report them.
-     *
-     * Five of the eight that used to sit here had a call site all along — the emote
-     * editor's pencil, the background settings tab, the Woka customiser's finish
-     * button and the two ends of the Sentry feedback dialog — and they now report
-     * from it, like every other event. These three are different in kind: nothing
-     * detects what they describe. There is no long-task observer, no error boundary,
-     * no WebRTC stats threshold, so there is no line to move anywhere.
-     *
-     * That matters more than it looks, because the SaaS reads all three. They feed
-     * the Kiosk's issue counters, which have therefore shown zero since the day they
-     * were written — and a zero that means "never wired" is indistinguishable there
-     * from a zero that means "no problems". Either the detectors get written or the
-     * columns go; leaving them is the one option that keeps a dashboard lying.
-     *
-     * Note what keeps these methods upright meanwhile: the catalog test scrapes the
-     * emitters for literals and this file is one of them, so an event named here
-     * reads as emitted whether or not anything calls it. That is exactly why the
-     * eight stayed invisible until the rest moved out, and why a ninth added here
-     * would be invisible too.
-     */
-    mediaQualityIssue(properties: ExperienceIssueProperties = {}): void {
-        this.trackAdminEvent("media.quality_issue", properties);
-    }
-
-    frontCriticalError(properties: ExperienceIssueProperties = {}): void {
-        this.trackAdminEvent("front.critical_error", properties);
-    }
-
-    performanceIssue(properties: ExperienceIssueProperties = {}): void {
-        this.trackAdminEvent("performance.issue", properties);
     }
 }
 export const analyticsClient = new AnalyticsClient();
