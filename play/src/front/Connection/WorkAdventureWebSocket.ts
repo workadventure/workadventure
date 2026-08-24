@@ -110,7 +110,7 @@ export class WorkAdventureWebSocket {
                 this.socket.send(payload);
             }
             this._reconnectingStream.next(false);
-            analyticsClient.socketReconnected();
+            analyticsClient.trackAdminEvent("websocket.reconnected");
         }
         const event = new Event("open");
         this.onopen?.call(this, event);
@@ -229,7 +229,7 @@ export class WorkAdventureWebSocket {
             }
 
             this.socket = this.createSocket();
-            analyticsClient.socketReconnecting();
+            analyticsClient.trackAdminEvent("websocket.reconnecting");
         }, this.getReconnectDelayMs());
     }
 

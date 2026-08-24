@@ -1441,6 +1441,9 @@ export const ANALYTICS_EVENTS = {
   "user.report.clicked": signal("The user reported someone."),
   "user.woka_menu.opened": signal("The user opened the Woka context menu."),
   "user_list.opened": signal("The user opened the user list."),
+  "websocket.reconnected": signal(
+    "A websocket retry succeeded and the client is back. PostHog has counted this as wa_socket_reconnected since long before this pipeline; this side had nothing, so a reconnection that worked and one that never did looked the same here.",
+  ),
   "websocket.reconnecting": signal(
     "The client is retrying its websocket connection. Counted as an experience issue.",
   ),
