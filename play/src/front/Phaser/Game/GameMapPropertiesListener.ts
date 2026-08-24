@@ -34,6 +34,7 @@ import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
 import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
+import { TimedEventsByKey } from "./../../Administration/TimedAnalyticsEvent";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
@@ -50,6 +51,16 @@ export type ITiledPlace = Omit<ITiledMapLayer | ITiledMapObject, "id"> & { id?: 
 export class GameMapPropertiesListener {
     private areasPropertiesListener: AreasPropertiesListener;
 
+    /**
+     * How long the player has been standing in each area they are currently inside.
+     *
+     * Here rather than on the analytics client because this listener is per-scene and
+     * this is where the areas are. It matters at teardown: the client's map outlived
+     * the scene, so a tileset added from the map editor rebuilt this listener and left
+     * every open dwell running until the socket died — while the cowebsites the very
+     * same destroy() closes were correctly ended.
+     */
+    private readonly areaDwells = new TimedEventsByKey();
     private coWebsitesOpenByPlace = new Map<string, OpenCoWebsite>();
     private coWebsitesActionTriggerByPlace = new Map<string, string>();
 
@@ -455,7 +466,7 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
             for (const area of newAreas) {
-                analyticsClient.enterAreaMapEditor(area.id, area.name);
+                this.areaDwells.replace(area.id, analyticsClient.enterArea(area.id, area.name));
             }
 
             if (this.gameMapFrontWrapper.areasManager === undefined) {
@@ -472,7 +483,8 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
             for (const area of oldAreas) {
-                analyticsClient.leaveAreaMapEditor(area.id, area.name);
+                analyticsClient.leaveArea(area.id, area.name);
+                this.areaDwells.close(area.id);
             }
 
             if (
@@ -978,6 +990,10 @@ export class GameMapPropertiesListener {
     public destroy(): void {
         // Destroy the areas properties listener
         this.areasPropertiesListener.destroy();
+
+        // End the dwells rather than strand them: this listener is rebuilt whenever a
+        // tileset is added, with no reconnection to close them for us.
+        this.areaDwells.closeAll();
 
         // Clean up action trigger callbacks
         for (const callback of this.actionTriggerCallback.values()) {

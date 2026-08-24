@@ -20,7 +20,11 @@ import {
     stripUrlToOrigin,
 } from "./CowebsiteAnalyticsProperties";
 import type { TimedAnalyticsEventHandle } from "./TimedAnalyticsEvent";
-import { forgetOpenTimedAnalyticsEvents, openTimedAnalyticsEvent, TimedEventsByKey } from "./TimedAnalyticsEvent";
+import {
+    forgetOpenTimedAnalyticsEvents,
+    openTimedAnalyticsEvent,
+    resumeOpenTimedAnalyticsEvents,
+} from "./TimedAnalyticsEvent";
 
 type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
 type AdminAnalyticsEvent = AnalyticsEventReportMessage["events"][number];
@@ -52,23 +56,6 @@ class AnalyticsClient {
     private isEnabled_ = false;
     private adminAnalyticsSender: AdminAnalyticsSender | undefined;
     private pendingAdminEvents: AdminAnalyticsEvent[] = [];
-    /** Open intervals, by the thing they are measuring. Closing is by the same key. */
-    private readonly openAreas = new TimedEventsByKey();
-    /** A screen share and an availability status are each a single continuous state, so one handle, not a map. */
-    private openScreenShare: TimedAnalyticsEventHandle | undefined;
-    private openStatus: TimedAnalyticsEventHandle | undefined;
-    private openMegaphoneBroadcast: TimedAnalyticsEventHandle | undefined;
-    /**
-     * Whether a broadcast is live, as opposed to whether we hold a handle for it.
-     *
-     * The two come apart across a reconnect: the handle is spent the moment the
-     * socket dies — the pusher closes the interval itself as `socket_closed` — but
-     * the broadcast is still running and nothing fires a second start. Without this,
-     * a broadcast spanning a reconnect would stay invisible for the rest of the
-     * tab's life; with it, setAdminAnalyticsSender reopens it against the new socket.
-     */
-    private megaphoneBroadcastLive = false;
-    private currentStatus: string | undefined;
     private previousRoomId: string | undefined;
 
     constructor() {
@@ -101,14 +88,9 @@ class AnalyticsClient {
             // filed here. CoWebsiteStore keeps its own and has no idea a socket
             // exists; a later close from it is a no-op rather than an unpaired frame.
             forgetOpenTimedAnalyticsEvents();
-            this.openAreas.forget();
-            this.openScreenShare = undefined;
-            this.openStatus = undefined;
-            this.currentStatus = undefined;
-            // The handle goes; `megaphoneBroadcastLive` deliberately does not.
-            this.openMegaphoneBroadcast = undefined;
-        } else if (this.megaphoneBroadcastLive) {
-            this.openMegaphoneBroadcastInterval();
+        } else {
+            // A socket is back. Whatever is still happening starts measuring again.
+            resumeOpenTimedAnalyticsEvents();
         }
         this.flushPendingAdminEvents();
     }
@@ -172,12 +154,13 @@ class AnalyticsClient {
     public openTimedEvent<N extends TimedAnalyticsEventName>(
         eventName: N,
         properties: TimedAnalyticsEventOpenProperties<N>,
+        options: { reopenOnReconnect?: boolean } = {},
     ): TimedAnalyticsEventHandle {
         if (!this.canSendAdminAnalytics()) {
             return NO_INTERVAL;
         }
 
-        return openTimedAnalyticsEvent(eventName, properties, this.sendTimedEventReport);
+        return openTimedAnalyticsEvent(eventName, properties, this.sendTimedEventReport, options);
     }
 
     private dispatchAdminEvent(event: AdminAnalyticsEvent): void {
@@ -241,28 +224,6 @@ class AnalyticsClient {
         this.previousRoomId = roomId;
     }
 
-    screenSharingStarted(hasAudio: boolean): void {
-        if (!this.canSendAdminAnalytics()) {
-            return;
-        }
-
-        // A live handle here means the matching stop never arrived, so this
-        // interval's END is the arrival of the next one rather than a real stop.
-        // The client no longer states why it closed, so that is not distinguishable
-        // downstream — see the note on TIMED_EVENT_END_REASONS.
-        this.openScreenShare?.close();
-        this.openScreenShare = openTimedAnalyticsEvent(
-            "meeting.screenshare.ended",
-            { hasAudio },
-            this.sendTimedEventReport,
-        );
-    }
-
-    screenSharingEnded(): void {
-        this.openScreenShare?.close();
-        this.openScreenShare = undefined;
-    }
-
     /**
      * Opens the interval that measures one cowebsite visit.
      *
@@ -304,52 +265,30 @@ class AnalyticsClient {
     //
     // Both keep their own posthog.capture: PostHog counts the two ends as two events,
     // while the admin gets one `megaphone.ended` row carrying the duration.
+    // The two ends of one broadcast, named for PostHog, which counts each press.
+    // The interval is the caller's: startMegaphoneLive is reachable twice without an
+    // intervening stop (the modal and the action bar both lead there), and only the
+    // caller can tell a second press from a second broadcast.
     startMegaphone(): void {
         this.posthog?.capture("wa_start_megaphone");
-        this.megaphoneBroadcastLive = true;
-        this.openMegaphoneBroadcastInterval();
     }
 
     stopMegaphone(): void {
         this.posthog?.capture("wa_stop_megaphone");
-        this.megaphoneBroadcastLive = false;
-        this.openMegaphoneBroadcast?.close();
-        this.openMegaphoneBroadcast = undefined;
-    }
-
-    private openMegaphoneBroadcastInterval(): void {
-        // startMegaphoneLive is reachable twice without an intervening stop — the modal
-        // and the action bar both reach it. Reopening would restart the clock and lose
-        // the time already broadcast.
-        if (this.openMegaphoneBroadcast || !this.canSendAdminAnalytics()) {
-            return;
-        }
-
-        this.openMegaphoneBroadcast = openTimedAnalyticsEvent("megaphone.ended", {}, this.sendTimedEventReport);
     }
 
     // enterArea/leaveArea keep their own posthog.capture for the same reason megaphone
     // does: PostHog counts an enter and a leave, the admin gets one `area.dwell` row.
-    enterArea(id: string, name: string): void {
+    // enterArea/leaveArea keep their own posthog.capture for the same reason megaphone
+    // does: PostHog counts an enter and a leave, the admin gets one `area.dwell` row.
+    enterArea(id: string, name: string): TimedAnalyticsEventHandle {
         this.posthog?.capture(`wa_map-editor_enter_area`, { id, name });
-        if (!this.canSendAdminAnalytics()) {
-            return;
-        }
 
-        // Entering an area already open means the previous leave never arrived.
-        // Close it rather than orphan it: the map holds one handle per area, so
-        // overwriting would leave an interval nothing could ever close, and the
-        // pusher would only close it when the socket died — dating a walk-through
-        // to the end of the session.
-        this.openAreas.replace(
-            id,
-            openTimedAnalyticsEvent("area.dwell", { areaId: id, areaName: name }, this.sendTimedEventReport),
-        );
+        return this.openTimedEvent("area.dwell", { areaId: id, areaName: name }, { reopenOnReconnect: true });
     }
 
     leaveArea(id: string, name: string): void {
         this.posthog?.capture(`wa_map-editor_leaver_area`, { id, name });
-        this.openAreas.close(id);
     }
 
     // Availability status (Online/Busy/Do-not-disturb/…) as a timed event: one row
@@ -358,24 +297,6 @@ class AnalyticsClient {
     // last one). A flip faster than 1s is dropped as churn. A reconnect leaves the
     // status untracked until the next change — the same gap the old status.changed
     // pairing had, since it only fired on a change too.
-    statusChanged(status: string): void {
-        if (!this.canSendAdminAnalytics() || status === this.currentStatus) {
-            return;
-        }
-
-        this.currentStatus = status;
-        this.openStatus?.close();
-        this.openStatus = openTimedAnalyticsEvent("status.dwell", { status }, this.sendTimedEventReport);
-    }
-
-    enterAreaMapEditor(id: string, name: string): void {
-        this.enterArea(id, name);
-    }
-
-    leaveAreaMapEditor(id: string, name: string): void {
-        this.leaveArea(id, name);
-    }
-
     // PostHog only. `cowebsite.closed` is now the end of an interval the store opens
     // and closes, so reporting it from the close BUTTON would both duplicate it and
     // miss the fifteen other ways a cowebsite goes away.
