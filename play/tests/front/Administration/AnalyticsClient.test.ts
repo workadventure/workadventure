@@ -146,9 +146,15 @@ describe("AnalyticsClient admin analytics sink", () => {
         // SpaceRegistry keeps several spaces live at once. This used to be a single
         // global provider store, so leaving one space ended the meeting of every
         // other one — the handle is per-caller precisely to make that impossible.
-        const first = analyticsClient.openMeeting({ meetingProvider: "webrtc", meetingId: "space-a" });
-        const second = analyticsClient.openMeeting({ meetingProvider: "livekit", meetingId: "space-b" });
-        first?.close();
+        const first = analyticsClient.openTimedEvent("meeting.ended", {
+            meetingProvider: "webrtc",
+            meetingId: "space-a",
+        });
+        const second = analyticsClient.openTimedEvent("meeting.ended", {
+            meetingProvider: "livekit",
+            meetingId: "space-b",
+        });
+        first.close();
 
         const events = sendAdmin.mock.calls.flatMap(([message]) => message.events);
         const opens = events.filter((event) => event.eventName === "timed_event.open");
@@ -158,7 +164,7 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(closes).toHaveLength(1);
         expect(closes[0].properties.handle).toBe(opens[0].properties.handle);
 
-        second?.close();
+        second.close();
         expect(
             sendAdmin.mock.calls
                 .flatMap(([message]) => message.events)
