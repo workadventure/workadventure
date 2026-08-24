@@ -20,13 +20,14 @@
  *
  * - An event added with this pipeline, which PostHog never knew. Adding a key here
  *   would invent volume rather than migrate it, so leave it out.
- * - An interval, whose PostHog counterpart is not one event: `cowebsite.closed`,
- *   `area.dwell` and `megaphone.ended` are opened and closed by the user, and
- *   PostHog counts both ends while the admin gets one row when it finishes.
- *   AnalyticsClient captures those itself, where the interval is opened and closed
- *   — and it has to, because the two do not coincide: a stale area handle closing
- *   is not someone leaving, and a broadcast reopened after a reconnect is not
- *   someone pressing start.
+ * - An interval whose PostHog counterpart does not coincide with it. `megaphone.ended`
+ *   is the example worth keeping in mind: PostHog counts each press of the start
+ *   button, while the interval covers the whole broadcast however often start is
+ *   pressed, so the two count different things and only the caller can tell them
+ *   apart. It captures its own, at the call site.
+ *
+ * Intervals whose ends DO coincide with a PostHog event are ordinary entries, in the
+ * third form below.
  *
  * The events two UI paths reach under two names are NOT in that list: they used to
  * be, and they are now ordinary entries in the discriminated form below.
@@ -41,7 +42,10 @@
  * PostHog counterpart, and requiring a key for every event would mean inventing
  * one for each new event added.
  */
-import type { AnalyticsEventName } from "./AnalyticsEventCatalog";
+import type {
+  AnalyticsEventName,
+  TimedAnalyticsEventName,
+} from "./AnalyticsEventCatalog";
 
 /**
  * What an event travels under in PostHog: one name, or the several it takes
@@ -59,15 +63,33 @@ import type { AnalyticsEventName } from "./AnalyticsEventCatalog";
  * a name of its own. A value with no entry in `byValue` is simply not a PostHog
  * event: `feedback.opened` from the Sentry dialog never was one.
  */
-type PostHogEventKey =
-  | string
-  | {
-      /** The declared property whose value picks the name. */
-      on: string;
-      byValue: Record<string, string>;
-      /** Used when the property is absent, for the optional discriminators. */
-      whenAbsent?: string;
-    };
+type PostHogEventKey = string | PostHogDiscriminated | PostHogIntervalKeys;
+
+type PostHogDiscriminated = {
+  /** The declared property whose value picks the name. */
+  on: string;
+  byValue: Record<string, string>;
+  /** Used when the property is absent, for the optional discriminators. */
+  whenAbsent?: string;
+};
+
+/**
+ * The two ends of an interval, for the intervals whose ends coincide with a PostHog
+ * event. `closes` is absent when PostHog never counted the end — opening a cowebsite
+ * has always been an event there, closing one has not.
+ *
+ * `opensProperties` narrows what travels. Without it the interval's whole payload
+ * goes, which is right for most of them and wrong for `cowebsite.closed`: its
+ * properties carry `fileName`, deliberately absent from the admin's anonymization
+ * allowlist and never projected by the internal Kiosk, because a document name is
+ * for the world that opened it and nobody else. Naming the fields here is what keeps
+ * that decision readable next to the name it applies to.
+ */
+type PostHogIntervalKeys = {
+  opens: string;
+  closes?: string;
+  opensProperties?: readonly string[];
+};
 
 export const POSTHOG_EVENT_KEYS: Partial<
   Record<AnalyticsEventName, PostHogEventKey>
@@ -91,6 +113,14 @@ export const POSTHOG_EVENT_KEYS: Partial<
 
   "conversation.participant_added": "wa_spontaneous_discussion",
 
+  // The interval the store opens when a cowebsite is opened. PostHog has counted the
+  // opening since long before this pipeline; the admin hears about it only when the
+  // visit ends, as one `cowebsite.closed` row carrying the duration.
+  "cowebsite.closed": {
+    opens: "wa_opened_website",
+    // Origin only. The rest of the payload names the document.
+    opensProperties: ["url"],
+  },
   "cowebsite.fullscreen_opened": "wa_fullscreen_cowebsite",
   "cowebsite.link_copied": "wa_copy_cowebsite_link",
   "cowebsite.opened_in_new_tab": "wa_open_cowebsite_in_new_tab",
@@ -270,9 +300,31 @@ export function postHogEventKey(
   if (key === undefined || typeof key === "string") {
     return key;
   }
+  // An interval is not a point event: its names belong to its two ends, and
+  // trackAdminEvent has neither of them.
+  if ("opens" in key) {
+    return undefined;
+  }
 
   const discriminator = properties[key.on];
   return discriminator === undefined
     ? key.whenAbsent
     : key.byValue[String(discriminator)];
+}
+
+/**
+ * The PostHog names for one interval's two ends, or undefined when it has none.
+ *
+ * Separate from `postHogEventKey` because the question is different: that one asks
+ * what a reported event is called, this one asks what opening and closing an
+ * interval are called. One name each, at two different moments.
+ */
+export function postHogIntervalKeys(
+  eventName: TimedAnalyticsEventName,
+): PostHogIntervalKeys | undefined {
+  const key = POSTHOG_EVENT_KEYS[eventName];
+
+  return key !== undefined && typeof key === "object" && "opens" in key
+    ? key
+    : undefined;
 }

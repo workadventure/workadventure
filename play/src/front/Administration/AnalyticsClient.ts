@@ -10,15 +10,10 @@ import type {
 // module's only import is a type, so what lands in the bundle is 117 strings. The
 // same table used to live on the catalog entries, which pulled ~166 live Zod
 // schemas into the browser to look one up.
-import { postHogEventKey } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
+import { postHogEventKey, postHogIntervalKeys } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { hasCapability } from "../Connection/Capabilities";
-import type { CowebsiteOpenedAnalyticsContext } from "./CowebsiteAnalyticsProperties";
-import {
-    buildCowebsiteOpenedProperties,
-    stripUrlSensitiveParts,
-    stripUrlToOrigin,
-} from "./CowebsiteAnalyticsProperties";
+import { stripUrlSensitiveParts, stripUrlToOrigin } from "./CowebsiteAnalyticsProperties";
 import type { EndTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
 import {
     forgetOpenTimedAnalyticsEvents,
@@ -39,6 +34,13 @@ const MAX_PENDING_ADMIN_EVENTS = 100;
 
 /** Handed back when the admin sink is off: an end that measures nothing. */
 const NO_INTERVAL: EndTimedAnalyticsEvent = () => {};
+
+/** The declared subset of an interval's properties that travels to PostHog, or all of it. */
+function pick(properties: Record<string, unknown>, keys: readonly string[] | undefined): Record<string, unknown> {
+    return keys === undefined
+        ? properties
+        : Object.fromEntries(keys.filter((key) => key in properties).map((key) => [key, properties[key]]));
+}
 
 declare global {
     interface Window {
@@ -150,11 +152,34 @@ class AnalyticsClient {
         properties: TimedAnalyticsEventOpenProperties<N>,
         options: { reopenOnReconnect?: boolean } = {},
     ): EndTimedAnalyticsEvent {
-        if (!this.canSendAdminAnalytics()) {
-            return NO_INTERVAL;
+        // Ahead of the capability gate, exactly as in trackAdminEvent and for the same
+        // reason: on a world whose pusher does not advertise the batch endpoint,
+        // PostHog is the only sink there is.
+        const keys = postHogIntervalKeys(eventName);
+        if (keys) {
+            this.posthog?.capture(keys.opens, pick(properties, keys.opensProperties));
         }
 
-        return openTimedAnalyticsEvent(eventName, properties, this.sendTimedEventReport, options);
+        const end = this.canSendAdminAnalytics()
+            ? openTimedAnalyticsEvent(eventName, properties, this.sendTimedEventReport, options)
+            : NO_INTERVAL;
+
+        if (!keys?.closes) {
+            return end;
+        }
+
+        // One capture however often it is called: `end` is idempotent and PostHog has
+        // to be too, or a holder that closes twice counts two.
+        const closes = keys.closes;
+        let captured = false;
+        return () => {
+            end();
+            if (captured) {
+                return;
+            }
+            captured = true;
+            this.posthog?.capture(closes, pick(properties, keys.opensProperties));
+        };
     }
 
     private dispatchAdminEvent(event: AdminAnalyticsEvent): void {
@@ -216,24 +241,6 @@ class AnalyticsClient {
             this.trackAdminEvent("room.changed", { fromRoomId: this.previousRoomId, toRoomId: roomId });
         }
         this.previousRoomId = roomId;
-    }
-
-    /**
-     * Opens the interval that measures one cowebsite visit, and hands it to the store.
-     *
-     * The store is where the pairing already lives: it holds the cowebsites, and its
-     * add/keepOnly/empty are the sixteen ways one goes away. Keeping the handles here
-     * meant a second, parallel record of which cowebsites were open, kept in step by
-     * hand — and only for as long as someone remembered to call closedWebsite.
-     */
-    openedWebsite(url: URL, context: CowebsiteOpenedAnalyticsContext = {}): EndTimedAnalyticsEvent {
-        // Its own capture rather than a table entry: this opens an interval the admin
-        // hears about only when the cowebsite CLOSES, while PostHog has always counted
-        // the opening. Origin only before it reaches PostHog too — cowebsite URLs carry
-        // auth tokens in the query and the document name in the path.
-        this.posthog?.capture("wa_opened_website", { url: stripUrlToOrigin(url) });
-
-        return this.openTimedEvent("cowebsite.closed", buildCowebsiteOpenedProperties(url, context));
     }
 
     /**
