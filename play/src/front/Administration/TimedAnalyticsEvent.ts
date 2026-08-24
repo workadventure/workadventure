@@ -11,6 +11,27 @@ export type TimedAnalyticsEventHandle = {
 };
 
 /**
+ * Every interval currently open, so the front can drop them all when the socket dies.
+ *
+ * A handle used to be dropped by whoever held it — AnalyticsClient cleared its own
+ * fields on disconnect. That stops working the moment a handle lives with the thing
+ * it measures: CoWebsiteStore has no idea a socket exists, and should not learn.
+ *
+ * Spending a handle rather than deleting it is what makes that safe. The holder keeps
+ * its reference and closes it whenever the user actually closes the thing; the close
+ * is then a no-op, because the pusher already ended that interval as `socket_closed`
+ * and a second close would travel over the new socket to be dropped as unpaired.
+ */
+const liveIntervals = new Set<() => void>();
+
+/** The socket went away: every open interval is already ended, on the pusher's side. */
+export function forgetOpenTimedAnalyticsEvents(): void {
+    for (const spend of [...liveIntervals]) {
+        spend();
+    }
+}
+
+/**
  * Opens an interval and hands back the way to close it.
  *
  * The front says *when* something starts and stops; it never says how long it
@@ -35,6 +56,11 @@ export function openTimedAnalyticsEvent<N extends TimedAnalyticsEventName>(
 ): TimedAnalyticsEventHandle {
     const handle = `${eventName}:${uuidv4()}`;
     let closed = false;
+    const spend = (): void => {
+        closed = true;
+        liveIntervals.delete(spend);
+    };
+    liveIntervals.add(spend);
 
     sendReport({
         events: [
@@ -53,7 +79,7 @@ export function openTimedAnalyticsEvent<N extends TimedAnalyticsEventName>(
             if (closed) {
                 return;
             }
-            closed = true;
+            spend();
 
             sendReport({
                 events: [
