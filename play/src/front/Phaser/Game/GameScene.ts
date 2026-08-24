@@ -72,6 +72,7 @@ import { TextUtils } from "../Components/TextUtils";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { PropertyUtils } from "../Map/PropertyUtils";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { stripUrlSensitiveParts } from "../../Administration/CowebsiteAnalyticsProperties";
 import { PathfindingManager } from "../../Utils/PathfindingManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
@@ -457,7 +458,9 @@ export class GameScene extends DirtyScene {
             this.wamUrlFile = _room.wamUrl;
         }
         this.roomUrl = _room.key;
-        analyticsClient.mapLoadingStarted(this.mapUrlFile || this.wamUrlFile || this.roomUrl);
+        analyticsClient.trackAdminEvent("map_loading.started", {
+            mapUrl: stripUrlSensitiveParts(this.mapUrlFile || this.wamUrlFile || this.roomUrl),
+        });
 
         this.entitiesCollectionsManager = new EntitiesCollectionsManager();
 

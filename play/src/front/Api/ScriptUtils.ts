@@ -1,5 +1,6 @@
 import { CardsService, GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { stripUrlToOrigin } from "../Administration/CowebsiteAnalyticsProperties";
 import { gameManager } from "../Phaser/Game/GameManager";
 
 class ScriptUtils {
@@ -11,7 +12,7 @@ class ScriptUtils {
         window.open(url);
 
         // Analytics tracking for opening a new tab
-        analyticsClient.scriptingWebsiteOpened(new URL(url));
+        analyticsClient.trackAdminEvent("scripting.website_opened", { url: stripUrlToOrigin(url) });
     }
 
     public goToPage(url: string) {
@@ -25,7 +26,7 @@ class ScriptUtils {
         }
         // Analytics tracking for opening a new tab
         if (urlPattern.test(urlToTrack)) {
-            analyticsClient.scriptingWebsiteOpened(new URL(urlToTrack));
+            analyticsClient.trackAdminEvent("scripting.website_opened", { url: stripUrlToOrigin(urlToTrack) });
         }
 
         window.location.href = url;

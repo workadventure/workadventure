@@ -2,6 +2,7 @@ import * as Phaser from "phaser";
 import type { Subscription } from "rxjs";
 import { iframeListener } from "../../Api/IframeListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { stripUrlToOrigin } from "../../Administration/CowebsiteAnalyticsProperties";
 import type { CreateEmbeddedWebsiteEvent, ModifyEmbeddedWebsiteEvent } from "../../Api/Events/EmbeddedWebsiteEvent";
 import type { GameScene } from "./GameScene";
 
@@ -90,7 +91,7 @@ export class EmbeddedWebsiteManager {
                     website.iframe.src = absoluteUrl;
 
                     // Analytics tracking for new url website
-                    analyticsClient.scriptingWebsiteOpened(newUrl);
+                    analyticsClient.trackAdminEvent("scripting.website_opened", { url: stripUrlToOrigin(newUrl) });
                 }
 
                 if (embeddedWebsiteEvent.visible !== undefined) {

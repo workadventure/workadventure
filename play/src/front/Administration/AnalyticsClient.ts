@@ -13,7 +13,6 @@ import type {
 import { postHogEventKey, postHogIntervalKeys } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { hasCapability } from "../Connection/Capabilities";
-import { stripUrlSensitiveParts, stripUrlToOrigin } from "./CowebsiteAnalyticsProperties";
 import type { EndTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
 import {
     forgetOpenTimedAnalyticsEvents,
@@ -237,17 +236,6 @@ class AnalyticsClient {
         this.previousRoomId = roomId;
     }
 
-    /**
-     * A URL the scripting API put on screen somewhere the app does not own: a browser
-     * tab, a navigation away, a UI panel, an in-map iframe. None of them is a
-     * cowebsite, and all five used to report `cowebsite.opened` with no context —
-     * landing as triggerProperty `other` and diluting every per-area cowebsite figure.
-     * PostHog keeps seeing them under the same name it always has.
-     */
-    scriptingWebsiteOpened(url: URL): void {
-        this.trackAdminEvent("scripting.website_opened", { url: stripUrlToOrigin(url) });
-    }
-
     // The two ends of one broadcast, named for PostHog, which counts each press. The
     // admin gets one `megaphone.ended` row carrying the duration instead.
     //
@@ -280,14 +268,6 @@ class AnalyticsClient {
     // miss the fifteen other ways a cowebsite goes away.
     closeCowebsite(): void {
         this.posthog?.capture("wa_close_cowebsite");
-    }
-
-    mapLoadingStarted(mapUrl?: string): void {
-        // Strip query string / fragment so map/WAM/room URLs carrying access
-        // tokens are not shipped as analytics, mirroring the cowebsite URL handling.
-        this.trackAdminEvent("map_loading.started", {
-            mapUrl: mapUrl ? stripUrlSensitiveParts(mapUrl) : undefined,
-        });
     }
 }
 export const analyticsClient = new AnalyticsClient();
