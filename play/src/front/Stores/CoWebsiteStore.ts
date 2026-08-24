@@ -1,6 +1,7 @@
 import { derived, get, readable, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import type { CowebsiteOpenedAnalyticsContext } from "../Administration/CowebsiteAnalyticsProperties";
+import { buildCowebsiteOpenedProperties } from "../Administration/CowebsiteAnalyticsProperties";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { TimedEventsByKey } from "../Administration/TimedAnalyticsEvent";
 
@@ -57,7 +58,13 @@ export function createCoWebsiteStore() {
             }
         }
 
-        openVisits.replace(coWebsite.getId(), analyticsClient.openedWebsite(coWebsite.getUrl(), analyticsContext));
+        openVisits.replace(
+            coWebsite.getId(),
+            analyticsClient.openTimedEvent(
+                "cowebsite.closed",
+                buildCowebsiteOpenedProperties(coWebsite.getUrl(), analyticsContext),
+            ),
+        );
     };
 
     /**

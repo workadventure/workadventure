@@ -188,6 +188,31 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(capture).toHaveBeenCalledWith("wa_say_bubble_open", {});
     });
 
+    it("sends PostHog the declared subset of an interval's properties, and nothing else", () => {
+        const capture = vi.fn();
+        window.capabilities = {};
+        window.posthog = { capture } as never;
+
+        analyticsClient.openTimedEvent("cowebsite.closed", {
+            url: "https://docs.example",
+            targetUrl: "https://docs.example",
+            mediaKind: "pdf",
+            triggerProperty: "openWebsite",
+            fileName: "NDA-acme.pdf",
+            fileExtension: "pdf",
+            areaId: "area-1",
+            areaName: "Meeting room",
+            schemaVersion: 1,
+        });
+
+        // The whole reason `opensProperties` exists. A document name is for the world
+        // that opened it: the admin strips it for a world that opted out of user-level
+        // activity and the internal Kiosk never projects the column, so shipping it to
+        // PostHog would walk around both.
+        expect(capture).toHaveBeenCalledWith("wa_opened_website", { url: "https://docs.example" });
+        expect(JSON.stringify(capture.mock.calls)).not.toContain("NDA-acme.pdf");
+    });
+
     it("leaves PostHog alone for events it never knew", () => {
         const sendAdmin = vi.fn();
         const capture = vi.fn();

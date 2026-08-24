@@ -444,20 +444,40 @@ describe("POSTHOG_EVENT_KEYS", () => {
         ).toEqual([]);
     });
 
+    /**
+     * The one PostHog name two events answer to, and the reason it is not a bug.
+     *
+     * Opening a cowebsite and the scripting API putting a URL on screen were one
+     * PostHog event long before this pipeline told them apart, and they still are:
+     * `cowebsite.opened` and `scripting.website_opened` are two admin events under
+     * `wa_opened_website`. Splitting the PostHog name would break a series that
+     * predates all of this.
+     *
+     * It was already true and simply not visible: the cowebsite half used to capture
+     * from a method body, so the table only ever saw one of the two. Naming it here
+     * is what keeps it the exception rather than the first of many.
+     */
+    const SHARED_ON_PURPOSE = ["wa_opened_website"];
+
     it("gives each PostHog name to exactly one event", () => {
         // Two events sharing a name double-count it in PostHog, and the two are
-        // indistinguishable once there. The discriminated entries are flattened in
-        // rather than skipped: one event under two names is the point of them, two
-        // events under one name is what this forbids.
-        const names = Object.values(POSTHOG_EVENT_KEYS).flatMap((key) =>
-            typeof key === "string"
-                ? [key]
-                : [...Object.values(key.byValue), ...(key.whenAbsent ? [key.whenAbsent] : [])],
-        );
+        // indistinguishable once there. Both other forms are flattened in rather than
+        // skipped: one event under two names is the point of the discriminated ones,
+        // and an interval's two ends are two names as much as any other — two events
+        // under one name is what this forbids.
+        const names = Object.values(POSTHOG_EVENT_KEYS).flatMap((key) => {
+            if (typeof key === "string") {
+                return [key];
+            }
+            if ("opens" in key) {
+                return key.closes ? [key.opens, key.closes] : [key.opens];
+            }
+            return [...Object.values(key.byValue), ...(key.whenAbsent ? [key.whenAbsent] : [])];
+        });
         const duplicated = names.filter((name, index) => names.indexOf(name) !== index);
 
         expect(names.length).toBeGreaterThan(100);
-        expect([...new Set(duplicated)].sort()).toEqual([]);
+        expect([...new Set(duplicated)].sort()).toEqual([...SHARED_ON_PURPOSE].sort());
     });
 
     it("discriminates on a property its event actually declares", () => {
@@ -467,7 +487,7 @@ describe("POSTHOG_EVENT_KEYS", () => {
         // which properties exist, so ask it rather than trust the string.
         const wrong: string[] = [];
         for (const [eventName, key] of Object.entries(POSTHOG_EVENT_KEYS)) {
-            if (typeof key === "string") {
+            if (typeof key === "string" || "opens" in key) {
                 continue;
             }
             // Object.entries widens the key to string; the table is keyed by event
