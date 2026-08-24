@@ -250,6 +250,9 @@ export const POSTHOG_EVENT_KEYS: Partial<
   "user.woka_menu.opened": "wa_open_woka_menu",
 
   "user_list.opened": "wa_open_user_list",
+
+  "websocket.reconnected": "wa_socket_reconnected",
+  "websocket.reconnecting": "wa_socket_reconnecting",
 };
 
 /**

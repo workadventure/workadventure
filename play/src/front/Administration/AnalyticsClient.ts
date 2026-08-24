@@ -625,13 +625,5 @@ class AnalyticsClient {
             return false;
         }
     }
-    // PostHog only: the pusher owns socket lifecycle in the new pipeline (user.connected
-    // / user.disconnected), so there is no front-side event for these to report.
-    socketReconnecting(): void {
-        this.posthog?.capture("wa_socket_reconnecting");
-    }
-    socketReconnected(): void {
-        this.posthog?.capture("wa_socket_reconnected");
-    }
 }
 export const analyticsClient = new AnalyticsClient();

@@ -329,13 +329,11 @@ export class RoomConnection implements RoomConnection {
         }
 
         this.socket = new WorkAdventureWebSocket(url, subProtocols);
+        // The stream stays — ConnectionManager drives the reconnecting toast off it.
+        // What went is the analytics subscription: the socket reports its own retries
+        // now, so this no longer watches a stream to say a second time what the layer
+        // below already said.
         this.websocketReconnectingStream = this.socket.reconnectingStream;
-        const reconnectingSubscription = this.websocketReconnectingStream.subscribe((isReconnecting) => {
-            if (isReconnecting) {
-                analyticsClient.trackAdminEvent("websocket.reconnecting");
-            }
-        });
-        this.onCleanup(() => reconnectingSubscription.unsubscribe());
 
         this.socket.onopen = () => {
             console.info("Socket has been opened");
