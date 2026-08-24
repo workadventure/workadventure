@@ -132,10 +132,12 @@ describe("SimplePeer connectionId replacement", () => {
 
     it("marks the superseded peer as an intentional close and does not trigger the retry flow", async () => {
         const { space, emitBackEvent, emitWebRtcStart } = makeSpace();
-        const analyticsClient = {
-            addNewParticipant: vi.fn(),
-            retryConnectionWebRtc: vi.fn(),
-        };
+        // One entry point, because that is what the client exposes now. The stub used
+        // to name the two methods this path calls, and a stub that names methods goes
+        // stale in silence: the call throws inside peer creation, the replacement
+        // never reaches markAsIntentionalClose, and the failure points at the teardown
+        // rather than at the stub.
+        const analyticsClient = { trackAdminEvent: vi.fn() };
 
         // Spy on the private retry entrypoint: replacing a live peer must NOT enter it.
         const handleConnectionFailureSpy = vi.spyOn(
@@ -167,7 +169,10 @@ describe("SimplePeer connectionId replacement", () => {
         expect(firstPeer.destroy).toHaveBeenCalled();
         // ...so the internal replacement never enters the retry flow, and no stale restart / analytics is produced.
         expect(handleConnectionFailureSpy).not.toHaveBeenCalled();
-        expect(analyticsClient.retryConnectionWebRtc).not.toHaveBeenCalled();
+        expect(analyticsClient.trackAdminEvent).not.toHaveBeenCalledWith(
+            "media.connection_retry",
+            expect.anything()
+        );
         expect(
             emitBackEvent.mock.calls.some(
                 (call) => call[0]?.event?.$case === "meetingConnectionRestartMessage",
