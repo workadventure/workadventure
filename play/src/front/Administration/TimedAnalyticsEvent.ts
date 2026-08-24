@@ -69,3 +69,50 @@ export function openTimedAnalyticsEvent<N extends TimedAnalyticsEventName>(
         },
     };
 }
+
+/**
+ * The intervals a caller measures several of at once, one per key.
+ *
+ * Areas and cowebsites both need this and both wrote it out by hand, identically:
+ * open a key that is already open and the previous interval is closed first, rather
+ * than overwritten. Overwriting is the bug worth naming — the stranded interval has
+ * nothing left that could close it, so the pusher only ends it when the socket dies,
+ * dating a walk-through to the end of the session.
+ *
+ * `closeAll` is for the owner's teardown. A map living on the analytics singleton had
+ * no teardown to hook, which is how area dwells came to outlive the scene that opened
+ * them while cowebsites, closed through their store, did not.
+ */
+export class TimedEventsByKey {
+    private readonly open = new Map<string, TimedAnalyticsEventHandle>();
+
+    /** Starts measuring `key`, ending whatever that key was already measuring. */
+    public replace(key: string, handle: TimedAnalyticsEventHandle): void {
+        this.open.get(key)?.close();
+        this.open.set(key, handle);
+    }
+
+    public close(key: string): void {
+        this.open.get(key)?.close();
+        this.open.delete(key);
+    }
+
+    /** The owner is going away and these intervals really ended. */
+    public closeAll(): void {
+        for (const handle of this.open.values()) {
+            handle.close();
+        }
+        this.open.clear();
+    }
+
+    /**
+     * The socket went away. Drops the handles WITHOUT closing them, which is the
+     * opposite of closeAll and deliberately so: the pusher has already ended every
+     * one of these as `socket_closed`, so a close frame now would be sent over the
+     * next socket and dropped there as unpaired — noise for a result already
+     * recorded.
+     */
+    public forget(): void {
+        this.open.clear();
+    }
+}
