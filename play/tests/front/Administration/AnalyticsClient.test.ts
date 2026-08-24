@@ -524,16 +524,14 @@ describe("AnalyticsClient admin analytics sink", () => {
         };
         window.posthog = { capture } as never;
 
-        analyticsClient.menuProfile();
-        analyticsClient.openProfileMenu();
+        analyticsClient.trackAdminEvent("profile.opened", { source: "menu" });
+        analyticsClient.trackAdminEvent("profile.opened", { source: "profile_button" });
 
-        // One event to this pipeline, two to PostHog — which is why the name cannot
-        // live on the catalog entry for these six.
-        // Bare, with no properties object: these two capture PostHog on their own
-        // line rather than through the map, and follow the shape every other explicit
-        // capture in the client uses.
-        expect(capture).toHaveBeenNthCalledWith(1, "wa_menu_profile");
-        expect(capture).toHaveBeenNthCalledWith(2, "wa_open_profile_menu");
+        // One event to this pipeline, two to PostHog. The property the call site was
+        // already passing is what picks the name, so neither of these two sites — nor
+        // any of the other 199 — has to know a PostHog name exists.
+        expect(capture).toHaveBeenNthCalledWith(1, "wa_menu_profile", { source: "menu" });
+        expect(capture).toHaveBeenNthCalledWith(2, "wa_open_profile_menu", { source: "profile_button" });
         expect(sendAdmin).toHaveBeenCalledTimes(2);
         expect(sendAdmin).toHaveBeenNthCalledWith(1, {
             events: [expect.objectContaining({ eventName: "profile.opened" })],

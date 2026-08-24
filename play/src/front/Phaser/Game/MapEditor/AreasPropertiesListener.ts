@@ -986,7 +986,10 @@ export class AreasPropertiesListener {
 
             coWebsites.add(coWebsite);
 
-            analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
+            analyticsClient.trackAdminEvent("meeting.area_entered", {
+                roomId: this.scene.roomUrl,
+                meetingProvider: "jitsi",
+            });
 
             popupStore.removePopup("jitsi");
             // TODO: this is the code to remove the new design popup before the "new design"
@@ -1106,7 +1109,7 @@ export class AreasPropertiesListener {
             "meeting",
         );
 
-        analyticsClient.enteredMeetingRoom(roomName, this.scene.roomUrl);
+        analyticsClient.trackAdminEvent("meeting.area_entered", { roomId: this.scene.roomUrl });
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {

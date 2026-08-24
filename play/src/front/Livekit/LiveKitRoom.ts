@@ -695,7 +695,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private requestRestart() {
-        analyticsClient.retryConnectionLivekit();
+        analyticsClient.trackAdminEvent("media.connection_retry", { meetingProvider: "livekit" });
         this.space.emitBackEvent({
             event: {
                 $case: "meetingConnectionRestartMessage",

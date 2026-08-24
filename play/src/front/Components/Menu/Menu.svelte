@@ -80,7 +80,7 @@
             switch (menu.key) {
                 case SubMenusInterface.profile:
                     activeComponent = ProfileSubMenu;
-                    analyticsClient.menuProfile();
+                    analyticsClient.trackAdminEvent("profile.opened", { source: "menu" });
                     break;
                 case SubMenusInterface.settings:
                     activeComponent = SettingsSubMenu;
@@ -96,11 +96,11 @@
                     break;
                 case SubMenusInterface.globalMessages:
                     activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
-                    analyticsClient.globalMessage();
+                    analyticsClient.trackAdminEvent("global_message.opened", { source: "menu" });
                     break;
                 case SubMenusInterface.report:
                     activeComponent = ReportSubMenu;
-                    analyticsClient.reportIssue();
+                    analyticsClient.trackAdminEvent("feedback.opened", { feedbackSource: "external_report_url" });
                     break;
                 case SubMenusInterface.chat:
                     activeComponent = ChatSubMenu;

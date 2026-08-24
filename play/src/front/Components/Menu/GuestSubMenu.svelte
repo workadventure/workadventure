@@ -71,7 +71,7 @@
 
     function copyLink() {
         // Analytics Client
-        analyticsClient.inviteCopyLink();
+        analyticsClient.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
 
         const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
         input.focus();
@@ -104,7 +104,7 @@
 
     async function shareLink() {
         // Analytics Client
-        analyticsClient.inviteCopyLink();
+        analyticsClient.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
 
         const shareData = { url: getLink() };
 

@@ -437,12 +437,36 @@ describe("POSTHOG_EVENT_KEYS", () => {
 
     it("gives each PostHog name to exactly one event", () => {
         // Two events sharing a name double-count it in PostHog, and the two are
-        // indistinguishable once there. The events that genuinely need one name per UI
-        // path capture PostHog in their own method instead, which is why none is here.
-        const names = Object.values(POSTHOG_EVENT_KEYS);
+        // indistinguishable once there. The discriminated entries are flattened in
+        // rather than skipped: one event under two names is the point of them, two
+        // events under one name is what this forbids.
+        const names = Object.values(POSTHOG_EVENT_KEYS).flatMap((key) =>
+            typeof key === "string"
+                ? [key]
+                : [...Object.values(key.byValue), ...(key.whenAbsent ? [key.whenAbsent] : [])],
+        );
         const duplicated = names.filter((name, index) => names.indexOf(name) !== index);
 
         expect(names.length).toBeGreaterThan(100);
         expect([...new Set(duplicated)].sort()).toEqual([]);
+    });
+
+    it("discriminates on a property its event actually declares", () => {
+        // The failure this guards is silent in the worst way: a typo in `on` finds no
+        // value, the lookup returns undefined, and the event simply stops reaching
+        // PostHog — no error, no warning, a series that flatlines. The catalog knows
+        // which properties exist, so ask it rather than trust the string.
+        const wrong: string[] = [];
+        for (const [eventName, key] of Object.entries(POSTHOG_EVENT_KEYS)) {
+            if (typeof key === "string") {
+                continue;
+            }
+            const properties = propertiesOf(ANALYTICS_EVENT_CATALOG[eventName]) as z.AnyZodObject;
+            if (!Object.keys(properties.shape).includes(key.on)) {
+                wrong.push(`${eventName} discriminates on "${key.on}", which it does not declare`);
+            }
+        }
+
+        expect(wrong.sort()).toEqual([]);
     });
 });

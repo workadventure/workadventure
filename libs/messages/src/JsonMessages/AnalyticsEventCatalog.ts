@@ -1264,9 +1264,18 @@ export const ANALYTICS_EVENTS = {
   ),
   "file.drag_dropped": signal("The user dropped a file into the world."),
   "global_audio.opened": signal("The user opened the global audio panel."),
-  "global_message.opened": signal(
-    "The user opened the global message composer.",
-  ),
+  "global_message.opened": event({
+    properties: z.object({
+      source: z
+        .enum(["menu", "action_bar"])
+        .describe("Which control opened the composer."),
+    }),
+    // A property rather than two events, because PostHog has counted these two
+    // paths separately since long before this pipeline (wa_menu_globalmessage and
+    // wa_action_globalmessage) and the admin could not tell them apart at all.
+    // Declaring the discriminator lets both sinks answer the same question.
+    description: "The user opened the global message composer.",
+  }),
   "global_message.sound_sent": signal(
     "The user broadcast a sound to the world.",
   ),
@@ -1388,7 +1397,16 @@ export const ANALYTICS_EVENTS = {
   "profile.name_edit_opened": signal(
     "The user opened name settings from their profile.",
   ),
-  "profile.opened": signal("The user opened their profile."),
+  "profile.opened": event({
+    properties: z.object({
+      source: z
+        .enum(["menu", "profile_button"])
+        .describe("Which control opened the profile."),
+    }),
+    // See global_message.opened: PostHog has always had wa_menu_profile and
+    // wa_open_profile_menu, and this side had one undifferentiated event.
+    description: "The user opened their profile.",
+  }),
   "profile.woka_edit_opened": signal(
     "The user opened Woka settings from their profile.",
   ),

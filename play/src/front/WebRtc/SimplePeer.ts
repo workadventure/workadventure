@@ -543,7 +543,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         // This avoids inflating the metric with every backoff attempt and with both peers
         // retrying a symmetric failure.
         if (this.retryManager.getAttemptCount(userId) <= 1) {
-            this._analyticsClient.retryConnectionWebRtc();
+            this._analyticsClient.trackAdminEvent("media.connection_retry", { meetingProvider: "webrtc" });
         }
 
         // Send restart message to backend, which will respond with a new webRtcStartMessage
@@ -870,7 +870,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this.closeConnection(userId, true);
 
         // Track manual retry attempt in analytics
-        this._analyticsClient.retryConnectionWebRtc();
+        this._analyticsClient.trackAdminEvent("media.connection_retry", { meetingProvider: "webrtc" });
 
         // Send restart message to backend to initiate reconnection
         // The backend will send webRtcStartMessage which will trigger createPeerConnection
