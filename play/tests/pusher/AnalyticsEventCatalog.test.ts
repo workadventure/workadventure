@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { generateSchema } from "@anatine/zod-openapi";
+import type { AnalyticsEventName } from "@workadventure/messages";
 import {
     ANALYTICS_EVENT_CATALOG,
     TIMED_ANALYTICS_EVENT_NAMES,
@@ -461,7 +462,11 @@ describe("POSTHOG_EVENT_KEYS", () => {
             if (typeof key === "string") {
                 continue;
             }
-            const properties = propertiesOf(ANALYTICS_EVENT_CATALOG[eventName]) as z.AnyZodObject;
+            // Object.entries widens the key to string; the table is keyed by event
+            // name by construction, which is what the Partial<Record<…>> type says.
+            const properties = propertiesOf(
+                ANALYTICS_EVENT_CATALOG[eventName as AnalyticsEventName]
+            ) as z.AnyZodObject;
             if (!Object.keys(properties.shape).includes(key.on)) {
                 wrong.push(`${eventName} discriminates on "${key.on}", which it does not declare`);
             }
