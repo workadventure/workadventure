@@ -1,10 +1,5 @@
 import type { PostHog } from "@posthog/types";
-import type {
-    AnalyticsEventArgs,
-    AnalyticsEventName,
-    AnalyticsEventProperties,
-    AnalyticsEventReportMessage,
-} from "@workadventure/messages";
+import type { AnalyticsEventArgs, AnalyticsEventName, AnalyticsEventReportMessage } from "@workadventure/messages";
 // By path rather than through the package barrel, and that is the point: this
 // module's only import is a type, so what lands in the bundle is 117 strings. The
 // same table used to live on the catalog entries, which pulled ~166 live Zod
@@ -12,6 +7,12 @@ import type {
 import { postHogEventKey } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { hasCapability } from "../Connection/Capabilities";
+import type { CowebsiteOpenedAnalyticsContext } from "./CowebsiteAnalyticsProperties";
+import {
+    buildCowebsiteOpenedProperties,
+    stripUrlSensitiveParts,
+    stripUrlToOrigin,
+} from "./CowebsiteAnalyticsProperties";
 import type { TimedAnalyticsEventHandle } from "./TimedAnalyticsEvent";
 import { openTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
 
@@ -22,26 +23,6 @@ type MeetingAnalyticsProperties = {
     meetingProvider: MeetingProvider;
     meetingId?: string;
     roomId?: string;
-};
-type CowebsiteMediaKind =
-    | "pdf"
-    | "image"
-    | "video"
-    | "audio"
-    | "document"
-    | "presentation"
-    | "spreadsheet"
-    | "website"
-    | "other";
-export type CowebsiteOpenedAnalyticsContext = {
-    targetUrl?: string;
-    mediaKind?: CowebsiteMediaKind;
-    triggerProperty?: "openLink" | "openWebsite" | "other";
-    fileName?: string;
-    fileExtension?: string;
-    areaId?: string;
-    areaName?: string;
-    schemaVersion?: number;
 };
 type ExperienceIssueProperties = {
     category?: string;
@@ -270,7 +251,7 @@ class AnalyticsClient {
         // Origin only before it reaches PostHog too: cowebsite URLs carry auth tokens
         // in the query/hash and the document name in the path. The admin sink does the
         // same via buildCowebsiteOpenedProperties; keep both in sync.
-        this.posthog?.capture("wa_opened_website", { url: this.stripUrlToOrigin(url) });
+        this.posthog?.capture("wa_opened_website", { url: stripUrlToOrigin(url) });
         if (!this.canSendAdminAnalytics()) {
             return;
         }
@@ -282,7 +263,7 @@ class AnalyticsClient {
             coWebsiteId,
             openTimedAnalyticsEvent(
                 "cowebsite.closed",
-                this.buildCowebsiteOpenedProperties(url, context),
+                buildCowebsiteOpenedProperties(url, context),
                 this.sendTimedEventReport,
             ),
         );
@@ -301,7 +282,7 @@ class AnalyticsClient {
      * PostHog keeps seeing them under the same name it always has.
      */
     scriptingWebsiteOpened(url: URL): void {
-        this.trackAdminEvent("scripting.website_opened", { url: this.stripUrlToOrigin(url) });
+        this.trackAdminEvent("scripting.website_opened", { url: stripUrlToOrigin(url) });
     }
 
     // The two ends of one interval, opened and closed where the broadcast is started
@@ -412,7 +393,7 @@ class AnalyticsClient {
         // Strip query string / fragment so map/WAM/room URLs carrying access
         // tokens are not shipped as analytics, mirroring the cowebsite URL handling.
         this.trackAdminEvent("map_loading.started", {
-            mapUrl: mapUrl ? this.stripUrlSensitiveParts(mapUrl) : undefined,
+            mapUrl: mapUrl ? stripUrlSensitiveParts(mapUrl) : undefined,
         });
     }
 
@@ -464,166 +445,6 @@ class AnalyticsClient {
 
     performanceIssue(properties: ExperienceIssueProperties = {}): void {
         this.trackAdminEvent("performance.issue", properties);
-    }
-
-    private buildCowebsiteOpenedProperties(
-        url: URL,
-        context: CowebsiteOpenedAnalyticsContext,
-    ): AnalyticsEventProperties<"cowebsite.opened"> {
-        const rawTargetUrl = context.targetUrl ?? url.toString();
-        const fileExtension = this.normalizeFileExtension(
-            context.fileExtension ?? this.getFileExtensionFromUrl(rawTargetUrl),
-        );
-        const mediaKind = context.mediaKind ?? this.inferCowebsiteMediaKind(rawTargetUrl, fileExtension);
-
-        return {
-            // Origin only. The query and hash carry auth tokens (access_token, sas,
-            // signed URLs) and the rest of the path carries whatever else the URL
-            // encodes, none of which analytics needs — the document name is reported
-            // on its own below, so the path would only be a second, unfiltered copy.
-            url: this.stripUrlToOrigin(url),
-            targetUrl: this.stripUrlToOrigin(rawTargetUrl),
-            mediaKind,
-            triggerProperty: context.triggerProperty ?? "other",
-            // Which documents a world opens is a metric its own administrator asks
-            // for, so the name is reported as its own field rather than smuggled
-            // inside a URL. It is deliberately absent from the admin's anonymization
-            // allowlist: document names are frequently sensitive (NDA-acme.pdf,
-            // salary-2026.xlsx), so a world that opts out of user-level activity has
-            // them stripped at ingestion, and the internal Kiosk does not project the
-            // column at all — only the world's own back-office shows it.
-            fileName: context.fileName ?? this.getFileNameFromUrl(rawTargetUrl),
-            fileExtension,
-            areaId: context.areaId,
-            areaName: context.areaName,
-            schemaVersion: context.schemaVersion ?? 1,
-        };
-    }
-
-    /**
-     * Drops the query string and hash, which routinely carry auth tokens
-     * (access_token, sas, signed URLs). The path is kept on purpose: for a map
-     * URL it *is* the analytic signal — it names which map was loaded, and every
-     * map would otherwise collapse onto its host.
-     *
-     * Not suitable for URLs the user chose: use stripUrlToOrigin for those.
-     */
-    private stripUrlSensitiveParts(input: string | URL): string {
-        try {
-            const parsed = input instanceof URL ? input : new URL(input, window.location.origin);
-            return parsed.origin + parsed.pathname;
-        } catch {
-            return typeof input === "string" ? input.split("?")[0].split("#")[0] : input.toString();
-        }
-    }
-
-    /**
-     * Reduces a user-chosen URL (an opened cowebsite) to its origin.
-     *
-     * The path is dropped as well as the query and hash, because it ends in the
-     * document name — keeping it re-introduced exactly the filenames this class
-     * refuses to collect (see buildCowebsiteOpenedProperties). getFileNameFromUrl
-     * below derives the name from nothing but that path, and the admin ran the
-     * very same extraction on the URL we shipped, so stripping fileName alone
-     * achieved nothing. The origin answers the analytic question — which apps do
-     * worlds open — without naming the document.
-     */
-    private stripUrlToOrigin(input: string | URL): string {
-        try {
-            const parsed = input instanceof URL ? input : new URL(input, window.location.origin);
-            return parsed.origin;
-        } catch {
-            // Unparseable: return the scheme+host prefix rather than the raw
-            // string, which would leak the path we just refused to send.
-            const asString = typeof input === "string" ? input : input.toString();
-            const schemeMatch = asString
-                .split("?")[0]
-                .split("#")[0]
-                .match(/^[a-z][a-z0-9+.-]*:\/\/[^/]+/i);
-            return schemeMatch ? schemeMatch[0] : "";
-        }
-    }
-
-    private getFileNameFromUrl(targetUrl: string): string | null {
-        try {
-            const pathname = new URL(targetUrl, window.location.origin).pathname;
-            const segments = pathname.split("/").filter(Boolean);
-            if (segments.length === 0) {
-                return null;
-            }
-
-            return decodeURIComponent(segments[segments.length - 1] ?? "") || null;
-        } catch (error) {
-            console.debug("Unable to extract cowebsite file name", error);
-            return null;
-        }
-    }
-
-    private getFileExtensionFromUrl(targetUrl: string): string | null {
-        const fileName = this.getFileNameFromUrl(targetUrl);
-        if (!fileName || !fileName.includes(".")) {
-            return null;
-        }
-
-        return this.normalizeFileExtension(fileName.split(".").pop() ?? null);
-    }
-
-    private normalizeFileExtension(extension: string | null | undefined): string | null {
-        if (!extension) {
-            return null;
-        }
-
-        return extension.trim().replace(/^\./, "").toLowerCase() || null;
-    }
-
-    private inferCowebsiteMediaKind(targetUrl: string, fileExtension: string | null): CowebsiteMediaKind {
-        if (!fileExtension) {
-            return this.looksLikeWebsiteUrl(targetUrl) ? "website" : "other";
-        }
-
-        if (fileExtension === "pdf") {
-            return "pdf";
-        }
-
-        if (["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "avif"].includes(fileExtension)) {
-            return "image";
-        }
-
-        if (["mp4", "webm", "mov", "avi", "mkv", "ogv"].includes(fileExtension)) {
-            return "video";
-        }
-
-        if (["mp3", "wav", "ogg", "m4a", "aac", "flac"].includes(fileExtension)) {
-            return "audio";
-        }
-
-        if (["ppt", "pptx", "odp", "key"].includes(fileExtension)) {
-            return "presentation";
-        }
-
-        if (["xls", "xlsx", "ods", "csv", "tsv"].includes(fileExtension)) {
-            return "spreadsheet";
-        }
-
-        if (["doc", "docx", "odt", "rtf", "txt", "md"].includes(fileExtension)) {
-            return "document";
-        }
-
-        if (["html", "htm"].includes(fileExtension)) {
-            return "website";
-        }
-
-        return "other";
-    }
-
-    private looksLikeWebsiteUrl(targetUrl: string): boolean {
-        try {
-            const parsedUrl = new URL(targetUrl, window.location.origin);
-            return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
-        } catch (error) {
-            console.debug("Unable to classify cowebsite URL", error);
-            return false;
-        }
     }
 }
 export const analyticsClient = new AnalyticsClient();

@@ -1,6 +1,6 @@
 import { derived, get, readable, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
-import type { CowebsiteOpenedAnalyticsContext } from "../Administration/AnalyticsClient";
+import type { CowebsiteOpenedAnalyticsContext } from "../Administration/CowebsiteAnalyticsProperties";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 
 export function createCoWebsiteStore() {
