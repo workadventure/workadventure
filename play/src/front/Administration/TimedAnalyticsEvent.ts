@@ -5,10 +5,14 @@ import type {
 } from "@workadventure/messages";
 import { v4 as uuidv4 } from "uuid";
 
-export type TimedAnalyticsEventHandle = {
-    /** Idempotent: closing twice reports one interval, not two. */
-    close(): void;
-};
+/**
+ * Ends the interval. Idempotent: calling it twice reports one interval, not two.
+ *
+ * A function rather than an object with a `close` method, because there was only
+ * ever one thing to do with it — and naming it is left to whoever stores it, where
+ * `endBroadcast()` says more than `broadcast.close()` did.
+ */
+export type EndTimedAnalyticsEvent = () => void;
 
 /**
  * Every interval currently open, so the front can act on all of them when the socket
@@ -78,7 +82,7 @@ export function openTimedAnalyticsEvent<N extends TimedAnalyticsEventName>(
     properties: TimedAnalyticsEventOpenProperties<N>,
     sendReport: (message: AnalyticsEventReportMessage) => void,
     { reopenOnReconnect = false }: { reopenOnReconnect?: boolean } = {},
-): TimedAnalyticsEventHandle {
+): EndTimedAnalyticsEvent {
     let handle = "";
     let closed = false;
     // Whether an open frame of ours is outstanding on the CURRENT socket. It goes
@@ -123,29 +127,27 @@ export function openTimedAnalyticsEvent<N extends TimedAnalyticsEventName>(
     openIntervals.add(interval);
     emitOpen();
 
-    return {
-        close(): void {
-            if (closed) {
-                return;
-            }
-            closed = true;
-            openIntervals.delete(interval);
-            if (!measuring) {
-                return;
-            }
+    return () => {
+        if (closed) {
+            return;
+        }
+        closed = true;
+        openIntervals.delete(interval);
+        if (!measuring) {
+            return;
+        }
 
-            sendReport({
-                events: [
-                    {
-                        eventName: "timed_event.close",
-                        source: "front",
-                        clientEventTimeMs: Date.now(),
-                        eventId: `timed-close:${handle}`,
-                        properties: { handle },
-                    },
-                ],
-            });
-        },
+        sendReport({
+            events: [
+                {
+                    eventName: "timed_event.close",
+                    source: "front",
+                    clientEventTimeMs: Date.now(),
+                    eventId: `timed-close:${handle}`,
+                    properties: { handle },
+                },
+            ],
+        });
     };
 }
 
@@ -163,23 +165,23 @@ export function openTimedAnalyticsEvent<N extends TimedAnalyticsEventName>(
  * them while cowebsites, closed through their store, did not.
  */
 export class TimedEventsByKey {
-    private readonly open = new Map<string, TimedAnalyticsEventHandle>();
+    private readonly open = new Map<string, EndTimedAnalyticsEvent>();
 
     /** Starts measuring `key`, ending whatever that key was already measuring. */
-    public replace(key: string, handle: TimedAnalyticsEventHandle): void {
-        this.open.get(key)?.close();
-        this.open.set(key, handle);
+    public replace(key: string, end: EndTimedAnalyticsEvent): void {
+        this.open.get(key)?.();
+        this.open.set(key, end);
     }
 
     public close(key: string): void {
-        this.open.get(key)?.close();
+        this.open.get(key)?.();
         this.open.delete(key);
     }
 
     /** The owner is going away and these intervals really ended. */
     public closeAll(): void {
-        for (const handle of this.open.values()) {
-            handle.close();
+        for (const end of this.open.values()) {
+            end();
         }
         this.open.clear();
     }

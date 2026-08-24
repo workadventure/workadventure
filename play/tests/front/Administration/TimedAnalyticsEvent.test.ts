@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { analyticsClient } from "../../../src/front/Administration/AnalyticsClient";
-import {
-    TimedEventsByKey,
-    type TimedAnalyticsEventHandle,
-} from "../../../src/front/Administration/TimedAnalyticsEvent";
+import { TimedEventsByKey } from "../../../src/front/Administration/TimedAnalyticsEvent";
 
 const makeSender = () => vi.fn();
 
@@ -15,65 +12,59 @@ function framesFrom(sendAdmin: ReturnType<typeof makeSender>) {
     };
 }
 
-/** A handle that records whether it was closed, and how many times. */
-function spyHandle(): TimedAnalyticsEventHandle & { closed: () => number } {
-    const close = vi.fn();
-    return { close, closed: () => close.mock.calls.length };
-}
-
 describe("TimedEventsByKey", () => {
     it("ends the interval a key was already measuring rather than overwriting it", () => {
         // The bug this exists to prevent: an overwritten handle has nothing left that
         // could close it, so the pusher only ends that interval when the socket dies —
         // which dates a walk through an area to the end of the session.
         const events = new TimedEventsByKey();
-        const first = spyHandle();
-        const second = spyHandle();
+        const first = vi.fn();
+        const second = vi.fn();
 
         events.replace("area-1", first);
         events.replace("area-1", second);
 
-        expect(first.closed()).toBe(1);
-        expect(second.closed()).toBe(0);
+        expect(first).toHaveBeenCalledTimes(1);
+        expect(second).not.toHaveBeenCalled();
     });
 
     it("keeps keys independent, so closing one leaves the others measuring", () => {
         // Areas overlap on a map and cowebsites sit side by side; this is the whole
         // reason these two are keyed where a screen share or a broadcast is not.
         const events = new TimedEventsByKey();
-        const one = spyHandle();
-        const two = spyHandle();
+        const one = vi.fn();
+        const two = vi.fn();
 
         events.replace("area-1", one);
         events.replace("area-2", two);
         events.close("area-1");
 
-        expect(one.closed()).toBe(1);
-        expect(two.closed()).toBe(0);
+        expect(one).toHaveBeenCalledTimes(1);
+        expect(two).not.toHaveBeenCalled();
     });
 
     it("closes a key once, however often it is asked", () => {
         const events = new TimedEventsByKey();
-        const handle = spyHandle();
+        const end = vi.fn();
 
-        events.replace("area-1", handle);
+        events.replace("area-1", end);
         events.close("area-1");
         events.close("area-1");
 
-        expect(handle.closed()).toBe(1);
+        expect(end).toHaveBeenCalledTimes(1);
     });
 
     it("closes everything on teardown", () => {
         const events = new TimedEventsByKey();
-        const one = spyHandle();
-        const two = spyHandle();
+        const one = vi.fn();
+        const two = vi.fn();
 
         events.replace("area-1", one);
         events.replace("area-2", two);
         events.closeAll();
 
-        expect(one.closed()).toBe(1);
-        expect(two.closed()).toBe(1);
+        expect(one).toHaveBeenCalledTimes(1);
+        expect(two).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -101,8 +92,8 @@ describe("openTimedEvent and the reconnect registry", () => {
     });
 
     it("reports one interval, paired by handle, and states no duration", () => {
-        const stay = analyticsClient.openTimedEvent("area.dwell", { areaId: "area-1", areaName: "Focus room" });
-        stay.close();
+        const endStay = analyticsClient.openTimedEvent("area.dwell", { areaId: "area-1", areaName: "Focus room" });
+        endStay();
 
         const { opens, closes } = framesFrom(sendAdmin);
         expect(opens[0].properties).toEqual(
@@ -121,9 +112,9 @@ describe("openTimedEvent and the reconnect registry", () => {
     });
 
     it("closes once, however often the holder asks", () => {
-        const stay = analyticsClient.openTimedEvent("status.dwell", { status: "ONLINE" });
-        stay.close();
-        stay.close();
+        const endStay = analyticsClient.openTimedEvent("status.dwell", { status: "ONLINE" });
+        endStay();
+        endStay();
 
         expect(framesFrom(sendAdmin).closes).toHaveLength(1);
     });
@@ -133,7 +124,7 @@ describe("openTimedEvent and the reconnect registry", () => {
         // pusher's side, nothing fires a second start — the broadcast never stopped,
         // the user is still in the area — and without this the rest of that stay is
         // invisible for the lifetime of the tab.
-        const broadcast = analyticsClient.openTimedEvent("megaphone.ended", {}, { reopenOnReconnect: true });
+        const endBroadcast = analyticsClient.openTimedEvent("megaphone.ended", {}, { reopenOnReconnect: true });
 
         analyticsClient.setAdminAnalyticsSender(undefined);
         const secondSocket = makeSender();
@@ -145,7 +136,7 @@ describe("openTimedEvent and the reconnect registry", () => {
 
         // And it is a NEW interval, not the spent one: closing it must pair with the
         // handle just reopened, or the pusher drops the close and the stay is lost.
-        broadcast.close();
+        endBroadcast();
         const closes = framesFrom(secondSocket).closes;
         expect(closes).toHaveLength(1);
         expect(closes[0].properties.handle).toBe(reopened[0].properties.handle);
@@ -166,7 +157,7 @@ describe("openTimedEvent and the reconnect registry", () => {
         // the user closes the thing. That close must be silent: the pusher recorded
         // this interval as socket_closed, and a second close would be dropped there as
         // unpaired — a frame that travelled for nothing.
-        const visit = analyticsClient.openTimedEvent("cowebsite.closed", {
+        const endVisit = analyticsClient.openTimedEvent("cowebsite.closed", {
             url: "https://example.com",
             targetUrl: "https://example.com",
             mediaKind: "website",
@@ -179,16 +170,16 @@ describe("openTimedEvent and the reconnect registry", () => {
         analyticsClient.setAdminAnalyticsSender(undefined);
         const secondSocket = makeSender();
         analyticsClient.setAdminAnalyticsSender(secondSocket);
-        visit.close();
+        endVisit();
 
         expect(framesFrom(secondSocket).closes).toHaveLength(0);
     });
 
     it("stops resuming once the user has ended it, even while disconnected", () => {
-        const broadcast = analyticsClient.openTimedEvent("megaphone.ended", {}, { reopenOnReconnect: true });
+        const endBroadcast = analyticsClient.openTimedEvent("megaphone.ended", {}, { reopenOnReconnect: true });
 
         analyticsClient.setAdminAnalyticsSender(undefined);
-        broadcast.close();
+        endBroadcast();
 
         const secondSocket = makeSender();
         analyticsClient.setAdminAnalyticsSender(secondSocket);
@@ -198,8 +189,8 @@ describe("openTimedEvent and the reconnect registry", () => {
 
     it("measures nothing, and complains about nothing, without the capability", () => {
         window.capabilities = {};
-        const stay = analyticsClient.openTimedEvent("area.dwell", { areaId: "area-1", areaName: "Focus room" });
-        stay.close();
+        const endStay = analyticsClient.openTimedEvent("area.dwell", { areaId: "area-1", areaName: "Focus room" });
+        endStay();
 
         expect(sendAdmin).not.toHaveBeenCalled();
     });
