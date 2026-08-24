@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/svelte";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import type { TimedAnalyticsEventHandle } from "../Administration/TimedAnalyticsEvent";
+import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
@@ -460,7 +460,7 @@ export const availabilityStatusStore = derived(
  * The name is kept because availabilityStatusStore is derived and re-emits the same
  * value: without it, every recomputation would end one dwell and start another.
  */
-let openStatus: TimedAnalyticsEventHandle | undefined;
+let endStatusDwell: EndTimedAnalyticsEvent | undefined;
 let currentStatusName: string | undefined;
 
 // This is a singleton so we can safely not ever unsubscribe from it.
@@ -473,8 +473,8 @@ availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
     const statusName = AvailabilityStatus[newStatus] ?? String(newStatus);
     if (statusName !== currentStatusName) {
         currentStatusName = statusName;
-        openStatus?.close();
-        openStatus = analyticsClient.openTimedEvent(
+        endStatusDwell?.();
+        endStatusDwell = analyticsClient.openTimedEvent(
             "status.dwell",
             { status: statusName },
             // The status did not change because the socket did: after a reconnect the

@@ -17,7 +17,7 @@ import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import type { TimedAnalyticsEventHandle } from "../../Administration/TimedAnalyticsEvent";
+import type { EndTimedAnalyticsEvent } from "../../Administration/TimedAnalyticsEvent";
 import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
@@ -143,7 +143,7 @@ export class SpacePeerManager {
      * so a single shared value meant leaving one space ended the meeting of every
      * other one.
      */
-    private openMeeting: TimedAnalyticsEventHandle | undefined;
+    private endMeeting: EndTimedAnalyticsEvent | undefined;
 
     private readonly _effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
 
@@ -574,15 +574,15 @@ export class SpacePeerManager {
      */
     private startMeetingAnalytics(meetingProvider: "webrtc" | "livekit"): void {
         this.endMeetingAnalytics();
-        this.openMeeting = analyticsClient.openTimedEvent("meeting.ended", {
+        this.endMeeting = analyticsClient.openTimedEvent("meeting.ended", {
             meetingProvider,
             meetingId: this.space.getName(),
         });
     }
 
     private endMeetingAnalytics(): void {
-        this.openMeeting?.close();
-        this.openMeeting = undefined;
+        this.endMeeting?.();
+        this.endMeeting = undefined;
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {

@@ -1,5 +1,5 @@
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import type { TimedAnalyticsEventHandle } from "../Administration/TimedAnalyticsEvent";
+import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 
 /**
  * The Jitsi meeting currently open, if any.
@@ -9,16 +9,16 @@ import type { TimedAnalyticsEventHandle } from "../Administration/TimedAnalytics
  * most one Jitsi meeting at a time. Both property listeners drive that store and
  * both drive this, which is what keeps the two from disagreeing.
  */
-let openMeeting: TimedAnalyticsEventHandle | undefined;
+let endMeeting: EndTimedAnalyticsEvent | undefined;
 
 export function jitsiMeetingStarted(roomName: string): void {
     // A live handle here means the matching leave never ran, so this interval's
     // end is the arrival of the next meeting rather than a real departure.
     jitsiMeetingEnded();
-    openMeeting = analyticsClient.openTimedEvent("meeting.ended", { meetingProvider: "jitsi", meetingId: roomName });
+    endMeeting = analyticsClient.openTimedEvent("meeting.ended", { meetingProvider: "jitsi", meetingId: roomName });
 }
 
 export function jitsiMeetingEnded(): void {
-    openMeeting?.close();
-    openMeeting = undefined;
+    endMeeting?.();
+    endMeeting = undefined;
 }

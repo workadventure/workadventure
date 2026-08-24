@@ -19,7 +19,7 @@ import {
     stripUrlSensitiveParts,
     stripUrlToOrigin,
 } from "./CowebsiteAnalyticsProperties";
-import type { TimedAnalyticsEventHandle } from "./TimedAnalyticsEvent";
+import type { EndTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
 import {
     forgetOpenTimedAnalyticsEvents,
     openTimedAnalyticsEvent,
@@ -37,8 +37,8 @@ type ExperienceIssueProperties = {
 
 const MAX_PENDING_ADMIN_EVENTS = 100;
 
-/** Handed back when the admin sink is off: a handle that measures nothing. */
-const NO_INTERVAL: TimedAnalyticsEventHandle = { close: (): void => {} };
+/** Handed back when the admin sink is off: an end that measures nothing. */
+const NO_INTERVAL: EndTimedAnalyticsEvent = () => {};
 
 declare global {
     interface Window {
@@ -149,7 +149,7 @@ class AnalyticsClient {
         eventName: N,
         properties: TimedAnalyticsEventOpenProperties<N>,
         options: { reopenOnReconnect?: boolean } = {},
-    ): TimedAnalyticsEventHandle {
+    ): EndTimedAnalyticsEvent {
         if (!this.canSendAdminAnalytics()) {
             return NO_INTERVAL;
         }
@@ -226,7 +226,7 @@ class AnalyticsClient {
      * meant a second, parallel record of which cowebsites were open, kept in step by
      * hand — and only for as long as someone remembered to call closedWebsite.
      */
-    openedWebsite(url: URL, context: CowebsiteOpenedAnalyticsContext = {}): TimedAnalyticsEventHandle {
+    openedWebsite(url: URL, context: CowebsiteOpenedAnalyticsContext = {}): EndTimedAnalyticsEvent {
         // Its own capture rather than a table entry: this opens an interval the admin
         // hears about only when the cowebsite CLOSES, while PostHog has always counted
         // the opening. Origin only before it reaches PostHog too — cowebsite URLs carry
@@ -264,7 +264,7 @@ class AnalyticsClient {
 
     // enterArea/leaveArea keep their own posthog.capture for the same reason megaphone
     // does: PostHog counts an enter and a leave, the admin gets one `area.dwell` row.
-    enterArea(id: string, name: string): TimedAnalyticsEventHandle {
+    enterArea(id: string, name: string): EndTimedAnalyticsEvent {
         this.posthog?.capture(`wa_map-editor_enter_area`, { id, name });
 
         return this.openTimedEvent("area.dwell", { areaId: id, areaName: name }, { reopenOnReconnect: true });
