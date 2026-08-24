@@ -14,7 +14,7 @@ import {
     stripUrlToOrigin,
 } from "./CowebsiteAnalyticsProperties";
 import type { TimedAnalyticsEventHandle } from "./TimedAnalyticsEvent";
-import { openTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
+import { openTimedAnalyticsEvent, TimedEventsByKey } from "./TimedAnalyticsEvent";
 
 type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
 type AdminAnalyticsEvent = AnalyticsEventReportMessage["events"][number];
@@ -44,7 +44,7 @@ class AnalyticsClient {
     private adminAnalyticsSender: AdminAnalyticsSender | undefined;
     private pendingAdminEvents: AdminAnalyticsEvent[] = [];
     /** Open intervals, by the thing they are measuring. Closing is by the same key. */
-    private openAreas = new Map<string, TimedAnalyticsEventHandle>();
+    private readonly openAreas = new TimedEventsByKey();
     /** A screen share and an availability status are each a single continuous state, so one handle, not a map. */
     private openScreenShare: TimedAnalyticsEventHandle | undefined;
     private openStatus: TimedAnalyticsEventHandle | undefined;
@@ -60,7 +60,7 @@ class AnalyticsClient {
      */
     private megaphoneBroadcastLive = false;
     /** Open cowebsite visits, by cowebsite id: several can be open side by side. */
-    private readonly openCowebsites = new Map<string, TimedAnalyticsEventHandle>();
+    private readonly openCowebsites = new TimedEventsByKey();
     private currentStatus: string | undefined;
     private previousRoomId: string | undefined;
 
@@ -92,13 +92,13 @@ class AnalyticsClient {
             // pusher itself as socket_closed, so these handles are already spent:
             // keeping them would mean a later visit to the same area closes a handle
             // from a dead socket, which the pusher drops as unpaired.
-            this.openAreas.clear();
+            this.openAreas.forget();
             this.openScreenShare = undefined;
             this.openStatus = undefined;
             this.currentStatus = undefined;
             // The handle goes; `megaphoneBroadcastLive` deliberately does not.
             this.openMegaphoneBroadcast = undefined;
-            this.openCowebsites.clear();
+            this.openCowebsites.forget();
         } else if (this.megaphoneBroadcastLive) {
             this.openMegaphoneBroadcastInterval();
         }
@@ -258,8 +258,7 @@ class AnalyticsClient {
 
         // A live handle for this id means the close never arrived; end that visit here
         // rather than stranding it until the socket dies.
-        this.openCowebsites.get(coWebsiteId)?.close();
-        this.openCowebsites.set(
+        this.openCowebsites.replace(
             coWebsiteId,
             openTimedAnalyticsEvent(
                 "cowebsite.closed",
@@ -270,8 +269,7 @@ class AnalyticsClient {
     }
 
     closedWebsite(coWebsiteId: string): void {
-        this.openCowebsites.get(coWebsiteId)?.close();
-        this.openCowebsites.delete(coWebsiteId);
+        this.openCowebsites.close(coWebsiteId);
     }
 
     /**
@@ -328,8 +326,7 @@ class AnalyticsClient {
         // overwriting would leave an interval nothing could ever close, and the
         // pusher would only close it when the socket died — dating a walk-through
         // to the end of the session.
-        this.openAreas.get(id)?.close();
-        this.openAreas.set(
+        this.openAreas.replace(
             id,
             openTimedAnalyticsEvent("area.dwell", { areaId: id, areaName: name }, this.sendTimedEventReport),
         );
@@ -337,8 +334,7 @@ class AnalyticsClient {
 
     leaveArea(id: string, name: string): void {
         this.posthog?.capture(`wa_map-editor_leaver_area`, { id, name });
-        this.openAreas.get(id)?.close();
-        this.openAreas.delete(id);
+        this.openAreas.close(id);
     }
 
     // Availability status (Online/Busy/Do-not-disturb/…) as a timed event: one row
