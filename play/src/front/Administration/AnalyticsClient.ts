@@ -225,12 +225,6 @@ class AnalyticsClient {
     }
 
     /**
-     * Opens the interval that measures one cowebsite visit.
-     *
-     * Keyed by the cowebsite's id, because several can be open side by side and each
-     * closes on its own — unlike a screen share or a broadcast, this map earns itself.
-     */
-    /**
      * Opens the interval that measures one cowebsite visit, and hands it to the store.
      *
      * The store is where the pairing already lives: it holds the cowebsites, and its
@@ -259,16 +253,13 @@ class AnalyticsClient {
         this.trackAdminEvent("scripting.website_opened", { url: stripUrlToOrigin(url) });
     }
 
-    // The two ends of one interval, opened and closed where the broadcast is started
-    // and stopped — startMegaphoneLive / stopMegaphoneLive. Everything that ends a
-    // broadcast goes through the second one, including being kicked off the stage.
+    // The two ends of one broadcast, named for PostHog, which counts each press. The
+    // admin gets one `megaphone.ended` row carrying the duration instead.
     //
-    // Both keep their own posthog.capture: PostHog counts the two ends as two events,
-    // while the admin gets one `megaphone.ended` row carrying the duration.
-    // The two ends of one broadcast, named for PostHog, which counts each press.
     // The interval is the caller's: startMegaphoneLive is reachable twice without an
     // intervening stop (the modal and the action bar both lead there), and only the
-    // caller can tell a second press from a second broadcast.
+    // caller can tell a second press from a second broadcast. Everything that ends a
+    // broadcast goes through stopMegaphoneLive, including being kicked off the stage.
     startMegaphone(): void {
         this.posthog?.capture("wa_start_megaphone");
     }
@@ -277,8 +268,6 @@ class AnalyticsClient {
         this.posthog?.capture("wa_stop_megaphone");
     }
 
-    // enterArea/leaveArea keep their own posthog.capture for the same reason megaphone
-    // does: PostHog counts an enter and a leave, the admin gets one `area.dwell` row.
     // enterArea/leaveArea keep their own posthog.capture for the same reason megaphone
     // does: PostHog counts an enter and a leave, the admin gets one `area.dwell` row.
     enterArea(id: string, name: string): TimedAnalyticsEventHandle {
@@ -291,12 +280,6 @@ class AnalyticsClient {
         this.posthog?.capture(`wa_map-editor_leaver_area`, { id, name });
     }
 
-    // Availability status (Online/Busy/Do-not-disturb/…) as a timed event: one row
-    // per period, measured by the pusher. Like a conversation, the current period
-    // stays open until the status changes or the socket dies (the pusher closes the
-    // last one). A flip faster than 1s is dropped as churn. A reconnect leaves the
-    // status untracked until the next change — the same gap the old status.changed
-    // pairing had, since it only fired on a change too.
     // PostHog only. `cowebsite.closed` is now the end of an interval the store opens
     // and closes, so reporting it from the close BUTTON would both duplicate it and
     // miss the fifteen other ways a cowebsite goes away.
