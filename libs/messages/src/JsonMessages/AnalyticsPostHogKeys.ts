@@ -1,5 +1,3 @@
-import type { AnalyticsEventName } from "./AnalyticsEventCatalog";
-
 /**
  * The name each event travels under in PostHog, the sink that predates this
  * pipeline and is still the only one on a world whose pusher does not advertise
@@ -43,6 +41,8 @@ import type { AnalyticsEventName } from "./AnalyticsEventCatalog";
  * PostHog counterpart, and requiring a key for every event would mean inventing
  * one for each new event added.
  */
+import type { AnalyticsEventName } from "./AnalyticsEventCatalog";
+
 /**
  * What an event travels under in PostHog: one name, or the several it takes
  * depending on one of its own declared properties.

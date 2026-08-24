@@ -183,15 +183,4 @@ export class TimedEventsByKey {
         }
         this.open.clear();
     }
-
-    /**
-     * The socket went away. Drops the handles WITHOUT closing them, which is the
-     * opposite of closeAll and deliberately so: the pusher has already ended every
-     * one of these as `socket_closed`, so a close frame now would be sent over the
-     * next socket and dropped there as unpaired — noise for a result already
-     * recorded.
-     */
-    public forget(): void {
-        this.open.clear();
-    }
 }

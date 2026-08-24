@@ -75,27 +75,6 @@ describe("TimedEventsByKey", () => {
         expect(one.closed()).toBe(1);
         expect(two.closed()).toBe(1);
     });
-
-    it("forgets without closing when the socket is what went away", () => {
-        // The opposite of closeAll, and the distinction is the point: the pusher has
-        // already ended these as socket_closed, so closing them here would send frames
-        // over the next socket for intervals already recorded — dropped there as
-        // unpaired, having travelled for nothing.
-        const events = new TimedEventsByKey();
-        const handle = spyHandle();
-
-        events.replace("area-1", handle);
-        events.forget();
-
-        expect(handle.closed()).toBe(0);
-
-        // And the key is genuinely gone: re-entering that area opens a fresh interval
-        // rather than closing a spent handle from a dead socket.
-        const next = spyHandle();
-        events.replace("area-1", next);
-        expect(handle.closed()).toBe(0);
-        expect(next.closed()).toBe(0);
-    });
 });
 
 /**
