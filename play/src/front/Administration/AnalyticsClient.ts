@@ -1,5 +1,11 @@
 import type { PostHog } from "@posthog/types";
-import type { AnalyticsEventArgs, AnalyticsEventName, AnalyticsEventReportMessage } from "@workadventure/messages";
+import type {
+    AnalyticsEventArgs,
+    AnalyticsEventName,
+    AnalyticsEventReportMessage,
+    TimedAnalyticsEventName,
+    TimedAnalyticsEventOpenProperties,
+} from "@workadventure/messages";
 // By path rather than through the package barrel, and that is the point: this
 // module's only import is a type, so what lands in the bundle is 117 strings. The
 // same table used to live on the catalog entries, which pulled ~166 live Zod
@@ -14,7 +20,7 @@ import {
     stripUrlToOrigin,
 } from "./CowebsiteAnalyticsProperties";
 import type { TimedAnalyticsEventHandle } from "./TimedAnalyticsEvent";
-import { openTimedAnalyticsEvent, TimedEventsByKey } from "./TimedAnalyticsEvent";
+import { forgetOpenTimedAnalyticsEvents, openTimedAnalyticsEvent, TimedEventsByKey } from "./TimedAnalyticsEvent";
 
 type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
 type AdminAnalyticsEvent = AnalyticsEventReportMessage["events"][number];
@@ -32,6 +38,9 @@ type ExperienceIssueProperties = {
 };
 
 const MAX_PENDING_ADMIN_EVENTS = 100;
+
+/** Handed back when the admin sink is off: a handle that measures nothing. */
+const NO_INTERVAL: TimedAnalyticsEventHandle = { close: (): void => {} };
 
 declare global {
     interface Window {
@@ -59,8 +68,6 @@ class AnalyticsClient {
      * tab's life; with it, setAdminAnalyticsSender reopens it against the new socket.
      */
     private megaphoneBroadcastLive = false;
-    /** Open cowebsite visits, by cowebsite id: several can be open side by side. */
-    private readonly openCowebsites = new TimedEventsByKey();
     private currentStatus: string | undefined;
     private previousRoomId: string | undefined;
 
@@ -89,16 +96,17 @@ class AnalyticsClient {
         if (!sender) {
             // The connection is going away (ConnectionManager clears the sender on
             // cleanup). Every interval this socket still holds open is closed by the
-            // pusher itself as socket_closed, so these handles are already spent:
-            // keeping them would mean a later visit to the same area closes a handle
-            // from a dead socket, which the pusher drops as unpaired.
+            // pusher itself as socket_closed, so these handles are already spent —
+            // and this now says so for handles held anywhere, not just the ones
+            // filed here. CoWebsiteStore keeps its own and has no idea a socket
+            // exists; a later close from it is a no-op rather than an unpaired frame.
+            forgetOpenTimedAnalyticsEvents();
             this.openAreas.forget();
             this.openScreenShare = undefined;
             this.openStatus = undefined;
             this.currentStatus = undefined;
             // The handle goes; `megaphoneBroadcastLive` deliberately does not.
             this.openMegaphoneBroadcast = undefined;
-            this.openCowebsites.forget();
         } else if (this.megaphoneBroadcastLive) {
             this.openMegaphoneBroadcastInterval();
         }
@@ -151,6 +159,25 @@ class AnalyticsClient {
         } satisfies AdminAnalyticsEvent;
 
         this.dispatchAdminEvent(event);
+    }
+
+    /**
+     * Opens an interval and hands the handle to the caller, who is the only one who
+     * knows when the thing it measures ends.
+     *
+     * Always returns a handle, even when the admin sink is off, so no caller has to
+     * branch on a capability it should not know about — the returned handle simply
+     * measures nothing.
+     */
+    public openTimedEvent<N extends TimedAnalyticsEventName>(
+        eventName: N,
+        properties: TimedAnalyticsEventOpenProperties<N>,
+    ): TimedAnalyticsEventHandle {
+        if (!this.canSendAdminAnalytics()) {
+            return NO_INTERVAL;
+        }
+
+        return openTimedAnalyticsEvent(eventName, properties, this.sendTimedEventReport);
     }
 
     private dispatchAdminEvent(event: AdminAnalyticsEvent): void {
@@ -242,34 +269,22 @@ class AnalyticsClient {
      * Keyed by the cowebsite's id, because several can be open side by side and each
      * closes on its own — unlike a screen share or a broadcast, this map earns itself.
      */
-    openedWebsite(coWebsiteId: string, url: URL, context: CowebsiteOpenedAnalyticsContext = {}): void {
-        // Captured here rather than off a catalog postHogKey: what this opens is an
-        // interval, reported to the admin only when the cowebsite CLOSES, whereas
-        // PostHog has always counted the opening. The two sinks are measuring
-        // different things, so there is no one event to hang both on.
-        //
-        // Origin only before it reaches PostHog too: cowebsite URLs carry auth tokens
-        // in the query/hash and the document name in the path. The admin sink does the
-        // same via buildCowebsiteOpenedProperties; keep both in sync.
+    /**
+     * Opens the interval that measures one cowebsite visit, and hands it to the store.
+     *
+     * The store is where the pairing already lives: it holds the cowebsites, and its
+     * add/keepOnly/empty are the sixteen ways one goes away. Keeping the handles here
+     * meant a second, parallel record of which cowebsites were open, kept in step by
+     * hand — and only for as long as someone remembered to call closedWebsite.
+     */
+    openedWebsite(url: URL, context: CowebsiteOpenedAnalyticsContext = {}): TimedAnalyticsEventHandle {
+        // Its own capture rather than a table entry: this opens an interval the admin
+        // hears about only when the cowebsite CLOSES, while PostHog has always counted
+        // the opening. Origin only before it reaches PostHog too — cowebsite URLs carry
+        // auth tokens in the query and the document name in the path.
         this.posthog?.capture("wa_opened_website", { url: stripUrlToOrigin(url) });
-        if (!this.canSendAdminAnalytics()) {
-            return;
-        }
 
-        // A live handle for this id means the close never arrived; end that visit here
-        // rather than stranding it until the socket dies.
-        this.openCowebsites.replace(
-            coWebsiteId,
-            openTimedAnalyticsEvent(
-                "cowebsite.closed",
-                buildCowebsiteOpenedProperties(url, context),
-                this.sendTimedEventReport,
-            ),
-        );
-    }
-
-    closedWebsite(coWebsiteId: string): void {
-        this.openCowebsites.close(coWebsiteId);
+        return this.openTimedEvent("cowebsite.closed", buildCowebsiteOpenedProperties(url, context));
     }
 
     /**

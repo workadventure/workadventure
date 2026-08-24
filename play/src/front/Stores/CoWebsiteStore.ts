@@ -2,9 +2,20 @@ import { derived, get, readable, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import type { CowebsiteOpenedAnalyticsContext } from "../Administration/CowebsiteAnalyticsProperties";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { TimedEventsByKey } from "../Administration/TimedAnalyticsEvent";
 
 export function createCoWebsiteStore() {
     const { subscribe, update } = writable<Array<CoWebsite>>([]);
+
+    /**
+     * How long each open cowebsite has been open, one interval per id.
+     *
+     * Here rather than on the analytics client because the pairing is here: this store
+     * is the only thing that knows a cowebsite went away, and closeRemoved below
+     * already computes exactly that. The client kept a parallel map of the same ids,
+     * which only stayed correct for as long as every removal remembered to tell it.
+     */
+    const openVisits = new TimedEventsByKey();
 
     /**
      * Every cowebsite in the app is opened through here, which is why the
@@ -46,7 +57,7 @@ export function createCoWebsiteStore() {
             }
         }
 
-        analyticsClient.openedWebsite(coWebsite.getId(), coWebsite.getUrl(), analyticsContext);
+        openVisits.replace(coWebsite.getId(), analyticsClient.openedWebsite(coWebsite.getUrl(), analyticsContext));
     };
 
     /**
@@ -62,7 +73,7 @@ export function createCoWebsiteStore() {
         const kept = new Set(after.map((coWebsite) => coWebsite.getId()));
         for (const coWebsite of before) {
             if (!kept.has(coWebsite.getId())) {
-                analyticsClient.closedWebsite(coWebsite.getId());
+                openVisits.close(coWebsite.getId());
             }
         }
     };
