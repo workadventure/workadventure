@@ -205,30 +205,6 @@ export const timedEventProperties = z.object({
     ),
 });
 
-/** Shared by the three events that report a user-facing reliability problem. */
-const experienceIssueProperties = z.object({
-  category: z
-    .string()
-    .optional()
-    .describe("Coarse grouping of the issue, e.g. the subsystem that failed."),
-  reason: z
-    .string()
-    .optional()
-    .describe(
-      "Short machine-readable cause. Free text; keep it low-cardinality.",
-    ),
-  durationMs: z
-    .number()
-    .optional()
-    .describe("How long the degraded state lasted, when measurable."),
-  count: z
-    .number()
-    .optional()
-    .describe(
-      "How many occurrences this one event stands for, when coalesced.",
-    ),
-});
-
 /** Shared by the meeting lifecycle events emitted from AnalyticsClient. */
 const meetingContextProperties = z.object({
   meetingId: z
@@ -1004,11 +980,6 @@ export const ANALYTICS_EVENTS = {
       "A camera or microphone failed. Counted as an experience issue.",
   }),
 
-  "media.quality_issue": event({
-    properties: experienceIssueProperties,
-    description: "Media quality degraded noticeably for the user.",
-  }),
-
   "settings.microphone.changed": event({
     properties: settingValueProperties,
     description: "The user changed the microphone setting.",
@@ -1173,17 +1144,6 @@ export const ANALYTICS_EVENTS = {
     }),
     description:
       "The websocket connection dropped. Counted as an experience issue.",
-  }),
-
-  "front.critical_error": event({
-    properties: experienceIssueProperties,
-    description: "The front hit an error serious enough to affect the user.",
-  }),
-
-  "performance.issue": event({
-    properties: experienceIssueProperties,
-    description:
-      "The client detected a performance problem, e.g. a long task blocking the main thread.",
   }),
 
   "pwa.install_prompt_shown": event({
