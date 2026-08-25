@@ -191,13 +191,33 @@ function armReachWorldWatchdog(target: string) {
         ElectronLog.info(`Reached the world in ${Date.now() - startedAt}ms.`);
         cancelReachWorldWatchdog();
     });
+    scheduleReachWorldDeadline(startedAt);
+}
+
+function isMainWindowOnScreen() {
+    return Boolean(mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && !mainWindow.isMinimized());
+}
+
+function scheduleReachWorldDeadline(startedAt: number) {
     reachWorldTimer = setTimeout(() => {
         reachWorldTimer = undefined;
-        cancelReachWorldWatchdog();
         if (getPresenceSnapshot().inWorld) {
+            cancelReachWorldWatchdog();
             return;
         }
-        ElectronLog.warn(`The world did not finish loading within ${REACH_WORLD_TIMEOUT_MS}ms.`);
+        // Chromium schedules no animation frames for a hidden or minimized window, which freezes the
+        // world's boot loop — frozen, not broken. Bouncing to the Landing here would destroy the
+        // world the user is coming back to, so keep waiting and only judge it once it is on screen.
+        if (!isMainWindowOnScreen()) {
+            scheduleReachWorldDeadline(startedAt);
+            return;
+        }
+        cancelReachWorldWatchdog();
+        ElectronLog.warn(
+            `The world did not finish loading within ${REACH_WORLD_TIMEOUT_MS}ms (${
+                Date.now() - startedAt
+            }ms since navigation).`
+        );
         void recoverToLandingWithError(WORLD_TIMEOUT_LANDING_MESSAGE);
     }, REACH_WORLD_TIMEOUT_MS);
 }
