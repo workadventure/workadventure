@@ -45,6 +45,11 @@ import { createTabStrip, resetTabStrip } from "./tab-strip";
 export { getActiveWorldContents, isActiveWorldContents } from "./tab-manager";
 import { closeAllHudWindows } from "./hud-windows";
 
+// The shell window stays hidden until the first world page finishes loading. `did-fail-load` covers
+// errors, but not a server that accepts the connection and then goes quiet (captive portal, DNS
+// black hole at login): loadURL simply never settles and the window never appears. Reveal it anyway
+// after this delay — the world's own loading screen beats an app with no window at all.
+const INITIAL_REVEAL_FALLBACK_MS = 8000;
 const DESKTOP_CALLBACK_FLOW_TTL_MS = 5 * 60 * 1000;
 const DESKTOP_CALLBACK_SECRET_BYTES = 32;
 const DESKTOP_CALLBACK_STATE_BYTES = 16;
@@ -63,6 +68,7 @@ let desktopCallbackServerOrigin: string | undefined;
 let desktopAuthWindow: BrowserWindow | undefined;
 let landingRecoveryInProgress = false;
 let activeTabTeardownWired = false;
+let initialRevealTimer: ReturnType<typeof setTimeout> | undefined;
 const desktopCallbackFlows = new Map<string, DesktopCallbackFlow>();
 
 const LOAD_FAILURE_LANDING_MESSAGE = "This world could not be loaded. It may be offline, or the URL may be wrong.";
@@ -143,7 +149,27 @@ function getDesktopConfig(): DesktopConfig {
     });
 }
 
+function cancelInitialRevealFallback() {
+    if (initialRevealTimer !== undefined) {
+        clearTimeout(initialRevealTimer);
+        initialRevealTimer = undefined;
+    }
+}
+
+function armInitialRevealFallback() {
+    cancelInitialRevealFallback();
+    initialRevealTimer = setTimeout(() => {
+        initialRevealTimer = undefined;
+        if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isVisible()) {
+            return;
+        }
+        ElectronLog.warn(`Initial load did not settle within ${INITIAL_REVEAL_FALLBACK_MS}ms; revealing the window.`);
+        showWindow();
+    }, INITIAL_REVEAL_FALLBACK_MS);
+}
+
 function showWindow() {
+    cancelInitialRevealFallback();
     if (!mainWindow) {
         return;
     }
@@ -672,6 +698,7 @@ export async function createWindow(initialUrl?: string) {
     }
 
     mainWindow.on("closed", () => {
+        cancelInitialRevealFallback();
         mainWindow = undefined;
         resetTabStrip();
         resetTabs();
@@ -735,7 +762,9 @@ export async function createWindow(initialUrl?: string) {
     // });
 
     // The shell has no content of its own, so rely on loadDesktopTarget → showWindow to reveal it
-    // once the first world view has something to paint (avoids a blank flash).
+    // once the first world view has something to paint (avoids a blank flash). The fallback timer
+    // guarantees that reveal happens even if the load never settles.
+    armInitialRevealFallback();
 
     await loadDesktopTarget(initialUrl);
 }
