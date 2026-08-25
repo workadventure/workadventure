@@ -12,11 +12,16 @@ export async function updateAutoLaunch() {
         return;
     }
 
-    // Deliberately NOT a hidden start (no `isHidden` / `openAsHidden`). Nothing reads
-    // `wasOpenedAsHidden`, so the shell would show the window anyway — and if it did stay hidden,
-    // Chromium schedules no requestAnimationFrame for a hidden window, which freezes the Phaser
-    // boot loop: the world would never connect, it would sit on its loading screen until the window
-    // is revealed. A visible launch is the only mode that actually reaches the world.
+    // Deliberately NOT a hidden start (no `isHidden` / `openAsHidden`): nothing reads
+    // `wasOpenedAsHidden`, so the shell shows and focuses the window anyway. The setting only ever
+    // promised a behaviour the app does not implement.
+    //
+    // It is not a technical dead end though. Measured on Electron 42 / macOS against a real world
+    // (criterion: the /ws/room WebSocket): a never-shown window keeps rendering and joins the room
+    // in ~4s, and `backgroundThrottling: false` on the world views (see tab-manager) covers the
+    // app-hidden case too. Implementing a real hidden start — read `wasOpenedAsHidden`, skip the
+    // initial reveal — would work. That is a product call (a login item that runs a game loop
+    // costs battery), not a blocked one.
 
     // `setLoginItemSettings` doesn't support linux
     if (process.platform === "linux") {
