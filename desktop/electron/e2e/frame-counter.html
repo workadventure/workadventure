@@ -1,0 +1,12 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>frame counter</title>
+<body style="background: #0a1422">
+    <script>
+        window.__frames = 0;
+        requestAnimationFrame(function tick() {
+            window.__frames++;
+            requestAnimationFrame(tick);
+        });
+    </script>
+</body>
