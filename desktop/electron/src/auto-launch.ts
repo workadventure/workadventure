@@ -12,11 +12,16 @@ export async function updateAutoLaunch() {
         return;
     }
 
+    // Deliberately NOT a hidden start (no `isHidden` / `openAsHidden`). Nothing reads
+    // `wasOpenedAsHidden`, so the shell would show the window anyway — and if it did stay hidden,
+    // Chromium schedules no requestAnimationFrame for a hidden window, which freezes the Phaser
+    // boot loop: the world would never connect, it would sit on its loading screen until the window
+    // is revealed. A visible launch is the only mode that actually reaches the world.
+
     // `setLoginItemSettings` doesn't support linux
     if (process.platform === "linux") {
         const autoLauncher = new AutoLaunch({
             name: "WorkAdventure",
-            isHidden: true,
         });
 
         if (isAutoLaunchEnabled) {
@@ -30,6 +35,5 @@ export async function updateAutoLaunch() {
 
     app.setLoginItemSettings({
         openAtLogin: isAutoLaunchEnabled,
-        openAsHidden: true,
     });
 }

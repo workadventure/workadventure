@@ -1,5 +1,5 @@
 import path from "path";
-import { app, BrowserWindow, globalShortcut } from "electron";
+import { app, globalShortcut } from "electron";
 
 import { createWindow, getWindow, openDeepLinkTarget } from "./window";
 import { createTray } from "./tray";
@@ -98,7 +98,10 @@ async function init() {
 
         setLogLevel(settings.get("log_level") || "info");
 
-        await autoUpdater.init();
+        // Not awaited: it ends on a network round-trip to the update feed, and at login the network
+        // is often not up yet. Awaiting it here delayed the tray, the menu and the window by however
+        // long that request took to fail.
+        void autoUpdater.init();
 
         // enable auto launch
         await updateAutoLaunch();
@@ -112,6 +115,15 @@ async function init() {
             app.dock?.setIcon(path.join(__dirname, "..", "assets", "icons", "logo.png"));
         }
 
+        // Before the window, not after: creating the window awaits the first page load, which is
+        // network-bound and has no upper bound. Built afterwards, a slow or hanging load left the
+        // app with no tray, no menu and no global shortcuts — nothing to click and nothing to quit
+        // with outside the task manager. These only resolve the window lazily, inside their click
+        // handlers, so they are safe to build while it does not exist yet.
+        createNativeApplicationMenu();
+        createTray();
+        loadShortcuts();
+
         const initialProtocolTarget = pendingProtocolTarget;
         pendingProtocolTarget = undefined;
         if (typeof initialProtocolTarget === "string") {
@@ -122,8 +134,6 @@ async function init() {
                 await openDeepLinkTarget(initialProtocolTarget);
             }
         }
-        createNativeApplicationMenu();
-        createTray();
 
         // Auto-away + notification hush: forward system idle transitions to the renderer, which
         // flips the WA availability to "away" and back. presence.setIdle (called inside) also
@@ -138,8 +148,6 @@ async function init() {
         // The unified Companion auto-shows (People / Chat / Controls) whenever the main window is
         // backgrounded in a world; also toggled from the tray + optional global shortcut.
         startCompanionController();
-
-        loadShortcuts();
     });
 
     // Quit when all windows are closed.
@@ -151,11 +159,11 @@ async function init() {
     });
 
     app.on("activate", () => {
-        // On macOS it's common to re-create a window in the app when the
-        // dock icon is clicked and there are no other windows open.
-        if (BrowserWindow.getAllWindows().length === 0) {
-            void createWindow();
-        }
+        // On macOS, clicking the dock icon re-creates the window when there is none. It must also
+        // reveal an existing-but-hidden one: a hidden window still counts in getAllWindows(), so the
+        // old length check made this a no-op and left the dock icon dead. createWindow() already
+        // handles both cases — it shows and focuses the current window when one exists.
+        void createWindow();
     });
 
     app.on("quit", () => {
