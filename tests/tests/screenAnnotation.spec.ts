@@ -45,6 +45,13 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
         await Menu.expectButtonState(alice, "screenShareButton", "active");
         await expect(bob.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 30_000 });
 
+        // Park the pointer away from the action bar first. Clicking a bar button leaves the mouse
+        // sitting on it, which keeps its hover help tooltip open (ActionBarButton opens it on
+        // mouseenter and only closes it on mouseleave). That tooltip is z-500 and overlaps the
+        // shared-screen tile, so it swallows the click below — and Playwright's retry loop never
+        // moves the mouse, so it never clears: the click times out every single run.
+        await alice.mouse.move(300, 300);
+
         // Alice clicks the pencil on her shared-screen tile: this enlarges the screen AND enters
         // drawing mode in a single click.
         await alice.getByTestId("screenshare-annotate-button").click();
