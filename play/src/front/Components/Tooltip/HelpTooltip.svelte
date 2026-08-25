@@ -29,8 +29,15 @@
 </script>
 
 <link rel="preload" as="image" href={tooltipArrow} />
+<!--
+  pointer-events-none: this is a hover hint, and it is positioned over whatever sits below the
+  action bar — a shared-screen tile, another button. Capturing clicks it never uses means the
+  element underneath silently stops responding while the tooltip is up. Its content is purely
+  informational (media, title, shortcuts, description, and a caller snippet that only ever holds
+  text and icons), so it has nothing to lose by letting clicks through.
+-->
 <div
-    class="sm:block absolute p-1.5 {hasImage && hasDesc
+    class="sm:block pointer-events-none absolute p-1.5 {hasImage && hasDesc
         ? 'w-64'
         : 'min-w-[128px] text-center'} z-[500] text-white rounded-lg top-[70px] -start-2 transform before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:start-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-start-0"
     in:fly={{ delay: delayBeforeAppear, y: 40, duration: 150 }}
