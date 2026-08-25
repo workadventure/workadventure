@@ -1111,10 +1111,6 @@ export class ProximityChatRoom implements ChatRoom {
                 iframeListener.sendJoinProximityMeetingEvent(playersInSpace);
             }
             faviconManager.pushNotificationFavicon();
-            screenWakeLock
-                .requestWakeLock()
-                .then((release) => (this.screenWakeRelease = release))
-                .catch((error) => console.error(error));
 
             // Note: by design, if someone comes talk to us, there should be only one new user in the space.
             // So we know for sure that there is only one new user.
@@ -1133,6 +1129,13 @@ export class ProximityChatRoom implements ChatRoom {
             this.sendMessage(get(LL).chat.timeLine.youJoinedMeetingRoom(), "incoming", false);
             this.soundManager.playMeetingInSound();
         }
+
+        // Request a screen wake lock so the device does not go to sleep while chatting (proximity or meeting room).
+        screenWakeLock
+            .requestWakeLock()
+            .then((release) => (this.screenWakeRelease = release))
+            .catch((error) => console.error(error));
+
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
         this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
