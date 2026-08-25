@@ -17,6 +17,7 @@ import {
     isAllowedNavigationUrl,
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
+    isRoomUrl,
     resolveInitialTarget,
     stripSensitiveQueryParams,
     type DesktopAuthCallback,
@@ -26,7 +27,7 @@ import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
 import { onMainWindowBlur, onMainWindowFocus, stopCompanion, updateCompanion } from "./companion-controller";
-import { resetPresence } from "./presence";
+import { getPresenceSnapshot, onPresenceChange, resetPresence } from "./presence";
 import { stopPresenterCursor } from "./presenter-cursor";
 import {
     activateTab,
@@ -50,6 +51,13 @@ import { closeAllHudWindows } from "./hud-windows";
 // black hole at login): loadURL simply never settles and the window never appears. Reveal it anyway
 // after this delay — the world's own loading screen beats an app with no window at all.
 const INITIAL_REVEAL_FALLBACK_MS = 8000;
+// Reaching the map is the whole point of the app, and the page's `load` event does not mean we got
+// there — it only means the bundle arrived. Everything that actually puts the user in a world runs
+// after it (Phaser boot, gameManager.init, map download, WS connect), and none of it fires
+// `did-fail-load` when it stalls: the user just watches a loading screen that never ends. The
+// renderer already reports when it is in (presence.inWorld, driven by gameSceneIsLoadedStore), so
+// treat that as the success criterion and bounce back to the Landing if it never comes.
+const REACH_WORLD_TIMEOUT_MS = 45_000;
 const DESKTOP_CALLBACK_FLOW_TTL_MS = 5 * 60 * 1000;
 const DESKTOP_CALLBACK_SECRET_BYTES = 32;
 const DESKTOP_CALLBACK_STATE_BYTES = 16;
@@ -69,9 +77,13 @@ let desktopAuthWindow: BrowserWindow | undefined;
 let landingRecoveryInProgress = false;
 let activeTabTeardownWired = false;
 let initialRevealTimer: ReturnType<typeof setTimeout> | undefined;
+let reachWorldTimer: ReturnType<typeof setTimeout> | undefined;
+let stopWatchingPresence: (() => void) | undefined;
 const desktopCallbackFlows = new Map<string, DesktopCallbackFlow>();
 
 const LOAD_FAILURE_LANDING_MESSAGE = "This world could not be loaded. It may be offline, or the URL may be wrong.";
+const WORLD_TIMEOUT_LANDING_MESSAGE =
+    "This world is taking too long to load. It may be offline, or your connection may be down.";
 
 function randomToken(bytes: number) {
     return crypto.randomBytes(bytes).toString("hex");
@@ -147,6 +159,47 @@ function getDesktopConfig(): DesktopConfig {
         ...process.env,
         portalUrl: settings.get("portal_url"),
     });
+}
+
+function cancelReachWorldWatchdog() {
+    if (reachWorldTimer !== undefined) {
+        clearTimeout(reachWorldTimer);
+        reachWorldTimer = undefined;
+    }
+    if (stopWatchingPresence) {
+        stopWatchingPresence();
+        stopWatchingPresence = undefined;
+    }
+}
+
+/**
+ * Watch the load of a room until the renderer says it is in the world. Only one watchdog is ever
+ * live (arming cancels the previous one) and the recovery targets the active view, so it always
+ * describes the tab the user is looking at. Portal and Landing loads have no game scene to wait for.
+ */
+function armReachWorldWatchdog(target: string) {
+    cancelReachWorldWatchdog();
+    if (!isRoomUrl(target)) {
+        return;
+    }
+
+    const startedAt = Date.now();
+    stopWatchingPresence = onPresenceChange(() => {
+        if (!getPresenceSnapshot().inWorld) {
+            return;
+        }
+        ElectronLog.info(`Reached the world in ${Date.now() - startedAt}ms.`);
+        cancelReachWorldWatchdog();
+    });
+    reachWorldTimer = setTimeout(() => {
+        reachWorldTimer = undefined;
+        cancelReachWorldWatchdog();
+        if (getPresenceSnapshot().inWorld) {
+            return;
+        }
+        ElectronLog.warn(`The world did not finish loading within ${REACH_WORLD_TIMEOUT_MS}ms.`);
+        void recoverToLandingWithError(WORLD_TIMEOUT_LANDING_MESSAGE);
+    }, REACH_WORLD_TIMEOUT_MS);
 }
 
 function cancelInitialRevealFallback() {
@@ -246,6 +299,10 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
     if (!contents) {
         return;
     }
+
+    // Signing in is a legitimate detour that outlives the world-load budget — drop the watchdog so
+    // it cannot bounce the user out of the login flow mid-way.
+    cancelReachWorldWatchdog();
 
     const safeActionUrl = escapeHtml(actionUrl);
     const safeTitle = escapeHtml(title);
@@ -699,6 +756,7 @@ export async function createWindow(initialUrl?: string) {
 
     mainWindow.on("closed", () => {
         cancelInitialRevealFallback();
+        cancelReachWorldWatchdog();
         mainWindow = undefined;
         resetTabStrip();
         resetTabs();
@@ -782,6 +840,7 @@ export async function loadLandingPage(errorMessage?: string): Promise<void> {
     if (!contents) {
         throw new Error("No active world view");
     }
+    cancelReachWorldWatchdog();
     const landingPath = path.resolve(__dirname, "..", "assets", "landing", "index.html");
     const loadOptions = errorMessage ? { query: { error: errorMessage } } : undefined;
     try {
@@ -842,6 +901,7 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
     pendingDeepLinkUrl = undefined;
     try {
         await contents.loadURL(target);
+        armReachWorldWatchdog(target);
         showWindow();
         return true;
     } catch (error) {
