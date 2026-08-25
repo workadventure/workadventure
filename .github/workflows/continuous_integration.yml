@@ -479,8 +479,11 @@ jobs:
       # property the whole app rests on, since WorkAdventure boots on Phaser's requestAnimationFrame
       # loop. Needs a display (xvfb) because it drives real windows. Deliberately not Playwright:
       # it launches Electron with anti-throttling switches that mask the behaviour under test.
+      # --no-sandbox: the runner's chrome-sandbox helper is not SUID-root, which aborts Electron on
+      # startup. It does not weaken the test — verified that it still fails (exit 1, 0 frames) when
+      # the throttling flag is removed.
       - name: "Background rendering (Electron)"
-        run: xvfb-run -a yarn run test:e2e
+        run: xvfb-run -a yarn run test:e2e --no-sandbox
         working-directory: "desktop/electron"
 
       - name: "Prettier"
