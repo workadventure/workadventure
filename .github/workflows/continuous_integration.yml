@@ -475,6 +475,14 @@ jobs:
         run: yarn run test
         working-directory: "desktop/electron"
 
+      # Certifies that a world view keeps rendering while the shell window is off screen — the
+      # property the whole app rests on, since WorkAdventure boots on Phaser's requestAnimationFrame
+      # loop. Needs a display (xvfb) because it drives real windows. Deliberately not Playwright:
+      # it launches Electron with anti-throttling switches that mask the behaviour under test.
+      - name: "Background rendering (Electron)"
+        run: xvfb-run -a yarn run test:e2e
+        working-directory: "desktop/electron"
+
       - name: "Prettier"
         run: yarn run pretty-check
         working-directory: "desktop/electron"

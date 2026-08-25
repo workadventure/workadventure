@@ -2,6 +2,7 @@ import { BrowserWindow, WebContentsView } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 import { formatWorldHistoryLabel } from "./desktop-url-policy";
+import { createWorldViewWebPreferences } from "./world-view-policy";
 
 /**
  * Owns the world tabs. Each open world is a WebContentsView (Electron 42 — BrowserView is
@@ -124,24 +125,9 @@ export function createWorldView(configure: (view: WebContentsView) => void): Wor
         throw new Error("Tab manager shell not set");
     }
     const view = new WebContentsView({
-        webPreferences: {
-            preload: path.resolve(__dirname, "..", "dist", "preload-app", "preload.js"),
-            nodeIntegration: false,
-            contextIsolation: true,
-            sandbox: true,
-            webSecurity: true,
-            // WorkAdventure's boot is driven by Phaser's game loop, which runs on
-            // requestAnimationFrame — and Chromium schedules no frames for a minimized or hidden
-            // window. Measured on Electron 42 / macOS: minimizing, hiding the window or hiding the
-            // app drops the renderer to 0 frames, freezing the load mid-way; with throttling off it
-            // keeps its full 60fps in all three. Without this, minimizing during startup means never
-            // reaching the map — the app's whole point.
-            // The camera still stops in background tabs: privacyShutdownStore keys on focus
-            // (blur/focus events), not on visibilityState, and a background view still loses focus.
-            // The cost: per Electron's docs, one unthrottled webContents unthrottles the whole
-            // window, so every open tab keeps its game loop running while the window is away.
-            backgroundThrottling: false,
-        },
+        webPreferences: createWorldViewWebPreferences(
+            path.resolve(__dirname, "..", "dist", "preload-app", "preload.js")
+        ),
     });
     const id = `tab-${++tabIdCounter}`;
     const tab: WorldTab = { id, view, urlLabel: "New world", url: "" };
