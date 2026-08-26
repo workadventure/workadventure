@@ -4,5 +4,4 @@ export function createWorldViewWebPreferences(preloadPath: string): {
     contextIsolation: true;
     sandbox: true;
     webSecurity: true;
-    backgroundThrottling: false;
 };
