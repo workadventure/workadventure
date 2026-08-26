@@ -6,7 +6,7 @@ import Menu from "./menu";
 import { play_url } from "./urls";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
-import { dismissNoBrowserSoundInfoToast } from "./doNotDisturbInfoToast";
+import { dismissNoBrowserSoundInfoToast, dismissNoMicrophoneSoundToast } from "./doNotDisturbInfoToast";
 
 function disposeWithContext(page: Page): Page {
     const closePage = page.close.bind(page);
@@ -118,6 +118,7 @@ async function createUser(
     await dismissDuplicateUserConnectedModalIfShown(page);
     await dismissPwaInstallScreenIfShown(page);
     await dismissNoBrowserSoundInfoToast(page);
+    await dismissNoMicrophoneSoundToast(page);
     await skipOnboardingWhenShown(page);
 
     if (browser.browserType().name() !== "webkit") {
@@ -186,6 +187,7 @@ export async function getPage(
     await dismissPwaInstallScreenIfShown(page, true);
     await dismissDuplicateUserConnectedModalIfShown(page, true);
     await dismissNoBrowserSoundInfoToast(page);
+    await dismissNoMicrophoneSoundToast(page);
     await skipOnboardingWhenShown(page);
 
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
