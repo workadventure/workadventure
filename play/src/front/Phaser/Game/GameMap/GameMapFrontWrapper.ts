@@ -8,7 +8,6 @@ import type {
     AreaUpdateCallback,
 } from "@workadventure/map-editor";
 import { AreaCoordinates, GameMapProperties } from "@workadventure/map-editor";
-import { buildDynamicAreas, randomPositionFromLayer } from "../StartPositionSource";
 import { MathUtils } from "@workadventure/math-utils";
 import type {
     ITiledMap,
@@ -26,6 +25,7 @@ import type { Entity } from "../../ECS/Entity";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { ITiledPlace } from "../GameMapPropertiesListener";
 import type { GameScene } from "../GameScene";
+import { buildDynamicAreas, randomPositionFromLayer } from "../StartPositionSource";
 import { EntitiesManager } from "./EntitiesManager";
 import { AreasManager } from "./AreasManager";
 import { getTileLayerStats, isWorthRenderingOnGpu } from "./TilemapGpuLayerEligibility";
