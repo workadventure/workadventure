@@ -50,6 +50,7 @@ class ConnectionManager {
     private _unloading = false;
     private authToken: string | null = null;
     private _currentRoom: Room | null = null;
+    private gameConnexionPromise: ReturnType<ConnectionManager["initGameConnexion"]> | undefined;
 
     private serviceWorker?: _ServiceWorker;
 
@@ -156,6 +157,23 @@ class ConnectionManager {
      *
      * @return returns a promise to the Room we are going to load OR a pointer to the URL we must redirect to if authentication is needed.
      */
+    /**
+     * Start resolving the room and authenticating, and hand back the same promise to everyone who
+     * asks. Nothing here touches Phaser — it is HTTP, the URL and localUserStore — so it does not
+     * have to wait for the game loop to hand it a turn. Kicking it off as the app mounts overlaps
+     * the round-trip with Phaser's boot and EntryScene's asset load, instead of queueing behind
+     * them; `GameManager.init` then awaits a request that is usually already in flight.
+     *
+     * Memoized rather than idempotent-by-luck: EntryScene runs once per page load, but a caller
+     * asking twice must not fire a second /room request nor race a second anonymous login.
+     */
+    public startGameConnexion(): ReturnType<ConnectionManager["initGameConnexion"]> {
+        if (!this.gameConnexionPromise) {
+            this.gameConnexionPromise = this.initGameConnexion();
+        }
+        return this.gameConnexionPromise;
+    }
+
     public async initGameConnexion(): Promise<
         | {
               room: Room;
