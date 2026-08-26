@@ -138,6 +138,7 @@ import type {
 } from "./ConnexionModels";
 import { localUserStore } from "./LocalUserStore";
 import { ConnectionClosedError } from "./ConnectionClosedError";
+import { isNeverHeld, stripPings } from "./HeldMessagePolicy";
 import { WorkAdventureWebSocket } from "./WorkAdventureWebSocket";
 
 // This must be greater than RoomManager's PING_INTERVAL
@@ -161,6 +162,9 @@ export class RoomConnection implements RoomConnection {
     public readonly errorScreenMessageStream = this._errorScreenMessageStream.asObservable();
     private readonly _roomConnectedPromise = new Deferred<OnConnectInterface>();
     public readonly roomConnectedPromise = this._roomConnectedPromise.promise;
+    /** Backstop: a queue fed by the network with no consumer must not grow without bound. */
+    private static readonly MAX_HELD_MESSAGES = 5000;
+
     private readonly _roomJoinedPromise = new Deferred<RoomJoinedMessageInterface>();
     public readonly roomJoinedPromise = this._roomJoinedPromise.promise;
     private readonly _teleportMessageMessageStream = new Subject<string>();
@@ -338,8 +342,83 @@ export class RoomConnection implements RoomConnection {
     }
 
     private handleSocketMessage = (messageEvent: MessageEvent<ServerToClientMessageTsProto>) => {
+        this.receiveSocketMessage(messageEvent.data);
+    };
+
+    /**
+     * Room state lands in plain RxJS Subjects, which do not buffer: anything dispatched before a
+     * consumer subscribes is gone for good. That is harmless while one and the same code joins the
+     * room and subscribes in the same breath. It stops being harmless once the session joins on its
+     * own and the renderer attaches later — the gap becomes however long that takes.
+     *
+     * So the connection can be told to hold what it receives and replay it, in order, once someone
+     * is ready for it. Off by default: a connection nobody holds dispatches immediately, exactly as
+     * before.
+     *
+     * Two kinds of message are never held:
+     *
+     * - **Pings.** They carry the keep-alive contract both ways — resetPingTimeout() on our side,
+     *   sendPong() for the server. Holding them would have the client declare a perfectly healthy
+     *   connection dead, and stop answering a server that is waiting on us. They are answered as
+     *   they arrive and dropped from the replay.
+     * - **roomConnectedMessage / roomJoinedMessage.** They resolve Deferreds, and a promise retains
+     *   its value for whoever awaits it later — there is nothing to lose by dispatching them, and
+     *   holding them would stall the very code waiting to learn the join succeeded.
+     */
+    private heldMessages: ServerToClientMessageTsProto[] | undefined;
+
+    /** Start holding. Idempotent, so a second consumer asking does not discard what is queued. */
+    public holdMessages(): void {
+        if (!this.heldMessages) {
+            this.heldMessages = [];
+        }
+    }
+
+    /** Replay everything held, in arrival order, then go live. */
+    public releaseMessages(): void {
+        const held = this.heldMessages;
+        this.heldMessages = undefined;
+        if (!held) {
+            return;
+        }
+        for (const data of held) {
+            this.dispatchSocketMessage(data);
+        }
+    }
+
+    private receiveSocketMessage(data: ServerToClientMessageTsProto): void {
+        if (!this.heldMessages) {
+            this.dispatchSocketMessage(data);
+            return;
+        }
+
+        const remaining = stripPings(data, () => {
+            this.resetPingTimeout();
+            this.sendPong();
+        });
+        if (remaining === undefined) {
+            return;
+        }
+
+        if (isNeverHeld(remaining)) {
+            this.dispatchSocketMessage(remaining);
+            return;
+        }
+
+        this.heldMessages.push(remaining);
+        if (this.heldMessages.length >= RoomConnection.MAX_HELD_MESSAGES) {
+            // Nobody claimed the connection and the queue is growing on network input. Go live
+            // rather than grow without bound: that is the behaviour we had before holding existed.
+            console.warn(
+                `Held ${this.heldMessages.length} messages without a consumer; releasing to avoid growing without bound.`,
+            );
+            this.releaseMessages();
+        }
+    }
+
+    private dispatchSocketMessage = (data: ServerToClientMessageTsProto) => {
         try {
-            const message = messageEvent.data.message;
+            const message = data.message;
             if (message === undefined) {
                 return;
             }
