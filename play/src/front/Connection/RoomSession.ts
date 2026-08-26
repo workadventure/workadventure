@@ -1,6 +1,7 @@
 import { GameMap } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
-import { AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
+import { PositionMessage_Direction } from "@workadventure/messages";
+import type { AvailabilityStatus } from "@workadventure/messages";
 import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 
 import { computeStartPosition } from "../Phaser/Game/StartPositionCalculator";
