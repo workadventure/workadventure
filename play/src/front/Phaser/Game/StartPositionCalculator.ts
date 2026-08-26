@@ -4,12 +4,12 @@ import type { ITiledMap, ITiledMapLayer } from "@workadventure/tiled-map-type-gu
 
 import type { PositionInterface } from "../../Connection/ConnexionModels";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import type { StartPositionSource } from "./StartPositionSource";
 
 const DEFAULT_START_NAME = "start";
 
 export function computeStartPosition(
-    gameMapFrontWrapper: GameMapFrontWrapper,
+    gameMapFrontWrapper: StartPositionSource,
     mapFile: ITiledMap,
     initPosition?: PositionInterface,
     startPositionName?: string,
@@ -99,7 +99,7 @@ export function computeStartPosition(
 }
 
 function getStartPositionFromTiledArea(
-    gameMapFrontWrapper: GameMapFrontWrapper,
+    gameMapFrontWrapper: StartPositionSource,
     startPositionName: string,
     needStartProperty = false,
 ): PositionInterface | undefined {
@@ -129,7 +129,7 @@ function getStartPositionFromTiledArea(
  * Look in the map-editor areas for an area with the name "startPositionName" and a property "start".
  */
 function getStartPositionFromArea(
-    gameMapFrontWrapper: GameMapFrontWrapper,
+    gameMapFrontWrapper: StartPositionSource,
     startPositionName: string,
 ): PositionInterface | undefined {
     const area = gameMapFrontWrapper.getAreaByName(startPositionName);
@@ -142,7 +142,7 @@ function getStartPositionFromArea(
     return undefined;
 }
 
-function getStartPositionFromDefaultStartArea(gameMapFrontWrapper: GameMapFrontWrapper): PositionInterface | undefined {
+function getStartPositionFromDefaultStartArea(gameMapFrontWrapper: StartPositionSource): PositionInterface | undefined {
     const areas = gameMapFrontWrapper.getAreas();
 
     const defaultStartAreas: AreaData[] = [];
@@ -174,7 +174,7 @@ function randomPositionFromRects(
 }
 
 function getStartPositionFromLayerName(
-    gameMapFrontWrapper: GameMapFrontWrapper,
+    gameMapFrontWrapper: StartPositionSource,
     mapFile: ITiledMap,
     startPositionName?: string,
 ): PositionInterface | undefined {
@@ -228,7 +228,7 @@ function getStartPositionFromLayerName(
 }
 
 function getStartPositionFromTile(
-    gameMapFrontWrapper: GameMapFrontWrapper,
+    gameMapFrontWrapper: StartPositionSource,
     mapFile: ITiledMap,
     startPositionName: string,
 ): PositionInterface | undefined {
