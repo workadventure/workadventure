@@ -10,6 +10,7 @@ import { urlManager } from "../Url/UrlManager";
 import type { PositionInterface } from "./ConnexionModels";
 import { connectionManager } from "./ConnectionManager";
 import { peekPrefetchedTmjFile, peekPrefetchedWamFile } from "./MapPrefetch";
+import { SingleUseSlot } from "./SingleUseSlot";
 import type { OnConnectInterface } from "./ConnexionModels";
 
 /**
@@ -42,16 +43,19 @@ export type JoinedSession = {
 };
 
 /**
- * Registered synchronously, before any of the work below runs. If it were only published once
- * joined, a scene reaching connect() while the join was still in flight would find nothing to
- * claim and open a second socket — two connections, two presences, for one user.
+ * Filled synchronously, before any of the work below runs. If it were only filled once joined, a
+ * scene reaching connect() while the join was still in flight would find nothing to claim and open
+ * a second socket — two connections, two presences, for one user.
+ *
+ * Closing on discard matters as much: whatever is dropped here has a socket open.
  */
-type EarlySession = {
-    roomUrl: string;
-    ready: Promise<JoinedSession>;
-};
-
-let earlySession: EarlySession | undefined;
+const earlySession = new SingleUseSlot<Promise<JoinedSession>>((ready) => {
+    ready
+        .then(({ connection }) => connection.connection.closeConnection())
+        .catch(() => {
+            // It never connected; there is nothing to close.
+        });
+});
 
 export type RoomSessionInput = {
     roomUrl: string;
@@ -91,12 +95,6 @@ async function resolveStartPosition(): Promise<PositionInterface | undefined> {
  * anything that goes wrong here leaves the scene to do exactly what it does today.
  */
 export function startRoomSession(input: RoomSessionInput): void {
-    // A session nobody claimed is stale by definition: reaching here again means the boot that
-    // opened it never got to a scene — a reconnection, or a room change. Handing that connection to
-    // the next scene would attach it to a socket from an abandoned attempt, so drop it and close it
-    // rather than keep it out of thrift.
-    discardEarlySession();
-
     const ready = (async (): Promise<JoinedSession> => {
         const startPosition = await resolveStartPosition();
         if (!startPosition) {
@@ -142,7 +140,9 @@ export function startRoomSession(input: RoomSessionInput): void {
         return { connection: onConnect, startPosition };
     })();
 
-    earlySession = { roomUrl: input.roomUrl, ready };
+    // Filling discards anything still held: reaching here again means the boot that opened it never
+    // got to a scene — a reconnection, or a room change — so that connection is stale.
+    earlySession.fill(input.roomUrl, ready);
 
     ready.catch((error) => {
         // Nothing here is load-bearing: GameScene falls back to connecting and joining itself.
@@ -155,21 +155,6 @@ export function startRoomSession(input: RoomSessionInput): void {
  * Claim the session GameScene should attach to. One-shot: a scene re-created on a portal, a room
  * change or a reconnection must build its own, against the room it is going to *now*.
  */
-function discardEarlySession(): void {
-    const stale = earlySession;
-    earlySession = undefined;
-    stale?.ready
-        .then(({ connection }) => connection.connection.closeConnection())
-        .catch(() => {
-            // It never connected; there is nothing to close.
-        });
-}
-
 export function takeRoomSession(roomUrl: string): Promise<JoinedSession> | undefined {
-    if (earlySession?.roomUrl !== roomUrl) {
-        return undefined;
-    }
-    const { ready } = earlySession;
-    earlySession = undefined;
-    return ready;
+    return earlySession.take(roomUrl);
 }
