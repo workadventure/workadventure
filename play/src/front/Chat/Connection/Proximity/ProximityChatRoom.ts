@@ -1133,7 +1133,15 @@ export class ProximityChatRoom implements ChatRoom {
         // Request a screen wake lock so the device does not go to sleep while chatting (proximity or meeting room).
         screenWakeLock
             .requestWakeLock()
-            .then((release) => (this.screenWakeRelease = release))
+            .then((release) => {
+                if (joinSignal.aborted || this._space !== spaceForThisJoin) {
+                    // The join attempt was aborted while we were acquiring the lock. Release it right away,
+                    // the cleanup code already ran and will not do it for us.
+                    release?.().catch((error) => console.error(error));
+                    return;
+                }
+                this.screenWakeRelease = release;
+            })
             .catch((error) => console.error(error));
 
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
@@ -1239,6 +1247,10 @@ export class ProximityChatRoom implements ChatRoom {
         this.scriptingOutputAudioStreamManager = undefined;
         this.scriptingInputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager = undefined;
+        if (this.screenWakeRelease) {
+            this.screenWakeRelease().catch((error) => console.error(error));
+            this.screenWakeRelease = undefined;
+        }
         this.spaceUsersStore.forward(readable(new Map()));
         this.spaceMetadataStore.set(new Map());
         this.unreadQuestionIdsStore.set(new Set());
