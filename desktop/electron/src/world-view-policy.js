@@ -1,15 +1,19 @@
 "use strict";
 
 /**
- * The renderer settings every world view runs under. Extracted from tab-manager so the behavioural
- * probe in e2e/ exercises the very object the app ships, instead of a copy that could drift.
+ * The renderer settings every world view runs under. Extracted from tab-manager so the hardened
+ * flags below sit in one testable place instead of inline in the view factory.
  *
- * `backgroundThrottling: false` is load-bearing, not a tweak. WorkAdventure's boot is driven by
- * Phaser's game loop, which runs on requestAnimationFrame, and Chromium schedules no frames for a
- * window it considers hidden. Measured on Electron 42 / macOS with a view hosted in a shell window
- * (the app's architecture): minimizing or hiding the shell drops the view to 0 frames with the
- * default, and keeps its full 60fps without throttling. Left throttled, a world loading while the
- * window is away never reaches the map — see world-view-policy.test.js and e2e/background-rendering.js.
+ * Background throttling is deliberately left at Chromium's default (throttled). Disabling it does
+ * keep a world loading while the shell window is minimized or hidden — measured on Electron 42 /
+ * macOS, 0 frames throttled vs a full 60fps unthrottled — but per Electron's docs a single
+ * unthrottled webContents unthrottles the whole window, so every open tab would keep its Phaser
+ * loop running whenever the window is away. That is a permanent CPU and battery cost on every user
+ * to fix a load-time case.
+ *
+ * The real cause is that WorkAdventure's boot is driven by Phaser's game loop (requestAnimationFrame),
+ * so nothing — not even opening the room WebSocket — happens while the renderer gets no frames. The
+ * fix belongs in the front: take the connection out of the render loop. Tracked separately.
  */
 function createWorldViewWebPreferences(preloadPath) {
     return {
@@ -18,7 +22,6 @@ function createWorldViewWebPreferences(preloadPath) {
         contextIsolation: true,
         sandbox: true,
         webSecurity: true,
-        backgroundThrottling: false,
     };
 }
 
