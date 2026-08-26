@@ -8,16 +8,26 @@ vi.mock("../../../src/front/Connection/ConnectionManager", () => ({
         startGameConnexion: () => startGameConnexion(),
     },
 }));
+vi.mock("@workadventure/map-editor/src/Migrations/WamFileMigration", () => ({
+    wamFileMigration: {
+        migrate: (wam: { mapUrl: string }) => wam,
+    },
+}));
 vi.mock("../../../src/front/Connection/AxiosUtils", () => ({
     axiosWithRetry: {
         get: (url: string) => get(url),
     },
 }));
 
-import { prefetchWamFile, takePrefetchedWamFile } from "../../../src/front/Connection/WamFilePrefetch";
+import {
+    prefetchWamFile,
+    takePrefetchedTmjFile,
+    takePrefetchedWamFile,
+} from "../../../src/front/Connection/MapPrefetch";
 
 const WAM_URL = "/_/global/maps.example.com/world.wam";
 const ABSOLUTE_WAM_URL = new URL(WAM_URL, window.location.href).toString();
+const ABSOLUTE_TMJ_URL = new URL("world.tmj", ABSOLUTE_WAM_URL).toString();
 
 function roomResolvingTo(wamUrl: string | undefined) {
     return Promise.resolve({ nextScene: "gameScene", room: { wamUrl } });
@@ -34,12 +44,13 @@ describe("WAM prefetch", () => {
         startGameConnexion.mockReset();
         get.mockReset();
         get.mockReturnValue(Promise.resolve({ data: { mapUrl: "world.tmj" } }));
-        // Drain anything a previous test left in the box: the module holds it at module scope.
-        const leftOver = takePrefetchedWamFile(ABSOLUTE_WAM_URL);
-        if (leftOver) {
-            leftOver.catch(() => {
-                // drained, never inspected
-            });
+        // Drain anything a previous test left in the boxes: the module holds them at module scope.
+        for (const leftOver of [takePrefetchedWamFile(ABSOLUTE_WAM_URL), takePrefetchedTmjFile(ABSOLUTE_TMJ_URL)]) {
+            if (leftOver) {
+                leftOver.catch(() => {
+                    // drained, never inspected
+                });
+            }
         }
     });
 
@@ -90,5 +101,50 @@ describe("WAM prefetch", () => {
         await settle();
 
         expect(get).not.toHaveBeenCalled();
+    });
+});
+
+describe("TMJ prefetch", () => {
+    it("chains the TMJ on the WAM, resolving its URL against the WAM's", async () => {
+        startGameConnexion.mockReturnValue(roomResolvingTo(WAM_URL));
+        get.mockImplementation((url: string) =>
+            url === ABSOLUTE_WAM_URL
+                ? Promise.resolve({ data: { mapUrl: "world.tmj" } })
+                : Promise.resolve({ data: { layers: [] } }),
+        );
+
+        prefetchWamFile();
+        await settle();
+        await settle();
+
+        expect(get).toHaveBeenCalledWith(ABSOLUTE_TMJ_URL);
+        await expect(takePrefetchedTmjFile(ABSOLUTE_TMJ_URL)).resolves.toEqual({ layers: [] });
+    });
+
+    it("hands the TMJ over only once", async () => {
+        startGameConnexion.mockReturnValue(roomResolvingTo(WAM_URL));
+        get.mockImplementation((url: string) =>
+            url === ABSOLUTE_WAM_URL
+                ? Promise.resolve({ data: { mapUrl: "world.tmj" } })
+                : Promise.resolve({ data: { layers: [] } }),
+        );
+
+        prefetchWamFile();
+        await settle();
+        await settle();
+
+        expect(takePrefetchedTmjFile(ABSOLUTE_TMJ_URL)).toBeDefined();
+        expect(takePrefetchedTmjFile(ABSOLUTE_TMJ_URL)).toBeUndefined();
+    });
+
+    it("downloads no TMJ when the WAM fails", async () => {
+        startGameConnexion.mockReturnValue(roomResolvingTo(WAM_URL));
+        get.mockReturnValue(Promise.reject(new Error("no wam")));
+
+        prefetchWamFile();
+        await settle();
+        await settle();
+
+        expect(get).toHaveBeenCalledTimes(1);
     });
 });

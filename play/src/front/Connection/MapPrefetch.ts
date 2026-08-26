@@ -1,9 +1,11 @@
+import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
+
 import { connectionManager } from "./ConnectionManager";
 import { axiosWithRetry } from "./AxiosUtils";
 
 /**
- * Starts downloading the WAM file as soon as the room is known, instead of waiting for Phaser to
- * boot and reach GameScene.preload().
+ * Starts downloading the map — the WAM, then the TMJ it points at — as soon as the room is known,
+ * instead of waiting for Phaser to boot and reach GameScene.preload().
  *
  * The WAM was never loaded through Phaser's Loader — it is a plain axios GET, only *sequenced* by
  * the loader through superLoad.loadPromise. So nothing stops it from starting earlier: its URL
@@ -41,6 +43,8 @@ export function prefetchWamFile(): void {
                 // claimed by takePrefetchedWamFile, or deliberately dropped
             });
             prefetched = { url, response };
+
+            prefetchTmjFile(url, response);
         })
         .catch(() => {
             // Room resolution failures are handled by GameManager.init.
@@ -57,5 +61,38 @@ export function takePrefetchedWamFile(absoluteUrl: string): Promise<unknown> | u
     }
     const { response } = prefetched;
     prefetched = undefined;
+    return response;
+}
+
+/**
+ * The TMJ the WAM points at, chained on the WAM download above. Same one-shot handover, same
+ * reason: a re-created scene must read the map as it is then.
+ */
+let prefetchedTmj: { url: string; response: Promise<unknown> } | undefined;
+
+function prefetchTmjFile(absoluteWamFileUrl: string, wamResponse: Promise<unknown>): void {
+    wamResponse
+        .then((wamData) => {
+            // Migrated on a copy purely to read `mapUrl`: GameScene still receives the untouched
+            // response and migrates it itself, so nothing here can change what it sees.
+            const wamFile = wamFileMigration.migrate(structuredClone(wamData));
+            const url = new URL(wamFile.mapUrl, absoluteWamFileUrl).toString();
+            const response = axiosWithRetry.get(url).then((res: { data: unknown }) => res.data);
+            response.catch(() => {
+                // claimed by takePrefetchedTmjFile, or deliberately dropped
+            });
+            prefetchedTmj = { url, response };
+        })
+        .catch(() => {
+            // The WAM failed; GameScene surfaces that when it claims the WAM.
+        });
+}
+
+export function takePrefetchedTmjFile(absoluteUrl: string): Promise<unknown> | undefined {
+    if (prefetchedTmj?.url !== absoluteUrl) {
+        return undefined;
+    }
+    const { response } = prefetchedTmj;
+    prefetchedTmj = undefined;
     return response;
 }

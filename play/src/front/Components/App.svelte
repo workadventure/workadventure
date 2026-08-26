@@ -28,7 +28,7 @@
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { connectionManager } from "../Connection/ConnectionManager";
-    import { prefetchWamFile } from "../Connection/WamFilePrefetch";
+    import { prefetchWamFile } from "../Connection/MapPrefetch";
     import { desktopApi } from "../Api/Desktop";
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import { urlManager } from "../Url/UrlManager";
