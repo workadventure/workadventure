@@ -19,14 +19,15 @@ vi.mock("../../../src/front/Connection/AxiosUtils", () => ({
     },
 }));
 
-type MapPrefetch = typeof import("../../../src/front/Connection/MapPrefetch");
-
-// Imported per test, after vi.resetModules(): MapPrefetch keeps its boxes at module scope, and a
+// Type-only, so it is erased and does not load the module eagerly. The instance under test is
+// imported per test, after vi.resetModules(): MapPrefetch keeps its boxes at module scope, and a
 // prefetch chain started by one test keeps running into the next one. A fresh module per test is
 // the only way each of them describes a single boot.
-let prefetchWamFile: MapPrefetch["prefetchWamFile"];
-let takePrefetchedWamFile: MapPrefetch["takePrefetchedWamFile"];
-let takePrefetchedTmjFile: MapPrefetch["takePrefetchedTmjFile"];
+import type * as MapPrefetch from "../../../src/front/Connection/MapPrefetch";
+
+let prefetchWamFile: typeof MapPrefetch.prefetchWamFile;
+let takePrefetchedWamFile: typeof MapPrefetch.takePrefetchedWamFile;
+let takePrefetchedTmjFile: typeof MapPrefetch.takePrefetchedTmjFile;
 
 const WAM_URL = "/_/global/maps.example.com/world.wam";
 const ABSOLUTE_WAM_URL = new URL(WAM_URL, window.location.href).toString();
