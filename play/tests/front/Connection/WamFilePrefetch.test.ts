@@ -24,7 +24,10 @@ function roomResolvingTo(wamUrl: string | undefined) {
 }
 
 /** Let the prefetch's promise chain settle before inspecting what it stored. */
-const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+const settle = () =>
+    new Promise((resolve) => {
+        setTimeout(resolve, 0);
+    });
 
 describe("WAM prefetch", () => {
     beforeEach(() => {
@@ -32,7 +35,12 @@ describe("WAM prefetch", () => {
         get.mockReset();
         get.mockReturnValue(Promise.resolve({ data: { mapUrl: "world.tmj" } }));
         // Drain anything a previous test left in the box: the module holds it at module scope.
-        takePrefetchedWamFile(ABSOLUTE_WAM_URL);
+        const leftOver = takePrefetchedWamFile(ABSOLUTE_WAM_URL);
+        if (leftOver) {
+            leftOver.catch(() => {
+                // drained, never inspected
+            });
+        }
     });
 
     it("downloads the WAM as soon as the room resolves", async () => {
