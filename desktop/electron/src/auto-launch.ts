@@ -12,16 +12,17 @@ export async function updateAutoLaunch() {
         return;
     }
 
-    // Deliberately NOT a hidden start (no `isHidden` / `openAsHidden`): nothing reads
-    // `wasOpenedAsHidden`, so the shell shows and focuses the window anyway. The setting only ever
-    // promised a behaviour the app does not implement.
+    // Deliberately NOT a hidden start (no `isHidden` / `openAsHidden`). Two reasons, and the second
+    // is the blocking one:
     //
-    // It is not a technical dead end though. Measured on Electron 42 / macOS against a real world
-    // (criterion: the /ws/room WebSocket): a never-shown window keeps rendering and joins the room
-    // in ~4s, and `backgroundThrottling: false` on the world views (see tab-manager) covers the
-    // app-hidden case too. Implementing a real hidden start — read `wasOpenedAsHidden`, skip the
-    // initial reveal — would work. That is a product call (a login item that runs a game loop
-    // costs battery), not a blocked one.
+    // Nothing reads `wasOpenedAsHidden`, so the shell shows and focuses the window anyway — the
+    // setting promised a behaviour the app does not implement.
+    //
+    // And implementing it would not work today. `openAsHidden` on macOS hides the *application*,
+    // and a hidden app gets no animation frames; WorkAdventure's boot runs on Phaser's game loop,
+    // so it would freeze mid-way and never reach the map. (A window merely created unshown is fine
+    // — Chromium still renders it — but that is not what a login item does.) Reaching a world in
+    // the background needs the connection taken out of the render loop, on the front side.
 
     // `setLoginItemSettings` doesn't support linux
     if (process.platform === "linux") {
