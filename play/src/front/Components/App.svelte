@@ -28,6 +28,7 @@
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { connectionManager } from "../Connection/ConnectionManager";
+    import { prefetchWamFile } from "../Connection/WamFilePrefetch";
     import { desktopApi } from "../Api/Desktop";
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import { urlManager } from "../Url/UrlManager";
@@ -97,6 +98,11 @@
         connectionManager.startGameConnexion().catch(() => {
             // handled by the awaiting caller
         });
+
+        // Chained on the room above: the WAM's URL comes from the /room response, and the file is a
+        // plain axios GET that Phaser's loader only sequences. Starting it here means GameScene
+        // usually finds it already downloaded instead of opening the request itself.
+        prefetchWamFile();
 
         const { width, height } = coWebsiteManager.getGameSize();
         const fps: Phaser.Types.Core.FPSConfig = {
