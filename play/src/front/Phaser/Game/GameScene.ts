@@ -124,6 +124,7 @@ import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandle
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { takePrefetchedTmjFile, takePrefetchedWamFile } from "../../Connection/MapPrefetch";
+import { takeRoomSession } from "../../Connection/RoomSession";
 import { StringUtils } from "../../Utils/StringUtils";
 import { PHASER_COLOR_DESIGN_SYSTEM_SECONDARY } from "../../Utils/DesignSystemPhaserColors";
 
@@ -304,6 +305,8 @@ export class GameScene extends DirtyScene {
     mapUrlFile!: string;
     wamUrlFile?: string;
     roomUrl: string;
+    /** Where the session already told the server we stand, when it joined ahead of this scene. */
+    private earlyStartPosition: PositionInterface | undefined;
     currentTick!: number;
     lastSentTick!: number; // The last tick at which a position was sent.
     lastMoveEventSent: HasPlayerMovedInterface = {
@@ -1979,14 +1982,29 @@ export class GameScene extends DirtyScene {
      * Initializes the connection to Pusher.
      */
     private connect(): void {
-        connectionManager
-            .connectToRoomSocket(
+        // Usually already open and already joined: the session did it while Phaser was still
+        // starting this scene (see RoomSession). It holds everything the server has sent since,
+        // and we release it below, once every stream here has a subscriber.
+        const connectOurselves = () =>
+            connectionManager.connectToRoomSocket(
                 this.roomUrl,
                 this.playerName,
                 gameManager.getCharacterTextureIds() ?? [],
                 gameManager.getCompanionTextureId(),
                 this.getGameMap().getWamFile()?.getLastCommandId(),
-            )
+            );
+
+        const session = takeRoomSession(this.roomUrl);
+        (session
+            ? session
+                  .then(({ connection, startPosition }) => {
+                      this.earlyStartPosition = startPosition;
+                      return connection;
+                  })
+                  // A head start that failed is not a failure: connect the way we always have.
+                  .catch(() => connectOurselves())
+            : connectOurselves()
+        )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
 
@@ -2030,12 +2048,17 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                const startPosition = computeStartPosition(
-                    this.gameMapFrontWrapper,
-                    this.mapFile,
-                    this.initPosition,
-                    urlManager.getStartPositionNameFromUrl(),
-                );
+                // Reuse the position the session announced rather than computing a fresh one: start
+                // areas are picked at random, so recomputing would draw a different spot and render
+                // the player somewhere the server never put them.
+                const startPosition =
+                    this.earlyStartPosition ??
+                    computeStartPosition(
+                        this.gameMapFrontWrapper,
+                        this.mapFile,
+                        this.initPosition,
+                        urlManager.getStartPositionNameFromUrl(),
+                    );
 
                 this.createCurrentPlayer(startPosition);
 
@@ -2226,6 +2249,12 @@ export class GameScene extends DirtyScene {
                 //     console.error("An error occurred server side: " + errorMessage.message);
                 //     //warningMessageStore.addWarningMessage(errorMessage.message);
                 // });
+
+                // Every stream above now has a subscriber. This deferred is what already gates
+                // joinRoom(), so releasing here inherits the ordering the scene relies on rather
+                // than inventing a weaker one: whatever the session held is replayed, in order,
+                // into handlers that are all in place.
+                this.connection.releaseMessages();
 
                 this.connectionAnswerPromiseDeferred.resolve();
                 // Analyze tags to find if we are admin. If yes, show console.

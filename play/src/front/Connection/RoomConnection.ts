@@ -942,6 +942,12 @@ export class RoomConnection implements RoomConnection {
         viewport: ViewportInterface,
         availabilityStatus: AvailabilityStatus,
     ): void {
+        if (this.joinRoomEmitted) {
+            // The session already announced us. Joining twice would register a second presence for
+            // the same socket, so the scene's call is deliberately a no-op: it goes on to await
+            // roomJoinedPromise, which resolves from the join that did happen.
+            return;
+        }
         this.joinRoomEmitted = true;
         this.send(
             {

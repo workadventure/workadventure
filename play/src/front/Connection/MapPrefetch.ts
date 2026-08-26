@@ -96,3 +96,16 @@ export function takePrefetchedTmjFile(absoluteUrl: string): Promise<unknown> | u
     prefetchedTmj = undefined;
     return response;
 }
+
+/**
+ * Read a prefetch without claiming it. The session needs the map to work out where to stand, and
+ * GameScene still needs the very same download for its own load — so this one reads, and only
+ * `take` hands over.
+ */
+export function peekPrefetchedWamFile(): Promise<unknown> | undefined {
+    return prefetched?.response;
+}
+
+export function peekPrefetchedTmjFile(): Promise<unknown> | undefined {
+    return prefetchedTmj?.response;
+}
