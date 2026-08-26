@@ -91,9 +91,11 @@ async function resolveStartPosition(): Promise<PositionInterface | undefined> {
  * anything that goes wrong here leaves the scene to do exactly what it does today.
  */
 export function startRoomSession(input: RoomSessionInput): void {
-    if (earlySession) {
-        return;
-    }
+    // A session nobody claimed is stale by definition: reaching here again means the boot that
+    // opened it never got to a scene — a reconnection, or a room change. Handing that connection to
+    // the next scene would attach it to a socket from an abandoned attempt, so drop it and close it
+    // rather than keep it out of thrift.
+    discardEarlySession();
 
     const ready = (async (): Promise<JoinedSession> => {
         const startPosition = await resolveStartPosition();
@@ -153,6 +155,16 @@ export function startRoomSession(input: RoomSessionInput): void {
  * Claim the session GameScene should attach to. One-shot: a scene re-created on a portal, a room
  * change or a reconnection must build its own, against the room it is going to *now*.
  */
+function discardEarlySession(): void {
+    const stale = earlySession;
+    earlySession = undefined;
+    stale?.ready
+        .then(({ connection }) => connection.connection.closeConnection())
+        .catch(() => {
+            // It never connected; there is nothing to close.
+        });
+}
+
 export function takeRoomSession(roomUrl: string): Promise<JoinedSession> | undefined {
     if (earlySession?.roomUrl !== roomUrl) {
         return undefined;
