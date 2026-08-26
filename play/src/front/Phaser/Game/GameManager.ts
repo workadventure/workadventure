@@ -218,6 +218,10 @@ export class GameManager {
                 playerName: this.playerName ?? "",
                 characterTextureIds: this.characterTextureIds ?? [],
                 companionTextureId: this.companionTextureId,
+                // Read here rather than in the session: GameManager already depends on MediaStore,
+                // so this costs no new import cycle — and joining as ONLINE would have announced a
+                // "busy" user as available until the scene corrected it.
+                availabilityStatus: get(availabilityStatusStore),
             });
 
             //TODO fix to return href with # saved in localstorage

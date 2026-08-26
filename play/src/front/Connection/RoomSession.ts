@@ -33,7 +33,11 @@ const PROVISIONAL_VIEWPORT_HALF_HEIGHT = 540;
 
 export type JoinedSession = {
     connection: OnConnectInterface;
-    startPosition: PositionInterface;
+    /**
+     * Where we announced the player — absent when we deliberately left the join to the scene, in
+     * which case it must compute the position itself.
+     */
+    startPosition?: PositionInterface;
 };
 
 /**
@@ -53,6 +57,7 @@ export type RoomSessionInput = {
     playerName: string;
     characterTextureIds: string[];
     companionTextureId: string | null;
+    availabilityStatus: AvailabilityStatus;
 };
 
 /**
@@ -106,6 +111,16 @@ export function startRoomSession(input: RoomSessionInput): void {
             lastCommandId,
         );
 
+        // The room may have been edited since the WAM we computed from was last saved: the server
+        // sends those commands on connect, and GameScene applies them *before* working out where to
+        // stand. A desk claimed in the map editor is exactly that kind of edit — computing from the
+        // stale copy would spawn the player away from their own desk. When there is anything to
+        // apply, hand the connection over unjoined and let the scene do it on the up-to-date map.
+        const pendingEdits = onConnect.roomConnectedMessage.editMapCommandsArrayMessage?.editMapCommands ?? [];
+        if (pendingEdits.length > 0) {
+            return { connection: onConnect };
+        }
+
         // Hold before announcing ourselves: the server starts streaming room state the moment it
         // sees the join, and nothing is subscribed yet.
         onConnect.connection.holdMessages();
@@ -118,10 +133,7 @@ export function startRoomSession(input: RoomSessionInput): void {
                 right: startPosition.x + PROVISIONAL_VIEWPORT_HALF_WIDTH,
                 bottom: startPosition.y + PROVISIONAL_VIEWPORT_HALF_HEIGHT,
             },
-            // Deliberately not read from availabilityStatusStore: it lives in MediaStore, and pulling
-            // that into the boot path risks the import cycle GameScene already has with it. The scene
-            // pushes the real status as soon as it subscribes, so a persisted "busy" corrects itself.
-            AvailabilityStatus.ONLINE,
+            input.availabilityStatus,
         );
 
         return { connection: onConnect, startPosition };
