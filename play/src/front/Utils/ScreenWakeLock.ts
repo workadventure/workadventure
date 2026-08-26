@@ -1,3 +1,15 @@
+/**
+ * Logs a wake lock failure, except when the browser refused because the page is hidden.
+ * This happens routinely (someone comes talk to us while the tab is in the background) and the
+ * lock is acquired again on the next "visibilitychange", so it is not worth polluting the console.
+ */
+function logWakeLockError(error: unknown): void {
+    if (error instanceof DOMException && error.name === "NotAllowedError") {
+        return;
+    }
+    console.error(error);
+}
+
 class ScreenWakeLock {
     private isSupported: boolean;
     private wakeLockSentinel: WakeLockSentinel | undefined;
@@ -34,7 +46,7 @@ class ScreenWakeLock {
         if (document.visibilityState !== "visible") {
             return;
         }
-        this.acquire().catch((error) => console.error(error));
+        this.acquire().catch((error) => logWakeLockError(error));
     };
 
     /**
@@ -49,7 +61,7 @@ class ScreenWakeLock {
         this.lockRequestCount++;
         // A failure here (typically a "NotAllowedError" because the document is hidden) is not
         // fatal: the lock will be acquired on the next "visibilitychange" if it is still wanted.
-        await this.acquire().catch((error) => console.error(error));
+        await this.acquire().catch((error) => logWakeLockError(error));
 
         let isReleased = false;
         return async () => {
