@@ -19,11 +19,14 @@ vi.mock("../../../src/front/Connection/AxiosUtils", () => ({
     },
 }));
 
-import {
-    prefetchWamFile,
-    takePrefetchedTmjFile,
-    takePrefetchedWamFile,
-} from "../../../src/front/Connection/MapPrefetch";
+type MapPrefetch = typeof import("../../../src/front/Connection/MapPrefetch");
+
+// Imported per test, after vi.resetModules(): MapPrefetch keeps its boxes at module scope, and a
+// prefetch chain started by one test keeps running into the next one. A fresh module per test is
+// the only way each of them describes a single boot.
+let prefetchWamFile: MapPrefetch["prefetchWamFile"];
+let takePrefetchedWamFile: MapPrefetch["takePrefetchedWamFile"];
+let takePrefetchedTmjFile: MapPrefetch["takePrefetchedTmjFile"];
 
 const WAM_URL = "/_/global/maps.example.com/world.wam";
 const ABSOLUTE_WAM_URL = new URL(WAM_URL, window.location.href).toString();
@@ -40,18 +43,13 @@ const settle = () =>
     });
 
 describe("WAM prefetch", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+        vi.resetModules();
         startGameConnexion.mockReset();
         get.mockReset();
         get.mockReturnValue(Promise.resolve({ data: { mapUrl: "world.tmj" } }));
-        // Drain anything a previous test left in the boxes: the module holds them at module scope.
-        for (const leftOver of [takePrefetchedWamFile(ABSOLUTE_WAM_URL), takePrefetchedTmjFile(ABSOLUTE_TMJ_URL)]) {
-            if (leftOver) {
-                leftOver.catch(() => {
-                    // drained, never inspected
-                });
-            }
-        }
+        ({ prefetchWamFile, takePrefetchedWamFile, takePrefetchedTmjFile } =
+            await import("../../../src/front/Connection/MapPrefetch"));
     });
 
     it("downloads the WAM as soon as the room resolves", async () => {
@@ -105,6 +103,14 @@ describe("WAM prefetch", () => {
 });
 
 describe("TMJ prefetch", () => {
+    beforeEach(async () => {
+        vi.resetModules();
+        startGameConnexion.mockReset();
+        get.mockReset();
+        ({ prefetchWamFile, takePrefetchedWamFile, takePrefetchedTmjFile } =
+            await import("../../../src/front/Connection/MapPrefetch"));
+    });
+
     it("chains the TMJ on the WAM, resolving its URL against the WAM's", async () => {
         startGameConnexion.mockReturnValue(roomResolvingTo(WAM_URL));
         get.mockImplementation((url: string) =>
@@ -145,6 +151,6 @@ describe("TMJ prefetch", () => {
         await settle();
         await settle();
 
-        expect(get).toHaveBeenCalledTimes(1);
+        expect(get).not.toHaveBeenCalledWith(ABSOLUTE_TMJ_URL);
     });
 });
