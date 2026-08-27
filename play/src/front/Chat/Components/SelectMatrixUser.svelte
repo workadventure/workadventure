@@ -5,9 +5,12 @@
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { chatSearchBarValue } from "../Stores/ChatStore";
     import type { SelectItem } from "./Room/searchChatMembersRule";
     import { searchChatMembersRule } from "./Room/searchChatMembersRule";
     import { IconUsers } from "@wa-icons";
+
+    const SEARCH_DEBOUNCE_DELAY = 300;
 
     interface Props {
         value?: SelectItem[];
@@ -22,16 +25,25 @@
         value = [];
     }
 
-    let items: SelectItem[] = $state([]);
+    let members: SelectItem[] = $state([]);
+    let createdItem: SelectItem | undefined = $state(undefined);
+    let items: SelectItem[] = $derived(createdItem === undefined ? members : [...members, createdItem]);
     const chat = gameManager.chatConnection;
 
-    const { searchWorldMembers } = searchChatMembersRule();
+    const { subscribeToWorldMembers, searchWorldMembers } = searchChatMembersRule();
+
+    function handleSearchError(error: unknown) {
+        onerror?.(get(LL).chat.matrixUserSelect.failedToLoadUsers());
+        console.error(error);
+        Sentry.captureException(error);
+    }
 
     function handleFilter(e: CustomEvent) {
         if (value.find((i) => i.label === filterText)) return;
         if (e.detail.length === 0 && filterText.length > 0) {
-            const prev = items.filter((i) => !i.created);
-            items = [...prev, { value: filterText, label: filterText, created: true }];
+            createdItem = { value: filterText, label: filterText, created: true };
+        } else if (filterText.length === 0) {
+            createdItem = undefined;
         }
     }
 
@@ -64,15 +76,44 @@
     }
 
     onMount(() => {
-        searchWorldMembers(filterText)
-            .then((newItems) => {
-                items = newItems;
+        let unsubscribeFromMembers: (() => void) | undefined;
+        let destroyed = false;
+
+        subscribeToWorldMembers((newMembers) => {
+            members = newMembers;
+        })
+            .then((unsubscribe) => {
+                if (destroyed) {
+                    unsubscribe();
+                    return;
+                }
+                unsubscribeFromMembers = unsubscribe;
             })
-            .catch((error) => {
-                onerror?.(get(LL).chat.matrixUserSelect.failedToLoadUsers());
-                console.error(error);
-                Sentry.captureException(error);
-            });
+            .catch(handleSearchError);
+
+        return () => {
+            destroyed = true;
+            unsubscribeFromMembers?.();
+            // The user providers are shared with the chat sidebar: give it back the filter of its own search bar.
+            searchWorldMembers(get(chatSearchBarValue)).catch((error) => console.error(error));
+        };
+    });
+
+    // Only a limited number of members is kept in memory, so we ask the user providers to search the
+    // whole world (the search is performed by the Admin API) whenever the user types in the selector.
+    let searchedText = "";
+    $effect(() => {
+        const text = filterText;
+        if (text === searchedText) {
+            return;
+        }
+        searchedText = text;
+
+        const timeout = setTimeout(() => {
+            searchWorldMembers(text).catch(handleSearchError);
+        }, SEARCH_DEBOUNCE_DELAY);
+
+        return () => clearTimeout(timeout);
     });
 </script>
 
