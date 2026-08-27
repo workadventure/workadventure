@@ -76,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "取消",
                 validate: "驗證",
             },
-            disabled: "此房間的 Jitsi 整合已停用 ❌",
             actionButtonLabel: "開始 Jitsi 會議",
         },
         playAudio: {
@@ -122,14 +121,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "講台（舞台）上的使用者可以向相符的「觀眾」區域中的所有與會者講話。",
             nameLabel: "名稱",
             namePlaceholder: "主舞台",
-            disabled: "此房間的講台已停用 ❌",
             actionButtonLabel: "加入講台",
         },
         listenerMegaphone: {
             label: "觀眾",
             description: "觀眾區域的使用者可以聽到所連結講台上的演講者。",
             nameLabel: "講台名稱",
-            disabled: "此房間的觀眾已停用 ❌",
             namePlaceholder: "我的演講者區域",
             waitingMediaLinkLabel: "直播開始前顯示的媒體",
             waitingMediaLinkPlaceholder: "https://www....",

@@ -14,7 +14,6 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import type { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
-    import { mapEditorRestrictedPropertiesStore } from "../../../Stores/MapEditorStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import AddPropertyButton from "./AddPropertyButton.svelte";
     import {
@@ -127,85 +126,43 @@
     />
 {/if}
 {#if property === "jitsiRoomProperty"}
-    {#if $mapEditorRestrictedPropertiesStore.includes("jitsiRoomProperty")}
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.jitsiRoomProperty.label()}
-            descriptionText={$LL.mapEditor.properties.jitsiRoomProperty.disabled()}
-            img={jitsiPng}
-            style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
-            onclick={(event) => {
-                onclick?.(event);
-            }}
-            disabled={true}
-            testId="jitsiRoomProperty"
-        />
-    {:else}
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.jitsiRoomProperty.label()}
-            descriptionText={$LL.mapEditor.properties.jitsiRoomProperty.description()}
-            img={jitsiPng}
-            style={`z-index: 260;${isActive ? "background-color: #4156f6;" : ""}`}
-            onclick={(event) => {
-                onclick?.(event);
-            }}
-            {disabled}
-            testId="jitsiRoomProperty"
-        />
-    {/if}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.jitsiRoomProperty.label()}
+        descriptionText={$LL.mapEditor.properties.jitsiRoomProperty.description()}
+        img={jitsiPng}
+        style={`z-index: 260;${isActive ? "background-color: #4156f6;" : ""}`}
+        onclick={(event) => {
+            onclick?.(event);
+        }}
+        {disabled}
+        testId="jitsiRoomProperty"
+    />
 {/if}
 {#if property === "speakerMegaphone"}
-    {#if $mapEditorRestrictedPropertiesStore.includes("speakerMegaphone")}
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.speakerMegaphone.label()}
-            descriptionText={$LL.mapEditor.properties.speakerMegaphone.disabled()}
-            img={IconMicrophone}
-            style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
-            onclick={(event) => {
-                onclick?.(event);
-            }}
-            disabled={true}
-            testId="speakerMegaphone"
-        />
-    {:else}
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.speakerMegaphone.label()}
-            descriptionText={$LL.mapEditor.properties.speakerMegaphone.description()}
-            img={IconMicrophone}
-            style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
-            onclick={(event) => {
-                onclick?.(event);
-            }}
-            {disabled}
-            testId="speakerMegaphone"
-        />
-    {/if}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.speakerMegaphone.label()}
+        descriptionText={$LL.mapEditor.properties.speakerMegaphone.description()}
+        img={IconMicrophone}
+        style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
+        onclick={(event) => {
+            onclick?.(event);
+        }}
+        {disabled}
+        testId="speakerMegaphone"
+    />
 {/if}
 {#if property === "listenerMegaphone"}
-    {#if $mapEditorRestrictedPropertiesStore.includes("speakerMegaphone")}
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.listenerMegaphone.label()}
-            descriptionText={$LL.mapEditor.properties.listenerMegaphone.disabled()}
-            img={IconEar}
-            style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
-            onclick={(event) => {
-                onclick?.(event);
-            }}
-            disabled={true}
-            testId="listenerMegaphone"
-        />
-    {:else}
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.listenerMegaphone.label()}
-            descriptionText={$LL.mapEditor.properties.listenerMegaphone.description()}
-            img={IconEar}
-            style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
-            onclick={(event) => {
-                onclick?.(event);
-            }}
-            {disabled}
-            testId="listenerMegaphone"
-        />
-    {/if}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.listenerMegaphone.label()}
+        descriptionText={$LL.mapEditor.properties.listenerMegaphone.description()}
+        img={IconEar}
+        style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
+        onclick={(event) => {
+            onclick?.(event);
+        }}
+        {disabled}
+        testId="listenerMegaphone"
+    />
 {/if}
 {#if property === "start"}
     <AddPropertyButton

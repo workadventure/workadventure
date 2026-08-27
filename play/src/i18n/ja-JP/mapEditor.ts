@@ -50,7 +50,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             durationLabel: "トランジション時間（ミリ秒）",
         },
         jitsiRoomProperty: {
-            disabled: "Jitsi integration is disabled for this room ❌",
             label: "Jitsi ルーム",
             description: "入室時に Jitsi ミーティングを開始します。",
             roomNameLabel: "ルーム名",
@@ -124,14 +123,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "ポディウム（ステージ）上のユーザーは、対応する「オーディエンス」エリアのすべての参加者に話すことができます。",
             nameLabel: "名前",
             namePlaceholder: "メインステージ",
-            disabled: "この部屋ではポディウムが無効になっています ❌",
             actionButtonLabel: "ポディウムに参加",
         },
         listenerMegaphone: {
             label: "オーディエンス",
             description: "オーディエンスエリアのユーザーは、リンクされたポディウムのスピーカーを聞くことができます。",
             nameLabel: "ポディウム名",
-            disabled: "この部屋ではオーディエンスが無効になっています ❌",
             namePlaceholder: "私のスピーカーゾーン",
             waitingMediaLinkLabel: "配信開始前に表示するメディア",
             waitingMediaLinkPlaceholder: "https://www…（メディアのURLを入力）",

@@ -76,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "취소",
                 validate: "확인",
             },
-            disabled: "이 방에서는 Jitsi 연동이 비활성화되었습니다 ❌",
             actionButtonLabel: "Jitsi 미팅 시작",
         },
         playAudio: {
@@ -123,7 +122,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: '연단(무대)에 있는 사용자는 연결된 "청중" 영역에 있는 모든 참석자에게 말할 수 있습니다.',
             nameLabel: "이름",
             namePlaceholder: "MainStage",
-            disabled: "이 방에서는 연단 기능이 비활성화되었습니다 ❌",
             actionButtonLabel: "연단 참가",
         },
         listenerMegaphone: {
@@ -131,7 +129,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "청중 영역의 사용자는 연결된 연단의 연사를 들을 수 있습니다.",
             nameLabel: "연결할 연단 이름",
             namePlaceholder: "MySpeakerZone",
-            disabled: "이 방에서는 청중 기능이 비활성화되었습니다 ❌",
             waitingMediaLinkLabel: "라이브 시작 전 표시할 미디어",
             waitingMediaLinkPlaceholder: "https://www....",
             waitingMedialLinkError: "링크에 문제가 있는 것 같습니다. 한 번 더 확인해 주시겠어요? 🙏",

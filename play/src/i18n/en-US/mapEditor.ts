@@ -75,7 +75,6 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancel",
                 validate: "Validate",
             },
-            disabled: "Jitsi integration is disabled for this room ❌",
             actionButtonLabel: "Start Jitsi meeting",
         },
         playAudio: {
@@ -121,14 +120,12 @@ const mapEditor: BaseTranslation = {
             description: 'Users on the podium (stage) can speak to all attendees in the matching "Audience" area.',
             nameLabel: "Name",
             namePlaceholder: "MainStage",
-            disabled: "Podium is disabled for this room ❌",
             actionButtonLabel: "Join podium",
         },
         listenerMegaphone: {
             label: "Audience",
             description: "Users in the audience area can hear the speaker on the linked podium.",
             nameLabel: "Podium Name",
-            disabled: "Audience is disabled for this room ❌",
             namePlaceholder: "MySpeakerZone",
             waitingMediaLinkLabel: "Media to display before the live starts",
             waitingMediaLinkPlaceholder: "https://www....",

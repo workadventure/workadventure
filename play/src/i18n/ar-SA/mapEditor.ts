@@ -76,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "إلغاء",
                 validate: "اعتماد",
             },
-            disabled: "تم تعطيل تكامل Jitsi لهذه الغرفة ❌",
             actionButtonLabel: "بدء اجتماع Jitsi",
         },
         playAudio: {
@@ -123,14 +122,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: 'يمكن للمستخدمين على المنصة (المسرح) التحدث إلى جميع الحاضرين في منطقة "الجمهور" المطابقة.',
             nameLabel: "الاسم",
             namePlaceholder: "المسرح الرئيسي",
-            disabled: "المنصة معطلة لهذه الغرفة ❌",
             actionButtonLabel: "الانضمام إلى المنصة",
         },
         listenerMegaphone: {
             label: "الجمهور",
             description: "يمكن للمستخدمين في منطقة الجمهور سماع المتحدث على المنصة المرتبطة.",
             nameLabel: "اسم المنصة",
-            disabled: "الجمهور معطل لهذه الغرفة ❌",
             waitingMediaLinkLabel: "الوسائط المعروضة قبل بدء البث",
             waitingMediaLinkPlaceholder: "https://www… (أدخل رابط الوسائط)",
             waitingMedialLinkError: "يبدو أن هناك مشكلة في الرابط الذي قدمته. هل يمكنك التحقق منه مرة أخرى؟ 🙏",
