@@ -76,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "přetorhnyć",
                 validate: "waliděrować",
             },
-            disabled: "Jitsi-integracia je za tutu rumnosć znjemóžnjena ❌",
             actionButtonLabel: "Jitsi-meeting startować",
         },
         playAudio: {
@@ -123,7 +122,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: 'Wužiwarjo na podiumje (podij) móža wšěm wobdźělnikam w přisłušnej "Publikum"-wobłuku rěčeć.',
             nameLabel: "Mjeno",
             namePlaceholder: "HłownyPodij",
-            disabled: "Podium je za tutu rumnosć znjemóžnjeny ❌",
             actionButtonLabel: "K podiumej připojować",
         },
         listenerMegaphone: {
@@ -137,7 +135,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Zda so, zo je problem ze wotkazom, kotryž sy zapósłał. Prošu přepruwuj jón hišće raz. 🙏",
             waitingMedialLinkHelp: "Prawy wotkaz měł być 'https://monlienmedia.com/…'.",
             waitingSpeaker: "Čaka so na rěčnika 🎤✨",
-            disabled: "Publikum je za tutu rumnosć znjemóžnjeny ❌",
             actionButtonLabel: "K publikumjej připojować",
         },
         chatEnabled: "Chat aktiwizowany",

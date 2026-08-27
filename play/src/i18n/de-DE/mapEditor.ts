@@ -50,7 +50,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             durationLabel: "Übergangsdauer (ms)",
         },
         jitsiRoomProperty: {
-            disabled: "Jitsi integration is disabled for this room ❌",
             label: "Jitsi-Raum",
             description: "Starten Sie ein Jitsi-Meeting beim Betreten.",
             roomNameLabel: "Raumname",
@@ -124,7 +123,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Benutzer auf dem Podium (Bühne) können zu allen Teilnehmern im zugehörigen "Publikum"-Bereich sprechen.',
             nameLabel: "Name",
             namePlaceholder: "Hauptbühne",
-            disabled: "Podium ist für diesen Raum deaktiviert ❌",
             actionButtonLabel: "Podium beitreten",
         },
         listenerMegaphone: {
@@ -132,7 +130,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Benutzer im Publikumsbereich können den Sprecher auf dem verknüpften Podium hören.",
             nameLabel: "Podiumsname",
             namePlaceholder: "MySpeakerZone",
-            disabled: "Publikum ist für diesen Raum deaktiviert ❌",
             waitingMediaLinkLabel: "Medien, die vor Beginn des Livestreams angezeigt werden",
             waitingMediaLinkPlaceholder: "https://www… (Medien-URL eingeben)",
             waitingMedialLinkError:

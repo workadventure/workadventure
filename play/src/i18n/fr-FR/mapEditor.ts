@@ -76,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annuler",
                 validate: "Valider",
             },
-            disabled: "L'intégration Jitsi est désactivée sur ce salon ❌",
             actionButtonLabel: "Démarrer une réunion Jitsi",
         },
         playAudio: {
@@ -125,14 +124,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Les utilisateurs sur le podium (scène) peuvent parler à tous les participants dans la zone "Audience" correspondante.',
             nameLabel: "Nom du podium",
             namePlaceholder: "MonPodium",
-            disabled: "Les podiums sont désactivés sur ce salon ❌",
             actionButtonLabel: "Rejoindre le podium",
         },
         listenerMegaphone: {
             label: "Audience",
             description: "Les utilisateurs dans la zone d'audience peuvent entendre l'orateur sur le podium lié.",
             nameLabel: "Nom du podium attaché",
-            disabled: 'Les zones "Audience" sont désactivées sur ce salon ❌',
             namePlaceholder: "MaZoneDeDiffusion",
             waitingMediaLinkLabel: "Média à afficher avant le début du live",
             waitingMediaLinkPlaceholder: "https://www… (entrez l’URL du média)",

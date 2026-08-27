@@ -76,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annuleren",
                 validate: "Valideren",
             },
-            disabled: "Jitsi-integratie is uitgeschakeld voor deze kamer ❌",
             actionButtonLabel: "Start Jitsi-vergadering",
         },
         playAudio: {
@@ -125,14 +124,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Gebruikers op het podium (podium) kunnen spreken tot alle deelnemers in het bijbehorende "Publiek" gebied.',
             nameLabel: "Naam",
             namePlaceholder: "HoofdPodium",
-            disabled: "Podium is uitgeschakeld voor deze kamer ❌",
             actionButtonLabel: "Deelnemen aan podium",
         },
         listenerMegaphone: {
             label: "Publiek",
             description: "Gebruikers in het publieksgebied kunnen de spreker op het gekoppelde podium horen.",
             nameLabel: "Podiumnaam",
-            disabled: "Publiek is uitgeschakeld voor deze kamer ❌",
             namePlaceholder: "MijnSprekerZone",
             waitingMediaLinkLabel: "Media om weer te geven voordat de livestream begint",
             waitingMediaLinkPlaceholder: "https://www… (media-URL invoeren)",

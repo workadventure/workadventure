@@ -139,7 +139,6 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
     mapEditorModeStore,
-    mapEditorRestrictedPropertiesStore,
     mapEditorSelectedToolStore,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapExplorationModeStore,
@@ -2556,7 +2555,6 @@ export class GameScene extends DirtyScene {
                         logoutCallback: () => {
                             connectionManager.logout();
                         },
-                        externalRestrictedMapEditorProperties: mapEditorRestrictedPropertiesStore,
                         showComponentInChat(component, props?) {
                             navChat.switchToCustomComponent(component, props);
                             chatVisibilityStore.set(true);
