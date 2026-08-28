@@ -139,8 +139,10 @@
         gameManager.getCurrentGameScene().getCameraManager().centerCameraOn(entity);
         // Use explorer tool to define the zoom to center camera position
         (
-            gameManager.getCurrentGameScene().getMapEditorModeManager().currentlyActiveTool as ExplorerTool
-        ).defineZoomToCenterCameraPosition();
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.currentlyActiveTool as
+                | ExplorerTool
+                | undefined
+        )?.defineZoomToCenterCameraPosition();
     }
     function unhighlightEntity(entity: Entity) {
         // Don't unhighlight if the entity is selected
@@ -155,8 +157,10 @@
         gameManager.getCurrentGameScene().getCameraManager().centerCameraOn(area);
         // Use explorer tool to define the zoom to center camera position
         (
-            gameManager.getCurrentGameScene().getMapEditorModeManager().currentlyActiveTool as ExplorerTool
-        ).defineZoomToCenterCameraPosition();
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.currentlyActiveTool as
+                | ExplorerTool
+                | undefined
+        )?.defineZoomToCenterCameraPosition();
     }
     function unhighlightArea(area: AreaPreview) {
         // Don't unhighlight if the area is selected
@@ -246,7 +250,7 @@
                     closable: true,
                 });
             });
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+        gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(undefined);
 
         // Close map editor to walk on the entity or zone
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);

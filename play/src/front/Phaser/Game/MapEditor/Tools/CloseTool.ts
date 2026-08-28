@@ -14,7 +14,7 @@ export class CloseTool implements MapEditorTool {
     }
     public activate(): void {
         analyticsClient.toggleMapEditor(false);
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+        gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(undefined);
         mapEditorModeStore.switchMode(false);
         mapEditorVisibilityStore.set(false);
     }

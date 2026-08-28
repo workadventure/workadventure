@@ -358,7 +358,7 @@ export class GameScene extends DirtyScene {
     private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
-    private mapEditorModeManager!: MapEditorModeManager;
+    private mapEditorModeManager: MapEditorModeManager | undefined;
     private entitiesCollectionsManager!: EntitiesCollectionsManager;
     private pathfindingManager!: PathfindingManager;
     private activatablesManager!: ActivatablesManager;
@@ -1752,7 +1752,7 @@ export class GameScene extends DirtyScene {
         return this.remotePlayersRepository;
     }
 
-    public getMapEditorModeManager(): MapEditorModeManager {
+    public getMapEditorModeManager(): MapEditorModeManager | undefined {
         return this.mapEditorModeManager;
     }
 

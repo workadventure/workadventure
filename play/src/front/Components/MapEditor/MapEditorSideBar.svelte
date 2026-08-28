@@ -72,7 +72,7 @@
             mapEditorVisibilityStore.set(true);
         }
         analyticsClient.openMapEditorTool(newTool);
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(newTool);
+        gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(newTool);
     }
 
     function toggleMapEditor() {

@@ -349,7 +349,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             // Check that the user can open map editor to edit an area
             if (get(mapEditorActivated)) {
                 if (clickedAreaPreview && get(mapEditorSelectedToolStore) !== EditorToolName.AreaEditor) {
-                    this.scene.getMapEditorModeManager().equipTool(EditorToolName.AreaEditor);
+                    this.scene.getMapEditorModeManager()?.equipTool(EditorToolName.AreaEditor);
                 }
             }
             return;
