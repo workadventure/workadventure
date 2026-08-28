@@ -436,6 +436,7 @@ message ClientToServerMessage {
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 49;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 46;
     VideoQualityReportMessage videoQualityReportMessage = 50;
+    UserMessageReadMessage userMessageReadMessage = 51;
   }
 }
 
@@ -1070,6 +1071,16 @@ message TeleportMessageMessage{
 message SendUserMessage{
   string type = 1;
   string message = 2;
+  // Identifier of the message on the admin side. Sent back by the client in a
+  // UserMessageReadMessage once the message has been read, so the admin can stop sending it.
+  // Empty when the admin did not provide one.
+  string id = 3;
+}
+
+// Sent by the client when the user acknowledged a message received in a SendUserMessage
+// (typically by clicking the "Ok" button of the moderation warning popup).
+message UserMessageReadMessage{
+  string id = 1;
 }
 
 message WorldFullWarningMessage{
@@ -1107,6 +1118,8 @@ message WorldConnectionMessage{
 message BanUserMessage{
   string type = 1;
   string message = 2;
+  // See SendUserMessage.id
+  string id = 3;
 }
 
 message AskPositionMessage{
@@ -1609,6 +1622,8 @@ message AdminMessage {
   string recipientUuid = 2;
   string roomId = 3;
   string type = 4;
+  // See SendUserMessage.id
+  string id = 5;
 }
 
 // A message sent by an administrator to everyone in a specific room

@@ -13,7 +13,7 @@ class UserMessageManager {
         //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         adminMessagesService.messageStream.subscribe((event) => {
             if (event.type === AdminMessageEventTypes.admin) {
-                textMessageStore.addMessage(event.text);
+                textMessageStore.addMessage(event.text, event.adminMessageId);
                 // Play sound in game scene if available
                 try {
                     gameManager.getCurrentGameScene().playSound("new-message", 0.2);
@@ -23,9 +23,9 @@ class UserMessageManager {
             } else if (event.type === AdminMessageEventTypes.audio) {
                 soundPlayingStore.playSound(UPLOADER_URL + event.text);
             } else if (event.type === AdminMessageEventTypes.ban) {
-                banMessageStore.addMessage(event.text);
+                banMessageStore.addMessage(event.text, event.adminMessageId);
             } else if (event.type === AdminMessageEventTypes.banned) {
-                banMessageStore.addMessage(event.text);
+                banMessageStore.addMessage(event.text, event.adminMessageId);
                 this.receiveBannedMessageListener();
             }
         });

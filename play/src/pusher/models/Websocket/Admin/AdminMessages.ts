@@ -5,6 +5,9 @@ export const isBanBannedAdminMessageInterface = z.object({
     type: z.enum(["ban", "banned"]),
     message: z.string(),
     userUuid: z.string(),
+    // Identifier of the message on the admin side, so the client can acknowledge it once read.
+    // Optional: an admin that does not store the message simply gets no read receipt.
+    id: z.union([z.string(), z.number()]).optional(),
 });
 
 export const isUserMessageAdminMessageInterface = z.object({

@@ -1076,7 +1076,13 @@ export class SocketManager {
         debug('Room "%s" was forcefully deleted from cache', roomId);
     }
 
-    public async sendAdminMessage(roomId: string, recipientUuid: string, message: string, type: string): Promise<void> {
+    public async sendAdminMessage(
+        roomId: string,
+        recipientUuid: string,
+        message: string,
+        type: string,
+        id = "",
+    ): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             console.error(
@@ -1113,6 +1119,7 @@ export class SocketManager {
                 sendUserMessage: {
                     message,
                     type,
+                    id,
                 },
             });
         }
@@ -1159,6 +1166,8 @@ export class SocketManager {
                 banUserMessage: {
                     message,
                     type: "banned",
+                    // The user is kicked right away, there is nothing to acknowledge.
+                    id: "",
                 },
             });
             endUserConnectionWithReason(recipient.socket, `User was banned: ${message}`);
@@ -1188,6 +1197,8 @@ export class SocketManager {
                 sendUserMessage: {
                     message,
                     type,
+                    // A room-wide message is not stored per user: nothing to acknowledge.
+                    id: "",
                 },
             });
         });

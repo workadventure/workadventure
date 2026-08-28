@@ -39,6 +39,7 @@ import type {
     SetPlayerDetailsMessage,
     IceServersAnswer,
     UpdateSpaceUserMessage,
+    UserMessageReadMessage,
     UserMovesMessage,
     ViewportMessage,
     GetSignedUrlAnswer,
@@ -726,6 +727,28 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
+    /**
+     * The user acknowledged a message sent by a moderator (typically by clicking "Ok" in the
+     * warning popup): tell the admin so the message is never displayed again.
+     */
+    async handleUserMessageRead(
+        client: PusherWebSocket,
+        userMessageReadMessage: UserMessageReadMessage,
+    ): Promise<void> {
+        const messageId = userMessageReadMessage.id;
+        if (!messageId) {
+            // Messages pushed live by a moderator to an already connected user carry no id.
+            return;
+        }
+        const socketData = client.getUserData();
+        try {
+            await adminService.markUserMessageAsRead(messageId, socketData.userUuid);
+        } catch (e) {
+            Sentry.captureException(`An error occurred on "handleUserMessageRead" ${e}`);
+            console.error(`An error occurred on "handleUserMessageRead" ${e}`);
+        }
+    }
+
     async handleBanPlayerMessage(client: PusherWebSocket, banPlayerMessage: BanPlayerMessage): Promise<void> {
         const socketData = client.getUserData();
         // Ban player only if the user is admin
@@ -861,7 +884,13 @@ export class SocketManager implements ZoneEventListener {
         return this.rooms;
     }
 
-    public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string): Promise<void> {
+    public async emitSendUserMessage(
+        userUuid: string,
+        message: string,
+        type: string,
+        roomId: string,
+        id = "",
+    ): Promise<void> {
         /*const client = this.searchClientByUuid(userUuid);
         if(client) {
             const adminMessage = new SendUserMessage();
@@ -879,6 +908,7 @@ export class SocketManager implements ZoneEventListener {
             roomId,
             recipientUuid: userUuid,
             type,
+            id,
         };
         backConnection.sendAdminMessage(backAdminMessage, (error: unknown) => {
             if (error !== null) {

@@ -543,7 +543,13 @@ const roomManager = {
     sendAdminMessage(call: ServerUnaryCall<AdminMessage, Empty>, callback: sendUnaryData<Empty>): void {
         const adminMessage = call.request;
         socketManager
-            .sendAdminMessage(adminMessage.roomId, adminMessage.recipientUuid, adminMessage.message, adminMessage.type)
+            .sendAdminMessage(
+                adminMessage.roomId,
+                adminMessage.recipientUuid,
+                adminMessage.message,
+                adminMessage.type,
+                adminMessage.id,
+            )
             .catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);

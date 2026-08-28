@@ -77,6 +77,15 @@ export interface AdminInterface {
     ): Promise<unknown>;
 
     /**
+     * Flags a message previously sent to a user (see the "messages" field of fetchMemberDataByUuid)
+     * as read, so it is not sent again the next time the user connects.
+     *
+     * @param messageId identifier of the message, as returned by fetchMemberDataByUuid
+     * @param userIdentifier the user who read the message
+     */
+    markUserMessageAsRead(messageId: string, userIdentifier: string): Promise<void>;
+
+    /**
      * @param locale
      * @param userUuid
      * @param ipAddress

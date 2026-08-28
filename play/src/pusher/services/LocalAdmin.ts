@@ -362,6 +362,11 @@ class LocalAdmin implements AdminInterface {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
+    markUserMessageAsRead(messageId: string, userIdentifier: string): Promise<void> {
+        // Without an admin backoffice there is no message to flag as read.
+        return Promise.resolve();
+    }
+
     async verifyBanUser(
         userUuid: string,
         ipAddress: string,
