@@ -138,11 +138,8 @@
         entity.setPointedToEditColor(0xf9e82d);
         gameManager.getCurrentGameScene().getCameraManager().centerCameraOn(entity);
         // Use explorer tool to define the zoom to center camera position
-        (
-            gameManager.getCurrentGameScene().getMapEditorModeManager()?.currentlyActiveTool as
-                | ExplorerTool
-                | undefined
-        )?.defineZoomToCenterCameraPosition();
+        const activeTool = gameManager.getCurrentGameScene().getMapEditorModeManager()?.currentlyActiveTool;
+        (activeTool as ExplorerTool | undefined)?.defineZoomToCenterCameraPosition();
     }
     function unhighlightEntity(entity: Entity) {
         // Don't unhighlight if the entity is selected
@@ -156,11 +153,8 @@
         area.setStrokeStyle(2, 0xf9e82d);
         gameManager.getCurrentGameScene().getCameraManager().centerCameraOn(area);
         // Use explorer tool to define the zoom to center camera position
-        (
-            gameManager.getCurrentGameScene().getMapEditorModeManager()?.currentlyActiveTool as
-                | ExplorerTool
-                | undefined
-        )?.defineZoomToCenterCameraPosition();
+        const activeTool = gameManager.getCurrentGameScene().getMapEditorModeManager()?.currentlyActiveTool;
+        (activeTool as ExplorerTool | undefined)?.defineZoomToCenterCameraPosition();
     }
     function unhighlightArea(area: AreaPreview) {
         // Don't unhighlight if the area is selected
