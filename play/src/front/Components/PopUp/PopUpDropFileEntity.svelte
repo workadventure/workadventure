@@ -113,7 +113,7 @@
 
         analyticsClient.dragDropFile();
         mapEditorModeStore.switchMode(true);
-        mapEditorModeManager.equipTool(EditorToolName.EntityEditor);
+        mapEditorModeManager?.equipTool(EditorToolName.EntityEditor);
         mapEditorEntityFileDroppedStore.set(true);
         mapEditorEntityModeStore.set("ADD");
         mapEditorSelectedEntityPrefabStore.set($state.snapshot(entityPrefab || defaultEntityPrefab));

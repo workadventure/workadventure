@@ -54,7 +54,7 @@
 
     function close() {
         mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(undefined);
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
+        gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(EditorToolName.EntityEditor);
     }
 </script>
 

@@ -100,7 +100,7 @@
                         variant="secondary"
                         class="w-fit px-10"
                         onclick={() => {
-                            mapEditorModeManager.claimPersonalArea(name);
+                            mapEditorModeManager?.claimPersonalArea(name);
                             closeDialog();
                         }}
                     >

@@ -156,7 +156,7 @@
                         closable: true,
                     });
                 });
-            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(undefined);
 
             // Close map editor to walk on the entity or zone
             analyticsClient.toggleMapEditor(!$mapEditorModeStore);

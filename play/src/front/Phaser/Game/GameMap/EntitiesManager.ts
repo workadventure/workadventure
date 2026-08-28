@@ -370,7 +370,7 @@ export class EntitiesManager extends EventEmitter {
                 this.isEntityEditorToolActive() == false
             ) {
                 // Activate entity editor tool
-                this.scene.getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
+                this.scene.getMapEditorModeManager()?.equipTool(EditorToolName.EntityEditor);
             }
 
             if (get(mapEditorModeStore) && !get(mapEditorSelectedEntityPrefabStore)) {

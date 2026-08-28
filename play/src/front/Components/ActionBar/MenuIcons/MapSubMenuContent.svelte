@@ -52,11 +52,11 @@
         if ($mapEditorModeStore && !$mapExplorationModeStore) {
             analyticsClient.toggleMapEditor(false);
             mapEditorModeStore.switchMode(false);
-            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(undefined);
         } else {
             analyticsClient.toggleMapEditor(true);
             mapEditorModeStore.switchMode(true);
-            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(EditorToolName.EntityEditor);
         }
         isTodoListVisibleStore.set(false);
         isCalendarVisibleStore.set(false);
@@ -65,11 +65,11 @@
 
     function toggleMapExplorerMode() {
         if ($mapExplorationModeStore) {
-            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(undefined);
             mapEditorModeStore.switchMode(false);
         } else {
             mapEditorModeStore.switchMode(true);
-            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(EditorToolName.ExploreTheRoom);
         }
 
         analyticsClient.clickTopOpenMapExplorer();

@@ -13,7 +13,7 @@ export async function executeUpdateWAMSettings(
     if (!wamFile || !scene.connection) {
         return;
     }
-    await scene.getMapEditorModeManager().executeCommand(
+    await scene.getMapEditorModeManager()?.executeCommand(
         new UpdateWAMSettingFrontCommand(
             wamFile,
             {

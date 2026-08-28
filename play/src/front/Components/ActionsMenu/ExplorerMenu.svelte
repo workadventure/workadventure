@@ -97,14 +97,14 @@
         analyticsClient.clickTopOpenMapExplorer();
 
         mapEditorModeStore.switchMode(true);
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
+        gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(EditorToolName.ExploreTheRoom);
     }
 
     function centerToUser() {
         analyticsClient.clickCenterToUser();
 
         mapEditorModeStore.switchMode(false);
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.CloseMapEditor);
+        gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(EditorToolName.CloseMapEditor);
     }
 
     onDestroy(() => {
