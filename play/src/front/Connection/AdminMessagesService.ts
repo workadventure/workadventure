@@ -11,6 +11,8 @@ export enum AdminMessageEventTypes {
 interface AdminMessageEvent {
     type: AdminMessageEventTypes;
     text: string;
+    /** Identifier of the message on the admin side, empty when the admin did not provide one. */
+    adminMessageId?: string;
     //todo add optional properties for other event types
 }
 
@@ -24,6 +26,7 @@ class AdminMessagesService {
         this._messageStream.next({
             type: message.type as unknown as AdminMessageEventTypes,
             text: message.message,
+            adminMessageId: message.id !== "" ? message.id : undefined,
         });
     }
 }

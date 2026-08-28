@@ -35,6 +35,14 @@
     }
 
     function closeBanMessage() {
+        if (message.adminMessageId !== undefined) {
+            // Tell the admin the message was read, so it is never displayed to this user again.
+            try {
+                gameManager.getCurrentGameScene().connection?.emitUserMessageRead(message.adminMessageId);
+            } catch (e) {
+                console.error("Could not acknowledge the moderation message", e);
+            }
+        }
         banMessageStore.clearMessageById(message.id);
     }
 </script>

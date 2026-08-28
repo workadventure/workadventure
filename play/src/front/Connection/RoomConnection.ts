@@ -1100,6 +1100,20 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    /**
+     * Acknowledges a message sent by a moderator, so the admin never displays it again.
+     */
+    public emitUserMessageRead(adminMessageId: string): void {
+        this.send({
+            message: {
+                $case: "userMessageReadMessage",
+                userMessageReadMessage: {
+                    id: adminMessageId,
+                },
+            },
+        });
+    }
+
     public emitBanPlayerMessage(banUserUuid: string, banUserName: string): void {
         this.send({
             message: {

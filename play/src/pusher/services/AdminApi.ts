@@ -51,6 +51,10 @@ export type AdminBannedData = z.infer<typeof AdminBannedData>;
 export const AdminLoginMessage = z.object({
     type: z.string(),
     message: z.string(),
+    // Identifier of the message on the admin side. Sent back to the admin once the user read the
+    // message, so it is not displayed again on the next connection. Optional: an admin that does
+    // not provide it simply gets no read receipt.
+    id: z.union([z.string(), z.number()]).optional(),
 });
 
 export type AdminLoginMessage = z.infer<typeof AdminLoginMessage>;
@@ -595,6 +599,45 @@ class AdminApi implements AdminInterface {
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
+            },
+        );
+    }
+
+    /**
+     * Tells the admin that the user read a message previously sent through SendUserMessage, so it
+     * is not sent again on the next connection.
+     */
+    async markUserMessageAsRead(messageId: string, userIdentifier: string): Promise<void> {
+        /**
+         * @openapi
+         * /api/room/message/{messageId}/read:
+         *   post:
+         *     tags: ["AdminAPI"]
+         *     description: Flags a message sent to a user as read, so it is never displayed again
+         *     security:
+         *      - Bearer: []
+         *     parameters:
+         *      - name: "messageId"
+         *        in: "path"
+         *        required: true
+         *        description: "The identifier of the message, as returned by /api/room/access"
+         *        type: "string"
+         *      - name: "userIdentifier"
+         *        in: "body"
+         *        required: true
+         *        description: "The identifier of the user who read the message"
+         *        type: "string"
+         *     responses:
+         *       200:
+         *         description: The message has been flagged as read
+         */
+        await axios.post(
+            `${ADMIN_API_URL}/api/room/message/${encodeURIComponent(messageId)}/read`,
+            {
+                userIdentifier,
+            },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
             },
         );
     }

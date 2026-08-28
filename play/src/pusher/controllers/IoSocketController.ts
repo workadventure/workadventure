@@ -226,6 +226,7 @@ export class IoSocketController {
                                         messageToEmit.message,
                                         messageToEmit.type,
                                         roomId,
+                                        messageToEmit.id !== undefined ? String(messageToEmit.id) : "",
                                     )
                                     .catch((error) => {
                                         Sentry.captureException(error);
@@ -517,7 +518,13 @@ export class IoSocketController {
                     socket.send({
                         message: {
                             $case: "sendUserMessage",
-                            sendUserMessage: loginMessage,
+                            sendUserMessage: {
+                                type: loginMessage.type,
+                                message: loginMessage.message,
+                                // The admin identifies its messages with an integer: normalize it,
+                                // the client sends it back as-is to acknowledge the message.
+                                id: loginMessage.id !== undefined ? String(loginMessage.id) : "",
+                            },
                         },
                     });
                 }
@@ -1094,6 +1101,13 @@ export class IoSocketController {
                                 }`;
 
                                 await socketManager.handleBackEvent(socket, message.message.backEvent);
+                                break;
+                            }
+                            case "userMessageReadMessage": {
+                                await socketManager.handleUserMessageRead(
+                                    socket,
+                                    message.message.userMessageReadMessage,
+                                );
                                 break;
                             }
                             case "videoQualityReportMessage": {
