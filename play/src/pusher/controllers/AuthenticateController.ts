@@ -244,6 +244,35 @@ export class AuthenticateController extends BaseHttpController {
                         ...resCheckTokenAuth,
                     } satisfies MeResponse);
                 } catch (err) {
+                    // OIDC access token expired — attempt silent refresh before forcing re-login
+                    if (authTokenData.refreshToken) {
+                        try {
+                            const refreshed = await openIDClient.refreshAccessToken(authTokenData.refreshToken);
+                            const resCheckTokenAuth = await openIDClient.checkTokenAuth(refreshed.access_token);
+                            const newAuthToken = await jwtTokenManager.createAuthToken(
+                                authTokenData.identifier,
+                                refreshed.access_token,
+                                refreshed.refresh_token ?? authTokenData.refreshToken,
+                                authTokenData.username,
+                                authTokenData.locale,
+                                authTokenData.tags,
+                                authTokenData.matrixUserId
+                            );
+                            res.json({
+                                username: authTokenData?.username,
+                                authToken: newAuthToken,
+                                locale: authTokenData?.locale,
+                                matrixUserId: authTokenData?.matrixUserId,
+                                matrixServerUrl:
+                                    (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
+                                ...resUserData,
+                                ...resCheckTokenAuth,
+                            } satisfies MeResponse);
+                            return;
+                        } catch (refreshErr) {
+                            console.warn("OIDC silent refresh failed, forcing re-login", refreshErr);
+                        }
+                    }
                     console.warn("Error while checking token auth", err);
                     throw new errors.JWTInvalid("Invalid token");
                 }
@@ -317,6 +346,7 @@ export class AuthenticateController extends BaseHttpController {
             const authToken = await jwtTokenManager.createAuthToken(
                 email,
                 userInfo?.access_token,
+                userInfo?.refresh_token,
                 userInfo?.username,
                 userInfo?.locale,
                 userInfo?.tags,
@@ -479,6 +509,7 @@ export class AuthenticateController extends BaseHttpController {
 
             const authToken = await jwtTokenManager.createAuthToken(
                 email || userUuid,
+                undefined,
                 undefined,
                 undefined,
                 undefined,
