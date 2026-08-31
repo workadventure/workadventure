@@ -299,9 +299,9 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
         popupStore.addPopup(SayPopUp, { type: this.controlKeyisPressed ? "think" : "say" }, "say");
         if (this.controlKeyisPressed) {
-            analyticsClient.openThinkBubble();
+            analyticsClient.trackAdminEvent("bubble.think.opened");
         } else {
-            analyticsClient.openSayBubble();
+            analyticsClient.trackAdminEvent("bubble.say.opened");
         }
     }
 

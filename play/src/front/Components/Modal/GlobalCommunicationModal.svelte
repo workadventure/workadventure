@@ -90,21 +90,21 @@
         displayedMegaphoneScreenStore.set(true);
         inputSendTextActive = false;
         uploadAudioActive = false;
-        analyticsClient.openMegaphone();
+        analyticsClient.trackAdminEvent("megaphone.opened");
     }
 
     function activateInputText() {
         displayedMegaphoneScreenStore.set(false);
         inputSendTextActive = true;
         uploadAudioActive = false;
-        analyticsClient.openGlobalMessage();
+        analyticsClient.trackAdminEvent("global_message.opened", { source: "action_bar" });
     }
 
     function activateUploadAudio() {
         displayedMegaphoneScreenStore.set(false);
         inputSendTextActive = false;
         uploadAudioActive = true;
-        analyticsClient.openGlobalAudio();
+        analyticsClient.trackAdminEvent("global_audio.opened");
     }
 
     function back() {
@@ -115,11 +115,11 @@
 
     function send(): void {
         if (inputSendTextActive) {
-            analyticsClient.sendGlocalTextMessage();
+            analyticsClient.trackAdminEvent("global_message.text_sent");
             handleSendText?.sendTextMessage(broadcastToWorld);
         }
         if (uploadAudioActive) {
-            analyticsClient.sendGlobalSoundMessage();
+            analyticsClient.trackAdminEvent("global_message.sound_sent");
             handleSendAudio?.sendAudioMessage(broadcastToWorld);
         }
         close();

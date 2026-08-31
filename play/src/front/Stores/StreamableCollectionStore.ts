@@ -160,7 +160,7 @@ export const isInRemoteConversation = derived(
     },
 );
 
-const isInActiveConversationStore = derived(
+export const isInActiveConversationStore = derived(
     [isInRemoteConversation, currentPlayerGroupIdStore, inLivekitStore],
     ([$isInRemoteConversation, $currentPlayerGroupIdStore, $inLivekitStore]) =>
         $isInRemoteConversation || $currentPlayerGroupIdStore !== undefined || $inLivekitStore,

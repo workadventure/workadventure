@@ -34,7 +34,7 @@
         if (triggerElement === undefined) {
             return;
         }
-        analyticsClient.openInvite();
+        analyticsClient.trackAdminEvent("invite.opened");
         closeFloatingUi = showFloatingUi(
             triggerElement,
             GuestSubMenu,

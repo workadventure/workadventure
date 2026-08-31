@@ -14,7 +14,7 @@
     let { button, first = undefined, last = undefined, classList = undefined }: Props = $props();
 
     function buttonActionBarTrigger(button: CustomButtonActionBarDescriptor) {
-        analyticsClient.clickOnCustomButton(button.id, button.label, button.tooltipTitle, button.imageSrc);
+        analyticsClient.trackAdminEvent("custom_button.clicked", { id: button.id, label: button.label });
         return iframeListener.sendButtonActionBarTriggered(button.id);
     }
 </script>

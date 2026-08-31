@@ -124,7 +124,7 @@
                     label={camera.label}
                     isSelected={$usedCameraDeviceIdStore === camera.deviceId}
                     onclick={() => {
-                        analyticsClient.selectCamera();
+                        analyticsClient.trackAdminEvent("settings.camera.selected");
                         selectCamera(camera.deviceId);
                     }}
                 />
@@ -161,7 +161,7 @@
                             size="sm"
                             class="w-full"
                             onclick={() => {
-                                analyticsClient.camera();
+                                analyticsClient.trackAdminEvent("media.camera.toggled");
                                 cameraClick();
                             }}
                         >
@@ -201,7 +201,7 @@
                     label={microphone.label}
                     isSelected={$usedMicrophoneDeviceIdStore === microphone.deviceId}
                     onclick={() => {
-                        analyticsClient.selectMicrophone();
+                        analyticsClient.trackAdminEvent("settings.microphone.selected");
                         selectMicrophone(microphone.deviceId);
                     }}
                 />
@@ -265,7 +265,7 @@
                             size="sm"
                             class="w-full"
                             onclick={() => {
-                                analyticsClient.microphone();
+                                analyticsClient.trackAdminEvent("media.microphone.toggled");
                                 microphoneClick();
                             }}
                         >
@@ -293,7 +293,7 @@
                     label={speaker.label}
                     isSelected={$speakerSelectedStore === speaker.deviceId}
                     onclick={() => {
-                        analyticsClient.selectSpeaker();
+                        analyticsClient.trackAdminEvent("settings.speaker.selected");
                         selectSpeaker(speaker.deviceId);
                     }}
                 />

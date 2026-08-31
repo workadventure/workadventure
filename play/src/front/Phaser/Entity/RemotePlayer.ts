@@ -174,7 +174,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
     private toggleActionsMenu(): void {
         // Track the open woka menu action
-        analyticsClient.openWokaMenu();
+        analyticsClient.trackAdminEvent("user.woka_menu.opened");
 
         // Close the woka menu if it is already open by the same remote player
         const wokaMenuStoreValue = get(wokaMenuStore);
@@ -218,7 +218,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             testId: "wokamenu-block-user-button",
             callback: () => {
                 // Track the report user action
-                analyticsClient.reportUser();
+                analyticsClient.trackAdminEvent("user.report.clicked");
 
                 showReportScreenStore.set({ userUuid: this.userUuid, userName: this.playerName });
             },
@@ -232,7 +232,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 style: "bg-white/10 hover:bg-white/30",
                 callback: () => {
                     // Track the talk to user action
-                    analyticsClient.goToUser();
+                    analyticsClient.trackAdminEvent("user.go_to_clicked");
 
                     if (this.scene.connection != undefined)
                         this.scene.connection.emitAskPosition(
@@ -253,7 +253,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 style: "bg-white/10 hover:bg-white/30",
                 callback: () => {
                     // Track the opened chat action
-                    analyticsClient.openedChat();
+                    analyticsClient.trackAdminEvent("chat.opened");
 
                     if (!get(userIsConnected)) {
                         modals.open(RequiresLoginForChatModal);

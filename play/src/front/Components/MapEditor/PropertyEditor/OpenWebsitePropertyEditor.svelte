@@ -487,7 +487,9 @@
                     .catch(handlerLinkError);
             }
 
-            analyticsClient.openPicker(property.application);
+            analyticsClient.trackAdminEvent("map_editor.application_picker.opened", {
+                applicationName: property.application,
+            });
         }
     }
 
@@ -510,7 +512,7 @@
             window.open("https://tldraw.com/", "_blank");
         }
 
-        analyticsClient.openApplicationWithoutPicker(property.application);
+        analyticsClient.trackAdminEvent("map_editor.application.opened", { applicationName: property.application });
     }
 
     function handlePolicyChange() {

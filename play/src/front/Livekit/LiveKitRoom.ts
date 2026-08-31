@@ -574,7 +574,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         if (reason === DisconnectReason.STATE_MISMATCH || reason === DisconnectReason.JOIN_FAILURE) {
-            analyticsClient.retryConnectionLivekit();
+            analyticsClient.trackAdminEvent("media.connection_retry", { meetingProvider: "livekit" });
             this.space.emitBackEvent({
                 event: {
                     $case: "meetingConnectionRestartMessage",
@@ -734,7 +734,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         this.participants.delete(participant.sid);
-
         // Also remove from pending participants if present
         const id = this.getParticipantId(participant);
         this.pendingParticipants.delete(id);

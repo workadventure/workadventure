@@ -5,6 +5,8 @@ import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
+import { analyticsClient } from "../Administration/AnalyticsClient";
+import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
 import { VideoBox } from "../Space/VideoBox";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
@@ -33,6 +35,7 @@ export const requestedScreenSharingState = createRequestedScreenSharingState();
 
 let currentStream: MediaStream | undefined = undefined;
 let screenSharingRequestId = 0;
+let previousScreenSharingHadStream = false;
 
 /**
  * Stops the screen sharing (both video and audio tracks)
@@ -364,3 +367,37 @@ export const screenSharingLocalVideoBox: Readable<VideoBox | undefined> = derive
 export const showDesktopCapturerSourcePicker = writable(false);
 
 export let desktopCapturerSourcePromiseResolve: ((source: DesktopCapturerSource | null) => void) | undefined;
+
+/** Ends the interval measuring the share currently on air, if any. */
+let endShare: EndTimedAnalyticsEvent | undefined;
+
+// This is a singleton so we can safely not ever unsubscribe from it.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
+    const stream = screenSharingLocalStream.type === "success" ? screenSharingLocalStream.stream : undefined;
+    const hasStream = !!stream;
+
+    if (hasStream && !previousScreenSharingHadStream) {
+        // A live handle here means the matching stop never arrived, so this interval's
+        // end is the arrival of the next one rather than a real stop. The client does
+        // not state why an interval closed, so that is not distinguishable downstream.
+        endShare?.();
+        endShare = analyticsClient.openTimedEvent(
+            "meeting.screenshare.ended",
+            { hasAudio: (stream?.getAudioTracks().length ?? 0) > 0 },
+            // Still sharing after a reconnect: nothing fires a second start, so without
+            // this the rest of the share is never measured.
+            { reopenOnReconnect: true },
+        );
+    }
+
+    if (!hasStream && previousScreenSharingHadStream) {
+        // No duration, and no clock read: the pusher measures the interval. This used
+        // to report max(1, round(now - startedAt)) — a floor that turned a share
+        // cancelled in 200ms into a reported second.
+        endShare?.();
+        endShare = undefined;
+    }
+
+    previousScreenSharingHadStream = hasStream;
+});

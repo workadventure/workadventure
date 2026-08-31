@@ -30,7 +30,7 @@ describe("Interpolation / Extrapolation", () => {
                 moving: true,
                 direction: PositionMessage_Direction.UP,
             },
-            END_TICK
+            END_TICK,
         );
 
         expect(playerMovement.isOutdated(START_TICK + MAX_EXTRAPOLATION_TIME)).toBe(false);
@@ -79,7 +79,7 @@ describe("Interpolation / Extrapolation", () => {
                 moving: false,
                 direction: PositionMessage_Direction.UP,
             },
-            END_TICK
+            END_TICK,
         );
 
         expect(playerMovement.getPosition(START_TICK + MAX_EXTRAPOLATION_TIME * 3)).toEqual({
@@ -107,7 +107,7 @@ describe("Interpolation / Extrapolation", () => {
                 moving: false,
                 direction: PositionMessage_Direction.UP,
             },
-            END_TICK
+            END_TICK,
         );
 
         expect(playerMovement.getPosition(START_TICK + MAX_EXTRAPOLATION_TIME)).toEqual({

@@ -51,7 +51,7 @@ export class LoginScene extends ResizableScene {
             throw new NameNotValidError();
         }
 
-        analyticsClient.validationName();
+        analyticsClient.trackAdminEvent("onboarding.name_validated");
         name = name.trim();
         const didSaveName = await connectionManager.saveName(name);
         gameManager.setPlayerName(name);

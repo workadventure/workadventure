@@ -22,7 +22,7 @@ const context = {
 };
 
 describe("subscribeToVideoQualityAnalytics", () => {
-    it("does not emit reports without the video quality analytics capability", () => {
+    it("does not emit reports without the generic analytics capability", () => {
         window.capabilities = {};
         const sendReport = vi.fn();
 
@@ -31,9 +31,9 @@ describe("subscribeToVideoQualityAnalytics", () => {
         expect(sendReport).not.toHaveBeenCalled();
     });
 
-    it("emits reports when the video quality analytics capability is present", () => {
+    it("emits reports when the generic analytics capability is present", () => {
         window.capabilities = {
-            "api/analytics/video-quality-batch": "v1",
+            "api/analytics/events-batch": "v1",
         };
         const sendReport = vi.fn();
 

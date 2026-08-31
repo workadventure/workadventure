@@ -33,6 +33,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { draftMessageService } from "../../Services/DraftMessageService";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import PollCreateDialog from "../PollCreateDialog.svelte";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
@@ -191,6 +192,9 @@
         // send message
         if (messageToSend.trim().length !== 0) {
             room?.sendMessage(messageToSend);
+            analyticsClient.trackAdminEvent("chat.message_sent", {
+                chatContext: room instanceof ProximityChatRoom ? "proximity" : "room",
+            });
             if (messageInput) {
                 messageInput.innerText = "";
             }

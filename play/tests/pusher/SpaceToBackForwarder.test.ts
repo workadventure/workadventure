@@ -47,7 +47,7 @@ describe("SpaceToBackForwarder", () => {
             const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await expect(
-                async () => await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS)
+                async () => await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS),
             ).rejects.toThrow();
         });
 
@@ -64,7 +64,7 @@ describe("SpaceToBackForwarder", () => {
             const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await expect(
-                async () => await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS)
+                async () => await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS),
             ).rejects.toThrow();
         });
 
@@ -309,7 +309,7 @@ describe("SpaceToBackForwarder", () => {
                         updateSpaceUserMessage: { spaceName: "test", user: spaceUser, updateMask: ["name"] },
                     },
                 },
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
@@ -625,7 +625,7 @@ describe("SpaceToBackForwarder", () => {
                         },
                     },
                 },
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
@@ -665,7 +665,7 @@ describe("SpaceToBackForwarder", () => {
                             "metadata-1": "value-1",
                         }),
                     },
-                })
+                }),
             ).toThrow();
         });
 
@@ -713,7 +713,7 @@ describe("SpaceToBackForwarder", () => {
                 {
                     spaceName: "test",
                     messageCase: "updateSpaceMetadataPusherToBackMessage",
-                }
+                },
             );
 
             consoleWarnSpy.mockRestore();
@@ -766,7 +766,7 @@ describe("SpaceToBackForwarder", () => {
                         syncSpaceUsersMessage: { spaceName: "test", users: [spaceUser] },
                     },
                 },
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });

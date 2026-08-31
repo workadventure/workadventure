@@ -30,7 +30,7 @@ function createNavChatStore() {
         subscribe,
         switchToChat() {
             set({ key: "chat" });
-            analyticsClient.openMessageList();
+            analyticsClient.trackAdminEvent("chat.message_list_opened");
         },
         switchToUserList() {
             const room = gameManager.getCurrentGameScene().room;
@@ -40,7 +40,7 @@ function createNavChatStore() {
             if (isChatOnlineListEnabled || isChatDisconnectedListEnabled) {
                 set({ key: "users" });
             }
-            analyticsClient.openUserList();
+            analyticsClient.trackAdminEvent("user_list.opened");
         },
         switchToCustomComponent(component: WorkAdventureComponent, props?: WorkAdventureComponentProps) {
             set({ key: "externalModule", component, props });

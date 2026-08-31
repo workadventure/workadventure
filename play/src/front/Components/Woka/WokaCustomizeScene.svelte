@@ -4,6 +4,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
     import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import BodyIcon from "../Icons/BodyIcon.svelte";
     import EyesIcon from "../Icons/EyesIcon.svelte";
     import HairIcon from "../Icons/HairIcon.svelte";
@@ -119,6 +120,7 @@
                 return;
             }
 
+            analyticsClient.trackAdminEvent("onboarding.custom_woka_selected");
             saveAndContinue(textureIds);
         } catch (err) {
             console.error("Error saving textures:", err);

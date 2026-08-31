@@ -1,6 +1,39 @@
 import type { PostHog } from "@posthog/types";
-import type { Emoji } from "../Stores/Utils/emojiSchema";
+import type {
+    AnalyticsEventArgs,
+    AnalyticsEventName,
+    AnalyticsEventReportMessage,
+    TimedAnalyticsEventName,
+    TimedAnalyticsEventOpenProperties,
+} from "@workadventure/messages";
+// By path rather than through the package barrel, and that is the point: this
+// module's only import is a type, so what lands in the bundle is 117 strings. The
+// same table used to live on the catalog entries, which pulled ~166 live Zod
+// schemas into the browser to look one up.
+import { postHogEventKey, postHogIntervalKeys } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
+import { hasCapability } from "../Connection/Capabilities";
+import type { EndTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
+import {
+    forgetOpenTimedAnalyticsEvents,
+    openTimedAnalyticsEvent,
+    resumeOpenTimedAnalyticsEvents,
+} from "./TimedAnalyticsEvent";
+
+type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
+type AdminAnalyticsEvent = AnalyticsEventReportMessage["events"][number];
+
+const MAX_PENDING_ADMIN_EVENTS = 100;
+
+/** Handed back when the admin sink is off: an end that measures nothing. */
+const NO_INTERVAL: EndTimedAnalyticsEvent = () => {};
+
+/** The declared subset of an interval's properties that travels to PostHog, or all of it. */
+function pick(properties: Record<string, unknown>, keys: readonly string[] | undefined): Record<string, unknown> {
+    return keys === undefined
+        ? properties
+        : Object.fromEntries(keys.filter((key) => key in properties).map((key) => [key, properties[key]]));
+}
 
 declare global {
     interface Window {
@@ -10,6 +43,9 @@ declare global {
 
 class AnalyticsClient {
     private isEnabled_ = false;
+    private adminAnalyticsSender: AdminAnalyticsSender | undefined;
+    private pendingAdminEvents: AdminAnalyticsEvent[] = [];
+    private previousRoomId: string | undefined;
 
     constructor() {
         if ((POSTHOG_API_KEY || POSTHOG_URL) && (!POSTHOG_API_KEY || !POSTHOG_URL)) {
@@ -27,268 +63,186 @@ class AnalyticsClient {
         return window.posthog;
     }
 
-    public get posthogInstance(): PostHog | undefined {
-        return window.posthog;
-    }
-
     public get isEnabled(): boolean {
         return this.isEnabled_;
     }
 
+    setAdminAnalyticsSender(sender: AdminAnalyticsSender | undefined): void {
+        this.adminAnalyticsSender = sender;
+        if (!sender) {
+            // The connection is going away (ConnectionManager clears the sender on
+            // cleanup). Every interval this socket still holds open is closed by the
+            // pusher itself as socket_closed, so these handles are already spent —
+            // and this now says so for handles held anywhere, not just the ones
+            // filed here. CoWebsiteStore keeps its own and has no idea a socket
+            // exists; a later close from it is a no-op rather than an unpaired frame.
+            forgetOpenTimedAnalyticsEvents();
+        } else {
+            // A socket is back. Whatever is still happening starts measuring again.
+            resumeOpenTimedAnalyticsEvents();
+        }
+        this.flushPendingAdminEvents();
+    }
+
+    /**
+     * The single choke point every analytics event goes through — both sinks.
+     *
+     * Called straight from the code that does the thing. There used to be a method
+     * here per event — 133 of them, each a name and a signature wrapping this one
+     * line — so reading what a button reported meant opening this file and finding
+     * `menuCredit()` to learn it sends `menu.credit.opened`. The event name at the
+     * point of use says that without the hop, and 133 names stopped being invented.
+     *
+     * Generic over the event name so the catalog checks both halves of the call: an
+     * unknown name and a property the event does not declare are both compile errors
+     * at the call site, rather than an event the admin silently drops months later.
+     * The properties argument is optional for the bare signals, which declare none.
+     *
+     * PostHog is fed from the same call, by looking the event up in
+     * POSTHOG_EVENT_KEYS — the only place a PostHog name is written down, bar the
+     * methods left below. Those reach two PostHog names for one event, which a map
+     * keyed by event cannot express, so they capture on their own line; keeping them
+     * here is what keeps `posthog.capture("wa_…")` out of the call sites.
+     */
+    public trackAdminEvent<N extends AnalyticsEventName>(eventName: N, ...args: AnalyticsEventArgs<N>): void {
+        const [properties = {}] = args;
+
+        // Ahead of the capability gate, and deliberately: PostHog is the sink that
+        // predates this pipeline, and on a world whose pusher does not advertise
+        // api/analytics/events-batch it is the only one there is. Gating it on that
+        // capability would switch analytics off for every such world.
+        const postHogKey = postHogEventKey(eventName, properties);
+        if (postHogKey) {
+            this.posthog?.capture(postHogKey, properties);
+        }
+
+        if (!this.canSendAdminAnalytics()) {
+            return;
+        }
+
+        const clientEventTimeMs = Date.now();
+        const event = {
+            eventName,
+            source: "front",
+            clientEventTimeMs,
+            eventId: `${eventName}:${clientEventTimeMs}:${Math.random().toString(36).slice(2)}`,
+            properties,
+        } satisfies AdminAnalyticsEvent;
+
+        this.dispatchAdminEvent(event);
+    }
+
+    /**
+     * Opens an interval and hands the handle to the caller, who is the only one who
+     * knows when the thing it measures ends.
+     *
+     * Always returns a handle, even when the admin sink is off, so no caller has to
+     * branch on a capability it should not know about — the returned handle simply
+     * measures nothing.
+     */
+    public openTimedEvent<N extends TimedAnalyticsEventName>(
+        eventName: N,
+        properties: TimedAnalyticsEventOpenProperties<N>,
+        options: { reopenOnReconnect?: boolean } = {},
+    ): EndTimedAnalyticsEvent {
+        // Ahead of the capability gate, exactly as in trackAdminEvent and for the same
+        // reason: on a world whose pusher does not advertise the batch endpoint,
+        // PostHog is the only sink there is.
+        const keys = postHogIntervalKeys(eventName);
+        if (keys) {
+            this.posthog?.capture(keys.opens, pick(properties, keys.opensProperties));
+        }
+
+        const end = this.canSendAdminAnalytics()
+            ? openTimedAnalyticsEvent(eventName, properties, this.sendTimedEventReport, options)
+            : NO_INTERVAL;
+
+        if (!keys?.closes) {
+            return end;
+        }
+
+        // One capture however often it is called: `end` is idempotent and PostHog has
+        // to be too, or a holder that closes twice counts two.
+        const closes = keys.closes;
+        let captured = false;
+        return () => {
+            end();
+            if (captured) {
+                return;
+            }
+            captured = true;
+            this.posthog?.capture(closes, pick(properties, keys.opensProperties));
+        };
+    }
+
+    private dispatchAdminEvent(event: AdminAnalyticsEvent): void {
+        if (!this.adminAnalyticsSender) {
+            this.pendingAdminEvents.push(event);
+            if (this.pendingAdminEvents.length > MAX_PENDING_ADMIN_EVENTS) {
+                this.pendingAdminEvents.shift();
+            }
+            return;
+        }
+
+        this.adminAnalyticsSender({ events: [event] });
+    }
+
+    /**
+     * Routes a timed event's control frames through the same buffer as everything
+     * else, rather than straight at the sender.
+     *
+     * The buffer is why: before the room connection exists there is nowhere to send,
+     * and an interval opened then would otherwise vanish while its close still went
+     * out — the pusher drops an unpaired close, so the interval would be lost with no
+     * trace. Buffered, both frames arrive in order and the pusher pairs them.
+     *
+     * The pusher starts timing when the open *reaches* it, so a frame that waits in
+     * this buffer shortens the interval it reports. Nothing here opens an interval
+     * before the connection is up (you cannot stand in an area, or share a screen, in
+     * a room you have not joined), so the wait is bounded by the flush that
+     * setAdminAnalyticsSender triggers. If the buffer overflows and drops an open,
+     * the pusher drops the close too: a lost interval, never an invented one.
+     */
+    private readonly sendTimedEventReport = (message: AnalyticsEventReportMessage): void => {
+        for (const event of message.events ?? []) {
+            this.dispatchAdminEvent(event);
+        }
+    };
+
+    private canSendAdminAnalytics(): boolean {
+        return "capabilities" in window && hasCapability("api/analytics/events-batch") === "v1";
+    }
+
+    private flushPendingAdminEvents(): void {
+        if (!this.adminAnalyticsSender || this.pendingAdminEvents.length === 0) {
+            return;
+        }
+
+        const events = this.pendingAdminEvents;
+        this.pendingAdminEvents = [];
+        this.adminAnalyticsSender({ events });
+    }
+
     identifyUser(uuid: string, email: string | null, roomId: string | null): void {
         this.posthog?.identify(uuid, { uuid, email, wa: true, roomId });
-    }
-
-    loggedWithSso(): void {
-        this.posthog?.capture("wa-logged-sso");
-    }
-
-    loggedWithToken(): void {
-        this.posthog?.capture("wa-logged-token");
+        this.trackAdminEvent("auth.user_identified", { roomId });
     }
 
     enteredRoom(roomId: string, roomGroup: string | null): void {
-        this.posthog?.capture("$pageView", { roomId, roomGroup });
-        this.posthog?.capture("enteredRoom");
+        this.trackAdminEvent("room.visited", { roomId, roomGroup });
+        if (this.previousRoomId && this.previousRoomId !== roomId) {
+            this.trackAdminEvent("room.changed", { fromRoomId: this.previousRoomId, toRoomId: roomId });
+        }
+        this.previousRoomId = roomId;
     }
 
-    openedMenu(): void {
-        this.posthog?.capture("wa-opened-menu");
-    }
-
-    launchEmote(emote: Emoji): void {
-        this.posthog?.capture("wa-emote-launch", { ...emote });
-    }
-
-    editEmote(): void {
-        this.posthog?.capture("wa-emote-edit");
-    }
-
-    clickOnCustomButton(id: string, label?: string, toolTip?: string, imageSrc?: string) {
-        this.posthog?.capture("wa-custom-button", { id, label, toolTip, imageSrc });
-    }
-
-    enteredJitsi(roomName: string, roomId: string): void {
-        this.posthog?.capture("wa-entered-jitsi", { roomName, roomId });
-    }
-
-    enteredMeetingRoom(roomName: string, roomId: string): void {
-        this.posthog?.capture("wa-entered-meeting-room", { roomName, roomId });
-    }
-
-    validationName(): void {
-        this.posthog?.capture("wa-name-validation");
-    }
-
-    validationWoka(scene: string): void {
-        this.posthog?.capture("wa-woka-validation", { scene });
-    }
-
-    validationVideo(): void {
-        this.posthog?.capture("wa-video-validation");
-    }
-
-    /** New feature analytics **/
-    openedChat(): void {
-        this.posthog?.capture("wa-opened-chat");
-    }
-
-    openInvite(): void {
-        this.posthog?.capture("wa-opened-invite");
-    }
-
-    lockDiscussion(): void {
-        this.posthog?.capture("wa_lockroom");
-    }
-
-    screenSharing(): void {
-        this.posthog?.capture("wa-screensharing");
-    }
-
-    follow(): void {
-        this.posthog?.capture("wa_follow");
-    }
-
-    camera(): void {
-        this.posthog?.capture("wa_camera");
-    }
-
-    microphone(): void {
-        this.posthog?.capture("wa_microphone");
-    }
-
-    retryConnectionWebRtc(): void {
-        this.posthog?.capture("wa_retry_connection_webrtc");
-    }
-
-    retryConnectionLivekit(): void {
-        this.posthog?.capture("wa_retry_connection_livekit");
-    }
-
-    openBackgroundSettings(): void {
-        this.posthog?.capture("wa_open_background_settings");
-    }
-
-    selectCamera(): void {
-        this.posthog?.capture("wa_select_camera");
-    }
-
-    selectMicrophone(): void {
-        this.posthog?.capture("wa_select_microphone");
-    }
-
-    selectSpeaker(): void {
-        this.posthog?.capture("wa_select_speaker");
-    }
-
-    settingMicrophone(value: string): void {
-        this.posthog?.capture("wa_setting_microphone", { checkbox: value });
-    }
-
-    settingBackground(background: string): void {
-        this.posthog?.capture("wa_setting_background", { backgroundType: background });
-    }
-
-    settingCamera(value: string): void {
-        this.posthog?.capture("wa_setting_camera", { checkbox: value });
-    }
-
-    settingNotification(value: string): void {
-        this.posthog?.capture("wa_setting_notification", { checkbox: value });
-    }
-
-    settingPictureInPicture(value: string): void {
-        this.posthog?.capture("wa_setting_picture_in_picture", { checkbox: value });
-    }
-
-    settingFullscreen(value: string): void {
-        this.posthog?.capture("wa_setting_fullscreen", { checkbox: value });
-    }
-
-    settingAskWebsite(value: string): void {
-        this.posthog?.capture("wa_setting_ask_website", { checkbox: value });
-    }
-
-    settingRequestFollow(value: string): void {
-        this.posthog?.capture("wa_setting_request_follow", { checkbox: value });
-    }
-
-    settingDecreaseAudioVolume(value: string): void {
-        this.posthog?.capture("wa_setting_decrease_audio_volume", { checkbox: value });
-    }
-
-    login(): void {
-        this.posthog?.capture("wa_login");
-    }
-
-    logout(): void {
-        this.posthog?.capture("wa_logout");
-    }
-
-    openedWebsite(url: URL): void {
-        this.posthog?.capture("wa_opened_website", { url: url.toString() });
-    }
-
-    menuCredit(): void {
-        this.posthog?.capture("wa_menu_credit");
-    }
-
-    menuProfile(): void {
-        this.posthog?.capture("wa_menu_profile");
-    }
-
-    menuSetting() {
-        this.posthog?.capture("wa_menu_setting");
-    }
-
-    menuChat(): void {
-        this.posthog?.capture("wa_menu_chat");
-    }
-
-    menuCustom(name: string): void {
-        this.posthog?.capture("wa_menu_custom", { name });
-    }
-
-    menuShortcuts(): void {
-        this.posthog?.capture("wa_menu_shortcuts");
-    }
-
-    globalMessage(): void {
-        this.posthog?.capture("wa_menu_globalmessage");
-    }
-
-    sendGlocalTextMessage(): void {
-        this.posthog?.capture("wa_menu_globalmessage_send");
-    }
-
-    sendGlobalSoundMessage(): void {
-        this.posthog?.capture("wa_menu_globalmessage_sound");
-    }
-
-    reportIssue(): void {
-        this.posthog?.capture("wa_menu_report");
-    }
-
-    menuContact(): void {
-        this.posthog?.capture("wa_menu_contact");
-    }
-
-    inviteCopyLink(): void {
-        this.posthog?.capture("wa_menu_invite_copylink");
-    }
-
-    inviteCopyLinkWalk(value: string): void {
-        this.posthog?.capture("wa_menu_invite_copylink_walk", { checkbox: value });
-    }
-
-    editCompanion(): void {
-        this.posthog?.capture("wa_edit_companion");
-    }
-
-    editCamera(): void {
-        this.posthog?.capture("wa_edit_camera");
-    }
-
-    editName(): void {
-        this.posthog?.capture("wa_edit_name");
-    }
-
-    editWoka(): void {
-        this.posthog?.capture("wa_edit_woka");
-    }
-
-    goToPersonalDesk(): void {
-        this.posthog?.capture("wa_go_to_personal_desk");
-    }
-
-    unclaimPersonalDesk(): void {
-        this.posthog?.capture("wa_unclaim_personal_desk");
-    }
-
-    selectWoka(): void {
-        this.posthog?.capture("wa_wokascene_select");
-    }
-
-    selectCompanion(): void {
-        this.posthog?.capture("wa_companionscene_select");
-    }
-
-    selectCustomWoka(): void {
-        this.posthog?.capture("wa_wokascene_custom");
-    }
-
-    layoutPresentChange(): void {
-        this.posthog?.capture("wa_layout_present");
-    }
-
-    addNewParticipant(peerId: string, userId: string, uuid: string): void {
-        this.posthog?.capture("wa_spontaneous_discussion", { peerId, userId, uuid });
-    }
-
-    openMegaphone(): void {
-        this.posthog?.capture("wa_action_megaphone");
-    }
-
+    // The two ends of one broadcast, named for PostHog, which counts each press. The
+    // admin gets one `megaphone.ended` row carrying the duration instead.
+    //
+    // The interval is the caller's: startMegaphoneLive is reachable twice without an
+    // intervening stop (the modal and the action bar both lead there), and only the
+    // caller can tell a second press from a second broadcast. Everything that ends a
+    // broadcast goes through stopMegaphoneLive, including being kicked off the stage.
     startMegaphone(): void {
         this.posthog?.capture("wa_start_megaphone");
     }
@@ -297,257 +251,23 @@ class AnalyticsClient {
         this.posthog?.capture("wa_stop_megaphone");
     }
 
-    toggleMapEditor(open: boolean): void {
-        this.posthog?.capture(`wa_mapeditor_${open ? "open" : "close"}`);
-    }
-
-    addMapEditorProperty(type: string, propertyName: string): void {
-        // 8 decembre 2023: this event is not used anymore
-        // this.posthog?.capture(`wa_map-editor_${type}_add_${propertyName}_property`);
-        this.posthog?.capture(`wa_map-editor_add_property`, { name: propertyName, type });
-    }
-
-    removeMapEditorProperty(type: string, propertyName: string): void {
-        // 8 decembre 2023: this event is not used anymore
-        // this.posthog?.capture(`wa_map-editor_${type}_remove_${propertyName}_property`);
-        this.posthog?.capture(`wa_map-editor_remove_property`, { name: propertyName, type });
-    }
-
-    openMapEditorTool(toolName: string): void {
-        // 8 decembre 2023: this event is not used anymore
-        // this.posthog?.capture(`wa_map-editor_open_${toolName}`);
-        this.posthog?.capture(`wa_map-editor_open_tool`, { name: toolName });
-    }
-
-    clickPropertyMapEditor(name: string, style?: string): void {
-        this.posthog?.capture(`wa_map-editor_click_property`, { name, style });
-    }
-
-    enterAreaMapEditor(id: string, name: string): void {
+    // enterArea/leaveArea keep their own posthog.capture for the same reason megaphone
+    // does: PostHog counts an enter and a leave, the admin gets one `area.dwell` row.
+    enterArea(id: string, name: string): EndTimedAnalyticsEvent {
         this.posthog?.capture(`wa_map-editor_enter_area`, { id, name });
+
+        return this.openTimedEvent("area.dwell", { areaId: id, areaName: name }, { reopenOnReconnect: true });
     }
 
-    leaveAreaMapEditor(id: string, name: string): void {
+    leaveArea(id: string, name: string): void {
         this.posthog?.capture(`wa_map-editor_leaver_area`, { id, name });
     }
 
-    turnTestSuccess(protocol: string | null): void {
-        this.posthog?.capture(`wa_turn_test_success`, { protocol });
-    }
-
-    turnTestFailure(): void {
-        this.posthog?.capture(`wa_turn_test_failure`);
-    }
-    turnTestTimeout(): void {
-        this.posthog?.capture(`wa_turn_test_timeout`);
-    }
-
-    noVideoStreamReceived(): void {
-        this.posthog?.capture(`wa_no_video_stream_received`);
-    }
-
-    moreActionMetting(): void {
-        this.posthog?.capture("wa_more_meeting_action");
-    }
-
-    pinMeetingAction(): void {
-        this.posthog?.capture("wa_pin_meeting_action");
-    }
-
-    muteMicrophoneMeetingAction(): void {
-        this.posthog?.capture("wa_mute_microphone_meeting_action");
-    }
-
-    muteMicrophoneEverybodyMeetingAction(): void {
-        this.posthog?.capture("wa_mute_microphone_everybody_meeting_action");
-    }
-
-    muteVideoMeetingAction(): void {
-        this.posthog?.capture("wa_mute_video_meeting_action");
-    }
-    muteVideoEverybodyMeetingAction(): void {
-        this.posthog?.capture("wa_mute_video_everybody_meeting_action");
-    }
-
-    kickoffMeetingAction(): void {
-        this.posthog?.capture("wa_kickoff_meeting_action");
-    }
-
-    sendPrivateMessageMeetingAction(): void {
-        this.posthog?.capture("wa_send_private_message_meeting_action");
-    }
-
-    reportMeetingAction(): void {
-        this.posthog?.capture("wa_report_meeting_action");
-    }
-
-    openExplorationMode(): void {
-        this.posthog?.capture(`wa_map-exploration-open`);
-    }
-
-    closeExplorationMode(): void {
-        this.posthog?.capture(`wa_map-exploration-close`);
-    }
-
-    openedRoomList(): void {
-        this.posthog?.capture("wa-opened-room-list");
-    }
-
-    openedPopup(targetRectangle: string, id: number): void {
-        this.posthog?.capture("wa_opened_popup", { targetRectangle, id });
-    }
-
-    openGlobalMessage(): void {
-        this.posthog?.capture("wa_action_globalmessage");
-    }
-
-    openGlobalAudio(): void {
-        this.posthog?.capture("wa_action_globalaudio");
-    }
-
-    openExternalModuleCalendar(): void {
-        this.posthog?.capture("wa-opened-external-module-calendar");
-    }
-
-    openExternalModuleTodoList(): void {
-        this.posthog?.capture("wa-opened-external-module-todolist");
-    }
-
-    openExternalModule(): void {
-        this.posthog?.capture("wa-opened-external-module");
-    }
-
-    settingAudioVolume(): void {
-        this.posthog?.capture("wa_setting_audio_volume");
-    }
-
-    openPicker(applicationName: string): void {
-        this.posthog?.capture("wa_map-editor_open_picker", { applicationName });
-    }
-
-    openApplicationWithoutPicker(applicationName: string): void {
-        this.posthog?.capture("wa_map-editor_open_application", { applicationName });
-    }
-
-    openCowebsiteInNewTab(): void {
-        this.posthog?.capture("wa_open_cowebsite_in_new_tab");
-    }
-    copyCowebsiteLink(): void {
-        this.posthog?.capture("wa_copy_cowebsite_link");
-    }
+    // PostHog only. `cowebsite.closed` is now the end of an interval the store opens
+    // and closes, so reporting it from the close BUTTON would both duplicate it and
+    // miss the fifteen other ways a cowebsite goes away.
     closeCowebsite(): void {
         this.posthog?.capture("wa_close_cowebsite");
-    }
-    fullScreenCowebsite(): void {
-        this.posthog?.capture("wa_fullscreen_cowebsite");
-    }
-    switchCowebsite(): void {
-        this.posthog?.capture("wa_switch_cowebsite");
-    }
-    openProfileMenu(): void {
-        this.posthog?.capture("wa_open_profile_menu");
-    }
-    filterInMapExplorer(): void {
-        this.posthog?.capture("wa_filter_in_map_explorer");
-    }
-    resizeCameraLayout(): void {
-        this.posthog?.capture("wa_resize_camera_layout");
-    }
-    openUserList(): void {
-        this.posthog?.capture("wa_open_user_list");
-    }
-    openMessageList(): void {
-        this.posthog?.capture("wa_open_message_list");
-    }
-
-    sendMessageFromUserList(): void {
-        this.posthog?.capture("wa_send_message_from_user_list");
-    }
-    createMatrixRoom(): void {
-        this.posthog?.capture("wa_create_matrix_room");
-    }
-    createMatrixFolder(): void {
-        this.posthog?.capture("wa_create_matrix_folder");
-    }
-    startMatrixEncryptionConfiguration(): void {
-        this.posthog?.capture("wa_start_matrix_encryption_configuration");
-    }
-    externalModuleChatBandClick(externalModuleName: string, action: string): void {
-        this.posthog?.capture("wa_external_module_chat_band_click", { externalModuleName, action });
-    }
-    dragDropFile() {
-        this.posthog?.capture("wa_drag_drop_file");
-    }
-    openSayBubble(): void {
-        this.posthog?.capture("wa_say_bubble_open");
-    }
-    openThinkBubble(): void {
-        this.posthog?.capture("wa_think_bubble_open");
-    }
-    clickTopOpenMapExplorer(): void {
-        this.posthog?.capture("wa_click_top_open_map_explorer");
-    }
-    clickCenterToUser(): void {
-        this.posthog?.capture("wa_click_center_to_user");
-    }
-    clickToZoomIn(): void {
-        this.posthog?.capture("wa_click_to_zoom_in");
-    }
-    clickToZoomOut(): void {
-        this.posthog?.capture("wa_click_to_zoom_out");
-    }
-    clickPictureInPicture(open: boolean): void {
-        this.posthog?.capture("wa_click_picture_in_picture", { open });
-    }
-    goToUser(): void {
-        this.posthog?.capture("wa_go_to_user");
-    }
-    showBusinessCard(): void {
-        this.posthog?.capture("wa_show_business_card");
-    }
-    reportUser(): void {
-        this.posthog?.capture("wa_report_user");
-    }
-    openWokaMenu(): void {
-        this.posthog?.capture("wa_open_woka_menu");
-    }
-
-    recordingStart(): void {
-        this.posthog?.capture("wa_recording_start");
-    }
-
-    recordingStop(): void {
-        this.posthog?.capture("wa_recording_stop");
-    }
-
-    openedRecordingList(): void {
-        this.posthog?.capture("wa_opened_recording_list");
-    }
-
-    /** Web app install prompt analytics */
-    pwaInstallPromptShown(isIos: boolean): void {
-        this.posthog?.capture("wa_pwa_install_prompt_shown", { isIos });
-    }
-
-    pwaInstallClick(): void {
-        this.posthog?.capture("wa_pwa_install_click");
-    }
-
-    pwaContinueInBrowserClick(): void {
-        this.posthog?.capture("wa_pwa_continue_in_browser_click");
-    }
-
-    pwaInstallOutcome(outcome: "accepted" | "dismissed"): void {
-        this.posthog?.capture("wa_pwa_install_outcome", { outcome });
-    }
-    pwaInstallFromProfileMenuClick(): void {
-        this.posthog?.capture("wa_pwa_install_from_profile_menu_click");
-    }
-    socketReconnecting(): void {
-        this.posthog?.capture("wa_socket_reconnecting");
-    }
-    socketReconnected(): void {
-        this.posthog?.capture("wa_socket_reconnected");
     }
 }
 export const analyticsClient = new AnalyticsClient();

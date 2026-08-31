@@ -566,7 +566,7 @@ class IframeListener {
                         } else if (iframeEvent.type == "openMenu") {
                             handleOpenMenuEvent(iframeEvent.data.key);
                         } else if (iframeEvent.type == "login") {
-                            analyticsClient.login();
+                            analyticsClient.trackAdminEvent("auth.login_clicked");
                             window.location.href = "/login";
                         } else if (iframeEvent.type == "redirectPricing") {
                             if (connectionManager.currentRoom && connectionManager.currentRoom.pricingUrl) {

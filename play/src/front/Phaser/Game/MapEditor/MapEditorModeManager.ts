@@ -19,6 +19,7 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { gameManager } from "../GameManager";
 import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
+import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { warningMessageStore } from "../../../Stores/ErrorStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
@@ -336,6 +337,11 @@ export class MapEditorModeManager {
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
                     const reason = editMapCommandMessage.editMapMessage.message.errorCommandMessage.reason;
                     logger("ErrorCommandMessage received", reason);
+                    // The only place a map editor edit is known to have failed. The
+                    // commands themselves send fire-and-forget, so this is where the
+                    // failure analytics belongs — reporting it next to the send would
+                    // have counted every rejected edit as a success.
+                    analyticsClient.trackAdminEvent("map_editor.save.failed", { reason });
                     const command = this.pendingCommands.find(
                         (command) => command.commandId === editMapCommandMessage.id,
                     );

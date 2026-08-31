@@ -24,6 +24,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
 import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
+import { jitsiMeetingEnded, jitsiMeetingStarted } from "../../WebRtc/JitsiMeetingAnalytics";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 
 import type { Area } from "../Entity/Area";
@@ -33,6 +34,7 @@ import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
 import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
+import { TimedEventsByKey } from "./../../Administration/TimedAnalyticsEvent";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
@@ -49,6 +51,16 @@ export type ITiledPlace = Omit<ITiledMapLayer | ITiledMapObject, "id"> & { id?: 
 export class GameMapPropertiesListener {
     private areasPropertiesListener: AreasPropertiesListener;
 
+    /**
+     * How long the player has been standing in each area they are currently inside.
+     *
+     * Here rather than on the analytics client because this listener is per-scene and
+     * this is where the areas are. It matters at teardown: the client's map outlived
+     * the scene, so a tileset added from the map editor rebuilt this listener and left
+     * every open dwell running until the socket died — while the cowebsites the very
+     * same destroy() closes were correctly ended.
+     */
+    private readonly areaDwells = new TimedEventsByKey();
     private coWebsitesOpenByPlace = new Map<string, OpenCoWebsite>();
     private coWebsitesActionTriggerByPlace = new Map<string, string>();
 
@@ -152,6 +164,7 @@ export class GameMapPropertiesListener {
                 */
                 coWebsites.keepOnly((coWebsite) => !(coWebsite instanceof JitsiCoWebsite));
                 inJitsiStore.set(false);
+                jitsiMeetingEnded();
                 if (newValue === undefined) {
                     return;
                 }
@@ -194,6 +207,7 @@ export class GameMapPropertiesListener {
                 }
 
                 inJitsiStore.set(true);
+                jitsiMeetingStarted(roomName);
 
                 const isJitsiConfig = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_CONFIG));
                 const isJitsiInterfaceConfig = z
@@ -241,7 +255,10 @@ export class GameMapPropertiesListener {
                 //     console.error(err);
                 // });
 
-                analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
+                analyticsClient.trackAdminEvent("meeting.area_entered", {
+                    roomId: this.scene.roomUrl,
+                    meetingProvider: "jitsi",
+                });
 
                 popupStore.removePopup("jitsi");
                 // TODO: this is the old new way of doing popups
@@ -448,6 +465,10 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onEnterArea((newAreas) => {
+            for (const area of newAreas) {
+                this.areaDwells.replace(area.id, analyticsClient.enterArea(area.id, area.name));
+            }
+
             if (this.gameMapFrontWrapper.areasManager === undefined) {
                 return;
             }
@@ -461,6 +482,11 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
+            for (const area of oldAreas) {
+                analyticsClient.leaveArea(area.id, area.name);
+                this.areaDwells.close(area.id);
+            }
+
             if (
                 this.gameMapFrontWrapper.areasManager == undefined ||
                 this.gameMapFrontWrapper.areasManager.getAreaById == undefined
@@ -644,15 +670,17 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsites.add(coWebsite);
+            coWebsites.add(coWebsite, undefined, {
+                targetUrl: url.toString(),
+                triggerProperty: "openWebsite",
+                areaId: place.id !== undefined ? String(place.id) : undefined,
+                areaName: typeof place.name === "string" ? place.name : undefined,
+            });
 
             loadCoWebsiteFunction();
 
             //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
             inOpenWebsite.set(true);
-
-            // analytics event for open website
-            analyticsClient.openedWebsite(url);
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
@@ -718,7 +746,12 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsites.add(coWebsite);
+            coWebsites.add(coWebsite, undefined, {
+                targetUrl: new URL(urlStr, this.scene.mapUrlFile).toString(),
+                triggerProperty: "openWebsite",
+                areaId: place.id !== undefined ? String(place.id) : undefined,
+                areaName: typeof place.name === "string" ? place.name : undefined,
+            });
 
             //user in zone to open cowesite with only icone
             inOpenWebsite.set(true);
@@ -957,6 +990,10 @@ export class GameMapPropertiesListener {
     public destroy(): void {
         // Destroy the areas properties listener
         this.areasPropertiesListener.destroy();
+
+        // End the dwells rather than strand them: this listener is rebuilt whenever a
+        // tileset is added, with no reconnection to close them for us.
+        this.areaDwells.closeAll();
 
         // Clean up action trigger callbacks
         for (const callback of this.actionTriggerCallback.values()) {

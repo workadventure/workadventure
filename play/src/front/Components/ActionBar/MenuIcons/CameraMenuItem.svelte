@@ -80,7 +80,7 @@
     );
 
     function cameraClick(): void {
-        analyticsClient.camera();
+        analyticsClient.trackAdminEvent("media.camera.toggled");
         if ($silentStore) return;
         if ($requestedCameraState === true) {
             requestedCameraState.disableWebcam();

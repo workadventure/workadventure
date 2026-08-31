@@ -74,6 +74,7 @@ import type { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
 import RecordingService from "./RecordingService";
 import type { PusherWebSocket } from "./PusherWebSocket";
+import { analyticsTimedEventTracker, CONNECTION_SESSION_HANDLE } from "./AnalyticsTimedEventTracker";
 
 const debug = Debug("socket");
 
@@ -264,6 +265,16 @@ export class SocketManager implements ZoneEventListener {
 
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, client.getUserData().viewport);
+                            // A session is an interval like any other: the tracker
+                            // emits user.connected now and user.disconnected when it
+                            // closes. open() is idempotent on the handle, which is what
+                            // the separate "already tracked" flag used to provide.
+                            analyticsTimedEventTracker.open(
+                                CONNECTION_SESSION_HANDLE,
+                                "user.disconnected",
+                                { connectionId: socketData.tabId },
+                                socketData,
+                            );
                             break;
                         }
                         case "refreshRoomMessage": {
@@ -427,6 +438,8 @@ export class SocketManager implements ZoneEventListener {
             try {
                 if (joinRoomEventEmitted) {
                     clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    // Closes the session along with everything else, sessions last.
+                    analyticsTimedEventTracker.closeConnection(socketData, "join_failed");
                 }
             } catch (emitErr) {
                 console.warn("Error while emitting client leave after failed join:", emitErr);
@@ -797,6 +810,13 @@ export class SocketManager implements ZoneEventListener {
                 } finally {
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    // One call closes every interval this socket holds, session
+                    // included and emitted last — see sessionsLast(). The admin
+                    // attributes a conversation to the session containing it and drops
+                    // one ending even a millisecond after its session's disconnect, so
+                    // that ordering is what keeps the headline metric from silently
+                    // reading zero.
+                    analyticsTimedEventTracker.closeConnection(socketData, "socket_closed");
                     debug("User ", socketData.name, " left: ", socketData.userUuid);
                 }
             }
