@@ -1,5 +1,5 @@
 diff --git a/node_modules/phaser/dist/phaser.esm.js b/node_modules/phaser/dist/phaser.esm.js
-index 07a961e..9e4cbf5 100644
+index 07a961e..d40f5b4 100644
 --- a/node_modules/phaser/dist/phaser.esm.js
 +++ b/node_modules/phaser/dist/phaser.esm.js
 @@ -208266,15 +208266,22 @@ module.exports = [
@@ -87,7 +87,29 @@ index 07a961e..9e4cbf5 100644
      '    if (flipX)',
      '    {',
      '        uv.x = 1.0 - uv.x;',
-@@ -208488,6 +208516,9 @@ module.exports = [
+@@ -208403,7 +208431,21 @@ module.exports = [
+     '    }',
+     '    #endif',
+     '    vec2 frameCorner = getFrameCorner(index);',
++    '    #ifdef FEATURE_BORDERFILTER',
+     '    return frameCorner + tile.uv;',
++    '    #else',
++    '    /* WA patch: keep the sample inside its own frame. uv is fract(), so it lives in [0,1), */',
++    '    /* but flipX, flipY and the rotation quadrant each mirror it into (0,1]. A fragment that */',
++    '    /* lands exactly on a tile boundary then gets uv == 1.0 and addresses the first texel of */',
++    '    /* the NEXT frame in the atlas: a one-pixel line of an unrelated tile along every tile */',
++    '    /* edge. Half a texel of inset is a no-op for every other fragment under NEAREST. The */',
++    '    /* BORDERFILTER (LINEAR) path needs the raw coordinate to measure that overshoot. */',
++    '    return clamp(',
++    '        frameCorner + tile.uv,',
++    '        frameCorner + 0.5,',
++    '        frameCorner + uTileWidthHeightMarginSpacing.xy - 0.5',
++    '    );',
++    '    #endif',
+     '}',
+     '#pragma phaserTemplate(fragmentHeader)',
+     'struct Samples {',
+@@ -208488,6 +208530,9 @@ module.exports = [
      '{',
      '    vec2 layerTexCoord = outTexCoord;',
      '    Tile tile = getLayerData(layerTexCoord);',
@@ -97,7 +119,7 @@ index 07a961e..9e4cbf5 100644
      '    Samples samples = getFinalSamples(tile, layerTexCoord);',
      '    vec4 fragColor = samples.color;',
      '    #pragma phaserTemplate(declareSamples)',
-@@ -208526,7 +208557,11 @@ module.exports = [
+@@ -208526,7 +208571,11 @@ module.exports = [
      '{',
      '    gl_Position = uProjectionMatrix * vec4(inPosition, 1.0, 1.0);',
      '    outTexCoord = inTexCoord;',
@@ -110,7 +132,7 @@ index 07a961e..9e4cbf5 100644
      '    #pragma phaserTemplate(vertexProcess)',
      '}',
  ].join('\n');
-@@ -243957,6 +243992,19 @@ var TilemapGPULayer = new Class({
+@@ -243957,6 +244006,19 @@ var TilemapGPULayer = new Class({
                  {
                      index |= 0x20000000;
                  }
@@ -130,7 +152,7 @@ index 07a961e..9e4cbf5 100644
                  if (tile.index === -1)
                  {
                      // Set the fourth bit to 1 to indicate an empty tile.
-@@ -246698,7 +246746,11 @@ var Tileset = new Class({
+@@ -246698,7 +246760,11 @@ var Tileset = new Class({
                  var animationDuration = tileDatum.animationDuration;
  
                  // This index maps to an animation, not a single tile.
@@ -144,7 +166,7 @@ index 07a961e..9e4cbf5 100644
                  // This animation points to a run of frames.
                  animations.push([ animationDuration, animFrames.length ]);
 diff --git a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
-index 8f3f66c..b2966b9 100644
+index 8f3f66c..6a770c6 100644
 --- a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
 +++ b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
 @@ -5,15 +5,22 @@ module.exports = [
@@ -232,7 +254,29 @@ index 8f3f66c..b2966b9 100644
      '    if (flipX)',
      '    {',
      '        uv.x = 1.0 - uv.x;',
-@@ -227,6 +255,9 @@ module.exports = [
+@@ -142,7 +170,21 @@ module.exports = [
+     '    }',
+     '    #endif',
+     '    vec2 frameCorner = getFrameCorner(index);',
++    '    #ifdef FEATURE_BORDERFILTER',
+     '    return frameCorner + tile.uv;',
++    '    #else',
++    '    /* WA patch: keep the sample inside its own frame. uv is fract(), so it lives in [0,1), */',
++    '    /* but flipX, flipY and the rotation quadrant each mirror it into (0,1]. A fragment that */',
++    '    /* lands exactly on a tile boundary then gets uv == 1.0 and addresses the first texel of */',
++    '    /* the NEXT frame in the atlas: a one-pixel line of an unrelated tile along every tile */',
++    '    /* edge. Half a texel of inset is a no-op for every other fragment under NEAREST. The */',
++    '    /* BORDERFILTER (LINEAR) path needs the raw coordinate to measure that overshoot. */',
++    '    return clamp(',
++    '        frameCorner + tile.uv,',
++    '        frameCorner + 0.5,',
++    '        frameCorner + uTileWidthHeightMarginSpacing.xy - 0.5',
++    '    );',
++    '    #endif',
+     '}',
+     '#pragma phaserTemplate(fragmentHeader)',
+     'struct Samples {',
+@@ -227,6 +269,9 @@ module.exports = [
      '{',
      '    vec2 layerTexCoord = outTexCoord;',
      '    Tile tile = getLayerData(layerTexCoord);',
@@ -260,7 +304,7 @@ index 83dc1e9..6ef0b12 100644
      '}',
  ].join('\n');
 diff --git a/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag b/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag
-index c5a0357..8581114 100644
+index c5a0357..9b9eaa5 100644
 --- a/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag
 +++ b/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag
 @@ -7,8 +7,10 @@
@@ -355,7 +399,35 @@ index c5a0357..8581114 100644
      if (flipX)
      {
          uv.x = 1.0 - uv.x;
-@@ -301,6 +332,10 @@ void main ()
+@@ -188,7 +219,27 @@ vec2 getTileTexelCoord (Tile tile)
+     #endif
+ 
+     vec2 frameCorner = getFrameCorner(index);
++
++    #ifdef FEATURE_BORDERFILTER
+     return frameCorner + tile.uv;
++    #else
++    // WA patch: keep the sample inside its own frame.
++    // `uv` is fract(), so it lives in [0, 1) - but flipY, flipX and the rotation quadrant each
++    // mirror it into (0, 1]. A fragment landing exactly on a tile boundary (fract() == 0, which
++    // happens for a whole row or column at once when the camera's sub-pixel offset lines the tile
++    // grid up with the fragment grid) then gets uv == 1.0, and `frameCorner + uv * tileSize`
++    // addresses the first texel of the NEXT frame in the atlas. Under NEAREST that paints a
++    // one-pixel line of an unrelated tile along every tile edge: horizontal for flipY and rot90,
++    // vertical for flipX and rot180, appearing and disappearing as the camera scrolls.
++    // Half a texel of inset is a no-op for every other fragment under NEAREST.
++    // The BORDERFILTER (LINEAR) path must keep the raw coordinate: it measures the overshoot
++    // itself in order to blend with the neighbouring tile.
++    return clamp(
++        frameCorner + tile.uv,
++        frameCorner + 0.5,
++        frameCorner + uTileWidthHeightMarginSpacing.xy - 0.5
++    );
++    #endif
+ }
+ 
+ #pragma phaserTemplate(fragmentHeader)
+@@ -301,6 +352,10 @@ void main ()
      vec2 layerTexCoord = outTexCoord;
      Tile tile = getLayerData(layerTexCoord);
  
