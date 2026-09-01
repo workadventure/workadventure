@@ -25,8 +25,6 @@
 
     let { user, isMatrixChatEnabled = true }: Props = $props();
 
-    let showRoomCreationInProgress = false;
-
     let { chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = $derived(user);
 
     /** Tint: local name, Matrix `account_data`, or peer cache — deps keep the row in sync. */
@@ -54,8 +52,6 @@
             query: $chatSearchBarValue,
         }),
     );
-
-    const roomCreationInProgress = gameManager.chatConnection.roomCreationInProgress;
 
     function getNameOfAvailabilityStatus(status: AvailabilityStatus) {
         switch (status) {
@@ -188,7 +184,7 @@
                         <UserActionButton {user} />
                     {/if}
                 </div>
-                {#if !isMe && !showRoomCreationInProgress && isMatrixChatEnabled}
+                {#if !isMe && isMatrixChatEnabled}
                     <!-- svelte-ignore a11y_no_static_element_interactions -->
                     <div
                         class="relative"
@@ -233,10 +229,6 @@
                                 {/if}
                             </div>
                         {/if}
-                    </div>
-                {:else if $roomCreationInProgress && showRoomCreationInProgress}
-                    <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">
-                        <IconLoader class="animate-spin" />
                     </div>
                 {/if}
             </div>

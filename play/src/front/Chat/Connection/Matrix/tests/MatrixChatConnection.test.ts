@@ -619,6 +619,133 @@ describe("MatrixChatConnection", () => {
             //eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockMatrixClient.getRoom).toHaveBeenCalledOnce();
         });
+        it("should deduplicate concurrent creations for the same user", async () => {
+            const mockMatrixClient = {
+                isGuest: vi.fn(),
+                off: vi.fn(),
+                on: vi.fn().mockImplementation((_, funcToResolve) => {
+                    funcToResolve(SyncState.Syncing);
+                }),
+                once: vi.fn().mockImplementation((_, funcToResolve) => {
+                    funcToResolve(SyncState.Syncing);
+                }),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                startClient: vi.fn(),
+                createRoom: vi.fn().mockResolvedValue({ room_id: "1" }),
+                getRoom: vi.fn(),
+            } as unknown as MatrixClient;
+
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            const spyGetDirectRoomFor = vi.spyOn(matrixChatConnection, "getDirectRoomFor");
+            spyGetDirectRoomFor.mockImplementation(() => undefined);
+            matrixChatConnection["addDMRoomInAccountData"] = vi.fn();
+
+            // A double click issues two concurrent calls: only one room must be created.
+            await Promise.all([
+                matrixChatConnection.createDirectRoom("AliceID"),
+                matrixChatConnection.createDirectRoom("AliceID"),
+            ]);
+            expect(mockMatrixClient.createRoom).toHaveBeenCalledOnce();
+
+            // Once settled, a later call goes through the whole flow again.
+            await matrixChatConnection.createDirectRoom("AliceID");
+            expect(mockMatrixClient.createRoom).toHaveBeenCalledTimes(2);
+        });
+    });
+    describe("getDirectRoomFor", () => {
+        const createDirectRoomStub = (
+            id: string,
+            memberships: [string, string][],
+            { type = "direct", lastMessageTimestamp = 0 }: { type?: string; lastMessageTimestamp?: number } = {},
+        ) =>
+            ({
+                id,
+                type: readable(type),
+                // Regression guard: the lookup must not rely on this lazily-initialized store,
+                // it stays empty until a participants panel calls ensureMembersInitialized().
+                members: writable([]),
+                lastMessageTimestamp,
+                getMatrixRoom: () => ({
+                    getMembers: () => memberships.map(([userId, membership]) => ({ userId, membership })),
+                }),
+            }) as unknown as MatrixChatRoom;
+
+        const getConnectionWithRooms = async (rooms: MatrixChatRoom[]) => {
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve({} as unknown as MatrixClient));
+            rooms.forEach((room) => matrixChatConnection["roomList"].set(room.id, room));
+            return matrixChatConnection;
+        };
+
+        it("should find a direct room even when its members store was never initialized", async () => {
+            const directRoom = createDirectRoomStub("dm", [
+                ["@me:matrix.org", KnownMembership.Join],
+                ["@alice:matrix.org", KnownMembership.Join],
+            ]);
+            const connection = await getConnectionWithRooms([directRoom]);
+
+            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBe(directRoom);
+        });
+
+        it("should find a direct room where the other user is still invited", async () => {
+            const directRoom = createDirectRoomStub("dm", [
+                ["@me:matrix.org", KnownMembership.Join],
+                ["@alice:matrix.org", KnownMembership.Invite],
+            ]);
+            const connection = await getConnectionWithRooms([directRoom]);
+
+            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBe(directRoom);
+        });
+
+        it("should ignore rooms that are not typed direct", async () => {
+            const multipleRoom = createDirectRoomStub(
+                "notADm",
+                [
+                    ["@me:matrix.org", KnownMembership.Join],
+                    ["@alice:matrix.org", KnownMembership.Join],
+                ],
+                { type: "multiple" },
+            );
+            const connection = await getConnectionWithRooms([multipleRoom]);
+
+            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBeUndefined();
+        });
+
+        it("should ignore rooms with more than two active members", async () => {
+            const crowdedRoom = createDirectRoomStub("crowded", [
+                ["@me:matrix.org", KnownMembership.Join],
+                ["@alice:matrix.org", KnownMembership.Join],
+                ["@bob:matrix.org", KnownMembership.Join],
+            ]);
+            const connection = await getConnectionWithRooms([crowdedRoom]);
+
+            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBeUndefined();
+        });
+
+        it("should ignore rooms the other user has left", async () => {
+            const abandonedRoom = createDirectRoomStub("abandoned", [
+                ["@me:matrix.org", KnownMembership.Join],
+                ["@alice:matrix.org", KnownMembership.Leave],
+            ]);
+            const connection = await getConnectionWithRooms([abandonedRoom]);
+
+            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBeUndefined();
+        });
+
+        it("should pick the most recently active room when duplicates exist", async () => {
+            const memberships: [string, string][] = [
+                ["@me:matrix.org", KnownMembership.Join],
+                ["@alice:matrix.org", KnownMembership.Join],
+            ];
+            const staleRoom = createDirectRoomStub("stale", memberships, { lastMessageTimestamp: 100 });
+            const activeRoom = createDirectRoomStub("active", memberships, { lastMessageTimestamp: 200 });
+            const connection = await getConnectionWithRooms([staleRoom, activeRoom]);
+
+            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBe(activeRoom);
+        });
     });
     describe("searchAccessibleRooms", () => {
         it("should search all public rooms with searchText in the options", async () => {
@@ -962,6 +1089,38 @@ describe("MatrixChatConnection", () => {
             expect(mockSetAccountData.mock.calls[0][0]).toBe("m.direct");
             expect(mockSetAccountData.mock.calls[0][1][userId]).toContain(roomId);
             expect(mockSetAccountData.mock.calls[0][1][userId]).toContain(roomId2);
+        });
+        it("should not rewrite account data when the room is already recorded for this user", async () => {
+            const userId = "AliceId";
+            const roomId = "roomTest";
+
+            const mockGetContent = vi.fn().mockReturnValue({ [userId]: [roomId] });
+            const mockSetAccountData = vi.fn();
+            const mockMatrixClient = {
+                isGuest: vi.fn(),
+                on: vi.fn(),
+                once: vi.fn().mockImplementation((_, funcToResolve) => {
+                    funcToResolve(SyncState.Syncing);
+                }),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                startClient: vi.fn(),
+                createRoom: vi.fn(),
+                getRoom: vi.fn().mockReturnValue(null),
+                joinRoom: vi.fn().mockResolvedValue(""),
+                getAccountData: vi.fn().mockReturnValue({
+                    getContent: mockGetContent,
+                }),
+                setAccountData: mockSetAccountData,
+            } as unknown as MatrixClient;
+
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            await matrixChatConnection["addDMRoomInAccountData"](userId, roomId);
+
+            expect(mockSetAccountData).not.toHaveBeenCalled();
         });
     });
 

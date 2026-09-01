@@ -140,6 +140,10 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     isGuest: Writable<boolean> = writable(false);
     hasUnreadMessages: Readable<boolean>;
     roomCreationInProgress: Writable<boolean> = writable(false);
+    private pendingDirectRoomCreation = new Map<
+        string,
+        Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>
+    >();
     roomFolders: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<
         MatrixRoomFolder["id"],
         MatrixRoomFolder
@@ -1840,6 +1844,21 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     async createDirectRoom(userToInvite: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
+        // Deduplicate concurrent calls (e.g. a double click on the "send message" button):
+        // both callers must resolve to the same room instead of racing two createRoom requests.
+        const pendingCreation = this.pendingDirectRoomCreation.get(userToInvite);
+        if (pendingCreation) return pendingCreation;
+
+        const creation = this.doCreateDirectRoom(userToInvite).finally(() => {
+            this.pendingDirectRoomCreation.delete(userToInvite);
+        });
+        this.pendingDirectRoomCreation.set(userToInvite, creation);
+        return creation;
+    }
+
+    private async doCreateDirectRoom(
+        userToInvite: string,
+    ): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
         if (!this.client) {
             return Promise.reject(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
         }
@@ -1882,19 +1901,23 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     getDirectRoomFor(userID: string): (ChatRoom & ChatRoomMembershipManagement) | undefined {
-        const directRooms = Array.from(this.roomList.values())
-            .filter((room) => {
-                const memberIDs = get(room.members)
-                    .filter((member) => member.id && ["join", "invite"].includes(get(member.membership)))
-                    .map((member) => member.id);
-                return (
-                    get(room.type) === "direct" &&
-                    memberIDs.some((memberId) => memberId === userID && memberIDs.length === 2)
-                );
-            })
-            .map((room) => room);
-        if (directRooms.length > 0) return directRooms[0];
-        return undefined;
+        const directRooms = Array.from(this.roomList.values()).filter((room) => {
+            if (get(room.type) !== "direct") return false;
+            // Read the SDK room, not room.members: that Svelte store stays empty until a
+            // participants panel triggers ensureMembersInitialized() (lazy loading, #6049).
+            const memberIDs = room
+                .getMatrixRoom()
+                .getMembers()
+                .filter(
+                    (member) =>
+                        member.membership === KnownMembership.Join || member.membership === KnownMembership.Invite,
+                )
+                .map((member) => member.userId);
+            return memberIDs.length === 2 && memberIDs.includes(userID);
+        });
+        // Duplicate DMs already exist for some users: pick the most recently active one
+        // (the sidebar sort criterion) instead of Map insertion order.
+        return directRooms.sort((roomA, roomB) => roomB.lastMessageTimestamp - roomA.lastMessageTimestamp)[0];
     }
 
     async searchChatUsers(searchText: string, limit = 20) {
@@ -2037,7 +2060,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }
         const directMap: Record<string, string[]> = this.client.getAccountData(EventType.Direct)?.getContent() || {};
-        directMap[userId] = [...(directMap[userId] || []), roomId];
+        const roomsForUser = directMap[userId] ?? [];
+        if (roomsForUser.includes(roomId)) return;
+        directMap[userId] = [...roomsForUser, roomId];
         await this.client.setAccountData(EventType.Direct, directMap);
     }
 
