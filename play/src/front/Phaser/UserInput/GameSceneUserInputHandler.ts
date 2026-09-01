@@ -23,9 +23,9 @@ import { inExternalServiceStore, myMicrophoneStore } from "../../Stores/MyMediaS
 import {
     createTemporaryUnmuteReleaseController,
     isUnavailableForMicrophone,
-    isTypingTarget,
     temporaryMicrophoneState,
 } from "../../Stores/MicrophoneSessionStore";
+import { isTypingTarget } from "../../Utils/CustomTypeGuards";
 import { INTERACT_KEY, type Shortcut } from "./UserInputManager";
 
 import Pointer = Phaser.Input.Pointer;
@@ -257,11 +257,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 // Handle Cmd (Mac) / Ctrl (Windows & Linux) + D for "walk my desk"
                 if (event.metaKey || event.ctrlKey) {
                     // Prevent the shortcut from being triggered when typing in input fields
-                    if (
-                        event.target instanceof HTMLInputElement ||
-                        event.target instanceof HTMLTextAreaElement ||
-                        event.target instanceof HTMLSelectElement
-                    ) {
+                    if (isTypingTarget(event.target)) {
                         return event;
                     }
                     event.preventDefault();
@@ -361,14 +357,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 }
                 break;
             }
-            // SPACE: push-to-talk release. Idempotent, so it is safe even when the matching
-            // keydown was ignored (typing, push-to-talk unavailable).
+            // SPACE: push-to-talk release. Idempotent, so a keydown we ignored is harmless.
             case " ": {
                 this.stopPushToTalk();
                 break;
             }
-            // The contextual action key (INTERACT_KEY). A letter key, so unlike the former Space
-            // binding it must not fire while typing nor steal a Ctrl/Cmd shortcut.
+            // The contextual action key. A letter, so it needs guards the old Space binding did not.
             case INTERACT_KEY.toLowerCase():
             case INTERACT_KEY: {
                 if (isTypingTarget(event.target) || event.ctrlKey || event.metaKey) {
@@ -400,7 +394,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             activatable.activate();
             activatable.destroyText("object");
         }
-        this.gameScene.CurrentPlayer?.handlePressInteractKeyPlayerTextCallback();
+        this.gameScene.CurrentPlayer?.firePlayerTextCallbacks();
     }
 
     public addInteractEventListener(callback: () => void): void {

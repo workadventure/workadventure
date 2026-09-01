@@ -95,19 +95,3 @@ export function isUnavailableForMicrophone(availabilityStatus: AvailabilityStatu
         availabilityStatus === AvailabilityStatus.BUSY
     );
 }
-
-/**
- * Guard so a game shortcut does not fire while the user is typing: the key must keep its normal
- * text-input behaviour in text fields and contenteditable elements. Used by push-to-talk (Space)
- * and by the interact key (see INTERACT_KEY).
- */
-export function isTypingTarget(target: EventTarget | null): boolean {
-    return (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target instanceof HTMLSelectElement ||
-        // isContentEditable covers nested nodes; the attribute check is the jsdom fallback (jsdom does
-        // not implement isContentEditable).
-        (target instanceof HTMLElement && (target.isContentEditable || target.contentEditable === "true"))
-    );
-}

@@ -8,6 +8,7 @@ import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandle
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import LL from "../../../i18n/i18n-svelte";
 
+import { isTypingTarget } from "../../Utils/CustomTypeGuards";
 import Key = Phaser.Input.Keyboard.Key;
 import Pointer = Phaser.Input.Pointer;
 import GameObject = Phaser.GameObjects.GameObject;
@@ -313,9 +314,7 @@ export class UserInputManager {
                 // Fix mac keyboard issue
                 // Prevents the input from being triggered when the focus is on an input field
                 if (
-                    d.keyInstance.originalEvent.target instanceof HTMLInputElement ||
-                    d.keyInstance.originalEvent.target instanceof HTMLTextAreaElement ||
-                    d.keyInstance.originalEvent.target instanceof HTMLSelectElement ||
+                    isTypingTarget(d.keyInstance.originalEvent.target) ||
                     d.keyInstance.originalEvent.metaKey ||
                     d.keyInstance.originalEvent.ctrlKey
                 ) {

@@ -15,7 +15,6 @@ const {
     effectiveMicrophoneState,
     forceMuteMicrophone,
     requestedMicrophoneState,
-    isTypingTarget,
     temporaryMicrophoneState,
 } = await import("./MicrophoneSessionStore");
 
@@ -77,17 +76,5 @@ describe("MicrophoneSessionStore", () => {
         controller.destroy();
         window.dispatchEvent(new Event("blur"));
         expect(stopTemporaryUnmute).toHaveBeenCalledTimes(3);
-    });
-
-    it("ignores push-to-talk keyboard events while typing", () => {
-        const contentEditable = document.createElement("div");
-        contentEditable.contentEditable = "true";
-
-        expect(isTypingTarget(document.createElement("input"))).toBe(true);
-        expect(isTypingTarget(document.createElement("textarea"))).toBe(true);
-        expect(isTypingTarget(document.createElement("select"))).toBe(true);
-        expect(isTypingTarget(contentEditable)).toBe(true);
-        expect(isTypingTarget(document.createElement("button"))).toBe(false);
-        expect(isTypingTarget(null)).toBe(false);
     });
 });

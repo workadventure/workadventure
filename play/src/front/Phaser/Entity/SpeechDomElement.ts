@@ -11,9 +11,8 @@ let speechKeyShadowFilterUid = 0;
 
 /** Primary action key — light “keycap”, same height as escape for alignment. */
 function buildInteractKeyboardBadgeHtml(): string {
-    // The cap is sized from the label so a one-letter key does not float in a cap cut for "SPACE".
-    const label = INTERACT_KEY;
-    const capWidth = Math.max(24, label.length * 6 + 20);
+    // The cap is sized from the key so a one-letter key does not float in a cap cut for "SPACE".
+    const capWidth = INTERACT_KEY.length * 6 + 20;
 
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("width", String(capWidth));
@@ -60,7 +59,7 @@ function buildInteractKeyboardBadgeHtml(): string {
     textElement.setAttribute("font-weight", "700");
     textElement.setAttribute("letter-spacing", "0.04em");
     textElement.setAttribute("fill", "#0f172a");
-    textElement.textContent = label;
+    textElement.textContent = INTERACT_KEY;
     svg.appendChild(textElement);
 
     const wrap = document.createElement("span");
