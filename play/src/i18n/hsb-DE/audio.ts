@@ -7,7 +7,7 @@ const audio: DeepPartial<Translation["audio"]> = {
         reduce: "znižće sylnosć zwuka awdioplayera za čas rěčenja",
         allow: "zwuk dowolić",
         error: "zwuk njeda so začitać",
-        notAllowed: "▶️ Zwuk njeje dowoleny. Tłóčće [SPACE] abo klikńće tu, zo by so wothrał!",
+        notAllowed: "▶️ Zwuk njeje dowoleny. Tłóčće [X] abo klikńće tu, zo by so wothrał!",
     },
     message: "rěčna powěsć",
     disable: "hasńće swój mikrofon",

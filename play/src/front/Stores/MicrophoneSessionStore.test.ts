@@ -15,7 +15,7 @@ const {
     effectiveMicrophoneState,
     forceMuteMicrophone,
     requestedMicrophoneState,
-    shouldIgnorePushToTalkKeyboardEvent,
+    isTypingTarget,
     temporaryMicrophoneState,
 } = await import("./MicrophoneSessionStore");
 
@@ -83,11 +83,11 @@ describe("MicrophoneSessionStore", () => {
         const contentEditable = document.createElement("div");
         contentEditable.contentEditable = "true";
 
-        expect(shouldIgnorePushToTalkKeyboardEvent(document.createElement("input"))).toBe(true);
-        expect(shouldIgnorePushToTalkKeyboardEvent(document.createElement("textarea"))).toBe(true);
-        expect(shouldIgnorePushToTalkKeyboardEvent(document.createElement("select"))).toBe(true);
-        expect(shouldIgnorePushToTalkKeyboardEvent(contentEditable)).toBe(true);
-        expect(shouldIgnorePushToTalkKeyboardEvent(document.createElement("button"))).toBe(false);
-        expect(shouldIgnorePushToTalkKeyboardEvent(null)).toBe(false);
+        expect(isTypingTarget(document.createElement("input"))).toBe(true);
+        expect(isTypingTarget(document.createElement("textarea"))).toBe(true);
+        expect(isTypingTarget(document.createElement("select"))).toBe(true);
+        expect(isTypingTarget(contentEditable)).toBe(true);
+        expect(isTypingTarget(document.createElement("button"))).toBe(false);
+        expect(isTypingTarget(null)).toBe(false);
     });
 });

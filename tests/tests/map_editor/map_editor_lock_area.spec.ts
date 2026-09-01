@@ -88,15 +88,15 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         await page2.getByTestId("lock-button").click();
         await expect(page2.getByTestId("lock-button")).toHaveClass(/bg-danger/);
 
-        // Admin is blocked, sees the admin-specific unlock message, then unlocks with SPACE.
+        // Admin is blocked, sees the admin-specific unlock message, then unlocks with the interact key.
         await Map.walkTo(page, "ArrowRight", 500);
         await expect(page.getByText(/unlock this area\./i)).toBeAttached();
-        await page.keyboard.press("Space");
+        await page.keyboard.press("x");
 
-        // After unlocking with SPACE, admin can enter the area.
+        // After unlocking with the interact key, admin can enter the area.
         await Map.walkTo(page, "ArrowRight", 500);
-        const adminPositionAfterSpaceUnlock = await Map.getPosition(page);
-        expect(adminPositionAfterSpaceUnlock.x).toBeGreaterThan(areaLeftBoundX);
+        const adminPositionAfterInteractUnlock = await Map.getPosition(page);
+        expect(adminPositionAfterInteractUnlock.x).toBeGreaterThan(areaLeftBoundX);
         // Admin restricts lock permissions to users with only the "admin" tag.
         await Map.teleportToPosition(page, 0, 3 * 32);
         await Menu.openMapEditor(page);

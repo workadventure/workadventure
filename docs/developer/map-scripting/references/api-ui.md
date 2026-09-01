@@ -135,7 +135,7 @@ const menu = await WA.ui.getMenuCommand("profile");
 menu.open();
 ```
 
-### Awaiting User Confirmation (with space bar)
+### Awaiting User Confirmation (with the interact key) {#awaiting-user-confirmation-with-space-bar}
 
 ```ts
 WA.ui.displayActionMessage({
@@ -145,7 +145,13 @@ WA.ui.displayActionMessage({
 }): ActionMessage
 ```
 
-Displays a message at the bottom of the screen (that will disappear when space bar is pressed).
+Displays a message at the bottom of the screen (that will disappear when the interact key, `X`, is pressed).
+
+:::caution
+The interact key changed from **Space** to **X** — Space is now the push-to-talk key. The `message`
+you pass here is written by you, so WorkAdventure cannot update it: check your own wording. Write
+the `[X]` marker in the message and WorkAdventure renders it as a key badge.
+:::
 
 ![Trigger Message](../images/trigger_message.png)
 

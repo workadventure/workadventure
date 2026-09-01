@@ -97,10 +97,11 @@ export function isUnavailableForMicrophone(availabilityStatus: AvailabilityStatu
 }
 
 /**
- * Guard so the Space key does not trigger push-to-talk while the user is typing: Space must keep
- * its normal "insert a space" behaviour in text fields and contenteditable elements.
+ * Guard so a game shortcut does not fire while the user is typing: the key must keep its normal
+ * text-input behaviour in text fields and contenteditable elements. Used by push-to-talk (Space)
+ * and by the interact key (see INTERACT_KEY).
  */
-export function shouldIgnorePushToTalkKeyboardEvent(target: EventTarget | null): boolean {
+export function isTypingTarget(target: EventTarget | null): boolean {
     return (
         target instanceof HTMLInputElement ||
         target instanceof HTMLTextAreaElement ||

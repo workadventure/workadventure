@@ -22,7 +22,7 @@ export interface UserInputHandlerInterface {
 
     handleActivableEntity: () => void;
 
-    addSpaceEventListener: (callback: () => void) => void;
-    removeSpaceEventListener: (callback: () => void) => void;
+    addInteractEventListener: (callback: () => void) => void;
+    removeInteractEventListener: (callback: () => void) => void;
     destroy?: () => void;
 }

@@ -299,7 +299,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
     }
 
     /**
-     * Displays a message at the bottom of the screen (that will disappear when space bar is pressed).
+     * Displays a message at the bottom of the screen (that will disappear when the interact key, `X`, is pressed).
      * {@link https://docs.workadventu.re/map-building/api-ui.md#awaiting-user-confirmation-with-space-bar | Website documentation}
      *
      * @param {ActionMessageOptions} actionMessageOptions Action options
@@ -314,7 +314,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
     }
 
     /**
-     * Displays a player message at the top of the user head (that will disappear when space bar is pressed).
+     * Displays a player message at the top of the user head (that will disappear when the interact key, `X`, is pressed).
      * {@link https://docs.workadventu.re/map-building/api-ui.md#awaiting-user-confirmation-with-space-bar | Website documentation}
      *
      * @param {PlayerMessageOptions} playerMessageOptions player options

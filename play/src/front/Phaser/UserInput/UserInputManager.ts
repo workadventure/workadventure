@@ -17,6 +17,13 @@ type Direction = "left" | "right" | "up" | "down";
 // Event listeners are valid for the lifetime of the Phaser object and will be garbage collected when the object is destroyed
 /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 
+/**
+ * The contextual "action" key: activates the nearby entity and confirms the popup that currently
+ * owns it. Single source of truth — the keyup case, the Phaser `keyup-<KEY>` event, the shortcuts
+ * table and the on-screen keycap all derive from it. Space is reserved for push-to-talk.
+ */
+export const INTERACT_KEY = "X";
+
 interface UserInputManagerDatum extends Shortcut {
     keyInstance?: Key;
     event: UserInputEvent;
@@ -28,7 +35,6 @@ export enum UserInputEvent {
     MoveRight,
     MoveDown,
     SpeedUp,
-    Interact,
     Follow,
     JoystickMove,
 }
@@ -213,12 +219,6 @@ export class UserInputManager {
                 description: get(LL).menu.shortcuts.speedUp(),
             },
             {
-                event: UserInputEvent.Interact,
-                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
-                key: "Space",
-                description: get(LL).menu.shortcuts.interact(),
-            },
-            {
                 event: UserInputEvent.Follow,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
                 key: "F",
@@ -333,11 +333,11 @@ export class UserInputManager {
         this.userInputHandler.handleActivableEntity();
     }
 
-    addSpaceEventListener(callback: () => void) {
-        this.userInputHandler.addSpaceEventListener(callback);
+    addInteractEventListener(callback: () => void) {
+        this.userInputHandler.addInteractEventListener(callback);
     }
-    removeSpaceEventListener(callback: () => void) {
-        this.userInputHandler.removeSpaceEventListener(callback);
+    removeInteractEventListener(callback: () => void) {
+        this.userInputHandler.removeInteractEventListener(callback);
     }
 
     destroy(): void {

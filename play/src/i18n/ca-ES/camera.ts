@@ -81,7 +81,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         preparingYouNetworkGuide: 'guia "Preparant la vostra xarxa"',
         refresh: "Actualitzar",
         continue: "Continuar",
-        newDeviceDetected: "Nou dispositiu detectat {device} 🎉 Canviar? [ESPAI] Ignorar [ESC]",
+        newDeviceDetected: "Nou dispositiu detectat {device} 🎉 Canviar? [X] Ignorar [ESC]",
     },
     my: {
         silentZone: "Zona silenciosa",

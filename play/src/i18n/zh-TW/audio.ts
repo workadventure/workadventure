@@ -7,7 +7,7 @@ const audio: DeepPartial<Translation["audio"]> = {
         reduce: "說話時降低音樂音量",
         allow: "播放聲音",
         error: "無法載入聲音",
-        notAllowed: "▶️ 音訊未允許。按 [空白鍵] 或點選此處播放！",
+        notAllowed: "▶️ 音訊未允許。按 [X] 或點選此處播放！",
     },
     message: "音訊訊息",
     disable: "關閉你的麥克風",
