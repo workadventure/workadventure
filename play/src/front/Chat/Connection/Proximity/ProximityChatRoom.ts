@@ -159,7 +159,7 @@ export class ProximityChatRoom implements ChatRoom {
     );
     private readonly unreadQuestionIdsStore = writable<ReadonlySet<string>>(new Set());
     readonly unreadQuestionCount: Readable<number> = derived(this.unreadQuestionIdsStore, (ids) => ids.size);
-    timelineItems = createProximityTimelineItemsStore(this.messages, this.pollItems);
+    timelineItems = createProximityTimelineItemsStore(this.messages, this.pollItems, this.qaItems);
     readonly pollCreation: ChatPollCreationCapability;
     readonly questionCreation: ChatQuestionCreationCapability;
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
@@ -538,10 +538,7 @@ export class ProximityChatRoom implements ChatRoom {
             this.addUnreadQuestionIds(newQuestionIds);
         }
 
-        if (!get(this.canModerateQuestions)) {
-            return;
-        }
-
+        // Notify every participant of a new question (not only moderators), mirroring notifyNewPolls.
         if (get(selectedRoomStore) !== this) {
             this.hasUnreadMessages.set(true);
             this.unreadNotificationCount.set(get(this.unreadNotificationCount) + newQuestions.length);
@@ -555,13 +552,12 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.unreadMessagesCount.set(get(this.unreadMessagesCount) + newQuestions.length);
         for (const question of newQuestions) {
+            // No sidePanelSection: clicking the toast scrolls to and highlights the question card in the timeline.
             chatNotificationStore.addNotification(
                 question.senderName ?? this.unknownUserName,
                 get(LL).chat.question.notification({ question: question.body }),
                 this,
                 question.id,
-                true,
-                "questions",
             );
         }
     }

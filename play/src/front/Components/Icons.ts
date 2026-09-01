@@ -17,6 +17,7 @@ export { default as IconArrowLeft } from "~icons/tabler/arrow-left";
 export { default as IconArrowBackUp } from "~icons/tabler/arrow-back-up";
 export { default as IconArrowDown } from "~icons/tabler/arrow-down";
 export { default as IconArrowUp } from "~icons/tabler/arrow-up";
+export { default as IconThumbUp } from "~icons/tabler/thumb-up";
 export { default as IconMoodSmile } from "~icons/tabler/mood-smile";
 export { default as IconPencil } from "~icons/tabler/pencil";
 export { default as IconTrash } from "~icons/tabler/trash";
