@@ -61,7 +61,14 @@ class ScriptUtils {
         // Check if the Url is a Cards link
         if (CardsService.isCardsLink(urlApi)) {
             // If it is a Cards link opening in new tab, we need to remove the token parameter
-            const userRoomToken = gameManager.getCurrentGameScene().connection?.userRoomToken;
+            let userRoomToken: string | undefined;
+            try {
+                userRoomToken = gameManager.getCurrentGameScene().connection?.userRoomToken;
+            } catch (error) {
+                // No game scene mid-transition. A Cards link without its token beats throwing:
+                // every caller of this method only wants the link a human should get.
+                console.info("Could not resolve the room token of a Cards link", error);
+            }
             url = CardsService.getCardsLink(urlApi, userRoomToken);
         }
 

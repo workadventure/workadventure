@@ -3,8 +3,8 @@
     import { Marked } from "marked";
     import { onDestroy, onMount } from "svelte";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
-    import { openChatLinkAsCoWebsite } from "../../../Links/ChatLinkOpener";
     import { resolveChatLinkClick } from "../../../Links/ChatLinkPolicy";
+    import { openChatLinkAsCoWebsite } from "../../../Utils";
     import { sanitizeHTML } from "./WA-HTML-Sanitizer";
 
     interface Props {
@@ -80,7 +80,7 @@
         }
     });
 
-    let pendingUrl: string | undefined = $state();
+    let opening = $state(false);
 
     // Delegated so it covers both the links marked builds from plain bodies and the ones
     // already baked into the formatted_body HTML of a reply, which never reach our renderer.
@@ -94,24 +94,24 @@
             return;
         }
 
-        const action = resolveChatLinkClick(anchor, event);
-        if (action.kind === "native") {
+        const url = resolveChatLinkClick(anchor, event);
+        if (url === undefined) {
             return;
         }
 
         event.preventDefault();
 
         // Probing embeddability is a round trip; ignore repeat clicks while one is in flight.
-        if (pendingUrl !== undefined) {
+        if (opening) {
             return;
         }
-        pendingUrl = action.url;
+        opening = true;
 
         (async () => {
             try {
-                await openChatLinkAsCoWebsite(action.url);
+                await openChatLinkAsCoWebsite(url);
             } finally {
-                pendingUrl = undefined;
+                opening = false;
             }
         })().catch((error) => console.error("Failed to open chat link", error));
     }
@@ -124,8 +124,8 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="message-bubble m-0 {hasDepth ? 'text-xs leading-4' : 'text-sm'} text-white py-1 px-3"
-    class:cursor-wait={pendingUrl !== undefined}
-    aria-busy={pendingUrl !== undefined}
+    class:cursor-wait={opening}
+    aria-busy={opening}
     lang=""
     onclick={onBubbleClick}
 >

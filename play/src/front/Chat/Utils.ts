@@ -173,3 +173,33 @@ export function getMatrixClientForChatTint(): MatrixClient | undefined {
     }
     return undefined;
 }
+
+/**
+ * Opens a chat link as a co-website, falling back to a new tab whenever embedding would leave
+ * the user staring at a blank iframe.
+ *
+ * Everything here works off the link exactly as it was posted. That is what the sender shared,
+ * what we probe, and what we embed.
+ */
+export const openChatLinkAsCoWebsite = async (rawUrl: string): Promise<void> => {
+    let embeddable: boolean;
+    try {
+        const answer = await gameManager.getCurrentGameScene().connection?.queryEmbeddableWebsite(rawUrl);
+        // state=false means the URL is unreachable, embeddable=false means it refuses to be
+        // framed. Both end up as a blank iframe, so both belong in a new tab.
+        embeddable = answer?.state === true && answer.embeddable;
+    } catch (error) {
+        console.info("Could not check whether chat link is embeddable, opening it in a new tab instead", error);
+        embeddable = false;
+    }
+
+    if (!embeddable) {
+        // openTab() runs the link back through getWebsiteUrl(), which strips embed-only
+        // parameters, so a new tab always lands on the page a human would expect.
+        scriptUtils.openTab(rawUrl);
+        return;
+    }
+
+    openCoWebSiteWithoutSource({ url: rawUrl, closable: true });
+    analyticsClient.openedWebsite(new URL(rawUrl));
+};

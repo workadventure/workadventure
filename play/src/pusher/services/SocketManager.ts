@@ -1699,13 +1699,8 @@ const verifyUrlAsDomainInWhiteList = (url: string) => {
     } catch {
         return false;
     }
-    return EMBEDDED_DOMAINS_WHITELIST.some((domain) => {
-        const allowedDomain = domain.trim().toLowerCase();
-        if (allowedDomain === "") {
-            return false;
-        }
-        return hostname === allowedDomain || hostname.endsWith(`.${allowedDomain}`);
-    });
+    // The whitelist is already trimmed and lowercased by its environment variable validator.
+    return EMBEDDED_DOMAINS_WHITELIST.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
 };
 
 export const socketManager = new SocketManager();

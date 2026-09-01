@@ -36,15 +36,7 @@
      * browser or hand to a colleague.
      */
     function baseUrl(): string {
-        const url = coWebsite.getUrl().toString();
-        try {
-            return scriptUtils.getWebsiteUrl(url);
-        } catch (error) {
-            // Cards links need the game scene, which is gone mid-transition. The embed URL
-            // still beats doing nothing.
-            console.info("Could not resolve the shareable URL of this co-website", error);
-            return url;
-        }
+        return scriptUtils.getWebsiteUrl(coWebsite.getUrl().toString());
     }
 
     function copyUrl() {
