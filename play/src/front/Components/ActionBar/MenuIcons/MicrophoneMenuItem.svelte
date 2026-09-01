@@ -15,7 +15,6 @@
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
     import {
         effectiveMicrophoneState,
-        microphoneSession,
         requestedMicrophoneState,
         temporaryMicrophoneState,
     } from "../../../Stores/MicrophoneSessionStore";
@@ -104,16 +103,16 @@
         analyticsClient.microphone();
         if ($silentStore) return;
         if ($temporaryMicrophoneState) {
-            microphoneSession.stopTemporaryUnmute();
+            temporaryMicrophoneState.set(false);
             if ($requestedMicrophoneState === false) {
-                microphoneSession.enablePersistentMicrophone();
+                requestedMicrophoneState.enableMicrophone();
             }
             return;
         }
         if ($requestedMicrophoneState === true) {
-            microphoneSession.disablePersistentMicrophone();
+            requestedMicrophoneState.disableMicrophone();
         } else {
-            microphoneSession.enablePersistentMicrophone();
+            requestedMicrophoneState.enableMicrophone();
         }
     }
 </script>

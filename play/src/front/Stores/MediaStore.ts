@@ -52,12 +52,10 @@ import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
 import {
-    createPushToTalkAvailabilityStore,
     effectiveMicrophoneState,
+    forceMuteMicrophone,
     isUnavailableForMicrophone,
-    microphoneSession,
     requestedMicrophoneState,
-    shouldEnableAudioConstraint,
     temporaryMicrophoneState,
 } from "./MicrophoneSessionStore";
 
@@ -239,12 +237,15 @@ export const inLivekitStore = writable(false);
 export const isListenerStore = writable(false);
 export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
 
-export const pushToTalkAvailabilityStore = createPushToTalkAvailabilityStore({
-    requestedMicrophoneState,
-    currentPlayerGroupIdStore,
-    inLivekitStore,
-    isSpeakerStore,
-});
+/**
+ * Push-to-talk is only offered when the mic is muted (otherwise the user is already talking) and
+ * the user is somewhere their voice would be heard: a conversation bubble, LiveKit, or as speaker.
+ */
+export const pushToTalkAvailabilityStore = derived(
+    [requestedMicrophoneState, currentPlayerGroupIdStore, inLivekitStore, isSpeakerStore],
+    ([$requestedMicrophoneState, $currentPlayerGroupIdStore, $inLivekitStore, $isSpeakerStore]) =>
+        !$requestedMicrophoneState && ($currentPlayerGroupIdStore !== undefined || $inLivekitStore || $isSpeakerStore),
+);
 /**
  * When true, the listener has consented to share their camera with the speaker (seeAttendees feature).
  * This store is set to true when the listener accepts the camera sharing popup.
@@ -520,15 +521,12 @@ export const mediaStreamConstraintsStore = derived(
 
         // Audio constraints always apply
         if (
-            !shouldEnableAudioConstraint({
-                requestedMicrophoneState: $requestedMicrophoneState,
-                temporaryMicrophoneState: $temporaryMicrophoneState,
-                myMicrophone: $myMicrophoneStore,
-                isInExternalService,
-                shouldDisableMicrophoneForPrivacy,
-                isEnergySaving,
-                availabilityStatus: $availabilityStatusStore,
-            })
+            ($requestedMicrophoneState === false && $temporaryMicrophoneState === false) ||
+            $myMicrophoneStore === false ||
+            isInExternalService ||
+            shouldDisableMicrophoneForPrivacy ||
+            isEnergySaving ||
+            isUnavailableStatus
         ) {
             currentAudioConstraint = false;
         }
@@ -579,7 +577,6 @@ export const mediaStreamConstraintsStore = derived(
 export type { LocalStreamStoreValue } from "./LocalStreamTypes";
 
 let currentStream: MediaStream | undefined = undefined;
-
 let oldConstraints: { video: MediaTrackConstraints | false; audio: MediaTrackConstraints | false } = {
     video: false,
     audio: false,
@@ -841,7 +838,7 @@ async function runRawStreamUpdate(
                 requestedCameraState.disableWebcam();
                 cameraAccessIssueStore.set(classified);
                 if (mustRequestNewAudio) {
-                    microphoneSession.forceMuteMicrophone();
+                    forceMuteMicrophone();
                     microphoneAccessIssueStore.set(classified);
                 }
             } else if (!constraints.video && !constraints.audio) {
@@ -854,7 +851,7 @@ async function runRawStreamUpdate(
                 console.info("Error. Unable to get microphone and/or camera access.", newConstraints, e);
                 emitCurrentStreamOrError(setIfCurrent, e);
                 if (mustRequestNewAudio) {
-                    microphoneSession.forceMuteMicrophone();
+                    forceMuteMicrophone();
                     microphoneAccessIssueStore.set(classifyMediaAccessError(e));
                 }
             }

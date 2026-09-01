@@ -4,7 +4,7 @@ import type { Subscription } from "rxjs";
 import type { PrivateEvents, SpaceInterface } from "../SpaceInterface";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { isSpeakerStore, requestedCameraState } from "../../Stores/MediaStore";
-import { microphoneSession } from "../../Stores/MicrophoneSessionStore";
+import { forceMuteMicrophone } from "../../Stores/MicrophoneSessionStore";
 import LL from "../../../i18n/i18n-svelte";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
@@ -50,7 +50,7 @@ function displayMuteDialog(event: PrivateEvents["muteAudio"] | PrivateEvents["mu
             sender: senderUser,
             acceptRequest: () => {
                 if (event.$case === "muteAudio") {
-                    microphoneSession.forceMuteMicrophone();
+                    forceMuteMicrophone();
                 } else {
                     requestedCameraState.disableWebcam();
                 }
@@ -73,7 +73,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
     space.observePrivateEvent("muteAudio").subscribe((event) => {
         if (event.muteAudio.force) {
             notificationPlayingStore.playNotification(get(LL).notification.microphoneMuted(), "microphone-off.png");
-            microphoneSession.forceMuteMicrophone();
+            forceMuteMicrophone();
         } else {
             notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), "microphone-off.png");
             displayMuteDialog({ ...event, sender: event.sender.spaceUserId }, space);
@@ -112,7 +112,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
     // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
     space.observePublicEvent("muteAudioForEverybody").subscribe((event) => {
         notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), "microphone-off.png");
-        microphoneSession.forceMuteMicrophone();
+        forceMuteMicrophone();
     });
 
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.

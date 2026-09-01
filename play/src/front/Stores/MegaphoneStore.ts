@@ -3,7 +3,7 @@ import { derived, writable } from "svelte/store";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import { isSpeakerStore, requestedCameraState } from "./MediaStore";
 import { requestedScreenSharingState } from "./ScreenSharingStore";
-import { effectiveMicrophoneState, shouldKeepMegaphoneStreaming } from "./MicrophoneSessionStore";
+import { effectiveMicrophoneState } from "./MicrophoneSessionStore";
 
 export const currentLiveStreamingSpaceStore = writable<SpaceInterface | undefined>();
 export const megaphoneCanBeUsedStore = writable<boolean>(false);
@@ -41,11 +41,8 @@ export const liveStreamingEnabledStore: Readable<boolean> = derived(
         ],
         set,
     ) => {
-        const hasMegaphoneMedia = shouldKeepMegaphoneStreaming({
-            requestedCameraState: $requestedCameraState,
-            effectiveMicrophoneState: $effectiveMicrophoneState,
-            requestedScreenSharingState: $requestedScreenSharingState,
-        });
+        // Uses the effective mic state so a push-to-talk unmute keeps the megaphone alive.
+        const hasMegaphoneMedia = $requestedCameraState || $effectiveMicrophoneState || $requestedScreenSharingState;
 
         set($isSpeakerStore || ($requestedMegaphoneStore && hasMegaphoneMedia));
         if ($requestedMegaphoneStore && !hasMegaphoneMedia) {

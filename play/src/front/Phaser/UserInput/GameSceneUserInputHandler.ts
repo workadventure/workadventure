@@ -23,8 +23,8 @@ import { inExternalServiceStore, myMicrophoneStore } from "../../Stores/MyMediaS
 import {
     createTemporaryUnmuteReleaseController,
     isUnavailableForMicrophone,
-    microphoneSession,
     shouldIgnorePushToTalkKeyboardEvent,
+    temporaryMicrophoneState,
 } from "../../Stores/MicrophoneSessionStore";
 import type { Shortcut } from "./UserInputManager";
 
@@ -38,31 +38,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private readonly temporaryUnmuteReleaseController: { destroy: () => void };
     public shortcuts: Shortcut[] = [];
 
-    /**
-     * Safety net for push-to-talk. The regular keyup is delivered through Phaser's keyboard
-     * plugin (see UserInputManager). If that delivery is ever skipped while Space is held
-     * (e.g. the keyboard plugin gets disabled), the missed keyup would leave the microphone
-     * temporarily unmuted. This raw window-level listener fires independently of Phaser and
-     * guarantees the temporary unmute is released as soon as Space is physically released.
-     *
-     * It only releases the microphone and intentionally does NOT clear
-     * `pushToTalkSpaceKeyConsumed`: in the normal case handleKeyUpEvent() still runs and owns
-     * clearing the flag + suppressing the Space interaction, so pre-clearing it here could let
-     * a spurious "interact" fire on release.
-     */
-    private readonly releasePushToTalkOnWindowSpaceUp = (event: KeyboardEvent): void => {
-        if (event.code === "Space" && this.pushToTalkSpaceKeyConsumed) {
-            microphoneSession.stopTemporaryUnmute();
-        }
-    };
-
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
         this.temporaryUnmuteReleaseController = createTemporaryUnmuteReleaseController({
             pushToTalkAvailabilityStore,
             stopTemporaryUnmute: () => this.stopPushToTalk(),
         });
-        window.addEventListener("keyup", this.releasePushToTalkOnWindowSpaceUp, { capture: true });
 
         this.initShortcuts();
     }
@@ -344,7 +325,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             return false;
         }
 
-        microphoneSession.startTemporaryUnmute();
+        temporaryMicrophoneState.set(true);
         this.pushToTalkSpaceKeyConsumed = true;
         event.preventDefault();
         event.stopPropagation();
@@ -353,7 +334,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
 
     private stopPushToTalk(): void {
         this.pushToTalkSpaceKeyConsumed = false;
-        microphoneSession.stopTemporaryUnmute();
+        temporaryMicrophoneState.set(false);
     }
 
     private openSayPopup(): void {
@@ -431,7 +412,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public destroy(): void {
-        window.removeEventListener("keyup", this.releasePushToTalkOnWindowSpaceUp, { capture: true });
         this.temporaryUnmuteReleaseController.destroy();
         this.stopPushToTalk();
     }
