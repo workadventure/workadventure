@@ -318,7 +318,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     showMore: "메시지 {number}개 더 보기",
     showLess: "적게 보기",
     showFullMessage: "Show more",
-    showLessMessage: "Show less",
     addRoomToFolderError: "방을 폴더에 추가할 수 없습니다",
     createRoom: {
         title: "새 방 만들기",

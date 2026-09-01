@@ -317,7 +317,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     showMore: "Toon {number} meer",
     showLess: "Toon minder",
     showFullMessage: "Show more",
-    showLessMessage: "Show less",
     addRoomToFolderError: "Kamer kon niet aan de map worden toegevoegd",
     createRoom: {
         title: "Nieuwe kamer maken",

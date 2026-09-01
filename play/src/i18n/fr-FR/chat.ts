@@ -318,7 +318,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     showMore: "En afficher {number} de plus",
     showLess: "En afficher moins",
     showFullMessage: "Voir plus",
-    showLessMessage: "Voir moins",
     addRoomToFolderError: "Impossible d'ajouter le salon au dossier",
     createRoom: {
         title: "Créer un nouveau salon",

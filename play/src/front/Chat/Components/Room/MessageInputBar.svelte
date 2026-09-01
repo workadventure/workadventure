@@ -156,21 +156,6 @@
         }
     }
 
-    function acquireSendingMessageLock() {
-        if (sendingMessage) {
-            return undefined;
-        }
-
-        sendingMessage = true;
-        return () => {
-            sendingMessage = false;
-        };
-    }
-
-    function getApplicationLink() {
-        return applicationProperty?.link;
-    }
-
     async function sendApplicationLinkMessage(applicationLink: string | undefined) {
         if (!applicationLink || applicationLink.length === 0) {
             return true;
@@ -194,17 +179,13 @@
     }
 
     async function sendMessage(messageToSend: string) {
-        if (!$canSendMessages) {
+        if (!$canSendMessages || sendingMessage) {
             return;
         }
-
-        const releaseSendingMessage = acquireSendingMessageLock();
-        if (!releaseSendingMessage) {
-            return;
-        }
+        sendingMessage = true;
 
         try {
-            const isApplicationMessageSent = await sendApplicationLinkMessage(getApplicationLink());
+            const isApplicationMessageSent = await sendApplicationLinkMessage(applicationProperty?.link);
             if (!isApplicationMessageSent) {
                 return;
             }
@@ -258,7 +239,10 @@
                 }
             }
         } finally {
-            releaseSendingMessage();
+            // No race to guard against: this runs on the UI thread and the early return above makes
+            // sendMessage non-reentrant, so nothing else can have touched the flag meanwhile.
+            // eslint-disable-next-line require-atomic-updates
+            sendingMessage = false;
         }
     }
 
@@ -633,14 +617,14 @@
     </div>
 {/if}
 {#if applicationComponentOpened}
-    <div class="w-full bg-contrast/50 rounded-t-2xl">
+    <fieldset class="w-full min-w-0 bg-contrast/50 rounded-t-2xl" disabled={sendingMessage}>
         <div class="flex flex-wrap w-full justify-between items-center p-2 gap-2">
             <button
                 data-testid="fileAttachmentButton"
                 class={applicationButtonClass}
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={sendingMessage || !fileAttachementEnabled || isProximityChatRoom || !$canSendMessages}
+                disabled={!fileAttachementEnabled || isProximityChatRoom || !$canSendMessages}
             >
                 <IconPaperclip font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
@@ -655,7 +639,7 @@
                 data-testid="createPollButton"
                 class={applicationButtonClass}
                 onclick={openPollCreationModal}
-                disabled={sendingMessage || !pollCreation || !$canCreatePoll}
+                disabled={!pollCreation || !$canCreatePoll}
             >
                 <IconList font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.poll.title()}</h2>
@@ -684,7 +668,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("youtube")}
                 class:bg-secondary-800={applicationProperty?.name === "youtube"}
-                disabled={sendingMessage || !applicationManager.youtubeToolActivated}
+                disabled={!applicationManager.youtubeToolActivated}
             >
                 <img draggable="false" class="w-8" src={youtubeSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.youtube.title()}</h2>
@@ -700,7 +684,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("klaxoon")}
                 class:bg-secondary-800={applicationProperty?.name === "klaxoon"}
-                disabled={sendingMessage || !applicationManager.klaxoonToolActivated}
+                disabled={!applicationManager.klaxoonToolActivated}
             >
                 <img draggable="false" class="w-8" src={klaxoonSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.klaxoon.title()}</h2>
@@ -716,7 +700,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("googleSheets")}
                 class:bg-secondary-800={applicationProperty?.name === "googleSheets"}
-                disabled={sendingMessage || !applicationManager.googleSheetsToolActivated}
+                disabled={!applicationManager.googleSheetsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleSheetsSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleSheets.title()}</h2>
@@ -732,7 +716,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("googleDocs")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDocs"}
-                disabled={sendingMessage || !applicationManager.googleDocsToolActivated}
+                disabled={!applicationManager.googleDocsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDocsSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleDocs.title()}</h2>
@@ -748,7 +732,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("googleSlides")}
                 class:bg-secondary-800={applicationProperty?.name === "googleSlides"}
-                disabled={sendingMessage || !applicationManager.googleSlidesToolActivated}
+                disabled={!applicationManager.googleSlidesToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleSlidesSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleSlides.title()}</h2>
@@ -764,7 +748,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("googleDrive")}
                 class:bg-secondary-800={applicationProperty?.name === "googleDrive"}
-                disabled={sendingMessage || !applicationManager.googleDriveToolActivated}
+                disabled={!applicationManager.googleDriveToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDriveSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.googleDrive.title()}</h2>
@@ -780,7 +764,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("eraser")}
                 class:bg-secondary-800={applicationProperty?.name === "eraser"}
-                disabled={sendingMessage || !applicationManager.eraserToolActivated}
+                disabled={!applicationManager.eraserToolActivated}
             >
                 <img draggable="false" class="w-8" src={eraserSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.eraser.title()}</h2>
@@ -796,7 +780,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("excalidraw")}
                 class:bg-secondary-800={applicationProperty?.name === "excalidraw"}
-                disabled={sendingMessage || !applicationManager.excalidrawToolActivated}
+                disabled={!applicationManager.excalidrawToolActivated}
             >
                 <img draggable="false" class="w-8" src={excalidrawSvg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.excalidraw.title()}</h2>
@@ -812,7 +796,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("cards")}
                 class:bg-secondary-800={applicationProperty?.name === "cards"}
-                disabled={sendingMessage || !applicationManager.cardsToolActivated}
+                disabled={!applicationManager.cardsToolActivated}
             >
                 <img draggable="false" class="w-8" src={cardsPng} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.cards.title()}</h2>
@@ -828,7 +812,7 @@
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("tldraw")}
                 class:bg-secondary-800={applicationProperty?.name === "tldraw"}
-                disabled={sendingMessage || !applicationManager.tldrawToolActivated}
+                disabled={!applicationManager.tldrawToolActivated}
             >
                 <img draggable="false" class="w-8" src={tldrawJpeg} alt={$LL.chat.a11y.applicationIcon()} />
                 <h2 class={applicationTitleClass}>{$LL.chat.form.application.tldraw.title()}</h2>
@@ -847,7 +831,6 @@
                     class={applicationButtonClass}
                     class:bg-secondary-800={applicationProperty?.name === app.name}
                     onclick={() => openLinkForm(app.name)}
-                    disabled={sendingMessage}
                 >
                     <img draggable="false" class="w-8" src={app.image} alt={$LL.chat.a11y.applicationIcon()} />
                     <h2 class={applicationTitleClass}>{app.name}</h2>
@@ -855,11 +838,12 @@
                 </button>
             {/each}
         </div>
-    </div>
+    </fieldset>
 {/if}
 {#if applicationProperty}
-    <div
-        class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50"
+    <fieldset
+        class="flex w-full min-w-0 flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50"
+        disabled={sendingMessage}
     >
         <ApplicationFormWrapper
             property={applicationProperty}
@@ -867,9 +851,8 @@
             update={onUpdatApplicationProperty}
             processing={onProcessingApplicationProperty}
             processed={onProcessedApplicationProperty}
-            disabled={sendingMessage}
         />
-    </div>
+    </fieldset>
 {/if}
 {#if fileAttachmentComponentOpened}
     <MessageFileInput

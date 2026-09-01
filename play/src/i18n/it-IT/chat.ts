@@ -317,7 +317,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     showMore: "Mostra {number} di più",
     showLess: "Mostra meno",
     showFullMessage: "Show more",
-    showLessMessage: "Show less",
     addRoomToFolderError: "Impossibile aggiungere la stanza alla cartella",
     createRoom: {
         title: "Crea nuova stanza",

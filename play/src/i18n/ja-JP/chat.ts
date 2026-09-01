@@ -317,7 +317,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     showMore: "{number} 件をさらに表示",
     showLess: "表示を減らす",
     showFullMessage: "Show more",
-    showLessMessage: "Show less",
     addRoomToFolderError: "フォルダーにルームを追加できません",
     createRoom: {
         title: "新しいルームの作成",

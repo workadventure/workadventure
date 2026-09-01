@@ -18,7 +18,6 @@
 
     interface Props {
         property: ApplicationProperty;
-        disabled?: boolean;
         close?: () => void;
         update?: (property: ApplicationProperty) => void;
         processing?: () => void;
@@ -28,7 +27,6 @@
 
     let {
         property,
-        disabled = false,
         close = () => {},
         update = () => {},
         processing = () => {},
@@ -191,9 +189,6 @@
         </h2>
         <CloseButton
             onclick={() => {
-                if (disabled) {
-                    return;
-                }
                 close();
             }}
         />
@@ -208,7 +203,6 @@
         class="border rounded w-full !m-0 text-black"
         value={property.link}
         bind:this={htmlElementInput}
-        {disabled}
         oninput={() => {
             inputCallback(property.link);
             input();

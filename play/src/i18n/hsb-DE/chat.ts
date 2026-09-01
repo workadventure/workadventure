@@ -317,7 +317,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     showMore: "Pokazać {number} wjace",
     showLess: "Pokazać mjenje",
     showFullMessage: "Show more",
-    showLessMessage: "Show less",
     addRoomToFolderError: "Njemóžno, rum k zarědej přidać",
     createRoom: {
         title: "Nowy rum napořeć",

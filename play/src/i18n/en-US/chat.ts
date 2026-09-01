@@ -316,7 +316,6 @@ const chat: BaseTranslation = {
     showMore: "Show {number} more",
     showLess: "Show less",
     showFullMessage: "Show more",
-    showLessMessage: "Show less",
     addRoomToFolderError: "Impossible to add the room to the folder",
     createRoom: {
         title: "Create new room",

@@ -319,7 +319,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     showMore: "{number} weitere anzeigen",
     showLess: "Weniger anzeigen",
     showFullMessage: "Show more",
-    showLessMessage: "Show less",
     addRoomToFolderError: "Raum konnte nicht zum Ordner hinzugefügt werden",
     createRoom: {
         title: "Neuen Raum erstellen",

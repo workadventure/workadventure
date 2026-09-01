@@ -1,11 +1,10 @@
 <script lang="ts">
     import type { Readable, Unsubscriber } from "svelte/store";
     import { Marked } from "marked";
-    import { onDestroy, onMount, tick } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
     import LL from "../../../../../i18n/i18n-svelte";
     import { sanitizeHTML } from "./WA-HTML-Sanitizer";
-    import { isMessageLongerThanCollapsedHeight } from "./MessageTextLayout";
 
     interface Props {
         content: Readable<ChatMessageContent>;
@@ -66,16 +65,10 @@
             promiseHtml
                 .then((result) => {
                     html = result;
-                    tick()
-                        .then(updateLongMessageState)
-                        .catch((error) => console.error("Failed to measure chat message", error));
                 })
                 .catch((error) => {
                     console.error("Failed to parse markdown content", error);
                     html = $content.body;
-                    tick()
-                        .then(updateLongMessageState)
-                        .catch((error) => console.error("Failed to measure chat message", error));
                 });
         });
     });
@@ -86,31 +79,20 @@
         }
     });
 
+    // The bubble is always clamped while collapsed, so the browser tells us whether the message overflows.
     $effect(() => {
-        // Re-run the measurement whenever the rendered html or the expanded state changes
-        // (updateLongMessageState itself only reads the DOM element).
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        html;
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        expanded;
-        updateLongMessageState();
-    });
-
-    function updateLongMessageState() {
-        if (!messageBubbleElement) {
+        if (!messageBubbleElement || expanded) {
             return;
         }
-
-        const lineHeight = Number.parseFloat(getComputedStyle(messageBubbleElement).lineHeight);
-        isLongMessage = isMessageLongerThanCollapsedHeight(messageBubbleElement.scrollHeight, lineHeight);
-    }
+        isLongMessage = html.length > 0 && messageBubbleElement.scrollHeight > messageBubbleElement.clientHeight;
+    });
 
     /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 <div
     class="message-bubble m-0 {hasDepth ? 'text-xs leading-4' : 'text-sm'} text-white py-1 px-3"
-    class:collapsed-message={isLongMessage && !expanded}
+    class:collapsed-message={!expanded}
     bind:this={messageBubbleElement}
     lang=""
 >
@@ -122,16 +104,13 @@
         class="m-0 px-3 pb-1 pt-0 text-xs font-semibold text-white/70 hover:text-white"
         onclick={() => (expanded = !expanded)}
     >
-        {expanded ? $LL.chat.showLessMessage() : $LL.chat.showFullMessage()}
+        {expanded ? $LL.chat.showLess() : $LL.chat.showFullMessage()}
     </button>
 {/if}
 
 <style>
     .collapsed-message {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 8;
-        line-clamp: 8;
+        max-height: 8lh;
         overflow: hidden;
     }
 </style>
