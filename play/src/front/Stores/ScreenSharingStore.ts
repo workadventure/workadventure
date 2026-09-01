@@ -250,6 +250,13 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                     }
                 }
 
+                if (currentRequestId !== screenSharingRequestId) {
+                    for (const track of stream.getTracks()) {
+                        track.stop();
+                    }
+                    return;
+                }
+
                 // If stream ends (for instance if user clicks the stop screen sharing button in the browser), let's close the view
                 for (const track of currentStream.getTracks()) {
                     track.onended = () => {
