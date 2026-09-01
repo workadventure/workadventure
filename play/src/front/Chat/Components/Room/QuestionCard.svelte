@@ -5,6 +5,8 @@
     import Button from "../../../Components/UI/Button.svelte";
     import { IconCheck, IconHelpCircle, IconList, IconLoader, IconThumbUp, IconTrash } from "@wa-icons";
 
+    type PendingAction = "upvote" | "answer" | "delete";
+
     interface Props {
         question: ChatQuestionItem;
     }
@@ -12,67 +14,29 @@
     let { question }: Props = $props();
 
     let questionState = $derived(question.state);
-    let isUpvoting = $state(false);
-    let isMarkingAnswered = $state(false);
-    let isDeleting = $state(false);
+    let pending: PendingAction | undefined = $state();
 
-    let cardBorderClass = $derived($questionState.isAnswered ? "border-success/30" : "border-white/10");
-    let statusAccentClass = $derived($questionState.isAnswered ? "bg-success" : "bg-warning");
-
-    function toggleUpvote() {
-        if (!$questionState.canUpvote || isUpvoting) {
+    function run(action: PendingAction, request: () => Promise<void>) {
+        if (pending) {
             return;
         }
 
-        isUpvoting = true;
-        question
-            .toggleUpvote()
-            .catch((error) => console.error("Failed to update question upvote", error))
+        pending = action;
+        request()
+            .catch((error) => console.error(`Failed to ${action} question`, error))
             .finally(() => {
-                isUpvoting = false;
+                pending = undefined;
             });
-    }
-
-    function markAnswered() {
-        if (!$questionState.canMarkAnswered || isMarkingAnswered) {
-            return;
-        }
-
-        isMarkingAnswered = true;
-        question
-            .markAnswered()
-            .catch((error) => console.error("Failed to mark question as answered", error))
-            .finally(() => {
-                isMarkingAnswered = false;
-            });
-    }
-
-    function removeQuestion() {
-        if (!$questionState.canDelete || isDeleting) {
-            return;
-        }
-
-        isDeleting = true;
-        question
-            .remove()
-            .catch((error) => console.error("Failed to delete question", error))
-            .finally(() => {
-                isDeleting = false;
-            });
-    }
-
-    function openQuestionsPanel() {
-        roomSidePanelStore.setActiveSection("questions");
     }
 </script>
 
 <div class="px-3">
     <div
         data-testid="questionCard"
-        class="question-card relative overflow-hidden rounded-2xl bg-contrast/90 border border-solid p-4 max-w-2xl transition-colors {cardBorderClass}"
+        class="question-card rounded-2xl bg-contrast/90 border border-solid p-4 max-w-2xl transition-colors {$questionState.isAnswered
+            ? 'border-success/30'
+            : 'border-white/10'}"
     >
-        <div class="absolute inset-y-0 left-0 w-1 {statusAccentClass}" aria-hidden="true"></div>
-
         <div class="flex flex-wrap items-center gap-2">
             <span
                 class="inline-flex h-6 items-center gap-1 rounded-md bg-warning/15 px-2 text-xs font-medium text-warning"
@@ -91,7 +55,7 @@
             {/if}
         </div>
 
-        <div class="mt-2 whitespace-pre-wrap text-sm font-semibold text-white overflow-wrap-anywhere">
+        <div class="mt-2 whitespace-pre-wrap wrap-anywhere text-sm font-semibold text-white">
             {$questionState.body}
         </div>
 
@@ -106,11 +70,11 @@
                 variant={$questionState.hasUpvoted ? "primary" : "light"}
                 appearance={$questionState.hasUpvoted ? "filled" : "border"}
                 size="xs"
-                disabled={!$questionState.canUpvote || isUpvoting}
+                disabled={!$questionState.canUpvote || pending === "upvote"}
                 aria-label={$LL.chat.question.upvote()}
                 aria-pressed={$questionState.hasUpvoted}
                 dataTestId="questionUpvoteButton"
-                onclick={toggleUpvote}
+                onclick={() => run("upvote", () => question.toggleUpvote())}
             >
                 {#snippet icon()}
                     <IconThumbUp font-size={14} />
@@ -123,12 +87,12 @@
                     variant="success"
                     appearance="border"
                     size="xs"
-                    disabled={isMarkingAnswered}
+                    disabled={pending === "answer"}
                     dataTestId="questionMarkAnsweredButton"
-                    onclick={markAnswered}
+                    onclick={() => run("answer", () => question.markAnswered())}
                 >
                     {#snippet icon()}
-                        {#if isMarkingAnswered}
+                        {#if pending === "answer"}
                             <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={14} />
                         {:else}
                             <IconCheck font-size={14} />
@@ -143,12 +107,12 @@
                     variant="danger"
                     appearance="border"
                     size="xs"
-                    disabled={isDeleting}
+                    disabled={pending === "delete"}
                     dataTestId="questionDeleteButton"
-                    onclick={removeQuestion}
+                    onclick={() => run("delete", () => question.remove())}
                 >
                     {#snippet icon()}
-                        {#if isDeleting}
+                        {#if pending === "delete"}
                             <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={14} />
                         {:else}
                             <IconTrash font-size={14} />
@@ -164,7 +128,7 @@
                 size="xs"
                 class="ms-auto"
                 dataTestId="questionViewAllButton"
-                onclick={openQuestionsPanel}
+                onclick={() => roomSidePanelStore.setActiveSection("questions")}
             >
                 {#snippet icon()}
                     <IconList font-size={14} />
@@ -174,9 +138,3 @@
         </div>
     </div>
 </div>
-
-<style>
-    .overflow-wrap-anywhere {
-        overflow-wrap: anywhere;
-    }
-</style>
