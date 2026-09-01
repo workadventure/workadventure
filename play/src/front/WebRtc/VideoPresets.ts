@@ -206,6 +206,18 @@ const screenShareMaxPreset: Preset = {
 };*/
 
 /**
+ * Maximum capture resolution of a screen share, per quality setting.
+ *
+ * AV1 has no hardware encoder on most machines, and nothing downstream ever lowers the published
+ * resolution.
+ */
+export const screenShareMaxResolution: Record<VideoQualitySetting, MediaTrackConstraints> = {
+    low: { width: { max: 1280 }, height: { max: 720 } },
+    recommended: { width: { max: 1920 }, height: { max: 1080 } },
+    high: { width: { max: 2560 }, height: { max: 1440 } },
+};
+
+/**
  * Select the most appropriate bandwidth and fps for your resolution.
  */
 export function selectVideoPreset(

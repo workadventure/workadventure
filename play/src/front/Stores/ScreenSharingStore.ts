@@ -4,6 +4,7 @@ import { asError } from "catch-unknown";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
+import { screenShareMaxResolution } from "../WebRtc/VideoPresets";
 import LL from "../../i18n/i18n-svelte";
 import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
 import { VideoBox } from "../Space/VideoBox";
@@ -236,6 +237,18 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 }
 
                 currentStream = stream;
+
+                // Capped on the track rather than in the getDisplayMedia constraints: those are only
+                // advisory in some browsers, and the Electron capture path does not go through them.
+                const videoTrack = stream.getVideoTracks()[0];
+                if (videoTrack) {
+                    try {
+                        await videoTrack.applyConstraints(screenShareMaxResolution[get(screenShareQualityStore)]);
+                    } catch (e) {
+                        // Not fatal: we simply keep the native resolution.
+                        console.warn("Could not cap the screen sharing resolution", e);
+                    }
+                }
 
                 // If stream ends (for instance if user clicks the stop screen sharing button in the browser), let's close the view
                 for (const track of currentStream.getTracks()) {
