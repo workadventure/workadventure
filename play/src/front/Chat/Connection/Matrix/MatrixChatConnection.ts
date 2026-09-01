@@ -1863,7 +1863,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             return Promise.reject(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
         }
 
-        const existingDirectRoom = this.getDirectRoomFor(userToInvite);
+        const existingDirectRoom = await this.getDirectRoomFor(userToInvite);
 
         if (existingDirectRoom) return existingDirectRoom;
 
@@ -1900,24 +1900,33 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
     }
 
-    getDirectRoomFor(userID: string): (ChatRoom & ChatRoomMembershipManagement) | undefined {
-        const directRooms = Array.from(this.roomList.values()).filter((room) => {
-            if (get(room.type) !== "direct") return false;
-            // Read the SDK room, not room.members: that Svelte store stays empty until a
-            // participants panel triggers ensureMembersInitialized() (lazy loading, #6049).
-            const memberIDs = room
-                .getMatrixRoom()
-                .getMembers()
-                .filter(
-                    (member) =>
-                        member.membership === KnownMembership.Join || member.membership === KnownMembership.Invite,
-                )
-                .map((member) => member.userId);
-            return memberIDs.length === 2 && memberIDs.includes(userID);
+    async getDirectRoomFor(userID: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
+        if (!this.client) return undefined;
+
+        const isActiveMembership = (membership: string | undefined) =>
+            membership === KnownMembership.Join || membership === KnownMembership.Invite;
+
+        // Look the DM up in the SDK client, not in roomList: roomList is filled asynchronously
+        // (one room per animation frame) and rooms transiently leave it during placement
+        // reconciliation, so it can miss a DM the client already knows about — every miss here
+        // forks a duplicate room. Same heuristic as Element's findDMForUser: a DM is a room of
+        // exactly two active people containing those two people.
+        const suitableRooms = this.client.getRooms().filter((room) => {
+            if (room.isSpaceRoom() || !isActiveMembership(room.getMyMembership())) return false;
+            const activeMembers = room.getMembers().filter((member) => isActiveMembership(member.membership));
+            return activeMembers.length === 2 && activeMembers.some((member) => member.userId === userID);
         });
+
         // Duplicate DMs already exist for some users: pick the most recently active one
-        // (the sidebar sort criterion) instead of Map insertion order.
-        return directRooms.sort((roomA, roomB) => roomB.lastMessageTimestamp - roomA.lastMessageTimestamp)[0];
+        // (the sidebar sort criterion) instead of an arbitrary insertion order.
+        const bestRoom = suitableRooms.sort(
+            (roomA, roomB) => roomB.getLastActiveTimestamp() - roomA.getLastActiveTimestamp(),
+        )[0];
+        if (!bestRoom) return undefined;
+
+        const existingWrapper = await this.findRoomOrFolder(bestRoom.roomId);
+        if (existingWrapper instanceof MatrixChatRoom) return existingWrapper;
+        return this.createAndAddNewRootRoom(bestRoom);
     }
 
     async searchChatUsers(searchText: string, limit = 20) {

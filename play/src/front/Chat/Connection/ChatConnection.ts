@@ -519,7 +519,7 @@ export interface ChatConnectionInterface {
     createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>;
     roomCreationInProgress: Readable<boolean>;
-    getDirectRoomFor(userChatId: string): (ChatRoom & ChatRoomMembershipManagement) | undefined;
+    getDirectRoomFor(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>;
     searchAccessibleRooms(searchText: string): Promise<
         {
             id: string;

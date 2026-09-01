@@ -46,8 +46,8 @@ export class VoidChatConnection implements ChatConnectionInterface {
         throw new Error("VoidChatConnection: createDirectRoom is not implemented.");
     }
 
-    getDirectRoomFor(userChatId: string): (ChatRoom & ChatRoomMembershipManagement) | undefined {
-        return undefined;
+    getDirectRoomFor(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
+        return Promise.resolve(undefined);
     }
 
     searchAccessibleRooms(searchText: string): Promise<{ id: string; name: string | undefined }[]> {

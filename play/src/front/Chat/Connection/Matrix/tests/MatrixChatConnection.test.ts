@@ -1,4 +1,4 @@
-import type { MatrixClient } from "matrix-js-sdk";
+import type { MatrixClient, Room } from "matrix-js-sdk";
 import { ClientEvent, EventType, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
@@ -564,7 +564,7 @@ describe("MatrixChatConnection", () => {
 
             const spyGetDirectRoomFor = vi.spyOn(matrixChatConnection, "getDirectRoomFor");
 
-            spyGetDirectRoomFor.mockImplementation(() => oldDirectRoom);
+            spyGetDirectRoomFor.mockResolvedValue(oldDirectRoom);
             matrixChatConnection["addDMRoomInAccountData"] = vi.fn();
 
             expect(await matrixChatConnection.createDirectRoom(userId)).toEqual(oldDirectRoom);
@@ -604,7 +604,7 @@ describe("MatrixChatConnection", () => {
             const userId = "AliceID";
 
             const spyGetDirectRoomFor = vi.spyOn(matrixChatConnection, "getDirectRoomFor");
-            spyGetDirectRoomFor.mockImplementation(() => undefined);
+            spyGetDirectRoomFor.mockResolvedValue(undefined);
 
             matrixChatConnection["createRoom"] = vi.fn().mockResolvedValue({
                 room_id: "newRoomId",
@@ -641,7 +641,7 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
 
             const spyGetDirectRoomFor = vi.spyOn(matrixChatConnection, "getDirectRoomFor");
-            spyGetDirectRoomFor.mockImplementation(() => undefined);
+            spyGetDirectRoomFor.mockResolvedValue(undefined);
             matrixChatConnection["addDMRoomInAccountData"] = vi.fn();
 
             // A double click issues two concurrent calls: only one room must be created.
@@ -649,102 +649,147 @@ describe("MatrixChatConnection", () => {
                 matrixChatConnection.createDirectRoom("AliceID"),
                 matrixChatConnection.createDirectRoom("AliceID"),
             ]);
+            //eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockMatrixClient.createRoom).toHaveBeenCalledOnce();
 
             // Once settled, a later call goes through the whole flow again.
             await matrixChatConnection.createDirectRoom("AliceID");
+            //eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockMatrixClient.createRoom).toHaveBeenCalledTimes(2);
         });
     });
     describe("getDirectRoomFor", () => {
-        const createDirectRoomStub = (
-            id: string,
+        const createSdkRoomStub = (
+            roomId: string,
             memberships: [string, string][],
-            { type = "direct", lastMessageTimestamp = 0 }: { type?: string; lastMessageTimestamp?: number } = {},
+            {
+                myMembership = KnownMembership.Join,
+                lastActiveTimestamp = 0,
+                isSpace = false,
+            }: { myMembership?: string; lastActiveTimestamp?: number; isSpace?: boolean } = {},
         ) =>
             ({
-                id,
-                type: readable(type),
-                // Regression guard: the lookup must not rely on this lazily-initialized store,
-                // it stays empty until a participants panel calls ensureMembersInitialized().
-                members: writable([]),
-                lastMessageTimestamp,
-                getMatrixRoom: () => ({
-                    getMembers: () => memberships.map(([userId, membership]) => ({ userId, membership })),
-                }),
-            }) as unknown as MatrixChatRoom;
+                roomId,
+                isSpaceRoom: () => isSpace,
+                getMyMembership: () => myMembership,
+                getMembers: () => memberships.map(([userId, membership]) => ({ userId, membership })),
+                getLastActiveTimestamp: () => lastActiveTimestamp,
+            }) as unknown as Room;
 
-        const getConnectionWithRooms = async (rooms: MatrixChatRoom[]) => {
-            const matrixChatConnection = await getMatrixConnection(Promise.resolve({} as unknown as MatrixClient));
-            rooms.forEach((room) => matrixChatConnection["roomList"].set(room.id, room));
-            return matrixChatConnection;
+        // The lookup must read the SDK client directly: roomList is filled asynchronously
+        // and can miss a DM the client already knows about (cold start, reconciliation).
+        const getConnectionWithSdkRooms = async (sdkRooms: Room[]) => {
+            const mockMatrixClient = {
+                getRooms: () => sdkRooms,
+            } as unknown as MatrixClient;
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+            const createAndAddNewRootRoom = vi.fn(
+                (room: Room) => ({ id: room.roomId, createdFrom: room }) as unknown as MatrixChatRoom,
+            );
+            matrixChatConnection["createAndAddNewRootRoom"] = createAndAddNewRootRoom;
+            return { matrixChatConnection, createAndAddNewRootRoom };
         };
 
-        it("should find a direct room even when its members store was never initialized", async () => {
-            const directRoom = createDirectRoomStub("dm", [
-                ["@me:matrix.org", KnownMembership.Join],
-                ["@alice:matrix.org", KnownMembership.Join],
-            ]);
-            const connection = await getConnectionWithRooms([directRoom]);
+        const directMemberships: [string, string][] = [
+            ["@me:matrix.org", KnownMembership.Join],
+            ["@alice:matrix.org", KnownMembership.Join],
+        ];
 
-            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBe(directRoom);
+        it("should find an existing direct room from the SDK client even when roomList is empty", async () => {
+            const directRoom = createSdkRoomStub("dm", directMemberships);
+            const { matrixChatConnection, createAndAddNewRootRoom } = await getConnectionWithSdkRooms([directRoom]);
+
+            const foundRoom = await matrixChatConnection.getDirectRoomFor("@alice:matrix.org");
+
+            expect(createAndAddNewRootRoom).toHaveBeenCalledWith(directRoom);
+            expect(foundRoom?.id).toBe("dm");
+        });
+
+        it("should return the already-registered wrapper instead of creating a new one", async () => {
+            const directRoom = createSdkRoomStub("dm", directMemberships);
+            const { matrixChatConnection, createAndAddNewRootRoom } = await getConnectionWithSdkRooms([directRoom]);
+            const existingWrapper = Object.create(MatrixChatRoomClass.prototype) as MatrixChatRoom;
+            matrixChatConnection["roomList"].set("dm", existingWrapper);
+
+            const foundRoom = await matrixChatConnection.getDirectRoomFor("@alice:matrix.org");
+
+            expect(foundRoom).toBe(existingWrapper);
+            expect(createAndAddNewRootRoom).not.toHaveBeenCalled();
         });
 
         it("should find a direct room where the other user is still invited", async () => {
-            const directRoom = createDirectRoomStub("dm", [
+            const directRoom = createSdkRoomStub("dm", [
                 ["@me:matrix.org", KnownMembership.Join],
                 ["@alice:matrix.org", KnownMembership.Invite],
             ]);
-            const connection = await getConnectionWithRooms([directRoom]);
+            const { matrixChatConnection } = await getConnectionWithSdkRooms([directRoom]);
 
-            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBe(directRoom);
+            expect(await matrixChatConnection.getDirectRoomFor("@alice:matrix.org")).toBeDefined();
         });
 
-        it("should ignore rooms that are not typed direct", async () => {
-            const multipleRoom = createDirectRoomStub(
-                "notADm",
+        it("should find a direct room I am still invited to", async () => {
+            const directRoom = createSdkRoomStub(
+                "dm",
                 [
-                    ["@me:matrix.org", KnownMembership.Join],
+                    ["@me:matrix.org", KnownMembership.Invite],
                     ["@alice:matrix.org", KnownMembership.Join],
                 ],
-                { type: "multiple" },
+                { myMembership: KnownMembership.Invite },
             );
-            const connection = await getConnectionWithRooms([multipleRoom]);
+            const { matrixChatConnection } = await getConnectionWithSdkRooms([directRoom]);
 
-            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBeUndefined();
+            expect(await matrixChatConnection.getDirectRoomFor("@alice:matrix.org")).toBeDefined();
         });
 
         it("should ignore rooms with more than two active members", async () => {
-            const crowdedRoom = createDirectRoomStub("crowded", [
+            const crowdedRoom = createSdkRoomStub("crowded", [
                 ["@me:matrix.org", KnownMembership.Join],
                 ["@alice:matrix.org", KnownMembership.Join],
                 ["@bob:matrix.org", KnownMembership.Join],
             ]);
-            const connection = await getConnectionWithRooms([crowdedRoom]);
+            const { matrixChatConnection } = await getConnectionWithSdkRooms([crowdedRoom]);
 
-            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBeUndefined();
+            expect(await matrixChatConnection.getDirectRoomFor("@alice:matrix.org")).toBeUndefined();
         });
 
         it("should ignore rooms the other user has left", async () => {
-            const abandonedRoom = createDirectRoomStub("abandoned", [
+            const abandonedRoom = createSdkRoomStub("abandoned", [
                 ["@me:matrix.org", KnownMembership.Join],
                 ["@alice:matrix.org", KnownMembership.Leave],
             ]);
-            const connection = await getConnectionWithRooms([abandonedRoom]);
+            const { matrixChatConnection } = await getConnectionWithSdkRooms([abandonedRoom]);
 
-            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBeUndefined();
+            expect(await matrixChatConnection.getDirectRoomFor("@alice:matrix.org")).toBeUndefined();
+        });
+
+        it("should ignore rooms I have left", async () => {
+            const leftRoom = createSdkRoomStub("left", directMemberships, {
+                myMembership: KnownMembership.Leave,
+            });
+            const { matrixChatConnection } = await getConnectionWithSdkRooms([leftRoom]);
+
+            expect(await matrixChatConnection.getDirectRoomFor("@alice:matrix.org")).toBeUndefined();
+        });
+
+        it("should ignore space rooms", async () => {
+            const spaceRoom = createSdkRoomStub("space", directMemberships, { isSpace: true });
+            const { matrixChatConnection } = await getConnectionWithSdkRooms([spaceRoom]);
+
+            expect(await matrixChatConnection.getDirectRoomFor("@alice:matrix.org")).toBeUndefined();
         });
 
         it("should pick the most recently active room when duplicates exist", async () => {
-            const memberships: [string, string][] = [
-                ["@me:matrix.org", KnownMembership.Join],
-                ["@alice:matrix.org", KnownMembership.Join],
-            ];
-            const staleRoom = createDirectRoomStub("stale", memberships, { lastMessageTimestamp: 100 });
-            const activeRoom = createDirectRoomStub("active", memberships, { lastMessageTimestamp: 200 });
-            const connection = await getConnectionWithRooms([staleRoom, activeRoom]);
+            const staleRoom = createSdkRoomStub("stale", directMemberships, { lastActiveTimestamp: 100 });
+            const activeRoom = createSdkRoomStub("active", directMemberships, { lastActiveTimestamp: 200 });
+            const { matrixChatConnection, createAndAddNewRootRoom } = await getConnectionWithSdkRooms([
+                staleRoom,
+                activeRoom,
+            ]);
 
-            expect(connection.getDirectRoomFor("@alice:matrix.org")).toBe(activeRoom);
+            const foundRoom = await matrixChatConnection.getDirectRoomFor("@alice:matrix.org");
+
+            expect(createAndAddNewRootRoom).toHaveBeenCalledWith(activeRoom);
+            expect(foundRoom?.id).toBe("active");
         });
     });
     describe("searchAccessibleRooms", () => {
