@@ -62,7 +62,7 @@
     "openapi3-ts": "^4.5.0",
     "prom-client": "^15.1.3",
     "protobuf-fieldmask": "^2.0.0",
-    "query-string": "^9.3.1",
+    "query-string": "^9.5.1",
     "redis": "^5.12.1",
     "rxjs": "^7.8.2",
     "source-map-support": "^0.5.21",
