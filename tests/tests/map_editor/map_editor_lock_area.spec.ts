@@ -134,4 +134,43 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         expect(alicePositionAfterAreaMove.y).toBeGreaterThan(6 * 32);
         await expect(page2.getByText("This area is locked. You cannot enter.")).toBeHidden();
     });
+
+    test("Lock area also blocks pathfinding moves of a user allowed to edit the map", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        const areaLeftBoundX = 1 * 32;
+
+        // Create an area just to the right of the spawn and make it lockable.
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        await AreaEditor.drawArea(page, { x: 1 * 32, y: 1 * 32 }, { x: 7 * 32, y: 7 * 32 });
+        await AreaEditor.addProperty(page, "lockableAreaPropertyData");
+        await Menu.closeMapEditor(page);
+
+        // Admin1 stays out of the area, Alice enters it and locks it.
+        await Map.teleportToPosition(page, 0, 3 * 32);
+        await using page2 = await getPage(browser, "Alice", Map.url("empty"));
+        await Map.teleportToPosition(page2, 4 * 32, 4 * 32);
+        await expect(page2.getByTestId("lock-button")).toBeVisible();
+        await page2.getByTestId("lock-button").click();
+        await expect(page2.getByTestId("lock-button")).toHaveClass(/bg-danger/);
+
+        // Admin1 can edit the map, which used to remove every area from his pathfinding collision grid. He must not
+        // be able to walk into the locked area with a pathfinding move, which is the code path used by the "talk to"
+        // action of the chat, by a right click on the map and by the scripting API.
+        await Map.walkToPosition(page, 4 * 32, 4 * 32).catch(() => {
+            // Expected: no path can be found into a locked area.
+        });
+        const adminPositionWhileLocked = await Map.getPosition(page);
+        expect(adminPositionWhileLocked.x).toBeLessThan(areaLeftBoundX);
+
+        // Once Alice unlocks the area, the very same move brings Admin1 inside: editing rights are still enough to
+        // enter an area he is not allowed to enter otherwise.
+        await page2.getByTestId("lock-button").click();
+        await expect(page2.getByTestId("lock-button")).not.toHaveClass(/bg-danger/);
+
+        await Map.walkToPosition(page, 4 * 32, 4 * 32);
+        const adminPositionAfterUnlock = await Map.getPosition(page);
+        expect(adminPositionAfterUnlock.x).toBeGreaterThan(areaLeftBoundX);
+    });
 });
