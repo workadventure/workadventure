@@ -649,10 +649,10 @@ export class SocketManager implements ZoneEventListener {
 
             socketData.viewport = viewport;
 
-            const room = this.rooms.get(socketData.roomId);
-            if (!room) {
-                // Guard (c): a concurrent teardown deleted this room after this still-live socket joined it.
-                // Recreate it in place while the socket still has a back connection.
+            const room = socketData.pusherRoom;
+            if (!room || this.rooms.get(socketData.roomId) !== room) {
+                // Guard (c): the room instance this socket joined was evicted or replaced by a concurrent
+                // teardown. Recreate/rejoin it in place while the socket still has a back connection.
                 if (socketData.backConnection) {
                     this.recoverMissingRoom(client);
                     return;
@@ -688,6 +688,7 @@ export class SocketManager implements ZoneEventListener {
                     return;
                 }
                 room.join(client);
+                socketData.pusherRoom = room;
                 room.setViewport(client, socketData.viewport);
 
                 const message = `Recreated missing room '${socketData.roomId}' for live socket of user '${socketData.userUuid}'`;
@@ -715,6 +716,7 @@ export class SocketManager implements ZoneEventListener {
         }
 
         pusherRoom.join(client);
+        client.getUserData().pusherRoom = pusherRoom;
     }
 
     handleUserMovesMessage(client: PusherWebSocket, userMovesMessage: UserMovesMessage): void {
@@ -868,17 +870,16 @@ export class SocketManager implements ZoneEventListener {
         try {
             if (socketData.roomId) {
                 try {
-                    //user leaves room
-                    const room: PusherRoom | undefined = this.rooms.get(socketData.roomId);
+                    //user leaves room: leave the exact instance this socket joined (the map may already
+                    // hold a fresh instance for the same URL after a reconnection race).
+                    const room: PusherRoom | undefined = socketData.pusherRoom;
                     if (room) {
                         debug("Leaving room %s.", socketData.roomId);
 
                         room.leave(socket);
+                        socketData.pusherRoom = undefined;
                         this.deleteRoomIfEmpty(room);
                     } else {
-                        // The room was already removed from the map. Indeed, there is a race condition
-                        // between the closing if the last user connection to the back and the closing of the room
-                        // connection to the back.
                         debug("Could not find the GameRoom the user is leaving: %s", socketData.roomId);
                     }
                     //user leave previous room

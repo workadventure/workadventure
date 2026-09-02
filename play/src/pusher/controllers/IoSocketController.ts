@@ -589,7 +589,7 @@ export class IoSocketController {
                 const userData = socket.getUserData();
                 const rooms = socketManager.getRooms();
 
-                if (!rooms.has(userData.roomId)) {
+                if (userData.pusherRoom === undefined || rooms.get(userData.roomId) !== userData.pusherRoom) {
                     Sentry.captureException(
                         `Room ${userData.roomId} not found for socket ${userData.userUuid} (${userData.name}) while reconnecting, closing the connection`,
                     );
@@ -601,8 +601,12 @@ export class IoSocketController {
                 }
             },
             canReplaceTransport: (socket) => {
+                // Revivable only if the room instance this socket joined is still the live one.
                 const userData = socket.getUserData();
-                return socketManager.getRooms().has(userData.roomId);
+                return (
+                    userData.pusherRoom !== undefined &&
+                    socketManager.getRooms().get(userData.roomId) === userData.pusherRoom
+                );
             },
             message: (socket, message): void => {
                 Sentry.withIsolationScope(() => {

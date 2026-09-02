@@ -59,6 +59,7 @@ const createClient = (
         userUuid: "user-uuid",
         viewport: { left: 0, top: 0, right: 10, bottom: 10 },
         backConnection: {},
+        pusherRoom: undefined,
         ...overrides,
     };
 
@@ -156,6 +157,24 @@ describe("SocketManager reconnection race guards", () => {
         // One recovery, one report — not one per viewport frame.
         expect(captureMessage).toHaveBeenCalledTimes(1);
         expect(captureMessage).toHaveBeenCalledWith(expect.stringContaining("Recreated missing room"), "warning");
+        expect(client.getUserData().pusherRoom).toBe(room);
+    });
+
+    it("recovers when the socket's room instance was replaced in the map", async () => {
+        const manager = new SocketManager();
+        const client = createClient();
+
+        // The socket joined a stale instance; the map now holds a fresh one for the same URL.
+        const stale = new roomMock.FakePusherRoom(ROOM_URL);
+        const live = new roomMock.FakePusherRoom(ROOM_URL);
+        client.getUserData().pusherRoom = stale as unknown as ReturnType<PusherWebSocket["getUserData"]>["pusherRoom"];
+        getRooms(manager).set(ROOM_URL, live);
+
+        manager.handleViewport(client, { left: 0, top: 0, right: 10, bottom: 10 });
+        await vi.waitFor(() => expect(live.join).toHaveBeenCalledWith(client));
+
+        expect(client.getUserData().pusherRoom).toBe(live);
+        expect(stale.join).not.toHaveBeenCalled();
     });
 
     it("still reports an unrecoverable missing room when the socket has no back connection", () => {
