@@ -78,7 +78,7 @@ export const openDirectChatRoom = async (chatID: string) => {
             return;
         }
         const chatConnection = await gameManager.getChatConnection();
-        let room = chatConnection.getDirectRoomFor(chatID);
+        let room = await chatConnection.getDirectRoomFor(chatID);
         if (!room) room = await chatConnection.createDirectRoom(chatID);
         if (!room) throw new Error("Failed to create room");
         analyticsClient.createMatrixRoom();

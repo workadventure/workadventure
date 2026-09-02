@@ -1315,12 +1315,16 @@ export class MatrixChatRoom
     }
 
     private onRoomNewMember(event: MatrixEvent, state: RoomState, member: RoomMember) {
-        const newWrapper = new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl, this.matrixRoom.client);
-        const merger = get(this.userProviderMergerStore);
-        if (merger) {
-            newWrapper.setUserProviderMergerContext(merger);
+        // A re-emitted membership event for an already-known member must not append a
+        // duplicate wrapper: stores deriving from this list count members.
+        if (!get(this.members).some((existingMember) => existingMember.id === member.userId)) {
+            const newWrapper = new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl, this.matrixRoom.client);
+            const merger = get(this.userProviderMergerStore);
+            if (merger) {
+                newWrapper.setUserProviderMergerContext(merger);
+            }
+            this.members.update((members) => [...members, newWrapper]);
         }
-        this.members.update((members) => [...members, newWrapper]);
         this.refreshRoomType();
         this.refreshJoinedMemberCount();
     }

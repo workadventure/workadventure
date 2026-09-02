@@ -140,6 +140,10 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     isGuest: Writable<boolean> = writable(false);
     hasUnreadMessages: Readable<boolean>;
     roomCreationInProgress: Writable<boolean> = writable(false);
+    private pendingDirectRoomCreation = new Map<
+        string,
+        Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>
+    >();
     roomFolders: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<
         MatrixRoomFolder["id"],
         MatrixRoomFolder
@@ -1840,11 +1844,26 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     async createDirectRoom(userToInvite: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
+        // Deduplicate concurrent calls (e.g. a double click on the "send message" button):
+        // both callers must resolve to the same room instead of racing two createRoom requests.
+        const pendingCreation = this.pendingDirectRoomCreation.get(userToInvite);
+        if (pendingCreation) return pendingCreation;
+
+        const creation = this.doCreateDirectRoom(userToInvite).finally(() => {
+            this.pendingDirectRoomCreation.delete(userToInvite);
+        });
+        this.pendingDirectRoomCreation.set(userToInvite, creation);
+        return creation;
+    }
+
+    private async doCreateDirectRoom(
+        userToInvite: string,
+    ): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
         if (!this.client) {
             return Promise.reject(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
         }
 
-        const existingDirectRoom = this.getDirectRoomFor(userToInvite);
+        const existingDirectRoom = await this.getDirectRoomFor(userToInvite);
 
         if (existingDirectRoom) return existingDirectRoom;
 
@@ -1881,20 +1900,33 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
     }
 
-    getDirectRoomFor(userID: string): (ChatRoom & ChatRoomMembershipManagement) | undefined {
-        const directRooms = Array.from(this.roomList.values())
-            .filter((room) => {
-                const memberIDs = get(room.members)
-                    .filter((member) => member.id && ["join", "invite"].includes(get(member.membership)))
-                    .map((member) => member.id);
-                return (
-                    get(room.type) === "direct" &&
-                    memberIDs.some((memberId) => memberId === userID && memberIDs.length === 2)
-                );
-            })
-            .map((room) => room);
-        if (directRooms.length > 0) return directRooms[0];
-        return undefined;
+    async getDirectRoomFor(userID: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
+        if (!this.client) return undefined;
+
+        const isActiveMembership = (membership: string | undefined) =>
+            membership === KnownMembership.Join || membership === KnownMembership.Invite;
+
+        // Look the DM up in the SDK client, not in roomList: roomList is filled asynchronously
+        // (one room per animation frame) and rooms transiently leave it during placement
+        // reconciliation, so it can miss a DM the client already knows about — every miss here
+        // forks a duplicate room. Same heuristic as Element's findDMForUser: a DM is a room of
+        // exactly two active people containing those two people.
+        const suitableRooms = this.client.getRooms().filter((room) => {
+            if (room.isSpaceRoom() || !isActiveMembership(room.getMyMembership())) return false;
+            const activeMembers = room.getMembers().filter((member) => isActiveMembership(member.membership));
+            return activeMembers.length === 2 && activeMembers.some((member) => member.userId === userID);
+        });
+
+        // Duplicate DMs already exist for some users: pick the most recently active one
+        // (the sidebar sort criterion) instead of an arbitrary insertion order.
+        const bestRoom = suitableRooms.sort(
+            (roomA, roomB) => roomB.getLastActiveTimestamp() - roomA.getLastActiveTimestamp(),
+        )[0];
+        if (!bestRoom) return undefined;
+
+        const existingWrapper = await this.findRoomOrFolder(bestRoom.roomId);
+        if (existingWrapper instanceof MatrixChatRoom) return existingWrapper;
+        return this.createAndAddNewRootRoom(bestRoom);
     }
 
     async searchChatUsers(searchText: string, limit = 20) {
@@ -2037,7 +2069,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }
         const directMap: Record<string, string[]> = this.client.getAccountData(EventType.Direct)?.getContent() || {};
-        directMap[userId] = [...(directMap[userId] || []), roomId];
+        const roomsForUser = directMap[userId] ?? [];
+        if (roomsForUser.includes(roomId)) return;
+        directMap[userId] = [...roomsForUser, roomId];
         await this.client.setAccountData(EventType.Direct, directMap);
     }
 
