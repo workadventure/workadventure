@@ -15,10 +15,6 @@ import type { RawSocket } from "./PusherWebSocket";
 import { validateWebsocketQuery } from "./QueryValidator";
 import { getClientIpFromXForwardedFor } from "./ClientIp";
 
-// Close code reported when a retained logical connection is discarded in favour of a new connection from the
-// same tab. 1008 (policy violation) matches the other "cannot reuse this socket" paths of this controller.
-const DISCARDED_CONTEXT_CLOSE_CODE = 1008;
-
 type UpgradeContext<TQuery> = {
     query: TQuery;
     request: {
@@ -57,7 +53,7 @@ type RoomWsConfig<TQuery extends RoomWsQuery> = {
     open: OpenHandler;
     rejectedOpen: RejectedOpenHandler;
     reconnect: ReconnectHandler;
-    canReplaceTransport?: CanReplaceTransportHandler;
+    canReplaceTransport: CanReplaceTransportHandler;
     message: MessageHandler;
     close: CloseHandler;
 };
@@ -133,17 +129,9 @@ export class PusherRoomSocketController {
         query: TQuery,
         websocketProtocol: string,
         tabContext: WebSocketContext | undefined,
-        canReplaceTransport: CanReplaceTransportHandler | undefined,
+        canReplaceTransport: CanReplaceTransportHandler,
     ): tabContext is WebSocketContext & { socket: PusherWebSocket } {
-        if (!tabContext?.socket) {
-            return false;
-        }
-
-        if (tabContext.socket.isDisconnecting()) {
-            return false;
-        }
-
-        if (canReplaceTransport && !canReplaceTransport(tabContext.socket)) {
+        if (!tabContext?.socket || tabContext.socket.isDisconnecting() || !canReplaceTransport(tabContext.socket)) {
             return false;
         }
 
@@ -189,17 +177,11 @@ export class PusherRoomSocketController {
     }
 
     /**
-     * Drop a retained logical connection that cannot serve the reconnection currently being opened, because it
-     * is already tearing down or because the server-side state it depends on is gone.
-     *
-     * The retained context is kept alive by a pending retention timeout whose job is exactly "if no transport
-     * comes back for this socket, close it for good". We now know no transport ever will, so we run that
-     * teardown immediately instead of merely cancelling the timeout — dropping the last reference to the socket
-     * without closing it would leak its back gRPC stream and leave a ghost user in the back's GameRoom.
-     *
-     * Order matters: `config.close()` must run before `end()`, because `end()` flags the socket as
-     * disconnecting and the cleanup ignores an already-disconnecting socket. `end()` is a no-op when the
-     * transport is already gone, which is the usual case here.
+     * Drop a retained logical connection that cannot serve the reconnection being opened (already tearing
+     * down, or its server-side room state is gone). The pending retention timeout would eventually run this
+     * teardown; no transport will ever come back, so run it now — forgetting the socket instead would leak
+     * its back gRPC stream. `config.close()` must run before `end()`: `end()` flags the socket as
+     * disconnecting and the cleanup ignores an already-disconnecting socket.
      */
     private discardRetainedContext<TQuery extends RoomWsQuery>(
         tabId: string,
@@ -213,14 +195,14 @@ export class PusherRoomSocketController {
         }
         socket.markPermanentlyDisconnected();
 
-        Promise.resolve(config.close(socket, DISCARDED_CONTEXT_CLOSE_CODE, reason))
+        Promise.resolve(config.close(socket, 1008, reason))
             .catch((e) => {
                 Sentry.captureException(e);
                 console.error(e);
             })
             .finally(() => {
                 if (!socket.isDisconnecting()) {
-                    socket.end(DISCARDED_CONTEXT_CLOSE_CODE, reason);
+                    socket.end(1008, reason);
                 }
             });
     }
@@ -351,7 +333,7 @@ export class PusherRoomSocketController {
                         );
                         context = undefined;
                         clientLastReceivedNonce = undefined;
-                    } else if (context?.socket && config.canReplaceTransport?.(context.socket) === false) {
+                    } else if (context?.socket && !config.canReplaceTransport(context.socket)) {
                         this.discardRetainedContext(
                             tabId,
                             context.socket,

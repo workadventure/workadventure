@@ -437,7 +437,7 @@ function createController(
     openHandler: (socket: unknown) => void | Promise<void> = vi.fn(),
     closeHandler: (socket: unknown) => void | Promise<void> = vi.fn(),
     messageHandler: (socket: unknown, message: unknown) => void | Promise<void> = vi.fn(),
-    canReplaceTransport: ((socket: PusherWebSocket) => boolean) | undefined = undefined,
+    canReplaceTransport: (socket: PusherWebSocket) => boolean = () => true,
 ) {
     const app = {
         ws: vi.fn((_path: string, handlers: unknown) => {

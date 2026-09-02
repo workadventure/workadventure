@@ -66,11 +66,7 @@ export class PusherWebSocket {
     }
 
     public handleDrain(): void {
-        if (this.isDisconnecting()) {
-            return;
-        }
-
-        if (!this.transportAvailable) {
+        if (this.isDisconnecting() || !this.transportAvailable) {
             return;
         }
         for (const { nonce, payload } of this.outgoingMessagesStore.getAfter(this.lastSentNonce)) {

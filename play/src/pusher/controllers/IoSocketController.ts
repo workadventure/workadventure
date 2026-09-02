@@ -1148,7 +1148,9 @@ export class IoSocketController {
                 });
             },
             close: (socket) => {
-                socketManager.cleanupSocket(socket, { preventReconnect: true });
+                // Terminal close: cleanup, then flag the socket so a late reconnect cannot revive it.
+                socketManager.cleanupSocket(socket);
+                socket.startDisconnecting();
             },
         });
     }
