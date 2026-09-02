@@ -83,6 +83,8 @@ export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 export class SocketManager implements ZoneEventListener {
     private static readonly RECORDING_QUERY_TIMEOUT_MS = 60_000;
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
+    // Rooms whose init() has not resolved yet, so concurrent getOrCreateRoom calls share one instance.
+    private creatingRooms: Map<string, Promise<PusherRoom>> = new Map<string, Promise<PusherRoom>>();
     private spaces: Map<string, SpaceInterface> = new Map<string, SpaceInterface>();
 
     constructor(private _spaceConnection = new SpaceConnection()) {
@@ -863,20 +865,35 @@ export class SocketManager implements ZoneEventListener {
     }
 
     async getOrCreateRoom(roomUrl: string): Promise<PusherRoom> {
-        //check and create new world for a room
-        let room = this.rooms.get(roomUrl);
-        if (room === undefined) {
-            room = new PusherRoom(roomUrl, this);
-            room.backConnectionClosedSignal.addEventListener(
-                "abort",
-                () => {
-                    this.rooms.delete(roomUrl);
-                },
-                { once: true },
-            );
-            await room.init();
-            this.rooms.set(roomUrl, room);
+        const room = this.rooms.get(roomUrl);
+        if (room !== undefined) {
+            return room;
         }
+
+        // Coalesce concurrent creations. init() only awaits microtasks today, but if it ever awaits real I/O,
+        // two callers would otherwise create two rooms for the same URL and leak one listenRoom stream.
+        let creation = this.creatingRooms.get(roomUrl);
+        if (creation === undefined) {
+            creation = this.createRoom(roomUrl).finally(() => this.creatingRooms.delete(roomUrl));
+            this.creatingRooms.set(roomUrl, creation);
+        }
+        return creation;
+    }
+
+    private async createRoom(roomUrl: string): Promise<PusherRoom> {
+        const room = new PusherRoom(roomUrl, this);
+        room.backConnectionClosedSignal.addEventListener(
+            "abort",
+            () => {
+                // Only evict the map entry if it still points to this instance.
+                if (this.rooms.get(roomUrl) === room) {
+                    this.rooms.delete(roomUrl);
+                }
+            },
+            { once: true },
+        );
+        await room.init();
+        this.rooms.set(roomUrl, room);
         return room;
     }
 
