@@ -42,7 +42,22 @@ export const CHARACTER_BODY_OFFSET_Y = 8;
 
 export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 
-export type PathFollowResult = { x: number; y: number; cancelled: boolean };
+export type PathFollowResult = {
+    x: number;
+    y: number;
+    cancelled: boolean;
+    /** Set when the path was aborted because a tile of the remaining path started colliding (e.g. an area got locked mid-walk). */
+    blocked?: boolean;
+    /** With `blocked`: last waypoint of the aborted path that is still walkable, in game pixels (feet position). */
+    lastReachablePosition?: { x: number; y: number };
+    /** With `blocked`: first waypoint of the aborted path that is now colliding, in game pixels (feet position). */
+    blockedPosition?: { x: number; y: number };
+};
+
+export type PathBlockedInfo = {
+    lastReachablePosition: { x: number; y: number };
+    blockedPosition: { x: number; y: number };
+};
 
 export abstract class Character extends Container implements OutlineableInterface, Movable {
     private readonly movedSubject = new Subject<PositionInterface>();
@@ -422,7 +437,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public finishFollowingPath(cancelled = false): void {
+    public finishFollowingPath(cancelled = false, blockedInfo?: PathBlockedInfo): void {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
         this.currentPathSegmentDistanceFromStart = 0;
@@ -430,7 +445,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         const resolve = this.pathFollowingResolve;
         this.pathFollowingResolve = undefined;
-        resolve?.({ x: this.x, y: this.y, cancelled });
+        resolve?.({ x: this.x, y: this.y, cancelled, ...(blockedInfo ? { blocked: true, ...blockedInfo } : {}) });
     }
 
     protected isFollowingPath(): boolean {
@@ -440,6 +455,12 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected getPathWalkingSpeed(): number {
         return this.pathWalkingSpeed ?? WOKA_SPEED;
     }
+
+    /**
+     * Called each time a waypoint of the followed path is reached, i.e. on each tile change.
+     * Subclasses can abort the path following from here (e.g. when the remaining path started colliding).
+     */
+    protected onPathWaypointReached(): void {}
 
     protected adjustPathToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
         const body = this.getBody();
@@ -473,6 +494,12 @@ export abstract class Character extends Container implements OutlineableInterfac
             if (this.pathToFollow.length === 1) {
                 this.setPosition(this.pathToFollow[0].x, this.pathToFollow[0].y);
                 this.finishFollowingPath();
+                return;
+            }
+
+            this.onPathWaypointReached();
+            if (!this.pathToFollow) {
+                // The hook aborted the path following.
                 return;
             }
 

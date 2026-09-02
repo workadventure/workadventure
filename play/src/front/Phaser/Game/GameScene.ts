@@ -194,6 +194,7 @@ import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/Ch
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
+import type { PathFollowResult } from "../Entity/Character";
 import { type Avatar, ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
@@ -281,6 +282,9 @@ interface PositionCoordinates {
 
 const WORLD_SPACE_NAME = "allWorldUser";
 const debug = Debug("GameScene");
+
+// Safety cap for moveTo() reroutes when the collision grid keeps changing while the path is followed.
+const MAX_PATH_REROUTES = 5;
 
 export class GameScene extends DirtyScene {
     Terrains: Array<Tileset>;
@@ -3881,18 +3885,111 @@ ${escapedMessage}
         speed: number | undefined = undefined,
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         const pathfindingManager = this.getPathfindingManager();
-        pathfindingManager.setCollisionGrid(this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }));
+        const resolvedSpeed = speed ?? this.CurrentPlayer.walkingSpeed;
+        let lastBlockedResult: PathFollowResult | undefined;
 
-        const path = await pathfindingManager.findPathFromGameCoordinates(
-            {
-                x: this.CurrentPlayer.x,
-                y: this.CurrentPlayer.y,
-            },
-            position,
-            tryFindingNearestAvailable,
+        // The collision grid can change while the path is followed (an area gets locked or full...): the
+        // player then aborts the path (see Player.onPathWaypointReached) and we compute a new route to the
+        // destination.
+        for (let attempt = 0; attempt <= MAX_PATH_REROUTES; attempt += 1) {
+            pathfindingManager.setCollisionGrid(
+                this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }),
+            );
+            // Each attempt must fully complete (walk, then maybe reroute) before the next one starts.
+            // eslint-disable-next-line no-await-in-loop
+            const path = await pathfindingManager.findPathFromGameCoordinates(
+                {
+                    x: this.CurrentPlayer.x,
+                    y: this.CurrentPlayer.y,
+                },
+                position,
+                tryFindingNearestAvailable,
+            );
+            if (path.length === 0) {
+                if (attempt === 0) throw new Error("No path found");
+                break;
+            }
+            // eslint-disable-next-line no-await-in-loop
+            const result = await this.CurrentPlayer.setPathToFollow(path, resolvedSpeed);
+            if (!result.blocked) {
+                // Normal arrival, or cancellation by the user taking over: never reroute in that case.
+                return { x: result.x, y: result.y, cancelled: result.cancelled };
+            }
+            lastBlockedResult = result;
+        }
+
+        // The destination is not reachable anymore: walk to the last waypoint of the blocked path that is
+        // still walkable ("up to the door"), then warn the user.
+        const lastReachablePosition = lastBlockedResult?.lastReachablePosition;
+        if (lastReachablePosition) {
+            const distanceToDoor = MathUtils.distanceBetween(
+                { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y },
+                lastReachablePosition,
+            );
+            if (distanceToDoor > this.gameMapFrontWrapper.getTileDimensions().width / 2) {
+                pathfindingManager.setCollisionGrid(
+                    this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }),
+                );
+                const doorPath = await pathfindingManager.findPathFromGameCoordinates(
+                    {
+                        x: this.CurrentPlayer.x,
+                        y: this.CurrentPlayer.y,
+                    },
+                    lastReachablePosition,
+                    true,
+                );
+                if (doorPath.length > 0) {
+                    const doorResult = await this.CurrentPlayer.setPathToFollow(doorPath, resolvedSpeed);
+                    if (doorResult.cancelled && !doorResult.blocked) {
+                        // The user took over while walking to the door: no warning.
+                        return { x: doorResult.x, y: doorResult.y, cancelled: true };
+                    }
+                }
+            }
+        }
+        this.displayPathBlockedWarning(lastBlockedResult?.blockedPosition ?? position);
+        return { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y, cancelled: true };
+    }
+
+    /**
+     * Displays the blocked-area warning above the woka when a pathfinding move had to stop short of its
+     * destination. Mirrors the messages shown by Area.displayWarningMessageOnCollide on physical contact.
+     */
+    private displayPathBlockedWarning(blockedPosition: { x: number; y: number }): void {
+        const areasManager = this.gameMapFrontWrapper.areasManager;
+        const blockingArea = areasManager
+            ?.getCollidingAreas()
+            .find((area) => MathUtils.isOverlappingWithRectangle(blockedPosition, area));
+        if (!areasManager || !blockingArea) {
+            // Blocked by something else than an area (an entity, a layer change...): stay silent.
+            return;
+        }
+        const blockReason = areasManager.getAreaBlockReason(blockingArea.id);
+        if (!blockReason) {
+            return;
+        }
+        let message: string;
+        switch (blockReason) {
+            case "locked":
+                message = get(LL).area.blocked.locked();
+                break;
+            case "maxUsers":
+                message = get(LL).area.blocked.maxUsers();
+                break;
+            case "noAccess":
+                message = get(LL).area.blocked.noAccess();
+                break;
+        }
+        const messageId = `path-blocked-${blockingArea.id}`;
+        this.CurrentPlayer.destroyText(messageId);
+        this.CurrentPlayer.playText(
+            messageId,
+            message,
+            5000,
+            () => this.CurrentPlayer.destroyText(messageId),
+            true,
+            "warning",
         );
-        if (path.length === 0) throw new Error("No path found");
-        return this.CurrentPlayer.setPathToFollow(path, speed ?? this.CurrentPlayer.walkingSpeed);
     }
 
     /**
