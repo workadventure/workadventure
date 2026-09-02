@@ -185,16 +185,18 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         await AreaEditor.addProperty(page, "lockableAreaPropertyData");
         await Menu.closeMapEditor(page);
 
-        // The admin stays inside the area to be able to lock it while Alice walks.
-        await Map.teleportToPosition(page, 4 * 32 + 16, 4 * 32);
+        // The admin stays inside the area to be able to lock it while Alice walks. He stands at the top
+        // of the wall, far from Alice's lane: if the two wokas get close enough, a proximity bubble
+        // forms (even through the wall) and the lock button then opens a picker instead of toggling.
+        await Map.teleportToPosition(page, 4 * 32 + 16, 1 * 32 + 16);
         await expect(page.getByTestId("lock-button")).toBeVisible();
 
         await using page2 = await getPage(browser, "Alice", Map.url("empty"));
-        await Map.teleportToPosition(page2, 16, 4 * 32 + 16);
+        await Map.teleportToPosition(page2, 16, 6 * 32 + 16);
 
         // Alice starts a slow pathfinding walk towards the middle of the area (speed 2 ≈ 40px/s, the
         // area border is ~2s away), and the admin locks the area while she is on her way.
-        await Map.startMoveTo(page2, 4 * 32 + 16, 4 * 32 + 16, 2);
+        await Map.startMoveTo(page2, 4 * 32 + 16, 6 * 32 + 16, 2);
         await page.getByTestId("lock-button").click();
         await expect(page.getByTestId("lock-button")).toHaveClass(/bg-danger/);
 
@@ -206,13 +208,13 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         expect(alicePositionAfterStop.x).toBeLessThan(3 * 32);
         await expect(page2.getByText("This area is locked. You cannot enter.")).toBeAttached();
 
-        // The admin unlocks, Alice goes back to her starting point and walks towards the other side
-        // of the wall; the admin locks it again while she is on her way.
+        // Alice goes back to her starting point, then the admin unlocks. She then walks towards the
+        // other side of the wall and the admin locks it again while she is on her way.
+        await Map.teleportToPosition(page2, 16, 6 * 32 + 16);
         await page.getByTestId("lock-button").click();
         await expect(page.getByTestId("lock-button")).not.toHaveClass(/bg-danger/);
-        await Map.teleportToPosition(page2, 16, 4 * 32 + 16);
 
-        await Map.startMoveTo(page2, 8 * 32 + 16, 4 * 32 + 16, 2);
+        await Map.startMoveTo(page2, 8 * 32 + 16, 6 * 32 + 16, 2);
         await page.getByTestId("lock-button").click();
         await expect(page.getByTestId("lock-button")).toHaveClass(/bg-danger/);
 
