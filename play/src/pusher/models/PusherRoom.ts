@@ -55,8 +55,13 @@ export class PusherRoom {
         socket.getUserData().pusherRoom = undefined;
     }
 
+    /**
+     * A socket is a member of the room from join() until leave(). Zones only appear once the socket sends its
+     * first viewport, one back round-trip after joining, so counting zones alone would report the room as empty
+     * while a socket is still joining and let a concurrent teardown close it under that socket.
+     */
     public isEmpty(): boolean {
-        return this.positionNotifier.isEmpty();
+        return this.listeners.size === 0 && this.positionNotifier.isEmpty();
     }
 
     public needsUpdate(versionNumber: number): boolean {
