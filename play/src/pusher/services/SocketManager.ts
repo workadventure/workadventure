@@ -602,7 +602,12 @@ export class SocketManager implements ZoneEventListener {
 
     private closeWebsocketConnection(client: PusherWebSocket, code: number, reason: string): void {
         this.cleanupSocket(client);
-        client.end(code, reason);
+        // A close frame reason is limited to 123 UTF-8 bytes; the full diagnostic stays in the logs.
+        const reasonBytes = Buffer.from(reason, "utf8");
+        client.end(
+            code,
+            reasonBytes.length <= 123 ? reason : reasonBytes.toString("utf8", 0, 123).replace(/\uFFFD+$/, ""),
+        );
     }
 
     public cleanupSocket(client: PusherWebSocket): void {
@@ -711,7 +716,9 @@ export class SocketManager implements ZoneEventListener {
      */
     private joinRoomIfStillConnected(client: PusherWebSocket, pusherRoom: PusherRoom): void {
         if (client.isDisconnecting()) {
-            this.deleteRoomIfEmpty(pusherRoom);
+            // Defer the empty-room check: concurrent callers coalesced on the same creation promise join in
+            // the same microtask batch, and closing the shared instance now would break their join.
+            setTimeout(() => this.deleteRoomIfEmpty(pusherRoom), 0);
             return;
         }
 
@@ -987,6 +994,12 @@ export class SocketManager implements ZoneEventListener {
                 { once: true },
             );
             await createdRoom.init();
+            if (createdRoom.backConnectionClosedSignal.aborted) {
+                // The abort listener above saw nothing to evict (the room was not in the map yet); publishing
+                // the instance now would hand every waiter a dead room.
+                createdRoom.close();
+                throw new Error(`Connection to the back server was lost while room ${roomUrl} was initializing`);
+            }
             this.rooms.set(roomUrl, createdRoom);
             return createdRoom;
         })();

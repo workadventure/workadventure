@@ -174,6 +174,16 @@ export class PusherWebSocket {
         return true;
     }
 
+    /**
+     * Close the underlying transport even when the logical connection is already disconnecting —
+     * `end()` is a no-op once `isDisconnecting()` is true, which would leave the transport open.
+     */
+    public closeTransport(code: number, reason: string): void {
+        if (this.transportAvailable) {
+            this.socket.end(code, reason);
+        }
+    }
+
     public isCurrentTransport(rawSocket: RawSocket): boolean {
         return this.socket === rawSocket;
     }

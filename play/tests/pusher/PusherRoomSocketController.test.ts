@@ -184,7 +184,11 @@ describe("PusherRoomSocketController reconnect retention", () => {
         vi.useFakeTimers();
 
         const open = vi.fn();
-        const close = vi.fn();
+        // Mirror production: the close handler runs the logical cleanup, which flags the socket
+        // as disconnecting before the discard teardown finishes.
+        const close = vi.fn((socket: unknown) => {
+            (socket as PusherWebSocket).startDisconnecting();
+        });
         const canReplaceTransport = vi.fn().mockReturnValue(false);
         const controller = createController(
             (handlers) => {

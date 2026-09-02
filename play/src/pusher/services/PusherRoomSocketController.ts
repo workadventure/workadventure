@@ -203,6 +203,9 @@ export class PusherRoomSocketController {
             .finally(() => {
                 if (!socket.isDisconnecting()) {
                     socket.end(1008, reason);
+                } else {
+                    // The cleanup flagged the socket as disconnecting; still close a transport left open.
+                    socket.closeTransport(1008, reason);
                 }
             });
     }
