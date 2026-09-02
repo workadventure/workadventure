@@ -46,6 +46,10 @@ export class PusherWebSocket {
     }
 
     public send(message: ServerToClientMessage): ReturnType<RawSocket["send"]> {
+        if (this.isDisconnecting()) {
+            return 0;
+        }
+
         const nonce = this.nextOutgoingNonce;
         const payloadWithNonce = PusherToFrontWebSocketMessage.encode({
             nonce,
@@ -62,7 +66,7 @@ export class PusherWebSocket {
     }
 
     public handleDrain(): void {
-        if (!this.transportAvailable) {
+        if (this.isDisconnecting() || !this.transportAvailable) {
             return;
         }
         for (const { nonce, payload } of this.outgoingMessagesStore.getAfter(this.lastSentNonce)) {
@@ -170,6 +174,16 @@ export class PusherWebSocket {
         return true;
     }
 
+    /**
+     * Close the underlying transport even when the logical connection is already disconnecting —
+     * `end()` is a no-op once `isDisconnecting()` is true, which would leave the transport open.
+     */
+    public closeTransport(code: number, reason: string): void {
+        if (this.transportAvailable) {
+            this.socket.end(code, reason);
+        }
+    }
+
     public isCurrentTransport(rawSocket: RawSocket): boolean {
         return this.socket === rawSocket;
     }
@@ -181,6 +195,11 @@ export class PusherWebSocket {
 
     public replaceSocket(newSocket: RawSocket, clientLastReceivedNonce: number): boolean {
         const socketData = this.socket.getUserData();
+        if (this.isDisconnecting()) {
+            newSocket.end(1008, "Cannot replace socket: logical connection is closed");
+            return false;
+        }
+
         console.info(
             `Replacing WebSocket transport for user ${socketData.userUuid} on tab ${socketData.tabId} (lastReceivedNonce=${clientLastReceivedNonce})`,
         );
