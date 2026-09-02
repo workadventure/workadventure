@@ -270,10 +270,8 @@ export class Player extends Character {
             return;
         }
         const lastReachable = this.pathToFollow[blockedIndex - 1];
-        const blocked = this.pathToFollow[blockedIndex];
         this.finishFollowingPath(true, {
             lastReachablePosition: { x: lastReachable.x, y: lastReachable.y + bodyYOffset },
-            blockedPosition: { x: blocked.x, y: blocked.y + bodyYOffset },
         });
     }
 

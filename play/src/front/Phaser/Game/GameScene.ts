@@ -3947,19 +3947,20 @@ ${escapedMessage}
                 }
             }
         }
-        this.displayPathBlockedWarning(lastBlockedResult?.blockedPosition ?? position);
+        this.displayPathBlockedWarning(position);
         return { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y, cancelled: true };
     }
 
     /**
      * Displays the blocked-area warning above the woka when a pathfinding move had to stop short of its
-     * destination. Mirrors the messages shown by Area.displayWarningMessageOnCollide on physical contact.
+     * unreachable destination. Mirrors the messages shown by Area.displayWarningMessageOnCollide on
+     * physical contact.
      */
-    private displayPathBlockedWarning(blockedPosition: { x: number; y: number }): void {
+    private displayPathBlockedWarning(destination: { x: number; y: number }): void {
         const areasManager = this.gameMapFrontWrapper.areasManager;
         const blockingArea = areasManager
             ?.getCollidingAreas()
-            .find((area) => MathUtils.isOverlappingWithRectangle(blockedPosition, area));
+            .find((area) => MathUtils.isOverlappingWithRectangle(destination, area));
         if (!areasManager || !blockingArea) {
             // Blocked by something else than an area (an entity, a layer change...): stay silent.
             return;

@@ -50,13 +50,10 @@ export type PathFollowResult = {
     blocked?: boolean;
     /** With `blocked`: last waypoint of the aborted path that is still walkable, in game pixels (feet position). */
     lastReachablePosition?: { x: number; y: number };
-    /** With `blocked`: first waypoint of the aborted path that is now colliding, in game pixels (feet position). */
-    blockedPosition?: { x: number; y: number };
 };
 
 export type PathBlockedInfo = {
     lastReachablePosition: { x: number; y: number };
-    blockedPosition: { x: number; y: number };
 };
 
 export abstract class Character extends Container implements OutlineableInterface, Movable {

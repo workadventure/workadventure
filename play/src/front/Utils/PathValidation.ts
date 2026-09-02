@@ -13,12 +13,11 @@ export function findFirstBlockedWaypointIndex(
     waypointYOffset: number,
     colliderTileType: number,
 ): number {
-    for (let i = 1; i < waypoints.length; i += 1) {
-        const tileX = Math.floor(waypoints[i].x / tileDimensions.width);
-        const tileY = Math.floor((waypoints[i].y + waypointYOffset) / tileDimensions.height);
-        if (grid[tileY]?.[tileX] === colliderTileType) {
-            return i;
-        }
-    }
-    return -1;
+    return waypoints.findIndex(
+        (waypoint, i) =>
+            i > 0 &&
+            grid[Math.floor((waypoint.y + waypointYOffset) / tileDimensions.height)]?.[
+                Math.floor(waypoint.x / tileDimensions.width)
+            ] === colliderTileType,
+    );
 }
