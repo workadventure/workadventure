@@ -124,7 +124,9 @@ describe("SocketManager reconnection race guards", () => {
         expect(room.join).not.toHaveBeenCalled();
         // The empty-room check is deferred so coalesced concurrent joiners run first.
         expect(room.close).not.toHaveBeenCalled();
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
         expect(room.close).toHaveBeenCalledTimes(1);
         expect(getRooms(manager).has(ROOM_URL)).toBe(false);
     });
