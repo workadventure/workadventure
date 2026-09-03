@@ -172,14 +172,14 @@ export async function getPage(
         | "User1",
     url: string,
     options: {
-        pageCreatedHook?: (page: Page) => void;
+        pageCreatedHook?: (page: Page) => void | Promise<void>;
     } = {},
 ): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
     const page: Page = await newBrowser.newPage();
     if (options.pageCreatedHook) {
-        options.pageCreatedHook(page);
+        await options.pageCreatedHook(page);
     }
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
