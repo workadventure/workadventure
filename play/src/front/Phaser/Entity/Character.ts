@@ -439,7 +439,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         const resolve = this.pathFollowingResolve;
         this.pathFollowingResolve = undefined;
-        resolve?.({ x: this.x, y: this.y, cancelled, ...(blocked ? { blocked: true } : {}) });
+        resolve?.({ x: this.x, y: this.y, cancelled, blocked });
     }
 
     protected isFollowingPath(): boolean {
@@ -452,7 +452,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     /**
      * Called each time a waypoint of the followed path is reached, i.e. on each tile change.
-     * Subclasses can abort the path following from here (e.g. when the remaining path started colliding).
+     * Subclasses can abort the path following from here (e.g. when the next waypoint started colliding).
      */
     protected onPathWaypointReached(): void {}
 

@@ -260,14 +260,15 @@ export class Player extends Character {
         }
         const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
         const body = this.getBody();
-        const blocked = isWaypointBlocked(
-            this.pathToFollow[1],
-            gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }),
-            gameMapFrontWrapper.getTileDimensions(),
-            body.height / 2 + body.offset.y,
-            PathTileType.Collider,
-        );
-        if (blocked) {
+        if (
+            isWaypointBlocked(
+                this.pathToFollow[1],
+                gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }),
+                gameMapFrontWrapper.getTileDimensions(),
+                body.height / 2 + body.offset.y,
+                PathTileType.Collider,
+            )
+        ) {
             this.finishFollowingPath(true, true);
         }
     }

@@ -3884,7 +3884,6 @@ ${escapedMessage}
         speed: number | undefined = undefined,
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         const pathfindingManager = this.getPathfindingManager();
-        const resolvedSpeed = speed ?? this.CurrentPlayer.walkingSpeed;
 
         // The collision grid can change while the path is followed (an area gets locked or full...): the
         // player then aborts right before walking onto a blocking tile (see Player.onPathWaypointReached)
@@ -3908,7 +3907,7 @@ ${escapedMessage}
                 break;
             }
             // eslint-disable-next-line no-await-in-loop
-            const result = await this.CurrentPlayer.setPathToFollow(path, resolvedSpeed);
+            const result = await this.CurrentPlayer.setPathToFollow(path, speed ?? this.CurrentPlayer.walkingSpeed);
             if (!result.blocked) {
                 // Normal arrival, or cancellation by the user taking over: never reroute in that case.
                 return { x: result.x, y: result.y, cancelled: result.cancelled };
