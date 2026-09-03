@@ -30,11 +30,11 @@ export async function dismissPwaInstallScreenIfShown(page: Page, dontShowAgain: 
     const microphone = page.getByTestId("microphone-button");
     const errorOccurred = page.getByText("An error occurred").first();
 
-    await Promise.race([
-        skip.waitFor({ state: "visible", timeout: 90_000 }),
-        microphone.waitFor({ state: "visible", timeout: 90_000 }),
-        errorOccurred.waitFor({ state: "visible", timeout: 90_000 }),
-    ]);
+    // One wait, not a Promise.race of three: the losers of a race keep polling for their full
+    // timeout, and every extra in-flight operation can trigger a registered locator handler
+    // concurrently. Playwright only keeps the last handler promise, so the earlier waiters are
+    // never resolved and hang until they time out.
+    await skip.or(microphone).or(errorOccurred).first().waitFor({ state: "visible", timeout: 90_000 });
 
     if (await skip.isVisible()) {
         if (dontShowAgain) {

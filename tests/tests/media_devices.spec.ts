@@ -318,37 +318,36 @@ async function createContextWithMockedMediaDevices(
 async function loginWithMockedMediaDevices(page: Page, url: string): Promise<void> {
     await page.goto(url);
 
-    const firstVisibleStep = await Promise.race([
-        page
-            .getByTestId("loginSceneNameInput")
-            .waitFor({ state: "visible" })
-            .then(() => "login" as const),
-        page
-            .locator("button.selectCharacterSceneFormSubmit")
-            .waitFor({ state: "visible" })
-            .then(() => "character" as const),
-        page
-            .locator("h2", { hasText: "Turn on your camera and microphone" })
-            .waitFor({ state: "visible" })
-            .then(() => "media" as const),
-        page
-            .getByTestId("microphone-button")
-            .waitFor({ state: "visible" })
-            .then(() => "map" as const),
-    ]);
+    const loginName = page.getByTestId("loginSceneNameInput");
+    const selectCharacter = page.locator("button.selectCharacterSceneFormSubmit");
+    const mediaStep = page.locator("h2", { hasText: "Turn on your camera and microphone" });
+    const microphone = page.getByTestId("microphone-button");
+
+    // Single wait, then read which step we landed on. A Promise.race would leave the losing
+    // waitFor() calls polling for their full timeout, and those extra in-flight operations
+    // deadlock any registered locator handler (see `dismissPwaInstallScreenIfShown`).
+    await loginName.or(selectCharacter).or(mediaStep).or(microphone).first().waitFor({ state: "visible" });
+
+    const firstVisibleStep = (await loginName.isVisible())
+        ? "login"
+        : (await selectCharacter.isVisible())
+          ? "character"
+          : (await mediaStep.isVisible())
+            ? "media"
+            : "map";
 
     if (firstVisibleStep === "login") {
-        await page.getByTestId("loginSceneNameInput").fill("Alice");
-        await page.getByTestId("loginSceneNameInput").press("Enter");
+        await loginName.fill("Alice");
+        await loginName.press("Enter");
     }
 
     if (firstVisibleStep === "login" || firstVisibleStep === "character") {
-        await expect(page.locator("button.selectCharacterSceneFormSubmit")).toBeVisible();
-        await page.locator("button.selectCharacterSceneFormSubmit").click();
+        await expect(selectCharacter).toBeVisible();
+        await selectCharacter.click();
     }
 
     if (firstVisibleStep !== "map") {
-        await expect(page.locator("h2", { hasText: "Turn on your camera and microphone" })).toBeVisible();
+        await expect(mediaStep).toBeVisible();
         await page.getByText("Save").click();
     }
 
@@ -370,24 +369,20 @@ async function openMediaSettings(page: Page): Promise<void> {
 }
 
 async function waitForMapAfterOnboarding(page: Page): Promise<void> {
-    for (let i = 0; i < 3; i++) {
-        const nextVisibleStep = await Promise.race([
-            page
-                .getByTestId("microphone-button")
-                .waitFor({ state: "visible", timeout: 30_000 })
-                .then(() => "map" as const),
-            page
-                .getByTestId("onboarding-button-welcome-skip")
-                .waitFor({ state: "visible", timeout: 30_000 })
-                .then(() => "onboarding" as const),
-        ]);
+    const microphone = page.getByTestId("microphone-button");
+    const skipOnboarding = page.getByTestId("onboarding-button-welcome-skip");
 
-        if (nextVisibleStep === "map") {
+    for (let i = 0; i < 3; i++) {
+        // Single wait rather than a Promise.race: a leaked loser polling for 30s here would race
+        // the `onboarding-button-welcome-skip` locator handler registered in utils/auth.ts.
+        await microphone.or(skipOnboarding).first().waitFor({ state: "visible", timeout: 30_000 });
+
+        if (await microphone.isVisible()) {
             return;
         }
 
-        await page.getByTestId("onboarding-button-welcome-skip").click();
+        await skipOnboarding.click();
     }
 
-    await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 30_000 });
+    await expect(microphone).toBeVisible({ timeout: 30_000 });
 }
