@@ -154,16 +154,10 @@ test.describe("Screen-sharing tests @nomobile @nowebkit @nofirefox", () => {
         // This is the "No video stream received" report: a short outage on the user's side, long enough for
         // livekit-client to give up reconnecting, while the WorkAdventure WebSocket stays up.
 
-        // John joins the meeting: the space stays on LiveKit whatever the WebRTC/LiveKit threshold of the machine
-        await using userJohn = await getPage(
-            browser,
-            "John",
-            publicTestMapUrl("tests/E2E/empty.json", "screensharing"),
-        );
-        await Map.teleportToPosition(userJohn, 160, 160);
-        await expect(userJohn.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 30_000 });
-        await expectLivekitConnectionsCountToBe(userAlice, 4, 30_000);
-        await expectLivekitConnectionsCountToBe(userBob, 4, 30_000);
+        // The space cannot flip back to WebRTC during the outage: the back counts users through the WorkAdventure
+        // WebSocket, which stays up.
+        await expectLivekitConnectionsCountToBe(userAlice, 3, 30_000);
+        await expectLivekitConnectionsCountToBe(userBob, 3, 30_000);
 
         const livekitGaveUp = aliceLivekitOutage.waitForLivekitToGiveUp();
         await aliceLivekitOutage.block();
@@ -172,19 +166,19 @@ test.describe("Screen-sharing tests @nomobile @nowebkit @nofirefox", () => {
         // The dead room is torn down (the old code kept it, with its stale participants, forever), the server
         // dropped Alice: everyone lost her participant and her screen share
         await expectLivekitConnectionsCountToBe(userAlice, 0, 30_000);
-        await expectLivekitConnectionsCountToBe(userBob, 3, 30_000);
+        await expectLivekitConnectionsCountToBe(userBob, 2, 30_000);
         await expect(userBob.locator("#highlighted-media").getByText("Alice")).toBeHidden({ timeout: 30_000 });
 
         // The network comes back: Alice gets a fresh invitation, rejoins and her screen share is published again.
         // Without the fix, Alice never rejoins and the others keep a tile of her with "No video stream received".
         await aliceLivekitOutage.restore();
-        await expectLivekitConnectionsCountToBe(userAlice, 4, 60_000);
-        await expectLivekitConnectionsCountToBe(userBob, 4, 60_000);
+        await expectLivekitConnectionsCountToBe(userAlice, 3, 60_000);
+        await expectLivekitConnectionsCountToBe(userBob, 3, 60_000);
         await Menu.expectButtonState(userAlice, "screenShareButton", "active");
         await expect(userAlice.locator("#cameras-container").getByText("You")).toHaveCount(2);
         await expect(userBob.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 30_000 });
-        await expect(userJohn.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 30_000 });
+        await expect(userMallory.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 30_000 });
         await expect(userBob.getByText("No video stream received")).toBeHidden();
-        await expect(userJohn.getByText("No video stream received")).toBeHidden();
+        await expect(userMallory.getByText("No video stream received")).toBeHidden();
     });
 });
