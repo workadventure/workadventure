@@ -20,8 +20,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         meetingPopupWaiting: {
             title: "การประชุม Microsoft Teams 🎉",
             subtitle: "การประชุม Teams ยังไม่ถูกสร้าง... กำลังดำเนินการอยู่ 💪",
-            guestExplain:
-                "กรุณาเชื่อมต่อกับแพลตฟอร์มเพื่อสร้างการประชุมออนไลน์ Teams หรือขอให้เจ้าของสร้างให้คุณ 🚀",
+            guestExplain: "กรุณาเชื่อมต่อกับแพลตฟอร์มเพื่อสร้างการประชุมออนไลน์ Teams หรือขอให้เจ้าของสร้างให้คุณ 🚀",
             guestError: "คุณยังไม่ได้เชื่อมต่อ จึงไม่สามารถสร้างการประชุมออนไลน์ Teams ได้ 😭",
             missingScope: "ไม่มีการสร้างการประชุม: บัญชี Microsoft ของคุณไม่ได้รับอนุญาตให้สร้างการประชุม",
             missingScopeExplain:
@@ -65,12 +64,10 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeToSyncTask: "ซิงก์งานของฉัน",
         popupCancel: "ยกเลิก",
         isSyncronized: "ซิงก์กับ Outlook แล้ว",
-        popupScopeIsConnectedExplainText:
-            "คุณเชื่อมต่ออยู่แล้ว กรุณาคลิกปุ่มเพื่อออกจากระบบแล้วเชื่อมต่อใหม่",
+        popupScopeIsConnectedExplainText: "คุณเชื่อมต่ออยู่แล้ว กรุณาคลิกปุ่มเพื่อออกจากระบบแล้วเชื่อมต่อใหม่",
         popupScopeIsConnectedButton: "ออกจากระบบ",
         popupErrorTitle: "⚠️ การซิงก์โมดูล Outlook หรือ Teams ล้มเหลว",
-        popupErrorDescription:
-            "การเริ่มต้นซิงก์โมดูล Outlook หรือ Teams ล้มเหลว กรุณาลองเชื่อมต่อใหม่อีกครั้ง",
+        popupErrorDescription: "การเริ่มต้นซิงก์โมดูล Outlook หรือ Teams ล้มเหลว กรุณาลองเชื่อมต่อใหม่อีกครั้ง",
         popupErrorContactAdmin: "หากปัญหายังคงอยู่ กรุณาติดต่อผู้ดูแลระบบของคุณ",
         popupErrorShowMore: "แสดงข้อมูลเพิ่มเติม",
         popupErrorMoreInfo1:
@@ -95,8 +92,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             title: "Google Meet 🎉",
             subtitle: "กำลังสร้าง Google Space ของคุณ… ใช้เวลาเพียงไม่กี่วินาที 💪",
             guestError: "คุณยังไม่ได้เชื่อมต่อ จึงไม่สามารถสร้าง Google Meet ได้ 😭",
-            guestExplain:
-                "กรุณาเข้าสู่ระบบแพลตฟอร์มเพื่อสร้าง Google Meet หรือขอให้เจ้าของสร้างให้คุณ 🚀",
+            guestExplain: "กรุณาเข้าสู่ระบบแพลตฟอร์มเพื่อสร้าง Google Meet หรือขอให้เจ้าของสร้างให้คุณ 🚀",
             error: "การตั้งค่า Google Workspace ของคุณไม่อนุญาตให้สร้าง Meet",
             errorExplain: "ไม่ต้องกังวล คุณยังสามารถเข้าร่วมการประชุมเมื่อคนอื่นแชร์ลิงก์ได้ 🙏",
             missingScope: "ไม่มีการสร้างการประชุม: บัญชี Google ของคุณไม่ได้ให้สิทธิ์การสร้างการประชุม",
@@ -104,8 +100,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             reconnect: "เชื่อมต่อ Google ใหม่",
         },
         popupScopeIsConnectedButton: "ออกจากระบบ",
-        popupScopeIsConnectedExplainText:
-            "คุณเชื่อมต่ออยู่แล้ว กรุณาคลิกปุ่มเพื่อออกจากระบบแล้วเชื่อมต่อใหม่",
+        popupScopeIsConnectedExplainText: "คุณเชื่อมต่ออยู่แล้ว กรุณาคลิกปุ่มเพื่อออกจากระบบแล้วเชื่อมต่อใหม่",
     },
     calendar: {
         title: "การประชุมของคุณวันนี้",

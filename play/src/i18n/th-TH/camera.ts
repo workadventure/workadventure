@@ -23,8 +23,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "คุณต้องอนุญาตให้เข้าถึงกล้องและไมโครโฟนในเบราว์เซอร์ของคุณ",
         cameraContent: "คุณต้องอนุญาตให้เข้าถึงกล้องในเบราว์เซอร์ของคุณ",
         microphoneContent: "คุณต้องอนุญาตให้เข้าถึงไมโครโฟนในเบราว์เซอร์ของคุณ",
-        firefoxContent:
-            'กรุณาทำเครื่องหมายที่ช่อง "Remember this decision" หากไม่ต้องการให้ Firefox ถามสิทธิ์ซ้ำอีก',
+        firefoxContent: 'กรุณาทำเครื่องหมายที่ช่อง "Remember this decision" หากไม่ต้องการให้ Firefox ถามสิทธิ์ซ้ำอีก',
         allow: "อนุญาตเว็บแคม",
         allowMicrophone: "อนุญาตไมโครโฟน",
         allowCameraMicrophone: "อนุญาตเว็บแคมและไมโครโฟน",
@@ -71,8 +70,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         titlePending: "กำลังรอการเชื่อมต่อเซิร์ฟเวอร์รีเลย์วิดีโอ",
         error: "ไม่สามารถเข้าถึงเซิร์ฟเวอร์ TURN ได้",
         content: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์รีเลย์วิดีโอได้ คุณอาจไม่สามารถสื่อสารกับผู้ใช้คนอื่นได้",
-        solutionVpn:
-            "หากคุณ<strong>เชื่อมต่อผ่าน VPN</strong> กรุณาตัดการเชื่อมต่อ VPN แล้วรีเฟรชหน้าเว็บ",
+        solutionVpn: "หากคุณ<strong>เชื่อมต่อผ่าน VPN</strong> กรุณาตัดการเชื่อมต่อ VPN แล้วรีเฟรชหน้าเว็บ",
         solutionVpnNotAskAgain: "เข้าใจแล้ว ไม่ต้องเตือนฉันอีก 🫡",
         solutionHotspot:
             "หากคุณอยู่ในเครือข่ายที่ถูกจำกัด (เครือข่ายบริษัท...) ลองเปลี่ยนเครือข่าย เช่น สร้าง<strong>ฮอตสปอต Wifi</strong> ด้วยโทรศัพท์ของคุณแล้วเชื่อมต่อผ่านโทรศัพท์",

@@ -38,7 +38,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     browserNotSupported: {
         title: "😢 เบราว์เซอร์ไม่รองรับ",
         message: "เบราว์เซอร์ของคุณ ({browserName}) ไม่ได้รับการรองรับจาก WorkAdventure อีกต่อไป",
-        description: "เบราว์เซอร์ของคุณเก่าเกินกว่าจะใช้งาน WorkAdventure ได้ กรุณาอัปเดตเป็นเวอร์ชันล่าสุดเพื่อดำเนินการต่อ",
+        description:
+            "เบราว์เซอร์ของคุณเก่าเกินกว่าจะใช้งาน WorkAdventure ได้ กรุณาอัปเดตเป็นเวอร์ชันล่าสุดเพื่อดำเนินการต่อ",
         whatToDo: "คุณทำอะไรได้บ้าง?",
         option1: "อัปเดต {browserName} เป็นเวอร์ชันล่าสุด",
         option2: "ออกจาก WorkAdventure และใช้เบราว์เซอร์อื่น",
@@ -47,14 +48,12 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     pwaInstall: {
         title: "ติดตั้ง WorkAdventure",
-        description:
-            "ติดตั้งแอปเพื่อประสบการณ์ที่ดียิ่งขึ้น: เข้าถึงได้รวดเร็ว เปิดพร้อมเครื่อง และใช้งานเหมือนแอป",
+        description: "ติดตั้งแอปเพื่อประสบการณ์ที่ดียิ่งขึ้น: เข้าถึงได้รวดเร็ว เปิดพร้อมเครื่อง และใช้งานเหมือนแอป",
         descriptionIos: "เพิ่ม WorkAdventure ลงในหน้าจอโฮมของคุณเพื่อประสบการณ์ที่ดีขึ้นและการเข้าถึงที่รวดเร็ว",
         feature1Title: "เข้าถึงรวดเร็ว",
         feature1Description: "เปิด WorkAdventure จากเมนู Start, Dock หรือเดสก์ท็อปของคุณ",
         feature2Title: "หน้าต่างแอปโดยเฉพาะ",
-        feature2Description:
-            "แยก WorkAdventure ออกจากแท็บเบราว์เซอร์ และเห็น WorkAdventure ได้ทันทีในทาสก์บาร์ของคุณ",
+        feature2Description: "แยก WorkAdventure ออกจากแท็บเบราว์เซอร์ และเห็น WorkAdventure ได้ทันทีในทาสก์บาร์ของคุณ",
         feature3Title: "เริ่มพร้อมคอมพิวเตอร์ของคุณ",
         feature3Description: "เปิด WorkAdventure เมื่ออุปกรณ์ของคุณเริ่มทำงาน",
         iosStepsTitle: "วิธีติดตั้ง",

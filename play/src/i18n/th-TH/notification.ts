@@ -18,8 +18,7 @@ const notification: DeepPartial<Translation["notification"]> = {
         permissionDenied: "ไม่ได้รับอนุญาต",
         content:
             "ไม่พลาดทุกการสนทนา เปิดการแจ้งเตือนเพื่อรับแจ้งเมื่อมีคนต้องการพูดคุยกับคุณ แม้คุณจะไม่ได้อยู่ที่แท็บ WorkAdventure",
-        firefoxContent:
-            'กรุณาทำเครื่องหมายที่ช่อง "Remember this decision" หากไม่ต้องการให้ Firefox ถามสิทธิ์ซ้ำอีก',
+        firefoxContent: 'กรุณาทำเครื่องหมายที่ช่อง "Remember this decision" หากไม่ต้องการให้ Firefox ถามสิทธิ์ซ้ำอีก',
         refresh: "รีเฟรช",
         continue: "ดำเนินการต่อโดยไม่รับการแจ้งเตือน",
         screen: {
