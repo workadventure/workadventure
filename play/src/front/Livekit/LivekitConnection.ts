@@ -54,10 +54,13 @@ export class LivekitConnection {
     private initialize() {
         this.unsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_INVITATION_MESSAGE).subscribe((message) => {
-                if (this.shutdownAbortController) {
-                    console.error("Livekit invitation already triggered for this LivekitState");
-                    Sentry.captureException(new Error("Livekit invitation already triggered for this LivekitState"));
-                    this.shutdownAbortController.abort();
+                if (this.livekitRoom) {
+                    // The back re-invites us after the previous room died (see LiveKitRoom.handleDisconnected).
+                    // Tear the old room down first so two rooms never share the same identity.
+                    debug("Replacing the existing Livekit room with a new invitation");
+                    this.shutdownAbortController?.abort();
+                    this.livekitRoom.destroy();
+                    this.livekitRoom = undefined;
                 }
                 this.shutdownAbortController = new AbortController();
                 const serverUrl = message.livekitInvitationMessage.serverUrl;

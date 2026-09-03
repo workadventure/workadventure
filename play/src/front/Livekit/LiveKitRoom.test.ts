@@ -1,6 +1,7 @@
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ConnectionState, DisconnectReason } from "livekit-client";
 import type { Readable } from "svelte/store";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
@@ -74,6 +75,19 @@ vi.mock("../Stores/StreamableCollectionStore", async () => {
 
 vi.mock("../Space/SpacePeerManager/SpacePeerManager", () => ({}));
 
+// The real LocalVideoTrack / LocalAudioTrack need a browser MediaStreamTrack. Keep the surface LiveKitRoom uses.
+vi.mock("livekit-client", async (importOriginal) => {
+    const actual = await importOriginal();
+    class FakeLocalTrack {
+        public isUpstreamPaused = false;
+        public resumeUpstream = vi.fn().mockResolvedValue(undefined);
+        public pauseUpstream = vi.fn().mockResolvedValue(undefined);
+        public replaceTrack = vi.fn().mockResolvedValue(undefined);
+        constructor(public mediaStreamTrack: MediaStreamTrack) {}
+    }
+    return { ...actual, LocalVideoTrack: FakeLocalTrack, LocalAudioTrack: FakeLocalTrack };
+});
+
 describe("LiveKitRoom", () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -126,6 +140,104 @@ describe("LiveKitRoom", () => {
         expect(unregister).toHaveBeenCalledOnce();
     });
 
+    it("should publish the camera again after a failed publication", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const publishTrack = vi
+            .fn()
+            .mockRejectedValueOnce(new Error("publishing rejected as engine not connected within timeout"))
+            .mockResolvedValue(undefined);
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack } as never;
+        const cameraStream = createCameraStream();
+
+        await expect(room["handleCameraTrack"](cameraStream)).rejects.toThrow("engine not connected");
+        expect(room["localCameraTrack"]).toBeUndefined();
+
+        await room["handleCameraTrack"](cameraStream);
+
+        expect(publishTrack).toHaveBeenCalledTimes(2);
+        expect(room["localCameraTrack"]?.mediaStreamTrack.id).toBe("camera-track");
+    });
+
+    it("should skip camera publication while reconnecting and replay it once reconnected", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const publishTrack = vi.fn().mockResolvedValue(undefined);
+        const sdkRoom = { state: ConnectionState.Reconnecting };
+        room["room"] = sdkRoom as never;
+        room["localParticipant"] = { publishTrack } as never;
+        const cameraStream = createCameraStream();
+        room["cameraStreamStore"] = writable(cameraStream);
+
+        await room["handleCameraTrack"](cameraStream);
+        expect(publishTrack).not.toHaveBeenCalled();
+
+        sdkRoom.state = ConnectionState.Connected;
+        room["handleReconnected"]();
+        await room["mediaTrackUpdateQueue"];
+
+        expect(publishTrack).toHaveBeenCalledOnce();
+        expect(room["localCameraTrack"]?.mediaStreamTrack.id).toBe("camera-track");
+    });
+
+    describe("handleDisconnected", () => {
+        function createDisconnectedRoom() {
+            const decrement = vi.fn();
+            const emitBackEvent = vi.fn();
+            const room = createLiveKitRoom({
+                screenSharingLocalStreamStore: writable(undefined),
+                shouldPublishScreenShareStore: writable(false),
+                livekitRoomCounter: { increment: vi.fn(), decrement },
+                emitBackEvent,
+            });
+            room["room"] = { off: vi.fn(), disconnect: vi.fn().mockResolvedValue(undefined) } as never;
+            return { room, decrement, emitBackEvent };
+        }
+
+        it("should tear the room down and ask for a new invitation when livekit-client gives up reconnecting", () => {
+            const { room, decrement, emitBackEvent } = createDisconnectedRoom();
+
+            room["handleDisconnected"](undefined);
+
+            expect(decrement).toHaveBeenCalledOnce();
+            expect(emitBackEvent).toHaveBeenCalledWith({
+                event: { $case: "meetingConnectionRestartMessage", meetingConnectionRestartMessage: {} },
+            });
+        });
+
+        it("should tear the room down without restarting on a duplicate identity", () => {
+            const { room, decrement, emitBackEvent } = createDisconnectedRoom();
+
+            room["handleDisconnected"](DisconnectReason.DUPLICATE_IDENTITY);
+
+            expect(decrement).toHaveBeenCalledOnce();
+            expect(emitBackEvent).not.toHaveBeenCalled();
+        });
+
+        it("should do nothing when the client initiated the disconnection", () => {
+            const { room, decrement, emitBackEvent } = createDisconnectedRoom();
+
+            room["handleDisconnected"](DisconnectReason.CLIENT_INITIATED);
+
+            expect(decrement).not.toHaveBeenCalled();
+            expect(emitBackEvent).not.toHaveBeenCalled();
+        });
+
+        it("should only destroy the room once", () => {
+            const { room, decrement } = createDisconnectedRoom();
+
+            room["handleDisconnected"](undefined);
+            room.destroy();
+
+            expect(decrement).toHaveBeenCalledOnce();
+        });
+    });
+
     it("should not forward screen share updates when the space forbids screen share publication", () => {
         const shouldPublishScreenShareStore = writable(false);
         const screenShareStream = createScreenShareStream();
@@ -161,33 +273,50 @@ describe("LiveKitRoom", () => {
 function createLiveKitRoom({
     screenSharingLocalStreamStore,
     shouldPublishScreenShareStore,
+    livekitRoomCounter = { increment: vi.fn(), decrement: vi.fn() },
+    emitBackEvent = vi.fn(),
 }: {
     screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
     shouldPublishScreenShareStore: Readable<boolean>;
+    livekitRoomCounter?: { increment: () => void; decrement: () => void };
+    emitBackEvent?: SpaceInterface["emitBackEvent"];
 }): LiveKitRoom {
     return new LiveKitRoom(
         "wss://livekit.example.com",
         "token",
-        createSpace(shouldPublishScreenShareStore),
+        createSpace(shouldPublishScreenShareStore, emitBackEvent),
         createStreamableSubjects(),
         writable(new Set<string>()),
         new AbortController().signal,
         screenSharingLocalStreamStore,
         writable(undefined),
-        {
-            increment: vi.fn(),
-            decrement: vi.fn(),
-        },
+        livekitRoomCounter,
         writable({ type: "success", stream: undefined }),
     );
 }
 
-function createSpace(shouldPublishScreenShareStore: Readable<boolean>): SpaceInterface {
+function createSpace(
+    shouldPublishScreenShareStore: Readable<boolean>,
+    emitBackEvent: SpaceInterface["emitBackEvent"],
+): SpaceInterface {
     return {
         isStreamingVideoStore: writable(false),
         isStreamingAudioStore: writable(false),
         shouldPublishScreenShareStore,
+        emitBackEvent,
     } as unknown as SpaceInterface;
+}
+
+function createCameraStream(): LocalStreamStoreValue {
+    const track = {
+        id: "camera-track",
+        kind: "video",
+        getSettings: () => ({ width: 1280, height: 720 }),
+    } as unknown as MediaStreamTrack;
+    return {
+        type: "success",
+        stream: { getVideoTracks: () => [track], getAudioTracks: () => [] } as unknown as MediaStream,
+    };
 }
 
 function createStreamableSubjects(): StreamableSubjects {
