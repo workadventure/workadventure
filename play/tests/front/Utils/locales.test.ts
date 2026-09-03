@@ -28,6 +28,7 @@ describe("Locale Detection", () => {
                     "ja-JP",
                     "nl-NL",
                     "pt-BR",
+                    "th-TH",
                     "vi-VN",
                     "zh-CN",
                 ].includes(locale),
@@ -44,6 +45,7 @@ describe("Locale Detection", () => {
                 "ja-JP",
                 "nl-NL",
                 "pt-BR",
+                "th-TH",
                 "vi-VN",
                 "zh-CN",
             ],
@@ -409,6 +411,29 @@ describe("Locale Detection", () => {
             const [, , detectorFunction] = (detectLocale as any).mock.calls[0];
             const result = detectorFunction();
             expect(result).toEqual(["fr-FR"]);
+        });
+
+        it('should detect Thai when browser sends generic "th"', async () => {
+            Object.defineProperty(window, "navigator", {
+                value: {
+                    language: "th",
+                    languages: ["th"],
+                },
+                configurable: true,
+            });
+
+            localStorageMock.getItem.mockReturnValue(null);
+
+            // Re-import with fresh mocks
+            const { localeDetector } = await import("../../../src/front/Utils/locales");
+            const { detectLocale } = await import("typesafe-i18n/detectors");
+
+            await localeDetector();
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const [, , detectorFunction] = (detectLocale as any).mock.calls[0];
+            const result = detectorFunction();
+            expect(result).toEqual(["th-TH"]);
         });
 
         it("should prefer exact matches over generic mappings", async () => {
