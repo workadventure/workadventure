@@ -2,6 +2,7 @@ import { Subject } from "rxjs";
 import { writable } from "svelte/store";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ConnectionState, DisconnectReason } from "livekit-client";
+import type * as LivekitClient from "livekit-client";
 import type { Readable } from "svelte/store";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
@@ -77,7 +78,7 @@ vi.mock("../Space/SpacePeerManager/SpacePeerManager", () => ({}));
 
 // The real LocalVideoTrack / LocalAudioTrack need a browser MediaStreamTrack. Keep the surface LiveKitRoom uses.
 vi.mock("livekit-client", async (importOriginal) => {
-    const actual = await importOriginal();
+    const actual = await importOriginal<typeof LivekitClient>();
     class FakeLocalTrack {
         public isUpstreamPaused = false;
         public resumeUpstream = vi.fn().mockResolvedValue(undefined);
