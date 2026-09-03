@@ -282,6 +282,9 @@ interface PositionCoordinates {
 const WORLD_SPACE_NAME = "allWorldUser";
 const debug = Debug("GameScene");
 
+// Safety cap for moveTo() reroutes when the collision grid keeps changing while the path is followed.
+const MAX_PATH_REROUTES = 5;
+
 export class GameScene extends DirtyScene {
     Terrains: Array<Tileset>;
     CurrentPlayer!: Player;
@@ -3881,18 +3884,60 @@ ${escapedMessage}
         speed: number | undefined = undefined,
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         const pathfindingManager = this.getPathfindingManager();
-        pathfindingManager.setCollisionGrid(this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }));
 
-        const path = await pathfindingManager.findPathFromGameCoordinates(
-            {
-                x: this.CurrentPlayer.x,
-                y: this.CurrentPlayer.y,
-            },
-            position,
-            tryFindingNearestAvailable,
-        );
-        if (path.length === 0) throw new Error("No path found");
-        return this.CurrentPlayer.setPathToFollow(path, speed ?? this.CurrentPlayer.walkingSpeed);
+        // The collision grid can change while the path is followed (an area gets locked or full...): the
+        // player then aborts right before walking onto a blocking tile (see Player.onPathWaypointReached)
+        // and we compute a new route to the destination.
+        for (let attempt = 0; attempt <= MAX_PATH_REROUTES; attempt += 1) {
+            pathfindingManager.setCollisionGrid(
+                this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }),
+            );
+            // Each attempt must fully complete (walk, then maybe reroute) before the next one starts.
+            // eslint-disable-next-line no-await-in-loop
+            const path = await pathfindingManager.findPathFromGameCoordinates(
+                {
+                    x: this.CurrentPlayer.x,
+                    y: this.CurrentPlayer.y,
+                },
+                position,
+                tryFindingNearestAvailable,
+            );
+            if (path.length === 0) {
+                if (attempt === 0) throw new Error("No path found");
+                break;
+            }
+            // eslint-disable-next-line no-await-in-loop
+            const result = await this.CurrentPlayer.setPathToFollow(path, speed ?? this.CurrentPlayer.walkingSpeed);
+            if (!result.blocked) {
+                // Normal arrival, or cancellation by the user taking over: never reroute in that case.
+                return { x: result.x, y: result.y, cancelled: result.cancelled };
+            }
+        }
+
+        // The path got blocked mid-walk and the destination is not reachable anymore. The woka already
+        // stands right before the blocking tile: warn about the area blocking the destination.
+        this.displayPathBlockedWarning(position);
+        return { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y, cancelled: true };
+    }
+
+    /**
+     * Displays the blocked-area warning above the woka when a pathfinding move had to stop short of its
+     * unreachable destination, reusing the same message (and admin unlock affordance) as a physical
+     * collision with the area.
+     */
+    private displayPathBlockedWarning(destination: { x: number; y: number }): void {
+        const areasManager = this.gameMapFrontWrapper.areasManager;
+        if (!areasManager) {
+            return;
+        }
+        const blockingArea = areasManager
+            .getCollidingAreas()
+            .find((area) => MathUtils.isOverlappingWithRectangle(destination, area));
+        if (!blockingArea) {
+            // Blocked by something else than an area (an entity, a layer change...): stay silent.
+            return;
+        }
+        areasManager.getAreaById(blockingArea.id)?.displayBlockedWarningMessage();
     }
 
     /**

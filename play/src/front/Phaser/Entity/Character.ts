@@ -42,7 +42,16 @@ export const CHARACTER_BODY_OFFSET_Y = 8;
 
 export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 
-export type PathFollowResult = { x: number; y: number; cancelled: boolean };
+export type PathFollowResult = {
+    x: number;
+    y: number;
+    cancelled: boolean;
+    /**
+     * Set when the path was aborted because its next waypoint started colliding (e.g. an area got locked
+     * mid-walk); the character stopped just before the blocking tile.
+     */
+    blocked?: boolean;
+};
 
 export abstract class Character extends Container implements OutlineableInterface, Movable {
     private readonly movedSubject = new Subject<PositionInterface>();
@@ -422,7 +431,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public finishFollowingPath(cancelled = false): void {
+    public finishFollowingPath(cancelled = false, blocked = false): void {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
         this.currentPathSegmentDistanceFromStart = 0;
@@ -430,7 +439,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         const resolve = this.pathFollowingResolve;
         this.pathFollowingResolve = undefined;
-        resolve?.({ x: this.x, y: this.y, cancelled });
+        resolve?.({ x: this.x, y: this.y, cancelled, blocked });
     }
 
     protected isFollowingPath(): boolean {
@@ -440,6 +449,12 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected getPathWalkingSpeed(): number {
         return this.pathWalkingSpeed ?? WOKA_SPEED;
     }
+
+    /**
+     * Called each time a waypoint of the followed path is reached, i.e. on each tile change.
+     * Subclasses can abort the path following from here (e.g. when the next waypoint started colliding).
+     */
+    protected onPathWaypointReached(): void {}
 
     protected adjustPathToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
         const body = this.getBody();
@@ -473,6 +488,12 @@ export abstract class Character extends Container implements OutlineableInterfac
             if (this.pathToFollow.length === 1) {
                 this.setPosition(this.pathToFollow[0].x, this.pathToFollow[0].y);
                 this.finishFollowingPath();
+                return;
+            }
+
+            this.onPathWaypointReached();
+            if (!this.pathToFollow) {
+                // The hook aborted the path following.
                 return;
             }
 

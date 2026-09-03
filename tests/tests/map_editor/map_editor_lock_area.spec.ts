@@ -173,4 +173,57 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         const adminPositionAfterUnlock = await Map.getPosition(page);
         expect(adminPositionAfterUnlock.x).toBeGreaterThan(areaLeftBoundX);
     });
+
+    test("Locking an area mid-walk stops or reroutes a pathfinding move", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+
+        // A vertical lockable wall covering columns 3-5, leaving row 0 and rows 7-9 free.
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        await AreaEditor.drawArea(page, { x: 3 * 32, y: 1 * 32 }, { x: 6 * 32, y: 7 * 32 });
+        await AreaEditor.addProperty(page, "lockableAreaPropertyData");
+        await Menu.closeMapEditor(page);
+
+        // The admin stays inside the area to be able to lock it while Alice walks. He stands at the top
+        // of the wall, far from Alice's lane: if the two wokas get close enough, a proximity bubble
+        // forms (even through the wall) and the lock button then opens a picker instead of toggling.
+        await Map.teleportToPosition(page, 4 * 32 + 16, 1 * 32 + 16);
+        await expect(page.getByTestId("lock-button")).toBeVisible();
+
+        await using page2 = await getPage(browser, "Alice", Map.url("empty"));
+        await Map.teleportToPosition(page2, 16, 6 * 32 + 16);
+
+        // Alice starts a slow pathfinding walk towards the vertical middle of the wall (speed 2 ≈
+        // 40px/s, the area border is ~2s away): every neighbouring tile of the destination is inside
+        // the wall too, so once locked the destination is unreachable even for the nearest-available
+        // fallback. The admin locks the area while she is on her way.
+        await Map.startMoveTo(page2, 4 * 32 + 16, 3 * 32 + 16, 2);
+        await page.getByTestId("lock-button").click();
+        await expect(page.getByTestId("lock-button")).toHaveClass(/bg-danger/);
+
+        // Alice walks up to the border, stops there and gets warned. She came from the left, so
+        // stopping outside the area means stopping left of column 3.
+        const stopResult = await Map.waitForMoveToResult(page2);
+        expect(stopResult.cancelled).toBe(true);
+        const alicePositionAfterStop = await Map.getPosition(page2);
+        expect(alicePositionAfterStop.x).toBeLessThan(3 * 32);
+        await expect(page2.getByText("This area is locked. You cannot enter.")).toBeAttached();
+
+        // Alice goes back to her starting point, then the admin unlocks. She then walks towards the
+        // other side of the wall and the admin locks it again while she is on her way.
+        await Map.teleportToPosition(page2, 16, 6 * 32 + 16);
+        await page.getByTestId("lock-button").click();
+        await expect(page.getByTestId("lock-button")).not.toHaveClass(/bg-danger/);
+
+        await Map.startMoveTo(page2, 8 * 32 + 16, 6 * 32 + 16, 2);
+        await page.getByTestId("lock-button").click();
+        await expect(page.getByTestId("lock-button")).toHaveClass(/bg-danger/);
+
+        // Alice is rerouted around the locked area and still reaches her destination.
+        const rerouteResult = await Map.waitForMoveToResult(page2);
+        expect(rerouteResult.cancelled).toBe(false);
+        const alicePositionAfterReroute = await Map.getPosition(page2);
+        expect(alicePositionAfterReroute.x).toBeGreaterThan(6 * 32);
+    });
 });
