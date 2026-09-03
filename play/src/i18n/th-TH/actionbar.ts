@@ -43,8 +43,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "ไมโครโฟนของคุณถูกปิดอยู่",
         activate: "เปิดไมโครโฟนของคุณ",
         noDevices: "ไม่พบอุปกรณ์ไมโครโฟน",
-        noSoundWarning:
-            "ไม่พบเสียงจากไมโครโฟนของคุณ อาจมีปัญหา ลองเปลี่ยนไมโครโฟนในการตั้งค่า",
+        noSoundWarning: "ไม่พบเสียงจากไมโครโฟนของคุณ อาจมีปัญหา ลองเปลี่ยนไมโครโฟนในการตั้งค่า",
         noSoundWarningPressEnter: "ไม่พบเสียงจากไมโครโฟนของคุณ กด Enter เพื่อเปิดการตั้งค่า",
         advancedNoiseReduction: "การลดเสียงรบกวนขั้นสูง",
         noiseSuppressionInitializing: "กำลังเริ่มต้นระบบตัดเสียงรบกวนแบบกำหนดเอง...",

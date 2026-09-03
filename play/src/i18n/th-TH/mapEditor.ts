@@ -130,8 +130,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             namePlaceholder: "MySpeakerZone",
             waitingMediaLinkLabel: "สื่อที่จะแสดงก่อนการถ่ายทอดสดเริ่ม",
             waitingMediaLinkPlaceholder: "https://www....",
-            waitingMedialLinkError:
-                "ดูเหมือนลิงก์ที่คุณให้มามีปัญหา ช่วยตรวจสอบอีกครั้งได้ไหม? 🙏",
+            waitingMedialLinkError: "ดูเหมือนลิงก์ที่คุณให้มามีปัญหา ช่วยตรวจสอบอีกครั้งได้ไหม? 🙏",
             waitingMedialLinkHelp: "ลิงก์ที่ถูกต้องควรเป็น 'https://monlienmedia.com/…'",
             waitingSpeaker: "กำลังรอผู้พูด 🎤✨",
             actionButtonLabel: "เข้าร่วมผู้ชม",
@@ -320,7 +319,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "ล็อกพื้นที่เพื่อป้องกันการเข้าจากภายนอก",
             lockLabel: "ล็อกพื้นที่",
             allowedTagsLabel: "แท็กที่อนุญาตให้ล็อก/ปลดล็อก",
-            allowedTagsInfo: "เฉพาะผู้ใช้ที่มีแท็กเหล่านี้เท่านั้นที่ล็อกหรือปลดล็อกพื้นที่นี้ได้ ปล่อยว่างเพื่ออนุญาตทุกคน",
+            allowedTagsInfo:
+                "เฉพาะผู้ใช้ที่มีแท็กเหล่านี้เท่านั้นที่ล็อกหรือปลดล็อกพื้นที่นี้ได้ ปล่อยว่างเพื่ออนุญาตทุกคน",
         },
         advancedOptions: "ตัวเลือกขั้นสูง",
         chatEnabled: "ผูกช่องแชทเฉพาะ",
@@ -399,8 +399,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             writeTag: "พิมพ์แท็ก...",
             objectType: "ประเภทวัตถุ",
             floatingObject: "วัตถุลอย",
-            floatingObjectDescription:
-                "วัตถุลอยสามารถวางได้อย่างอิสระบนแผนที่ มิฉะนั้นจะถูกจัดเรียงตามตารางของแผนที่",
+            floatingObjectDescription: "วัตถุลอยสามารถวางได้อย่างอิสระบนแผนที่ มิฉะนั้นจะถูกจัดเรียงตามตารางของแผนที่",
             depth: "ความลึก",
             groundLevel: "ระดับพื้น",
             custom: "กำหนดเอง",
@@ -426,8 +425,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         loading: "กำลังโหลด",
         megaphone: {
             title: "เมกะโฟน",
-            description:
-                "เมกะโฟนคือเครื่องมือที่ให้คุณกระจายสตรีมวิดีโอ/เสียงไปยังผู้เล่นทุกคนในห้อง/โลก",
+            description: "เมกะโฟนคือเครื่องมือที่ให้คุณกระจายสตรีมวิดีโอ/เสียงไปยังผู้เล่นทุกคนในห้อง/โลก",
             inputs: {
                 spaceName: "ชื่อสเปซ",
                 spaceNameHelper:
@@ -472,8 +470,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rightsHelper:
                     "ทุกคนที่มีอย่างน้อยหนึ่งในแท็กเหล่านี้สามารถเริ่มการบันทึกได้ ปล่อยว่างเพื่ออนุญาตผู้ใช้ที่เข้าสู่ระบบทุกคน",
                 enableSounds: "เล่นเสียงแจ้งเตือนเมื่อเริ่มและหยุดการบันทึก",
-                enableSoundsHelper:
-                    "เมื่อเปิดใช้งาน ผู้เข้าร่วมทุกคนจะได้ยินเสียงแจ้งเตือนเมื่อการบันทึกเริ่มหรือหยุด",
+                enableSoundsHelper: "เมื่อเปิดใช้งาน ผู้เข้าร่วมทุกคนจะได้ยินเสียงแจ้งเตือนเมื่อการบันทึกเริ่มหรือหยุด",
                 error: {
                     save: {
                         success: "บันทึกการตั้งค่าการบันทึกแล้ว",
@@ -495,8 +492,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             helps: {
                 description: "คำอธิบายของแผนที่ ใช้แสดงในโซเชียลเน็ตเวิร์กเมื่อแชร์ลิงก์ไปยังแผนที่ได้",
                 tags: "รายการแท็ก ใช้กำหนดสิทธิ์เข้าถึงแผนที่ได้",
-                thumbnail:
-                    "URL ของภาพขนาดย่อ ภาพนี้จะใช้ในโซเชียลเน็ตเวิร์กเมื่อแชร์ลิงก์ไปยังแผนที่",
+                thumbnail: "URL ของภาพขนาดย่อ ภาพนี้จะใช้ในโซเชียลเน็ตเวิร์กเมื่อแชร์ลิงก์ไปยังแผนที่",
                 copyright:
                     "ประกาศลิขสิทธิ์ของแผนที่นี้ อาจเป็นลิงก์ไปยังสัญญาอนุญาต ส่วนประกอบของแผนที่ เช่น ไทล์เซ็ตหรือรูปภาพ อาจมีลิขสิทธิ์ของตัวเอง",
             },
