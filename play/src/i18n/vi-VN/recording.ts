@@ -6,7 +6,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     title: "Danh sách bản ghi của bạn",
     noRecordings: "Không có bản ghi nào",
     errorFetchingRecordings: "Đã xảy ra lỗi khi tải danh sách bản ghi",
-    expireIn: "Hết hạn sau {days} ngày",
+    expireIn: "Hết hạn sau {days} ngày{s}",
     expiresOn: "Hết hạn vào {date}",
     download: "Tải xuống",
     close: "Đóng",
