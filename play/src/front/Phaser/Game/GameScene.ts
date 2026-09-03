@@ -72,7 +72,7 @@ import { TextUtils } from "../Components/TextUtils";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { PropertyUtils } from "../Map/PropertyUtils";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { PathfindingManager } from "../../Utils/PathfindingManager";
+import { PathfindingManager, PathTileType } from "../../Utils/PathfindingManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserMovedInterface,
@@ -3903,7 +3903,11 @@ ${escapedMessage}
                 tryFindingNearestAvailable,
             );
             if (path.length === 0) {
-                if (attempt === 0) throw new Error("No path found");
+                if (attempt === 0) {
+                    // The destination is unreachable from the start (typically an already locked area):
+                    // still walk towards it instead of silently doing nothing.
+                    return this.walkTowardsBlockedDestination(position, tryFindingNearestAvailable, speed);
+                }
                 break;
             }
             // eslint-disable-next-line no-await-in-loop
@@ -3916,6 +3920,64 @@ ${escapedMessage}
 
         // The path got blocked mid-walk and the destination is not reachable anymore. The woka already
         // stands right before the blocking tile: warn about the area blocking the destination.
+        this.displayPathBlockedWarning(position);
+        return { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y, cancelled: true };
+    }
+
+    /**
+     * The destination is not reachable right now (typically inside an already locked area). Rather than
+     * doing nothing, walks towards it on a path computed as if the blocking areas were walkable: the live
+     * next-waypoint check (see Player.onPathWaypointReached) stops the woka right before the first tile
+     * that really collides, where the blocked-area warning is displayed. If the area gets unlocked while
+     * the woka is walking, it simply reaches the destination.
+     */
+    private async walkTowardsBlockedDestination(
+        position: { x: number; y: number },
+        tryFindingNearestAvailable: boolean,
+        speed: number | undefined,
+    ): Promise<{ x: number; y: number; cancelled: boolean }> {
+        const areasManager = this.gameMapFrontWrapper.areasManager;
+        if (!areasManager) {
+            throw new Error("No path found");
+        }
+
+        // Suggestion grid only: real walls stay, and reality is enforced tile by tile while walking.
+        const pathfindingManager = this.getPathfindingManager();
+        const liveGrid = this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false });
+        const tileDimensions = this.gameMapFrontWrapper.getTileDimensions();
+        const suggestionGrid = liveGrid.map((row) => [...row]);
+        for (const area of areasManager.getCollidingAreas()) {
+            const xStart = Math.max(0, Math.floor(area.x / tileDimensions.width));
+            const xEnd = Math.ceil((area.x + area.width) / tileDimensions.width);
+            const yStart = Math.max(0, Math.floor(area.y / tileDimensions.height));
+            const yEnd = Math.ceil((area.y + area.height) / tileDimensions.height);
+            for (let y = yStart; y < Math.min(yEnd, suggestionGrid.length); y += 1) {
+                for (let x = xStart; x < Math.min(xEnd, suggestionGrid[y].length); x += 1) {
+                    suggestionGrid[y][x] = PathTileType.Walkable;
+                }
+            }
+        }
+
+        pathfindingManager.setCollisionGrid(suggestionGrid);
+        const path = await pathfindingManager
+            .findPathFromGameCoordinates(
+                {
+                    x: this.CurrentPlayer.x,
+                    y: this.CurrentPlayer.y,
+                },
+                position,
+                tryFindingNearestAvailable,
+            )
+            .finally(() => pathfindingManager.setCollisionGrid(liveGrid));
+        if (path.length === 0) {
+            throw new Error("No path found");
+        }
+
+        const result = await this.CurrentPlayer.setPathToFollow(path, speed ?? this.CurrentPlayer.walkingSpeed);
+        if (!result.blocked) {
+            // The area got unlocked while walking and the woka arrived, or the user took over.
+            return { x: result.x, y: result.y, cancelled: result.cancelled };
+        }
         this.displayPathBlockedWarning(position);
         return { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y, cancelled: true };
     }

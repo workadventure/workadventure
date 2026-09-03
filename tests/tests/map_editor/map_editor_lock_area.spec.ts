@@ -225,5 +225,17 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         expect(rerouteResult.cancelled).toBe(false);
         const alicePositionAfterReroute = await Map.getPosition(page2);
         expect(alicePositionAfterReroute.x).toBeGreaterThan(6 * 32);
+
+        // Walking towards an ALREADY locked area must not be a silent no-op: Alice goes back to her
+        // starting point and walks towards the middle of the wall (still locked). She walks up to the
+        // border, stops there and gets the warning.
+        await Map.teleportToPosition(page2, 16, 6 * 32 + 16);
+        await Map.startMoveTo(page2, 4 * 32 + 16, 3 * 32 + 16, 2);
+        const alreadyLockedResult = await Map.waitForMoveToResult(page2);
+        expect(alreadyLockedResult.cancelled).toBe(true);
+        const alicePositionAfterPreLockedWalk = await Map.getPosition(page2);
+        expect(alicePositionAfterPreLockedWalk.x).toBeGreaterThan(1 * 32);
+        expect(alicePositionAfterPreLockedWalk.x).toBeLessThan(3 * 32);
+        await expect(page2.getByText("This area is locked. You cannot enter.")).toBeAttached();
     });
 });
