@@ -7,7 +7,7 @@ import { UsernameMegaphoneDisplay } from "./UsernameMegaphoneDisplay";
 import { UsernameStatusDisplay } from "./UsernameStatusDisplay";
 
 const CORRECTION_RATE = 0.65; // When one game pixel is smaller than one screen pixel (zoomed-out), we zoom out the Woka name, but only up to CORRECTION_RATE. After that, the Woka name will stay at its current screen size even if we zoom out more (to keep the text readable)
-const USERNAME_FONT_FAMILY = "Roboto";
+const USERNAME_FONT_FAMILY = 'Roboto, "Noto Sans Thai", sans-serif';
 const USERNAME_FONT_SIZE = 10;
 const USERNAME_FONT_WEIGHT = 500;
 
