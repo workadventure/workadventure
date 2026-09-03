@@ -1,5 +1,5 @@
 import Debug from "debug";
-import { ConnectionError } from "livekit-client";
+import { ConnectionError, ConnectionErrorReason } from "livekit-client";
 import type { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { Readable } from "svelte/store";
@@ -81,6 +81,16 @@ export class LivekitConnection {
                         // It can happen when the user leaves the space just after joining it.
                         // In this case, we don't want to log an error.
                         debug("Livekit connection aborted because the user left the space");
+                        return;
+                    }
+                    if (
+                        err instanceof ConnectionError &&
+                        (err.reason === ConnectionErrorReason.ServerUnreachable ||
+                            err.reason === ConnectionErrorReason.Timeout)
+                    ) {
+                        // The LiveKit server cannot be reached (network outage on the user's side, typically).
+                        // LiveKitRoom.handleDisconnected already asked the back for a new invitation: not a bug.
+                        console.warn("Could not reach the Livekit server, a new connection will be requested", err);
                         return;
                     }
                     console.error("An error occurred in LivekitConnection initialize", err);

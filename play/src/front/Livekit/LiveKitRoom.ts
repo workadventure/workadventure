@@ -46,6 +46,11 @@ type LivekitRoomCounter = {
     decrement: () => void;
 };
 
+// ponytail: fixed delay before asking for a new invitation when the room never managed to connect (the LiveKit
+// server is unreachable right now), so a long outage does not turn into a tight re-invitation loop. Exponential
+// backoff if it ever matters.
+const RESTART_DELAY_WHEN_NEVER_CONNECTED_MS = 5000;
+
 export class LiveKitRoom implements LiveKitRoomInterface {
     private room: Room | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
@@ -63,6 +68,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private rxjsSubscriptions: Subscription[] = [];
     private unregisterAudioPlaybackRetry: Unsubscriber | undefined;
     private destroyed = false;
+    private everConnected = false;
     // Kept so that publications skipped while the room was reconnecting can be replayed on RoomEvent.Reconnected
     private cameraStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
     private microphoneStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
@@ -146,6 +152,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         await room.connect(this.serverUrl, this.token, {
             autoSubscribe: false,
         });
+        this.everConnected = true;
         this.handleAudioPlaybackStatusChanged();
         if (this.abortSignal.aborted) {
             await room.disconnect();
@@ -645,6 +652,20 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         // STATE_MISMATCH, JOIN_FAILURE, or no reason at all (livekit-client gave up after its reconnect attempts):
         // ask the back for a fresh invitation. LivekitConnection builds the replacement room when it arrives.
+        if (this.everConnected) {
+            this.requestRestart();
+            return;
+        }
+        setTimeout(() => {
+            if (this.abortSignal.aborted) {
+                // The space left LiveKit mode in the meantime
+                return;
+            }
+            this.requestRestart();
+        }, RESTART_DELAY_WHEN_NEVER_CONNECTED_MS);
+    }
+
+    private requestRestart() {
         analyticsClient.retryConnectionLivekit();
         this.space.emitBackEvent({
             event: {

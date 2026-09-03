@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ConnectionState, DisconnectReason } from "livekit-client";
 import type { Readable } from "svelte/store";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
@@ -91,6 +91,10 @@ vi.mock("livekit-client", async (importOriginal) => {
 describe("LiveKitRoom", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     it("registers one retry that restarts blocked LiveKit audio", async () => {
@@ -196,6 +200,7 @@ describe("LiveKitRoom", () => {
                 emitBackEvent,
             });
             room["room"] = { off: vi.fn(), disconnect: vi.fn().mockResolvedValue(undefined) } as never;
+            room["everConnected"] = true;
             return { room, decrement, emitBackEvent };
         }
 
@@ -208,6 +213,19 @@ describe("LiveKitRoom", () => {
             expect(emitBackEvent).toHaveBeenCalledWith({
                 event: { $case: "meetingConnectionRestartMessage", meetingConnectionRestartMessage: {} },
             });
+        });
+
+        it("should delay the new invitation request when the room never connected", () => {
+            vi.useFakeTimers();
+            const { room, decrement, emitBackEvent } = createDisconnectedRoom();
+            room["everConnected"] = false;
+
+            room["handleDisconnected"](DisconnectReason.JOIN_FAILURE);
+
+            expect(decrement).toHaveBeenCalledOnce();
+            expect(emitBackEvent).not.toHaveBeenCalled();
+            vi.advanceTimersByTime(5000);
+            expect(emitBackEvent).toHaveBeenCalledOnce();
         });
 
         it("should tear the room down without restarting on a duplicate identity", () => {
