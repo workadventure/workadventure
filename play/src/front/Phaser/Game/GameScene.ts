@@ -3952,9 +3952,7 @@ ${escapedMessage}
             const yStart = Math.max(0, Math.floor(area.y / tileDimensions.height));
             const yEnd = Math.ceil((area.y + area.height) / tileDimensions.height);
             for (let y = yStart; y < Math.min(yEnd, suggestionGrid.length); y += 1) {
-                for (let x = xStart; x < Math.min(xEnd, suggestionGrid[y].length); x += 1) {
-                    suggestionGrid[y][x] = PathTileType.Walkable;
-                }
+                suggestionGrid[y].fill(PathTileType.Walkable, xStart, xEnd);
             }
         }
 
