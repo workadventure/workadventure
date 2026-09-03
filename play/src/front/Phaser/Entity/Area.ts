@@ -157,7 +157,7 @@ export class Area extends Rectangle {
         });
     }
 
-    private displayWarningMessageOnCollide() {
+    public displayBlockedWarningMessage() {
         // Get the reason why the area is blocked
         let message: string = get(LL).area.noAccess(); // Default message
         const messageId = `area-blocked-${this.areaData.id}`;
@@ -236,14 +236,14 @@ export class Area extends Rectangle {
                     this.highLightArea();
                 }
 
-                this.displayWarningMessageOnCollide();
+                this.displayBlockedWarningMessage();
                 this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
             }
         } else if (!this.userHasCollideWithArea) {
             // Fallback if areasManager is not available
             this.userHasCollideWithArea = true;
             this.highLightArea();
-            this.displayWarningMessageOnCollide();
+            this.displayBlockedWarningMessage();
             this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
         }
     }

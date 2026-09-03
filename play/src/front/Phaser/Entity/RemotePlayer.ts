@@ -11,7 +11,6 @@ import {
 import type { WokaMenuAction } from "../../Stores/WokaMenuStore";
 import { wokaMenuStore } from "../../Stores/WokaMenuStore";
 import { Character } from "../Entity/Character";
-import type { PathBlockedInfo } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
@@ -125,8 +124,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         }
     }
 
-    public finishFollowingPath(cancelled = false, blockedInfo?: PathBlockedInfo): void {
-        super.finishFollowingPath(cancelled, blockedInfo);
+    public finishFollowingPath(cancelled = false, blocked = false): void {
+        super.finishFollowingPath(cancelled, blocked);
         this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.pathFollowingUpdateCallback);
         this.scene.markDirty();
     }

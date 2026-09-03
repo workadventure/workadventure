@@ -194,9 +194,11 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         await using page2 = await getPage(browser, "Alice", Map.url("empty"));
         await Map.teleportToPosition(page2, 16, 6 * 32 + 16);
 
-        // Alice starts a slow pathfinding walk towards the middle of the area (speed 2 ≈ 40px/s, the
-        // area border is ~2s away), and the admin locks the area while she is on her way.
-        await Map.startMoveTo(page2, 4 * 32 + 16, 6 * 32 + 16, 2);
+        // Alice starts a slow pathfinding walk towards the vertical middle of the wall (speed 2 ≈
+        // 40px/s, the area border is ~2s away): every neighbouring tile of the destination is inside
+        // the wall too, so once locked the destination is unreachable even for the nearest-available
+        // fallback. The admin locks the area while she is on her way.
+        await Map.startMoveTo(page2, 4 * 32 + 16, 3 * 32 + 16, 2);
         await page.getByTestId("lock-button").click();
         await expect(page.getByTestId("lock-button")).toHaveClass(/bg-danger/);
 

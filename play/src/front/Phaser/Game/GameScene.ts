@@ -194,7 +194,6 @@ import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/Ch
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
-import type { PathFollowResult } from "../Entity/Character";
 import { type Avatar, ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
@@ -3886,11 +3885,10 @@ ${escapedMessage}
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         const pathfindingManager = this.getPathfindingManager();
         const resolvedSpeed = speed ?? this.CurrentPlayer.walkingSpeed;
-        let lastBlockedResult: PathFollowResult | undefined;
 
         // The collision grid can change while the path is followed (an area gets locked or full...): the
-        // player then aborts the path (see Player.onPathWaypointReached) and we compute a new route to the
-        // destination.
+        // player then aborts right before walking onto a blocking tile (see Player.onPathWaypointReached)
+        // and we compute a new route to the destination.
         for (let attempt = 0; attempt <= MAX_PATH_REROUTES; attempt += 1) {
             pathfindingManager.setCollisionGrid(
                 this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }),
@@ -3915,82 +3913,32 @@ ${escapedMessage}
                 // Normal arrival, or cancellation by the user taking over: never reroute in that case.
                 return { x: result.x, y: result.y, cancelled: result.cancelled };
             }
-            lastBlockedResult = result;
         }
 
-        // The destination is not reachable anymore: walk to the last waypoint of the blocked path that is
-        // still walkable ("up to the door"), then warn the user.
-        const lastReachablePosition = lastBlockedResult?.lastReachablePosition;
-        if (lastReachablePosition) {
-            const distanceToDoor = MathUtils.distanceBetween(
-                { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y },
-                lastReachablePosition,
-            );
-            if (distanceToDoor > this.gameMapFrontWrapper.getTileDimensions().width / 2) {
-                pathfindingManager.setCollisionGrid(
-                    this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }),
-                );
-                const doorPath = await pathfindingManager.findPathFromGameCoordinates(
-                    {
-                        x: this.CurrentPlayer.x,
-                        y: this.CurrentPlayer.y,
-                    },
-                    lastReachablePosition,
-                    true,
-                );
-                if (doorPath.length > 0) {
-                    const doorResult = await this.CurrentPlayer.setPathToFollow(doorPath, resolvedSpeed);
-                    if (doorResult.cancelled && !doorResult.blocked) {
-                        // The user took over while walking to the door: no warning.
-                        return { x: doorResult.x, y: doorResult.y, cancelled: true };
-                    }
-                }
-            }
-        }
+        // The path got blocked mid-walk and the destination is not reachable anymore. The woka already
+        // stands right before the blocking tile: warn about the area blocking the destination.
         this.displayPathBlockedWarning(position);
         return { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y, cancelled: true };
     }
 
     /**
      * Displays the blocked-area warning above the woka when a pathfinding move had to stop short of its
-     * unreachable destination. Mirrors the messages shown by Area.displayWarningMessageOnCollide on
-     * physical contact.
+     * unreachable destination, reusing the same message (and admin unlock affordance) as a physical
+     * collision with the area.
      */
     private displayPathBlockedWarning(destination: { x: number; y: number }): void {
         const areasManager = this.gameMapFrontWrapper.areasManager;
+        if (!areasManager) {
+            return;
+        }
         const blockingArea = areasManager
-            ?.getCollidingAreas()
+            .getCollidingAreas()
             .find((area) => MathUtils.isOverlappingWithRectangle(destination, area));
-        if (!areasManager || !blockingArea) {
+        if (!blockingArea) {
             // Blocked by something else than an area (an entity, a layer change...): stay silent.
             return;
         }
-        const blockReason = areasManager.getAreaBlockReason(blockingArea.id);
-        if (!blockReason) {
-            return;
-        }
-        let message: string;
-        switch (blockReason) {
-            case "locked":
-                message = get(LL).area.blocked.locked();
-                break;
-            case "maxUsers":
-                message = get(LL).area.blocked.maxUsers();
-                break;
-            case "noAccess":
-                message = get(LL).area.blocked.noAccess();
-                break;
-        }
-        const messageId = `path-blocked-${blockingArea.id}`;
-        this.CurrentPlayer.destroyText(messageId);
-        this.CurrentPlayer.playText(
-            messageId,
-            message,
-            5000,
-            () => this.CurrentPlayer.destroyText(messageId),
-            true,
-            "warning",
-        );
+        areasManager.getAreaById(blockingArea.id)?.displayBlockedWarningMessage();
     }
 
     /**

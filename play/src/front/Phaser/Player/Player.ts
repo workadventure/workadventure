@@ -6,9 +6,9 @@ import type { GameScene } from "../Game/GameScene";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
-import type { PathBlockedInfo, PathFollowResult } from "../Entity/Character";
+import type { PathFollowResult } from "../Entity/Character";
 import { PathTileType } from "../../Utils/PathfindingManager";
-import { findFirstBlockedWaypointIndex } from "../../Utils/PathValidation";
+import { isWaypointBlocked } from "../../Utils/PathValidation";
 
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
@@ -239,18 +239,20 @@ export class Player extends Character {
         super.moveToPathPosition(x, y);
     }
 
-    public finishFollowingPath(cancelled = false, blockedInfo?: PathBlockedInfo): void {
+    public finishFollowingPath(cancelled = false, blocked = false): void {
         const wasFollowing = this.isFollowingPath();
-        super.finishFollowingPath(cancelled, blockedInfo);
+        super.finishFollowingPath(cancelled, blocked);
         this.onPathFinished(wasFollowing);
     }
 
     /**
      * The collision grid can change while a path is being followed (an area gets locked or full, an
      * entity is dropped...). Since the path following runs with direct body control, colliders would
-     * not stop us: revalidate the remaining path on each tile change and abort as soon as a waypoint
-     * ahead started colliding. GameScene.moveTo() then reroutes to the destination, or walks to the
-     * last reachable waypoint if the destination is not reachable anymore.
+     * not stop us: check the next waypoint on each tile change and abort right before walking onto a
+     * tile that started colliding. Only the NEXT waypoint is checked, on purpose: the woka keeps
+     * walking up to the obstacle, so the blocked warning shows next to the area it talks about, and a
+     * lock lifted before the woka reaches the area never interrupts the walk. GameScene.moveTo() then
+     * reroutes to the destination, or stops there when it is not reachable anymore.
      */
     protected onPathWaypointReached(): void {
         if (!this.pathToFollow || this.pathToFollow.length < 2) {
@@ -258,21 +260,16 @@ export class Player extends Character {
         }
         const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
         const body = this.getBody();
-        const bodyYOffset = body.height / 2 + body.offset.y;
-        const blockedIndex = findFirstBlockedWaypointIndex(
-            this.pathToFollow,
+        const blocked = isWaypointBlocked(
+            this.pathToFollow[1],
             gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }),
             gameMapFrontWrapper.getTileDimensions(),
-            bodyYOffset,
+            body.height / 2 + body.offset.y,
             PathTileType.Collider,
         );
-        if (blockedIndex === -1) {
-            return;
+        if (blocked) {
+            this.finishFollowingPath(true, true);
         }
-        const lastReachable = this.pathToFollow[blockedIndex - 1];
-        this.finishFollowingPath(true, {
-            lastReachablePosition: { x: lastReachable.x, y: lastReachable.y + bodyYOffset },
-        });
     }
 
     public teleportTo(x: number, y: number): void {

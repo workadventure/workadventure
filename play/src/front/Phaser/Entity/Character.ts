@@ -46,14 +46,11 @@ export type PathFollowResult = {
     x: number;
     y: number;
     cancelled: boolean;
-    /** Set when the path was aborted because a tile of the remaining path started colliding (e.g. an area got locked mid-walk). */
+    /**
+     * Set when the path was aborted because its next waypoint started colliding (e.g. an area got locked
+     * mid-walk); the character stopped just before the blocking tile.
+     */
     blocked?: boolean;
-    /** With `blocked`: last waypoint of the aborted path that is still walkable, in game pixels (feet position). */
-    lastReachablePosition?: { x: number; y: number };
-};
-
-export type PathBlockedInfo = {
-    lastReachablePosition: { x: number; y: number };
 };
 
 export abstract class Character extends Container implements OutlineableInterface, Movable {
@@ -434,7 +431,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public finishFollowingPath(cancelled = false, blockedInfo?: PathBlockedInfo): void {
+    public finishFollowingPath(cancelled = false, blocked = false): void {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
         this.currentPathSegmentDistanceFromStart = 0;
@@ -442,7 +439,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         const resolve = this.pathFollowingResolve;
         this.pathFollowingResolve = undefined;
-        resolve?.({ x: this.x, y: this.y, cancelled, ...(blockedInfo ? { blocked: true, ...blockedInfo } : {}) });
+        resolve?.({ x: this.x, y: this.y, cancelled, ...(blocked ? { blocked: true } : {}) });
     }
 
     protected isFollowingPath(): boolean {
