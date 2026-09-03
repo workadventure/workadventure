@@ -58,6 +58,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private pendingParticipants: Map<string, RemoteParticipant> = new Map();
     private localParticipant: LocalParticipant | undefined;
     private scriptingAudioTrack: MediaStreamTrack | undefined;
+    // Scripting stream received while the room was not connected, published once it is (see dispatchStream)
+    private pendingScriptingStream: MediaStream | undefined;
     private localScreenSharingVideoTrack: LocalVideoTrack | undefined;
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
@@ -160,6 +162,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         this.synchronizeMediaState();
+        this.flushPendingScriptingStream();
 
         // Subscribe to observeUserJoined to process pending participants when a specific spaceUser becomes available
         this.rxjsSubscriptions.push(
@@ -358,6 +361,19 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         if (this.screenShareStreamStore) {
             this.queueScreenShareUpdate(get(this.screenShareStreamStore));
         }
+        this.flushPendingScriptingStream();
+    }
+
+    private flushPendingScriptingStream() {
+        const stream = this.pendingScriptingStream;
+        if (!stream) {
+            return;
+        }
+        this.pendingScriptingStream = undefined;
+        this.dispatchStream(stream).catch((err) => {
+            console.error("An error occurred while publishing the pending scripting stream", err);
+            Sentry.captureException(err);
+        });
     }
 
     private synchronizeMediaState() {
@@ -726,6 +742,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         if (this.scriptingAudioTrack === audioTrack) {
+            return;
+        }
+
+        if (!this.isRoomConnected()) {
+            // Same reason as the camera / microphone / screen share: publishing now would hang and then stop the
+            // track. Published by flushPendingScriptingStream() once the room is (re)connected.
+            this.pendingScriptingStream = mediaStream;
             return;
         }
 
