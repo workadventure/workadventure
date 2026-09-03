@@ -190,6 +190,27 @@ describe("LiveKitRoom", () => {
         expect(room["localCameraTrack"]?.mediaStreamTrack.id).toBe("camera-track");
     });
 
+    it("should defer a scripting stream while the room is not connected and publish it once reconnected", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const publishTrack = vi.fn().mockResolvedValue(undefined);
+        const sdkRoom = { state: ConnectionState.Reconnecting };
+        room["room"] = sdkRoom as never;
+        room["localParticipant"] = { publishTrack } as never;
+        const audioTrack = { id: "scripting-track", kind: "audio" } as unknown as MediaStreamTrack;
+        const stream = { getAudioTracks: () => [audioTrack] } as unknown as MediaStream;
+
+        await room.dispatchStream(stream);
+        expect(publishTrack).not.toHaveBeenCalled();
+
+        sdkRoom.state = ConnectionState.Connected;
+        room["handleReconnected"]();
+        await vi.waitFor(() => expect(publishTrack).toHaveBeenCalledOnce());
+        expect(publishTrack).toHaveBeenCalledWith(audioTrack, expect.objectContaining({ name: expect.any(String) }));
+    });
+
     describe("handleDisconnected", () => {
         function createDisconnectedRoom() {
             const decrement = vi.fn();

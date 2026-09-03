@@ -22,7 +22,9 @@ export class LivekitConnection {
     private readonly unsubscribers: Subscription[] = [];
     private livekitRoom: LiveKitRoom | undefined;
     private shutdownAbortController: AbortController | undefined;
-    private streamToDispatch: MediaStream | undefined;
+    // Last scripting stream dispatched to this space. Every room (the first one and every replacement after a
+    // terminal disconnection) publishes it right after joining.
+    private lastDispatchedStream: MediaStream | undefined;
     constructor(
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
@@ -71,10 +73,9 @@ export class LivekitConnection {
                 (async () => {
                     await room.prepareConnection();
                     await room.joinRoom();
-                    if (this.streamToDispatch) {
-                        await this.dispatchStream(this.streamToDispatch);
+                    if (this.lastDispatchedStream) {
+                        await this.dispatchStream(this.lastDispatchedStream);
                     }
-                    this.streamToDispatch = undefined;
                 })().catch((err) => {
                     if (err instanceof ConnectionError && err.message === "Client initiated disconnect") {
                         // This error is triggered when the "destroy" method is called before Livekit connection completes.
@@ -114,8 +115,8 @@ export class LivekitConnection {
     }
 
     async dispatchStream(mediaStream: MediaStream): Promise<void> {
+        this.lastDispatchedStream = mediaStream;
         if (!this.livekitRoom) {
-            this.streamToDispatch = mediaStream;
             return;
         }
 
