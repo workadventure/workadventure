@@ -3,9 +3,6 @@
 @import "@fontsource/roboto-condensed";
 @import "@fontsource/press-start-2p";
 @import "@fontsource-variable/oswald";
-/* Fallback font for Thai characters (subsets ship with unicode-range: U+0E00-0E7F) */
-@import "@fontsource/noto-sans-thai";
-@import "@fontsource/noto-sans-thai/500.css";
 
 /* Custom font Comic Jens for Speech / Think bubbles */
 @font-face {
@@ -24,4 +21,25 @@
     font-style: normal;
     font-display: swap;
     unicode-range: U+1100-11FF, U+3130-318F, U+AC00-D7AF, U+A960-A97F, U+D7B0-D7FF;
+}
+
+/* Special fallback font for Thai characters. The unicode-range is mandatory: it keeps the file
+   from being downloaded for non-Thai text, and keeps this font out of the fallback chain of the
+   Latin scripts (which would otherwise steal the Comic Jens bubbles). */
+@font-face {
+    font-family: "Noto Sans Thai";
+    src: url("./fonts/noto-sans-thai/noto-sans-thai-thai-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0E00-0E7F;
+}
+
+@font-face {
+    font-family: "Noto Sans Thai";
+    src: url("./fonts/noto-sans-thai/noto-sans-thai-thai-500-normal.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0E00-0E7F;
 }

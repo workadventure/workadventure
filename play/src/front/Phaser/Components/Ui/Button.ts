@@ -37,7 +37,7 @@ export class Button extends Container {
         this.text = this.scene.add
             .text(0, 0, "", {
                 color: "0x000000",
-                fontFamily: '"Press Start 2P", "Noto Sans Thai", sans-serif',
+                fontFamily: '"Press Start 2P"',
                 fontSize: "9px",
             })
             .setOrigin(0.5, 0.45);

@@ -101,7 +101,6 @@
     "@aws-sdk/client-s3": "^3.1054.0",
     "@aws-sdk/s3-request-presigner": "^3.1054.0",
     "@floating-ui/dom": "^1.7.6",
-    "@fontsource/noto-sans-thai": "^5.3.0",
     "@fontsource/press-start-2p": "^5.2.7",
     "@fontsource/roboto": "^5.2.10",
     "@fontsource/roboto-condensed": "^5.2.8",
