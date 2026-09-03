@@ -10,6 +10,7 @@ import {
     Track,
     VideoPresets,
     DisconnectReason,
+    ConnectionState,
     supportsAV1,
 } from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
@@ -61,12 +62,18 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
     private unregisterAudioPlaybackRetry: Unsubscriber | undefined;
+    private destroyed = false;
+    // Kept so that publications skipped while the room was reconnecting can be replayed on RoomEvent.Reconnected
+    private cameraStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
+    private microphoneStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
+    private screenShareStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
 
     // Bound event handlers to avoid memory leaks
     private readonly boundHandleParticipantConnected = this.handleParticipantConnected.bind(this);
     private readonly boundHandleParticipantDisconnected = this.handleParticipantDisconnected.bind(this);
     private readonly boundHandleActiveSpeakersChanged = this.handleActiveSpeakersChanged.bind(this);
     private readonly boundHandleDisconnected = this.handleDisconnected.bind(this);
+    private readonly boundHandleReconnected = this.handleReconnected.bind(this);
     private readonly boundHandleAudioPlaybackStatusChanged = this.handleAudioPlaybackStatusChanged.bind(this);
 
     constructor(
@@ -231,7 +238,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         if (!this.localCameraTrack) {
-            this.localCameraTrack = new LocalVideoTrack(videoTrack);
+            if (!this.isRoomConnected()) {
+                // Skipped on purpose: see isRoomConnected(). handleReconnected() replays this update.
+                return;
+            }
+            const cameraTrack = new LocalVideoTrack(videoTrack);
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
                 videoCodec: "vp9",
@@ -246,7 +257,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 maxFramerate: preset.fps,
             };
 
-            await this.localParticipant.publishTrack(this.localCameraTrack, publishOptions);
+            await this.localParticipant.publishTrack(cameraTrack, publishOptions);
+            // Only keep the reference once published: after a failed publish, later updates must publish again
+            // instead of calling replaceTrack() on an unpublished track.
+            this.localCameraTrack = cameraTrack;
         } else {
             await this.localCameraTrack.replaceTrack(videoTrack, {
                 userProvidedTrack: true,
@@ -295,11 +309,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         if (!this.localMicrophoneTrack) {
-            this.localMicrophoneTrack = new LocalAudioTrack(audioTrack);
+            if (!this.isRoomConnected()) {
+                // Skipped on purpose: see isRoomConnected(). handleReconnected() replays this update.
+                return;
+            }
+            const microphoneTrack = new LocalAudioTrack(audioTrack);
 
-            await this.localParticipant.publishTrack(this.localMicrophoneTrack, {
+            await this.localParticipant.publishTrack(microphoneTrack, {
                 source: Track.Source.Microphone,
             });
+            // Only keep the reference once published (see handleCameraTrack)
+            this.localMicrophoneTrack = microphoneTrack;
         } else {
             await this.localMicrophoneTrack.replaceTrack(audioTrack, {
                 userProvidedTrack: true,
@@ -311,25 +331,51 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
     }
 
+    /**
+     * publishTrack() on a room whose signal connection is down waits up to 15 seconds for it to come back, then
+     * rejects AND stops the MediaStreamTrack we handed it, killing the user's own camera/microphone.
+     * Publications are therefore skipped while the room is not connected and replayed by handleReconnected().
+     */
+    private isRoomConnected(): boolean {
+        return this.room?.state === ConnectionState.Connected;
+    }
+
+    private handleReconnected() {
+        // Handlers are no-ops for tracks that are already published, so replaying the whole media state is safe.
+        if (this.cameraStreamStore) {
+            this.queueCameraTrackUpdate(get(this.cameraStreamStore));
+        }
+        if (this.microphoneStreamStore) {
+            this.queueMicrophoneTrackUpdate(get(this.microphoneStreamStore));
+        }
+        if (this.screenShareStreamStore) {
+            this.queueScreenShareUpdate(get(this.screenShareStreamStore));
+        }
+    }
+
     private synchronizeMediaState() {
+        this.cameraStreamStore = deriveSwitchStore(this._localStreamStore, this.space.isStreamingVideoStore);
         this.unsubscribers.push(
-            deriveSwitchStore(this._localStreamStore, this.space.isStreamingVideoStore).subscribe((localStream) => {
+            this.cameraStreamStore.subscribe((localStream) => {
                 this.queueCameraTrackUpdate(localStream);
             }),
         );
 
+        this.microphoneStreamStore = deriveSwitchStore(this._localStreamStore, this.space.isStreamingAudioStore);
         this.unsubscribers.push(
-            deriveSwitchStore(this._localStreamStore, this.space.isStreamingAudioStore).subscribe((localStream) => {
+            this.microphoneStreamStore.subscribe((localStream) => {
                 this.queueMicrophoneTrackUpdate(localStream);
             }),
         );
 
+        this.screenShareStreamStore = deriveSwitchStore(
+            this.screenSharingLocalStreamStore,
+            this.space.shouldPublishScreenShareStore,
+        );
         this.unsubscribers.push(
-            deriveSwitchStore(this.screenSharingLocalStreamStore, this.space.shouldPublishScreenShareStore).subscribe(
-                (stream) => {
-                    this.queueScreenShareUpdate(stream);
-                },
-            ),
+            this.screenShareStreamStore.subscribe((stream) => {
+                this.queueScreenShareUpdate(stream);
+            }),
         );
 
         this.unsubscribers.push(
@@ -389,7 +435,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         if (!this.localScreenSharingVideoTrack) {
-            this.localScreenSharingVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
+            if (!this.isRoomConnected()) {
+                // Skipped on purpose: see isRoomConnected(). handleReconnected() replays this update.
+                return;
+            }
+            const screenShareVideoLocalTrack = new LocalVideoTrack(screenShareVideoTrack);
 
             const screenSharePublishOptions: TrackPublishOptions = {
                 source: Track.Source.ScreenShare,
@@ -410,7 +460,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 maxFramerate: preset.fps,
             };
 
-            await this.localParticipant.publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions);
+            await this.localParticipant.publishTrack(screenShareVideoLocalTrack, screenSharePublishOptions);
+            // Only keep the reference once published (see handleCameraTrack)
+            this.localScreenSharingVideoTrack = screenShareVideoLocalTrack;
         } else if (this.localScreenSharingVideoTrack.mediaStreamTrack.id === screenShareVideoTrack.id) {
             // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
             if (this.localScreenSharingVideoTrack.isUpstreamPaused) {
@@ -428,11 +480,16 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         if (screenShareAudioTrack) {
             if (!this.localScreenSharingAudioTrack) {
-                this.localScreenSharingAudioTrack = new LocalAudioTrack(screenShareAudioTrack);
+                if (!this.isRoomConnected()) {
+                    return;
+                }
+                const screenShareAudioLocalTrack = new LocalAudioTrack(screenShareAudioTrack);
 
-                await this.localParticipant.publishTrack(this.localScreenSharingAudioTrack, {
+                await this.localParticipant.publishTrack(screenShareAudioLocalTrack, {
                     source: Track.Source.ScreenShareAudio,
                 });
+                // Only keep the reference once published (see handleCameraTrack)
+                this.localScreenSharingAudioTrack = screenShareAudioLocalTrack;
             } else if (this.localScreenSharingAudioTrack.mediaStreamTrack.id === screenShareAudioTrack.id) {
                 // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
                 if (this.localScreenSharingAudioTrack.isUpstreamPaused) {
@@ -534,6 +591,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
         this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
+        this.room.on(RoomEvent.Reconnected, this.boundHandleReconnected);
         this.room.on(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
     }
 
@@ -559,34 +617,41 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private handleDisconnected(reason?: DisconnectReason) {
-        const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
-
-        if (reason === DisconnectReason.ROOM_CLOSED || reason === DisconnectReason.ROOM_DELETED) {
-            // Normal closure, no need to log an error
+        if (
+            reason === DisconnectReason.CLIENT_INITIATED ||
+            reason === DisconnectReason.ROOM_CLOSED ||
+            reason === DisconnectReason.ROOM_DELETED
+        ) {
+            // We left, or the back closed the room: the switch / finalize messages handle the cleanup.
             return;
         }
 
-        if (reason !== DisconnectReason.CLIENT_INITIATED) {
-            // Error case: let's log and capture the error. We don't want to trigger a reconnection.
-            // If we are in this case, it means that the room was closed by the client for a reason
-            // other than a backend server message.
-            Sentry.captureMessage(`Room disconnected without a valid reason: ${disconnectReasonLabel}`, {
-                level: "warning",
-                tags: {
-                    reason: disconnectReasonLabel,
-                },
-            });
+        const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
+        Sentry.captureMessage(`Room disconnected without a valid reason: ${disconnectReasonLabel}`, {
+            level: "warning",
+            tags: {
+                reason: disconnectReasonLabel,
+            },
+        });
+
+        // livekit-client never reconnects a room once it emitted Disconnected. Tear it down right away so the
+        // media stores stop feeding a dead engine (each publish would otherwise hang 15s and stop the user's track).
+        this.destroy();
+
+        if (reason === DisconnectReason.DUPLICATE_IDENTITY || reason === DisconnectReason.PARTICIPANT_REMOVED) {
+            // Another connection took our place, or the back removed us on purpose: restarting would fight it.
+            return;
         }
 
-        if (reason === DisconnectReason.STATE_MISMATCH || reason === DisconnectReason.JOIN_FAILURE) {
-            analyticsClient.retryConnectionLivekit();
-            this.space.emitBackEvent({
-                event: {
-                    $case: "meetingConnectionRestartMessage",
-                    meetingConnectionRestartMessage: {},
-                },
-            });
-        }
+        // STATE_MISMATCH, JOIN_FAILURE, or no reason at all (livekit-client gave up after its reconnect attempts):
+        // ask the back for a fresh invitation. LivekitConnection builds the replacement room when it arrives.
+        analyticsClient.retryConnectionLivekit();
+        this.space.emitBackEvent({
+            event: {
+                $case: "meetingConnectionRestartMessage",
+                meetingConnectionRestartMessage: {},
+            },
+        });
     }
 
     private parseParticipantMetadata(participant: Participant): ParticipantMetadata {
@@ -814,6 +879,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     public destroy(): void {
+        if (this.destroyed) {
+            // Called both from handleDisconnected() and from LivekitConnection
+            return;
+        }
+        this.destroyed = true;
         try {
             this.unsubscribers.forEach((unsubscriber) => unsubscriber());
             this.rxjsSubscriptions.forEach((subscription) => subscription.unsubscribe());
@@ -823,6 +893,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
+            this.room?.off(RoomEvent.Reconnected, this.boundHandleReconnected);
             this.room?.off(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
             this.unregisterAudioPlaybackRetry?.();
             this.unregisterAudioPlaybackRetry = undefined;
