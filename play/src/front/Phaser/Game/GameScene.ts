@@ -333,20 +333,9 @@ export class GameScene extends DirtyScene {
     private tileAnimationRefreshEvent: Phaser.Time.TimerEvent | undefined;
     private messageSubscription: Subscription | null = null;
     private rxJsSubscriptions: Array<Subscription> = [];
-    private emoteUnsubscriber!: Unsubscriber;
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
-    private followUsersColorStoreUnsubscriber!: Unsubscriber;
-    private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
-    private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
-    private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
-    private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
-    private availabilityStatusStoreUnsubscriber!: Unsubscriber;
-    private mapEditorModeStoreUnsubscriber!: Unsubscriber;
-    private mapExplorationStoreUnsubscriber!: Unsubscriber;
-    private modalVisibilityStoreUnsubscriber!: Unsubscriber;
-    private lastNewMediaDeviceDetectedStoreUnsubscriber!: Unsubscriber;
-    private peerStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
+    private storesSubscribed = false;
     private entityPermissions: EntityPermissions | undefined;
     private entityPermissionsDeferred: Deferred<EntityPermissions> = new Deferred();
     private gameMapFrontWrapper!: GameMapFrontWrapper;
@@ -1196,18 +1185,6 @@ export class GameScene extends DirtyScene {
         } else {
             this._proximityChatRoom?.destroy();
         }
-        this.mapEditorModeStoreUnsubscriber?.();
-        this.emoteUnsubscriber?.();
-        this.followUsersColorStoreUnsubscriber?.();
-        this.modalVisibilityStoreUnsubscriber?.();
-        this.highlightedEmbedScreenUnsubscriber?.();
-        this.embedScreenLayoutStoreUnsubscriber?.();
-        this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
-        this.jitsiParticipantsCountStoreUnsubscriber?.();
-        this.availabilityStatusStoreUnsubscriber?.();
-        this.mapExplorationStoreUnsubscriber?.();
-        this.lastNewMediaDeviceDetectedStoreUnsubscriber?.();
-        this.peerStoreUnsubscriber?.();
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }
@@ -2579,167 +2556,165 @@ export class GameScene extends DirtyScene {
     }
 
     private subscribeToStores(): void {
-        if (
-            this.userIsJitsiDominantSpeakerStoreUnsubscriber != undefined ||
-            this.jitsiParticipantsCountStoreUnsubscriber != undefined ||
-            this.availabilityStatusStoreUnsubscriber != undefined ||
-            this.emoteUnsubscriber != undefined ||
-            this.followUsersColorStoreUnsubscriber != undefined ||
-            this.mapEditorModeStoreUnsubscriber != undefined ||
-            this.mapExplorationStoreUnsubscriber != undefined ||
-            this.lastNewMediaDeviceDetectedStoreUnsubscriber != undefined
-        ) {
-            console.error(
-                "subscribeToStores => Check all subscriber undefined ",
-                this.userIsJitsiDominantSpeakerStoreUnsubscriber,
-                this.jitsiParticipantsCountStoreUnsubscriber,
-                this.availabilityStatusStoreUnsubscriber,
-                this.emoteUnsubscriber,
-                this.followUsersColorStoreUnsubscriber,
-                this.mapEditorModeStoreUnsubscriber,
-                this.mapExplorationStoreUnsubscriber,
-                this.lastNewMediaDeviceDetectedStoreUnsubscriber,
-            );
-
-            throw new Error("One store is already subscribed.");
+        if (this.storesSubscribed) {
+            throw new Error("subscribeToStores: the stores are already subscribed.");
         }
+        this.storesSubscribed = true;
 
-        this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
-            (dominantSpeaker) => {
+        this.unsubscribers.push(
+            userIsJitsiDominantSpeakerStore.subscribe((dominantSpeaker) => {
                 this.jitsiDominantSpeaker = dominantSpeaker;
                 this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
-            },
+            }),
         );
 
-        this.jitsiParticipantsCountStoreUnsubscriber = jitsiParticipantsCountStore.subscribe((participantsCount) => {
-            this.jitsiParticipantsCount = participantsCount;
-            this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
-        });
+        this.unsubscribers.push(
+            jitsiParticipantsCountStore.subscribe((participantsCount) => {
+                this.jitsiParticipantsCount = participantsCount;
+                this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
+            }),
+        );
 
-        this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
-            if (!this.connection) {
-                throw new Error("Connection is undefined");
-            }
-            this.connection.emitPlayerStatusChange(availabilityStatus);
-            this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
-            if (availabilityStatus === AvailabilityStatus.SILENT) {
-                this.CurrentPlayer.toggleTalk(false);
-            }
-        });
-
-        this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
-            if (emote && get(enableUserInputsStore)) {
-                this.CurrentPlayer?.playEmote(emote.emoji);
-                this.connection?.emitEmoteEvent(emote.emoji);
-                emoteStore.set(null);
-            }
-        });
-
-        this.followUsersColorStoreUnsubscriber = followUsersColorStore.subscribe((color) => {
-            if (color !== undefined) {
-                this.CurrentPlayer.setFollowOutlineColor(color);
-                this.connection?.emitPlayerOutlineColor(color);
-            } else {
-                this.CurrentPlayer.removeFollowOutlineColor();
-                this.connection?.emitPlayerOutlineColor(null);
-            }
-        });
-
-        this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
-            //this.reposition();
-        });
-
-        this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
-            //this.reposition();
-        });
-
-        this.mapEditorModeStoreUnsubscriber = mapEditorModeStore.subscribe((isOn) => {
-            if (isOn) {
-                this.activatablesManager.deactivateSelectedObject();
-                this.activatablesManager.handlePointerOutActivatableObject();
-                this.activatablesManager.disableSelectingByDistance();
-            } else {
-                this.activatablesManager.handlePointerOutActivatableObject();
-                this.activatablesManager.enableSelectingByDistance();
-                // make sure all entities are non-interactive
-                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
-                // add interactions back only for activatables
-                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
-            }
-            this.markDirty();
-        });
-
-        this.mapExplorationStoreUnsubscriber = mapExplorationModeStore.subscribe((exploration) => {
-            if (exploration) {
-                this.cameraManager.setExplorationMode();
-            } else {
-                this.input.keyboard?.enableGlobalCapture();
-            }
-        });
-
-        this.lastNewMediaDeviceDetectedStoreUnsubscriber = lastNewMediaDeviceDetectedStore.subscribe((devices) => {
-            if (devices.length === 0) return;
-            const ignoredNewMediaDeviceIds = localUserStore.getIgnoredNewMediaDeviceIds();
-            // filter device by name tu avoid multiple notification for the same device
-            const devicesToNotify = devices.reduce((devices: MediaDeviceInfo[], currentDevice: MediaDeviceInfo) => {
-                if (ignoredNewMediaDeviceIds.has(currentDevice.deviceId)) {
-                    return devices;
+        this.unsubscribers.push(
+            availabilityStatusStore.subscribe((availabilityStatus) => {
+                if (!this.connection) {
+                    throw new Error("Connection is undefined");
                 }
-                if (
-                    devices.find((device_) => device_.label == currentDevice.label) != undefined ||
-                    get(requestedCameraDeviceIdStore) == currentDevice.deviceId ||
-                    get(requestedMicrophoneDeviceIdStore) == currentDevice.deviceId ||
-                    get(speakerSelectedStore) == currentDevice.deviceId
-                )
+                this.connection.emitPlayerStatusChange(availabilityStatus);
+                this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
+                if (availabilityStatus === AvailabilityStatus.SILENT) {
+                    this.CurrentPlayer.toggleTalk(false);
+                }
+            }),
+        );
+
+        this.unsubscribers.push(
+            emoteStore.subscribe((emote) => {
+                if (emote && get(enableUserInputsStore)) {
+                    this.CurrentPlayer?.playEmote(emote.emoji);
+                    this.connection?.emitEmoteEvent(emote.emoji);
+                    emoteStore.set(null);
+                }
+            }),
+        );
+
+        this.unsubscribers.push(
+            followUsersColorStore.subscribe((color) => {
+                if (color !== undefined) {
+                    this.CurrentPlayer.setFollowOutlineColor(color);
+                    this.connection?.emitPlayerOutlineColor(color);
+                } else {
+                    this.CurrentPlayer.removeFollowOutlineColor();
+                    this.connection?.emitPlayerOutlineColor(null);
+                }
+            }),
+        );
+
+        this.unsubscribers.push(
+            highlightedEmbedScreen.subscribe((value) => {
+                //this.reposition();
+            }),
+        );
+
+        this.unsubscribers.push(
+            embedScreenLayoutStore.subscribe((layout) => {
+                //this.reposition();
+            }),
+        );
+
+        this.unsubscribers.push(
+            mapEditorModeStore.subscribe((isOn) => {
+                if (isOn) {
+                    this.activatablesManager.deactivateSelectedObject();
+                    this.activatablesManager.handlePointerOutActivatableObject();
+                    this.activatablesManager.disableSelectingByDistance();
+                } else {
+                    this.activatablesManager.handlePointerOutActivatableObject();
+                    this.activatablesManager.enableSelectingByDistance();
+                    // make sure all entities are non-interactive
+                    this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
+                    // add interactions back only for activatables
+                    this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
+                }
+                this.markDirty();
+            }),
+        );
+
+        this.unsubscribers.push(
+            mapExplorationModeStore.subscribe((exploration) => {
+                if (exploration) {
+                    this.cameraManager.setExplorationMode();
+                } else {
+                    this.input.keyboard?.enableGlobalCapture();
+                }
+            }),
+        );
+
+        this.unsubscribers.push(
+            lastNewMediaDeviceDetectedStore.subscribe((devices) => {
+                if (devices.length === 0) return;
+                const ignoredNewMediaDeviceIds = localUserStore.getIgnoredNewMediaDeviceIds();
+                // filter device by name tu avoid multiple notification for the same device
+                const devicesToNotify = devices.reduce((devices: MediaDeviceInfo[], currentDevice: MediaDeviceInfo) => {
+                    if (ignoredNewMediaDeviceIds.has(currentDevice.deviceId)) {
+                        return devices;
+                    }
+                    if (
+                        devices.find((device_) => device_.label == currentDevice.label) != undefined ||
+                        get(requestedCameraDeviceIdStore) == currentDevice.deviceId ||
+                        get(requestedMicrophoneDeviceIdStore) == currentDevice.deviceId ||
+                        get(speakerSelectedStore) == currentDevice.deviceId
+                    )
+                        return devices;
+
+                    devices.push(currentDevice);
                     return devices;
+                }, []);
 
-                devices.push(currentDevice);
-                return devices;
-            }, []);
+                for (const device of devicesToNotify) {
+                    const id = `${PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX}${device.deviceId}`;
+                    this.CurrentPlayer.destroyText(id);
+                    this.CurrentPlayer.playText(
+                        id,
+                        get(LL).camera.webrtc.newDeviceDetected({ device: device.label }),
+                        5000,
+                        () => {
+                            this.CurrentPlayer.destroyText(id);
 
-            for (const device of devicesToNotify) {
-                const id = `${PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX}${device.deviceId}`;
-                this.CurrentPlayer.destroyText(id);
-                this.CurrentPlayer.playText(
-                    id,
-                    get(LL).camera.webrtc.newDeviceDetected({ device: device.label }),
-                    5000,
-                    () => {
-                        this.CurrentPlayer.destroyText(id);
+                            // get all devices with the same label
+                            const devicesToUse = devices.filter((device_) => device_.label === device.label);
 
-                        // get all devices with the same label
-                        const devicesToUse = devices.filter((device_) => device_.label === device.label);
+                            for (const deviceToUse of devicesToUse) {
+                                switch (deviceToUse.kind) {
+                                    case "videoinput":
+                                        requestedCameraDeviceIdStore.set(deviceToUse.deviceId);
+                                        localUserStore.setPreferredVideoInputDevice(deviceToUse.deviceId);
+                                        break;
+                                    // use the new device
+                                    case "audioinput":
+                                        requestedMicrophoneDeviceIdStore.set(deviceToUse.deviceId);
+                                        localUserStore.setPreferredAudioInputDevice(deviceToUse.deviceId);
+                                        break;
 
-                        for (const deviceToUse of devicesToUse) {
-                            switch (deviceToUse.kind) {
-                                case "videoinput":
-                                    requestedCameraDeviceIdStore.set(deviceToUse.deviceId);
-                                    localUserStore.setPreferredVideoInputDevice(deviceToUse.deviceId);
-                                    break;
-                                // use the new device
-                                case "audioinput":
-                                    requestedMicrophoneDeviceIdStore.set(deviceToUse.deviceId);
-                                    localUserStore.setPreferredAudioInputDevice(deviceToUse.deviceId);
-                                    break;
-
-                                case "audiooutput":
-                                    localUserStore.setSpeakerDeviceId(deviceToUse.deviceId);
-                                    speakerSelectedStore.set(deviceToUse.deviceId);
-                                    break;
-                                default:
-                                    console.warn("Unknown device kind: ", deviceToUse.kind);
+                                    case "audiooutput":
+                                        localUserStore.setSpeakerDeviceId(deviceToUse.deviceId);
+                                        speakerSelectedStore.set(deviceToUse.deviceId);
+                                        break;
+                                    default:
+                                        console.warn("Unknown device kind: ", deviceToUse.kind);
+                                }
                             }
-                        }
-                    },
-                    true,
-                    "message",
-                    () => {
-                        localUserStore.addIgnoredNewMediaDeviceId(device.deviceId);
-                        this.CurrentPlayer.destroyText(id);
-                    },
-                );
-            }
-        });
+                        },
+                        true,
+                        "message",
+                        () => {
+                            localUserStore.addIgnoredNewMediaDeviceId(device.deviceId);
+                            this.CurrentPlayer.destroyText(id);
+                        },
+                    );
+                }
+            }),
+        );
 
         const NO_MICROPHONE_SOUND_TOAST_ID = "no-microphone-sound-toast";
         this.unsubscribers.push(
