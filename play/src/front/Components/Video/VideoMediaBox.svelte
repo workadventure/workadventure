@@ -3,7 +3,7 @@
     import { getContext, onDestroy, onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
     import type { Subscription } from "rxjs";
-    import SoundMeterWidget from "../SoundMeterWidget.svelte";
+    import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/VideoBox";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -67,7 +67,6 @@
             : undefined,
     );
     let volumeStore = $derived(streamable?.volume);
-    let volumeMeter = $derived($volumeMeterStore);
     let webRtcStatsStore = $derived($displayVideoQualityStore ? streamable?.webrtcStats : undefined);
     let webRtcStats = $derived($webRtcStatsStore);
 
@@ -415,8 +414,10 @@
                                     class:opacity-20={$activePictureInPictureStore}
                                 >
                                     {#if $hasAudioStore && !audioStateMismatch}
-                                        <SoundMeterWidget
-                                            volume={volumeMeter}
+                                        <!-- The wrapper subscribes to the volume store itself, so the SoundMeter
+                                             (Web Audio analyser + polling) only runs while this block is rendered. -->
+                                        <SoundMeterWidgetWrapper
+                                            volume={volumeMeterStore}
                                             cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                                             barColor="white"
                                         />
