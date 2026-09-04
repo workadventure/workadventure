@@ -207,6 +207,64 @@ describe("Space", () => {
     });
 });
 
+describe("Space.extractUpdatedFieldsFromUpdateSpaceUserMessage", () => {
+    const createSpace = () =>
+        new Space(
+            "test",
+            "test",
+            new EventProcessor(),
+            FilterType.ALL_USERS,
+            vi.fn(),
+            mock<SpaceConnectionInterface>(),
+            "world",
+            [],
+            () => ({}) as unknown as SpaceToBackForwarder,
+            () => ({}) as unknown as SpaceToFrontDispatcher,
+        );
+
+    const createSocket = (spaceUserId: string) =>
+        mock<PusherWebSocket>({
+            getUserData: vi.fn().mockReturnValue({ spaceUserId, userUuid: "uuid" }),
+        });
+
+    it("applies the update to the socket's user even when the message carries a stale spaceUserId", () => {
+        const space = createSpace();
+        const socket = createSocket("room_207");
+        space._localConnectedUserWithSpaceUser.set(socket, {
+            ...SpaceUser.fromPartial({ spaceUserId: "room_207", uuid: "uuid" }),
+            lowercaseName: "fabio",
+        });
+        vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        const result = space.extractUpdatedFieldsFromUpdateSpaceUserMessage(socket, {
+            spaceName: "test",
+            user: SpaceUser.fromPartial({ spaceUserId: "room_187", screenSharingState: true }),
+            updateMask: ["screenSharingState"],
+        });
+
+        expect(result?.changedFields).toEqual(["screenSharingState"]);
+        expect(result?.partialSpaceUser.spaceUserId).toBe("room_207");
+        expect(result?.partialSpaceUser.screenSharingState).toBe(true);
+    });
+
+    it("rejects an update from a socket that is not in the space", () => {
+        const space = createSpace();
+        const stranger = createSocket("room_1");
+        space._localConnectedUserWithSpaceUser.set(createSocket("room_2"), {
+            ...SpaceUser.fromPartial({ spaceUserId: "room_2", uuid: "uuid" }),
+            lowercaseName: "other",
+        });
+
+        expect(() =>
+            space.extractUpdatedFieldsFromUpdateSpaceUserMessage(stranger, {
+                spaceName: "test",
+                user: SpaceUser.fromPartial({ spaceUserId: "room_2", cameraState: true }),
+                updateMask: ["cameraState"],
+            }),
+        ).toThrow("spaceUser not found");
+    });
+});
+
 describe("SpaceConnection", () => {
     describe("getSpaceStreamToBackPromise", () => {
         it("should create a new spaceStreamToBack if there is no spaceStreamToBack for the backId", async () => {

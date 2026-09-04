@@ -336,39 +336,23 @@ export class Space implements SpaceForSpaceConnectionInterface {
             return null;
         }
 
-        // Use the spaceUserId from the message to find the correct user
-        // This is important when the same userUuid has multiple connections (e.g., multiple tabs)
-        const messageSpaceUserId = updateSpaceUserMessage.user.spaceUserId;
-        const spaceUser = Array.from(this._localConnectedUserWithSpaceUser.values()).find(
-            (user) => user.spaceUserId === messageSpaceUserId,
-        );
+        // The sending socket is the only identity the pusher can trust. The spaceUserId carried by the message
+        // comes from the front and can be stale, and a lookup by uuid could pick another tab of the same user.
+        const spaceUser = this._localConnectedUserWithSpaceUser.get(client);
         if (!spaceUser) {
-            // Fallback to userUuid for backward compatibility
-            const userUuid = client.getUserData().userUuid;
-            const spaceUserByUuid = Array.from(this._localConnectedUserWithSpaceUser.values()).find(
-                (user) => user.uuid === userUuid,
-            );
-            if (!spaceUserByUuid) {
-                throw new Error(`spaceUser not found by spaceUserId ${messageSpaceUserId} or userUuid ${userUuid}`);
-            }
-            console.warn(
-                `[Space.applyFromUpdateSpaceUserMessage] User found by userUuid fallback, not by spaceUserId. ` +
-                    `messageSpaceUserId: ${messageSpaceUserId}, foundSpaceUserId: ${spaceUserByUuid.spaceUserId}`,
-            );
+            throw new Error(`spaceUser not found for socket ${client.getUserData().spaceUserId} in space ${this.name}`);
         }
 
-        const targetUser =
-            spaceUser ??
-            Array.from(this._localConnectedUserWithSpaceUser.values()).find(
-                (user) => user.uuid === client.getUserData().userUuid,
+        const messageSpaceUserId = updateSpaceUserMessage.user.spaceUserId;
+        if (messageSpaceUserId !== spaceUser.spaceUserId) {
+            console.warn(
+                `[Space.extractUpdatedFieldsFromUpdateSpaceUserMessage] Message spaceUserId ${messageSpaceUserId} does not match the socket's ${spaceUser.spaceUserId}. Applying the update to the socket's user.`,
             );
-        if (!targetUser) {
-            throw new Error(`spaceUser not found for message spaceUserId ${messageSpaceUserId}`);
         }
 
         return {
             changedFields: updateSpaceUserMessage.updateMask,
-            partialSpaceUser: updateSpaceUserMessage.user,
+            partialSpaceUser: { ...updateSpaceUserMessage.user, spaceUserId: spaceUser.spaceUserId },
         };
     }
 
