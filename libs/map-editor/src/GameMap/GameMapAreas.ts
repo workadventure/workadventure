@@ -164,6 +164,115 @@ export class GameMapAreas {
         return areaRightTags.some((tag) => userConnectedTags.includes(tag));
     }
 
+    /**
+     * Returns true if the map contains at least one area with an *active* access restriction
+     * (a restrictedRightsPropertyData with a non-empty tag list).
+     * Used as a cheap gate before running the per-position access check: on a map without any
+     * restricted area, callers can skip the (more costly) position lookup entirely.
+     */
+    public hasRestrictedAreas(): boolean {
+        for (const area of this.areas.values()) {
+            if (this.getAreaRightPropertyData(area) !== undefined) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns the areas overlapping the given player position, applying the Woka Y offset so the
+     * notion of "inside" matches the front-end (the Woka feet).
+     */
+    public getPlayerAreasOnPosition(position: { x: number; y: number }): AreaData[] {
+        return this.getAreasOnPosition(position, this.areasPositionOffsetY);
+    }
+
+    /**
+     * Returns the restricted areas overlapping the given player position that the user is NOT
+     * allowed to access, based on their connected tags. An empty array means the position is
+     * allowed for this user.
+     *
+     * The player Y offset is applied so the notion of "inside" matches the front-end (the Woka
+     * feet), avoiding boundary mismatches when this is used for server-side enforcement.
+     */
+    public getForbiddenAreasOnPosition(position: { x: number; y: number }, userConnectedTags: string[]): AreaData[] {
+        return this.getPlayerAreasOnPosition(position).filter((area) => !this.hasAreaAccess(area, userConnectedTags));
+    }
+
+    /**
+     * If the given player position lies inside one or more restricted areas the user cannot access,
+     * returns the nearest position that is *verified* to be allowed. Returns the position unchanged
+     * when it is already allowed. Used to eject a user who ended up inside a forbidden area (spawned
+     * there, or the area became restricted around them).
+     *
+     * Returns `undefined` when no allowed position was found around the blocking areas (a map where
+     * restricted areas fully enclose the position). Callers must handle that case: they are the ones
+     * holding the context needed to decide (a last known good position, the map start position, or
+     * simply not moving the player) — this helper deliberately never invents a position.
+     *
+     * Candidates are the four exits of each blocking area, plus the four exits of their bounding box
+     * (which is what clears overlapping or nested restricted areas, where exiting a single one can
+     * land inside another). Every candidate is checked with `getForbiddenAreasOnPosition`, the same
+     * predicate the server enforces moves with, so a returned position can never be rejected
+     * afterwards by the enforcement it feeds.
+     */
+    public findNearestAllowedPosition(
+        position: { x: number; y: number },
+        userConnectedTags: string[],
+    ): { x: number; y: number } | undefined {
+        const blockingAreas = this.getForbiddenAreasOnPosition(position, userConnectedTags);
+        if (blockingAreas.length === 0) {
+            return { x: position.x, y: position.y };
+        }
+
+        const candidates = blockingAreas.flatMap((area) => this.getExitPositions(position, area));
+        candidates.push(...this.getExitPositions(position, this.getBoundingBox(blockingAreas)));
+
+        let nearest: { x: number; y: number } | undefined;
+        let nearestDistance = Number.POSITIVE_INFINITY;
+        for (const candidate of candidates) {
+            if (this.getForbiddenAreasOnPosition(candidate, userConnectedTags).length > 0) {
+                continue;
+            }
+            const distance = (candidate.x - position.x) ** 2 + (candidate.y - position.y) ** 2;
+            if (distance < nearestDistance) {
+                nearest = candidate;
+                nearestDistance = distance;
+            }
+        }
+        return nearest;
+    }
+
+    /**
+     * The four positions just outside the given rectangle's edges, keeping the other axis unchanged,
+     * and accounting for the Woka Y offset (the "inside" test compares `y + offset` against the
+     * rectangle). A 1px margin is enough to clear the inclusive boundary.
+     */
+    private getExitPositions(
+        position: { x: number; y: number },
+        rectangle: { x: number; y: number; width: number; height: number },
+    ): { x: number; y: number }[] {
+        const margin = 1;
+        const offsetY = this.areasPositionOffsetY;
+        return [
+            { x: rectangle.x - margin, y: position.y },
+            { x: rectangle.x + rectangle.width + margin, y: position.y },
+            { x: position.x, y: rectangle.y - offsetY - margin },
+            { x: position.x, y: rectangle.y + rectangle.height - offsetY + margin },
+        ];
+    }
+
+    private getBoundingBox(areas: AreaData[]): { x: number; y: number; width: number; height: number } {
+        const x = Math.min(...areas.map((area) => area.x));
+        const y = Math.min(...areas.map((area) => area.y));
+        return {
+            x,
+            y,
+            width: Math.max(...areas.map((area) => area.x + area.width)) - x,
+            height: Math.max(...areas.map((area) => area.y + area.height)) - y,
+        };
+    }
+
     public isOverlappingArea(areaId: string): boolean {
         const area = this.getArea(areaId);
         if (area === undefined) {
