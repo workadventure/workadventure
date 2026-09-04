@@ -154,6 +154,7 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         await expect(page2.getByTestId("lock-button")).toBeVisible();
         await page2.getByTestId("lock-button").click();
         await expect(page2.getByTestId("lock-button")).toHaveClass(/bg-danger/);
+        await Map.waitForCollidingAreasCount(page, 1);
 
         // Admin1 can edit the map, which used to remove every area from his pathfinding collision grid. He must not
         // be able to walk into the locked area with a pathfinding move, which is the code path used by the "talk to"
@@ -168,6 +169,7 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         // enter an area he is not allowed to enter otherwise.
         await page2.getByTestId("lock-button").click();
         await expect(page2.getByTestId("lock-button")).not.toHaveClass(/bg-danger/);
+        await Map.waitForCollidingAreasCount(page, 0);
 
         await Map.walkToPosition(page, 4 * 32, 4 * 32);
         const adminPositionAfterUnlock = await Map.getPosition(page);
@@ -215,6 +217,7 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(page2, 16, 6 * 32 + 16);
         await page.getByTestId("lock-button").click();
         await expect(page.getByTestId("lock-button")).not.toHaveClass(/bg-danger/);
+        await Map.waitForCollidingAreasCount(page2, 0);
 
         await Map.startMoveTo(page2, 8 * 32 + 16, 6 * 32 + 16, 2);
         await page.getByTestId("lock-button").click();

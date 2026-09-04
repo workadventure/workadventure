@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { evaluateScript } from "./scripting";
 import { RENDERER_MODE } from "./environment";
 import { play_url } from "./urls";
@@ -85,6 +86,22 @@ class Map {
             }
             return await w.moveToResult;
         });
+    }
+
+    /**
+     * Waits until `count` areas collide with this player. A lock toggled from another browser only lands here once
+     * the server broadcast arrived: call this before a pathfinding move that depends on it.
+     */
+    async waitForCollidingAreasCount(page: Page, count: number) {
+        await expect
+            .poll(() =>
+                page.evaluate(() =>
+                    (
+                        window as unknown as { e2eHooks: { getCollidingAreasCount(): number } }
+                    ).e2eHooks.getCollidingAreasCount(),
+                ),
+            )
+            .toBe(count);
     }
 
     async getPosition(page: Page): Promise<{ x: number; y: number }> {

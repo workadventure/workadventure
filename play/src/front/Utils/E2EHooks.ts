@@ -311,6 +311,14 @@ export function decrementLivekitRoomCount() {
 }
 
 /**
+ * Number of areas the local player currently collides with (locked, full, no access...). Lets a test wait until a
+ * lock toggled from another browser has reached this client before starting a pathfinding move.
+ */
+function getCollidingAreasCount(): number {
+    return gameManager.getCurrentGameScene().getGameMapFrontWrapper().areasManager?.getCollidingAreas().length ?? 0;
+}
+
+/**
  * The e2eHooks object contains methods used for E2E tests.
  * We should refrain from growing this object too much but it can be useful in very specific circumstances (usually linked to Phaser testing)
  */
@@ -326,6 +334,7 @@ export const e2eHooks = {
         return livekitRoomCount;
     },
     gameToBrowserCoordinates,
+    getCollidingAreasCount,
     /**
      * [DEBUG] Forces a WebRTC peer failure to test the retry mechanism.
      */
