@@ -28,6 +28,8 @@
     import { waScaleManager } from "../Phaser/Services/WaScaleManager";
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
+    import { connectionManager } from "../Connection/ConnectionManager";
+    import { prefetchWamFile } from "../Connection/MapPrefetch";
     import { desktopApi } from "../Api/Desktop";
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import { urlManager } from "../Url/UrlManager";
@@ -83,6 +85,25 @@
                 console.error("Error while initializing Sentry", e);
             }
         }
+
+        // Resolve the room and authenticate now, in parallel with everything below. This is HTTP,
+        // the URL and localUserStore — no Phaser — but it used to run from EntryScene.create(),
+        // which means it only started once Phaser had booted and EntryScene had downloaded its own
+        // assets. Started here it overlaps them, and GameManager.init() awaits a request that is
+        // usually already in flight. The result is memoized, so awaiting it there is not a second
+        // request.
+        //
+        // The catch is deliberately empty: the failure is handled where the result is consumed
+        // (GameManager.init -> errorScreenStore). This only keeps the kick-off from surfacing as an
+        // unhandled rejection when nothing has awaited it yet.
+        connectionManager.startGameConnexion().catch(() => {
+            // handled by the awaiting caller
+        });
+
+        // Chained on the room above: the WAM's URL comes from the /room response, and the file is a
+        // plain axios GET that Phaser's loader only sequences. Starting it here means GameScene
+        // usually finds it already downloaded instead of opening the request itself.
+        prefetchWamFile();
 
         const { width, height } = coWebsiteManager.getGameSize();
         const fps: Phaser.Types.Core.FPSConfig = {
