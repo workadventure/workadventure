@@ -83,6 +83,42 @@ export interface WokaEmoteGroundSpec {
     sample: (elapsed: number) => { scale?: number; alpha?: number; angle?: number };
 }
 
+/**
+ * A short sound played where the Woka stands. Everyone whose viewport covers the Woka receives the
+ * emote (the back relays it per zone), so the sound is scoped by distance on the listener's side
+ * instead: full volume within a conversation-bubble radius, silence beyond WOKA_EMOTE_SOUND_RANGE.
+ * See wokaEmoteSoundVolume().
+ */
+export interface WokaEmoteSoundSpec {
+    /** File name under /resources/objects/emotes/. */
+    file: string;
+    /** Delay from the start of the emote, in milliseconds. Defaults to 0. */
+    at?: number;
+}
+
+/** Where the emote sounds live, relative to the play server's public directory. */
+export const WOKA_EMOTE_SOUND_PATH = "/resources/objects/emotes/";
+
+/** Phaser cache key of an emote sound. */
+export function wokaEmoteSoundKey(sound: WokaEmoteSoundSpec): string {
+    return `woka-emote-${sound.file}`;
+}
+
+/** Distance from the listener, in world pixels, beyond which an emote sound is not heard at all. */
+export const WOKA_EMOTE_SOUND_RANGE = 480;
+/** Volume of an emote sound heard from up close. The same level as every other game notification. */
+export const WOKA_EMOTE_SOUND_VOLUME = 0.2;
+
+/**
+ * Volume of an emote sound for a listener `distance` pixels away: full up to `near` (the radius at
+ * which two Wokas start a conversation bubble), fading linearly to nothing at `far`.
+ */
+export function wokaEmoteSoundVolume(distance: number, near: number, far = WOKA_EMOTE_SOUND_RANGE): number {
+    if (distance <= near) return WOKA_EMOTE_SOUND_VOLUME;
+    if (distance >= far) return 0;
+    return WOKA_EMOTE_SOUND_VOLUME * (1 - (distance - near) / (far - near));
+}
+
 export interface WokaEmoteDefinition {
     id: WokaEmoteId;
     /** How long the animation runs, in milliseconds. */
@@ -99,6 +135,8 @@ export interface WokaEmoteDefinition {
     particles?: WokaEmoteParticleSpec[];
     /** A mark left on the floor under the Woka, for emotes whose energy goes downwards. */
     ground?: WokaEmoteGroundSpec;
+    /** A sound heard by the players standing near the Woka. */
+    sound?: WokaEmoteSoundSpec;
     sample: (elapsed: number) => Partial<WokaEmoteState>;
 }
 
@@ -190,6 +228,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         id: "question",
         duration: 1400,
         icon: "❓",
+        sound: { file: "question.mp3" },
         // Here the tilt is the message rather than a stand-in for a missing arm: a head leans when
         // it does not understand.
         particles: [
@@ -215,6 +254,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         id: "laugh",
         duration: 1100,
         icon: "😂",
+        sound: { file: "laugh.mp3" },
         // A body that bounces on the spot is not, on its own, readable as laughter: `celebrate` and
         // `jump` bounce too. The three "HA" puffs are what names the emote, and they leave the head
         // in the rhythm of the shake.
@@ -344,6 +384,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         id: "celebrate",
         duration: 1400, // two 700ms hops
         icon: "🎉",
+        sound: { file: "celebrate.mp3" },
         // The confetti of the mock-up would need a pixel-art sheet that does not exist yet; until it
         // does, the bubble carries the celebration and the body carries the energy.
         bubble: "🎉",
@@ -382,6 +423,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         id: "nope",
         duration: 700,
         icon: "🙅",
+        sound: { file: "nope.mp3" },
         sample: (t) => ({
             frame: stepThrough(t, 160, [LEFT, RIGHT]),
             x: oscillate(t, 160) * 3 * Math.max(0, 1 - t / 700),
