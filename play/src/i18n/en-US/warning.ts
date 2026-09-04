@@ -34,6 +34,10 @@ const warning: BaseTranslation = {
         confirmContinue: "I understand, continue",
         dontRemindAgain: "Don't show this message again",
     },
+    livekitConnection: {
+        critical: "You might encounter communication problems with other users.",
+        warning: "Your audio or video quality might be reduced.",
+    },
     browserNotSupported: {
         title: "😢 Browser Not Supported",
         message: "Your browser ({browserName}) is no longer supported by WorkAdventure.",
