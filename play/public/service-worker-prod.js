@@ -1,3 +1,11 @@
+// Matrix authenticated media support (adds its own install/activate/fetch listeners).
+// Wrapped so a missing/updated media worker never breaks the base service worker.
+try {
+    importScripts('/matrix-media-service-worker.js');
+} catch (e) {
+    // Authenticated media unavailable; the rest of the service worker keeps working.
+}
+
 let CACHE_NAME = 'workavdenture-cache';
 let urlsToCache = [
     '/'
