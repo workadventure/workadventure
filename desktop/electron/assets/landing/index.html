@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';"
+        />
+        <title>WorkAdventure</title>
+        <style>
+            /* Oswald is WorkAdventure's display face (play/src/front/style/font.css). The page is
+               sandboxed under `default-src 'self'`, so the file is vendored next to this document
+               instead of pulled from a CDN. */
+            @font-face {
+                font-family: "Oswald";
+                src: url("./fonts/oswald-latin-wght-normal.woff2") format("woff2-variations");
+                font-weight: 200 700;
+                font-display: swap;
+            }
+            /* Bebas Neue is not otherwise used in this repo, so it is vendored here like the rest
+               (SIL Open Font License 1.1). Caps-only by design. */
+            @font-face {
+                font-family: "Bebas Neue";
+                src: url("./fonts/bebas-neue-latin-400-normal.woff2") format("woff2");
+                font-weight: 400;
+                font-display: swap;
+            }
+            /* Roboto Condensed is the design system's `--font-main`
+               (@workadventure/design-system/src/theme.css), so the body text uses it too. */
+            @font-face {
+                font-family: "Roboto Condensed";
+                src: url("./fonts/roboto-condensed-latin-400-normal.woff2") format("woff2");
+                font-weight: 400;
+                font-display: swap;
+            }
+            @font-face {
+                font-family: "Roboto Condensed";
+                src: url("./fonts/roboto-condensed-latin-700-normal.woff2") format("woff2");
+                font-weight: 700;
+                font-display: swap;
+            }
+
+            :root {
+                color-scheme: dark;
+                --bg: #0c1626;
+                /* Translucent so the backdrop-blur behind it actually reads as glass. */
+                --card: rgba(22, 35, 60, 0.72);
+                --card-border: rgba(255, 255, 255, 0.07);
+                --text: #ffffff;
+                --text-muted: #93a3ba;
+                --primary: #5b5ff0;
+                --primary-hover: #6f73ff;
+                --danger: #ff8c78;
+                --focus: rgba(139, 143, 255, 0.5);
+                --radius: 14px;
+                /* Design-system type scale (@workadventure/design-system/src/theme.css). Kept as
+                   variables so the tiles quote the same tokens the rest of the product does. */
+                --text-lg: 18px;
+                --text-lg-line: 28px;
+                --text-sm: 14px;
+                --text-sm-line: 24px;
+                --text-xs: 13px;
+                --text-xs-line: 20px;
+                font-family: "Roboto Condensed", Arial, ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                height: 100%;
+            }
+
+            body {
+                margin: 0;
+                min-width: 320px;
+                color: var(--text);
+                /* Stands in for the mockup's blurred world art until a real capture exists. */
+                background: radial-gradient(1200px 620px at 20% -10%, rgba(74, 106, 168, 0.42), transparent 70%),
+                    radial-gradient(900px 520px at 88% 108%, rgba(56, 84, 140, 0.34), transparent 70%),
+                    linear-gradient(160deg, #10203a 0%, var(--bg) 55%, #0a1220 100%);
+            }
+
+            button,
+            input {
+                font: inherit;
+            }
+
+            .page {
+                display: flex;
+                flex-direction: column;
+                /* Sized against the 1440x1024 design frame, but everything below scales with the
+                   viewport and keeps the design's RATIOS rather than its exact pixels. */
+                width: min(1340px, 100%);
+                min-height: 100%;
+                margin: 0 auto;
+                padding: clamp(28px, 5vh, 64px) clamp(20px, 5vw, 72px) clamp(48px, 9vh, 104px);
+            }
+
+            main {
+                display: flex;
+                flex: 1;
+                flex-direction: column;
+                justify-content: center;
+                gap: 30px;
+            }
+
+            /* ── Two layouts. With worlds the content sits toward the top-left so the world row has
+               room to breathe; with none, everything centres. Driven by one attribute on .page so
+               the states can't drift apart. ── */
+            .page[data-state="has-worlds"] main {
+                justify-content: flex-start;
+                padding-top: clamp(8px, 4vh, 48px);
+            }
+            .page[data-state="empty"] .intro {
+                text-align: center;
+            }
+            .page[data-state="empty"] .choices {
+                justify-content: center;
+            }
+
+            /* No width cap: the headline is meant to sit on ONE line, and the fluid size keeps it
+               there down to narrow windows. `balance` only kicks in once it genuinely has to wrap. */
+            h1 {
+                margin: 0;
+                font-family: Oswald, Roboto, sans-serif;
+                font-size: clamp(24px, 3.2vw, 46px);
+                font-weight: 500;
+                line-height: 1.05;
+                letter-spacing: 0.005em;
+                text-transform: uppercase;
+                text-wrap: balance;
+            }
+
+            .intro p {
+                max-width: 66ch;
+                margin: 14px 0 0;
+                color: var(--text-muted);
+                font-size: 14px;
+                line-height: 1.55;
+            }
+
+            .page[data-state="empty"] .intro p {
+                margin-inline: auto;
+            }
+
+            .section-label {
+                margin: 0 0 12px;
+                font-family: Oswald, Roboto, sans-serif;
+                font-size: 15px;
+                font-weight: 500;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+            }
+
+            /* ── Recent worlds ─────────────────────────────────────────────────────────────── */
+            .recent[hidden] {
+                display: none;
+            }
+
+            /* A single row that runs off the edge, as in the mockup — recents are scanned, not
+               browsed, so wrapping them into a block would make the page feel like a directory. */
+            .world-row {
+                display: flex;
+                gap: clamp(14px, 1.7vw, 24px);
+                overflow-x: auto;
+                padding-bottom: 6px;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+            }
+
+            .world-row::-webkit-scrollbar {
+                height: 6px;
+            }
+            .world-row::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.16);
+                border-radius: 3px;
+            }
+
+            .world {
+                position: relative;
+                flex: 0 0 auto;
+                /* 345x198 on the 1440x1024 design frame. The ratio is held exactly (kept as the
+                   literal pair — 1.742 rounded to 16:9 is visible at this size) while the width
+                   scales with the viewport, so the row keeps its shape on any window. */
+                width: clamp(232px, 24vw, 345px);
+                aspect-ratio: 345 / 198;
+                padding: 0;
+                overflow: hidden;
+                background: none;
+                border: 1px solid var(--card-border);
+                border-radius: 12px;
+                color: inherit;
+                text-align: left;
+                cursor: pointer;
+            }
+
+            /* No real map image exists for an arbitrary world (see the commit message), so the tile
+               is generated from the URL: a stable hue plus a faint grid that reads as a floor plan.
+               Both custom properties are set per card by the renderer. */
+            .world-art {
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(
+                        150deg,
+                        hsl(var(--h) 42% 42%) 0%,
+                        hsl(calc(var(--h) + 28) 38% 26%) 60%,
+                        hsl(calc(var(--h) + 44) 34% 18%) 100%
+                    );
+            }
+
+            .world-art::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background-image: linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+                background-size: 40px 40px;
+                background-position: var(--ox) var(--oy);
+            }
+
+            /* Keeps the name legible over any generated hue. */
+            .world-scrim {
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(to top, rgba(4, 10, 20, 0.92) 0%, rgba(4, 10, 20, 0.4) 42%, transparent 72%);
+            }
+
+            .world-copy {
+                position: absolute;
+                right: clamp(10px, 1vw, 14px);
+                bottom: clamp(7px, 0.72vw, 10px);
+                left: clamp(10px, 1vw, 14px);
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                min-width: 0;
+                transition: opacity 140ms ease;
+            }
+
+            /* The Explore band REPLACES the caption rather than covering it. Hiding it outright
+               means the band keeps a generous fade instead of having to be opaque all the way up
+               to the name — at 18/28 + 13/20 the caption is taller than the band's solid part. */
+            .world:hover .world-copy,
+            .world:focus-visible .world-copy {
+                opacity: 0;
+            }
+
+            .world-name,
+            .world-url {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            /* Paragraph/LG — 18/28, Regular, white. */
+            .world-name {
+                color: #fff;
+                font-size: clamp(14px, 1.25vw, var(--text-lg));
+                font-weight: 400;
+                line-height: calc(var(--text-lg-line) / var(--text-lg));
+            }
+
+            /* Paragraph/XS — 13/20. */
+            .world-url {
+                color: rgba(255, 255, 255, 0.62);
+                font-size: clamp(11px, 0.9vw, var(--text-xs));
+                line-height: calc(var(--text-xs-line) / var(--text-xs));
+            }
+
+            /* The whole tile is the open button, so the pin sits above it rather than inside it —
+               nesting a button in a button is invalid and swallows the click. */
+            .world-pin {
+                position: absolute;
+                top: 8px;
+                left: 8px;
+                z-index: 2;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                padding: 0;
+                background: none;
+                border: 0;
+                border-radius: 7px;
+                color: rgba(255, 255, 255, 0.85);
+                cursor: pointer;
+                filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+                transition: color 140ms ease, background-color 140ms ease;
+            }
+
+            .world-pin:hover {
+                color: #f5c451;
+                background: rgba(0, 0, 0, 0.32);
+            }
+
+            .world-pin.is-pinned {
+                color: #f5c451;
+            }
+
+            /* Hovering swaps only the caption strip — the map stays visible above it, so the tile
+               still shows which world you are about to open while it offers the action. Opaque and
+               sized to cover the name/URL exactly, so they don't ghost through the label. */
+            .world-hover {
+                position: absolute;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 1;
+                display: flex;
+                /* Centred on the SOLID part, not on the box: the top third of this band is the
+                   fade, so centring in the full height would float the label above the block of
+                   colour and read as misaligned. Bottom-aligned with padding instead, which also
+                   lands it where the name it replaces used to sit. */
+                align-items: flex-end;
+                justify-content: center;
+                /* 68/198 of the design tile, as a share so it tracks the tile at any size. */
+                height: 34.4%;
+                /* Puts the label's optical centre on the solid block's centre. */
+                padding-bottom: clamp(5px, 0.53vw, 7.5px);
+                /* Solid where it has to hide the name and URL, then fading out above so the band
+                   melts into the map instead of cutting it with a hard line. The stop sits just
+                   above the copy, which ends ~34px up. */
+                background: linear-gradient(
+                    to top,
+                    var(--primary) 0%,
+                    var(--primary) 64%,
+                    rgba(91, 95, 240, 0) 100%
+                );
+                /* Paragraph/LG — Roboto Condensed 18/28, no tracking, sentence case. */
+                font-size: clamp(14px, 1.25vw, var(--text-lg));
+                font-weight: 400;
+                line-height: calc(var(--text-lg-line) / var(--text-lg));
+                letter-spacing: 0;
+                opacity: 0;
+                transition: opacity 140ms ease;
+            }
+
+            /* The label and the chevron centre against each other here, not against the band. */
+            .world-hover-row {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            /* 6x12 chevron, 2px stroke. Drawn as SVG so the stroke stays crisp at any tile size. */
+            .world-hover-row svg {
+                flex: 0 0 auto;
+                width: 6px;
+                height: 12px;
+            }
+
+            .world:hover .world-hover,
+            .world:focus-visible .world-hover {
+                opacity: 1;
+            }
+
+            .world:focus-visible,
+            .world-pin:focus-visible {
+                outline: 3px solid var(--focus);
+                outline-offset: 2px;
+            }
+
+            .world:disabled {
+                cursor: wait;
+            }
+
+            /* ── Join / Create ─────────────────────────────────────────────────────────────── */
+            .choices {
+                display: flex;
+                align-items: stretch;
+                /* 22 + 80 (the OR column) + 22 = the 124px the design leaves between the cards. */
+                gap: clamp(12px, 1.7vw, 22px);
+            }
+
+            .choice {
+                display: flex;
+                /* 534x287 on the design frame. The pair shares the row and caps at that width, and
+                   the ratio drives the height — so the cards keep their shape as the window
+                   changes. `min-height` is the floor for when copy wraps at narrow widths. */
+                flex: 1 1 0;
+                flex-direction: column;
+                max-width: 534px;
+                aspect-ratio: 534 / 287;
+                /* Deliberately 0: with an aspect-ratio, ANY min-height also imposes a min-WIDTH
+                   (height x ratio), which pushed the pair wider than the viewport and scrolled the
+                   page sideways. Below the breakpoint the cards stack and the ratio is dropped. */
+                min-height: 0;
+                padding: clamp(18px, 1.9vw, 26px) clamp(20px, 2vw, 28px) clamp(16px, 1.7vw, 24px);
+                /* Frosted over the background rather than a flat fill — the design's glass card.
+                   8px is Tailwind's default `backdrop-blur`, which the mockup uses. */
+                background: var(--card);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                border: 1px solid var(--card-border);
+                border-radius: var(--radius);
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+            }
+
+            /* Bebas Neue 28/39, Regular, no tracking. `uppercase` is redundant for Bebas (it has
+               no lowercase glyphs) but keeps the look if the face ever falls back to Arial. */
+            .choice h2 {
+                margin: 0 0 10px;
+                font-family: "Bebas Neue", "Roboto Condensed", Arial, sans-serif;
+                font-size: clamp(21px, 1.95vw, 28px);
+                font-weight: 400;
+                line-height: calc(39 / 28);
+                letter-spacing: 0;
+                text-transform: uppercase;
+            }
+
+            /* Paragraph/SM — 14/24. Not LG: at 18px the Create description needs 530px against
+               476px of card, so it wrapped. 16px does fit, but by 5px, which any font fallback or
+               copy tweak would eat — SM keeps it on one line with room to spare. */
+            .choice p {
+                margin: 0;
+                color: var(--text-muted);
+                font-size: clamp(12px, 0.98vw, var(--text-sm));
+                line-height: calc(var(--text-sm-line) / var(--text-sm));
+            }
+
+            .or {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex: 0 0 clamp(34px, 5.5vw, 80px);
+                color: var(--text-muted);
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+            }
+
+            .field {
+                margin-top: clamp(6px, 1vw, 14px);
+            }
+
+            .field label {
+                display: block;
+                margin-bottom: 7px;
+                color: var(--text-muted);
+                font-size: 12px;
+            }
+
+            input[type="url"] {
+                width: 100%;
+                height: 40px;
+                padding: 0 13px;
+                color: var(--text);
+                background: rgba(6, 13, 26, 0.55);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 9px;
+                outline: none;
+                font-size: 13px;
+                transition: border-color 140ms ease, box-shadow 140ms ease;
+            }
+
+            input[type="url"]::placeholder {
+                color: #64748b;
+            }
+
+            input[type="url"]:focus-visible {
+                border-color: rgba(139, 143, 255, 0.85);
+                box-shadow: 0 0 0 3px rgba(91, 95, 240, 0.22);
+            }
+
+            /* Buttons hang bottom-right; `margin-top:auto` keeps them on the baseline even though
+               the two cards hold different amounts of copy. */
+            .choice-actions {
+                display: flex;
+                justify-content: flex-end;
+                margin-top: auto;
+                padding-top: clamp(4px, 0.8vw, 12px);
+            }
+
+            /* 96 wide with 12px top/bottom padding and a 10px gap. The height is NOT fixed: at
+               16/24 the padding alone gives 48px, which is what the design asks for — pinning it
+               to 64 left the label floating in an over-tall box. `nowrap` guarantees the single
+               line, and the small horizontal padding keeps "Create world" inside the 96px. */
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                min-width: clamp(78px, 6.7vw, 96px);
+                padding: 12px 4px;
+                color: #fff;
+                background: var(--primary);
+                /* No border: a 1px transparent one made the box 50px tall instead of the 48 the
+                   padding and line-height add up to. Focus uses an outline, so nothing needs it. */
+                border: 0;
+                border-radius: 8px;
+                cursor: pointer;
+                /* 1.12vw so the cap is actually reached at the 1440 design width (1.1vw tops out
+                   at 15.84 and never hits 16). */
+                font-size: clamp(13px, 1.12vw, 16px);
+                font-weight: 400;
+                line-height: calc(24 / 16);
+                letter-spacing: 0;
+                text-align: center;
+                white-space: nowrap;
+                transition: background-color 140ms ease;
+            }
+
+            .btn:hover:not(:disabled) {
+                background: var(--primary-hover);
+            }
+
+            .btn:focus-visible {
+                outline: 3px solid var(--focus);
+                outline-offset: 2px;
+            }
+
+            .btn:disabled {
+                opacity: 0.6;
+                cursor: wait;
+            }
+
+            .error {
+                min-height: 15px;
+                margin-top: 4px;
+                color: var(--danger);
+                font-size: 12px;
+                line-height: 1.4;
+                visibility: hidden;
+            }
+
+            .error.visible {
+                visibility: visible;
+            }
+
+            .recent-error {
+                min-height: 0;
+                margin-top: 6px;
+            }
+
+            .recent-error.visible {
+                min-height: 16px;
+            }
+
+            /* Stack before the pair gets squeezed: below ~1100px the ratio-derived height is no
+               longer tall enough for the Join card at 28/39 + 18/28, and the copy spills out. */
+            @media (max-width: 1100px) {
+                .choices {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                .choice {
+                    max-width: none;
+                    /* Stacked, the cards are full-width: holding the ratio would make them
+                       absurdly tall, so height goes back to following the content. `flex` has to
+                       be reset too — in a column the 1 1 0 basis applies to HEIGHT and would
+                       collapse each card to nothing. */
+                    flex: 0 0 auto;
+                    aspect-ratio: auto;
+                    min-height: 0;
+                }
+                .or {
+                    flex-basis: auto;
+                    justify-content: center;
+                    padding: 2px 0;
+                }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                *,
+                *::before,
+                *::after {
+                    transition: none !important;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page" id="page" data-state="empty">
+            <main>
+                <div class="intro">
+                    <h1>Your workplace, one URL away.</h1>
+                    <p>
+                        Open a world you already belong to, or create a new space for your team. Your last world will
+                        reopen automatically next time.
+                    </p>
+                </div>
+
+                <!-- Pinned and recent worlds share one row (the star marks the pinned ones), so the
+                     page keeps a single scanning line instead of two near-identical sections. -->
+                <section class="recent" id="recent" aria-labelledby="recent-title" hidden>
+                    <h2 class="section-label" id="recent-title">Recent worlds</h2>
+                    <div class="world-row" id="world-row"></div>
+                    <div class="error recent-error" id="recent-error" role="alert" aria-live="polite"></div>
+                </section>
+
+                <div class="choices">
+                    <form class="choice" id="join-form" novalidate>
+                        <h2>Join a world</h2>
+                        <p>Paste the complete URL from your invitation or browser.</p>
+                        <div class="field">
+                            <label for="world-url">Enter your world URL</label>
+                            <input
+                                type="url"
+                                id="world-url"
+                                name="url"
+                                placeholder="https://play.workadventu.re/@/..."
+                                inputmode="url"
+                                autocomplete="url"
+                                aria-describedby="join-error"
+                                required
+                            />
+                        </div>
+                        <div class="error" id="join-error" role="alert" aria-live="polite"></div>
+                        <div class="choice-actions">
+                            <button class="btn" type="submit" id="join-btn">Open world</button>
+                        </div>
+                    </form>
+
+                    <div class="or" aria-hidden="true">or</div>
+
+                    <section class="choice" aria-labelledby="create-world-title">
+                        <h2 id="create-world-title">Create a world</h2>
+                        <p>Set up a new virtual office from the WorkAdventure administration console.</p>
+                        <div class="error" id="create-error" role="alert" aria-live="polite"></div>
+                        <div class="choice-actions">
+                            <button class="btn" type="button" id="create-btn">Create world</button>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+
+        <script src="./renderer.js"></script>
+    </body>
+</html>
