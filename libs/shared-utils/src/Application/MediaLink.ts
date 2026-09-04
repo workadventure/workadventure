@@ -34,89 +34,87 @@ export const enum defaultNativeIntegrationAppId {
     TLDRAW = "tldraw",
 }
 
-export class MediaLinkManager {
-    mediaUrlLink: URL;
-
-    constructor(private mediaLink: string) {
-        this.mediaUrlLink = new URL(mediaLink);
+export async function getEmbedLink(
+    url: URL,
+    properties?: { klaxoonId?: string; excalidrawDomains?: string[] },
+): Promise<string> {
+    if (CardsService.isCardsLink(url)) {
+        return CardsService.getCardsLink(url);
     }
-
-    getEmbedLink(properties?: { klaxoonId?: string; excalidrawDomains?: string[] }): Promise<string> {
-        if (CardsService.isCardsLink(this.mediaUrlLink)) {
-            return Promise.resolve(CardsService.getCardsLink(this.mediaUrlLink));
-        }
-        if (EraserService.isEraserLink(this.mediaUrlLink)) {
-            return Promise.resolve(this.mediaUrlLink.toString());
-        }
-        if (ExcalidrawService.isExcalidrawLink(this.mediaUrlLink, properties?.excalidrawDomains)) {
-            return Promise.resolve(this.mediaUrlLink.toString());
-        }
-        if (GoogleWorkSpaceService.isGoogleDocsLink(this.mediaUrlLink)) {
-            return Promise.resolve(GoogleWorkSpaceService.getGoogleDocsEmbedUrl(this.mediaUrlLink));
-        }
-        if (GoogleWorkSpaceService.isGoogleSheetsLink(this.mediaUrlLink)) {
-            return Promise.resolve(GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(this.mediaUrlLink));
-        }
-        if (GoogleWorkSpaceService.isGoogleSlidesLink(this.mediaUrlLink)) {
-            return Promise.resolve(GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(this.mediaUrlLink));
-        }
-        if (KlaxoonService.isKlaxoonLink(this.mediaUrlLink)) {
-            return Promise.resolve(KlaxoonService.getKlaxoonEmbedUrl(this.mediaUrlLink, properties?.klaxoonId));
-        }
-        if (TldrawService.isTldrawLink(this.mediaUrlLink)) {
-            return Promise.resolve(this.mediaUrlLink.toString());
-        }
-        if (YoutubeService.isYoutubeLink(this.mediaUrlLink)) {
-            return Promise.resolve(YoutubeService.getYoutubeEmbedUrl(this.mediaUrlLink));
-        }
-        return Promise.resolve(this.mediaUrlLink.toString());
+    if (EraserService.isEraserLink(url)) {
+        return url.toString();
     }
+    if (ExcalidrawService.isExcalidrawLink(url, properties?.excalidrawDomains)) {
+        return url.toString();
+    }
+    if (GoogleWorkSpaceService.isGoogleDocsLink(url)) {
+        return GoogleWorkSpaceService.getGoogleDocsEmbedUrl(url);
+    }
+    if (GoogleWorkSpaceService.isGoogleSheetsLink(url)) {
+        return GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(url);
+    }
+    if (GoogleWorkSpaceService.isGoogleSlidesLink(url)) {
+        return GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(url);
+    }
+    if (KlaxoonService.isKlaxoonLink(url)) {
+        return KlaxoonService.getKlaxoonEmbedUrl(url, properties?.klaxoonId);
+    }
+    if (TldrawService.isTldrawLink(url)) {
+        return url.toString();
+    }
+    if (YoutubeService.isYoutubeLink(url)) {
+        return YoutubeService.getYoutubeEmbedUrl(url);
+    }
+    return url.toString();
+}
 
-    linkMatchWithApplicationIdOrName(application: string) {
-        switch (application) {
-            case defaultNativeIntegrationAppName.KLAXOON:
-            case defaultNativeIntegrationAppId.KLAXOON:
-                KlaxoonService.validateKlaxoonBasicUrl(this.mediaUrlLink);
-                break;
-            case defaultNativeIntegrationAppName.YOUTUBE:
-            case defaultNativeIntegrationAppId.YOUTUBE:
-                YoutubeService.validateYoutubeLink(this.mediaUrlLink);
-                break;
-            case defaultNativeIntegrationAppName.GOOGLE_DRIVE:
-            case defaultNativeIntegrationAppId.GOOGLE_DRIVE:
-                GoogleWorkSpaceService.validateGoogleLink(this.mediaUrlLink);
-                break;
-            case defaultNativeIntegrationAppName.GOOGLE_DOCS:
-            case defaultNativeIntegrationAppId.GOOGLE_DOCS:
-                GoogleWorkSpaceService.validateGoogleDocsLink(this.mediaUrlLink);
-                break;
-            case defaultNativeIntegrationAppName.GOOGLE_SHEETS:
-            case defaultNativeIntegrationAppId.GOOGLE_SHEETS:
-                GoogleWorkSpaceService.validateGoogleSheetLink(this.mediaUrlLink);
-                break;
-            case defaultNativeIntegrationAppName.GOOGLE_SLIDES:
-            case defaultNativeIntegrationAppId.GOOGLE_SLIDES:
-                GoogleWorkSpaceService.validateGoogleSlideLink(this.mediaUrlLink);
-                break;
-            case defaultNativeIntegrationAppName.ERASER:
-            case defaultNativeIntegrationAppId.ERASER:
-                EraserService.validateLink(this.mediaUrlLink);
-                break;
-            case defaultNativeIntegrationAppName.EXCALIDRAW:
-            case defaultNativeIntegrationAppId.EXCALIDRAW:
-                ExcalidrawService.validateLink(this.mediaUrlLink);
-                break;
-            case defaultNativeIntegrationAppName.CARDS:
-            case defaultNativeIntegrationAppId.CARDS:
-                CardsService.validateLink(this.mediaUrlLink);
-                break;
-            case defaultNativeIntegrationAppName.TLDRAW:
-                //Commented because defaultNativeIntegrationAppName.TLDRAW === defaultNativeIntegrationAppId.TLDRAW
-                //case defaultNativeIntegrationAppId.TLDRAW:
-                TldrawService.validateLink(this.mediaUrlLink);
-                break;
-            default:
-                throw new Error("No match link");
-        }
+/**
+ * Throws when the link does not belong to the given application (id or display name).
+ */
+export function validateLinkForApplication(url: URL, application: string): void {
+    switch (application) {
+        case defaultNativeIntegrationAppName.KLAXOON:
+        case defaultNativeIntegrationAppId.KLAXOON:
+            KlaxoonService.validateKlaxoonBasicUrl(url);
+            break;
+        case defaultNativeIntegrationAppName.YOUTUBE:
+        case defaultNativeIntegrationAppId.YOUTUBE:
+            YoutubeService.validateYoutubeLink(url);
+            break;
+        case defaultNativeIntegrationAppName.GOOGLE_DRIVE:
+        case defaultNativeIntegrationAppId.GOOGLE_DRIVE:
+            GoogleWorkSpaceService.validateGoogleLink(url);
+            break;
+        case defaultNativeIntegrationAppName.GOOGLE_DOCS:
+        case defaultNativeIntegrationAppId.GOOGLE_DOCS:
+            GoogleWorkSpaceService.validateGoogleDocsLink(url);
+            break;
+        case defaultNativeIntegrationAppName.GOOGLE_SHEETS:
+        case defaultNativeIntegrationAppId.GOOGLE_SHEETS:
+            GoogleWorkSpaceService.validateGoogleSheetLink(url);
+            break;
+        case defaultNativeIntegrationAppName.GOOGLE_SLIDES:
+        case defaultNativeIntegrationAppId.GOOGLE_SLIDES:
+            GoogleWorkSpaceService.validateGoogleSlideLink(url);
+            break;
+        case defaultNativeIntegrationAppName.ERASER:
+        case defaultNativeIntegrationAppId.ERASER:
+            EraserService.validateLink(url);
+            break;
+        case defaultNativeIntegrationAppName.EXCALIDRAW:
+        case defaultNativeIntegrationAppId.EXCALIDRAW:
+            ExcalidrawService.validateLink(url);
+            break;
+        case defaultNativeIntegrationAppName.CARDS:
+        case defaultNativeIntegrationAppId.CARDS:
+            CardsService.validateLink(url);
+            break;
+        case defaultNativeIntegrationAppName.TLDRAW:
+            //Commented because defaultNativeIntegrationAppName.TLDRAW === defaultNativeIntegrationAppId.TLDRAW
+            //case defaultNativeIntegrationAppId.TLDRAW:
+            TldrawService.validateLink(url);
+            break;
+        default:
+            throw new Error("No match link");
     }
 }

@@ -1,10 +1,9 @@
-import { MediaLinkManager } from "@workadventure/shared-utils";
+import { getEmbedLink as getEmbedLinkOf } from "@workadventure/shared-utils";
 import { gameManager } from "../Phaser/Game/GameManager";
 
 export function getEmbedLink(url: string): Promise<string> {
-    const mediaLinkManager = new MediaLinkManager(url);
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
-    return mediaLinkManager.getEmbedLink({
+    return getEmbedLinkOf(new URL(url), {
         klaxoonId: applicationManager.klaxoonToolClientId,
         excalidrawDomains: applicationManager.excalidrawToolDomains,
     });

@@ -4,9 +4,10 @@
     import {
         ApplicationService,
         defaultNativeIntegrationAppName,
+        getEmbedLink,
         GoogleWorkSpaceService,
         KlaxoonService,
-        MediaLinkManager,
+        validateLinkForApplication,
     } from "@workadventure/shared-utils";
     import CloseButton from "../../../../Components/MapEditor/PropertyEditor/CloseButton.svelte";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../../Enum/EnvironmentVariable";
@@ -103,9 +104,9 @@
         errorLink = undefined;
         let link = htmlElementInput.value.trim();
         try {
-            let mediaLink = new MediaLinkManager(htmlElementInput.value.trim());
-            mediaLink.linkMatchWithApplicationIdOrName(property.name);
-            link = await mediaLink.getEmbedLink({
+            const url = new URL(link);
+            validateLinkForApplication(url, property.name);
+            link = await getEmbedLink(url, {
                 klaxoonId: applicationManager.klaxoonToolClientId,
                 excalidrawDomains: applicationManager.excalidrawToolDomains,
             });
