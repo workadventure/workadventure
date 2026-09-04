@@ -105,6 +105,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Mostrar un emoji",
             desc: "Expresa cómo te sientes con un solo clic usando reacciones emoji. ¡Solo toca y listo!",
         },
+        wokaEmote: {
+            title: "Reproducir un emote",
+            desc: "Haz que tu Woka salte, baile o gire. Mantén pulsada la G para abrir la rueda y suéltala para reproducir.",
+        },
         audioManager: {
             title: "Volumen de sonidos ambientales",
             desc: "Configura el volumen de audio haciendo clic aquí.",
@@ -215,6 +219,25 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Aún no tiene un escritorio personal",
         errorMoving: "No se puede llegar a su escritorio personal",
         errorUnclaiming: "No se puede liberar su escritorio personal",
+    },
+    wokaEmote: {
+        button: "Emotes",
+        wheelTitle: "Rueda de emotes",
+        hint: "Elige un emote",
+        names: {
+            jump: "Saltar",
+            spin: "Pirueta",
+            dance: "Bailar",
+            celebrate: "Celebrar",
+            nod: "Sí",
+            question: "Perplejo",
+            laugh: "Reír",
+            moonwalk: "Moonwalk",
+            runInPlace: "Correr en el sitio",
+            nope: "No",
+            love: "Corazón",
+            afk: "Ausente",
+        },
     },
 };
 

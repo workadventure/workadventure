@@ -84,7 +84,7 @@ import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
 import { emitError, endUserConnectionWithReason } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
-import { isValidEmote } from "./EmoteValidator";
+import { isValidEmote, isValidWokaEmote } from "./EmoteValidator";
 
 const debug = Debug("socketmanager");
 
@@ -1248,13 +1248,20 @@ export class SocketManager {
     }
 
     handleEmoteEventMessage(room: GameRoom, user: User, emotePromptMessage: EmotePromptMessage) {
-        // The emote is relayed to every player nearby: refuse anything that is not an emoji.
-        if (!isValidEmote(emotePromptMessage.emote)) {
-            debug("Invalid emote received. Dropping message.");
+        // The emote is relayed to every player nearby: refuse anything that is not an emoji, or an
+        // animation identifier this version of the back knows about.
+        const { emote, wokaEmoteId } = emotePromptMessage;
+        const knownWokaEmote = wokaEmoteId !== undefined && isValidWokaEmote(wokaEmoteId, emote);
+        // An identifier this back has never heard of costs the sender its animation, not its emote:
+        // the emoji that travels with it is still relayed. A front deployed ahead of the back would
+        // otherwise play the emote for its own player and stay silent for everybody else.
+        if (!knownWokaEmote && !isValidEmote(emote)) {
+            debug("Invalid emote received (id: %s). Dropping message.", wokaEmoteId ?? "none");
             return;
         }
         room.emitEmoteEvent(user, {
-            emote: emotePromptMessage.emote,
+            emote,
+            wokaEmoteId: knownWokaEmote ? wokaEmoteId : undefined,
             actorUserId: user.id,
         });
     }

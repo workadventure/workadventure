@@ -60,6 +60,10 @@ class AnalyticsClient {
         this.posthog?.capture("wa-emote-launch", { ...emote });
     }
 
+    launchWokaEmote(emoteId: string): void {
+        this.posthog?.capture("wa-woka-emote-launch", { emoteId });
+    }
+
     editEmote(): void {
         this.posthog?.capture("wa-emote-edit");
     }

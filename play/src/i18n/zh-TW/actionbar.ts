@@ -103,6 +103,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "顯示表情符號",
             desc: "只要點一下就能用表情符號回應來表達您的感受。只要點一下即可！",
         },
+        wokaEmote: {
+            title: "播放表情",
+            desc: "讓你的 Woka 跳躍、跳舞或旋轉。按住 G 開啟輪盤，放開即可播放。",
+        },
         audioManager: {
             title: "環境聲音音量",
             desc: "點此設定音訊音量。",
@@ -213,6 +217,25 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "您還沒有個人辦公桌",
         errorMoving: "無法抵達您的個人辦公桌",
         errorUnclaiming: "無法釋放您的個人辦公桌",
+    },
+    wokaEmote: {
+        button: "表情動作",
+        wheelTitle: "表情輪盤",
+        hint: "選擇一個表情",
+        names: {
+            jump: "跳躍",
+            spin: "旋轉",
+            dance: "跳舞",
+            celebrate: "慶祝",
+            nod: "是",
+            question: "疑惑",
+            laugh: "大笑",
+            moonwalk: "太空步",
+            runInPlace: "原地跑",
+            nope: "拒絕",
+            love: "愛心",
+            afk: "離開",
+        },
     },
 };
 

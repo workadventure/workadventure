@@ -103,6 +103,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "عرض رمز تعبيري",
             desc: "عبّر عن شعورك بنقرة واحدة باستخدام ردود الفعل الرمزية. فقط اضغط وانطلق!",
         },
+        wokaEmote: {
+            title: "تشغيل إيماءة",
+            desc: "اجعل الـ Woka يقفز أو يرقص أو يدور. اضغط مع الاستمرار على G لفتح العجلة وأفلته للتشغيل.",
+        },
         audioManager: {
             title: "حجم الأصوات المحيطة",
             desc: "قم بضبط حجم الأصوات المحيطة بسهولة.",
@@ -213,6 +217,25 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "ليس لديك مكتب شخصي بعد",
         errorMoving: "تعذر الوصول إلى مكتبك الشخصي",
         errorUnclaiming: "تعذر تحرير مكتبك الشخصي",
+    },
+    wokaEmote: {
+        button: "إيماءات",
+        wheelTitle: "عجلة الإيماءات",
+        hint: "اختر إيماءة",
+        names: {
+            jump: "قفز",
+            spin: "دوران",
+            dance: "رقص",
+            celebrate: "احتفال",
+            nod: "نعم",
+            question: "حائر",
+            laugh: "ضحك",
+            moonwalk: "مشية القمر",
+            runInPlace: "الركض في المكان",
+            nope: "لا",
+            love: "قلب",
+            afk: "بعيد",
+        },
     },
 };
 

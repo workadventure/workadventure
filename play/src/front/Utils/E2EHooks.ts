@@ -1,17 +1,14 @@
 import * as Phaser from "phaser";
 import type { ForceFirstPeerUnilateralDestroyResult } from "../Space/SpacePeerManager/SpacePeerManager";
 import { gameManager } from "../Phaser/Game/GameManager";
+import type { Coordinates } from "./GameToBrowserCoordinates";
+import { projectGameToBrowser } from "./GameToBrowserCoordinates";
 
 import Camera = Phaser.Cameras.Scene2D.Camera;
 
 let webRtcConnectionsCount = 0;
 let livekitConnectionsCount = 0;
 let livekitRoomCount = 0;
-
-interface Coordinates {
-    x: number;
-    y: number;
-}
 
 interface E2ECoordinateOptions {
     timeoutMs?: number;
@@ -60,54 +57,26 @@ function currentCameraHasRunningEffect(): boolean {
     return hasRunningCameraEffect(gameManager.getCurrentGameScene().getCameraManager().getCamera());
 }
 
-function getGameCanvas(): HTMLCanvasElement {
-    const canvas = document.querySelector<HTMLCanvasElement>("#game canvas");
+function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): Coordinates {
+    const projection = projectGameToBrowser(gameCoordinates);
 
-    if (!canvas) {
+    if (!projection) {
         throw new Error('Unable to convert game coordinates: "#game canvas" was not found.');
     }
 
-    return canvas;
-}
-
-function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): Coordinates {
-    const scene = gameManager.getCurrentGameScene();
-    const camera = scene.getCameraManager().getCamera();
-
-    // camera.preRender() must be called before accessing worldView or camera matrices to ensure they are up to date.
-    // See the same pattern in GameScene.connect().
-    camera.preRender();
-
-    const canvas = getGameCanvas();
-    const canvasRect = canvas.getBoundingClientRect();
-    const canvasInternalWidth = canvas.width || camera.width;
-    const canvasInternalHeight = canvas.height || camera.height;
-    const scaleX = canvasRect.width / canvasInternalWidth;
-    const scaleY = canvasRect.height / canvasInternalHeight;
-    const canvasPoint = camera.matrixCombined.transformPoint(gameCoordinates.x, gameCoordinates.y, { x: 0, y: 0 });
-    const x = canvasRect.left + canvasPoint.x * scaleX;
-    const y = canvasRect.top + canvasPoint.y * scaleY;
-    const roundTrip = camera.getWorldPoint(canvasPoint.x, canvasPoint.y);
-
-    if (!areCoordinatesClose(gameCoordinates, roundTrip, DEFAULT_COORDINATE_STABILITY_TOLERANCE)) {
+    if (!areCoordinatesClose(gameCoordinates, projection.roundTrip, DEFAULT_COORDINATE_STABILITY_TOLERANCE)) {
         throw new Error(
             "Unable to convert game coordinates: camera coordinate round trip did not return the original point. " +
                 JSON.stringify({
                     gameCoordinates,
-                    canvasPoint,
-                    roundTrip: {
-                        x: roundTrip.x,
-                        y: roundTrip.y,
-                    },
+                    browser: projection.browser,
+                    roundTrip: projection.roundTrip,
                     tolerance: DEFAULT_COORDINATE_STABILITY_TOLERANCE,
                 }),
         );
     }
 
-    return {
-        x,
-        y,
-    };
+    return projection.browser;
 }
 
 function areCoordinatesClose(first: Coordinates, second: Coordinates, tolerance: number): boolean {

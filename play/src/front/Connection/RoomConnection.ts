@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/svelte";
 
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
 import { Deferred } from "@workadventure/shared-utils";
+import type { WokaEmoteId } from "@workadventure/shared-utils";
 import type {
     AddSpaceFilterMessage,
     AnswerMessage,
@@ -1143,6 +1144,22 @@ export class RoomConnection implements RoomConnection {
                 $case: "emotePromptMessage",
                 emotePromptMessage: {
                     emote: emoteName,
+                },
+            },
+        });
+    }
+
+    /**
+     * Broadcasts an animated Woka emote. `emoteName` carries the emoji bubble that goes with it, or
+     * an empty string when the animation stands on its own.
+     */
+    public emitWokaEmoteEvent(wokaEmoteId: WokaEmoteId, emoteName = ""): void {
+        this.send({
+            message: {
+                $case: "emotePromptMessage",
+                emotePromptMessage: {
+                    emote: emoteName,
+                    wokaEmoteId,
                 },
             },
         });
