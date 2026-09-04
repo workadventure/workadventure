@@ -58,6 +58,9 @@ export type ConnectingSocketData = {
     cameraState: boolean;
     // Unique identifier for the browser tab, captured as early as websocket upgrade.
     tabId: string;
+    // Unique identifier of the front WorkAdventureWebSocket instance. A transport resume is only accepted onto the
+    // logical connection carrying the same id. Undefined for fronts predating this parameter.
+    connectionId?: string;
     attendeesState: boolean;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;

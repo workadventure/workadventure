@@ -5,6 +5,7 @@ import {
     type ServerToClientMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject } from "rxjs";
+import { v4 as uuidv4 } from "uuid";
 import { NoncedMessageStore } from "../../common/NoncedMessageStore";
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../Enum/EnvironmentVariable";
 import { analyticsClient } from "../Administration/AnalyticsClient";
@@ -30,6 +31,9 @@ export class WorkAdventureWebSocket {
 
     private readonly url: URL;
     private readonly protocols: string[] | undefined;
+    // Identifies this logical connection to the pusher. Successive RoomConnections of one page share the tab id,
+    // so the pusher needs this to make sure a resumed transport lands on the session it left and not on a newer one.
+    private readonly connectionId = uuidv4();
     private manuallyClosed = false;
     private reconnectAttempted = false;
     private reconnectAttempt = 0;
@@ -167,6 +171,7 @@ export class WorkAdventureWebSocket {
 
     private createSocket(): WebSocket {
         const socketUrl = new URL(this.url.toString());
+        socketUrl.searchParams.set("connectionId", this.connectionId);
         if (this.reconnectAttempted) {
             socketUrl.searchParams.set("lastReceivedNonce", this.lastReceivedNonce.toString());
         }

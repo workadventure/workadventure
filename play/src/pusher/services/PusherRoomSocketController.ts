@@ -39,6 +39,7 @@ type CloseHandler = (socket: PusherWebSocket, code: number, reason: string) => v
 
 type RoomWsQuery = {
     tabId: string;
+    connectionId?: string;
 };
 
 type RoomWsQueryValidator<TQuery extends RoomWsQuery> = ZodObject<ZodRawShape, "strip", ZodTypeAny, TQuery>;
@@ -138,6 +139,12 @@ export class PusherRoomSocketController {
         }
 
         if ("roomId" in query && typeof query.roomId === "string" && query.roomId !== socketData.roomId) {
+            return false;
+        }
+
+        // A newer connection from the same tab may own the tab context by now: only the WorkAdventureWebSocket
+        // that opened this logical connection is allowed to resume it.
+        if (query.connectionId !== socketData.connectionId) {
             return false;
         }
 
