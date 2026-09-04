@@ -22,23 +22,42 @@ import { dismissNoBrowserSoundInfoToast } from "./doNotDisturbInfoToast";
  * `Page` already implements `Symbol.asyncDispose` as `close()`, so patching `close` is all it takes
  * for `await using page = await getPage(...)` to tear the context down as well.
  */
+/**
+ * Firefox 153 (bundled with Playwright 1.62) intermittently throws out of `context.close()`:
+ *
+ *     Protocol error (Browser.removeBrowserContext): can't access property
+ *     "_maybeDontRestoreTabs", this._windows[aWindow.__SSi] is undefined
+ *
+ * `SessionStore.maybeDontRestoreTabs()` indexes `this._windows[aWindow.__SSi]` with no guard, so it
+ * throws when juggler closes the last tab of a window SessionStore is no longer tracking. It is
+ * purely teardown-time bookkeeping for session restore, which tests never use, and every assertion
+ * in the test has already run by the time it fires — but it still fails the test.
+ *
+ * This is a workaround, not a fix. Firefox bails out of `closeWindow()` before it reaches
+ * `window.close()`, so the window it failed to close leaks for the rest of the worker. That happens
+ * whether or not we rethrow, so swallowing costs nothing beyond hiding the leak. Drop this once the
+ * upstream bug is fixed.
+ */
+async function closeContext(context: BrowserContext): Promise<void> {
+    try {
+        await context.close();
+    } catch (e) {
+        if (!(e instanceof Error)) {
+            throw e;
+        }
+        if (e.message.includes("has been closed") || e.message.includes("_maybeDontRestoreTabs")) {
+            return;
+        }
+        throw e;
+    }
+}
+
 function disposeWithContext(page: Page): Page {
     const context = page.context();
     let closePromise: Promise<void> | undefined;
 
-    const closeContext = async () => {
-        try {
-            await context.close();
-        } catch (e) {
-            if (e instanceof Error && e.message.includes("has been closed")) {
-                return;
-            }
-            throw e;
-        }
-    };
-
     page.close = () => {
-        closePromise ??= closeContext();
+        closePromise ??= closeContext(context);
         return closePromise;
     };
 
@@ -147,7 +166,7 @@ async function createUser(
 
     // Closing the context closes its pages; closing the page first is the redundant second teardown
     // that Firefox 153 chokes on. See `disposeWithContext`.
-    await context.close();
+    await closeContext(context);
 }
 
 export async function getPage(
