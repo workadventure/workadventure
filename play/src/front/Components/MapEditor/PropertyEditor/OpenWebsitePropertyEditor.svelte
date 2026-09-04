@@ -10,7 +10,8 @@
         GoogleWorkSpaceService,
         KlaxoonException,
         KlaxoonService,
-        MediaLinkManager,
+        getEmbedLink,
+        validateLinkForApplication,
         TldrawException,
         YoutubeService,
         EraserException,
@@ -216,12 +217,12 @@
             error = "";
             warning = "";
             try {
-                const mediaLink = new MediaLinkManager(property.link);
+                const url = new URL(property.link);
 
                 // Vérify that the link matches with properties
-                if (property.application != "website") mediaLink.linkMatchWithApplicationIdOrName(property.application);
+                if (property.application != "website") validateLinkForApplication(url, property.application);
 
-                const embedLink = await mediaLink.getEmbedLink({
+                const embedLink = await getEmbedLink(url, {
                     klaxoonId: applicationManager.klaxoonToolClientId,
                     excalidrawDomains: applicationManager.excalidrawToolDomains,
                 });

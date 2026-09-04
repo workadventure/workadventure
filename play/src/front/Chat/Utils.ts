@@ -8,6 +8,7 @@ import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../Stores/CoWebsiteStore";
 import { scriptUtils } from "../Api/ScriptUtils";
+import { getEmbedLink } from "../Utils/EmbedLink";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
@@ -173,3 +174,41 @@ export function getMatrixClientForChatTint(): MatrixClient | undefined {
     }
     return undefined;
 }
+
+/**
+ * Opens a chat link as a co-website, falling back to a new tab whenever embedding would leave
+ * the user staring at a blank iframe.
+ *
+ * The message keeps showing the link as it was posted. Only at click time do we resolve the embed
+ * form known apps require (YouTube's /embed/, Google's /preview, Klaxoon's from=embedded...):
+ * that is what we probe and what we embed, since the posted form is often not frameable.
+ */
+export const openChatLinkAsCoWebsite = async (rawUrl: string): Promise<void> => {
+    let url = rawUrl;
+    try {
+        url = await getEmbedLink(rawUrl);
+    } catch (error) {
+        console.info("Could not resolve an embed link for the chat link, using it as posted", error);
+    }
+
+    let embeddable: boolean;
+    try {
+        const answer = await gameManager.getCurrentGameScene().connection?.queryEmbeddableWebsite(url);
+        // state=false means the URL is unreachable, embeddable=false means it refuses to be
+        // framed. Both end up as a blank iframe, so both belong in a new tab.
+        embeddable = answer?.state === true && answer.embeddable;
+    } catch (error) {
+        console.info("Could not check whether chat link is embeddable, opening it in a new tab instead", error);
+        embeddable = false;
+    }
+
+    if (!embeddable) {
+        // openTab() runs the link back through getWebsiteUrl(), which strips embed-only
+        // parameters, so a new tab always lands on the page a human would expect.
+        scriptUtils.openTab(rawUrl);
+        return;
+    }
+
+    openCoWebSiteWithoutSource({ url, closable: true });
+    analyticsClient.openedWebsite(new URL(url));
+};

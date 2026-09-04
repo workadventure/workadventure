@@ -7,6 +7,7 @@
     import PopUpCopyUrl from "../PopUp/PopUpCopyUrl.svelte";
     import { popupStore } from "../../Stores/PopupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { scriptUtils } from "../../Api/ScriptUtils";
 
     interface Props {
         coWebsite: CoWebsite;
@@ -29,8 +30,17 @@
         analyticsClient.switchCowebsite();
     }
 
+    /**
+     * The URL a human should get: a co-website may hold an embed-only link (Klaxoon's
+     * `from=embedded`, Google's embed form), which is not what you want to paste into a
+     * browser or hand to a colleague.
+     */
+    function baseUrl(): string {
+        return scriptUtils.getWebsiteUrl(coWebsite.getUrl().toString());
+    }
+
     function copyUrl() {
-        const url = coWebsite.getUrl().toString();
+        const url = baseUrl();
 
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
         analyticsClient.copyCowebsiteLink();
@@ -39,7 +49,7 @@
     }
 
     function openInNewTab() {
-        const url = coWebsite.getUrl().toString();
+        const url = baseUrl();
 
         window.open(url, "_blank");
         analyticsClient.openCowebsiteInNewTab();
