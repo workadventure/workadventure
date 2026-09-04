@@ -123,6 +123,14 @@
                     onchange={onValueChange}
                 />
             </div>
+            <div class="value-switch">
+                <InputSwitch
+                    id="raiseHandEnabled"
+                    label={$LL.mapEditor.properties.raiseHandEnabled()}
+                    bind:value={property.raiseHandEnabled}
+                    onchange={onValueChange}
+                />
+            </div>
         </span>
     {/snippet}
 </PropertyEditorBase>

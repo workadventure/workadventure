@@ -139,6 +139,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         chatEnabled: "Chat aktiwizowany",
         allowTalking: "Rěčenje a tworjenje pucherjow dowolić",
+        raiseHandEnabled: "Zběhnjenje ruki dowolić",
         seeAttendees: "Wobdźělnikow pokazać",
         start: {
             label: "startowy wobłuk",
@@ -308,6 +309,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "Z deaktiwěrowanym mikrofonom startować",
                 startWithVideoMuted: "Z deaktiwěrowanej kameru startować",
                 disableChat: "Chat deaktiwěrować",
+                raiseHandEnabled: "Zběhnjenje ruki dowolić",
                 livekitRoomAdminTag: "Moderatorowa toflicka za meetingowy rum",
                 cancel: "přetorhnyć",
                 validate: "waliděrować",

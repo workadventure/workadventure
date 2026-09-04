@@ -141,6 +141,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
 
         chatEnabled: "Associar um canal de chat dedicado",
         allowTalking: "Permitir falar e formar bolhas",
+        raiseHandEnabled: "Permitir levantar a mão",
         seeAttendees: "Ver participantes",
         start: {
             label: "Área inicial",
@@ -311,6 +312,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "Iniciar com microfone silenciado",
                 startWithVideoMuted: "Iniciar com vídeo fechado",
                 disableChat: "Desabilitar chat",
+                raiseHandEnabled: "Permitir levantar a mão",
                 livekitRoomAdminTag: "Tag de moderador para a sala de reunião",
                 cancel: "Cancelar",
                 validate: "Validar",
