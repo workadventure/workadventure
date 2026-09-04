@@ -8,17 +8,25 @@ import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 import { dismissNoBrowserSoundInfoToast } from "./doNotDisturbInfoToast";
 
+/**
+ * `getPage()` gives every page its own browser context, and nothing else ever closes those
+ * contexts, so `page.close()` has to close the context too or it leaks for the rest of the worker.
+ *
+ * Closing the context is enough on its own: juggler's `BrowserContext.destroy()` already closes
+ * every page of the context and waits for each `TargetDestroyed`. Closing the page first only adds
+ * a second, redundant teardown of the same tab — and because juggler drops a page from
+ * `context.pages` on the async `TabClose` event, that second close can land on a window Firefox has
+ * already stopped tracking, which is where Firefox 153 throws
+ * `Browser.removeBrowserContext ... can't access property "_maybeDontRestoreTabs"`.
+ *
+ * `Page` already implements `Symbol.asyncDispose` as `close()`, so patching `close` is all it takes
+ * for `await using page = await getPage(...)` to tear the context down as well.
+ */
 function disposeWithContext(page: Page): Page {
-    const closePage = page.close.bind(page);
     const context = page.context();
     let closePromise: Promise<void> | undefined;
-    let contextClosed = false;
 
     const closeContext = async () => {
-        if (contextClosed) {
-            return;
-        }
-        contextClosed = true;
         try {
             await context.close();
         } catch (e) {
@@ -29,24 +37,10 @@ function disposeWithContext(page: Page): Page {
         }
     };
 
-    const closePageAndContext = async (args: Parameters<Page["close"]>) => {
-        if (!page.isClosed()) {
-            await closePage(...args);
-        }
-        await closeContext();
-    };
-
-    page.close = (...args: Parameters<Page["close"]>) => {
-        closePromise ??= closePageAndContext(args);
+    page.close = () => {
+        closePromise ??= closeContext();
         return closePromise;
     };
-
-    if (!(Symbol.asyncDispose in page)) {
-        Object.defineProperty(page, Symbol.asyncDispose, {
-            configurable: true,
-            value: () => page.close(),
-        });
-    }
 
     return page;
 }
@@ -151,7 +145,8 @@ async function createUser(
 
     await page.context().storageState({ path: "./.auth/" + name + ".json" });
 
-    await page.close();
+    // Closing the context closes its pages; closing the page first is the redundant second teardown
+    // that Firefox 153 chokes on. See `disposeWithContext`.
     await context.close();
 }
 
