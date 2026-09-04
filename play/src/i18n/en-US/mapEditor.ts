@@ -306,6 +306,7 @@ const mapEditor: BaseTranslation = {
                 startWithAudioMuted: "Start with microphone muted",
                 startWithVideoMuted: "Start with video closed",
                 disableChat: "Disable chat",
+                raiseHandEnabled: "Allow raising hands",
                 livekitRoomAdminTag: "Moderator tag for the meeting room",
                 cancel: "Cancel",
                 validate: "Validate",
@@ -327,6 +328,7 @@ const mapEditor: BaseTranslation = {
         advancedOptions: "Advanced Options",
         chatEnabled: "Associate a dedicated chat channel",
         allowTalking: "Allow talking and forming bubbles",
+        raiseHandEnabled: "Allow raising hands",
         noProperties: "No properties defined",
     },
     areaEditor: {

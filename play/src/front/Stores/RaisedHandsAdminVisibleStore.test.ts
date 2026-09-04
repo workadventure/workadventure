@@ -14,7 +14,7 @@ vi.mock("./GameStore", async () => {
 });
 vi.mock("./MediaStore", async () => {
     const { writable: w } = await import("svelte/store");
-    return { isSpeakerStore: w(false) };
+    return { isSpeakerStore: w(false), inLivekitStore: w(false) };
 });
 vi.mock("./MegaphoneStore", async () => {
     const { writable: w } = await import("svelte/store");
@@ -23,8 +23,9 @@ vi.mock("./MegaphoneStore", async () => {
 
 import { raisedHandsStore, speakingUsersStore } from "./PeerStore";
 import { userIsAdminStore } from "./GameStore";
-import { isSpeakerStore } from "./MediaStore";
+import { inLivekitStore, isSpeakerStore } from "./MediaStore";
 import { givenFloorSpaceStore } from "./MegaphoneStore";
+import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
 import { raisedHandsAdminVisibleStore } from "./RaisedHandsAdminVisibleStore";
 
 const queue = raisedHandsStore as unknown as Writable<RaisedHand[]>;
@@ -36,20 +37,17 @@ const grantedFloor = givenFloorSpaceStore as unknown as Writable<unknown>;
 describe("raisedHandsAdminVisibleStore", () => {
     const oneRaisedHand = () => queue.set([{ spaceUserId: "room_1", name: "Alice", at: 1 }]);
 
-    beforeEach(() => {
+    const reset = () => {
         queue.set([]);
         speakers.set([]);
         admin.set(false);
         speaker.set(false);
         grantedFloor.set(undefined);
-    });
-    afterEach(() => {
-        queue.set([]);
-        speakers.set([]);
-        admin.set(false);
-        speaker.set(false);
-        grantedFloor.set(undefined);
-    });
+        currentPlayerGroupIdStore.set(undefined);
+        inLivekitStore.set(false);
+    };
+    beforeEach(reset);
+    afterEach(reset);
 
     it("is hidden when there is nothing to act on, even for an admin", () => {
         admin.set(true);
@@ -89,8 +87,25 @@ describe("raisedHandsAdminVisibleStore", () => {
         expect(get(raisedHandsAdminVisibleStore)).toBe(true);
     });
 
-    it("is hidden for a plain listener", () => {
+    it("is hidden for a plain megaphone listener", () => {
         oneRaisedHand();
+        expect(get(raisedHandsAdminVisibleStore)).toBe(false);
+    });
+
+    it("shows to everyone in a proximity bubble, which has no host", () => {
+        currentPlayerGroupIdStore.set(42);
+        oneRaisedHand();
+        expect(get(raisedHandsAdminVisibleStore)).toBe(true);
+    });
+
+    it("shows to everyone in a meeting room, where everybody already speaks", () => {
+        inLivekitStore.set(true);
+        oneRaisedHand();
+        expect(get(raisedHandsAdminVisibleStore)).toBe(true);
+    });
+
+    it("stays hidden in a bubble while nobody has raised a hand", () => {
+        currentPlayerGroupIdStore.set(42);
         expect(get(raisedHandsAdminVisibleStore)).toBe(false);
     });
 });
