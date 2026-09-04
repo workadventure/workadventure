@@ -46,6 +46,9 @@ export const LivekitRoomConfigData = z
         startWithAudioMuted: z.boolean(),
         startWithVideoMuted: z.boolean(),
         disableChat: z.boolean().optional().default(false),
+        // Whether attendees may raise their hand to ask for the floor. On by default, and absent from
+        // maps built before the option existed, hence `.optional()` on top of the default.
+        raiseHandEnabled: z.boolean().optional().default(true),
     })
     .optional();
 
@@ -144,6 +147,9 @@ export const ListenerMegaphonePropertyData = PropertyBase.extend({
     speakerZoneName: z.string(),
     chatEnabled: z.boolean().default(false),
     allowTalking: z.boolean().optional().default(false),
+    // Whether listeners may raise their hand to ask the speaker for the floor. On by default, and absent
+    // from maps built before the option existed, hence `.optional()` on top of the default.
+    raiseHandEnabled: z.boolean().optional().default(true),
     waitingLink: z.string().optional(),
 });
 
