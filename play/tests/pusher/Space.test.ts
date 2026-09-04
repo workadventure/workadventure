@@ -234,17 +234,24 @@ describe("Space.extractUpdatedFieldsFromUpdateSpaceUserMessage", () => {
             ...SpaceUser.fromPartial({ spaceUserId: "room_207", uuid: "uuid" }),
             lowercaseName: "fabio",
         });
-        vi.spyOn(console, "warn").mockImplementation(() => {});
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-        const result = space.extractUpdatedFieldsFromUpdateSpaceUserMessage(socket, {
-            spaceName: "test",
-            user: SpaceUser.fromPartial({ spaceUserId: "room_187", screenSharingState: true }),
-            updateMask: ["screenSharingState"],
-        });
+        try {
+            const result = space.extractUpdatedFieldsFromUpdateSpaceUserMessage(socket, {
+                spaceName: "test",
+                user: SpaceUser.fromPartial({ spaceUserId: "room_187", screenSharingState: true }),
+                updateMask: ["screenSharingState"],
+            });
 
-        expect(result?.changedFields).toEqual(["screenSharingState"]);
-        expect(result?.partialSpaceUser.spaceUserId).toBe("room_207");
-        expect(result?.partialSpaceUser.screenSharingState).toBe(true);
+            expect(result?.changedFields).toEqual(["screenSharingState"]);
+            expect(result?.partialSpaceUser.spaceUserId).toBe("room_207");
+            expect(result?.partialSpaceUser.screenSharingState).toBe(true);
+            expect(warnSpy).toHaveBeenCalledWith(
+                expect.stringContaining("room_187 does not match the socket's room_207"),
+            );
+        } finally {
+            warnSpy.mockRestore();
+        }
     });
 
     it("rejects an update from a socket that is not in the space", () => {
