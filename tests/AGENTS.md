@@ -36,3 +36,37 @@ re-run. Related labels:
 |-------|--------|
 | `full-trace` | Record DOM snapshots too, so the trace viewer can time-travel the DOM. Slower. |
 | `no-flaky` | Disable retries, so a flaky test fails the build instead of passing on a second attempt. |
+
+## How CI splits the suite
+
+Each browser project is spread over several CI legs, but not with Playwright's `--shard`: that
+balances the *number* of tests, and here the number of tests says little about how long they take.
+Instead, `scripts/shard-list.mjs` packs whole spec files into shards by their measured duration,
+read from `shard-timings.json`, and CI passes the result to `--test-list`.
+
+Consequences when adding or moving tests:
+
+- **A new spec file has no recorded duration** and is weighed as an average file until the timings
+  are refreshed. That is fine for one or two files; `shard-list.mjs` warns once more than 20% of the
+  files are unrecorded.
+- **A single spec file is a floor** on how short a shard can get, because packing is per file. If one
+  file grows past the others, split it rather than adding shards.
+- **`--test-list` paths are relative to `testDir`** (`chat/matrixChat.spec.ts`, not
+  `tests/chat/matrixChat.spec.ts`), and Playwright ignores entries it cannot match — a list gone
+  stale would run nothing and still exit 0. CI therefore runs `shard-list.mjs --verify`, which
+  resolves the list through Playwright and fails when it selects no test.
+
+Refresh the durations from a run where every leg finished:
+
+```bash
+npm run e2e:timings                 # newest successful run on master
+npm run e2e:timings -- --run <id>   # a specific run
+```
+
+Then resize the shard counts in the `end-to-end-tests` matrix of
+`.github/workflows/build-test-and-deploy.yml` if a project has drifted. Preview what a given split
+would look like with:
+
+```bash
+node scripts/shard-list.mjs --project chromium --shard 1 --of 6
+```

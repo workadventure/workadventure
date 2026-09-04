@@ -15,6 +15,7 @@ export interface WorkflowRun {
   status: string;
   conclusion: string;
   createdAt: string;
+  headSha: string;
   url: string;
 }
 
@@ -23,7 +24,12 @@ interface ArtifactResponse {
 }
 
 interface JobsResponse {
-  jobs: GithubJob[];
+  jobs: WorkflowJob[];
+}
+
+/** A job as `gh run view --json jobs` returns it, with the id needed to fetch its log. */
+export interface WorkflowJob extends GithubJob {
+  databaseId: number;
 }
 
 export async function run(
@@ -111,7 +117,7 @@ export async function listWorkflowRuns(
     "--limit",
     "10",
     "--json",
-    "databaseId,displayTitle,status,conclusion,createdAt,url",
+    "databaseId,displayTitle,status,conclusion,createdAt,headSha,url",
   ]);
   return JSON.parse(output) as WorkflowRun[];
 }
@@ -122,7 +128,7 @@ export async function getWorkflowRun(runId: number): Promise<WorkflowRun> {
     "view",
     String(runId),
     "--json",
-    "databaseId,displayTitle,status,conclusion,createdAt,url",
+    "databaseId,displayTitle,status,conclusion,createdAt,headSha,url",
   ]);
   return JSON.parse(output) as WorkflowRun;
 }
@@ -141,7 +147,7 @@ export async function listArtifacts(
   return pages.flatMap((page) => page.artifacts);
 }
 
-export async function listJobs(runId: number): Promise<GithubJob[]> {
+export async function listJobs(runId: number): Promise<WorkflowJob[]> {
   const output = await run("gh", [
     "run",
     "view",
@@ -150,4 +156,14 @@ export async function listJobs(runId: number): Promise<GithubJob[]> {
     "jobs",
   ]);
   return (JSON.parse(output) as JobsResponse).jobs;
+}
+
+export async function fetchJobLog(
+  repository: string,
+  jobId: number,
+): Promise<string> {
+  return await run("gh", [
+    "api",
+    `repos/${repository}/actions/jobs/${jobId}/logs`,
+  ]);
 }
