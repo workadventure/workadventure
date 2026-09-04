@@ -28,6 +28,8 @@ class FakeWebSocket extends EventTarget {
 }
 
 describe("WorkAdventureWebSocket close codes", () => {
+    let socket: WorkAdventureWebSocket | undefined;
+
     beforeEach(() => {
         vi.useFakeTimers();
         FakeWebSocket.instances = [];
@@ -35,13 +37,16 @@ describe("WorkAdventureWebSocket close codes", () => {
     });
 
     afterEach(() => {
+        // Detaches the window listeners of whichever fake transport is current.
+        socket?.close();
+        socket = undefined;
         WorkAdventureWebSocket.setWebsocketFactory(null);
         vi.useRealTimers();
         vi.restoreAllMocks();
     });
 
     it("resumes the transport after a transient close", () => {
-        const socket = new WorkAdventureWebSocket("ws://pusher/ws/room?tabId=tab");
+        socket = new WorkAdventureWebSocket("ws://pusher/ws/room?tabId=tab");
         const onclose = vi.fn();
         socket.onclose = onclose;
 
@@ -54,7 +59,7 @@ describe("WorkAdventureWebSocket close codes", () => {
     });
 
     it("does not resume after the pusher destroyed the session", () => {
-        const socket = new WorkAdventureWebSocket("ws://pusher/ws/room?tabId=tab");
+        socket = new WorkAdventureWebSocket("ws://pusher/ws/room?tabId=tab");
         const onclose = vi.fn();
         socket.onclose = onclose;
 
