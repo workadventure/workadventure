@@ -44,19 +44,19 @@ describe("PusherRoomSocketController reconnect retention", () => {
         const socket = createSocket({ tabId: "tab-1" });
         await registeredHandlers?.open(socket);
 
-        expect(getContextMap(controller).has("tab-1")).toBe(true);
+        expect(getContextMap(controller).has("conn-1")).toBe(true);
 
         await registeredHandlers?.close(socket);
         await flushMicrotasks();
 
-        expect(getContextMap(controller).has("tab-1")).toBe(true);
+        expect(getContextMap(controller).has("conn-1")).toBe(true);
 
         vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS - 1);
-        expect(getContextMap(controller).has("tab-1")).toBe(true);
+        expect(getContextMap(controller).has("conn-1")).toBe(true);
 
         vi.advanceTimersByTime(1);
         await flushMicrotasks();
-        expect(getContextMap(controller).has("tab-1")).toBe(false);
+        expect(getContextMap(controller).has("conn-1")).toBe(false);
     });
 
     it("delays logical cleanup so a closed transport can still be replaced", async () => {
@@ -74,7 +74,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
         const initialSocket = createSocket({ tabId: "tab-1" });
         await registeredHandlers?.open(initialSocket);
 
-        const initialContext = getContextMap(controller).get("tab-1");
+        const initialContext = getContextMap(controller).get("conn-1");
         expect(initialContext).toBeDefined();
 
         await registeredHandlers?.close(initialSocket);
@@ -89,7 +89,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
         await flushMicrotasks();
 
         expect(close).not.toHaveBeenCalled();
-        expect(getContextMap(controller).get("tab-1")?.socket).toBe(initialContext?.socket);
+        expect(getContextMap(controller).get("conn-1")).toBe(initialContext);
     });
 
     it("cancels the scheduled cleanup when the same tab reconnects in time", async () => {
@@ -102,7 +102,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
         const initialSocket = createSocket({ tabId: "tab-1" });
         await registeredHandlers?.open(initialSocket);
 
-        const initialContext = getContextMap(controller).get("tab-1");
+        const initialContext = getContextMap(controller).get("conn-1");
         expect(initialContext).toBeDefined();
 
         await registeredHandlers?.close(initialSocket);
@@ -113,7 +113,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
         vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
 
-        expect(getContextMap(controller).has("tab-1")).toBe(true);
+        expect(getContextMap(controller).has("conn-1")).toBe(true);
     });
 
     it("creates a fresh context after the retention window expires", async () => {
@@ -136,7 +136,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
         await registeredHandlers?.open(reconnectSocket);
 
         expect(open).toHaveBeenCalledTimes(2);
-        expect(getContextMap(controller).get("tab-1")?.socket).toBeDefined();
+        expect(getContextMap(controller).get("conn-1")).toBeDefined();
     });
 
     it("runs logical cleanup when no replacement arrives before retention expires", async () => {
@@ -182,7 +182,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
         await flushMicrotasks();
 
         expect(close).toHaveBeenCalledWith(expect.any(PusherWebSocket), 1000, "Page unloading");
-        expect(getContextMap(controller).has("tab-1")).toBe(false);
+        expect(getContextMap(controller).has("conn-1")).toBe(false);
 
         vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
         await flushMicrotasks();
@@ -200,10 +200,10 @@ describe("PusherRoomSocketController reconnect retention", () => {
         const initialSocket = createSocket({ tabId: "tab-1" });
         await registeredHandlers?.open(initialSocket);
 
-        const wrapper = getContextMap(controller).get("tab-1")?.socket as PusherWebSocket;
+        const wrapper = getContextMap(controller).get("conn-1") as PusherWebSocket;
         wrapper.send({ message: undefined });
 
-        const initialContext = getContextMap(controller).get("tab-1");
+        const initialContext = getContextMap(controller).get("conn-1");
         expect(initialContext).toBeDefined();
 
         await registeredHandlers?.close(initialSocket);
@@ -246,7 +246,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
         await registeredHandlers?.open(socket);
 
-        const wrapper = getContextMap(controller).get("tab-1")?.socket as PusherWebSocket;
+        const wrapper = getContextMap(controller).get("conn-1") as PusherWebSocket;
         wrapper.send({ message: undefined });
         wrapper.send({ message: undefined });
 
@@ -260,50 +260,78 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
 describe("PusherRoomSocketController transport resume identity", () => {
     afterEach(() => {
+        vi.clearAllTimers();
+        vi.useRealTimers();
         vi.restoreAllMocks();
     });
 
-    const canReplace = (controller: PusherRoomSocketController, query: object, socket: PusherWebSocket) =>
+    const canReplace = (controller: PusherRoomSocketController, query: object, retained?: PusherWebSocket) =>
         (
             controller as unknown as {
-                canReplaceTransportWithoutUpgrade: (query: object, protocol: string, ctx: object) => boolean;
+                canReplaceTransportWithoutUpgrade: (
+                    query: object,
+                    protocol: string,
+                    retained?: PusherWebSocket,
+                ) => boolean;
             }
-        ).canReplaceTransportWithoutUpgrade(query, "token", { socket });
+        ).canReplaceTransportWithoutUpgrade(query, "token", retained);
 
-    it("refuses to resume onto a logical connection opened by another WorkAdventureWebSocket", () => {
+    it("only resumes onto a retained connection with the same token and room", () => {
         const controller = createController(() => {});
-        const retained = createPusherWebSocket(createSocket({ tabId: "tab-1", connectionId: "newer-page-socket" }));
+        const retained = createPusherWebSocket(createSocket({ token: "token", roomId: "room-id" }));
 
-        expect(canReplace(controller, { tabId: "tab-1", connectionId: "stale-page-socket" }, retained)).toBe(false);
-        expect(canReplace(controller, { tabId: "tab-1", connectionId: "newer-page-socket" }, retained)).toBe(true);
+        expect(canReplace(controller, { roomId: "room-id" }, retained)).toBe(true);
+        expect(canReplace(controller, { roomId: "another-room" }, retained)).toBe(false);
+        expect(canReplace(controller, { roomId: "room-id" }, undefined)).toBe(false);
     });
 
-    it("still resumes fronts that do not send a connection id", () => {
-        const controller = createController(() => {});
-        const retained = createPusherWebSocket(createSocket({ tabId: "tab-1", connectionId: undefined }));
-
-        expect(canReplace(controller, { tabId: "tab-1" }, retained)).toBe(true);
-    });
-
-    it("lets the legitimate connection resume after a mismatched resume was refused", async () => {
+    it("refuses a resume from a WorkAdventureWebSocket that never opened a connection here", async () => {
         let handlers: RegisteredHandlers | undefined;
         const controller = createController((h) => {
             handlers = h;
         });
 
-        const initialSocket = createSocket({ tabId: "tab-1", connectionId: "current" });
+        const initialSocket = createSocket({ connectionId: "current" });
         await handlers?.open(initialSocket);
-        const retained = getContextMap(controller).get("tab-1")?.socket;
+        const retained = getContextMap(controller).get("current");
 
-        const stale = createSocket({ tabId: "tab-1", connectionId: "stale", clientLastReceivedNonce: 7 });
+        const stale = createSocket({ connectionId: "stale", clientLastReceivedNonce: 7 });
         await handlers?.open(stale);
-        expect(getEndMock(stale)).toHaveBeenCalledWith(1008, "Cannot replace socket: connection id mismatch");
-        expect(getContextMap(controller).get("tab-1")?.socket).toBe(retained);
+        expect(getEndMock(stale)).toHaveBeenCalledWith(1008, "Cannot replace socket: previous connection not retained");
+        expect(getContextMap(controller).get("current")).toBe(retained);
 
-        const legitimate = createSocket({ tabId: "tab-1", connectionId: "current", clientLastReceivedNonce: 0 });
+        const legitimate = createSocket({ connectionId: "current", clientLastReceivedNonce: 0 });
         await handlers?.open(legitimate);
         expect(getEndMock(legitimate)).not.toHaveBeenCalled();
         expect(getEndMock(initialSocket)).toHaveBeenCalledWith(1008, "Replaced by a reconnected socket");
+    });
+
+    it("does not retain a connection from a front that sends no connection id", async () => {
+        vi.useFakeTimers();
+        let handlers: RegisteredHandlers | undefined;
+        const close = vi.fn();
+        const controller = createController(
+            (h) => {
+                handlers = h;
+            },
+            vi.fn(),
+            close,
+        );
+
+        const socket = createSocket({ connectionId: undefined });
+        await handlers?.open(socket);
+        expect(getContextMap(controller).size).toBe(0);
+
+        await handlers?.close(socket, 1006);
+        await flushMicrotasks();
+        expect(close).toHaveBeenCalledTimes(1);
+
+        const resume = createSocket({ connectionId: undefined, clientLastReceivedNonce: 0 });
+        await handlers?.open(resume);
+        expect(getEndMock(resume)).toHaveBeenCalledWith(
+            1008,
+            "Cannot replace socket: previous connection not retained",
+        );
     });
 
     it("rejects a replacement socket carrying a different connection id", () => {
@@ -378,12 +406,8 @@ function createController(
     return controller;
 }
 
-function getContextMap(controller: PusherRoomSocketController): Map<string, { socket?: unknown }> {
-    return (
-        controller as unknown as {
-            contextByTabKey: Map<string, { socket?: unknown }>;
-        }
-    ).contextByTabKey;
+function getContextMap(controller: PusherRoomSocketController): Map<string, unknown> {
+    return (controller as unknown as { retainedByConnectionId: Map<string, unknown> }).retainedByConnectionId;
 }
 
 function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
@@ -418,6 +442,7 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
         microphoneState: false,
         cameraState: false,
         tabId: "tab-1",
+        connectionId: "conn-1",
         attendeesState: false,
         queryAbortControllers: new Map(),
         canRecord: false,
