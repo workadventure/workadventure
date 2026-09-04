@@ -66,6 +66,7 @@ import { SpaceConnection } from "../models/SpaceConnection";
 import { ClientNotPartOfSpaceError, SpaceDestroyedError } from "../models/SpaceValidationErrors";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
+import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
@@ -302,7 +303,11 @@ export class SocketManager implements ZoneEventListener {
                             } else {
                                 console.warn(logMessage);
                             }
-                            this.closeWebsocketConnection(client, 1011, `Back lost: ${connectionCloseReason}`);
+                            this.closeWebsocketConnection(
+                                client,
+                                WS_CLOSE_CODE_SESSION_DESTROYED,
+                                `Back lost: ${connectionCloseReason}`,
+                            );
                         }
                     } catch (e: unknown) {
                         console.error("Error while handling ended connection to back", e);
@@ -322,7 +327,11 @@ export class SocketManager implements ZoneEventListener {
                             err,
                         );
                         if (!client.isDisconnecting()) {
-                            this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+                            this.closeWebsocketConnection(
+                                client,
+                                WS_CLOSE_CODE_SESSION_DESTROYED,
+                                "Error while connecting to back server",
+                            );
                         }
                     } catch (e: unknown) {
                         console.error("Error while handling error event in connection to back", e);
@@ -356,7 +365,11 @@ export class SocketManager implements ZoneEventListener {
             }
 
             // Let's close the websocket connection with an error code
-            this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+            this.closeWebsocketConnection(
+                client,
+                WS_CLOSE_CODE_SESSION_DESTROYED,
+                "Error while connecting to back server",
+            );
         }
     }
 
@@ -436,7 +449,11 @@ export class SocketManager implements ZoneEventListener {
             }
 
             // Let's close the websocket connection with an error code
-            this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+            this.closeWebsocketConnection(
+                client,
+                WS_CLOSE_CODE_SESSION_DESTROYED,
+                "Error while connecting to back server",
+            );
         }
     }
 

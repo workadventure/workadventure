@@ -14,6 +14,7 @@ vi.mock("@workadventure/messages", () => ({
 }));
 
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../../src/pusher/enums/EnvironmentVariable";
+import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../src/common/WebSocketCloseCodes";
 import type { SocketData } from "../../src/pusher/models/Websocket/SocketData";
 import { PusherRoomSocketController } from "../../src/pusher/services/PusherRoomSocketController";
 import { PusherWebSocket, type RawSocket } from "../../src/pusher/services/PusherWebSocket";
@@ -188,6 +189,31 @@ describe("PusherRoomSocketController reconnect retention", () => {
         await flushMicrotasks();
 
         expect(close).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not retain the tab context after the pusher destroyed the session", async () => {
+        vi.useFakeTimers();
+
+        const close = vi.fn();
+        const controller = createController(
+            (handlers) => {
+                registeredHandlers = handlers;
+            },
+            vi.fn(),
+            close,
+        );
+
+        const socket = createSocket({ tabId: "tab-1" });
+        await registeredHandlers?.open(socket);
+        await registeredHandlers?.close(
+            socket,
+            WS_CLOSE_CODE_SESSION_DESTROYED,
+            new TextEncoder().encode("Back lost").buffer,
+        );
+        await flushMicrotasks();
+
+        expect(close).toHaveBeenCalledWith(expect.any(PusherWebSocket), WS_CLOSE_CODE_SESSION_DESTROYED, "Back lost");
+        expect(getContextMap(controller).has("tab-1")).toBe(false);
     });
 
     it("queues outgoing messages while a transport is closed and flushes them after replacement", async () => {

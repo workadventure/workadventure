@@ -63,7 +63,7 @@ describe("Space", () => {
                 ({
                     syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
                     addUserToNotify: vi.fn(),
-                } as unknown as SpaceToBackForwarder);
+                }) as unknown as SpaceToBackForwarder;
 
             const mockNotifyMeAddUser = vi.fn();
             const mockNotifyMeInit = vi.fn();
@@ -72,7 +72,7 @@ describe("Space", () => {
                 ({
                     notifyMeAddUser: mockNotifyMeAddUser,
                     notifyMeInit: mockNotifyMeInit,
-                } as unknown as SpaceToFrontDispatcher);
+                }) as unknown as SpaceToFrontDispatcher;
 
             const mockOnBackEndDisconnect = vi.fn();
 
@@ -91,7 +91,7 @@ describe("Space", () => {
                 "world",
                 [],
                 mockSpaceToBackForwarderFactory,
-                mockSpaceToFrontDispatcherFactory
+                mockSpaceToFrontDispatcherFactory,
             );
 
             space.initSpace();
@@ -155,13 +155,13 @@ describe("Space", () => {
                 ({
                     syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
                     addUserToNotify: vi.fn(),
-                } as unknown as SpaceToBackForwarder);
+                }) as unknown as SpaceToBackForwarder;
 
             const mockNotifyMeAddUser = vi.fn();
             const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
                 ({
                     notifyMeAddUser: mockNotifyMeAddUser,
-                } as unknown as SpaceToFrontDispatcher);
+                }) as unknown as SpaceToFrontDispatcher;
 
             const mockOnBackEndDisconnect = vi.fn();
 
@@ -180,7 +180,7 @@ describe("Space", () => {
                 "world",
                 [],
                 mockSpaceToBackForwarderFactory,
-                mockSpaceToFrontDispatcherFactory
+                mockSpaceToFrontDispatcherFactory,
             );
 
             space.initSpace();
@@ -542,14 +542,14 @@ describe("SpaceConnection", () => {
                     spaceConnection as unknown as {
                         spacePerBackId: Map<number, Map<string, SpaceForSpaceConnectionInterface>>;
                     }
-                ).spacePerBackId.get(0)
+                ).spacePerBackId.get(0),
             ).toBeUndefined();
             expect(
                 (
                     spaceConnection as unknown as {
                         spaceStreamToBackPromises: Map<number, Promise<BackSpaceConnection>>;
                     }
-                ).spaceStreamToBackPromises.get(0)
+                ).spaceStreamToBackPromises.get(0),
             ).toBeUndefined();
         });
         it("should throw an error if back connection is not found", () => {

@@ -10,6 +10,7 @@ import { asError } from "catch-unknown";
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../enums/EnvironmentVariable";
 import type { ConnectingSocketData } from "../models/Websocket/SocketData";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
+import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
 import { PusherWebSocket } from "./PusherWebSocket";
 import type { RawSocket } from "./PusherWebSocket";
 import { validateWebsocketQuery } from "./QueryValidator";
@@ -390,7 +391,7 @@ export class PusherRoomSocketController {
                     socket.markPermanentlyDisconnected();
                     return Promise.resolve(config.close(socket, code, reason));
                 };
-                if (code === 1000 || code === 1001) {
+                if (code === 1000 || code === 1001 || code === WS_CLOSE_CODE_SESSION_DESTROYED) {
                     closePermanently().then(forgetRetained, (e) => {
                         console.error(e);
                         forgetRetained();
