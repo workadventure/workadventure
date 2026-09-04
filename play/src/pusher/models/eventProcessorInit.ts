@@ -49,3 +49,22 @@ eventProcessor.registerPrivateEventProcessor("muteVideo", (event, sender) => {
 
     return event;
 });
+
+eventProcessor.registerPrivateEventProcessor("proximityFileTransferOffer", (event, sender) => {
+    if (event.$case !== "proximityFileTransferOffer") {
+        throw new Error("Invalid event type");
+    }
+
+    if (!sender) {
+        throw new Error("Sender not found");
+    }
+
+    return {
+        $case: "proximityFileTransferOffer",
+        proximityFileTransferOffer: {
+            ...event.proximityFileTransferOffer,
+            characterTextures: sender.characterTextures,
+            name: sender.name,
+        },
+    };
+});

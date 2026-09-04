@@ -182,6 +182,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     notification: {
         discussion: "quiere hablar contigo",
         message: "ha enviado un mensaje",
+        file: "ha enviado un archivo: {fileName}",
         forum: "en el foro",
         in: "en",
     },
@@ -297,6 +298,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "descargar",
         openCoWebsite: "Abrir en co-website",
         loadingAttachment: "Loading attachment...",
+        remainingTime: "quedan ~{time}",
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "No se puede descifrar este archivo adjunto.",
         copy: "copiar el enlace",

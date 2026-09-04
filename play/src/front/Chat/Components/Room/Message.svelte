@@ -206,7 +206,7 @@
                     {/if}
 
                     {@const MessageComponent = messageType[type]}
-                    <MessageComponent {content} />
+                    <MessageComponent {content} {message} />
 
                     {#if $reactionsWithUsers.length > 0}
                         <MessageReactions
