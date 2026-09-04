@@ -1,0 +1,52 @@
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
+
+const randomNames: DeepPartial<Translation["randomNames"]> = {
+    template: "{name} {adjective}",
+    adjectives: {
+        name0: "Vũ Trụ",
+        name1: "Điện Quang",
+        name2: "Huyền Bí",
+        name3: "Neon",
+        name4: "Lượng Tử",
+        name5: "Tinh Tú",
+        name6: "Thần Tốc",
+        name7: "Điện Tử",
+        name8: "Pixel",
+        name9: "Tân Tinh",
+        name10: "Bóng Ma",
+        name11: "Bóng Đêm",
+        name12: "Pha Lê",
+        name13: "Hoàng Kim",
+        name14: "Bạc",
+        name15: "Lửa",
+        name16: "Băng",
+        name17: "Bão Tố",
+        name18: "Sấm",
+        name19: "Chớp",
+    },
+    names: {
+        name0: "Rồng",
+        name1: "Phượng Hoàng",
+        name2: "Chiến Binh",
+        name3: "Ninja",
+        name4: "Pháp Sư",
+        name5: "Nhà Thám Hiểm",
+        name6: "Phi Công",
+        name7: "Thuyền Trưởng",
+        name8: "Anh Hùng",
+        name9: "Huyền Thoại",
+        name10: "Nhà Vô Địch",
+        name11: "Bậc Thầy",
+        name12: "Hộ Vệ",
+        name13: "Hiệp Sĩ",
+        name14: "Du Hiệp",
+        name15: "Thợ Săn",
+        name16: "Người Tìm Kiếm",
+        name17: "Lữ Khách",
+        name18: "Người Viễn Du",
+        name19: "Nhà Phiêu Lưu",
+    },
+};
+
+export default randomNames;
