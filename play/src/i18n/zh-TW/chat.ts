@@ -52,6 +52,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         notAvailable: "圖片無法使用。",
         imageActions: "圖片操作",
     },
+    urlPreview: {
+        label: "連結預覽",
+        hide: "隱藏預覽",
+    },
     join: "加入",
     search: "搜尋",
     closeSearch: "關閉搜尋",

@@ -26,6 +26,35 @@ database:
     database: /data/homeserver.db
 log_config: "/data/matrix.workadventure.localhost.log.config"
 media_store_path: /data/media_store
+
+# Lets the chat show OpenGraph previews for links. Synapse defaults this off, and the
+# helm charts already turn it on, so without this dev is the odd one out and previews
+# only 404 here.
+url_preview_enabled: true
+# Synapse refuses to start with previews enabled and no blacklist, and rightly so: it
+# will fetch whatever URL a user pastes, so anything pointing inside the compose network
+# or at the host would otherwise be ours to fetch on the user's behalf.
+# Kept in sync with charts/synapse/values.yaml in the SaaS repo.
+url_preview_ip_range_blacklist:
+  - '127.0.0.0/8'
+  - '10.0.0.0/8'
+  - '172.16.0.0/12'
+  - '192.168.0.0/16'
+  - '100.64.0.0/10'
+  - '192.0.0.0/24'
+  - '169.254.0.0/16'
+  - '192.88.99.0/24'
+  - '198.18.0.0/15'
+  - '192.0.2.0/24'
+  - '198.51.100.0/24'
+  - '203.0.113.0/24'
+  - '224.0.0.0/4'
+  - '::1/128'
+  - 'fe80::/10'
+  - 'fc00::/7'
+  - '2001:db8::/32'
+  - 'ff00::/8'
+  - 'fec0::/10'
 report_stats: true
 registration_shared_secret: "XJx!`J-;J4Kx!'p>J%[C!G$u8=YP6_4eEV$~Je9#~c>9sPGcDz"
 macaroon_secret_key: "E@=9DoVJg.t:.k:p8uI9*hMOQl~^JF8,rs2ak-evN5eS*pv.jF"

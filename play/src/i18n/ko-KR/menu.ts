@@ -80,6 +80,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         notifications: "알림",
         enablePictureInPicture: "PIP(화면 속 화면) 활성화",
         chatSounds: "채팅 소리",
+        chatUrlPreviews: "채팅에서 링크 미리보기 표시",
+        chatUrlPreviewsInPrivate: "암호화된 방과 근접 채팅에서도 미리보기 표시",
         cowebsiteTrigger: "웹사이트 및 Jitsi Meet 방을 열기 전에 항상 물어보기",
         ignoreFollowRequest: "다른 사용자를 따라가는 요청 무시",
         proximityDiscussionVolume: "근접 대화 볼륨",

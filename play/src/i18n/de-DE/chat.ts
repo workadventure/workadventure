@@ -55,6 +55,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         notAvailable: "Bild nicht verfügbar.",
         imageActions: "Bildaktionen",
     },
+    urlPreview: {
+        label: "Linkvorschau",
+        hide: "Vorschauen ausblenden",
+    },
     join: "Beitreten",
     search: "Suchen",
     closeSearch: "Suche schließen",

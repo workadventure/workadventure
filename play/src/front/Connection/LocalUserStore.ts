@@ -29,6 +29,8 @@ const authToken = "authToken";
 const notification = "notificationPermission";
 const allowPictureInPicture = "allowPictureInPicture";
 const chatSounds = "chatSounds";
+const chatUrlPreviews = "chatUrlPreviews";
+const chatUrlPreviewsInPrivate = "chatUrlPreviewsInPrivate";
 const preferredVideoInputDevice = "preferredVideoInputDevice";
 const preferredAudioInputDevice = "preferredAudioInputDevice";
 const cacheAPIIndex = "workavdenture-cache";
@@ -424,6 +426,28 @@ class LocalUserStore {
 
     getChatSounds(): boolean {
         return localStorage.getItem(chatSounds) !== "false";
+    }
+
+    setChatUrlPreviews(value: boolean): void {
+        localStorage.setItem(chatUrlPreviews, value.toString());
+    }
+
+    getChatUrlPreviews(): boolean {
+        return localStorage.getItem(chatUrlPreviews) !== "false";
+    }
+
+    setChatUrlPreviewsInPrivate(value: boolean): void {
+        localStorage.setItem(chatUrlPreviewsInPrivate, value.toString());
+    }
+
+    /**
+     * Previews for encrypted rooms and proximity chat, where fetching one tells the
+     * homeserver about a URL it would otherwise never see. Off unless asked for, and
+     * deliberately per device: no server or config should be able to answer this for
+     * the user.
+     */
+    getChatUrlPreviewsInPrivate(): boolean {
+        return localStorage.getItem(chatUrlPreviewsInPrivate) === "true";
     }
 
     private getFoldersOpened(): Set<string> {
