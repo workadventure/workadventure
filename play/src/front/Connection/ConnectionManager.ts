@@ -436,8 +436,9 @@ class ConnectionManager {
         retryAttempt = 0,
     ): Promise<OnConnectInterface> {
         Sentry.setTag("roomId", roomUrl);
+        let connection: RoomConnection | undefined;
         return new Promise<OnConnectInterface>((resolve, reject) => {
-            const connection = new RoomConnection(
+            connection = new RoomConnection(
                 this.authToken,
                 roomUrl,
                 characterTextureIds,
@@ -514,6 +515,10 @@ class ConnectionManager {
                 });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
+
+            // The failed connection must not outlive this attempt: its WorkAdventureWebSocket would otherwise keep
+            // trying to resume its transport (with the same tab id) next to the fresh connection created by the retry.
+            connection?.closeConnection();
 
             errorScreenStore.setError(
                 ErrorScreenMessage.fromPartial({
