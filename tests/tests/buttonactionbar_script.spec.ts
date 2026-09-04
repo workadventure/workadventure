@@ -2,12 +2,12 @@ import { expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 import Menu from "./utils/menu";
 
 test.describe("action bar @nomobile", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
 
     test("Buttons in action bar and sub-menus", async ({ browser }) => {

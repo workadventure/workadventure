@@ -3,12 +3,13 @@ import { evaluateScript } from "./utils/scripting";
 import { expectInViewport } from "./utils/viewport";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.describe("Modal @nomobile", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
+
     test("Modal script test", async ({ browser }) => {
         // Go to
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "modal_script"));

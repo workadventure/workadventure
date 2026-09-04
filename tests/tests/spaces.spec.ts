@@ -1,15 +1,18 @@
 import { expect, test } from "@playwright/test";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 import { getBackDump, getPusherDump } from "./utils/debug";
 import { rebootBack } from "./utils/containers";
 
 test.setTimeout(180_000);
 
 test.describe("Spaces @nomobile @nowebkit", () => {
-    test.beforeEach(async ({ page, browserName }) => {
-        test.skip(isMobile(page) || browserName === "webkit", "Skip on mobile and WebKit, this is a mostly back test");
+    test.beforeEach(async ({ viewport, browserName }) => {
+        test.skip(
+            isMobileViewport(viewport) || browserName === "webkit",
+            "Skip on mobile and WebKit, this is a mostly back test",
+        );
     });
 
     test("purges spaces if back restarts @docker @slow", async ({ browser, request }) => {

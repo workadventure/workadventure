@@ -2,12 +2,12 @@ import { expect, test } from "@playwright/test";
 import { evaluateScript } from "../utils/scripting";
 import { publicTestMapUrl } from "../utils/urls";
 import { getPage } from "../utils/auth";
-import { isMobile } from "../utils/isMobile";
+import { isMobileViewport } from "../utils/isMobile";
 import Menu from "../utils/menu";
 
 test.describe("Iframe API @nodesktop", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(!isMobile(page), "Run only on mobile");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(!isMobileViewport(viewport), "Run only on mobile");
     });
 
     test("disable invite user button", async ({ browser }) => {

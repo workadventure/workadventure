@@ -3,12 +3,13 @@ import { oidcLogin, oidcLogout } from "./utils/oidc";
 import { evaluateScript } from "./utils/scripting";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.describe("OpenID connect @oidc @nomobile", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
+
     // https://github.com/element-hq/synapse/issues/19303 - skip webkit due to synapse v1.144.0 OIDC issues
     test("can login and logout @nomobile @nowebkit", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "oidc"));

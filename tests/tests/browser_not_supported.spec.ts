@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { RENDERER_MODE } from "./utils/environment";
 import { publicTestMapUrl } from "./utils/urls";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.describe("Browser Not Supported Page", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
 
     test("should display browser not supported page when structuredClone is not available", async ({
