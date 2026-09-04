@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SpaceUser } from "@workadventure/messages";
+import { FilterType, SpaceUser } from "@workadventure/messages";
 import { RecordingManager } from "../src/Model/RecordingManager";
 import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
 import type { IRecordableState } from "../src/Model/Interfaces/ICommunicationState";
@@ -50,6 +50,7 @@ function createRecordableState() {
 function createDependencies(state: IRecordableState<IRecordableStrategy>) {
     const publishMetadata = vi.fn();
     const space: ICommunicationSpace = {
+        filterType: FilterType.ALL_USERS,
         getAllUsers: () => [],
         getUsersInFilter: () => [],
         getUsersToNotify: () => [],
