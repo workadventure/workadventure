@@ -5,6 +5,7 @@
     import Input from "../../Input/Input.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import { IconFileMusic } from "../../Icons";
+    import { audioOutput } from "../../../WebRtc/AudioOutputManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     interface Props {
@@ -103,7 +104,7 @@
                         <button onclick={stopAudio} class="mt-7 ps-1 pe-0 text-xl"> ⏹️ </button>
                     {/if}
                 </div>
-                <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer}></audio>
+                <audio use:audioOutput class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer}></audio>
             </div>
             <div class="value-input text-danger-800" class:invisible={!errorMessage}>
                 ⚠️ {errorMessage}

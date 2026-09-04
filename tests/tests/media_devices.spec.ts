@@ -120,12 +120,38 @@ test.describe("Media devices @nomobile @nowebkit", () => {
 
         await context.close();
     });
+
+    test("should offer audio outputs even when no microphone or camera stream is obtained", async ({
+        browser,
+        browserName,
+    }) => {
+        test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
+
+        // Audio output selection needs no permission, but the device list used to be enumerated
+        // only after a successful getUserMedia. A user joining with microphone and camera off — the
+        // default, and unavoidable in a silent zone — was left with an empty section and nothing to
+        // select.
+        const url = publicTestMapUrl("tests/E2E/empty.json", "speaker-without-media-access");
+        const context = await createContextWithMockedMediaDevices(browser, { denyMediaAccess: true });
+        const page = await context.newPage();
+
+        await loginWithMockedMediaDevices(page, url);
+        await openMediaSettings(page);
+
+        await expect(page.getByText("AirPods Speaker")).toBeVisible();
+        await expect(page.getByText("MacBook Speakers")).toBeVisible();
+        await expect(page.getByText("No speaker device found")).toBeHidden();
+
+        await context.close();
+    });
 });
 
 type MockedMediaDevicePreferences = {
     preferredAudioInputDevice?: string;
     preferredVideoInputDevice?: string;
     speakerDeviceId?: string;
+    /** Makes getUserMedia reject, as it does when the user never grants microphone or camera. */
+    denyMediaAccess?: boolean;
 };
 
 async function createContextWithMockedMediaDevices(
@@ -215,6 +241,9 @@ async function createContextWithMockedMediaDevices(
             configurable: true,
             writable: true,
             value: async (constraints: MediaStreamConstraints) => {
+                if (preferences.denyMediaAccess === true) {
+                    throw new DOMException("Permission denied", "NotAllowedError");
+                }
                 const stream = new MediaStream();
 
                 if (constraints.audio !== false && constraints.audio !== undefined) {
