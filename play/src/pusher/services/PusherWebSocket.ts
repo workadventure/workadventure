@@ -231,6 +231,14 @@ export class PusherWebSocket {
             return false;
         }
 
+        if (previousSocketData.connectionId !== newSocketData.connectionId) {
+            console.warn(
+                `Cannot replace WebSocket transport for user ${socketData.userUuid} on tab ${socketData.tabId}: connection id mismatch (previous=${previousSocketData.connectionId}, new=${newSocketData.connectionId})`,
+            );
+            newSocket.end(1008, "Cannot replace socket: connection id mismatch");
+            return false;
+        }
+
         // Keep logical connection state (room/back stream/subscriptions) while swapping only the transport.
         Object.assign(newSocketData, previousSocketData);
 

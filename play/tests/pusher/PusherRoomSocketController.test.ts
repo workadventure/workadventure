@@ -263,6 +263,42 @@ describe("PusherRoomSocketController reconnect retention", () => {
     });
 });
 
+describe("PusherRoomSocketController transport resume identity", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    const canReplace = (controller: PusherRoomSocketController, query: object, socket: PusherWebSocket) =>
+        (
+            controller as unknown as {
+                canReplaceTransportWithoutUpgrade: (query: object, protocol: string, ctx: object) => boolean;
+            }
+        ).canReplaceTransportWithoutUpgrade(query, "token", { socket });
+
+    it("refuses to resume onto a logical connection opened by another WorkAdventureWebSocket", () => {
+        const controller = createController(() => {});
+        const retained = createPusherWebSocket(createSocket({ tabId: "tab-1", connectionId: "newer-page-socket" }));
+
+        expect(canReplace(controller, { tabId: "tab-1", connectionId: "stale-page-socket" }, retained)).toBe(false);
+        expect(canReplace(controller, { tabId: "tab-1", connectionId: "newer-page-socket" }, retained)).toBe(true);
+    });
+
+    it("still resumes fronts that do not send a connection id", () => {
+        const controller = createController(() => {});
+        const retained = createPusherWebSocket(createSocket({ tabId: "tab-1", connectionId: undefined }));
+
+        expect(canReplace(controller, { tabId: "tab-1" }, retained)).toBe(true);
+    });
+
+    it("rejects a replacement socket carrying a different connection id", () => {
+        const previous = createPusherWebSocket(createSocket({ connectionId: "a" }));
+        const replacement = createSocket({ connectionId: "b" });
+
+        expect(previous.replaceSocket(replacement, 0)).toBe(false);
+        expect(getEndMock(replacement)).toHaveBeenCalledWith(1008, "Cannot replace socket: connection id mismatch");
+    });
+});
+
 describe("PusherWebSocket backpressure", () => {
     afterEach(() => {
         vi.useRealTimers();
