@@ -81,7 +81,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         refresh: "Aktualisieren",
         continue: "Weiter",
         solutionVpnNotAskAgain: "Verstanden. Mich nicht erneut warnen 🫡",
-        newDeviceDetected: "Neues Gerät erkannt {device} 🎉 Wechseln? [LEERTASTE] Ignorieren [ESC]",
+        newDeviceDetected: "Neues Gerät erkannt {device} 🎉 Wechseln? [X] Ignorieren [ESC]",
     },
     my: {
         silentZone: "Stiller Bereich",

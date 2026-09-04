@@ -1,5 +1,13 @@
 ## Version develop
 
+### Breaking changes
+- The contextual "interact" key moved from **Space** to **X**. Space is now reserved for push-to-talk
+  (hold it to temporarily unmute in a meeting).
+  **Map creators must update their own texts**: the `triggerMessage` entity/area property and the
+  `message` passed to `WA.ui.displayActionMessage()` / `WA.ui.displayPlayerMessage()` are authored in
+  the map, so WorkAdventure cannot rewrite them. Any wording telling users to "press Space" is now
+  wrong. Use the `[X]` marker in a trigger message to render the key badge.
+
 ### Updates
 - Added multi Co-Website management
 

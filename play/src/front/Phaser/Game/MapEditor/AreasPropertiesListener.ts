@@ -712,11 +712,11 @@ export class AreasPropertiesListener {
                 // NEW CODE BEFORE REDESIGN. TODO: choose if we keep it
                 /*const callback = () => {
                     scriptUtils.openTab(property.link as string), this.scene.CurrentPlayer.destroyText(actionId);
-                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.scene.userInputManager.removeInteractEventListener(callback);
                     this.actionTriggerCallback.delete(actionId);
                 };
                 this.scene.CurrentPlayer.playText(actionId, `${message}`, -1, callback);
-                this.scene.userInputManager?.addSpaceEventListener(callback);
+                this.scene.userInputManager?.addInteractEventListener(callback);
                 this.actionTriggerCallback.set(actionId, callback);*/
 
                 /**
@@ -775,11 +775,11 @@ export class AreasPropertiesListener {
             /*const callback = () => {
                 this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
                 this.scene.CurrentPlayer.destroyText(actionId);
-                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.scene.userInputManager.removeInteractEventListener(callback);
                 this.actionTriggerCallback.delete(actionId);
             };
             this.scene.CurrentPlayer.playText(actionId, `${message}`, -1, callback);
-            this.scene.userInputManager?.addSpaceEventListener(callback);
+            this.scene.userInputManager?.addInteractEventListener(callback);
             this.actionTriggerCallback.set(actionId, callback);*/
 
             /**
@@ -982,7 +982,7 @@ export class AreasPropertiesListener {
             /*this.scene.CurrentPlayer.destroyText("jitsi");
             const callback = this.actionTriggerCallback.get("jitsi");
             if (callback) {
-                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.scene.userInputManager.removeInteractEventListener(callback);
                 this.actionTriggerCallback.delete("jitsi");
             }*/
             /**
@@ -1016,11 +1016,11 @@ export class AreasPropertiesListener {
             /*const callback = () => {
                 openJitsiRoomFunction().catch((e) => console.error(e));
                 this.scene.CurrentPlayer.destroyText("jitsi");
-                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.scene.userInputManager.removeInteractEventListener(callback);
                 this.actionTriggerCallback.delete("jitsi");
             };
             this.scene.CurrentPlayer.playText("jitsi", `${message}`, -1, callback);
-            this.scene.userInputManager?.addSpaceEventListener(callback);
+            this.scene.userInputManager?.addInteractEventListener(callback);
             this.actionTriggerCallback.set("jitsi", callback);*/
 
             /**
@@ -1251,7 +1251,7 @@ export class AreasPropertiesListener {
         this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
         const callback = this.actionTriggerCallback.get(actionTriggerUuid);
         if (callback) {
-            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.scene.userInputManager.removeInteractEventListener(callback);
             this.actionTriggerCallback.delete(actionTriggerUuid);
         }
 
@@ -1306,7 +1306,7 @@ export class AreasPropertiesListener {
         /*this.scene.CurrentPlayer.destroyText("jitsi");
         const callback = this.actionTriggerCallback.get("jitsi");
         if (callback) {
-            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.scene.userInputManager.removeInteractEventListener(callback);
             this.actionTriggerCallback.delete("jitsi");
         }*/
         /**
@@ -1470,7 +1470,7 @@ export class AreasPropertiesListener {
         this.scene.CurrentPlayer.destroyText(actionId);
         const callback = this.actionTriggerCallback.get(actionId);
         if (callback) {
-            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.scene.userInputManager.removeInteractEventListener(callback);
             this.actionTriggerCallback.delete(actionId);
         }*/
         /**
@@ -1985,7 +1985,7 @@ export class AreasPropertiesListener {
         this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
         const callback = this.actionTriggerCallback.get(actionTriggerUuid);
         if (callback) {
-            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.scene.userInputManager.removeInteractEventListener(callback);
             this.actionTriggerCallback.delete(actionTriggerUuid);
         }
 
@@ -2041,7 +2041,7 @@ export class AreasPropertiesListener {
 
         // Clean up action trigger callbacks
         for (const callback of this.actionTriggerCallback.values()) {
-            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.scene.userInputManager.removeInteractEventListener(callback);
         }
         this.actionTriggerCallback.clear();
 

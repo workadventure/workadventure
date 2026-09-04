@@ -78,7 +78,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         preparingYouNetworkGuide: "「準備您的網路」指南",
         refresh: "重新整理",
         continue: "繼續",
-        newDeviceDetected: "偵測到新裝置 {device} 🎉 切換？[空白鍵] 忽略 [Esc]",
+        newDeviceDetected: "偵測到新裝置 {device} 🎉 切換？[X] 忽略 [Esc]",
     },
     my: {
         silentZone: "安靜區",

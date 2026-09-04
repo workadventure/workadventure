@@ -794,7 +794,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         return this._lastDirection;
     }
 
-    public handlePressSpacePlayerTextCallback() {
+    public firePlayerTextCallbacks() {
         for (const [, text] of this.texts) {
             (text as SpeechDomElement).callback();
         }

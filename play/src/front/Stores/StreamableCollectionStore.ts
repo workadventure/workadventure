@@ -24,7 +24,6 @@ import {
     localVolumeStore,
     mediaStreamConstraintsStore,
     requestedCameraState,
-    requestedMicrophoneState,
     silentStore,
 } from "./MediaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
@@ -70,7 +69,9 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
                 stream.getVideoTracks().length > 0
             );
         }),
-        hasAudio: requestedMicrophoneState,
+        // hasAudio mirrors hasVideo: it follows the real audio transport (mic on or push-to-talk), so the
+        // local tile shows the sound meter while audio is live and the muted-mic icon when muted.
+        hasAudio: derived(mediaStreamConstraintsStore, (constraints) => constraints.audio !== false),
         statusStore: writable("connected" as const),
         name: writable($LL.camera.my.nameTag()),
         showVoiceIndicator: localVoiceIndicatorStore,

@@ -3,21 +3,25 @@ import { get } from "svelte/store";
 import { marked } from "marked";
 import LL from "../../../i18n/i18n-svelte";
 import { sanitizeHtml } from "../../Utils/HtmlSanitizer";
+import { INTERACT_KEY } from "../UserInput/UserInputManager";
 
 import DOMElement = Phaser.GameObjects.DOMElement;
 
 let speechKeyShadowFilterUid = 0;
 
 /** Primary action key — light “keycap”, same height as escape for alignment. */
-function buildSpaceKeyboardBadgeHtml(): string {
+function buildInteractKeyboardBadgeHtml(): string {
+    // The cap is sized from the key so a one-letter key does not float in a cap cut for "SPACE".
+    const capWidth = INTERACT_KEY.length * 6 + 20;
+
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", "48");
+    svg.setAttribute("width", String(capWidth));
     svg.setAttribute("height", "18");
-    svg.setAttribute("viewBox", "0 0 48 18");
+    svg.setAttribute("viewBox", `0 0 ${capWidth} 18`);
     svg.setAttribute("class", "speech-key__svg");
     svg.style.verticalAlign = "middle";
 
-    const shadowId = `speech-key-space-shadow-${++speechKeyShadowFilterUid}`;
+    const shadowId = `speech-key-interact-shadow-${++speechKeyShadowFilterUid}`;
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     const filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
     filter.setAttribute("id", shadowId);
@@ -37,7 +41,7 @@ function buildSpaceKeyboardBadgeHtml(): string {
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     rect.setAttribute("x", "0.5");
     rect.setAttribute("y", "0.5");
-    rect.setAttribute("width", "47");
+    rect.setAttribute("width", String(capWidth - 1));
     rect.setAttribute("height", "17");
     rect.setAttribute("rx", "4");
     rect.setAttribute("fill", "#f8fafc");
@@ -47,7 +51,7 @@ function buildSpaceKeyboardBadgeHtml(): string {
     svg.appendChild(rect);
 
     const textElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    textElement.setAttribute("x", "24");
+    textElement.setAttribute("x", String(capWidth / 2));
     textElement.setAttribute("y", "12");
     textElement.setAttribute("text-anchor", "middle");
     textElement.setAttribute("font-family", "system-ui, -apple-system, Segoe UI, sans-serif");
@@ -55,11 +59,11 @@ function buildSpaceKeyboardBadgeHtml(): string {
     textElement.setAttribute("font-weight", "700");
     textElement.setAttribute("letter-spacing", "0.04em");
     textElement.setAttribute("fill", "#0f172a");
-    textElement.textContent = "SPACE";
+    textElement.textContent = INTERACT_KEY;
     svg.appendChild(textElement);
 
     const wrap = document.createElement("span");
-    wrap.className = "speech-key speech-key--space";
+    wrap.className = "speech-key speech-key--interact";
     wrap.setAttribute("aria-hidden", "true");
     wrap.appendChild(svg);
     return wrap.outerHTML;
@@ -150,10 +154,10 @@ export class SpeechDomElement extends DOMElement {
         type: "warning" | "message" = "message",
         private readonly escapeCallback?: () => void,
     ) {
-        const spaceMarker = get(LL).trigger.spaceKeyboard();
+        const interactMarker = get(LL).trigger.interactKeyboard();
         const escapeMarker = get(LL).trigger.escapeKeyboard();
 
-        let textTransformed = text.replace(spaceMarker, buildSpaceKeyboardBadgeHtml());
+        let textTransformed = text.replace(interactMarker, buildInteractKeyboardBadgeHtml());
         if (text.includes(escapeMarker)) {
             textTransformed = textTransformed.replace(escapeMarker, buildEscapeKeyboardBadgeHtml(!!escapeCallback));
         }

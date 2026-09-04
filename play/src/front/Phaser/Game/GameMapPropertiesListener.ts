@@ -71,7 +71,7 @@ export class GameMapPropertiesListener {
                 /*this.scene.CurrentPlayer.destroyText("openTab");
                 const callback = this.actionTriggerCallback.get("openTab");
                 if (callback) {
-                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.scene.userInputManager.removeInteractEventListener(callback);
                     this.actionTriggerCallback.delete("openTab");
                 }*/
                 /**
@@ -107,11 +107,11 @@ export class GameMapPropertiesListener {
                     /*const callback = () => {
                         scriptUtils.openTab(newValue);
                         this.scene.CurrentPlayer.destroyText("openTab");
-                        this.scene.userInputManager.removeSpaceEventListener(callback);
+                        this.scene.userInputManager.removeInteractEventListener(callback);
                         this.actionTriggerCallback.delete("openTab");
                     };
                     this.scene.CurrentPlayer.playText("openTab", `${message}`, -1, callback);
-                    this.scene.userInputManager?.addSpaceEventListener(callback);
+                    this.scene.userInputManager?.addInteractEventListener(callback);
                     this.actionTriggerCallback.set("openTab", callback);*/
 
                     /**
@@ -143,7 +143,7 @@ export class GameMapPropertiesListener {
                 /*this.scene.CurrentPlayer.destroyText("jitsi");
                 const callback = this.actionTriggerCallback.get("jitsi");
                 if (callback) {
-                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.scene.userInputManager.removeInteractEventListener(callback);
                     this.actionTriggerCallback.delete("jitsi");
                 }*/
                 /**
@@ -248,7 +248,7 @@ export class GameMapPropertiesListener {
                 /*this.scene.CurrentPlayer.destroyText("jitsi");
                 const callback = this.actionTriggerCallback.get("jitsi");
                 if (callback) {
-                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.scene.userInputManager.removeInteractEventListener(callback);
                     this.actionTriggerCallback.delete("jitsi");
                 }*/
                 /**
@@ -283,11 +283,11 @@ export class GameMapPropertiesListener {
                 /*const callback = () => {
                     openJitsiRoomFunction().catch((e) => console.error(e));
                     this.scene.CurrentPlayer.destroyText("jitsi");
-                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.scene.userInputManager.removeInteractEventListener(callback);
                     this.actionTriggerCallback.delete("jitsi");
                 };
                 this.scene.CurrentPlayer.playText("jitsi", `${message}`, -1, callback);
-                this.scene.userInputManager?.addSpaceEventListener(callback);
+                this.scene.userInputManager?.addInteractEventListener(callback);
                 this.actionTriggerCallback.set("jitsi", callback);*/
 
                 /**
@@ -316,7 +316,7 @@ export class GameMapPropertiesListener {
                 this.scene.CurrentPlayer.destroyText("bbbMeeting");
                 const callback = this.actionTriggerCallback.get("bbbMeeting");
                 if (callback) {
-                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.scene.userInputManager.removeInteractEventListener(callback);
                     this.actionTriggerCallback.delete("bbbMeeting");
                 }
                 /**
@@ -615,7 +615,7 @@ export class GameMapPropertiesListener {
             this.scene.CurrentPlayer.destroyText(actionId);
             const callback = this.actionTriggerCallback.get(actionId);
             if (callback) {
-                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.scene.userInputManager.removeInteractEventListener(callback);
                 this.actionTriggerCallback.delete(actionId);
             }*/
             /**
@@ -680,11 +680,11 @@ export class GameMapPropertiesListener {
             /*const callback = () => {
                 openCoWebsiteFunction();
                 this.scene.CurrentPlayer.destroyText(actionId);
-                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.scene.userInputManager.removeInteractEventListener(callback);
                 this.actionTriggerCallback.delete(actionId);
             };
             this.scene.CurrentPlayer.playText(actionId, `${websiteTriggerMessageProperty}`, -1, callback);
-            this.scene.userInputManager?.addSpaceEventListener(callback);
+            this.scene.userInputManager?.addInteractEventListener(callback);
             this.actionTriggerCallback.set(actionId, callback);*/
             /**
              * @DEPRECATED - This is the old way to show trigger message
@@ -886,7 +886,7 @@ export class GameMapPropertiesListener {
         this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
         const callback = this.actionTriggerCallback.get(actionTriggerUuid);
         if (callback) {
-            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.scene.userInputManager.removeInteractEventListener(callback);
             this.actionTriggerCallback.delete(actionTriggerUuid);
         }
 
@@ -906,7 +906,7 @@ export class GameMapPropertiesListener {
         /*this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
         const callback = this.actionTriggerCallback.get(actionTriggerUuid);
         if (callback) {
-            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.scene.userInputManager.removeInteractEventListener(callback);
             this.actionTriggerCallback.delete(actionTriggerUuid);
         }*/
 
@@ -960,7 +960,7 @@ export class GameMapPropertiesListener {
 
         // Clean up action trigger callbacks
         for (const callback of this.actionTriggerCallback.values()) {
-            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.scene.userInputManager.removeInteractEventListener(callback);
         }
         this.actionTriggerCallback.clear();
 
