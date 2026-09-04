@@ -557,50 +557,6 @@
     <div class="w-full bg-contrast/50 rounded-t-2xl">
         <div class="flex flex-wrap w-full justify-between items-center p-2 gap-2">
             <button
-                data-testid="fileAttachmentButton"
-                class={applicationButtonClass}
-                onclick={() => openFileAttachmentComponent()}
-                class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={!fileAttachementEnabled || isProximityChatRoom || !$canSendMessages}
-            >
-                <IconPaperclip font-size={32} />
-                <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
-                <p class={applicationDescriptionClass}>
-                    {fileAttachementEnabled && !isProximityChatRoom
-                        ? $LL.chat.fileAttachment.description()
-                        : $LL.chat.fileAttachment.featureComingSoon()}
-                </p>
-            </button>
-
-            <button
-                data-testid="createPollButton"
-                class={applicationButtonClass}
-                onclick={openPollCreationModal}
-                disabled={!pollCreation || !$canCreatePoll}
-            >
-                <IconList font-size={32} />
-                <h2 class={applicationTitleClass}>{$LL.chat.poll.title()}</h2>
-                <p class={applicationDescriptionClass}>
-                    {pollCreation && $canCreatePoll ? $LL.chat.poll.create.description() : $LL.chat.disabled()}
-                </p>
-            </button>
-
-            <button
-                data-testid="openQuestionsPanelButton"
-                class={applicationButtonClass}
-                onclick={openQuestionsPanel}
-                disabled={!canOpenQuestions}
-            >
-                <IconHelpCircle font-size={32} />
-                <h2 class={applicationTitleClass}>{$LL.chat.question.title()}</h2>
-                <p class={applicationDescriptionClass}>
-                    {canOpenQuestions ? $LL.chat.question.description() : $LL.chat.disabled()}
-                </p>
-            </button>
-        </div>
-
-        <div class="flex flex-wrap w-full justify-between items-center p-2 gap-2">
-            <button
                 data-testid="youtubeApplicationButton"
                 class={applicationButtonClass}
                 onclick={() => openLinkForm("youtube")}
@@ -775,6 +731,50 @@
                 </button>
             {/each}
         </div>
+
+        <div class="flex flex-wrap w-full justify-between items-center p-2 gap-2">
+            <button
+                data-testid="fileAttachmentButton"
+                class={applicationButtonClass}
+                onclick={() => openFileAttachmentComponent()}
+                class:bg-secondary-800={fileAttachmentComponentOpened}
+                disabled={!fileAttachementEnabled || isProximityChatRoom || !$canSendMessages}
+            >
+                <IconPaperclip font-size={32} />
+                <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
+                <p class={applicationDescriptionClass}>
+                    {fileAttachementEnabled && !isProximityChatRoom
+                        ? $LL.chat.fileAttachment.description()
+                        : $LL.chat.fileAttachment.featureComingSoon()}
+                </p>
+            </button>
+
+            <button
+                data-testid="createPollButton"
+                class={applicationButtonClass}
+                onclick={openPollCreationModal}
+                disabled={!pollCreation || !$canCreatePoll}
+            >
+                <IconList font-size={32} />
+                <h2 class={applicationTitleClass}>{$LL.chat.poll.title()}</h2>
+                <p class={applicationDescriptionClass}>
+                    {pollCreation && $canCreatePoll ? $LL.chat.poll.create.description() : $LL.chat.disabled()}
+                </p>
+            </button>
+
+            <button
+                data-testid="openQuestionsPanelButton"
+                class={applicationButtonClass}
+                onclick={openQuestionsPanel}
+                disabled={!canOpenQuestions}
+            >
+                <IconHelpCircle font-size={32} />
+                <h2 class={applicationTitleClass}>{$LL.chat.question.title()}</h2>
+                <p class={applicationDescriptionClass}>
+                    {canOpenQuestions ? $LL.chat.question.description() : $LL.chat.disabled()}
+                </p>
+            </button>
+        </div>
     </div>
 {/if}
 {#if applicationProperty}
@@ -783,7 +783,6 @@
     >
         <ApplicationFormWrapper
             property={applicationProperty}
-            close={() => (applicationProperty = undefined)}
             update={onUpdatApplicationProperty}
             processing={onProcessingApplicationProperty}
             processed={onProcessedApplicationProperty}

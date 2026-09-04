@@ -9,7 +9,6 @@
         KlaxoonService,
         validateLinkForApplication,
     } from "@workadventure/shared-utils";
-    import CloseButton from "../../../../Components/MapEditor/PropertyEditor/CloseButton.svelte";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../../Enum/EnvironmentVariable";
     import LL from "../../../../../i18n/i18n-svelte";
     import type { ApplicationProperty } from "../MessageInputBar.svelte";
@@ -19,7 +18,6 @@
 
     interface Props {
         property: ApplicationProperty;
-        close?: () => void;
         update?: (property: ApplicationProperty) => void;
         processing?: () => void;
         processed?: () => void;
@@ -28,7 +26,6 @@
 
     let {
         property,
-        close = () => {},
         update = () => {},
         processing = () => {},
         processed = () => {},
@@ -188,11 +185,6 @@
         <h2 class="min-w-0 flex-1 text-center text-sm p-0 m-0 leading-tight whitespace-normal break-words">
             {property.title}
         </h2>
-        <CloseButton
-            onclick={() => {
-                close();
-            }}
-        />
     </div>
     <p class="text-xs text-center p-0 m-0 min-h-8 w-full leading-tight whitespace-normal break-words text-gray-400">
         {property.description}
