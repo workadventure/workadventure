@@ -275,6 +275,7 @@ export class IoSocketController {
                 cameraState: z.string().transform((val) => val === "true"),
                 microphoneState: z.string().transform((val) => val === "true"),
                 tabId: z.string(),
+                connectionId: z.string().optional(),
             }),
             upgrade: async ({ query, request, isAborted, upgrade, reject }) => {
                 debug(
@@ -466,6 +467,7 @@ export class IoSocketController {
                         microphoneState,
                         cameraState,
                         tabId: query.tabId,
+                        connectionId: query.connectionId,
                         attendeesState: false,
                         queryAbortControllers: new Map<number, AbortController>(),
                         canRecord: userData.canRecord ?? false,

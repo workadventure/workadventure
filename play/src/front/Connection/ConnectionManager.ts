@@ -422,6 +422,7 @@ class ConnectionManager {
         retryAttempt = 0,
     ): Promise<OnConnectInterface> {
         Sentry.setTag("roomId", roomUrl);
+        let pendingConnection: RoomConnection | undefined;
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
                 this.authToken,
@@ -430,6 +431,8 @@ class ConnectionManager {
                 companionTextureId,
                 lastCommandId,
             );
+
+            pendingConnection = connection;
 
             // The websocketErrorStream stream is completed in the RoomConnection. No need to unsubscribe.
             //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
@@ -500,6 +503,10 @@ class ConnectionManager {
                 });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
+
+            // The failed connection must not outlive this attempt: its WorkAdventureWebSocket would otherwise keep
+            // trying to resume its transport (with the same tab id) next to the fresh connection created by the retry.
+            pendingConnection?.closeConnection();
 
             errorScreenStore.setError(
                 ErrorScreenMessage.fromPartial({
