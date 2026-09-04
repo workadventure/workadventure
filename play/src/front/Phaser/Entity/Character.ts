@@ -7,6 +7,7 @@ import type { WokaEmoteId } from "@workadventure/shared-utils";
 import { SayMessageType, AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { defaultWoka, Deferred, type Movable, type PositionInterface } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
+import { MathUtils } from "@workadventure/math-utils";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { createColorStore } from "../../Stores/OutlineColorStore";
@@ -17,9 +18,11 @@ import { Companion } from "../Companion/Companion";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { WokaEmoteAnimator } from "../Game/Emote/WokaEmoteAnimator";
-import { getWokaEmote } from "../Game/Emote/WokaEmoteCatalog";
+import { getWokaEmote, wokaEmoteSoundKey, wokaEmoteSoundVolume } from "../Game/Emote/WokaEmoteCatalog";
+import type { WokaEmoteSoundSpec } from "../Game/Emote/WokaEmoteCatalog";
+import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
+import { MINIMUM_DISTANCE, WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 
 import { UsernameDisplay } from "../Components/UsernameDisplay";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
@@ -73,6 +76,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     private emote: DOMElement | null = null;
     private emoteTween: Tween | null = null;
     private wokaEmote: WokaEmoteAnimator | null = null;
+    private wokaEmoteSound: Phaser.Sound.BaseSound | null = null;
     private texts: Map<string, DOMElement> = new Map();
     private textsToBuild = new Map();
     scene: GameScene;
@@ -594,6 +598,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     destroy(): void {
+        this.wokaEmoteSound?.destroy();
+        this.wokaEmoteSound = null;
         this.wokaEmote?.destroy();
         this.wokaEmote = null;
         this.usernameDisplay?.destroy();
@@ -636,9 +642,32 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
         this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, this, definition, () => this.stopWokaEmote());
         this.wokaEmote.start();
+        if (definition.sound) {
+            this.playWokaEmoteSound(definition.sound);
+        }
+    }
+
+    /**
+     * The sound is heard from where this Woka stands: full volume within a conversation-bubble
+     * radius of the current player, fading to nothing further away. The local player is at
+     * distance zero of itself, so it always hears its own emote.
+     */
+    private playWokaEmoteSound(sound: WokaEmoteSoundSpec): void {
+        if (!statusChanger.allowNotificationSound()) return;
+        const distance = MathUtils.distanceBetween(this, this.scene.CurrentPlayer);
+        const volume = wokaEmoteSoundVolume(distance, MINIMUM_DISTANCE);
+        if (volume <= 0) return;
+        this.wokaEmoteSound = this.scene.sound.add(wokaEmoteSoundKey(sound), {
+            volume,
+            delay: (sound.at ?? 0) / 1000,
+        });
+        this.wokaEmoteSound.play();
     }
 
     stopWokaEmote(): void {
+        // An interrupted emote takes its sound with it, the same way it takes its glyphs.
+        this.wokaEmoteSound?.destroy();
+        this.wokaEmoteSound = null;
         if (!this.wokaEmote) return;
         this.wokaEmote.destroy();
         this.wokaEmote = null;

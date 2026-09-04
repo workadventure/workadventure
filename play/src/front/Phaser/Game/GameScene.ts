@@ -203,7 +203,7 @@ import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
 import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
-import { getWokaEmote } from "./Emote/WokaEmoteCatalog";
+import { getWokaEmote, WOKA_EMOTES, WOKA_EMOTE_SOUND_PATH, wokaEmoteSoundKey } from "./Emote/WokaEmoteCatalog";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -498,6 +498,11 @@ export class GameScene extends DirtyScene {
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
         this.load.audio("meeting-in", "/resources/objects/meeting-in.wav");
         this.load.audio("meeting-out", "/resources/objects/meeting-out.wav");
+        for (const emote of WOKA_EMOTES) {
+            if (emote.sound) {
+                this.load.audio(wokaEmoteSoundKey(emote.sound), WOKA_EMOTE_SOUND_PATH + emote.sound.file);
+            }
+        }
 
         this.sound.pauseOnBlur = false;
 
