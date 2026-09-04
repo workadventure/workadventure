@@ -4,7 +4,7 @@ import type { Subscription } from "rxjs";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { Queue } from "queue-typescript";
 import type { Readable, Unsubscriber } from "svelte/store";
-import { get } from "svelte/store";
+import { derived, get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
@@ -88,6 +88,11 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore } from "../../Stores/EmoteStore";
 import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
+import {
+    inMegaphoneZoneStore,
+    meetingRaiseHandStore,
+    megaphoneRaiseHandStore,
+} from "../../Stores/RaiseHandZoneSettingsStore";
 import { raisedHandPlayerIdsStore } from "../../Stores/RaisedHandsStore";
 import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
 import {
@@ -111,6 +116,7 @@ import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import {
     availabilityStatusStore,
     batchGetUserMediaStore,
+    inLivekitStore,
     lastNewMediaDeviceDetectedStore,
     localVoiceIndicatorStore,
     requestedCameraDeviceIdStore,
@@ -2647,6 +2653,21 @@ export class GameScene extends DirtyScene {
         this.unsubscribers.push(
             isInRemoteConversation.subscribe((inConversation) => {
                 if (!inConversation && get(requestedHandRaiseState).raised) {
+                    requestedHandRaiseState.lowerHand();
+                }
+            }),
+        );
+
+        // Same safety net for a zone whose option says no (the map builder turned it off, or the user walked
+        // into such a zone): it takes the button away, so a hand still up must not stay up. Outside any zone
+        // the button follows the conversation itself (bubble, global megaphone), handled just above.
+        this.unsubscribers.push(
+            derived(
+                [meetingRaiseHandStore, megaphoneRaiseHandStore, inLivekitStore, inMegaphoneZoneStore],
+                ([$meeting, $megaphone, $inLivekit, $inMegaphoneZone]) =>
+                    ($inLivekit || $inMegaphoneZone) && !$meeting && !$megaphone,
+            ).subscribe((zoneForbidsRaiseHand) => {
+                if (zoneForbidsRaiseHand && get(requestedHandRaiseState).raised) {
                     requestedHandRaiseState.lowerHand();
                 }
             }),

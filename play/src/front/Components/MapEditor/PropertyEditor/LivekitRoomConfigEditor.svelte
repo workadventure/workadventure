@@ -13,9 +13,10 @@
         startWithAudioMuted: false,
         startWithVideoMuted: false,
         disableChat: false,
+        raiseHandEnabled: true,
     };
 
-    type LivekitRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted" | "disableChat";
+    type LivekitRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted" | "disableChat" | "raiseHandEnabled";
 
     const defaultConfigKeys: LivekitRoomConfigDataKeys[] = Object.keys(defaultConfig).map(
         (key) => key as LivekitRoomConfigDataKeys,
@@ -49,6 +50,7 @@
         startWithAudioMuted: false,
         startWithVideoMuted: false,
         disableChat: false,
+        raiseHandEnabled: true,
     });
 
     onMount(() => {
@@ -56,9 +58,12 @@
             startWithAudioMuted: false,
             startWithVideoMuted: false,
             disableChat: false,
+            raiseHandEnabled: true,
         };
         if (config !== undefined) {
-            currentConfig = $state.snapshot(config);
+            // Maps built before the raise-hand option have no such key: keep the feature on for them
+            // rather than letting the switch read as "off".
+            currentConfig = { ...$state.snapshot(config), raiseHandEnabled: config.raiseHandEnabled ?? true };
         }
     });
 
