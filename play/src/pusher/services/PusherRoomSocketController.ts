@@ -59,7 +59,6 @@ type RoomWsConfig<TQuery extends RoomWsQuery> = {
 
 type WebSocketContext = {
     socket?: PusherWebSocket;
-    clientLastReceivedNonce?: number;
 };
 
 export class PusherRoomSocketController {
@@ -213,11 +212,10 @@ export class PusherRoomSocketController {
                         clientLastReceivedNonce !== undefined &&
                         this.canReplaceTransportWithoutUpgrade(query, websocketProtocol, tabContext)
                     ) {
-                        tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
                         this.upgradeSocket(
                             upgradeAborted.aborted,
                             res,
-                            { ...tabContext.socket.getUserData() },
+                            { ...tabContext.socket.getUserData(), clientLastReceivedNonce },
                             websocketKey,
                             websocketProtocol,
                             websocketExtensions,
@@ -237,14 +235,12 @@ export class PusherRoomSocketController {
                         },
                         isAborted: () => upgradeAborted.aborted,
                         upgrade: (data) => {
-                            const tabContext = this.contextByTabKey.get(query.tabId) ?? {};
-                            tabContext.clientLastReceivedNonce = clientLastReceivedNonce;
-                            this.contextByTabKey.set(query.tabId, tabContext);
-
+                            // The nonce travels with this transport only: a resume that turns out to be illegitimate
+                            // must not disturb another connection of the same tab that is resuming concurrently.
                             this.upgradeSocket(
                                 upgradeAborted.aborted,
                                 res,
-                                data,
+                                { ...data, clientLastReceivedNonce },
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -290,7 +286,8 @@ export class PusherRoomSocketController {
 
                     const tabId = socketData.tabId;
                     const context = this.contextByTabKey.get(tabId);
-                    const clientLastReceivedNonce = context?.clientLastReceivedNonce;
+                    const clientLastReceivedNonce = socketData.clientLastReceivedNonce;
+                    socketData.clientLastReceivedNonce = undefined;
 
                     if (context?.socket && clientLastReceivedNonce !== undefined && !context.socket.isDisconnecting()) {
                         console.info("[PusherRoomSocketController] attempting transport replacement", {
@@ -298,17 +295,13 @@ export class PusherRoomSocketController {
                             userUuid: socketData.userUuid,
                             clientLastReceivedNonce,
                         });
-                        try {
-                            const replaced = context.socket.replaceSocket(rawSocket, clientLastReceivedNonce);
+                        const replaced = context.socket.replaceSocket(rawSocket, clientLastReceivedNonce);
 
-                            if (replaced) {
-                                this.clearContextCleanup(tabId);
-                                this.wrappersBySocket.set(rawSocket, context.socket);
+                        if (replaced) {
+                            this.clearContextCleanup(tabId);
+                            this.wrappersBySocket.set(rawSocket, context.socket);
 
-                                await config.reconnect(context.socket);
-                            }
-                        } finally {
-                            context.clientLastReceivedNonce = undefined;
+                            await config.reconnect(context.socket);
                         }
 
                         return;

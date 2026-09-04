@@ -76,14 +76,13 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
         const initialContext = getContextMap(controller).get("tab-1");
         expect(initialContext).toBeDefined();
-        initialContext!.clientLastReceivedNonce = 0;
 
         await registeredHandlers?.close(initialSocket);
         await flushMicrotasks();
 
         expect(close).not.toHaveBeenCalled();
 
-        const reconnectSocket = createSocket({ tabId: "tab-1" });
+        const reconnectSocket = createSocket({ tabId: "tab-1", clientLastReceivedNonce: 0 });
         await registeredHandlers?.open(reconnectSocket);
 
         vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
@@ -105,12 +104,11 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
         const initialContext = getContextMap(controller).get("tab-1");
         expect(initialContext).toBeDefined();
-        initialContext!.clientLastReceivedNonce = 0;
 
         await registeredHandlers?.close(initialSocket);
         await flushMicrotasks();
 
-        const reconnectSocket = createSocket({ tabId: "tab-1" });
+        const reconnectSocket = createSocket({ tabId: "tab-1", clientLastReceivedNonce: 0 });
         await registeredHandlers?.open(reconnectSocket);
 
         vi.advanceTimersByTime(CLIENT_DISCONNECTION_RETENTION_MS);
@@ -207,7 +205,6 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
         const initialContext = getContextMap(controller).get("tab-1");
         expect(initialContext).toBeDefined();
-        initialContext!.clientLastReceivedNonce = 1;
 
         await registeredHandlers?.close(initialSocket);
         await flushMicrotasks();
@@ -215,7 +212,7 @@ describe("PusherRoomSocketController reconnect retention", () => {
         wrapper.send({ message: undefined });
         expect(getSendMock(initialSocket)).toHaveBeenCalledTimes(1);
 
-        const reconnectSocket = createSocket({ tabId: "tab-1" });
+        const reconnectSocket = createSocket({ tabId: "tab-1", clientLastReceivedNonce: 1 });
         await registeredHandlers?.open(reconnectSocket);
 
         expect(getSendMock(reconnectSocket)).toHaveBeenCalledTimes(1);
@@ -225,13 +222,11 @@ describe("PusherRoomSocketController reconnect retention", () => {
         vi.useFakeTimers();
 
         const open = vi.fn();
-        const controller = createController((handlers) => {
+        createController((handlers) => {
             registeredHandlers = handlers;
         }, open);
 
-        getContextMap(controller).set("tab-1", { clientLastReceivedNonce: 4 });
-
-        const reconnectSocket = createSocket({ tabId: "tab-1" });
+        const reconnectSocket = createSocket({ tabId: "tab-1", clientLastReceivedNonce: 4 });
         await registeredHandlers?.open(reconnectSocket);
 
         expect(open).not.toHaveBeenCalled();
@@ -288,6 +283,27 @@ describe("PusherRoomSocketController transport resume identity", () => {
         const retained = createPusherWebSocket(createSocket({ tabId: "tab-1", connectionId: undefined }));
 
         expect(canReplace(controller, { tabId: "tab-1" }, retained)).toBe(true);
+    });
+
+    it("lets the legitimate connection resume after a mismatched resume was refused", async () => {
+        let handlers: RegisteredHandlers | undefined;
+        const controller = createController((h) => {
+            handlers = h;
+        });
+
+        const initialSocket = createSocket({ tabId: "tab-1", connectionId: "current" });
+        await handlers?.open(initialSocket);
+        const retained = getContextMap(controller).get("tab-1")?.socket;
+
+        const stale = createSocket({ tabId: "tab-1", connectionId: "stale", clientLastReceivedNonce: 7 });
+        await handlers?.open(stale);
+        expect(getEndMock(stale)).toHaveBeenCalledWith(1008, "Cannot replace socket: connection id mismatch");
+        expect(getContextMap(controller).get("tab-1")?.socket).toBe(retained);
+
+        const legitimate = createSocket({ tabId: "tab-1", connectionId: "current", clientLastReceivedNonce: 0 });
+        await handlers?.open(legitimate);
+        expect(getEndMock(legitimate)).not.toHaveBeenCalled();
+        expect(getEndMock(initialSocket)).toHaveBeenCalledWith(1008, "Replaced by a reconnected socket");
     });
 
     it("rejects a replacement socket carrying a different connection id", () => {
@@ -362,12 +378,10 @@ function createController(
     return controller;
 }
 
-function getContextMap(
-    controller: PusherRoomSocketController,
-): Map<string, { socket?: unknown; clientLastReceivedNonce?: number }> {
+function getContextMap(controller: PusherRoomSocketController): Map<string, { socket?: unknown }> {
     return (
         controller as unknown as {
-            contextByTabKey: Map<string, { socket?: unknown; clientLastReceivedNonce?: number }>;
+            contextByTabKey: Map<string, { socket?: unknown }>;
         }
     ).contextByTabKey;
 }
