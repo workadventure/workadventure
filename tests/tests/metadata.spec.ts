@@ -1,12 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { maps_domain } from "./utils/urls";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.describe("Meta tags @nomobile @nofirefox @nowebkit", () => {
-    test.beforeEach(async ({ page, browserName }) => {
+    test.beforeEach(async ({ viewport, browserName }) => {
         // Skip test for mobile device
-        test.skip(isMobile(page) || browserName !== "chromium", "Skip on mobile non-Chromium");
+        test.skip(isMobileViewport(viewport) || browserName !== "chromium", "Skip on mobile non-Chromium");
     });
+
     test("check they are populated when the user-agent is a bot. @selfsigned", async ({ request }) => {
         const result = await request.get(`/_/global/${maps_domain}/tests/Properties/mapProperties.json`, {
             headers: {

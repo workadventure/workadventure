@@ -6,11 +6,11 @@ import { evaluateScript } from "./utils/scripting";
 import { oidcLogin, oidcLogout } from "./utils/oidc";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.describe("API WA.players @nomobile @nowebkit", () => {
-    test.beforeEach(async ({ page, browserName }) => {
-        test.skip(isMobile(page) || browserName === "webkit", "Skip on mobile and WebKit");
+    test.beforeEach(async ({ viewport, browserName }) => {
+        test.skip(isMobileViewport(viewport) || browserName === "webkit", "Skip on mobile and WebKit");
     });
 
     test("enter leave events are received", async ({ browser }) => {

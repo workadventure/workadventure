@@ -5,15 +5,15 @@ import { createZipFromDirectory } from "./utils/zip";
 import { RENDERER_MODE } from "./utils/environment";
 import { map_storage_url, maps_domain } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.use({
     baseURL: map_storage_url,
 });
 
 test.describe("Map-storage Upload API @nomobile", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
 
     test("users are asked to reconnect when a map is updated", async ({ request, browser }) => {

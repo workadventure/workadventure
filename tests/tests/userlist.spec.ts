@@ -3,11 +3,11 @@ import Map from "./utils/map";
 import { publicTestMapUrl } from "./utils/urls";
 import chatUtils from "./utils/chat";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobile, isMobileViewport } from "./utils/isMobile";
 
 test.describe("Walk to @nomobile @nowebkit", () => {
-    test.beforeEach(async ({ page, browserName }) => {
-        test.skip(browserName === "webkit" || isMobile(page), "Skip on WebKit and mobile");
+    test.beforeEach(async ({ viewport, browserName }) => {
+        test.skip(browserName === "webkit" || isMobileViewport(viewport), "Skip on WebKit and mobile");
     });
 
     // FIXME: for some reason, this test fails in Helm. Find why

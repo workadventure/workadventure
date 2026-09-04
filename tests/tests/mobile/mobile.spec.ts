@@ -3,7 +3,7 @@ import Menu from "../utils/menu";
 import Map from "../utils/map";
 import { play_url, publicTestMapUrl } from "../utils/urls";
 import { getPage } from "../utils/auth";
-import { isMobile } from "../utils/isMobile";
+import { isMobileViewport } from "../utils/isMobile";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -11,8 +11,8 @@ test.use({
 });
 
 test.describe("Mobile @nowebkit @nodesktop", () => {
-    test.beforeEach(async ({ page, browserName }) => {
-        test.skip(!isMobile(page) || browserName === "webkit", "Run only on mobile Chromium");
+    test.beforeEach(async ({ viewport, browserName }) => {
+        test.skip(!isMobileViewport(viewport) || browserName === "webkit", "Run only on mobile Chromium");
     });
 
     test("Successfully bubble discussion with mobile device", async ({ browser }) => {

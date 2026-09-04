@@ -3,13 +3,16 @@ import { publicTestMapUrl } from "./utils/urls";
 import Map from "./utils/map";
 import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.setTimeout(180_000);
 
 test.describe("Connection @nomobile @nowebkit", () => {
-    test.beforeEach(async ({ page, browserName }) => {
-        test.skip(isMobile(page) || browserName === "webkit", "Skip on mobile and WebKit due to limitations");
+    test.beforeEach(async ({ viewport, browserName }) => {
+        test.skip(
+            isMobileViewport(viewport) || browserName === "webkit",
+            "Skip on mobile and WebKit due to limitations",
+        );
     });
 
     test("can succeed even if WorkAdventure starts while pusher is down @slow", async ({ browser }) => {
