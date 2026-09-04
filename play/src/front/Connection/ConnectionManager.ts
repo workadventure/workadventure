@@ -41,8 +41,6 @@ const connectionRetryJitterMs = 500;
 const websocketReconnectingToastId = "websocket-reconnecting-toast";
 
 class ConnectionManager {
-    private static readonly TAB_ID_STORAGE_KEY = "workadventure_tab_id";
-
     private localUser!: LocalUser;
 
     private connexionType?: GameConnexionTypes;
@@ -56,8 +54,11 @@ class ConnectionManager {
     private readonly _roomConnectionStream = new Subject<RoomConnection>();
     public readonly roomConnectionStream = this._roomConnectionStream.asObservable();
 
-    // Unique identifier for this browser tab, kept across reloads but remains scoped to the tab context.
-    private readonly _tabId: string = ConnectionManager.getOrCreateTabId();
+    // Unique identifier for this page load, used by the back to kill the stale connection of a previous
+    // RoomConnection from the same tab. Deliberately NOT persisted in sessionStorage: "Duplicate tab" and
+    // "Reopen closed tab" copy sessionStorage, which would give two live pages the same id and make them
+    // kill each other's connection in a loop.
+    private readonly _tabId: string = uuidv4();
 
     get unloading() {
         return this._unloading;
@@ -70,21 +71,6 @@ class ConnectionManager {
             this._unloading = true;
             if (this.reconnectingTimeout) clearTimeout(this.reconnectingTimeout);
         });
-    }
-
-    private static getOrCreateTabId(): string {
-        try {
-            const existingTabId = sessionStorage.getItem(ConnectionManager.TAB_ID_STORAGE_KEY);
-            if (existingTabId) {
-                return existingTabId;
-            }
-
-            const tabId = uuidv4();
-            sessionStorage.setItem(ConnectionManager.TAB_ID_STORAGE_KEY, tabId);
-            return tabId;
-        } catch {
-            return uuidv4();
-        }
     }
 
     /**
