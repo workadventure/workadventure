@@ -40,15 +40,17 @@ export const getYoutubeEmbedUrl = async (url: URL): Promise<string> => {
     });
 };
 
-// Create function to check if the link is a Youtube link
+const YOUTUBE_HOSTS = ["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtube-nocookie.com"];
+
+// Matching on the host: a substring test on the whole URL missed youtu.be short links and
+// let https://example.com/?q=youtube through to the oembed endpoint.
 export const isYoutubeLink = (url: URL): boolean => {
-    return url.toString().indexOf("youtube") > -1;
+    return YOUTUBE_HOSTS.includes(url.hostname);
 };
 
 // Create function to check if the Youtbe link in parameter is embedable or not
 export const isEmbeddableYoutubeLink = (url: URL): boolean => {
-    const link = url.toString();
-    return link.indexOf("embed") > -1;
+    return url.pathname.startsWith("/embed/");
 };
 
 // Get title from youtube link save in cache

@@ -80,7 +80,7 @@ export class MediaLinkManager {
                 break;
             case defaultNativeIntegrationAppName.YOUTUBE:
             case defaultNativeIntegrationAppId.YOUTUBE:
-                YoutubeService.isYoutubeLink(this.mediaUrlLink);
+                YoutubeService.validateYoutubeLink(this.mediaUrlLink);
                 break;
             case defaultNativeIntegrationAppName.GOOGLE_DRIVE:
             case defaultNativeIntegrationAppId.GOOGLE_DRIVE:
