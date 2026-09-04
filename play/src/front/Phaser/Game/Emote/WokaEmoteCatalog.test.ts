@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { WOKA_EMOTE_IDS } from "@workadventure/shared-utils";
-import { WOKA_EMOTES, getWokaEmote, sampleWokaEmote, swell, track } from "./WokaEmoteCatalog";
+import {
+    WOKA_EMOTES,
+    WOKA_EMOTE_SOUND_PATH,
+    WOKA_EMOTE_SOUND_RANGE,
+    WOKA_EMOTE_SOUND_VOLUME,
+    getWokaEmote,
+    sampleWokaEmote,
+    swell,
+    track,
+    wokaEmoteSoundVolume,
+} from "./WokaEmoteCatalog";
 import { buildGlyphSvg, isWokaEmoteGlyphName } from "./WokaEmoteGlyphs";
 
 /** The spritesheet holds exactly 12 frames; asking Phaser for anything else renders nothing. */
@@ -192,5 +202,37 @@ describe("the pixel glyphs", () => {
 
     it("rejects a name that is not in the table", () => {
         expect(isWokaEmoteGlyphName("sparkles")).toBe(false);
+    });
+});
+
+describe("the sounds", () => {
+    const NEAR = 64; // MINIMUM_DISTANCE in the default configuration
+
+    it("is heard in full within a conversation-bubble radius", () => {
+        expect(wokaEmoteSoundVolume(0, NEAR)).toBe(WOKA_EMOTE_SOUND_VOLUME);
+        expect(wokaEmoteSoundVolume(NEAR, NEAR)).toBe(WOKA_EMOTE_SOUND_VOLUME);
+    });
+
+    it("fades linearly to silence at the edge of its range", () => {
+        const halfway = (NEAR + WOKA_EMOTE_SOUND_RANGE) / 2;
+        expect(wokaEmoteSoundVolume(halfway, NEAR)).toBeCloseTo(WOKA_EMOTE_SOUND_VOLUME / 2);
+        expect(wokaEmoteSoundVolume(WOKA_EMOTE_SOUND_RANGE, NEAR)).toBe(0);
+        expect(wokaEmoteSoundVolume(WOKA_EMOTE_SOUND_RANGE * 10, NEAR)).toBe(0);
+    });
+
+    it("plays a file that is actually shipped", () => {
+        // The Phaser loader only warns on a 404, so a typo here would be a silent emote in production.
+        const shipped = Object.keys(import.meta.glob("/public/resources/objects/emotes/*"));
+        for (const definition of WOKA_EMOTES) {
+            if (!definition.sound) continue;
+            expect(shipped, definition.id).toContain("/public" + WOKA_EMOTE_SOUND_PATH + definition.sound.file);
+        }
+    });
+
+    it("starts before the emote is over", () => {
+        for (const definition of WOKA_EMOTES) {
+            if (!definition.sound) continue;
+            expect(definition.sound.at ?? 0).toBeLessThan(definition.duration);
+        }
     });
 });
