@@ -8,6 +8,7 @@ import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { socketManager } from "../services/SocketManager";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
+import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
 import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";
@@ -224,7 +225,7 @@ export class PusherRoom {
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
                     socketManager.cleanupSocket(listener);
-                    listener.end(1011, "Connection error between pusher and back server");
+                    listener.end(WS_CLOSE_CODE_SESSION_DESTROYED, "Connection error between pusher and back server");
                     console.error("Connection error between pusher and back server", err);
                 }
                 this.backConnectionClosedAbortController.abort();
@@ -239,7 +240,7 @@ export class PusherRoom {
                 for (const listener of this.listeners) {
                     socketManager.cleanupSocket(listener);
                     listener.end(
-                        1011,
+                        WS_CLOSE_CODE_SESSION_DESTROYED,
                         "Room connection closed between pusher and back server " +
                             this.roomUrl +
                             " " +

@@ -6,6 +6,7 @@ import {
 } from "@workadventure/messages";
 import { BehaviorSubject } from "rxjs";
 import { NoncedMessageStore } from "../../common/NoncedMessageStore";
+import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../Enum/EnvironmentVariable";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 
@@ -181,8 +182,9 @@ export class WorkAdventureWebSocket {
     }
 
     private shouldReconnect(event: CloseEvent): boolean {
-        // Do not reconnect if handshake/auth was refused.
-        if (event.code === 1000 || event.code === 1008) {
+        // Do not reconnect if handshake/auth was refused, or if the pusher destroyed the session: a resume could only
+        // land on a session that is not ours (another connection of the same tab). The caller reconnects from scratch.
+        if (event.code === 1000 || event.code === 1008 || event.code === WS_CLOSE_CODE_SESSION_DESTROYED) {
             return false;
         }
         if (this.reconnectStartedAt !== undefined) {
