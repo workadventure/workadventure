@@ -58,6 +58,11 @@ import {
 } from "../../../Stores/MediaStore";
 import { jitsiMeetingEnded, jitsiMeetingStarted } from "../../../WebRtc/JitsiMeetingAnalytics";
 import { currentLiveStreamingSpaceStore, givenFloorSpaceStore } from "../../../Stores/MegaphoneStore";
+import {
+    inMegaphoneZoneStore,
+    meetingRaiseHandStore,
+    megaphoneRaiseHandStore,
+} from "../../../Stores/RaiseHandZoneSettingsStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../../WebRtc/CoWebsite/ImageCoWebsite";
@@ -111,6 +116,7 @@ interface MegaphoneZoneState {
     seeAttendees: boolean;
     chatEnabled: boolean;
     allowTalking: boolean;
+    raiseHandEnabled: boolean;
     waitingLink: string | undefined;
 }
 
@@ -1061,6 +1067,9 @@ export class AreasPropertiesListener {
         abortSignal: AbortSignal,
     ): Promise<void> {
         inLivekitStore.set(true);
+        // Attendees of a meeting room may raise their hand, unless the map builder turned the option off.
+        // Maps built before the option existed have no such key, hence the `?? true`.
+        meetingRaiseHandStore.set(property.livekitRoomConfig?.raiseHandEnabled ?? true);
 
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
 
@@ -1367,6 +1376,7 @@ export class AreasPropertiesListener {
         this._isVideoActiveBeforeLivekitRoom = false;
         this._isMicrophoneActiveBeforeLivekitRoom = false;
         inLivekitStore.set(false);
+        meetingRaiseHandStore.set(false);
     }
 
     private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
@@ -1574,6 +1584,8 @@ export class AreasPropertiesListener {
                     seeAttendees: property.seeAttendees,
                     chatEnabled: property.chatEnabled,
                     allowTalking: false,
+                    // The speaker is the one raised hands are addressed to, never a hand raiser.
+                    raiseHandEnabled: false,
                     waitingLink: undefined,
                 });
                 this.refreshMegaphoneGlobalStores(uniqRoomName);
@@ -1676,6 +1688,7 @@ export class AreasPropertiesListener {
                         seeAttendees,
                         chatEnabled: property.chatEnabled,
                         allowTalking: property.allowTalking,
+                        raiseHandEnabled: property.raiseHandEnabled ?? true,
                         waitingLink: property.waitingLink,
                     });
                     this.refreshMegaphoneGlobalStores(uniqRoomName);
@@ -1720,6 +1733,7 @@ export class AreasPropertiesListener {
                     seeAttendees,
                     chatEnabled: property.chatEnabled,
                     allowTalking: property.allowTalking,
+                    raiseHandEnabled: property.raiseHandEnabled ?? true,
                     waitingLink: property.waitingLink,
                 });
                 isListenerStore.set(!property.allowTalking);
@@ -1781,6 +1795,12 @@ export class AreasPropertiesListener {
         isListenerStore.set(
             speakerZone === undefined && zones.some((zone) => zone.role === "listener" && !zone.allowTalking),
         );
+        // Listeners may ask the speaker for the floor, as long as one of the listener zones they stand in
+        // allows it. A speaker of the same space is the host, so they never raise a hand.
+        megaphoneRaiseHandStore.set(
+            speakerZone === undefined && zones.some((zone) => zone.role === "listener" && zone.raiseHandEnabled),
+        );
+        inMegaphoneZoneStore.set(zones.length > 0);
 
         const activeZone = speakerZone ?? listenerZone;
         if (!activeZone) {

@@ -138,6 +138,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         chatEnabled: "전용 채팅 채널 연결",
         allowTalking: "대화 및 버블 형성 허용",
+        raiseHandEnabled: "손들기 허용",
         seeAttendees: "참석자 보기",
         start: {
             label: "시작 영역",
@@ -306,6 +307,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "마이크 음소거 상태로 시작",
                 startWithVideoMuted: "비디오 끈 상태로 시작",
                 disableChat: "채팅 비활성화",
+                raiseHandEnabled: "손들기 허용",
                 livekitRoomAdminTag: "회의실 진행자 태그",
                 cancel: "취소",
                 validate: "확인",

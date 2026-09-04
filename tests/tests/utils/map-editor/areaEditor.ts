@@ -126,9 +126,14 @@ class AreaEditor {
         }
     }
 
-    async setAreaLiveKitProperty(page: Page, startWithAudioMuted = false, startWithVideoMuted = false) {
+    async setAreaLiveKitProperty(
+        page: Page,
+        startWithAudioMuted = false,
+        startWithVideoMuted = false,
+        raiseHandEnabled = true,
+    ) {
         await page.getByTestId("livekitRoomProperty").click();
-        if (!startWithAudioMuted && !startWithVideoMuted) {
+        if (!startWithAudioMuted && !startWithVideoMuted && raiseHandEnabled) {
             return;
         }
 
@@ -140,6 +145,12 @@ class AreaEditor {
 
         if (startWithAudioMuted) {
             await page.getByTestId("startWithAudioMuted").check();
+        }
+
+        if (!raiseHandEnabled) {
+            // On by default: one click turns it off. The switch is a styled div over an sr-only checkbox,
+            // so click it rather than using check()/uncheck().
+            await page.getByTestId("raiseHandEnabled").click();
         }
 
         await page.getByTestId("livekitRoomConfigValidateButton").click(); //close the more options
