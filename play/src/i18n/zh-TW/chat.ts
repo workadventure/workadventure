@@ -315,6 +315,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     nothingToDisplay: "無內容顯示",
     showMore: "顯示更多 {number} 則",
     showLess: "顯示更少",
+    showFullMessage: "顯示全文",
     addRoomToFolderError: "無法將房間加入資料夾",
     createRoom: {
         title: "建立新房間",
@@ -664,6 +665,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     whoops: "哎呀！出錯了",
     failedToOpenRoom: "開啟房間失敗：{roomId}",
     failedToSendAttachments: "傳送附件失敗。請重試。",
+    failedToSendMessage: "傳送訊息失敗。請重試。",
+    partiallyFailedToSendMessage: "訊息只傳送了一部分，未送出的內容已保留在輸入框中。",
     refreshChatError: "重新整理聊天失敗",
     discord: {
         chatBand: {
