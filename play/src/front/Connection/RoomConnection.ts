@@ -1649,7 +1649,7 @@ export class RoomConnection implements RoomConnection {
         filterType: FilterType,
         propertiesToSync: string[],
         options?: { signal: AbortSignal },
-    ): Promise<SpaceUser["spaceUserId"]> {
+    ): Promise<{ spaceUserId: SpaceUser["spaceUserId"]; activeMicrophoneCount: number }> {
         const answer = await this.query(
             {
                 $case: "joinSpaceQuery",
@@ -1666,7 +1666,10 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
 
-        return answer.joinSpaceAnswer.spaceUserId;
+        return {
+            spaceUserId: answer.joinSpaceAnswer.spaceUserId,
+            activeMicrophoneCount: answer.joinSpaceAnswer.activeMicrophoneCount,
+        };
     }
 
     public async emitLeaveSpace(spaceName: string): Promise<void> {

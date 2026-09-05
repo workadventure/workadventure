@@ -83,6 +83,7 @@ Environment variables for the Play service (frontend and pusher).
 | `MAX_USERNAME_LENGTH` | No | Maximum allowed length for usernames. Defaults to 10 |
 | `MAX_PER_GROUP` | No | Maximum number of users in a bubble/group. Defaults to 4 |
 | `MAX_DISPLAYED_VIDEOS` | No | An approximation of the maximum number of videos displayed at once. If there are more videos to display, the user will have to scroll. The number of videos can sometimes be slightly greater (MAX_DISPLAYED_VIDEOS + number of videos to display % number of videos per row). This is useful to avoid overloading the Livekit server when a lot of people are in the same room. |
+| `MAX_SPEAKERS_BEFORE_AUTOMUTE` | No | Microphone auto-mute threshold. When a user enters a communication space (proximity bubble, meeting room or podium) that already has at least this many other participants with their microphone on, the user's microphone is automatically muted on entry (a toast warns them; they can unmute manually afterwards). Only affects the moment of joining/going live — it never mutes a user who is already in the space. Defaults to 6. Set to 0 to disable auto-muting. |
 | `NODE_ENV` | No | Node.js environment: 'development', 'production', or 'test' |
 | `CONTACT_URL` | No | URL for users to contact support or administrators |
 | `POSTHOG_API_KEY` | No | PostHog API key for analytics tracking |

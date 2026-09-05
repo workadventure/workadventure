@@ -142,7 +142,16 @@ export interface SpaceInterface {
     readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
     readonly observeMetadata: Observable<Map<string, unknown>>;
     readonly filterType: FilterType;
+    // Number of other users already publishing audio when the local user joined this space (from the
+    // back). Used to auto-mute the local microphone before publishing in an already-crowded space.
+    readonly initialActiveMicrophoneCount: number;
     get mySpaceUserId(): SpaceUser["spaceUserId"];
+    /**
+     * True when this space synchronizes media state (camera / microphone / screen sharing), i.e. it is
+     * an actual communication space (proximity bubble, meeting room or podium) rather than a presence
+     * space such as the world space (which only syncs availabilityStatus / chatID).
+     */
+    isVideoSpace(): boolean;
     getUsers(options?: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>>;
     waitForSpaceUser(spaceUserId: SpaceUser["spaceUserId"], timeoutMs: number): Promise<SpaceUserExtended>;
 

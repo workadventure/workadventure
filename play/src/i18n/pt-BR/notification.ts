@@ -7,6 +7,8 @@ const notification: BaseTranslation = {
     askToMuteMicrophone: "Posso silenciar seu microfone?",
     askToMuteCamera: "Posso silenciar sua câmera?",
     microphoneMuted: "Seu microfone foi silenciado por um moderador",
+    microphoneAutoMuted: "Seu microfone foi silenciado automaticamente",
+    unmute: "Ativar microfone",
     cameraMuted: "Sua câmera foi silenciada por um moderador",
     announcement: "Anúncio",
     open: "Abrir",
