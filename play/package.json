@@ -126,7 +126,7 @@
     "@workadventure/store-utils": "1.0.0",
     "@workadventure/tailwind": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.1.2",
-    "axios": "^1.16.1",
+    "axios": "^1.18.0",
     "axios-cache-interceptor": "^1.12.0",
     "axios-retry": "^4.5.0",
     "buffer": "^6.0.3",
