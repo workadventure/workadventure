@@ -53,7 +53,7 @@
     "bigbluebutton-js": "^0.2.0",
     "busboy": "^1.6.0",
     "debug": "^4.4.3",
-    "deepmerge-ts": "^7.1.5",
+    "deepmerge-ts": "^8.0.2",
     "express": "^5.2.1",
     "google-protobuf": "^4.0.2",
     "jose": "^6.2.3",
