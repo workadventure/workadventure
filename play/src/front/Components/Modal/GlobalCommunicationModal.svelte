@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
-    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { onDestroy } from "svelte";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
@@ -37,36 +36,19 @@
     import Button from "../UI/Button.svelte";
     import { IconAlertTriangle, IconInfoCircle, IconMessageShare, IconMusicShare, IconSpeakerPhone } from "@wa-icons";
 
-    let mainModal: HTMLDivElement;
-
     let inputSendTextActive = $state(false);
     let uploadAudioActive = $state(false);
     let broadcastToWorld = $state(false);
     let handleSendText: TextGlobalMessageHandle | undefined = $state();
     let handleSendAudio: AudioGlobalMessageHandle | undefined = $state();
-    let videoElement: HTMLVideoElement | undefined = $state();
     let stream: MediaStream | undefined = $state();
-    let aspectRatio = $state(1);
-
-    let isMobile = $state(isMediaBreakpointUp("md"));
-    const resizeObserver = new ResizeObserver(() => {
-        isMobile = isMediaBreakpointUp("md");
-    });
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
-            // TODO: remove this hack
-            setTimeout(() => {
-                aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
-            }, 100);
         } else {
             stream = undefined;
         }
-    });
-
-    onMount(() => {
-        resizeObserver.observe(mainModal);
     });
 
     onDestroy(() => {
@@ -194,7 +176,6 @@
 
 <div
     class="absolute z-[308] rounded-xxl w-full h-full top-0 left-0 right-0 bottom-0 flex items-center justify-center overflow-hidden"
-    bind:this={mainModal}
 >
     <div
         class="h-full md:h-auto md:top-auto md:left-auto md:right-auto md:bottom-auto bg-contrast/80 backdrop-blur rounded-md max-h-screen overflow-y-auto w-full lg:w-11/12"
@@ -437,9 +418,8 @@
                     <div class="flex flex-col md:flex-row justify-center">
                         <div class="flex flex-col mr-5">
                             <video
-                                bind:this={videoElement}
                                 class="h-full w-full md:object-cover rounded"
-                                class:object-contain={stream && (isMobile || aspectRatio < 1)}
+                                class:object-contain={stream}
                                 class:max-h-[230px]={stream}
                                 style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                                 use:srcObject={stream}
