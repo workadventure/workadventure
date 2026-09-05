@@ -15,12 +15,12 @@ function logFailure(error: unknown): void {
 }
 
 export class TasksVisionBlurCompositor {
-    private readonly pipeline: WebGlBlurPipeline;
+    private readonly pipeline: WebGlBlurPipeline<HTMLCanvasElement | OffscreenCanvas>;
     private unavailable = false;
 
     constructor(
         private readonly gl: WebGL2RenderingContext,
-        canvas: HTMLCanvasElement,
+        canvas: HTMLCanvasElement | OffscreenCanvas,
     ) {
         this.pipeline = new WebGlBlurPipeline({ canvas, gl, restoreState: true });
     }

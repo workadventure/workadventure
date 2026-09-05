@@ -7,8 +7,10 @@ const WEBGL_MIN_BLUR_MAX_SIDE = 288;
 const WEBGL_BLUR_MAX_RADIUS = 18;
 const DUAL_KAWASE_MIN_SIDE = 24;
 
-type WebGlBlurPipelineOptions = {
-    canvas: HTMLCanvasElement;
+type WebGlCanvas = HTMLCanvasElement | OffscreenCanvas;
+
+type WebGlBlurPipelineOptions<TCanvas extends WebGlCanvas> = {
+    canvas: TCanvas;
     gl: WebGlBlurContext;
     ownsContext?: boolean;
     restoreState?: boolean;
@@ -221,7 +223,7 @@ void main() {
 }
 `;
 
-export class WebGlBlurPipeline {
+export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> {
     private downsampleProgram: WebGLProgram | null = null;
     private upsampleProgram: WebGLProgram | null = null;
     private compositeProgram: WebGLProgram | null = null;
@@ -254,7 +256,7 @@ export class WebGlBlurPipeline {
     private maskTexelSizeLocation: WebGLUniformLocation | null = null;
     private contextLost = false;
 
-    private readonly canvas: HTMLCanvasElement;
+    private readonly canvas: TCanvas;
     private readonly gl: WebGlBlurContext;
     private readonly ownsContext: boolean;
     private readonly restoreState: boolean;
@@ -270,7 +272,7 @@ export class WebGlBlurPipeline {
         this.releaseResources();
     };
 
-    constructor(options: WebGlBlurPipelineOptions) {
+    constructor(options: WebGlBlurPipelineOptions<TCanvas>) {
         this.canvas = options.canvas;
         this.gl = options.gl;
         this.ownsContext = options.ownsContext ?? false;
@@ -287,7 +289,7 @@ export class WebGlBlurPipeline {
         width: number,
         height: number,
         blurAmount: number,
-    ): HTMLCanvasElement | null {
+    ): TCanvas | null {
         if (this.isUnavailable()) {
             return null;
         }
@@ -342,7 +344,7 @@ export class WebGlBlurPipeline {
         width: number,
         height: number,
         blurAmount: number,
-    ): HTMLCanvasElement | null {
+    ): TCanvas | null {
         if (this.isUnavailable()) {
             return null;
         }
