@@ -39,8 +39,8 @@ function createNavChatStore() {
 
             if (isChatOnlineListEnabled || isChatDisconnectedListEnabled) {
                 set({ key: "users" });
+                analyticsClient.trackAdminEvent("user_list.opened");
             }
-            analyticsClient.trackAdminEvent("user_list.opened");
         },
         switchToCustomComponent(component: WorkAdventureComponent, props?: WorkAdventureComponentProps) {
             set({ key: "externalModule", component, props });

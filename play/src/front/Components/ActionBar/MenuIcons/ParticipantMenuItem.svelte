@@ -98,7 +98,6 @@
         selectedRoomStore.set(proximityChatRoom);
         navChat.switchToUserList();
         chatVisibilityStore.set(true);
-        analyticsClient.trackAdminEvent("user_list.opened");
         closeParticipantMenu();
     }
 

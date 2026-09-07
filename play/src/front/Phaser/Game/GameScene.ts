@@ -561,7 +561,7 @@ export class GameScene extends DirtyScene {
             if (this.preloading && !(file instanceof Phaser.Loader.FileTypes.SpriteSheetFile)) {
                 analyticsClient.trackAdminEvent("asset.error", {
                     kind: "asset",
-                    reason: file?.src ?? this.originalMapUrl,
+                    reason: stripUrlSensitiveParts(file?.src ?? this.originalMapUrl),
                 });
                 //remove loader in progress
                 this.handleErrorAndCleanup(

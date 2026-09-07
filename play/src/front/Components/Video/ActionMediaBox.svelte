@@ -273,7 +273,6 @@
             onclick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                analyticsClient.trackAdminEvent("meeting.private_message.clicked");
                 visitCard(spaceUser);
             }}
         >

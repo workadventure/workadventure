@@ -101,7 +101,9 @@ describe("AnalyticsEventsQueue", () => {
                 source: "pusher",
                 clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
                 eventId: "event-id",
-                properties: {},
+                properties: {
+                    connectionId: "connection-id",
+                },
             },
             socketData({ analyticsEventsEnabled: false }),
         );
@@ -172,14 +174,14 @@ describe("AnalyticsEventsQueue", () => {
         queue.setEnabled(true);
 
         queue.enqueueEvent(event("valid-event", "chat.message_sent"), socketData());
-        queue.enqueueEvent(event("invalid-event", "status.changed"), socketData());
+        queue.enqueueEvent(event("invalid-event", "room.changed"), socketData());
         await queue.flush();
 
         expect(post).toHaveBeenCalledTimes(3);
         expect((post.mock.calls[1][1] as AnalyticsEventsBatch).events).toHaveLength(1);
         expect((post.mock.calls[1][1] as AnalyticsEventsBatch).events[0].eventName).toBe("chat.message_sent");
         expect((post.mock.calls[2][1] as AnalyticsEventsBatch).events).toHaveLength(1);
-        expect((post.mock.calls[2][1] as AnalyticsEventsBatch).events[0].eventName).toBe("status.changed");
+        expect((post.mock.calls[2][1] as AnalyticsEventsBatch).events[0].eventName).toBe("room.changed");
         expect(queue.getStats()).toMatchObject({
             droppedInvalid: 1,
             eventsSent: 1,
@@ -189,8 +191,10 @@ describe("AnalyticsEventsQueue", () => {
 
     it("accounts partial success when a non-validation error aborts the individual retry mid-loop", async () => {
         // After a 422 the queue retries events one-by-one. If event #1 succeeds and
-        // event #2 fails with 5xx, only event #2 must be counted against
+        // event #2 keeps failing with 5xx, only event #2 must be counted against
         // droppedAfterSendFailure — the success of event #1 must NOT be discarded.
+        // The singleton gets the same transient-retry policy as a batch, so the
+        // 5xx has to be repeated until the attempts run out.
         const validationError = {
             isAxiosError: true,
             message: "Request failed with status code 422",
@@ -205,16 +209,23 @@ describe("AnalyticsEventsQueue", () => {
             .fn()
             .mockRejectedValueOnce(validationError)
             .mockResolvedValueOnce(undefined)
-            .mockRejectedValueOnce(serverError)
-            .mockRejectedValueOnce(serverError)
-            .mockRejectedValueOnce(serverError);
+            .mockRejectedValue(serverError);
         const queue = new AnalyticsEventsQueue(baseConfig, post);
         queue.setEnabled(true);
 
         queue.enqueueEvent(event("valid-event", "chat.message_sent"), socketData());
-        queue.enqueueEvent(event("server-error-event", "status.changed"), socketData());
-        await queue.flush();
+        queue.enqueueEvent(event("server-error-event", "room.changed"), socketData());
+        vi.useFakeTimers();
+        try {
+            const flushing = queue.flush();
+            await vi.runAllTimersAsync();
+            await flushing;
+        } finally {
+            vi.useRealTimers();
+        }
 
+        // 1 batch + 1 singleton + 4 attempts on the failing singleton
+        expect(post).toHaveBeenCalledTimes(6);
         expect(queue.getStats()).toMatchObject({
             droppedAfterSendFailure: 1,
             eventsSent: 1,
@@ -294,6 +305,27 @@ describe("AnalyticsEventsQueue", () => {
                 jitter: 0.07,
             }),
         });
+    });
+
+    it("names the LiveKit transport by topology, as the catalog does", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+
+        queue.enqueueVideoQualityReport(
+            {
+                samples: [
+                    videoQualitySample({
+                        transportType: VideoQualityTransportType.VIDEO_QUALITY_TRANSPORT_TYPE_LIVEKIT,
+                    }),
+                ],
+            },
+            socketData(),
+        );
+        await queue.flush();
+
+        const batch = post.mock.calls[0][1] as AnalyticsEventsBatch;
+        expect(batch.events[0].properties).toMatchObject({ transportType: "SFU" });
     });
 
     it("drops video quality samples for a space the socket has not joined", async () => {

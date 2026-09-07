@@ -249,7 +249,7 @@
 
     function changeCameraPrivacySettings() {
         // Analytics Client
-        analyticsClient.trackAdminEvent("settings.microphone.changed", {
+        analyticsClient.trackAdminEvent("settings.camera.changed", {
             value: valueCameraPrivacySettings ? "true" : "false",
         });
 
@@ -261,7 +261,7 @@
 
     function changeMicrophonePrivacySettings() {
         // Analytics Client
-        analyticsClient.trackAdminEvent("settings.camera.changed", {
+        analyticsClient.trackAdminEvent("settings.microphone.changed", {
             value: valueMicrophonePrivacySettings ? "true" : "false",
         });
 

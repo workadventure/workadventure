@@ -563,8 +563,10 @@ export class AnalyticsEventsQueue {
             }
 
             try {
+                // Same transient-retry policy as the batch: a 5xx/429 on one singleton
+                // must not drop it and everything after it on the first attempt.
                 // eslint-disable-next-line no-await-in-loop
-                await this.postBatch(
+                await this.sendWithRetry(
                     {
                         ...batch,
                         events: [event],
@@ -642,12 +644,13 @@ function toStreamCategory(streamCategory: VideoQualityStreamCategory): "video" |
     return undefined;
 }
 
-function toTransportType(transportType: VideoQualityTransportType): "P2P" | "Livekit" | undefined {
+function toTransportType(transportType: VideoQualityTransportType): "P2P" | "SFU" | undefined {
     if (transportType === VideoQualityTransportType.VIDEO_QUALITY_TRANSPORT_TYPE_P2P) {
         return "P2P";
     }
+    // The catalog names the transport by topology, not by vendor.
     if (transportType === VideoQualityTransportType.VIDEO_QUALITY_TRANSPORT_TYPE_LIVEKIT) {
-        return "Livekit";
+        return "SFU";
     }
     return undefined;
 }
