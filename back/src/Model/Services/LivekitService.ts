@@ -308,7 +308,25 @@ export class LiveKitService {
             status: this.toStatusName(egressInfo.status),
             error: egressInfo.error,
             createdAt: Number(event.createdAt),
+            startedAtMs: this.nanosecondsToMilliseconds(egressInfo.startedAt),
+            endedAtMs: this.nanosecondsToMilliseconds(egressInfo.endedAt),
+            fileResults: (egressInfo.fileResults ?? []).map((file) => ({
+                filename: file.filename,
+                sizeBytes: Number(file.size),
+                durationMs: this.nanosecondsToMilliseconds(file.duration),
+            })),
         });
+    }
+
+    /**
+     * LiveKit reports timestamps and durations as nanosecond bigints. Divide
+     * before converting: a nanosecond epoch does not fit in a double.
+     */
+    private nanosecondsToMilliseconds(nanoseconds: bigint | undefined): number {
+        if (nanoseconds === undefined) {
+            return 0;
+        }
+        return Number(nanoseconds / BigInt(1_000_000));
     }
 
     private async receiveWebhook(rawBody: Buffer | Uint8Array, authHeader: string | undefined): Promise<WebhookEvent> {
