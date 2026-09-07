@@ -79,6 +79,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         notifications: "通知",
         enablePictureInPicture: "启用画中画",
         chatSounds: "聊天声音",
+        chatUrlPreviews: "在聊天中显示链接预览",
+        chatUrlPreviewsInPrivate: "在加密房间和邻近聊天中显示链接预览",
         cowebsiteTrigger: "在打开网页和Jitsi Meet会议前总是询问",
         ignoreFollowRequest: "忽略跟随其他用户的请求",
         proximityDiscussionVolume: "邻近讨论音量",

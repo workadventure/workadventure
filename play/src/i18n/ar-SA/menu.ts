@@ -80,6 +80,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         notifications: "الإشعارات", // Notifications
         enablePictureInPicture: "تمكين صورة داخل صورة",
         chatSounds: "أصوات الدردشة", // Chat sounds
+        chatUrlPreviews: "إظهار معاينات الروابط في الدردشة",
+        chatUrlPreviewsInPrivate: "إظهار معاينات الروابط في الغرف المشفّرة ودردشة القرب",
         cowebsiteTrigger: "اسأل في كل مرة قبل فتح مواقع الويب أو غرف Jitsi-Meet", // Ask every time before opening websites or Jitsi-Meet rooms
         ignoreFollowRequest: "تجاهل طلبات المتابعة من المستخدمين الآخرين", // Ignore follow requests from other users
         proximityDiscussionVolume: "مستوى صوت النقاش القريب",

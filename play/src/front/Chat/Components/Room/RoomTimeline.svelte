@@ -566,6 +566,7 @@
                                 showHeader={item.showHeader}
                                 membersForMessageAvatars={room.membersForMessageAvatars}
                                 showThreadSummary={room.conversationKind === "room"}
+                                isEncrypted={room.isEncrypted}
                             />
                         {/if}
                     </li>

@@ -1,14 +1,18 @@
 <script lang="ts">
     import { derived, readable } from "svelte/store";
     import type { Readable } from "svelte/store";
+    import { tick } from "svelte";
+    import type { WorkAdventureComponent } from "../../../../types/component";
     import type {
         ChatMessage,
         ChatMessageType,
         ChatRoomMember,
         ChatThreadSummary,
     } from "../../Connection/ChatConnection";
-    import type { WorkAdventureComponent } from "../../../../types/component";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { findPreviewableLinks } from "../../Links/LinkExtractor";
+    import { shouldFetchUrlPreview } from "../../Links/UrlPreviewSettings";
     import Avatar from "../Avatar.svelte";
 
     import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
@@ -17,6 +21,7 @@
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../../Stores/SelectedThreadStore";
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
+    import LinkPreviewGroup from "./Message/LinkPreviewGroup.svelte";
     import MessageOptions from "./MessageOptions.svelte";
     import MessageImage from "./Message/MessageImage.svelte";
     import MessageText from "./Message/MessageText.svelte";
@@ -40,6 +45,11 @@
         /** Root message reply preview; hide inside an open thread timeline (main room only). */
         showThreadSummary?: boolean;
         updateMessageBody?: (event: { id: string }) => void;
+        /**
+         * Whether the room encrypts messages. Defaults to encrypted so that a caller which
+         * forgets to pass it gets no link previews rather than a privacy leak.
+         */
+        isEncrypted?: Readable<boolean>;
     }
 
     let {
@@ -49,9 +59,11 @@
         membersForMessageAvatars = undefined,
         showThreadSummary = true,
         updateMessageBody = () => {},
+        isEncrypted = readable(true),
     }: Props = $props();
 
     let messageRef: HTMLDivElement | undefined = $state();
+    let messageBodyRef: HTMLDivElement | undefined = $state();
 
     let {
         id,
@@ -67,7 +79,50 @@
         reactions,
     } = $derived(message);
 
+    let previewLinks: string[] = $state([]);
+
+    let mayPreviewLinks = $derived(
+        replyDepth === 0 &&
+            date !== null &&
+            shouldFetchUrlPreview({
+                isProximity: type === "proximity",
+                isEncrypted: $isEncrypted,
+                previewsInCleartextRooms: localUserStore.getChatUrlPreviews(),
+                previewsInPrivateMessages: localUserStore.getChatUrlPreviewsInPrivate(),
+            }),
+    );
+
+    let matrixClient = $derived(getMatrixClientForChatTint());
+
+    async function refreshPreviewLinks() {
+        if (!mayPreviewLinks) {
+            previewLinks = [];
+            return;
+        }
+        // MessageText signals us from a .finally(), which can land before Svelte has flushed
+        // the rendered markdown into the DOM.
+        await tick();
+        const root = messageBodyRef;
+        if (root === undefined) {
+            return;
+        }
+        const links = findPreviewableLinks(root);
+        // Only publish a real change, or every re-render would refetch.
+        if (links.length !== previewLinks.length || links.some((link, i) => link !== previewLinks[i])) {
+            previewLinks = links;
+        }
+    }
+
     const handleUpdateMessageBody = () => {
+        updateMessageBody({
+            id: message.id,
+        });
+        refreshPreviewLinks().catch((error) => console.error("Failed to collect links to preview", error));
+    };
+
+    // Preview cards grow the message after the fact; the timeline needs to re-anchor, but the
+    // links themselves have not changed, so this deliberately skips the extraction.
+    const handlePreviewResize = () => {
         updateMessageBody({
             id: message.id,
         });
@@ -213,7 +268,21 @@
                     {/if}
 
                     {@const MessageComponent = messageType[type]}
-                    <MessageComponent updateMessageBody={handleUpdateMessageBody} {content} />
+                    <!-- Scoped to this message's own body: the outer container also holds the
+                         quoted message, whose links are not ours to preview. -->
+                    <div bind:this={messageBodyRef}>
+                        <MessageComponent updateMessageBody={handleUpdateMessageBody} {content} />
+                    </div>
+
+                    {#if mayPreviewLinks && matrixClient && date && previewLinks.length > 0}
+                        <LinkPreviewGroup
+                            eventId={id}
+                            links={previewLinks}
+                            client={matrixClient}
+                            eventTimestamp={date.getTime()}
+                            onResize={handlePreviewResize}
+                        />
+                    {/if}
 
                     {#if $reactionsWithUsers.length > 0}
                         <MessageReactions

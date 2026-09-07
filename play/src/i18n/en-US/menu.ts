@@ -80,6 +80,8 @@ const menu: BaseTranslation = {
         notifications: "Notifications",
         enablePictureInPicture: "Enable picture-in-picture",
         chatSounds: "Chat sounds",
+        chatUrlPreviews: "Show link previews in chat",
+        chatUrlPreviewsInPrivate: "Show link previews in encrypted rooms and proximity chat",
         cowebsiteTrigger: "Always ask before opening websites and Jitsi Meet rooms",
         ignoreFollowRequest: "Ignore requests to follow other users",
         proximityDiscussionVolume: "Proximity discussion volume",

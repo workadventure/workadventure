@@ -81,6 +81,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         notifications: "通知",
         enablePictureInPicture: "ピクチャーインピクチャーを有効にする",
         chatSounds: "チャットサウンド",
+        chatUrlPreviews: "チャットでリンクのプレビューを表示する",
+        chatUrlPreviewsInPrivate: "暗号化されたルームと近接チャットでもプレビューを表示する",
         cowebsiteTrigger: "ウェブサイトや Jitsi ルームを開く前に必ず確認する",
         ignoreFollowRequest: "他のユーザをフォローするリクエストを無視する",
         proximityDiscussionVolume: "近接ディスカッションの音量",

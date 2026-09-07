@@ -82,6 +82,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         notifications: "Meldingen",
         enablePictureInPicture: "Picture-in-picture inschakelen",
         chatSounds: "Geluiden van chat",
+        chatUrlPreviews: "Linkvoorbeelden in de chat tonen",
+        chatUrlPreviewsInPrivate: "Linkvoorbeelden tonen in versleutelde ruimtes en nabijheidschat",
         cowebsiteTrigger: "Altijd vragen voordat websites en Jitsi Meet-ruimtes worden geopend",
         ignoreFollowRequest: "Negeer verzoeken om andere gebruikers te volgen",
         proximityDiscussionVolume: "Volume van nabijheidsdiscussies",

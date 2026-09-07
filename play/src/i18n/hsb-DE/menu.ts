@@ -81,6 +81,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         notifications: "powěsće",
         enablePictureInPicture: "wobraz-we-wobrazu aktiwěrować",
         chatSounds: "zwuki chata",
+        chatUrlPreviews: "Přehlady wotkazow w chaće pokazać",
+        chatUrlPreviewsInPrivate: "Přehlady wotkazow w zaklučowanych rumnosćach a w chaće bliskosće pokazać",
         cowebsiteTrigger: "Kóždy raz so naprašować, prjedy hač so webstrony abo Jitsi Meet rumy wotewrje",
         ignoreFollowRequest: "Ignoruj naprašowanja wo sćěhowanje wot druhich wužiwarjow",
         proximityDiscussionVolume: "hłošnosć diskusijow w bliskosći",
