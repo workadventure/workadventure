@@ -1400,6 +1400,32 @@ export type AnalyticsEventProperties<N extends AnalyticsEventName> = z.input<
   (typeof ANALYTICS_EVENTS)[N]["properties"]
 >;
 
+/**
+ * One event as the pusher queues it: the envelope plus that event's exact
+ * properties, per catalog entry.
+ *
+ * A mapped type over ANALYTICS_EVENTS rather than `z.infer<typeof
+ * analyticsEventCatalogUnion>`: the union is assembled from a generic option
+ * type, so inferring from it yields `unknown` for every field. This is what lets
+ * the compiler reject a synthesized event whose payload does not match its entry
+ * — `transportType: "Livekit"` against an enum of `"P2P" | "SFU"`, say.
+ *
+ * Strict on purpose: the wire schema is `.passthrough()` so an older or newer
+ * front is not rejected for an extra key, but code that *builds* an event has no
+ * business adding keys the catalog does not name.
+ */
+export type AnalyticsEventEnvelope<
+  N extends AnalyticsEventName = AnalyticsEventName,
+> = {
+  [K in N]: {
+    eventName: K;
+    source: (typeof ANALYTICS_EVENTS)[K]["source"];
+    clientEventTimeMs: number;
+    eventId: string;
+    properties: z.output<(typeof ANALYTICS_EVENTS)[K]["properties"]>;
+  };
+}[N];
+
 /** Every interval the pusher measures, whoever opens it. */
 export type AnyTimedAnalyticsEventName = {
   [N in AnalyticsEventName]: (typeof ANALYTICS_EVENTS)[N] extends {

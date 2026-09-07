@@ -3,6 +3,7 @@ import {
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
     VideoQualityTransportType,
+    type AnalyticsEventName,
     type VideoQualitySampleMessage,
 } from "@workadventure/messages";
 
@@ -11,6 +12,7 @@ vi.mock("../../src/pusher/enums/EnvironmentVariable", () => import("./mocks/push
 import type { SocketData } from "../../src/pusher/models/Websocket/SocketData";
 import {
     AnalyticsEventsQueue,
+    type AnalyticsEventInput,
     type AnalyticsEventsBatch,
     type AnalyticsEventsQueueConfig,
 } from "../../src/pusher/services/AnalyticsEventsQueue";
@@ -43,6 +45,7 @@ describe("AnalyticsEventsQueue", () => {
                 eventId: "event-id",
                 properties: {
                     connectionId: "connection-id",
+                    connectedAt: "2026-04-24T12:00:05.000Z",
                 },
             },
             socketData(),
@@ -71,6 +74,7 @@ describe("AnalyticsEventsQueue", () => {
                         tabId: "tab-id",
                         properties: {
                             connectionId: "connection-id",
+                            connectedAt: "2026-04-24T12:00:05.000Z",
                         },
                     }),
                 ],
@@ -103,6 +107,7 @@ describe("AnalyticsEventsQueue", () => {
                 eventId: "event-id",
                 properties: {
                     connectionId: "connection-id",
+                    connectedAt: "2026-04-24T12:00:05.000Z",
                 },
             },
             socketData({ analyticsEventsEnabled: false }),
@@ -146,7 +151,7 @@ describe("AnalyticsEventsQueue", () => {
         expect(multiByte.length).toBeLessThan(8 * 1024);
         expect(Buffer.byteLength(multiByte, "utf8")).toBeGreaterThan(8 * 1024);
 
-        queue.enqueueEvent({ ...event("oversized-multibyte"), properties: { blob: multiByte } }, socketData());
+        queue.enqueueEvent(event("oversized-multibyte", "user.connected", { blob: multiByte }), socketData());
         await queue.flush();
 
         expect(post).not.toHaveBeenCalled();
@@ -360,14 +365,23 @@ describe("AnalyticsEventsQueue", () => {
     });
 });
 
-function event(eventId: string, eventName = "user.connected") {
+/**
+ * A fixture, not a catalog-shaped event: the queue does not validate what it is
+ * handed (the handler does, upstream), so these tests use whatever name and an
+ * empty payload — hence the assertion.
+ */
+function event(
+    eventId: string,
+    eventName: AnalyticsEventName = "user.connected",
+    properties: Record<string, unknown> = {},
+): AnalyticsEventInput {
     return {
         eventName,
-        source: "pusher" as const,
+        source: "pusher",
         clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
         eventId,
-        properties: {},
-    };
+        properties,
+    } as AnalyticsEventInput;
 }
 
 function socketData(overrides: Partial<SocketData> & { analyticsEventsEnabled?: boolean } = {}): SocketData {

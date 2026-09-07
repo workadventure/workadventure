@@ -103,15 +103,18 @@ export function processAnalyticsReportMessage(
             continue;
         }
 
-        // Look the name up before parsing, rather than handing the whole envelope
-        // to the catalog union. Both reach the same verdict, but a discriminator
-        // miss makes zod build an issue enumerating all 166 expected names — ~8.8 KB
-        // of error object, 11x the cost of a successful parse, paid on exactly the
-        // events a strict gate rejects. A property lookup costs nothing.
+        // Check the name before parsing, rather than letting the catalog union
+        // reject it. Both reach the same verdict, but a discriminator miss makes zod
+        // build an issue enumerating all 166 expected names — ~8.8 KB of error
+        // object, 11x the cost of a successful parse, paid on exactly the events a
+        // strict gate rejects. A property lookup costs nothing.
         // See AnalyticsEventCatalog.bench.ts.
-        const schema = ANALYTICS_EVENT_CATALOG[event.eventName as AnalyticsEventName] as
-            | (typeof ANALYTICS_EVENT_CATALOG)[AnalyticsEventName]
-            | undefined;
+        //
+        // hasOwn before indexing: the catalog is a plain object, so "constructor"
+        // would otherwise resolve to Object and the parse below would throw.
+        const schema = Object.hasOwn(ANALYTICS_EVENT_CATALOG, event.eventName)
+            ? ANALYTICS_EVENT_CATALOG[event.eventName as AnalyticsEventName]
+            : undefined;
         if (!schema) {
             console.warn("Analytics event dropped: unknown event name", {
                 eventName: typeof event.eventName === "string" ? event.eventName.slice(0, 64) : typeof event.eventName,
@@ -156,6 +159,9 @@ export function processAnalyticsReportMessage(
             continue;
         }
 
+        // The catalog entry is typed generically (one option type for all 166), so
+        // the parse result is loose even though the runtime check is exact. The
+        // assertion states what safeParse just established.
         queue.enqueueEvent(parsed.data as AnalyticsEventInput, socketData);
     }
 }

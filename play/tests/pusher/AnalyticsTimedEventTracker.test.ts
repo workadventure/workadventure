@@ -112,12 +112,8 @@ describe("AnalyticsTimedEventTracker", () => {
 
         // A user can be in two areas, a meeting and a screen share at the
         // same time — handles keep them apart, so no interval is ever swallowed.
-        expect(
-            tracker.open("h1", "area.dwell", { areaId: "a", areaName: "A" }, socketData),
-        ).toBe(true);
-        expect(
-            tracker.open("h2", "area.dwell", { areaId: "b", areaName: "B" }, socketData),
-        ).toBe(true);
+        expect(tracker.open("h1", "area.dwell", { areaId: "a", areaName: "A" }, socketData)).toBe(true);
+        expect(tracker.open("h2", "area.dwell", { areaId: "b", areaName: "B" }, socketData)).toBe(true);
 
         expect(tracker.closeConnection(socketData, "socket_closed")).toBe(2);
     });
@@ -207,11 +203,11 @@ describe("AnalyticsTimedEventTracker", () => {
 /**
  * Reads an ISO timestamp out of an emitted event's properties.
  *
- * They are typed JsonValue, so narrowing here rather than casting: a property that stopped being a
+ * They are typed unknown, so narrowing here rather than casting: a property that stopped being a
  * string would otherwise stringify to something Date.parse turns into NaN, and every comparison
  * against NaN is false — the test would fail, but pointing at the wrong thing.
  */
-function timestampOf(properties: AnalyticsEventInput["properties"], key: string): number {
+function timestampOf(properties: Record<string, unknown>, key: string): number {
     const value = properties[key];
     if (typeof value !== "string") {
         throw new Error(`Expected ${key} to be an ISO string, got ${typeof value}`);

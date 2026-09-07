@@ -106,6 +106,9 @@ export class AnalyticsTimedEventTracker {
         // row at each end.
         const definition = timedAnalyticsEventDefinition(eventName);
         if (definition?.opensWith) {
+            // Asserted, not inferred: the tracker is generic over the interval, and the
+            // field names come off the definition at runtime. The payload itself was
+            // parsed against the catalog's openProperties before reaching open().
             this.queue.enqueueEvent(
                 {
                     eventName: definition.opensWith,
@@ -116,10 +119,10 @@ export class AnalyticsTimedEventTracker {
                     // counting the open twice.
                     eventId: `${connectionId}:${handle}:opened:${startedAtMs}`,
                     properties: {
-                        ...(properties as AnalyticsEventInput["properties"]),
+                        ...properties,
                         [definition.intervalFields.start]: new Date(startedAtMs).toISOString(),
                     },
-                },
+                } as AnalyticsEventInput,
                 socketData,
             );
         }
@@ -212,8 +215,6 @@ export class AnalyticsTimedEventTracker {
                 // Deterministic: a retried batch re-sends this exact id and the backend
                 // dedupes on it instead of counting the interval twice.
                 eventId: `${connectionId}:${handle}:${endedAtMs}`,
-                // Computed keys widen the literal to an index signature, which JsonObject
-                // is not; the values below are all strings and numbers.
                 properties: {
                     ...entry.properties,
                     [fields.start]: new Date(entry.startedAtMs).toISOString(),
@@ -227,7 +228,7 @@ export class AnalyticsTimedEventTracker {
                             ? Math.max(0, Math.round((endedAtMs - entry.startedAtMs) / 1000))
                             : Math.max(0, (endedAtMs - entry.startedAtMs) / 1000),
                     [fields.reason]: endReason,
-                } as AnalyticsEventInput["properties"],
+                },
             },
             entry.socketData,
         );

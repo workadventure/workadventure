@@ -3,7 +3,10 @@ import {
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
     VideoQualityTransportType,
+    type AnalyticsEventEnvelope,
+    type AnalyticsEventName,
     type AnalyticsEventsBatchPayload,
+    type AnalyticsStoredEvent,
     type VideoQualityReportMessage,
     type VideoQualitySampleMessage,
 } from "@workadventure/messages";
@@ -52,38 +55,28 @@ export function serializedPropertiesBytes(properties: unknown): number | undefin
 }
 
 export type AnalyticsEventSource = "front" | "pusher" | "media";
-type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
-type JsonObject = { [key: string]: JsonValue };
 
-export type AnalyticsEventInput = {
-    eventName: string;
-    source: AnalyticsEventSource;
-    clientEventTimeMs: number;
-    eventId: string;
-    properties: JsonObject;
-};
+/**
+ * What enters the queue: one catalog envelope, so an event the pusher synthesizes
+ * itself (a video quality sample, an interval) is checked against its catalog
+ * entry by the compiler. A hand-written `{ [key]: JsonValue }` used to sit here,
+ * and it let `transportType: "Livekit"` through for an enum that only knows
+ * `"SFU"`.
+ */
+export type AnalyticsEventInput = AnalyticsEventEnvelope;
 
-export type AnalyticsEvent = {
-    eventName: string;
-    source: AnalyticsEventSource;
-    clientEventTime: string;
-    pusherReceivedAt: string;
-    eventId: string;
-    userUuid: string;
-    userId: number | null;
-    spaceUserId: string;
-    clientIp: string | null;
-    world: string;
-    roomId: string;
-    tabId: string | null;
-    properties: JsonObject;
-};
+/**
+ * What leaves the queue: the stored-event contract, with `eventName` narrowed
+ * from the contract's string to the catalog's. `properties` stays the contract's
+ * record — past this point it is a payload on its way out, not something to
+ * reason about per event.
+ */
+export type AnalyticsEvent = Omit<AnalyticsStoredEvent, "eventName"> & { eventName: AnalyticsEventName };
 
 /**
  * Derived from the schema Swagger publishes, rather than written out again here:
  * the two used to be separate declarations that could disagree without anything
- * noticing. `events` is narrowed back to the pusher's own AnalyticsEvent, whose
- * `properties` is a JsonObject rather than the contract's looser record.
+ * noticing. `events` is narrowed back to the pusher's own AnalyticsEvent.
  */
 export type AnalyticsEventsBatch = Omit<AnalyticsEventsBatchPayload, "events"> & {
     events: AnalyticsEvent[];
