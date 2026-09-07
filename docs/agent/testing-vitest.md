@@ -2,6 +2,12 @@
 
 Vitest test locations vary by package: some are under `tests/`, while others are colocated under `src/`.
 
+In `play`, `npm test` runs the `unit` project (node/jsdom). Storybook stories are tested in a separate `storybook`
+project that runs in a real browser via Playwright; run those with `npm run test:storybook`. The two are kept apart so
+the unit suite does not compete with Chromium for CPU, which starves timing-sensitive tests.
+
+Stories are colocated with their component (`Chip.stories.svelte` next to `Chip.svelte`).
+
 ## Run a single test once
 
 ```bash

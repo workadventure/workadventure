@@ -1,7 +1,16 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
+
 import { generateConfig } from "@workadventure/eslint-config";
 import svelteParser from "svelte-eslint-parser";
 
 export default [
+    // Storybook config files are tooling, not app source (like eslint.config.js), and are
+    // not covered by the typed `npm run lint` scope. Keep the typed parser from choking on
+    // them when lint-staged picks them up.
+    {
+        ignores: [".storybook/**"],
+    },
     ...generateConfig(import.meta.dirname),
     {
         files: ["**/*.svelte"],
@@ -40,11 +49,11 @@ export default [
             // https://github.com/un-ts/eslint-plugin-import-x/issues/308
             "import/no-duplicates": "off",
 
-
             // Uncomment this to detect circular dependencies in imports
             // It is slow (~7 minutes) but is really helpful to detect architectural issues
             // TODO: solve these issues one by one and then enable this rule in CI only
             //"import/no-cycle": [2, { "maxDepth": 5, "ignoreExternal": true }],
-        }
-    }
+        },
+    },
+    ...storybook.configs["flat/recommended"],
 ];
