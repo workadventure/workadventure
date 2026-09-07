@@ -44,6 +44,34 @@ function createPlayersStore() {
                     return users;
                 });
             });
+            // Keep known players live: availability status (and chatID) can change after a user joins.
+            // Without this the store held a join-time snapshot, so consumers (e.g. the desktop
+            // companion People list) showed stale statuses. Only relevant changes notify — voice
+            // indicator / outline / sayMessage updates are ignored as the store doesn't track them.
+            //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+            roomConnection.playerDetailsUpdatedMessageStream.subscribe((message) => {
+                const details = message.details;
+                if (!details) {
+                    return;
+                }
+                const availabilityChanged = details.availabilityStatus !== AvailabilityStatus.UNCHANGED;
+                const chatIdChanged = details.chatID !== undefined;
+                if (!availabilityChanged && !chatIdChanged) {
+                    return;
+                }
+                update((users) => {
+                    const player = users.get(message.userId);
+                    if (player) {
+                        if (availabilityChanged) {
+                            player.availabilityStatus = details.availabilityStatus;
+                        }
+                        if (chatIdChanged) {
+                            player.chatID = details.chatID ?? undefined;
+                        }
+                    }
+                    return users;
+                });
+            });
         },
         getPlayerById(userId: number): PlayerInterface | undefined {
             return players.get(userId);

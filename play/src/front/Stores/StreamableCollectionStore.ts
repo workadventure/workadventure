@@ -160,7 +160,14 @@ export const isInRemoteConversation = derived(
     },
 );
 
-const isInActiveConversationStore = derived(
+/**
+ * Broader signal than {@link isInRemoteConversation}: true as soon as the user is engaged with at
+ * least one other participant — either through an existing video/screen stream (`isInRemoteConversation`),
+ * a proximity bubble that just formed (`currentPlayerGroupIdStore !== undefined`), or a Livekit
+ * session. Useful for opening the desktop PiP automatically when someone walks into the meeting
+ * even before their first stream lands.
+ */
+export const isInActiveConversationStore = derived(
     [isInRemoteConversation, currentPlayerGroupIdStore, inLivekitStore],
     ([$isInRemoteConversation, $currentPlayerGroupIdStore, $inLivekitStore]) =>
         $isInRemoteConversation || $currentPlayerGroupIdStore !== undefined || $inLivekitStore,
