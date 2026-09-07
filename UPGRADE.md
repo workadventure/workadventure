@@ -2,7 +2,9 @@
 
 This document provides instructions for upgrading WorkAdventure between versions.
 
-## Analytics environment variables renamed (BREAKING CHANGE)
+## Upgrading from v1.33.x to v1.34.0
+
+### Analytics environment variables renamed (BREAKING CHANGE)
 
 Video quality samples used to travel through their own queue and their own
 `VIDEO_ANALYTICS_*` settings. They now ride the single generic analytics queue, so
