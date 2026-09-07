@@ -27,3 +27,17 @@ npm run e2e:report -- --refresh
 ```
 
 Run `npm run e2e:report -- --help` for all options. Stop the report server with Ctrl+C.
+
+## Shard timings
+
+The same runs also carry the per-spec-file durations that CI uses to split each Playwright project
+into shards of roughly equal wall-clock time. Regenerate `tests/shard-timings.json` from a run where
+every leg finished:
+
+```bash
+npm run e2e:timings                 # newest successful run on master
+npm run e2e:timings -- --run 31467905058
+npm run e2e:timings -- --dry-run    # print the summary without writing
+```
+
+See `tests/AGENTS.md` for when a refresh is worth doing.

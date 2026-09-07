@@ -94,106 +94,28 @@ jobs:
     name: "End to end tests with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}"
     strategy:
       fail-fast: false
+      # Shard counts are sized from the durations in tests/shard-timings.json so that every leg lands
+      # around eight minutes: chromium and firefox carry most of the suite, webkit almost none.
+      # Regenerate the timings with `npm run e2e:timings` and resize here if a project drifts.
       matrix:
         include:
-          - browser: chromium
-            parameters: --project=chromium
-            project: chromium
-            shard: 1
-            nbShards: 4
-            renderer: auto
-            ignoreTags: "@nodesktop"
-          - browser: chromium
-            parameters: --project=chromium
-            project: chromium
-            shard: 2
-            nbShards: 4
-            renderer: auto
-            ignoreTags: "@nodesktop"
-          - browser: chromium
-            parameters: --project=chromium
-            project: chromium
-            shard: 3
-            nbShards: 4
-            renderer: auto
-            ignoreTags: "@nodesktop"
-          - browser: chromium
-            parameters: --project=chromium
-            project: chromium
-            shard: 4
-            nbShards: 4
-            renderer: auto
-            ignoreTags: "@nodesktop"
-          - browser: firefox
-            parameters: --project=firefox
-            project: firefox
-            shard: 1
-            nbShards: 4
-            renderer: auto
-            ignoreTags: "@nofirefox|@nodesktop"
-          - browser: firefox
-            parameters: --project=firefox
-            project: firefox
-            shard: 2
-            nbShards: 4
-            renderer: auto
-            ignoreTags: "@nofirefox|@nodesktop"
-          - browser: firefox
-            parameters: --project=firefox
-            project: firefox
-            shard: 3
-            nbShards: 4
-            renderer: auto
-            ignoreTags: "@nofirefox|@nodesktop"
-          - browser: firefox
-            parameters: --project=firefox
-            project: firefox
-            shard: 4
-            nbShards: 4
-            renderer: auto
-            ignoreTags: "@nofirefox|@nodesktop"
-          - browser: webkit
-            parameters: --project=webkit
-            project: webkit
-            shard: 1
-            nbShards: 3
-            renderer: headless
-            ignoreTags: "@nowebkit|@nodesktop"
-          - browser: webkit
-            parameters: --project=webkit
-            project: webkit
-            shard: 2
-            nbShards: 3
-            renderer: headless
-            ignoreTags: "@nowebkit|@nodesktop"
-          - browser: webkit
-            parameters: --project=webkit
-            project: webkit
-            shard: 3
-            nbShards: 3
-            renderer: headless
-            ignoreTags: "@nowebkit|@nodesktop"
-          - browser: ""
-            parameters: --project=mobilechromium
-            project: mobilechromium
-            shard: 1
-            nbShards: 1
-            renderer: auto
-            ignoreTags: "@nomobile"
-          - browser: ""
-            parameters: --project=mobilefirefox
-            project: mobilefirefox
-            shard: 1
-            nbShards: 1
-            renderer: auto
-            ignoreTags: "@nomobile|@nofirefox"
-          - browser: ""
-            parameters: --project=mobilewebkit
-            project: mobilewebkit
-            shard: 1
-            nbShards: 1
-            renderer: headless
-            ignoreTags: "@nomobile|@nowebkit"
+          - { project: chromium,       browser: chromium, shard: 1, nbShards: 6, renderer: auto,     ignoreTags: "@nodesktop" }
+          - { project: chromium,       browser: chromium, shard: 2, nbShards: 6, renderer: auto,     ignoreTags: "@nodesktop" }
+          - { project: chromium,       browser: chromium, shard: 3, nbShards: 6, renderer: auto,     ignoreTags: "@nodesktop" }
+          - { project: chromium,       browser: chromium, shard: 4, nbShards: 6, renderer: auto,     ignoreTags: "@nodesktop" }
+          - { project: chromium,       browser: chromium, shard: 5, nbShards: 6, renderer: auto,     ignoreTags: "@nodesktop" }
+          - { project: chromium,       browser: chromium, shard: 6, nbShards: 6, renderer: auto,     ignoreTags: "@nodesktop" }
+          - { project: firefox,        browser: firefox,  shard: 1, nbShards: 5, renderer: auto,     ignoreTags: "@nofirefox|@nodesktop" }
+          - { project: firefox,        browser: firefox,  shard: 2, nbShards: 5, renderer: auto,     ignoreTags: "@nofirefox|@nodesktop" }
+          - { project: firefox,        browser: firefox,  shard: 3, nbShards: 5, renderer: auto,     ignoreTags: "@nofirefox|@nodesktop" }
+          - { project: firefox,        browser: firefox,  shard: 4, nbShards: 5, renderer: auto,     ignoreTags: "@nofirefox|@nodesktop" }
+          - { project: firefox,        browser: firefox,  shard: 5, nbShards: 5, renderer: auto,     ignoreTags: "@nofirefox|@nodesktop" }
+          - { project: webkit,         browser: webkit,   shard: 1, nbShards: 1, renderer: headless, ignoreTags: "@nowebkit|@nodesktop" }
+          - { project: mobilechromium, browser: chromium, shard: 1, nbShards: 2, renderer: auto,     ignoreTags: "@nomobile" }
+          - { project: mobilechromium, browser: chromium, shard: 2, nbShards: 2, renderer: auto,     ignoreTags: "@nomobile" }
+          - { project: mobilefirefox,  browser: firefox,  shard: 1, nbShards: 2, renderer: auto,     ignoreTags: "@nomobile|@nofirefox" }
+          - { project: mobilefirefox,  browser: firefox,  shard: 2, nbShards: 2, renderer: auto,     ignoreTags: "@nomobile|@nofirefox" }
+          - { project: mobilewebkit,   browser: webkit,   shard: 1, nbShards: 1, renderer: headless, ignoreTags: "@nomobile|@nowebkit" }
     needs:
       - build-play
       - build-back
@@ -202,41 +124,17 @@ jobs:
       - build-map-storage
     timeout-minutes: 60
     runs-on: ubuntu-24.04
+    env:
+      COMPOSE_FILES: "-f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml"
+      # Forks get no write access to the registry, so their images travel as build artifacts instead
+      # of being pulled by name. That changes when the stack can start, hence the guards below.
+      IS_FORK: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+      GREP_INVERT: "@slow|${{ matrix.ignoreTags }}"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 24
-      - name: Install dependencies
-        run: npm ci
-        working-directory: tests
-      - name: Install Playwright
-        run: npx playwright install --with-deps ${{ matrix.browser }}
-        working-directory: tests
-      - name: Set up virtual audio output for Firefox
-        if: ${{ contains(matrix.project, 'firefox') }}
-        run: |
-          sudo apt-get install --yes pulseaudio pulseaudio-utils
-          pulseaudio --start --exit-idle-time=-1
-          pactl load-module module-null-sink sink_name=ci_null_sink
-          pactl set-default-sink ci_null_sink
-          pactl info
+      - uses: actions/checkout@v4
+      - uses: rlespinasse/github-slug-action@4.2.3
       - name: 'Setup .env file'
         run: cp .env.template .env
-      - uses: rlespinasse/github-slug-action@4.2.3
-      - name: Display pulled version
-        run: echo "Pulling images with tag ${DOCKER_TAG}"
-        env:
-          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-
-      - name: "Install Room Api client dependencies"
-        run: npm ci
-        working-directory: "libs/room-api-clients/room-api-client-js"
-
-      - name: "Build Room Api client proto files"
-        run: npm run ts-proto
-        working-directory: "libs/room-api-clients/room-api-client-js"
-
       - name: Fill .env file
         run: |
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
@@ -252,40 +150,97 @@ jobs:
           sed -i "s/ENABLE_TUTORIAL=true/ENABLE_TUTORIAL=false/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
+      - name: Display pulled version
+        run: echo "Pulling images with tag ${DOCKER_TAG}"
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
+      # Booting the stack is the longest step of the setup and it needs nothing from npm, so it runs
+      # in the background while the toolchain installs. "Wait for WorkAdventure" below collects it.
+      - name: Start WorkAdventure
+        if: env.IS_FORK != 'true'
+        run: |
+          nohup bash -c 'docker compose $COMPOSE_FILES up -d --scale egress=2 > /tmp/compose-up.log 2>&1; echo $? > /tmp/compose-up.status' > /dev/null 2>&1 &
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
+        working-directory: tests
+      - name: Install Playwright
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+        working-directory: tests
+      - name: Set up virtual audio output for Firefox
+        if: ${{ contains(matrix.project, 'firefox') }}
+        run: |
+          sudo apt-get install --yes pulseaudio pulseaudio-utils
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=ci_null_sink
+          pactl set-default-sink ci_null_sink
+          pactl info
+
+      - name: "Install Room Api client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room Api client proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      # Playwright's own --shard splits by number of tests, which on this suite left one chromium leg
+      # running three times the work of another. This picks the spec files by measured duration
+      # instead, and --verify refuses a list that would silently select nothing.
+      - name: Compute the balanced shard
+        run: |
+          node scripts/shard-list.mjs \
+            --project ${{ matrix.project }} \
+            --shard ${{ matrix.shard }} --of ${{ matrix.nbShards }} \
+            --grep-invert "$GREP_INVERT" \
+            --out /tmp/shard-list.txt \
+            --verify
+          cat /tmp/shard-list.txt
+        working-directory: tests
 
       - name: Download artifact
-        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+        if: env.IS_FORK == 'true'
         uses: actions/download-artifact@v4
         with:
           name: play
           path: /tmp
       - name: Download artifact
-        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+        if: env.IS_FORK == 'true'
         uses: actions/download-artifact@v4
         with:
           name: back
           path: /tmp
       - name: Download artifact
-        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+        if: env.IS_FORK == 'true'
         uses: actions/download-artifact@v4
         with:
           name: maps
           path: /tmp
       - name: Download artifact
-        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+        if: env.IS_FORK == 'true'
         uses: actions/download-artifact@v4
         with:
           name: map-storage
           path: /tmp
       - name: Download artifact
-        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+        if: env.IS_FORK == 'true'
         uses: actions/download-artifact@v4
         with:
           name: uploader
           path: /tmp
       - name: Load image
-        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+        if: env.IS_FORK == 'true'
         run: |
           docker image load --input /tmp/play.tar.gz
           docker image load --input /tmp/back.tar.gz
@@ -293,10 +248,32 @@ jobs:
           docker image load --input /tmp/map-storage.tar.gz
           docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
+      # A fork only has its images once the artifacts are loaded, so its stack starts here instead.
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d --scale egress=2
+        if: env.IS_FORK == 'true'
+        run: |
+          docker compose $COMPOSE_FILES up -d --scale egress=2
+          echo 0 > /tmp/compose-up.status
 
-        
+      # `up -d` returns once the everything_started gate has seen map-storage and synapse healthy,
+      # so waiting on it is waiting on a usable stack.
+      - name: Wait for WorkAdventure
+        run: |
+          for _ in $(seq 1 120); do
+            if [ -f /tmp/compose-up.status ]; then
+              break
+            fi
+            sleep 5
+          done
+          if [ -f /tmp/compose-up.log ]; then
+            cat /tmp/compose-up.log
+          fi
+          if [ ! -f /tmp/compose-up.status ]; then
+            echo "The stack did not finish starting within 10 minutes."
+            exit 1
+          fi
+          exit "$(cat /tmp/compose-up.status)"
+
       - name: Upload test-map
         run: sleep 5 && npm run upload-test-map
         working-directory: map-storage
@@ -318,21 +295,20 @@ jobs:
             echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
           fi
       - name: Run Playwright tests
-        run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow${{ matrix.ignoreTags && matrix.ignoreTags != '' && format('|{0}', matrix.ignoreTags) || '' }}"
+        run: npm run test-prod-like -- --project=${{ matrix.project }} --test-list /tmp/shard-list.txt --grep-invert "$GREP_INVERT"
         working-directory: tests
         env:
           RENDERER_MODE: ${{ matrix.renderer }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
           FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
-          IS_FORK: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
       - name: Display docker compose logs on failure
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs
+        run: docker compose $COMPOSE_FILES logs
         if: failure()
       - name: Display containers state
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml ps
+        run: docker compose $COMPOSE_FILES ps
         if: failure()
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs > tests/playwright-report/docker-compose.log
+        run: docker compose $COMPOSE_FILES logs > tests/playwright-report/docker-compose.log
         if: failure()
       - uses: actions/upload-artifact@v4
         if: always()
