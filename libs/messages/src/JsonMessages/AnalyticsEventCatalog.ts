@@ -88,31 +88,6 @@ export const LEGACY_TIMED_EVENT_END_REASONS: Record<
  * One schema per analytics event, with every field `.describe()`d so the catalog
  * can be turned into documentation.
  *
- * ## This IS the runtime gate
- *
- * It did not use to be, and the reasoning that kept it out is worth recording,
- * because only one half of it survived measurement.
- *
- * The skew argument was: a newer front must be able to ship an event family
- * before admin knows about it, and 23 of the names the front emits today are
- * already unknown to the admin's allowlist. That is true — but it is about the
- * front↔ADMIN gap, and the admin is a separate deployment that logs-and-accepts
- * unknown names for exactly that reason. This catalog sits between the front and
- * the pusher, which ship from the same `play/` image and cannot skew. The
- * argument does not transfer.
- *
- * The performance argument was that a union costs ~134x a flat parse. That figure
- * was measured on a recursive `z.lazy` JSON schema, where the cost is nesting
- * depth. A discriminated union is a `Map.get` plus exactly one member parse:
- * remeasured at 2.4x, and 64-deep nesting neither throws nor recurses. See
- * `play/tests/pusher/AnalyticsEventCatalog.bench.ts` for the numbers, including
- * the one that did survive — a discriminator MISS costs 11x, so callers look the
- * name up here before handing it to the union.
- *
- * What stays open is the payload: `properties` is `passthrough()`, so a known
- * event whose payload a newer front extended keeps its extra fields. Only the
- * event *name* is closed.
- *
  * What it is for:
  * - documentation: every event and field carries a description, ready for a
  *   generator to walk (see `contrib/tools/generate-env-docs`, which already does
@@ -142,11 +117,7 @@ export const LEGACY_TIMED_EVENT_END_REASONS: Record<
  * envelope columns, not per-event properties, and are absent below on purpose.
  *
  * Anonymization is worth knowing when adding a field, but it is not applied here:
- * the admin owns it end to end and applies it at ingestion
- * (AnalyticsMetricsPolicyService::anonymizeEvent). For a world that opted out of
- * `user_level_activity`, numbers and booleans always survive, but a **string**
- * survives only if its key is on the admin's allowlist — a new free-form string
- * field will silently vanish for those worlds unless it is added there too.
+ * the admin owns it end to end and applies it at ingestion.
  */
 
 /* -------------------------------------------------------------------------- */

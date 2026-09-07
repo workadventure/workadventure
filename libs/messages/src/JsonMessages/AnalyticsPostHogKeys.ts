@@ -3,19 +3,6 @@
  * pipeline and is still the only one on a world whose pusher does not advertise
  * `api/analytics/events-batch`.
  *
- * ## Why this is not a field on the catalog entry
- *
- * It was, briefly, and the entry is the more obvious home: one event, one place,
- * nothing to keep in step. But `ANALYTICS_EVENTS` is ~166 live Zod schemas, and
- * the front is the only thing that needs these names — reading them off the
- * catalog meant importing all of it into the browser bundle to look up a table of
- * strings. Here, the sole import is a *type*, which is erased: the front gets 117
- * strings and no Zod.
- *
- * The type is what keeps the two in step. Every key must be a real event name, so
- * a renamed or deleted event is a compile error rather than a mapping that
- * silently stops matching anything.
- *
  * ## Absent means "not a PostHog event", which covers two things
  *
  * - An event added with this pipeline, which PostHog never knew. Adding a key here
@@ -28,9 +15,6 @@
  *
  * Intervals whose ends DO coincide with a PostHog event are ordinary entries, in the
  * third form below.
- *
- * The events two UI paths reach under two names are NOT in that list: they used to
- * be, and they are now ordinary entries in the discriminated form below.
  *
  * ## What PostHog receives
  *
