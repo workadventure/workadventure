@@ -85,7 +85,6 @@ describe("CommunicationManager", () => {
             stopRecordingByServer: vi.fn().mockResolvedValue(null),
             stopRecordingIfRecorderMatches: vi.fn().mockResolvedValue(null),
             hasRecordingSession: vi.fn().mockReturnValue(false),
-            getSessionRecorder: vi.fn().mockReturnValue(null),
             confirmRecordingStartedByWebhook: vi.fn().mockReturnValue(false),
             finishRecordingByWebhook: vi
                 .fn()
@@ -101,7 +100,6 @@ describe("CommunicationManager", () => {
             stopRecordingByServer: mocks.stopRecordingByServer,
             stopRecordingIfRecorderMatches: mocks.stopRecordingIfRecorderMatches,
             hasRecordingSession: mocks.hasRecordingSession,
-            getSessionRecorder: mocks.getSessionRecorder,
             confirmRecordingStartedByWebhook: mocks.confirmRecordingStartedByWebhook,
             finishRecordingByWebhook: mocks.finishRecordingByWebhook,
             handleAddUser: mocks.handleAddUser,
@@ -856,11 +854,16 @@ describe("CommunicationManager", () => {
             expect(recordingEventNotifier).not.toHaveBeenCalled();
         });
 
-        it("should notify the admin when a started webhook confirms a session, and survive a failing admin", async () => {
+        it("should not notify the admin when a started webhook arrives, and survive a failing admin on end", async () => {
             const recordingManager = createRecordingManager();
             const recorder = createSpaceUser("recorder_1");
-            recordingManager.mocks.getSessionRecorder.mockReturnValue(recorder);
             recordingManager.mocks.confirmRecordingStartedByWebhook.mockReturnValue(true);
+            recordingManager.mocks.finishRecordingByWebhook.mockReturnValue({
+                processed: true,
+                recorder,
+                unexpected: false,
+                hasActiveSessions: true,
+            });
             const recordingEventNotifier = vi.fn().mockRejectedValue(new Error("admin down"));
 
             const manager = new CommunicationManager(createSpace(), {
@@ -871,14 +874,26 @@ describe("CommunicationManager", () => {
                 recordingEventNotifier,
             });
 
+            manager.handleNormalizedRecordingWebhook(
+                HandleRecordingWebhookRequest.fromPartial({
+                    recordingSessionId: "session-1",
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED,
+                    status: "EGRESS_ACTIVE",
+                })
+            );
+            expect(recordingEventNotifier).not.toHaveBeenCalled();
+
             expect(() =>
                 manager.handleNormalizedRecordingWebhook(
                     HandleRecordingWebhookRequest.fromPartial({
                         recordingSessionId: "session-1",
                         egressId: "egress-1",
                         roomName: "test-space",
-                        phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED,
-                        status: "EGRESS_ACTIVE",
+                        phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+                        status: "EGRESS_FAILED",
+                        error: "upload failed",
                     })
                 )
             ).not.toThrow();
@@ -886,8 +901,9 @@ describe("CommunicationManager", () => {
 
             expect(recordingEventNotifier).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    phase: "started",
-                    egressId: "egress-1",
+                    phase: "ended",
+                    status: "EGRESS_FAILED",
+                    error: "upload failed",
                     recorder: { uuid: "uuid-recorder_1", spaceUserId: "recorder_1" },
                     startedAt: null,
                     files: [],

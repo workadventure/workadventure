@@ -6,11 +6,11 @@ import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LivekitCredentialsResponse } from "./Repository/LivekitCredentialsResponse";
 
 /**
- * What the admin learns when a recording egress starts or ends. It turns
- * this into customer webhooks (recording.started / completed / failed).
+ * What the admin learns when a recording egress ends. It turns a completed
+ * one into a customer webhook (recording.completed).
  */
 export interface RecordingEventPayload {
-    phase: "started" | "ended";
+    phase: "ended";
     status: string;
     egressId: string;
     recordingSessionId: string;
@@ -26,7 +26,7 @@ const RECORDING_EVENT_RETRY_DELAYS_MS = [250, 1_000, 4_000];
 
 class AdminApi {
     /**
-     * Tells the admin about a recording lifecycle event. Retried a few times on
+     * Tells the admin that a recording egress ended. Retried a few times on
      * transport or server errors; a 4xx means the admin rejected the payload
      * and is not retried. Resolves silently when no admin is configured.
      */

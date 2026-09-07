@@ -362,17 +362,11 @@ export class CommunicationManager implements ICommunicationManager {
     public handleNormalizedRecordingWebhook(request: HandleRecordingWebhookRequest): void {
         switch (request.phase) {
             case RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED: {
-                // Read the recorder before confirming: the manager only exposes
-                // it while the session exists.
-                const recorder = this._recordingManager.getSessionRecorder(request.recordingSessionId);
-                const confirmed = this._recordingManager.confirmRecordingStartedByWebhook(
+                this._recordingManager.confirmRecordingStartedByWebhook(
                     request.recordingSessionId,
                     request.egressId,
                     request.roomName,
                 );
-                if (confirmed && recorder) {
-                    this.notifyRecordingEvent(request, recorder, "started");
-                }
                 return;
             }
             case RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED: {
@@ -385,7 +379,7 @@ export class CommunicationManager implements ICommunicationManager {
                     return;
                 }
 
-                this.notifyRecordingEvent(request, result.recorder, "ended");
+                this.notifyRecordingEnded(request, result.recorder);
 
                 if (result.unexpected) {
                     this.space.dispatchPrivateEvent({
@@ -414,15 +408,13 @@ export class CommunicationManager implements ICommunicationManager {
 
     /**
      * Fire-and-forget: the admin turning this into customer webhooks must
-     * never delay or fail the recording flow itself.
+     * never delay or fail the recording flow itself. Only the end of an
+     * egress is reported; the admin reads the status to tell a usable
+     * recording from a failed one.
      */
-    private notifyRecordingEvent(
-        request: HandleRecordingWebhookRequest,
-        recorder: SpaceUser,
-        phase: RecordingEventPayload["phase"],
-    ): void {
+    private notifyRecordingEnded(request: HandleRecordingWebhookRequest, recorder: SpaceUser): void {
         const payload: RecordingEventPayload = {
-            phase,
+            phase: "ended",
             status: request.status,
             egressId: request.egressId,
             recordingSessionId: request.recordingSessionId,
@@ -439,10 +431,7 @@ export class CommunicationManager implements ICommunicationManager {
         };
 
         this.recordingEventNotifier(payload).catch((error) => {
-            console.error(
-                `Failed to notify the admin of a recording ${phase} event (egress ${request.egressId}):`,
-                error,
-            );
+            console.error(`Failed to notify the admin of a recording end (egress ${request.egressId}):`, error);
             Sentry.captureException(error);
         });
     }

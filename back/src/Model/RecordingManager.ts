@@ -43,7 +43,6 @@ export interface IRecordingManager {
         roomName: string,
     ): { processed: boolean; recorder: SpaceUser | null; unexpected: boolean; hasActiveSessions: boolean };
     hasRecordingSession(recordingSessionId: string): boolean;
-    getSessionRecorder(recordingSessionId: string): SpaceUser | null;
     handleAddUser(user: SpaceUser): void;
     isRecording: boolean;
     destroy(): void;
@@ -135,10 +134,6 @@ export class RecordingManager implements IRecordingManager {
 
     public hasRecordingSession(recordingSessionId: string): boolean {
         return this.sessions.has(recordingSessionId);
-    }
-
-    public getSessionRecorder(recordingSessionId: string): SpaceUser | null {
-        return this.sessions.get(recordingSessionId)?.recorder ?? null;
     }
 
     public getRecordingState(): ManagedRecordingState {
