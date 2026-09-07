@@ -47,7 +47,7 @@ describe("SpaceToBackForwarder", () => {
             const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await expect(
-                async () => await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS)
+                async () => await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS),
             ).rejects.toThrow();
         });
 
@@ -64,7 +64,7 @@ describe("SpaceToBackForwarder", () => {
             const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await expect(
-                async () => await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS)
+                async () => await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS),
             ).rejects.toThrow();
         });
 
@@ -309,7 +309,7 @@ describe("SpaceToBackForwarder", () => {
                         updateSpaceUserMessage: { spaceName: "test", user: spaceUser, updateMask: ["name"] },
                     },
                 },
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
@@ -506,6 +506,79 @@ describe("SpaceToBackForwarder", () => {
             expect(mockSendQuery).toHaveBeenCalledOnce();
         });
 
+        it("should send a single removeSpaceUserQuery when unregisterUser is called twice concurrently", async () => {
+            const mockWriteFunction = vi.fn();
+
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                closed: false,
+                on: vi.fn().mockReturnThis(),
+            });
+
+            const mockSocket = mock<PusherWebSocket>({
+                getUserData: vi.fn().mockReturnValue({
+                    spaceUserId: "foo_1",
+                    spaces: new Set<string>(["test"]),
+                }),
+            });
+
+            const spaceUser = SpaceUser.fromPartial({ spaceUserId: "foo_1", uuid: "uuid-foo_1", name: "foo" });
+
+            let resolveRemoveQuery: (answer: unknown) => void = () => {};
+            const mockSendQuery = vi.fn().mockImplementation(
+                () =>
+                    new Promise((resolve) => {
+                        resolveRemoveQuery = resolve;
+                    }),
+            );
+
+            const mockCleanup = vi.fn();
+            const mockSpace = {
+                name: "test",
+                _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
+                _localWatchers: new Set<string>(["foo_1"]),
+                spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
+                metadata: new Map(),
+                query: mock<Query>({
+                    send: mockSendQuery,
+                }),
+                cleanup: mockCleanup,
+                isEmpty: vi.fn().mockReturnValue(true),
+            } as unknown as Space;
+
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
+
+            // An explicit leave and the socket-close sweep both unregister the same socket while the
+            // first removeSpaceUserQuery is still pending.
+            const first = spaceForwarder.unregisterUser(mockSocket);
+            const second = spaceForwarder.unregisterUser(mockSocket);
+            await flushPromises();
+
+            resolveRemoveQuery({
+                $case: "removeSpaceUserAnswer",
+                removeSpaceUserAnswer: { spaceName: "test", spaceUserId: "foo_1" },
+            });
+            await Promise.all([first, second]);
+            await flushPromises();
+
+            expect(mockSendQuery).toHaveBeenCalledOnce();
+            const deleteToNotifyWrites = mockWriteFunction.mock.calls.filter(
+                (call) =>
+                    (call[0] as { message: { $case: string } }).message.$case === "deleteSpaceUserToNotifyMessage",
+            );
+            expect(deleteToNotifyWrites).toHaveLength(1);
+            expect(mockCleanup).toHaveBeenCalledOnce();
+
+            // Once the first unregistration settled, a later call is a fresh attempt again.
+            mockSendQuery.mockResolvedValue({
+                $case: "removeSpaceUserAnswer",
+                removeSpaceUserAnswer: { spaceName: "test", spaceUserId: "foo_1" },
+            });
+            await expect(spaceForwarder.unregisterUser(mockSocket)).resolves.toBeUndefined();
+            expect(mockSendQuery).toHaveBeenCalledTimes(2);
+        });
+
         it("shouldn't call cleanup when there are still local connected users", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
@@ -625,7 +698,7 @@ describe("SpaceToBackForwarder", () => {
                         },
                     },
                 },
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
@@ -665,7 +738,7 @@ describe("SpaceToBackForwarder", () => {
                             "metadata-1": "value-1",
                         }),
                     },
-                })
+                }),
             ).toThrow();
         });
 
@@ -713,7 +786,7 @@ describe("SpaceToBackForwarder", () => {
                 {
                     spaceName: "test",
                     messageCase: "updateSpaceMetadataPusherToBackMessage",
-                }
+                },
             );
 
             consoleWarnSpy.mockRestore();
@@ -766,7 +839,7 @@ describe("SpaceToBackForwarder", () => {
                         syncSpaceUsersMessage: { spaceName: "test", users: [spaceUser] },
                     },
                 },
-                expect.any(Function)
+                expect.any(Function),
             );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });

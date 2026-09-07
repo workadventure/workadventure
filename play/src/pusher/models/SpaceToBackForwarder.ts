@@ -149,7 +149,24 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         });
     }
 
-    async unregisterUser(socket: PusherWebSocket): Promise<void> {
+    // Unregistering awaits a round trip to the back. A second call for the same socket during that
+    // await (e.g. an explicit leave overlapping with the socket-close sweep) must not resend the
+    // delete-to-notify / remove messages: the back would receive them after the user is gone.
+    private readonly unregisteringSockets = new Map<PusherWebSocket, Promise<void>>();
+
+    unregisterUser(socket: PusherWebSocket): Promise<void> {
+        const inFlight = this.unregisteringSockets.get(socket);
+        if (inFlight) {
+            return inFlight;
+        }
+        const promise = this.doUnregisterUser(socket).finally(() => {
+            this.unregisteringSockets.delete(socket);
+        });
+        this.unregisteringSockets.set(socket, promise);
+        return promise;
+    }
+
+    private async doUnregisterUser(socket: PusherWebSocket): Promise<void> {
         const userData = socket.getUserData();
 
         const spaceUserId = userData.spaceUserId;

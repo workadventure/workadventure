@@ -22,9 +22,9 @@ function createUser(spaceUserId: string): SpaceUser {
     });
 }
 
-function createSpace(dispatchPrivateEvent = vi.fn()): ICommunicationSpace {
+function createSpace(dispatchPrivateEvent = vi.fn(), usersInSpace: SpaceUser[] = []): ICommunicationSpace {
     return {
-        getAllUsers: () => [],
+        getAllUsers: () => usersInSpace,
         getUsersInFilter: () => [],
         getUsersToNotify: () => [],
         getRecordingState: () => ({ isRecording: false }),
@@ -34,8 +34,14 @@ function createSpace(dispatchPrivateEvent = vi.fn()): ICommunicationSpace {
         getPropertiesToSync: () => [],
         publishMetadata: vi.fn(),
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
-        getUser: vi.fn(),
+        getUser: (spaceUserId: string) => usersInSpace.find((user) => user.spaceUserId === spaceUserId),
     } as unknown as ICommunicationSpace;
+}
+
+function webRtcDisconnectDispatches(dispatchPrivateEvent: ReturnType<typeof vi.fn>): WebRtcStartDispatch[] {
+    return dispatchPrivateEvent.mock.calls
+        .map((call) => call[0] as WebRtcStartDispatch)
+        .filter((event) => event.spaceEvent.event.$case === "webRtcDisconnectMessage");
 }
 
 function webRtcStartDispatches(dispatchPrivateEvent: ReturnType<typeof vi.fn>): WebRtcStartDispatch[] {
@@ -50,9 +56,10 @@ function webRtcStartDispatches(dispatchPrivateEvent: ReturnType<typeof vi.fn>): 
  */
 async function setupStrategyWithConnection() {
     const dispatchPrivateEvent = vi.fn();
-    const space = createSpace(dispatchPrivateEvent);
     const userA = createUser("user-a");
     const userB = createUser("user-b");
+    const usersInSpace = [userA, userB];
+    const space = createSpace(dispatchPrivateEvent, usersInSpace);
     const users = new Map([
         [userA.spaceUserId, userA],
         [userB.spaceUserId, userB],
@@ -69,7 +76,7 @@ async function setupStrategyWithConnection() {
 
     dispatchPrivateEvent.mockClear();
 
-    return { strategy, dispatchPrivateEvent, connectionId };
+    return { strategy, dispatchPrivateEvent, connectionId, userA, userB, usersInSpace };
 }
 
 describe("WebRTCCommunicationStrategy.handleMeetingConnectionRestartMessage", () => {
@@ -122,7 +129,7 @@ describe("WebRTCCommunicationStrategy.handleMeetingConnectionRestartMessage", ()
         expect(webRtcStartDispatches(dispatchPrivateEvent)).toHaveLength(2);
     });
 
-    it("ignores a restart when no connection exists between the peers", async () => {
+    it("ignores a restart when no connection exists between the peers", () => {
         const dispatchPrivateEvent = vi.fn();
         const space = createSpace(dispatchPrivateEvent);
         const strategy = new WebRTCCommunicationStrategy(space, new Map(), new Map());
@@ -141,5 +148,37 @@ describe("WebRTCCommunicationStrategy.handleMeetingConnectionRestartMessage", ()
         strategy.handleMeetingConnectionRestartMessage(MeetingConnectionRestartMessage.fromPartial({}), "user-a");
 
         expect(dispatchPrivateEvent).not.toHaveBeenCalled();
+    });
+});
+
+describe("WebRTCCommunicationStrategy disconnect teardown", () => {
+    it("sends one disconnect per direction of a tracked connection, and nothing on a repeated teardown", async () => {
+        const { strategy, dispatchPrivateEvent, userA } = await setupStrategyWithConnection();
+
+        strategy.deleteUserFromNotify(userA);
+
+        const disconnects = webRtcDisconnectDispatches(dispatchPrivateEvent);
+        expect(disconnects.map((event) => [event.senderUserId, event.receiverUserId])).toEqual([
+            ["user-a", "user-b"],
+            ["user-b", "user-a"],
+        ]);
+
+        dispatchPrivateEvent.mockClear();
+        // A duplicate delete-to-notify (e.g. an explicit leave overlapping with the socket close) has nothing
+        // left to tear down: it must not spam the remaining peers with disconnects.
+        strategy.deleteUserFromNotify(userA);
+        expect(dispatchPrivateEvent).not.toHaveBeenCalled();
+    });
+
+    it("does not dispatch on behalf of a sender that already left the space", async () => {
+        const { strategy, dispatchPrivateEvent, userA, usersInSpace } = await setupStrategyWithConnection();
+        // user-a was removed from the space before its delete-to-notify arrived (Sentry BACK-2B).
+        usersInSpace.splice(usersInSpace.indexOf(userA), 1);
+
+        expect(() => strategy.deleteUserFromNotify(userA)).not.toThrow();
+
+        const disconnects = webRtcDisconnectDispatches(dispatchPrivateEvent);
+        // Only the direction whose sender is still in the space is dispatched.
+        expect(disconnects.map((event) => [event.senderUserId, event.receiverUserId])).toEqual([["user-b", "user-a"]]);
     });
 });
