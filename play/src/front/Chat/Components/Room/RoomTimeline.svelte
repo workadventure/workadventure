@@ -340,10 +340,8 @@
         lastSeenLastItemKey = lastKey;
 
         const lastItem = items[items.length - 1];
-        const lastMessage =
-            lastItem?.kind === "item" && lastItem.timelineItem.kind === "message"
-                ? lastItem.timelineItem.message
-                : undefined;
+        const lastTimelineItem = lastItem?.kind === "item" ? lastItem.timelineItem : undefined;
+        const lastMessage = lastTimelineItem?.kind === "message" ? lastTimelineItem.message : undefined;
 
         if (isNewLastItem && lastMessage?.sender?.chatId === myChatID) {
             // I just sent this: jump to it even if I was reading history.
@@ -357,9 +355,36 @@
         }
         // untrack: scrollToMessageListBottom writes autoScroll, reading it reactively would re-enter.
         if (isNewLastItem && untrack(() => autoScroll)) {
-            scrollToMessageListBottom();
+            if (lastMessage !== undefined && lastTimelineItem !== undefined) {
+                scrollToTimelineEventStart(lastTimelineItem.id);
+            } else {
+                scrollToMessageListBottom();
+            }
         }
     });
+
+    /**
+     * A long incoming message is read from its first line, not from its tail. Pinning to its start
+     * leaves us above the bottom, so the scroll is flagged "pin-bottom" (which never resyncs
+     * autoScroll): we are still following the conversation and the next message must scroll too.
+     */
+    function findTimelineEventElement(eventId: string): HTMLLIElement | undefined {
+        return Array.from(messageListRef?.querySelectorAll<HTMLLIElement>("li[data-event-id]") ?? []).find(
+            (element) => element.dataset.eventId === eventId,
+        );
+    }
+
+    function scrollToTimelineEventStart(eventId: string) {
+        const target = findTimelineEventElement(eventId);
+        if (!target) {
+            scrollToMessageListBottom();
+            return;
+        }
+        releaseScrollAnchor();
+        autoScroll = true;
+        beginProgrammaticScroll("pin-bottom");
+        target.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
 
     function isAtBottom(): boolean {
         if (!messageListRef) return true;
@@ -544,17 +569,13 @@
 
         await tick();
 
-        let target = Array.from(messageListRef?.querySelectorAll<HTMLLIElement>("li[data-event-id]") ?? []).find(
-            (element) => element.dataset.eventId === request.eventId,
-        );
+        let target = findTimelineEventElement(request.eventId);
 
         if (!target) {
             const wasMadeVisible = (await room.ensureTimelineEventVisible?.(request.eventId)) ?? false;
             if (wasMadeVisible) {
                 await tick();
-                target = Array.from(messageListRef?.querySelectorAll<HTMLLIElement>("li[data-event-id]") ?? []).find(
-                    (element) => element.dataset.eventId === request.eventId,
-                );
+                target = findTimelineEventElement(request.eventId);
             }
         }
 
@@ -568,7 +589,7 @@
         autoScroll = false;
         releaseScrollAnchor();
         beginProgrammaticScroll("resync");
-        target.scrollIntoView({ block: "center", behavior: "smooth" });
+        target.scrollIntoView({ block: "start", behavior: "smooth" });
         target.classList.remove("highlight-message");
         // // Force the highlight animation to restart when the same poll is clicked again.
         // target.offsetWidth;
