@@ -23,6 +23,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "你必须在浏览器设置里允许摄像头和麦克风访问权限。",
         cameraContent: "你必须在浏览器设置里允许摄像头访问权限。",
         microphoneContent: "你必须在浏览器设置里允许麦克风访问权限。",
+        safariContent:
+            "打开 Safari >「此网站的设置」（或 Safari > 设置 > 网站 > 摄像头 / 麦克风），将本站设为「允许」，然后刷新页面。",
         firefoxContent: '如果你不希望Firefox反复要求授权，请选中"记住此决定"。',
         allow: "允许网络摄像头",
         allowMicrophone: "允许麦克风",

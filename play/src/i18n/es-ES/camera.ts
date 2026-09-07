@@ -23,6 +23,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Debe permitir acceso a la cámara y el micrófono en el navegador.",
         cameraContent: "Debe permitir acceso a la cámara en el navegador.",
         microphoneContent: "Debe permitir acceso al micrófono en el navegador.",
+        safariContent:
+            'Abra Safari > Configuración para este sitio web… (o Safari > Configuración > Sitios web > Cámara / Micrófono), establezca este sitio en "Permitir" y actualice la página.',
         firefoxContent:
             'Por favor, haga clic en la caja "Recordar esta decisión", si no quiere que Firefox siga pidiéndole autorización.',
         allow: "Permitir webcam",

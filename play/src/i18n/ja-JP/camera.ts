@@ -23,6 +23,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "ブラウザからカメラとマイクへのアクセスを許可する必要があります。",
         cameraContent: "ブラウザからカメラへのアクセスを許可する必要があります。",
         microphoneContent: "ブラウザからマイクへのアクセスを許可する必要があります。",
+        safariContent:
+            "Safari >「このWebサイトの設定」（または Safari > 設定 > Webサイト > カメラ / マイク）を開き、このサイトを「許可」に設定してから、ページを再読み込みしてください。",
         firefoxContent:
             "今後 Firefox からの問い合わせを受けたくない場合は「今後も同様に処理する」にチェックを付けてください。",
         allow: "ウェブカメラを許可",

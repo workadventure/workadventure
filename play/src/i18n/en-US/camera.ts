@@ -24,6 +24,8 @@ const camera: BaseTranslation = {
         microphoneContent: "You must allow microphone access in your browser.",
         firefoxContent:
             'Please click the "Remember this decision" checkbox, if you don\'t want Firefox to keep asking you the authorization.',
+        safariContent:
+            'Open Safari > Settings for This Website… (or Safari > Settings > Websites > Camera / Microphone), set this site to "Allow", then refresh the page.',
         allow: "Allow webcam",
         allowMicrophone: "Allow microphone",
         allowCameraMicrophone: "Allow webcam and microphone",

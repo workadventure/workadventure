@@ -23,6 +23,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Přistup na kameru a mikrofon dyrbi so w browseru dopušćić dać.",
         cameraContent: "Přistup na kameru dyrbi so w browseru dopušćić dać.",
         microphoneContent: "Přistup na mikrofon dyrbi so w browseru dopušćić dać.",
+        safariContent:
+            'Wočiń Safari > Nastajenja za tute websydło… (abo Safari > Nastajenja > Websydła > Kamera / Mikrofon), staj tute sydło na "Dowolić" a začitaj stronu znowa.',
         firefoxContent:
             'Prošu zaklik na "Diese Entscheidungen speichern" šaltowanskej přestrjeni, zo by so wospjetnym naprašowanjam za dowolnosću w Firefox zadźěwało.',
         allow: "Webcam dowolić",

@@ -22,6 +22,8 @@ const camera: BaseTranslation = {
         content: "Você deve permitir o acesso à câmera e ao microfone em seu navegador.",
         cameraContent: "Você deve permitir o acesso à câmera em seu navegador.",
         microphoneContent: "Você deve permitir o acesso ao microfone em seu navegador.",
+        safariContent:
+            'Abra Safari > Configurações para este site… (ou Safari > Configurações > Sites > Câmera / Microfone), defina este site como "Permitir" e atualize a página.',
         firefoxContent:
             'Por favor, clique na caixa de seleção "Lembrar esta decisão", se você não quiser que o Firefox continue pedindo a autorização.',
         allow: "Permitir webcam",
