@@ -22,6 +22,7 @@ describe("TransitionPolicy", () => {
         stopRecordingByServer: () => Promise.resolve(null),
         stopRecordingIfRecorderMatches: () => Promise.resolve(null),
         hasRecordingSession: () => false,
+        getSessionRecorder: () => null,
         confirmRecordingStartedByWebhook: () => false,
         finishRecordingByWebhook: () => ({
             processed: false,
