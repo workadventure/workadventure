@@ -303,6 +303,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "เริ่มโดยปิดไมโครโฟน",
                 startWithVideoMuted: "เริ่มโดยปิดวิดีโอ",
                 disableChat: "ปิดใช้งานแชท",
+                raiseHandEnabled: "อนุญาตให้ยกมือ",
                 livekitRoomAdminTag: "แท็กผู้ควบคุมสำหรับห้องประชุม",
                 cancel: "ยกเลิก",
                 validate: "ตรวจสอบ",
@@ -325,6 +326,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         advancedOptions: "ตัวเลือกขั้นสูง",
         chatEnabled: "ผูกช่องแชทเฉพาะ",
         allowTalking: "อนุญาตให้พูดคุยและสร้างบับเบิล",
+        raiseHandEnabled: "อนุญาตให้ยกมือ",
         noProperties: "ยังไม่ได้กำหนดคุณสมบัติ",
     },
     areaEditor: {
