@@ -104,7 +104,6 @@
             if (!showPicker) {
                 const entry = lockableAreas[0];
                 if (canLockEntry(entry)) {
-                    analyticsClient.trackAdminEvent("bubble.lock.toggled");
                     lockAreaClick(entry);
                 }
                 return;
@@ -118,7 +117,6 @@
                 if (!triggerElement) {
                     return;
                 }
-                analyticsClient.trackAdminEvent("bubble.lock.toggled");
                 closeFloatingUi = showFloatingUi(
                     triggerElement,
                     LockableAreaPicker,

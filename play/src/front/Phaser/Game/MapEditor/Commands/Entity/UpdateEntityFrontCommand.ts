@@ -59,7 +59,10 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
                 height: entity.height,
             },
         );
-        analyticsClient.trackAdminEvent("map_editor.entity.updated", { entityType: this.newConfig.prefabRef?.id });
+        // From the entity, not the delta: a move or a property edit carries no prefabRef.
+        analyticsClient.trackAdminEvent("map_editor.entity.updated", {
+            entityType: entity.getEntityData().prefabRef.id,
+        });
     }
 
     private handleEntityUpdate(config: Partial<WAMEntityData>): void {

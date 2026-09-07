@@ -98,7 +98,7 @@
     }
 
     function visitCard(spaceUser: SpaceUserExtended) {
-        analyticsClient.trackAdminEvent("meeting.private_message.clicked");
+        analyticsClient.trackAdminEvent("user.business_card.opened");
         requestVisitCardsStore.set(spaceUser.visitCardUrl ?? null);
         close();
     }

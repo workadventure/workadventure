@@ -41,6 +41,7 @@
             createFolderError = undefined;
             loadingFolderCreation = true;
             await chat.createFolder(createFolderOptions);
+            analyticsClient.trackAdminEvent("chat.matrix_folder.created");
             modals.close();
             notifyUserForFolderCreation();
         } catch (error) {
@@ -52,7 +53,6 @@
             }
         } finally {
             loadingFolderCreation = false;
-            analyticsClient.trackAdminEvent("chat.matrix_folder.created");
         }
     }
 

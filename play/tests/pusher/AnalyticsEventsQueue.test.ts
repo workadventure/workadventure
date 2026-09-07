@@ -284,6 +284,52 @@ describe("AnalyticsEventsQueue", () => {
         });
     });
 
+    it("drain() waits for the only batch when it is already in flight", async () => {
+        // flush() has spliced the batch out before awaiting the POST, so the queue
+        // is empty while the request is pending. drain() must still wait for it.
+        let resolveInFlight: () => void = () => undefined;
+        const post = vi.fn().mockImplementationOnce(
+            () =>
+                new Promise<void>((resolve) => {
+                    resolveInFlight = resolve;
+                }),
+        );
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+        queue.enqueueEvent(event("event-1"), socketData());
+
+        const ongoingFlush = queue.flush();
+        let drained = false;
+        const draining = queue.drain(5_000).then(() => {
+            drained = true;
+        });
+        await new Promise<void>((resolve) => {
+            setTimeout(resolve, 80);
+        });
+        expect(drained).toBe(false);
+
+        resolveInFlight();
+        await ongoingFlush;
+        await draining;
+        expect(queue.getStats()).toMatchObject({ batchesSent: 1, eventsSent: 1 });
+    });
+
+    it("drops video quality samples whose metrics are not finite", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+
+        queue.enqueueVideoQualityReport({ samples: [videoQualitySample({ fps: Number.NaN })] }, socketData());
+        queue.enqueueVideoQualityReport(
+            { samples: [videoQualitySample({ bandwidthBytesPerSecond: Number.POSITIVE_INFINITY })] },
+            socketData(),
+        );
+        await queue.flush();
+
+        expect(post).not.toHaveBeenCalled();
+        expect(queue.getStats()).toMatchObject({ droppedInvalid: 2 });
+    });
+
     it("converts video quality reports to generic media events", async () => {
         const post = vi.fn().mockResolvedValue(undefined);
         const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));

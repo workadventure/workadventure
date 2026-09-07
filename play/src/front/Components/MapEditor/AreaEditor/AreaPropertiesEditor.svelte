@@ -428,7 +428,7 @@
 
     function onAddSpecificProperty(app: ApplicationDefinitionInterface) {
         if (!$mapEditorSelectedAreaPreviewStore) return;
-        analyticsClient.trackAdminEvent("map_editor.property.added", { name: app.name, type: "entity" });
+        analyticsClient.trackAdminEvent("map_editor.property.added", { name: app.name, type: "area" });
         const property: OpenWebsitePropertyData = {
             id: uuid(),
             type: "openWebsite",

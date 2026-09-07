@@ -167,7 +167,10 @@ export class AnalyticsEventsQueue {
         }
 
         const deadline = Date.now() + timeoutMs;
-        while (this.queue.length > 0 && Date.now() < deadline) {
+        // `isFlushing` too: flush() splices its batch out of the queue before
+        // awaiting the POST, so on the last batch the queue is already empty while
+        // the request is still in flight — and process.exit would cut it short.
+        while ((this.queue.length > 0 || this.isFlushing) && Date.now() < deadline) {
             const lengthBefore = this.queue.length;
             // eslint-disable-next-line no-await-in-loop
             await this.flush(deadline);
@@ -351,6 +354,18 @@ export class AnalyticsEventsQueue {
         const streamCategory = toStreamCategory(sample.streamCategory);
         const transportType = toTransportType(sample.transportType);
         if (!streamCategory || !transportType || !isRequiredString(sample.spaceName)) {
+            return undefined;
+        }
+
+        // NaN and Infinity are valid protobuf doubles but serialize to null, which
+        // the admin rejects — and a rejection costs a whole 422 split.
+        if (
+            !Number.isFinite(sample.fps) ||
+            !Number.isFinite(sample.jitter) ||
+            !Number.isFinite(sample.bandwidthBytesPerSecond) ||
+            !Number.isFinite(sample.frameWidth) ||
+            !Number.isFinite(sample.frameHeight)
+        ) {
             return undefined;
         }
 
