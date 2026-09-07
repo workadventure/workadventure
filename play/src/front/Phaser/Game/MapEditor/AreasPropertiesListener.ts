@@ -184,7 +184,14 @@ export class AreasPropertiesListener {
     }
 
     public onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
+        const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
         for (const areaData of areasData) {
+            // Skip areas the current user is not allowed to enter: they are about to be ejected, so
+            // we neither notify them, nor track the entry, nor apply the area's effects (meeting, ...).
+            if (areasManager?.isCurrentUserHasAreaAccess(areaData.id) === false) {
+                continue;
+            }
+
             // analytics event for area
             analyticsClient.enterAreaMapEditor(areaData.id, areaData.name);
 
@@ -368,6 +375,12 @@ export class AreasPropertiesListener {
     private abortControllers: Map<string, AbortController> = new Map();
 
     private addPropertyFilter(property: AreaDataProperty, areaData: AreaData, area?: Area) {
+        // Do not apply the effects of an area the current user is not allowed to enter (they are
+        // about to be ejected). This prevents, e.g., briefly joining a meeting when passing through
+        // — or being pushed out of — a restricted area.
+        if (this.scene.getGameMapFrontWrapper().areasManager?.isCurrentUserHasAreaAccess(areaData.id) === false) {
+            return;
+        }
         const abortController = new AbortController();
         this.abortControllers.set(property.id, abortController);
         switch (property.type) {

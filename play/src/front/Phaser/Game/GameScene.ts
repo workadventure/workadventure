@@ -3535,10 +3535,24 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("movePlayerTo", async (message) => {
+            if (
+                this.gameMapFrontWrapper.areasManager?.isPositionAllowedForCurrentUser(message.x, message.y) === false
+            ) {
+                throw new Error(
+                    "WA.player.moveTo: the target position is inside a restricted area the user does not have access to.",
+                );
+            }
             return this.moveTo({ x: message.x, y: message.y }, true, message.speed);
         });
 
         iframeListener.registerAnswerer("teleportPlayerTo", (message) => {
+            if (
+                this.gameMapFrontWrapper.areasManager?.isPositionAllowedForCurrentUser(message.x, message.y) === false
+            ) {
+                throw new Error(
+                    "WA.player.teleport: the target position is inside a restricted area the user does not have access to.",
+                );
+            }
             this.CurrentPlayer.teleportTo(message.x, message.y);
         });
 

@@ -41,6 +41,22 @@ export class User implements Movable, CustomJsonReplacerInterface {
      */
     public readonly queryMessageAbortControllers = new Map<number, AbortController>();
 
+    /**
+     * Timestamp (ms) of the last position correction sent to this user after a denied move into a
+     * restricted area. Used to throttle corrections against a client spamming forbidden positions.
+     */
+    public lastPositionCorrectionAt = 0;
+
+    /**
+     * The last position this user held that the server checked and accepted against the map's area
+     * rights. Used as the fallback destination when someone must be ejected from an area that just
+     * became restricted around them and no allowed position can be computed from the geometry: a
+     * position the server itself validated beats anything we could invent.
+     * Undefined until the user's first accepted move (their spawn position is not validated by
+     * `updatePosition`, it goes through `sanitizeSpawnPosition` instead).
+     */
+    public lastAllowedPosition: PointInterface | undefined;
+
     public constructor(
         public id: number,
         public readonly uuid: string,
