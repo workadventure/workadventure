@@ -104,6 +104,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Hiện biểu tượng cảm xúc",
             desc: "Thể hiện cảm xúc của bạn chỉ với một cú bấm bằng biểu tượng cảm xúc. Bấm là xong!",
         },
+        raiseHand: {
+            title: "Giơ tay",
+            desc: "Ra hiệu rằng bạn muốn phát biểu. Bàn tay giơ lên của bạn được hiển thị trên bản đồ và trên video của bạn, để mọi người biết đến lượt ai tiếp theo.",
+        },
         audioManager: {
             title: "Âm lượng âm thanh môi trường",
             desc: "Bấm vào đây để chỉnh âm lượng.",
@@ -129,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "Chọn khu vực để khóa/mở khóa",
             bubbleLabel: "Bong bóng thảo luận",
             unnamedArea: "Khu vực chưa đặt tên",
+        },
+        giveBackFloor: {
+            title: "Trả lại quyền phát biểu",
+            desc: "Bạn đã được trao quyền phát biểu. Nhấp để ngừng nói và trả lại quyền này.",
         },
         megaphone: {
             title: "Tắt loa phóng thanh",
@@ -177,6 +185,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Bạn có thể dùng chế độ hình trong hình để xem video hoặc bài thuyết trình trong khi đang trò chuyện. Chỉ cần bấm vào biểu tượng hình trong hình và tận hưởng nội dung của bạn.",
         },
         videoNotSupported: "Trình duyệt của bạn không hỗ trợ thẻ video.",
+    },
+    raisedHands: {
+        speaking: "Đang phát biểu",
+        title: "Tay đang giơ",
+        empty: "Chưa có ai giơ tay",
+        help: "Xem ai đã giơ tay, theo thứ tự, và trao quyền phát biểu cho họ.",
     },
     listStatusTitle: {
         enable: "Đổi trạng thái của bạn",
