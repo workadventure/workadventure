@@ -36,6 +36,10 @@ const warning: DeepPartial<Translation["warning"]> = {
         confirmContinue: "理解しました、続ける",
         dontRemindAgain: "このメッセージを再表示しない",
     },
+    livekitConnection: {
+        critical: "他のユーザーとの通信に問題が発生する可能性があります。",
+        warning: "オーディオまたはビデオの品質が低下する可能性があります。",
+    },
     browserNotSupported: {
         title: "😢 サポートされていないブラウザ",
         message: "お使いのブラウザ（{browserName}）は、WorkAdventureでサポートされなくなりました。",

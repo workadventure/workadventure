@@ -23,6 +23,10 @@ const warning: DeepPartial<Translation["warning"]> = {
     backgroundProcessing: {
         failedToApply: "套用背景效果失敗",
     },
+    livekitConnection: {
+        critical: "您可能會遇到與其他使用者的通訊問題。",
+        warning: "您的音訊或視訊品質可能會降低。",
+    },
     popupBlocked: {
         title: "彈出視窗被封鎖",
         content: "請在您的瀏覽器設定中允許此網站的彈出視窗。",
