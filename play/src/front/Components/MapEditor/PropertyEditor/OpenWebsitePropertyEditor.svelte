@@ -226,6 +226,7 @@
                     klaxoonId: applicationManager.klaxoonToolClientId,
                     excalidrawDomains: applicationManager.excalidrawToolDomains,
                 });
+                if (embedLink === undefined) throw new Error(`No embed link for ${property.link}`);
                 if (embedLink != property.link) property.link = embedLink;
 
                 if (property.application == "youtube")

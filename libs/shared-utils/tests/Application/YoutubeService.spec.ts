@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { isEmbeddableYoutubeLink, isYoutubeLink, validateYoutubeLink } from "../../src/Application/YoutubeService";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import axios from "axios";
+import {
+    getYoutubeEmbedUrl,
+    isEmbeddableYoutubeLink,
+    isYoutubeLink,
+    validateYoutubeLink,
+} from "../../src/Application/YoutubeService";
 import { YoutubeException } from "../../src/Application/Exception/YoutubeException";
 
 describe("isYoutubeLink", () => {
@@ -32,5 +38,22 @@ describe("validateYoutubeLink", () => {
     it("throws a YoutubeException on a non YouTube link", () => {
         expect(() => validateYoutubeLink(new URL("https://example.com"))).toThrow(YoutubeException);
         expect(() => validateYoutubeLink(new URL("https://youtu.be/6ZfuNTqbHE8"))).not.toThrow();
+    });
+});
+
+describe("getYoutubeEmbedUrl", () => {
+    const oembed = vi.spyOn(axios, "get");
+    afterEach(() => oembed.mockReset());
+
+    it("keeps an embed link as is without asking YouTube", async () => {
+        await expect(getYoutubeEmbedUrl(new URL("https://www.youtube.com/embed/6ZfuNTqbHE8"))).resolves.toBe(
+            "https://www.youtube.com/embed/6ZfuNTqbHE8",
+        );
+        expect(oembed).not.toHaveBeenCalled();
+    });
+
+    it("returns undefined when YouTube has no embed form for the video", async () => {
+        oembed.mockRejectedValueOnce(new Error("Request failed with status code 401"));
+        await expect(getYoutubeEmbedUrl(new URL("https://youtu.be/private"))).resolves.toBeUndefined();
     });
 });

@@ -34,10 +34,15 @@ export const enum defaultNativeIntegrationAppId {
     TLDRAW = "tldraw",
 }
 
+/**
+ * Returns the form of the link that can be framed: the embed URL of a known application, or the
+ * link itself for anything else. Undefined means the link belongs to a known application that has
+ * no embed form for it (a private YouTube video, for instance).
+ */
 export async function getEmbedLink(
     url: URL,
     properties?: { klaxoonId?: string; excalidrawDomains?: string[] },
-): Promise<string> {
+): Promise<string | undefined> {
     if (CardsService.isCardsLink(url)) {
         return CardsService.getCardsLink(url);
     }

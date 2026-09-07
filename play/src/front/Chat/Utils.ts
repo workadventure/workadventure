@@ -181,15 +181,11 @@ export function getMatrixClientForChatTint(): MatrixClient | undefined {
  *
  * The message keeps showing the link as it was posted. Only at click time do we resolve the embed
  * form known apps require (YouTube's /embed/, Google's /preview, Klaxoon's from=embedded...):
- * that is what we probe and what we embed, since the posted form is often not frameable.
+ * that is what we probe and what we embed, since the posted form is often not frameable. When no
+ * embed form exists, the link is probed as posted and the probe decides.
  */
 export const openChatLinkAsCoWebsite = async (rawUrl: string): Promise<void> => {
-    let url = rawUrl;
-    try {
-        url = await getEmbedLink(rawUrl);
-    } catch (error) {
-        console.info("Could not resolve an embed link for the chat link, using it as posted", error);
-    }
+    const url = (await getEmbedLink(rawUrl)) ?? rawUrl;
 
     let embeddable: boolean;
     try {

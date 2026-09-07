@@ -103,10 +103,12 @@
         try {
             const url = new URL(link);
             validateLinkForApplication(url, property.name);
-            link = await getEmbedLink(url, {
+            const embedLink = await getEmbedLink(url, {
                 klaxoonId: applicationManager.klaxoonToolClientId,
                 excalidrawDomains: applicationManager.excalidrawToolDomains,
             });
+            if (embedLink === undefined) throw new Error(`No embed link for ${url}`);
+            link = embedLink;
             if (property.regexUrl) {
                 link = ApplicationService.validateLink(
                     new URL(link),
