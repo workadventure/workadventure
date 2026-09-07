@@ -152,7 +152,13 @@ import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBri
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { megaphoneCanBeUsedStore, megaphoneSpaceSettingsStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
+import {
+    megaphoneCanBeUsedStore,
+    megaphoneSpaceSettingsStore,
+    megaphoneSpaceStore,
+    requestedMegaphoneStore,
+} from "../../Stores/MegaphoneStore";
+import { stopMegaphoneLive } from "../../Components/ActionBar/MenuIcons/megaphoneActions";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -1211,6 +1217,14 @@ export class GameScene extends DirtyScene {
         this.gameMapPropertiesListener?.destroy();
         this.pathfindingManager?.cleanup();
 
+        // A broadcast does not follow the user into the next room, but nothing said
+        // so: the action bar kept offering to stop it, and its analytics interval —
+        // opened with reopenOnReconnect — was resumed on the next room's socket as if
+        // the megaphone were still on. Guarded so an idle room change does not count
+        // as a stop.
+        if (get(requestedMegaphoneStore)) {
+            stopMegaphoneLive();
+        }
         this._broadcastService?.destroy().catch((e) => {
             console.error("Error while destroying broadcast service", e);
             Sentry.captureException(e);
