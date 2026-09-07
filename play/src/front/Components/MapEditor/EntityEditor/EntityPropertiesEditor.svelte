@@ -153,6 +153,7 @@
                         startWithAudioMuted: false,
                         startWithVideoMuted: false,
                         disableChat: false,
+                        raiseHandEnabled: true,
                     },
                     livekitRoomAdminTag: "",
                 };
