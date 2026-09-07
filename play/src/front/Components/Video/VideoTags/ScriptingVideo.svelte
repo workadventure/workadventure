@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { ScriptingVideoStreamable } from "../../../Space/Streamable";
+    import { audioOutput } from "../../../WebRtc/AudioOutputManager";
 
     interface Props {
         style: string;
@@ -23,6 +24,7 @@
 
 <!-- svelte-ignore a11y_media_has_caption -->
 <video
+    use:audioOutput
     {style}
     bind:videoWidth
     bind:videoHeight

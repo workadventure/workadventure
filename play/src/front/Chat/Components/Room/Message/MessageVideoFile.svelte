@@ -2,6 +2,7 @@
     import type { Readable } from "svelte/store";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
     import LL from "../../../../../i18n/i18n-svelte";
+    import { audioOutput } from "../../../../WebRtc/AudioOutputManager";
 
     interface Props {
         content: Readable<ChatMessageContent>;
@@ -20,7 +21,7 @@
     </div>
 {:else if $content.url !== undefined}
     <!-- svelte-ignore a11y_media_has_caption -->
-    <video controls class="w-full block rounded">
+    <video use:audioOutput controls class="w-full block rounded">
         <source src={$content.url} />
     </video>
 {/if}

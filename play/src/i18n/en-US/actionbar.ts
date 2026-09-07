@@ -55,6 +55,12 @@ const actionbar: BaseTranslation = {
     speaker: {
         disabled: "Your speaker is disabled",
         activate: "Activate your speaker",
+        test: "Test audio output",
+        unnamedDevice: "Audio output {index}",
+        loading: "Looking for audio outputs…",
+        unsupported:
+            "This browser does not let you choose an audio output. Sound plays on the device selected in your system settings.",
+        fallbackInUse: "Your browser refused this device. Sound is playing on the system default.",
         noDevices: "No speaker device found",
         noDevicesDesc:
             "Your browser does not list any selectable audio output. Some browsers limit this (for example Safari). Try another browser, reconnect headphones or speakers, check your system sound settings and your computer's configuration (privacy, devices).",

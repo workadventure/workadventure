@@ -3,6 +3,7 @@
     import { onDestroy } from "svelte";
     import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { audioOutput } from "../../WebRtc/AudioOutputManager";
     import { IconMusic, IconPause, IconPauseFilled, IconPlay, IconPlayFilled } from "@wa-icons";
 
     interface Props {
@@ -59,7 +60,7 @@
 >
     <IconMusic class="top-0 bottom-0 h-8 w-8 m-2" />
     <p>{$LL.audio.message()}</p>
-    <audio bind:this={audio} src={url} onended={soundEnded}>
+    <audio use:audioOutput bind:this={audio} src={url} onended={soundEnded}>
         <track kind="captions" />
     </audio>
     <!-- Button to stop the audio -->

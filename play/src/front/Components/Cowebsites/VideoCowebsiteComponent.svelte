@@ -2,6 +2,7 @@
     import { onMount, onDestroy } from "svelte";
     import type { VideoCoWebsite } from "../../WebRtc/CoWebsite/VideoCoWebsite";
     import { screenWakeLock } from "../../Utils/ScreenWakeLock";
+    import { audioOutput } from "../../WebRtc/AudioOutputManager";
 
     interface Props {
         actualCowebsite: VideoCoWebsite;
@@ -65,6 +66,7 @@
 <div class="relative w-full h-full flex items-center justify-center bg-black" class:hidden={!visible}>
     <!-- svelte-ignore a11y_media_has_caption -->
     <video
+        use:audioOutput
         bind:this={videoElement}
         controls
         preload="metadata"

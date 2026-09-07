@@ -1,5 +1,6 @@
 <script lang="ts">
     import * as Sentry from "@sentry/svelte";
+    import { playNotificationSound } from "../../WebRtc/AudioOutputManager";
     import Button from "../UI/Button.svelte";
     import Select from "./Select.svelte";
 
@@ -29,16 +30,13 @@
         playLabel = "▶",
     }: Props = $props();
 
-    const sound = new Audio();
-
     function playSelectedSound(selectedValue: string = value) {
         const url = getSoundUrl(selectedValue);
         if (!url) {
             return;
         }
-        sound.src = url;
-        sound.volume = volume;
-        sound.play().catch((e) => {
+        // Preview on the selected audio output, so it matches where the sound will actually play.
+        playNotificationSound(url, volume).catch((e) => {
             console.error(e);
             Sentry.captureException(e);
         });

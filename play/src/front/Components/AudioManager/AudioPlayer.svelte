@@ -17,6 +17,7 @@
     import { warningMessageStore } from "../../Stores/ErrorStore";
     import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { audioOutput } from "../../WebRtc/AudioOutputManager";
 
     let HTMLAudioPlayer: HTMLAudioElement | undefined;
     let unsubscriberFileStore: Unsubscriber | null = null;
@@ -167,4 +168,4 @@
     }
 </script>
 
-<audio preload="auto" class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer}></audio>
+<audio use:audioOutput preload="auto" class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer}></audio>

@@ -8,6 +8,8 @@
         requestedMicrophoneState,
         speakerListStore,
         speakerSelectedStore,
+        speakerSelectionSupported,
+        usedSpeakerDeviceIdStore,
         silentStore,
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
@@ -20,6 +22,7 @@
     import { cameraPermissionStateStore, microphonePermissionStateStore } from "../../../Stores/MediaStatusStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { playTestSound } from "../../../WebRtc/AudioOutputManager";
     import { noiseSuppressionEnabledStore, noiseSuppressionStateStore } from "../../../Stores/NoiseSuppressionStore";
     import { handleOpenMenuEvent, settingsSubMenuTargetStore, SubMenusInterface } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -29,7 +32,7 @@
     import SectionDivider from "./SectionDivider.svelte";
     import SectionTitle from "./SectionTitle.svelte";
     import DeviceListItem from "./DeviceListItem.svelte";
-    import { IconCamera, IconHeadphones, IconMicrophoneOn, IconSettings } from "@wa-icons";
+    import { IconCamera, IconHeadphones, IconMicrophoneOn, IconSettings, IconUnMute } from "@wa-icons";
 
     interface Props {
         oncameraselected?: () => void;
@@ -53,6 +56,22 @@
         localUserStore.setSpeakerDeviceId(deviceId);
         speakerSelectedStore.set(deviceId);
     }
+
+    function testSpeaker() {
+        playTestSound($speakerSelectedStore).catch((e) => console.error(e));
+    }
+
+    // Without microphone permission the browser hands back empty labels, which would render as
+    // blank rows.
+    function speakerLabel(speaker: MediaDeviceInfo, index: number): string {
+        return speaker.label || $LL.actionbar.speaker.unnamedDevice({ index: index + 1 });
+    }
+
+    // The selection is what the user asked for; usedSpeakerDeviceIdStore is what the browser
+    // actually applied. A mismatch means setSinkId was refused and we fell back.
+    let speakerFallbackInUse = $derived(
+        $usedSpeakerDeviceIdStore !== undefined && $usedSpeakerDeviceIdStore !== $speakerSelectedStore,
+    );
 
     function cameraClick(): void {
         if ($silentStore) return;
@@ -286,11 +305,43 @@
                 <IconHeadphones font-size="14" />
                 {$LL.actionbar.subtitle.speaker()}
             </div>
+            {#snippet actions()}
+                {#if $speakerListStore && $speakerListStore.length > 0}
+                    <button
+                        type="button"
+                        data-testid="speaker-test-button"
+                        class="flex h-7 w-7 items-center justify-center rounded text-white/50 hover:bg-white/10 hover:text-white"
+                        aria-label={$LL.actionbar.speaker.test()}
+                        title={$LL.actionbar.speaker.test()}
+                        onclick={testSpeaker}
+                    >
+                        <IconUnMute font-size="14" />
+                    </button>
+                {/if}
+            {/snippet}
         </SectionTitle>
-        {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
-            {#each $speakerListStore as speaker, index (index)}
+        <!-- Every branch below renders something: an empty section with no explanation was the bug. -->
+        {#if !speakerSelectionSupported}
+            <div class="group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
+                <div class="text-sm italic text-center text-white/55" data-testid="speaker-unsupported">
+                    {$LL.actionbar.speaker.unsupported()}
+                </div>
+            </div>
+        {:else if $speakerListStore === undefined}
+            <div class="group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
+                <div class="text-sm italic text-center text-white/55">{$LL.actionbar.speaker.loading()}</div>
+            </div>
+        {:else if $speakerListStore.length === 0}
+            <div class="group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
+                <div class="text-sm italic text-center">
+                    <p class="text-sm p-0 m-0">{$LL.actionbar.speaker.noDevices()}</p>
+                    <span class="text-xs text-white/55">{$LL.actionbar.speaker.noDevicesDesc()}</span>
+                </div>
+            </div>
+        {:else}
+            {#each $speakerListStore as speaker, index (speaker.deviceId)}
                 <DeviceListItem
-                    label={speaker.label}
+                    label={speakerLabel(speaker, index)}
                     isSelected={$speakerSelectedStore === speaker.deviceId}
                     onclick={() => {
                         analyticsClient.selectSpeaker();
@@ -298,17 +349,11 @@
                     }}
                 />
             {/each}
-        {:else if $speakerListStore !== undefined}
-            <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
-                <div class="text-sm italic text-center">
-                    {#if $speakerListStore.length === 0}
-                        <p class="text-sm p-0 m-0">{$LL.actionbar.speaker.noDevices()}</p>
-                        <span class="text-xs text-white/55">{$LL.actionbar.speaker.noDevicesDesc()}</span>
-                    {:else}
-                        {$LL.actionbar.speaker.disabled()}
-                    {/if}
+            {#if speakerFallbackInUse}
+                <div class="px-2 py-1 text-xs text-pop-red" data-testid="speaker-fallback-warning">
+                    {$LL.actionbar.speaker.fallbackInUse()}
                 </div>
-            </div>
+            {/if}
         {/if}
     </div>
 </div>

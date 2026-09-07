@@ -52,6 +52,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         ignore: "تجاهل",
     },
     speaker: {
+        test: "اختبار مخرج الصوت",
+        unnamedDevice: "مخرج الصوت {index}",
+        loading: "جارٍ البحث عن مخارج الصوت…",
+        unsupported: "لا يتيح هذا المتصفح اختيار مخرج الصوت. يُشغَّل الصوت على الجهاز المحدد في إعدادات النظام.",
+        fallbackInUse: "رفض متصفحك هذا الجهاز. يُشغَّل الصوت على الجهاز الافتراضي للنظام.",
         disabled: "مكبر الصوت معطل",
         activate: "قم بتنشيط مكبر الصوت",
         noDevices: "لم يتم العثور على جهاز مكبر صوت",
