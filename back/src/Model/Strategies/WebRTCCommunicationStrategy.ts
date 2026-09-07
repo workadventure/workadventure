@@ -231,7 +231,17 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private sendWebRTCDisconnect(senderId: string, receiverId: string): void {
+        if (!this._connections.hasConnection(senderId, receiverId)) {
+            // Nothing to tear down: don't notify the receiver of a connection that does not exist.
+            return;
+        }
         this._connections.removeConnection(senderId, receiverId);
+        if (!this._space.getUser(senderId)) {
+            // The sender already left the space (its removal is what triggered this teardown).
+            // dispatchPrivateEvent would throw because it needs the sender, and the receiver is
+            // already told to drop the peer by the removeSpaceUserMessage broadcast.
+            return;
+        }
         this._space.dispatchPrivateEvent({
             spaceName: this._space.getSpaceName(),
             receiverUserId: receiverId,
