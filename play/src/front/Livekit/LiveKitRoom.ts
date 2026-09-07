@@ -1,3 +1,6 @@
+// Side-effect import: disables livekit-client's wasted per-frame time-sync monitor before any
+// Room/track is created. See patchLivekitTimeSync.ts for the rationale.
+import "./patchLivekitTimeSync";
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
 import type { LocalParticipant, Participant, RemoteParticipant, TrackPublishOptions } from "livekit-client";
