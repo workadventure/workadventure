@@ -1,6 +1,7 @@
 <script lang="ts">
     import { LL } from "../../../i18n/i18n-svelte";
     import { raisedHandsStore, speakingUsersStore } from "../../Stores/PeerStore";
+    import { floorControlsVisibleStore } from "../../Stores/RaisedHandsAdminVisibleStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import type { PictureStore } from "../../Stores/PictureStore";
@@ -41,14 +42,16 @@
             <div class="flex items-center gap-2 p-1 rounded hover:bg-white/10">
                 <RaisedHandAvatar pictureStore={getPictureStore(entry.spaceUserId)} name={entry.name} />
                 <span class="text-white text-sm grow truncate">{entry.name}</span>
-                <Button
-                    variant="secondary"
-                    size="xs"
-                    dataTestId="panel-give-floor"
-                    onclick={() => giveFloor(entry.spaceUserId)}
-                >
-                    {$LL.camera.menu.giveFloor()}
-                </Button>
+                {#if $floorControlsVisibleStore}
+                    <Button
+                        variant="secondary"
+                        size="xs"
+                        dataTestId="panel-give-floor"
+                        onclick={() => giveFloor(entry.spaceUserId)}
+                    >
+                        {$LL.camera.menu.giveFloor()}
+                    </Button>
+                {/if}
             </div>
         {/each}
     {/if}
@@ -61,14 +64,16 @@
             <div class="flex items-center gap-2 p-1 rounded hover:bg-white/10">
                 <RaisedHandAvatar pictureStore={getPictureStore(entry.spaceUserId)} name={entry.name} />
                 <span class="text-white text-sm grow truncate">{entry.name}</span>
-                <Button
-                    variant="danger"
-                    size="xs"
-                    dataTestId="panel-revoke-floor"
-                    onclick={() => revokeFloor(entry.spaceUserId)}
-                >
-                    {$LL.camera.menu.revokeFloor()}
-                </Button>
+                {#if $floorControlsVisibleStore}
+                    <Button
+                        variant="danger"
+                        size="xs"
+                        dataTestId="panel-revoke-floor"
+                        onclick={() => revokeFloor(entry.spaceUserId)}
+                    >
+                        {$LL.camera.menu.revokeFloor()}
+                    </Button>
+                {/if}
             </div>
         {/each}
     {/if}

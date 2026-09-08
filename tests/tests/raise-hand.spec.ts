@@ -16,12 +16,12 @@ test.use({
 
 // These tests exercise the raise-hand feature in a LiveKit meeting area, one of the two zones that offer it
 // (the other being a megaphone audience, covered in raise-hand-megaphone.spec.ts). The raise-hand state
-// travels through the space metadata queue, so this also covers that pipeline end to end (badge ordering +
-// give-the-floor).
+// travels through the space metadata queue, so this also covers that pipeline end to end (badge ordering).
 //
-// A proximity bubble offers the control too, without any promotion: the raised hands form an ordered queue
-// every participant sees, so whoever leads the discussion can give the floor orally ("give the floor" there
-// only lowers the hand). The meeting area can turn the control off; both are asserted below.
+// In a meeting area, as in a proximity bubble, everybody already speaks: the raised hands are an ordered
+// queue every participant sees (badge on the tile + panel) with no "give the floor" control, whoever leads
+// the discussion hands the floor over orally and each user lowers their own hand. Giving / taking back the
+// floor only exists in a megaphone broadcast. The meeting area can turn the control off; all asserted below.
 test.describe("Raise hand @oidc @nomobile @nowebkit", () => {
     test.beforeEach(({ browserName, page }) => {
         // Map editor is unavailable on mobile, and WebKit has camera issues in CI.
@@ -37,7 +37,7 @@ test.describe("Raise hand @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
     }
 
-    test("in a proximity bubble everyone sees the queue and can give the floor, which only lowers the hand @nofirefox", async ({
+    test("in a proximity bubble everyone sees the queue, without any give-the-floor control @nofirefox", async ({
         browser,
         request,
     }) => {
@@ -64,14 +64,15 @@ test.describe("Raise hand @oidc @nomobile @nowebkit", () => {
         await expect(dock).toBeVisible({ timeout: 20_000 });
         await expect(dock.getByTestId("raised-hands-panel")).toContainText("Bob");
 
-        // Alice gives Bob the floor from the queue: nothing to promote in a bubble, Bob is just told it is his
-        // turn and his hand goes down, which empties (and hides) the queue.
-        await dock.getByTestId("panel-give-floor").click();
-        await expect(bob.getByText(/It's your turn to speak/)).toBeVisible({ timeout: 20_000 });
+        // Nothing to promote in a bubble, so the queue offers no "give the floor" button to Alice...
+        await expect(dock.getByTestId("panel-give-floor")).toHaveCount(0);
+
+        // ...and Bob lowers his own hand, which empties (and hides) the queue.
+        await bob.getByTestId("raise-hand-button").click();
         await expect(dock).toBeHidden({ timeout: 20_000 });
     });
 
-    test("a raised hand shows an ordered badge to others, and giving the floor lowers it @nofirefox", async ({
+    test("a raised hand shows an ordered badge to others, with no give-the-floor control in a meeting room @nofirefox", async ({
         browser,
         request,
     }) => {
@@ -99,12 +100,15 @@ test.describe("Raise hand @oidc @nomobile @nowebkit", () => {
         await expect(bobBoxOnAlice.getByTestId("raised-hand-badge")).toBeVisible({ timeout: 20_000 });
         await expect(bobBoxOnAlice.getByTestId("raised-hand-badge")).toContainText("1");
 
-        // Alice opens Bob's tile menu and gives him the floor.
+        // Everybody already speaks in a meeting room, so Bob's tile menu offers Alice (an admin) no "give the
+        // floor" action, even though his hand is up; the queue panel has none either.
         await bobBoxOnAlice.locator(".user-menu-btn").click();
-        await alice.getByTestId("give-floor-user").click();
+        await expect(alice.locator(".mute-audio-user")).toBeVisible();
+        await expect(alice.getByTestId("give-floor-user")).toHaveCount(0);
+        await expect(alice.getByTestId("panel-give-floor")).toHaveCount(0);
 
-        // Bob is notified that it is his turn, and his raised hand is lowered (the badge disappears for Alice).
-        await expect(bob.getByText(/It's your turn to speak/)).toBeVisible({ timeout: 20_000 });
+        // Bob lowers his own hand: the badge disappears for Alice.
+        await bob.getByTestId("raise-hand-button").click();
         await expect(bobBoxOnAlice.getByTestId("raised-hand-badge")).toBeHidden({ timeout: 20_000 });
     });
 

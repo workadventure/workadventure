@@ -26,7 +26,7 @@ import { userIsAdminStore } from "./GameStore";
 import { inLivekitStore, isSpeakerStore } from "./MediaStore";
 import { givenFloorSpaceStore } from "./MegaphoneStore";
 import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
-import { raisedHandsAdminVisibleStore } from "./RaisedHandsAdminVisibleStore";
+import { floorControlsVisibleStore, raisedHandsAdminVisibleStore } from "./RaisedHandsAdminVisibleStore";
 
 const queue = raisedHandsStore as unknown as Writable<RaisedHand[]>;
 const speakers = speakingUsersStore as unknown as Writable<FloorSpeaker[]>;
@@ -107,5 +107,28 @@ describe("raisedHandsAdminVisibleStore", () => {
     it("stays hidden in a bubble while nobody has raised a hand", () => {
         currentPlayerGroupIdStore.set(42);
         expect(get(raisedHandsAdminVisibleStore)).toBe(false);
+    });
+});
+
+describe("floorControlsVisibleStore", () => {
+    const reset = () => {
+        currentPlayerGroupIdStore.set(undefined);
+        inLivekitStore.set(false);
+    };
+    beforeEach(reset);
+    afterEach(reset);
+
+    it("offers the floor controls in a megaphone broadcast", () => {
+        expect(get(floorControlsVisibleStore)).toBe(true);
+    });
+
+    it("hides them in a proximity bubble, where everybody already speaks", () => {
+        currentPlayerGroupIdStore.set(42);
+        expect(get(floorControlsVisibleStore)).toBe(false);
+    });
+
+    it("hides them in a meeting room, where everybody already speaks", () => {
+        inLivekitStore.set(true);
+        expect(get(floorControlsVisibleStore)).toBe(false);
     });
 });
