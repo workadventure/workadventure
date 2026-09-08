@@ -144,8 +144,14 @@ export class CommunicationManager implements ICommunicationManager {
         this.userRegistry.addUser(user);
         this.cancelPendingTransitionIfNeeded();
 
-        await this.lifecycleManager.getCurrentState().handleUserAdded(user);
+        // Decide the strategy before telling the joiner which one to use. If this join tips the
+        // bubble into LiveKit, the old state's switchState() already told the joiner (the registry
+        // maps are shared with the states) and the new state's init() already added them.
+        const stateBefore = this.lifecycleManager.getCurrentState();
         await this.evaluateAndHandleTransition(user);
+        if (this.lifecycleManager.getCurrentState() === stateBefore) {
+            await stateBefore.handleUserAdded(user);
+        }
     }
 
     public async handleUserDeleted(user: SpaceUser): Promise<void> {
@@ -164,8 +170,12 @@ export class CommunicationManager implements ICommunicationManager {
         this.userRegistry.addUserToNotify(user);
         this.cancelPendingTransitionIfNeeded();
 
-        await this.lifecycleManager.getCurrentState().handleUserToNotifyAdded(user);
+        // Same ordering as handleUserAdded.
+        const stateBefore = this.lifecycleManager.getCurrentState();
         await this.evaluateAndHandleTransition(user);
+        if (this.lifecycleManager.getCurrentState() === stateBefore) {
+            await stateBefore.handleUserToNotifyAdded(user);
+        }
     }
 
     public async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
@@ -231,26 +241,36 @@ export class CommunicationManager implements ICommunicationManager {
         type: CommunicationType,
         context: TransitionContext,
     ): Promise<void> {
-        const nextState = await this.orchestrator.executeImmediateTransition(type, context);
+        // Hold the transition lock so a handler arriving mid-creation (typically the joiner's watch)
+        // waits for this transition instead of cancelling it and creating a second LiveKit state.
+        const transition = (async () => {
+            const nextState = await this.orchestrator.executeImmediateTransition(type, context);
 
-        if (!nextState) {
-            return;
+            if (!nextState) {
+                return;
+            }
+
+            // Final validation before setting state
+            const currentType = this.lifecycleManager.getCurrentState().communicationType as CommunicationType;
+            const userCount = this.space.getAllUsers().length;
+
+            if (!this.policy.shouldTransition(currentType, userCount)) {
+                return;
+            }
+
+            const expectedNextType = this.policy.getNextStateType(currentType, userCount);
+            if (expectedNextType && nextState.communicationType !== expectedNextType) {
+                return;
+            }
+
+            await this.lifecycleManager.transitionTo(nextState);
+        })();
+        this.orchestrator.setTransitionLock(transition);
+        try {
+            await transition;
+        } finally {
+            this.orchestrator.clearTransitionLock();
         }
-
-        // Final validation before setting state
-        const currentType = this.lifecycleManager.getCurrentState().communicationType as CommunicationType;
-        const userCount = this.space.getAllUsers().length;
-
-        if (!this.policy.shouldTransition(currentType, userCount)) {
-            return;
-        }
-
-        const expectedNextType = this.policy.getNextStateType(currentType, userCount);
-        if (expectedNextType && nextState.communicationType !== expectedNextType) {
-            return;
-        }
-
-        await this.lifecycleManager.transitionTo(nextState);
     }
 
     /**

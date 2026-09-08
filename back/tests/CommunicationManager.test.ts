@@ -34,7 +34,7 @@ describe("CommunicationManager", () => {
 
     // Real state object (minimal implementation)
     const createState = (
-        type: CommunicationType
+        type: CommunicationType,
     ): ICommunicationState<ICommunicationStrategy> & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
         const mocks = {
             init: vi.fn().mockResolvedValue(undefined),
@@ -112,7 +112,7 @@ describe("CommunicationManager", () => {
     // Real policy implementation (simple, testable)
     const createPolicy = (
         shouldTransitionResult = false,
-        nextStateType: CommunicationType | null = null
+        nextStateType: CommunicationType | null = null,
     ): ITransitionPolicy & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
         const mocks = {
             shouldTransition: vi.fn().mockReturnValue(shouldTransitionResult),
@@ -152,7 +152,7 @@ describe("CommunicationManager", () => {
 
     // Real lifecycle manager implementation
     const createLifecycleManager = (
-        initialState: ICommunicationState<ICommunicationStrategy>
+        initialState: ICommunicationState<ICommunicationStrategy>,
     ): IStateLifecycleManager & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
         const mocks = {
             getCurrentState: vi.fn().mockReturnValue(initialState),
@@ -171,7 +171,7 @@ describe("CommunicationManager", () => {
 
     // Initial state factory
     const createInitialStateFactory = (
-        state: ICommunicationState<ICommunicationStrategy>
+        state: ICommunicationState<ICommunicationStrategy>,
     ): InitialStateFactory & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
         const mocks = {
             createInitialState: vi.fn().mockReturnValue(state),
@@ -235,7 +235,7 @@ describe("CommunicationManager", () => {
             expect(initialStateFactory.mocks.createInitialState).toHaveBeenCalledWith(
                 space,
                 expect.any(Map),
-                expect.any(Map)
+                expect.any(Map),
             );
         });
     });
@@ -531,7 +531,7 @@ describe("CommunicationManager", () => {
                 expect.objectContaining({
                     space: space,
                     playUri: user.playUri,
-                })
+                }),
             );
         });
 
@@ -555,7 +555,7 @@ describe("CommunicationManager", () => {
                 CommunicationType.WEBRTC,
                 expect.any(Object),
                 expect.any(Function),
-                expect.any(Function)
+                expect.any(Function),
             );
         });
 
@@ -586,6 +586,60 @@ describe("CommunicationManager", () => {
             await manager.handleUserAdded(user);
 
             expect(lifecycleManager.mocks.transitionTo).toHaveBeenCalledWith(newState);
+        });
+
+        it("should make a concurrent watch wait for the in-flight transition instead of cancelling it", async () => {
+            const space = createSpace();
+            const oldState = createState(CommunicationType.WEBRTC);
+            const newState = createState(CommunicationType.LIVEKIT);
+
+            // Orchestrator mock with a real transition lock and a deferred state creation
+            const orchestrator = createOrchestrator();
+            orchestrator.mocks.setTransitionLock.mockImplementation((promise: Promise<void>) => {
+                orchestrator.mocks.waitForTransitionLock.mockReturnValue(promise);
+            });
+            orchestrator.mocks.clearTransitionLock.mockImplementation(() => {
+                orchestrator.mocks.waitForTransitionLock.mockResolvedValue(undefined);
+            });
+            let resolveCreation!: (state: ICommunicationState<ICommunicationStrategy>) => void;
+            orchestrator.mocks.executeImmediateTransition.mockReturnValue(
+                new Promise<ICommunicationState<ICommunicationStrategy>>((resolve) => {
+                    resolveCreation = resolve;
+                }),
+            );
+
+            const policy = createPolicy(true, CommunicationType.LIVEKIT);
+            policy.mocks.shouldTransition.mockImplementation(
+                (currentType: CommunicationType) => currentType === CommunicationType.WEBRTC,
+            );
+            const lifecycleManager = createLifecycleManager(oldState);
+            lifecycleManager.mocks.transitionTo.mockImplementation(
+                (state: ICommunicationState<ICommunicationStrategy>) => {
+                    lifecycleManager.mocks.getCurrentState.mockReturnValue(state);
+                },
+            );
+
+            const manager = new CommunicationManager(space, {
+                policy: policy,
+                orchestrator: orchestrator,
+                lifecycleManager: lifecycleManager,
+            });
+
+            const joiner = createSpaceUser("user_5");
+            const joinPromise = manager.handleUserAdded(joiner);
+            // The join and the watch are two distinct back messages: give the join one tick to take the lock
+            await Promise.resolve();
+            const watchPromise = manager.handleUserToNotifyAdded(joiner);
+            // Let the watch reach the lock before the LiveKit state is ready
+            await Promise.resolve();
+            resolveCreation(newState);
+            await Promise.all([joinPromise, watchPromise]);
+
+            expect(orchestrator.mocks.executeImmediateTransition).toHaveBeenCalledTimes(1);
+            expect(orchestrator.mocks.cancelPendingTransition).toHaveBeenCalledTimes(1);
+            expect(lifecycleManager.mocks.transitionTo).toHaveBeenCalledTimes(1);
+            expect(oldState.mocks.handleUserAdded).not.toHaveBeenCalled();
+            expect(oldState.mocks.handleUserToNotifyAdded).not.toHaveBeenCalled();
         });
 
         it("should not transition when immediate transition returns null", async () => {
@@ -761,13 +815,13 @@ describe("CommunicationManager", () => {
                     egressId: "egress-1",
                     roomName: "test-space",
                     phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
-                })
+                }),
             );
 
             expect(recordingManager.mocks.finishRecordingByWebhook).toHaveBeenCalledWith(
                 "session-1",
                 "egress-1",
-                "test-space"
+                "test-space",
             );
             expect(orchestrator.mocks.scheduleDelayedTransition).toHaveBeenCalledWith(
                 CommunicationType.WEBRTC,
@@ -776,7 +830,7 @@ describe("CommunicationManager", () => {
                     space,
                 }),
                 expect.any(Function),
-                expect.any(Function)
+                expect.any(Function),
             );
         });
 
@@ -815,19 +869,19 @@ describe("CommunicationManager", () => {
                     recordingSessionId: "session-1",
                     rawBody: Buffer.from("{}"),
                     authorizationHeader: "jwt-token",
-                })
+                }),
             );
 
             expect(state.handleLivekitWebhook).toHaveBeenCalledWith(
                 expect.any(Uint8Array),
                 "jwt-token",
                 "test-space",
-                "session-1"
+                "session-1",
             );
             expect(recordingManager.mocks.finishRecordingByWebhook).toHaveBeenCalledWith(
                 "session-1",
                 "egress-1",
-                "test-space"
+                "test-space",
             );
         });
 
@@ -860,7 +914,7 @@ describe("CommunicationManager", () => {
                     egressId: "egress-1",
                     roomName: "test-space",
                     phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
-                })
+                }),
             );
 
             expect(space.dispatchPrivateEvent).toHaveBeenCalledWith({
@@ -905,7 +959,7 @@ describe("CommunicationManager", () => {
                     egressId: "egress-1",
                     roomName: "test-space",
                     phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
-                })
+                }),
             );
 
             expect(orchestrator.mocks.scheduleDelayedTransition).not.toHaveBeenCalled();
@@ -920,7 +974,7 @@ describe("CommunicationManager", () => {
                 (_type: CommunicationType, _context: unknown, onComplete: TransitionCompleteCallback) => {
                     capturedCallback = onComplete;
                     return { abortController: new AbortController() };
-                }
+                },
             );
 
             const policy = createPolicy(true, CommunicationType.WEBRTC);
@@ -952,7 +1006,7 @@ describe("CommunicationManager", () => {
                 (_type: CommunicationType, _context: unknown, onComplete: TransitionCompleteCallback) => {
                     capturedCallback = onComplete;
                     return { abortController: new AbortController() };
-                }
+                },
             );
 
             // Start with transition allowed
