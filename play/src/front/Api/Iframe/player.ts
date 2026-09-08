@@ -280,11 +280,17 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     }
 
     /**
-     * Get a value to provide connected status for the current player.
-     * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-tags-of-the-player | Website documentation}
+     * Whether the current player is signed in, as opposed to playing anonymously.
      *
-     * @returns {boolean} Player tags
+     * Being signed in says nothing about what the player is allowed to do - that is what
+     * {@link tags} is for. It is the right check for anything belonging to a person rather than to
+     * a visit: their own settings, their own data, anything they can be asked about and later
+     * change their mind on.
+     *
+     * Important: You need to wait for the end of the scripting API initialization before accessing
+     * this property.
+     *
+     * @returns {boolean} True when the player is signed in, false when they are anonymous
      */
     get isLogged(): boolean {
         if (isLogged === undefined) {
