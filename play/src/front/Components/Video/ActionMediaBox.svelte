@@ -1,5 +1,6 @@
 <script lang="ts">
     import { type Writable, writable } from "svelte/store";
+    import { FilterType } from "@workadventure/messages";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
     import NoVideoSvg from "../images/no-video.svg";
@@ -32,6 +33,11 @@
     // listener whose SpaceUser the local user does not receive.
     let isHandRaised = $derived($raisedHandsOrderStore.has(spaceUser.spaceUserId));
     let hasFloor = $derived(spaceUser.reactiveUser.megaphoneState);
+    // The floor is only a real thing in a megaphone broadcast. In a bubble or a meeting room (ALL_USERS space)
+    // everybody already speaks, so we offer no give / take back control there: the raised-hand badge is enough.
+    let canModerateFloor = $derived(
+        ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && spaceUser.space.filterType !== FilterType.ALL_USERS,
+    );
 
     let moreActionOpened = $state(false);
 
@@ -209,7 +215,7 @@
     {/if}
 
     <!-- Give the floor (to a user who raised their hand) -->
-    {#if ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && !isScreenSharing && isHandRaised && !$hasFloor}
+    {#if canModerateFloor && !isScreenSharing && isHandRaised && !$hasFloor}
         <button
             class="action-button give-floor-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             data-testid="give-floor-user"
@@ -225,7 +231,7 @@
     {/if}
 
     <!-- Revoke the floor (take it back from a current speaker) -->
-    {#if ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && !isScreenSharing && $hasFloor}
+    {#if canModerateFloor && !isScreenSharing && $hasFloor}
         <button
             class="action-button revoke-floor-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             data-testid="revoke-floor-user"
