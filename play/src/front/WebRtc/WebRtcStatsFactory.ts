@@ -37,12 +37,16 @@ export function createPeerWebRtcStats(remotePeer: RemotePeer): PeerWebRtcStats {
             getTrackId: () => remotePeer.remoteStream?.getVideoTracks()[0]?.id,
             includeRelayDetails: true,
             getExpectedFps: () => remotePeer.expectedFps,
+            measureFpsVariability: remotePeer.videoType === "video",
         }),
         sender: createSenderStatsStore(reportStore, "P2P"),
     };
 }
 
-export function createLivekitWebRtcStats(track: RemoteTrack | undefined): Readable<WebRtcStats | undefined> {
+export function createLivekitWebRtcStats(
+    track: RemoteTrack | undefined,
+    videoType: "video" | "screenSharing",
+): Readable<WebRtcStats | undefined> {
     const reportStore = createStatsReportStore(
         () => {
             if (!track) {
@@ -66,6 +70,7 @@ export function createLivekitWebRtcStats(track: RemoteTrack | undefined): Readab
         includeRelayDetails: false,
         // The SFU pauses the track when we do not display it (adaptiveStream); the target frame rate is unknown
         getExpectedFps: () => (track?.streamState === Track.StreamState.Paused ? 0 : undefined),
+        measureFpsVariability: videoType === "video",
     });
 }
 
@@ -118,6 +123,9 @@ type ReceiverStatsOptions = {
     includeRelayDetails?: boolean;
     // Frame rate the sender targets for us right now, 0 when it intentionally sends nothing, undefined if unknown
     getExpectedFps?: () => number | undefined;
+    // False for screen shares: their frame rate follows the content (a still screen sends about one frame per
+    // second, whatever the codec), so its variability says nothing about the connection.
+    measureFpsVariability: boolean;
 };
 
 function createReceiverStatsStore(
@@ -158,13 +166,15 @@ function createReceiverStatsStore(
             const expectedFps = options.getExpectedFps?.();
             receiverStats.expectedFps = expectedFps;
             receiverStats.paused = expectedFps === 0;
-            receiverStats.fpsStdDev = fpsVariability.push(
-                receiverStats.fps,
-                expectedFps,
-                receiverStats.frameWidth,
-                receiverStats.frameHeight,
-                Date.now(),
-            );
+            receiverStats.fpsStdDev = options.measureFpsVariability
+                ? fpsVariability.push(
+                      receiverStats.fps,
+                      expectedFps,
+                      receiverStats.frameWidth,
+                      receiverStats.frameHeight,
+                      Date.now(),
+                  )
+                : undefined;
             set(receiverStats);
         },
         undefined,
