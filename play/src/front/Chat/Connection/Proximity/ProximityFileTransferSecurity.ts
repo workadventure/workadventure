@@ -13,18 +13,11 @@ export type ProximityFileTransferEncryptionMetadata = {
 
 export type ProximityFileTransferEncryptionKey = Uint8Array;
 
-export type EncryptedProximityFileBlob = {
-    blob: Blob;
-    metadata: ProximityFileTransferEncryptionMetadata;
-    sha256: string;
-};
-
 /**
- * Wire size of an encrypted transfer for a plaintext of `plainSize` bytes: encrypted chunks travel
- * with a per-chunk overhead, so the announced size may legitimately be larger than the plaintext.
- * An empty file still produces one (final) frame.
+ * Exact wire size of an encrypted transfer for a plaintext of `plainSize` bytes: every 1 MB slice
+ * becomes one length-prefixed secretstream frame, and an empty file still produces one (final) frame.
  */
-export function getMaxEncryptedTransferWireSize(plainSize: number): number {
+export function getEncryptedTransferWireSize(plainSize: number): number {
     return (
         plainSize +
         Math.max(1, Math.ceil(plainSize / PROXIMITY_FILE_TRANSFER_ENCRYPTION_CHUNK_SIZE)) *
@@ -47,50 +40,68 @@ export async function importProximityFileEncryptionKey(rawKey: string): Promise<
     return sodium.from_base64(rawKey, sodium.base64_variants.ORIGINAL);
 }
 
-/**
- * Encrypts a blob into length-prefixed secretstream frames and hashes the plaintext in the same pass.
- */
-export async function encryptProximityFileBlob(
-    blob: Blob,
-    key: ProximityFileTransferEncryptionKey,
-): Promise<EncryptedProximityFileBlob> {
+/** SHA-256 of a blob, read slice by slice so the whole file never sits in memory. */
+export async function hashProximityFileBlob(blob: Blob): Promise<string> {
     await sodium.ready;
-    const { state, header } = sodium.crypto_secretstream_xchacha20poly1305_init_push(key);
     const hasher = sodium.crypto_hash_sha256_init();
-    const frames: Uint8Array<ArrayBuffer>[] = [];
-    let offset = 0;
-    do {
-        const nextOffset = offset + PROXIMITY_FILE_TRANSFER_ENCRYPTION_CHUNK_SIZE;
-        const tag =
-            nextOffset >= blob.size
-                ? sodium.crypto_secretstream_xchacha20poly1305_TAG_FINAL
-                : sodium.crypto_secretstream_xchacha20poly1305_TAG_MESSAGE;
-        // eslint-disable-next-line no-await-in-loop -- secretstream chunks must be pushed in order
-        const chunk = new Uint8Array(await blob.slice(offset, nextOffset).arrayBuffer());
-        sodium.crypto_hash_sha256_update(hasher, chunk);
-        frames.push(frameEncryptedChunk(sodium.crypto_secretstream_xchacha20poly1305_push(state, chunk, null, tag)));
-        offset = nextOffset;
-    } while (offset < blob.size);
-    return {
-        blob: new Blob(frames, { type: "application/octet-stream" }),
-        metadata: {
-            algorithm: "XCHACHA20-POLY1305",
-            iv: sodium.to_base64(header, sodium.base64_variants.ORIGINAL),
-            mimeType: blob.type,
-        },
-        sha256: sodium.crypto_hash_sha256_final(hasher, "hex"),
-    };
+    for (let offset = 0; offset < blob.size; offset += PROXIMITY_FILE_TRANSFER_ENCRYPTION_CHUNK_SIZE) {
+        // eslint-disable-next-line no-await-in-loop -- slices must be hashed in order
+        const chunk = await blob.slice(offset, offset + PROXIMITY_FILE_TRANSFER_ENCRYPTION_CHUNK_SIZE).arrayBuffer();
+        sodium.crypto_hash_sha256_update(hasher, new Uint8Array(chunk));
+    }
+    return sodium.crypto_hash_sha256_final(hasher, "hex");
 }
 
 /**
- * Decrypts and hashes a transfer as its bytes arrive, so the receiver never holds the whole
- * ciphertext and the whole plaintext at the same time. Frames may span several incoming chunks.
+ * Encrypts a blob into length-prefixed secretstream frames, one 1 MB slice at a time, so the sender
+ * only ever holds one slice in memory. One encryptor per recipient: the header (`metadata.iv`) is
+ * fresh for every stream.
+ */
+export class ProximityFileStreamEncryptor {
+    private constructor(
+        private readonly state: StateAddress,
+        readonly metadata: ProximityFileTransferEncryptionMetadata,
+    ) {}
+
+    static async create(
+        key: ProximityFileTransferEncryptionKey,
+        mimeType: string,
+    ): Promise<ProximityFileStreamEncryptor> {
+        await sodium.ready;
+        const { state, header } = sodium.crypto_secretstream_xchacha20poly1305_init_push(key);
+        return new ProximityFileStreamEncryptor(state, {
+            algorithm: "XCHACHA20-POLY1305",
+            iv: sodium.to_base64(header, sodium.base64_variants.ORIGINAL),
+            mimeType,
+        });
+    }
+
+    async *frames(blob: Blob): AsyncGenerator<Uint8Array<ArrayBuffer>> {
+        let offset = 0;
+        do {
+            const nextOffset = offset + PROXIMITY_FILE_TRANSFER_ENCRYPTION_CHUNK_SIZE;
+            const tag =
+                nextOffset >= blob.size
+                    ? sodium.crypto_secretstream_xchacha20poly1305_TAG_FINAL
+                    : sodium.crypto_secretstream_xchacha20poly1305_TAG_MESSAGE;
+            // eslint-disable-next-line no-await-in-loop -- secretstream chunks must be pushed in order
+            const chunk = new Uint8Array(await blob.slice(offset, nextOffset).arrayBuffer());
+            yield frameEncryptedChunk(sodium.crypto_secretstream_xchacha20poly1305_push(this.state, chunk, null, tag));
+            offset = nextOffset;
+        } while (offset < blob.size);
+    }
+}
+
+/**
+ * Decrypts and hashes a transfer as its bytes arrive. Decrypted frames are folded into a Blob as
+ * they come, which keeps the plaintext in the browser's blob storage (off the JS heap, and spillable
+ * to disk) instead of accumulating it in memory. Frames may span several incoming chunks.
  */
 export class ProximityFileStreamDecryptor {
     private readonly pending: Uint8Array[] = [];
     private pendingLength = 0;
     private frameLength: number | undefined;
-    private readonly parts: Uint8Array<ArrayBuffer>[] = [];
+    private blob = new Blob([]);
     private finished = false;
 
     private constructor(
@@ -120,10 +131,7 @@ export class ProximityFileStreamDecryptor {
                     return;
                 }
                 const prefix = this.take(FRAME_LENGTH_PREFIX);
-                this.frameLength = new DataView(prefix.buffer, prefix.byteOffset, prefix.byteLength).getUint32(
-                    0,
-                    false,
-                );
+                this.frameLength = new DataView(prefix.buffer).getUint32(0, false);
             }
             if (this.pendingLength < this.frameLength) {
                 return;
@@ -138,7 +146,7 @@ export class ProximityFileStreamDecryptor {
                 throw new Error("Unable to decrypt proximity file transfer");
             }
             sodium.crypto_hash_sha256_update(this.hasher, pulled.message);
-            this.parts.push(pulled.message as Uint8Array<ArrayBuffer>);
+            this.blob = new Blob([this.blob, pulled.message as Uint8Array<ArrayBuffer>]);
             this.finished = pulled.tag === sodium.crypto_secretstream_xchacha20poly1305_TAG_FINAL;
         }
     }
@@ -148,7 +156,7 @@ export class ProximityFileStreamDecryptor {
             throw new Error("Unable to decrypt proximity file transfer");
         }
         return {
-            blob: new Blob(this.parts, { type: this.mimeType }),
+            blob: new Blob([this.blob], { type: this.mimeType }),
             sha256: sodium.crypto_hash_sha256_final(this.hasher, "hex"),
         };
     }

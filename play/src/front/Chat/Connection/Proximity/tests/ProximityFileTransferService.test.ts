@@ -11,9 +11,9 @@ import {
 } from "../ProximityFileTransferService";
 import { encodeProximityFileChunkFrame } from "../ProximityFileTransferProtocol";
 import {
-    encryptProximityFileBlob,
     exportProximityFileEncryptionKey,
     generateProximityFileEncryptionKey,
+    ProximityFileStreamEncryptor,
 } from "../ProximityFileTransferSecurity";
 
 const HELLO_SHA256 = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
@@ -35,6 +35,11 @@ function offerEvent(transferId: string, size: number, sender = "sender", sha256 
     };
 }
 
+type PrivateService = {
+    handleDataChannelMessage(session: unknown, data: unknown): Promise<void>;
+    sendOutgoingTransfer(session: unknown, transferId: string): Promise<void>;
+};
+
 function createService(localSpaceUserId: string) {
     const incomingOffers = new Subject<ReturnType<typeof offerEvent>>();
     const emitPrivateMessage = vi.fn();
@@ -51,26 +56,35 @@ function createService(localSpaceUserId: string) {
     });
     const updates: ProximityFileTransferUpdate[] = [];
     const updatesSubscription = service.transferUpdates.subscribe((update) => updates.push(update));
-    const handleDataChannelMessage = (data: unknown) =>
-        (
-            service as unknown as { handleDataChannelMessage(session: unknown, data: unknown): Promise<void> }
-        ).handleDataChannelMessage({}, data);
-    return { service, incomingOffers, emitPrivateMessage, updates, updatesSubscription, handleDataChannelMessage };
+    const privateService = service as unknown as PrivateService;
+    const handleDataChannelMessage = (data: unknown) => privateService.handleDataChannelMessage({}, data);
+    return {
+        service,
+        privateService,
+        incomingOffers,
+        emitPrivateMessage,
+        updates,
+        updatesSubscription,
+        handleDataChannelMessage,
+    };
 }
 
 /** Encrypts `content` the way a sender does and returns the messages a receiver would get. */
 async function encryptedTransfer(transferId: string, content: string) {
     const key = await generateProximityFileEncryptionKey();
-    const encrypted = await encryptProximityFileBlob(new Blob([content], { type: "text/plain" }), key);
+    const encryptor = await ProximityFileStreamEncryptor.create(key, "text/plain");
     const keyMessage = JSON.stringify({
         type: "proximity_file_key",
         transferId,
         rawKey: await exportProximityFileEncryptionKey(key),
-        iv: encrypted.metadata.iv,
-        mimeType: encrypted.metadata.mimeType,
+        iv: encryptor.metadata.iv,
+        mimeType: encryptor.metadata.mimeType,
     });
-    const bytes = new Uint8Array(await encrypted.blob.arrayBuffer());
-    return { keyMessage, bytes, sha256: encrypted.sha256 };
+    const frames: Uint8Array<ArrayBuffer>[] = [];
+    for await (const frame of encryptor.frames(new Blob([content]))) {
+        frames.push(frame);
+    }
+    return { keyMessage, bytes: new Uint8Array(await new Blob(frames).arrayBuffer()) };
 }
 
 describe("validateProximityFiles", () => {
@@ -91,18 +105,48 @@ describe("ProximityFileTransferService", () => {
         vi.unstubAllGlobals();
     });
 
-    it("should decrypt a transfer chunk by chunk and expose the verified blob", async () => {
+    it("should stream an encrypted file from a sender to a receiver", async () => {
+        const createObjectURL = vi.fn().mockReturnValue("blob:received");
+        vi.stubGlobal("URL", { createObjectURL });
+        const sender = createService("sender");
+        const receiver = createService("recipient");
+        const file = new File(["hello"], "hello.txt", { type: "text/plain" });
+        const [offer] = await sender.service.createOutgoingOffers([file], ["recipient"]);
+        receiver.incomingOffers.next(offerEvent(offer.transferId, file.size, "sender", offer.sha256));
+        const wire: unknown[] = [];
+        const dataChannel = { bufferedAmount: 0, send: (data: unknown) => wire.push(data) };
+
+        await sender.privateService.sendOutgoingTransfer(
+            { remoteSpaceUserId: "recipient", dataChannel },
+            offer.transferId,
+        );
+        for (const message of wire) {
+            // eslint-disable-next-line no-await-in-loop -- the data channel delivers in order
+            await receiver.handleDataChannelMessage(message);
+        }
+
+        expect(receiver.updates.at(-1)).toEqual({
+            transferId: offer.transferId,
+            state: "ready",
+            progress: 1,
+            url: "blob:received",
+        });
+        const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
+        expect(await blob.text()).toBe("hello");
+        expect(blob.type).toBe("text/plain");
+    });
+
+    it("should decrypt a transfer whose frames straddle chunk boundaries", async () => {
         const createObjectURL = vi.fn().mockReturnValue("blob:transfer-1");
         vi.stubGlobal("URL", { createObjectURL });
         const { incomingOffers, updates, handleDataChannelMessage } = createService("recipient");
-        const { keyMessage, bytes, sha256 } = await encryptedTransfer("transfer-1", "hello");
-        incomingOffers.next(offerEvent("transfer-1", 5, "sender", sha256));
+        const { keyMessage, bytes } = await encryptedTransfer("transfer-1", "hello");
+        incomingOffers.next(offerEvent("transfer-1", 5, "sender", HELLO_SHA256));
 
         await handleDataChannelMessage(keyMessage);
         await handleDataChannelMessage(
             JSON.stringify({ type: "proximity_file_start", transferId: "transfer-1", size: bytes.byteLength }),
         );
-        // 7-byte chunks: the frame length prefix and the ciphertext both straddle chunk boundaries.
         for (let offset = 0; offset < bytes.byteLength; offset += 7) {
             // eslint-disable-next-line no-await-in-loop -- chunks are delivered in order
             await handleDataChannelMessage(
@@ -111,15 +155,8 @@ describe("ProximityFileTransferService", () => {
         }
         await handleDataChannelMessage(JSON.stringify({ type: "proximity_file_complete", transferId: "transfer-1" }));
 
-        expect(updates.at(-1)).toEqual({
-            transferId: "transfer-1",
-            state: "ready",
-            progress: 1,
-            url: "blob:transfer-1",
-        });
-        const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
-        expect(await blob.text()).toBe("hello");
-        expect(blob.type).toBe("text/plain");
+        expect(updates.at(-1)).toMatchObject({ transferId: "transfer-1", state: "ready" });
+        expect(await (createObjectURL.mock.calls[0]?.[0] as Blob).text()).toBe("hello");
     });
 
     it("should reject a transfer whose plaintext hash does not match the offer", async () => {
@@ -189,14 +226,13 @@ describe("ProximityFileTransferService", () => {
         });
     });
 
-    it("should emit one encrypted private offer per recipient", async () => {
+    it("should emit one private offer per recipient", async () => {
         const { service, emitPrivateMessage } = createService("sender");
         const file = new File(["hello"], "hello.txt", { type: "text/plain" });
 
         const [offer] = await service.createOutgoingOffers([file], ["recipient-1", "sender", "recipient-2"]);
 
         expect(offer.sha256).toBe(HELLO_SHA256);
-        expect(offer.encryptedFile.size).toBeGreaterThan(file.size);
         expect(
             emitPrivateMessage.mock.calls.map(([message, receiver]) => [
                 (message as NonNullable<PrivateSpaceEvent["event"]>).$case,

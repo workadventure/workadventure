@@ -10,12 +10,13 @@ import {
     type ProximityFileTransferControlMessage,
 } from "./ProximityFileTransferProtocol";
 import {
-    encryptProximityFileBlob,
     exportProximityFileEncryptionKey,
     generateProximityFileEncryptionKey,
-    getMaxEncryptedTransferWireSize,
+    getEncryptedTransferWireSize,
+    hashProximityFileBlob,
     importProximityFileEncryptionKey,
     ProximityFileStreamDecryptor,
+    ProximityFileStreamEncryptor,
     type ProximityFileTransferEncryptionKey,
     type ProximityFileTransferEncryptionMetadata,
 } from "./ProximityFileTransferSecurity";
@@ -77,9 +78,7 @@ export type ProximityFileTransferOffer = {
     messageType: "file" | "image" | "audio" | "video";
     recipients: string[];
     sha256: string;
-    encryptedFile: File;
     encryptionKey: ProximityFileTransferEncryptionKey;
-    encryptionMetadata: ProximityFileTransferEncryptionMetadata;
 };
 
 type ProximityFileTransferSignalPayload =
@@ -221,18 +220,16 @@ export class ProximityFileTransferService {
         return offers;
     }
 
+    // The file itself stays on disk (a File is not loaded in memory); it is read, encrypted and
+    // sent slice by slice each time a recipient requests it.
     private async createOutgoingOffer(file: File, recipients: string[]): Promise<ProximityFileTransferOffer> {
-        const encryptionKey = await generateProximityFileEncryptionKey();
-        const encrypted = await encryptProximityFileBlob(file, encryptionKey);
         return {
             transferId: uuidv4(),
             file,
             messageType: getMessageTypeFromFile(file),
             recipients,
-            sha256: encrypted.sha256,
-            encryptedFile: new File([encrypted.blob], file.name, { type: file.type }),
-            encryptionKey,
-            encryptionMetadata: encrypted.metadata,
+            sha256: await hashProximityFileBlob(file),
+            encryptionKey: await generateProximityFileEncryptionKey(),
         };
     }
 
@@ -407,7 +404,6 @@ export class ProximityFileTransferService {
             const message = decodeProximityFileControlMessage(data);
             switch (message.type) {
                 case "proximity_file_request": {
-                    await this.sendOutgoingEncryptionKey(session, message.transferId);
                     await this.enqueueOutgoingTransfer(session, message.transferId);
                     break;
                 }
@@ -516,17 +512,38 @@ export class ProximityFileTransferService {
             return;
         }
 
-        const fileToSend = transfer.encryptedFile;
-        this.sendControlMessage(dataChannel, { type: "proximity_file_start", transferId, size: fileToSend.size });
+        const encryptor = await ProximityFileStreamEncryptor.create(transfer.encryptionKey, transfer.file.type);
+        this.sendControlMessage(dataChannel, {
+            type: "proximity_file_key",
+            transferId,
+            rawKey: await exportProximityFileEncryptionKey(transfer.encryptionKey),
+            iv: encryptor.metadata.iv,
+            mimeType: encryptor.metadata.mimeType,
+        });
+        this.sendControlMessage(dataChannel, {
+            type: "proximity_file_start",
+            transferId,
+            size: getEncryptedTransferWireSize(transfer.file.size),
+        });
 
-        for (let offset = 0; offset < fileToSend.size; offset += PROXIMITY_FILE_TRANSFER_CHUNK_SIZE) {
-            // eslint-disable-next-line no-await-in-loop
-            const chunkBuffer = await fileToSend
-                .slice(offset, offset + PROXIMITY_FILE_TRANSFER_CHUNK_SIZE)
-                .arrayBuffer();
-            dataChannel.send(encodeProximityFileChunkFrame(transferId, new Uint8Array(chunkBuffer)));
-            // eslint-disable-next-line no-await-in-loop
-            await this.waitForBackpressure(dataChannel);
+        try {
+            for await (const frame of encryptor.frames(transfer.file)) {
+                for (let offset = 0; offset < frame.byteLength; offset += PROXIMITY_FILE_TRANSFER_CHUNK_SIZE) {
+                    dataChannel.send(
+                        encodeProximityFileChunkFrame(
+                            transferId,
+                            frame.subarray(offset, offset + PROXIMITY_FILE_TRANSFER_CHUNK_SIZE),
+                        ),
+                    );
+                    // eslint-disable-next-line no-await-in-loop -- chunks must be sent in order
+                    await this.waitForBackpressure(dataChannel);
+                }
+            }
+        } catch (error) {
+            // Typically the file changed or vanished on disk since the offer was made.
+            console.error("Error while sending proximity file transfer", error);
+            this.sendControlMessage(dataChannel, { type: "proximity_file_error", transferId, reason: "unavailable" });
+            return;
         }
 
         this.sendControlMessage(dataChannel, { type: "proximity_file_complete", transferId });
@@ -577,7 +594,7 @@ export class ProximityFileTransferService {
             offerSize > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE ||
             !Number.isFinite(announcedSize) ||
             announcedSize < 0 ||
-            announcedSize > getMaxEncryptedTransferWireSize(offerSize)
+            announcedSize > getEncryptedTransferWireSize(offerSize)
         ) {
             this.failReceivingTransfer(transferId, "file-too-large");
             return undefined;
@@ -658,22 +675,6 @@ export class ProximityFileTransferService {
             }
         }
         return count;
-    }
-
-    private async sendOutgoingEncryptionKey(session: PeerSession, transferId: string): Promise<void> {
-        const transfer = this.outgoingTransfers.get(transferId);
-        const dataChannel = session.dataChannel;
-        if (!transfer || !dataChannel) {
-            return;
-        }
-
-        this.sendControlMessage(dataChannel, {
-            type: "proximity_file_key",
-            transferId,
-            rawKey: await exportProximityFileEncryptionKey(transfer.encryptionKey),
-            iv: transfer.encryptionMetadata.iv,
-            mimeType: transfer.encryptionMetadata.mimeType,
-        });
     }
 }
 
