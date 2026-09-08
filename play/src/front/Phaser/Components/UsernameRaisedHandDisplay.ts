@@ -1,3 +1,9 @@
+import { MEGAPHONE_ICON_SIZE } from "./UsernameDisplaySizes";
+
+// Explicit game-pixel square, same size as the megaphone badge: a percentage height on an <img> only
+// resolves once it has intrinsic dimensions, and the 24px SVG box then overflows the 14px pill.
+const ICON_SIZE = `calc(${MEGAPHONE_ICON_SIZE}px * var(--username-dom-scale, 1))`;
+
 /**
  * A small raised-hand badge displayed next to the player's name when they raised their hand in a
  * meeting. It mirrors the behaviour of {@link UsernameMegaphoneDisplay}: a DOM element living inside
@@ -18,7 +24,8 @@ export class UsernameRaisedHandDisplay {
         this.element.setAttribute("aria-hidden", "true");
         this.element.style.display = "none";
         this.element.style.flex = "0 0 auto";
-        this.element.style.height = "75%";
+        this.element.style.width = ICON_SIZE;
+        this.element.style.height = ICON_SIZE;
         this.element.style.marginLeft = `calc(-2px * var(--username-dom-scale, 1))`;
         this.element.style.opacity = "0";
         this.element.style.pointerEvents = "none";

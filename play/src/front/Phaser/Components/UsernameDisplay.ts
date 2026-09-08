@@ -143,6 +143,7 @@ export class UsernameDisplay {
         this.element.remove();
         this.statusDisplay.destroy();
         this.megaphoneDisplay.destroy();
+        this.raisedHandDisplay.destroy();
         this.scene.game.events.off(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
     }
 
