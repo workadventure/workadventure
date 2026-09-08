@@ -13,8 +13,8 @@ import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
  * In a megaphone broadcast the panel is a moderation tool, so it is reserved to a user allowed to promote
  * (an admin, or a genuine megaphone-zone speaker). In a proximity bubble or a LiveKit meeting room everyone
  * already speaks and there is no host: the panel is then a plain ordered queue shown to every participant,
- * so whoever leads the discussion can hand the floor over orally ("give the floor" there only lowers the
- * hand and notifies the user, see BindMuteEvents).
+ * without floor controls (see floorControlsVisibleStore), so whoever leads the discussion can hand the
+ * floor over orally.
  *
  * A listener who was GIVEN the floor is also a "speaker" (isSpeakerStore), but must NOT inherit the host's
  * moderation rights (otherwise a promoted guest could in turn hand the floor to others). Such a promoted
@@ -42,4 +42,15 @@ export const raisedHandsAdminVisibleStore: Readable<boolean> = derived(
         const everyoneIsEqual = $playerGroupId !== undefined || $inLivekit;
         return (canModerate || everyoneIsEqual) && ($raisedHands.length > 0 || $speakers.length > 0);
     },
+);
+
+/**
+ * Whether "give the floor" / "take back the floor" controls are offered at all. They only do something in a
+ * megaphone broadcast, where the floor is a real promotion to speaker. In a proximity bubble or a LiveKit
+ * meeting room everybody already speaks: the raised hands are just an ordered queue (badge on the tile +
+ * panel), whoever leads hands the floor over orally and each user lowers their own hand.
+ */
+export const floorControlsVisibleStore: Readable<boolean> = derived(
+    [currentPlayerGroupIdStore, inLivekitStore],
+    ([$playerGroupId, $inLivekit]) => $playerGroupId === undefined && !$inLivekit,
 );
