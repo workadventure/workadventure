@@ -65,9 +65,8 @@ export class ProximityFileStorage {
         if (!(await this.available)) {
             return new MemoryProximityFileSink();
         }
-        const session = this.session;
         try {
-            await this.request({ type: "open", session, name });
+            await this.request({ type: "open", session: this.session, name });
         } catch (error) {
             console.warn("Unable to open a proximity file on disk, keeping it in memory", error);
             return new MemoryProximityFileSink();
@@ -77,7 +76,7 @@ export class ProximityFileStorage {
                 this.request(
                     {
                         type: "write",
-                        session,
+                        session: this.session,
                         name,
                         buffer: bytes.buffer,
                         byteOffset: bytes.byteOffset,
@@ -86,13 +85,13 @@ export class ProximityFileStorage {
                     [bytes.buffer],
                 ),
             finish: async (mimeType) => {
-                await this.request({ type: "close", session, name });
-                const directory = await (await navigator.storage.getDirectory()).getDirectoryHandle(session);
+                await this.request({ type: "close", session: this.session, name });
+                const directory = await (await navigator.storage.getDirectory()).getDirectoryHandle(this.session);
                 const file = await (await directory.getFileHandle(name)).getFile();
                 // slice() re-types the disk-backed file without copying it.
                 return file.slice(0, file.size, mimeType);
             },
-            discard: () => this.request({ type: "remove", session, name }),
+            discard: () => this.request({ type: "remove", session: this.session, name }),
         };
     }
 

@@ -561,10 +561,6 @@ export class ProximityFileTransferService {
         if (!receivingTransfer) {
             return;
         }
-        if (receivingTransfer.receivedBytes !== receivingTransfer.expectedBytes) {
-            this.failReceivingTransfer(transferId, "integrity-check-failed");
-            return;
-        }
         let decrypted: { blob: Blob; sha256: string };
         try {
             decrypted = await receivingTransfer.decryptor.finish();
