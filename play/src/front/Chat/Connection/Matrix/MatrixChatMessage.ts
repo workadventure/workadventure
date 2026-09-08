@@ -12,6 +12,7 @@ import type {
     ChatThreadSummary,
     ChatUser,
 } from "../ChatConnection";
+import { DOWNLOAD_MIME_TYPE, sanitizeInlineMimeType } from "../../../Utils/InlineMimeType";
 import { chatUserFactoryFromRoom } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
@@ -323,18 +324,20 @@ export class MatrixChatMessage implements ChatMessage {
         return this.room.client.mxcUrlToHttp(url);
     }
     private mapMatrixMessageTypeToChatMessage() {
-        const matrixMessageType = this.event.getOriginalContent().msgtype;
-        switch (matrixMessageType) {
+        const content = this.event.getOriginalContent();
+        // An attachment the chat cannot render inline (e.g. an SVG) is offered as a download instead.
+        const inline = sanitizeInlineMimeType(content.info?.mimetype as string | undefined) !== DOWNLOAD_MIME_TYPE;
+        switch (content.msgtype) {
             case "m.text":
                 return "text";
             case "m.image":
-                return "image";
+                return inline ? "image" : "file";
             case "m.file":
                 return "file";
             case "m.audio":
-                return "audio";
+                return inline ? "audio" : "file";
             case "m.video":
-                return "video";
+                return inline ? "video" : "file";
         }
         return "text";
     }

@@ -1,5 +1,6 @@
 import type { IContent, MatrixClient, MatrixEvent } from "matrix-js-sdk";
 import type { EncryptedFile, MediaEventContent } from "matrix-js-sdk/lib/@types/media";
+import { sanitizeInlineMimeType } from "../../../Utils/InlineMimeType";
 
 type MediaErrorKind = "download" | "decrypt";
 
@@ -72,7 +73,9 @@ function createBlobUrlRegistry(): BlobUrlRegistry {
     const blobUrls = new Set<string>();
 
     const createFromBuffer = (buffer: ArrayBuffer, mimeType: string | undefined): string => {
-        const blob = new Blob([buffer], { type: mimeType ?? "application/octet-stream" });
+        // The mime type comes from the event and is not trusted: a same-origin blob: URL typed
+        // image/svg+xml or text/html would run scripts at our origin when opened as a document.
+        const blob = new Blob([buffer], { type: sanitizeInlineMimeType(mimeType) });
         const blobUrl = URL.createObjectURL(blob);
         blobUrls.add(blobUrl);
         return blobUrl;
