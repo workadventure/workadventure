@@ -25,6 +25,14 @@ import { isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import { subscribeToOutboundVideoQualityAnalytics, subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createPeerWebRtcStats } from "./WebRtcStatsFactory";
+import {
+    computeVideoEncoding,
+    DEFAULT_VIEWER_DISPLAY,
+    HIDDEN_VIEWER_DISPLAY,
+    isViewerDisplayHidden,
+    VIEWER_REPORT_TIMEOUT_MS,
+    type ViewerDisplay,
+} from "./AdaptiveVideoEncoding";
 import { registerLocalEncoderStats } from "./LocalEncoderStats";
 import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
 
@@ -75,6 +83,12 @@ export class RemotePeer extends Peer implements Streamable {
     private analyticsStatsUnsubscribe: Unsubscriber | undefined;
     private analyticsRemoteStreamUnsubscribe: (() => void) | undefined;
     private receiverMaxBitrateBps: number | undefined;
+    // What the remote viewer displays of our video, as last reported (see ResolutionMessage)
+    private viewerDisplay: ViewerDisplay = DEFAULT_VIEWER_DISPLAY;
+    private viewerReportedDisplay = false;
+    // Cuts the video if the viewer never tells us how it displays it (see VIEWER_REPORT_TIMEOUT_MS)
+    private viewerReportTimeout: ReturnType<typeof setTimeout> | undefined;
+    private videoEncodingRetryTimeout: ReturnType<typeof setTimeout> | undefined;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -152,6 +166,7 @@ export class RemotePeer extends Peer implements Streamable {
         this._statusStore.set("connected");
 
         this._connected = true;
+        this.applyVideoEncoding();
 
         /*const proximityRoomChat = gameManager.getCurrentGameScene().proximityChatRoom;
 
@@ -440,10 +455,12 @@ export class RemotePeer extends Peer implements Streamable {
                         } finally {
                             this.localStream.removeTrack(oldVideoTrack);
                         }
+                        this.applyVideoEncoding();
                     } else if (newVideoTrack && !oldVideoTrack) {
                         debug("Adding video track in P2P connection");
                         this.localStream.addTrack(newVideoTrack);
                         this.addTrack(newVideoTrack, this.localStream);
+                        this.applyVideoEncoding();
                     } else if (oldVideoTrack && !newVideoTrack) {
                         debug("Removing video track in P2P connection");
                         try {
@@ -678,6 +695,12 @@ export class RemotePeer extends Peer implements Streamable {
             if (this.closeStreamableTimeout) {
                 clearTimeout(this.closeStreamableTimeout);
             }
+            if (this.videoEncodingRetryTimeout) {
+                clearTimeout(this.videoEncodingRetryTimeout);
+            }
+            if (this.viewerReportTimeout) {
+                clearTimeout(this.viewerReportTimeout);
+            }
 
             this._connected = false;
             this.senderAnalyticsUnsubscribe?.();
@@ -894,15 +917,23 @@ export class RemotePeer extends Peer implements Streamable {
      * The logic is throttled to max one call every 250ms.
      */
     private _setDimensions = throttle(250, (width: number, height: number): void => {
+        if (this.destroyed || this.closing) {
+            // The tile of a closing peer unmounts and reports itself hidden: nothing to tell anymore.
+            return;
+        }
         try {
-            const preset = this.getPresetForDimensions(width, height);
+            // 0x0: we do not display the video, the sender stops encoding for us
+            const hidden = width <= 0 || height <= 0;
+            debug(
+                `Adaptive video: reporting our display of ${this._spaceUserId} as ${hidden ? "hidden" : `${width}x${height}`}`,
+            );
             this.write(
                 new Buffer(
                     JSON.stringify({
                         type: "resolution",
-                        width: width,
-                        height: height,
-                        maxBitrate: preset.bitrate,
+                        width: hidden ? 0 : width,
+                        height: hidden ? 0 : height,
+                        maxBitrate: hidden ? 0 : this.getPresetForDimensions(width, height).bitrate,
                     } satisfies P2PMessage),
                 ),
             );
@@ -912,74 +943,109 @@ export class RemotePeer extends Peer implements Streamable {
     });
 
     /**
-     * Updates video constraints based on the preset information from the remote peer.
-     * This adjusts bitrate and resolution to match what's actually displayed.
+     * Called when the remote viewer reports the size it displays our video in (0x0: not displayed).
      */
     private updateVideoConstraintsForDisplayDimensions(width: number, height: number, bandwidthLimit: number): void {
+        this.viewerDisplay = { width, height, maxBitrate: bandwidthLimit };
+        this.viewerReportedDisplay = true;
+        if (this.viewerReportTimeout) {
+            clearTimeout(this.viewerReportTimeout);
+            this.viewerReportTimeout = undefined;
+        }
+        this.applyVideoEncoding();
+    }
+
+    /**
+     * A viewer that displays our video reports its tile size within a second of receiving the stream. Without any
+     * report (hidden tab, offscreen tile, unknown client), stop sending video rather than keep the default stream.
+     */
+    private cutVideoUnlessViewerReports(): void {
+        if (this.viewerReportedDisplay || this.viewerReportTimeout) {
+            return;
+        }
+        this.viewerReportTimeout = setTimeout(() => {
+            this.viewerReportTimeout = undefined;
+            if (this.viewerReportedDisplay) {
+                return;
+            }
+            debug(`Adaptive video: no display report from ${this._spaceUserId} after ${VIEWER_REPORT_TIMEOUT_MS}ms`);
+            this.viewerDisplay = HIDDEN_VIEWER_DISPLAY;
+            this.applyVideoEncoding();
+        }, VIEWER_REPORT_TIMEOUT_MS);
+    }
+
+    /**
+     * Encodes for what the viewer displays: scaled down to its tile, and not at all while the tile is hidden.
+     * Called when the connection opens, when our video track changes and when the viewer reports its tile.
+     */
+    private applyVideoEncoding(): void {
         const pc = this._pc as RTCPeerConnection | undefined;
-        if (!pc) {
-            console.warn("Adaptive video: no RTCPeerConnection available");
+        const videoSender = pc?.getSenders().find((s) => s.track?.kind === "video");
+        if (!videoSender?.track) {
             return;
         }
 
-        const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
-        if (!videoSender || !videoSender.track) {
-            console.warn("Adaptive video: no video sender found");
-            return;
-        }
-        const settings = videoSender.track.getSettings();
-        const currentWidth = settings.width || 1280;
-        const currentHeight = settings.height || 720;
-
-        // Compute bandwidth and framerate based on the smallest of the displayed resolution and the capture resolution.
-        if (currentWidth * currentHeight < width * height) {
-            width = currentWidth;
-            height = currentHeight;
-        }
-
-        // Let's find the best presets
-        const preset = this.getPresetForDimensions(width, height);
-
-        // Calculate scale factor based on current capture resolution vs target preset
-        const scaleFactor = Math.max(1, Math.min(currentWidth / width, currentHeight / height));
-
-        // Get current parameters and modify encoding settings
         const parameters = videoSender.getParameters();
         if (!parameters.encodings || parameters.encodings.length === 0) {
-            console.warn("Adaptive video: no encodings found in parameters");
+            this.retryVideoEncodingLater();
             return;
         }
 
-        // Apply new constraints
+        this.cutVideoUnlessViewerReports();
+
+        const settings = videoSender.track.getSettings();
+        const encoding = computeVideoEncoding(
+            this.viewerDisplay,
+            { width: settings.width || 1280, height: settings.height || 720 },
+            (width, height) => this.getPresetForDimensions(width, height),
+        );
+
         if (this.type === "screenSharing") {
             parameters.degradationPreference = get(bandwidthConstrainedPreferenceStore);
         }
-        parameters.encodings[0].maxBitrate = Math.min(preset.bitrate, bandwidthLimit);
-        parameters.encodings[0].maxFramerate = preset.fps;
-
-        if (scaleFactor > 1) {
-            parameters.encodings[0].scaleResolutionDownBy = scaleFactor;
-            debug(
-                `Adaptive video: scaling down ${currentWidth}x${currentHeight} by ${scaleFactor.toFixed(
-                    2,
-                )}x to ~${Math.round(currentWidth / scaleFactor)}x${Math.round(currentHeight / scaleFactor)}`,
-            );
-        } else {
-            delete parameters.encodings[0].scaleResolutionDownBy;
-            debug("Adaptive video: no scaling needed, using full resolution");
+        parameters.encodings[0].active = encoding.active;
+        if (encoding.active) {
+            parameters.encodings[0].maxBitrate = encoding.maxBitrate;
+            parameters.encodings[0].maxFramerate = encoding.maxFramerate;
+            if (encoding.scaleResolutionDownBy !== undefined) {
+                parameters.encodings[0].scaleResolutionDownBy = encoding.scaleResolutionDownBy;
+            } else {
+                delete parameters.encodings[0].scaleResolutionDownBy;
+            }
         }
 
         // Apply parameters transactionally
         videoSender
             .setParameters(parameters)
             .then(() => {
+                this.videoEncodingRetries = 0;
                 debug(
-                    `Adaptive video: successfully applied resolution ${width}x${height} @ ${preset.bitrate}bps, ${preset.fps}fps`,
+                    isViewerDisplayHidden(this.viewerDisplay)
+                        ? "Adaptive video: viewer does not display our video, encoder paused"
+                        : `Adaptive video: applied ${this.viewerDisplay.width}x${this.viewerDisplay.height} @ ${encoding.maxBitrate}bps, ${encoding.maxFramerate}fps, scale ${encoding.scaleResolutionDownBy ?? 1}`,
                 );
             })
-            .catch((err) => {
+            .catch((err: unknown) => {
+                if (err instanceof DOMException && err.name === "InvalidStateError") {
+                    // Chrome rejects setParameters() until the first negotiation of the sender is done.
+                    this.retryVideoEncodingLater();
+                    return;
+                }
                 console.error("Adaptive video: failed to set parameters", err);
             });
+    }
+
+    private videoEncodingRetries = 0;
+
+    private retryVideoEncodingLater(): void {
+        if (this.videoEncodingRetryTimeout || this.videoEncodingRetries >= 5) {
+            return;
+        }
+        this.videoEncodingRetries++;
+        this.videoEncodingRetryTimeout = setTimeout(() => {
+            this.videoEncodingRetryTimeout = undefined;
+            this.applyVideoEncoding();
+        }, 1000);
     }
 
     private getLocalQualitySetting(): VideoQualitySetting {

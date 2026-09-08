@@ -84,6 +84,13 @@
         resizeObserver.observe(videoElement);
     }
 
+    // Tells the sender we do not display the video: it stops encoding for us until we send a size again.
+    function reportHidden() {
+        lastWidth = undefined;
+        lastHeight = undefined;
+        setDimensions(0, 0);
+    }
+
     onMount(() => {
         videoElement.srcObject = stream;
 
@@ -117,6 +124,9 @@
     });
 
     onDestroy(() => {
+        // The tile is gone: scrolled out of view (VideoBoxOptimizer), tab hidden without Picture-in-Picture
+        // (CenteredVideo), layout change... No need to receive video for it anymore.
+        reportHidden();
         if (noVideoOutputDetector) {
             noVideoOutputDetector.destroy();
             noVideoOutputDetector = undefined;
