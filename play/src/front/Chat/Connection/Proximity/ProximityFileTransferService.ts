@@ -1,23 +1,20 @@
-import type { PrivateSpaceEvent, ProximityFileTransferOfferMessage } from "@workadventure/messages";
+import type { ProximityFileTransferOfferMessage } from "@workadventure/messages";
 import type { Observable } from "rxjs";
 import { Subject, Subscription } from "rxjs";
 import { v4 as uuidv4 } from "uuid";
-import type {
-    IncomingProximityFileTransferOffer,
-    ProximityFileTransferUpdate,
-    ProximityFileTransferTransport,
-} from "./ProximityFileTransferTransport";
+import type { SpaceInterface } from "../../../Space/SpaceInterface";
 import {
     decodeProximityFileChunkFrame,
     decodeProximityFileControlMessage,
     encodeProximityFileChunkFrame,
-    encodeProximityFileControlMessage,
+    type ProximityFileTransferControlMessage,
 } from "./ProximityFileTransferProtocol";
 import {
     decryptProximityFileBlob,
     encryptProximityFileBlob,
     exportProximityFileEncryptionKey,
     generateProximityFileEncryptionKey,
+    getMaxEncryptedTransferWireSize,
     hashProximityFileBlob,
     importProximityFileEncryptionKey,
     type ProximityFileTransferEncryptionKey,
@@ -35,8 +32,6 @@ export const PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE = 100 * 1024 * 1024;
 // from flooding the recipient with offers and growing the incomingTransfers map unbounded.
 export const PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER = 20;
 const PROXIMITY_FILE_TRANSFER_CHUNK_SIZE = 64 * 1024;
-const PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_SIZE = 1024 * 1024;
-const PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_OVERHEAD = 21;
 const PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD = 256 * 1024;
 const PROXIMITY_FILE_TRANSFER_NEGOTIATION_TIMEOUT = 15_000;
 
@@ -54,63 +49,39 @@ export function validateProximityFiles(files: File[]): ProximityFileValidationRe
     return { ok: true };
 }
 
-export const ENABLE_PROXIMITY_FILE_TRANSFER_SECURITY = true;
-
-export function isProximityFileTransferSecurityEnabled(): boolean {
-    return ENABLE_PROXIMITY_FILE_TRANSFER_SECURITY;
-}
-
-type ProximityFileTransferBackpressureDataChannel = {
-    readonly bufferedAmount: number;
-    bufferedAmountLowThreshold: number;
-    addEventListener: EventTarget["addEventListener"];
-    removeEventListener: EventTarget["removeEventListener"];
+export type IncomingProximityFileTransferOffer = ProximityFileTransferOfferMessage & {
+    senderSpaceUserId: string;
 };
 
-export function waitForProximityFileTransferBackpressure(
-    dataChannel: ProximityFileTransferBackpressureDataChannel,
-): Promise<void> {
-    dataChannel.bufferedAmountLowThreshold = PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD;
-
-    if (dataChannel.bufferedAmount <= PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD) {
-        return Promise.resolve();
-    }
-
-    return new Promise((resolve) => {
-        const resolveWhenReady = () => {
-            if (dataChannel.bufferedAmount > PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD) {
-                return;
-            }
-
-            dataChannel.removeEventListener("bufferedamountlow", resolveWhenReady);
-            resolve();
-        };
-
-        dataChannel.addEventListener("bufferedamountlow", resolveWhenReady);
-        resolveWhenReady();
-    });
-}
-
-export type ProximityFileTransferRecipient = {
-    spaceUserId: string;
-};
+export type ProximityFileTransferUpdate =
+    | {
+          transferId: string;
+          state: "pending" | "connecting" | "downloading";
+          progress: number;
+      }
+    | {
+          transferId: string;
+          state: "ready";
+          progress: 1;
+          url: string;
+      }
+    | {
+          transferId: string;
+          state: "error";
+          progress: number;
+          error: string;
+      };
 
 export type ProximityFileTransferOffer = {
     transferId: string;
     file: File;
     messageType: "file" | "image" | "audio" | "video";
     recipients: string[];
-    sha256?: string;
-    encryptionAlgorithm?: "XCHACHA20-POLY1305";
-    encryptionKeyId?: string;
-    encryptedFile?: File;
-    encryptionKey?: ProximityFileTransferEncryptionKey;
-    encryptionMetadata?: ProximityFileTransferEncryptionMetadata;
+    sha256: string;
+    encryptedFile: File;
+    encryptionKey: ProximityFileTransferEncryptionKey;
+    encryptionMetadata: ProximityFileTransferEncryptionMetadata;
 };
-
-export type { IncomingProximityFileTransferOffer, ProximityFileTransferTransport };
-
-export type { ProximityFileTransferUpdate };
 
 type ProximityFileTransferSignalPayload =
     | {
@@ -122,37 +93,16 @@ type ProximityFileTransferSignalPayload =
           candidate: RTCIceCandidateInit;
       };
 
-type PrivateEventsObservables = {
-    proximityFileTransferOffer: Subject<
-        {
-            $case: "proximityFileTransferOffer";
-            proximityFileTransferOffer: ProximityFileTransferOfferMessage;
-            sender: { spaceUserId: string } | string;
-        } & Record<string, unknown>
-    >;
-    proximityFileTransferSignal: Subject<
-        {
-            $case: "proximityFileTransferSignal";
-            proximityFileTransferSignal: { transferId: string; connectionId: string; signal: string };
-            sender: { spaceUserId: string } | string;
-        } & Record<string, unknown>
-    >;
-};
+type ProximityFileTransferSignalMessage = { transferId: string; connectionId: string; signal: string };
 
-export type ProximityFileTransferSpace = {
-    emitPrivateMessage(message: NonNullable<PrivateSpaceEvent["event"]>, receiverUserId: string): void;
-    observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): PrivateEventsObservables[K];
-};
+export type ProximityFileTransferSpace = Pick<SpaceInterface, "emitPrivateMessage" | "observePrivateEvent">;
 
 export type ProximityFileTransferServiceOptions = {
     localSpaceUserId: string;
     space: ProximityFileTransferSpace;
-    getIceServers?: () => Promise<RTCIceServer[]>;
+    getIceServers: () => Promise<RTCIceServer[]>;
     createPeerConnection?: (configuration: RTCConfiguration) => RTCPeerConnection;
     canExchangeWith?: (spaceUserId: string) => boolean;
-    isSecurityEnabled?: () => boolean;
-    transferTransport?: ProximityFileTransferTransport;
-    getTransferTransport?: () => ProximityFileTransferTransport | undefined;
 };
 
 type PeerSession = {
@@ -175,7 +125,6 @@ type ReceivingTransfer = {
     expectedBytes: number;
     chunks: Uint8Array<ArrayBuffer>[];
     receivedBytes: number;
-    encryptionMetadata?: ProximityFileTransferEncryptionMetadata;
 };
 
 type PendingProximityFileEncryption = {
@@ -192,7 +141,6 @@ export class ProximityFileTransferService {
     private readonly pendingIncomingEncryption = new Map<string, PendingProximityFileEncryption>();
     private readonly peerSessions = new Map<string, PeerSession>();
     private readonly subscriptions = new Subscription();
-    private readonly observedTransferTransports = new WeakSet<ProximityFileTransferTransport>();
     private readonly incomingOfferSubject = new Subject<IncomingProximityFileTransferOffer>();
     public readonly incomingOffers: Observable<IncomingProximityFileTransferOffer> = this.incomingOfferSubject;
     private readonly transferUpdateSubject = new Subject<ProximityFileTransferUpdate>();
@@ -201,7 +149,7 @@ export class ProximityFileTransferService {
     constructor(private readonly options: ProximityFileTransferServiceOptions) {
         this.subscriptions.add(
             this.options.space.observePrivateEvent("proximityFileTransferOffer").subscribe((event) => {
-                const senderSpaceUserId = typeof event.sender === "string" ? event.sender : event.sender.spaceUserId;
+                const senderSpaceUserId = event.sender.spaceUserId;
                 if (senderSpaceUserId === this.options.localSpaceUserId) {
                     return;
                 }
@@ -223,8 +171,8 @@ export class ProximityFileTransferService {
                 this.incomingOfferSubject.next(offer);
             }),
         );
-        // Free the per-peer offer slot once a download finishes, so completing transfers does not
-        // count against the cap (works for both the WebRTC and LiveKit transports).
+        // Free the per-peer offer slot once a download finishes, so completing transfers do not
+        // count against the cap.
         this.subscriptions.add(
             this.transferUpdateSubject.subscribe((update) => {
                 if (update.state === "ready") {
@@ -234,93 +182,55 @@ export class ProximityFileTransferService {
         );
         this.subscriptions.add(
             this.options.space.observePrivateEvent("proximityFileTransferSignal").subscribe((event) => {
-                const senderSpaceUserId = typeof event.sender === "string" ? event.sender : event.sender.spaceUserId;
-                this.handleTransferSignal(senderSpaceUserId, event.proximityFileTransferSignal).catch((error) => {
+                this.handleSignal(event.sender.spaceUserId, event.proximityFileTransferSignal).catch((error) => {
                     console.error("Error while handling proximity file transfer signal", error);
                 });
             }),
         );
     }
 
-    async createOutgoingOffers(
-        files: File[],
-        recipients: ProximityFileTransferRecipient[],
-    ): Promise<ProximityFileTransferOffer[]> {
+    async createOutgoingOffers(files: File[], recipients: string[]): Promise<ProximityFileTransferOffer[]> {
         const validation = validateProximityFiles(files);
         if (!validation.ok) {
             throw new Error(validation.reason);
         }
 
-        const recipientIds = recipients
-            .map((recipient) => recipient.spaceUserId)
-            .filter((spaceUserId) => spaceUserId !== this.options.localSpaceUserId);
+        const recipientIds = recipients.filter((spaceUserId) => spaceUserId !== this.options.localSpaceUserId);
+        const offers = await Promise.all(files.map((file) => this.createOutgoingOffer(file, recipientIds)));
 
-        const preparedOffers = await Promise.all(
-            files.map(async (file) => {
-                const transferId = uuidv4();
-                return {
-                    file,
-                    transferId,
-                    offer: await this.createOutgoingOffer(file, transferId, recipientIds),
-                };
-            }),
-        );
-
-        const offers: ProximityFileTransferOffer[] = [];
-        for (const { file, transferId, offer } of preparedOffers) {
-            const transferTransport = this.getTransferTransport();
-            this.outgoingTransfers.set(transferId, offer);
-            transferTransport?.sendFile(offer.encryptedFile ?? file, transferId, recipientIds);
-
+        for (const offer of offers) {
+            this.outgoingTransfers.set(offer.transferId, offer);
             for (const recipientId of recipientIds) {
                 this.options.space.emitPrivateMessage(
                     {
                         $case: "proximityFileTransferOffer",
                         proximityFileTransferOffer: {
-                            transferId,
-                            fileName: file.name,
-                            mimeType: file.type,
-                            size: file.size,
+                            transferId: offer.transferId,
+                            fileName: offer.file.name,
+                            mimeType: offer.file.type,
+                            size: offer.file.size,
                             messageType: offer.messageType,
                             characterTextures: [],
                             name: undefined,
                             sha256: offer.sha256,
-                            encryptionAlgorithm: offer.encryptionAlgorithm,
-                            encryptionKeyId: offer.encryptionKeyId,
                         },
                     },
                     recipientId,
                 );
             }
-
-            offers.push(offer);
         }
         return offers;
     }
 
-    private async createOutgoingOffer(
-        file: File,
-        transferId: string,
-        recipientIds: string[],
-    ): Promise<ProximityFileTransferOffer> {
-        const offer: ProximityFileTransferOffer = {
-            transferId,
-            file,
-            messageType: getMessageTypeFromFile(file),
-            recipients: recipientIds,
-        };
-
-        if (!this.isSecurityEnabled()) {
-            return offer;
-        }
-
+    private async createOutgoingOffer(file: File, recipients: string[]): Promise<ProximityFileTransferOffer> {
         const encryptionKey = await generateProximityFileEncryptionKey();
         const encrypted = await encryptProximityFileBlob(file, encryptionKey);
         return {
-            ...offer,
+            transferId: uuidv4(),
+            file,
+            messageType: getMessageTypeFromFile(file),
+            recipients,
             sha256: await hashProximityFileBlob(file),
-            encryptionAlgorithm: encrypted.metadata.algorithm,
-            encryptionKeyId: transferId,
             encryptedFile: new File([encrypted.blob], file.name, { type: file.type }),
             encryptionKey,
             encryptionMetadata: encrypted.metadata,
@@ -334,38 +244,9 @@ export class ProximityFileTransferService {
         }
 
         this.transferUpdateSubject.next({ transferId, state: "connecting", progress: 0 });
-        const transferTransport = this.getTransferTransport();
-        if (transferTransport) {
-            const security =
-                this.isSecurityEnabled() && this.isEncryptedOffer(offer)
-                    ? this.waitForIncomingEncryption(transferId)
-                    : undefined;
-            if (security) {
-                const session = await this.ensureInitiatorPeerSession(offer.senderSpaceUserId, transferId);
-                const dataChannel = await session.openPromise;
-                this.sendControlMessage(dataChannel, {
-                    type: "proximity_file_request",
-                    transferId,
-                });
-            }
-            await transferTransport.requestDownload(
-                offer,
-                security
-                    ? {
-                          encryptionKey: security.keyPromise,
-                          encryptionMetadata: security.metadataPromise,
-                      }
-                    : undefined,
-            );
-            return;
-        }
-
         const session = await this.ensureInitiatorPeerSession(offer.senderSpaceUserId, transferId);
         const dataChannel = await session.openPromise;
-        this.sendControlMessage(dataChannel, {
-            type: "proximity_file_request",
-            transferId,
-        });
+        this.sendControlMessage(dataChannel, { type: "proximity_file_request", transferId });
     }
 
     destroy(): void {
@@ -376,7 +257,6 @@ export class ProximityFileTransferService {
         this.incomingTransfers.clear();
         this.receivingTransfers.clear();
         this.pendingIncomingEncryption.clear();
-        this.options.transferTransport?.destroy();
         for (const session of this.peerSessions.values()) {
             clearTimeout(session.negotiationTimeout);
             session.dataChannel?.close();
@@ -411,9 +291,6 @@ export class ProximityFileTransferService {
         const peerConnectionFactory =
             this.options.createPeerConnection ??
             ((configuration: RTCConfiguration) => new RTCPeerConnection(configuration));
-        if (!this.options.getIceServers) {
-            throw new Error("Missing WebRTC ICE server provider");
-        }
         const peerConnection = peerConnectionFactory({ iceServers: await this.options.getIceServers() });
         let resolveOpen!: (dataChannel: RTCDataChannel) => void;
         let rejectOpen!: (error: Error) => void;
@@ -487,7 +364,7 @@ export class ProximityFileTransferService {
 
     private async handleSignal(
         senderSpaceUserId: string,
-        signalMessage: { transferId: string; connectionId: string; signal: string },
+        signalMessage: ProximityFileTransferSignalMessage,
     ): Promise<void> {
         if (!this.canExchangeWith(senderSpaceUserId)) {
             return;
@@ -526,40 +403,22 @@ export class ProximityFileTransferService {
         await session.peerConnection.addIceCandidate(signal.candidate);
     }
 
-    private async handleTransferSignal(
-        senderSpaceUserId: string,
-        signalMessage: { transferId: string; connectionId: string; signal: string },
-    ): Promise<void> {
-        const signal = JSON.parse(signalMessage.signal) as { type?: string };
-        const transferTransport = this.getTransferTransport();
-        if (signal.type !== "description" && signal.type !== "candidate" && transferTransport?.handleSignal) {
-            await transferTransport.handleSignal(senderSpaceUserId, signalMessage);
-            return;
-        }
-
-        await this.handleSignal(senderSpaceUserId, signalMessage);
-    }
-
     private async handleDataChannelMessage(session: PeerSession, data: unknown): Promise<void> {
         if (typeof data === "string") {
             const message = decodeProximityFileControlMessage(data);
             switch (message.type) {
                 case "proximity_file_request": {
                     await this.sendOutgoingEncryptionKey(session, message.transferId);
-                    if (this.getTransferTransport() && this.isSecurityEnabled()) {
-                        return;
-                    }
                     await this.enqueueOutgoingTransfer(session, message.transferId);
                     break;
                 }
                 case "proximity_file_key": {
-                    if (message.encryptionIv === undefined || message.plainMimeType === undefined) {
-                        return;
-                    }
-                    await this.resolveIncomingEncryptionKey(message.transferId, message.rawKey, {
+                    const pending = this.waitForIncomingEncryption(message.transferId);
+                    pending.resolveKey(await importProximityFileEncryptionKey(message.rawKey));
+                    pending.resolveMetadata({
                         algorithm: "XCHACHA20-POLY1305",
-                        iv: message.encryptionIv,
-                        mimeType: message.plainMimeType,
+                        iv: message.iv,
+                        mimeType: message.mimeType,
                     });
                     break;
                 }
@@ -568,22 +427,7 @@ export class ProximityFileTransferService {
                     if (!offer) {
                         return;
                     }
-                    const encryptionMetadata =
-                        message.encryptionAlgorithm === "XCHACHA20-POLY1305" &&
-                        message.encryptionIv !== undefined &&
-                        message.plainMimeType !== undefined
-                            ? {
-                                  algorithm: message.encryptionAlgorithm,
-                                  iv: message.encryptionIv,
-                                  mimeType: message.plainMimeType,
-                              }
-                            : undefined;
-                    const expectedBytes = this.validateIncomingTransferSize(
-                        message.transferId,
-                        offer,
-                        message.size,
-                        encryptionMetadata !== undefined,
-                    );
+                    const expectedBytes = this.validateIncomingTransferSize(message.transferId, offer, message.size);
                     if (expectedBytes === undefined) {
                         return;
                     }
@@ -592,7 +436,6 @@ export class ProximityFileTransferService {
                         expectedBytes,
                         chunks: [],
                         receivedBytes: 0,
-                        encryptionMetadata,
                     });
                     this.transferUpdateSubject.next({
                         transferId: message.transferId,
@@ -667,34 +510,20 @@ export class ProximityFileTransferService {
             return;
         }
 
-        const fileToSend = transfer.encryptedFile ?? transfer.file;
-        this.sendControlMessage(dataChannel, {
-            type: "proximity_file_start",
-            transferId,
-            fileName: transfer.file.name,
-            mimeType: transfer.file.type,
-            size: fileToSend.size,
-            sha256: transfer.sha256,
-            encryptionAlgorithm: transfer.encryptionMetadata?.algorithm,
-            encryptionIv: transfer.encryptionMetadata?.iv,
-            plainMimeType: transfer.encryptionMetadata?.mimeType,
-        });
+        const fileToSend = transfer.encryptedFile;
+        this.sendControlMessage(dataChannel, { type: "proximity_file_start", transferId, size: fileToSend.size });
 
         for (let offset = 0; offset < fileToSend.size; offset += PROXIMITY_FILE_TRANSFER_CHUNK_SIZE) {
             // eslint-disable-next-line no-await-in-loop
             const chunkBuffer = await fileToSend
                 .slice(offset, offset + PROXIMITY_FILE_TRANSFER_CHUNK_SIZE)
                 .arrayBuffer();
-            const chunk = new Uint8Array(chunkBuffer);
-            dataChannel.send(copyToArrayBuffer(encodeProximityFileChunkFrame(transferId, chunk)));
+            dataChannel.send(encodeProximityFileChunkFrame(transferId, new Uint8Array(chunkBuffer)));
             // eslint-disable-next-line no-await-in-loop
             await this.waitForBackpressure(dataChannel);
         }
 
-        this.sendControlMessage(dataChannel, {
-            type: "proximity_file_complete",
-            transferId,
-        });
+        this.sendControlMessage(dataChannel, { type: "proximity_file_complete", transferId });
     }
 
     private async completeReceivingTransfer(transferId: string): Promise<void> {
@@ -706,64 +535,44 @@ export class ProximityFileTransferService {
             this.failReceivingTransfer(transferId, "integrity-check-failed");
             return;
         }
-        const blob = await this.createVerifiedReceivingBlob(receivingTransfer);
-        if (!blob) {
-            return;
-        }
-        const url = URL.createObjectURL(blob);
-        this.receivingTransfers.delete(transferId);
-        this.transferUpdateSubject.next({ transferId, state: "ready", progress: 1, url });
-    }
-
-    private async createVerifiedReceivingBlob(receivingTransfer: ReceivingTransfer): Promise<Blob | undefined> {
-        const receivedParts = receivingTransfer.chunks.map((chunk) => copyToArrayBuffer(chunk));
-        if (!receivingTransfer.encryptionMetadata) {
-            return new Blob(receivedParts, { type: receivingTransfer.offer.mimeType });
-        }
-
-        const encryptedBlob = new Blob(receivedParts, { type: "application/octet-stream" });
+        const pending = this.waitForIncomingEncryption(transferId);
         const decryptedBlob = await decryptProximityFileBlob(
-            encryptedBlob,
-            await this.getIncomingEncryptionKey(receivingTransfer.offer.transferId),
-            receivingTransfer.encryptionMetadata,
+            new Blob(receivingTransfer.chunks, { type: "application/octet-stream" }),
+            await pending.keyPromise,
+            await pending.metadataPromise,
         );
         if (
             decryptedBlob.size !== Number(receivingTransfer.offer.size) ||
             (await hashProximityFileBlob(decryptedBlob)) !== receivingTransfer.offer.sha256
         ) {
-            this.receivingTransfers.delete(receivingTransfer.offer.transferId);
-            this.transferUpdateSubject.next({
-                transferId: receivingTransfer.offer.transferId,
-                state: "error",
-                progress: 0,
-                error: "integrity-check-failed",
-            });
-            return undefined;
+            this.failReceivingTransfer(transferId, "integrity-check-failed");
+            return;
         }
-        return decryptedBlob;
+        this.receivingTransfers.delete(transferId);
+        this.pendingIncomingEncryption.delete(transferId);
+        this.transferUpdateSubject.next({
+            transferId,
+            state: "ready",
+            progress: 1,
+            url: URL.createObjectURL(decryptedBlob),
+        });
     }
 
     private validateIncomingTransferSize(
         transferId: string,
         offer: IncomingProximityFileTransferOffer,
         announcedSize: number,
-        isEncrypted: boolean,
     ): number | undefined {
         const offerSize = Number(offer.size);
-        const maxExpectedWireSize = isEncrypted ? getMaxEncryptedTransferWireSize(offerSize) : offerSize;
         if (
             !Number.isFinite(offerSize) ||
             offerSize < 0 ||
             offerSize > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE ||
             !Number.isFinite(announcedSize) ||
             announcedSize < 0 ||
-            announcedSize > maxExpectedWireSize
+            announcedSize > getMaxEncryptedTransferWireSize(offerSize)
         ) {
             this.failReceivingTransfer(transferId, "file-too-large");
-            return undefined;
-        }
-        if (!isEncrypted && announcedSize !== offerSize) {
-            this.failReceivingTransfer(transferId, "integrity-check-failed");
             return undefined;
         }
         return announcedSize;
@@ -794,11 +603,8 @@ export class ProximityFileTransferService {
         });
     }
 
-    private sendControlMessage(
-        dataChannel: RTCDataChannel,
-        message: Parameters<typeof encodeProximityFileControlMessage>[0],
-    ): void {
-        dataChannel.send(encodeProximityFileControlMessage(message));
+    private sendControlMessage(dataChannel: RTCDataChannel, message: ProximityFileTransferControlMessage): void {
+        dataChannel.send(JSON.stringify(message));
     }
 
     private emitSignal(
@@ -856,18 +662,6 @@ export class ProximityFileTransferService {
         return count;
     }
 
-    private isSecurityEnabled(): boolean {
-        return this.options.isSecurityEnabled?.() ?? false;
-    }
-
-    private isEncryptedOffer(offer: IncomingProximityFileTransferOffer): boolean {
-        return (
-            offer.sha256 !== undefined &&
-            offer.encryptionAlgorithm === "XCHACHA20-POLY1305" &&
-            offer.encryptionKeyId !== undefined
-        );
-    }
-
     private waitForIncomingEncryption(transferId: string): PendingProximityFileEncryption {
         const existing = this.pendingIncomingEncryption.get(transferId);
         if (existing) {
@@ -887,24 +681,10 @@ export class ProximityFileTransferService {
         return pending;
     }
 
-    private getIncomingEncryptionKey(transferId: string): Promise<ProximityFileTransferEncryptionKey> {
-        return this.waitForIncomingEncryption(transferId).keyPromise;
-    }
-
-    private async resolveIncomingEncryptionKey(
-        transferId: string,
-        rawKey: string,
-        metadata: ProximityFileTransferEncryptionMetadata,
-    ): Promise<void> {
-        const pending = this.waitForIncomingEncryption(transferId);
-        pending.resolveKey(await importProximityFileEncryptionKey(rawKey));
-        pending.resolveMetadata(metadata);
-    }
-
     private async sendOutgoingEncryptionKey(session: PeerSession, transferId: string): Promise<void> {
         const transfer = this.outgoingTransfers.get(transferId);
         const dataChannel = session.dataChannel;
-        if (!transfer?.encryptionKey || !transfer.encryptionMetadata || !dataChannel || !this.isSecurityEnabled()) {
+        if (!transfer || !dataChannel) {
             return;
         }
 
@@ -912,22 +692,9 @@ export class ProximityFileTransferService {
             type: "proximity_file_key",
             transferId,
             rawKey: await exportProximityFileEncryptionKey(transfer.encryptionKey),
-            encryptionIv: transfer.encryptionMetadata.iv,
-            plainMimeType: transfer.encryptionMetadata.mimeType,
+            iv: transfer.encryptionMetadata.iv,
+            mimeType: transfer.encryptionMetadata.mimeType,
         });
-    }
-
-    private getTransferTransport(): ProximityFileTransferTransport | undefined {
-        const transferTransport = this.options.transferTransport ?? this.options.getTransferTransport?.();
-        if (transferTransport?.transferUpdates && !this.observedTransferTransports.has(transferTransport)) {
-            this.observedTransferTransports.add(transferTransport);
-            this.subscriptions.add(
-                transferTransport.transferUpdates.subscribe((update) => {
-                    this.transferUpdateSubject.next(update);
-                }),
-            );
-        }
-        return transferTransport;
     }
 }
 
@@ -942,21 +709,4 @@ export function getMessageTypeFromFile(file: File): "file" | "image" | "audio" |
         return "video";
     }
     return "file";
-}
-
-function copyToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-    const buffer = new ArrayBuffer(bytes.byteLength);
-    new Uint8Array(buffer).set(bytes);
-    return buffer;
-}
-
-export function getMaxEncryptedTransferWireSize(plainSize: number): number {
-    if (plainSize === 0) {
-        return 0;
-    }
-    return (
-        plainSize +
-        Math.ceil(plainSize / PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_SIZE) *
-            PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_OVERHEAD
-    );
 }

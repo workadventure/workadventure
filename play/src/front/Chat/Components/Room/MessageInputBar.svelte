@@ -50,12 +50,6 @@
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import {
-        completeFilePreview,
-        createFilePreview,
-        removeFilePreviews,
-        type MessageInputBarFilePreview,
-    } from "./MessageInputBarFilePreview";
     import { IconHelpCircle, IconList, IconLoader, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
     import { modals } from "@wa-modals";
 
@@ -74,7 +68,14 @@
     let messageBarRef: HTMLDivElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
     let files: { id: string; file: File }[] = $state([]);
-    let filesPreview: MessageInputBarFilePreview[] = $state([]);
+    let filesPreview: {
+        id: string;
+        size: number;
+        name: string;
+        type: string;
+        url: string | undefined;
+        preparing: boolean;
+    }[] = $state([]);
     const TYPINT_TIMEOUT = 10000;
     const inactiveProximityState = readable(false);
 
@@ -181,7 +182,7 @@
             try {
                 await room.sendFiles(fileList);
                 files = files.filter((f) => !idsToSend.includes(f.id));
-                filesPreview = removeFilePreviews(filesPreview, idsToSend);
+                filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
             } catch (error) {
                 console.error(error);
                 warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
@@ -283,28 +284,34 @@
     }
 
     function addToPreviews(files: { id: string; file: File }[]) {
-        filesPreview = [...filesPreview, ...files.map(createFilePreview)];
+        filesPreview = [
+            ...filesPreview,
+            ...files.map(({ id, file }) => ({
+                id,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                url: undefined,
+                preparing: file.type.includes("image"),
+            })),
+        ];
 
-        Array.from(files).forEach((file) => {
-            if (!file.file.type.includes("image")) {
-                return;
+        for (const { id, file } of files) {
+            if (!file.type.includes("image")) {
+                continue;
             }
-
             const reader = new FileReader();
-
-            reader.onload = () => {
-                filesPreview = completeFilePreview(filesPreview, file.id, reader.result);
+            reader.onloadend = () => {
+                const url = typeof reader.result === "string" ? reader.result : undefined;
+                filesPreview = filesPreview.map((p) => (p.id === id ? { ...p, url, preparing: false } : p));
             };
-            reader.onerror = () => {
-                filesPreview = completeFilePreview(filesPreview, file.id, undefined);
-            };
-            reader.readAsDataURL(file.file);
-        });
+            reader.readAsDataURL(file);
+        }
     }
 
     function deleteFile(id: string) {
         files = files.filter((file) => file.id !== id);
-        filesPreview = removeFilePreviews(filesPreview, [id]);
+        filesPreview = filesPreview.filter((filePreview) => filePreview.id !== id);
     }
 
     function formatBytes(bytes: number) {

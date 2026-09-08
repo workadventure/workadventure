@@ -63,6 +63,7 @@ function createOffer(): IncomingProximityFileTransferOffer {
         messageType: "file",
         characterTextures: [],
         name: "Sender",
+        sha256: "digest",
         senderSpaceUserId: "sender",
     };
 }

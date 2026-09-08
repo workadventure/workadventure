@@ -14,20 +14,14 @@ export const ProximityFileTransferControlMessage = z.union([
     z.object({
         type: z.literal("proximity_file_start"),
         transferId: z.string(),
-        fileName: z.string(),
-        mimeType: z.string(),
         size: z.number().nonnegative(),
-        sha256: z.string().optional(),
-        encryptionAlgorithm: z.literal("XCHACHA20-POLY1305").optional(),
-        encryptionIv: z.string().optional(),
-        plainMimeType: z.string().optional(),
     }),
     z.object({
         type: z.literal("proximity_file_key"),
         transferId: z.string(),
         rawKey: z.string(),
-        encryptionIv: z.string().optional(),
-        plainMimeType: z.string().optional(),
+        iv: z.string(),
+        mimeType: z.string(),
     }),
     z.object({
         type: z.literal("proximity_file_complete"),
@@ -46,12 +40,6 @@ export type ProximityFileChunkFrame = {
     transferId: string;
     chunk: Uint8Array<ArrayBuffer>;
 };
-
-function toArrayBufferBackedUint8Array(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
-    const copy = new Uint8Array(bytes.byteLength);
-    copy.set(bytes);
-    return copy;
-}
 
 export function encodeProximityFileChunkFrame(transferId: string, chunk: Uint8Array): Uint8Array<ArrayBuffer> {
     const encodedTransferId = textEncoder.encode(transferId);
@@ -92,12 +80,8 @@ export function decodeProximityFileChunkFrame(frame: ArrayBuffer | ArrayBufferVi
 
     return {
         transferId: textDecoder.decode(bytes.subarray(HEADER_LENGTH, chunkOffset)),
-        chunk: toArrayBufferBackedUint8Array(bytes.subarray(chunkOffset)),
+        chunk: bytes.slice(chunkOffset),
     };
-}
-
-export function encodeProximityFileControlMessage(message: ProximityFileTransferControlMessage): string {
-    return JSON.stringify(message);
 }
 
 export function decodeProximityFileControlMessage(message: string): ProximityFileTransferControlMessage {

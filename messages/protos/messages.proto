@@ -1292,9 +1292,7 @@ message ProximityFileTransferOfferMessage {
   string messageType = 5;
   repeated CharacterTextureMessage characterTextures = 6;
   optional string name = 7;
-  optional string sha256 = 8;
-  optional string encryptionAlgorithm = 9;
-  optional string encryptionKeyId = 10;
+  string sha256 = 8;
 }
 
 message ProximityFileTransferSignalMessage {

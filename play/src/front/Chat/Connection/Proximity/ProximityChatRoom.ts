@@ -80,11 +80,8 @@ import { getUnreadRemoteQuestionIds } from "./ProximityQAUnread";
 import { createProximityTimelineItemsStore } from "./ProximityTimelineItemsStore";
 import {
     getMessageTypeFromFile,
-    isProximityFileTransferSecurityEnabled,
     ProximityFileTransferService,
-    validateProximityFiles,
     type IncomingProximityFileTransferOffer,
-    type ProximityFileTransferSpace,
     type ProximityFileTransferUpdate,
 } from "./ProximityFileTransferService";
 import { estimateProximityFileTransferRemainingSeconds } from "./ProximityFileTransferEta";
@@ -473,15 +470,10 @@ export class ProximityChatRoom implements ChatRoom {
         }
 
         const fileArray = Array.from(files);
-        const validation = validateProximityFiles(fileArray);
-        if (!validation.ok) {
-            throw new Error(validation.reason);
-        }
-
         const recipients = Array.from(this.users?.values() ?? [])
             .filter((user) => user.spaceUserId !== this._spaceUserId)
             .filter((user) => !blackListManager.isBlackListed(user.uuid))
-            .map((user) => ({ spaceUserId: user.spaceUserId }));
+            .map((user) => user.spaceUserId);
 
         const spaceUser = this.users?.get(this._spaceUserId);
         const chatUser = spaceUser ? mapExtendedSpaceUserToChatUser(spaceUser) : this.unknownUser;
@@ -872,11 +864,9 @@ export class ProximityChatRoom implements ChatRoom {
         this.fileTransferUpdateSubscription?.unsubscribe();
         this.fileTransferService = new ProximityFileTransferService({
             localSpaceUserId: this._spaceUserId,
-            space: space as unknown as ProximityFileTransferSpace,
+            space,
             getIceServers: () => iceServersManager.getIceServersConfig(),
-            getTransferTransport: () => space.spacePeerManager.getProximityFileTransferTransport(),
             canExchangeWith: (spaceUserId) => !this.isBlackListedSpaceUser(spaceUserId),
-            isSecurityEnabled: isProximityFileTransferSecurityEnabled,
         });
         this.fileTransferIncomingOfferSubscription = this.fileTransferService.incomingOffers.subscribe((offer) => {
             if (this.isBlackListedSpaceUser(offer.senderSpaceUserId)) {

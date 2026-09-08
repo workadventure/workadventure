@@ -3,7 +3,6 @@ import {
     decodeProximityFileChunkFrame,
     decodeProximityFileControlMessage,
     encodeProximityFileChunkFrame,
-    encodeProximityFileControlMessage,
 } from "../ProximityFileTransferProtocol";
 
 describe("Proximity file transfer binary framing", () => {
@@ -21,38 +20,21 @@ describe("Proximity file transfer binary framing", () => {
 });
 
 describe("Proximity file transfer control messages", () => {
-    it("should preserve encryption key messages", () => {
-        const encoded = encodeProximityFileControlMessage({
+    it("should decode encryption key messages", () => {
+        const message = {
             type: "proximity_file_key",
             transferId: "transfer-1",
             rawKey: "key",
-        });
+            iv: "iv",
+            mimeType: "text/plain",
+        };
 
-        expect(decodeProximityFileControlMessage(encoded)).toEqual({
-            type: "proximity_file_key",
-            transferId: "transfer-1",
-            rawKey: "key",
-        });
+        expect(decodeProximityFileControlMessage(JSON.stringify(message))).toEqual(message);
     });
 
-    it("should preserve encrypted start metadata", () => {
-        const encoded = encodeProximityFileControlMessage({
-            type: "proximity_file_start",
-            transferId: "transfer-1",
-            fileName: "hello.txt",
-            mimeType: "text/plain",
-            size: 5,
-            sha256: "digest",
-            encryptionAlgorithm: "XCHACHA20-POLY1305",
-            encryptionIv: "iv",
-            plainMimeType: "text/plain",
-        });
+    it("should reject key messages without encryption metadata", () => {
+        const message = { type: "proximity_file_key", transferId: "transfer-1", rawKey: "key" };
 
-        expect(decodeProximityFileControlMessage(encoded)).toMatchObject({
-            sha256: "digest",
-            encryptionAlgorithm: "XCHACHA20-POLY1305",
-            encryptionIv: "iv",
-            plainMimeType: "text/plain",
-        });
+        expect(() => decodeProximityFileControlMessage(JSON.stringify(message))).toThrow();
     });
 });
