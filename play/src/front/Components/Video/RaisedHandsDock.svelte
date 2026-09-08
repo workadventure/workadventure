@@ -14,10 +14,10 @@
 </script>
 
 {#if $raisedHandsAdminVisibleStore}
-    <!-- Docked top-right, below the top action bar, like the notification/toast stack. #main-layout is
-         pointer-events-none, so the dock re-enables pointer events for itself only. -->
+    <!-- Rendered at the bottom of the top-right toast stack (see MainLayout), so toasts never cover it.
+         #main-layout is pointer-events-none, so the dock re-enables pointer events for itself only. -->
     <div
-        class="pointer-events-auto absolute end-2 top-2 z-[700] flex w-72 max-w-[calc(100vw-1rem)] flex-row items-stretch gap-1"
+        class="pointer-events-auto mt-2 flex w-72 max-w-[calc(100vw-1rem)] flex-row items-stretch gap-1"
         data-testid="raised-hands-dock"
         transition:fly={{ x: 210, duration: 500 }}
     >
