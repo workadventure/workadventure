@@ -36,7 +36,8 @@ export function subscribeToVideoQualityAnalytics(
     sendReport: (message: VideoQualityReportMessage) => void,
 ): Unsubscriber {
     return subscribeToSamples(statsStore, context, sendReport, (stats, base) => {
-        if (!isValidStats(stats)) {
+        // A stream the sender paused on purpose (we do not display it) says nothing about the connection
+        if (stats.paused || !isValidStats(stats)) {
             return undefined;
         }
         return {

@@ -32,8 +32,13 @@
                     <td>Bandwidth:</td><td>{Math.round((webRtcStats.bandwidth / 1000) * 8)} kbps</td>
                 </tr>
                 <tr>
-                    <td>FPS:</td><td>{Math.round(webRtcStats.fps)}</td>
+                    <td>FPS:</td><td>{webRtcStats.paused ? "paused by sender" : Math.round(webRtcStats.fps)}</td>
                 </tr>
+                {#if webRtcStats.expectedFps}
+                    <tr>
+                        <td>Expected FPS:</td><td>{Math.round(webRtcStats.expectedFps)}</td>
+                    </tr>
+                {/if}
                 <tr>
                     <td>FPS Variability:</td>
                     <td>{fpsStdDevDisplay}</td>

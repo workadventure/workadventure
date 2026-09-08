@@ -83,6 +83,8 @@ export class RemotePeer extends Peer implements Streamable {
     private analyticsStatsUnsubscribe: Unsubscriber | undefined;
     private analyticsRemoteStreamUnsubscribe: (() => void) | undefined;
     private receiverMaxBitrateBps: number | undefined;
+    // Frame rate the remote sender targets for us, as last announced (see EncodingMessage); 0 while it pauses
+    public expectedFps: number | undefined;
     // What the remote viewer displays of our video, as last reported (see ResolutionMessage)
     private viewerDisplay: ViewerDisplay = DEFAULT_VIEWER_DISPLAY;
     private viewerReportedDisplay = false;
@@ -223,6 +225,10 @@ export class RemotePeer extends Peer implements Streamable {
                 }
                 case "resolution": {
                     this.updateVideoConstraintsForDisplayDimensions(message.width, message.height, message.maxBitrate);
+                    break;
+                }
+                case "encoding": {
+                    this.expectedFps = message.expectedFps;
                     break;
                 }
                 default: {
@@ -1019,6 +1025,7 @@ export class RemotePeer extends Peer implements Streamable {
             .setParameters(parameters)
             .then(() => {
                 this.videoEncodingRetries = 0;
+                this.announceExpectedFps(encoding.active ? encoding.maxFramerate : 0, settings.frameRate);
                 debug(
                     isViewerDisplayHidden(this.viewerDisplay)
                         ? "Adaptive video: viewer does not display our video, encoder paused"
@@ -1033,6 +1040,29 @@ export class RemotePeer extends Peer implements Streamable {
                 }
                 console.error("Adaptive video: failed to set parameters", err);
             });
+    }
+
+    /**
+     * Tells the viewer the frame rate to expect from us, so that it does not count our deliberate changes
+     * (pause, tile resized) as an unstable connection.
+     */
+    private announceExpectedFps(maxFramerate: number | undefined, captureFrameRate: number | undefined): void {
+        if (this.destroyed || this.closing) {
+            return;
+        }
+        const expectedFps = Math.min(maxFramerate ?? captureFrameRate ?? 0, captureFrameRate ?? Infinity);
+        try {
+            this.write(
+                new Buffer(
+                    JSON.stringify({
+                        type: "encoding",
+                        expectedFps: Number.isFinite(expectedFps) ? expectedFps : 0,
+                    } satisfies P2PMessage),
+                ),
+            );
+        } catch (e) {
+            console.error("Failed to send encoding message to peer", e);
+        }
     }
 
     private videoEncodingRetries = 0;
