@@ -1,6 +1,6 @@
 import type { PrivateSpaceEvent } from "@workadventure/messages";
 import { Subject } from "rxjs";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
     PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE,
     PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER,
@@ -10,10 +10,15 @@ import {
     validateProximityFiles,
 } from "../ProximityFileTransferService";
 import { encodeProximityFileChunkFrame } from "../ProximityFileTransferProtocol";
+import {
+    encryptProximityFileBlob,
+    exportProximityFileEncryptionKey,
+    generateProximityFileEncryptionKey,
+} from "../ProximityFileTransferSecurity";
 
 const HELLO_SHA256 = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
 
-function offerEvent(transferId: string, size: number, sender = "sender") {
+function offerEvent(transferId: string, size: number, sender = "sender", sha256 = "digest") {
     return {
         $case: "proximityFileTransferOffer" as const,
         proximityFileTransferOffer: {
@@ -24,7 +29,7 @@ function offerEvent(transferId: string, size: number, sender = "sender") {
             messageType: "file",
             characterTextures: [],
             name: undefined,
-            sha256: "digest",
+            sha256,
         },
         sender: { spaceUserId: sender },
     };
@@ -53,6 +58,21 @@ function createService(localSpaceUserId: string) {
     return { service, incomingOffers, emitPrivateMessage, updates, updatesSubscription, handleDataChannelMessage };
 }
 
+/** Encrypts `content` the way a sender does and returns the messages a receiver would get. */
+async function encryptedTransfer(transferId: string, content: string) {
+    const key = await generateProximityFileEncryptionKey();
+    const encrypted = await encryptProximityFileBlob(new Blob([content], { type: "text/plain" }), key);
+    const keyMessage = JSON.stringify({
+        type: "proximity_file_key",
+        transferId,
+        rawKey: await exportProximityFileEncryptionKey(key),
+        iv: encrypted.metadata.iv,
+        mimeType: encrypted.metadata.mimeType,
+    });
+    const bytes = new Uint8Array(await encrypted.blob.arrayBuffer());
+    return { keyMessage, bytes, sha256: encrypted.sha256 };
+}
+
 describe("validateProximityFiles", () => {
     it("should reject more than three files", () => {
         const files = [
@@ -67,10 +87,78 @@ describe("validateProximityFiles", () => {
 });
 
 describe("ProximityFileTransferService", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it("should decrypt a transfer chunk by chunk and expose the verified blob", async () => {
+        const createObjectURL = vi.fn().mockReturnValue("blob:transfer-1");
+        vi.stubGlobal("URL", { createObjectURL });
+        const { incomingOffers, updates, handleDataChannelMessage } = createService("recipient");
+        const { keyMessage, bytes, sha256 } = await encryptedTransfer("transfer-1", "hello");
+        incomingOffers.next(offerEvent("transfer-1", 5, "sender", sha256));
+
+        await handleDataChannelMessage(keyMessage);
+        await handleDataChannelMessage(
+            JSON.stringify({ type: "proximity_file_start", transferId: "transfer-1", size: bytes.byteLength }),
+        );
+        // 7-byte chunks: the frame length prefix and the ciphertext both straddle chunk boundaries.
+        for (let offset = 0; offset < bytes.byteLength; offset += 7) {
+            // eslint-disable-next-line no-await-in-loop -- chunks are delivered in order
+            await handleDataChannelMessage(
+                encodeProximityFileChunkFrame("transfer-1", bytes.subarray(offset, offset + 7)),
+            );
+        }
+        await handleDataChannelMessage(JSON.stringify({ type: "proximity_file_complete", transferId: "transfer-1" }));
+
+        expect(updates.at(-1)).toEqual({
+            transferId: "transfer-1",
+            state: "ready",
+            progress: 1,
+            url: "blob:transfer-1",
+        });
+        const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
+        expect(await blob.text()).toBe("hello");
+        expect(blob.type).toBe("text/plain");
+    });
+
+    it("should reject a transfer whose plaintext hash does not match the offer", async () => {
+        vi.stubGlobal("URL", { createObjectURL: vi.fn() });
+        const { incomingOffers, updates, handleDataChannelMessage } = createService("recipient");
+        const { keyMessage, bytes } = await encryptedTransfer("transfer-1", "hello");
+        incomingOffers.next(offerEvent("transfer-1", 5, "sender", "not-the-hash"));
+
+        await handleDataChannelMessage(keyMessage);
+        await handleDataChannelMessage(
+            JSON.stringify({ type: "proximity_file_start", transferId: "transfer-1", size: bytes.byteLength }),
+        );
+        await handleDataChannelMessage(encodeProximityFileChunkFrame("transfer-1", bytes));
+        await handleDataChannelMessage(JSON.stringify({ type: "proximity_file_complete", transferId: "transfer-1" }));
+
+        expect(updates.at(-1)).toMatchObject({
+            transferId: "transfer-1",
+            state: "error",
+            error: "integrity-check-failed",
+        });
+    });
+
+    it("should reject a start message that arrives before the encryption key", async () => {
+        const { incomingOffers, updates, handleDataChannelMessage } = createService("recipient");
+        incomingOffers.next(offerEvent("transfer-1", 5));
+
+        await handleDataChannelMessage(
+            JSON.stringify({ type: "proximity_file_start", transferId: "transfer-1", size: 5 }),
+        );
+
+        expect(updates.at(-1)).toMatchObject({ transferId: "transfer-1", state: "error", error: "missing-key" });
+    });
+
     it("should reject incoming chunks beyond the announced transfer size", async () => {
         const { incomingOffers, updates, handleDataChannelMessage } = createService("recipient");
+        const { keyMessage } = await encryptedTransfer("transfer-1", "");
         incomingOffers.next(offerEvent("transfer-1", 0));
 
+        await handleDataChannelMessage(keyMessage);
         await handleDataChannelMessage(
             JSON.stringify({ type: "proximity_file_start", transferId: "transfer-1", size: 0 }),
         );

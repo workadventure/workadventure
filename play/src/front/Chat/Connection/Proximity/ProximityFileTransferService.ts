@@ -10,13 +10,12 @@ import {
     type ProximityFileTransferControlMessage,
 } from "./ProximityFileTransferProtocol";
 import {
-    decryptProximityFileBlob,
     encryptProximityFileBlob,
     exportProximityFileEncryptionKey,
     generateProximityFileEncryptionKey,
     getMaxEncryptedTransferWireSize,
-    hashProximityFileBlob,
     importProximityFileEncryptionKey,
+    ProximityFileStreamDecryptor,
     type ProximityFileTransferEncryptionKey,
     type ProximityFileTransferEncryptionMetadata,
 } from "./ProximityFileTransferSecurity";
@@ -112,7 +111,10 @@ type PeerSession = {
     openPromise: Promise<RTCDataChannel>;
     resolveOpen: (dataChannel: RTCDataChannel) => void;
     rejectOpen: (error: Error) => void;
-    queue: Promise<void>;
+    // Inbound messages are processed one at a time so the key always lands before the start
+    // message that needs it; outbound transfers to the same peer are sent one after the other.
+    inboundQueue: Promise<void>;
+    outboundQueue: Promise<void>;
     negotiationTimeout: ReturnType<typeof setTimeout>;
     signalTransferId: string;
     canEmitCandidates: boolean;
@@ -122,8 +124,8 @@ type PeerSession = {
 type ReceivingTransfer = {
     offer: IncomingProximityFileTransferOffer;
     expectedBytes: number;
-    chunks: Uint8Array<ArrayBuffer>[];
     receivedBytes: number;
+    decryptor: ProximityFileStreamDecryptor;
 };
 
 type IncomingProximityFileEncryption = {
@@ -131,16 +133,11 @@ type IncomingProximityFileEncryption = {
     metadata: ProximityFileTransferEncryptionMetadata;
 };
 
-type PendingProximityFileEncryption = {
-    promise: Promise<IncomingProximityFileEncryption>;
-    resolve: (encryption: IncomingProximityFileEncryption) => void;
-};
-
 export class ProximityFileTransferService {
     private readonly outgoingTransfers = new Map<string, ProximityFileTransferOffer>();
     private readonly incomingTransfers = new Map<string, IncomingProximityFileTransferOffer>();
     private readonly receivingTransfers = new Map<string, ReceivingTransfer>();
-    private readonly pendingIncomingEncryption = new Map<string, PendingProximityFileEncryption>();
+    private readonly incomingEncryption = new Map<string, IncomingProximityFileEncryption>();
     private readonly peerSessions = new Map<string, PeerSession>();
     private readonly subscriptions = new Subscription();
     private readonly incomingOfferSubject = new Subject<IncomingProximityFileTransferOffer>();
@@ -232,7 +229,7 @@ export class ProximityFileTransferService {
             file,
             messageType: getMessageTypeFromFile(file),
             recipients,
-            sha256: await hashProximityFileBlob(file),
+            sha256: encrypted.sha256,
             encryptedFile: new File([encrypted.blob], file.name, { type: file.type }),
             encryptionKey,
             encryptionMetadata: encrypted.metadata,
@@ -258,7 +255,7 @@ export class ProximityFileTransferService {
         this.outgoingTransfers.clear();
         this.incomingTransfers.clear();
         this.receivingTransfers.clear();
-        this.pendingIncomingEncryption.clear();
+        this.incomingEncryption.clear();
         for (const session of this.peerSessions.values()) {
             clearTimeout(session.negotiationTimeout);
             session.dataChannel?.close();
@@ -305,7 +302,8 @@ export class ProximityFileTransferService {
             openPromise,
             resolveOpen,
             rejectOpen,
-            queue: Promise.resolve(),
+            inboundQueue: Promise.resolve(),
+            outboundQueue: Promise.resolve(),
             signalTransferId: "",
             canEmitCandidates: false,
             pendingCandidates: [],
@@ -352,9 +350,11 @@ export class ProximityFileTransferService {
             session.rejectOpen(new Error("Proximity file transfer data channel error"));
         };
         dataChannel.onmessage = (event) => {
-            this.handleDataChannelMessage(session, event.data).catch((error) => {
-                console.error("Error while handling proximity file transfer data channel message", error);
-            });
+            session.inboundQueue = session.inboundQueue
+                .then(() => this.handleDataChannelMessage(session, event.data))
+                .catch((error) => {
+                    console.error("Error while handling proximity file transfer data channel message", error);
+                });
         };
         dataChannel.onclose = () => {
             this.closePeerSession(session.remoteSpaceUserId);
@@ -412,7 +412,7 @@ export class ProximityFileTransferService {
                     break;
                 }
                 case "proximity_file_key": {
-                    this.waitForIncomingEncryption(message.transferId).resolve({
+                    this.incomingEncryption.set(message.transferId, {
                         key: await importProximityFileEncryptionKey(message.rawKey),
                         metadata: { algorithm: "XCHACHA20-POLY1305", iv: message.iv, mimeType: message.mimeType },
                     });
@@ -427,11 +427,16 @@ export class ProximityFileTransferService {
                     if (expectedBytes === undefined) {
                         return;
                     }
+                    const encryption = this.incomingEncryption.get(message.transferId);
+                    if (!encryption) {
+                        this.failReceivingTransfer(message.transferId, "missing-key");
+                        return;
+                    }
                     this.receivingTransfers.set(message.transferId, {
                         offer,
                         expectedBytes,
-                        chunks: [],
                         receivedBytes: 0,
+                        decryptor: await ProximityFileStreamDecryptor.create(encryption.key, encryption.metadata),
                     });
                     this.transferUpdateSubject.next({
                         transferId: message.transferId,
@@ -441,7 +446,7 @@ export class ProximityFileTransferService {
                     break;
                 }
                 case "proximity_file_complete": {
-                    await this.completeReceivingTransfer(message.transferId);
+                    this.completeReceivingTransfer(message.transferId);
                     break;
                 }
                 case "proximity_file_error": {
@@ -473,7 +478,12 @@ export class ProximityFileTransferService {
             this.failReceivingTransfer(frame.transferId, "file-too-large");
             return;
         }
-        receivingTransfer.chunks.push(frame.chunk);
+        try {
+            receivingTransfer.decryptor.push(frame.chunk);
+        } catch {
+            this.failReceivingTransfer(frame.transferId, "integrity-check-failed");
+            return;
+        }
         receivingTransfer.receivedBytes = nextReceivedBytes;
         this.transferUpdateSubject.next({
             transferId: frame.transferId,
@@ -483,8 +493,8 @@ export class ProximityFileTransferService {
     }
 
     private enqueueOutgoingTransfer(session: PeerSession, transferId: string): Promise<void> {
-        session.queue = session.queue.then(() => this.sendOutgoingTransfer(session, transferId));
-        return session.queue;
+        session.outboundQueue = session.outboundQueue.then(() => this.sendOutgoingTransfer(session, transferId));
+        return session.outboundQueue;
     }
 
     private async sendOutgoingTransfer(session: PeerSession, transferId: string): Promise<void> {
@@ -522,7 +532,7 @@ export class ProximityFileTransferService {
         this.sendControlMessage(dataChannel, { type: "proximity_file_complete", transferId });
     }
 
-    private async completeReceivingTransfer(transferId: string): Promise<void> {
+    private completeReceivingTransfer(transferId: string): void {
         const receivingTransfer = this.receivingTransfers.get(transferId);
         if (!receivingTransfer) {
             return;
@@ -531,26 +541,27 @@ export class ProximityFileTransferService {
             this.failReceivingTransfer(transferId, "integrity-check-failed");
             return;
         }
-        const { key, metadata } = await this.waitForIncomingEncryption(transferId).promise;
-        const decryptedBlob = await decryptProximityFileBlob(
-            new Blob(receivingTransfer.chunks, { type: "application/octet-stream" }),
-            key,
-            metadata,
-        );
+        let decrypted: { blob: Blob; sha256: string };
+        try {
+            decrypted = receivingTransfer.decryptor.finish();
+        } catch {
+            this.failReceivingTransfer(transferId, "integrity-check-failed");
+            return;
+        }
         if (
-            decryptedBlob.size !== receivingTransfer.offer.size ||
-            (await hashProximityFileBlob(decryptedBlob)) !== receivingTransfer.offer.sha256
+            decrypted.blob.size !== receivingTransfer.offer.size ||
+            decrypted.sha256 !== receivingTransfer.offer.sha256
         ) {
             this.failReceivingTransfer(transferId, "integrity-check-failed");
             return;
         }
         this.receivingTransfers.delete(transferId);
-        this.pendingIncomingEncryption.delete(transferId);
+        this.incomingEncryption.delete(transferId);
         this.transferUpdateSubject.next({
             transferId,
             state: "ready",
             progress: 1,
-            url: URL.createObjectURL(decryptedBlob),
+            url: URL.createObjectURL(decrypted.blob),
         });
     }
 
@@ -647,21 +658,6 @@ export class ProximityFileTransferService {
             }
         }
         return count;
-    }
-
-    private waitForIncomingEncryption(transferId: string): PendingProximityFileEncryption {
-        const existing = this.pendingIncomingEncryption.get(transferId);
-        if (existing) {
-            return existing;
-        }
-
-        let resolve!: PendingProximityFileEncryption["resolve"];
-        const promise = new Promise<IncomingProximityFileEncryption>((r) => {
-            resolve = r;
-        });
-        const pending = { promise, resolve };
-        this.pendingIncomingEncryption.set(transferId, pending);
-        return pending;
     }
 
     private async sendOutgoingEncryptionKey(session: PeerSession, transferId: string): Promise<void> {
