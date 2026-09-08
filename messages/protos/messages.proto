@@ -159,6 +159,23 @@ enum VideoQualityRelayProtocol {
   VIDEO_QUALITY_RELAY_PROTOCOL_TLS = 3;
 }
 
+// Direction of a video stream from the reporter's point of view.
+enum VideoQualityStreamDirection {
+  // Unspecified means inbound: samples sent by clients that predate the outbound (encoder) samples.
+  VIDEO_QUALITY_STREAM_DIRECTION_UNSPECIFIED = 0;
+  VIDEO_QUALITY_STREAM_DIRECTION_INBOUND = 1;
+  VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND = 2;
+}
+
+// Why the browser's encoder is not sending at full quality (RTCOutboundRtpStreamStats.qualityLimitationReason).
+enum VideoQualityLimitationReason {
+  VIDEO_QUALITY_LIMITATION_REASON_UNSPECIFIED = 0;
+  VIDEO_QUALITY_LIMITATION_REASON_NONE = 1;
+  VIDEO_QUALITY_LIMITATION_REASON_CPU = 2;
+  VIDEO_QUALITY_LIMITATION_REASON_BANDWIDTH = 3;
+  VIDEO_QUALITY_LIMITATION_REASON_OTHER = 4;
+}
+
 message VideoQualitySampleMessage {
   uint64 clientEventTimeMs = 1;
   optional uint64 sampleSeq = 2;
@@ -180,6 +197,11 @@ message VideoQualitySampleMessage {
   uint32 frameWidth = 18;
   uint32 frameHeight = 19;
   optional string mimeType = 20;
+  VideoQualityStreamDirection direction = 21;
+  // Outbound streams only.
+  optional VideoQualityLimitationReason qualityLimitationReason = 22;
+  // Outbound streams only: encoder implementation reported by the browser (e.g. "libaom", "libvpx", "ExternalEncoder").
+  optional string encoderImplementation = 23;
 }
 
 message VideoQualityReportMessage {

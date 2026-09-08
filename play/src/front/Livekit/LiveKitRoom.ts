@@ -28,6 +28,8 @@ import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore"
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { createLivekitSenderStats } from "../WebRtc/WebRtcStatsFactory";
+import { subscribeToOutboundVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
 import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
@@ -64,6 +66,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
     private localMicrophoneTrack: LocalAudioTrack | undefined;
+    // Encoder health reports of the video tracks we publish (see subscribeToOutboundVideoQualityAnalytics)
+    private cameraAnalyticsUnsubscribe: Unsubscriber | undefined;
+    private screenShareAnalyticsUnsubscribe: Unsubscriber | undefined;
     private screenShareUpdateQueue: Promise<void> = Promise.resolve();
     private mediaTrackUpdateQueue: Promise<void> = Promise.resolve();
     private unsubscribers: Unsubscriber[] = [];
@@ -271,6 +276,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             // Only keep the reference once published: after a failed publish, later updates must publish again
             // instead of calling replaceTrack() on an unpublished track.
             this.localCameraTrack = cameraTrack;
+            this.cameraAnalyticsUnsubscribe = this.subscribeToEncoderAnalytics(cameraTrack, "video");
         } else {
             await this.localCameraTrack.replaceTrack(videoTrack, {
                 userProvidedTrack: true,
@@ -486,6 +492,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             await this.localParticipant.publishTrack(screenShareVideoLocalTrack, screenSharePublishOptions);
             // Only keep the reference once published (see handleCameraTrack)
             this.localScreenSharingVideoTrack = screenShareVideoLocalTrack;
+            this.screenShareAnalyticsUnsubscribe = this.subscribeToEncoderAnalytics(
+                screenShareVideoLocalTrack,
+                "screenSharing",
+            );
         } else if (this.localScreenSharingVideoTrack.mediaStreamTrack.id === screenShareVideoTrack.id) {
             // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
             if (this.localScreenSharingVideoTrack.isUpstreamPaused) {
@@ -565,6 +575,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         // Note: if we ever use "pauseUpstream" again instead of unpublishTrack, we should comment the clear of local track references
         // because of the memory leak issue mentioned above. We need to keep them to be able to replace the tracks when publishing a new screen share.
+        this.screenShareAnalyticsUnsubscribe?.();
+        this.screenShareAnalyticsUnsubscribe = undefined;
         this.localScreenSharingVideoTrack = undefined;
         this.localScreenSharingAudioTrack = undefined;
     }
@@ -922,6 +934,30 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.previousSpeakers = speakersSet;
     }
 
+    /**
+     * Reports the health of the encoder of a published track (CPU / bandwidth limitation, encoder implementation)
+     * to the video quality analytics. The camera track is only paused when the camera is turned off, so its
+     * subscription lives as long as the room: paused tracks encode nothing and produce no sample.
+     */
+    private subscribeToEncoderAnalytics(
+        track: LocalVideoTrack,
+        streamCategory: "video" | "screenSharing",
+    ): Unsubscriber {
+        return subscribeToOutboundVideoQualityAnalytics(
+            createLivekitSenderStats(track),
+            {
+                streamId: `${this.localParticipant?.sid ?? "local"}:${streamCategory}:outbound`,
+                streamCategory,
+                transportType: "Livekit",
+                // The stream goes to the LiveKit server, not to a single remote user
+                remoteSpaceUserId: "",
+                spaceName: this.space.getName(),
+                livekitServerUrl: this.serverUrl,
+            },
+            (message) => this.space.emitVideoQualityReport(message),
+        );
+    }
+
     public destroy(): void {
         if (this.destroyed) {
             // Called both from handleDisconnected() and from LivekitConnection
@@ -941,6 +977,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
             this.unregisterAudioPlaybackRetry?.();
             this.unregisterAudioPlaybackRetry = undefined;
+            this.cameraAnalyticsUnsubscribe?.();
+            this.cameraAnalyticsUnsubscribe = undefined;
+            this.screenShareAnalyticsUnsubscribe?.();
+            this.screenShareAnalyticsUnsubscribe = undefined;
             this.leaveRoom();
         } finally {
             this._livekitRoomCounter.decrement();

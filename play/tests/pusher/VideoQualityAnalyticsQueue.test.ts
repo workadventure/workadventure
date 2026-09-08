@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+    VideoQualityLimitationReason,
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
+    VideoQualityStreamDirection,
     VideoQualityTransportType,
     type VideoQualitySampleMessage,
 } from "@workadventure/messages";
@@ -75,6 +77,7 @@ describe("VideoQualityAnalyticsQueue", () => {
                         streamId: "stream-id",
                         streamCategory: "video",
                         transportType: "P2P",
+                        direction: "inbound",
                         relay: true,
                         relayProtocol: "udp",
                         livekitServerUrl: null,
@@ -85,6 +88,8 @@ describe("VideoQualityAnalyticsQueue", () => {
                         frameWidth: 1280,
                         frameHeight: 720,
                         mimeType: "video/VP8",
+                        qualityLimitationReason: null,
+                        encoderImplementation: null,
                         sampleSeq: 1,
                         connectionId: "connection-id",
                         sessionId: "session-id",
@@ -97,13 +102,65 @@ describe("VideoQualityAnalyticsQueue", () => {
                     "Content-Type": "application/json",
                 },
                 timeout: 500,
-            }
+            },
         );
         expect(queue.getStats()).toMatchObject({
             queueSize: 0,
             batchesSent: 1,
             samplesSent: 1,
         });
+    });
+
+    it("relays outbound (encoder) samples, with or without a remote user", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new VideoQualityAnalyticsQueue(baseConfig, post);
+        queue.setEnabled(true);
+
+        queue.enqueueReport(
+            {
+                samples: [
+                    sample({
+                        direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND,
+                        transportType: VideoQualityTransportType.VIDEO_QUALITY_TRANSPORT_TYPE_LIVEKIT,
+                        remoteSpaceUserId: "",
+                        remoteUserUuid: undefined,
+                        livekitServerUrl: "wss://livekit.test",
+                        jitter: 0,
+                        qualityLimitationReason: VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_CPU,
+                        encoderImplementation: "libaom",
+                    }),
+                ],
+            },
+            socketData(),
+        );
+        await queue.flush();
+
+        const batch = post.mock.calls[0][1] as VideoQualityAnalyticsBatch;
+        expect(batch.samples).toHaveLength(1);
+        expect(batch.samples[0]).toMatchObject({
+            direction: "outbound",
+            transportType: "Livekit",
+            remoteSpaceUserId: null,
+            remoteUserUuid: null,
+            livekitServerUrl: "wss://livekit.test",
+            qualityLimitationReason: "cpu",
+            encoderImplementation: "libaom",
+        });
+    });
+
+    it("keeps requiring a remote user for inbound samples", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const queue = new VideoQualityAnalyticsQueue(baseConfig, post);
+        queue.setEnabled(true);
+
+        queue.enqueueReport({ samples: [sample({ remoteSpaceUserId: "" })] }, socketData());
+        await queue.flush();
+
+        expect(post).not.toHaveBeenCalled();
+        expect(queue.getStats()).toMatchObject({ droppedInvalid: 1, queueSize: 0 });
+
+        consoleWarn.mockRestore();
     });
 
     it("drops the oldest samples when the queue is full", async () => {
@@ -141,7 +198,7 @@ describe("VideoQualityAnalyticsQueue", () => {
                     }),
                 ],
             },
-            socketData()
+            socketData(),
         );
         await queue.flush();
 
@@ -240,6 +297,7 @@ function sample(overrides: Partial<VideoQualitySampleMessage> = {}): VideoQualit
         spaceName: "space",
         streamCategory: VideoQualityStreamCategory.VIDEO_QUALITY_STREAM_CATEGORY_VIDEO,
         transportType: VideoQualityTransportType.VIDEO_QUALITY_TRANSPORT_TYPE_P2P,
+        direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_INBOUND,
         relay: true,
         relayProtocol: VideoQualityRelayProtocol.VIDEO_QUALITY_RELAY_PROTOCOL_UDP,
         livekitServerUrl: undefined,
