@@ -59,7 +59,8 @@
         }
         try {
             const embedLink = await getEmbedLink(property.waitingLink);
-            if (property.waitingLink != embedLink) property.waitingLink = embedLink;
+            if (embedLink === undefined) linkError = true;
+            else if (property.waitingLink != embedLink) property.waitingLink = embedLink;
         } catch {
             linkError = true;
         } finally {

@@ -441,7 +441,11 @@ export const EnvironmentVariables = z.object({
     EMBEDDED_DOMAINS_WHITELIST: z
         .string()
         .optional()
-        .transform((val) => toArray(val))
+        .transform((val) =>
+            toArray(val)
+                .map((domain) => domain.trim().toLowerCase())
+                .filter((domain) => domain !== ""),
+        )
         .describe("Comma-separated list of domains allowed for embedded iframes"),
     CARDS_ENABLED: BoolAsString.optional()
         .transform((val) => toBool(val, false))
