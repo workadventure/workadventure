@@ -3,6 +3,7 @@ import type { RemoteVideoTrack } from "livekit-client";
 import type { WorkAdventureComponent } from "../../types/component";
 import type { PeerStatus } from "../WebRtc/RemotePeer";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
+import type { LocalEncoderStats } from "../WebRtc/LocalEncoderStats";
 import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 
 export interface LivekitStreamable {
@@ -77,4 +78,8 @@ export interface Streamable {
     readonly volume: Writable<number>;
     readonly videoType: StreamCategory;
     readonly webrtcStats: Readable<WebRtcStats | undefined> | undefined;
+    /**
+     * Health of our own encoder(s), set on the local camera / screen share feedback tiles only.
+     */
+    readonly senderStats?: Readable<LocalEncoderStats | undefined>;
 }

@@ -23,6 +23,7 @@
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
     import WebRtcStats from "./WebRtcStatsBox.svelte";
+    import EncoderStatsBox from "./EncoderStatsBox.svelte";
     import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
 
     interface Props {
@@ -70,6 +71,8 @@
     let volumeMeter = $derived($volumeMeterStore);
     let webRtcStatsStore = $derived($displayVideoQualityStore ? streamable?.webrtcStats : undefined);
     let webRtcStats = $derived($webRtcStatsStore);
+    let encoderStatsStore = $derived($displayVideoQualityStore ? streamable?.senderStats : undefined);
+    let encoderStats = $derived($encoderStatsStore);
 
     // Check if user is currently reconnecting (WebRTC retry in progress)
     let isReconnecting = $derived(effectiveStatus === "reconnecting");
@@ -433,6 +436,9 @@
                             {/if}
                             {#if webRtcStats}
                                 <WebRtcStats {webRtcStats} />
+                            {/if}
+                            {#if encoderStats}
+                                <EncoderStatsBox {encoderStats} />
                             {/if}
 
                             <!-- The menu to go fullscreen -->

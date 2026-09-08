@@ -29,6 +29,7 @@ import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { createLivekitSenderStats } from "../WebRtc/WebRtcStatsFactory";
+import { registerLocalEncoderStats } from "../WebRtc/LocalEncoderStats";
 import { subscribeToOutboundVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
@@ -943,8 +944,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         track: LocalVideoTrack,
         streamCategory: "video" | "screenSharing",
     ): Unsubscriber {
-        return subscribeToOutboundVideoQualityAnalytics(
-            createLivekitSenderStats(track),
+        const senderStats = createLivekitSenderStats(track);
+        // Shown in the local camera / screen share feedback tile
+        const unregisterLocalEncoderStats = registerLocalEncoderStats(streamCategory, senderStats);
+        const unsubscribeAnalytics = subscribeToOutboundVideoQualityAnalytics(
+            senderStats,
             {
                 streamId: `${this.localParticipant?.sid ?? "local"}:${streamCategory}:outbound`,
                 streamCategory,
@@ -956,6 +960,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             },
             (message) => this.space.emitVideoQualityReport(message),
         );
+        return () => {
+            unsubscribeAnalytics();
+            unregisterLocalEncoderStats();
+        };
     }
 
     public destroy(): void {

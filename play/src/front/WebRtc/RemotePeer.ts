@@ -25,6 +25,7 @@ import { isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import { subscribeToOutboundVideoQualityAnalytics, subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createPeerWebRtcStats } from "./WebRtcStatsFactory";
+import { registerLocalEncoderStats } from "./LocalEncoderStats";
 import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
@@ -70,6 +71,7 @@ export class RemotePeer extends Peer implements Streamable {
     // Health of our own encoder on this connection (what we send to the peer)
     public readonly senderWebrtcStats: Readable<WebRtcSenderStats | undefined>;
     private senderAnalyticsUnsubscribe: Unsubscriber | undefined;
+    private unregisterLocalEncoderStats: Unsubscriber | undefined;
     private analyticsStatsUnsubscribe: Unsubscriber | undefined;
     private analyticsRemoteStreamUnsubscribe: (() => void) | undefined;
     private receiverMaxBitrateBps: number | undefined;
@@ -497,6 +499,8 @@ export class RemotePeer extends Peer implements Streamable {
         const stats = createPeerWebRtcStats(this);
         this.webrtcStats = stats.receiver;
         this.senderWebrtcStats = stats.sender;
+        // Shown in the local camera / screen share feedback tile
+        this.unregisterLocalEncoderStats = registerLocalEncoderStats(this.type, this.senderWebrtcStats);
         // Each P2P connection has its own encoder: report it per peer.
         this.senderAnalyticsUnsubscribe = subscribeToOutboundVideoQualityAnalytics(
             this.senderWebrtcStats,
@@ -678,6 +682,8 @@ export class RemotePeer extends Peer implements Streamable {
             this._connected = false;
             this.senderAnalyticsUnsubscribe?.();
             this.senderAnalyticsUnsubscribe = undefined;
+            this.unregisterLocalEncoderStats?.();
+            this.unregisterLocalEncoderStats = undefined;
             if (this.closing) {
                 return;
             }
