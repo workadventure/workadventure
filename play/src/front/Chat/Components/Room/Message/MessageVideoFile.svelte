@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
     import type { ChatMessage, ChatMessageContent } from "../../../Connection/ChatConnection";
-    import LL from "../../../../../i18n/i18n-svelte";
     import MessageAttachmentOffer from "./MessageAttachmentOffer.svelte";
 
     interface Props {
@@ -18,10 +17,5 @@
         <source src={$content.url} />
     </video>
 {:else}
-    <MessageAttachmentOffer
-        {content}
-        {message}
-        loadingLabel={$LL.chat.file.loadingAttachment()}
-        errorLabel={$LL.chat.file.attachmentDownloadError()}
-    />
+    <MessageAttachmentOffer {content} {message} />
 {/if}

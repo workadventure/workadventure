@@ -42,6 +42,7 @@ function createService(localSpaceUserId: string) {
         localSpaceUserId,
         space,
         getIceServers: () => Promise.resolve([]),
+        canExchangeWith: () => true,
     });
     const updates: ProximityFileTransferUpdate[] = [];
     const updatesSubscription = service.transferUpdates.subscribe((update) => updates.push(update));

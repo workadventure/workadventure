@@ -74,7 +74,6 @@
         name: string;
         type: string;
         url: string | undefined;
-        preparing: boolean;
     }[] = $state([]);
     const TYPINT_TIMEOUT = 10000;
     const inactiveProximityState = readable(false);
@@ -292,7 +291,6 @@
                 type: file.type,
                 size: file.size,
                 url: undefined,
-                preparing: file.type.includes("image"),
             })),
         ];
 
@@ -303,7 +301,7 @@
             const reader = new FileReader();
             reader.onloadend = () => {
                 const url = typeof reader.result === "string" ? reader.result : undefined;
-                filesPreview = filesPreview.map((p) => (p.id === id ? { ...p, url, preparing: false } : p));
+                filesPreview = filesPreview.map((p) => (p.id === id ? { ...p, url } : p));
             };
             reader.readAsDataURL(file);
         }
@@ -537,7 +535,7 @@
                     >
                         <IconX font-size="12" />
                     </button>
-                    {#if preview.type.includes("image") && typeof preview.url === "string" && !preview.preparing}
+                    {#if preview.type.includes("image") && preview.url !== undefined}
                         <img
                             draggable="false"
                             class="w-full h-full object-cover rounded-[10px]"
@@ -553,7 +551,7 @@
                                 {preview.name}
                             </span>
                             <div class="flex items-center gap-1 rounded-[6px] bg-white/10 p-0.5 text-xxs m-0.5">
-                                {#if preview.preparing}
+                                {#if preview.type.includes("image") && preview.url === undefined}
                                     <IconLoader class="animate-spin shrink-0" font-size={12} />
                                 {/if}
                                 <span>{formatBytes(preview.size)}</span>

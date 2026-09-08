@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-const CHUNK_FRAME_MAGIC = new Uint8Array([0x57, 0x41, 0x46, 0x54]); // WAFT
-const HEADER_LENGTH = CHUNK_FRAME_MAGIC.length + 2;
+// Binary frames are `uint16 transferIdLength | transferId | chunk`; control messages travel as strings.
+const HEADER_LENGTH = 2;
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -48,9 +48,7 @@ export function encodeProximityFileChunkFrame(transferId: string, chunk: Uint8Ar
     }
 
     const frame = new Uint8Array(HEADER_LENGTH + encodedTransferId.length + chunk.byteLength);
-    frame.set(CHUNK_FRAME_MAGIC, 0);
-    const view = new DataView(frame.buffer);
-    view.setUint16(CHUNK_FRAME_MAGIC.length, encodedTransferId.length, false);
+    new DataView(frame.buffer).setUint16(0, encodedTransferId.length, false);
     frame.set(encodedTransferId, HEADER_LENGTH);
     frame.set(chunk, HEADER_LENGTH + encodedTransferId.length);
     return frame;
@@ -65,14 +63,7 @@ export function decodeProximityFileChunkFrame(frame: ArrayBuffer | ArrayBufferVi
         throw new Error("Invalid proximity file chunk frame");
     }
 
-    for (let i = 0; i < CHUNK_FRAME_MAGIC.length; i++) {
-        if (bytes[i] !== CHUNK_FRAME_MAGIC[i]) {
-            throw new Error("Invalid proximity file chunk frame");
-        }
-    }
-
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const transferIdLength = view.getUint16(CHUNK_FRAME_MAGIC.length, false);
+    const transferIdLength = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint16(0, false);
     const chunkOffset = HEADER_LENGTH + transferIdLength;
     if (bytes.byteLength < chunkOffset) {
         throw new Error("Invalid proximity file chunk frame");

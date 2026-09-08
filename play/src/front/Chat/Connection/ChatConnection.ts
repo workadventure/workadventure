@@ -248,7 +248,7 @@ export interface ChatMessage {
     remove: () => void;
     edit: (newContent: string) => Promise<void>;
     downloadAttachment?: () => Promise<void>;
-    refuseAttachment?: () => Promise<void>;
+    refuseAttachment?: () => void;
     isDeleted: Readable<boolean>;
     isModified: Readable<boolean>;
     canEdit: Readable<boolean>;

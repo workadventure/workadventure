@@ -7,11 +7,11 @@
     interface Props {
         content: Readable<ChatMessageContent>;
         message?: ChatMessage;
-        loadingLabel: string;
-        errorLabel: string;
+        loadingLabel?: string;
+        errorLabel?: string;
     }
 
-    let { content, message = undefined, loadingLabel, errorLabel }: Props = $props();
+    let { content, message = undefined, loadingLabel = undefined, errorLabel = undefined }: Props = $props();
     let estimatedRemainingTime = $derived(
         $content.mediaEstimatedRemainingSeconds === undefined
             ? undefined
@@ -37,7 +37,7 @@
             </button>
         </div>
     {:else if $content.mediaState === "loading"}
-        {loadingLabel}
+        {loadingLabel ?? $LL.chat.file.loadingAttachment()}
         {#if $content.mediaProgress !== undefined}
             {Math.round($content.mediaProgress * 100)}%
         {/if}
@@ -47,6 +47,8 @@
     {:else if $content.mediaState === "refused"}
         {$LL.chat.decline()}
     {:else}
-        {$content.mediaErrorKind === "decrypt" ? $LL.chat.file.attachmentDecryptError() : errorLabel}
+        {$content.mediaErrorKind === "decrypt"
+            ? $LL.chat.file.attachmentDecryptError()
+            : (errorLabel ?? $LL.chat.file.attachmentDownloadError())}
     {/if}
 </div>

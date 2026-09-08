@@ -231,12 +231,12 @@ describe("ProximityChatRoom file transfers", () => {
         }
     });
 
-    it("should mark an incoming file transfer request as refused locally", async () => {
+    it("should mark an incoming file transfer request as refused locally", () => {
         const room = createRoom();
         Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
         const [message] = get(room.messages);
 
-        await Reflect.get(message, "refuseAttachment")?.();
+        Reflect.get(message, "refuseAttachment")?.();
 
         expect(get(message.content)).toMatchObject({
             mediaState: "refused",

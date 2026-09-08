@@ -12,12 +12,7 @@ export function estimateProximityFileTransferRemainingSeconds(progress: number, 
         return undefined;
     }
 
-    const remainingSeconds = (elapsedMs * (1 - progress)) / progress / 1_000;
-    if (!Number.isFinite(remainingSeconds) || remainingSeconds <= 0) {
-        return undefined;
-    }
-
-    return Math.ceil(remainingSeconds);
+    return Math.ceil((elapsedMs * (1 - progress)) / progress / 1_000);
 }
 
 export function formatProximityFileTransferRemainingTime(remainingSeconds: number): string | undefined {

@@ -4,7 +4,7 @@ import { ForwardableStore, MapStore, SearchableArrayStore } from "@workadventure
 import type { Readable, Writable, Unsubscriber } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
-import type { Subscription } from "rxjs";
+import { Subscription } from "rxjs";
 import type { CharacterTextureMessage } from "@workadventure/messages";
 import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { asError } from "catch-unknown";
@@ -105,7 +105,7 @@ export class ProximityChatMessage implements ChatMessage {
         public isMyMessage: boolean,
         public type: ChatMessageType,
         public downloadAttachment?: () => Promise<void>,
-        public refuseAttachment?: () => Promise<void>,
+        public refuseAttachment?: () => void,
     ) {}
 
     remove(): void {
@@ -184,8 +184,7 @@ export class ProximityChatRoom implements ChatRoom {
     private selectedRoomUnsubscriber: Unsubscriber;
     private readonly proximityPolls = new Map<string, ProximityChatPoll>();
     private readonly proximityQuestions = new Map<string, ProximityChatQuestion>();
-    private fileTransferIncomingOfferSubscription: Subscription | undefined;
-    private fileTransferUpdateSubscription: Subscription | undefined;
+    private fileTransferSubscriptions = new Subscription();
     private observeUserJoinedSubscription: Subscription | undefined;
     private observeUserLeftSubscription: Subscription | undefined;
     // Users by spaceUserId
@@ -243,10 +242,11 @@ export class ProximityChatRoom implements ChatRoom {
     private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
     private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
     private fileTransferService: ProximityFileTransferService | undefined;
-    private fileTransferMessages = new Map<string, ProximityChatMessage>();
-    private fileTransferContents = new Map<string, Writable<ChatMessageContent>>();
+    private fileTransfers = new Map<
+        string,
+        { message: ProximityChatMessage; content: Writable<ChatMessageContent>; downloadStartedAt?: number }
+    >();
     private fileTransferObjectUrls = new Set<string>();
-    private fileTransferDownloadStartedAt = new Map<string, number>();
     private screenWakeRelease: undefined | (() => Promise<void>);
 
     constructor(
@@ -498,23 +498,21 @@ export class ProximityChatRoom implements ChatRoom {
 
         const offers = await this.fileTransferService.createOutgoingOffers(fileArray, recipients);
 
-        for (const offer of offers) {
+        // createOutgoingOffers preserves the input order, so offers[i] belongs to pendingMessages[i].
+        pendingMessages.forEach(({ message, content }, index) => {
+            const offer = offers[index];
             const objectUrl = URL.createObjectURL(offer.file);
             this.fileTransferObjectUrls.add(objectUrl);
-            const pendingMessage = pendingMessages.find(({ file }) => file === offer.file);
-            const message = pendingMessage?.message;
-            pendingMessage?.content.set({
+            content.set({
                 body: offer.file.name,
                 url: objectUrl,
                 mediaState: "ready",
                 mediaProgress: 1,
                 mediaEstimatedRemainingSeconds: undefined,
             });
-            if (message) {
-                message.id = offer.transferId;
-                this.lastMessageTimestamp = message.date.getTime();
-            }
-        }
+            message.id = offer.transferId;
+            this.lastMessageTimestamp = message.date.getTime();
+        });
     }
 
     private createPoll(options: ChatPollCreateOptions): Promise<void> {
@@ -860,27 +858,29 @@ export class ProximityChatRoom implements ChatRoom {
 
     private setupFileTransferService(space: SpaceInterface): void {
         this.fileTransferService?.destroy();
-        this.fileTransferIncomingOfferSubscription?.unsubscribe();
-        this.fileTransferUpdateSubscription?.unsubscribe();
+        this.fileTransferSubscriptions.unsubscribe();
+        this.fileTransferSubscriptions = new Subscription();
         this.fileTransferService = new ProximityFileTransferService({
             localSpaceUserId: this._spaceUserId,
             space,
             getIceServers: () => iceServersManager.getIceServersConfig(),
             canExchangeWith: (spaceUserId) => !this.isBlackListedSpaceUser(spaceUserId),
         });
-        this.fileTransferIncomingOfferSubscription = this.fileTransferService.incomingOffers.subscribe((offer) => {
-            if (this.isBlackListedSpaceUser(offer.senderSpaceUserId)) {
-                return;
-            }
-            this.addIncomingFileOffer(offer);
-        });
-        this.fileTransferUpdateSubscription = this.fileTransferService.transferUpdates.subscribe((update) => {
-            this.applyFileTransferUpdate(update);
-        });
+        this.fileTransferSubscriptions.add(
+            this.fileTransferService.incomingOffers.subscribe((offer) => {
+                if (this.isBlackListedSpaceUser(offer.senderSpaceUserId)) {
+                    return;
+                }
+                this.addIncomingFileOffer(offer);
+            }),
+        );
+        this.fileTransferSubscriptions.add(
+            this.fileTransferService.transferUpdates.subscribe((update) => this.applyFileTransferUpdate(update)),
+        );
     }
 
     private addIncomingFileOffer(offer: IncomingProximityFileTransferOffer): void {
-        if (this.fileTransferMessages.has(offer.transferId)) {
+        if (this.fileTransfers.has(offer.transferId)) {
             return;
         }
 
@@ -922,8 +922,7 @@ export class ProximityChatRoom implements ChatRoom {
             () => this.refuseIncomingFileOffer(offer.transferId),
         );
 
-        this.fileTransferMessages.set(offer.transferId, message);
-        this.fileTransferContents.set(offer.transferId, content);
+        this.fileTransfers.set(offer.transferId, { message, content });
         this.messages.push(message);
         this.lastMessageTimestamp = message.date.getTime();
         this.notifyNewMessage(message);
@@ -946,13 +945,14 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private applyFileTransferUpdate(update: ProximityFileTransferUpdate): void {
-        const content = this.fileTransferContents.get(update.transferId);
-        if (!content) {
+        const transfer = this.fileTransfers.get(update.transferId);
+        if (!transfer) {
             return;
         }
+        const { content } = transfer;
 
         if (update.state === "ready") {
-            this.fileTransferDownloadStartedAt.delete(update.transferId);
+            transfer.downloadStartedAt = undefined;
             this.fileTransferObjectUrls.add(update.url);
             content.update((currentContent) => ({
                 ...currentContent,
@@ -966,7 +966,7 @@ export class ProximityChatRoom implements ChatRoom {
         }
 
         if (update.state === "error") {
-            this.fileTransferDownloadStartedAt.delete(update.transferId);
+            transfer.downloadStartedAt = undefined;
             content.update((currentContent) => ({
                 ...currentContent,
                 mediaState: currentContent.url !== undefined ? "ready" : "error",
@@ -977,12 +977,15 @@ export class ProximityChatRoom implements ChatRoom {
             return;
         }
 
-        const mediaEstimatedRemainingSeconds =
-            update.state === "downloading"
-                ? this.estimateFileTransferRemainingSeconds(update.transferId, update.progress)
-                : undefined;
-        if (update.state !== "downloading") {
-            this.fileTransferDownloadStartedAt.delete(update.transferId);
+        let mediaEstimatedRemainingSeconds: number | undefined;
+        if (update.state === "downloading") {
+            transfer.downloadStartedAt ??= Date.now();
+            mediaEstimatedRemainingSeconds = estimateProximityFileTransferRemainingSeconds(
+                update.progress,
+                Date.now() - transfer.downloadStartedAt,
+            );
+        } else {
+            transfer.downloadStartedAt = undefined;
         }
         content.update((currentContent) => ({
             ...currentContent,
@@ -993,23 +996,8 @@ export class ProximityChatRoom implements ChatRoom {
         }));
     }
 
-    private estimateFileTransferRemainingSeconds(transferId: string, progress: number): number | undefined {
-        let startedAt = this.fileTransferDownloadStartedAt.get(transferId);
-        if (startedAt === undefined) {
-            startedAt = Date.now();
-            this.fileTransferDownloadStartedAt.set(transferId, startedAt);
-        }
-
-        return estimateProximityFileTransferRemainingSeconds(progress, Date.now() - startedAt);
-    }
-
-    private refuseIncomingFileOffer(transferId: string): Promise<void> {
-        const content = this.fileTransferContents.get(transferId);
-        if (!content) {
-            return Promise.resolve();
-        }
-
-        content.update((currentContent) => {
+    private refuseIncomingFileOffer(transferId: string): void {
+        this.fileTransfers.get(transferId)?.content.update((currentContent) => {
             if (currentContent.url !== undefined) {
                 return currentContent;
             }
@@ -1022,7 +1010,6 @@ export class ProximityChatRoom implements ChatRoom {
                 mediaErrorKind: undefined,
             };
         });
-        return Promise.resolve();
     }
 
     private sanitizeFileMessageType(messageType: string): ChatMessageType {
@@ -1038,7 +1025,7 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private markFileOffersFromSenderUnavailable(spaceUserId: string): void {
-        for (const [transferId, message] of this.fileTransferMessages.entries()) {
+        for (const [transferId, { message }] of this.fileTransfers.entries()) {
             if (message.sender?.spaceUserId !== spaceUserId || get(message.content).url !== undefined) {
                 continue;
             }
@@ -1843,15 +1830,10 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private cleanupFileTransferService(): void {
-        this.fileTransferIncomingOfferSubscription?.unsubscribe();
-        this.fileTransferIncomingOfferSubscription = undefined;
-        this.fileTransferUpdateSubscription?.unsubscribe();
-        this.fileTransferUpdateSubscription = undefined;
+        this.fileTransferSubscriptions.unsubscribe();
         this.fileTransferService?.destroy();
         this.fileTransferService = undefined;
-        this.fileTransferMessages.clear();
-        this.fileTransferContents.clear();
-        this.fileTransferDownloadStartedAt.clear();
+        this.fileTransfers.clear();
         for (const objectUrl of this.fileTransferObjectUrls) {
             URL.revokeObjectURL(objectUrl);
         }

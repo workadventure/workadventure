@@ -101,8 +101,7 @@ export type ProximityFileTransferServiceOptions = {
     localSpaceUserId: string;
     space: ProximityFileTransferSpace;
     getIceServers: () => Promise<RTCIceServer[]>;
-    createPeerConnection?: (configuration: RTCConfiguration) => RTCPeerConnection;
-    canExchangeWith?: (spaceUserId: string) => boolean;
+    canExchangeWith: (spaceUserId: string) => boolean;
 };
 
 type PeerSession = {
@@ -127,11 +126,14 @@ type ReceivingTransfer = {
     receivedBytes: number;
 };
 
+type IncomingProximityFileEncryption = {
+    key: ProximityFileTransferEncryptionKey;
+    metadata: ProximityFileTransferEncryptionMetadata;
+};
+
 type PendingProximityFileEncryption = {
-    keyPromise: Promise<ProximityFileTransferEncryptionKey>;
-    metadataPromise: Promise<ProximityFileTransferEncryptionMetadata>;
-    resolveKey: (key: ProximityFileTransferEncryptionKey) => void;
-    resolveMetadata: (metadata: ProximityFileTransferEncryptionMetadata) => void;
+    promise: Promise<IncomingProximityFileEncryption>;
+    resolve: (encryption: IncomingProximityFileEncryption) => void;
 };
 
 export class ProximityFileTransferService {
@@ -288,10 +290,7 @@ export class ProximityFileTransferService {
     }
 
     private async createPeerSession(remoteSpaceUserId: string, connectionId: string): Promise<PeerSession> {
-        const peerConnectionFactory =
-            this.options.createPeerConnection ??
-            ((configuration: RTCConfiguration) => new RTCPeerConnection(configuration));
-        const peerConnection = peerConnectionFactory({ iceServers: await this.options.getIceServers() });
+        const peerConnection = new RTCPeerConnection({ iceServers: await this.options.getIceServers() });
         let resolveOpen!: (dataChannel: RTCDataChannel) => void;
         let rejectOpen!: (error: Error) => void;
         const openPromise = new Promise<RTCDataChannel>((resolve, reject) => {
@@ -366,7 +365,7 @@ export class ProximityFileTransferService {
         senderSpaceUserId: string,
         signalMessage: ProximityFileTransferSignalMessage,
     ): Promise<void> {
-        if (!this.canExchangeWith(senderSpaceUserId)) {
+        if (!this.options.canExchangeWith(senderSpaceUserId)) {
             return;
         }
 
@@ -413,12 +412,9 @@ export class ProximityFileTransferService {
                     break;
                 }
                 case "proximity_file_key": {
-                    const pending = this.waitForIncomingEncryption(message.transferId);
-                    pending.resolveKey(await importProximityFileEncryptionKey(message.rawKey));
-                    pending.resolveMetadata({
-                        algorithm: "XCHACHA20-POLY1305",
-                        iv: message.iv,
-                        mimeType: message.mimeType,
+                    this.waitForIncomingEncryption(message.transferId).resolve({
+                        key: await importProximityFileEncryptionKey(message.rawKey),
+                        metadata: { algorithm: "XCHACHA20-POLY1305", iv: message.iv, mimeType: message.mimeType },
                     });
                     break;
                 }
@@ -498,7 +494,7 @@ export class ProximityFileTransferService {
             !transfer ||
             !dataChannel ||
             !transfer.recipients.includes(session.remoteSpaceUserId) ||
-            !this.canExchangeWith(session.remoteSpaceUserId)
+            !this.options.canExchangeWith(session.remoteSpaceUserId)
         ) {
             if (dataChannel) {
                 this.sendControlMessage(dataChannel, {
@@ -535,14 +531,14 @@ export class ProximityFileTransferService {
             this.failReceivingTransfer(transferId, "integrity-check-failed");
             return;
         }
-        const pending = this.waitForIncomingEncryption(transferId);
+        const { key, metadata } = await this.waitForIncomingEncryption(transferId).promise;
         const decryptedBlob = await decryptProximityFileBlob(
             new Blob(receivingTransfer.chunks, { type: "application/octet-stream" }),
-            await pending.keyPromise,
-            await pending.metadataPromise,
+            key,
+            metadata,
         );
         if (
-            decryptedBlob.size !== Number(receivingTransfer.offer.size) ||
+            decryptedBlob.size !== receivingTransfer.offer.size ||
             (await hashProximityFileBlob(decryptedBlob)) !== receivingTransfer.offer.sha256
         ) {
             this.failReceivingTransfer(transferId, "integrity-check-failed");
@@ -563,7 +559,7 @@ export class ProximityFileTransferService {
         offer: IncomingProximityFileTransferOffer,
         announcedSize: number,
     ): number | undefined {
-        const offerSize = Number(offer.size);
+        const offerSize = offer.size;
         if (
             !Number.isFinite(offerSize) ||
             offerSize < 0 ||
@@ -594,12 +590,7 @@ export class ProximityFileTransferService {
         }
 
         return new Promise((resolve) => {
-            const previousHandler = dataChannel.onbufferedamountlow;
-            dataChannel.onbufferedamountlow = (event) => {
-                dataChannel.onbufferedamountlow = previousHandler;
-                previousHandler?.call(dataChannel, event);
-                resolve();
-            };
+            dataChannel.addEventListener("bufferedamountlow", () => resolve(), { once: true });
         });
     }
 
@@ -648,10 +639,6 @@ export class ProximityFileTransferService {
         session.peerConnection.close();
     }
 
-    private canExchangeWith(spaceUserId: string): boolean {
-        return this.options.canExchangeWith?.(spaceUserId) ?? true;
-    }
-
     private countIncomingOffersFromSender(senderSpaceUserId: string): number {
         let count = 0;
         for (const offer of this.incomingTransfers.values()) {
@@ -668,15 +655,11 @@ export class ProximityFileTransferService {
             return existing;
         }
 
-        let resolveKey!: (key: ProximityFileTransferEncryptionKey) => void;
-        let resolveMetadata!: (metadata: ProximityFileTransferEncryptionMetadata) => void;
-        const keyPromise = new Promise<ProximityFileTransferEncryptionKey>((resolve) => {
-            resolveKey = resolve;
+        let resolve!: PendingProximityFileEncryption["resolve"];
+        const promise = new Promise<IncomingProximityFileEncryption>((r) => {
+            resolve = r;
         });
-        const metadataPromise = new Promise<ProximityFileTransferEncryptionMetadata>((resolve) => {
-            resolveMetadata = resolve;
-        });
-        const pending = { keyPromise, metadataPromise, resolveKey, resolveMetadata };
+        const pending = { promise, resolve };
         this.pendingIncomingEncryption.set(transferId, pending);
         return pending;
     }
