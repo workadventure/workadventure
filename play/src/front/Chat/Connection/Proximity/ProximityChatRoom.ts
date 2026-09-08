@@ -80,7 +80,6 @@ import { getUnreadRemoteQuestionIds } from "./ProximityQAUnread";
 import { createProximityTimelineItemsStore } from "./ProximityTimelineItemsStore";
 import {
     getMessageTypeFromMimeType,
-    sanitizeProximityFileMimeType,
     ProximityFileTransferService,
     type IncomingProximityFileTransferOffer,
     type ProximityFileTransferUpdate,
@@ -491,7 +490,7 @@ export class ProximityChatRoom implements ChatRoom {
                 content,
                 new Date(),
                 true,
-                getMessageTypeFromMimeType(sanitizeProximityFileMimeType(file.type)),
+                getMessageTypeFromMimeType(file.type),
             );
             this.messages.push(message);
             return { file, message, content };
@@ -918,7 +917,7 @@ export class ProximityChatRoom implements ChatRoom {
             content,
             new Date(),
             false,
-            getMessageTypeFromMimeType(sanitizeProximityFileMimeType(offer.mimeType)),
+            getMessageTypeFromMimeType(offer.mimeType),
             () => this.fileTransferService?.download(offer.transferId) ?? Promise.resolve(),
             () => this.refuseIncomingFileOffer(offer.transferId),
         );

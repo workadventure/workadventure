@@ -276,7 +276,6 @@ describe("ProximityChatRoom file transfers", () => {
             {
                 transferId: "transfer-1",
                 file,
-                messageType: "file",
                 recipients: [],
             },
         ]);

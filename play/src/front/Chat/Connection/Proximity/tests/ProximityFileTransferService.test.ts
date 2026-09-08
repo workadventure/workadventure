@@ -6,7 +6,6 @@ import {
     PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE,
     PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER,
     ProximityFileTransferService,
-    sanitizeProximityFileMimeType,
     type ProximityFileTransferSpace,
     type ProximityFileTransferUpdate,
     validateProximityFiles,
@@ -106,13 +105,12 @@ describe("validateProximityFiles", () => {
     });
 });
 
-describe("sanitizeProximityFileMimeType", () => {
-    it("should keep inline-safe types and downgrade everything else to a plain download", () => {
-        expect(sanitizeProximityFileMimeType("image/png")).toBe("image/png");
-        expect(sanitizeProximityFileMimeType("Image/PNG; charset=binary")).toBe("image/png");
-        expect(sanitizeProximityFileMimeType("image/svg+xml")).toBe("application/octet-stream");
-        expect(sanitizeProximityFileMimeType("text/html")).toBe("application/octet-stream");
-        expect(getMessageTypeFromMimeType(sanitizeProximityFileMimeType("image/svg+xml"))).toBe("file");
+describe("getMessageTypeFromMimeType", () => {
+    it("should only give inline cards to allowlisted types", () => {
+        expect(getMessageTypeFromMimeType("image/png")).toBe("image");
+        expect(getMessageTypeFromMimeType("Image/PNG; charset=binary")).toBe("image");
+        expect(getMessageTypeFromMimeType("image/svg+xml")).toBe("file");
+        expect(getMessageTypeFromMimeType("text/html")).toBe("file");
     });
 });
 

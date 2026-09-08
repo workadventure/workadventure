@@ -3,6 +3,7 @@ import type { Observable } from "rxjs";
 import { Subject, Subscription } from "rxjs";
 import { v4 as uuidv4 } from "uuid";
 import type { SpaceInterface } from "../../../Space/SpaceInterface";
+import { sanitizeInlineMimeType } from "../../../Utils/InlineMimeType";
 import { ProximityFileStorage } from "./ProximityFileStorage";
 import {
     decodeProximityFileChunkFrame,
@@ -75,7 +76,6 @@ export type ProximityFileTransferUpdate =
 export type ProximityFileTransferOffer = {
     transferId: string;
     file: File;
-    messageType: "file" | "image" | "audio" | "video";
     recipients: string[];
     sha256: string;
     encryptionKey: ProximityFileTransferEncryptionKey;
@@ -232,7 +232,6 @@ export class ProximityFileTransferService {
         return {
             transferId: uuidv4(),
             file,
-            messageType: getMessageTypeFromMimeType(sanitizeProximityFileMimeType(file.type)),
             recipients,
             sha256: await hashProximityFileBlob(file),
             encryptionKey: await generateProximityFileEncryptionKey(),
@@ -445,7 +444,7 @@ export class ProximityFileTransferService {
                         decryptor: await ProximityFileStreamDecryptor.create(
                             encryption.key,
                             encryption.iv,
-                            sanitizeProximityFileMimeType(offer.mimeType),
+                            sanitizeInlineMimeType(offer.mimeType),
                             await this.storage.createSink(message.transferId),
                         ),
                     });
@@ -711,39 +710,16 @@ export class ProximityFileTransferService {
     }
 }
 
-// Only types the chat renders inline. Anything else (notably image/svg+xml and text/html, which
-// would run scripts at our origin when a blob: URL is opened as a document) is downgraded to a
-// plain download.
-const INLINE_MIME_TYPES = new Set([
-    "image/png",
-    "image/jpeg",
-    "image/gif",
-    "image/webp",
-    "image/avif",
-    "audio/mpeg",
-    "audio/ogg",
-    "audio/wav",
-    "audio/webm",
-    "audio/mp4",
-    "audio/aac",
-    "video/mp4",
-    "video/webm",
-    "video/ogg",
-]);
-
-export function sanitizeProximityFileMimeType(mimeType: string): string {
-    const type = mimeType.split(";")[0].trim().toLowerCase();
-    return INLINE_MIME_TYPES.has(type) ? type : "application/octet-stream";
-}
-
+/** Which chat card renders a file: only allowlisted types get an inline image/audio/video card. */
 export function getMessageTypeFromMimeType(mimeType: string): "file" | "image" | "audio" | "video" {
-    if (mimeType.startsWith("image/")) {
+    const type = sanitizeInlineMimeType(mimeType);
+    if (type.startsWith("image/")) {
         return "image";
     }
-    if (mimeType.startsWith("audio/")) {
+    if (type.startsWith("audio/")) {
         return "audio";
     }
-    if (mimeType.startsWith("video/")) {
+    if (type.startsWith("video/")) {
         return "video";
     }
     return "file";
