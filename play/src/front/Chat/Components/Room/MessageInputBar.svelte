@@ -111,6 +111,10 @@
             isProximityRoomJoined: $proximityRoomJoined,
         }) || !$canSendMessages,
     );
+    // Proximity files travel peer to peer, so there is nobody to send them to before the space is joined.
+    let canAttachFiles = $derived(
+        fileAttachementEnabled && $canSendMessages && (!isProximityChatRoom || $proximityRoomJoined),
+    );
     const canOpenQuestions = canOpenQuestionsPanel(room);
     let replyMessageId: string | null = null;
     const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
@@ -277,6 +281,9 @@
     }
 
     export function handleFiles(filesToAdd: FileList) {
+        if (!canAttachFiles) {
+            return;
+        }
         const newFiles = [...filesToAdd].map((file) => ({ id: uuid(), file }));
         files = [...files, ...newFiles];
         addToPreviews(newFiles);
@@ -748,7 +755,7 @@
                 class={applicationButtonClass}
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={!fileAttachementEnabled || !$canSendMessages}
+                disabled={!canAttachFiles}
             >
                 <IconPaperclip font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
