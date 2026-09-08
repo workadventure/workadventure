@@ -1,31 +1,20 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
-    import type { ChatMessageContent } from "../../../Connection/ChatConnection";
-    import LL from "../../../../../i18n/i18n-svelte";
+    import type { ChatMessage, ChatMessageContent } from "../../../Connection/ChatConnection";
+    import MessageAttachmentOffer from "./MessageAttachmentOffer.svelte";
 
     interface Props {
         content: Readable<ChatMessageContent>;
+        message?: ChatMessage;
     }
 
-    let { content }: Props = $props();
+    let { content, message = undefined }: Props = $props();
 </script>
 
-{#if $content.mediaState === "loading"}
-    <div class="text-xs text-white/80 px-2 py-2">{$LL.chat.file.loadingAttachment()}</div>
-{:else if $content.mediaState === "error"}
-    <div class="text-xs text-white/80 px-2 py-2">
-        {$content.mediaErrorKind === "decrypt"
-            ? $LL.chat.file.attachmentDecryptError()
-            : $LL.chat.file.attachmentDownloadError()}
-    </div>
-{:else if $content.url !== undefined}
+{#if $content.url !== undefined}
     <audio controls src={$content.url} class="max-w-full min-w-96 block p-2"></audio>
 {:else}
-    <div class="text-xs text-white/80 px-2 py-2">
-        {$content.mediaErrorKind === "decrypt"
-            ? $LL.chat.file.attachmentDecryptError()
-            : $LL.chat.file.attachmentDownloadError()}
-    </div>
+    <MessageAttachmentOffer {content} {message} />
 {/if}
 
 <style>

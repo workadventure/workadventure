@@ -150,6 +150,7 @@
     "highlight.js": "^11.11.1",
     "hyper-express": "^6.17.3",
     "jose": "^6.2.3",
+    "libsodium-wrappers-sumo": "^0.8.4",
     "limiter": "^3.0.0",
     "live-directory": "moufmouf/live-directory#hot_reload_param",
     "livekit-client": "^2.19.2",
