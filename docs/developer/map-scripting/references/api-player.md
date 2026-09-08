@@ -89,6 +89,29 @@ WA.onInit().then(() => {
 })
 ```
 
+### Know if the player is logged in
+
+```
+WA.player.isLogged: boolean;
+```
+
+Whether the current player is signed in, as opposed to playing anonymously, is available from the `WA.player.isLogged` property.
+
+:::caution
+Being logged in says nothing about what a player is allowed to do. Rights come from
+[the player's tags](#get-the-tags-of-the-player), and a logged-in player may have none at all.
+:::
+
+:::info
+You need to wait for the end of the initialization before accessing `WA.player.isLogged`
+:::
+
+```typescript
+WA.onInit().then(() => {
+    console.log('Logged in: ', WA.player.isLogged);
+})
+```
+
 ### Get the position of the player
 ```
 WA.player.getPosition(): Promise<Position>
