@@ -1,4 +1,5 @@
 import sodium, { type StateAddress } from "libsodium-wrappers-sumo";
+import type { ProximityFileSink } from "./ProximityFileStorage";
 
 const PROXIMITY_FILE_TRANSFER_ENCRYPTION_CHUNK_SIZE = 1024 * 1024;
 const FRAME_LENGTH_PREFIX = 4;
@@ -93,36 +94,36 @@ export class ProximityFileStreamEncryptor {
 }
 
 /**
- * Decrypts and hashes a transfer as its bytes arrive. Decrypted frames are folded into a Blob as
- * they come, which keeps the plaintext in the browser's blob storage (off the JS heap, and spillable
- * to disk) instead of accumulating it in memory. Frames may span several incoming chunks.
+ * Decrypts and hashes a transfer as its bytes arrive, handing every decrypted frame to the sink
+ * right away so the plaintext never accumulates in memory. Frames may span several incoming chunks.
  */
 export class ProximityFileStreamDecryptor {
     private readonly pending: Uint8Array[] = [];
     private pendingLength = 0;
     private frameLength: number | undefined;
-    private blob = new Blob([]);
     private finished = false;
 
     private constructor(
         private readonly state: StateAddress,
         private readonly hasher: StateAddress,
         private readonly mimeType: string,
+        private readonly sink: ProximityFileSink,
     ) {}
 
     static async create(
         key: ProximityFileTransferEncryptionKey,
         metadata: ProximityFileTransferEncryptionMetadata,
+        sink: ProximityFileSink,
     ): Promise<ProximityFileStreamDecryptor> {
         await sodium.ready;
         const state = sodium.crypto_secretstream_xchacha20poly1305_init_pull(
             sodium.from_base64(metadata.iv, sodium.base64_variants.ORIGINAL),
             key,
         );
-        return new ProximityFileStreamDecryptor(state, sodium.crypto_hash_sha256_init(), metadata.mimeType);
+        return new ProximityFileStreamDecryptor(state, sodium.crypto_hash_sha256_init(), metadata.mimeType, sink);
     }
 
-    push(bytes: Uint8Array): void {
+    async push(bytes: Uint8Array): Promise<void> {
         this.pending.push(bytes);
         this.pendingLength += bytes.byteLength;
         for (;;) {
@@ -146,19 +147,24 @@ export class ProximityFileStreamDecryptor {
                 throw new Error("Unable to decrypt proximity file transfer");
             }
             sodium.crypto_hash_sha256_update(this.hasher, pulled.message);
-            this.blob = new Blob([this.blob, pulled.message as Uint8Array<ArrayBuffer>]);
             this.finished = pulled.tag === sodium.crypto_secretstream_xchacha20poly1305_TAG_FINAL;
+            // eslint-disable-next-line no-await-in-loop -- frames must be written in order
+            await this.sink.write(pulled.message as Uint8Array<ArrayBuffer>);
         }
     }
 
-    finish(): { blob: Blob; sha256: string } {
+    async finish(): Promise<{ blob: Blob; sha256: string }> {
         if (!this.finished || this.pendingLength !== 0) {
             throw new Error("Unable to decrypt proximity file transfer");
         }
         return {
-            blob: new Blob([this.blob], { type: this.mimeType }),
+            blob: await this.sink.finish(this.mimeType),
             sha256: sodium.crypto_hash_sha256_final(this.hasher, "hex"),
         };
+    }
+
+    discard(): Promise<void> {
+        return this.sink.discard();
     }
 
     private take(length: number): Uint8Array<ArrayBuffer> {

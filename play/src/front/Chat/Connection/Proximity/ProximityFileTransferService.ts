@@ -3,6 +3,7 @@ import type { Observable } from "rxjs";
 import { Subject, Subscription } from "rxjs";
 import { v4 as uuidv4 } from "uuid";
 import type { SpaceInterface } from "../../../Space/SpaceInterface";
+import { ProximityFileStorage } from "./ProximityFileStorage";
 import {
     decodeProximityFileChunkFrame,
     decodeProximityFileControlMessage,
@@ -138,6 +139,7 @@ export class ProximityFileTransferService {
     private readonly receivingTransfers = new Map<string, ReceivingTransfer>();
     private readonly incomingEncryption = new Map<string, IncomingProximityFileEncryption>();
     private readonly peerSessions = new Map<string, PeerSession>();
+    private readonly storage = new ProximityFileStorage();
     private readonly subscriptions = new Subscription();
     private readonly incomingOfferSubject = new Subject<IncomingProximityFileTransferOffer>();
     public readonly incomingOffers: Observable<IncomingProximityFileTransferOffer> = this.incomingOfferSubject;
@@ -253,6 +255,7 @@ export class ProximityFileTransferService {
         this.incomingTransfers.clear();
         this.receivingTransfers.clear();
         this.incomingEncryption.clear();
+        this.storage.destroy().catch((error) => console.warn("Unable to clean up proximity file storage", error));
         for (const session of this.peerSessions.values()) {
             clearTimeout(session.negotiationTimeout);
             session.dataChannel?.close();
@@ -432,7 +435,11 @@ export class ProximityFileTransferService {
                         offer,
                         expectedBytes,
                         receivedBytes: 0,
-                        decryptor: await ProximityFileStreamDecryptor.create(encryption.key, encryption.metadata),
+                        decryptor: await ProximityFileStreamDecryptor.create(
+                            encryption.key,
+                            encryption.metadata,
+                            await this.storage.createSink(message.transferId),
+                        ),
                     });
                     this.transferUpdateSubject.next({
                         transferId: message.transferId,
@@ -442,7 +449,7 @@ export class ProximityFileTransferService {
                     break;
                 }
                 case "proximity_file_complete": {
-                    this.completeReceivingTransfer(message.transferId);
+                    await this.completeReceivingTransfer(message.transferId);
                     break;
                 }
                 case "proximity_file_error": {
@@ -475,7 +482,7 @@ export class ProximityFileTransferService {
             return;
         }
         try {
-            receivingTransfer.decryptor.push(frame.chunk);
+            await receivingTransfer.decryptor.push(frame.chunk);
         } catch {
             this.failReceivingTransfer(frame.transferId, "integrity-check-failed");
             return;
@@ -549,7 +556,7 @@ export class ProximityFileTransferService {
         this.sendControlMessage(dataChannel, { type: "proximity_file_complete", transferId });
     }
 
-    private completeReceivingTransfer(transferId: string): void {
+    private async completeReceivingTransfer(transferId: string): Promise<void> {
         const receivingTransfer = this.receivingTransfers.get(transferId);
         if (!receivingTransfer) {
             return;
@@ -560,7 +567,7 @@ export class ProximityFileTransferService {
         }
         let decrypted: { blob: Blob; sha256: string };
         try {
-            decrypted = receivingTransfer.decryptor.finish();
+            decrypted = await receivingTransfer.decryptor.finish();
         } catch {
             this.failReceivingTransfer(transferId, "integrity-check-failed");
             return;
@@ -603,6 +610,10 @@ export class ProximityFileTransferService {
     }
 
     private failReceivingTransfer(transferId: string, error: string): void {
+        this.receivingTransfers
+            .get(transferId)
+            ?.decryptor.discard()
+            .catch((discardError) => console.warn("Unable to discard proximity file transfer", discardError));
         this.receivingTransfers.delete(transferId);
         this.transferUpdateSubject.next({
             transferId,

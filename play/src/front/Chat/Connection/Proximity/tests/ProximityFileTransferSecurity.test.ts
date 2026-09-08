@@ -6,7 +6,9 @@ import {
     ProximityFileStreamDecryptor,
     ProximityFileStreamEncryptor,
     type ProximityFileTransferEncryptionKey,
+    type ProximityFileTransferEncryptionMetadata,
 } from "../ProximityFileTransferSecurity";
+import { MemoryProximityFileSink } from "../ProximityFileStorage";
 
 const HELLO_SHA256 = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
 
@@ -17,6 +19,10 @@ async function encrypt(blob: Blob, key: ProximityFileTransferEncryptionKey) {
         frames.push(frame);
     }
     return { bytes: new Uint8Array(await new Blob(frames).arrayBuffer()), metadata: encryptor.metadata };
+}
+
+function decryptor(key: ProximityFileTransferEncryptionKey, metadata: ProximityFileTransferEncryptionMetadata) {
+    return ProximityFileStreamDecryptor.create(key, metadata, new MemoryProximityFileSink());
 }
 
 describe("Proximity file transfer security", () => {
@@ -37,13 +43,14 @@ describe("Proximity file transfer security", () => {
     it("should decrypt and hash a stream whose frames span several chunks", async () => {
         const key = await generateProximityFileEncryptionKey();
         const { bytes, metadata } = await encrypt(new Blob(["hello"], { type: "text/plain" }), key);
-        const decryptor = await ProximityFileStreamDecryptor.create(key, metadata);
+        const stream = await decryptor(key, metadata);
 
         // 3-byte chunks split both the length prefix and the ciphertext across pushes.
         for (let offset = 0; offset < bytes.byteLength; offset += 3) {
-            decryptor.push(bytes.subarray(offset, offset + 3));
+            // eslint-disable-next-line no-await-in-loop -- chunks arrive in order
+            await stream.push(bytes.subarray(offset, offset + 3));
         }
-        const { blob, sha256 } = decryptor.finish();
+        const { blob, sha256 } = await stream.finish();
 
         expect(await blob.text()).toBe("hello");
         expect(blob.type).toBe("text/plain");
@@ -53,29 +60,29 @@ describe("Proximity file transfer security", () => {
     it("should round-trip an empty file", async () => {
         const key = await generateProximityFileEncryptionKey();
         const { bytes, metadata } = await encrypt(new Blob([]), key);
-        const decryptor = await ProximityFileStreamDecryptor.create(key, metadata);
+        const stream = await decryptor(key, metadata);
 
-        decryptor.push(bytes);
+        await stream.push(bytes);
 
-        expect(decryptor.finish().blob.size).toBe(0);
+        expect((await stream.finish()).blob.size).toBe(0);
     });
 
     it("should reject tampered ciphertext", async () => {
         const key = await generateProximityFileEncryptionKey();
         const { bytes, metadata } = await encrypt(new Blob(["hello"]), key);
         bytes[bytes.length - 1] ^= 1;
-        const decryptor = await ProximityFileStreamDecryptor.create(key, metadata);
+        const stream = await decryptor(key, metadata);
 
-        expect(() => decryptor.push(bytes)).toThrow("Unable to decrypt proximity file transfer");
+        await expect(stream.push(bytes)).rejects.toThrow("Unable to decrypt proximity file transfer");
     });
 
     it("should reject a truncated stream", async () => {
         const key = await generateProximityFileEncryptionKey();
         const { bytes, metadata } = await encrypt(new Blob(["hello"]), key);
-        const decryptor = await ProximityFileStreamDecryptor.create(key, metadata);
+        const stream = await decryptor(key, metadata);
 
-        decryptor.push(bytes.subarray(0, bytes.byteLength - 1));
+        await stream.push(bytes.subarray(0, bytes.byteLength - 1));
 
-        expect(() => decryptor.finish()).toThrow("Unable to decrypt proximity file transfer");
+        await expect(stream.finish()).rejects.toThrow("Unable to decrypt proximity file transfer");
     });
 });
