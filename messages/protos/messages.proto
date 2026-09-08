@@ -1289,7 +1289,6 @@ message ProximityFileTransferOfferMessage {
   string fileName = 2;
   string mimeType = 3;
   uint64 size = 4;
-  string messageType = 5;
   repeated CharacterTextureMessage characterTextures = 6;
   optional string name = 7;
   string sha256 = 8;

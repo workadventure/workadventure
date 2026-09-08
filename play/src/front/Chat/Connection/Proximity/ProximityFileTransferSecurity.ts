@@ -6,12 +6,6 @@ const FRAME_LENGTH_PREFIX = 4;
 // crypto_secretstream_xchacha20poly1305_ABYTES (17) + the length prefix of each frame.
 const PROXIMITY_FILE_TRANSFER_ENCRYPTED_CHUNK_OVERHEAD = 17 + FRAME_LENGTH_PREFIX;
 
-export type ProximityFileTransferEncryptionMetadata = {
-    algorithm: "XCHACHA20-POLY1305";
-    iv: string;
-    mimeType: string;
-};
-
 export type ProximityFileTransferEncryptionKey = Uint8Array;
 
 /**
@@ -54,27 +48,20 @@ export async function hashProximityFileBlob(blob: Blob): Promise<string> {
 }
 
 /**
- * Encrypts a blob into length-prefixed secretstream frames, one 1 MB slice at a time, so the sender
- * only ever holds one slice in memory. One encryptor per recipient: the header (`metadata.iv`) is
- * fresh for every stream.
+ * Encrypts a blob into length-prefixed XChaCha20-Poly1305 secretstream frames, one 1 MB slice at a
+ * time, so the sender only ever holds one slice in memory. One encryptor per recipient: the stream
+ * header (`iv`) is fresh for every stream.
  */
 export class ProximityFileStreamEncryptor {
     private constructor(
         private readonly state: StateAddress,
-        readonly metadata: ProximityFileTransferEncryptionMetadata,
+        readonly iv: string,
     ) {}
 
-    static async create(
-        key: ProximityFileTransferEncryptionKey,
-        mimeType: string,
-    ): Promise<ProximityFileStreamEncryptor> {
+    static async create(key: ProximityFileTransferEncryptionKey): Promise<ProximityFileStreamEncryptor> {
         await sodium.ready;
         const { state, header } = sodium.crypto_secretstream_xchacha20poly1305_init_push(key);
-        return new ProximityFileStreamEncryptor(state, {
-            algorithm: "XCHACHA20-POLY1305",
-            iv: sodium.to_base64(header, sodium.base64_variants.ORIGINAL),
-            mimeType,
-        });
+        return new ProximityFileStreamEncryptor(state, sodium.to_base64(header, sodium.base64_variants.ORIGINAL));
     }
 
     async *frames(blob: Blob): AsyncGenerator<Uint8Array<ArrayBuffer>> {
@@ -112,15 +99,16 @@ export class ProximityFileStreamDecryptor {
 
     static async create(
         key: ProximityFileTransferEncryptionKey,
-        metadata: ProximityFileTransferEncryptionMetadata,
+        iv: string,
+        mimeType: string,
         sink: ProximityFileSink,
     ): Promise<ProximityFileStreamDecryptor> {
         await sodium.ready;
         const state = sodium.crypto_secretstream_xchacha20poly1305_init_pull(
-            sodium.from_base64(metadata.iv, sodium.base64_variants.ORIGINAL),
+            sodium.from_base64(iv, sodium.base64_variants.ORIGINAL),
             key,
         );
-        return new ProximityFileStreamDecryptor(state, sodium.crypto_hash_sha256_init(), metadata.mimeType, sink);
+        return new ProximityFileStreamDecryptor(state, sodium.crypto_hash_sha256_init(), mimeType, sink);
     }
 
     async push(bytes: Uint8Array): Promise<void> {

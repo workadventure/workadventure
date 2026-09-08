@@ -79,7 +79,8 @@ import {
 import { getUnreadRemoteQuestionIds } from "./ProximityQAUnread";
 import { createProximityTimelineItemsStore } from "./ProximityTimelineItemsStore";
 import {
-    getMessageTypeFromFile,
+    getMessageTypeFromMimeType,
+    sanitizeProximityFileMimeType,
     ProximityFileTransferService,
     type IncomingProximityFileTransferOffer,
     type ProximityFileTransferUpdate,
@@ -490,7 +491,7 @@ export class ProximityChatRoom implements ChatRoom {
                 content,
                 new Date(),
                 true,
-                getMessageTypeFromFile(file),
+                getMessageTypeFromMimeType(sanitizeProximityFileMimeType(file.type)),
             );
             this.messages.push(message);
             return { file, message, content };
@@ -917,7 +918,7 @@ export class ProximityChatRoom implements ChatRoom {
             content,
             new Date(),
             false,
-            this.sanitizeFileMessageType(offer.messageType),
+            getMessageTypeFromMimeType(sanitizeProximityFileMimeType(offer.mimeType)),
             () => this.fileTransferService?.download(offer.transferId) ?? Promise.resolve(),
             () => this.refuseIncomingFileOffer(offer.transferId),
         );
@@ -1010,13 +1011,6 @@ export class ProximityChatRoom implements ChatRoom {
                 mediaErrorKind: undefined,
             };
         });
-    }
-
-    private sanitizeFileMessageType(messageType: string): ChatMessageType {
-        if (messageType === "image" || messageType === "audio" || messageType === "video" || messageType === "file") {
-            return messageType;
-        }
-        return "file";
     }
 
     private isBlackListedSpaceUser(spaceUserId: string): boolean {

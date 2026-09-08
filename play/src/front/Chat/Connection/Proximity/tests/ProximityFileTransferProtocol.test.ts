@@ -26,13 +26,12 @@ describe("Proximity file transfer control messages", () => {
             transferId: "transfer-1",
             rawKey: "key",
             iv: "iv",
-            mimeType: "text/plain",
         };
 
         expect(decodeProximityFileControlMessage(JSON.stringify(message))).toEqual(message);
     });
 
-    it("should reject key messages without encryption metadata", () => {
+    it("should reject key messages without a stream header", () => {
         const message = { type: "proximity_file_key", transferId: "transfer-1", rawKey: "key" };
 
         expect(() => decodeProximityFileControlMessage(JSON.stringify(message))).toThrow();

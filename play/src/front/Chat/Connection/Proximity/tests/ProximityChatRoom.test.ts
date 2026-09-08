@@ -60,7 +60,6 @@ function createOffer(): IncomingProximityFileTransferOffer {
         fileName: "hello.txt",
         mimeType: "text/plain",
         size: 5,
-        messageType: "file",
         characterTextures: [],
         name: "Sender",
         sha256: "digest",
@@ -95,6 +94,15 @@ describe("ProximityChatRoom file transfers", () => {
             },
         ]);
         expect(get(chatVisibilityStore)).toBe(false);
+    });
+
+    it("should show an inline-unsafe mime type as a plain file, never as an image", () => {
+        const room = createRoom();
+
+        Reflect.get(room, "addIncomingFileOffer").call(room, { ...createOffer(), mimeType: "image/svg+xml" });
+
+        const [message] = get(room.messages);
+        expect(message.type).toBe("file");
     });
 
     it("should not count or notify an incoming file transfer request when the room is visible", () => {

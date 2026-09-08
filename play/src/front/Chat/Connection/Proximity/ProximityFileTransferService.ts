@@ -19,7 +19,6 @@ import {
     ProximityFileStreamDecryptor,
     ProximityFileStreamEncryptor,
     type ProximityFileTransferEncryptionKey,
-    type ProximityFileTransferEncryptionMetadata,
 } from "./ProximityFileTransferSecurity";
 
 export const PROXIMITY_FILE_TRANSFER_MAX_FILES = 3;
@@ -130,7 +129,7 @@ type ReceivingTransfer = {
 
 type IncomingProximityFileEncryption = {
     key: ProximityFileTransferEncryptionKey;
-    metadata: ProximityFileTransferEncryptionMetadata;
+    iv: string;
 };
 
 export class ProximityFileTransferService {
@@ -157,6 +156,12 @@ export class ProximityFileTransferService {
                     ...event.proximityFileTransferOffer,
                     senderSpaceUserId,
                 };
+                // A transferId belongs to the peer that first offered it: another peer re-offering
+                // the same id must not be able to take over the card shown for the first sender.
+                const existing = this.incomingTransfers.get(offer.transferId);
+                if (existing && existing.senderSpaceUserId !== senderSpaceUserId) {
+                    return;
+                }
                 // Throttle a peer that floods us with offers. Re-offering a known transferId just
                 // refreshes it (the count is per distinct transferId), so legitimate retries are fine.
                 if (
@@ -209,7 +214,6 @@ export class ProximityFileTransferService {
                             fileName: offer.file.name,
                             mimeType: offer.file.type,
                             size: offer.file.size,
-                            messageType: offer.messageType,
                             characterTextures: [],
                             name: undefined,
                             sha256: offer.sha256,
@@ -228,7 +232,7 @@ export class ProximityFileTransferService {
         return {
             transferId: uuidv4(),
             file,
-            messageType: getMessageTypeFromFile(file),
+            messageType: getMessageTypeFromMimeType(sanitizeProximityFileMimeType(file.type)),
             recipients,
             sha256: await hashProximityFileBlob(file),
             encryptionKey: await generateProximityFileEncryptionKey(),
@@ -411,14 +415,17 @@ export class ProximityFileTransferService {
                     break;
                 }
                 case "proximity_file_key": {
+                    if (!this.incomingOfferFrom(session, message.transferId)) {
+                        return;
+                    }
                     this.incomingEncryption.set(message.transferId, {
                         key: await importProximityFileEncryptionKey(message.rawKey),
-                        metadata: { algorithm: "XCHACHA20-POLY1305", iv: message.iv, mimeType: message.mimeType },
+                        iv: message.iv,
                     });
                     break;
                 }
                 case "proximity_file_start": {
-                    const offer = this.incomingTransfers.get(message.transferId);
+                    const offer = this.incomingOfferFrom(session, message.transferId);
                     if (!offer) {
                         return;
                     }
@@ -437,7 +444,8 @@ export class ProximityFileTransferService {
                         receivedBytes: 0,
                         decryptor: await ProximityFileStreamDecryptor.create(
                             encryption.key,
-                            encryption.metadata,
+                            encryption.iv,
+                            sanitizeProximityFileMimeType(offer.mimeType),
                             await this.storage.createSink(message.transferId),
                         ),
                     });
@@ -449,10 +457,15 @@ export class ProximityFileTransferService {
                     break;
                 }
                 case "proximity_file_complete": {
-                    await this.completeReceivingTransfer(message.transferId);
+                    if (this.receivingTransferFrom(session, message.transferId)) {
+                        await this.completeReceivingTransfer(message.transferId);
+                    }
                     break;
                 }
                 case "proximity_file_error": {
+                    if (!this.incomingOfferFrom(session, message.transferId)) {
+                        return;
+                    }
                     this.transferUpdateSubject.next({
                         transferId: message.transferId,
                         state: "error",
@@ -469,7 +482,7 @@ export class ProximityFileTransferService {
         }
 
         const frame = decodeProximityFileChunkFrame(data as ArrayBuffer | ArrayBufferView);
-        const receivingTransfer = this.receivingTransfers.get(frame.transferId);
+        const receivingTransfer = this.receivingTransferFrom(session, frame.transferId);
         if (!receivingTransfer) {
             return;
         }
@@ -519,13 +532,12 @@ export class ProximityFileTransferService {
             return;
         }
 
-        const encryptor = await ProximityFileStreamEncryptor.create(transfer.encryptionKey, transfer.file.type);
+        const encryptor = await ProximityFileStreamEncryptor.create(transfer.encryptionKey);
         this.sendControlMessage(dataChannel, {
             type: "proximity_file_key",
             transferId,
             rawKey: await exportProximityFileEncryptionKey(transfer.encryptionKey),
-            iv: encryptor.metadata.iv,
-            mimeType: encryptor.metadata.mimeType,
+            iv: encryptor.iv,
         });
         this.sendControlMessage(dataChannel, {
             type: "proximity_file_start",
@@ -674,6 +686,20 @@ export class ProximityFileTransferService {
         session.peerConnection.close();
     }
 
+    /** The incoming offer for `transferId`, only if it was made by the peer on the other end of `session`. */
+    private incomingOfferFrom(
+        session: PeerSession,
+        transferId: string,
+    ): IncomingProximityFileTransferOffer | undefined {
+        const offer = this.incomingTransfers.get(transferId);
+        return offer?.senderSpaceUserId === session.remoteSpaceUserId ? offer : undefined;
+    }
+
+    private receivingTransferFrom(session: PeerSession, transferId: string): ReceivingTransfer | undefined {
+        const receivingTransfer = this.receivingTransfers.get(transferId);
+        return receivingTransfer?.offer.senderSpaceUserId === session.remoteSpaceUserId ? receivingTransfer : undefined;
+    }
+
     private countIncomingOffersFromSender(senderSpaceUserId: string): number {
         let count = 0;
         for (const offer of this.incomingTransfers.values()) {
@@ -685,14 +711,39 @@ export class ProximityFileTransferService {
     }
 }
 
-export function getMessageTypeFromFile(file: File): "file" | "image" | "audio" | "video" {
-    if (file.type.startsWith("image/")) {
+// Only types the chat renders inline. Anything else (notably image/svg+xml and text/html, which
+// would run scripts at our origin when a blob: URL is opened as a document) is downgraded to a
+// plain download.
+const INLINE_MIME_TYPES = new Set([
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+    "image/avif",
+    "audio/mpeg",
+    "audio/ogg",
+    "audio/wav",
+    "audio/webm",
+    "audio/mp4",
+    "audio/aac",
+    "video/mp4",
+    "video/webm",
+    "video/ogg",
+]);
+
+export function sanitizeProximityFileMimeType(mimeType: string): string {
+    const type = mimeType.split(";")[0].trim().toLowerCase();
+    return INLINE_MIME_TYPES.has(type) ? type : "application/octet-stream";
+}
+
+export function getMessageTypeFromMimeType(mimeType: string): "file" | "image" | "audio" | "video" {
+    if (mimeType.startsWith("image/")) {
         return "image";
     }
-    if (file.type.startsWith("audio/")) {
+    if (mimeType.startsWith("audio/")) {
         return "audio";
     }
-    if (file.type.startsWith("video/")) {
+    if (mimeType.startsWith("video/")) {
         return "video";
     }
     return "file";
