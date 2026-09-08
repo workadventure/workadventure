@@ -392,18 +392,16 @@
                 <LimitRoomModal />
             {/if}
 
-            {#if $toastStore.size > 0}
-                <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
-                    {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
-                        {@const toast = toastEntry[1]}
-                        {@const ToastComponent = toast.component}
-                        <ToastComponent {...toast.props} />
-                    {/each}
-                </div>
-            {/if}
-
-            <!-- Host-side raised-hands management, docked top-right (self-gates on raisedHandsAdminVisibleStore) -->
-            <RaisedHandsDock />
+            <!-- Toast stack, with the host-side raised-hands dock stacked below it so a toast never covers the
+                 dock's buttons (the dock self-gates on raisedHandsAdminVisibleStore). -->
+            <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
+                {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
+                    {@const toast = toastEntry[1]}
+                    {@const ToastComponent = toast.component}
+                    <ToastComponent {...toast.props} />
+                {/each}
+                <RaisedHandsDock />
+            </div>
 
             {#if $showRecordingList}
                 <RecordingsListModal />
