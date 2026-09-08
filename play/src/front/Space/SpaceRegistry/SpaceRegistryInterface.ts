@@ -1,6 +1,6 @@
 import type { FilterType } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
-import type { SpaceInterface } from "../SpaceInterface";
+import type { FloorSpeaker, RaisedHand, SpaceInterface } from "../SpaceInterface";
 import type { VideoBox } from "../VideoBox";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];
@@ -24,6 +24,10 @@ export interface SpaceRegistryInterface {
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
     readonly isLiveStreamingStore: Readable<boolean>;
     readonly isLiveStreamingAudioStore: Readable<boolean>;
+    readonly raisedHandsStore: Readable<RaisedHand[]>;
+    readonly speakingUsersStore: Readable<FloorSpeaker[]>;
+    giveFloor(spaceUserId: string): void;
+    revokeFloor(spaceUserId: string): void;
     readonly shouldPublishScreenShareStore: Readable<boolean>;
     spacesEligibleForRecording: Readable<SpaceInterface[]>;
 }

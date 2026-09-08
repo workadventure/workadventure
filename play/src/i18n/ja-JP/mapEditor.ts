@@ -140,6 +140,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
 
         chatEnabled: "専用チャットチャンネルを開設",
         allowTalking: "会話とバブルの形成を許可する",
+        raiseHandEnabled: "挙手を許可する",
         seeAttendees: "参加者を表示",
         start: {
             label: "入口エリア",
@@ -308,6 +309,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "マイクをミュートした状態で開始",
                 startWithVideoMuted: "ビデオを閉じた状態で開始",
                 disableChat: "チャットを無効化",
+                raiseHandEnabled: "挙手を許可する",
                 livekitRoomAdminTag: "ミーティングルームのモデレータータグ",
                 cancel: "キャンセル",
                 validate: "有効",

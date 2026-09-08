@@ -75,6 +75,7 @@
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
+    import RaisedHandsDock from "./Video/RaisedHandsDock.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
@@ -391,15 +392,16 @@
                 <LimitRoomModal />
             {/if}
 
-            {#if $toastStore.size > 0}
-                <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
-                    {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
-                        {@const toast = toastEntry[1]}
-                        {@const ToastComponent = toast.component}
-                        <ToastComponent {...toast.props} />
-                    {/each}
-                </div>
-            {/if}
+            <!-- Toast stack, with the host-side raised-hands dock stacked below it so a toast never covers the
+                 dock's buttons (the dock self-gates on raisedHandsAdminVisibleStore). -->
+            <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
+                {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
+                    {@const toast = toastEntry[1]}
+                    {@const ToastComponent = toast.component}
+                    <ToastComponent {...toast.props} />
+                {/each}
+                <RaisedHandsDock />
+            </div>
 
             {#if $showRecordingList}
                 <RecordingsListModal />

@@ -1,3 +1,8 @@
+import {
+    FLOOR_HOLDERS_METADATA_KEY,
+    RAISED_HANDS_METADATA_KEY,
+    parseStoredSpaceMetadata,
+} from "@workadventure/shared-utils";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
@@ -33,8 +38,10 @@ import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 
 import type {
+    FloorSpeaker,
     PrivateEventsObservables,
     PublicEventsObservables,
+    RaisedHand,
     SpaceInterface,
     SpaceUserUpdate,
     UpdateSpaceUserEvent,
@@ -42,6 +49,16 @@ import type {
     SpaceUserExtended,
 } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
+
+// Shapes come from the shared space-metadata catalogue, which is also what the back validates against, so
+// there is a single definition of what a raised hand or a floor holder looks like.
+function parseRaisedHands(value: unknown): RaisedHand[] {
+    return parseStoredSpaceMetadata(RAISED_HANDS_METADATA_KEY, value) ?? [];
+}
+
+function parseFloorHolders(value: unknown): FloorSpeaker[] {
+    return parseStoredSpaceMetadata(FLOOR_HOLDERS_METADATA_KEY, value) ?? [];
+}
 import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
@@ -65,6 +82,8 @@ export class Space implements SpaceInterface {
     public allScreenShareStreamStore: MapStore<string, VideoBox> = new MapStore<string, VideoBox>();
     public readonly videoStreamStore: Readable<Map<string, VideoBox>>;
     public readonly screenShareStreamStore: Readable<Map<string, VideoBox>>;
+    public readonly raisedHandsStore: Readable<RaisedHand[]>;
+    public readonly speakingUsersStore: Readable<FloorSpeaker[]>;
     // private readonly blockedUsersVideoBox: Map<string, VideoBox> = new Map<string, VideoBox>();
     // private readonly blockedUsersScreenShareVideoBox: Map<string, VideoBox> = new Map<string, VideoBox>();
     private readonly _blockedUsersStore: Writable<Set<string>> = writable(new Set<string>());
@@ -222,6 +241,28 @@ export class Space implements SpaceInterface {
                 return newScreenShareStreamStore;
             },
         );
+
+        // The raised-hands queue lives in the space metadata (broadcast to all members, unlike SpaceUser),
+        // so it reaches every participant including a megaphone speaker without seeAttendees.
+        this.raisedHandsStore = readable<RaisedHand[]>([], (set) => {
+            set(parseRaisedHands(this.getMetadata().get(RAISED_HANDS_METADATA_KEY)));
+            const subscription = this.observeMetadataProperty(RAISED_HANDS_METADATA_KEY).subscribe((value) => {
+                set(parseRaisedHands(value));
+            });
+            return () => subscription.unsubscribe();
+        });
+
+        // List of the OTHER users who currently hold a GRANTED floor (given after a raised hand), derived from the
+        // space metadata (broadcast to all members, so the host receives it even without seeAttendees). The local
+        // user is filtered out. Only granted guests appear here — never the hosts/original speakers — so a promoted
+        // guest can never take the floor back from the presenter.
+        this.speakingUsersStore = readable<FloorSpeaker[]>([], (set) => {
+            const compute = (value: unknown) =>
+                set(parseFloorHolders(value).filter((entry) => entry.spaceUserId !== this._mySpaceUserId));
+            compute(this.getMetadata().get(FLOOR_HOLDERS_METADATA_KEY));
+            const subscription = this.observeMetadataProperty(FLOOR_HOLDERS_METADATA_KEY).subscribe(compute);
+            return () => subscription.unsubscribe();
+        });
 
         this.onBlockSubscribe = this._blackListManager.onBlockStream.subscribe((userUuid) => {
             const spaceUser = this.getSpaceUserByUuid(userUuid);

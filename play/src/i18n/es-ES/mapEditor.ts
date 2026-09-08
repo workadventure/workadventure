@@ -307,6 +307,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "Iniciar con el micrófono silenciado",
                 startWithVideoMuted: "Iniciar con el vídeo cerrado",
                 disableChat: "Desactivar el chat",
+                raiseHandEnabled: "Permitir levantar la mano",
                 livekitRoomAdminTag: "Etiqueta de moderador de la sala de reuniones",
                 cancel: "Cancelar",
                 validate: "Validar",
@@ -316,6 +317,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         advancedOptions: "Opciones avanzadas",
         chatEnabled: "Asociar un canal de chat dedicado",
         allowTalking: "Permitir hablar y formar burbujas",
+        raiseHandEnabled: "Permitir levantar la mano",
         maxUsersInAreaPropertyData: {
             label: "Número máximo de usuarios",
             description: "Establecer el número máximo de usuarios en la zona.",

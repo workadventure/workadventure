@@ -1,16 +1,18 @@
 <script lang="ts">
     import { type Writable, writable } from "svelte/store";
+    import { FilterType } from "@workadventure/messages";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
     import NoVideoSvg from "../images/no-video.svg";
     import { LL } from "../../../i18n/i18n-svelte";
     import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
+    import { raisedHandsOrderStore } from "../../Stores/RaisedHandsStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import type { StreamCategory } from "../../Space/Streamable";
-    import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
+    import { IconAlertTriangle, IconUser, IconMute, IconUnMute, IconMicrophone, IconMicrophoneOff } from "@wa-icons";
 
     interface Props {
         spaceUser: SpaceUserExtended;
@@ -27,6 +29,15 @@
     let isMicrophoneEnabled = $derived(spaceUser.reactiveUser.microphoneState);
     let isVideoEnabled = $derived(spaceUser.reactiveUser.cameraState);
     let canAskToMuteAudioOrTurnOffVideo = $derived(spaceUser.space.canAskToMuteAudioOrTurnOffVideo);
+    // Raise-hand state comes from the space metadata queue (not SpaceUser), so it is known even for a
+    // listener whose SpaceUser the local user does not receive.
+    let isHandRaised = $derived($raisedHandsOrderStore.has(spaceUser.spaceUserId));
+    let hasFloor = $derived(spaceUser.reactiveUser.megaphoneState);
+    // The floor is only a real thing in a megaphone broadcast. In a bubble or a meeting room (ALL_USERS space)
+    // everybody already speaks, so we offer no give / take back control there: the raised-hand badge is enough.
+    let canModerateFloor = $derived(
+        ($userIsAdminStore || $canAskToMuteAudioOrTurnOffVideo) && spaceUser.space.filterType !== FilterType.ALL_USERS,
+    );
 
     let moreActionOpened = $state(false);
 
@@ -84,6 +95,24 @@
             kickOffUser: {},
         });
 
+        close();
+    }
+
+    function giveFloor(spaceUser: SpaceUserExtended) {
+        analyticsClient.giveFloorMeetingAction();
+        spaceUser.emitPrivateEvent({
+            $case: "giveFloor",
+            giveFloor: {},
+        });
+        close();
+    }
+
+    function revokeFloor(spaceUser: SpaceUserExtended) {
+        analyticsClient.revokeFloorMeetingAction();
+        spaceUser.emitPrivateEvent({
+            $case: "revokeFloor",
+            revokeFloor: {},
+        });
         close();
     }
 
@@ -182,6 +211,38 @@
             {:else}
                 {$LL.camera.menu.askToMuteAudioUser()}
             {/if}
+        </button>
+    {/if}
+
+    <!-- Give the floor (to a user who raised their hand) -->
+    {#if canModerateFloor && !isScreenSharing && isHandRaised && !$hasFloor}
+        <button
+            class="action-button give-floor-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
+            data-testid="give-floor-user"
+            onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                giveFloor(spaceUser);
+            }}
+        >
+            <IconMicrophone class="w-4 h-4 text-white flex-shrink-0" />
+            {$LL.camera.menu.giveFloor()}
+        </button>
+    {/if}
+
+    <!-- Revoke the floor (take it back from a current speaker) -->
+    {#if canModerateFloor && !isScreenSharing && $hasFloor}
+        <button
+            class="action-button revoke-floor-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
+            data-testid="revoke-floor-user"
+            onclick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                revokeFloor(spaceUser);
+            }}
+        >
+            <IconMicrophoneOff class="w-4 h-4 text-white flex-shrink-0" />
+            {$LL.camera.menu.revokeFloor()}
         </button>
     {/if}
 

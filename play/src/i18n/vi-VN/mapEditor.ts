@@ -304,6 +304,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "Bắt đầu với micrô tắt",
                 startWithVideoMuted: "Bắt đầu với video tắt",
                 disableChat: "Tắt trò chuyện",
+                raiseHandEnabled: "Cho phép giơ tay",
                 livekitRoomAdminTag: "Nhãn người điều hành cho phòng họp",
                 cancel: "Hủy",
                 validate: "Xác nhận",
@@ -326,6 +327,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         advancedOptions: "Tùy chọn nâng cao",
         chatEnabled: "Gắn một kênh trò chuyện riêng",
         allowTalking: "Cho phép nói chuyện và tạo bong bóng",
+        raiseHandEnabled: "Cho phép giơ tay",
         noProperties: "Chưa có thuộc tính nào",
     },
     areaEditor: {

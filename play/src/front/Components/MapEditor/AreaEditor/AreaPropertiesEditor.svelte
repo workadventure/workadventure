@@ -209,6 +209,7 @@
                         startWithAudioMuted: false,
                         startWithVideoMuted: false,
                         disableChat: false,
+                        raiseHandEnabled: true,
                     },
                     livekitRoomAdminTag: "",
                 };
@@ -320,6 +321,7 @@
                     speakerZoneName: areasName.size == 1 ? [...areasName.keys()][0] : "",
                     chatEnabled: false,
                     allowTalking: false,
+                    raiseHandEnabled: true,
                 };
             }
             case "exit":
@@ -656,6 +658,7 @@
                                     startWithAudioMuted: false,
                                     startWithVideoMuted: false,
                                     disableChat: false,
+                                    raiseHandEnabled: true,
                                 };
 
                                 config.disableChat = true;
