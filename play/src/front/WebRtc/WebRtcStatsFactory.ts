@@ -165,7 +165,6 @@ function createReceiverStatsStore(
             }
             const expectedFps = options.getExpectedFps?.();
             receiverStats.expectedFps = expectedFps;
-            receiverStats.paused = expectedFps === 0;
             receiverStats.fpsStdDev = options.measureFpsVariability
                 ? fpsVariability.push(
                       receiverStats.fps,

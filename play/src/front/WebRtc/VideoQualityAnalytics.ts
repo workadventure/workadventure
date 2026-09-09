@@ -37,7 +37,7 @@ export function subscribeToVideoQualityAnalytics(
 ): Unsubscriber {
     return subscribeToSamples(statsStore, context, sendReport, (stats, base) => {
         // A stream the sender paused on purpose (we do not display it) says nothing about the connection
-        if (stats.paused || !isValidStats(stats)) {
+        if (stats.expectedFps === 0 || !isValidStats(stats)) {
             return undefined;
         }
         return {

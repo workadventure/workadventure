@@ -11,10 +11,6 @@ export type ViewerDisplay = {
     maxBitrate: number;
 };
 
-export type CaptureSize = { width: number; height: number };
-
-export type VideoPreset = { bitrate: number; fps: number };
-
 export type VideoEncodingUpdate = {
     active: boolean;
     maxBitrate?: number;
@@ -28,7 +24,6 @@ export type VideoEncodingUpdate = {
  * that never reports (hidden tab, offscreen tile) gets cut after VIEWER_REPORT_TIMEOUT_MS.
  */
 export const DEFAULT_VIEWER_DISPLAY: ViewerDisplay = { width: 320, height: 180, maxBitrate: 0 };
-export const HIDDEN_VIEWER_DISPLAY: ViewerDisplay = { width: 0, height: 0, maxBitrate: 0 };
 export const VIEWER_REPORT_TIMEOUT_MS = 5000;
 
 export function isViewerDisplayHidden(viewer: ViewerDisplay): boolean {
@@ -37,8 +32,8 @@ export function isViewerDisplayHidden(viewer: ViewerDisplay): boolean {
 
 export function computeVideoEncoding(
     viewer: ViewerDisplay,
-    capture: CaptureSize,
-    selectPreset: (width: number, height: number) => VideoPreset,
+    capture: { width: number; height: number },
+    selectPreset: (width: number, height: number) => { bitrate: number; fps: number },
 ): VideoEncodingUpdate {
     if (isViewerDisplayHidden(viewer)) {
         // Nobody looks at it: stop the encoder for this connection (audio is not affected).

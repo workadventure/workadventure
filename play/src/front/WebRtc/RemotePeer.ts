@@ -28,7 +28,6 @@ import { createPeerWebRtcStats } from "./WebRtcStatsFactory";
 import {
     computeVideoEncoding,
     DEFAULT_VIEWER_DISPLAY,
-    HIDDEN_VIEWER_DISPLAY,
     isViewerDisplayHidden,
     VIEWER_REPORT_TIMEOUT_MS,
     type ViewerDisplay,
@@ -975,7 +974,7 @@ export class RemotePeer extends Peer implements Streamable {
                 return;
             }
             debug(`Adaptive video: no display report from ${this._spaceUserId} after ${VIEWER_REPORT_TIMEOUT_MS}ms`);
-            this.viewerDisplay = HIDDEN_VIEWER_DISPLAY;
+            this.viewerDisplay = { width: 0, height: 0, maxBitrate: 0 };
             this.applyVideoEncoding();
         }, VIEWER_REPORT_TIMEOUT_MS);
     }
