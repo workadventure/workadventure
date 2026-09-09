@@ -1,11 +1,13 @@
 import type { Readable, Unsubscriber } from "svelte/store";
 import type { VideoQualityReportMessage, VideoQualitySampleMessage } from "@workadventure/messages";
 import {
+    VideoQualityLimitationReason,
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
+    VideoQualityStreamDirection,
     VideoQualityTransportType,
 } from "@workadventure/messages";
-import type { WebRtcStats } from "../Components/Video/WebRtcStats";
+import type { WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcStats";
 import { hasCapability } from "../Connection/Capabilities";
 
 const VIDEO_ANALYTICS_SEND_INTERVAL_MS = 5_000;
@@ -15,6 +17,7 @@ export type VideoQualityAnalyticsContext = {
     streamId: string;
     streamCategory: "video" | "screenSharing";
     transportType: "P2P" | "Livekit";
+    // Empty for streams sent to a LiveKit server (no single remote user)
     remoteSpaceUserId: string;
     remoteUserUuid?: string;
     spaceName: string;
@@ -24,10 +27,83 @@ export type VideoQualityAnalyticsContext = {
 
 const sessionId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+/**
+ * Reports the quality of a video stream we receive.
+ */
 export function subscribeToVideoQualityAnalytics(
     statsStore: Readable<WebRtcStats | undefined>,
     context: VideoQualityAnalyticsContext,
     sendReport: (message: VideoQualityReportMessage) => void,
+): Unsubscriber {
+    return subscribeToSamples(statsStore, context, sendReport, (stats, base) => {
+        if (!isValidStats(stats)) {
+            return undefined;
+        }
+        return {
+            ...base,
+            direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_INBOUND,
+            relay: stats.relay,
+            relayProtocol: toRelayProtocol(stats.relayProtocol),
+            fps: stats.fps,
+            fpsStdDev: stats.fpsStdDev,
+            jitter: stats.jitter,
+            bandwidthBytesPerSecond: stats.bandwidth,
+            frameWidth: toUInt32(stats.frameWidth),
+            frameHeight: toUInt32(stats.frameHeight),
+            mimeType: stats.mimeType,
+        };
+    });
+}
+
+/**
+ * Reports the health of the encoder of a video stream we send (camera or screen share): whether the browser is
+ * CPU or bandwidth limited, and which encoder it uses.
+ */
+export function subscribeToOutboundVideoQualityAnalytics(
+    statsStore: Readable<WebRtcSenderStats | undefined>,
+    context: VideoQualityAnalyticsContext,
+    sendReport: (message: VideoQualityReportMessage) => void,
+): Unsubscriber {
+    return subscribeToSamples(statsStore, context, sendReport, (stats, base) => {
+        if (!isValidSenderStats(stats)) {
+            return undefined;
+        }
+        return {
+            ...base,
+            direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND,
+            fps: stats.fps,
+            // The sender has no receive jitter
+            jitter: 0,
+            bandwidthBytesPerSecond: stats.bandwidth,
+            frameWidth: toUInt32(stats.frameWidth),
+            frameHeight: toUInt32(stats.frameHeight),
+            mimeType: stats.mimeType,
+            qualityLimitationReason: toLimitationReason(stats.qualityLimitationReason),
+            encoderImplementation: stats.encoderImplementation,
+        };
+    });
+}
+
+type BaseSample = Pick<
+    VideoQualitySampleMessage,
+    | "clientEventTimeMs"
+    | "sampleSeq"
+    | "streamId"
+    | "connectionId"
+    | "sessionId"
+    | "remoteUserUuid"
+    | "remoteSpaceUserId"
+    | "spaceName"
+    | "streamCategory"
+    | "transportType"
+    | "livekitServerUrl"
+>;
+
+function subscribeToSamples<T>(
+    statsStore: Readable<T | undefined>,
+    context: VideoQualityAnalyticsContext,
+    sendReport: (message: VideoQualityReportMessage) => void,
+    buildSample: (stats: T, base: BaseSample) => VideoQualitySampleMessage | undefined,
 ): Unsubscriber {
     if (hasCapability(VIDEO_QUALITY_ANALYTICS_CAPABILITY) !== "v1") {
         return () => {};
@@ -37,7 +113,7 @@ export function subscribeToVideoQualityAnalytics(
     let lastSentAt = 0;
 
     return statsStore.subscribe((stats) => {
-        if (!stats || !isValidStats(stats)) {
+        if (!stats) {
             return;
         }
 
@@ -45,9 +121,8 @@ export function subscribeToVideoQualityAnalytics(
         if (now - lastSentAt < VIDEO_ANALYTICS_SEND_INTERVAL_MS) {
             return;
         }
-        lastSentAt = now;
 
-        const sample: VideoQualitySampleMessage = {
+        const sample = buildSample(stats, {
             clientEventTimeMs: now,
             sampleSeq,
             streamId: context.streamId,
@@ -58,18 +133,13 @@ export function subscribeToVideoQualityAnalytics(
             spaceName: context.spaceName,
             streamCategory: toStreamCategory(context.streamCategory),
             transportType: toTransportType(context.transportType),
-            relay: stats.relay,
-            relayProtocol: toRelayProtocol(stats.relayProtocol),
             livekitServerUrl: context.livekitServerUrl,
-            fps: stats.fps,
-            fpsStdDev: stats.fpsStdDev,
-            jitter: stats.jitter,
-            bandwidthBytesPerSecond: stats.bandwidth,
-            frameWidth: toUInt32(stats.frameWidth),
-            frameHeight: toUInt32(stats.frameHeight),
-            mimeType: stats.mimeType,
-        };
+        });
+        if (!sample) {
+            return;
+        }
 
+        lastSentAt = now;
         sampleSeq += 1;
 
         try {
@@ -88,6 +158,17 @@ function isValidStats(stats: WebRtcStats): boolean {
         Number.isFinite(stats.frameWidth) &&
         Number.isFinite(stats.frameHeight) &&
         (stats.fpsStdDev === undefined || Number.isFinite(stats.fpsStdDev))
+    );
+}
+
+function isValidSenderStats(stats: WebRtcSenderStats): boolean {
+    return (
+        Number.isFinite(stats.fps) &&
+        Number.isFinite(stats.bandwidth) &&
+        Number.isFinite(stats.frameWidth) &&
+        Number.isFinite(stats.frameHeight) &&
+        // A paused track encodes nothing: not worth a sample, unless the encoder is stalled by a limitation
+        (stats.fps > 0 || stats.qualityLimitationReason !== "none")
     );
 }
 
@@ -114,6 +195,19 @@ function toRelayProtocol(relayProtocol: WebRtcStats["relayProtocol"]): VideoQual
         return VideoQualityRelayProtocol.VIDEO_QUALITY_RELAY_PROTOCOL_TLS;
     }
     return undefined;
+}
+
+function toLimitationReason(reason: WebRtcSenderStats["qualityLimitationReason"]): VideoQualityLimitationReason {
+    switch (reason) {
+        case "cpu":
+            return VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_CPU;
+        case "bandwidth":
+            return VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_BANDWIDTH;
+        case "other":
+            return VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_OTHER;
+        default:
+            return VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_NONE;
+    }
 }
 
 function toUInt32(value: number): number {

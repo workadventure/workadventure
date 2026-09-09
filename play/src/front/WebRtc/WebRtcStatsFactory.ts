@@ -1,19 +1,23 @@
-import type { RemoteTrack } from "livekit-client";
-import { readable, type Readable } from "svelte/store";
-import type { WebRtcStats } from "../Components/Video/WebRtcStats";
+import type { LocalVideoTrack, RemoteTrack } from "livekit-client";
+import { derived, readable, type Readable } from "svelte/store";
+import type { WebRtcQualityLimitationReason, WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { RemotePeer } from "./RemotePeer";
 
-/**
- * Creates a readable store that provides WebRTC statistics for a peer connection.
- * Updates every second with current bandwidth, FPS, frame dimensions, jitter, and TURN routing info.
- *
- * @param remotePeer The RemotePeer instance to collect statistics from
- * @returns A Svelte readable store with WebRtcStats or undefined
- */
 const WEBRTC_STATS_DISPLAY_INTERVAL_MS = 1_000;
 
-export function createWebRtcStats(remotePeer: RemotePeer): Readable<WebRtcStats | undefined> {
-    return createWebRtcStatsFromReport(
+export type PeerWebRtcStats = {
+    // What we receive from the peer
+    receiver: Readable<WebRtcStats | undefined>;
+    // What we send to the peer (our own encoder)
+    sender: Readable<WebRtcSenderStats | undefined>;
+};
+
+/**
+ * Creates the WebRTC statistics stores of a P2P connection. Both stores are derived from a single getStats()
+ * poll (one call per second while at least one of them is subscribed).
+ */
+export function createPeerWebRtcStats(remotePeer: RemotePeer): PeerWebRtcStats {
+    const reportStore = createStatsReportStore(
         () => {
             const pc = remotePeer._pc as RTCPeerConnection;
             if (!pc) {
@@ -22,18 +26,22 @@ export function createWebRtcStats(remotePeer: RemotePeer): Readable<WebRtcStats 
             return pc.getStats(null);
         },
         {
+            isStopped: () => remotePeer.destroyed,
+            onError: (e) => console.error("getStats error for peer ", remotePeer.spaceUserId, e),
+        },
+    );
+    return {
+        receiver: createReceiverStatsStore(reportStore, {
             source: "P2P",
             getTrackId: () => remotePeer.remoteStream?.getVideoTracks()[0]?.id,
             includeRelayDetails: true,
-            isStopped: () => remotePeer.destroyed,
-            onError: (e) => console.error("getStats error for peer ", remotePeer.spaceUserId, e),
-            intervalMs: WEBRTC_STATS_DISPLAY_INTERVAL_MS,
-        },
-    );
+        }),
+        sender: createSenderStatsStore(reportStore, "P2P"),
+    };
 }
 
 export function createLivekitWebRtcStats(track: RemoteTrack | undefined): Readable<WebRtcStats | undefined> {
-    return createWebRtcStatsFromReport(
+    const reportStore = createStatsReportStore(
         () => {
             if (!track) {
                 return Promise.resolve(undefined);
@@ -41,42 +49,43 @@ export function createLivekitWebRtcStats(track: RemoteTrack | undefined): Readab
             return track.getRTCStatsReport();
         },
         {
-            source: "Livekit",
-            getTrackId: () => {
-                if (!track) {
-                    return undefined;
-                }
-                const trackWithMedia = track as unknown as { mediaStreamTrack?: MediaStreamTrack };
-                return trackWithMedia.mediaStreamTrack?.id;
-            },
-            includeRelayDetails: false,
             onError: (e) => console.error("getRTCStatsReport error for livekit track", e),
-            intervalMs: WEBRTC_STATS_DISPLAY_INTERVAL_MS,
         },
     );
+    return createReceiverStatsStore(reportStore, {
+        source: "Livekit",
+        getTrackId: () => {
+            if (!track) {
+                return undefined;
+            }
+            const trackWithMedia = track as unknown as { mediaStreamTrack?: MediaStreamTrack };
+            return trackWithMedia.mediaStreamTrack?.id;
+        },
+        includeRelayDetails: false,
+    });
 }
 
-type StatsFactoryOptions = {
-    source: string;
-    getTrackId?: () => string | undefined;
-    includeRelayDetails?: boolean;
+/**
+ * Statistics of a track we publish to LiveKit (the report only contains this track's sender).
+ */
+export function createLivekitSenderStats(track: LocalVideoTrack): Readable<WebRtcSenderStats | undefined> {
+    const reportStore = createStatsReportStore(() => track.getRTCStatsReport(), {
+        onError: (e) => console.error("getRTCStatsReport error for local livekit track", e),
+    });
+    return createSenderStatsStore(reportStore, "Livekit");
+}
+
+type StatsReportStoreOptions = {
     isStopped?: () => boolean;
     onError?: (error: unknown) => void;
     intervalMs?: number;
 };
 
-function createWebRtcStatsFromReport(
+function createStatsReportStore(
     getReport: () => Promise<RTCStatsReport | undefined>,
-    options: StatsFactoryOptions,
-): Readable<WebRtcStats | undefined> {
-    return readable<WebRtcStats | undefined>(undefined, (set) => {
-        let bytesReceivedPrev = 0;
-        let framesDecodedPrev = 0;
-        let timestampPrev = 0;
-        let lastFrameWidth: number | undefined;
-        let lastFrameHeight: number | undefined;
-        const fpsSamples: number[] = [];
-        let fpsStdDev: number | undefined;
+    options: StatsReportStoreOptions,
+): Readable<RTCStatsReport | undefined> {
+    return readable<RTCStatsReport | undefined>(undefined, (set) => {
         const interval = setInterval(() => {
             if (options.isStopped?.()) {
                 set(undefined);
@@ -84,57 +93,9 @@ function createWebRtcStatsFromReport(
                 return;
             }
             getReport()
-                .then((stats) => {
-                    if (!stats) {
-                        return;
-                    }
-                    const videoTrackId = options.getTrackId?.();
-                    const { receiverStats, bytesReceived, framesDecoded, timestamp } = buildWebRtcStatsFromReport(
-                        stats,
-                        videoTrackId,
-                        {
-                            bytesReceivedPrev,
-                            framesDecodedPrev,
-                            timestampPrev,
-                        },
-                        options,
-                    );
-                    if (timestamp) {
-                        bytesReceivedPrev = bytesReceived;
-                        framesDecodedPrev = framesDecoded;
-                        timestampPrev = timestamp;
-                    }
-                    if (receiverStats) {
-                        if (
-                            lastFrameWidth !== undefined &&
-                            lastFrameHeight !== undefined &&
-                            (receiverStats.frameWidth !== lastFrameWidth ||
-                                receiverStats.frameHeight !== lastFrameHeight)
-                        ) {
-                            fpsSamples.length = 0;
-                            fpsStdDev = undefined;
-                        }
-                        if (Number.isFinite(receiverStats.fps)) {
-                            fpsSamples.push(receiverStats.fps);
-                            if (fpsSamples.length > 8) {
-                                fpsSamples.shift();
-                            }
-                            if (fpsSamples.length === 8) {
-                                const mean = fpsSamples.reduce((sum, value) => sum + value, 0) / fpsSamples.length;
-                                const variance =
-                                    fpsSamples.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) /
-                                    (fpsSamples.length - 1);
-                                fpsStdDev = Math.sqrt(variance);
-                            } else {
-                                fpsStdDev = undefined;
-                            }
-                        } else {
-                            fpsStdDev = undefined;
-                        }
-                        receiverStats.fpsStdDev = fpsStdDev;
-                        lastFrameWidth = receiverStats.frameWidth;
-                        lastFrameHeight = receiverStats.frameHeight;
-                        set(receiverStats);
+                .then((report) => {
+                    if (report) {
+                        set(report);
                     }
                 })
                 .catch((e) => {
@@ -147,6 +108,102 @@ function createWebRtcStatsFromReport(
     });
 }
 
+type ReceiverStatsOptions = {
+    source: string;
+    getTrackId?: () => string | undefined;
+    includeRelayDetails?: boolean;
+};
+
+function createReceiverStatsStore(
+    reportStore: Readable<RTCStatsReport | undefined>,
+    options: ReceiverStatsOptions,
+): Readable<WebRtcStats | undefined> {
+    let bytesReceivedPrev = 0;
+    let framesDecodedPrev = 0;
+    let timestampPrev = 0;
+    let lastFrameWidth: number | undefined;
+    let lastFrameHeight: number | undefined;
+    const fpsSamples: number[] = [];
+    let fpsStdDev: number | undefined;
+
+    return derived<Readable<RTCStatsReport | undefined>, WebRtcStats | undefined>(
+        reportStore,
+        ($report, set) => {
+            if (!$report) {
+                set(undefined);
+                return;
+            }
+            const videoTrackId = options.getTrackId?.();
+            const { receiverStats, bytesReceived, framesDecoded, timestamp } = buildWebRtcStatsFromReport(
+                $report,
+                videoTrackId,
+                {
+                    bytesReceivedPrev,
+                    framesDecodedPrev,
+                    timestampPrev,
+                },
+                options,
+            );
+            if (timestamp) {
+                bytesReceivedPrev = bytesReceived;
+                framesDecodedPrev = framesDecoded;
+                timestampPrev = timestamp;
+            }
+            if (!receiverStats) {
+                return;
+            }
+            if (
+                lastFrameWidth !== undefined &&
+                lastFrameHeight !== undefined &&
+                (receiverStats.frameWidth !== lastFrameWidth || receiverStats.frameHeight !== lastFrameHeight)
+            ) {
+                fpsSamples.length = 0;
+                fpsStdDev = undefined;
+            }
+            if (Number.isFinite(receiverStats.fps)) {
+                fpsSamples.push(receiverStats.fps);
+                if (fpsSamples.length > 8) {
+                    fpsSamples.shift();
+                }
+                if (fpsSamples.length === 8) {
+                    const mean = fpsSamples.reduce((sum, value) => sum + value, 0) / fpsSamples.length;
+                    const variance =
+                        fpsSamples.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / (fpsSamples.length - 1);
+                    fpsStdDev = Math.sqrt(variance);
+                } else {
+                    fpsStdDev = undefined;
+                }
+            } else {
+                fpsStdDev = undefined;
+            }
+            receiverStats.fpsStdDev = fpsStdDev;
+            lastFrameWidth = receiverStats.frameWidth;
+            lastFrameHeight = receiverStats.frameHeight;
+            set(receiverStats);
+        },
+        undefined,
+    );
+}
+
+function createSenderStatsStore(
+    reportStore: Readable<RTCStatsReport | undefined>,
+    source: string,
+): Readable<WebRtcSenderStats | undefined> {
+    const prev = new Map<string, SenderLayerPrev>();
+
+    return derived<Readable<RTCStatsReport | undefined>, WebRtcSenderStats | undefined>(
+        reportStore,
+        ($report, set) => {
+            if (!$report) {
+                set(undefined);
+                return;
+            }
+            set(buildWebRtcSenderStatsFromReport($report, prev, source));
+        },
+        undefined,
+    );
+}
+
 type StatsPrev = {
     bytesReceivedPrev: number;
     framesDecodedPrev: number;
@@ -157,7 +214,7 @@ function buildWebRtcStatsFromReport(
     stats: RTCStatsReport,
     videoTrackId: string | undefined,
     prev: StatsPrev,
-    options: StatsFactoryOptions,
+    options: ReceiverStatsOptions,
 ): {
     receiverStats: WebRtcStats | undefined;
     bytesReceived: number;
@@ -262,4 +319,92 @@ function buildWebRtcStatsFromReport(
         framesDecoded,
         timestamp,
     };
+}
+
+export type SenderLayerPrev = {
+    bytesSent: number;
+    framesEncoded: number;
+    timestamp: number;
+};
+
+/**
+ * Builds the sender-side statistics from a stats report containing our outbound video RTP stream(s).
+ * With simulcast or SVC there is one outbound-rtp entry per layer: the frame size, fps and limitation reason come
+ * from the largest layer, the bandwidth is the sum of all layers.
+ *
+ * Returns undefined when the report has no outbound video stream or when no previous sample allows computing rates.
+ * `prev` is updated in place with the counters of this report.
+ */
+export function buildWebRtcSenderStatsFromReport(
+    stats: RTCStatsReport,
+    prev: Map<string, SenderLayerPrev>,
+    source: string,
+): WebRtcSenderStats | undefined {
+    const layers: any[] = [];
+    const codecs = new Map<string, any>();
+    stats.forEach((v: any) => {
+        if (v.type === "outbound-rtp" && (v.kind === "video" || v.mediaType === "video")) {
+            layers.push(v);
+        } else if (v.type === "codec") {
+            codecs.set(v.id, v);
+        }
+    });
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    if (layers.length === 0) {
+        prev.clear();
+        return undefined;
+    }
+
+    const topLayer = layers.reduce((best, layer) =>
+        (layer.frameWidth ?? 0) * (layer.frameHeight ?? 0) > (best.frameWidth ?? 0) * (best.frameHeight ?? 0)
+            ? layer
+            : best,
+    );
+    const topPrev = prev.get(topLayer.id);
+    const timeDiffSeconds = topPrev ? (topLayer.timestamp - topPrev.timestamp) / 1000 : 0;
+
+    let bytesSentDelta = 0;
+    for (const layer of layers) {
+        const layerPrev = prev.get(layer.id);
+        if (layerPrev) {
+            bytesSentDelta += (layer.bytesSent ?? 0) - layerPrev.bytesSent;
+        }
+        prev.set(layer.id, {
+            bytesSent: layer.bytesSent ?? 0,
+            framesEncoded: layer.framesEncoded ?? 0,
+            timestamp: layer.timestamp ?? 0,
+        });
+    }
+    for (const id of Array.from(prev.keys())) {
+        if (!layers.some((layer) => layer.id === id)) {
+            prev.delete(id);
+        }
+    }
+
+    if (!topPrev || timeDiffSeconds <= 0) {
+        return undefined;
+    }
+
+    return {
+        source,
+        frameWidth: topLayer.frameWidth ?? 0,
+        frameHeight: topLayer.frameHeight ?? 0,
+        mimeType: codecs.get(topLayer.codecId)?.mimeType,
+        bandwidth: Math.max(0, bytesSentDelta) / timeDiffSeconds,
+        fps: Math.max(0, (topLayer.framesEncoded ?? 0) - topPrev.framesEncoded) / timeDiffSeconds,
+        qualityLimitationReason: toQualityLimitationReason(topLayer.qualityLimitationReason),
+        encoderImplementation:
+            typeof topLayer.encoderImplementation === "string" ? topLayer.encoderImplementation : undefined,
+    };
+}
+
+function toQualityLimitationReason(reason: unknown): WebRtcQualityLimitationReason {
+    switch (reason) {
+        case "cpu":
+        case "bandwidth":
+        case "other":
+            return reason;
+        default:
+            return "none";
+    }
 }
