@@ -7,7 +7,11 @@ export interface WebRtcStats {
     // Bandwidth in bytes/seconds
     bandwidth: number;
     fps: number;
+    // Variability of the received frame rate, deliberate changes excluded (see FpsVariabilityTracker).
+    // Never measured for screen shares, whose frame rate follows the content.
     fpsStdDev?: number;
+    // Frame rate the sender targets for us, when it told us (0: it paused the video because we do not display it)
+    expectedFps?: number;
     // Whether the selected ICE route is TURN relayed
     relay?: boolean;
     // Protocol used with TURN when relayed (browser-dependent)

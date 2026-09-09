@@ -586,7 +586,7 @@ export class LiveKitParticipant {
         const trackStore = type === "video" ? this._videoRemoteTrack : this._screenShareRemoteTrack;
         return derived([trackStore], ([$track], set) => {
             if ($track) {
-                const statsStore = createLivekitWebRtcStats($track);
+                const statsStore = createLivekitWebRtcStats($track, type === "video" ? "video" : "screenSharing");
                 const statsUnsubscribe = statsStore.subscribe(set);
                 return () => {
                     statsUnsubscribe();

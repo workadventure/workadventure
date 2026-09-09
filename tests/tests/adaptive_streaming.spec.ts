@@ -35,6 +35,14 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
             browser,
             "Bob",
             publicTestMapUrl("tests/E2E/empty.json", "adaptive_streaming"),
+            {
+                // Without Picture-in-Picture, a hidden tab displays no video at all (see the end of the test)
+                pageCreatedHook: async (page) => {
+                    await page.addInitScript(() => {
+                        localStorage.setItem("allowPictureInPicture", "false");
+                    });
+                },
+            },
         );
         await userBob.evaluate(() => localStorage.setItem("debug", "*"));
         await Map.teleportToPosition(userBob, 160, 160);
@@ -88,5 +96,27 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
                 },
             )
             .toBeTruthy();
+
+        ////////////////////////// Bob hides his tab: Alice stops encoding for him /////////////////////////
+        // The encoder box of Alice's own tile aggregates what she sends (here, to Bob only).
+        const aliceEncoderBox = page.locator("#cameras-container").getByTestId("encoder-stats");
+        const aliceEncodedFps = async () => Number(/FPS:\s*(\d+)/.exec(await aliceEncoderBox.innerText())?.[1] ?? -1);
+        await expect.poll(aliceEncodedFps, { timeout: 30_000 }).toBeGreaterThan(5);
+
+        // Headless Chromium never hides a page: emulate what the browser does when the tab goes to the background.
+        await userBob.evaluate(() => {
+            Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+            document.dispatchEvent(new Event("visibilitychange"));
+        });
+        await expect.poll(aliceEncodedFps, { timeout: 30_000 }).toBe(0);
+
+        // Bob comes back: Alice resumes, and Bob does not get a "No video stream received" warning
+        await userBob.evaluate(() => {
+            Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
+            document.dispatchEvent(new Event("visibilitychange"));
+        });
+        await expect.poll(aliceEncodedFps, { timeout: 30_000 }).toBeGreaterThan(5);
+        await expect(userBob.locator("#cameras-container").getByText("Alice")).toBeVisible();
+        await expect(userBob.getByText("No video stream received")).toBeHidden();
     });
 });
