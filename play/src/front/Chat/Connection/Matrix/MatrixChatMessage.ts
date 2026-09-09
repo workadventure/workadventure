@@ -12,7 +12,7 @@ import type {
     ChatThreadSummary,
     ChatUser,
 } from "../ChatConnection";
-import { DOWNLOAD_MIME_TYPE, sanitizeInlineMimeType } from "../../../Utils/InlineMimeType";
+import { canRenderImageOrVideoInline } from "../../../Utils/InlineMimeType";
 import { chatUserFactoryFromRoom } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
@@ -325,19 +325,21 @@ export class MatrixChatMessage implements ChatMessage {
     }
     private mapMatrixMessageTypeToChatMessage() {
         const content = this.event.getOriginalContent();
-        // An attachment the chat cannot render inline (e.g. an SVG) is offered as a download instead.
-        const inline = sanitizeInlineMimeType(content.info?.mimetype as string | undefined) !== DOWNLOAD_MIME_TYPE;
         switch (content.msgtype) {
             case "m.text":
                 return "text";
             case "m.image":
-                return inline ? "image" : "file";
+            case "m.video":
+                // An attachment whose filename and mimetype disagree is shown as a plain file
+                // instead of being rendered, the way Element does it.
+                if (!canRenderImageOrVideoInline(content)) {
+                    return "file";
+                }
+                return content.msgtype === "m.image" ? "image" : "video";
             case "m.file":
                 return "file";
             case "m.audio":
-                return inline ? "audio" : "file";
-            case "m.video":
-                return inline ? "video" : "file";
+                return "audio";
         }
         return "text";
     }

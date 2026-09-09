@@ -117,7 +117,14 @@ function toAttachmentMediaEventContent(content: IContent): MediaEventContent | u
     if (typeof content.body !== "string") {
         return undefined;
     }
-    if (content.msgtype !== "m.file" && content.msgtype !== "m.audio" && content.msgtype !== "m.video") {
+    // m.image is in the list because an image whose filename and mimetype disagree is shown as a
+    // plain file, and its encrypted media still has to be decrypted through this path.
+    if (
+        content.msgtype !== "m.file" &&
+        content.msgtype !== "m.audio" &&
+        content.msgtype !== "m.video" &&
+        content.msgtype !== "m.image"
+    ) {
         return undefined;
     }
     return content as MediaEventContent;
