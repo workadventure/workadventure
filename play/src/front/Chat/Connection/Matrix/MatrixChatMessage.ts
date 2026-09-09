@@ -328,14 +328,12 @@ export class MatrixChatMessage implements ChatMessage {
         switch (content.msgtype) {
             case "m.text":
                 return "text";
+            // An attachment whose filename and mimetype disagree is shown as a plain file instead
+            // of being rendered, the way Element does it.
             case "m.image":
+                return canRenderImageOrVideoInline(content) ? "image" : "file";
             case "m.video":
-                // An attachment whose filename and mimetype disagree is shown as a plain file
-                // instead of being rendered, the way Element does it.
-                if (!canRenderImageOrVideoInline(content)) {
-                    return "file";
-                }
-                return content.msgtype === "m.image" ? "image" : "video";
+                return canRenderImageOrVideoInline(content) ? "video" : "file";
             case "m.file":
                 return "file";
             case "m.audio":
