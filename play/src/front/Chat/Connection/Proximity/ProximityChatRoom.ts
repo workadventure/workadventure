@@ -1165,6 +1165,10 @@ export class ProximityChatRoom implements ChatRoom {
             (async () => {
                 const player = await this.waitForRemotePlayer(spaceUser.spaceUserId);
                 await initialJoinEvents.promise;
+                // The wait may outlive the meeting (we left, or joined another space) or the user (already gone).
+                if (this._space !== spaceForThisJoin || !this.users?.has(spaceUser.spaceUserId)) {
+                    return;
+                }
                 if (!player || announcedUserIds.has(player.userId)) {
                     return;
                 }
@@ -1199,7 +1203,9 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.observeUserLeftSubscription = this._space.observeUserLeft.subscribe((spaceUser) => {
             const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
-            if (player) {
+            // Only announce the departure of users we did announce (one still waiting for zone data is unknown to
+            // scripts), and forget them so they are announced again if they come back.
+            if (player && announcedUserIds.delete(player.userId)) {
                 iframeListener.sendParticipantLeaveMeetingEvent(spaceName, player);
                 if (this.isDefaultProximityRoom()) {
                     iframeListener.sendParticipantLeaveProximityMeetingEvent(player);
@@ -1405,7 +1411,11 @@ export class ProximityChatRoom implements ChatRoom {
 
     private async mapSpaceUsersToRemotePlayers(spaceUsers: SpaceUserExtended[]): Promise<MessageUserJoined[]> {
         const players = await Promise.all(
-            spaceUsers.map((spaceUser) => this.waitForRemotePlayer(spaceUser.spaceUserId)),
+            spaceUsers.map(async (spaceUser) => {
+                const player = await this.waitForRemotePlayer(spaceUser.spaceUserId);
+                // The user may have left the space while we were waiting for their zone data.
+                return this.users?.has(spaceUser.spaceUserId) ? player : undefined;
+            }),
         );
         return players.filter((player): player is MessageUserJoined => player !== undefined);
     }
