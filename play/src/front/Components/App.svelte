@@ -25,6 +25,7 @@
     import { ErrorScene } from "../Phaser/Reconnecting/ErrorScene";
     import { Game } from "../Phaser/Game/Game";
     import { waScaleManager } from "../Phaser/Services/WaScaleManager";
+    import { startBackgroundBootPump } from "../Phaser/Services/BackgroundBootPump";
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
@@ -209,52 +210,7 @@
 
         game = new Game(config);
 
-        // Everything left of the boot — switching to GameScene, reaching connect(), joining the
-        // room — is dispatched by a loop that runs on requestAnimationFrame, which a hidden renderer
-        // never gets. Until the world is reached, clock that loop by hand whenever frames stop
-        // arriving, so a window that starts in the background joins its room instead of freezing on
-        // the loading screen. Same code path as always, only the clock changes. While the interval
-        // drives, Phaser's own clock is put to sleep and woken as soon as a frame arrives, so the
-        // loop only ever has one driver.
-        const loop = game.loop;
-        const bootStartedAt = performance.now();
-        let lastFrameAt = bootStartedAt;
-        let driving = false;
-        const handBack = () => {
-            if (driving) {
-                driving = false;
-                loop.wake();
-            }
-        };
-        const watchFrames = () => {
-            lastFrameAt = performance.now();
-            handBack();
-            if (bootPump !== undefined) {
-                requestAnimationFrame(watchFrames);
-            }
-        };
-        requestAnimationFrame(watchFrames);
-        stopBootPump = () => {
-            clearInterval(bootPump);
-            bootPump = undefined;
-            // Leave Phaser holding its own clock, or a window revealed later would never redraw.
-            handBack();
-        };
-        bootPump = setInterval(() => {
-            const now = performance.now();
-            // Give up on a user parked on a name or woka screen that no tick can get past.
-            if ($gameSceneIsLoadedStore || now - bootStartedAt > 60_000) {
-                stopBootPump?.();
-                return;
-            }
-            if (now - lastFrameAt > 100) {
-                if (!driving) {
-                    driving = true;
-                    loop.sleep();
-                }
-                loop.tick();
-            }
-        }, 16);
+        stopBootPump = startBackgroundBootPump(game);
 
         waScaleManager.setGame(game);
 
@@ -298,7 +254,6 @@
     //$: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
 
     let canvasSizeUnsubscriber: Unsubscriber;
-    let bootPump: ReturnType<typeof setInterval> | undefined;
     let stopBootPump: (() => void) | undefined;
     onMount(() => {
         canvasSizeUnsubscriber = canvasSize.subscribe(({ width, height }) => {
