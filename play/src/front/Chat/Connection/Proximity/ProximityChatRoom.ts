@@ -10,6 +10,7 @@ import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { Deferred } from "@workadventure/shared-utils";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
@@ -1102,10 +1103,6 @@ export class ProximityChatRoom implements ChatRoom {
             }
             await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
-            const playersInSpace = this.mapSpaceUsersToRemotePlayers(users);
-            if (this.isDefaultProximityRoom()) {
-                iframeListener.sendJoinProximityMeetingEvent(playersInSpace);
-            }
             faviconManager.pushNotificationFavicon();
 
             // Note: by design, if someone comes talk to us, there should be only one new user in the space.
@@ -1156,10 +1153,29 @@ export class ProximityChatRoom implements ChatRoom {
         });
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
-        // Now that we have the complete user list we can listen to incoming and outgoing users
+        // Now that we have the complete user list we can listen to incoming and outgoing users.
+        // The initial join events (sent below) may still be waiting for the zone data of the users already in the
+        // space, so late joiners are held back until those events are out: a user is announced exactly once, either
+        // in the initial list or as a participant joining afterwards.
+        const initialJoinEvents = new Deferred<void>();
+        initialJoinEvents.promise.catch(() => {});
+        const announcedUserIds = new Set<number>();
+        let joinEventsSent = false;
         this.observeUserJoinedSubscription = this._space.observeUserJoined.subscribe((spaceUser) => {
-            const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
-            if (player) {
+            (async () => {
+                const player = await this.waitForRemotePlayer(spaceUser.spaceUserId);
+                await initialJoinEvents.promise;
+                if (!player || announcedUserIds.has(player.userId)) {
+                    return;
+                }
+                announcedUserIds.add(player.userId);
+                if (!joinEventsSent) {
+                    // Nobody was known when we joined (getFirstUsers backstop, or zone data that never came):
+                    // this first peer IS the meeting we joined, not a participant joining an existing one.
+                    joinEventsSent = true;
+                    this.sendJoinEvents(spaceName, [player]);
+                    return;
+                }
                 iframeListener.sendParticipantJoinMeetingEvent(spaceName, player);
                 if (this.isDefaultProximityRoom()) {
                     iframeListener.sendParticipantJoinProximityMeetingEvent(player);
@@ -1174,7 +1190,11 @@ export class ProximityChatRoom implements ChatRoom {
                 if (this.users && this.users.size <= MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS) {
                     this.soundManager.playMeetingInSound();
                 }
-            }
+            })().catch((e) => {
+                if (!(e instanceof AbortError)) {
+                    console.error("Error while announcing a user joining the proximity space", e);
+                }
+            });
         });
 
         this.observeUserLeftSubscription = this._space.observeUserLeft.subscribe((spaceUser) => {
@@ -1197,13 +1217,38 @@ export class ProximityChatRoom implements ChatRoom {
             }
             this.removeTypingUserbyID(spaceUser.spaceUserId);
         });
-        await this.throwIfAborted(joinSignal, spaceForThisJoin);
+        try {
+            await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
-        const playersInMeeting = this.mapSpaceUsersToRemotePlayers(Array.from((this.users ?? new Map()).values()));
-        iframeListener.sendJoinMeetingEvent(spaceName, get(this.name), get(this.kind), playersInMeeting);
+            const playersInMeeting = await this.mapSpaceUsersToRemotePlayers(
+                Array.from((this.users ?? new Map()).values()),
+            );
+            await this.throwIfAborted(joinSignal, spaceForThisJoin);
+
+            // A bubble with nobody known yet is not announced: the first peer to show up will trigger the join
+            // events (see observeUserJoinedSubscription above). Being alone in a meeting room is legitimate though.
+            if (isMeetingRoomChat || playersInMeeting.length > 0) {
+                joinEventsSent = true;
+                for (const player of playersInMeeting) {
+                    announcedUserIds.add(player.userId);
+                }
+                this.sendJoinEvents(spaceName, playersInMeeting);
+            }
+            initialJoinEvents.resolve();
+        } catch (e) {
+            initialJoinEvents.reject(asError(e));
+            throw e;
+        }
 
         this.joinSpaceAbortController = undefined;
         return this._space;
+    }
+
+    private sendJoinEvents(spaceName: string, players: MessageUserJoined[]): void {
+        if (this.isDefaultProximityRoom()) {
+            iframeListener.sendJoinProximityMeetingEvent(players);
+        }
+        iframeListener.sendJoinMeetingEvent(spaceName, get(this.name), get(this.kind), players);
     }
 
     /**
@@ -1339,17 +1384,30 @@ export class ProximityChatRoom implements ChatRoom {
         return this.remotePlayersRepository.getPlayers().get(userId);
     }
 
-    private mapSpaceUsersToRemotePlayers(spaceUsers: SpaceUserExtended[]): MessageUserJoined[] {
-        const playersInSpace: MessageUserJoined[] = [];
-
-        for (const spaceUser of spaceUsers.values()) {
-            const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
-            if (player) {
-                playersInSpace.push(player);
-            }
+    /**
+     * Resolves the remote player data of a space user. A user can be registered in the space before their
+     * userJoinedMessage reaches us through the zone system (typically someone spawning right next to us), so we
+     * wait for it rather than dropping the user. Resolves to undefined for ourselves and for users whose data
+     * never arrives.
+     */
+    private async waitForRemotePlayer(spaceUserId: string): Promise<MessageUserJoined | undefined> {
+        if (spaceUserId === this._spaceUserId) {
+            return undefined;
         }
+        const { userId } = this.extractUserIdAndRoomUrlFromSpaceId(spaceUserId);
+        try {
+            return await this.remotePlayersRepository.getPlayer(userId);
+        } catch (e) {
+            console.warn(`User ${spaceUserId} is in the proximity space but never showed up in the players list`, e);
+            return undefined;
+        }
+    }
 
-        return playersInSpace;
+    private async mapSpaceUsersToRemotePlayers(spaceUsers: SpaceUserExtended[]): Promise<MessageUserJoined[]> {
+        const players = await Promise.all(
+            spaceUsers.map((spaceUser) => this.waitForRemotePlayer(spaceUser.spaceUserId)),
+        );
+        return players.filter((player): player is MessageUserJoined => player !== undefined);
     }
 
     private extractUserIdAndRoomUrlFromSpaceId(spaceId: string): { roomUrl: string; userId: number } {
