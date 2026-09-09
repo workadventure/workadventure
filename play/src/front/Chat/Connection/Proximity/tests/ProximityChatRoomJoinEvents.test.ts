@@ -97,6 +97,7 @@ function player(userId: number): MessageUserJoined {
 
 function createFakeSpace(users: Map<string, SpaceUserExtended>) {
     const observeUserJoined = new Subject<SpaceUserExtended>();
+    const observeUserLeft = new Subject<SpaceUserExtended>();
     const space = {
         getName: () => "bubble",
         destroyed: false,
@@ -105,10 +106,10 @@ function createFakeSpace(users: Map<string, SpaceUserExtended>) {
         observeMetadata: new Subject(),
         observePublicEvent: () => new Subject(),
         observeUserJoined,
-        observeUserLeft: new Subject<SpaceUserExtended>(),
+        observeUserLeft,
         getUsers: () => Promise.resolve(users),
     } as unknown as SpaceInterface;
-    return { space, observeUserJoined, users };
+    return { space, observeUserJoined, observeUserLeft, users };
 }
 
 function createRoom(space: SpaceInterface, repository: RemotePlayersRepository): ProximityChatRoom {
@@ -155,7 +156,7 @@ describe("ProximityChatRoom join events", () => {
 
     it("waits for the zone data of users already in the space and announces them all in one go", async () => {
         const users = new Map([1, 2, 3].map((id) => [`room_${id}`, spaceUser(id)]));
-        const { space, observeUserJoined } = createFakeSpace(users);
+        const { space, observeUserJoined, observeUserLeft } = createFakeSpace(users);
         const repository = new RemotePlayersRepository();
         const room = createRoom(space, repository);
 
@@ -174,12 +175,24 @@ describe("ProximityChatRoom join events", () => {
 
         // A later peer is a participant joining, not a new meeting.
         repository.addPlayer(player(4));
+        users.set("room_4", spaceUser(4));
         observeUserJoined.next(spaceUser(4));
         await flush();
         expect(iframeListener.sendParticipantJoinProximityMeetingEvent).toHaveBeenCalledWith(
             expect.objectContaining({ userId: 4 }),
         );
         expect(iframeListener.sendJoinProximityMeetingEvent).toHaveBeenCalledTimes(1);
+
+        // A participant who leaves is announced leaving, and announced again when coming back.
+        users.delete("room_4");
+        observeUserLeft.next(spaceUser(4));
+        expect(iframeListener.sendParticipantLeaveProximityMeetingEvent).toHaveBeenCalledWith(
+            expect.objectContaining({ userId: 4 }),
+        );
+        users.set("room_4", spaceUser(4));
+        observeUserJoined.next(spaceUser(4));
+        await flush();
+        expect(iframeListener.sendParticipantJoinProximityMeetingEvent).toHaveBeenCalledTimes(2);
     });
 
     it("does not announce an empty bubble: the first peer to show up triggers the join event", async () => {
@@ -196,6 +209,7 @@ describe("ProximityChatRoom join events", () => {
         expect(iframeListener.sendJoinProximityMeetingEvent).not.toHaveBeenCalled();
         expect(iframeListener.sendJoinMeetingEvent).not.toHaveBeenCalled();
 
+        users.set("room_2", spaceUser(2));
         observeUserJoined.next(spaceUser(2));
         repository.addPlayer(player(2));
         await vi.advanceTimersByTimeAsync(0);
@@ -204,6 +218,7 @@ describe("ProximityChatRoom join events", () => {
         expect(iframeListener.sendParticipantJoinProximityMeetingEvent).not.toHaveBeenCalled();
 
         repository.addPlayer(player(3));
+        users.set("room_3", spaceUser(3));
         observeUserJoined.next(spaceUser(3));
         await vi.advanceTimersByTimeAsync(0);
         expect(iframeListener.sendParticipantJoinProximityMeetingEvent).toHaveBeenCalledWith(
