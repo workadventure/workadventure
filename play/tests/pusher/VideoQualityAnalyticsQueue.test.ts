@@ -194,7 +194,7 @@ describe("VideoQualityAnalyticsQueue", () => {
                         spaceName: "other",
                     }),
                     sample({
-                        streamCategory: VideoQualityStreamCategory.VIDEO_QUALITY_STREAM_CATEGORY_UNSPECIFIED,
+                        streamCategory: VideoQualityStreamCategory.UNRECOGNIZED,
                     }),
                 ],
             },
