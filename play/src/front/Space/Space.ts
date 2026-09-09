@@ -48,6 +48,7 @@ import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
 import { recordingSchema, spaceMetadataValidator } from "./SpaceMetadataValidator";
 import { VideoBox } from "./VideoBox";
+import { LOCAL_SCREEN_SHARING_STREAM_ID } from "./Streamable";
 import type { Streamable } from "./Streamable";
 
 export class Space implements SpaceInterface {
@@ -1327,6 +1328,12 @@ export class Space implements SpaceInterface {
         this.observeScreenSharingPeerAdded?.unsubscribe();
         this.observeScreenSharingPeerRemoved?.unsubscribe();
         this.observeScreenSharingPeerAdded = this._peerManager.screenSharingPeerAdded.subscribe((peer) => {
+            // Peers sending our own screen carry the recipient's spaceUserId, not ours. Nothing to
+            // attach: they aren't sharing yet; updateUserData attaches this same peer when they do.
+            if (peer.uniqueId === LOCAL_SCREEN_SHARING_STREAM_ID) {
+                return;
+            }
+
             const spaceUserId = peer.spaceUserId;
 
             if (spaceUserId === this._mySpaceUserId) {
@@ -1334,7 +1341,7 @@ export class Space implements SpaceInterface {
             }
 
             if (!spaceUserId) {
-                console.error("observeVideoPeerAdded : peer has no spaceUserId");
+                console.error("observeScreenSharingPeerAdded : peer has no spaceUserId");
                 return;
             }
 

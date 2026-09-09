@@ -9,6 +9,7 @@ import { Space } from "../Space";
 import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { recordingStore } from "../../Stores/RecordingStore";
+import { LOCAL_SCREEN_SHARING_STREAM_ID } from "../Streamable";
 import type { StreamCategory, Streamable } from "../Streamable";
 import type { StreamableSubjects } from "../SpacePeerManager/SpacePeerManager";
 import type { PeerStatus } from "../../WebRtc/RemotePeer";
@@ -460,6 +461,37 @@ describe("Space test", () => {
         ]);
         expect(activeStreamable.closeStreamable).toHaveBeenCalledOnce();
         expect(pendingStreamable.closeStreamable).not.toHaveBeenCalled();
+    });
+
+    it("should ignore the outgoing peers created to send our own screen share", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            videoPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            },
+        );
+        const subjects = getStreamableSubjects(space);
+        // Peers sending our screen carry the *recipient's* spaceUserId, and the recipient is not sharing.
+        const localScreenShare = createStreamable(LOCAL_SCREEN_SHARING_STREAM_ID, "alice-id", "screenSharing");
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+        space.initUsers([
+            createSpaceUser({
+                spaceUserId: "alice-id",
+                name: "Alice",
+                screenSharingState: false,
+            }),
+        ]);
+
+        subjects.screenSharingPeerAdded.next(localScreenShare);
+
+        expect(consoleErrorSpy).not.toHaveBeenCalled();
+        expect(space.getScreenSharingPeerVideoBox("alice-id")).toBeUndefined();
+        consoleErrorSpy.mockRestore();
     });
 
     it("should show a named recording toast immediately when the recorder is already known", async () => {

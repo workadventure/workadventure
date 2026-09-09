@@ -6,6 +6,7 @@ import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { screenShareMaxResolution } from "../WebRtc/VideoPresets";
 import LL from "../../i18n/i18n-svelte";
+import { LOCAL_SCREEN_SHARING_STREAM_ID } from "../Space/Streamable";
 import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
 import { VideoBox } from "../Space/VideoBox";
 import { localEncoderStatsStore } from "../WebRtc/LocalEncoderStats";
@@ -316,7 +317,7 @@ const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, func
     );
 
     const localMedia = {
-        uniqueId: "localScreenSharingStream",
+        uniqueId: LOCAL_SCREEN_SHARING_STREAM_ID,
         media: {
             type: "webrtc" as const,
             streamStore: mutedLocalMediaStreamStore,
