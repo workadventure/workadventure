@@ -28,7 +28,13 @@
     import ShortcutSubMenu from "./ShortcutSubMenu.svelte";
     import HelpSubMenu from "./HelpSubMenu.svelte";
 
-    let activeSubMenu: MenuItem = $state($subMenusStore[$activeSubMenuStore]);
+    // raw, not $state: this holds one of the objects in subMenusStore and is compared back against
+    // them with ===, both here and in the markup. A deep-reactive $state would proxy it, and a proxy
+    // never matches the object it wraps - so the active item would stop matching itself: no
+    // highlight in the list, and includes() below would decide the open menu had been removed from
+    // the store and switch away from it, tearing down whatever it was showing. It is only ever
+    // reassigned, never mutated, so there is nothing for the proxy to do anyway.
+    let activeSubMenu: MenuItem = $state.raw($subMenusStore[$activeSubMenuStore]);
     let activeComponent: WorkAdventureComponent = $state(ProfileSubMenu);
     let props: { url: string; allowApi: boolean; allow?: string } = $state({
         url: "",
