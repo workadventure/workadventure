@@ -25,6 +25,7 @@
     import { ErrorScene } from "../Phaser/Reconnecting/ErrorScene";
     import { Game } from "../Phaser/Game/Game";
     import { waScaleManager } from "../Phaser/Services/WaScaleManager";
+    import { startBackgroundBootPump } from "../Phaser/Services/BackgroundBootPump";
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
@@ -209,6 +210,8 @@
 
         game = new Game(config);
 
+        stopBootPump = startBackgroundBootPump(game);
+
         waScaleManager.setGame(game);
 
         canvas = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
@@ -251,6 +254,7 @@
     //$: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
 
     let canvasSizeUnsubscriber: Unsubscriber;
+    let stopBootPump: (() => void) | undefined;
     onMount(() => {
         canvasSizeUnsubscriber = canvasSize.subscribe(({ width, height }) => {
             if (width < 1 || height < 1) {
@@ -263,6 +267,7 @@
 
     onDestroy(() => {
         canvasSizeUnsubscriber?.();
+        stopBootPump?.();
         if (canvas && handleCanvasClick) {
             canvas.removeEventListener("click", handleCanvasClick);
         }
