@@ -79,6 +79,8 @@ function majorType(mimeType: string | undefined): string | undefined {
 }
 
 interface MediaLikeContent {
+    // Matrix event contents are open-ended maps; the index signature lets one be passed as is.
+    [key: string]: unknown;
     filename?: string;
     body?: string;
     info?: {
