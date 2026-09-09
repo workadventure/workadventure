@@ -1,7 +1,9 @@
 import axios, { isAxiosError } from "axios";
 import {
+    VideoQualityLimitationReason,
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
+    VideoQualityStreamDirection,
     VideoQualityTransportType,
     type VideoQualityReportMessage,
     type VideoQualitySampleMessage,
@@ -23,6 +25,8 @@ const RETRY_JITTER_MAX_MS = 250;
 export type VideoQualityAnalyticsStreamCategory = "video" | "screenSharing";
 export type VideoQualityAnalyticsTransportType = "P2P" | "Livekit";
 export type VideoQualityAnalyticsRelayProtocol = "udp" | "tcp" | "tls";
+export type VideoQualityAnalyticsStreamDirection = "inbound" | "outbound";
+export type VideoQualityAnalyticsLimitationReason = "none" | "cpu" | "bandwidth" | "other";
 
 export type VideoQualityAnalyticsSample = {
     clientEventTime: string;
@@ -31,7 +35,8 @@ export type VideoQualityAnalyticsSample = {
     remoteUserUuid: string | null;
     reporterUserId: number | null;
     reporterSpaceUserId: string;
-    remoteSpaceUserId: string;
+    // Null for outbound streams sent to a LiveKit server (no single remote user)
+    remoteSpaceUserId: string | null;
     spaceName: string;
     world: string;
     roomId: string;
@@ -40,6 +45,7 @@ export type VideoQualityAnalyticsSample = {
     streamId: string;
     streamCategory: VideoQualityAnalyticsStreamCategory;
     transportType: VideoQualityAnalyticsTransportType;
+    direction: VideoQualityAnalyticsStreamDirection;
     relay: boolean | null;
     relayProtocol: VideoQualityAnalyticsRelayProtocol | null;
     livekitServerUrl: string | null;
@@ -50,6 +56,9 @@ export type VideoQualityAnalyticsSample = {
     frameWidth: number;
     frameHeight: number;
     mimeType: string | null;
+    // Outbound streams only
+    qualityLimitationReason: VideoQualityAnalyticsLimitationReason | null;
+    encoderImplementation: string | null;
     sampleSeq: number | null;
     connectionId: string | null;
     sessionId: string | null;
@@ -215,6 +224,7 @@ export class VideoQualityAnalyticsQueue {
         const streamCategory = toStreamCategory(sample.streamCategory);
         const transportType = toTransportType(sample.transportType);
         const relayProtocol = toRelayProtocol(sample.relayProtocol);
+        const direction = toDirection(sample.direction);
 
         if (streamCategory === undefined) {
             console.warn("Video quality analytics sample dropped", {
@@ -238,9 +248,12 @@ export class VideoQualityAnalyticsQueue {
             return undefined;
         }
 
+        // Outbound streams published to a LiveKit server have no single remote user.
+        const remoteSpaceUserId = isRequiredString(sample.remoteSpaceUserId) ? sample.remoteSpaceUserId : null;
+
         if (
             !isRequiredString(sample.streamId) ||
-            !isRequiredString(sample.remoteSpaceUserId) ||
+            (direction === "inbound" && remoteSpaceUserId === null) ||
             !isRequiredString(sample.spaceName)
         ) {
             console.warn("Video quality analytics sample dropped", {
@@ -326,7 +339,7 @@ export class VideoQualityAnalyticsQueue {
             remoteUserUuid: sample.remoteUserUuid ?? null,
             reporterUserId: socketData.userId ?? null,
             reporterSpaceUserId: socketData.spaceUserId,
-            remoteSpaceUserId: sample.remoteSpaceUserId,
+            remoteSpaceUserId,
             spaceName: fullSpaceName,
             world: socketData.world,
             roomId: socketData.roomId,
@@ -335,6 +348,7 @@ export class VideoQualityAnalyticsQueue {
             streamId: sample.streamId,
             streamCategory,
             transportType,
+            direction,
             relay: sample.relay ?? null,
             relayProtocol,
             livekitServerUrl: sample.livekitServerUrl ?? null,
@@ -345,6 +359,9 @@ export class VideoQualityAnalyticsQueue {
             frameWidth: Math.round(sample.frameWidth),
             frameHeight: Math.round(sample.frameHeight),
             mimeType: sample.mimeType ?? null,
+            qualityLimitationReason:
+                direction === "outbound" ? toLimitationReason(sample.qualityLimitationReason) : null,
+            encoderImplementation: direction === "outbound" ? (sample.encoderImplementation ?? null) : null,
             sampleSeq: sample.sampleSeq ?? null,
             connectionId: sample.connectionId ?? null,
             sessionId: sample.sessionId ?? null,
@@ -431,6 +448,27 @@ function toRelayProtocol(
         return "tls";
     }
     return null;
+}
+
+function toDirection(direction: VideoQualityStreamDirection | undefined): VideoQualityAnalyticsStreamDirection {
+    return direction === VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND ? "outbound" : "inbound";
+}
+
+function toLimitationReason(
+    reason: VideoQualityLimitationReason | undefined,
+): VideoQualityAnalyticsLimitationReason | null {
+    switch (reason) {
+        case VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_NONE:
+            return "none";
+        case VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_CPU:
+            return "cpu";
+        case VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_BANDWIDTH:
+            return "bandwidth";
+        case VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_OTHER:
+            return "other";
+        default:
+            return null;
+    }
 }
 
 function isRequiredString(value: string | undefined): value is string {

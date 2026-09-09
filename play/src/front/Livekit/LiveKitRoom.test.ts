@@ -91,6 +91,11 @@ vi.mock("livekit-client", async (importOriginal) => {
 
 describe("LiveKitRoom", () => {
     beforeEach(() => {
+        // The encoder analytics hook checks the admin capabilities after a publication
+        window.capabilities = {};
+    });
+
+    beforeEach(() => {
         vi.clearAllMocks();
     });
 
@@ -344,6 +349,8 @@ function createSpace(
         isStreamingAudioStore: writable(false),
         shouldPublishScreenShareStore,
         emitBackEvent,
+        getName: () => "world.space",
+        emitVideoQualityReport: vi.fn(),
     } as unknown as SpaceInterface;
 }
 

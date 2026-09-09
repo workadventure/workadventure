@@ -8,6 +8,7 @@ import { screenShareMaxResolution } from "../WebRtc/VideoPresets";
 import LL from "../../i18n/i18n-svelte";
 import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
 import { VideoBox } from "../Space/VideoBox";
+import { localEncoderStatsStore } from "../WebRtc/LocalEncoderStats";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
@@ -341,6 +342,7 @@ const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, func
         volume: writable(1),
         videoType: "screenSharing",
         webrtcStats: undefined,
+        senderStats: localEncoderStatsStore.screenSharing,
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
