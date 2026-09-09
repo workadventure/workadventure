@@ -1,6 +1,5 @@
 import { generateSchema } from "@anatine/zod-openapi";
 import {
-    isAdminApiData,
     isErrorApiErrorData,
     isErrorApiRedirectData,
     isErrorApiRetryData,
@@ -26,7 +25,6 @@ class SwaggerGenerator {
         if (type === "external") {
             return {
                 definitions: {
-                    AdminApiData: generateSchema(isAdminApiData),
                     ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
                     FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
                     MapDetailsData: generateSchema(isMapDetailsData),
@@ -38,7 +36,6 @@ class SwaggerGenerator {
         }
         return {
             definitions: {
-                AdminApiData: generateSchema(isAdminApiData),
                 Capabilities: generateSchema(isCapabilities),
                 CompanionTextureCollectionList: generateSchema(CompanionTextureCollection.array()),
                 CompanionDetail: generateSchema(CompanionDetail),

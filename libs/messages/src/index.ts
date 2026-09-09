@@ -13,7 +13,6 @@ export * from "./JsonMessages/MapDetailsData";
 export * from "./JsonMessages/MetaTagFavicon";
 export * from "./JsonMessages/MetaTagManifestIcon";
 export * from "./JsonMessages/PlayerTextures";
-export * from "./JsonMessages/RegisterData";
 export * from "./JsonMessages/RoomRedirect";
 export * from "./JsonMessages/OpidWokaNamePolicy";
 export * from "./JsonMessages/MeResponse";

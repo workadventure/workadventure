@@ -1,19 +1,11 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type {
-    AdminApiData,
-    MapDetailsData,
-    OauthRefreshToken,
-    RoomRedirect,
-    Capabilities,
-    IceServer,
-} from "@workadventure/messages";
+import type { MapDetailsData, OauthRefreshToken, RoomRedirect, Capabilities, IceServer } from "@workadventure/messages";
 import {
     isOauthRefreshToken,
     MemberData,
     CompanionDetail,
     ErrorApiData,
-    isAdminApiData,
     isApplicationDefinitionInterface,
     isCapabilities,
     isErrorApiErrorData,
@@ -477,66 +469,6 @@ class AdminApi implements AdminInterface {
                 details: message,
             };
         }
-    }
-
-    async fetchMemberDataByToken(
-        organizationMemberToken: string,
-        playUri: string | null,
-        locale?: string,
-    ): Promise<AdminApiData> {
-        /**
-         * @openapi
-         * /api/login-url/{organizationMemberToken}:
-         *   get:
-         *     tags: ["AdminAPI"]
-         *     description: Returns a member from the token
-         *     security:
-         *      - Bearer: []
-         *     produces:
-         *      - "application/json"
-         *     parameters:
-         *      - name: "organizationMemberToken"
-         *        in: "path"
-         *        description: "The token of member in the organization"
-         *        type: "string"
-         *      - name: "playUri"
-         *        in: "query"
-         *        description: "The full URL of WorkAdventure"
-         *        required: true
-         *        type: "string"
-         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSlug/roomSlug"
-         *     responses:
-         *       200:
-         *         description: The details of the member
-         *         schema:
-         *             $ref: "#/definitions/AdminApiData"
-         *       401:
-         *         description: Error while retrieving the data because you are not authorized
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiRedirectData'
-         *       404:
-         *         description: Error while retrieving the data
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiErrorData'
-         *
-         */
-        //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-        const res = await axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
-            params: { playUri },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-        });
-
-        const adminApiData = isAdminApiData.safeParse(res.data);
-
-        if (adminApiData.success) {
-            return adminApiData.data;
-        }
-
-        console.error(adminApiData.error.issues);
-        Sentry.captureException(adminApiData.error.issues);
-        console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
-
-        throw new Error("Message received from /api/login-url is not in the expected format.");
     }
 
     async fetchWellKnownChallenge(host: string): Promise<string> {

@@ -1,5 +1,4 @@
 import type {
-    AdminApiData,
     ErrorApiData,
     IceServer,
     MapDetailsData,
@@ -42,18 +41,6 @@ export interface AdminInterface {
         authToken?: string,
         locale?: string,
     ): Promise<MapDetailsData | RoomRedirect | ErrorApiData>;
-
-    /**
-     * @param locale
-     * @param organizationMemberToken
-     * @param playUri
-     * @return AdminApiData
-     */
-    fetchMemberDataByToken(
-        organizationMemberToken: string,
-        playUri: string | null,
-        locale?: string,
-    ): Promise<AdminApiData>;
 
     /**
      * @var host Request hostname

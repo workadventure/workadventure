@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
 import type { ErrorApiErrorData, ErrorApiRetryData, ErrorApiUnauthorizedData } from "@workadventure/messages";
-import { isRegisterData, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
+import { MeResponse, ErrorScreenMessage } from "@workadventure/messages";
 import axios, { AxiosError, isAxiosError } from "axios";
 import { Subject } from "rxjs";
 import { asError } from "catch-unknown";
@@ -199,42 +199,6 @@ class ConnectionManager {
         } else if (this.connexionType === GameConnexionTypes.jwt) {
             /** @deprecated */
             throw new Error("This endpoint is deprecated");
-        }
-
-        //@deprecated
-        else if (this.connexionType === GameConnexionTypes.register) {
-            const organizationMemberToken = urlManager.getOrganizationToken();
-            const result = await axiosToPusher.post("register", { organizationMemberToken }).then((res) => res.data);
-
-            const registerDataChecking = isRegisterData.safeParse(result);
-
-            if (!registerDataChecking.success) {
-                console.error("Invalid data received from /register route. Data: ", result);
-                throw new Error("Invalid data received from /register route.");
-            }
-
-            const data = registerDataChecking.data;
-
-            this.localUser = new LocalUser(data.userUuid, data.email);
-            this.authToken = data.authToken;
-            localUserStore.saveUser(this.localUser);
-            localUserStore.setAuthToken(this.authToken);
-            analyticsClient.loggedWithToken();
-
-            const roomUrl = data.roomUrl;
-
-            const query = urlParams.toString();
-            this._currentRoom = await Room.createRoom(
-                new URL(
-                    window.location.protocol +
-                        "//" +
-                        window.location.host +
-                        roomUrl +
-                        (query ? "?" + query : "") + //use urlParams because the token param must be deleted
-                        window.location.hash,
-                ),
-            );
-            urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (this.connexionType === GameConnexionTypes.room || this.connexionType === GameConnexionTypes.empty) {
             this.authToken = localUserStore.getAuthToken();
 

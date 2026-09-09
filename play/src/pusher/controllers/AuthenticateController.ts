@@ -1,6 +1,6 @@
 import fs from "fs";
 import { v4 } from "uuid";
-import type { MeResponse, RegisterData } from "@workadventure/messages";
+import type { MeResponse } from "@workadventure/messages";
 import { MeRequest } from "@workadventure/messages";
 import { z } from "zod";
 import { errors } from "jose";
@@ -65,7 +65,6 @@ export class AuthenticateController extends BaseHttpController {
         this.openIDCallback();
         this.matrixCallback();
         this.logoutCallback();
-        this.register();
         this.anonymLogin();
         this.profileCallback();
         this.logoutUser();
@@ -403,97 +402,6 @@ export class AuthenticateController extends BaseHttpController {
             });
             res.type("html").send(html);
             return;
-        });
-    }
-
-    /**
-     * @openapi
-     * /register:
-     *   post:
-     *     description: Try to login with an admin token
-     *     parameters:
-     *      - name: "organizationMemberToken"
-     *        in: "body"
-     *        description: "A token allowing a user to connect to a given world"
-     *        required: true
-     *        type: "string"
-     *     responses:
-     *       200:
-     *         description: The details of the logged user
-     *         content:
-     *           application/json:
-     *             schema:
-     *               type: object
-     *               properties:
-     *                 authToken:
-     *                   type: string
-     *                   description: A unique identification JWT token
-     *                 userUuid:
-     *                   type: string
-     *                   description: Unique user ID
-     *                 email:
-     *                   type: string|null
-     *                   description: The email of the user
-     *                   example: john.doe@example.com
-     *                 roomUrl:
-     *                   type: string
-     *                   description: The room URL to connect to
-     *                   example: https://play.workadventu.re/@/foo/bar/baz
-     *                 organizationMemberToken:
-     *                   type: string|null
-     *                   description: TODO- unclear. It seems to be sent back from the request?
-     *                   example: ???
-     *                 mapUrlStart:
-     *                   type: string
-     *                   description: TODO- unclear. I cannot find any use of this
-     *                   example: ???
-     *                 messages:
-     *                   type: array
-     *                   description: The list of messages to be displayed when the user logs?
-     *                   example: ???
-     */
-    private register(): void {
-        this.app.options("/register", (req, res) => {
-            res.status(200).send("");
-        });
-
-        this.app.post("/register", async (req, res) => {
-            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            const param = req.body;
-
-            //todo: what to do if the organizationMemberToken is already used?
-            const organizationMemberToken: string | null = param.organizationMemberToken;
-            const playUri: string | null = param.playUri;
-
-            if (typeof organizationMemberToken != "string") throw new Error("No organization token");
-            const data = await adminService.fetchMemberDataByToken(
-                organizationMemberToken,
-                playUri,
-                req.header("accept-language"),
-            );
-            const userUuid = data.userUuid;
-            const email = data.email;
-            const roomUrl = data.roomUrl;
-            const mapUrlStart = data.mapUrlStart;
-            const matrixUserId = email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined;
-
-            const authToken = await jwtTokenManager.createAuthToken(
-                email || userUuid,
-                undefined,
-                undefined,
-                undefined,
-                [],
-                matrixUserId,
-            );
-
-            res.json({
-                authToken,
-                userUuid,
-                email,
-                roomUrl,
-                mapUrlStart,
-                organizationMemberToken,
-            } satisfies RegisterData);
         });
     }
 
