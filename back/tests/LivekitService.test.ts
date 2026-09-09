@@ -153,6 +153,16 @@ describe("LiveKitService", () => {
                 roomName: "test-space",
                 status: EgressStatus.EGRESS_ABORTED,
                 error: "egress stopped remotely",
+                // LiveKit reports nanoseconds.
+                startedAt: 1_700_000_000_000_000_000n,
+                endedAt: 1_700_000_610_000_000_000n,
+                fileResults: [
+                    {
+                        filename: "recorder-uuid/recording-2023-11-14T22:13:20.mp4",
+                        size: 4_096n,
+                        duration: 610_400_000_000n,
+                    },
+                ],
             },
         });
         const service = createService(vi.fn(), vi.fn(), receive);
@@ -170,6 +180,30 @@ describe("LiveKitService", () => {
             status: "EGRESS_ABORTED",
             error: "egress stopped remotely",
             createdAt: 1234,
+            startedAtMs: 1_700_000_000_000,
+            endedAtMs: 1_700_000_610_000,
+            fileResults: [
+                { filename: "recorder-uuid/recording-2023-11-14T22:13:20.mp4", sizeBytes: 4096, durationMs: 610_400 },
+            ],
+        });
+    });
+
+    it("leaves timestamps at zero and files empty when LiveKit reports none", async () => {
+        const receive = vi.fn().mockResolvedValue({
+            event: "egress_started",
+            id: "event-2",
+            createdAt: 1n,
+            egressInfo: { egressId: "egress-1", roomName: "test-space", status: EgressStatus.EGRESS_ACTIVE },
+        });
+        const service = createService(vi.fn(), vi.fn(), receive);
+
+        const result = await service.handleLivekitWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1");
+
+        expect(result).toMatchObject({
+            phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED,
+            startedAtMs: 0,
+            endedAtMs: 0,
+            fileResults: [],
         });
     });
 

@@ -914,6 +914,18 @@ message HandleRecordingWebhookRequest {
   string status = 7;
   string error = 8;
   int64 createdAt = 9;
+  // Milliseconds since the epoch, 0 when LiveKit did not report them.
+  int64 startedAtMs = 10;
+  int64 endedAtMs = 11;
+  // The files LiveKit wrote for this egress (empty until the egress ended).
+  repeated RecordingFileResult fileResults = 12;
+}
+
+message RecordingFileResult {
+  // Object key in the recording bucket, as LiveKit reports it.
+  string filename = 1;
+  int64 sizeBytes = 2;
+  int64 durationMs = 3;
 }
 
 message HandleLivekitWebhookRequest {

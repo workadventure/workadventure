@@ -5,7 +5,63 @@ import * as Sentry from "@sentry/node";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LivekitCredentialsResponse } from "./Repository/LivekitCredentialsResponse";
 
+/**
+ * What the admin learns when a recording egress ends. It turns a completed
+ * one into a customer webhook (recording.completed).
+ */
+export interface RecordingEventPayload {
+    phase: "ended";
+    status: string;
+    egressId: string;
+    recordingSessionId: string;
+    playUri: string;
+    recorder: { uuid: string; spaceUserId: string };
+    startedAt: string | null;
+    endedAt: string | null;
+    error: string | null;
+    files: { filename: string; sizeBytes: number; durationSeconds: number }[];
+}
+
+const RECORDING_EVENT_RETRY_DELAYS_MS = [250, 1_000, 4_000];
+
 class AdminApi {
+    /**
+     * Tells the admin that a recording egress ended. Retried a few times on
+     * transport or server errors; a 4xx means the admin rejected the payload
+     * and is not retried. Resolves silently when no admin is configured.
+     */
+    async notifyRecordingEvent(payload: RecordingEventPayload): Promise<void> {
+        if (!ADMIN_API_URL) {
+            return;
+        }
+
+        const url = new URL("api/recordings/events", ADMIN_API_URL).toString();
+        const send = async (attempt: number): Promise<void> => {
+            try {
+                await axios.post(url, payload, {
+                    headers: {
+                        Authorization: `${ADMIN_API_TOKEN ?? ""}`,
+                        Accept: "application/json",
+                    },
+                    timeout: 5_000,
+                });
+            } catch (error) {
+                const status = isAxiosError(error) ? error.response?.status : undefined;
+                const rejected =
+                    status !== undefined && status >= 400 && status < 500 && status !== 408 && status !== 429;
+                if (rejected || attempt >= RECORDING_EVENT_RETRY_DELAYS_MS.length) {
+                    throw error;
+                }
+                await new Promise<void>((resolve) => {
+                    setTimeout(resolve, RECORDING_EVENT_RETRY_DELAYS_MS[attempt]);
+                });
+                return send(attempt + 1);
+            }
+        };
+
+        return send(0);
+    }
+
     async fetchLivekitCredentials(spaceId: string, playUri: string): Promise<LivekitCredentialsResponse> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
