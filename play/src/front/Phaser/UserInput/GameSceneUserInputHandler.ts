@@ -53,6 +53,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 description: get(LL).menu.shortcuts.rotatePlayer(),
             },
             {
+                key: "G",
+                description: get(LL).menu.shortcuts.wokaEmoteWheel(),
+            },
+            {
                 key: "1",
                 description: get(LL).menu.shortcuts.emote1(),
             },

@@ -21,6 +21,7 @@ export * as YoutubeException from "./Application/Exception/YoutubeException";
 export * from "./Events/ChatEvent";
 export * from "./Events/BanEvent";
 export * from "./Woka/defaultWoka";
+export * from "./Woka/wokaEmotes";
 export * from "./Calendar/EventInterface";
 export * from "./TodoList/TodoListInterface";
 export { errorHandler, setErrorHandler } from "./ErrorHandler";

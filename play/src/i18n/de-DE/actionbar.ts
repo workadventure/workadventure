@@ -107,6 +107,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Ein Emoji anzeigen",
             desc: "Drücken Sie mit nur einem Klick Ihre Gefühle mit Emoji-Reaktionen aus. Einfach tippen und los!",
         },
+        wokaEmote: {
+            title: "Ein Emote abspielen",
+            desc: "Lass deinen Woka springen, tanzen oder sich drehen. Halte G gedrückt, um das Rad zu öffnen, und lass los zum Abspielen.",
+        },
         audioManager: {
             title: "Lautstärke der Umgebungsgeräusche",
             desc: "Konfigurieren Sie die Audio-Lautstärke, indem Sie hier klicken.",
@@ -217,6 +221,25 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Sie haben noch keinen persönlichen Schreibtisch",
         errorMoving: "Ihr persönlicher Schreibtisch konnte nicht erreicht werden",
         errorUnclaiming: "Ihr persönlicher Schreibtisch konnte nicht freigegeben werden",
+    },
+    wokaEmote: {
+        button: "Emotes",
+        wheelTitle: "Emote-Rad",
+        hint: "Wähle ein Emote",
+        names: {
+            jump: "Springen",
+            spin: "Drehung",
+            dance: "Tanzen",
+            celebrate: "Feiern",
+            nod: "Ja",
+            question: "Ratlos",
+            laugh: "Lachen",
+            moonwalk: "Moonwalk",
+            runInPlace: "Auf der Stelle laufen",
+            nope: "Nein",
+            love: "Herz",
+            afk: "Abwesend",
+        },
     },
 };
 

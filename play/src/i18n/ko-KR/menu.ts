@@ -183,6 +183,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openUserList: "사용자 목록 열기",
         toggleMapEditor: "지도 편집기 표시/숨기기",
         rotatePlayer: "플레이어 회전",
+        wokaEmoteWheel: "이모트 휠",
         emote1: "이모트 1",
         emote2: "이모트 2",
         emote3: "이모트 3",

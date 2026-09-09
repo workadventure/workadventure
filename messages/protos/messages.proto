@@ -210,11 +210,15 @@ message LeaveChatRoomAreaMessage {
 
 message EmotePromptMessage {
   string emote = 2;
+  // Identifier of an animated Woka emote (see WOKA_EMOTE_IDS in shared-utils). When set, the Woka
+  // plays the animation and `emote` carries the optional emoji bubble that goes with it.
+  optional string wokaEmoteId = 3;
 }
 
 message EmoteEventMessage {
   int32 actorUserId = 1;
   string emote = 2;
+  optional string wokaEmoteId = 3;
 }
 
 message FollowRequestMessage {

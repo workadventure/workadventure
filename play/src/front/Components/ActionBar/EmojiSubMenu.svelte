@@ -24,6 +24,7 @@
     import SayPopUp from "../PopUp/SayPopUp.svelte";
     import Button from "../UI/Button.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { openWokaEmoteWheel } from "../../Stores/WokaEmoteStore";
     import { IconPencil, IconXIcon } from "@wa-icons";
 
     let emoteDataLoading = $state(false);
@@ -58,6 +59,7 @@
 
     let showSayBubbleTooltip = $state(false);
     let showThinkBubbleTooltip = $state(false);
+    let showWokaEmoteTooltip = $state(false);
 
     let closeFloatingUi: (() => void) | undefined = undefined;
 
@@ -265,11 +267,11 @@
             -->
         </div>
         <!-- Divider -->
-        {#if isSayBubbleEnabled}
-            <div class="w-full h-[1px] bg-white/10"></div>
+        <div class="w-full h-[1px] bg-white/10"></div>
 
-            <div class="px-1 py-2 flex flex-row items-center justify-between">
-                <div class="flex flex-row justify-between gap-2 items-center w-full">
+        <div class="px-1 py-2 flex flex-row items-center justify-between">
+            <div class="flex flex-row justify-between gap-2 items-center w-full">
+                {#if isSayBubbleEnabled}
                     <button
                         class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
                         onmouseenter={() => (showSayBubbleTooltip = true)}
@@ -316,9 +318,34 @@
                             />
                         </div>
                     {/if}
-                </div>
+                {/if}
+                <button
+                    class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
+                    onmouseenter={() => (showWokaEmoteTooltip = true)}
+                    onmouseleave={() => (showWokaEmoteTooltip = false)}
+                    onclick={() => {
+                        // The wheel opens on the Woka, in the middle of the map: leaving the emoji
+                        // bar open under it would put two pickers on screen at once.
+                        activeSecondaryZoneActionBarStore.set(undefined);
+                        openWokaEmoteWheel();
+                    }}
+                    data-testid="woka-emote-button"
+                >
+                    {$LL.actionbar.wokaEmote.button()}
+                </button>
+                {#if showWokaEmoteTooltip}
+                    <div class="absolute top-1/3 right-0 m-auto w-2 h-1">
+                        <HelpTooltip
+                            title={$LL.actionbar.help.wokaEmote.title()}
+                            desc={$LL.actionbar.help.wokaEmote.desc()}
+                            shortcuts={["g"]}
+                            hasImage={false}
+                            delayBeforeAppear={100}
+                        />
+                    </div>
+                {/if}
             </div>
-        {/if}
+        </div>
     </div>
     <div use:arrowAction></div>
 </div>

@@ -3,6 +3,7 @@ import { menuInputFocusStore } from "./MenuInputFocusStore";
 import { chatInputFocusStore } from "./ChatStore";
 import { showReportScreenStore, userReportEmpty } from "./ShowReportScreenStore";
 import { emoteMenuStore } from "./EmoteStore";
+import { wokaEmoteWheelVisibleStore } from "./WokaEmoteStore";
 import { refreshPromptStore } from "./RefreshPromptStore";
 import { mapDeletedPromptStore } from "./MapDeletedPromptStore";
 
@@ -19,6 +20,7 @@ export const enableUserInputsStore = derived(
         inputFormFocusStore,
         mapExplorerSearchinputFocusStore,
         emoteMenuStore,
+        wokaEmoteWheelVisibleStore,
         refreshPromptStore,
         mapDeletedPromptStore,
     ],
@@ -29,6 +31,7 @@ export const enableUserInputsStore = derived(
         $inputFormFocusStore,
         $mapExplorerSearchinputFocusStore,
         $emoteMenuStore,
+        $wokaEmoteWheelVisibleStore,
         $refreshPromptStore,
         $mapDeletedPromptStore,
     ]) => {
@@ -39,6 +42,7 @@ export const enableUserInputsStore = derived(
             !$inputFormFocusStore &&
             !$mapExplorerSearchinputFocusStore &&
             !$emoteMenuStore &&
+            !$wokaEmoteWheelVisibleStore &&
             !$refreshPromptStore &&
             !$mapDeletedPromptStore
         );

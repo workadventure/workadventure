@@ -60,6 +60,7 @@
     import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
     import WokaMenu from "./ActionsMenu/WokaMenu.svelte";
+    import WokaEmoteWheel from "./Emote/WokaEmoteWheel.svelte";
     import Lazy from "./Lazy.svelte";
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import Modal from "./Modal/Modal.svelte";
@@ -236,6 +237,9 @@
         highlightFullScreen.set(false);
     }
 </script>
+
+<!-- Always mounted: it owns the "G" shortcut, which has to work before the wheel is on screen. -->
+<WokaEmoteWheel />
 
 <!-- Components ordered by z-index -->
 <div
