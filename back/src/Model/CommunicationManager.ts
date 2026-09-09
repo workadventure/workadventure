@@ -241,9 +241,25 @@ export class CommunicationManager implements ICommunicationManager {
         type: CommunicationType,
         context: TransitionContext,
     ): Promise<void> {
-        // Hold the transition lock so a handler arriving mid-creation (typically the joiner's watch)
-        // waits for this transition instead of cancelling it and creating a second LiveKit state.
-        const transition = (async () => {
+        // Hold the transition lock while the next state is created, so a handler arriving mid-creation
+        // (typically the joiner's watch) waits for this transition instead of cancelling it and creating
+        // a second LiveKit state. The lock is released as soon as the new state is current and the switch
+        // has been dispatched, NOT after init(): a user joining during init() must be notified through
+        // the new state right away, before init() sends them their LiveKit invitation.
+        let released = false;
+        let release!: () => void;
+        this.orchestrator.setTransitionLock(
+            new Promise<void>((resolve) => {
+                release = resolve;
+            }),
+        );
+        const releaseLock = () => {
+            if (released) return;
+            released = true;
+            this.orchestrator.clearTransitionLock();
+            release();
+        };
+        try {
             const nextState = await this.orchestrator.executeImmediateTransition(type, context);
 
             if (!nextState) {
@@ -263,13 +279,12 @@ export class CommunicationManager implements ICommunicationManager {
                 return;
             }
 
-            await this.lifecycleManager.transitionTo(nextState);
-        })();
-        this.orchestrator.setTransitionLock(transition);
-        try {
+            // transitionTo() swaps the current state and dispatches the switch synchronously, then awaits init().
+            const transition = this.lifecycleManager.transitionTo(nextState);
+            releaseLock();
             await transition;
         } finally {
-            this.orchestrator.clearTransitionLock();
+            releaseLock();
         }
     }
 

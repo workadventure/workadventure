@@ -1,5 +1,5 @@
 // Disabled because test mocks use vi.fn() which are passed as object properties
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type Mock } from "vitest";
 import {
     HandleLivekitWebhookRequest,
     HandleRecordingWebhookRequest,
@@ -588,6 +588,16 @@ describe("CommunicationManager", () => {
             expect(lifecycleManager.mocks.transitionTo).toHaveBeenCalledWith(newState);
         });
 
+        // Gives the orchestrator mock a real transition lock (waiters block until it is cleared)
+        const withRealTransitionLock = (orchestrator: ReturnType<typeof createOrchestrator>) => {
+            orchestrator.mocks.setTransitionLock.mockImplementation((promise: Promise<void>) => {
+                orchestrator.mocks.waitForTransitionLock.mockReturnValue(promise);
+            });
+            orchestrator.mocks.clearTransitionLock.mockImplementation(() => {
+                orchestrator.mocks.waitForTransitionLock.mockResolvedValue(undefined);
+            });
+        };
+
         it("should make a concurrent watch wait for the in-flight transition instead of cancelling it", async () => {
             const space = createSpace();
             const oldState = createState(CommunicationType.WEBRTC);
@@ -595,12 +605,7 @@ describe("CommunicationManager", () => {
 
             // Orchestrator mock with a real transition lock and a deferred state creation
             const orchestrator = createOrchestrator();
-            orchestrator.mocks.setTransitionLock.mockImplementation((promise: Promise<void>) => {
-                orchestrator.mocks.waitForTransitionLock.mockReturnValue(promise);
-            });
-            orchestrator.mocks.clearTransitionLock.mockImplementation(() => {
-                orchestrator.mocks.waitForTransitionLock.mockResolvedValue(undefined);
-            });
+            withRealTransitionLock(orchestrator);
             let resolveCreation!: (state: ICommunicationState<ICommunicationStrategy>) => void;
             orchestrator.mocks.executeImmediateTransition.mockReturnValue(
                 new Promise<ICommunicationState<ICommunicationStrategy>>((resolve) => {
@@ -640,6 +645,59 @@ describe("CommunicationManager", () => {
             expect(lifecycleManager.mocks.transitionTo).toHaveBeenCalledTimes(1);
             expect(oldState.mocks.handleUserAdded).not.toHaveBeenCalled();
             expect(oldState.mocks.handleUserToNotifyAdded).not.toHaveBeenCalled();
+        });
+
+        it("should delegate a user joining while the new state initializes without waiting for init()", async () => {
+            const space = createSpace();
+            const oldState = createState(CommunicationType.WEBRTC);
+            const newState = createState(CommunicationType.LIVEKIT);
+
+            const orchestrator = createOrchestrator();
+            withRealTransitionLock(orchestrator);
+            orchestrator.mocks.executeImmediateTransition.mockResolvedValue(newState);
+
+            const policy = createPolicy(true, CommunicationType.LIVEKIT);
+            policy.mocks.shouldTransition.mockImplementation(
+                (currentType: CommunicationType) => currentType === CommunicationType.WEBRTC,
+            );
+            // transitionTo() makes the new state current right away, then init() takes a while
+            let finishInit!: () => void;
+            const lifecycleManager = createLifecycleManager(oldState);
+            (
+                lifecycleManager.mocks.transitionTo as Mock<
+                    (state: ICommunicationState<ICommunicationStrategy>) => Promise<void>
+                >
+            ).mockImplementation((state) => {
+                lifecycleManager.mocks.getCurrentState.mockReturnValue(state);
+                return new Promise<void>((resolve) => {
+                    finishInit = resolve;
+                });
+            });
+
+            const manager = new CommunicationManager(space, {
+                policy: policy,
+                orchestrator: orchestrator,
+                lifecycleManager: lifecycleManager,
+            });
+
+            const flipper = createSpaceUser("user_4");
+            const flipperJoin = manager.handleUserAdded(flipper);
+            // Let the transition reach transitionTo() (init pending)
+            await new Promise((resolve) => {
+                setTimeout(resolve, 0);
+            });
+            expect(lifecycleManager.mocks.transitionTo).toHaveBeenCalledTimes(1);
+
+            // A user joining now must be told the new strategy before init() sends their invitation:
+            // the join must complete through the new state without waiting for init() to finish.
+            const lateJoiner = createSpaceUser("user_5");
+            await manager.handleUserAdded(lateJoiner);
+            expect(newState.mocks.handleUserAdded).toHaveBeenCalledWith(lateJoiner);
+            expect(oldState.mocks.handleUserAdded).not.toHaveBeenCalled();
+
+            finishInit();
+            await flipperJoin;
+            expect(newState.mocks.handleUserAdded).toHaveBeenCalledTimes(1);
         });
 
         it("should not transition when immediate transition returns null", async () => {
