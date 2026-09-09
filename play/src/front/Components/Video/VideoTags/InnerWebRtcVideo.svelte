@@ -117,6 +117,9 @@
     });
 
     onDestroy(() => {
+        // The tile is gone: scrolled out of view (VideoBoxOptimizer), tab hidden without Picture-in-Picture
+        // (CenteredVideo), layout change... Tell the sender to stop encoding for us.
+        setDimensions(0, 0);
         if (noVideoOutputDetector) {
             noVideoOutputDetector.destroy();
             noVideoOutputDetector = undefined;

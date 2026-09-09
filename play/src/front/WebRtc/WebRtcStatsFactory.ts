@@ -1,7 +1,8 @@
-import type { LocalVideoTrack, RemoteTrack } from "livekit-client";
+import { Track, type LocalVideoTrack, type RemoteTrack } from "livekit-client";
 import { derived, readable, type Readable } from "svelte/store";
 import type { WebRtcQualityLimitationReason, WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { RemotePeer } from "./RemotePeer";
+import { FpsVariabilityTracker } from "./FpsVariabilityTracker";
 
 const WEBRTC_STATS_DISPLAY_INTERVAL_MS = 1_000;
 
@@ -35,12 +36,17 @@ export function createPeerWebRtcStats(remotePeer: RemotePeer): PeerWebRtcStats {
             source: "P2P",
             getTrackId: () => remotePeer.remoteStream?.getVideoTracks()[0]?.id,
             includeRelayDetails: true,
+            getExpectedFps: () => remotePeer.expectedFps,
+            measureFpsVariability: remotePeer.videoType === "video",
         }),
         sender: createSenderStatsStore(reportStore, "P2P"),
     };
 }
 
-export function createLivekitWebRtcStats(track: RemoteTrack | undefined): Readable<WebRtcStats | undefined> {
+export function createLivekitWebRtcStats(
+    track: RemoteTrack | undefined,
+    videoType: "video" | "screenSharing",
+): Readable<WebRtcStats | undefined> {
     const reportStore = createStatsReportStore(
         () => {
             if (!track) {
@@ -62,6 +68,9 @@ export function createLivekitWebRtcStats(track: RemoteTrack | undefined): Readab
             return trackWithMedia.mediaStreamTrack?.id;
         },
         includeRelayDetails: false,
+        // The SFU pauses the track when we do not display it (adaptiveStream); the target frame rate is unknown
+        getExpectedFps: () => (track?.streamState === Track.StreamState.Paused ? 0 : undefined),
+        measureFpsVariability: videoType === "video",
     });
 }
 
@@ -112,6 +121,11 @@ type ReceiverStatsOptions = {
     source: string;
     getTrackId?: () => string | undefined;
     includeRelayDetails?: boolean;
+    // Frame rate the sender targets for us right now, 0 when it intentionally sends nothing, undefined if unknown
+    getExpectedFps?: () => number | undefined;
+    // False for screen shares: their frame rate follows the content (a still screen sends about one frame per
+    // second, whatever the codec), so its variability says nothing about the connection.
+    measureFpsVariability: boolean;
 };
 
 function createReceiverStatsStore(
@@ -121,10 +135,7 @@ function createReceiverStatsStore(
     let bytesReceivedPrev = 0;
     let framesDecodedPrev = 0;
     let timestampPrev = 0;
-    let lastFrameWidth: number | undefined;
-    let lastFrameHeight: number | undefined;
-    const fpsSamples: number[] = [];
-    let fpsStdDev: number | undefined;
+    const fpsVariability = new FpsVariabilityTracker();
 
     return derived<Readable<RTCStatsReport | undefined>, WebRtcStats | undefined>(
         reportStore,
@@ -152,33 +163,17 @@ function createReceiverStatsStore(
             if (!receiverStats) {
                 return;
             }
-            if (
-                lastFrameWidth !== undefined &&
-                lastFrameHeight !== undefined &&
-                (receiverStats.frameWidth !== lastFrameWidth || receiverStats.frameHeight !== lastFrameHeight)
-            ) {
-                fpsSamples.length = 0;
-                fpsStdDev = undefined;
-            }
-            if (Number.isFinite(receiverStats.fps)) {
-                fpsSamples.push(receiverStats.fps);
-                if (fpsSamples.length > 8) {
-                    fpsSamples.shift();
-                }
-                if (fpsSamples.length === 8) {
-                    const mean = fpsSamples.reduce((sum, value) => sum + value, 0) / fpsSamples.length;
-                    const variance =
-                        fpsSamples.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / (fpsSamples.length - 1);
-                    fpsStdDev = Math.sqrt(variance);
-                } else {
-                    fpsStdDev = undefined;
-                }
-            } else {
-                fpsStdDev = undefined;
-            }
-            receiverStats.fpsStdDev = fpsStdDev;
-            lastFrameWidth = receiverStats.frameWidth;
-            lastFrameHeight = receiverStats.frameHeight;
+            const expectedFps = options.getExpectedFps?.();
+            receiverStats.expectedFps = expectedFps;
+            receiverStats.fpsStdDev = options.measureFpsVariability
+                ? fpsVariability.push(
+                      receiverStats.fps,
+                      expectedFps,
+                      receiverStats.frameWidth,
+                      receiverStats.frameHeight,
+                      Date.now(),
+                  )
+                : undefined;
             set(receiverStats);
         },
         undefined,
