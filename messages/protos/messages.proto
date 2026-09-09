@@ -141,22 +141,33 @@ message WebRtcSignal {
 }
 
 enum VideoQualityStreamCategory {
-  VIDEO_QUALITY_STREAM_CATEGORY_UNSPECIFIED = 0;
-  VIDEO_QUALITY_STREAM_CATEGORY_VIDEO = 1;
-  VIDEO_QUALITY_STREAM_CATEGORY_SCREEN_SHARING = 2;
+  VIDEO_QUALITY_STREAM_CATEGORY_VIDEO = 0;
+  VIDEO_QUALITY_STREAM_CATEGORY_SCREEN_SHARING = 1;
 }
 
 enum VideoQualityTransportType {
-  VIDEO_QUALITY_TRANSPORT_TYPE_UNSPECIFIED = 0;
-  VIDEO_QUALITY_TRANSPORT_TYPE_P2P = 1;
-  VIDEO_QUALITY_TRANSPORT_TYPE_LIVEKIT = 2;
+  VIDEO_QUALITY_TRANSPORT_TYPE_P2P = 0;
+  VIDEO_QUALITY_TRANSPORT_TYPE_LIVEKIT = 1;
 }
 
 enum VideoQualityRelayProtocol {
-  VIDEO_QUALITY_RELAY_PROTOCOL_UNSPECIFIED = 0;
-  VIDEO_QUALITY_RELAY_PROTOCOL_UDP = 1;
-  VIDEO_QUALITY_RELAY_PROTOCOL_TCP = 2;
-  VIDEO_QUALITY_RELAY_PROTOCOL_TLS = 3;
+  VIDEO_QUALITY_RELAY_PROTOCOL_UDP = 0;
+  VIDEO_QUALITY_RELAY_PROTOCOL_TCP = 1;
+  VIDEO_QUALITY_RELAY_PROTOCOL_TLS = 2;
+}
+
+// Direction of a video stream from the reporter's point of view.
+enum VideoQualityStreamDirection {
+  VIDEO_QUALITY_STREAM_DIRECTION_INBOUND = 0;
+  VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND = 1;
+}
+
+// Why the browser's encoder is not sending at full quality (RTCOutboundRtpStreamStats.qualityLimitationReason).
+enum VideoQualityLimitationReason {
+  VIDEO_QUALITY_LIMITATION_REASON_NONE = 0;
+  VIDEO_QUALITY_LIMITATION_REASON_CPU = 1;
+  VIDEO_QUALITY_LIMITATION_REASON_BANDWIDTH = 2;
+  VIDEO_QUALITY_LIMITATION_REASON_OTHER = 3;
 }
 
 message VideoQualitySampleMessage {
@@ -180,6 +191,11 @@ message VideoQualitySampleMessage {
   uint32 frameWidth = 18;
   uint32 frameHeight = 19;
   optional string mimeType = 20;
+  VideoQualityStreamDirection direction = 21;
+  // Outbound streams only.
+  optional VideoQualityLimitationReason qualityLimitationReason = 22;
+  // Outbound streams only: encoder implementation reported by the browser (e.g. "libaom", "libvpx", "ExternalEncoder").
+  optional string encoderImplementation = 23;
 }
 
 message VideoQualityReportMessage {

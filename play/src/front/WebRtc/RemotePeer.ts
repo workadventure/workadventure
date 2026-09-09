@@ -17,14 +17,15 @@ import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
-import type { WebRtcStats } from "../Components/Video/WebRtcStats";
+import type { WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { Streamable, StreamCategory, WebRtcStreamable } from "../Space/Streamable";
 import { createMediaStreamTrackPresenceStore } from "../Space/MediaStreamTrackPresenceStore";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
-import { subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
-import { createWebRtcStats } from "./WebRtcStatsFactory";
+import { subscribeToOutboundVideoQualityAnalytics, subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
+import { createPeerWebRtcStats } from "./WebRtcStatsFactory";
+import { registerLocalEncoderStats } from "./LocalEncoderStats";
 import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
@@ -67,6 +68,10 @@ export class RemotePeer extends Peer implements Streamable {
     public readonly volume: Writable<number>;
     public readonly videoType: StreamCategory;
     public readonly webrtcStats: Readable<WebRtcStats | undefined>;
+    // Health of our own encoder on this connection (what we send to the peer)
+    public readonly senderWebrtcStats: Readable<WebRtcSenderStats | undefined>;
+    private senderAnalyticsUnsubscribe: Unsubscriber | undefined;
+    private unregisterLocalEncoderStats: Unsubscriber | undefined;
     private analyticsStatsUnsubscribe: Unsubscriber | undefined;
     private analyticsRemoteStreamUnsubscribe: (() => void) | undefined;
     private receiverMaxBitrateBps: number | undefined;
@@ -491,7 +496,25 @@ export class RemotePeer extends Peer implements Streamable {
             this.showVoiceIndicatorStore.forward(showVoiceIndicator);
         }
 
-        this.webrtcStats = createWebRtcStats(this);
+        const stats = createPeerWebRtcStats(this);
+        this.webrtcStats = stats.receiver;
+        this.senderWebrtcStats = stats.sender;
+        // Shown in the local camera / screen share feedback tile
+        this.unregisterLocalEncoderStats = registerLocalEncoderStats(this.type, this.senderWebrtcStats);
+        // Each P2P connection has its own encoder: report it per peer.
+        this.senderAnalyticsUnsubscribe = subscribeToOutboundVideoQualityAnalytics(
+            this.senderWebrtcStats,
+            {
+                streamId: `${this._connectionId}:${this._spaceUserId}:${this.type}:outbound`,
+                streamCategory: this.type,
+                transportType: "P2P",
+                remoteSpaceUserId: this._spaceUserId,
+                remoteUserUuid: this.space.getSpaceUserBySpaceUserId(this._spaceUserId)?.uuid,
+                spaceName: this.space.getName(),
+                connectionId: this._connectionId,
+            },
+            (message) => this.space.emitVideoQualityReport(message),
+        );
     }
 
     private sendBlockMessage(blocking: boolean) {
@@ -657,6 +680,10 @@ export class RemotePeer extends Peer implements Streamable {
             }
 
             this._connected = false;
+            this.senderAnalyticsUnsubscribe?.();
+            this.senderAnalyticsUnsubscribe = undefined;
+            this.unregisterLocalEncoderStats?.();
+            this.unregisterLocalEncoderStats = undefined;
             if (this.closing) {
                 return;
             }

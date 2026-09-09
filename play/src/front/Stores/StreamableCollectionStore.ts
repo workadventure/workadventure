@@ -6,6 +6,7 @@ import LL from "../../i18n/i18n-svelte";
 import { VideoBox } from "../Space/VideoBox";
 import type { Streamable } from "../Space/Streamable";
 import { touchScreenManager } from "../Touch/TouchScreenManager";
+import { localEncoderStatsStore } from "../WebRtc/LocalEncoderStats";
 import { screenSharingLocalVideoBox } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
@@ -85,6 +86,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
         volume: writable(1),
         videoType: "video",
         webrtcStats: undefined,
+        senderStats: localEncoderStatsStore.video,
     };
     const videoBox = VideoBox.fromLocalStreamable(streamable, -2);
     set(videoBox);
