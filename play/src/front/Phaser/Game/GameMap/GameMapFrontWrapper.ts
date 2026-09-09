@@ -20,7 +20,10 @@ import type {
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import { Deferred } from "@workadventure/shared-utils";
+import { get } from "svelte/store";
 import { PathTileType } from "../../../Utils/PathfindingManager";
+import { getAreaMapEditors, hasMeetingProperty } from "../../../Rules/MeetingRules";
+import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 import type { Entity } from "../../ECS/Entity";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { ITiledPlace } from "../GameMapPropertiesListener";
@@ -642,7 +645,7 @@ export class GameMapFrontWrapper {
     }
 
     /**
-     * Marks walkable tiles under meeting (Jitsi/Livekit) and personal desk areas with higher pathfinding cost.
+     * Marks walkable tiles under meeting and personal desk areas with higher pathfinding cost.
      * Meeting overlaps take precedence over personal desk on the same tile.
      */
     private applyPathfindingAreaWeights(grid: number[][], mapWidth: number, mapHeight: number): void {
@@ -656,10 +659,9 @@ export class GameMapFrontWrapper {
 
         const personalAreas: AreaData[] = [];
         const meetingAreas: AreaData[] = [];
+        const areaMapEditors = getAreaMapEditors(get(extensionModuleStore));
         for (const area of gameMapAreas.getAreas().values()) {
-            const hasMeeting = area.properties.some(
-                (p) => p.type === "jitsiRoomProperty" || p.type === "livekitRoomProperty",
-            );
+            const hasMeeting = hasMeetingProperty(area.properties, areaMapEditors);
             const hasPersonalDesk = area.properties.some((p) => p.type === "personalAreaPropertyData");
             if (hasPersonalDesk) {
                 personalAreas.push(area);
