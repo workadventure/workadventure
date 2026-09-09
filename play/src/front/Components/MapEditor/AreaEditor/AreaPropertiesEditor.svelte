@@ -44,6 +44,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import MaxUsersInAreaPropertyEditor from "../PropertyEditor/MaxUsersInAreaPropertyEditor.svelte";
     import LockableAreaPropertyEditor from "../PropertyEditor/LockableAreaPropertyEditor.svelte";
+    import { hasMeetingProperty } from "./meetingProperties";
 
     let properties: AreaDataProperties = $state([]);
     let areaName = $state("");
@@ -559,6 +560,8 @@
         },
         [],
     );
+
+    let hasMeeting = $derived(hasMeetingProperty(properties, extensionModulesAreaMapEditor));
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -594,7 +597,7 @@
                     onclick={() => {
                         onAddProperty("livekitRoomProperty");
                     }}
-                    disabled={hasSpeakerMegaphoneProperty || hasListenerMegaphoneProperty}
+                    disabled={hasMeeting}
                 />
             {/if}
             {#if FEATURE_FLAG_BROADCAST_AREAS}
@@ -604,7 +607,7 @@
                         onclick={() => {
                             onAddProperty("speakerMegaphone");
                         }}
-                        disabled={hasListenerMegaphoneProperty || hasLivekitRoomProperty}
+                        disabled={hasMeeting}
                     />
                 {/if}
                 {#if !hasListenerMegaphoneProperty}
@@ -613,7 +616,7 @@
                         onclick={() => {
                             onAddProperty("listenerMegaphone");
                         }}
-                        disabled={hasSpeakerMegaphoneProperty || hasLivekitRoomProperty}
+                        disabled={hasMeeting}
                     />
                 {/if}
             {/if}
@@ -712,7 +715,7 @@
             <div class="properties-buttons flex flex-row flex-wrap mt-2">
                 {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                     {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, areaProperty] (`extensionModuleAreaMapEditor-${subtype}`)}
-                        {#if areaProperty.shouldDisplayButton(properties)}
+                        {#if areaProperty.shouldDisplayButton(properties) && !(areaProperty.isMeeting && hasMeeting)}
                             <AddPropertyButtonWrapper
                                 property="extensionModule"
                                 subProperty={subtype}
@@ -729,7 +732,7 @@
                         onclick={() => {
                             onAddProperty("jitsiRoomProperty");
                         }}
-                        disabled={hasLivekitRoomProperty || hasSpeakerMegaphoneProperty || hasListenerMegaphoneProperty}
+                        disabled={hasMeeting}
                     />
                 {/if}
             </div>
