@@ -1,6 +1,5 @@
 import path from "path";
 import type {
-    AdminApiData,
     CompanionDetail,
     ErrorApiData,
     IceServer,
@@ -338,14 +337,6 @@ class LocalAdmin implements AdminInterface {
                 enableTutorial: ENABLE_TUTORIAL,
             },
         });
-    }
-
-    async fetchMemberDataByToken(
-        organizationMemberToken: string,
-        playUri: string | null,
-        locale?: string,
-    ): Promise<AdminApiData> {
-        return Promise.reject(new Error("No admin backoffice set!"));
     }
 
     fetchWellKnownChallenge(host: string): Promise<string> {
