@@ -161,10 +161,8 @@ enum VideoQualityRelayProtocol {
 
 // Direction of a video stream from the reporter's point of view.
 enum VideoQualityStreamDirection {
-  // Unspecified means inbound: samples sent by clients that predate the outbound (encoder) samples.
-  VIDEO_QUALITY_STREAM_DIRECTION_UNSPECIFIED = 0;
-  VIDEO_QUALITY_STREAM_DIRECTION_INBOUND = 1;
-  VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND = 2;
+  VIDEO_QUALITY_STREAM_DIRECTION_INBOUND = 0;
+  VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND = 1;
 }
 
 // Why the browser's encoder is not sending at full quality (RTCOutboundRtpStreamStats.qualityLimitationReason).

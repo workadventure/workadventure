@@ -451,7 +451,6 @@ function toRelayProtocol(
 }
 
 function toDirection(direction: VideoQualityStreamDirection | undefined): VideoQualityAnalyticsStreamDirection {
-    // Unspecified: samples from clients that predate outbound samples are inbound.
     return direction === VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND ? "outbound" : "inbound";
 }
 
