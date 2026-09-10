@@ -206,5 +206,4 @@ export const openChatLinkAsCoWebsite = async (rawUrl: string): Promise<void> => 
     }
 
     openCoWebSiteWithoutSource({ url, closable: true });
-    analyticsClient.openedWebsite(new URL(url));
 };
