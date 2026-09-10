@@ -2,22 +2,24 @@ import { isAndroid, isIOS } from "./DeviceUtils";
 
 export type VideoQualitySetting = "low" | "recommended" | "high";
 
-export type VideoCodec = "av1" | "vp9" | "vp8";
+export type VideoCodec = "av1" | "vp9" | "h264" | "vp8";
 
 /**
  * Codecs we are willing to encode with, best first. The transport keeps the first one the browser supports.
  *
  * AV1 and VP9 are software encoders on most machines. A phone cannot afford them, and neither can a weak laptop:
- * the "low" quality setting is the user telling us so.
+ * the "low" quality setting is the user telling us so. H.264 is the one codec with a hardware encoder nearly
+ * everywhere (VideoToolbox, MediaFoundation, MediaCodec), so it is the fallback. VP8 is not listed: every browser
+ * negotiates it anyway, and it is only ever software.
  */
 export function preferredVideoCodecs(category: "video" | "screenSharing", quality: VideoQualitySetting): VideoCodec[] {
     if (isAndroid() || isIOS()) {
-        return ["vp8"];
+        return ["h264"];
     }
     if (category === "screenSharing" && quality !== "low") {
-        return ["av1", "vp9", "vp8"];
+        return ["av1", "vp9", "h264"];
     }
-    return ["vp9", "vp8"];
+    return ["vp9", "h264"];
 }
 
 /**
@@ -25,11 +27,12 @@ export function preferredVideoCodecs(category: "video" | "screenSharing", qualit
  */
 export function videoCodecFromMimeType(mimeType: string | undefined): VideoCodec | undefined {
     const codec = mimeType?.toLowerCase().split("/").pop();
-    return codec === "av1" || codec === "vp9" || codec === "vp8" ? codec : undefined;
+    return codec === "av1" || codec === "vp9" || codec === "h264" || codec === "vp8" ? codec : undefined;
 }
 
-// Bitrate needed for the same visual quality, relative to AV1. Each codec generation saves roughly 30 %.
-const BITRATE_FACTOR: Record<VideoCodec, number> = { av1: 1, vp9: 1.4, vp8: 2 };
+// Bitrate needed for the same visual quality, relative to AV1. Each codec generation saves roughly 30 %; WebRTC
+// negotiates constrained baseline H.264, which is VP8-class.
+const BITRATE_FACTOR: Record<VideoCodec, number> = { av1: 1, vp9: 1.4, h264: 2, vp8: 2 };
 
 // Frames above this size are budgeted as if they were this size
 const MAX_PIXELS = 1920 * 1080;
