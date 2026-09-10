@@ -18,6 +18,7 @@ import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcStats";
+import { LOCAL_SCREEN_SHARING_STREAM_ID } from "../Space/Streamable";
 import type { Streamable, StreamCategory, WebRtcStreamable } from "../Space/Streamable";
 import { createMediaStreamTrackPresenceStore } from "../Space/MediaStreamTrackPresenceStore";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -298,7 +299,7 @@ export class RemotePeer extends Peer implements Streamable {
         this.usePresentationMode = !(type === "video");
         //this.userUuid = spaceUser.uuid;
         this.uniqueId = isLocalPeer
-            ? "localScreenSharingStream"
+            ? LOCAL_SCREEN_SHARING_STREAM_ID
             : type === "video"
               ? "video_" + _spaceUserId
               : "screensharing_" + _spaceUserId;

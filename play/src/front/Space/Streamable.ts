@@ -41,6 +41,9 @@ export interface ComponentStreamable {
 
 export type StreamCategory = "video" | "screenSharing" | "scripting" | "component";
 
+// Our own screen capture: local preview + the outgoing peers that send it.
+export const LOCAL_SCREEN_SHARING_STREAM_ID = "localScreenSharingStream";
+
 export interface Streamable {
     readonly uniqueId: string;
     readonly media: LivekitStreamable | WebRtcStreamable | ScriptingVideoStreamable | ComponentStreamable;
