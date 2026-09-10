@@ -2,11 +2,11 @@ import type { Translation } from "../i18n-types";
 import type { DeepPartial } from "../DeepPartial";
 
 const trigger: DeepPartial<Translation["trigger"]> = {
-    cowebsite: `[SPATIE] om de website te openen 👀`,
-    jitsiRoom: "[SPATIE] om Jitsi binnen te gaan 👀",
-    newTab: "[SPATIE] om een nieuw tabblad te openen 👀",
-    object: "[SPATIE] om ermee te interageren 👀",
-    spaceKeyboard: "[SPATIE]",
+    cowebsite: `[X] om de website te openen 👀`,
+    jitsiRoom: "[X] om Jitsi binnen te gaan 👀",
+    newTab: "[X] om een nieuw tabblad te openen 👀",
+    object: "[X] om ermee te interageren 👀",
+    interactKeyboard: "[X]",
     escapeKeyboard: "[ESC]",
     mobile: {
         cowebsite: "👆 om de website te openen 👀",

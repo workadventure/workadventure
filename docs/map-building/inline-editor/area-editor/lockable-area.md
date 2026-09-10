@@ -41,7 +41,7 @@ If the user does not have the required tags to lock or unlock the area, the lock
 When a user outside the area tries to enter a locked area, their movement is blocked at the area boundary. A message is displayed: **"This area is locked. You cannot enter."**
 
 :::info
-Users with the `admin` tag can force-unlock a locked area. When an admin tries to enter a locked area, a prompt is displayed allowing them to press the space key to unlock the area.
+Users with the `admin` tag can force-unlock a locked area. When an admin tries to enter a locked area, a prompt is displayed allowing them to press the interact key (`X`) to unlock the area.
 This is useful for cases where a user locks an area and forgets to lock the area before walking away from their computer.
 :::
 

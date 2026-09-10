@@ -13,11 +13,11 @@
     let { message, click, userInputManager }: Props = $props();
 
     onMount(() => {
-        userInputManager.addSpaceEventListener(click);
+        userInputManager.addInteractEventListener(click);
     });
 
     onDestroy(() => {
-        userInputManager.removeSpaceEventListener(click);
+        userInputManager.removeInteractEventListener(click);
     });
 </script>
 

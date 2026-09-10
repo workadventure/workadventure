@@ -7,7 +7,7 @@ const audio: DeepPartial<Translation["audio"]> = {
         reduce: "خفض مستوى الصوت أثناء المحادثة", // Reduce the volume of the audio player when speaking
         allow: "تفعيل الصوت", // Allow audio
         error: "تعذر تحميل الصوت", // Could not load sound
-        notAllowed: "▶️ التشغيل التلقائي غير مسموح. اضغط [المسافة] أو انقر هنا للتشغيل!",
+        notAllowed: "▶️ التشغيل التلقائي غير مسموح. اضغط [X] أو انقر هنا للتشغيل!",
     },
     message: "رسالة صوتية", // Voice message
     disable: "إيقاف الميكروفون", // Disable microphone

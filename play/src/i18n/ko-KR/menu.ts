@@ -178,6 +178,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         moveRight: "오른쪽으로 이동",
         speedUp: "달리기",
         interact: "상호작용",
+        pushToTalk: "회의에서 임시로 음소거를 해제하려면 길게 누르기",
         follow: "따라가기",
         openChat: "채팅 열기",
         openUserList: "사용자 목록 열기",

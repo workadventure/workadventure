@@ -179,7 +179,7 @@ export class Area extends Rectangle {
                                 message = get(LL).area.blocked.unlockWithTrigger({
                                     trigger: touchScreenManager.detectPrimaryTouchDevice()
                                         ? "👆"
-                                        : get(LL).trigger.spaceKeyboard(),
+                                        : get(LL).trigger.interactKeyboard(),
                                 });
 
                                 //message = message.replace("[SPACE]", svg.outerHTML);

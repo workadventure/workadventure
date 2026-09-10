@@ -177,6 +177,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         moveRight: "向右移动",
         speedUp: "跑步",
         interact: "交互",
+        pushToTalk: "在会议中按住可临时取消静音",
         follow: "跟随",
         openChat: "打开聊天",
         openUserList: "打开用户列表",

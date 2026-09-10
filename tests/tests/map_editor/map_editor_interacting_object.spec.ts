@@ -126,10 +126,10 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         await EntityEditor.moveAndRightClick(page, 1 * 32, 7.5 * 32 - 30);
 
         // Wait for the text to be visible
-        await expect(page.getByText("SPACE to interact with it 👀")).toBeVisible({ timeout: 30000 });
+        await expect(page.getByText("X to interact with it 👀")).toBeVisible({ timeout: 30000 });
 
-        // Press space to interact with the entity
-        await page.keyboard.press("Space");
+        // Press the interact key to interact with the entity
+        await page.keyboard.press("x");
 
         // Wait for iframe to appear (you might need to adjust the selector based on the actual iframe)
         //eslint-disable-next-line playwright/no-wait-for-selector

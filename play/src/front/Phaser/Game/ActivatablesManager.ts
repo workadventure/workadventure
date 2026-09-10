@@ -11,7 +11,7 @@ import { PHASER_COLOR_DESIGN_SYSTEM_SECONDARY } from "../../Utils/DesignSystemPh
 import type { ActivatableInterface } from "./ActivatableInterface";
 
 export class ActivatablesManager {
-    // The item that can be selected by pressing the space key.
+    // The item that can be selected by pressing the interact key (INTERACT_KEY).
     private selectedActivatableObjectByDistance?: ActivatableInterface;
     private selectedActivatableObjectByPointer?: ActivatableInterface;
     private activatableObjectsDistances: Map<ActivatableInterface, number> = new Map<ActivatableInterface, number>();

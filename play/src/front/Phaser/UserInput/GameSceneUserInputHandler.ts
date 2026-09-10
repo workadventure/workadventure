@@ -18,7 +18,15 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import type { Shortcut } from "./UserInputManager";
+import { availabilityStatusStore, pushToTalkAvailabilityStore } from "../../Stores/MediaStore";
+import { inExternalServiceStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
+import {
+    createTemporaryUnmuteReleaseController,
+    isUnavailableForMicrophone,
+    temporaryMicrophoneState,
+} from "../../Stores/MicrophoneSessionStore";
+import { isTypingTarget } from "../../Utils/CustomTypeGuards";
+import { INTERACT_KEY, type Shortcut } from "./UserInputManager";
 
 import Pointer = Phaser.Input.Pointer;
 import GameObject = Phaser.GameObjects.GameObject;
@@ -26,10 +34,15 @@ import GameObject = Phaser.GameObjects.GameObject;
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
     private controlKeyisPressed: boolean = false;
+    private readonly temporaryUnmuteReleaseController: { destroy: () => void };
     public shortcuts: Shortcut[] = [];
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
+        this.temporaryUnmuteReleaseController = createTemporaryUnmuteReleaseController({
+            pushToTalkAvailabilityStore,
+            stopTemporaryUnmute: () => this.stopPushToTalk(),
+        });
 
         this.initShortcuts();
     }
@@ -51,6 +64,14 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             {
                 key: "R",
                 description: get(LL).menu.shortcuts.rotatePlayer(),
+            },
+            {
+                key: INTERACT_KEY,
+                description: get(LL).menu.shortcuts.interact(),
+            },
+            {
+                key: "Space",
+                description: get(LL).menu.shortcuts.pushToTalk(),
             },
             {
                 key: "1",
@@ -92,11 +113,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 key: "D",
                 description: get(LL).menu.shortcuts.walkMyDesk(),
                 ctrlKey: true,
-            },
-            // F
-            {
-                key: "F",
-                description: get(LL).menu.shortcuts.follow(),
             },
         ];
     }
@@ -216,6 +232,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
 
         switch (event.code) {
+            case "Space": {
+                if (this.tryStartPushToTalk(event)) {
+                    return event;
+                }
+                break;
+            }
             case "KeyE": {
                 if (get(mapManagerActivated) == false) return event;
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
@@ -235,11 +257,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 // Handle Cmd (Mac) / Ctrl (Windows & Linux) + D for "walk my desk"
                 if (event.metaKey || event.ctrlKey) {
                     // Prevent the shortcut from being triggered when typing in input fields
-                    if (
-                        event.target instanceof HTMLInputElement ||
-                        event.target instanceof HTMLTextAreaElement ||
-                        event.target instanceof HTMLSelectElement
-                    ) {
+                    if (isTypingTarget(event.target)) {
                         return event;
                     }
                     event.preventDefault();
@@ -289,6 +307,28 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         return event;
     }
 
+    private tryStartPushToTalk(event: KeyboardEvent): boolean {
+        if (
+            event.repeat ||
+            isTypingTarget(event.target) ||
+            !get(pushToTalkAvailabilityStore) ||
+            !get(myMicrophoneStore) ||
+            get(inExternalServiceStore) ||
+            isUnavailableForMicrophone(get(availabilityStatusStore))
+        ) {
+            return false;
+        }
+
+        temporaryMicrophoneState.set(true);
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+    }
+
+    private stopPushToTalk(): void {
+        temporaryMicrophoneState.set(false);
+    }
+
     private openSayPopup(): void {
         if (!this.gameScene.room.isSayEnabled) {
             return;
@@ -317,8 +357,17 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 }
                 break;
             }
-            // SPACE
+            // SPACE: push-to-talk release. Idempotent, so a keydown we ignored is harmless.
             case " ": {
+                this.stopPushToTalk();
+                break;
+            }
+            // The contextual action key. A letter, so it needs guards the old Space binding did not.
+            case INTERACT_KEY.toLowerCase():
+            case INTERACT_KEY: {
+                if (isTypingTarget(event.target) || event.ctrlKey || event.metaKey) {
+                    break;
+                }
                 this.handleActivableEntity();
                 break;
             }
@@ -345,15 +394,20 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             activatable.activate();
             activatable.destroyText("object");
         }
-        this.gameScene.CurrentPlayer?.handlePressSpacePlayerTextCallback();
+        this.gameScene.CurrentPlayer?.firePlayerTextCallbacks();
     }
 
-    public addSpaceEventListener(callback: () => void): void {
-        this.gameScene.input.keyboard?.addListener("keyup-SPACE", callback);
+    public addInteractEventListener(callback: () => void): void {
+        this.gameScene.input.keyboard?.addListener(`keyup-${INTERACT_KEY}`, callback);
         this.gameScene.getActivatablesManager().disableSelectingByDistance();
     }
-    public removeSpaceEventListener(callback: () => void): void {
-        this.gameScene.input.keyboard?.removeListener("keyup-SPACE", callback);
+    public removeInteractEventListener(callback: () => void): void {
+        this.gameScene.input.keyboard?.removeListener(`keyup-${INTERACT_KEY}`, callback);
         this.gameScene.getActivatablesManager().enableSelectingByDistance();
+    }
+
+    public destroy(): void {
+        this.temporaryUnmuteReleaseController.destroy();
+        this.stopPushToTalk();
     }
 }

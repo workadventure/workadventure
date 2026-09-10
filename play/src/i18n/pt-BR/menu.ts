@@ -181,6 +181,7 @@ const menu: BaseTranslation = {
         moveRight: "Mover para Direita",
         speedUp: "Correr",
         interact: "Interagir",
+        pushToTalk: "Manter pressionado para ativar temporariamente o microfone em uma reunião",
         follow: "Seguir",
         openChat: "Abrir Chat",
         openUserList: "Abrir Lista de Usuários",

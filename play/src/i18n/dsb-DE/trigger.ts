@@ -2,11 +2,11 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const trigger: DeepPartial<Translation["trigger"]> = {
-    cowebsite: "Tłoc PROZNU TASTU abo pótusni how, aby se wótcynił webbok",
-    newTab: "Tłoc PROZNU TASTU abo pótusni how, aby webbok se wótcynił we nowem tabje",
-    jitsiRoom: "Tłoc PROZNU TASTU abo pótusni how, aby stupił do Jitsi-Meet-śpy",
-    object: "Tłoc PROZNU TASTU abo pótusni how, aby z nim interagował 👀",
-    spaceKeyboard: "[PROZNA TASTA]",
+    cowebsite: "Tłoc [X] abo pótusni how, aby se wótcynił webbok",
+    newTab: "Tłoc [X] abo pótusni how, aby webbok se wótcynił we nowem tabje",
+    jitsiRoom: "Tłoc [X] abo pótusni how, aby stupił do Jitsi-Meet-śpy",
+    object: "Tłoc [X] abo pótusni how, aby z nim interagował 👀",
+    interactKeyboard: "[X]",
     escapeKeyboard: "[ESC]",
     mobile: {
         cowebsite: "👆 aby se wótcynił webbok 👀",

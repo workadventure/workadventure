@@ -183,6 +183,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         moveRight: "Aller à droite",
         speedUp: "Courir",
         interact: "Interagir",
+        pushToTalk: "Maintenir pour parler temporairement en réunion",
         openChat: "Ouvrir le chat",
         openUserList: "Ouvrir la liste des utilisateurs",
         toggleMapEditor: "Afficher/Cacher l'éditeur de carte",

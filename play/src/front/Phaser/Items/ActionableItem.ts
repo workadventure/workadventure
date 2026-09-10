@@ -1,5 +1,5 @@
 /**
- * An actionable item represents an in-game object that can be activated using the space-bar.
+ * An actionable item represents an in-game object that can be activated using the interact key (INTERACT_KEY).
  * It has coordinates and an "activation radius"
  */
 import * as Phaser from "phaser";

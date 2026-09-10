@@ -51,6 +51,13 @@ import { NoiseSuppressionController } from "./NoiseSuppressionController";
 import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
+import {
+    effectiveMicrophoneState,
+    forceMuteMicrophone,
+    isUnavailableForMicrophone,
+    requestedMicrophoneState,
+    temporaryMicrophoneState,
+} from "./MicrophoneSessionStore";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
@@ -88,25 +95,6 @@ function createRequestedCameraState() {
 }
 
 /**
- * A store that contains the microphone state requested by the user (on or off).
- */
-function createRequestedMicrophoneState() {
-    const { subscribe, set } = writable(localUserStore.getRequestedMicrophoneState());
-
-    return {
-        subscribe,
-        enableMicrophone: () => {
-            set(true);
-            localUserStore.setRequestedMicrophoneState(true);
-        },
-        disableMicrophone: () => {
-            set(false);
-            localUserStore.setRequestedMicrophoneState(false);
-        },
-    };
-}
-
-/**
  * A store that contains whether the EnableCameraScene is shown or not.
  */
 function createEnableCameraSceneVisibilityStore() {
@@ -120,7 +108,7 @@ function createEnableCameraSceneVisibilityStore() {
 }
 
 export const requestedCameraState = createRequestedCameraState();
-export const requestedMicrophoneState = createRequestedMicrophoneState();
+export { effectiveMicrophoneState, requestedMicrophoneState, temporaryMicrophoneState };
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**
@@ -248,6 +236,16 @@ export const isSpeakerStore = writable(false);
 export const inLivekitStore = writable(false);
 export const isListenerStore = writable(false);
 export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
+
+/**
+ * Push-to-talk is only offered when the mic is muted (otherwise the user is already talking) and
+ * the user is somewhere their voice would be heard: a conversation bubble, LiveKit, or as speaker.
+ */
+export const pushToTalkAvailabilityStore = derived(
+    [requestedMicrophoneState, currentPlayerGroupIdStore, inLivekitStore, isSpeakerStore],
+    ([$requestedMicrophoneState, $currentPlayerGroupIdStore, $inLivekitStore, $isSpeakerStore]) =>
+        !$requestedMicrophoneState && ($currentPlayerGroupIdStore !== undefined || $inLivekitStore || $isSpeakerStore),
+);
 /**
  * When true, the listener has consented to share their camera with the speaker (seeAttendees feature).
  * This store is set to true when the listener accepts the camera sharing popup.
@@ -472,6 +470,7 @@ export const mediaStreamConstraintsStore = derived(
     [
         requestedCameraState,
         requestedMicrophoneState,
+        temporaryMicrophoneState,
         myCameraStore,
         myMicrophoneStore,
         inExternalServiceStore,
@@ -488,6 +487,7 @@ export const mediaStreamConstraintsStore = derived(
         [
             $requestedCameraState,
             $requestedMicrophoneState,
+            $temporaryMicrophoneState,
             $myCameraStore,
             $myMicrophoneStore,
             $inExternalServiceStore,
@@ -513,21 +513,15 @@ export const mediaStreamConstraintsStore = derived(
         // Shared conditions for disabling media
         const isInExternalService = $inExternalServiceStore === true;
         const isEnergySaving = $cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false;
-        const isUnavailableStatus =
-            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-            $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
-            $availabilityStatusStore === AvailabilityStatus.BUSY;
         const shouldDisableMicrophoneForPrivacy =
             $privacyShutdownStore === true && !localUserStore.getMicrophonePrivacySettings();
         const shouldDisableCameraForPrivacy =
             $privacyShutdownStore === true && !localUserStore.getCameraPrivacySettings();
+        const isUnavailableStatus = isUnavailableForMicrophone($availabilityStatusStore);
 
         // Audio constraints always apply
         if (
-            $requestedMicrophoneState === false ||
+            ($requestedMicrophoneState === false && $temporaryMicrophoneState === false) ||
             $myMicrophoneStore === false ||
             isInExternalService ||
             shouldDisableMicrophoneForPrivacy ||
@@ -844,7 +838,7 @@ async function runRawStreamUpdate(
                 requestedCameraState.disableWebcam();
                 cameraAccessIssueStore.set(classified);
                 if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
+                    forceMuteMicrophone();
                     microphoneAccessIssueStore.set(classified);
                 }
             } else if (!constraints.video && !constraints.audio) {
@@ -857,7 +851,7 @@ async function runRawStreamUpdate(
                 console.info("Error. Unable to get microphone and/or camera access.", newConstraints, e);
                 emitCurrentStreamOrError(setIfCurrent, e);
                 if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
+                    forceMuteMicrophone();
                     microphoneAccessIssueStore.set(classifyMediaAccessError(e));
                 }
             }
@@ -1123,8 +1117,11 @@ export const backgroundProcessedLocalVideoTrackStore = derived<
 
 /**
  * The microphone state to broadcast to the space: true only when an audio track is actually
- * being captured/published. Unlike requestedMicrophoneState, this accounts for privacy shutdown,
- * energy saving, unavailable status, external services, and getUserMedia not having resolved yet.
+ * being captured/published. Unlike requestedMicrophoneState / effectiveMicrophoneState (which are
+ * user-intent stores), this accounts for privacy shutdown, energy saving, unavailable status,
+ * external services, and getUserMedia not having resolved yet. This is what SpacePeerManager must
+ * emit so remote users see our real mic state (a push-to-talk temporary unmute produces a real
+ * audio track, so it turns this true as soon as the track exists).
  */
 export const effectiveMicrophoneStateStore = derived(
     audioProcessedLocalAudioTrackStore,
