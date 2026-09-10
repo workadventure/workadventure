@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+    chooseNegotiatedCodec,
     preferredVideoCodecs,
     selectVideoPreset,
     videoCodecFromMimeType,
@@ -89,6 +90,27 @@ describe("selectVideoPreset", () => {
         expect(selectVideoPreset(720, 1280, false, "recommended", "vp9").fps).toBe(30);
         expect(selectVideoPreset(90, 160, false, "high", "vp9").fps).toBe(30);
         expect(selectVideoPreset(360, 640, true, "low", "av1").fps).toBe(30);
+    });
+});
+
+describe("chooseNegotiatedCodec", () => {
+    const negotiated: RTCRtpCodec[] = [
+        { mimeType: "video/VP8", clockRate: 90000 },
+        { mimeType: "video/rtx", clockRate: 90000 },
+        { mimeType: "video/H264", clockRate: 90000, sdpFmtpLine: "profile-level-id=42e01f;packetization-mode=1" },
+        { mimeType: "video/H264", clockRate: 90000, sdpFmtpLine: "profile-level-id=42e01f;packetization-mode=0" },
+        { mimeType: "video/VP9", clockRate: 90000, sdpFmtpLine: "profile-id=0" },
+    ];
+
+    it("takes the first preferred codec the peer negotiated, whatever its position", () => {
+        expect(chooseNegotiatedCodec(["vp9", "h264"], negotiated)?.mimeType).toBe("video/VP9");
+        expect(chooseNegotiatedCodec(["h264"], negotiated)?.sdpFmtpLine).toContain("packetization-mode=1");
+        expect(chooseNegotiatedCodec(["av1", "vp9"], negotiated)?.mimeType).toBe("video/VP9");
+    });
+
+    it("gives up when nothing we prefer was negotiated", () => {
+        expect(chooseNegotiatedCodec(["av1"], negotiated)).toBeUndefined();
+        expect(chooseNegotiatedCodec(["h264"], [])).toBeUndefined();
     });
 });
 

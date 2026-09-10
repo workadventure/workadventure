@@ -89,11 +89,21 @@ implemented; see the "Future work" section.
   `videoCodec` at `publishTrack()`. This is explicit on purpose: LiveKit silently rewrites an unsupported codec to its
   hardcoded default of VP8, not to `publishDefaults.videoCodec`. When the primary codec is VP8, LiveKit disables the
   VP8 backup track on its own.
-- **P2P** ([`RemotePeer.ts`](../../../play/src/front/WebRtc/RemotePeer.ts)): the list is handed to
-  `@workadventure/simple-peer` as `preferredCodecs`, which calls `RTCRtpTransceiver.setCodecPreferences()` with the
-  listed codecs first, in order, and the remaining browser codecs after them. The codec actually used is negotiated per
-  connection, so the setting of the peer that initiates the connection tends to win. The encoder budget therefore
-  follows the **negotiated** codec, read from `RTCRtpSender.getParameters().codecs[0]`, not the preference.
+- **P2P** ([`RemotePeer.ts`](../../../play/src/front/WebRtc/RemotePeer.ts)), in two steps, because WebRTC
+  separates what we prefer to receive from what we send:
+    1. The list is handed to `@workadventure/simple-peer` as `preferredCodecs`, which calls
+       `RTCRtpTransceiver.setCodecPreferences()` with the listed codecs first, in order, and the remaining browser
+       codecs after them. **This only expresses what we prefer to receive.** libwebrtc picks its send codec as the
+       first codec of the *remote* description, so this list drives the *peer's* encoder, not ours. On its own it
+       produces the opposite of the intent: a phone asking for H.264 makes its desktop peer encode H.264, while the
+       phone itself encodes whatever the desktop asked for.
+    2. Our own send codec is therefore chosen explicitly at every encoding update, with the WebRTC codec selection
+       API: `chooseNegotiatedCodec()` takes the first entry of our list among the codecs negotiated on the sender
+       (`RTCRtpSender.getParameters().codecs`), and it is set as `encodings[0].codec` in `setParameters()`. No
+       renegotiation is needed. Chrome supports this since version 119; browsers that do not ignore the field and keep
+       encoding what the peer asked for. The two directions of one connection can use different codecs.
+
+  The encoder budget follows the codec we selected, or the first negotiated one where the field is not supported.
 
 ## Bitrate Budget
 
@@ -235,12 +245,13 @@ times.
 
 ### Subscriber side
 
-- Reports its display size, plus a `maxBitrate` hint: the budget of `selectVideoPreset()` for that size, its own
-  quality setting, and the codec negotiated on the connection (read from `RTCRtpReceiver.getParameters().codecs[0]`).
-- The sender applies the minimum of its own budget and the hint. Both are computed with the same curve and the same
-  codec, so the hint only bites when the viewer's quality setting is lower than the sender's.
-- Before the negotiation completes the codec is unknown and the hint is computed for VP8, the most expensive one, so it
-  never starves the sender.
+- Reports its display size, plus a `maxBitrate` hint: the budget of `selectVideoPreset()` for that size and its own
+  quality setting.
+- The sender applies the minimum of its own budget and the hint, so the hint only bites when the viewer's quality
+  setting is lower than the sender's.
+- The viewer does not know which codec the sender picked, so the hint is budgeted for the most expensive one (VP8
+  class, which H.264 shares). It therefore never starves the sender; on a VP9 sender it is 1.4× looser than the
+  viewer's setting strictly implies. Sending the quality setting instead of a bitrate would remove that approximation.
 
 ## LiveKit Implementation
 
