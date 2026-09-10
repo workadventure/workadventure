@@ -142,10 +142,13 @@ describe("chooseNegotiatedCodec", () => {
         { mimeType: "video/VP9", clockRate: 90000, sdpFmtpLine: "profile-id=0" },
     ];
 
-    it("takes the first preferred codec the peer negotiated, whatever its position", () => {
-        expect(chooseNegotiatedCodec(["vp9", "h264"], negotiated)?.mimeType).toBe("video/VP9");
-        expect(chooseNegotiatedCodec(["h264"], negotiated)?.sdpFmtpLine).toContain("packetization-mode=1");
+    it("takes the first codec in the peer's order that we accept", () => {
+        // The peer asked for H.264 before VP9: it gets H.264 even though we would rather send VP9
+        expect(chooseNegotiatedCodec(["vp9", "h264"], negotiated)?.mimeType).toBe("video/H264");
+        expect(chooseNegotiatedCodec(["vp9", "h264"], negotiated)?.sdpFmtpLine).toContain("packetization-mode=1");
         expect(chooseNegotiatedCodec(["av1", "vp9"], negotiated)?.mimeType).toBe("video/VP9");
+        // VP8 is negotiated first but we never accept it
+        expect(chooseNegotiatedCodec(["vp9"], negotiated)?.mimeType).toBe("video/VP9");
     });
 
     it("gives up when nothing we prefer was negotiated", () => {

@@ -49,17 +49,15 @@ export function videoCodecFromMimeType(mimeType: string | undefined): VideoCodec
 }
 
 /**
- * Among the codecs negotiated on a sender, the first one of our preference list. H.264 is negotiated as several
- * profile entries; any of them will do.
+ * Among the codecs negotiated on a sender, listed in the order the peer prefers to receive them, the first one we
+ * accept. The peer's order wins over ours: a phone asking for H.264 asked for a reason, and our list only says what
+ * we can afford. H.264 is negotiated as several profile entries; any of them will do.
  */
-export function chooseNegotiatedCodec(preferred: VideoCodec[], negotiated: RTCRtpCodec[]): RTCRtpCodec | undefined {
-    for (const codec of preferred) {
-        const match = negotiated.find((candidate) => videoCodecFromMimeType(candidate.mimeType) === codec);
-        if (match) {
-            return match;
-        }
-    }
-    return undefined;
+export function chooseNegotiatedCodec(accepted: VideoCodec[], negotiated: RTCRtpCodec[]): RTCRtpCodec | undefined {
+    return negotiated.find((candidate) => {
+        const codec = videoCodecFromMimeType(candidate.mimeType);
+        return codec !== undefined && accepted.includes(codec);
+    });
 }
 
 // Bitrate needed for the same visual quality, relative to AV1. Each codec generation saves roughly 30 %; WebRTC
