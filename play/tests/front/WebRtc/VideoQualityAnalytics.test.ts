@@ -76,7 +76,7 @@ describe("subscribeToOutboundVideoQualityAnalytics", () => {
 
     it("emits outbound samples carrying the encoder health", () => {
         window.capabilities = {
-            "api/analytics/video-quality-batch": "v1",
+            "api/analytics/events-batch": "v1",
         };
         const sendReport = vi.fn();
 
@@ -108,7 +108,7 @@ describe("subscribeToOutboundVideoQualityAnalytics", () => {
 
     it("skips samples of a paused encoder", () => {
         window.capabilities = {
-            "api/analytics/video-quality-batch": "v1",
+            "api/analytics/events-batch": "v1",
         };
         const sendReport = vi.fn();
 
