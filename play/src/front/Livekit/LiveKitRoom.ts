@@ -12,6 +12,7 @@ import {
     DisconnectReason,
     ConnectionState,
     supportsAV1,
+    supportsVP9,
 } from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -26,7 +27,12 @@ import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerMana
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
-import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
+import {
+    preferredVideoCodecs,
+    selectVideoPreset,
+    type VideoCodec,
+    type VideoQualitySetting,
+} from "../WebRtc/VideoPresets";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { createLivekitSenderStats } from "../WebRtc/WebRtcStatsFactory";
 import { registerLocalEncoderStats } from "../WebRtc/LocalEncoderStats";
@@ -210,11 +216,29 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         return get(bandwidthConstrainedPreferenceStore);
     }
 
-    private getPresetForTrack(track: MediaStreamTrack, isScreenShare: boolean): { bitrate: number; fps: number } {
+    /**
+     * The best codec we want that the browser can encode. Chosen explicitly because LiveKit silently rewrites an
+     * unsupported codec (Chrome on Android, Chromium without libaom, Firefox, Safari...) to its hardcoded default
+     * of VP8 rather than to `publishDefaults.videoCodec`.
+     */
+    private getVideoCodec(isScreenShare: boolean): VideoCodec {
+        const supported: Record<VideoCodec, () => boolean> = { av1: supportsAV1, vp9: supportsVP9, vp8: () => true };
+        return (
+            preferredVideoCodecs(isScreenShare ? "screenSharing" : "video", this.getQualitySetting(isScreenShare)).find(
+                (codec) => supported[codec](),
+            ) ?? "vp8"
+        );
+    }
+
+    private getPresetForTrack(
+        track: MediaStreamTrack,
+        isScreenShare: boolean,
+        codec: VideoCodec,
+    ): { bitrate: number; fps: number } {
         const settings = track.getSettings();
         const width = settings.width || 1280;
         const height = settings.height || 720;
-        return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare));
+        return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare), codec);
     }
 
     private queueCameraTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
@@ -259,15 +283,16 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 return;
             }
             const cameraTrack = new LocalVideoTrack(videoTrack);
+            const cameraCodec = this.getVideoCodec(false);
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
-                videoCodec: "vp9",
+                videoCodec: cameraCodec,
                 simulcast: true,
                 // Commented out: the default simulcast layers are sufficient for our use case
                 //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
             };
 
-            const preset = this.getPresetForTrack(videoTrack, false);
+            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec);
             publishOptions.videoEncoding = {
                 maxBitrate: preset.bitrate,
                 maxFramerate: preset.fps,
@@ -470,21 +495,18 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 return;
             }
             const screenShareVideoLocalTrack = new LocalVideoTrack(screenShareVideoTrack);
+            const screenShareCodec = this.getVideoCodec(true);
 
             const screenSharePublishOptions: TrackPublishOptions = {
                 source: Track.Source.ScreenShare,
-                // When AV1 encoding is unavailable (Chrome on Android, Chromium builds without
-                // libaom, Firefox, Safari...), LiveKit silently rewrites the codec to its hardcoded
-                // default of VP8 rather than to `publishDefaults.videoCodec`. Fall back to VP9
-                // explicitly; LiveKit still degrades VP9 to VP8 on its own if VP9 is missing too.
-                videoCodec: supportsAV1() ? "av1" : "vp9",
+                videoCodec: screenShareCodec,
                 simulcast: true,
                 // Commented out: the default simulcast layers are sufficient for our use case
                 // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
                 degradationPreference: this.getBandwidthConstrainedPreference(),
             };
 
-            const preset = this.getPresetForTrack(screenShareVideoTrack, true);
+            const preset = this.getPresetForTrack(screenShareVideoTrack, true, screenShareCodec);
             screenSharePublishOptions.screenShareEncoding = {
                 maxBitrate: preset.bitrate,
                 maxFramerate: preset.fps,

@@ -33,7 +33,13 @@ import {
     type ViewerDisplay,
 } from "./AdaptiveVideoEncoding";
 import { registerLocalEncoderStats } from "./LocalEncoderStats";
-import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
+import {
+    preferredVideoCodecs,
+    selectVideoPreset,
+    videoCodecFromMimeType,
+    type VideoCodec,
+    type VideoQualitySetting,
+} from "./VideoPresets";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -45,6 +51,14 @@ const debug = Debug("webrtc:RemotePeer");
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
+/**
+ * The codec negotiated for a video transceiver comes first in its parameters, at both ends. Before negotiation, or
+ * with a codec we never ask for (H.264 with a Firefox peer), budget the bandwidth like VP8, the most expensive.
+ */
+function negotiatedVideoCodec(parameters: RTCRtpParameters | undefined): VideoCodec {
+    return videoCodecFromMimeType(parameters?.codecs?.[0]?.mimeType) ?? "vp8";
+}
+
 export class RemotePeer extends Peer implements Streamable {
     public _connected = false;
     public remoteStream!: MediaStream;
@@ -285,7 +299,10 @@ export class RemotePeer extends Peer implements Streamable {
                 }),
             },
             preferredCodecs: {
-                video: type === "video" ? ["video/VP9", "video/VP8"] : ["video/AV1", "video/VP9", "video/VP8"],
+                video: preferredVideoCodecs(
+                    type,
+                    type === "screenSharing" ? get(screenShareQualityStore) : get(videoQualityStore),
+                ).map((codec) => "video/" + codec.toUpperCase()),
             },
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
@@ -938,7 +955,18 @@ export class RemotePeer extends Peer implements Streamable {
                         type: "resolution",
                         width: hidden ? 0 : width,
                         height: hidden ? 0 : height,
-                        maxBitrate: hidden ? 0 : this.getPresetForDimensions(width, height).bitrate,
+                        maxBitrate: hidden
+                            ? 0
+                            : this.getPresetForDimensions(
+                                  width,
+                                  height,
+                                  negotiatedVideoCodec(
+                                      (this._pc as RTCPeerConnection | undefined)
+                                          ?.getReceivers()
+                                          .find((receiver) => receiver.track?.kind === "video")
+                                          ?.getParameters(),
+                                  ),
+                              ).bitrate,
                     } satisfies P2PMessage),
                 ),
             );
@@ -999,10 +1027,11 @@ export class RemotePeer extends Peer implements Streamable {
         this.cutVideoUnlessViewerReports();
 
         const settings = videoSender.track.getSettings();
+        const codec = negotiatedVideoCodec(parameters);
         const encoding = computeVideoEncoding(
             this.viewerDisplay,
             { width: settings.width || 1280, height: settings.height || 720 },
-            (width, height) => this.getPresetForDimensions(width, height),
+            (width, height) => this.getPresetForDimensions(width, height, codec),
         );
 
         if (this.type === "screenSharing") {
@@ -1081,8 +1110,8 @@ export class RemotePeer extends Peer implements Streamable {
         return this.type === "screenSharing" ? get(screenShareQualityStore) : get(videoQualityStore);
     }
 
-    private getPresetForDimensions(width: number, height: number): { bitrate: number; fps: number } {
-        return selectVideoPreset(height, width, this.type === "screenSharing", this.getLocalQualitySetting());
+    private getPresetForDimensions(width: number, height: number, codec: VideoCodec): { bitrate: number; fps: number } {
+        return selectVideoPreset(height, width, this.type === "screenSharing", this.getLocalQualitySetting(), codec);
     }
 
     /**
