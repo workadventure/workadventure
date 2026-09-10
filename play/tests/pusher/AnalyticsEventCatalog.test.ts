@@ -35,7 +35,16 @@ function propertiesOf(schema: z.ZodDiscriminatedUnionOption<"eventName">): z.Zod
  * below — and a catalog nobody checks is worth less.
  */
 const EMITTER_SOURCES = import.meta.glob<string>(
-    ["../../src/front/**/*.{ts,svelte}", "../../src/pusher/services/AnalyticsEventsQueue.ts"],
+    [
+        "../../src/front/**/*.{ts,svelte}",
+        // `src/front/external-modules/` is empty here and symlinked to the SaaS repo's own
+        // external-modules/ when the two are checked out together. Vite refuses to inline a
+        // ?raw file whose real path escapes the project root, so globbing it fails the whole
+        // suite with "Denied ID" — and there is nothing to gain by reading it: the events
+        // those modules emit are the ones listed in EMITTED_FROM_EXTERNAL_MODULES below.
+        "!../../src/front/external-modules/**",
+        "../../src/pusher/services/AnalyticsEventsQueue.ts",
+    ],
     { query: "?raw", import: "default", eager: true },
 );
 
