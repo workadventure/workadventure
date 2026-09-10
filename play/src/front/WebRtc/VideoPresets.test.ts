@@ -15,16 +15,16 @@ describe("preferredVideoCodecs", () => {
         vi.mocked(isIOS).mockReturnValue(false);
     });
 
-    it("keeps AV1 for a screen share unless the quality setting is low", () => {
-        expect(preferredVideoCodecs("screenSharing", "recommended")).toEqual(["av1", "vp9", "vp8"]);
-        expect(preferredVideoCodecs("screenSharing", "low")).toEqual(["vp9", "vp8"]);
-        expect(preferredVideoCodecs("video", "high")).toEqual(["vp9", "vp8"]);
+    it("keeps AV1 for a screen share unless the quality setting is low, with hardware H.264 as the fallback", () => {
+        expect(preferredVideoCodecs("screenSharing", "recommended")).toEqual(["av1", "vp9", "h264"]);
+        expect(preferredVideoCodecs("screenSharing", "low")).toEqual(["vp9", "h264"]);
+        expect(preferredVideoCodecs("video", "high")).toEqual(["vp9", "h264"]);
     });
 
-    it("only encodes VP8 on a phone", () => {
+    it("only encodes H.264 on a phone", () => {
         vi.mocked(isAndroid).mockReturnValue(true);
-        expect(preferredVideoCodecs("screenSharing", "high")).toEqual(["vp8"]);
-        expect(preferredVideoCodecs("video", "high")).toEqual(["vp8"]);
+        expect(preferredVideoCodecs("screenSharing", "high")).toEqual(["h264"]);
+        expect(preferredVideoCodecs("video", "high")).toEqual(["h264"]);
     });
 });
 
@@ -75,6 +75,7 @@ describe("selectVideoPreset", () => {
         const vp8 = selectVideoPreset(1080, 1920, true, "recommended", "vp8");
         expect(vp9.bitrate).toBe(4_200_000);
         expect(vp8.bitrate).toBe(6_000_000);
+        expect(selectVideoPreset(1080, 1920, true, "recommended", "h264").bitrate).toBe(6_000_000);
         expect(vp8.fps).toBe(av1.fps);
         // The camera anchors are VP9 values
         expect(selectVideoPreset(720, 1280, false, "recommended", "vp9").bitrate).toBe(700_000);
@@ -94,7 +95,8 @@ describe("selectVideoPreset", () => {
 describe("videoCodecFromMimeType", () => {
     it("reads the negotiated codec", () => {
         expect(videoCodecFromMimeType("video/VP9")).toBe("vp9");
-        expect(videoCodecFromMimeType("video/H264")).toBeUndefined();
+        expect(videoCodecFromMimeType("video/H264")).toBe("h264");
+        expect(videoCodecFromMimeType("video/rtx")).toBeUndefined();
         expect(videoCodecFromMimeType(undefined)).toBeUndefined();
     });
 });

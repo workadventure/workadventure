@@ -53,7 +53,7 @@ const debug = Debug("webrtc:RemotePeer");
  */
 /**
  * The codec negotiated for a video transceiver comes first in its parameters, at both ends. Before negotiation, or
- * with a codec we never ask for (H.264 with a Firefox peer), budget the bandwidth like VP8, the most expensive.
+ * with a codec we do not know, budget the bandwidth like VP8, the most expensive.
  */
 function negotiatedVideoCodec(parameters: RTCRtpParameters | undefined): VideoCodec {
     return videoCodecFromMimeType(parameters?.codecs?.[0]?.mimeType) ?? "vp8";

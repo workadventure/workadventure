@@ -56,9 +56,9 @@ keeps the first one the browser can encode.
 
 | Situation | Camera | Screen share |
 |---|---|---|
-| Desktop, quality recommended or high | VP9, VP8 | AV1, VP9, VP8 |
-| Desktop, quality low | VP9, VP8 | VP9, VP8 |
-| Android or iOS | VP8 | VP8 |
+| Desktop, quality recommended or high | VP9, H.264 | AV1, VP9, H.264 |
+| Desktop, quality low | VP9, H.264 | VP9, H.264 |
+| Android or iOS | H.264 | H.264 |
 
 Why these choices:
 
@@ -67,9 +67,17 @@ Why these choices:
   laptop. The rough CPU cost is 3 to 5 times VP8 for AV1 and 2 times VP8 for VP9.
 - **No AV1 on "low"**: the "low" setting is the user telling us the machine or the connection is weak. Dropping AV1 is
   the cheapest way to halve the encode cost.
-- **VP8 only on phones**: no phone should run a software VP9 or AV1 encoder.
 - **VP9 for cameras**: at camera sizes the AV1 saving does not justify its CPU cost, and VP9 hardware encoders exist on
   some machines.
+- **H.264 as the fallback**: it is the only codec with a hardware encoder nearly everywhere (VideoToolbox on macOS,
+  MediaFoundation on Windows, MediaCodec on Android). macOS in particular has no hardware encoder for VP8, VP9 or AV1,
+  so H.264 is the only rung that actually frees the CPU there. Phones get it first for the same reason. It costs
+  bandwidth: WebRTC negotiates constrained baseline H.264, which is VP8-class, so about 40 % more than VP9 for the
+  same quality, which is why it is not the default on desktop.
+- **VP8 is never preferred**: it is mandatory in WebRTC, so every browser negotiates it anyway, and it is software
+  everywhere. It remains the floor when H.264 is missing (a Firefox whose OpenH264 download is blocked by policy,
+  Chromium builds without proprietary codecs). LiveKit rewrites an unsupported codec to VP8 on its own, and in P2P
+  the browser's remaining codecs are appended after our list.
 
 A more complete treatment (automatic codec downgrade when the encoder reports it is CPU limited) is designed but not
 implemented; see the "Future work" section.
@@ -145,15 +153,17 @@ exponent or an anchor makes the test fail if the curve drifts away from the refe
 |---|---|
 | AV1 | 1 |
 | VP9 | 1.4 |
+| H.264 | 2 |
 | VP8 | 2 |
 
-Each codec generation saves roughly 30 % over the previous one. The anchors of a curve are expressed for one codec
+Each codec generation saves roughly 30 % over the previous one; constrained baseline H.264 sits with VP8. The anchors of a curve are expressed for one codec
 (`anchorCodec`), and the budget is multiplied by the ratio of the two factors. So the camera anchors, which are VP9
 values, are multiplied by 2 / 1.4 ≈ 1.43 for a VP8 encoder, and the screen share anchors, which are AV1 values, by 1.4
 for VP9 and by 2 for VP8.
 
 This is what makes dropping AV1 on the "low" setting safe: the screen share keeps its sharpness on VP9 because it gets
-40 % more bandwidth to do so.
+40 % more bandwidth to do so. The same applies when a stream lands on H.264: the hardware encoder is nearly free for
+the CPU, and the budget doubles to compensate for its lower efficiency.
 
 ### Frame rate
 
@@ -172,7 +182,7 @@ Cameras lower the frame rate on small tiles, where it is the cheapest thing to g
 
 Camera, recommended:
 
-| Displayed size | VP9 | VP8 |
+| Displayed size | VP9 | H.264 or VP8 |
 |---|---|---|
 | 160 × 90 | 31 kbps | 44 kbps |
 | 320 × 180 | 88 kbps | 125 kbps |
@@ -183,7 +193,7 @@ Camera, recommended:
 
 Screen share, recommended:
 
-| Captured size | AV1 | VP9 | VP8 |
+| Captured size | AV1 | VP9 | H.264 or VP8 |
 |---|---|---|---|
 | 1280 × 720 | 2 Mbps | 2.8 Mbps | 4 Mbps |
 | 1440 × 900 | 2.37 Mbps | 3.32 Mbps | 4.74 Mbps |
@@ -246,7 +256,8 @@ times.
 - Simulcast is enabled. Our budget applies to the **top** layer only; `livekit-client` derives the lower layers from
   its own presets.
 - The camera declares VP8 as a backup codec (`backupCodecPolicy: SIMULCAST`): if a subscriber cannot decode VP9,
-  LiveKit asks the publisher to also encode VP8, instead of downgrading everyone.
+  LiveKit asks the publisher to also encode VP8, instead of downgrading everyone. When the primary codec is already
+  VP8, LiveKit disables the backup itself.
 
 ### Subscriber side
 
@@ -270,7 +281,7 @@ times.
 
 ## Future work
 
-The design of an automatic codec downgrade (AV1 → VP9 → VP8 when the encoder reports a sustained CPU limitation) and
+The design of an automatic codec downgrade (AV1 → VP9 → H.264 when the encoder reports a sustained CPU limitation) and
 of an earlier P2P → LiveKit switch for CPU-limited machines is written up separately. The codec preference list and the
 codec factor above are its building blocks: once the detector exists, it only has to pick a lower entry of the list
 and republish, and the bitrate follows.
