@@ -50,6 +50,8 @@ export interface ExtensionModuleAreaProperty {
     handleAreaPropertyOnEnter: (area: AreaData, signal: AbortSignal) => void;
     handleAreaPropertyOnLeave: (area?: AreaData) => void;
     shouldDisplayButton: (areaProperties: AreaDataProperties) => boolean;
+    /** This area property opens a meeting: an area holds only one. */
+    isMeeting?: boolean;
 }
 
 export interface ExtensionModule {

@@ -32,7 +32,6 @@
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
     import { IconChevronDown, IconChevronRight, IconInfoCircle } from "../../Icons";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
-    import type { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
     import TooltipPropertyButton from "../PropertyEditor/TooltipPropertyButton.svelte";
     import LivekitRoomPropertyEditor from "../PropertyEditor/LivekitRoomPropertyEditor.svelte";
@@ -44,6 +43,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import MaxUsersInAreaPropertyEditor from "../PropertyEditor/MaxUsersInAreaPropertyEditor.svelte";
     import LockableAreaPropertyEditor from "../PropertyEditor/LockableAreaPropertyEditor.svelte";
+    import { getAreaMapEditors, hasMeetingProperty } from "../../../Rules/MeetingRules";
 
     let properties: AreaDataProperties = $state([]);
     let areaName = $state("");
@@ -550,16 +550,9 @@
         showDescriptionField = !showDescriptionField;
     }
 
-    let extensionModulesAreaMapEditor = $extensionModuleStore.reduce(
-        (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
-            const areaProperty = module.areaMapEditor?.();
-            if (areaProperty != undefined) {
-                acc.push(areaProperty);
-            }
-            return acc;
-        },
-        [],
-    );
+    let extensionModulesAreaMapEditor = getAreaMapEditors($extensionModuleStore);
+
+    let hasMeeting = $derived(hasMeetingProperty(properties, extensionModulesAreaMapEditor));
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -595,7 +588,7 @@
                     onclick={() => {
                         onAddProperty("livekitRoomProperty");
                     }}
-                    disabled={hasSpeakerMegaphoneProperty || hasListenerMegaphoneProperty}
+                    disabled={hasMeeting}
                 />
             {/if}
             {#if FEATURE_FLAG_BROADCAST_AREAS}
@@ -605,7 +598,7 @@
                         onclick={() => {
                             onAddProperty("speakerMegaphone");
                         }}
-                        disabled={hasListenerMegaphoneProperty || hasLivekitRoomProperty}
+                        disabled={hasMeeting}
                     />
                 {/if}
                 {#if !hasListenerMegaphoneProperty}
@@ -614,7 +607,7 @@
                         onclick={() => {
                             onAddProperty("listenerMegaphone");
                         }}
-                        disabled={hasSpeakerMegaphoneProperty || hasLivekitRoomProperty}
+                        disabled={hasMeeting}
                     />
                 {/if}
             {/if}
@@ -713,7 +706,7 @@
             <div class="properties-buttons flex flex-row flex-wrap mt-2">
                 {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                     {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, areaProperty] (`extensionModuleAreaMapEditor-${subtype}`)}
-                        {#if areaProperty.shouldDisplayButton(properties)}
+                        {#if areaProperty.shouldDisplayButton(properties) && !(areaProperty.isMeeting && hasMeeting)}
                             <AddPropertyButtonWrapper
                                 property="extensionModule"
                                 subProperty={subtype}
@@ -730,7 +723,7 @@
                         onclick={() => {
                             onAddProperty("jitsiRoomProperty");
                         }}
-                        disabled={hasLivekitRoomProperty || hasSpeakerMegaphoneProperty || hasListenerMegaphoneProperty}
+                        disabled={hasMeeting}
                     />
                 {/if}
             </div>
