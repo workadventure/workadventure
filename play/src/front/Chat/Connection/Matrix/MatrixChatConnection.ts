@@ -485,6 +485,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.client.getVisibleRooms().forEach((room) => this.updateRawUnreadRoom(room));
     }
 
+    private getDirectRoomIdsFor(userID: string): Set<string> {
+        const directRoomsPerUsers = this.client?.getAccountData(EventType.Direct)?.getContent() ?? {};
+        const roomIds: unknown = directRoomsPerUsers[userID];
+        return new Set(Array.isArray(roomIds) ? (roomIds as string[]) : []);
+    }
+
     private getDirectRoomIds(): Set<string> {
         const directRoomsPerUsers = this.client?.getAccountData(EventType.Direct)?.getContent() ?? {};
         return new Set(Object.values(directRoomsPerUsers).flat() as string[]);
@@ -1911,11 +1917,21 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         // reconciliation, so it can miss a DM the client already knows about — every miss here
         // forks a duplicate room. Same heuristic as Element's findDMForUser: a DM is a room of
         // exactly two active people containing those two people.
-        const suitableRooms = this.client.getRooms().filter((room) => {
+        const candidateRooms = this.client.getRooms().filter((room) => {
             if (room.isSpaceRoom() || !isActiveMembership(room.getMyMembership())) return false;
-            const activeMembers = room.getMembers().filter((member) => isActiveMembership(member.membership));
-            return activeMembers.length === 2 && activeMembers.some((member) => member.userId === userID);
+            // Counts come from the room summary, not from `getMembers().length`: under lazy loading the
+            // latter only holds the member events that happen to be loaded (the heroes and the recent
+            // senders), so a crowded room whose two loaded members are the two of us would be picked as
+            // our DM. Same reasoning as MatrixChatRoom.getMatrixRoomType.
+            if (room.getJoinedMemberCount() + room.getInvitedMemberCount() !== 2) return false;
+            return isActiveMembership(room.getMember(userID)?.membership);
         });
+
+        // A room flagged as a DM with that user wins over a room that merely ended up with two people:
+        // a group chat everybody else left still counts two active members but is not our DM.
+        const directRoomIds = this.getDirectRoomIdsFor(userID);
+        const flaggedRooms = candidateRooms.filter((room) => directRoomIds.has(room.roomId));
+        const suitableRooms = flaggedRooms.length > 0 ? flaggedRooms : candidateRooms;
 
         // Duplicate DMs already exist for some users: pick the most recently active one
         // (the sidebar sort criterion) instead of an arbitrary insertion order.
