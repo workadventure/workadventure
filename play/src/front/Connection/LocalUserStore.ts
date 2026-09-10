@@ -61,6 +61,7 @@ export const languageKey = "language";
 const videoQualityKey = "videoQuality";
 const screenShareQualityKey = "screenShareQuality";
 const bandwidthConstrainedScreenSharePreferenceKey = "bandwidthConstrainedScreenSharePreference";
+const codecRetryTimesKey = "codecRetryTimes";
 const legacyVideoBandwidthKey = "videoBandwidth";
 const legacyScreenShareBandwidthKey = "screenShareBandwidth";
 const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
@@ -775,6 +776,25 @@ class LocalUserStore {
         }
 
         return "maintain-resolution";
+    }
+
+    // When each video codec the browser called not smooth was last tried again, keyed by direction and codec
+    // ("encode:vp9"), as a timestamp
+    getCodecRetryTimes(): Record<string, number> {
+        try {
+            const raw = localStorage.getItem(codecRetryTimesKey);
+            if (!raw) {
+                return {};
+            }
+            const parsed = z.record(z.number()).safeParse(JSON.parse(raw));
+            return parsed.success ? parsed.data : {};
+        } catch {
+            return {};
+        }
+    }
+
+    setCodecRetryTime(codec: string, time: number): void {
+        localStorage.setItem(codecRetryTimesKey, JSON.stringify({ ...this.getCodecRetryTimes(), [codec]: time }));
     }
 
     // Background transformation settings
