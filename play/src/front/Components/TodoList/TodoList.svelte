@@ -157,7 +157,7 @@
                     class="text-center text-xs text-gray-400 italic hover:underline cursor-pointer mt-5"
                     on:click={closeTodoList}
                 >
-                    ${$LL.externalModule.todoList.sentence()}
+                    {$LL.externalModule.todoList.sentence()}
                 </p>
             {/if}
         </div>
