@@ -30,6 +30,20 @@ export function videoCodecFromMimeType(mimeType: string | undefined): VideoCodec
     return codec === "av1" || codec === "vp9" || codec === "h264" || codec === "vp8" ? codec : undefined;
 }
 
+/**
+ * Among the codecs negotiated on a sender, the first one of our preference list. H.264 is negotiated as several
+ * profile entries; any of them will do.
+ */
+export function chooseNegotiatedCodec(preferred: VideoCodec[], negotiated: RTCRtpCodec[]): RTCRtpCodec | undefined {
+    for (const codec of preferred) {
+        const match = negotiated.find((candidate) => videoCodecFromMimeType(candidate.mimeType) === codec);
+        if (match) {
+            return match;
+        }
+    }
+    return undefined;
+}
+
 // Bitrate needed for the same visual quality, relative to AV1. Each codec generation saves roughly 30 %; WebRTC
 // negotiates constrained baseline H.264, which is VP8-class.
 const BITRATE_FACTOR: Record<VideoCodec, number> = { av1: 1, vp9: 1.4, h264: 2, vp8: 2 };

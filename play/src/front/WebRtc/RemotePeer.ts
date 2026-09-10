@@ -34,6 +34,7 @@ import {
 } from "./AdaptiveVideoEncoding";
 import { registerLocalEncoderStats } from "./LocalEncoderStats";
 import {
+    chooseNegotiatedCodec,
     preferredVideoCodecs,
     selectVideoPreset,
     videoCodecFromMimeType,
@@ -51,13 +52,8 @@ const debug = Debug("webrtc:RemotePeer");
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
-/**
- * The codec negotiated for a video transceiver comes first in its parameters, at both ends. Before negotiation, or
- * with a codec we do not know, budget the bandwidth like VP8, the most expensive.
- */
-function negotiatedVideoCodec(parameters: RTCRtpParameters | undefined): VideoCodec {
-    return videoCodecFromMimeType(parameters?.codecs?.[0]?.mimeType) ?? "vp8";
-}
+// WebRTC codec selection API (Chrome 119+), not in the DOM typings yet
+type RTCRtpEncodingParametersWithCodec = RTCRtpEncodingParameters & { codec?: RTCRtpCodec };
 
 export class RemotePeer extends Peer implements Streamable {
     public _connected = false;
@@ -955,18 +951,11 @@ export class RemotePeer extends Peer implements Streamable {
                         type: "resolution",
                         width: hidden ? 0 : width,
                         height: hidden ? 0 : height,
-                        maxBitrate: hidden
-                            ? 0
-                            : this.getPresetForDimensions(
-                                  width,
-                                  height,
-                                  negotiatedVideoCodec(
-                                      (this._pc as RTCPeerConnection | undefined)
-                                          ?.getReceivers()
-                                          .find((receiver) => receiver.track?.kind === "video")
-                                          ?.getParameters(),
-                                  ),
-                              ).bitrate,
+                        // The sender picks its own codec, which we do not know: budget the most expensive one so the
+                        // hint never starves it. The sender takes the minimum with its own preset anyway.
+                        // ponytail: 1.4x looser than intended on a VP9 sender; send the quality setting instead of a
+                        // bitrate if that matters
+                        maxBitrate: hidden ? 0 : this.getPresetForDimensions(width, height, "vp8").bitrate,
                     } satisfies P2PMessage),
                 ),
             );
@@ -1027,7 +1016,19 @@ export class RemotePeer extends Peer implements Streamable {
         this.cutVideoUnlessViewerReports();
 
         const settings = videoSender.track.getSettings();
-        const codec = negotiatedVideoCodec(parameters);
+        // setCodecPreferences() only says what we prefer to receive: the peer's list drives our encoder. The codec
+        // selection API picks our send codec among the negotiated ones (Chrome 119+; other browsers ignore the field
+        // and keep encoding what the peer asked for, which comes first in the negotiated list).
+        const sendCodec = chooseNegotiatedCodec(
+            preferredVideoCodecs(this.type, this.getLocalQualitySetting()),
+            parameters.codecs ?? [],
+        );
+        const encoding0: RTCRtpEncodingParametersWithCodec = parameters.encodings[0];
+        if (sendCodec) {
+            const { mimeType, clockRate, sdpFmtpLine, channels } = sendCodec;
+            encoding0.codec = { mimeType, clockRate, sdpFmtpLine, channels };
+        }
+        const codec = videoCodecFromMimeType((sendCodec ?? parameters.codecs?.[0])?.mimeType) ?? "vp8";
         const encoding = computeVideoEncoding(
             this.viewerDisplay,
             { width: settings.width || 1280, height: settings.height || 720 },
