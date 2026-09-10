@@ -311,6 +311,7 @@ describe("AnalyticsEventCatalog", () => {
                 spaceName: "world.space",
                 streamCategory: "video",
                 transportType: "P2P",
+                direction: "inbound",
                 relay: true,
                 relayProtocol: "udp",
                 livekitServerUrl: null,
@@ -321,6 +322,45 @@ describe("AnalyticsEventCatalog", () => {
                 frameWidth: 1280,
                 frameHeight: 720,
                 mimeType: "video/VP8",
+                qualityLimitationReason: null,
+                encoderImplementation: null,
+                sampleSeq: 1,
+            },
+        });
+
+        expect(parsed.success).toBe(true);
+    });
+
+    it("validates an outbound video quality sample, which names no remote user", () => {
+        const parsed = ANALYTICS_EVENT_CATALOG["media.video_quality.sample"].safeParse({
+            eventName: "media.video_quality.sample",
+            source: "pusher",
+            clientEventTimeMs: Date.parse("2026-04-24T12:00:05.000Z"),
+            eventId: "reporter-uuid:stream-id:1",
+            properties: {
+                streamId: "stream-id",
+                connectionId: null,
+                sessionId: "session-id",
+                remoteUserUuid: null,
+                // A track published to a LiveKit server goes to the room, not to a participant.
+                remoteSpaceUserId: null,
+                spaceName: "world.space",
+                streamCategory: "video",
+                transportType: "SFU",
+                direction: "outbound",
+                relay: null,
+                relayProtocol: null,
+                livekitServerUrl: "wss://livekit.test",
+                fps: 28,
+                fpsStdDev: null,
+                // The sender receives nothing, so it has no jitter to report.
+                jitter: 0,
+                bandwidthBytesPerSecond: 300000,
+                frameWidth: 1920,
+                frameHeight: 1080,
+                mimeType: "video/AV1",
+                qualityLimitationReason: "cpu",
+                encoderImplementation: "libaom",
                 sampleSeq: 1,
             },
         });
@@ -492,9 +532,7 @@ describe("POSTHOG_EVENT_KEYS", () => {
             }
             // Object.entries widens the key to string; the table is keyed by event
             // name by construction, which is what the Partial<Record<…>> type says.
-            const properties = propertiesOf(
-                ANALYTICS_EVENT_CATALOG[eventName as AnalyticsEventName]
-            ) as z.AnyZodObject;
+            const properties = propertiesOf(ANALYTICS_EVENT_CATALOG[eventName as AnalyticsEventName]) as z.AnyZodObject;
             if (!Object.keys(properties.shape).includes(key.on)) {
                 wrong.push(`${eventName} discriminates on "${key.on}", which it does not declare`);
             }
