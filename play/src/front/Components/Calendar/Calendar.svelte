@@ -140,7 +140,7 @@
                                                 }
                                             }}
                                             class="text-xs text-right text-secondary-500"
-                                            target="_blank">${$LL.externalModule.calendar.joinMeeting()}</a
+                                            target="_blank">{$LL.externalModule.calendar.joinMeeting()}</a
                                         >
                                     {/if}
                                 </div>
