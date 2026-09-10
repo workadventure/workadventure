@@ -36,6 +36,9 @@
     }: Props = $props();
     let optionAdvancedActivated = $state(false);
 
+    // Same default as the one applied when opening the Jitsi cowebsite (see GameMapPropertiesListener).
+    property.width ??= 50;
+
     function onTriggerValueChange() {
         triggerOnActionChoosen = property.trigger === ON_ACTION_TRIGGER_BUTTON;
         onchange?.();
