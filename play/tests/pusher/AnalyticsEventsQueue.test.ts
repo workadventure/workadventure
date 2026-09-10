@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+    VideoQualityLimitationReason,
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
+    VideoQualityStreamDirection,
     VideoQualityTransportType,
     type AnalyticsEventName,
     type VideoQualitySampleMessage,
@@ -379,6 +381,48 @@ describe("AnalyticsEventsQueue", () => {
         expect(batch.events[0].properties).toMatchObject({ transportType: "SFU" });
     });
 
+    it("keeps the encoder health on outbound samples and only there", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+
+        queue.enqueueVideoQualityReport(
+            {
+                samples: [
+                    videoQualitySample({
+                        direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND,
+                        transportType: VideoQualityTransportType.VIDEO_QUALITY_TRANSPORT_TYPE_LIVEKIT,
+                        // Published to the room, not to one participant.
+                        remoteSpaceUserId: "",
+                        qualityLimitationReason: VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_CPU,
+                        encoderImplementation: "libaom",
+                    }),
+                    videoQualitySample({
+                        qualityLimitationReason: VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_CPU,
+                        encoderImplementation: "libaom",
+                    }),
+                ],
+            },
+            socketData(),
+        );
+        await queue.flush();
+
+        const batch = post.mock.calls[0][1] as AnalyticsEventsBatch;
+        expect(batch.events[0].properties).toMatchObject({
+            direction: "outbound",
+            remoteSpaceUserId: null,
+            qualityLimitationReason: "cpu",
+            encoderImplementation: "libaom",
+        });
+        // An inbound sample measures a stream someone else encodes, so the browser
+        // reports nothing about our encoder: a client claiming otherwise is ignored.
+        expect(batch.events[1].properties).toMatchObject({
+            direction: "inbound",
+            qualityLimitationReason: null,
+            encoderImplementation: null,
+        });
+    });
+
     it("drops video quality samples for a space the socket has not joined", async () => {
         const post = vi.fn().mockResolvedValue(undefined);
         const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
@@ -457,6 +501,7 @@ function videoQualitySample(overrides: Partial<VideoQualitySampleMessage> = {}):
         spaceName: "space",
         streamCategory: VideoQualityStreamCategory.VIDEO_QUALITY_STREAM_CATEGORY_VIDEO,
         transportType: VideoQualityTransportType.VIDEO_QUALITY_TRANSPORT_TYPE_P2P,
+        direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_INBOUND,
         relay: true,
         relayProtocol: VideoQualityRelayProtocol.VIDEO_QUALITY_RELAY_PROTOCOL_UDP,
         livekitServerUrl: undefined,

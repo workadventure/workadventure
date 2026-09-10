@@ -523,7 +523,10 @@ export const ANALYTICS_EVENTS = {
         ),
       remoteSpaceUserId: z
         .string()
-        .describe("The other party's space-scoped id."),
+        .nullable()
+        .describe(
+          "The other party's space-scoped id. Null on an outbound sample: a stream published to a LiveKit server has no single remote user.",
+        ),
       spaceName: z
         .string()
         .describe(
@@ -535,6 +538,11 @@ export const ANALYTICS_EVENTS = {
       transportType: z
         .enum(["P2P", "SFU"])
         .describe("Direct peer connection, or relayed through an SFU."),
+      direction: z
+        .enum(["inbound", "outbound"])
+        .describe(
+          "Whether the sample measures a stream we receive or one we send. An outbound sample describes our own encoder, so it carries no jitter and no remote user.",
+        ),
       relay: z
         .boolean()
         .nullable()
@@ -566,6 +574,18 @@ export const ANALYTICS_EVENTS = {
         .string()
         .nullable()
         .describe("Negotiated codec, e.g. video/VP8."),
+      qualityLimitationReason: z
+        .enum(["none", "cpu", "bandwidth", "other"])
+        .nullable()
+        .describe(
+          "Outbound only: why the browser is degrading what it encodes. `cpu` is a machine that cannot keep up, which otherwise reads to everyone else as a bad network.",
+        ),
+      encoderImplementation: z
+        .string()
+        .nullable()
+        .describe(
+          'Outbound only: encoder the browser picked, e.g. "libaom", "libvpx", "ExternalEncoder".',
+        ),
       sampleSeq: z
         .number()
         .nullable()
