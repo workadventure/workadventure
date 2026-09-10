@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { codecPerformance, probeCodecPerformance, retryGranted } from "./CodecPerformance";
 
 // A machine with hardware H.264, software VP9 that keeps up until 360p, and no AV1 at all
@@ -53,24 +54,26 @@ describe("codecPerformance", () => {
 describe("retryGranted", () => {
     const week = 7 * 24 * 60 * 60 * 1000;
 
-    it("respects a fresh verdict and starts the clock", () => {
-        localStorage.removeItem("codecSmoothRetry:encode:vp9");
+    beforeAll(() => {
+        localStorage.clear();
+    });
 
+    it("respects a fresh verdict and starts the clock", () => {
         expect(retryGranted("encode", "vp9")).toBe(false);
-        expect(Number(localStorage.getItem("codecSmoothRetry:encode:vp9"))).toBeGreaterThan(0);
+        expect(localUserStore.getCodecRetryTimes()["encode:vp9"]).toBeGreaterThan(0);
     });
 
     it("grants a retry after a week, once per session", () => {
-        localStorage.setItem("codecSmoothRetry:decode:vp9", String(Date.now() - week - 1000));
+        localUserStore.setCodecRetryTime("decode:vp9", Date.now() - week - 1000);
 
         expect(retryGranted("decode", "vp9")).toBe(true);
-        expect(Number(localStorage.getItem("codecSmoothRetry:decode:vp9"))).toBeGreaterThan(Date.now() - 1000);
+        expect(localUserStore.getCodecRetryTimes()["decode:vp9"]).toBeGreaterThan(Date.now() - 1000);
         // The session keeps its decision even though the clock was just restarted
         expect(retryGranted("decode", "vp9")).toBe(true);
     });
 
     it("waits when the last retry is recent", () => {
-        localStorage.setItem("codecSmoothRetry:encode:av1", String(Date.now() - 1000));
+        localUserStore.setCodecRetryTime("encode:av1", Date.now() - 1000);
 
         expect(retryGranted("encode", "av1")).toBe(false);
     });

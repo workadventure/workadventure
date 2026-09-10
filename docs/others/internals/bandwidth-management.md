@@ -99,8 +99,8 @@ cost is: in P2P the tile the viewer displays, on LiveKit the capture size. The P
 change without a renegotiation, is judged at 720p, the most sensitive question to ask a history that infers across
 sizes.
 
-The weekly retry is a timestamp per codec and direction in `localStorage`, decided once per session so every stream
-of the session agrees. Without it, avoiding a codec would mean never encoding with it again, so the browser would
+The weekly retry is a timestamp per codec and direction, kept by `LocalUserStore` like every other local setting,
+decided once per session so every stream of the session agrees. Without it, avoiding a codec would mean never encoding with it again, so the browser would
 never refresh its verdict.
 
 Why these choices:

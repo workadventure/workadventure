@@ -1,3 +1,4 @@
+import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoCodec } from "./VideoPresets";
 
 /**
@@ -114,18 +115,12 @@ export function retryGranted(direction: CodecDirection, codec: VideoCodec): bool
     if (decided !== undefined) {
         return decided;
     }
-    let granted = false;
-    try {
-        const storageKey = `codecSmoothRetry:${decisionKey}`;
-        const lastRetry = Number(localStorage.getItem(storageKey));
-        const now = Date.now();
-        // A fresh verdict is respected; the clock starts now
-        granted = lastRetry > 0 && now - lastRetry > RETRY_INTERVAL_MS;
-        if (granted || !(lastRetry > 0)) {
-            localStorage.setItem(storageKey, String(now));
-        }
-    } catch {
-        // No storage (privacy mode): never retry
+    const lastRetry = localUserStore.getCodecRetryTimes()[decisionKey];
+    const now = Date.now();
+    // A fresh verdict is respected; the clock starts now
+    const granted = lastRetry !== undefined && now - lastRetry > RETRY_INTERVAL_MS;
+    if (granted || lastRetry === undefined) {
+        localUserStore.setCodecRetryTime(decisionKey, now);
     }
     retryDecisions.set(decisionKey, granted);
     return granted;
