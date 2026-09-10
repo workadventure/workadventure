@@ -51,14 +51,57 @@ further here.
 
 ## Codec Selection
 
-`preferredVideoCodecs(category, quality)` returns the codecs we are willing to encode with, best first. The transport
-keeps the first one the browser can encode.
+`preferredVideoCodecs(category, quality, direction, pixels)` returns the codecs we are willing to encode (or, for
+the P2P receive preference, decode) with at a given frame size, best first. The transport keeps the first one the
+browser can use.
+
+It starts from a static order and filters it with what the browser knows about this machine:
 
 | Situation | Camera | Screen share |
 |---|---|---|
-| Desktop, quality recommended or high | VP9, H.264 | AV1, VP9, H.264 |
-| Desktop, quality low | VP9, H.264 | VP9, H.264 |
-| Android or iOS | H.264 | H.264 |
+| Quality recommended or high | VP9, H.264 | AV1, VP9, H.264 |
+| Quality low | VP9, H.264 | VP9, H.264 |
+
+Then, for every codec except H.264, which always stays:
+
+- **Desktop**: the codec is kept unless the browser remembers it as *not smooth* at that frame size (see below). With
+  no verdict, it is kept.
+- **Android and iOS**: the codec is kept only if the browser reports a hardware encoder (or decoder) for it, and it is
+  smooth. With no verdict, it is dropped: a phone does not experiment on its battery.
+- A codec dropped for smoothness gets **one retry per week**, so a single bad session cannot demote it forever.
+
+So a Pixel with a hardware VP9 encoder keeps VP9; a phone without one encodes H.264; a weak laptop that struggled with
+VP9 at 720p last week gets H.264 at 720p but still VP9 on a small P2P tile.
+
+### What the browser knows: `CodecPerformance.ts`
+
+At startup, [`CodecPerformance.ts`](../../../play/src/front/WebRtc/CodecPerformance.ts) asks
+`navigator.mediaCapabilities.encodingInfo()` and `decodingInfo()` with `type: "webrtc"` about AV1, VP9 and H.264 at
+seven frame sizes from 160 × 90 to 2560 × 1440. That is a few milliseconds of lookups, no encoding. The answers are
+cached and read synchronously afterwards; until they arrive, the lists behave as if there were no verdict.
+
+In Chromium (verified in the source):
+
+- `powerEfficient` is true when a hardware encoder or decoder exists for the codec. There is no small-size heuristic
+  on the WebRTC path.
+- `smooth` comes from the browser's WebRTC performance history: per codec, frame size bucket, hardware flag and
+  direction, the 99th percentile of the processing time per frame measured in real sessions on this profile, on any
+  site. A stream is smooth when that percentile stays under the frame duration. The history is only written while a
+  **single** encoder runs (one camera, no screen share, no other P2P peer), so verdicts come from clean measurements,
+  and a user who only ever sits in large bubbles never writes any. With no history the answer is optimistic.
+  Verdicts infer across sizes: smooth at a large size implies smooth below, not smooth at a small size implies not
+  smooth above.
+- Safari and Firefox do not answer the WebRTC type: everything stays unknown there and the static rule applies. On
+  iOS that is the right answer anyway, Apple hardware encodes H.264 only.
+
+The decision is made at the size we are about to encode, because that is where the history is written and where the
+cost is: in P2P the tile the viewer displays, on LiveKit the capture size. The P2P receive preference, which cannot
+change without a renegotiation, is judged at 720p, the most sensitive question to ask a history that infers across
+sizes.
+
+The weekly retry is a timestamp per codec and direction in `localStorage`, decided once per session so every stream
+of the session agrees. Without it, avoiding a codec would mean never encoding with it again, so the browser would
+never refresh its verdict.
 
 Why these choices:
 
@@ -71,9 +114,9 @@ Why these choices:
   some machines.
 - **H.264 as the fallback**: it is the only codec with a hardware encoder nearly everywhere (VideoToolbox on macOS,
   MediaFoundation on Windows, MediaCodec on Android). macOS in particular has no hardware encoder for VP8, VP9 or AV1,
-  so H.264 is the only rung that actually frees the CPU there. Phones get it first for the same reason. It costs
-  bandwidth: WebRTC negotiates constrained baseline H.264, which is VP8-class, so about 40 % more than VP9 for the
-  same quality, which is why it is not the default on desktop.
+  so H.264 is the only rung that actually frees the CPU there. It costs bandwidth: WebRTC negotiates constrained
+  baseline H.264, which is VP8-class, so about 40 % more than VP9 for the same quality, which is why it is not the
+  default on desktop.
 - **VP8 is never preferred**: it is mandatory in WebRTC, so every browser negotiates it anyway, and it is software
   everywhere. It remains the floor when H.264 is missing (a Firefox whose OpenH264 download is blocked by policy,
   Chromium builds without proprietary codecs). LiveKit rewrites an unsupported codec to VP8 on its own, and in P2P
@@ -98,10 +141,11 @@ implemented; see the "Future work" section.
        produces the opposite of the intent: a phone asking for H.264 makes its desktop peer encode H.264, while the
        phone itself encodes whatever the desktop asked for.
     2. Our own send codec is therefore chosen explicitly at every encoding update, with the WebRTC codec selection
-       API: `chooseNegotiatedCodec()` takes the first entry of our list among the codecs negotiated on the sender
-       (`RTCRtpSender.getParameters().codecs`), and it is set as `encodings[0].codec` in `setParameters()`. No
-       renegotiation is needed. Chrome supports this since version 119; browsers that do not ignore the field and keep
-       encoding what the peer asked for. The two directions of one connection can use different codecs.
+       API: `chooseNegotiatedCodec()` takes the first entry of our list, computed for the frame size about to be
+       encoded, among the codecs negotiated on the sender (`RTCRtpSender.getParameters().codecs`), and it is set as
+       `encodings[0].codec` in `setParameters()`. No renegotiation is needed, so the codec can follow the tile size.
+       Chrome supports this since version 119; browsers that do not ignore the field and keep encoding what the peer
+       asked for. The two directions of one connection can use different codecs.
 
   The encoder budget follows the codec we selected, or the first negotiated one where the field is not supported.
 
@@ -260,7 +304,7 @@ times.
 ### Publisher side
 
 - Reads `videoQualityStore` and `screenShareQualityStore` at track publication time.
-- Chooses the codec with `getVideoCodec()` (see Codec Selection).
+- Chooses the codec with `getVideoCodec()` for the capture size of the track (see Codec Selection).
 - Computes the budget with `selectVideoPreset()` for the captured size and that codec.
 - Publishes the camera with `videoEncoding.maxBitrate` / `maxFramerate`, and the screen share with
   `screenShareEncoding.maxBitrate` / `maxFramerate` and the user's `degradationPreference`.
@@ -302,7 +346,8 @@ and republish, and the bitrate follows.
 | File | Purpose |
 |------|---------|
 | [`play/src/front/WebRtc/VideoPresets.ts`](../../../play/src/front/WebRtc/VideoPresets.ts) | Codec preferences, bitrate curves, frame rates |
-| [`play/src/front/WebRtc/VideoPresets.test.ts`](../../../play/src/front/WebRtc/VideoPresets.test.ts) | Fit against the reference table, codec scaling |
+| [`play/src/front/WebRtc/VideoPresets.test.ts`](../../../play/src/front/WebRtc/VideoPresets.test.ts) | Fit against the reference table, codec scaling, codec filtering |
+| [`play/src/front/WebRtc/CodecPerformance.ts`](../../../play/src/front/WebRtc/CodecPerformance.ts) | What the browser knows about each codec: hardware, past smoothness |
 | [`play/src/front/WebRtc/AdaptiveVideoEncoding.ts`](../../../play/src/front/WebRtc/AdaptiveVideoEncoding.ts) | P2P encoding from the viewer's display size |
 | [`play/src/front/Livekit/LiveKitRoom.ts`](../../../play/src/front/Livekit/LiveKitRoom.ts) | LiveKit publisher codec and bandwidth limiting |
 | [`play/src/front/Livekit/LivekitParticipant.ts`](../../../play/src/front/Livekit/LivekitParticipant.ts) | LiveKit subscriber quality selection |

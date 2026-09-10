@@ -221,7 +221,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      * unsupported codec (Chrome on Android, Chromium without libaom, Firefox, Safari...) to its hardcoded default
      * of VP8 rather than to `publishDefaults.videoCodec`.
      */
-    private getVideoCodec(isScreenShare: boolean): VideoCodec {
+    private getVideoCodec(isScreenShare: boolean, track: MediaStreamTrack): VideoCodec {
+        const { width = 1280, height = 720 } = track.getSettings();
         // H.264 and VP8 are mandatory in WebRTC; the rare browser without H.264 (Firefox with the OpenH264 download
         // blocked) is rewritten to VP8 by LiveKit, at the same bitrate budget.
         const supported: Record<VideoCodec, () => boolean> = {
@@ -231,9 +232,12 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             vp8: () => true,
         };
         return (
-            preferredVideoCodecs(isScreenShare ? "screenSharing" : "video", this.getQualitySetting(isScreenShare)).find(
-                (codec) => supported[codec](),
-            ) ?? "vp8"
+            preferredVideoCodecs(
+                isScreenShare ? "screenSharing" : "video",
+                this.getQualitySetting(isScreenShare),
+                "encode",
+                width * height,
+            ).find((codec) => supported[codec]()) ?? "vp8"
         );
     }
 
@@ -290,7 +294,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 return;
             }
             const cameraTrack = new LocalVideoTrack(videoTrack);
-            const cameraCodec = this.getVideoCodec(false);
+            const cameraCodec = this.getVideoCodec(false, videoTrack);
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
                 videoCodec: cameraCodec,
@@ -502,7 +506,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 return;
             }
             const screenShareVideoLocalTrack = new LocalVideoTrack(screenShareVideoTrack);
-            const screenShareCodec = this.getVideoCodec(true);
+            const screenShareCodec = this.getVideoCodec(true, screenShareVideoTrack);
 
             const screenSharePublishOptions: TrackPublishOptions = {
                 source: Track.Source.ScreenShare,

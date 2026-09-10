@@ -1,3 +1,4 @@
+import { codecPerformance, retryGranted, type CodecDirection } from "./CodecPerformance";
 import { isAndroid, isIOS } from "./DeviceUtils";
 
 export type VideoQualitySetting = "low" | "recommended" | "high";
@@ -5,21 +6,38 @@ export type VideoQualitySetting = "low" | "recommended" | "high";
 export type VideoCodec = "av1" | "vp9" | "h264" | "vp8";
 
 /**
- * Codecs we are willing to encode with, best first. The transport keeps the first one the browser supports.
+ * Codecs we are willing to encode (or decode) with at a given frame size, best first. The transport keeps the first
+ * one the browser supports.
  *
- * AV1 and VP9 are software encoders on most machines. A phone cannot afford them, and neither can a weak laptop:
- * the "low" quality setting is the user telling us so. H.264 is the one codec with a hardware encoder nearly
- * everywhere (VideoToolbox, MediaFoundation, MediaCodec), so it is the fallback. VP8 is not listed: every browser
- * negotiates it anyway, and it is only ever software.
+ * AV1 and VP9 are software encoders on most machines. A weak laptop cannot afford them at 720p, and the "low"
+ * quality setting is the user telling us so; but the browser knows better than a rule: it remembers whether each
+ * codec ran smoothly at that size on this machine (see CodecPerformance). A phone only gets a codec its hardware
+ * handles. H.264 is the floor: a hardware encoder nearly everywhere (VideoToolbox, MediaFoundation, MediaCodec), and
+ * always negotiated. VP8 is not listed: every browser negotiates it anyway, and it is only ever software.
  */
-export function preferredVideoCodecs(category: "video" | "screenSharing", quality: VideoQualitySetting): VideoCodec[] {
-    if (isAndroid() || isIOS()) {
-        return ["h264"];
-    }
-    if (category === "screenSharing" && quality !== "low") {
-        return ["av1", "vp9", "h264"];
-    }
-    return ["vp9", "h264"];
+export function preferredVideoCodecs(
+    category: "video" | "screenSharing",
+    quality: VideoQualitySetting,
+    direction: CodecDirection,
+    pixels: number,
+): VideoCodec[] {
+    const mobile = isAndroid() || isIOS();
+    const candidates: VideoCodec[] =
+        category === "screenSharing" && quality !== "low" ? ["av1", "vp9", "h264"] : ["vp9", "h264"];
+    return candidates.filter((codec) => {
+        if (codec === "h264") {
+            return true;
+        }
+        const performance = codecPerformance(direction, codec, pixels);
+        if (!performance) {
+            // No verdict (probe pending, Safari, Firefox): a desktop tries, a phone does not
+            return !mobile;
+        }
+        if (mobile && !performance.powerEfficient) {
+            return false;
+        }
+        return performance.supported && (performance.smooth || retryGranted(direction, codec));
+    });
 }
 
 /**
