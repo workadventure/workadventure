@@ -21,14 +21,26 @@
     }
 
     function formatHour(date: Date) {
+        // The agenda spans the next 24 hours, so name the day of anything that is not today.
+        const isToday = date.toDateString() === new Date().toDateString();
         // undefined locale: follow the browser's own date/time settings
         return date.toLocaleString(undefined, {
+            weekday: isToday ? undefined : "short",
             hour: "2-digit",
             minute: "2-digit",
         });
     }
 
     function openMeeting(event: CalendarEventInterface) {
+        const joinUrl = event.resource?.onlineMeeting?.joinUrl;
+
+        // A WorkAdventure meeting takes place in a room of this world: the link redirects to it, so
+        // follow it in place rather than opening a tab the user has to come back from.
+        if (event.resource?.onlineMeeting?.isWorkAdventure === true && joinUrl) {
+            window.location.assign(joinUrl);
+            return true;
+        }
+
         const gameScene = gameManager.getCurrentGameScene();
         if (!gameScene) return false;
 
@@ -118,7 +130,11 @@
                     {#each [...$calendarEventsStore.entries()] as [eventId, event] (eventId)}
                         <div class="flex flex-col justify-center">
                             <div class="flex flex-row justify-start w-full">
-                                <span class="text-xs">{formatHour(event.start)}</span>
+                                <span class="text-xs"
+                                    >{event.allDay
+                                        ? $LL.externalModule.calendar.allDay()
+                                        : formatHour(event.start)}</span
+                                >
                                 <hr class="border-gray-300 mx-2 w-full opacity-30 border-dashed" />
                             </div>
                             <div
@@ -140,15 +156,22 @@
                                                 }
                                             }}
                                             class="text-xs text-right text-secondary-500"
-                                            target="_blank">{$LL.externalModule.calendar.joinMeeting()}</a
+                                            target={event.resource.onlineMeeting.isWorkAdventure === true
+                                                ? undefined
+                                                : "_blank"}
+                                            >{event.resource.onlineMeeting.isWorkAdventure === true
+                                                ? $LL.externalModule.calendar.joinMeetingInWorkAdventure()
+                                                : $LL.externalModule.calendar.joinMeeting()}</a
                                         >
                                     {/if}
                                 </div>
                             </div>
-                            <div class="flex flex-row justify-start w-full">
-                                <span class="text-xs">{formatHour(event.end)}</span>
-                                <hr class="border-gray-300 mx-2 w-full opacity-30 border-dashed" />
-                            </div>
+                            {#if !event.allDay}
+                                <div class="flex flex-row justify-start w-full">
+                                    <span class="text-xs">{formatHour(event.end)}</span>
+                                    <hr class="border-gray-300 mx-2 w-full opacity-30 border-dashed" />
+                                </div>
+                            {/if}
                         </div>
                     {/each}
                 {/if}
