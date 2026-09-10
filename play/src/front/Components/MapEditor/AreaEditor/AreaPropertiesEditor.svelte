@@ -182,6 +182,7 @@
                     jitsiRoomConfig: {},
                     hideButtonLabel: true,
                     roomName: $LL.mapEditor.properties.jitsiRoomProperty.label(),
+                    width: 50,
                     trigger: ON_ACTION_TRIGGER_ENTER,
                 };
             }
