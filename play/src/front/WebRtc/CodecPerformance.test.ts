@@ -1,6 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { codecPerformance, probeCodecPerformance, retryGranted } from "./CodecPerformance";
+import {
+    canSelectSendCodec,
+    codecPerformance,
+    probeCodecPerformance,
+    probeSendCodecSelection,
+    retryGranted,
+} from "./CodecPerformance";
 
 // A machine with hardware H.264, software VP9 that keeps up until 360p, and no AV1 at all
 const fakeMediaCapabilities = {
@@ -48,6 +54,35 @@ describe("codecPerformance", () => {
 
     it("does nothing without the API", async () => {
         await expect(probeCodecPerformance(undefined)).resolves.toBeUndefined();
+    });
+});
+
+describe("probeSendCodecSelection", () => {
+    // A connection whose sender reacts to setParameters() as instructed
+    const fakePeerConnection = (setParameters: () => Promise<void>) =>
+        class {
+            public close = () => undefined;
+            public addTransceiver() {
+                return { sender: { getParameters: () => ({ encodings: [{}] }), setParameters } };
+            }
+        } as unknown as typeof RTCPeerConnection;
+
+    const failure = (name: string) => {
+        const e = new Error(name);
+        e.name = name;
+        return Promise.reject(e);
+    };
+
+    it("detects a browser that validates the codec field", async () => {
+        expect(await probeSendCodecSelection(fakePeerConnection(() => failure("InvalidModificationError")))).toBe(true);
+        expect(canSelectSendCodec()).toBe(true);
+    });
+
+    it("treats a browser that ignores the field, or fails otherwise, as unsupported", async () => {
+        expect(await probeSendCodecSelection(fakePeerConnection(() => Promise.resolve()))).toBe(false);
+        expect(canSelectSendCodec()).toBe(false);
+        expect(await probeSendCodecSelection(fakePeerConnection(() => failure("InvalidStateError")))).toBe(false);
+        expect(await probeSendCodecSelection(undefined)).toBe(false);
     });
 });
 
