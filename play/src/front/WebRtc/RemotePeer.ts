@@ -22,7 +22,8 @@ import { LOCAL_SCREEN_SHARING_STREAM_ID } from "../Space/Streamable";
 import type { Streamable, StreamCategory, WebRtcStreamable } from "../Space/Streamable";
 import { createMediaStreamTrackPresenceStore } from "../Space/MediaStreamTrackPresenceStore";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { canSelectSendCodec, isFirefox } from "./DeviceUtils";
+import { isFirefox } from "./DeviceUtils";
+import { canSelectSendCodec, type RTCRtpEncodingParametersWithCodec } from "./CodecPerformance";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import { subscribeToOutboundVideoQualityAnalytics, subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createPeerWebRtcStats } from "./WebRtcStatsFactory";
@@ -53,8 +54,6 @@ const debug = Debug("webrtc:RemotePeer");
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
-// WebRTC codec selection API (Chrome 119+), not in the DOM typings yet
-type RTCRtpEncodingParametersWithCodec = RTCRtpEncodingParameters & { codec?: RTCRtpCodec };
 
 export class RemotePeer extends Peer implements Streamable {
     public _connected = false;
@@ -1033,7 +1032,7 @@ export class RemotePeer extends Peer implements Streamable {
 
         const settings = videoSender.track.getSettings();
         // setCodecPreferences() only says what we prefer to receive: the peer's list drives our encoder. The codec
-        // selection API picks our send codec among the negotiated ones (Chrome 119+; other browsers ignore the field
+        // selection API picks our send codec among the negotiated ones (Chrome 119+, Firefox 142+; others ignore the field
         // and keep encoding what the peer asked for, which comes first in the negotiated list): the first codec the
         // peer asked for that we accept, for the size we are about to encode. VP9 is cheap on a thumbnail even where
         // 720p is not.

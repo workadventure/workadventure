@@ -40,6 +40,50 @@ const RETRY_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const results = new Map<string, CodecPerformance>();
 const retryDecisions = new Map<string, boolean>();
+let sendCodecSelectable = false;
+
+// WebRTC codec selection API (Chrome 119+, Firefox 142+), not in the DOM typings yet
+export type RTCRtpEncodingParametersWithCodec = RTCRtpEncodingParameters & { codec?: RTCRtpCodec };
+
+/**
+ * Whether the browser lets a sender pick its codec among the negotiated ones (RTCRtpEncodingParameters.codec). Unknown
+ * until the probe answered, and treated as unsupported meanwhile: the exclusive negotiation that follows is safe, only
+ * less flexible.
+ */
+export function canSelectSendCodec(): boolean {
+    return sendCodecSelectable;
+}
+
+/**
+ * The codec field is a dictionary member, invisible on any prototype, so it is probed on a throwaway connection: a
+ * browser that implements it must reject an unknown codec with InvalidModificationError, one that does not ignores
+ * the field and resolves. Any other failure counts as unsupported.
+ */
+export async function probeSendCodecSelection(
+    PeerConnection: typeof RTCPeerConnection | undefined = globalThis.RTCPeerConnection,
+): Promise<boolean> {
+    sendCodecSelectable = false;
+    if (!PeerConnection) {
+        return false;
+    }
+    const connection = new PeerConnection();
+    try {
+        const sender = connection.addTransceiver("video").sender;
+        const parameters = sender.getParameters();
+        const encoding: RTCRtpEncodingParametersWithCodec | undefined = parameters.encodings[0];
+        if (!encoding) {
+            return false;
+        }
+        encoding.codec = { mimeType: "video/x-probe", clockRate: 90000 };
+        await sender.setParameters(parameters);
+        return false;
+    } catch (e) {
+        sendCodecSelectable = e instanceof Error && e.name === "InvalidModificationError";
+        return sendCodecSelectable;
+    } finally {
+        connection.close();
+    }
+}
 
 function key(direction: CodecDirection, codec: ProbedCodec, sizeIndex: number): string {
     return `${direction}:${codec}:${sizeIndex}`;
@@ -127,3 +171,4 @@ export function retryGranted(direction: CodecDirection, codec: VideoCodec): bool
 }
 
 probeCodecPerformance().catch((e) => console.error("Codec performance probe failed", e));
+probeSendCodecSelection().catch((e) => console.error("Codec selection probe failed", e));

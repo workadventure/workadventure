@@ -146,12 +146,15 @@ implemented; see the "Future work" section.
        accepts for the frame size about to be encoded, and sets it as `encodings[0].codec` in `setParameters()`. The
        peer's order wins over ours: a phone asking for H.264 asked for a reason, and our list only says what we can
        afford. No renegotiation is needed, so the codec can follow the tile size. Chrome supports this since version
-       119. The two directions of one connection can use different codecs.
-    3. A browser without the codec selection API (Safari, hence every browser on iOS, and Firefox) cannot do step 2
-       and encodes whatever the peer asks for. There, the receive list is passed as **exclusive**: only those codecs
+       119 and Firefox since 142. The two directions of one connection can use different codecs.
+    3. A browser without the codec selection API (Safari today, hence every browser on iOS) cannot do step 2 and
+       encodes whatever the peer asks for. There, the receive list is passed as **exclusive**: only those codecs
        (plus rtx/red/ulpfec) are negotiated, whether we offer or answer, so the connection cannot use anything we
        cannot afford, in either direction. An iPhone therefore ends up on hardware H.264 both ways, at the cost of
-       about 40 % more bandwidth than VP9. `canSelectSendCodec()` in `DeviceUtils.ts` makes that call.
+       about 40 % more bandwidth than VP9. Whether the API exists is probed once at startup by
+       `probeSendCodecSelection()` in `CodecPerformance.ts`: the codec field is a dictionary member, invisible on any
+       prototype, but a browser that implements it must reject an unknown codec on a throwaway connection, while one
+       that does not ignores the field. Until the probe answers, the API counts as absent, which is the safe side.
 
   The encoder budget follows the codec we selected, or the first negotiated one where the field is not supported.
 
