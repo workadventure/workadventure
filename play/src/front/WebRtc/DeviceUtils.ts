@@ -36,6 +36,15 @@ export function isSafari(): boolean {
     return getNavigatorType() === NavigatorType.safari;
 }
 
+/**
+ * Whether the browser implements the WebRTC codec selection API (RTCRtpEncodingParameters.codec, Chrome 119+),
+ * letting a sender pick its codec among the negotiated ones. Safari (every browser on iOS) and Firefox do not: they
+ * encode whatever the peer asks to receive.
+ */
+export function canSelectSendCodec(): boolean {
+    return !(isFirefox() || isSafari() || isIOS());
+}
+
 export function isMac(): boolean {
     const nav = navigator as Navigator & { userAgentData?: { platform: string } };
     if (nav.userAgentData?.platform) {

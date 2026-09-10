@@ -134,18 +134,24 @@ implemented; see the "Future work" section.
   VP8 backup track on its own.
 - **P2P** ([`RemotePeer.ts`](../../../play/src/front/WebRtc/RemotePeer.ts)), in two steps, because WebRTC
   separates what we prefer to receive from what we send:
-    1. The list is handed to `@workadventure/simple-peer` as `preferredCodecs`, which calls
+    1. The list is handed to `@workadventure/simple-peer` as `receiveCodecs`, which calls
        `RTCRtpTransceiver.setCodecPreferences()` with the listed codecs first, in order, and the remaining browser
        codecs after them. **This only expresses what we prefer to receive.** libwebrtc picks its send codec as the
        first codec of the *remote* description, so this list drives the *peer's* encoder, not ours. On its own it
        produces the opposite of the intent: a phone asking for H.264 makes its desktop peer encode H.264, while the
        phone itself encodes whatever the desktop asked for.
     2. Our own send codec is therefore chosen explicitly at every encoding update, with the WebRTC codec selection
-       API: `chooseNegotiatedCodec()` takes the first entry of our list, computed for the frame size about to be
-       encoded, among the codecs negotiated on the sender (`RTCRtpSender.getParameters().codecs`), and it is set as
-       `encodings[0].codec` in `setParameters()`. No renegotiation is needed, so the codec can follow the tile size.
-       Chrome supports this since version 119; browsers that do not ignore the field and keep encoding what the peer
-       asked for. The two directions of one connection can use different codecs.
+       API: `chooseNegotiatedCodec()` takes, among the codecs negotiated on the sender
+       (`RTCRtpSender.getParameters().codecs`, in the order the peer prefers to receive them), the first one our list
+       accepts for the frame size about to be encoded, and sets it as `encodings[0].codec` in `setParameters()`. The
+       peer's order wins over ours: a phone asking for H.264 asked for a reason, and our list only says what we can
+       afford. No renegotiation is needed, so the codec can follow the tile size. Chrome supports this since version
+       119. The two directions of one connection can use different codecs.
+    3. A browser without the codec selection API (Safari, hence every browser on iOS, and Firefox) cannot do step 2
+       and encodes whatever the peer asks for. There, the receive list is passed as **exclusive**: only those codecs
+       (plus rtx/red/ulpfec) are negotiated, whether we offer or answer, so the connection cannot use anything we
+       cannot afford, in either direction. An iPhone therefore ends up on hardware H.264 both ways, at the cost of
+       about 40 % more bandwidth than VP9. `canSelectSendCodec()` in `DeviceUtils.ts` makes that call.
 
   The encoder budget follows the codec we selected, or the first negotiated one where the field is not supported.
 

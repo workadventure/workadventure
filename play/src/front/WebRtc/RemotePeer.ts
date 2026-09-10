@@ -21,7 +21,7 @@ import type { WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcS
 import type { Streamable, StreamCategory, WebRtcStreamable } from "../Space/Streamable";
 import { createMediaStreamTrackPresenceStore } from "../Space/MediaStreamTrackPresenceStore";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { isFirefox } from "./DeviceUtils";
+import { canSelectSendCodec, isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import { subscribeToOutboundVideoQualityAnalytics, subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createPeerWebRtcStats } from "./WebRtcStatsFactory";
@@ -294,16 +294,20 @@ export class RemotePeer extends Peer implements Streamable {
                     rtcpMuxPolicy: "require",
                 }),
             },
-            preferredCodecs: {
-                // What we prefer to receive (see applyVideoEncoding for what we send), judged at 720p: the largest tile we
-                video:
-                    // may show, and the most sensitive question to ask a history that infers across sizes
-                    preferredVideoCodecs(
+            receiveCodecs: {
+                video: {
+                    // What we prefer to receive (see applyVideoEncoding for what we send), judged at 720p: the largest
+                    // tile we may show, and the most sensitive question to ask a history that infers across sizes
+                    prefer: preferredVideoCodecs(
                         type,
                         type === "screenSharing" ? get(screenShareQualityStore) : get(videoQualityStore),
                         "decode",
                         1280 * 720,
                     ).map((codec) => "video/" + codec.toUpperCase()),
+                    // A browser that cannot pick its own send codec encodes whatever the peer asks for: restrict the
+                    // negotiation to what we can afford instead, in both directions
+                    exclusive: !canSelectSendCodec(),
+                },
             },
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
@@ -1023,8 +1027,9 @@ export class RemotePeer extends Peer implements Streamable {
         const settings = videoSender.track.getSettings();
         // setCodecPreferences() only says what we prefer to receive: the peer's list drives our encoder. The codec
         // selection API picks our send codec among the negotiated ones (Chrome 119+; other browsers ignore the field
-        // and keep encoding what the peer asked for, which comes first in the negotiated list). Chosen for the size
-        // we are about to encode: VP9 is cheap on a thumbnail even where 720p is not.
+        // and keep encoding what the peer asked for, which comes first in the negotiated list): the first codec the
+        // peer asked for that we accept, for the size we are about to encode. VP9 is cheap on a thumbnail even where
+        // 720p is not.
         const chosen: { sendCodec?: RTCRtpCodec } = {};
         const encoding = computeVideoEncoding(
             this.viewerDisplay,
