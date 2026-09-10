@@ -62,8 +62,10 @@ test.describe("Picture In Picture", () => {
         await alicePage.mouse.move(300, 300);
         await bobPage.mouse.move(300, 300);
 
-        // Wait for the video call button to be visible
-        await expect(bobPage.getByTestId("pictureInPictureButtonDisabled")).toBeVisible({ timeout: 10_000 });
-        await expect(alicePage.getByTestId("pictureInPictureButtonDisabled")).toBeVisible({ timeout: 10_000 });
+        // Check the Picture in Picture button is not available
+        await expect(bobPage.getByTestId("screenShareButton")).toBeVisible({ timeout: 10_000 });
+        await expect(bobPage.getByTestId("pictureInPictureButtonDisabled")).toBeHidden({ timeout: 10_000 });
+        await expect(alicePage.getByTestId("screenShareButton")).toBeVisible({ timeout: 10_000 });
+        await expect(alicePage.getByTestId("pictureInPictureButtonDisabled")).toBeHidden({ timeout: 10_000 });
     });
 });

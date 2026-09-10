@@ -38,7 +38,7 @@
 <ActionBarButton
     classList="group/btn-picture-in-picture"
     disabledHelp={$openedMenuStore !== undefined}
-    state={$pictureInPictureSupportedStore ? ($activePictureInPictureStore ? "active" : "normal") : "disabled"}
+    state={$activePictureInPictureStore ? "active" : "normal"}
     dataTestId={$pictureInPictureSupportedStore ? "pictureInPictureButton" : "pictureInPictureButtonDisabled"}
     tooltipTitle={$LL.actionbar.help.pictureInPicture.title()}
     desc={$pictureInPictureSupportedStore
