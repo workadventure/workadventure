@@ -71,13 +71,13 @@ Then, for every codec except H.264, which always stays:
 - A codec dropped for smoothness gets **one retry per week**, so a single bad session cannot demote it forever.
 
 So a Pixel with a hardware VP9 encoder keeps VP9; a phone without one encodes H.264; a weak laptop that struggled with
-VP9 at 720p last week gets H.264 at 720p but still VP9 on a small P2P tile.
+VP9 at 720p last week gets H.264.
 
 ### What the browser knows: `CodecPerformance.ts`
 
 At startup, [`CodecPerformance.ts`](../../../play/src/front/WebRtc/CodecPerformance.ts) asks
 `navigator.mediaCapabilities.encodingInfo()` and `decodingInfo()` with `type: "webrtc"` about AV1, VP9 and H.264 at
-seven frame sizes from 160 × 90 to 2560 × 1440. That is a few milliseconds of lookups, no encoding. The answers are
+three frame sizes, 720p, 1080p and 1440p. That is a few milliseconds of lookups, no encoding. The answers are
 cached and read synchronously afterwards; until they arrive, the lists behave as if there were no verdict.
 
 In Chromium (verified in the source):
@@ -95,10 +95,9 @@ In Chromium (verified in the source):
   only, H.264 in hardware both ways, and no AV1 at all. A browser without the API leaves everything unknown, and the
   static rule applies.
 
-The decision is made at the size we are about to encode, because that is where the history is written and where the
-cost is: in P2P the tile the viewer displays, on LiveKit the capture size. The P2P receive preference, which cannot
-change without a renegotiation, is judged at 720p, the most sensitive question to ask a history that infers across
-sizes.
+The decision is made at the size we encode: the capture size on LiveKit, and 720p for a P2P connection, whose codec
+set cannot change without a renegotiation. 720p is also the most sensitive question to ask a history that infers
+across sizes: not smooth at any smaller size means not smooth at 720p.
 
 The weekly retry is a timestamp per codec and direction, kept by `LocalUserStore` like every other local setting,
 decided once per session so every stream of the session agrees. Without it, avoiding a codec would mean never encoding with it again, so the browser would
@@ -133,39 +132,27 @@ implemented; see the "Future work" section.
   `videoCodec` at `publishTrack()`. This is explicit on purpose: LiveKit silently rewrites an unsupported codec to its
   hardcoded default of VP8, not to `publishDefaults.videoCodec`. When the primary codec is VP8, LiveKit disables the
   VP8 backup track on its own.
-- **P2P** ([`RemotePeer.ts`](../../../play/src/front/WebRtc/RemotePeer.ts)), in two steps, because WebRTC
-  separates what we prefer to receive from what we send:
-    1. The list is handed to `@workadventure/simple-peer` as `receiveCodecs`, which calls
-       `RTCRtpTransceiver.setCodecPreferences()` with the listed codecs first, in order, and the remaining browser
-       codecs after them. **This only expresses what we prefer to receive.** libwebrtc picks its send codec as the
-       first codec of the *remote* description, so this list drives the *peer's* encoder, not ours. On its own it
-       produces the opposite of the intent: a phone asking for H.264 makes its desktop peer encode H.264, while the
-       phone itself encodes whatever the desktop asked for.
-    2. Our own send codec is therefore chosen explicitly at every encoding update, with the WebRTC codec selection
-       API: `chooseNegotiatedCodec()` takes, among the codecs negotiated on the sender
-       (`RTCRtpSender.getParameters().codecs`, in the order the peer prefers to receive them), the first one our list
-       accepts for the frame size about to be encoded, and sets it as `encodings[0].codec` in `setParameters()`. The
-       peer's order wins over ours: a phone asking for H.264 asked for a reason, and our list only says what we can
-       afford. No renegotiation is needed, so the codec can follow the tile size. Chrome supports this since version
-       119 and Firefox since 142. The two directions of one connection can use different codecs.
-    3. A browser without the codec selection API (Safari today, hence every browser on iOS) cannot do step 2 and
-       encodes whatever the peer asks for. There, the negotiation is **exclusive** and limited to what we can afford
-       to **encode**, ordered by what we prefer to decode (`negotiableVideoCodecs()`): only those codecs (plus
-       rtx/red/ulpfec) are negotiated, whether we offer or answer, so neither direction can use anything else.
-       `setCodecPreferences()` alone would not achieve that: a browser sends the codecs of the *remote* description,
-       so an exclusive answer restricts the offerer but not the answerer. The fork (12.2.0) therefore also removes
-       the other codecs from every remote description before applying it. The end-to-end test
-       `tests/webrtc_codecs.spec.ts` checks what each side of a bubble encodes, with Bob in Chromium, Firefox or
-       WebKit (`BOB_BROWSER`), against a deployment when `PLAY_URL` and `CODEC_TEST_MAP_URL` are set. An
-       iPhone decodes VP9 in hardware but encodes it in software, so it ends up on hardware H.264 both ways, at the
-       cost of about 40 % more bandwidth than VP9. Asking to receive VP9 while sending H.264 would need the peer to
-       know what we can encode before it offers, which is a protocol change kept for later. Whether the API exists is
-       probed once at startup by
-       `probeSendCodecSelection()` in `CodecPerformance.ts`: the codec field is a dictionary member, invisible on any
-       prototype, but a browser that implements it must reject an unknown codec on a throwaway connection, while one
-       that does not ignores the field. Until the probe answers, the API counts as absent, which is the safe side.
+- **P2P** ([`RemotePeer.ts`](../../../play/src/front/WebRtc/RemotePeer.ts)): the list is handed to
+  `@workadventure/simple-peer` as `receiveCodecs`, **exclusive**. WebRTC separates what a peer prefers to receive
+  from what it sends: `RTCRtpTransceiver.setCodecPreferences()` only shapes what we advertise for receiving, and a
+  browser sends the codecs of the *remote* description, in the remote's order. On its own, a preference therefore
+  drives the *peer's* encoder, not ours: a phone asking for H.264 made its desktop peer encode H.264, while the phone
+  itself encoded whatever the desktop asked for. So the negotiation is limited to what we can afford to **encode**,
+  ordered by what we prefer to decode (`negotiableVideoCodecs()`, judged at 720p since the set cannot change without
+  a renegotiation): the fork (12.2.0) leaves the other codecs out of our offers and answers and removes them from
+  every remote description before applying it, so neither direction can use anything else. Within that set the
+  peer's order wins: the browser encodes the first codec the peer listed, and the encoder budget follows that codec,
+  read from `RTCRtpSender.getParameters().codecs[0]`.
 
-  The encoder budget follows the codec we selected, or the first negotiated one where the field is not supported.
+  An iPhone decodes VP9 in hardware but encodes it in software, so it ends up on hardware H.264 both ways, at the
+  cost of about 40 % more bandwidth than VP9. Receiving VP9 while sending H.264 would need the peer to know what we
+  can encode before it offers, a protocol change kept for later. The WebRTC codec selection API
+  (`RTCRtpEncodingParameters.codec`, Chrome 119+, Firefox 142+) could pick the send codec per tile size without a
+  renegotiation, but it yields the same codec in every common case, so it is not used.
+
+  The end-to-end test `tests/webrtc_codecs.spec.ts` checks what each side of a bubble encodes, with Bob in
+  Chromium, Firefox or WebKit (`BOB_BROWSER`), against a deployment when `PLAY_URL` and `CODEC_TEST_MAP_URL` are
+  set.
 
 ## Bitrate Budget
 

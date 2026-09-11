@@ -22,7 +22,6 @@ import type { Streamable, StreamCategory, WebRtcStreamable } from "../Space/Stre
 import { createMediaStreamTrackPresenceStore } from "../Space/MediaStreamTrackPresenceStore";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
-import { canSelectSendCodec, type RTCRtpEncodingParametersWithCodec } from "./CodecPerformance";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import { subscribeToOutboundVideoQualityAnalytics, subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createPeerWebRtcStats } from "./WebRtcStatsFactory";
@@ -35,9 +34,7 @@ import {
 } from "./AdaptiveVideoEncoding";
 import { registerLocalEncoderStats } from "./LocalEncoderStats";
 import {
-    chooseNegotiatedCodec,
     negotiableVideoCodecs,
-    preferredVideoCodecs,
     selectVideoPreset,
     videoCodecFromMimeType,
     type VideoCodec,
@@ -297,15 +294,10 @@ export class RemotePeer extends Peer implements Streamable {
             },
             receiveCodecs: {
                 video: {
-                    // What we prefer to receive (see applyVideoEncoding for what we send), judged at 720p: the largest
-                    // tile we may show, and the most sensitive question to ask a history that infers across sizes.
-                    // A browser that cannot pick its own send codec encodes whatever the peer asks for: it negotiates
-                    // only what it can afford to encode instead, exclusively, in both directions.
-                    prefer: (canSelectSendCodec()
-                        ? preferredVideoCodecs(type, quality, "decode", 1280 * 720)
-                        : negotiableVideoCodecs(type, quality)
-                    ).map((codec) => "video/" + codec.toUpperCase()),
-                    exclusive: !canSelectSendCodec(),
+                    // What we prefer to receive, among what we can afford to encode: a browser sends the codecs of the
+                    // remote description, so this list restricts both directions (see negotiableVideoCodecs)
+                    prefer: negotiableVideoCodecs(type, quality).map((codec) => "video/" + codec.toUpperCase()),
+                    exclusive: true,
                 },
             },
             // Firefox works better with trickle ICE enabled
@@ -1024,29 +1016,13 @@ export class RemotePeer extends Peer implements Streamable {
         this.cutVideoUnlessViewerReports();
 
         const settings = videoSender.track.getSettings();
-        // setCodecPreferences() only says what we prefer to receive: the peer's list drives our encoder. The codec
-        // selection API picks our send codec among the negotiated ones (Chrome 119+, Firefox 142+; others ignore the field
-        // and keep encoding what the peer asked for, which comes first in the negotiated list): the first codec the
-        // peer asked for that we accept, for the size we are about to encode. VP9 is cheap on a thumbnail even where
-        // 720p is not.
-        const chosen: { sendCodec?: RTCRtpCodec } = {};
+        // The negotiated codecs come in the order the peer prefers to receive them, and the browser sends the first
+        const codec = videoCodecFromMimeType(parameters.codecs?.[0]?.mimeType) ?? "vp8";
         const encoding = computeVideoEncoding(
             this.viewerDisplay,
             { width: settings.width || 1280, height: settings.height || 720 },
-            (width, height) => {
-                chosen.sendCodec = chooseNegotiatedCodec(
-                    preferredVideoCodecs(this.type, this.getLocalQualitySetting(), "encode", width * height),
-                    parameters.codecs ?? [],
-                );
-                const codec = videoCodecFromMimeType((chosen.sendCodec ?? parameters.codecs?.[0])?.mimeType) ?? "vp8";
-                return this.getPresetForDimensions(width, height, codec);
-            },
+            (width, height) => this.getPresetForDimensions(width, height, codec),
         );
-        if (chosen.sendCodec) {
-            const { mimeType, clockRate, sdpFmtpLine, channels } = chosen.sendCodec;
-            const encoding0: RTCRtpEncodingParametersWithCodec = parameters.encodings[0];
-            encoding0.codec = { mimeType, clockRate, sdpFmtpLine, channels };
-        }
 
         if (this.type === "screenSharing") {
             parameters.degradationPreference = get(bandwidthConstrainedPreferenceStore);

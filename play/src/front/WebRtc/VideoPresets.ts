@@ -49,20 +49,8 @@ export function videoCodecFromMimeType(mimeType: string | undefined): VideoCodec
 }
 
 /**
- * Among the codecs negotiated on a sender, listed in the order the peer prefers to receive them, the first one we
- * accept. The peer's order wins over ours: a phone asking for H.264 asked for a reason, and our list only says what
- * we can afford. H.264 is negotiated as several profile entries; any of them will do.
- */
-export function chooseNegotiatedCodec(accepted: VideoCodec[], negotiated: RTCRtpCodec[]): RTCRtpCodec | undefined {
-    return negotiated.find((candidate) => {
-        const codec = videoCodecFromMimeType(candidate.mimeType);
-        return codec !== undefined && accepted.includes(codec);
-    });
-}
-
-/**
- * What to negotiate on a connection whose browser cannot pick its own send codec: it will encode whatever the peer
- * asks for, so nothing we cannot afford to encode may be negotiated at all. Ordered by what we prefer to decode.
+ * What to negotiate on a P2P connection: a browser encodes whatever the peer asks for, so nothing we cannot afford
+ * to encode may be negotiated at all. Ordered by what we prefer to decode.
  * Judged at 720p, the largest frame we may have to encode, since the set cannot change afterwards.
  *
  * An iPhone decodes VP9 in hardware but encodes it in software: this gives H.264 only, both ways.
