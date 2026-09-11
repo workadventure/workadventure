@@ -341,12 +341,13 @@
                                 >
                                     <button
                                         type="button"
+                                        class="flex min-w-0 flex-1 cursor-pointer items-stretch gap-3 border-none bg-transparent p-0 m-0 text-left text-inherit focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
                                         onclick={() =>
                                             openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
                                         data-testid="recording-item-{index}"
                                     >
                                         <span
-                                            class="relative w-40 min-w-40 shrink-0 overflow-hidden rounded bg-black/30 aspect-video"
+                                            class="relative block w-40 min-w-40 shrink-0 self-center overflow-hidden rounded bg-black/30 aspect-video"
                                         >
                                             <img
                                                 class="absolute inset-0 h-full w-full object-cover"
