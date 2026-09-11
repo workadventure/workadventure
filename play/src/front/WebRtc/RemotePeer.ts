@@ -25,6 +25,7 @@ import { isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import { subscribeToOutboundVideoQualityAnalytics, subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createPeerWebRtcStats } from "./WebRtcStatsFactory";
+import { demotedCodecStore } from "./CodecPerformance";
 import {
     computeVideoEncoding,
     DEFAULT_VIEWER_DISPLAY,
@@ -86,6 +87,7 @@ export class RemotePeer extends Peer implements Streamable {
     public readonly senderWebrtcStats: Readable<WebRtcSenderStats | undefined>;
     private senderAnalyticsUnsubscribe: Unsubscriber | undefined;
     private unregisterLocalEncoderStats: Unsubscriber | undefined;
+    private demotedCodecUnsubscribe: Unsubscriber | undefined;
     private analyticsStatsUnsubscribe: Unsubscriber | undefined;
     private analyticsRemoteStreamUnsubscribe: (() => void) | undefined;
     private receiverMaxBitrateBps: number | undefined;
@@ -162,6 +164,12 @@ export class RemotePeer extends Peer implements Streamable {
 
     private readonly iceTimeoutHandler = () => {
         this._statusStore.set("error");
+    };
+
+    private readonly negotiatedHandler = () => {
+        if (this._connected) {
+            this.applyVideoEncoding();
+        }
     };
 
     private readonly connectHandler = () => {
@@ -279,6 +287,12 @@ export class RemotePeer extends Peer implements Streamable {
         incrementWebRtcConnectionsCount();
         const firefoxBrowser = isFirefox();
         const quality = type === "screenSharing" ? get(screenShareQualityStore) : get(videoQualityStore);
+        const receiveCodecs = () => ({
+            video: {
+                prefer: negotiableVideoCodecs(type, quality).map((codec) => "video/" + codec.toUpperCase()),
+                exclusive: true,
+            },
+        });
 
         // Firefox-specific configuration
         const peerConfig: PeerOptions = {
@@ -292,18 +306,26 @@ export class RemotePeer extends Peer implements Streamable {
                     rtcpMuxPolicy: "require",
                 }),
             },
-            receiveCodecs: {
-                video: {
-                    // What we prefer to receive, among what we can afford to encode: a browser sends the codecs of the
-                    // remote description, so this list restricts both directions (see negotiableVideoCodecs)
-                    prefer: negotiableVideoCodecs(type, quality).map((codec) => "video/" + codec.toUpperCase()),
-                    exclusive: true,
-                },
-            },
+            // What we prefer to receive, among what we can afford to encode: a browser sends the codecs of the
+            // remote description, so this list restricts both directions (see negotiableVideoCodecs)
+            receiveCodecs: receiveCodecs(),
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
         };
         super(peerConfig);
+
+        // A codec the CPU limitation detector demoted leaves the negotiated set: whoever initiates the renegotiation,
+        // both sides end up on the remaining codecs (the fork re-applies the preference on offers and answers)
+        let negotiated = receiveCodecs().video.prefer.join();
+        this.demotedCodecUnsubscribe = demotedCodecStore[type].subscribe(() => {
+            const wanted = receiveCodecs();
+            if (wanted.video.prefer.join() === negotiated) {
+                return;
+            }
+            negotiated = wanted.video.prefer.join();
+            this.receiveCodecs = wanted;
+            this.negotiate();
+        });
 
         this.volume = writable(defaultVolume);
         this.videoType = type;
@@ -425,6 +447,9 @@ export class RemotePeer extends Peer implements Streamable {
         this.on("iceTimeout", this.iceTimeoutHandler);
 
         this.on("connect", this.connectHandler);
+
+        // The codec may have changed: the bitrate budget follows
+        this.on("negotiated", this.negotiatedHandler);
 
         this.on("data", this.dataHandler);
 
@@ -704,6 +729,7 @@ export class RemotePeer extends Peer implements Streamable {
             this.off("error", this.errorHandler);
             this.off("iceTimeout", this.iceTimeoutHandler);
             this.off("connect", this.connectHandler);
+            this.off("negotiated", this.negotiatedHandler);
             this.off("data", this.dataHandler);
             this.off("finish", this.finishHandler);
 
@@ -725,6 +751,8 @@ export class RemotePeer extends Peer implements Streamable {
             this.senderAnalyticsUnsubscribe = undefined;
             this.unregisterLocalEncoderStats?.();
             this.unregisterLocalEncoderStats = undefined;
+            this.demotedCodecUnsubscribe?.();
+            this.demotedCodecUnsubscribe = undefined;
             if (this.closing) {
                 return;
             }

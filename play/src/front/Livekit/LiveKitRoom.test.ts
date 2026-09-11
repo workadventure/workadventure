@@ -8,6 +8,7 @@ import type { LocalStreamStoreValue } from "../Stores/MediaStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { Streamable } from "../Space/Streamable";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { demotedCodecStore } from "../WebRtc/CodecPerformance";
 import { LiveKitRoom } from "./LiveKitRoom";
 
 const audioPlaybackStoreMock = vi.hoisted(() => {
@@ -321,6 +322,78 @@ describe("LiveKitRoom", () => {
         expect(queueScreenShareUpdate).toHaveBeenLastCalledWith(undefined);
     });
 });
+
+describe("codec demotion", () => {
+    beforeEach(() => {
+        window.capabilities = {};
+        demotedCodecStore.video.set(undefined);
+        demotedCodecStore.screenSharing.set(undefined);
+    });
+
+    it("republishes the screen share without the demoted codec", async () => {
+        const stream = createScreenShareStreamWithVideo();
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(stream),
+            shouldPublishScreenShareStore: writable(true),
+        });
+        const publishTrack = vi.fn().mockResolvedValue(undefined);
+        const unpublishTrack = vi.fn().mockResolvedValue(undefined);
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack, unpublishTrack } as never;
+        room["screenShareStreamStore"] = writable(stream);
+        await room["handleScreenShareUpdate"](stream);
+        expect(publishTrack.mock.calls[0][1].videoCodec).toBe("vp9");
+
+        demotedCodecStore.screenSharing.set("vp9");
+        room["republishScreenShare"]();
+        await room["screenShareUpdateQueue"];
+
+        expect(unpublishTrack).toHaveBeenCalledOnce();
+        expect(publishTrack).toHaveBeenCalledTimes(2);
+        expect(publishTrack.mock.calls[1][1].videoCodec).toBe("h264");
+    });
+
+    it("unpublishes the camera for real, once, to publish it again without the demoted codec", async () => {
+        const cameraStream = createCameraStream();
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const publishTrack = vi.fn().mockResolvedValue(undefined);
+        const unpublishTrack = vi.fn().mockResolvedValue(undefined);
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack, unpublishTrack } as never;
+        room["cameraStreamStore"] = writable(cameraStream);
+        await room["handleCameraTrack"](cameraStream);
+        expect(publishTrack.mock.calls[0][1].videoCodec).toBe("vp9");
+
+        demotedCodecStore.video.set("vp9");
+        room["republishCamera"]();
+        await room["mediaTrackUpdateQueue"];
+
+        expect(unpublishTrack).toHaveBeenCalledOnce();
+        expect(publishTrack).toHaveBeenCalledTimes(2);
+        expect(publishTrack.mock.calls[1][1].videoCodec).toBe("h264");
+
+        // Turning the camera off afterwards pauses the publication, as before
+        await room["handleCameraTrack"](undefined);
+        expect(unpublishTrack).toHaveBeenCalledOnce();
+        const cameraTrack = room["localCameraTrack"] as unknown as { pauseUpstream: ReturnType<typeof vi.fn> };
+        expect(cameraTrack.pauseUpstream.mock.calls).toHaveLength(1);
+    });
+});
+
+function createScreenShareStreamWithVideo(): LocalStreamStoreValue {
+    const track = {
+        id: "screen-track",
+        kind: "video",
+        getSettings: () => ({ width: 1920, height: 1080 }),
+    } as unknown as MediaStreamTrack;
+    return {
+        type: "success",
+        stream: { getVideoTracks: () => [track], getAudioTracks: () => [] } as unknown as MediaStream,
+    };
+}
 
 function createLiveKitRoom({
     screenSharingLocalStreamStore,

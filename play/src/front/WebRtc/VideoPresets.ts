@@ -1,4 +1,5 @@
-import { codecPerformance, retryGranted, type CodecDirection } from "./CodecPerformance";
+import { get } from "svelte/store";
+import { codecPerformance, demotedCodecStore, retryGranted, type CodecDirection } from "./CodecPerformance";
 import { isAndroid, isIOS } from "./DeviceUtils";
 
 export type VideoQualitySetting = "low" | "recommended" | "high";
@@ -14,6 +15,8 @@ export type VideoCodec = "av1" | "vp9" | "h264" | "vp8";
  * codec ran smoothly at that size on this machine (see CodecPerformance). A phone only gets a codec its hardware
  * handles. H.264 is the floor: a hardware encoder nearly everywhere (VideoToolbox, MediaFoundation, MediaCodec), and
  * always negotiated. VP8 is not listed: every browser negotiates it anyway, and it is only ever software.
+ *
+ * A codec that could not keep up during this session (demotedCodecStore) is out, with every codec above it.
  */
 export function preferredVideoCodecs(
     category: "video" | "screenSharing",
@@ -24,7 +27,8 @@ export function preferredVideoCodecs(
     const mobile = isAndroid() || isIOS();
     const candidates: VideoCodec[] =
         category === "screenSharing" && quality !== "low" ? ["av1", "vp9", "h264"] : ["vp9", "h264"];
-    return candidates.filter((codec) => {
+    const demoted = get(demotedCodecStore[category]);
+    return candidates.slice(demoted ? candidates.indexOf(demoted) + 1 : 0).filter((codec) => {
         if (codec === "h264") {
             return true;
         }
