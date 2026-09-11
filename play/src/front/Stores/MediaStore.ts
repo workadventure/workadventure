@@ -19,6 +19,7 @@ import {
     createBackgroundTransformer,
 } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { LL } from "../../i18n/i18n-svelte";
+import { gameSceneIsLoadedStore } from "./GameSceneStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore, warningMessageStore } from "./ErrorStore";
@@ -1347,6 +1348,7 @@ const SPEECH_HOLD_MS = 1500;
  *   audio is inspected, transmitted or stored.
  */
 let endMicrophoneDwell: EndTimedAnalyticsEvent | undefined;
+let unsubscribeEffectiveMicrophone: Unsubscriber | undefined;
 let unsubscribeVoiceIndicator: Unsubscriber | undefined;
 
 const speechIntervals = createHeldIntervalTracker(
@@ -1354,32 +1356,50 @@ const speechIntervals = createHeldIntervalTracker(
     SPEECH_HOLD_MS,
 );
 
-// This is a singleton so we can safely not ever unsubscribe from it.
+const closeMicrophoneDwell = (): void => {
+    speechIntervals.stop();
+    unsubscribeVoiceIndicator?.();
+    unsubscribeVoiceIndicator = undefined;
+    endMicrophoneDwell?.();
+    endMicrophoneDwell = undefined;
+};
+
+// Nothing here may be watched from module scope. `effectiveMicrophoneStateStore` is
+// derived off the getUserMedia chain, so subscribing to it is what STARTS that chain:
+// doing it at import time reaches for the microphone before the user has even reached
+// a room, which changes when permission is asked for and when devices are held.
+// `gameSceneIsLoadedStore` is a plain writable and costs nothing to watch, and it is
+// true exactly while the user is in a room — which is also the only time an analytics
+// row has a room to belong to.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-effectiveMicrophoneStateStore.subscribe((microphoneOpen: boolean) => {
-    if (!microphoneOpen) {
-        speechIntervals.stop();
-        unsubscribeVoiceIndicator?.();
-        unsubscribeVoiceIndicator = undefined;
-        endMicrophoneDwell?.();
-        endMicrophoneDwell = undefined;
+gameSceneIsLoadedStore.subscribe((inRoom: boolean) => {
+    if (!inRoom) {
+        unsubscribeEffectiveMicrophone?.();
+        unsubscribeEffectiveMicrophone = undefined;
+        closeMicrophoneDwell();
         return;
     }
 
-    endMicrophoneDwell ??= analyticsClient.openTimedEvent(
-        "media.microphone.dwell",
-        {},
-        // The microphone did not close because the socket did: after a reconnect it
-        // is still open, and nothing will say so again.
-        { reopenOnReconnect: true },
-    );
+    unsubscribeEffectiveMicrophone ??= effectiveMicrophoneStateStore.subscribe((microphoneOpen: boolean) => {
+        if (!microphoneOpen) {
+            closeMicrophoneDwell();
+            return;
+        }
 
-    // Only watch the analyser while there is something to hear. localVoiceIndicatorStore
-    // is derived, so subscribing is what starts the SoundMeter: holding it open with the
-    // microphone closed would run one for nothing.
-    unsubscribeVoiceIndicator ??= localVoiceIndicatorStore.subscribe((speaking: boolean) =>
-        speechIntervals.set(speaking),
-    );
+        endMicrophoneDwell ??= analyticsClient.openTimedEvent(
+            "media.microphone.dwell",
+            {},
+            // The microphone did not close because the socket did: after a reconnect it
+            // is still open, and nothing will say so again.
+            { reopenOnReconnect: true },
+        );
+
+        // Same reasoning one level down: subscribing is what starts the SoundMeter, so
+        // it runs only while there is actually something to hear.
+        unsubscribeVoiceIndicator ??= localVoiceIndicatorStore.subscribe((speaking: boolean) =>
+            speechIntervals.set(speaking),
+        );
+    });
 });
 
 /**
