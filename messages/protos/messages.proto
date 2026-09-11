@@ -826,9 +826,9 @@ message Recording {
   string timestamp = 1;
   string baseFilename = 2;
   VideoFile videoFile = 3;
-  reserved 4; // was: repeated Thumbnail thumbnails, one signed URL every 10s of video. See GetRecordingThumbnailsQuery.
   // Signed URL of the thumbnail shown in the list, empty if the recording has none.
-  string posterUrl = 5;
+  // The other thumbnails are fetched on demand, see GetRecordingThumbnailsQuery.
+  string posterUrl = 4;
 }
 
 message VideoFile {
