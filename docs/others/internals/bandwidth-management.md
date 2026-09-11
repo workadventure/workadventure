@@ -91,8 +91,9 @@ In Chromium (verified in the source):
   and a user who only ever sits in large bubbles never writes any. With no history the answer is optimistic.
   Verdicts infer across sizes: smooth at a large size implies smooth below, not smooth at a small size implies not
   smooth above.
-- Safari and Firefox do not answer the WebRTC type: everything stays unknown there and the static rule applies. On
-  iOS that is the right answer anyway, Apple hardware encodes H.264 only.
+- Safari answers the WebRTC type too. An iPhone 14 reports VP9 as decodable in hardware but encodable in software
+  only, H.264 in hardware both ways, and no AV1 at all. A browser without the API leaves everything unknown, and the
+  static rule applies.
 
 The decision is made at the size we are about to encode, because that is where the history is written and where the
 cost is: in P2P the tile the viewer displays, on LiveKit the capture size. The P2P receive preference, which cannot
@@ -148,10 +149,13 @@ implemented; see the "Future work" section.
        afford. No renegotiation is needed, so the codec can follow the tile size. Chrome supports this since version
        119 and Firefox since 142. The two directions of one connection can use different codecs.
     3. A browser without the codec selection API (Safari today, hence every browser on iOS) cannot do step 2 and
-       encodes whatever the peer asks for. There, the receive list is passed as **exclusive**: only those codecs
-       (plus rtx/red/ulpfec) are negotiated, whether we offer or answer, so the connection cannot use anything we
-       cannot afford, in either direction. An iPhone therefore ends up on hardware H.264 both ways, at the cost of
-       about 40 % more bandwidth than VP9. Whether the API exists is probed once at startup by
+       encodes whatever the peer asks for. There, the negotiation is **exclusive** and limited to what we can afford
+       to **encode**, ordered by what we prefer to decode (`negotiableVideoCodecs()`): only those codecs (plus
+       rtx/red/ulpfec) are negotiated, whether we offer or answer, so neither direction can use anything else. An
+       iPhone decodes VP9 in hardware but encodes it in software, so it ends up on hardware H.264 both ways, at the
+       cost of about 40 % more bandwidth than VP9. Asking to receive VP9 while sending H.264 would need the peer to
+       know what we can encode before it offers, which is a protocol change kept for later. Whether the API exists is
+       probed once at startup by
        `probeSendCodecSelection()` in `CodecPerformance.ts`: the codec field is a dictionary member, invisible on any
        prototype, but a browser that implements it must reject an unknown codec on a throwaway connection, while one
        that does not ignores the field. Until the probe answers, the API counts as absent, which is the safe side.

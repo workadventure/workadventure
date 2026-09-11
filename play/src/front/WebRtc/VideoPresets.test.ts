@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
     chooseNegotiatedCodec,
+    negotiableVideoCodecs,
     preferredVideoCodecs,
     selectVideoPreset,
     videoCodecFromMimeType,
@@ -130,6 +131,37 @@ describe("selectVideoPreset", () => {
         expect(selectVideoPreset(720, 1280, false, "recommended", "vp9").fps).toBe(30);
         expect(selectVideoPreset(90, 160, false, "high", "vp9").fps).toBe(30);
         expect(selectVideoPreset(360, 640, true, "low", "av1").fps).toBe(30);
+    });
+});
+
+describe("negotiableVideoCodecs", () => {
+    beforeEach(() => {
+        vi.mocked(isAndroid).mockReturnValue(false);
+        vi.mocked(isIOS).mockReturnValue(false);
+        vi.mocked(retryGranted).mockReturnValue(false);
+    });
+
+    it("keeps only what can be encoded, in decode preference order: an iPhone gets H.264 both ways", () => {
+        vi.mocked(isIOS).mockReturnValue(true);
+        vi.mocked(codecPerformance).mockImplementation((direction, codec) => {
+            if (codec === "h264") {
+                return { supported: true, smooth: true, powerEfficient: true };
+            }
+            if (codec === "vp9") {
+                // Hardware decoder, software encoder
+                return { supported: true, smooth: direction === "decode", powerEfficient: direction === "decode" };
+            }
+            return { supported: false, smooth: false, powerEfficient: false };
+        });
+        expect(preferredVideoCodecs("video", "high", "decode", 1280 * 720)).toEqual(["vp9", "h264"]);
+        expect(negotiableVideoCodecs("video", "high")).toEqual(["h264"]);
+        vi.mocked(isIOS).mockReturnValue(false);
+    });
+
+    it("is the decode list when everything can be encoded", () => {
+        vi.mocked(isIOS).mockReturnValue(false);
+        vi.mocked(codecPerformance).mockReturnValue(undefined);
+        expect(negotiableVideoCodecs("screenSharing", "high")).toEqual(["av1", "vp9", "h264"]);
     });
 });
 

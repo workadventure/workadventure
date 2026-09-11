@@ -7,8 +7,9 @@ import type { VideoCodec } from "./VideoPresets";
  *
  * In Chromium, `powerEfficient` means a hardware encoder or decoder exists for the codec, and `smooth` comes from a
  * per-profile history of real WebRTC sessions: the 99th percentile of the processing time per frame, per codec and
- * frame size, recorded only while a single encoder runs. With no history the answer is optimistic. Safari and Firefox
- * do not answer the WebRTC type, so everything stays unknown there.
+ * frame size, recorded only while a single encoder runs. With no history the answer is optimistic. Safari answers the
+ * WebRTC type too (an iPhone 14 reports hardware VP9 decoding, software VP9 encoding, hardware H.264 both ways, no
+ * AV1); a browser without the API leaves everything unknown.
  */
 
 export type CodecDirection = "encode" | "decode";

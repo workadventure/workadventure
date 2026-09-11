@@ -30,7 +30,7 @@ export function preferredVideoCodecs(
         }
         const performance = codecPerformance(direction, codec, pixels);
         if (!performance) {
-            // No verdict (probe pending, Safari, Firefox): a desktop tries, a phone does not
+            // No verdict (probe pending, or a browser without the API): a desktop tries, a phone does not
             return !mobile;
         }
         if (mobile && !performance.powerEfficient) {
@@ -58,6 +58,18 @@ export function chooseNegotiatedCodec(accepted: VideoCodec[], negotiated: RTCRtp
         const codec = videoCodecFromMimeType(candidate.mimeType);
         return codec !== undefined && accepted.includes(codec);
     });
+}
+
+/**
+ * What to negotiate on a connection whose browser cannot pick its own send codec: it will encode whatever the peer
+ * asks for, so nothing we cannot afford to encode may be negotiated at all. Ordered by what we prefer to decode.
+ * Judged at 720p, the largest frame we may have to encode, since the set cannot change afterwards.
+ *
+ * An iPhone decodes VP9 in hardware but encodes it in software: this gives H.264 only, both ways.
+ */
+export function negotiableVideoCodecs(category: "video" | "screenSharing", quality: VideoQualitySetting): VideoCodec[] {
+    const encodable = preferredVideoCodecs(category, quality, "encode", 1280 * 720);
+    return preferredVideoCodecs(category, quality, "decode", 1280 * 720).filter((codec) => encodable.includes(codec));
 }
 
 // Bitrate needed for the same visual quality, relative to AV1. Each codec generation saves roughly 30 %; WebRTC
