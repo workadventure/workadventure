@@ -83,6 +83,11 @@ export class IoSocketController {
 
     adminRoomSocket(): void {
         this.app.ws<AdminSocketData>("/ws/admin/rooms", {
+            // The "listen" message carries the admin JWT (which embeds every authorized room URL)
+            // plus the same room list again, so a large organization goes over uWS' 16kB default.
+            // uWS then drops such a message by closing the socket with no close frame at all, so
+            // the admin only sees a bare 1006 and silently loses its "users connected" counters.
+            maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES,
             upgrade: (res, req, context) => {
                 const websocketKey = req.getHeader("sec-websocket-key");
