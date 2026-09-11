@@ -86,7 +86,14 @@ vi.mock("livekit-client", async (importOriginal) => {
         public replaceTrack = vi.fn().mockResolvedValue(undefined);
         constructor(public mediaStreamTrack: MediaStreamTrack) {}
     }
-    return { ...actual, LocalVideoTrack: FakeLocalTrack, LocalAudioTrack: FakeLocalTrack };
+    return {
+        ...actual,
+        LocalVideoTrack: FakeLocalTrack,
+        LocalAudioTrack: FakeLocalTrack,
+        // Codec support is probed through RTCRtpSender, which jsdom does not have
+        supportsAV1: () => false,
+        supportsVP9: () => true,
+    };
 });
 
 describe("LiveKitRoom", () => {
