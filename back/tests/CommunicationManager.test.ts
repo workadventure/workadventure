@@ -291,7 +291,7 @@ describe("CommunicationManager", () => {
             const user = createSpaceUser("user_1");
             await manager.handleUserAdded(user);
 
-            expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.WEBRTC, 0);
+            expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.WEBRTC, 0, 0);
         });
 
         it("should cancel pending transition when conditions change after adding user", async () => {
@@ -367,11 +367,35 @@ describe("CommunicationManager", () => {
             const user = createSpaceUser("user_1");
             await manager.handleUserDeleted(user);
 
-            expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.LIVEKIT, 0);
+            expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.LIVEKIT, 0, 0);
         });
     });
 
     describe("handleUserUpdated", () => {
+        it("evaluates the transition, counting the flagged users, when a user raises its cpuLimited flag", async () => {
+            const flagged = { ...createSpaceUser("user_1"), cpuLimited: true };
+            const space = createSpace([flagged, createSpaceUser("user_2"), createSpaceUser("user_3")]);
+            const policy = createPolicy(true, CommunicationType.LIVEKIT);
+            const state = createState(CommunicationType.WEBRTC);
+            const lifecycleManager = createLifecycleManager(state);
+            const orchestrator = createOrchestrator();
+
+            const manager = new CommunicationManager(space, {
+                policy: policy,
+                lifecycleManager: lifecycleManager,
+                orchestrator: orchestrator,
+            });
+
+            await manager.handleUserUpdated(flagged, ["cpuLimited"]);
+
+            expect(state.mocks.handleUserUpdated).toHaveBeenCalledWith(flagged);
+            expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.WEBRTC, 3, 1);
+            expect(orchestrator.mocks.executeImmediateTransition).toHaveBeenCalledWith(
+                CommunicationType.LIVEKIT,
+                expect.anything(),
+            );
+        });
+
         it("should delegate to current state when user is updated", async () => {
             const space = createSpace();
             const state = createState(CommunicationType.WEBRTC);

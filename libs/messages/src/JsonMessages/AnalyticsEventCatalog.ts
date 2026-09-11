@@ -968,6 +968,16 @@ export const ANALYTICS_EVENTS = {
       "This client's encoder could not keep up with its codec and left it for a cheaper one. Read against media.video_quality.sample, whose qualityLimitationReason is what this decision is made on: the sample says the machine is struggling, this says what was given up about it. Once per codec per session — nothing goes back up before a reload.",
   }),
 
+  "media.livekit_switch.requested": event({
+    properties: z.object({
+      streamCategory: z
+        .enum(["video", "screenSharing"])
+        .describe("Which encoders could not keep up."),
+    }),
+    description:
+      "This client told the space it cannot keep up encoding for several P2P peers, asking for the bubble to be moved to LiveKit, where it encodes once. A request, not an outcome: the back refuses it when it has no LiveKit or when the world turned the switch off, and the next window then falls through to media.codec.degraded. Once per session — the flag is never lowered, or the bubble would bounce.",
+  }),
+
   "media.permission_denied": event({
     properties: z.object({
       kind: mediaDeviceKind,
