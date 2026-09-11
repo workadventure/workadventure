@@ -81,7 +81,12 @@ function isJsonCreate(name: string): boolean {
     const stats = fs.statSync(file);
     const timeCreation = stats.mtime.getTime();
     const twoHoursAgo = new Date().getTime() - 60 * 60 * 1000; // 1 hour in ms
-    return timeCreation > twoHoursAgo;
+    if (timeCreation <= twoHoursAgo) {
+        return false;
+    }
+    // Storage is per origin: a state saved against another deployment (PLAY_URL changed) is worthless here
+    const state = JSON.parse(fs.readFileSync(file, "utf8")) as { origins?: { origin: string }[] };
+    return (state.origins ?? []).some((entry) => entry.origin === new URL(play_url).origin);
 }
 
 async function createUser(
@@ -97,7 +102,8 @@ async function createUser(
         | "UserLogin1"
         | "John"
         | "UserMatrix2"
-        | "User1",
+        | "User1"
+        | "Carol",
     browser: Browser,
     url: string,
 ): Promise<void> {
@@ -183,7 +189,8 @@ export async function getPage(
         | "UserLogin1"
         | "John"
         | "UserMatrix2"
-        | "User1",
+        | "User1"
+        | "Carol",
     url: string,
     options: {
         pageCreatedHook?: (page: Page) => void | Promise<void>;
