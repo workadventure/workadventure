@@ -285,7 +285,9 @@ export class RemotePeer extends Peer implements Streamable {
                 }),
             },
             preferredCodecs: {
-                video: type === "video" ? ["video/VP9", "video/VP8"] : ["video/AV1", "video/VP9", "video/VP8"],
+                // AV1 is deliberately not offered for screen sharing: encoding it in software
+                // pegs the publisher's CPU (see LiveKitRoom.handleScreenShareUpdate).
+                video: ["video/VP9", "video/VP8"],
             },
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
