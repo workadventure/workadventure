@@ -30,6 +30,7 @@ export class PusherWebSocket {
     };
     private nextOutgoingNonce = 1;
     private lastSentNonce = 0;
+    private waitingForDrain = false;
     private lastReceivedNonce = 0;
     private transportAvailable = true;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
@@ -54,7 +55,7 @@ export class PusherWebSocket {
         this.nextOutgoingNonce += 1;
         this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
-        if (!this.transportAvailable || nonce > this.lastSentNonce + 1) {
+        if (!this.transportAvailable || this.waitingForDrain || nonce > this.lastSentNonce + 1) {
             return 0;
         }
 
@@ -65,6 +66,7 @@ export class PusherWebSocket {
         if (!this.transportAvailable) {
             return;
         }
+        this.waitingForDrain = false;
         for (const { nonce, payload } of this.outgoingMessagesStore.getAfter(this.lastSentNonce)) {
             if (this.sendStoredPayload(nonce, payload) !== 1) {
                 return;
@@ -309,8 +311,15 @@ export class PusherWebSocket {
         }
 
         const sendStatus = this.socket.send(payload, true);
-        if (sendStatus === 1) {
+        // uWS send: 1 = written, 0 = buffered as backpressure (uWS still delivers it, in order), 2 = dropped
+        // because maxBackpressure was reached. Only a dropped message may be sent again on drain: resending
+        // a buffered one delivers it twice to the client.
+        if (sendStatus !== 2) {
             this.lastSentNonce = nonce;
+        }
+        if (sendStatus !== 1) {
+            // Stop feeding uWS until it drains, otherwise we pile up past maxBackpressure and get dropped.
+            this.waitingForDrain = true;
         }
         return sendStatus;
     }
