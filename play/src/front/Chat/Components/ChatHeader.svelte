@@ -32,10 +32,18 @@
     function handleToggleSearch() {
         searchActive = !searchActive;
 
-        if (!searchActive) {
-            chatSearchBarValue.set("");
-            joignableRoom.set([]);
-        }
+        if (!searchActive) clearSearch();
+    }
+
+    function clearSearch() {
+        clearTimeout(typingTimer);
+        chatSearchBarValue.set("");
+        joignableRoom.set([]);
+        // The user providers are shared and keep the text of the last search: reset their filter too,
+        // or the user list stays filtered while the search bar shows nothing.
+        userProviderMergerPromise
+            .then((userProviderMerger) => userProviderMerger.setFilter(""))
+            .catch((e) => console.error(e));
     }
 
     const handleKeyDown = () => {
@@ -82,11 +90,7 @@
     }
 
     onDestroy(() => {
-        if (typingTimer) {
-            clearTimeout(typingTimer);
-        }
-        chatSearchBarValue.set("");
-        joignableRoom.set([]);
+        clearSearch();
     });
 </script>
 
