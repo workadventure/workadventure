@@ -125,6 +125,10 @@ class AnalyticsClient {
         this.posthog?.capture("wa_retry_connection_livekit");
     }
 
+    codecDowngraded(category: string, codec: string, transport: string): void {
+        this.posthog?.capture("wa_codec_downgrade", { category, codec, transport });
+    }
+
     openBackgroundSettings(): void {
         this.posthog?.capture("wa_open_background_settings");
     }

@@ -33,6 +33,7 @@ import {
     type VideoCodec,
     type VideoQualitySetting,
 } from "../WebRtc/VideoPresets";
+import { demotedCodecStore } from "../WebRtc/CodecPerformance";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { createLivekitSenderStats } from "../WebRtc/WebRtcStatsFactory";
 import { registerLocalEncoderStats } from "../WebRtc/LocalEncoderStats";
@@ -450,6 +451,24 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             }),
         );
 
+        // A codec demoted by the CPU limitation detector while we publish with it: publish again without it.
+        // The current value is what the publications above were already chosen with.
+        for (const [category, republish] of [
+            ["video", () => this.republishCamera()],
+            ["screenSharing", () => this.republishScreenShare()],
+        ] as const) {
+            let initial = true;
+            this.unsubscribers.push(
+                demotedCodecStore[category].subscribe(() => {
+                    if (initial) {
+                        initial = false;
+                        return;
+                    }
+                    republish();
+                }),
+            );
+        }
+
         this.unsubscribers.push(
             bandwidthConstrainedPreferenceStore.subscribe((preference) => {
                 if (!this.localScreenSharingVideoTrack) {
@@ -461,6 +480,37 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 });
             }),
         );
+    }
+
+    /**
+     * The codec of a publication is fixed at publishTrack(): changing it is an unpublish followed by a publish, the
+     * same two updates a share that stops and starts goes through.
+     */
+    private republishScreenShare(): void {
+        this.queueScreenShareUpdate(undefined);
+        this.queueScreenShareUpdate(this.screenShareStreamStore && get(this.screenShareStreamStore));
+    }
+
+    /**
+     * Same for the camera, except that unpublishCameraTrack() only pauses the publication (see the note there): a
+     * real unpublish, once per session at most, so that the next publication picks the codec anew.
+     */
+    private republishCamera(): void {
+        this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
+            .then(async () => {
+                if (!this.localCameraTrack || !this.localParticipant) {
+                    return;
+                }
+                await this.localParticipant.unpublishTrack(this.localCameraTrack, false);
+                this.cameraAnalyticsUnsubscribe?.();
+                this.cameraAnalyticsUnsubscribe = undefined;
+                this.localCameraTrack = undefined;
+            })
+            .catch((err) => {
+                console.error("An error occurred while unpublishing the camera for a codec change", err);
+                Sentry.captureException(err);
+            });
+        this.queueCameraTrackUpdate(this.cameraStreamStore && get(this.cameraStreamStore));
     }
 
     private queueScreenShareUpdate(stream: LocalStreamStoreValue | undefined): void {
