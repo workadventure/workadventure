@@ -36,6 +36,7 @@ import {
 import { registerLocalEncoderStats } from "./LocalEncoderStats";
 import {
     chooseNegotiatedCodec,
+    negotiableVideoCodecs,
     preferredVideoCodecs,
     selectVideoPreset,
     videoCodecFromMimeType,
@@ -280,6 +281,7 @@ export class RemotePeer extends Peer implements Streamable {
     ) {
         incrementWebRtcConnectionsCount();
         const firefoxBrowser = isFirefox();
+        const quality = type === "screenSharing" ? get(screenShareQualityStore) : get(videoQualityStore);
 
         // Firefox-specific configuration
         const peerConfig: PeerOptions = {
@@ -296,15 +298,13 @@ export class RemotePeer extends Peer implements Streamable {
             receiveCodecs: {
                 video: {
                     // What we prefer to receive (see applyVideoEncoding for what we send), judged at 720p: the largest
-                    // tile we may show, and the most sensitive question to ask a history that infers across sizes
-                    prefer: preferredVideoCodecs(
-                        type,
-                        type === "screenSharing" ? get(screenShareQualityStore) : get(videoQualityStore),
-                        "decode",
-                        1280 * 720,
+                    // tile we may show, and the most sensitive question to ask a history that infers across sizes.
+                    // A browser that cannot pick its own send codec encodes whatever the peer asks for: it negotiates
+                    // only what it can afford to encode instead, exclusively, in both directions.
+                    prefer: (canSelectSendCodec()
+                        ? preferredVideoCodecs(type, quality, "decode", 1280 * 720)
+                        : negotiableVideoCodecs(type, quality)
                     ).map((codec) => "video/" + codec.toUpperCase()),
-                    // A browser that cannot pick its own send codec encodes whatever the peer asks for: restrict the
-                    // negotiation to what we can afford instead, in both directions
                     exclusive: !canSelectSendCodec(),
                 },
             },
