@@ -1764,6 +1764,9 @@ message SpaceUser{
   google.protobuf.StringValue chatID = 17; // used
   bool showVoiceIndicator = 18;
   bool attendeesState = 19;
+  // Raised by a client whose video encoders could not keep up while it encoded for several P2P peers: the back moves
+  // the space to LiveKit and keeps it there while such a user is present. Never lowered within a session.
+  bool cpuLimited = 20;
 }
 
 /*message PartialSpaceUser{

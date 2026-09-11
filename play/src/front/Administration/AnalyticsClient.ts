@@ -129,6 +129,10 @@ class AnalyticsClient {
         this.posthog?.capture("wa_codec_downgrade", { category, codec, transport });
     }
 
+    cpuLimitedFlagRaised(category: string, transport: string): void {
+        this.posthog?.capture("wa_cpu_limited_flag", { category, transport });
+    }
+
     openBackgroundSettings(): void {
         this.posthog?.capture("wa_open_background_settings");
     }

@@ -26,13 +26,16 @@ function stats(
 function run(
     detector: CpuLimitationDetector,
     samples: (LocalEncoderStats | undefined)[],
-    screenShareRunning = false,
+    context = { screenShareRunning: false, flagRaised: true },
 ): [number, string][] {
     const decisions: [number, string][] = [];
+    const state = { ...context };
     samples.forEach((sample, second) => {
-        const codec = detector.sample(sample, screenShareRunning, second * 1000);
-        if (codec) {
-            decisions.push([second, codec]);
+        const action = detector.sample(sample, state, second * 1000);
+        if (action) {
+            decisions.push([second, action.kind === "flag" ? "flag" : action.codec]);
+            // The flag stays up for the session, as the wiring does
+            state.flagRaised ||= action.kind === "flag";
         }
     });
     return decisions;
@@ -92,9 +95,9 @@ describe("CpuLimitationDetector", () => {
         const decisions: string[] = [];
         // 100 s of three encoders each reporting at its own time within the second: 301 readings, 76 samples
         for (let tick = 0; tick <= 300; tick++) {
-            const codec = detector.sample(stats("cpu"), false, tick * 333);
-            if (codec) {
-                decisions.push(codec);
+            const action = detector.sample(stats("cpu"), { screenShareRunning: false, flagRaised: true }, tick * 333);
+            if (action) {
+                decisions.push(action.kind);
             }
         }
         expect(decisions).toHaveLength(1);
@@ -120,9 +123,39 @@ describe("CpuLimitationDetector", () => {
 
     it("holds the camera back while a screen share is being sent", () => {
         const episode = limited(WARMUP_SAMPLES + WINDOW_SAMPLES);
+        const sharing = { screenShareRunning: true, flagRaised: true };
+        const notSharing = { screenShareRunning: false, flagRaised: true };
 
-        expect(run(new CpuLimitationDetector("video"), episode, true)).toHaveLength(0);
-        expect(run(new CpuLimitationDetector("video"), episode, false)).toHaveLength(1);
-        expect(run(new CpuLimitationDetector("screenSharing"), episode, true)).toHaveLength(1);
+        expect(run(new CpuLimitationDetector("video"), episode, sharing)).toHaveLength(0);
+        expect(run(new CpuLimitationDetector("video"), episode, notSharing)).toHaveLength(1);
+        expect(run(new CpuLimitationDetector("screenSharing"), episode, sharing)).toHaveLength(1);
+    });
+
+    it("asks for LiveKit before touching the codec when it encodes for several P2P peers", () => {
+        const flagDown = { screenShareRunning: false, flagRaised: false };
+        const threePeers = Array<LocalEncoderStats>(WARMUP_SAMPLES + 2 * WINDOW_SAMPLES + 1).fill(
+            stats("cpu", { source: "P2P (3 encoders)", encoderCount: 3 }),
+        );
+
+        // The flag first; the back not switching (no LiveKit), the next window falls through to the codec
+        expect(run(new CpuLimitationDetector("video"), threePeers, flagDown)).toEqual([
+            [WARMUP_SAMPLES + WINDOW_SAMPLES - 1, "flag"],
+            [WARMUP_SAMPLES + 2 * WINDOW_SAMPLES, "vp9"],
+        ]);
+        // Whatever the codec: a hardware encoder gains from fewer encoders too
+        const hardware = threePeers.map((sample) => ({ ...sample, encoderImplementation: "ExternalEncoder" }));
+        expect(run(new CpuLimitationDetector("video"), hardware, flagDown)).toEqual([
+            [WARMUP_SAMPLES + WINDOW_SAMPLES - 1, "flag"],
+        ]);
+        // Not for a single peer, not on LiveKit, not twice
+        expect(run(new CpuLimitationDetector("video"), limited(WARMUP_SAMPLES + WINDOW_SAMPLES), flagDown)).toEqual([
+            [WARMUP_SAMPLES + WINDOW_SAMPLES - 1, "vp9"],
+        ]);
+        const livekit = Array<LocalEncoderStats>(WARMUP_SAMPLES + WINDOW_SAMPLES).fill(
+            stats("cpu", { source: "Livekit" }),
+        );
+        expect(run(new CpuLimitationDetector("video"), livekit, flagDown)).toEqual([
+            [WARMUP_SAMPLES + WINDOW_SAMPLES - 1, "vp9"],
+        ]);
     });
 });

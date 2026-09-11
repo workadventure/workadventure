@@ -5,7 +5,7 @@ export interface ICommunicationManager {
     getRecordingState(): ManagedRecordingState;
     handleUserAdded(user: SpaceUser): Promise<void>;
     handleUserDeleted(user: SpaceUser): Promise<void>;
-    handleUserUpdated(user: SpaceUser): Promise<void>;
+    handleUserUpdated(user: SpaceUser, updateMask?: string[]): Promise<void>;
     handleStartRecording(user: SpaceUser): Promise<void>;
     handleStopRecording(user: SpaceUser): Promise<void>;
     handleRecorderLeftSpace(spaceUserId: string): Promise<boolean>;

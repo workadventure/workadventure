@@ -6,7 +6,7 @@ import {
     type MeetingConnectionRestartMessage,
     type SpaceUser,
 } from "@workadventure/messages";
-import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
+import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
@@ -132,7 +132,12 @@ export class CommunicationManager implements ICommunicationManager {
         // Initialize transition policy with LiveKit availability checker
         this.policy =
             dependencies.policy ??
-            new TransitionPolicy(MAX_USERS_FOR_WEBRTC, new LivekitAvailabilityService(), this._recordingManager);
+            new TransitionPolicy(
+                MAX_USERS_FOR_WEBRTC,
+                new LivekitAvailabilityService(),
+                this._recordingManager,
+                LIVEKIT_SWITCH_ON_CPU_LIMITATION,
+            );
     }
 
     public getRecordingState(): ManagedRecordingState {
@@ -162,8 +167,14 @@ export class CommunicationManager implements ICommunicationManager {
         await this.evaluateAndHandleTransition(user);
     }
 
-    public async handleUserUpdated(user: SpaceUser): Promise<void> {
+    public async handleUserUpdated(user: SpaceUser, updateMask: string[] = []): Promise<void> {
         await this.lifecycleManager.getCurrentState().handleUserUpdated(user);
+
+        // The one field update the policy looks at: a member raising its cpuLimited flag
+        if (updateMask.includes("cpuLimited")) {
+            this.cancelPendingTransitionIfNeeded();
+            await this.evaluateAndHandleTransition(user);
+        }
     }
 
     public async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
@@ -193,11 +204,10 @@ export class CommunicationManager implements ICommunicationManager {
         // Wait for any ongoing transition to complete
         await this.orchestrator.waitForTransitionLock();
 
-        const currentType = this.lifecycleManager.getCurrentState().communicationType as CommunicationType;
-        const userCount = this.space.getAllUsers().length;
+        const [currentType, userCount, cpuLimitedUserCount] = this.policyInputs();
 
         // Check if transition is needed
-        if (!this.policy.shouldTransition(currentType, userCount)) {
+        if (!this.policy.shouldTransition(currentType, userCount, cpuLimitedUserCount)) {
             return;
         }
 
@@ -267,10 +277,9 @@ export class CommunicationManager implements ICommunicationManager {
             }
 
             // Final validation before setting state
-            const currentType = this.lifecycleManager.getCurrentState().communicationType as CommunicationType;
-            const userCount = this.space.getAllUsers().length;
+            const [currentType, userCount, cpuLimitedUserCount] = this.policyInputs();
 
-            if (!this.policy.shouldTransition(currentType, userCount)) {
+            if (!this.policy.shouldTransition(currentType, userCount, cpuLimitedUserCount)) {
                 return;
             }
 
@@ -297,10 +306,9 @@ export class CommunicationManager implements ICommunicationManager {
             context,
             (nextState) => {
                 // Final validation before setting state
-                const currentType = this.lifecycleManager.getCurrentState().communicationType as CommunicationType;
-                const userCount = this.space.getAllUsers().length;
+                const [currentType, userCount, cpuLimitedUserCount] = this.policyInputs();
 
-                if (!this.policy.shouldTransition(currentType, userCount)) {
+                if (!this.policy.shouldTransition(currentType, userCount, cpuLimitedUserCount)) {
                     return;
                 }
 
@@ -326,12 +334,24 @@ export class CommunicationManager implements ICommunicationManager {
             return;
         }
 
-        const currentType = this.lifecycleManager.getCurrentState().communicationType as CommunicationType;
-        const userCount = this.space.getAllUsers().length;
+        const [currentType, userCount, cpuLimitedUserCount] = this.policyInputs();
 
-        if (!this.policy.shouldTransition(currentType, userCount)) {
+        if (!this.policy.shouldTransition(currentType, userCount, cpuLimitedUserCount)) {
             this.orchestrator.cancelPendingTransition();
         }
+    }
+
+    /**
+     * What the policy decides on: the current transport, how many users are in the space, how many of them raised
+     * their cpuLimited flag.
+     */
+    private policyInputs(): [CommunicationType, number, number] {
+        const users = this.space.getAllUsers();
+        return [
+            this.lifecycleManager.getCurrentState().communicationType as CommunicationType,
+            users.length,
+            users.filter((user) => user.cpuLimited).length,
+        ];
     }
 
     public handleMeetingConnectionRestartMessage(
