@@ -214,7 +214,11 @@ reports no limitation reason and never reacts.
 
 To see it happen: DevTools → Performance → CPU 6× slowdown, share a screen with the quality set to "high" (1440p,
 AV1), enable the video quality stats overlay: the tile reports `Limited by: cpu`, and about 70 s later the codec
-changes.
+changes. The end-to-end test `tests/webrtc_cpu_limitation.spec.ts` (opt-in, `RUN_CPU_LIMITATION_E2E=1`, a few
+minutes) drives the whole chain on a deployment by making one page report every outbound video stream as
+CPU-limited: three users in a bubble, the flag, the switch to LiveKit, the bubble staying there when a member
+leaves, then the camera republished in H.264; with `CPU_LIMITATION_EXPECT=demote` it checks the codec
+renegotiation with both peers instead.
 
 ## Bitrate Budget
 
