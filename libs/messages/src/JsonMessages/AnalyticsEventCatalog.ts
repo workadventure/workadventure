@@ -983,6 +983,24 @@ export const ANALYTICS_EVENTS = {
     description: "The TURN connectivity test passed.",
   }),
 
+  "media.codec.degraded": event({
+    properties: z.object({
+      streamCategory: z
+        .enum(["video", "screenSharing"])
+        .describe("Whether the camera or the screen share was demoted."),
+      codec: z
+        .enum(["av1", "vp9", "h264", "vp8"])
+        .describe(
+          "The codec being left. It and everything above it are dropped from what this client offers for the rest of the session, so the next one down is what gets negotiated.",
+        ),
+      transportType: z
+        .enum(["P2P", "SFU"])
+        .describe("Direct peer connection, or relayed through an SFU."),
+    }),
+    description:
+      "This client's encoder could not keep up with its codec and left it for a cheaper one. Read against media.video_quality.sample, whose qualityLimitationReason is what this decision is made on: the sample says the machine is struggling, this says what was given up about it. Once per codec per session — nothing goes back up before a reload.",
+  }),
+
   "media.permission_denied": event({
     properties: z.object({
       kind: mediaDeviceKind,
