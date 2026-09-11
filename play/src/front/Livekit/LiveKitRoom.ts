@@ -11,7 +11,6 @@ import {
     VideoPresets,
     DisconnectReason,
     ConnectionState,
-    supportsAV1,
 } from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -473,11 +472,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
             const screenSharePublishOptions: TrackPublishOptions = {
                 source: Track.Source.ScreenShare,
-                // When AV1 encoding is unavailable (Chrome on Android, Chromium builds without
-                // libaom, Firefox, Safari...), LiveKit silently rewrites the codec to its hardcoded
-                // default of VP8 rather than to `publishDefaults.videoCodec`. Fall back to VP9
-                // explicitly; LiveKit still degrades VP9 to VP8 on its own if VP9 is missing too.
-                videoCodec: supportsAV1() ? "av1" : "vp9",
+                // AV1 has no hardware encoder on most machines: publishers reported their whole
+                // computer slowing down while sharing their screen. VP9 is hardware-accelerated far
+                // more often and good enough for screen content. LiveKit degrades VP9 to VP8 on its
+                // own when the publisher has no VP9 encoder.
+                videoCodec: "vp9",
                 simulcast: true,
                 // Commented out: the default simulcast layers are sufficient for our use case
                 // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]

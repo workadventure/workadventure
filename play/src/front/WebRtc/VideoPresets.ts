@@ -208,8 +208,7 @@ const screenShareMaxPreset: Preset = {
 /**
  * Maximum capture resolution of a screen share, per quality setting.
  *
- * AV1 has no hardware encoder on most machines, and nothing downstream ever lowers the published
- * resolution.
+ * Nothing downstream ever lowers the published resolution, so cap it at capture time.
  */
 export const screenShareMaxResolution: Record<VideoQualitySetting, MediaTrackConstraints> = {
     low: { width: { max: 1280 }, height: { max: 720 } },
@@ -230,7 +229,7 @@ export function selectVideoPreset(
     fps: number;
 } {
     if (isScreenShare) {
-        return selectAV1Preset(displayWidth, displayHeight, quality);
+        return selectScreenSharePreset(displayWidth, displayHeight, quality);
     } else {
         return selectVP9Preset(displayWidth, displayHeight, Object.values(videoPresets), videoMaxPreset, quality);
     }
@@ -261,9 +260,9 @@ function selectVP9Preset(
 }
 
 /**
- * The bitrate for AV1 scales with the frame size (sqrt of the pixel ratio vs 1920x1080) and is capped by the selected quality maximum.
+ * The screen share bitrate scales with the frame size (sqrt of the pixel ratio vs 1920x1080) and is capped by the selected quality maximum.
  */
-export function selectAV1Preset(
+export function selectScreenSharePreset(
     width: number,
     height: number,
     quality: VideoQualitySetting,
