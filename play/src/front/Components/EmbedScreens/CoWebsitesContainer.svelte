@@ -130,7 +130,7 @@
             fullScreenCowebsite.set(false);
         } else {
             fullScreenCowebsite.set(true);
-            analyticsClient.fullScreenCowebsite();
+            analyticsClient.trackAdminEvent("cowebsite.fullscreen_opened");
         }
     }
 

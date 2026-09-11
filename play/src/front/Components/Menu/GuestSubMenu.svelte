@@ -71,7 +71,7 @@
 
     function copyLink() {
         // Analytics Client
-        analyticsClient.inviteCopyLink();
+        analyticsClient.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
 
         const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
         input.focus();
@@ -91,8 +91,10 @@
         const input = document.getElementById("input-share-link");
         if (input) {
             const value = getLink();
-            // Analytics Client
-            analyticsClient.inviteCopyLinkWalk(value);
+            // Report the option, not the link it produces: the event records whether
+            // walk-to-me is on. The link carries the entry point and, when the option
+            // is on, the player's coordinates — none of which this event is about.
+            analyticsClient.trackAdminEvent("invite.walk_link_option_changed", { value: walkAutomatically });
 
             (input as HTMLInputElement).value = value;
         }
@@ -102,7 +104,7 @@
 
     async function shareLink() {
         // Analytics Client
-        analyticsClient.inviteCopyLink();
+        analyticsClient.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
 
         const shareData = { url: getLink() };
 

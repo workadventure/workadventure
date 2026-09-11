@@ -85,11 +85,11 @@ class ConnectionManager {
     public loadOpenIDScreen(manuallyTriggered: boolean, providerId?: string, providerScopes?: string[]): URL | null {
         localUserStore.setAuthToken(null);
         if (!ENABLE_OPENID || !this._currentRoom) {
-            analyticsClient.loggedWithToken();
+            analyticsClient.trackAdminEvent("auth.logged_token");
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
-        analyticsClient.loggedWithSso();
+        analyticsClient.trackAdminEvent("auth.logged_sso");
         const redirectUrl = new URL("login-screen", ABSOLUTE_PUSHER_URL);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         if (manuallyTriggered) {
@@ -410,6 +410,12 @@ class ConnectionManager {
                     // Set the default application integration for the room
 
                     this.bindWebsocketReconnectingToast(connection);
+                    analyticsClient.setAdminAnalyticsSender((message) => connection.emitAnalyticsEventReport(message));
+                    analyticsClient.trackAdminEvent("session.started", { roomId: roomUrl, schemaVersion: 1 });
+                    connection.onCleanup(() =>
+                        analyticsClient.trackAdminEvent("session.ended", { roomId: roomUrl, schemaVersion: 1 }),
+                    );
+                    connection.onCleanup(() => analyticsClient.setAdminAnalyticsSender(undefined));
                     this._roomConnectionStream.next(connection);
                     errorScreenStore.delete();
                     resolve(connect);

@@ -55,13 +55,13 @@ export async function installPwaFromStore(): Promise<void> {
     const state = get(store);
     if (!state.deferredPrompt) return;
 
-    analyticsClient.pwaInstallClick();
+    analyticsClient.trackAdminEvent("pwa.install_clicked");
     store.update((s) => ({ ...s, installing: true }));
     try {
         await state.deferredPrompt.prompt();
         const { outcome } = await state.deferredPrompt.userChoice;
         console.log("outcome", outcome);
-        analyticsClient.pwaInstallOutcome(outcome);
+        analyticsClient.trackAdminEvent("pwa.install_outcome", { outcome });
         if (outcome === "accepted") {
             window.__workadventureDeferredPwaPrompt = null;
             pwaInstallProfileMenuEligibleStore.set(false);

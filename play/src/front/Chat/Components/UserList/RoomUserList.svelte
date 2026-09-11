@@ -94,7 +94,7 @@
             closeInviteFloatingUi = undefined;
             isInviteMenuOpen = false;
         } else if (inviteButtonElement) {
-            analyticsClient.openInvite();
+            analyticsClient.trackAdminEvent("invite.opened");
             closeInviteFloatingUi = showFloatingUi(
                 inviteButtonElement,
                 GuestSubMenu,

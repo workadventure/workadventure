@@ -17,7 +17,7 @@
 
     function screenSharingClick(): void {
         onclick?.();
-        analyticsClient.screenSharing();
+        analyticsClient.trackAdminEvent("meeting.screenshare.toggled");
         if ($silentStore && !$isSpeakerStore) return;
         if ($requestedScreenSharingState === true) {
             requestedScreenSharingState.disableScreenSharing();

@@ -16,8 +16,11 @@ import {
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
     PUSHER_WS_PORT,
+    DRAIN_TIMEOUT_MS,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
+import { runDrains } from "./pusher/services/ShutdownDrains";
+import { analyticsTimedEventTracker } from "./pusher/services/AnalyticsTimedEventTracker";
 
 // In production, the current working directory is "dist".
 if (fs.existsSync("dist") && !fs.existsSync("src")) {
@@ -64,6 +67,73 @@ if (SENTRY_DSN != undefined) {
     console.error(e);
     Sentry.captureException(e);
 });
+
+// Graceful shutdown: close what is still open, then drain the analytics queues, so
+// events buffered at exit time still reach the admin instead of being silently
+// dropped.
+//
+// This matters more than it looks for timed events (conversations, and later areas
+// and screenshares): an interval is reported by exactly ONE row, emitted when it
+// closes. There is no periodic sample to fall back on, so an interval that is never
+// closed is not merely imprecise — it never happened as far as analytics knows. Every
+// exit path we can observe must therefore close first. The one we cannot is
+// SIGKILL/OOM, where the process dies with the map; persisting it would not help,
+// because on recovery we would know an interval was open but not when it ended, and
+// inventing that timestamp is worse than losing it.
+let shuttingDown = false;
+const shutdown = (reason: string, endReason: "pusher_shutdown" | "pusher_crashed", exitCode: number): void => {
+    if (shuttingDown) {
+        return;
+    }
+    shuttingDown = true;
+
+    // Close BEFORE draining, not after: closeAll() only enqueues, so draining first
+    // would leave its events behind.
+    //
+    // Sessions are intervals too and close in the same pass — last, so that an
+    // interval never ends after the session containing it. That ordering used to be
+    // this file's job, spelled out as two calls in a fixed order; it now belongs to
+    // the tracker, which is the only thing that knows which handle is a session.
+    const closedTimedEvents = analyticsTimedEventTracker.closeAll(endReason);
+    console.info(
+        `${reason}: closed ${closedTimedEvents} timed event(s), sessions included, draining analytics queues before exit…`,
+    );
+
+    // Both arms exit, on purpose. runDrains already inspects every result and logs
+    // the failures by name, so the rejection arm should be unreachable — but this is
+    // the path that ends the process, and the one outcome worse than a lost buffer
+    // is a replica that never exits and gets SIGKILLed with its sockets still open.
+    // The version this replaces had a .catch() on a Promise.allSettled, which cannot
+    // reject: it read as this guarantee without being one.
+    runDrains(DRAIN_TIMEOUT_MS).then(
+        () => process.exit(exitCode),
+        (error: unknown) => {
+            console.error("Unexpected error while draining during shutdown", error);
+            process.exit(exitCode);
+        },
+    );
+};
+
+process.once("SIGTERM", (signal) => shutdown(`Received ${signal}`, "pusher_shutdown", 0));
+process.once("SIGINT", (signal) => shutdown(`Received ${signal}`, "pusher_shutdown", 0));
+
+// A crash used to take every open interval down with it: only SIGTERM/SIGINT were
+// handled, so an uncaught throw exited without closing anything. The process is going
+// to die either way — but it can still spend its last moments flushing what it
+// already knows, which is the difference between a conversation being reported and
+// never having existed.
+process.once("uncaughtException", (error) => {
+    console.error("Uncaught exception — closing open analytics intervals before exit", error);
+    Sentry.captureException(error);
+    shutdown("Uncaught exception", "pusher_crashed", 1);
+});
+// Deliberately NOT hooking unhandledRejection. IoSocketController already listens for
+// it, logs it and lets the pusher keep serving — and that listener is what suppresses
+// Node's default "throw on unhandled rejection". Shutting down here would turn a
+// survivable, logged rejection into the death of the replica, reporting every live
+// conversation on it as pusher_crashed. An analytics handler that manufactures the
+// outage it exists to record is worse than no handler: the process is still healthy,
+// so the intervals it holds are still going to close normally.
 
 // Room API
 if (!ADMIN_API_URL && !ROOM_API_SECRET_KEY) {

@@ -4,6 +4,7 @@ import type { AreaEditorTool } from "../../Tools/AreaEditorTool";
 import type { FrontCommandInterface } from "../FrontCommandInterface";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 import type { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
+import { analyticsClient } from "../../../../../Administration/AnalyticsClient";
 
 export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCommandInterface {
     constructor(
@@ -43,5 +44,6 @@ export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCo
 
     public emitEvent(roomConnection: RoomConnection): void {
         roomConnection.emitMapEditorModifyArea(this.commandId, this.newConfig);
+        analyticsClient.trackAdminEvent("map_editor.area.updated", { areaType: this.newConfig.name });
     }
 }

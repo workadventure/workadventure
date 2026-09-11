@@ -39,7 +39,7 @@ export class NoVideoOutputDetector {
             this.noVideoTimeout = setTimeout(() => {
                 this.onNoVideo();
                 this.noVideoTimeout = undefined;
-                analyticsClient.noVideoStreamReceived();
+                analyticsClient.trackAdminEvent("media.video_stream_missing");
             }, 5000);
 
             if (this.callbackId !== undefined) {

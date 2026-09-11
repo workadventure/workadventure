@@ -172,7 +172,10 @@
                             ? 'mx-2'
                             : ''}"
                         onclick={(event) => {
-                            analyticsClient.clickPropertyMapEditor(action.actionName, action.style);
+                            analyticsClient.trackAdminEvent("map_editor.property.clicked", {
+                                name: action.actionName,
+                                style: action.style,
+                            });
                             event.preventDefault();
                             closeActionsMenu();
                             action.callback();

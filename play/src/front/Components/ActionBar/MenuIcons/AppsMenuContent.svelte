@@ -45,7 +45,7 @@
     }
 
     function showRoomList() {
-        analyticsClient.openedRoomList();
+        analyticsClient.trackAdminEvent("room_list.opened");
         resetChatVisibility();
         resetModalVisibility();
 
@@ -53,18 +53,25 @@
         openedMenuStore.closeAll();
     }
 
+    // Both of these are toggles, so the analytics call has to come AFTER the flip and
+    // read the new state. Reporting first counted the click that closes the panel as
+    // an opening too.
     function openExternalModuleCalendar() {
-        analyticsClient.openExternalModuleCalendar();
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
         isTodoListVisibleStore.set(false);
+        if ($isCalendarVisibleStore) {
+            analyticsClient.trackAdminEvent("external_module.calendar_opened");
+        }
         mapEditorModeStore.switchMode(false);
         openedMenuStore.closeAll();
     }
 
     function openExternalModuleTodoList() {
-        analyticsClient.openExternalModuleTodoList();
         isTodoListVisibleStore.set(!$isTodoListVisibleStore);
         isCalendarVisibleStore.set(false);
+        if ($isTodoListVisibleStore) {
+            analyticsClient.trackAdminEvent("external_module.todo_list_opened");
+        }
         mapEditorModeStore.switchMode(false);
         openedMenuStore.closeAll();
     }
@@ -86,7 +93,7 @@
     <ActionBarButton
         classList="group/btn-recording-list"
         onclick={() => {
-            analyticsClient.openedRecordingList();
+            analyticsClient.trackAdminEvent("recording.list_opened");
             $showRecordingList = true;
             openedMenuStore.closeAll();
         }}

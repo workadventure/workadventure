@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../src/front/Enum/EnvironmentVariable.ts", () => import("../mocks/frontEnvironmentVariableMock"));
 vi.mock("../../../src/front/Administration/AnalyticsClient", () => ({
-    analyticsClient: { socketReconnected: vi.fn(), socketReconnecting: vi.fn() },
+    analyticsClient: { trackAdminEvent: vi.fn() },
 }));
 
 import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../../src/common/WebSocketCloseCodes";

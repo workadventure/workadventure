@@ -83,7 +83,7 @@
     function openEnableCameraScene() {
         enableCameraSceneVisibilityStore.showEnableCameraScene();
         gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
-        analyticsClient.editCamera();
+        analyticsClient.trackAdminEvent("profile.camera_edit_opened");
     }
 
     async function openFeedbackScene() {
@@ -107,6 +107,7 @@
             hideToolText: $LL.actionbar.issueReport.hideToolText(),
             isRequiredLabel: "",
             onFormOpen: () => {
+                analyticsClient.trackAdminEvent("feedback.opened", { feedbackSource: "sentry" });
                 gameManager.getCurrentGameScene().userInputManager.disableControls("store");
                 gameManager.getCurrentGameScene().userInputManager.disableRightClick();
                 openedMenuStore.close("profileMenu");
@@ -117,6 +118,10 @@
                 form?.close();
             },
             onSubmitSuccess: () => {
+                // No hasScreenshot: the form allows one but tells us nothing about it
+                // here, and the property is optional precisely so it can be left out
+                // rather than guessed.
+                analyticsClient.trackAdminEvent("feedback.submitted", { feedbackSource: "sentry" });
                 gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
                 gameManager.getCurrentGameScene().userInputManager.restoreRightClick();
                 form?.close();
@@ -142,7 +147,7 @@
     );
 
     function openPwaInstallPrompt(): void {
-        analyticsClient.pwaInstallFromProfileMenuClick();
+        analyticsClient.trackAdminEvent("pwa.install_from_profile_menu_clicked");
         openedMenuStore.close("profileMenu");
         gameManager.leaveGame(PwaInstallSceneName, new PwaInstallScene());
     }
@@ -158,7 +163,7 @@
                 label={$LL.actionbar.profil()}
                 onclick={() => {
                     openEditNameScene();
-                    analyticsClient.editName();
+                    analyticsClient.trackAdminEvent("profile.name_edit_opened");
                 }}
             >
                 <ProfilIcon />
@@ -168,7 +173,7 @@
             label={$LL.actionbar.woka()}
             onclick={() => {
                 openEditSkinScene();
-                analyticsClient.editWoka();
+                analyticsClient.trackAdminEvent("profile.woka_edit_opened");
             }}
         >
             <Woka userId={-1} placeholderSrc="" customWidth="26px" />
@@ -177,7 +182,7 @@
             label={$LL.actionbar.companion()}
             onclick={() => {
                 openEditCompanionScene();
-                analyticsClient.editCompanion();
+                analyticsClient.trackAdminEvent("profile.companion_edit_opened");
             }}
         >
             <Companion userId={-1} placeholderSrc="../static/images/default-companion.png" width="26px" height="26px" />
@@ -198,7 +203,7 @@
             label={$LL.actionbar.allSettings()}
             onclick={() => {
                 showMenuItem(SubMenusInterface.settings);
-                analyticsClient.openedMenu();
+                analyticsClient.trackAdminEvent("menu.opened");
                 openedMenuStore.close("profileMenu");
             }}
         >
@@ -255,7 +260,7 @@
         {#if ENABLE_OPENID && $userIsConnected}
             <button
                 onclick={() => {
-                    analyticsClient.logout();
+                    analyticsClient.trackAdminEvent("auth.logout_clicked");
                     connectionManager.logout();
                 }}
                 class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"

@@ -79,7 +79,7 @@
     );
 
     function microphoneClick(): void {
-        analyticsClient.microphone();
+        analyticsClient.trackAdminEvent("media.microphone.toggled");
         if ($silentStore) return;
         if ($requestedMicrophoneState === true) {
             requestedMicrophoneState.disableMicrophone();

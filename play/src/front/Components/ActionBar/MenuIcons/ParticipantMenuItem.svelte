@@ -80,7 +80,7 @@
         proximityChatRoom.unreadMessagesCount.set(0);
         chatNotificationStore.clearRoom(proximityChatRoom.id);
         proximityChatRoom.unreadNotificationCount.set(0);
-        analyticsClient.openedChat();
+        analyticsClient.trackAdminEvent("chat.opened");
         closeParticipantMenu();
     }
 
@@ -98,7 +98,6 @@
         selectedRoomStore.set(proximityChatRoom);
         navChat.switchToUserList();
         chatVisibilityStore.set(true);
-        analyticsClient.openUserList();
         closeParticipantMenu();
     }
 

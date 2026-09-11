@@ -5,6 +5,7 @@ import type { FrontCommandInterface } from "../FrontCommandInterface";
 import type { TrashEditorTool } from "../../Tools/TrashEditorTool";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 import type { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
+import { analyticsClient } from "../../../../../Administration/AnalyticsClient";
 import { DeleteAreaFrontCommand } from "./DeleteAreaFrontCommand";
 
 export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCommandInterface {
@@ -37,5 +38,6 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
 
     public emitEvent(roomConnection: RoomConnection): void {
         roomConnection.emitMapEditorCreateArea(this.commandId, this.areaConfig);
+        analyticsClient.trackAdminEvent("map_editor.area.created", { areaType: this.areaConfig.name });
     }
 }

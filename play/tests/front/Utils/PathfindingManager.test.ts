@@ -183,7 +183,7 @@ describe("PathfindingManager", () => {
                             { x: sx, y: sy },
                             { x: ex, y: ey },
                         ]),
-                    1
+                    1,
                 );
                 return Math.random(); // different instance IDs
             });

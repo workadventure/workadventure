@@ -27,7 +27,7 @@
 
     function select() {
         onclick?.();
-        analyticsClient.switchCowebsite();
+        analyticsClient.trackAdminEvent("cowebsite.switched");
     }
 
     /**
@@ -43,7 +43,7 @@
         const url = baseUrl();
 
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
-        analyticsClient.copyCowebsiteLink();
+        analyticsClient.trackAdminEvent("cowebsite.link_copied");
         oncopy?.();
         popupStore.addPopup(PopUpCopyUrl, {}, "popupCopyUrl");
     }
@@ -52,7 +52,7 @@
         const url = baseUrl();
 
         window.open(url, "_blank");
-        analyticsClient.openCowebsiteInNewTab();
+        analyticsClient.trackAdminEvent("cowebsite.opened_in_new_tab");
         if (coWebsite.shouldCloseOnOpenInNewTab()) closeTab();
     }
 </script>

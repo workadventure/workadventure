@@ -43,11 +43,11 @@
 
         try {
             if (row.action === "start") {
-                analyticsClient.recordingStart();
                 await row.space.startRecording();
+                analyticsClient.trackAdminEvent("recording.started");
             } else {
-                analyticsClient.recordingStop();
                 await row.space.stopRecording();
+                analyticsClient.trackAdminEvent("recording.stopped");
             }
         } catch (error) {
             recordingStore.clearRequestState(row.spaceName);

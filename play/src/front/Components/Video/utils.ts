@@ -31,7 +31,7 @@ function hasWebRtcQuirks(): boolean {
 function handleTurnServerSuccess(browserName: string, reason: string, protocol: string = "udp"): void {
     debug(`onicecandidate => ${browserName} ${reason} - TURN server likely reachable`);
     helpWebRtcSettingsVisibleStore.set("hidden");
-    analyticsClient.turnTestSuccess(protocol);
+    analyticsClient.trackAdminEvent("media.turn_test.succeeded", { protocol });
 }
 
 export function srcObject(node: HTMLVideoElement, stream: MediaStream | null | undefined) {
@@ -107,7 +107,7 @@ export async function checkCoturnServer() {
             debug("onicecandidate => gathering is complete");
             if (!turnServerReached) {
                 debug("onicecandidate => no turn server found after gathering complete");
-                analyticsClient.turnTestFailure();
+                analyticsClient.trackAdminEvent("media.turn_test.failed");
 
                 // For Safari and Firefox, be more lenient - assume TURN is working
                 // These browsers often don't generate relay candidates even when TURN is working
@@ -142,7 +142,7 @@ export async function checkCoturnServer() {
             debug("onicecandidate => The TURN server is reachable!");
             turnServerReached = true;
             helpWebRtcSettingsVisibleStore.set("hidden");
-            analyticsClient.turnTestSuccess(e.candidate.protocol);
+            analyticsClient.trackAdminEvent("media.turn_test.succeeded", { protocol: e.candidate.protocol });
             pc.close();
         }
 
@@ -237,7 +237,7 @@ export async function checkCoturnServer() {
                 // For other browsers, show pending state
                 debug("TURN test timeout - setting to pending");
                 helpWebRtcSettingsVisibleStore.set("pending");
-                analyticsClient.turnTestTimeout();
+                analyticsClient.trackAdminEvent("media.turn_test.timeout");
             }
         }
         if (checkPeerConnexionStatusTimeOut) {

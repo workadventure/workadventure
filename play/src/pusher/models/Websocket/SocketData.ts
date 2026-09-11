@@ -65,6 +65,7 @@ export type ConnectingSocketData = {
     // open handler and never shared with other transports of the same tab.
     clientLastReceivedNonce?: number;
     attendeesState: boolean;
+    analyticsEventsEnabled?: boolean;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
@@ -74,6 +75,4 @@ export type SocketData = ConnectingSocketData & {
     name: string;
     viewport: ViewportInterface;
     availabilityStatus: AvailabilityStatus;
-    // Unique identifier for the browser tab, used to detect reconnections from the same tab
-    tabId: string | undefined;
 };
