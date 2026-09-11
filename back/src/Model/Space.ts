@@ -190,7 +190,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     },
                 });
 
-                this.communicationManager.handleUserUpdated(user).catch((e) => {
+                this.communicationManager.handleUserUpdated(user, updateMask).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
                 });

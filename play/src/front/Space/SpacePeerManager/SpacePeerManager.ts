@@ -7,6 +7,7 @@ import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
+import { cpuLimitedStore } from "../../WebRtc/CpuLimitationDetector";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import { effectiveCameraStateStore, effectiveMicrophoneStateStore } from "../../Stores/MediaStore";
@@ -500,6 +501,14 @@ export class SpacePeerManager {
             this.cameraStateStore.subscribe((state) => {
                 this.space.emitUpdateUser({
                     cameraState: state,
+                });
+            }),
+        );
+        // The back moves the bubble to LiveKit for a member whose encoders cannot keep up (see CpuLimitationDetector)
+        this.unsubscribes.push(
+            cpuLimitedStore.subscribe((state) => {
+                this.space.emitUpdateUser({
+                    cpuLimited: state,
                 });
             }),
         );
