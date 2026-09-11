@@ -1,4 +1,4 @@
-import type { Readable, Writable } from "svelte/store";
+import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
@@ -8,6 +8,7 @@ import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
+import { createHeldIntervalTracker } from "../Administration/HeldIntervalTracker";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
@@ -1320,6 +1321,66 @@ export const localVoiceIndicatorStore = derived<Readable<number[] | undefined>, 
     },
     false,
 );
+
+/**
+ * How long speech is held open across a silence before the period is closed. Longer
+ * than the gaps inside speech, shorter than the gaps between turns.
+ */
+const SPEECH_HOLD_MS = 1500;
+
+/**
+ * Time the microphone was actually open, and time the user was actually speaking.
+ *
+ * Both ride the same interval machinery as `status.dwell`: the front says when a
+ * period starts and stops, the pusher measures it on its own clock and emits one row
+ * when it closes.
+ *
+ * The two signals are deliberately the local, effective ones:
+ *
+ * - the microphone is `effectiveMicrophoneStateStore`, true only while a track is
+ *   really being captured. A denied permission, a privacy shutdown or an
+ *   energy-saving pause read as closed, so this measures time a microphone could be
+ *   heard rather than time a toggle was left on.
+ * - speech is this user's OWN volume analyser, not a remote "who is speaking" signal.
+ *   That keeps it independent of the meeting engine, and it means one speaker is
+ *   reported once rather than once per listener. It is loudness, not recognition: no
+ *   audio is inspected, transmitted or stored.
+ */
+let endMicrophoneDwell: EndTimedAnalyticsEvent | undefined;
+let unsubscribeVoiceIndicator: Unsubscriber | undefined;
+
+const speechIntervals = createHeldIntervalTracker(
+    () => analyticsClient.openTimedEvent("media.speech.dwell", {}, { reopenOnReconnect: true }),
+    SPEECH_HOLD_MS,
+);
+
+// This is a singleton so we can safely not ever unsubscribe from it.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+effectiveMicrophoneStateStore.subscribe((microphoneOpen: boolean) => {
+    if (!microphoneOpen) {
+        speechIntervals.stop();
+        unsubscribeVoiceIndicator?.();
+        unsubscribeVoiceIndicator = undefined;
+        endMicrophoneDwell?.();
+        endMicrophoneDwell = undefined;
+        return;
+    }
+
+    endMicrophoneDwell ??= analyticsClient.openTimedEvent(
+        "media.microphone.dwell",
+        {},
+        // The microphone did not close because the socket did: after a reconnect it
+        // is still open, and nothing will say so again.
+        { reopenOnReconnect: true },
+    );
+
+    // Only watch the analyser while there is something to hear. localVoiceIndicatorStore
+    // is derived, so subscribing is what starts the SoundMeter: holding it open with the
+    // microphone closed would run one for nothing.
+    unsubscribeVoiceIndicator ??= localVoiceIndicatorStore.subscribe((speaking: boolean) =>
+        speechIntervals.set(speaking),
+    );
+});
 
 /**
  * Device list

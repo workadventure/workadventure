@@ -1252,9 +1252,26 @@ export const ANALYTICS_EVENTS = {
     "The user zoomed out on the map explorer.",
   ),
   "media.camera.toggled": signal("The user turned their camera on or off."),
+  "media.microphone.dwell": timedEvent({
+    openableBy: "client",
+    openProperties: z.object({}),
+    endReasonDescription:
+      "Why the microphone stopped being open, or what closed it.",
+    description:
+      "Time the user actually held their microphone open, measured by the pusher. Driven by the effective capture state rather than the user's preference: a denied permission, a track that never started, a privacy shutdown or an energy-saving pause all read as closed, so this is time a microphone could be heard rather than time a toggle was left on. media.microphone.toggled counts presses of that toggle and answers a different question.",
+  }),
+
   "media.microphone.toggled": signal(
     "The user turned their microphone on or off.",
   ),
+
+  "media.speech.dwell": timedEvent({
+    openableBy: "client",
+    openProperties: z.object({}),
+    endReasonDescription: "Why the speech period ended, or what ended it.",
+    description:
+      "Time the user was detected speaking while their microphone was open, from the local volume analyser with a hold applied so ordinary pauses between words do not cut a sentence into fragments. Reported by the speaker's own client and by nobody else, so the same speech cannot be counted once per listener. It is an estimate from loudness, not recognition: no audio is inspected, transmitted or stored.",
+  }),
   "media.turn_test.failed": signal(
     "The TURN connectivity test failed. Counted as an experience issue.",
   ),
