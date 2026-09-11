@@ -823,6 +823,20 @@ export class IoSocketController {
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
+                                        case "getRecordingThumbnailsQuery": {
+                                            const getRecordingThumbnailsAnswer =
+                                                await socketManager.handleGetRecordingThumbnailsQuery(
+                                                    socket,
+                                                    message.message.queryMessage.query.getRecordingThumbnailsQuery
+                                                        .baseFilename,
+                                                );
+                                            answerMessage.answer = {
+                                                $case: "getRecordingThumbnailsAnswer",
+                                                getRecordingThumbnailsAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
                                         case "deleteRecordingQuery": {
                                             const deleteRecordingAnswer =
                                                 await socketManager.handleDeleteRecordingQuery(

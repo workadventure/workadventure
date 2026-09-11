@@ -717,6 +717,7 @@ export class SocketManager {
                 case "leaveSpaceQuery":
                 case "mapStorageJwtQuery":
                 case "getRecordingsQuery":
+                case "getRecordingThumbnailsQuery":
                 case "deleteRecordingQuery":
                 case "getSignedUrlQuery":
                 case "startRecordingQuery":

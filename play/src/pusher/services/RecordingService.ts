@@ -8,7 +8,7 @@ import {
     type _Object,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import type { Recording, Thumbnail } from "@workadventure/messages";
+import type { Recording } from "@workadventure/messages";
 import {
     LIVEKIT_RECORDING_S3_ENDPOINT,
     LIVEKIT_RECORDING_S3_CDN_ENDPOINT,
@@ -21,6 +21,13 @@ import {
 export default class RecordingService {
     // Thumbnail signed URLs expire after 1 hour (for viewing in the recordings list)
     private static readonly THUMBNAIL_URL_EXPIRATION_SECONDS = 3600;
+    // The egress captures a thumbnail every 10s, so a long recording has hundreds of them. Signing them
+    // all would put hundreds of kB of URLs in a single websocket frame, for a preview nobody watches to
+    // the end. Spread this many over the video instead.
+    private static readonly MAX_THUMBNAILS_PER_RECORDING = 15;
+    // The very first thumbnail is often captured before anything is rendered, so the list shows the second one.
+    private static readonly POSTER_THUMBNAIL_INDEX = 1;
+    private static readonly BASE_FILENAME_REGEX = /^recording-(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})$/;
 
     public static async getRecords(userUuid: string): Promise<Recording[]> {
         let client: S3Client;
@@ -42,15 +49,6 @@ export default class RecordingService {
             return [];
         }
 
-        // Intermediate type for collecting data before generating signed URLs
-        interface ThumbnailData {
-            key: string;
-            filename: string;
-            size: number | undefined;
-            sequenceNumber: number;
-            timestampSeconds: number;
-        }
-
         interface SessionData {
             timestamp: string;
             baseFilename: string;
@@ -61,7 +59,7 @@ export default class RecordingService {
                       size: number | undefined;
                   }
                 | undefined;
-            thumbnails: ThumbnailData[];
+            thumbnailKeys: { key: string; sequenceNumber: number }[];
         }
 
         const sessions = new Map<string, SessionData>();
@@ -83,7 +81,7 @@ export default class RecordingService {
                     timestamp: timestamp,
                     baseFilename: `recording-${timestamp}`,
                     videoFile: undefined,
-                    thumbnails: [],
+                    thumbnailKeys: [],
                 });
             }
 
@@ -96,17 +94,7 @@ export default class RecordingService {
                     size: item.Size !== undefined ? Number(item.Size) : undefined,
                 };
             } else if (fileType === "thumbnail") {
-                const sequenceMatch = filename.match(/_(\d+)\./);
-                const sequenceNumber = sequenceMatch ? parseInt(sequenceMatch[1], 10) : 0;
-                const timestampSeconds = (sequenceNumber - 1) * 120;
-
-                session.thumbnails.push({
-                    key: item.Key,
-                    filename: filename,
-                    size: item.Size !== undefined ? Number(item.Size) : undefined,
-                    sequenceNumber: sequenceNumber,
-                    timestampSeconds: timestampSeconds,
-                });
+                session.thumbnailKeys.push({ key: item.Key, sequenceNumber: this.getSequenceNumber(filename) });
             }
         });
 
@@ -115,35 +103,87 @@ export default class RecordingService {
             .filter((session) => session.videoFile !== undefined)
             .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 
-        // Generate signed URLs for all thumbnails
-        const recordings: Recording[] = await Promise.all(
+        // One signed URL per recording: the rest are fetched on demand, see getThumbnailUrls().
+        return Promise.all(
             sortedSessions.map(async (session) => {
-                const sortedThumbnails = session.thumbnails.sort(
-                    (a, b) => (a.sequenceNumber || 0) - (b.sequenceNumber || 0),
-                );
-
-                // Generate signed URLs for thumbnails
-                const thumbnailsWithSignedUrls: Thumbnail[] = await Promise.all(
-                    sortedThumbnails.map(async (thumb) => ({
-                        key: thumb.key,
-                        url: await this.generateThumbnailSignedUrl(thumb.key),
-                        filename: thumb.filename,
-                        size: thumb.size,
-                        sequenceNumber: thumb.sequenceNumber,
-                        timestampSeconds: thumb.timestampSeconds,
-                    })),
-                );
+                const sortedKeys = this.sortBySequenceNumber(session.thumbnailKeys);
+                const poster = sortedKeys[this.POSTER_THUMBNAIL_INDEX] ?? sortedKeys[0];
 
                 return {
                     timestamp: session.timestamp,
                     baseFilename: session.baseFilename,
                     videoFile: session.videoFile,
-                    thumbnails: thumbnailsWithSignedUrls,
+                    posterUrl: poster ? await this.generateThumbnailSignedUrl(poster.key) : "",
                 };
             }),
         );
+    }
 
-        return recordings;
+    /**
+     * Signed URLs for the thumbnails of a single recording, evenly spaced over the video and capped to
+     * MAX_THUMBNAILS_PER_RECORDING. Used by the hover preview, once the user asks for that recording.
+     */
+    public static async getThumbnailUrls(userUuid: string, baseFilename: string): Promise<string[]> {
+        const timestampMatch = baseFilename.match(this.BASE_FILENAME_REGEX);
+        if (!timestampMatch) {
+            throw new Error("Invalid recording name");
+        }
+
+        let client: S3Client;
+        try {
+            client = this.getS3Client();
+        } catch (error) {
+            console.error("Error getting S3 client:", error);
+            return [];
+        }
+
+        if (!LIVEKIT_RECORDING_S3_BUCKET) {
+            console.error("LIVEKIT_RECORDING_S3_BUCKET is not configured");
+            return [];
+        }
+
+        // The prefix keeps the listing inside the user's own folder, whatever the client asked for.
+        const prefix = `${userUuid}/thumbnail-${timestampMatch[1]}_`;
+        const contents = await this.listAllObjects(client, LIVEKIT_RECORDING_S3_BUCKET, prefix);
+
+        const sortedKeys = this.sortBySequenceNumber(
+            contents.flatMap((item) =>
+                item.Key ? [{ key: item.Key, sequenceNumber: this.getSequenceNumber(item.Key) }] : [],
+            ),
+        );
+
+        // Skip the pre-roll frame, like the poster does.
+        const usableKeys = sortedKeys.length > 1 ? sortedKeys.slice(this.POSTER_THUMBNAIL_INDEX) : sortedKeys;
+
+        return Promise.all(
+            this.evenlySpaced(usableKeys, this.MAX_THUMBNAILS_PER_RECORDING).map((thumbnail) =>
+                this.generateThumbnailSignedUrl(thumbnail.key),
+            ),
+        );
+    }
+
+    /**
+     * Picks at most `max` items, evenly spaced over the whole array (first and last always included).
+     */
+    private static evenlySpaced<T>(items: T[], max: number): T[] {
+        if (items.length <= max) {
+            return items;
+        }
+
+        const step = (items.length - 1) / (max - 1);
+        return Array.from({ length: max }, (_, index) => items[Math.round(index * step)]);
+    }
+
+    private static getSequenceNumber(filename: string): number {
+        const sequenceMatch = filename.match(/_(\d+)\./);
+        return sequenceMatch ? parseInt(sequenceMatch[1], 10) : 0;
+    }
+
+    /**
+     * Thumbnails are numbered _1.jpg.._360.jpg, so they must be ordered numerically, not alphabetically.
+     */
+    private static sortBySequenceNumber<T extends { sequenceNumber: number }>(thumbnails: T[]): T[] {
+        return [...thumbnails].sort((a, b) => a.sequenceNumber - b.sequenceNumber);
     }
 
     /**

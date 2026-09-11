@@ -1829,6 +1829,26 @@ export class RoomConnection implements RoomConnection {
         return nonUndefinedRecordingsAnswer;
     }
 
+    /**
+     * Signed URLs of the thumbnails of one recording, for the hover preview. The recordings list only
+     * carries one poster per recording, so these are fetched only for the recording being hovered.
+     */
+    public async queryRecordingThumbnails(baseFilename: string, signal?: AbortSignal): Promise<string[]> {
+        const answer = await this.query(
+            {
+                $case: "getRecordingThumbnailsQuery",
+                getRecordingThumbnailsQuery: {
+                    baseFilename,
+                },
+            },
+            { signal },
+        );
+        if (answer.$case !== "getRecordingThumbnailsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.getRecordingThumbnailsAnswer.urls;
+    }
+
     public async getSignedUrl(key: string): Promise<string> {
         const answer = await this.query({
             $case: "getSignedUrlQuery",
