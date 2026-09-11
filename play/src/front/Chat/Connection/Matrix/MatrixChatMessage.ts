@@ -12,6 +12,7 @@ import type {
     ChatThreadSummary,
     ChatUser,
 } from "../ChatConnection";
+import { canRenderImageOrVideoInline } from "../../../Utils/InlineMimeType";
 import { chatUserFactoryFromRoom } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
@@ -323,18 +324,20 @@ export class MatrixChatMessage implements ChatMessage {
         return this.room.client.mxcUrlToHttp(url);
     }
     private mapMatrixMessageTypeToChatMessage() {
-        const matrixMessageType = this.event.getOriginalContent().msgtype;
-        switch (matrixMessageType) {
+        const content = this.event.getOriginalContent();
+        switch (content.msgtype) {
             case "m.text":
                 return "text";
+            // An attachment whose filename and mimetype disagree is shown as a plain file instead
+            // of being rendered, the way Element does it.
             case "m.image":
-                return "image";
+                return canRenderImageOrVideoInline(content) ? "image" : "file";
+            case "m.video":
+                return canRenderImageOrVideoInline(content) ? "video" : "file";
             case "m.file":
                 return "file";
             case "m.audio":
                 return "audio";
-            case "m.video":
-                return "video";
         }
         return "text";
     }

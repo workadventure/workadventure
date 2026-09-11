@@ -125,6 +125,47 @@ describe("resolveAttachmentMediaFromEvent", () => {
         expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:attachment");
     });
 
+    it("should not type an encrypted attachment blob with a mime type the chat cannot render inline", async () => {
+        const createObjectUrlSpy = vi.fn((blob: Blob) => `blob:${blob.type}`);
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(() =>
+                Promise.resolve({
+                    ok: true,
+                    arrayBuffer: () => Promise.resolve(new Uint8Array([1, 2, 3]).buffer),
+                }),
+            ),
+        );
+        vi.stubGlobal("URL", { createObjectURL: createObjectUrlSpy, revokeObjectURL: vi.fn() });
+        vi.stubGlobal("crypto", {
+            subtle: {
+                digest: vi.fn(() => Promise.resolve(new Uint8Array([9, 8, 7]).buffer)),
+                importKey: vi.fn(() => Promise.resolve("imported-key")),
+                decrypt: vi.fn(() => Promise.resolve(new Uint8Array([4, 5, 6]).buffer)),
+            },
+        });
+        const client = { mxcUrlToHttp: (mxc: string) => `https://example.com/${mxc}` } as unknown as MatrixClient;
+        const event = {
+            getOriginalContent: () => ({
+                msgtype: "m.file",
+                body: "logo.svg",
+                file: {
+                    url: "mxc://example.org/encrypted",
+                    iv: "AA",
+                    hashes: { sha256: "CQgH" },
+                    key: { k: "AQIDBA", alg: "A256CTR", ext: true, key_ops: ["encrypt", "decrypt"], kty: "oct" },
+                    v: "v2",
+                },
+                info: { mimetype: "image/svg+xml" },
+            }),
+        } as unknown as MatrixEvent;
+
+        const result = await resolveAttachmentMediaFromEvent(event, client, new AbortController().signal);
+
+        expect(result.sourceUrl).toBe("blob:application/octet-stream");
+        result.cleanup();
+    });
+
     it("should map encrypted attachment decrypt failures to decrypt errors", async () => {
         vi.stubGlobal(
             "fetch",
