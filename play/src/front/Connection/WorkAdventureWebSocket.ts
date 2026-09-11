@@ -5,6 +5,7 @@ import {
     type ServerToClientMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject } from "rxjs";
+import * as Sentry from "@sentry/svelte";
 import { v4 as uuidv4 } from "uuid";
 import { NoncedMessageStore } from "../../common/NoncedMessageStore";
 import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
@@ -42,6 +43,7 @@ export class WorkAdventureWebSocket {
     private reconnectionTimeout: ReturnType<typeof setTimeout> | undefined;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
+    private duplicateNonceReported = false;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
         CLIENT_DISCONNECTION_RETENTION_MS,
     );
@@ -155,6 +157,20 @@ export class WorkAdventureWebSocket {
         } catch (e) {
             console.error(e);
             this.close(1003, "Invalid message format");
+            return;
+        }
+
+        // The pusher must never send us the same nonce twice: it only replays frames the client reported
+        // as missing. A duplicate means the server-side bookkeeping is broken, and replaying a frame to
+        // the application layer corrupts state (double query answers, ghost users...). Drop it, loudly.
+        if (frame.nonce <= this.lastReceivedNonce) {
+            const message = `Received a duplicate message from the pusher (nonce ${frame.nonce}, last received nonce ${this.lastReceivedNonce}). Ignoring it.`;
+            console.warn(message);
+            if (!this.duplicateNonceReported) {
+                // Duplicates come in bursts (one per drain event), so only report the first one of this connection.
+                this.duplicateNonceReported = true;
+                Sentry.captureMessage(message);
+            }
             return;
         }
 

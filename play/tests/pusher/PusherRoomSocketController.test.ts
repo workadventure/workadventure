@@ -280,7 +280,8 @@ describe("PusherRoomSocketController reconnect retention", () => {
 
         await registeredHandlers?.drain(socket);
 
-        expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
+        // The message held behind the backpressured one is flushed; the backpressured one is not sent again.
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(2);
     });
 });
 
@@ -386,24 +387,61 @@ describe("PusherWebSocket backpressure", () => {
 
         wrapper.handleDrain();
 
-        expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
+        // Only the second message is sent on drain: the first one is already buffered by uWS.
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(2);
     });
 
-    it("keeps the drain tracker at the last accepted nonce when drain hits backpressure again", () => {
+    it("never hands a backpressured message to uWS twice, however many drains happen", () => {
         const socket = createSocket();
-        getSendMock(socket).mockReturnValueOnce(0).mockReturnValueOnce(1).mockReturnValueOnce(0).mockReturnValue(1);
+        getSendMock(socket).mockReturnValue(0);
+        const wrapper = createPusherWebSocket(socket);
+
+        wrapper.send({ message: undefined });
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
+
+        wrapper.handleDrain();
+        wrapper.handleDrain();
+
+        // uWS returned 0: it buffered the payload and will deliver it. Sending it again on every drain
+        // delivers it to the client several times (duplicate query answers, ghost users...).
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
+    });
+
+    it("sends a dropped message again on drain", () => {
+        const socket = createSocket();
+        getSendMock(socket).mockReturnValueOnce(2).mockReturnValue(1);
         const wrapper = createPusherWebSocket(socket);
 
         wrapper.send({ message: undefined });
         wrapper.send({ message: undefined });
-        wrapper.handleDrain();
-        wrapper.send({ message: undefined });
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
 
+        wrapper.handleDrain();
+
+        // uWS returned 2: maxBackpressure was reached and the payload was never queued, so both the
+        // dropped message and the one held behind it must be sent.
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
+    });
+
+    it("resumes at the next unsent message when drain hits backpressure again", () => {
+        const socket = createSocket();
+        getSendMock(socket).mockReturnValueOnce(0).mockReturnValueOnce(0).mockReturnValue(1);
+        const wrapper = createPusherWebSocket(socket);
+
+        wrapper.send({ message: undefined });
+        wrapper.send({ message: undefined });
+        wrapper.send({ message: undefined });
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(1);
+
+        // Second message backpressures too, so the third one stays held.
+        wrapper.handleDrain();
+        expect(getSendMock(socket)).toHaveBeenCalledTimes(2);
+
+        wrapper.handleDrain();
         expect(getSendMock(socket)).toHaveBeenCalledTimes(3);
 
-        wrapper.handleDrain();
-
-        expect(getSendMock(socket)).toHaveBeenCalledTimes(5);
+        // Every payload reached uWS exactly once.
+        expect(new Set(getSendMock(socket).mock.calls.map(([payload]) => payload)).size).toBe(3);
     });
 });
 
