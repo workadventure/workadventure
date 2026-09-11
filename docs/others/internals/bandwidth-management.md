@@ -151,7 +151,12 @@ implemented; see the "Future work" section.
     3. A browser without the codec selection API (Safari today, hence every browser on iOS) cannot do step 2 and
        encodes whatever the peer asks for. There, the negotiation is **exclusive** and limited to what we can afford
        to **encode**, ordered by what we prefer to decode (`negotiableVideoCodecs()`): only those codecs (plus
-       rtx/red/ulpfec) are negotiated, whether we offer or answer, so neither direction can use anything else. An
+       rtx/red/ulpfec) are negotiated, whether we offer or answer, so neither direction can use anything else.
+       `setCodecPreferences()` alone would not achieve that: a browser sends the codecs of the *remote* description,
+       so an exclusive answer restricts the offerer but not the answerer. The fork (12.2.0) therefore also removes
+       the other codecs from every remote description before applying it. The end-to-end test
+       `tests/webrtc_codecs.spec.ts` checks what each side of a bubble encodes, with Bob in Chromium, Firefox or
+       WebKit (`BOB_BROWSER`), against a deployment when `PLAY_URL` and `CODEC_TEST_MAP_URL` are set. An
        iPhone decodes VP9 in hardware but encodes it in software, so it ends up on hardware H.264 both ways, at the
        cost of about 40 % more bandwidth than VP9. Asking to receive VP9 while sending H.264 would need the peer to
        know what we can encode before it offers, which is a protocol change kept for later. Whether the API exists is
