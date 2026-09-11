@@ -17,6 +17,7 @@ import type {
     GetMemberAnswer,
     GetMemberQuery,
     GetRecordingsAnswer,
+    GetRecordingThumbnailsAnswer,
     DeleteRecordingAnswer,
     JoinRoomMessage,
     MemberData,
@@ -1514,6 +1515,16 @@ export class SocketManager implements ZoneEventListener {
         const records = await RecordingService.getRecords(userUuid);
         return {
             recordings: records,
+        };
+    }
+
+    async handleGetRecordingThumbnailsQuery(
+        client: PusherWebSocket,
+        baseFilename: string,
+    ): Promise<GetRecordingThumbnailsAnswer> {
+        const { userUuid } = client.getUserData();
+        return {
+            urls: await RecordingService.getThumbnailUrls(userUuid, baseFilename),
         };
     }
 

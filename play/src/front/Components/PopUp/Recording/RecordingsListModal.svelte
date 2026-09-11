@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { NonUndefinedFields, Recording } from "@workadventure/messages";
     import type { GameScene } from "../../../Phaser/Game/GameScene";
     import PopUpContainer from "../PopUpContainer.svelte";
@@ -20,7 +20,7 @@
 
     type ViewMode = "list" | "card";
 
-    let viewMode: ViewMode = "list";
+    let viewMode: ViewMode = "card";
     let recordings: NonUndefinedFields<Recording>[] = [];
     let isLoading: boolean = false;
     let isError: boolean = false;
@@ -35,8 +35,13 @@
     }
 
     let hoveredRecordIndex: number = -1;
-    let thumbnailIndex: number = 1;
+    let thumbnailIndex: number = 0;
     let thumbnailInterval: number | null = null;
+    /** Signed thumbnail URLs of the recording being hovered, empty while they load. */
+    let hoveredThumbnails: string[] = [];
+    /** Thumbnails are fetched per recording, on hover: keep them for as long as the modal is open. */
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity
+    const thumbnailsRequests = new Map<string, Promise<string[]>>();
 
     /** Card mode: filename of the card showing the actions panel (download/delete), or null */
     let actionsCardFilename: string | null = null;
@@ -120,6 +125,8 @@
 
     async function queryRecordings(): Promise<void> {
         isLoading = true;
+        // The signed URLs these hold expire after an hour.
+        thumbnailsRequests.clear();
         if (!connection) return;
         try {
             const recordingsAnswer = await connection.queryRecordings();
@@ -133,14 +140,41 @@
         }
     }
 
-    function startThumbnailCycle(recordIndex: number, thumbnails: NonUndefinedFields<Recording>["thumbnails"]): void {
-        if (thumbnails.length <= 2) return;
+    /**
+     * The list only carries one poster per recording, so the frames of the hover preview are fetched
+     * for that recording only, the first time it is hovered.
+     */
+    function loadThumbnails(baseFilename: string): Promise<string[]> {
+        let request = thumbnailsRequests.get(baseFilename);
+        if (!request) {
+            request = (connection?.queryRecordingThumbnails(baseFilename) ?? Promise.resolve([])).catch((error) => {
+                console.error("Failed to query recording thumbnails:", error);
+                // Let a later hover try again.
+                thumbnailsRequests.delete(baseFilename);
+                return [];
+            });
+            thumbnailsRequests.set(baseFilename, request);
+        }
+        return request;
+    }
 
+    async function startThumbnailCycle(recordIndex: number, record: NonUndefinedFields<Recording>): Promise<void> {
         hoveredRecordIndex = recordIndex;
-        thumbnailIndex = 1;
+        thumbnailIndex = 0;
+        hoveredThumbnails = [];
 
+        const urls = await loadThumbnails(record.baseFilename);
+
+        // The pointer may have left, or moved to another recording, while the thumbnails were loading.
+        if (hoveredRecordIndex !== recordIndex || urls.length <= 1) return;
+
+        hoveredThumbnails = urls;
+        // Hovering the same recording twice while it loads resolves both calls: never leak the first interval.
+        if (thumbnailInterval) {
+            clearInterval(thumbnailInterval);
+        }
         thumbnailInterval = window.setInterval(() => {
-            thumbnailIndex = (thumbnailIndex + 1) % thumbnails.length || 1;
+            thumbnailIndex = (thumbnailIndex + 1) % urls.length;
         }, 650);
     }
 
@@ -150,7 +184,21 @@
             thumbnailInterval = null;
         }
         hoveredRecordIndex = -1;
-        thumbnailIndex = 1;
+        thumbnailIndex = 0;
+        hoveredThumbnails = [];
+    }
+
+    function thumbnailSrc(
+        record: NonUndefinedFields<Recording>,
+        isHovered: boolean,
+        index: number,
+        thumbnails: string[],
+    ): string | undefined {
+        if (isHovered && thumbnails.length > 0) {
+            return thumbnails[index];
+        }
+        // Recordings whose thumbnails failed to generate have no poster.
+        return record.posterUrl || undefined;
     }
 
     function getDaysUntilExpiration(filename: string): number | null {
@@ -201,6 +249,9 @@
             minute: "2-digit",
         });
     }
+
+    // The modal can be closed while a thumbnail cycle is running.
+    onDestroy(stopThumbnailCycle);
 
     onMount(async () => {
         try {
@@ -285,7 +336,7 @@
                                 <div
                                     role="presentation"
                                     class="group flex min-w-0 flex-1 items-stretch gap-3 overflow-hidden rounded border-none bg-white/[0.06] p-0 m-0 text-left text-inherit transition-all hover:-translate-y-px hover:bg-white/10"
-                                    onmouseenter={() => startThumbnailCycle(index, record.thumbnails)}
+                                    onmouseenter={() => startThumbnailCycle(index, record)}
                                     onmouseleave={stopThumbnailCycle}
                                 >
                                     <button
@@ -299,9 +350,12 @@
                                         >
                                             <img
                                                 class="absolute inset-0 h-full w-full object-cover"
-                                                src={hoveredRecordIndex === index
-                                                    ? record.thumbnails[thumbnailIndex]?.url
-                                                    : record.thumbnails[1]?.url}
+                                                src={thumbnailSrc(
+                                                    record,
+                                                    hoveredRecordIndex === index,
+                                                    thumbnailIndex,
+                                                    hoveredThumbnails,
+                                                )}
                                                 alt=""
                                             />
                                             <span
@@ -415,7 +469,7 @@
                                     <button
                                         type="button"
                                         class="flex min-w-0 flex-1 cursor-pointer flex-col overflow-hidden rounded border-none bg-transparent p-0 m-0 text-left text-inherit focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
-                                        onmouseenter={() => startThumbnailCycle(index, record.thumbnails)}
+                                        onmouseenter={() => startThumbnailCycle(index, record)}
                                         onmouseleave={stopThumbnailCycle}
                                         onclick={() =>
                                             openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
@@ -426,9 +480,12 @@
                                         >
                                             <img
                                                 class="absolute inset-0 h-full w-full object-cover"
-                                                src={hoveredRecordIndex === index
-                                                    ? record.thumbnails[thumbnailIndex]?.url
-                                                    : record.thumbnails[1]?.url}
+                                                src={thumbnailSrc(
+                                                    record,
+                                                    hoveredRecordIndex === index,
+                                                    thumbnailIndex,
+                                                    hoveredThumbnails,
+                                                )}
                                                 alt=""
                                             />
                                             <span

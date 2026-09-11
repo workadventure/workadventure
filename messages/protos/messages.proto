@@ -566,6 +566,7 @@ message QueryMessage {
     GetSignedUrlQuery getSignedUrlQuery = 19;
     StartRecordingQuery startRecordingQuery = 21;
     StopRecordingQuery stopRecordingQuery = 22;
+    GetRecordingThumbnailsQuery getRecordingThumbnailsQuery = 23;
   }
 }
 
@@ -647,6 +648,11 @@ message GetRecordingsQuery {
   optional string uuid = 2;
 }
 
+// Thumbnails of a single recording, fetched on demand: the list only carries one poster per recording.
+message GetRecordingThumbnailsQuery {
+  string baseFilename = 1;
+}
+
 message DeleteRecordingQuery {
   string recordingId = 1;
 }
@@ -684,6 +690,7 @@ message AnswerMessage {
     GetSignedUrlAnswer getSignedUrlAnswer = 21;
     StartRecordingAnswer startRecordingAnswer = 22;
     StopRecordingAnswer stopRecordingAnswer = 23;
+    GetRecordingThumbnailsAnswer getRecordingThumbnailsAnswer = 24;
   }
 }
 
@@ -773,6 +780,11 @@ message GetRecordingsAnswer {
   repeated Recording recordings = 1;
 }
 
+message GetRecordingThumbnailsAnswer {
+  // Signed URLs, evenly spaced over the recording, oldest first.
+  repeated string urls = 1;
+}
+
 message DeleteRecordingAnswer {
   bool success = 1;
   optional string errorMessage = 2;
@@ -814,22 +826,15 @@ message Recording {
   string timestamp = 1;
   string baseFilename = 2;
   VideoFile videoFile = 3;
-  repeated Thumbnail thumbnails = 4;
+  reserved 4; // was: repeated Thumbnail thumbnails, one signed URL every 10s of video. See GetRecordingThumbnailsQuery.
+  // Signed URL of the thumbnail shown in the list, empty if the recording has none.
+  string posterUrl = 5;
 }
 
 message VideoFile {
   string key = 1;
   string filename = 2;
   optional uint64 size = 3;
-}
-
-message Thumbnail {
-  string key = 1;
-  string url = 2;
-  string filename = 3;
-  optional uint64 size = 4;
-  optional int32 sequenceNumber = 5;
-  optional int32 timestampSeconds = 6;
 }
 
 /*********** PUSHER TO BACK QUERYMESSAGES *************/
