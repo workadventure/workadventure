@@ -154,6 +154,51 @@ implemented; see the "Future work" section.
   Chromium, Firefox or WebKit (`BOB_BROWSER`), against a deployment when `PLAY_URL` and `CODEC_TEST_MAP_URL` are
   set.
 
+### When the encoder cannot keep up: `CpuLimitationDetector.ts`
+
+The probe above is a memory: it says nothing about the current load. During a stream, the browser does.
+`qualityLimitationReason === "cpu"` in the `outbound-rtp` stats is the verdict of libwebrtc's overuse detector: the
+encoder took longer than a frame interval for several seconds, and the resolution or the frame rate has **already**
+been lowered (following `degradationPreference`). The machine is never unprotected. The question is only whether that
+degradation is the right one for the viewers: for a software encoder, a cheaper codec at full resolution usually is,
+above all on a screen share where sharpness is the product, at the price of bandwidth.
+
+[`CpuLimitationDetector.ts`](../../../play/src/front/WebRtc/CpuLimitationDetector.ts) watches the aggregated encoder
+stats of each category (`localEncoderStatsStore`, the worst case over the encoders of the category, the same numbers
+the local feedback tiles show) and takes one sample a second. The reason stays set while the adaptation is in force,
+so the share of `cpu` samples over a window is the share of time the encoder was limited: gaps in a long episode
+are tolerated, a lone spike is ignored.
+
+- Window of 60 samples, threshold 70 % (Jitsi waits for a 60 s streak; same length, gaps tolerated). The first 10
+  samples after a stream starts are ignored: keyframes and rate-control ramp-up look like overload.
+- The window starts over when the stream stops, the transport changes (P2P ↔ LiveKit) or the codec changes.
+- One decision per full window, then a full window of cooldown.
+- Never for H.264 (nothing below it), never for a hardware encoder (a cheaper codec gains it nothing).
+- The camera holds back while a screen share is being sent: the screen share is the heavy encoder and goes first;
+  demoting the camera in the meantime would mark the wrong codec.
+
+A decision **demotes** the codec for the rest of the session: `demotedCodecStore` in `CodecPerformance.ts` records
+it per category, and `preferredVideoCodecs()` leaves it out together with every codec above it (screen share
+AV1 → VP9 → H.264, camera VP9 → H.264). Nothing is persisted, the browser's own smooth history is the memory across
+sessions, and nothing goes back up before the page is reloaded. The publishers subscribe to the store:
+
+- **LiveKit**: the codec of a publication is fixed at `publishTrack()`, so `LiveKitRoom` unpublishes and publishes
+  again, the same two updates a share that stops and starts goes through. The camera publication is normally reused
+  for the whole room (turning the camera off pauses it, see `unpublishCameraTrack()`): a demotion is the one time it
+  is really unpublished.
+- **P2P**: `RemotePeer` sets the fork's `receiveCodecs` to the new `negotiableVideoCodecs()` and calls
+  `negotiate()`. The fork (12.3.0) re-applies the preference before every offer and answer, so both sides end up on
+  the remaining codecs whoever initiates the renegotiation, and the bitrate budget follows the new codec on the
+  `negotiated` event. The transceivers and ICE stay: viewers get a keyframe and a sub-second freeze.
+
+Each demotion is reported to PostHog as `wa_codec_downgrade` (category, codec left, transport); the codec change
+itself shows in the video quality samples through `mimeType`. Firefox reports no limitation reason and never
+demotes.
+
+To see it happen: DevTools → Performance → CPU 6× slowdown, share a screen with the quality set to "high" (1440p,
+AV1), enable the video quality stats overlay: the tile reports `Limited by: cpu`, and about 70 s later the codec
+changes.
+
 ## Bitrate Budget
 
 `selectVideoPreset(displayHeight, displayWidth, isScreenShare, quality, codec)` returns the `maxBitrate` and
@@ -341,10 +386,9 @@ times.
 
 ## Future work
 
-The design of an automatic codec downgrade (AV1 → VP9 → H.264 when the encoder reports a sustained CPU limitation) and
-of an earlier P2P → LiveKit switch for CPU-limited machines is written up separately. The codec preference list and the
-codec factor above are its building blocks: once the detector exists, it only has to pick a lower entry of the list
-and republish, and the bitrate follows.
+The codec downgrade above is client-only. Its counterpart on the back, an earlier P2P → LiveKit switch when a
+CPU-limited machine encodes for several peers (N encoders → 1), is written up separately: the detector already
+provides the signal, the back needs to learn it and pin the bubble to LiveKit the way a recording does.
 
 ## Related Files
 
@@ -357,6 +401,7 @@ and republish, and the bitrate follows.
 | [`play/src/front/Livekit/LiveKitRoom.ts`](../../../play/src/front/Livekit/LiveKitRoom.ts) | LiveKit publisher codec and bandwidth limiting |
 | [`play/src/front/Livekit/LivekitParticipant.ts`](../../../play/src/front/Livekit/LivekitParticipant.ts) | LiveKit subscriber quality selection |
 | [`play/src/front/WebRtc/RemotePeer.ts`](../../../play/src/front/WebRtc/RemotePeer.ts) | P2P codec preference, bandwidth limiting, viewer hint |
+| [`play/src/front/WebRtc/CpuLimitationDetector.ts`](../../../play/src/front/WebRtc/CpuLimitationDetector.ts) | Codec demotion when the encoder is CPU-limited |
 | [`play/src/front/Stores/MediaStore.ts`](../../../play/src/front/Stores/MediaStore.ts) | Camera quality store |
 | [`play/src/front/Stores/ScreenSharingStore.ts`](../../../play/src/front/Stores/ScreenSharingStore.ts) | Screen share quality store |
 | [`play/src/front/Components/Menu/SettingsSubMenu.svelte`](../../../play/src/front/Components/Menu/SettingsSubMenu.svelte) | User settings UI |
