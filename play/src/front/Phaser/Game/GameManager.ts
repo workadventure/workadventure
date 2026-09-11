@@ -72,7 +72,9 @@ export class GameManager {
 
     public async init(scenePlugin: ScenePlugin): Promise<string> {
         this.scenePlugin = scenePlugin;
-        const result = await connectionManager.initGameConnexion();
+        // Awaits the request App.svelte already started; only falls back to firing it here if
+        // nothing did (tests, or any entry point that does not go through App.svelte).
+        const result = await connectionManager.startGameConnexion();
         if (result instanceof URL) {
             window.location.assign(result.toString());
             // window.location.assign is not immediate and Javascript keeps running after.

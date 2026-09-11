@@ -123,6 +123,7 @@ import { audioInterruptedStore } from "../../Stores/AudioInterruptedStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
+import { takePrefetchedTmjFile, takePrefetchedWamFile } from "../../Connection/MapPrefetch";
 import { StringUtils } from "../../Utils/StringUtils";
 import { PHASER_COLOR_DESIGN_SYSTEM_SECONDARY } from "../../Utils/DesignSystemPhaserColors";
 
@@ -565,10 +566,17 @@ export class GameScene extends DirtyScene {
         if (this.wamUrlFile) {
             const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
 
+            // Usually already in flight: App.svelte prefetches it as soon as the room resolves.
+            // Falls back to fetching here when there is nothing to claim — a re-created scene
+            // (portal, room change, reconnection), which must read the WAM as it is now.
+            const wamResponse =
+                takePrefetchedWamFile(absoluteWamFileUrl) ??
+                axiosWithRetry.get(absoluteWamFileUrl).then((response: { data: unknown }) => response.data);
+
             this.superLoad.loadPromise(
-                axiosWithRetry.get(absoluteWamFileUrl).then((response) => {
+                wamResponse.then((wamData) => {
                     try {
-                        this.wamFile = wamFileMigration.migrate(response.data);
+                        this.wamFile = wamFileMigration.migrate(wamData);
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
                         this.loadEntityCollections();
@@ -1782,6 +1790,20 @@ export class GameScene extends DirtyScene {
     }
 
     private doLoadTMJFile(mapUrlFile: string): void {
+        // Usually already downloaded: MapPrefetch chained it on the WAM as soon as the room
+        // resolved. Handing it to Phaser's tilemap cache keeps everything downstream — onMapLoad,
+        // the tileset loads, the renderable layers — on exactly the path it takes today.
+        const prefetched = takePrefetchedTmjFile(mapUrlFile);
+        if (prefetched) {
+            this.superLoad.loadPromise(
+                prefetched.then(async (data) => {
+                    this.cache.tilemap.add(mapUrlFile, { format: Phaser.Tilemaps.Formats.TILED_JSON, data });
+                    await this.onMapLoad(data);
+                }),
+            );
+            return;
+        }
+
         this.load.on("filecomplete-tilemapJSON-" + mapUrlFile, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data).catch((e) => console.error(e));
         });

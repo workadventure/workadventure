@@ -25,6 +25,7 @@ import type { Entity } from "../../ECS/Entity";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { ITiledPlace } from "../GameMapPropertiesListener";
 import type { GameScene } from "../GameScene";
+import { buildDynamicAreas, randomPositionFromLayer } from "./GameMapLookups";
 import { EntitiesManager } from "./EntitiesManager";
 import { AreasManager } from "./AreasManager";
 import { getTileLayerStats, isWorthRenderingOnGpu } from "./TilemapGpuLayerEligibility";
@@ -180,36 +181,9 @@ export class GameMapFrontWrapper {
             }
         }
 
-        let nbUnnamedTileArea = 0;
-
-        // NOTE: We leave "zone" for legacy reasons
-        this.gameMap.tiledObjects
-            .filter((object) => ["zone", "area"].includes(object.class ?? ""))
-            .forEach((tiledArea: ITiledMapObject) => {
-                if (!tiledArea.name) {
-                    tiledArea.name = "unnamed_tiled_area_" + nbUnnamedTileArea;
-                    nbUnnamedTileArea++;
-                }
-
-                if (tiledArea.width === undefined || tiledArea.height === undefined) {
-                    console.warn("Areas must be square objects. Object " + tiledArea.name + " is not square.");
-                    return;
-                }
-                // In case an area already exists with the same name, we rename it to avoid conflicts
-                if (this.dynamicAreas.get(tiledArea.name)) {
-                    console.warn("There are several '" + tiledArea.name + "' areas existing in your Tiled map.");
-                    tiledArea.name = "unnamed_tiled_area_" + nbUnnamedTileArea;
-                    nbUnnamedTileArea++;
-                }
-                this.dynamicAreas.set(tiledArea.name, {
-                    name: tiledArea.name,
-                    width: tiledArea.width,
-                    height: tiledArea.height,
-                    x: tiledArea.x,
-                    y: tiledArea.y,
-                    properties: this.mapTiledPropertiesToDynamicAreaProperties(tiledArea.properties ?? []),
-                });
-            });
+        for (const [name, dynamicArea] of buildDynamicAreas(this.gameMap)) {
+            this.dynamicAreas.set(name, dynamicArea);
+        }
 
         this.collisionGrid = [];
         // NOTE: We cannot really proceed without it
@@ -1094,28 +1068,7 @@ export class GameMapFrontWrapper {
     }
 
     public getRandomPositionFromLayer(layerName: string): { x: number; y: number } {
-        const layer = this.findLayer(layerName) as ITiledMapTileLayer;
-        if (!layer) {
-            throw new Error(`No layer "${layerName}" was found`);
-        }
-        const tiles = layer.data;
-        if (!tiles) {
-            throw new Error(`No tiles in "${layerName}" were found`);
-        }
-        if (typeof tiles === "string") {
-            throw new Error("The content of a JSON map must be filled as a JSON array, not as a string");
-        }
-        const possiblePositions: { x: number; y: number }[] = [];
-        tiles.forEach((objectKey: number, key: number) => {
-            if (objectKey === 0) {
-                return;
-            }
-            possiblePositions.push({ x: key % layer.width, y: Math.floor(key / layer.width) });
-        });
-        if (possiblePositions.length > 0) {
-            return MathUtils.randomFromArray(possiblePositions);
-        }
-        throw new Error(`No possible position found, layer "${layerName}" is empty`);
+        return randomPositionFromLayer(this.gameMap, layerName);
     }
 
     public getTiledObjectProperty(
