@@ -1,14 +1,8 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { localUserStore } from "../Connection/LocalUserStore";
-import {
-    canSelectSendCodec,
-    codecPerformance,
-    probeCodecPerformance,
-    probeSendCodecSelection,
-    retryGranted,
-} from "./CodecPerformance";
+import { codecPerformance, probeCodecPerformance, retryGranted } from "./CodecPerformance";
 
-// A machine with hardware H.264, software VP9 that keeps up until 360p, and no AV1 at all
+// A machine with hardware H.264, software VP9 that keeps up until 720p, and no AV1 at all
 const fakeMediaCapabilities = {
     encodingInfo: (configuration: MediaEncodingConfiguration) => info(configuration.video, "encode"),
     decodingInfo: (configuration: MediaDecodingConfiguration) => info(configuration.video, "decode"),
@@ -23,19 +17,20 @@ function info(video: VideoConfiguration | undefined, direction: string): Promise
     }
     return Promise.resolve({
         supported: true,
-        smooth: video.width <= 640 || direction === "decode",
+        smooth: video.width <= 1280 || direction === "decode",
         powerEfficient: false,
     });
 }
 
 describe("codecPerformance", () => {
-    it("answers from the closest probed size below the requested one", async () => {
+    it("answers from the closest probed size below the requested one, 720p at least", async () => {
         await probeCodecPerformance(fakeMediaCapabilities);
 
-        expect(codecPerformance("encode", "vp9", 640 * 360)?.smooth).toBe(true);
-        // 533x300: judged at 320x180, the largest probed size below
+        expect(codecPerformance("encode", "vp9", 1280 * 720)?.smooth).toBe(true);
+        // Smaller frames are judged at 720p
         expect(codecPerformance("encode", "vp9", 533 * 300)?.smooth).toBe(true);
-        expect(codecPerformance("encode", "vp9", 1280 * 720)?.smooth).toBe(false);
+        expect(codecPerformance("encode", "vp9", 1920 * 1080)?.smooth).toBe(false);
+        // 4K is judged at 1440p, the largest probed size below
         expect(codecPerformance("encode", "vp9", 3840 * 2160)?.smooth).toBe(false);
         expect(codecPerformance("decode", "vp9", 1280 * 720)?.smooth).toBe(true);
         expect(codecPerformance("encode", "h264", 1280 * 720)).toEqual({
@@ -54,35 +49,6 @@ describe("codecPerformance", () => {
 
     it("does nothing without the API", async () => {
         await expect(probeCodecPerformance(undefined)).resolves.toBeUndefined();
-    });
-});
-
-describe("probeSendCodecSelection", () => {
-    // A connection whose sender reacts to setParameters() as instructed
-    const fakePeerConnection = (setParameters: () => Promise<void>) =>
-        class {
-            public close = () => undefined;
-            public addTransceiver() {
-                return { sender: { getParameters: () => ({ encodings: [{}] }), setParameters } };
-            }
-        } as unknown as typeof RTCPeerConnection;
-
-    const failure = (name: string) => {
-        const e = new Error(name);
-        e.name = name;
-        return Promise.reject(e);
-    };
-
-    it("detects a browser that validates the codec field", async () => {
-        expect(await probeSendCodecSelection(fakePeerConnection(() => failure("InvalidModificationError")))).toBe(true);
-        expect(canSelectSendCodec()).toBe(true);
-    });
-
-    it("treats a browser that ignores the field, or fails otherwise, as unsupported", async () => {
-        expect(await probeSendCodecSelection(fakePeerConnection(() => Promise.resolve()))).toBe(false);
-        expect(canSelectSendCodec()).toBe(false);
-        expect(await probeSendCodecSelection(fakePeerConnection(() => failure("InvalidStateError")))).toBe(false);
-        expect(await probeSendCodecSelection(undefined)).toBe(false);
     });
 });
 

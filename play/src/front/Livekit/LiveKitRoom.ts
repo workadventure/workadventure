@@ -223,21 +223,16 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      */
     private getVideoCodec(isScreenShare: boolean, track: MediaStreamTrack): VideoCodec {
         const { width = 1280, height = 720 } = track.getSettings();
-        // H.264 and VP8 are mandatory in WebRTC; the rare browser without H.264 (Firefox with the OpenH264 download
-        // blocked) is rewritten to VP8 by LiveKit, at the same bitrate budget.
-        const supported: Record<VideoCodec, () => boolean> = {
-            av1: supportsAV1,
-            vp9: supportsVP9,
-            h264: () => true,
-            vp8: () => true,
-        };
+        // H.264 is mandatory in WebRTC and always ends the list; the rare browser without it (Firefox with the
+        // OpenH264 download blocked) is rewritten to VP8 by LiveKit, at the same bitrate budget.
+        const supported: Partial<Record<VideoCodec, () => boolean>> = { av1: supportsAV1, vp9: supportsVP9 };
         return (
             preferredVideoCodecs(
                 isScreenShare ? "screenSharing" : "video",
                 this.getQualitySetting(isScreenShare),
                 "encode",
                 width * height,
-            ).find((codec) => supported[codec]()) ?? "vp8"
+            ).find((codec) => supported[codec]?.() ?? true) ?? "h264"
         );
     }
 

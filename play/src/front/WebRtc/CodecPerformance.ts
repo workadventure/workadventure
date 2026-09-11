@@ -25,12 +25,8 @@ type ProbedCodec = (typeof PROBED_CODECS)[number];
 
 const CONTENT_TYPES: Record<ProbedCodec, string> = { av1: "video/AV1", vp9: "video/VP9", h264: "video/H264" };
 
-// The sizes we encode at: P2P tiles from a thumbnail up, a 720p LiveKit camera, screen shares up to 1440p
+// The sizes we decide at: 720p for a P2P connection and a LiveKit camera, larger LiveKit screen share captures
 const PROBED_SIZES: [number, number][] = [
-    [160, 90],
-    [320, 180],
-    [640, 360],
-    [960, 540],
     [1280, 720],
     [1920, 1080],
     [2560, 1440],
@@ -41,51 +37,6 @@ const RETRY_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const results = new Map<string, CodecPerformance>();
 const retryDecisions = new Map<string, boolean>();
-let sendCodecSelectable = false;
-
-// WebRTC codec selection API (Chrome 119+, Firefox 142+), not in the DOM typings yet
-export type RTCRtpEncodingParametersWithCodec = RTCRtpEncodingParameters & { codec?: RTCRtpCodec };
-
-/**
- * Whether the browser lets a sender pick its codec among the negotiated ones (RTCRtpEncodingParameters.codec). Unknown
- * until the probe answered, and treated as unsupported meanwhile: the exclusive negotiation that follows is safe, only
- * less flexible.
- */
-export function canSelectSendCodec(): boolean {
-    return sendCodecSelectable;
-}
-
-/**
- * The codec field is a dictionary member, invisible on any prototype, so it is probed on a throwaway connection: a
- * browser that implements it must reject an unknown codec with InvalidModificationError, one that does not ignores
- * the field and resolves. Any other failure counts as unsupported.
- */
-export async function probeSendCodecSelection(
-    PeerConnection: typeof RTCPeerConnection | undefined = globalThis.RTCPeerConnection,
-): Promise<boolean> {
-    sendCodecSelectable = false;
-    if (!PeerConnection) {
-        return false;
-    }
-    const connection = new PeerConnection();
-    try {
-        const sender = connection.addTransceiver("video").sender;
-        const parameters = sender.getParameters();
-        const encoding: RTCRtpEncodingParametersWithCodec | undefined = parameters.encodings[0];
-        if (!encoding) {
-            return false;
-        }
-        encoding.codec = { mimeType: "video/x-probe", clockRate: 90000 };
-        await sender.setParameters(parameters);
-        return false;
-    } catch (e) {
-        sendCodecSelectable = e instanceof Error && e.name === "InvalidModificationError";
-        return sendCodecSelectable;
-    } finally {
-        connection.close();
-    }
-}
-
 function key(direction: CodecDirection, codec: ProbedCodec, sizeIndex: number): string {
     return `${direction}:${codec}:${sizeIndex}`;
 }
@@ -127,7 +78,8 @@ export async function probeCodecPerformance(
 }
 
 /**
- * The verdict for a codec at the size we are about to encode or decode, from the closest probed size below it.
+ * The verdict for a codec at the size we are about to encode or decode, from the closest probed size below it
+ * (720p for anything smaller).
  * Unknown until the probe answered, on browsers without the API, and for VP8, which we never probe.
  */
 export function codecPerformance(
@@ -172,4 +124,3 @@ export function retryGranted(direction: CodecDirection, codec: VideoCodec): bool
 }
 
 probeCodecPerformance().catch((e) => console.error("Codec performance probe failed", e));
-probeSendCodecSelection().catch((e) => console.error("Codec selection probe failed", e));
