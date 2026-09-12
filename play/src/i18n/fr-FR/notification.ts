@@ -8,6 +8,8 @@ const notification: DeepPartial<Translation["notification"]> = {
     askToMuteMicrophone: "Puis-je couper votre micro ?",
     askToMuteCamera: "Puis-je couper votre caméra ?",
     microphoneMuted: "Votre micro a été coupé par un modérateur",
+    microphoneAutoMuted: "Votre micro a été coupé automatiquement",
+    unmute: "Réactiver le micro",
     cameraMuted: "Votre caméra a été coupée par un modérateur",
     notificationSentToMuteMicrophone: "Une notification a été envoyée à {name} pour couper son micro",
     notificationSentToMuteCamera: "Une notification a été envoyée à {name} pour couper sa caméra",

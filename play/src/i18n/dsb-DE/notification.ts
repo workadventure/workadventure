@@ -8,6 +8,8 @@ const notification: DeepPartial<Translation["notification"]> = {
     askToMuteMicrophone: "Mógu waš mikrofon němy cyniś?",
     askToMuteCamera: "Mógu wašu kameru němy cyniś?",
     microphoneMuted: "Waš mikrofon jo se wót moderatora němy cynił",
+    microphoneAutoMuted: "Waš mikrofon jo se awtomatiski němy cynił",
+    unmute: "Mikrofon zašaltowaś",
     cameraMuted: "Waša kamera jo se wót moderatora němy cyniła",
     notificationSentToMuteMicrophone: "Powěźeńka jo se na {name} pósłała, aby jogo mikrofon němy cynił",
     notificationSentToMuteCamera: "Powěźeńka jo se na {name} pósłała, aby jogo kameru němy cyniła",

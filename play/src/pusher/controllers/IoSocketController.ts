@@ -963,7 +963,7 @@ export class IoSocketController {
                                             const localSpaceName =
                                                 message.message.queryMessage.query.joinSpaceQuery.spaceName;
                                             message.message.queryMessage.query.joinSpaceQuery.spaceName = `${userData.world}.${message.message.queryMessage.query.joinSpaceQuery.spaceName}`;
-                                            await socketManager.handleJoinSpace(
+                                            const activeMicrophoneCount = await socketManager.handleJoinSpace(
                                                 socket,
                                                 message.message.queryMessage.query.joinSpaceQuery.spaceName,
                                                 localSpaceName,
@@ -978,6 +978,7 @@ export class IoSocketController {
                                                 $case: "joinSpaceAnswer",
                                                 joinSpaceAnswer: {
                                                     spaceUserId: userData.spaceUserId,
+                                                    activeMicrophoneCount,
                                                 },
                                             };
                                             this.sendAnswerMessage(socket, answerMessage);

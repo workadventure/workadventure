@@ -597,6 +597,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                         throw new Error("Filter type mismatch when adding user to space");
                     }
 
+                    // Count the OTHER users already publishing audio before adding the joining user
+                    // (who joins with microphoneState=false anyway). The client uses this to decide
+                    // whether to auto-mute before publishing (avoids a publish-then-mute renegotiation).
+                    const activeMicrophoneCount = this.countActiveMicrophones();
                     this.addUser(watcher, spaceQueryMessage.query.addSpaceUserQuery.user);
                     this._spaceUpdatedSubject.next(this);
                     return {
@@ -605,6 +609,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                             addSpaceUserAnswer: {
                                 spaceName: this.name,
                                 spaceUserId: spaceQueryMessage.query.addSpaceUserQuery.user.spaceUserId,
+                                activeMicrophoneCount,
                             },
                         },
                     };
@@ -703,6 +708,48 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return Array.from(this.users.values())
             .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
             .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
+    }
+
+    /**
+     * True when this space synchronizes microphone state, i.e. it is an actual communication space
+     * (proximity bubble, meeting room or podium) rather than a presence space such as the world space
+     * (which only syncs availabilityStatus / chatID).
+     */
+    private synchronizesMicrophoneState(): boolean {
+        return this._propertiesToSync.includes("microphoneState");
+    }
+
+    /**
+     * Whether the given user is actively publishing their microphone into THIS space.
+     *
+     * In a megaphone / podium space (LIVE_STREAMING_*), only on-stage speakers (megaphoneState) actually
+     * broadcast audio; everyone else joins as a listener and keeps their microphoneState for proximity
+     * chat elsewhere without publishing here. In an ALL_USERS media space (proximity bubble / meeting
+     * room), everyone publishes their microphone.
+     */
+    private isPublishingMicrophone(user: SpaceUser): boolean {
+        if (
+            this._filterType === FilterType.LIVE_STREAMING_USERS ||
+            this._filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
+        ) {
+            return user.megaphoneState && user.microphoneState;
+        }
+        return user.microphoneState;
+    }
+
+    /**
+     * Counts users currently publishing audio into this space. Reported to a joining client so it can
+     * auto-mute before publishing when the space is already crowded (MAX_SPEAKERS_BEFORE_AUTOMUTE).
+     * Returns 0 for spaces that do not synchronize microphone state (e.g. the world/presence space), and
+     * only counts on-stage speakers in megaphone spaces (so joining a map as a listener never counts).
+     */
+    public countActiveMicrophones(): number {
+        if (!this.synchronizesMicrophoneState()) {
+            return 0;
+        }
+        return Array.from(this.users.values())
+            .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
+            .filter((user: SpaceUser) => this.isPublishingMicrophone(user)).length;
     }
 
     public getMetadataValue(key: string): unknown {

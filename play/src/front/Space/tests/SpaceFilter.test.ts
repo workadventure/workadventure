@@ -12,7 +12,7 @@ import type { SpaceUserExtended } from "../SpaceInterface";
 const defaultRoomConnectionMock = {
     emitUserJoinSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
-    emitJoinSpace: vi.fn(),
+    emitJoinSpace: vi.fn().mockResolvedValue({ spaceUserId: "space-user-id", activeMicrophoneCount: 0 }),
     emitRemoveSpaceFilter: vi.fn(),
 } as unknown as RoomConnection;
 
@@ -271,7 +271,7 @@ describe("SpaceFilter", () => {
             const mockRoomConnection = {
                 emitAddSpaceFilter: vi.fn(),
                 emitRemoveSpaceFilter: vi.fn(),
-                emitJoinSpace: vi.fn(),
+                emitJoinSpace: vi.fn().mockResolvedValue({ spaceUserId: "space-user-id", activeMicrophoneCount: 0 }),
             } as unknown as RoomConnection;
 
             const space = await Space.create("space-name", FilterType.ALL_USERS, mockRoomConnection, [], signal, {
@@ -296,7 +296,7 @@ describe("SpaceFilter", () => {
             const mockRoomConnection = {
                 emitAddSpaceFilter: vi.fn(),
                 emitRemoveSpaceFilter: vi.fn(),
-                emitJoinSpace: vi.fn(),
+                emitJoinSpace: vi.fn().mockResolvedValue({ spaceUserId: "space-user-id", activeMicrophoneCount: 0 }),
             } as unknown as RoomConnection;
 
             const space = await Space.create("space-name", FilterType.ALL_USERS, mockRoomConnection, [], signal, {

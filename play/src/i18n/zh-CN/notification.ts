@@ -8,6 +8,8 @@ const notification: DeepPartial<Translation["notification"]> = {
     askToMuteMicrophone: "我可以将您的麦克风静音吗？",
     askToMuteCamera: "我可以将您的摄像头静音吗？",
     microphoneMuted: "您的麦克风已被管理员静音",
+    microphoneAutoMuted: "您的麦克风已被自动静音",
+    unmute: "取消静音",
     cameraMuted: "您的摄像头已被管理员静音",
     notificationSentToMuteMicrophone: "已向 {name} 发送通知以静音其麦克风",
     notificationSentToMuteCamera: "已向 {name} 发送通知以静音其摄像头",
