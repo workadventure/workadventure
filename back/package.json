@@ -49,7 +49,7 @@
     "@workadventure/messages": "1.0.0",
     "@workadventure/shared-utils": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.1.2",
-    "axios": "^1.16.1",
+    "axios": "^1.18.0",
     "bigbluebutton-js": "^0.2.0",
     "busboy": "^1.6.0",
     "debug": "^4.4.3",
