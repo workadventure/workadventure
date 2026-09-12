@@ -24,7 +24,7 @@
         "electron-log": "^4.4.6",
         "electron-serve": "^1.1.0",
         "electron-settings": "^4.0.2",
-        "electron-updater": "^4.6.5",
+        "electron-updater": "^6.3.0",
         "electron-util": "^0.17.2",
         "electron-window-state": "^5.0.3",
         "node-fetch": "^3.2.10"
