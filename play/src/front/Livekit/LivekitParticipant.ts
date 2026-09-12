@@ -209,6 +209,12 @@ export class LiveKitParticipant {
             }
 
             this._cameraVideoSubscribed = subscribed;
+            console.log(
+                "DEBUG: Setting camera video subscription to",
+                subscribed,
+                "for participant",
+                this.participant.name,
+            );
             this._cameraPublication?.setSubscribed(subscribed);
             return;
         }
@@ -218,15 +224,33 @@ export class LiveKitParticipant {
         }
 
         this._screenShareVideoSubscribed = subscribed;
+        console.log(
+            "DEBUG: Setting screen share video subscription to",
+            subscribed,
+            "for participant",
+            this.participant.name,
+        );
         this._screenSharePublication?.setSubscribed(subscribed);
     }
 
     private syncVideoSubscriptionState(type: "camera" | "screenShare") {
         if (type === "camera") {
+            console.log(
+                "DEBUG: Syncing camera video subscription state to",
+                this._cameraVideoSubscribed,
+                "for participant",
+                this.participant.name,
+            );
             this._cameraPublication?.setSubscribed(this._cameraVideoSubscribed);
             return;
         }
 
+        console.log(
+            "DEBUG: Syncing screen share video subscription state to",
+            this._screenShareVideoSubscribed,
+            "for participant",
+            this.participant.name,
+        );
         this._screenSharePublication?.setSubscribed(this._screenShareVideoSubscribed);
     }
 
@@ -275,6 +299,10 @@ export class LiveKitParticipant {
                 Sentry.captureMessage(
                     "Camera track received on a publication that is not the one we expected. This should not happen.",
                 );
+                console.log(
+                    "DEBUG: Unsubscribing from unexpected camera publication for participant",
+                    this.participant.name,
+                );
                 this._cameraPublication.setSubscribed(false);
             }
             this._cameraPublication = publication;
@@ -287,6 +315,10 @@ export class LiveKitParticipant {
                 );
                 Sentry.captureMessage(
                     "Screen share track received on a publication that is not the one we expected. This should not happen.",
+                );
+                console.log(
+                    "DEBUG: Unsubscribing from unexpected screen share publication for participant",
+                    this.participant.name,
                 );
                 this._screenSharePublication.setSubscribed(false);
             }
@@ -301,6 +333,10 @@ export class LiveKitParticipant {
                 );
                 Sentry.captureMessage(
                     "Screen share audio track received on a publication that is not the one we expected. This should not happen.",
+                );
+                console.log(
+                    "DEBUG: Unsubscribing from unexpected screen share audio publication for participant",
+                    this.participant.name,
                 );
                 this._screenShareAudioPublication.setSubscribed(false);
             }
@@ -317,6 +353,10 @@ export class LiveKitParticipant {
                 Sentry.captureMessage(
                     "Scripting audio track received on a publication that is not the one we expected. This should not happen.",
                 );
+                console.log(
+                    "DEBUG: Unsubscribing from unexpected scripting audio publication for participant",
+                    this.participant.name,
+                );
                 this._scriptingAudioPublication.setSubscribed(false);
             }
             publication.setSubscribed(true);
@@ -330,8 +370,13 @@ export class LiveKitParticipant {
                 Sentry.captureMessage(
                     "Microphone track received on a publication that is not the one we expected. This should not happen.",
                 );
+                console.log(
+                    "DEBUG: Unsubscribing from unexpected microphone publication for participant",
+                    this.participant.name,
+                );
                 this._microphonePublication.setSubscribed(false);
             }
+            console.log("DEBUG: Subscribing to microphone publication for participant", this.participant.name);
             publication.setSubscribed(true);
             this._microphonePublication = publication;
             this._hasMicrophoneAudio.set(!publication.isMuted);
@@ -373,6 +418,7 @@ export class LiveKitParticipant {
 
     private handleTrackUnpublished(publication: RemoteTrackPublication) {
         if (publication.source === Track.Source.Camera) {
+            console.log("DEBUG: Unsubscribing from camera publication for participant", this.participant.name);
             publication.setSubscribed(false);
             if (this._cameraPublication === publication) {
                 this._cameraPublication = undefined;
@@ -380,6 +426,7 @@ export class LiveKitParticipant {
             this._videoRemoteTrack.set(undefined);
             this._hasVideo.set(false);
         } else if (publication.source === Track.Source.ScreenShare) {
+            console.log("DEBUG: Unsubscribing from screen share publication for participant", this.participant.name);
             publication.setSubscribed(false);
             if (this._screenSharePublication === publication) {
                 this._screenSharePublication = undefined;
@@ -388,6 +435,10 @@ export class LiveKitParticipant {
             this._hasScreenShareVideo.set(false);
             this.refreshLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.ScreenShareAudio) {
+            console.log(
+                "DEBUG: Unsubscribing from screen share audio publication for participant",
+                this.participant.name,
+            );
             publication.setSubscribed(false);
             if (this._screenShareAudioPublication === publication) {
                 this._screenShareAudioPublication = undefined;
@@ -397,6 +448,7 @@ export class LiveKitParticipant {
                 this.refreshLivekitScreenShareStreamStore();
             }
         } else if (this.isScriptingAudioPublication(publication)) {
+            console.log("DEBUG: Unsubscribing from scripting audio publication for participant", this.participant.name);
             publication.setSubscribed(false);
             if (this._scriptingAudioPublication === publication) {
                 this._scriptingAudioPublication = undefined;
@@ -405,6 +457,7 @@ export class LiveKitParticipant {
                 this._hasScriptingAudio.set(false);
             }
         } else if (publication.source === Track.Source.Microphone) {
+            console.log("DEBUG: Unsubscribing from microphone publication for participant", this.participant.name);
             publication.setSubscribed(false);
             if (this._microphonePublication === publication) {
                 this._microphonePublication = undefined;
@@ -646,6 +699,7 @@ export class LiveKitParticipant {
         this._screenShareVideoSubscriptions.clear();
         this._cameraVideoSubscribed = false;
         this._screenShareVideoSubscribed = false;
+        console.log("DEBUG: Destroying LiveKitParticipant for participant", this.participant.name);
         this._cameraPublication?.setSubscribed(false);
         this._microphonePublication?.setSubscribed(false);
         this._scriptingAudioPublication?.setSubscribed(false);
