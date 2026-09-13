@@ -62,10 +62,14 @@ test.describe("Picture In Picture", () => {
         await alicePage.mouse.move(300, 300);
         await bobPage.mouse.move(300, 300);
 
+        // Wait until both users are in the bubble: that is when the PiP button would show up.
+        // (the screen sharing button is not a usable anchor here: WebKit never publishes a stream,
+        // so it stays hidden once the onboarding is over)
+        await expect(bobPage.getByTestId("cameras-container")).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByTestId("cameras-container")).toBeVisible({ timeout: 20_000 });
+
         // Check the Picture in Picture button is not available
-        await expect(bobPage.getByTestId("screenShareButton")).toBeVisible({ timeout: 10_000 });
-        await expect(bobPage.getByTestId("pictureInPictureButtonDisabled")).toBeHidden({ timeout: 10_000 });
-        await expect(alicePage.getByTestId("screenShareButton")).toBeVisible({ timeout: 10_000 });
-        await expect(alicePage.getByTestId("pictureInPictureButtonDisabled")).toBeHidden({ timeout: 10_000 });
+        await expect(bobPage.getByTestId("pictureInPictureButton")).toBeHidden({ timeout: 10_000 });
+        await expect(alicePage.getByTestId("pictureInPictureButton")).toBeHidden({ timeout: 10_000 });
     });
 });
