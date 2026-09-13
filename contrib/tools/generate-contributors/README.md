@@ -15,6 +15,8 @@ The generator adapts [OpenClaw's implementation](https://github.com/openclaw/ope
 - `tenure = 1 + min(1, contributor age / repository age)^2 * 0.5`, using the first commit date.
 - Changed lines exclude `docs/`; commit and PR credit still includes documentation. PR counts cover the latest 5,000 merged PRs.
 - GitHub noreply addresses and optional `nameToLogin` / `emailToLogin` mappings resolve commit authors.
+- Numeric noreply account IDs retain credit across renames; merged PR and docs-only authors remain candidates while contributor aggregates catch up. Aggregate commit counts can still lag behind a merge.
+- Bot accounts returned by GitHub are retained, matching OpenClaw; there is no blanket bot exclusion.
 - Optional `displayName`, `ensureLogins` and `seedCommit` preserve explicit credits. Seed avatar account IDs resolve renamed users without attributing their work to a reused login.
 - As in OpenClaw, default avatars are detected by image dimensions and cached in the README's hidden block. Remove a login from that block to check its avatar again.
 
@@ -28,5 +30,6 @@ PR does not trigger another update. Closed-but-unmerged PRs and fork repositorie
 
 The repository must allow GitHub Actions to create pull requests. The workflow uses `GITHUB_TOKEN`, changes only
 `README.md` in the update PR, and does not merge it or alter branch protection. README changes become visible on `master`
-after the update PR is merged. PRs created with `GITHUB_TOKEN` do not automatically trigger `push` or `pull_request`
-workflows. If required checks apply, a maintainer can close and reopen the update PR to trigger the normal PR checks.
+after the update PR is merged. `GITHUB_TOKEN`-created or updated PRs can produce approval-required `pull_request`
+workflow runs; a user with write access can approve these from the PR page. They do not trigger `push` workflows.
+See [GitHub's event documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request).
