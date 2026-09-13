@@ -229,6 +229,8 @@ export class Room {
                 this._skipCameraPage = data.skipCameraPage ?? false;
                 this._bypassPwa = data.bypassPwa ?? false;
                 this._recording = data.recording ?? undefined;
+                localUserStore.setDefaultCameraPrivacySettings(data.defaultCameraPrivacySettings ?? false);
+                localUserStore.setDefaultMicrophonePrivacySettings(data.defaultMicrophonePrivacySettings ?? true);
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
