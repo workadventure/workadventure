@@ -92,6 +92,10 @@ interface PlayerVariable {
 class LocalUserStore {
     private jwt: JwtAuthToken | undefined;
     private name: string | undefined;
+    /** Default for the microphone privacy setting until the user stores their own preference. */
+    private defaultMicrophonePrivacySettings: boolean = true;
+    /** Default for the camera privacy setting until the user stores their own preference. */
+    private defaultCameraPrivacySettings: boolean = false;
     /** Last in-session display name (from {@link #setName} or {@link #notifyPlayerDisplayNameChanged}). */
     private latestSessionDisplayName: string | undefined;
     private displayNameListeners = new Set<(name: string) => void>();
@@ -557,24 +561,46 @@ class LocalUserStore {
         localStorage.setItem(cameraPrivacySettings, option.toString());
     }
 
+    /**
+     * Sets the default value used for the camera privacy setting when the
+     * user has not stored their own preference yet (e.g. configured by the
+     * instance administrator through the DEFAULT_CAMERA_PRIVACY_SETTINGS
+     * environment variable). The user can still change it in the settings menu.
+     */
+    setDefaultCameraPrivacySettings(option: boolean) {
+        this.defaultCameraPrivacySettings = option;
+    }
+
     getCameraPrivacySettings() {
-        //if this setting doesn't exist in LocalUserStore, we set a default value
-        if (localStorage.getItem(cameraPrivacySettings) == null) {
-            localStorage.setItem(cameraPrivacySettings, "false");
+        //if this setting doesn't exist in LocalUserStore, we use the configured default value
+        const storedValue = localStorage.getItem(cameraPrivacySettings);
+        if (storedValue == null) {
+            return this.defaultCameraPrivacySettings;
         }
-        return localStorage.getItem(cameraPrivacySettings) === "true";
+        return storedValue === "true";
     }
 
     setMicrophonePrivacySettings(option: boolean) {
         localStorage.setItem(microphonePrivacySettings, option.toString());
     }
 
+    /**
+     * Sets the default value used for the microphone privacy setting when the
+     * user has not stored their own preference yet (e.g. configured by the
+     * instance administrator through the DEFAULT_MICROPHONE_PRIVACY_SETTINGS
+     * environment variable). The user can still change it in the settings menu.
+     */
+    setDefaultMicrophonePrivacySettings(option: boolean) {
+        this.defaultMicrophonePrivacySettings = option;
+    }
+
     getMicrophonePrivacySettings() {
-        //if this setting doesn't exist in LocalUserStore, we set a default value
-        if (localStorage.getItem(microphonePrivacySettings) == null) {
-            localStorage.setItem(microphonePrivacySettings, "true");
+        //if this setting doesn't exist in LocalUserStore, we use the configured default value
+        const storedValue = localStorage.getItem(microphonePrivacySettings);
+        if (storedValue == null) {
+            return this.defaultMicrophonePrivacySettings;
         }
-        return localStorage.getItem(microphonePrivacySettings) === "true";
+        return storedValue === "true";
     }
 
     getAllUserProperties(context: string): Map<string, PlayerVariable> {

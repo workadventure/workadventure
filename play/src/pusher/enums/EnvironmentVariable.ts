@@ -98,6 +98,10 @@ export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = env.ENABLE_CHAT_DISCONNECT
 export const DEFAULT_WOKA_NAME: string = env.DEFAULT_WOKA_NAME || "";
 export const DEFAULT_WOKA_TEXTURE: string = env.DEFAULT_WOKA_TEXTURE || "";
 export const SKIP_CAMERA_PAGE: boolean = env.SKIP_CAMERA_PAGE ?? false;
+/** Initial value of the camera privacy setting for users who have not set their own preference. */
+export const DEFAULT_CAMERA_PRIVACY_SETTINGS: boolean = env.DEFAULT_CAMERA_PRIVACY_SETTINGS ?? false;
+/** Initial value of the microphone privacy setting for users who have not set their own preference. */
+export const DEFAULT_MICROPHONE_PRIVACY_SETTINGS: boolean = env.DEFAULT_MICROPHONE_PRIVACY_SETTINGS ?? true;
 /** When true, map details include bypassPwa so the play client never shows the Web App install screen. */
 export const BYPASS_PWA: boolean = env.BYPASS_PWA ?? false;
 export const PROVIDE_DEFAULT_WOKA_NAME: "no" | "random" | "fix" | "fix-plus-random-numbers" | undefined =

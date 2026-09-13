@@ -330,6 +330,16 @@ export const isMapDetailsData = z.object({
     description: "Whether to skip the camera permission request page",
     example: true,
   }),
+  defaultCameraPrivacySettings: extendApi(z.boolean().optional(), {
+    description:
+      "Initial value of the 'keep camera enabled when the tab is away' privacy setting, before the user sets their own preference",
+    example: false,
+  }),
+  defaultMicrophonePrivacySettings: extendApi(z.boolean().optional(), {
+    description:
+      "Initial value of the 'keep microphone enabled when the tab is away' privacy setting, before the user sets their own preference",
+    example: false,
+  }),
   bypassPwa: extendApi(z.boolean().optional(), {
     description:
       "When true (e.g. admin option), never show the Web App / PWA install screen or menu entry",

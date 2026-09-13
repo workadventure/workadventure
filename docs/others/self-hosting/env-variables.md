@@ -55,6 +55,8 @@ Environment variables for the Play service (frontend and pusher).
 | `DEFAULT_WOKA_NAME` | No | Default name to use for users when they join the room. |
 | `DEFAULT_WOKA_TEXTURE` | No | Default avatar texture URL to use for users. |
 | `SKIP_CAMERA_PAGE` | No | Whether to skip the camera permission request page. Defaults to false. |
+| `DEFAULT_CAMERA_PRIVACY_SETTINGS` | No | Initial value of the camera privacy setting ('keep camera enabled when the tab is away') for users who have not set their own preference. Defaults to false. |
+| `DEFAULT_MICROPHONE_PRIVACY_SETTINGS` | No | Initial value of the microphone privacy setting ('keep microphone enabled when the tab is away') for users who have not set their own preference. Defaults to true. |
 | `BYPASS_PWA` | No | When true, LocalAdmin map details set bypassPwa so the client never shows the Web App install flow. Defaults to false. |
 | `PROVIDE_DEFAULT_WOKA_NAME` | No | How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended). |
 | `PROVIDE_DEFAULT_WOKA_TEXTURE` | No | How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE). |
