@@ -108,7 +108,7 @@ globalThis.fetch = async (url) => {
     };
 }
 
-test("uses the OpenClaw composite ranking, paginates, sizes avatars and retains API bot entries", (t) => {
+test("combines contribution metrics and tenure, paginates, sizes avatars and retains API bot entries", (t) => {
     const early = user("early", 1, 5);
     const recent = user("recent", 2, 5);
     const doc = user("docs-only", 3, 1);
@@ -316,4 +316,50 @@ test("handles prototype-named authors and display names without inherited mappin
     assert.match(f.readme(), /alt="constructor"/);
     const names = [...f.readme().matchAll(/<a href="https:\/\/github.com\/([^"]+)">/g)].map((m) => m[1]);
     assert.deepEqual(names, ["alice", "constructor"]);
+});
+
+test("matches readable names but does not guess an account from an unrelated email prefix", (t) => {
+    const f = fixture(t, {
+        users: [user("aliceexample", 1), user("bob", 2, 10)],
+        history: [
+            "Alice Example\x1fcontact@example.com\x1f2020-01-01T00:00:00Z",
+            "10000\t0\tsrc/alice.ts",
+            "Unrelated Name\x1fbob@example.com\x1f2020-01-01T00:00:00Z",
+            "1000000\t0\tsrc/bob.ts",
+        ].join("\n"),
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    const names = [...f.readme().matchAll(/<a href="https:\/\/github.com\/([^"]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(names, ["aliceexample", "bob"]);
+});
+
+test("does not count an anonymous alias again when the account already has aggregate credit", (t) => {
+    const f = fixture(t, {
+        users: [
+            user("alice", 1, 2),
+            user("bob", 2, 10),
+            { name: "Alice", email: "alice@example.com", contributions: 100 },
+        ],
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    const names = [...f.readme().matchAll(/<a href="https:\/\/github.com\/([^"]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(names, ["bob", "alice"]);
+});
+
+test("keeps a bot's app profile linked across regenerations with a custom label", (t) => {
+    const bot = {
+        ...user("github-actions[bot]", 1),
+        html_url: "https://github.com/apps/github-actions",
+        avatar_url: "https://avatars.githubusercontent.com/in/15368?v=4",
+    };
+    const f = fixture(t, { users: [bot], config: { displayName: { "github-actions[bot]": "CI" } } });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    const first = f.readme();
+    assert.equal(f.run().status, 0);
+    assert.equal(f.readme(), first);
+    assert.equal((first.match(/<img /g) ?? []).length, 1);
+    assert.match(first, /href="https:\/\/github.com\/apps\/github-actions"/);
 });

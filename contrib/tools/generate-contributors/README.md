@@ -9,16 +9,16 @@ node --test contrib/tools/generate-contributors/update-contributors.test.mjs
 
 No npm installation is needed. Generation requires a complete Git checkout and network access; tests use local fixtures.
 
-The generator adapts [OpenClaw's implementation](https://github.com/openclaw/openclaw/blob/65c8b06f2e42f4788d45da3b5573a761ddaf58fd/scripts/update-clawtributors.ts):
+The list uses the following rules:
 
 - Linked 48×48 avatars, sorted by `(commits * 2 + merged PRs * 10 + sqrt(changed lines)) * tenure`.
 - `tenure = 1 + min(1, contributor age / repository age)^2 * 0.5`, using the first commit date.
 - Changed lines exclude `docs/`; commit and PR credit still includes documentation. PR counts cover the latest 5,000 merged PRs.
 - GitHub noreply addresses and optional `nameToLogin` / `emailToLogin` mappings resolve commit authors.
 - Numeric noreply account IDs retain credit across renames; merged PR and docs-only authors remain candidates while contributor aggregates catch up. Aggregate commit counts can still lag behind a merge.
-- Bot accounts returned by GitHub are retained, matching OpenClaw; there is no blanket bot exclusion.
+- Bot accounts returned by GitHub are retained.
 - Optional `displayName`, `ensureLogins` and `seedCommit` preserve explicit credits. Seed avatar account IDs resolve renamed users without attributing their work to a reused login.
-- As in OpenClaw, default avatars are detected by image dimensions and cached in the README's hidden block. Remove a login from that block to check its avatar again.
+- Default avatars are detected by image dimensions and cached in the README's hidden block. Remove a login from that block to check its avatar again.
 
 Only the contributor marker blocks in the root README are rewritten. Other content is preserved.
 
