@@ -17,7 +17,7 @@ The list uses the following rules:
 - GitHub noreply addresses and optional `nameToLogin` / `emailToLogin` mappings resolve commit authors.
 - Numeric noreply account IDs retain credit across renames; merged PR and docs-only authors remain candidates while contributor aggregates catch up. Aggregate commit counts can still lag behind a merge.
 - Bot accounts returned by GitHub are retained.
-- Optional `displayName`, `ensureLogins` and `seedCommit` preserve explicit credits. Seed avatar account IDs resolve renamed users without attributing their work to a reused login.
+- Existing HTML or Markdown avatars in the README are retained. Account IDs resolve renamed users without attributing their work to a reused login.
 - Default avatars are detected by image dimensions and cached in the README's hidden block. Remove a login from that block to check its avatar again.
 
 Only the contributor marker blocks in the root README are rewritten. Other content is preserved.

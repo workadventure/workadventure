@@ -40,8 +40,7 @@ const args = process.argv.slice(2);
 const name = require('node:path').basename(process.argv[1]);
 fs.appendFileSync('commands.jsonl', JSON.stringify({name, args}) + '\\n');
 if (name === 'git') {
-  if (args[0] === 'show') console.log(data.seed ?? '');
-  else if (args[0] === 'rev-list') console.log('root');
+  if (args[0] === 'rev-list') console.log('root');
   else if (args.includes('--reverse')) console.log(data.history ?? '');
   else console.log('2020-01-01T00:00:00Z');
 } else if (args[0] === 'pr') {
@@ -141,17 +140,14 @@ test("combines contribution metrics and tenure, paginates, sizes avatars and ret
     assert.equal(f.readme(), html, "regeneration must not add blank lines or unrelated changes");
 });
 
-test("resolves mapped authors and ensured users, escaping display names", (t) => {
+test("resolves mapped authors and escapes existing avatar labels", (t) => {
     const octocat = user("octocat", 10, 1);
-    const ensured = user("ensured", 11);
     const f = fixture(t, {
         users: [octocat],
-        lookup: { ensured },
+        readme: `${prefix}${start}\n<a href="https://github.com/octocat"><img src="https://avatars.githubusercontent.com/u/10?v=4" alt="A &lt; B &amp; &quot;C&quot;"></a>\n${end}${suffix}`,
         config: {
             nameToLogin: { "The Author": "octocat" },
             emailToLogin: { "another@example.com": "octocat" },
-            ensureLogins: ["ensured"],
-            displayName: { octocat: 'A < B & "C"' },
         },
         history: [
             "The Author\x1funknown@example.com\x1f2020-01-01T00:00:00Z",
@@ -164,15 +160,13 @@ test("resolves mapped authors and ensured users, escaping display names", (t) =>
     assert.equal(result.status, 0, result.stderr);
     assert.match(f.readme(), /alt="A &lt; B &amp; &quot;C&quot;"/);
     assert.equal((f.readme().match(/href="https:\/\/github.com\/octocat"/g) ?? []).length, 1);
-    assert.match(f.readme(), /href="https:\/\/github.com\/ensured"/);
 });
 
 test("keeps historical credit through renamed and deleted accounts without crediting a reused login", (t) => {
     const f = fixture(t, {
         users: [user("old-login", 22)],
-        config: { seedCommit: "history" },
         lookup: { 21: user("new-login", 21) },
-        seed: `${start}\n<a href="https://github.com/old-login"><img src="https://avatars.githubusercontent.com/u/21?v=4" alt="Original"></a>\n<img src="https://avatars.githubusercontent.com/u/23?v=4" alt="Deleted">\n${end}`,
+        readme: `${prefix}${start}\n<a href="https://github.com/old-login"><img src="https://avatars.githubusercontent.com/u/21?v=4" alt="Original"></a>\n<img src="https://avatars.githubusercontent.com/u/23?v=4" alt="Deleted">\n${end}${suffix}`,
     });
     const result = f.run();
     assert.equal(result.status, 0, result.stderr);
@@ -214,7 +208,7 @@ test("caches default avatars without hiding failed probes or changing unrelated 
 
 test("does not rewrite README when GitHub lookups fail instead of silently losing credit", (t) => {
     const f = fixture(t, {
-        config: { ensureLogins: ["unavailable"] },
+        prs: ["unavailable"],
         errors: { "users/unavailable": "gh: API rate limit exceeded (HTTP 403)" },
     });
     assert.notEqual(f.run().status, 0);
@@ -274,8 +268,7 @@ test("does not attribute numeric or hyphen-leading authors' LOC to the preceding
 test("credits historical noreply account IDs rather than reused login names", (t) => {
     const f = fixture(t, {
         users: [user("old-login", 22), user("new-login", 21)],
-        config: { seedCommit: "history" },
-        seed: `${start}\n<a href="https://github.com/old-login"><img src="https://avatars.githubusercontent.com/u/21?v=4" alt="Original"></a>\n${end}`,
+        readme: `${prefix}${start}\n<a href="https://github.com/old-login"><img src="https://avatars.githubusercontent.com/u/21?v=4" alt="Original"></a>\n${end}${suffix}`,
         history: "Original\x1f21+old-login@users.noreply.github.com\x1f2020-01-01T00:00:00Z\n10000\t0\tsrc/original.ts",
     });
     const result = f.run();
@@ -300,7 +293,7 @@ test("does not fall back to a reused login when the original account is deleted"
     assert.deepEqual(names, ["alice", "old-login"]);
 });
 
-test("handles prototype-named authors and display names without inherited mappings", (t) => {
+test("handles prototype-named authors without inherited mappings", (t) => {
     const f = fixture(t, {
         users: [user("constructor", 42), user("alice", 1)],
         config: { nameToLogin: { ["__proto__"]: "alice" } },
@@ -354,7 +347,10 @@ test("keeps a bot's app profile linked across regenerations with a custom label"
         html_url: "https://github.com/apps/github-actions",
         avatar_url: "https://avatars.githubusercontent.com/in/15368?v=4",
     };
-    const f = fixture(t, { users: [bot], config: { displayName: { "github-actions[bot]": "CI" } } });
+    const f = fixture(t, {
+        users: [bot],
+        readme: `${prefix}${start}\n<a href="${bot.html_url}"><img src="${bot.avatar_url}" alt="CI"></a>\n${end}${suffix}`,
+    });
     const result = f.run();
     assert.equal(result.status, 0, result.stderr);
     const first = f.readme();
@@ -362,4 +358,55 @@ test("keeps a bot's app profile linked across regenerations with a custom label"
     assert.equal(f.readme(), first);
     assert.equal((first.match(/<img /g) ?? []).length, 1);
     assert.match(first, /href="https:\/\/github.com\/apps\/github-actions"/);
+});
+
+test("resolves numeric noreply IDs before a name alias pointing to a reused login", (t) => {
+    const f = fixture(t, {
+        users: [user("old-login", 22), user("new-login", 21)],
+        config: { nameToLogin: { Original: "old-login" } },
+        history: "Original\x1f21+old-login@users.noreply.github.com\x1f2020-01-01T00:00:00Z\n10000\t0\tsrc/a.ts",
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    const names = [...f.readme().matchAll(/<a href="https:\/\/github.com\/([^"]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(names, ["new-login", "old-login"]);
+});
+
+test("recognizes a known contributor's GitHub-domain email despite a different author name", (t) => {
+    const f = fixture(t, {
+        users: [user("alice", 1), user("bob", 2, 5)],
+        history: "A Different Name\x1falice@github.com\x1f2020-01-01T00:00:00Z\n10000\t0\tsrc/a.ts",
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    const names = [...f.readme().matchAll(/<a href="https:\/\/github.com\/([^"]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(names, ["alice", "bob"]);
+});
+
+test("retains linked Markdown avatars, including escaped labels, through regeneration", (t) => {
+    const f = fixture(t, {
+        lookup: { 21: user("alice", 21) },
+        readme: `${prefix}${start}\n[![Alice \\[dev\\]](https://avatars.githubusercontent.com/u/21?v=4)](https://github.com/alice)\n${end}${suffix}`,
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    const first = f.readme();
+    assert.match(first, /href="https:\/\/github.com\/alice"/);
+    assert.match(first, /alt="Alice \[dev\]"/);
+    assert.ok(first.startsWith(prefix));
+    assert.ok(first.endsWith(suffix));
+    assert.equal(f.run().status, 0);
+    assert.equal(f.readme(), first);
+});
+
+test("retains API bot credit without treating bot noreply addresses as personal logins", (t) => {
+    const f = fixture(t, {
+        users: [user("alice", 1, 5), user("dependabot[bot]", 2)],
+        history:
+            "dependabot[bot]\x1f2+dependabot[bot]@users.noreply.github.com\x1f2020-01-01T00:00:00Z\n1000000\t0\tpackage-lock.json",
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    const names = [...f.readme().matchAll(/<a href="https:\/\/github.com\/([^"]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(names, ["alice", "dependabot[bot]"]);
 });
