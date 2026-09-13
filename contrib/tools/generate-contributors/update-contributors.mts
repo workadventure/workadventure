@@ -4,9 +4,6 @@ import { readFileSync, writeFileSync } from "node:fs";
 type Settings = {
     nameToLogin?: Record<string, string>;
     emailToLogin?: Record<string, string>;
-    displayName?: Record<string, string>;
-    ensureLogins?: string[];
-    seedCommit?: string;
 };
 
 type Profile = {
@@ -59,7 +56,9 @@ function replaceSection(text: string, markers: readonly [string, string], conten
 }
 
 function dictionary(values: Record<string, string> = {}): Map<string, string> {
-    return new Map(Object.entries(values).map(([key, value]) => [key.trim().toLowerCase(), value.trim()]));
+    return new Map(
+        Object.entries(values).map(([key, value]) => [key.trim().toLowerCase().replace(/\s+/g, " "), value.trim()]),
+    );
 }
 
 function day(value: string): number {
@@ -85,11 +84,16 @@ function attributes(tag: string): Map<string, string> {
 
 function previousTiles(text: string): Tile[] {
     const content = section(text, visibleMarkers)?.content ?? "";
-    return [...content.matchAll(/(?:<a\b[^>]*>\s*)?<img\b[^>]*>(?:\s*<\/a>)?/g)].flatMap(([tag]) => {
+    const tiles = [...content.matchAll(/(?:<a\b[^>]*>\s*)?<img\b[^>]*>(?:\s*<\/a>)?/g)].flatMap(([tag]) => {
         const values = attributes(tag);
         const image = values.get("src");
         return image ? [{ image, label: values.get("alt") ?? "", link: values.get("href") }] : [];
     });
+    for (const match of content.matchAll(/\[!\[((?:\\.|[^\]])*)\]\((\S+?)\)\]\((https?:\/\/[^)\s]+)\)/g)) {
+        const [, label, image, link] = match;
+        if (label && image && link) tiles.push({ label: label.replace(/\\([\\\[\]])/g, "$1"), image, link });
+    }
+    return tiles;
 }
 
 function avatarId(image: string): number | undefined {
@@ -182,7 +186,6 @@ async function main(): Promise<void> {
     );
     const names = dictionary(settings.nameToLogin);
     const emails = dictionary(settings.emailToLogin);
-    const labels = dictionary(settings.displayName);
     const members = new Map<number, Member>();
     const profiles = new Map<string | number, Profile | null>();
 
@@ -222,7 +225,7 @@ async function main(): Promise<void> {
         if (!result) {
             result = {
                 profile,
-                label: labels.get(profile.login.toLowerCase()) ?? profile.login,
+                label: profile.login,
                 commits: 0,
                 pulls: 0,
                 lines: 0,
@@ -233,15 +236,32 @@ async function main(): Promise<void> {
     }
 
     function author(name: string, email: string): Profile | null {
-        const mapped = emails.get(email.toLowerCase()) ?? names.get(name.toLowerCase());
-        if (mapped) return lookup(mapped);
-        const noreply = /^(?:(\d+)\+)?([a-z\d-]+)@users\.noreply\.github\.com$/i.exec(email);
-        if (noreply) {
+        const mappedEmail = emails.get(email.toLowerCase());
+        if (mappedEmail) return lookup(mappedEmail);
+        const noreply = /^(?:(\d+)\+)?([^@]+)@users\.noreply\.github\.com$/i.exec(email);
+        if (noreply && !/^[a-z\d-]+$/i.test(noreply[2] ?? "")) return null;
+        if (noreply?.[1]) {
             // The immutable ID takes precedence over a handle that may have been reused.
-            return lookup(noreply[1] ? Number(noreply[1]) : (noreply[2] ?? ""));
+            return lookup(Number(noreply[1]));
         }
-        const handle = name.toLowerCase().replace(/[^a-z\d-]/g, "");
-        return profiles.get(handle) ?? null;
+        const localPart = email.split("@")[0]?.toLowerCase() ?? "";
+        const letters = (value: string) => value.toLowerCase().replace(/[^a-z\d]/g, "");
+        if (letters(name) && letters(name) === letters(localPart)) {
+            for (const candidate of [localPart, localPart.replace(/[._-]/g, "")]) {
+                const profile = profiles.get(candidate);
+                if (profile) return profile;
+            }
+        }
+        if (noreply?.[2]) return lookup(noreply[2]);
+        if (email.toLowerCase().endsWith("@github.com") && profiles.has(localPart)) {
+            return profiles.get(localPart) ?? null;
+        }
+        const normalized = name.trim().toLowerCase().replace(/\s+/g, " ");
+        const compact = normalized.replace(/ /g, "");
+        const mappedName = names.get(normalized) ?? names.get(compact);
+        const candidate = mappedName ?? (profiles.has(normalized) ? normalized : compact);
+        if (!/^[a-z\d-]+$/i.test(candidate)) return null;
+        return mappedName ? lookup(mappedName) : (profiles.get(candidate) ?? null);
     }
 
     const pages: Contribution[][] = JSON.parse(
@@ -302,14 +322,8 @@ async function main(): Promise<void> {
         const profile = lookup(login);
         if (profile) member(profile).pulls++;
     }
-    for (const login of settings.ensureLogins ?? []) {
-        const profile = lookup(login);
-        if (profile) member(profile);
-    }
-
-    const historyReadme = settings.seedCommit ? command("git", ["show", `${settings.seedCommit}:README.md`]) : "";
     const unlinked = new Map<string, Tile>();
-    for (const tile of [...previousTiles(historyReadme), ...previousTiles(readme)]) {
+    for (const tile of previousTiles(readme)) {
         const id = avatarId(tile.image);
         const linkLogin = tile.link && /^https:\/\/github\.com\/([^/]+)$/.exec(tile.link)?.[1];
         const image = new URL(tile.image);
@@ -320,7 +334,7 @@ async function main(): Promise<void> {
         const profile = id !== undefined ? lookup(id) : linkLogin ? lookup(linkLogin) : (known?.profile ?? null);
         if (profile) {
             const entry = member(profile);
-            entry.label = labels.get(profile.login.toLowerCase()) ?? (tile.label || profile.login);
+            entry.label = tile.label || profile.login;
         } else {
             unlinked.set(tile.image, { ...tile, link: undefined });
         }
