@@ -124,7 +124,7 @@ test("uses the OpenClaw composite ranking, paginates, sizes avatars and retains 
             "50\t50\tsrc/a.ts",
             "Docs\x1fdocs-only@users.noreply.github.com\x1f2021-01-01T00:00:00Z",
             "1000000\t0\tdocs/generated.md",
-            "Recent\x1f12+recent@users.noreply.github.com\x1f2026-09-13T00:00:00Z",
+            "Recent\x1f2+recent@users.noreply.github.com\x1f2026-09-13T00:00:00Z",
             "100\t0\tsrc/b.ts",
         ].join("\n"),
         prs: ["pr-author", "pr-author", "pr-author"],
@@ -228,4 +228,92 @@ test("requires explicit contributor markers", (t) => {
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /missing contributors block/);
     assert.equal(f.readme(), readme);
+});
+
+test("includes merged PR authors before the contributor aggregate catches up", (t) => {
+    const f = fixture(t, {
+        users: [user("existing", 1)],
+        prs: ["new-contributor"],
+        lookup: { "new-contributor": user("new-contributor", 2) },
+        history: "Jane Developer\x1fjane@example.com\x1f2026-09-13T00:00:00Z\n1\t0\tsrc/new.ts",
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(f.readme(), /href="https:\/\/github.com\/new-contributor"/);
+});
+
+test("retains docs-only commit authors missing from the aggregate and PR query", (t) => {
+    const f = fixture(t, {
+        users: [user("existing", 1)],
+        lookup: { 2: user("new-docs", 2) },
+        history: "Jane Developer\x1f2+new-docs@users.noreply.github.com\x1f2026-09-13T00:00:00Z\n1\t0\tdocs/new.md",
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(f.readme(), /href="https:\/\/github.com\/new-docs"/);
+});
+
+test("does not attribute numeric or hyphen-leading authors' LOC to the preceding author", (t) => {
+    for (const name of ["2bob", "-Bob"]) {
+        const f = fixture(t, {
+            users: [user("alice", 1), user("2bob", 2)],
+            history: [
+                "Alice\x1falice@users.noreply.github.com\x1f2020-01-01T00:00:00Z",
+                "1\t0\tsrc/a.ts",
+                `${name}\x1f2+2bob@users.noreply.github.com\x1f2020-01-01T00:00:00Z`,
+                "10000\t0\tsrc/b.ts",
+            ].join("\n"),
+        });
+        const result = f.run();
+        assert.equal(result.status, 0, result.stderr);
+        const names = [...f.readme().matchAll(/<a href="https:\/\/github.com\/([^"]+)">/g)].map((m) => m[1]);
+        assert.deepEqual(names, ["2bob", "alice"]);
+    }
+});
+
+test("credits historical noreply account IDs rather than reused login names", (t) => {
+    const f = fixture(t, {
+        users: [user("old-login", 22), user("new-login", 21)],
+        config: { seedCommit: "history" },
+        seed: `${start}\n<a href="https://github.com/old-login"><img src="https://avatars.githubusercontent.com/u/21?v=4" alt="Original"></a>\n${end}`,
+        history: "Original\x1f21+old-login@users.noreply.github.com\x1f2020-01-01T00:00:00Z\n10000\t0\tsrc/original.ts",
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    const names = [...f.readme().matchAll(/<a href="https:\/\/github.com\/([^"]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(names, ["new-login", "old-login"]);
+});
+
+test("does not fall back to a reused login when the original account is deleted", (t) => {
+    const f = fixture(t, {
+        users: [user("old-login", 22), user("alice", 1)],
+        history: [
+            "Alice\x1f1+alice@users.noreply.github.com\x1f2020-01-01T00:00:00Z",
+            "10\t0\tsrc/a.ts",
+            "Original\x1f21+old-login@users.noreply.github.com\x1f2020-01-01T00:00:00Z",
+            "10000\t0\tsrc/b.ts",
+        ].join("\n"),
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    const names = [...f.readme().matchAll(/<a href="https:\/\/github.com\/([^"]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(names, ["alice", "old-login"]);
+});
+
+test("handles prototype-named authors and display names without inherited mappings", (t) => {
+    const f = fixture(t, {
+        users: [user("constructor", 42), user("alice", 1)],
+        config: { nameToLogin: { ["__proto__"]: "alice" } },
+        history: [
+            "constructor\x1fanother@example.com\x1f2020-01-01T00:00:00Z",
+            "1\t0\tsrc/a.ts",
+            "__proto__\x1funknown@example.com\x1f2020-01-01T00:00:00Z",
+            "10000\t0\tsrc/b.ts",
+        ].join("\n"),
+    });
+    const result = f.run();
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(f.readme(), /alt="constructor"/);
+    const names = [...f.readme().matchAll(/<a href="https:\/\/github.com\/([^"]+)">/g)].map((m) => m[1]);
+    assert.deepEqual(names, ["alice", "constructor"]);
 });

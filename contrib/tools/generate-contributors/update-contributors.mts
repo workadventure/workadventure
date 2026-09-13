@@ -82,7 +82,7 @@ const CONTRIBUTORS_HIDDEN_END = "contributors:hidden:end -->";
 const mapPath = resolve("contrib/tools/generate-contributors/contributors-map.json");
 const mapConfig: MapConfig = JSON.parse(readFileSync(mapPath, "utf8"));
 
-const displayName = mapConfig.displayName ?? {};
+const displayName = normalizeMap(mapConfig.displayName ?? {});
 const nameToLogin = normalizeMap(mapConfig.nameToLogin ?? {});
 const emailToLogin = normalizeMap(mapConfig.emailToLogin ?? {});
 const ensureLogins = (mapConfig.ensureLogins ?? []).map((login) => login.toLowerCase());
@@ -95,6 +95,7 @@ const hiddenReadmeLogins = new Set(parseHiddenReadmeLogins(currentReadme));
 const raw = runGh(["api", `repos/${REPO}/contributors?per_page=100&anon=1`, "--paginate", "--slurp"]);
 const contributors: ApiContributor[] = JSON.parse(raw).flat();
 const apiByLogin = new Map<string, User>();
+const usersByAccountId = new Map<number, User | null>();
 const contributionsByLogin = new Map<string, number>();
 const defaultAvatarByLogin = new Map<string, Promise<boolean>>();
 
@@ -105,12 +106,16 @@ for (const item of contributors) {
     if (typeof item.contributions === "number") {
         contributionsByLogin.set(item.login.toLowerCase(), item.contributions);
     }
-    apiByLogin.set(item.login.toLowerCase(), {
+    const user: User = {
         id: item.id,
         login: item.login,
         html_url: item.html_url,
         avatar_url: normalizeAvatar(item.avatar_url),
-    });
+    };
+    apiByLogin.set(item.login.toLowerCase(), user);
+    if (user.id !== undefined) {
+        usersByAccountId.set(user.id, user);
+    }
 }
 
 for (const login of ensureLogins) {
@@ -136,7 +141,7 @@ for (const line of log.split("\n")) {
         continue;
     }
 
-    if (line.includes("\x1f") && !/^[0-9-]/.test(line)) {
+    if (line.includes("\x1f")) {
         const [name, email, date] = line.split("\x1f", 3);
         currentName = name?.trim() ?? null;
         currentEmail = email?.trim().toLowerCase() ?? null;
@@ -350,7 +355,9 @@ for (const item of contributors) {
     }
 }
 
-for (const [login, loc] of linesByLogin.entries()) {
+// Contributor aggregates can lag behind a merge. PR authors and docs-only
+// commit authors remain candidates even when the aggregate or code LOC is empty.
+for (const login of new Set([...linesByLogin.keys(), ...firstCommitByLogin.keys(), ...prsByLogin.keys()])) {
     if (entriesByKey.has(login)) {
         continue;
     }
@@ -359,6 +366,7 @@ for (const [login, loc] of linesByLogin.entries()) {
         user = fetchUser(login) || undefined;
     }
     if (user) {
+        const loc = linesByLogin.get(login) ?? 0;
         const commits = contributionsByLogin.get(login) ?? 0;
         const prs = prsByLogin.get(login) ?? 0;
         const fd = firstCommitByLogin.get(login) ?? "";
@@ -437,7 +445,7 @@ function runGh(args: string[]): string {
 }
 
 function normalizeMap(map: Record<string, string>): Record<string, string> {
-    const out: Record<string, string> = {};
+    const out: Record<string, string> = Object.create(null);
     for (const [key, value] of Object.entries(map)) {
         out[normalizeName(key)] = value;
     }
@@ -531,10 +539,17 @@ function fetchUser(login: string): User | null {
 }
 
 function fetchUserByAccountId(accountId: number): User | null {
+    if (usersByAccountId.has(accountId)) {
+        return usersByAccountId.get(accountId) ?? null;
+    }
     try {
-        return parseUser(runGh(["api", `user/${accountId}`]));
+        const user = parseUser(runGh(["api", `user/${accountId}`]));
+        const matched = user?.id === accountId ? user : null;
+        usersByAccountId.set(accountId, matched);
+        return matched;
     } catch (error) {
         if (isGitHubMissing(error)) {
+            usersByAccountId.set(accountId, null);
             return null;
         }
         throw error;
@@ -824,6 +839,21 @@ function resolveLogin(
 ): string | null {
     if (email && emailToLoginLocal[email]) {
         return normalizeLogin(emailToLoginLocal[email]);
+    }
+
+    // The account ID in modern noreply addresses survives login renames.
+    // Never fall back to a potentially reused handle when that account is gone.
+    const noreply = email?.match(/^(\d+)\+([^@]+)@users\.noreply\.github\.com$/);
+    if (noreply) {
+        const accountId = Number(noreply[1]);
+        if (!Number.isSafeInteger(accountId) || accountId <= 0 || !normalizeLogin(noreply[2] ?? null)) {
+            return null;
+        }
+        const user = fetchUserByAccountId(accountId);
+        if (user) {
+            apiByLoginValue.set(user.login.toLowerCase(), user);
+        }
+        return normalizeLogin(user?.login ?? null);
     }
 
     if (email && name) {
