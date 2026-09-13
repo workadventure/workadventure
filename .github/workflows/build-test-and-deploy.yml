@@ -100,30 +100,42 @@ jobs:
             parameters: --project=chromium
             project: chromium
             shard: 1
-            nbShards: 4
+            nbShards: 5
             renderer: auto
             ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 2
-            nbShards: 4
+            nbShards: 5
             renderer: auto
             ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 3
-            nbShards: 4
+            nbShards: 5
             renderer: auto
             ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 4
-            nbShards: 4
+            nbShards: 5
             renderer: auto
             ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
+          - browser: chromium
+            parameters: --project=chromium
+            project: chromium
+            shard: 5
+            nbShards: 5
+            renderer: auto
+            ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
@@ -131,6 +143,7 @@ jobs:
             nbShards: 4
             renderer: auto
             ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
@@ -138,6 +151,7 @@ jobs:
             nbShards: 4
             renderer: auto
             ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
@@ -145,6 +159,7 @@ jobs:
             nbShards: 4
             renderer: auto
             ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
@@ -152,34 +167,30 @@ jobs:
             nbShards: 4
             renderer: auto
             ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 1
-            nbShards: 3
-            renderer: headless
-            ignoreTags: "@nowebkit|@nodesktop"
-          - browser: webkit
-            parameters: --project=webkit
-            project: webkit
-            shard: 2
-            nbShards: 3
-            renderer: headless
-            ignoreTags: "@nowebkit|@nodesktop"
-          - browser: webkit
-            parameters: --project=webkit
-            project: webkit
-            shard: 3
-            nbShards: 3
+            nbShards: 1
             renderer: headless
             ignoreTags: "@nowebkit|@nodesktop"
           - browser: ""
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 1
-            nbShards: 1
+            nbShards: 2
             renderer: auto
             ignoreTags: "@nomobile"
+            shardWeights: "33:48"
+          - browser: ""
+            parameters: --project=mobilechromium
+            project: mobilechromium
+            shard: 2
+            nbShards: 2
+            renderer: auto
+            ignoreTags: "@nomobile"
+            shardWeights: "33:48"
           - browser: ""
             parameters: --project=mobilefirefox
             project: mobilefirefox
@@ -322,6 +333,11 @@ jobs:
         working-directory: tests
         env:
           RENDERER_MODE: ${{ matrix.renderer }}
+          # Playwright's --shard balances by TEST COUNT, which left shards 3.5x apart in wall time
+          # (1249s vs 362s on chromium 4-way). PWTEST_SHARD_WEIGHTS sets each shard's test count
+          # explicitly, so the boundaries can be placed to balance DURATION instead. Regenerate with
+          # tests/scripts/shard-weights.mjs after adding or substantially changing tests.
+          PWTEST_SHARD_WEIGHTS: ${{ matrix.shardWeights }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
           FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
           IS_FORK: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}

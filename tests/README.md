@@ -86,3 +86,37 @@ Alternatively, to run a test in "headed" mode, only for Firefox, run:
 ```bash
 npm run test-headed-firefox -- [name of the test file]
 ```
+
+## CI sharding
+
+CI splits the suite across 14 parallel jobs (see the `end-to-end-tests` matrix in
+`.github/workflows/build-test-and-deploy.yml`). The pipeline is only as fast as its
+slowest job, so those jobs need to take roughly the same time.
+
+Playwright's `--shard` balances by test **count**, which is not the same thing: a 0.7s
+error-page check and a 60s matrix-chat test both count as "1". An evenly-counted split left
+the chromium shards 3.5x apart in wall time (1249s vs 362s), and the slow one alone set the
+pipeline's duration.
+
+So each project also passes `PWTEST_SHARD_WEIGHTS` ("a:b:c"), which sets each shard's test
+count explicitly. Shards are still contiguous runs of whole spec files in listing order, so
+choosing the counts places the boundaries — and the boundaries can be placed to balance
+duration instead of count.
+
+Those weights are a snapshot of one CI run's timings, so they drift as tests are added and
+changed. **Regenerate them after adding or substantially changing tests:**
+
+```bash
+node scripts/shard-weights.mjs            # uses the latest successful run
+node scripts/shard-weights.mjs <runId>    # or a specific one
+```
+
+It reads per-test durations from a finished run's logs and prints a `shardWeights` line per
+project; copy each into the matching matrix entries. It needs `gh` authenticated and the
+room-api client built (see [Build room-api-clients](#build-room-api-clients)), otherwise
+`--list` cannot import `room-api.spec.ts`.
+
+Stale weights degrade gracefully rather than breaking — Playwright rescales them
+proportionally, so every test still runs, the shards just drift back towards unbalanced. If
+you change a project's shard count in the workflow, update `PROJECTS` at the top of the
+script to match.
