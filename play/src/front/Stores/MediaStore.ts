@@ -6,6 +6,7 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import * as Sentry from "@sentry/svelte";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
+import { gameManager } from "../Phaser/Game/GameManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { createHeldIntervalTracker } from "../Administration/HeldIntervalTracker";
@@ -551,9 +552,15 @@ export const mediaStreamConstraintsStore = derived(
             $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
             $availabilityStatusStore === AvailabilityStatus.BUSY;
         const shouldDisableMicrophoneForPrivacy =
-            $privacyShutdownStore === true && !localUserStore.getMicrophonePrivacySettings();
+            $privacyShutdownStore === true &&
+            !localUserStore.getMicrophonePrivacySettings(
+                gameManager.currentStartedRoomOrNull?.defaultMicrophonePrivacySettings ?? true,
+            );
         const shouldDisableCameraForPrivacy =
-            $privacyShutdownStore === true && !localUserStore.getCameraPrivacySettings();
+            $privacyShutdownStore === true &&
+            !localUserStore.getCameraPrivacySettings(
+                gameManager.currentStartedRoomOrNull?.defaultCameraPrivacySettings ?? false,
+            );
 
         // Audio constraints always apply
         if (
