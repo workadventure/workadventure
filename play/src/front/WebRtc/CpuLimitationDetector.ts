@@ -33,19 +33,32 @@ export const LIMITED_SHARE = 0.7;
 export const WARMUP_SAMPLES = 10;
 const SAMPLE_INTERVAL_MS = 1000;
 
+/**
+ * The codec of the whole set, when its encoders agree on one.
+ *
+ * A demotion picks one codec for every encoder of the category, and P2P peers negotiate separately (a Firefox peer,
+ * a peer we already demoted for): a mixed set is nobody's codec to leave. The summary of the aggregate cannot say
+ * this, it holds the codec of whichever encoder is the most limited at that instant.
+ */
+function agreedMimeType(stats: LocalEncoderStats): string | undefined {
+    const mimeTypes = new Set(stats.encoders.map((encoder) => encoder.mimeType));
+    return mimeTypes.size === 1 ? stats.encoders[0].mimeType : undefined;
+}
+
 export class CpuLimitationDetector {
     private samples: boolean[] = [];
     private warmup = WARMUP_SAMPLES;
     private cooldown = 0;
     private lastSampleTime = -Infinity;
-    private transport: string | undefined;
+    private source: string | undefined;
     private mimeType: string | undefined;
 
     constructor(private category: EncoderCategory) {}
 
     /**
-     * Feeds one reading of the aggregated stats of the category (the worst case over its encoders, the way the
-     * feedback tile shows it). Returns the codec to demote when it is time.
+     * Feeds one reading of the aggregated stats of the category. What to demote is read from `stats.encoders`, the
+     * readings themselves: the summary around them describes whichever encoder is the most limited at that instant,
+     * which is fine for a tile and no basis for a decision. Returns the codec to demote when it is time.
      * `screenShareRunning` holds the camera back: the screen share is the heavy encoder, it goes first, and demoting
      * the camera in the meantime would mark the wrong codec.
      */
@@ -54,15 +67,15 @@ export class CpuLimitationDetector {
         screenShareRunning: boolean,
         now: number = Date.now(),
     ): VideoCodec | undefined {
-        // "P2P (3 encoders)" and "P2P" are the same transport
-        const transport = stats?.source.split(" ")[0];
-        if (!stats || transport !== this.transport || stats.mimeType !== this.mimeType) {
-            // A new stream, a transport switch or a codec change (ours or the peer's): start over
+        const mimeType = stats && agreedMimeType(stats);
+        if (!stats || stats.source !== this.source || mimeType !== this.mimeType) {
+            // A new stream, a transport switch or a codec change (ours, a peer's, or the set ceasing to agree):
+            // start over
             this.samples = [];
             this.warmup = WARMUP_SAMPLES;
             this.cooldown = 0;
-            this.transport = transport;
-            this.mimeType = stats?.mimeType;
+            this.source = stats?.source;
+            this.mimeType = mimeType;
         }
         if (!stats || now - this.lastSampleTime < SAMPLE_INTERVAL_MS) {
             // Several encoders tick separately: one sample a second whatever their number
@@ -87,13 +100,15 @@ export class CpuLimitationDetector {
         if (this.samples.filter(Boolean).length < LIMITED_SHARE * WINDOW_SAMPLES) {
             return undefined;
         }
-        const codec = videoCodecFromMimeType(stats.mimeType);
-        // Nothing below H.264; and a hardware encoder gains nothing from a cheaper codec
+        // undefined when the encoders disagree on the codec: not ours to demote
+        const codec = videoCodecFromMimeType(mimeType);
+        // Nothing below H.264; and a cheaper codec gains a hardware encoder nothing, while a set that is only
+        // partly hardware still has software encoders to relieve
         if (
             codec === undefined ||
             codec === "h264" ||
             codec === "vp8" ||
-            describeEncoder(stats.encoderImplementation).type === "hardware"
+            stats.encoders.every((encoder) => describeEncoder(encoder.encoderImplementation).type === "hardware")
         ) {
             return undefined;
         }
