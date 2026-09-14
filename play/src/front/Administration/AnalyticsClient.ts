@@ -13,6 +13,7 @@ import type {
 import { postHogEventKey, postHogIntervalKeys } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { hasCapability } from "../Connection/Capabilities";
+import { currentMeetingProperties } from "./CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
 import {
     forgetOpenTimedAnalyticsEvents,
@@ -39,6 +40,25 @@ declare global {
     interface Window {
         posthog?: PostHog;
     }
+}
+
+/**
+ * Adds the meeting an in-meeting action happened in.
+ *
+ * Centrally rather than at each of the dozen call sites: the answer is the same for
+ * all of them — the meeting this tab is in — and a field that has to be remembered
+ * eleven times is a field that will be forgotten once. Without it these rows say a
+ * microphone was muted somewhere, by someone, and cannot be placed on a meeting.
+ *
+ * Explicit properties win: the Jitsi lifecycle events state their own id, and they
+ * are the authority on themselves.
+ */
+function withMeetingContext<T extends object>(eventName: string, properties: T): T {
+    if (!eventName.startsWith("meeting.")) {
+        return properties;
+    }
+
+    return { ...currentMeetingProperties(), ...properties };
 }
 
 class AnalyticsClient {
@@ -105,7 +125,8 @@ class AnalyticsClient {
      * here is what keeps `posthog.capture("wa_…")` out of the call sites.
      */
     public trackAdminEvent<N extends AnalyticsEventName>(eventName: N, ...args: AnalyticsEventArgs<N>): void {
-        const [properties = {}] = args;
+        const [given = {}] = args;
+        const properties = withMeetingContext(eventName, given);
 
         // Ahead of the capability gate, and deliberately: PostHog is the sink that
         // predates this pipeline, and on a world whose pusher does not advertise
@@ -142,9 +163,10 @@ class AnalyticsClient {
      */
     public openTimedEvent<N extends TimedAnalyticsEventName>(
         eventName: N,
-        properties: TimedAnalyticsEventOpenProperties<N>,
+        openProperties: TimedAnalyticsEventOpenProperties<N>,
         options: { reopenOnReconnect?: boolean } = {},
     ): EndTimedAnalyticsEvent {
+        const properties = withMeetingContext(eventName, openProperties);
         // Ahead of the capability gate, exactly as in trackAdminEvent and for the same
         // reason: on a world whose pusher does not advertise the batch endpoint,
         // PostHog is the only sink there is.
