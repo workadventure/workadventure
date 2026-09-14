@@ -1,4 +1,5 @@
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { meetingEnded, meetingStarted } from "../Administration/CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 
 /**
@@ -10,15 +11,22 @@ import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEve
  * both drive this, which is what keeps the two from disagreeing.
  */
 let endMeeting: EndTimedAnalyticsEvent | undefined;
+let currentMeetingId: string | undefined;
 
 export function jitsiMeetingStarted(roomName: string): void {
     // A live handle here means the matching leave never ran, so this interval's
     // end is the arrival of the next meeting rather than a real departure.
     jitsiMeetingEnded();
     endMeeting = analyticsClient.openTimedEvent("meeting.ended", { meetingProvider: "jitsi", meetingId: roomName });
+    currentMeetingId = roomName;
+    meetingStarted(roomName);
 }
 
 export function jitsiMeetingEnded(): void {
     endMeeting?.();
     endMeeting = undefined;
+    if (currentMeetingId !== undefined) {
+        meetingEnded(currentMeetingId);
+        currentMeetingId = undefined;
+    }
 }
