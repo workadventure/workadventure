@@ -733,16 +733,35 @@ export const ANALYTICS_EVENTS = {
     // meetingProvider spelled out rather than `.required()` on the shared shape:
     // required() rebuilds the field and drops its .describe().
     openProperties: meetingContextProperties.extend({
+      // Optional since the back took the meeting over: it reports what a meeting IS
+      // (`meetingKind`) rather than which transport carried it, and the transport can
+      // change mid-meeting. Still filled by the one path the back cannot see — Jitsi,
+      // whose areas join no space server-side.
       meetingProvider: z
         .enum(["livekit", "jitsi", "webrtc"])
+        .optional()
         .describe(
-          "Which media backend carried the meeting, and therefore what kind of meeting it was: `webrtc` is a spontaneous bubble, `livekit` and `jitsi` are meeting areas.",
+          "Which media backend carried the meeting. It does NOT say what kind of meeting it was — a meeting area of four or fewer never leaves webrtc — which is what meetingKind is for.",
         ),
+      meetingKind: z
+        .enum(["bubble", "area"])
+        .optional()
+        .describe(
+          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet. Filled by the back, which knows a Group from an area Space by construction; absent on the rows a client still opens.",
+        ),
+      participantCount: z
+        .number()
+        .optional()
+        .describe("How many distinct people passed through the meeting."),
+      peakParticipantCount: z
+        .number()
+        .optional()
+        .describe("The most people in it at any one moment."),
     }),
     endReasonDescription:
       "`socket_closed` and the `pusher_*` values mean the client never got to close it — a tab closed mid-meeting, or the pusher restarted.",
     description:
-      "A meeting, measured. One row per meeting, emitted by the pusher when the interval closes and timestamped at its end. `meetingProvider` is what tells a spontaneous bubble (`webrtc`) from a meeting area (`livekit` / `jitsi`).",
+      "A meeting, measured. One row per meeting — by the back, which owns the meeting's lifecycle and counts its participants; the row is attributed to nobody, because a meeting belongs to no one participant. Historical rows, and Jitsi ones, were opened once per participant by each client and carry participant-seconds instead: `meetingKind` is present on the former and absent on the latter.",
   }),
 
   "meeting.screenshare.ended": timedEvent({
@@ -1366,6 +1385,38 @@ export const ANALYTICS_EVENTS = {
   "meeting.microphone.muted_for_everybody": signal(
     "A moderator muted everyone's microphone.",
   ),
+  "meeting.participation.ended": event({
+    properties: z.object({
+      meetingId: z.string().describe("Meeting this participation belongs to."),
+      meetingKind: z
+        .enum(["bubble", "area"])
+        .describe(
+          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet.",
+        ),
+      joinRank: z
+        .number()
+        .describe(
+          "Where this participant came in the arrival order. The first two opened the meeting; anyone after joined a conversation already running.",
+        ),
+      startedAt: z.string().datetime().describe("When they joined."),
+      endedAt: z
+        .string()
+        .datetime()
+        .describe("When they left, or when the meeting ended around them."),
+      durationSeconds: z
+        .number()
+        .describe("How long they were in the meeting."),
+      endReason: z
+        .string()
+        .describe(
+          "`back_shutdown` means the server closed it, not the participant.",
+        ),
+    }),
+    description:
+      "One person's time in one meeting, emitted by the back when the meeting ends. This is the per-user view of a meeting: meeting.ended is deliberately attributed to nobody, because a meeting belongs to no one participant.",
+    source: "pusher",
+  }),
+
   "meeting.participant.kicked": signal("A moderator removed a participant."),
   "meeting.participant.pinned": signal(
     "The user pinned a participant's video.",
