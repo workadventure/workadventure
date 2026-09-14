@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
 import { focusStore } from "../../../src/front/Stores/FocusStore";
 
@@ -20,5 +20,21 @@ describe("focusStore", () => {
         expect(get(focusStore)).toBe(true);
 
         unsubscribe();
+    });
+
+    it("reads the current focus when it gains a subscriber", () => {
+        // The listeners only exist while the store has subscribers: a change happening in between would
+        // otherwise be handed over stale to the next subscriber.
+        const unsubscribe = focusStore.subscribe(() => {});
+        window.dispatchEvent(new Event("blur"));
+        expect(get(focusStore)).toBe(false);
+        unsubscribe();
+
+        const hasFocus = vi.spyOn(document, "hasFocus").mockReturnValue(true);
+        const unsubscribeAgain = focusStore.subscribe(() => {});
+        expect(get(focusStore)).toBe(true);
+
+        unsubscribeAgain();
+        hasFocus.mockRestore();
     });
 });

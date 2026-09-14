@@ -22,6 +22,10 @@ export const focusStore = readable(document.hasFocus(), function start(set) {
         }
     };
 
+    // The listeners only exist while the store has subscribers, and the initial value dates back to the module
+    // evaluation: read the current state rather than trust a value that may have been left behind.
+    set(document.hasFocus());
+
     window.addEventListener("blur", onBlur);
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisibilityChange);
