@@ -12,6 +12,7 @@
     import type { Locales } from "../../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../Utils/locales";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { Room } from "../../Connection/Room";
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -62,10 +63,15 @@
     let disableAnimations: boolean = $state(localUserStore.getDisableAnimations());
     let valueLocale: string = $state($locale);
     let valueCameraPrivacySettings = $state(
-        localUserStore.getCameraPrivacySettings(gameManager.currentStartedRoom.defaultCameraPrivacySettings),
+        localUserStore.getCameraPrivacySettings(
+            gameManager.currentStartedRoomOrNull?.defaultCameraPrivacySettings ?? Room.DEFAULT_CAMERA_PRIVACY_SETTINGS,
+        ),
     );
     let valueMicrophonePrivacySettings = $state(
-        localUserStore.getMicrophonePrivacySettings(gameManager.currentStartedRoom.defaultMicrophonePrivacySettings),
+        localUserStore.getMicrophonePrivacySettings(
+            gameManager.currentStartedRoomOrNull?.defaultMicrophonePrivacySettings ??
+                Room.DEFAULT_MICROPHONE_PRIVACY_SETTINGS,
+        ),
     );
     const initialVideoQuality = localUserStore.getVideoQuality();
     let valueVideoQuality = $state(initialVideoQuality === "high" ? 3 : initialVideoQuality === "low" ? 1 : 2);
