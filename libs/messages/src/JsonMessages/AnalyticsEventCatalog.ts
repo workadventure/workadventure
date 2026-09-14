@@ -189,6 +189,29 @@ const meetingContextProperties = z.object({
     .describe("Which media backend carried the meeting."),
 });
 
+/**
+ * The space a broadcast runs in, carried by both halves of it: the speaker's
+ * `megaphone.ended` and every listener's `broadcast.audience.ended`. It is what joins
+ * a broadcast to its audience — without it the two families cannot be related at all,
+ * since a listener has no other handle on the broadcast they are hearing.
+ */
+const broadcastProperties = z.object({
+  broadcastId: z
+    .string()
+    .describe(
+      "Space the broadcast runs in: the world megaphone space, or a speaker zone's.",
+    ),
+  // A discriminator rather than two event names, for the reason spelled out on
+  // meeting.ended: a megaphone broadcast and a speaker-zone one are the same act on
+  // the same kind of space, so splitting them by name would make every "how much was
+  // broadcast" query a union — and the next broadcast surface a three-way one.
+  broadcastKind: z
+    .enum(["megaphone", "speaker_zone"])
+    .describe(
+      "Where the broadcast was started: the world megaphone, or a speaker zone on the map.",
+    ),
+});
+
 const cowebsiteOpenedProperties = z.object({
   url: z
     .string()
@@ -1161,6 +1184,20 @@ export const ANALYTICS_EVENTS = {
   "auth.logged_token": signal("The user signed in with a token."),
   "auth.login_clicked": signal("The user clicked sign in."),
   "auth.logout_clicked": signal("The user clicked sign out."),
+  // The other half of a broadcast. `megaphone.ended` measures the speaker, and on its
+  // own it says how long someone talked to an empty room just as readily as to a full
+  // one. Audience time is reported by each listener, so it adds up to reach × duration
+  // rather than duration — which is why it is a family of its own and must never be
+  // summed into conversation time: listening is not collaborating.
+  "broadcast.audience.ended": timedEvent({
+    openableBy: "client",
+    openProperties: broadcastProperties,
+    endReasonDescription:
+      "Why the listening period ended: the last speaker stopped, the listener walked out of the zone, or the tab went away.",
+    description:
+      "Time one user spent with a broadcast live in a space they were in, measured by the pusher. It opens when a speaker other than this user goes on air and closes when the last one stops, so an empty megaphone space accrues nothing. A user who is broadcasting themselves is still counted as audience of the other speakers on a panel; their own airtime is megaphone.ended.",
+  }),
+
   "bubble.lock.toggled": signal(
     "The user locked or unlocked their conversation bubble.",
   ),
@@ -1314,7 +1351,7 @@ export const ANALYTICS_EVENTS = {
   "megaphone.ended": timedEvent({
     openableBy: "client",
     opensWith: "megaphone.started",
-    openProperties: z.object({}),
+    openProperties: broadcastProperties,
     // Mandatory with opensWith — see the note on meeting.ended.
     minDurationMs: 0,
     endReasonDescription:
@@ -1324,7 +1361,7 @@ export const ANALYTICS_EVENTS = {
   }),
   "megaphone.opened": signal("The user opened the megaphone."),
   "megaphone.started": event({
-    properties: z.object({
+    properties: broadcastProperties.extend({
       startedAt: z
         .string()
         .datetime()

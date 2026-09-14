@@ -19,6 +19,7 @@ import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import type { EndTimedAnalyticsEvent } from "../../Administration/TimedAnalyticsEvent";
 import { isMeetingSpace } from "../../Rules/MeetingRules";
+import { trackBroadcastAnalytics } from "../../Streaming/BroadcastAnalytics";
 import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
@@ -145,6 +146,7 @@ export class SpacePeerManager {
      * other one.
      */
     private endMeeting: EndTimedAnalyticsEvent | undefined;
+    private readonly stopBroadcastAnalytics: () => void;
 
     private readonly _effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
 
@@ -188,6 +190,7 @@ export class SpacePeerManager {
         private _recordingStore = recordingStore,
     ) {
         this._communicationState = new DefaultCommunicationState();
+        this.stopBroadcastAnalytics = trackBroadcastAnalytics(space);
 
         this._effectiveScreenSharingLocalStreamStore = deriveSwitchStore(
             _screenSharingLocalStreamStore,
@@ -565,6 +568,7 @@ export class SpacePeerManager {
         this.cancelPendingRecorderNameResolution(this.space.getName());
         this._recordingStore.removeSpace(this.space.getName());
         this.endMeetingAnalytics();
+        this.stopBroadcastAnalytics();
     }
 
     /**
