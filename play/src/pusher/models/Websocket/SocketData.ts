@@ -56,6 +56,12 @@ export type ConnectingSocketData = {
     roomName: string;
     microphoneState: boolean;
     cameraState: boolean;
+    // When this socket was last heard from, as a pusher clock instant. Every inbound
+    // message stamps it, so it is the last moment the client is PROVEN to have been
+    // there — unlike the close, which a frozen tab reaches 150 s late (the idle timeout
+    // plus the disconnection retention). Analytics ends an interval here rather than at
+    // the close when nobody closed it.
+    lastActivityAtMs: number;
     // Unique identifier for the browser tab, captured as early as websocket upgrade.
     tabId: string;
     // Unique identifier of the front WorkAdventureWebSocket instance. A transport resume is only accepted onto the
