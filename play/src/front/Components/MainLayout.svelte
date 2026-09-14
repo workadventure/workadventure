@@ -45,6 +45,7 @@
     import type { WorkAdventureComponent } from "../../types/component";
     import { LL } from "../../i18n/i18n-svelte";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
+    import { startCalendarReminders } from "./Calendar/CalendarReminder";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import ActionBarButton from "./ActionBar/ActionBarButton.svelte";
 
@@ -168,9 +169,12 @@
         );
     }
 
+    let stopCalendarReminders: (() => void) | undefined;
+
     onMount(() => {
         document.addEventListener("focusin", handleFocusInEvent);
         document.addEventListener("focusout", handleFocusOutEvent);
+        stopCalendarReminders = startCalendarReminders();
     });
 
     onDestroy(() => {
@@ -180,6 +184,7 @@
         if (participantListAutoHideTimer) {
             clearTimeout(participantListAutoHideTimer);
         }
+        stopCalendarReminders?.();
     });
 
     let marginLeft = $derived($chatVisibilityStore ? $chatSidebarWidthStore : 0);
