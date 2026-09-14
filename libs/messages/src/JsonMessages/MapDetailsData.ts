@@ -338,7 +338,7 @@ export const isMapDetailsData = z.object({
   defaultMicrophonePrivacySettings: extendApi(z.boolean().optional(), {
     description:
       "Initial value of the 'keep microphone enabled when the tab is away' privacy setting, before the user sets their own preference",
-    example: false,
+    example: true,
   }),
   bypassPwa: extendApi(z.boolean().optional(), {
     description:

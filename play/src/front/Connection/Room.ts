@@ -30,6 +30,9 @@ export interface RoomRedirect {
 }
 
 export class Room {
+    public static readonly DEFAULT_CAMERA_PRIVACY_SETTINGS = false;
+    public static readonly DEFAULT_MICROPHONE_PRIVACY_SETTINGS = true;
+
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _opidLogoutRedirectUrl: string = new URL("logout", ABSOLUTE_PUSHER_URL).toString();
@@ -77,8 +80,8 @@ export class Room {
     private _provideDefaultWokaTexture: "no" | "random" | "fix" = "no";
     private _skipCameraPage: boolean = false;
     private _bypassPwa: boolean = false;
-    private _defaultCameraPrivacySettings: boolean = false;
-    private _defaultMicrophonePrivacySettings: boolean = true;
+    private _defaultCameraPrivacySettings: boolean = Room.DEFAULT_CAMERA_PRIVACY_SETTINGS;
+    private _defaultMicrophonePrivacySettings: boolean = Room.DEFAULT_MICROPHONE_PRIVACY_SETTINGS;
     private _recording: RecordingData | undefined;
 
     private constructor(private roomUrl: URL) {
@@ -230,8 +233,10 @@ export class Room {
                 this._provideDefaultWokaTexture = data.provideDefaultWokaTexture ?? "no";
                 this._skipCameraPage = data.skipCameraPage ?? false;
                 this._bypassPwa = data.bypassPwa ?? false;
-                this._defaultCameraPrivacySettings = data.defaultCameraPrivacySettings ?? false;
-                this._defaultMicrophonePrivacySettings = data.defaultMicrophonePrivacySettings ?? true;
+                this._defaultCameraPrivacySettings =
+                    data.defaultCameraPrivacySettings ?? Room.DEFAULT_CAMERA_PRIVACY_SETTINGS;
+                this._defaultMicrophonePrivacySettings =
+                    data.defaultMicrophonePrivacySettings ?? Room.DEFAULT_MICROPHONE_PRIVACY_SETTINGS;
                 this._recording = data.recording ?? undefined;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
