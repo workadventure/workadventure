@@ -43,6 +43,18 @@ export type SpaceKind = z.infer<typeof spaceKindSchema>;
  */
 export const meetingKindSchema = spaceKindSchema;
 
+/**
+ * What a meeting row may name, including what is not a space. The space kinds are
+ * filled by the back because it owns the space. `external` is not a space at all: an
+ * area that opens the meeting in Teams or Google Meet, which the back never sees — so
+ * the client reports it, and what it measures is time spent in the AREA and not in
+ * the call.
+ */
+export const reportedMeetingKindSchema = z.enum([
+  ...meetingKindSchema.options,
+  "external",
+]);
+
 /** Mirrors the admin's `max:255` on eventName / eventId. */
 export const MAX_EVENT_NAME_LENGTH = 255;
 export const MAX_EVENT_ID_LENGTH = 255;
@@ -252,7 +264,7 @@ const meetingContextProperties = z.object({
     .describe("Identifier of the meeting, when the provider exposes one."),
   roomId: z.string().optional().describe("Room the meeting belongs to."),
   meetingProvider: z
-    .enum(["livekit", "jitsi", "webrtc"])
+    .enum(["livekit", "jitsi", "webrtc", "teams", "google_meet"])
     .optional()
     .describe("Which media backend carried the meeting."),
 });
@@ -747,7 +759,7 @@ export const ANALYTICS_EVENTS = {
     properties: z.object({
       roomId: z.string().describe("Room containing the meeting area."),
       meetingProvider: z
-        .enum(["livekit", "jitsi", "webrtc"])
+        .enum(["livekit", "jitsi", "webrtc", "teams", "google_meet"])
         .optional()
         .describe("Media backend of the area."),
     }),
@@ -790,15 +802,15 @@ export const ANALYTICS_EVENTS = {
       // Filled by the one path the back cannot see — Jitsi, whose areas join no space
       // server-side.
       meetingProvider: z
-        .enum(["livekit", "jitsi", "webrtc"])
+        .enum(["livekit", "jitsi", "webrtc", "teams", "google_meet"])
         .optional()
         .describe(
           "Which media backend carried the meeting. It does NOT say what kind of meeting it was — a meeting area of four or fewer never leaves webrtc — which is what meetingKind is for.",
         ),
-      meetingKind: meetingKindSchema
+      meetingKind: reportedMeetingKindSchema
         .optional()
         .describe(
-          "What the meeting was: a spontaneous proximity bubble, an area people went to in order to meet, the world megaphone, or a speaker zone. The last two are broadcasts — a meeting whose predicate is one speaker on air rather than two people present — so anything reading meeting time as conversation time filters them out. Filled by the back from what the space's client declared; absent on the rows a client opens (Jitsi).",
+          "What the meeting was: a spontaneous proximity bubble, an area people went to in order to meet, the world megaphone, a speaker zone, or `external`. Megaphone and speaker zone are broadcasts — a meeting whose predicate is one speaker on air rather than two people present — so anything reading meeting time as conversation time filters them out. `external` is an area that opens a meeting somewhere else entirely (Teams, Google Meet), where what is measured is time spent in the AREA and not in the call, which happens in another tab or another app. Filled by the back from what the space's client declared; by the client for the ones the back cannot see (Jitsi, Teams, Google Meet).",
         ),
       participantCount: z
         .number()
@@ -1486,8 +1498,8 @@ export const ANALYTICS_EVENTS = {
         meetingId: z
           .string()
           .describe("Meeting this participation belongs to."),
-        meetingKind: meetingKindSchema.describe(
-          "What the meeting was: a bubble, an area, the world megaphone, or a speaker zone. The last two are broadcasts; see meeting.ended.",
+        meetingKind: reportedMeetingKindSchema.describe(
+          "What the meeting was: a bubble, an area, the world megaphone, a speaker zone, or `external`. Megaphone and speaker zone are broadcasts, `external` a meeting held elsewhere; see meeting.ended.",
         ),
         joinRank: joinRankProperty,
         role: z
