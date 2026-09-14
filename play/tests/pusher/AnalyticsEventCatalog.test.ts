@@ -70,6 +70,18 @@ const QUEUE_SOURCES = Object.entries(EMITTER_SOURCES)
 const EMITTED_FROM_EXTERNAL_MODULES = ["external_module.opened", "external_module.chat_band.clicked"];
 
 /**
+ * Emitted from `back/`, which this glob cannot reach: it is a separate package with
+ * its own tsconfig, and Vite refuses to inline `?raw` files from outside the project
+ * root — the same reason `src/front/external-modules/` is excluded above.
+ *
+ * These are the rows the back emits as the authority on a meeting: it owns the
+ * lifecycle (a Group for a bubble, an area Space for a meeting area), so it is the
+ * only party that can say a meeting happened once rather than once per participant.
+ * See back/src/Services/MeetingAnalytics.ts.
+ */
+const EMITTED_FROM_BACK = ["meeting.participation.ended"];
+
+/**
  * The names the front asks the pusher to time, e.g. openTimedEvent("area.dwell", …).
  *
  * Both spellings: the literal used to sit on the low-level `openTimedAnalyticsEvent`
@@ -115,7 +127,7 @@ function extractEmittedEventNames(): Set<string> {
         }
     }
 
-    for (const name of EMITTED_FROM_EXTERNAL_MODULES) {
+    for (const name of [...EMITTED_FROM_EXTERNAL_MODULES, ...EMITTED_FROM_BACK]) {
         names.add(name);
     }
 
