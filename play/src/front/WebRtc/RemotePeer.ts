@@ -467,6 +467,12 @@ export class RemotePeer extends Peer implements Streamable {
                         debug("Adding video track in P2P connection");
                         this.localStream.addTrack(newVideoTrack);
                         this.addTrack(newVideoTrack, this.localStream);
+                        // Removing the track unmounted the viewer's tile, which reported 0x0. A re-added track
+                        // reaches the viewer muted and only unmutes on the first frame: keeping the encoder paused
+                        // would stop the viewer from ever mounting a tile and reporting a size again. Start over
+                        // from the default assumption, as on a fresh connection.
+                        this.viewerDisplay = DEFAULT_VIEWER_DISPLAY;
+                        this.viewerReportedDisplay = false;
                         this.applyVideoEncoding();
                     } else if (oldVideoTrack && !newVideoTrack) {
                         debug("Removing video track in P2P connection");
