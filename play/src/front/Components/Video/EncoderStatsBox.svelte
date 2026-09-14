@@ -45,7 +45,11 @@
                     <td>Codec:</td><td>{encoderStats.mimeType ?? "-"}</td>
                 </tr>
                 <tr>
-                    <td>Source:</td><td>{encoderStats.source}</td>
+                    <td>Source:</td><td
+                        >{encoderStats.source}{encoderStats.encoders.length > 1
+                            ? ` (${encoderStats.encoders.length} encoders)`
+                            : ""}</td
+                    >
                 </tr>
             </tbody>
         </table>
