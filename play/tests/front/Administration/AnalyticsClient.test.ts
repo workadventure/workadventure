@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { analyticsClient } from "../../../src/front/Administration/AnalyticsClient";
+import { meetingEnded, meetingStarted } from "../../../src/front/Administration/CurrentMeeting";
 
 describe("AnalyticsClient admin analytics sink", () => {
     beforeEach(() => {
@@ -234,5 +235,25 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(sendAdmin).toHaveBeenNthCalledWith(2, {
             events: [expect.objectContaining({ eventName: "profile.opened" })],
         });
+    });
+
+    it("places an in-meeting action on the meeting it happened in", () => {
+        const sendAdmin = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = { "api/analytics/events-batch": "v1" };
+        meetingStarted("bubble-1");
+
+        analyticsClient.trackAdminEvent("meeting.microphone.muted");
+        // Not a meeting event: it carries no meeting, whatever this tab is in.
+        analyticsClient.trackAdminEvent("bubble.say.opened");
+
+        expect(sendAdmin.mock.calls[0][0].events[0].properties).toEqual({ meetingId: "bubble-1" });
+        expect(sendAdmin.mock.calls[1][0].events[0].properties).toEqual({});
+
+        meetingEnded("bubble-1");
+        sendAdmin.mockClear();
+        analyticsClient.trackAdminEvent("meeting.microphone.muted");
+
+        expect(sendAdmin.mock.calls[0][0].events[0].properties).toEqual({});
     });
 });

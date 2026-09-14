@@ -176,6 +176,24 @@ export const timedEventProperties = z.object({
     ),
 });
 
+/**
+ * Which meeting an in-meeting action happened in.
+ *
+ * Attached centrally by AnalyticsClient rather than passed at each of the dozen call
+ * sites, because the answer is the same for all of them — the meeting this tab is in —
+ * and a field that has to be remembered eleven times is a field that will be forgotten
+ * once. Without it these rows say a microphone was muted somewhere, by someone, and
+ * cannot be placed on the meeting they belong to.
+ */
+const meetingActionProperties = z.object({
+  meetingId: z
+    .string()
+    .optional()
+    .describe(
+      "Meeting the action happened in. Absent when the action somehow fired outside one.",
+    ),
+});
+
 /** Shared by the meeting lifecycle events emitted from AnalyticsClient. */
 const meetingContextProperties = z.object({
   meetingId: z
@@ -775,7 +793,7 @@ export const ANALYTICS_EVENTS = {
 
   "meeting.screenshare.ended": timedEvent({
     openableBy: "client",
-    openProperties: z.object({
+    openProperties: meetingActionProperties.extend({
       hasAudio: z
         .boolean()
         .describe("Whether the shared screen carried audio."),
@@ -1356,16 +1374,22 @@ export const ANALYTICS_EVENTS = {
   "media.video_stream_missing": signal(
     "A video stream was expected but never arrived. Counted as an experience issue.",
   ),
-  "meeting.actions.opened": signal("The user opened the meeting actions menu."),
-  "meeting.camera_layout_resized": signal(
-    "The user resized the camera layout.",
-  ),
-  "meeting.microphone.muted": signal(
-    "The user muted their microphone in a meeting.",
-  ),
-  "meeting.microphone.muted_for_everybody": signal(
-    "A moderator muted everyone's microphone.",
-  ),
+  "meeting.actions.opened": event({
+    properties: meetingActionProperties,
+    description: "The user opened the meeting actions menu.",
+  }),
+  "meeting.camera_layout_resized": event({
+    properties: meetingActionProperties,
+    description: "The user resized the camera layout.",
+  }),
+  "meeting.microphone.muted": event({
+    properties: meetingActionProperties,
+    description: "The user muted their microphone in a meeting.",
+  }),
+  "meeting.microphone.muted_for_everybody": event({
+    properties: meetingActionProperties,
+    description: "A moderator muted everyone's microphone.",
+  }),
   "meeting.participation.ended": event({
     properties: z.object({
       meetingId: z.string().describe("Meeting this participation belongs to."),
@@ -1398,21 +1422,34 @@ export const ANALYTICS_EVENTS = {
     source: "pusher",
   }),
 
-  "meeting.participant.kicked": signal("A moderator removed a participant."),
-  "meeting.participant.pinned": signal(
-    "The user pinned a participant's video.",
-  ),
-  "meeting.private_message.clicked": signal(
-    "The user started a private message from a meeting.",
-  ),
-  "meeting.report.clicked": signal("The user reported someone from a meeting."),
-  "meeting.screenshare.toggled": signal("The user toggled screen sharing."),
-  "meeting.video.muted": signal(
-    "The user turned their camera off in a meeting.",
-  ),
-  "meeting.video.muted_for_everybody": signal(
-    "A moderator turned off everyone's camera.",
-  ),
+  "meeting.participant.kicked": event({
+    properties: meetingActionProperties,
+    description: "A moderator removed a participant.",
+  }),
+  "meeting.participant.pinned": event({
+    properties: meetingActionProperties,
+    description: "The user pinned a participant's video.",
+  }),
+  "meeting.private_message.clicked": event({
+    properties: meetingActionProperties,
+    description: "The user started a private message from a meeting.",
+  }),
+  "meeting.report.clicked": event({
+    properties: meetingActionProperties,
+    description: "The user reported someone from a meeting.",
+  }),
+  "meeting.screenshare.toggled": event({
+    properties: meetingActionProperties,
+    description: "The user toggled screen sharing.",
+  }),
+  "meeting.video.muted": event({
+    properties: meetingActionProperties,
+    description: "The user turned their camera off in a meeting.",
+  }),
+  "meeting.video.muted_for_everybody": event({
+    properties: meetingActionProperties,
+    description: "A moderator turned off everyone's camera.",
+  }),
   // A broadcast is an interval, and the two halves used to be two loose signals with
   // nothing carrying the time between them — while the SaaS seeder already fabricated
   // a `durationSeconds` for it, which is a fair summary of how obviously it was
