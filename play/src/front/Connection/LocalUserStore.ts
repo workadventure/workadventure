@@ -557,11 +557,7 @@ class LocalUserStore {
         localStorage.setItem(cameraPrivacySettings, option.toString());
     }
 
-    /**
-     * Returns the camera privacy setting stored by the user. If the user has not
-     * stored a preference yet, the given default is used (typically the value
-     * configured by the instance administrator, exposed by the current {@link Room}).
-     */
+    /** Returns the camera privacy setting, or the given default if the user has not stored a preference yet. */
     getCameraPrivacySettings(defaultCameraPrivacySettings: boolean = false) {
         const storedValue = localStorage.getItem(cameraPrivacySettings);
         if (storedValue == null) {
@@ -574,11 +570,7 @@ class LocalUserStore {
         localStorage.setItem(microphonePrivacySettings, option.toString());
     }
 
-    /**
-     * Returns the microphone privacy setting stored by the user. If the user has not
-     * stored a preference yet, the given default is used (typically the value
-     * configured by the instance administrator, exposed by the current {@link Room}).
-     */
+    /** Returns the microphone privacy setting, or the given default if the user has not stored a preference yet. */
     getMicrophonePrivacySettings(defaultMicrophonePrivacySettings: boolean = true) {
         const storedValue = localStorage.getItem(microphonePrivacySettings);
         if (storedValue == null) {
