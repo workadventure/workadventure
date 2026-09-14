@@ -296,8 +296,7 @@ class AdminApi implements AdminInterface {
             const mapDetailData = isMapDetailsData.safeParse(res.data);
 
             if (mapDetailData.success) {
-                // Keep the symmetry with LocalAdmin: if the admin does not provide the default
-                // privacy settings, fall back to the environment variables configured on the play service.
+                // Fall back to the environment variables to keep symmetry with LocalAdmin.
                 return {
                     ...mapDetailData.data,
                     defaultCameraPrivacySettings:

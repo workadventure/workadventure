@@ -505,20 +505,12 @@ export class Room {
         return this._bypassPwa;
     }
 
-    /**
-     * Default for the camera privacy setting ("keep camera enabled when the tab is away")
-     * used while the user has not stored their own preference yet.
-     * Configured by the instance administrator; the user can still change it in the settings menu.
-     */
+    /** Default for the camera privacy setting ("keep camera enabled when the tab is away") until the user sets their own preference. */
     get defaultCameraPrivacySettings(): boolean {
         return this._defaultCameraPrivacySettings;
     }
 
-    /**
-     * Default for the microphone privacy setting ("keep microphone enabled when the tab is away")
-     * used while the user has not stored their own preference yet.
-     * Configured by the instance administrator; the user can still change it in the settings menu.
-     */
+    /** Default for the microphone privacy setting ("keep microphone enabled when the tab is away") until the user sets their own preference. */
     get defaultMicrophonePrivacySettings(): boolean {
         return this._defaultMicrophonePrivacySettings;
     }
