@@ -9,6 +9,10 @@
     let { encoderStats }: Props = $props();
 
     let encoder = $derived(describeEncoder(encoderStats?.encoderImplementation));
+    // One per encoder: a P2P bubble whose peers negotiated different codecs reads "VP9/AV1/VP9"
+    let codecs = $derived(
+        encoderStats?.encoders.map(({ mimeType }) => mimeType?.replace("video/", "") ?? "-").join("/") ?? "-",
+    );
     // Red when the machine cannot keep up, yellow when something else holds the encoder back
     let statsColorClass = $derived(
         encoderStats?.qualityLimitationReason === "cpu"
@@ -42,7 +46,7 @@
                     <td>Resolution:</td><td>{encoderStats.frameWidth}x{encoderStats.frameHeight}</td>
                 </tr>
                 <tr>
-                    <td>Codec:</td><td>{encoderStats.mimeType ?? "-"}</td>
+                    <td>Codec:</td><td data-testid="encoder-codec">{codecs}</td>
                 </tr>
                 <tr>
                     <td>Source:</td><td
