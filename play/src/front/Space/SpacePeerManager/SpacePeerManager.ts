@@ -17,8 +17,6 @@ import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintS
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
-import { analyticsClient } from "../../Administration/AnalyticsClient";
-import type { EndTimedAnalyticsEvent } from "../../Administration/TimedAnalyticsEvent";
 import { meetingEnded, meetingStarted } from "../../Administration/CurrentMeeting";
 import { isMeetingSpace } from "../../Rules/MeetingRules";
 import { trackBroadcastAnalytics } from "../../Streaming/BroadcastAnalytics";
@@ -140,14 +138,6 @@ export class SpacePeerManager {
 
     private _communicationState: ICommunicationState;
     private _toFinalizeState: ICommunicationState | undefined;
-    /**
-     * The meeting this space is currently carrying, if any.
-     *
-     * Per instance, not global: SpaceRegistry keeps several spaces live at once,
-     * so a single shared value meant leaving one space ended the meeting of every
-     * other one.
-     */
-    private endMeeting: EndTimedAnalyticsEvent | undefined;
     private readonly stopBroadcastAnalytics: () => void;
 
     private readonly _effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
@@ -216,7 +206,7 @@ export class SpacePeerManager {
 
                 // create factory for the new state instead of creating the state directly ?
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
-                    this.startMeetingAnalytics("webrtc");
+                    this.startMeetingAnalytics();
                     this._communicationState = new WebRTCState(
                         this.space,
                         this._streamableSubjects,
@@ -224,7 +214,7 @@ export class SpacePeerManager {
                         this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
-                    this.startMeetingAnalytics("livekit");
+                    this.startMeetingAnalytics();
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
@@ -582,23 +572,24 @@ export class SpacePeerManager {
     }
 
     /**
-     * A strategy switch is the only place a meeting's media backend is known for
-     * certain. `webrtc` is a spontaneous bubble, `livekit` a meeting area; the space
-     * name is the meeting id, so every participant of one meeting reports the same one.
+     * Records which meeting this tab is in. It no longer REPORTS the meeting: the back
+     * does, once per meeting instead of once per participant, because it is the only
+     * party that can count the participants of one.
      *
-     * It is not, on its own, where a meeting starts: the back sends the same switch to
-     * whoever merely joins a media-syncing space, the megaphone space included — hence
-     * the guard. See `isMeetingSpace`.
+     * What is still needed here is the id, so that the periods this client does report
+     * — the microphone it held open, the times it was speaking — can say which meeting
+     * they happened in. Nobody else can: those are measured from the local analyser and
+     * never leave this tab until they are reported.
+     *
+     * Still gated on the space being a conversation: the back sends the same strategy
+     * switch to whoever merely joins a media-syncing space, the megaphone space
+     * included, and a speaking period in a broadcast belongs to no meeting.
      */
-    private startMeetingAnalytics(meetingProvider: "webrtc" | "livekit"): void {
+    private startMeetingAnalytics(): void {
         this.endMeetingAnalytics();
         if (!isMeetingSpace(this.space.filterType)) {
             return;
         }
-        this.endMeeting = analyticsClient.openTimedEvent("meeting.ended", {
-            meetingProvider,
-            meetingId: this.space.getName(),
-        });
         meetingStarted(this.space.getName());
     }
 
@@ -606,8 +597,6 @@ export class SpacePeerManager {
         // Unguarded: meetingEnded only clears a meeting whose id matches, so calling it
         // for a meeting that never opened here is a no-op.
         meetingEnded(this.space.getName());
-        this.endMeeting?.();
-        this.endMeeting = undefined;
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
