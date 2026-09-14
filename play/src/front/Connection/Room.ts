@@ -77,6 +77,8 @@ export class Room {
     private _provideDefaultWokaTexture: "no" | "random" | "fix" = "no";
     private _skipCameraPage: boolean = false;
     private _bypassPwa: boolean = false;
+    private _defaultCameraPrivacySettings: boolean = false;
+    private _defaultMicrophonePrivacySettings: boolean = true;
     private _recording: RecordingData | undefined;
 
     private constructor(private roomUrl: URL) {
@@ -228,9 +230,9 @@ export class Room {
                 this._provideDefaultWokaTexture = data.provideDefaultWokaTexture ?? "no";
                 this._skipCameraPage = data.skipCameraPage ?? false;
                 this._bypassPwa = data.bypassPwa ?? false;
+                this._defaultCameraPrivacySettings = data.defaultCameraPrivacySettings ?? false;
+                this._defaultMicrophonePrivacySettings = data.defaultMicrophonePrivacySettings ?? true;
                 this._recording = data.recording ?? undefined;
-                localUserStore.setDefaultCameraPrivacySettings(data.defaultCameraPrivacySettings ?? false);
-                localUserStore.setDefaultMicrophonePrivacySettings(data.defaultMicrophonePrivacySettings ?? true);
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -501,6 +503,24 @@ export class Room {
     /** When true (admin / map API), never show the Web App install flow. */
     get bypassPwa(): boolean {
         return this._bypassPwa;
+    }
+
+    /**
+     * Default for the camera privacy setting ("keep camera enabled when the tab is away")
+     * used while the user has not stored their own preference yet.
+     * Configured by the instance administrator; the user can still change it in the settings menu.
+     */
+    get defaultCameraPrivacySettings(): boolean {
+        return this._defaultCameraPrivacySettings;
+    }
+
+    /**
+     * Default for the microphone privacy setting ("keep microphone enabled when the tab is away")
+     * used while the user has not stored their own preference yet.
+     * Configured by the instance administrator; the user can still change it in the settings menu.
+     */
+    get defaultMicrophonePrivacySettings(): boolean {
+        return this._defaultMicrophonePrivacySettings;
     }
 
     get recording(): RecordingData | undefined {

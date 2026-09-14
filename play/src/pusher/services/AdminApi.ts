@@ -22,6 +22,8 @@ import {
     ADMIN_API_RETRY_DELAY,
     ADMIN_API_TOKEN,
     ADMIN_API_URL,
+    DEFAULT_CAMERA_PRIVACY_SETTINGS,
+    DEFAULT_MICROPHONE_PRIVACY_SETTINGS,
     OPID_PROFILE_SCREEN_PROVIDER,
     ADMIN_URL,
 } from "../enums/EnvironmentVariable";
@@ -294,7 +296,15 @@ class AdminApi implements AdminInterface {
             const mapDetailData = isMapDetailsData.safeParse(res.data);
 
             if (mapDetailData.success) {
-                return mapDetailData.data;
+                // Keep the symmetry with LocalAdmin: if the admin does not provide the default
+                // privacy settings, fall back to the environment variables configured on the play service.
+                return {
+                    ...mapDetailData.data,
+                    defaultCameraPrivacySettings:
+                        mapDetailData.data.defaultCameraPrivacySettings ?? DEFAULT_CAMERA_PRIVACY_SETTINGS,
+                    defaultMicrophonePrivacySettings:
+                        mapDetailData.data.defaultMicrophonePrivacySettings ?? DEFAULT_MICROPHONE_PRIVACY_SETTINGS,
+                };
             }
 
             const roomRedirect = isRoomRedirect.safeParse(res.data);

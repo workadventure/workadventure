@@ -384,6 +384,11 @@ export class GameManager {
         return this.startRoom;
     }
 
+    /** Returns the current room, or undefined if no room has been started yet. */
+    public get currentStartedRoomOrNull(): Room | undefined {
+        return this.startRoom;
+    }
+
     public get currentStartedRoomPromise(): Promise<Room> {
         return this._startRoomPromise.promise;
     }

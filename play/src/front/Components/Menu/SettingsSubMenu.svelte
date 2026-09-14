@@ -61,8 +61,12 @@
     );
     let disableAnimations: boolean = $state(localUserStore.getDisableAnimations());
     let valueLocale: string = $state($locale);
-    let valueCameraPrivacySettings = $state(localUserStore.getCameraPrivacySettings());
-    let valueMicrophonePrivacySettings = $state(localUserStore.getMicrophonePrivacySettings());
+    let valueCameraPrivacySettings = $state(
+        localUserStore.getCameraPrivacySettings(gameManager.currentStartedRoom.defaultCameraPrivacySettings),
+    );
+    let valueMicrophonePrivacySettings = $state(
+        localUserStore.getMicrophonePrivacySettings(gameManager.currentStartedRoom.defaultMicrophonePrivacySettings),
+    );
     const initialVideoQuality = localUserStore.getVideoQuality();
     let valueVideoQuality = $state(initialVideoQuality === "high" ? 3 : initialVideoQuality === "low" ? 1 : 2);
     const initialScreenShareQuality = localUserStore.getScreenShareQuality();
