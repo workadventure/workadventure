@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/svelte";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { currentMeetingProperties, subscribeToCurrentMeeting } from "../Administration/CurrentMeeting";
+import { currentMeetingIdStore, currentMeetingProperties } from "../Administration/CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { createHeldIntervalTracker } from "../Administration/HeldIntervalTracker";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
@@ -1422,7 +1422,7 @@ gameSceneIsLoadedStore.subscribe((inRoom: boolean) => {
     // half did not, and one row can only name one meeting. Microphones stay open
     // across several meetings, so without this the field would be decided by wherever
     // the user happened to be when they unmuted.
-    unsubscribeCurrentMeeting ??= subscribeToCurrentMeeting((meetingId: string | undefined) => {
+    unsubscribeCurrentMeeting ??= currentMeetingIdStore.subscribe((meetingId: string | undefined) => {
         if (endMicrophoneDwell === undefined || meetingId === microphoneDwellMeetingId) {
             return;
         }

@@ -10,23 +10,22 @@ import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEve
  * most one Jitsi meeting at a time. Both property listeners drive that store and
  * both drive this, which is what keeps the two from disagreeing.
  */
-let endMeeting: EndTimedAnalyticsEvent | undefined;
-let currentMeetingId: string | undefined;
+let current: { end: EndTimedAnalyticsEvent; meetingId: string } | undefined;
 
 export function jitsiMeetingStarted(roomName: string): void {
     // A live handle here means the matching leave never ran, so this interval's
     // end is the arrival of the next meeting rather than a real departure.
     jitsiMeetingEnded();
-    endMeeting = analyticsClient.openTimedEvent("meeting.ended", { meetingProvider: "jitsi", meetingId: roomName });
-    currentMeetingId = roomName;
+    const end = analyticsClient.openTimedEvent("meeting.ended", { meetingProvider: "jitsi", meetingId: roomName });
+    current = { end, meetingId: roomName };
     meetingStarted(roomName);
 }
 
 export function jitsiMeetingEnded(): void {
-    endMeeting?.();
-    endMeeting = undefined;
-    if (currentMeetingId !== undefined) {
-        meetingEnded(currentMeetingId);
-        currentMeetingId = undefined;
+    if (current === undefined) {
+        return;
     }
+    current.end();
+    meetingEnded(current.meetingId);
+    current = undefined;
 }
