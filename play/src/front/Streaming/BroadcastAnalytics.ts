@@ -30,14 +30,14 @@ export function trackBroadcastAnalytics(space: SpaceInterface): () => void {
         broadcastKind:
             space.getMetadata().get("isMegaphoneSpace") === true ? ("megaphone" as const) : ("speaker_zone" as const),
     });
-    const speakers = new Set<string>();
     let endAudience: EndTimedAnalyticsEvent | undefined;
     let endAirtime: EndTimedAnalyticsEvent | undefined;
 
-    // One interval for the whole time *someone* is on air, not one per speaker: a
-    // listener who sat through a panel of three listened once.
-    const syncAudience = (): void => {
-        if (speakers.size > 0) {
+    // One interval for the whole time *someone* is on air, not one per speaker: a listener
+    // who sat through a panel of three listened once. The store excludes the local user, so
+    // own airtime — which is the other event — never counts as audience time.
+    const unsubscribeAudience = space.hasRemoteSpeakerStore.subscribe((someoneOnAir: boolean) => {
+        if (someoneOnAir) {
             endAudience ??= analyticsClient.openTimedEvent("broadcast.audience.ended", broadcastContext(), {
                 reopenOnReconnect: true,
             });
@@ -47,30 +47,7 @@ export function trackBroadcastAnalytics(space: SpaceInterface): () => void {
 
         endAudience?.();
         endAudience = undefined;
-    };
-
-    // Leaving is going off air, which is why the same function takes the three events.
-    const trackSpeaker = (spaceUserId: string, onAir: boolean): void => {
-        // Own airtime is the other event. Without this, a speaker would report the
-        // whole of their own broadcast as audience time too.
-        if (spaceUserId === space.mySpaceUserId) {
-            return;
-        }
-
-        if (onAir) {
-            speakers.add(spaceUserId);
-        } else {
-            speakers.delete(spaceUserId);
-        }
-
-        syncAudience();
-    };
-
-    const subscriptions = [
-        space.observeUserJoined.subscribe((user) => trackSpeaker(user.spaceUserId, user.megaphoneState)),
-        space.observeUserUpdated.subscribe(({ newUser }) => trackSpeaker(newUser.spaceUserId, newUser.megaphoneState)),
-        space.observeUserLeft.subscribe((user) => trackSpeaker(user.spaceUserId, false)),
-    ];
+    });
 
     // In a broadcast space this store is the local `megaphoneState` and nothing else —
     // listener streaming, which the seeAttendees feature turns on for the audience,
@@ -96,7 +73,7 @@ export function trackBroadcastAnalytics(space: SpaceInterface): () => void {
     });
 
     return () => {
-        subscriptions.forEach((subscription) => subscription.unsubscribe());
+        unsubscribeAudience();
         unsubscribeAirtime();
         endAudience?.();
         endAirtime?.();

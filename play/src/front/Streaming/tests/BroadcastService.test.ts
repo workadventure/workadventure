@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { readable } from "svelte/store";
+import { readable, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { FilterType } from "@workadventure/messages";
 import type { SpaceInterface } from "../../Space/SpaceInterface";
@@ -15,30 +15,38 @@ vi.mock("../../Phaser/Game/GameManager", () => ({
     },
 }));
 
+function createMockSpace() {
+    const hasRemoteSpeakerStore = writable(false);
+    const space = {
+        usersStore: readable(new Map()),
+        observeUserJoined: new Subject().asObservable(),
+        observeUserLeft: new Subject().asObservable(),
+        hasRemoteSpeakerStore,
+        startListenerStreaming: vi.fn(),
+        stopListenerStreaming: vi.fn(),
+        getName: vi.fn(() => "megaphone-space"),
+    } as unknown as SpaceInterface;
+
+    return { space, hasRemoteSpeakerStore };
+}
+
+function createService(space: SpaceInterface) {
+    const joinSpace = vi.fn().mockResolvedValue(space);
+    const spaceRegistry = {
+        joinSpace,
+        leaveSpace: vi.fn().mockResolvedValue(undefined),
+    } as unknown as SpaceRegistryInterface;
+
+    return {
+        joinSpace,
+        service: new BroadcastService(spaceRegistry, undefined, [], new AbortController().signal),
+    };
+}
+
 describe("BroadcastService", () => {
     it("should use screenSharingState watch field when feedback is disabled", async () => {
-        const joinSpace = vi.fn();
-        const leaveSpace = vi.fn().mockResolvedValue(undefined);
-        const observeUserJoined = new Subject();
-        const observeUserLeft = new Subject();
-
-        const mockSpace = {
-            usersStore: readable(new Map()),
-            observeUserJoined: observeUserJoined.asObservable(),
-            observeUserLeft: observeUserLeft.asObservable(),
-            startListenerStreaming: vi.fn(),
-            stopListenerStreaming: vi.fn(),
-            getName: vi.fn(() => "megaphone-space"),
-        } as unknown as SpaceInterface;
-
-        joinSpace.mockResolvedValue(mockSpace);
-
-        const spaceRegistry = {
-            joinSpace,
-            leaveSpace,
-        } as unknown as SpaceRegistryInterface;
-
-        const service = new BroadcastService(spaceRegistry, undefined, [], new AbortController().signal);
+        const { space } = createMockSpace();
+        const { service, joinSpace } = createService(space);
 
         await service.joinSpace("Megaphone Space", new AbortController().signal, false);
 
@@ -52,28 +60,8 @@ describe("BroadcastService", () => {
     });
 
     it("should use screenSharingState and attendeesState watch fields when feedback is enabled", async () => {
-        const joinSpace = vi.fn();
-        const leaveSpace = vi.fn().mockResolvedValue(undefined);
-        const observeUserJoined = new Subject();
-        const observeUserLeft = new Subject();
-
-        const mockSpace = {
-            usersStore: readable(new Map()),
-            observeUserJoined: observeUserJoined.asObservable(),
-            observeUserLeft: observeUserLeft.asObservable(),
-            startListenerStreaming: vi.fn(),
-            stopListenerStreaming: vi.fn(),
-            getName: vi.fn(() => "megaphone-space"),
-        } as unknown as SpaceInterface;
-
-        joinSpace.mockResolvedValue(mockSpace);
-
-        const spaceRegistry = {
-            joinSpace,
-            leaveSpace,
-        } as unknown as SpaceRegistryInterface;
-
-        const service = new BroadcastService(spaceRegistry, undefined, [], new AbortController().signal);
+        const { space } = createMockSpace();
+        const { service, joinSpace } = createService(space);
 
         await service.joinSpace("Megaphone Space", new AbortController().signal, true);
 
@@ -84,5 +72,33 @@ describe("BroadcastService", () => {
             expect.any(AbortSignal),
             expect.any(Object),
         );
+    });
+
+    it("should publish the audience only while a speaker is on air", async () => {
+        const { space, hasRemoteSpeakerStore } = createMockSpace();
+        const { service } = createService(space);
+
+        await service.joinSpace("Megaphone Space", new AbortController().signal, true);
+
+        // Nobody on air yet: joining must not emit an attendeesState the space never had.
+        expect(space.startListenerStreaming).not.toHaveBeenCalled();
+        expect(space.stopListenerStreaming).not.toHaveBeenCalled();
+
+        hasRemoteSpeakerStore.set(true);
+        expect(space.startListenerStreaming).toHaveBeenCalledTimes(1);
+
+        hasRemoteSpeakerStore.set(false);
+        expect(space.stopListenerStreaming).toHaveBeenCalledTimes(1);
+    });
+
+    it("should leave the audience alone when there is no feedback to give", async () => {
+        const { space, hasRemoteSpeakerStore } = createMockSpace();
+        const { service } = createService(space);
+
+        await service.joinSpace("Megaphone Space", new AbortController().signal, false);
+        hasRemoteSpeakerStore.set(true);
+
+        // startListenerStreaming throws outside a WITH_FEEDBACK space.
+        expect(space.startListenerStreaming).not.toHaveBeenCalled();
     });
 });

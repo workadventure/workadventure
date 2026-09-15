@@ -86,6 +86,9 @@ export class Space implements SpaceInterface {
     private _registerRefCount = 0;
     private isDestroyed = false;
     public readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;
+    private _setHasRemoteSpeaker: ((value: boolean) => void) | undefined;
+    private _hasRemoteSpeaker = false;
+    public readonly hasRemoteSpeakerStore: Readable<boolean>;
     public readonly observeUserJoined: Observable<SpaceUserExtended>;
     public readonly observeUserLeft: Observable<SpaceUserExtended>;
     public readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
@@ -143,6 +146,20 @@ export class Space implements SpaceInterface {
             this.registerSpaceFilter();
             this._setUsers = set;
             set(this._users);
+
+            return () => {
+                if (!this.isDestroyed) {
+                    this.unregisterSpaceFilter();
+                }
+            };
+        });
+
+        // Same shape as usersStore, and for the same reason: subscribing is what asks the
+        // pusher for this space's users in the first place.
+        this.hasRemoteSpeakerStore = readable(false, (set) => {
+            this.registerSpaceFilter();
+            this._setHasRemoteSpeaker = set;
+            set(this._hasRemoteSpeaker);
 
             return () => {
                 if (!this.isDestroyed) {
@@ -706,7 +723,30 @@ export class Space implements SpaceInterface {
         }
 
         this._setUsers?.(this._users);
+        this.refreshHasRemoteSpeaker();
         this.initPromise?.resolve();
+    }
+
+    /**
+     * Recomputed rather than counted incrementally: the three call sites below are the only
+     * ways `_users` changes, and a scan of a handful of users is cheaper than a tally that
+     * can drift. Silent when the answer is unchanged, so subscribers see edges only.
+     */
+    private refreshHasRemoteSpeaker(): void {
+        let hasRemoteSpeaker = false;
+        for (const user of this._users.values()) {
+            if (user.megaphoneState && user.spaceUserId !== this._mySpaceUserId) {
+                hasRemoteSpeaker = true;
+                break;
+            }
+        }
+
+        if (hasRemoteSpeaker === this._hasRemoteSpeaker) {
+            return;
+        }
+
+        this._hasRemoteSpeaker = hasRemoteSpeaker;
+        this._setHasRemoteSpeaker?.(hasRemoteSpeaker);
     }
 
     addUser(user: SpaceUser): SpaceUserExtended {
@@ -737,6 +777,7 @@ export class Space implements SpaceInterface {
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
+            this.refreshHasRemoteSpeaker();
 
             if (this._addUserSubject) {
                 this._addUserSubject.next(extendSpaceUser);
@@ -753,6 +794,7 @@ export class Space implements SpaceInterface {
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
+            this.refreshHasRemoteSpeaker();
             if (this._leftUserSubject) {
                 this._leftUserSubject.next(user);
             }
@@ -775,6 +817,12 @@ export class Space implements SpaceInterface {
         const maskedNewData = applyFieldMask(newData, updateMask) as unknown as Partial<SpaceUser>;
 
         deepmergeInto(userToUpdate, maskedNewData);
+
+        // Guarded because this one runs on every position and state update of every user,
+        // unlike the add/remove paths.
+        if (maskedNewData.megaphoneState !== undefined) {
+            this.refreshHasRemoteSpeaker();
+        }
 
         for (const key in maskedNewData) {
             // We allow ourselves a not 100% exact type cast here.
