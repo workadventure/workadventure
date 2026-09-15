@@ -53,7 +53,6 @@ const debug = Debug("webrtc:RemotePeer");
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
-
 export class RemotePeer extends Peer implements Streamable {
     public _connected = false;
     public remoteStream!: MediaStream;
