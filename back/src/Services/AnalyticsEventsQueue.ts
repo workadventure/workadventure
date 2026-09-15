@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as Sentry from "@sentry/node";
 import type { AnalyticsEventsBatchPayload, AnalyticsStoredEvent } from "@workadventure/messages";
+import { registerDrainableService } from "@workadventure/shared-utils";
 import {
     ADMIN_API_TOKEN,
     ADMIN_API_URL,
@@ -9,7 +10,6 @@ import {
     ANALYTICS_MAX_QUEUE_SIZE,
     ANALYTICS_TIMEOUT_MS,
 } from "../Enum/EnvironmentVariable";
-import { registerDrainableService } from "./ShutdownDrains";
 
 const SCHEMA_VERSION = 1;
 

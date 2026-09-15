@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { clearDrainableServices, registerDrainableService, runDrains } from "../../src/pusher/services/ShutdownDrains";
+import { clearDrainableServices, registerDrainableService, runDrains } from "../src/ShutdownDrains";
 
 describe("ShutdownDrains", () => {
     beforeEach(() => {

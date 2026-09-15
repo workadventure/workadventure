@@ -1,5 +1,6 @@
 // lib/server.ts
 import * as Sentry from "@sentry/node";
+import { runDrains } from "@workadventure/shared-utils";
 import App from "./App";
 import {
     ENABLE_TELEMETRY,
@@ -11,7 +12,6 @@ import {
 import { telemetryService } from "./Services/TelemetryService";
 import { analyticsEventsQueue } from "./Services/AnalyticsEventsQueue";
 import { meetingAnalytics } from "./Services/MeetingAnalytics";
-import { runDrains } from "./Services/ShutdownDrains";
 
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));
