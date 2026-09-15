@@ -169,7 +169,8 @@ the local feedback tiles show) and takes one sample a second. The reason stays s
 so the share of `cpu` samples over a window is the share of time the encoder was limited: gaps in a long episode
 are tolerated, a lone spike is ignored.
 
-- Window of 60 samples, threshold 70 % (Jitsi waits for a 60 s streak; same length, gaps tolerated). The first 10
+- Window of 30 samples, threshold 70 % (Jitsi waits for a 60 s streak; half the length, and gaps tolerated rather
+  than a streak, so the same episode is caught about twice as fast). The first 10
   samples after a stream starts are ignored: keyframes and rate-control ramp-up look like overload.
 - The window starts over when the stream stops, the transport changes (P2P ↔ LiveKit) or the codec changes.
 - One decision per full window, then a full window of cooldown.

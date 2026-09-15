@@ -40,8 +40,8 @@ export type CpuLimitationAction = { kind: "flag" } | { kind: "demote"; codec: Vi
  */
 export const cpuLimitedStore = writable(false);
 
-// Jitsi waits for a 60 s streak; the same length, with gaps tolerated
-export const WINDOW_SAMPLES = 60;
+// If more than 70% of the samples are CPU limited for 30 seconds, we act.
+export const WINDOW_SAMPLES = 30;
 export const LIMITED_SHARE = 0.7;
 // Keyframes and rate-control ramp-up look like overload
 export const WARMUP_SAMPLES = 10;
@@ -163,7 +163,7 @@ export function startCpuLimitationDetectors(): void {
             }
             if (action.kind === "flag") {
                 console.info(
-                    `The ${category} encoders were CPU-limited for most of the last minute: asking for LiveKit`,
+                    `The ${category} encoders were CPU-limited for most of the last 30 seconds: asking for LiveKit`,
                 );
                 cpuLimitedStore.set(true);
                 analyticsClient.trackAdminEvent("media.livekit_switch.requested", {
@@ -171,7 +171,7 @@ export function startCpuLimitationDetectors(): void {
                 });
             } else {
                 console.info(
-                    `The ${category} encoder was CPU-limited for most of the last minute: leaving ${action.codec}`,
+                    `The ${category} encoder was CPU-limited for most of the last 30 seconds: leaving ${action.codec}`,
                 );
                 demotedCodecStore[category].set(action.codec);
                 analyticsClient.trackAdminEvent("media.codec.degraded", {
