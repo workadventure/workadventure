@@ -221,6 +221,24 @@ const meetingActionProperties = z.object({
     ),
 });
 
+/**
+ * What carried the meeting.
+ *
+ * `external` rather than one entry per vendor: a Teams or a Google Meet area belongs
+ * to an extension, and enumerating them here would make this catalog — which every
+ * deployment ships — change every time someone writes a new one. The extension names
+ * itself in `externalMeetingProviderName` instead.
+ */
+const MEETING_PROVIDERS = ["livekit", "jitsi", "webrtc", "external"] as const;
+
+/** Which extension held the meeting. Only meaningful when the provider is `external`. */
+const externalMeetingProviderName = z
+  .string()
+  .optional()
+  .describe(
+    "Name the extension declares itself under, when meetingProvider is `external`. Absent for the providers WorkAdventure carries itself.",
+  );
+
 /** Shared by the meeting lifecycle events emitted from AnalyticsClient. */
 const meetingContextProperties = z.object({
   meetingId: z
@@ -229,9 +247,10 @@ const meetingContextProperties = z.object({
     .describe("Identifier of the meeting, when the provider exposes one."),
   roomId: z.string().optional().describe("Room the meeting belongs to."),
   meetingProvider: z
-    .enum(["livekit", "jitsi", "webrtc", "teams", "google_meet"])
+    .enum(MEETING_PROVIDERS)
     .optional()
     .describe("Which media backend carried the meeting."),
+  externalMeetingProviderName,
 });
 
 /** Carried by the broadcast row and every participation in it: it is what joins them. */
@@ -735,9 +754,10 @@ export const ANALYTICS_EVENTS = {
     properties: z.object({
       roomId: z.string().describe("Room containing the meeting area."),
       meetingProvider: z
-        .enum(["livekit", "jitsi", "webrtc", "teams", "google_meet"])
+        .enum(MEETING_PROVIDERS)
         .optional()
         .describe("Media backend of the area."),
+      externalMeetingProviderName,
     }),
     description: "The user walked into a meeting area.",
   }),
@@ -778,11 +798,12 @@ export const ANALYTICS_EVENTS = {
       // change mid-meeting. Still filled by the one path the back cannot see — Jitsi,
       // whose areas join no space server-side.
       meetingProvider: z
-        .enum(["livekit", "jitsi", "webrtc", "teams", "google_meet"])
+        .enum(MEETING_PROVIDERS)
         .optional()
         .describe(
           "Which media backend carried the meeting. It does NOT say what kind of meeting it was — a meeting area of four or fewer never leaves webrtc — which is what meetingKind is for.",
         ),
+      externalMeetingProviderName,
       meetingKind: z
         .enum(["bubble", "area", "external"])
         .optional()
