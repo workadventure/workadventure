@@ -1418,7 +1418,7 @@ export const ANALYTICS_EVENTS = {
         ),
     }),
     description:
-      "One person's time in one meeting, emitted by the back when the meeting ends. This is the per-user view of a meeting: meeting.ended is deliberately attributed to nobody, because a meeting belongs to no one participant.",
+      "One person's time in one meeting, emitted by the back when the meeting ends. This is the per-user view of a meeting: meeting.ended is deliberately attributed to nobody, because a meeting belongs to no one participant. NOT to be joined to itself: grouping these rows by meetingId yields who was in a meeting with whom, and aggregated over months that is a map of who works with whom — a different product from a record of what happened, and one with a different legal footing. Nothing builds that query today, and the decision to leave it unbuilt is the reason this sentence exists: it is two lines of SQL away, so it will not stay unbuilt by accident.",
     source: "pusher",
   }),
 
