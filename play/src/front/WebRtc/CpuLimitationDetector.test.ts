@@ -101,15 +101,21 @@ describe("CpuLimitationDetector", () => {
 
     it("takes one sample a second, however many encoders tick", () => {
         const detector = new CpuLimitationDetector("screenSharing");
-        const decisions: string[] = [];
-        // 100 s of three encoders each reporting at its own time within the second: 301 readings, 76 samples
-        for (let tick = 0; tick <= 300; tick++) {
+        const samplesNeeded = WARMUP_SAMPLES + WINDOW_SAMPLES;
+        // Three encoders, each reporting at its own time within the second. A sample is taken a second after the
+        // previous one, so a reading every 333 ms is sampled every fourth reading: this is just enough readings
+        // for one decision.
+        const readings = samplesNeeded * 4;
+        const decisionTicks: number[] = [];
+        for (let tick = 0; tick <= readings; tick++) {
             const action = detector.sample(stats("cpu"), { screenShareRunning: false, flagRaised: true }, tick * 333);
             if (action) {
-                decisions.push(action.kind);
+                decisionTicks.push(tick);
             }
         }
-        expect(decisions).toHaveLength(1);
+        // Sampling every reading instead would have decided three times sooner, and more than once by now
+        expect(decisionTicks).toHaveLength(1);
+        expect(decisionTicks[0]).toBeGreaterThan(samplesNeeded * 2);
     });
 
     it("leaves H.264, VP8 and hardware encoders alone", () => {

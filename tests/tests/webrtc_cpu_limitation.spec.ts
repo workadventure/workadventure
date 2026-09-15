@@ -6,7 +6,7 @@ import { expectWebRtcConnectionsCountToBe } from "./utils/webRtc";
 import { play_url, publicTestMapUrl } from "./utils/urls";
 
 /**
- * What happens when a member's video encoders report a CPU limitation for most of a minute (CpuLimitationDetector).
+ * What happens when a member's video encoders report a CPU limitation for most of half a minute (CpuLimitationDetector).
  *
  * Alice's page rewrites `qualityLimitationReason` to "cpu" in every outbound video stats report, so the whole chain
  * runs on a real signal shape without needing a machine that actually struggles: stats parsing, the detector's
@@ -19,8 +19,8 @@ import { play_url, publicTestMapUrl } from "./utils/urls";
  */
 const MAP_URL = process.env.CODEC_TEST_MAP_URL ?? publicTestMapUrl("tests/E2E/empty.json", "cpu-limitation-e2e");
 const EXPECT = process.env.CPU_LIMITATION_EXPECT ?? "switch";
-// The detector decides after 10 warm-up samples and a 60-sample window, one sample a second
-const WINDOW_MS = 75_000;
+// The detector decides after 10 warm-up samples and a 30-sample window, one sample a second
+const WINDOW_MS = 45_000;
 
 const showStats = async (page: Page) => {
     await page.addInitScript(() => {
