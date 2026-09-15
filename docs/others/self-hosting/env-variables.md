@@ -229,6 +229,7 @@ Environment variables for the Map Storage service.
 | `WAM_TEMPLATE_URL` | No | The URL to fetch an empty WAM template |
 | `ENTITY_COLLECTION_URLS` | No | A comma separated list of entity collection URLs to be used when a new TMJ map is uploaded. Note: ignored if WAM_TEMPLATE_URL is set. |
 | `MAP_STORAGE_API_TOKEN` | Yes | API token to access the map-storage REST API |
+| `DIRECT_UPLOAD_URL` | No | Absolute URL of the /upload endpoint reached without going through a proxy that limits request body size (e.g. Cloudflare's 100MB limit). Advertised to the map uploader via GET /upload-endpoint. If empty, the uploader keeps using the URL it was configured with. |
 | `PUSHER_URL` | Yes | URL of the pusher service |
 | `WHITELISTED_RESOURCE_URLS` | No | Comma-separated list of allowed URLs for loading external resources |
 | `SECRET_KEY` | No | The JWT token to use when the map-storage is used as a file server. This token will be used to authenticate the user when accessing files. |

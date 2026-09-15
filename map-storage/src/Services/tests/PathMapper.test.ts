@@ -1,10 +1,11 @@
 import path from "path";
+import type { Request } from "express";
 import { describe, expect, it, vi } from "vitest";
 
 const env = vi.hoisted(() => ({ PATH_PREFIX: "", USE_DOMAIN_NAME_IN_PATH: true }));
 vi.mock("../../Enum/EnvironmentVariable", () => env);
 
-const { decodeStoragePath, mapPathUsingDomain, mapPathUsingUrl } = await import("../PathMapper");
+const { decodeStoragePath, getRequestDomain, mapPathUsingDomain, mapPathUsingUrl } = await import("../PathMapper");
 
 const DOMAIN = "example.map-storage.workadventu.re";
 
@@ -99,5 +100,23 @@ describe("mapPathUsingUrl", () => {
         } finally {
             env.USE_DOMAIN_NAME_IN_PATH = true;
         }
+    });
+});
+
+describe("getRequestDomain", () => {
+    const req = (headers: Record<string, string>) =>
+        ({ headers, hostname: "direct-upload.example.com" }) as unknown as Request;
+
+    it("prefers the world declared by the uploader over the proxy and the request host", () => {
+        // The uploader POSTs to DIRECT_UPLOAD_URL (bypassing Cloudflare) but targets the world of its
+        // configured MAP_STORAGE_URL. The ingress overwrites x-forwarded-host with the direct host.
+        expect(
+            getRequestDomain(req({ "x-map-storage-host": DOMAIN, "x-forwarded-host": "direct-upload.example.com" })),
+        ).toBe(DOMAIN);
+    });
+
+    it("falls back to x-forwarded-host, then to the request hostname", () => {
+        expect(getRequestDomain(req({ "x-forwarded-host": DOMAIN }))).toBe(DOMAIN);
+        expect(getRequestDomain(req({}))).toBe("direct-upload.example.com");
     });
 });
