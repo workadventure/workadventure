@@ -176,6 +176,24 @@ export const timedEventProperties = z.object({
     ),
 });
 
+/**
+ * Which meeting an in-meeting action happened in.
+ *
+ * Attached centrally by AnalyticsClient rather than passed at each of the dozen call
+ * sites, because the answer is the same for all of them — the meeting this tab is in —
+ * and a field that has to be remembered eleven times is a field that will be forgotten
+ * once. Without it these rows say a microphone was muted somewhere, by someone, and
+ * cannot be placed on the meeting they belong to.
+ */
+const meetingActionProperties = z.object({
+  meetingId: z
+    .string()
+    .optional()
+    .describe(
+      "Meeting the action happened in. Absent when the action somehow fired outside one.",
+    ),
+});
+
 /** Shared by the meeting lifecycle events emitted from AnalyticsClient. */
 const meetingContextProperties = z.object({
   meetingId: z
@@ -742,21 +760,40 @@ export const ANALYTICS_EVENTS = {
     // meetingProvider spelled out rather than `.required()` on the shared shape:
     // required() rebuilds the field and drops its .describe().
     openProperties: meetingContextProperties.extend({
+      // Optional since the back took the meeting over: it reports what a meeting IS
+      // (`meetingKind`) rather than which transport carried it, and the transport can
+      // change mid-meeting. Still filled by the one path the back cannot see — Jitsi,
+      // whose areas join no space server-side.
       meetingProvider: z
         .enum(["livekit", "jitsi", "webrtc"])
+        .optional()
         .describe(
-          "Which media backend carried the meeting, and therefore what kind of meeting it was: `webrtc` is a spontaneous bubble, `livekit` and `jitsi` are meeting areas.",
+          "Which media backend carried the meeting. It does NOT say what kind of meeting it was — a meeting area of four or fewer never leaves webrtc — which is what meetingKind is for.",
         ),
+      meetingKind: z
+        .enum(["bubble", "area"])
+        .optional()
+        .describe(
+          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet. Filled by the back, which knows a Group from an area Space by construction; absent on the rows a client still opens.",
+        ),
+      participantCount: z
+        .number()
+        .optional()
+        .describe("How many distinct people passed through the meeting."),
+      peakParticipantCount: z
+        .number()
+        .optional()
+        .describe("The most people in it at any one moment."),
     }),
     endReasonDescription:
       "`socket_closed` and the `pusher_*` values mean the client never got to close it — a tab closed mid-meeting, or the pusher restarted.",
     description:
-      "A meeting, measured. One row per meeting, emitted by the pusher when the interval closes and timestamped at its end. `meetingProvider` is what tells a spontaneous bubble (`webrtc`) from a meeting area (`livekit` / `jitsi`).",
+      "A meeting, measured. One row per meeting — by the back, which owns the meeting's lifecycle and counts its participants; the row is attributed to nobody, because a meeting belongs to no one participant. Historical rows, and Jitsi ones, were opened once per participant by each client and carry participant-seconds instead: `meetingKind` is present on the former and absent on the latter.",
   }),
 
   "meeting.screenshare.ended": timedEvent({
     openableBy: "client",
-    openProperties: z.object({
+    openProperties: meetingActionProperties.extend({
       hasAudio: z
         .boolean()
         .describe("Whether the shared screen carried audio."),
@@ -1337,31 +1374,82 @@ export const ANALYTICS_EVENTS = {
   "media.video_stream_missing": signal(
     "A video stream was expected but never arrived. Counted as an experience issue.",
   ),
-  "meeting.actions.opened": signal("The user opened the meeting actions menu."),
-  "meeting.camera_layout_resized": signal(
-    "The user resized the camera layout.",
-  ),
-  "meeting.microphone.muted": signal(
-    "The user muted their microphone in a meeting.",
-  ),
-  "meeting.microphone.muted_for_everybody": signal(
-    "A moderator muted everyone's microphone.",
-  ),
-  "meeting.participant.kicked": signal("A moderator removed a participant."),
-  "meeting.participant.pinned": signal(
-    "The user pinned a participant's video.",
-  ),
-  "meeting.private_message.clicked": signal(
-    "The user started a private message from a meeting.",
-  ),
-  "meeting.report.clicked": signal("The user reported someone from a meeting."),
-  "meeting.screenshare.toggled": signal("The user toggled screen sharing."),
-  "meeting.video.muted": signal(
-    "The user turned their camera off in a meeting.",
-  ),
-  "meeting.video.muted_for_everybody": signal(
-    "A moderator turned off everyone's camera.",
-  ),
+  "meeting.actions.opened": event({
+    properties: meetingActionProperties,
+    description: "The user opened the meeting actions menu.",
+  }),
+  "meeting.camera_layout_resized": event({
+    properties: meetingActionProperties,
+    description: "The user resized the camera layout.",
+  }),
+  "meeting.microphone.muted": event({
+    properties: meetingActionProperties,
+    description: "The user muted their microphone in a meeting.",
+  }),
+  "meeting.microphone.muted_for_everybody": event({
+    properties: meetingActionProperties,
+    description: "A moderator muted everyone's microphone.",
+  }),
+  "meeting.participation.ended": event({
+    properties: z.object({
+      meetingId: z.string().describe("Meeting this participation belongs to."),
+      meetingKind: z
+        .enum(["bubble", "area"])
+        .describe(
+          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet.",
+        ),
+      joinRank: z
+        .number()
+        .describe(
+          "Where this participant came in the arrival order. The first two opened the meeting; anyone after joined a conversation already running.",
+        ),
+      startedAt: z.string().datetime().describe("When they joined."),
+      endedAt: z
+        .string()
+        .datetime()
+        .describe("When they left, or when the meeting ended around them."),
+      durationSeconds: z
+        .number()
+        .describe("How long they were in the meeting."),
+      endReason: z
+        .string()
+        .describe(
+          "`back_shutdown` means the server closed it, not the participant.",
+        ),
+    }),
+    description:
+      "One person's time in one meeting, emitted by the back when the meeting ends. This is the per-user view of a meeting: meeting.ended is deliberately attributed to nobody, because a meeting belongs to no one participant. NOT to be joined to itself: grouping these rows by meetingId yields who was in a meeting with whom, and aggregated over months that is a map of who works with whom — a different product from a record of what happened, and one with a different legal footing. Nothing builds that query today, and the decision to leave it unbuilt is the reason this sentence exists: it is two lines of SQL away, so it will not stay unbuilt by accident.",
+    source: "pusher",
+  }),
+
+  "meeting.participant.kicked": event({
+    properties: meetingActionProperties,
+    description: "A moderator removed a participant.",
+  }),
+  "meeting.participant.pinned": event({
+    properties: meetingActionProperties,
+    description: "The user pinned a participant's video.",
+  }),
+  "meeting.private_message.clicked": event({
+    properties: meetingActionProperties,
+    description: "The user started a private message from a meeting.",
+  }),
+  "meeting.report.clicked": event({
+    properties: meetingActionProperties,
+    description: "The user reported someone from a meeting.",
+  }),
+  "meeting.screenshare.toggled": event({
+    properties: meetingActionProperties,
+    description: "The user toggled screen sharing.",
+  }),
+  "meeting.video.muted": event({
+    properties: meetingActionProperties,
+    description: "The user turned their camera off in a meeting.",
+  }),
+  "meeting.video.muted_for_everybody": event({
+    properties: meetingActionProperties,
+    description: "A moderator turned off everyone's camera.",
+  }),
   // A broadcast is an interval, and the two halves used to be two loose signals with
   // nothing carrying the time between them — while the SaaS seeder already fabricated
   // a `durationSeconds` for it, which is a fair summary of how obviously it was

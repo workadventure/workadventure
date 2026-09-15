@@ -20,6 +20,7 @@ import {
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
+import { meetingAnalytics, type MeetingParticipant } from "../Services/MeetingAnalytics";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { SpacesWatcher } from "./SpacesWatcher";
 import type { EventProcessor } from "./EventProcessor";
@@ -32,6 +33,24 @@ import { metadataProcessor } from "./MetadataProcessorInit";
 const debug = Debug("space");
 
 type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
+
+/**
+ * Whether this space is a meeting area — a place people go TO meet — as opposed to
+ * every other space the app opens.
+ *
+ * Three exclusions, each for a space that would otherwise be counted as a meeting:
+ *
+ * - the megaphone space and the speaker/listener zones are broadcasts, and they are
+ *   the ones that made "connected" mean "in a meeting". They are told apart by their
+ *   filter, which is set at join time on every path.
+ * - the world space and the chat spaces carry no media to sync, so nobody is meeting
+ *   in them; this is the same predicate the communication manager already uses to
+ *   decide a space has media at all.
+ * - a proximity bubble also matches both tests above — it IS a meeting, but one the
+ *   `Group` already owns, and counting it twice is worse than not counting it here.
+ *   Its meeting is registered before the space exists, so the id is already taken.
+ */
+const MEETING_MEDIA_PROPERTIES = ["cameraState", "microphoneState", "screenSharingState"];
 
 export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     readonly name: string;
@@ -89,6 +108,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     }),
                 },
             });
+
+            this.trackMeetingJoin(spaceUser);
 
             this.communicationManager.handleUserAdded(spaceUser).catch((e) => {
                 Sentry.captureException(e);
@@ -231,6 +252,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 this._nbWatchers = 0;
             }
             this._spaceUpdatedSubject.next(this);
+            this.trackMeetingLeave(spaceUserId);
             debug(`${this.name} : user => removed ${spaceUserId}`);
         } catch (e) {
             console.error("Error while removing user", e);
@@ -714,6 +736,60 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
     public getPropertiesToSync(): string[] {
         return this._propertiesToSync;
+    }
+
+    /**
+     * A meeting area is a space people go TO meet: everyone sees everyone
+     * (`ALL_USERS`, which excludes the megaphone and the speaker/listener zones) and
+     * it syncs media (which excludes the world space and the chat spaces).
+     *
+     * A proximity bubble passes both tests, and deliberately: it is a meeting, but one
+     * the `Group` owns. Its id is registered before this space exists, so the calls
+     * below are no-ops on it — a bubble is never counted twice.
+     */
+    private isMeetingArea(): boolean {
+        return (
+            this._filterType === FilterType.ALL_USERS &&
+            this._propertiesToSync.some((property) => MEETING_MEDIA_PROPERTIES.includes(property))
+        );
+    }
+
+    private trackMeetingJoin(spaceUser: SpaceUser): void {
+        if (!this.isMeetingArea()) {
+            return;
+        }
+
+        meetingAnalytics.meetingStarted(this.name, this.world, spaceUser.playUri, "area");
+        meetingAnalytics.participantJoined(this.name, this.asMeetingParticipant(spaceUser));
+    }
+
+    private trackMeetingLeave(spaceUserId: string): void {
+        if (meetingAnalytics.kindOf(this.name) !== "area") {
+            return;
+        }
+
+        meetingAnalytics.participantLeft(this.name, spaceUserId);
+        // An area meeting ends when the last person walks out. Anyone arriving later
+        // starts a new one, which is the honest reading: two meetings happened in that
+        // room, not one with a gap in the middle.
+        if (meetingAnalytics.presentCount(this.name) === 0) {
+            meetingAnalytics.meetingEnded(this.name);
+        }
+    }
+
+    private asMeetingParticipant(spaceUser: SpaceUser): MeetingParticipant {
+        return {
+            key: spaceUser.spaceUserId,
+            uuid: spaceUser.uuid,
+            // A space user carries no numeric member id, no tab and no IP: the back
+            // sees the space through the pusher, not through the socket. The admin
+            // takes all three as nullable.
+            userId: null,
+            spaceUserId: spaceUser.spaceUserId,
+            roomId: spaceUser.playUri,
+            tabId: null,
+            clientIp: null,
+        };
     }
 
     private isPublishing(spaceUser: SpaceUser): boolean {
