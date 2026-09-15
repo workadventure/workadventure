@@ -123,6 +123,10 @@ export class AnalyticsEventsQueue {
     public async drain(timeoutMs: number): Promise<void> {
         const deadline = Date.now() + timeoutMs;
         while (this.queue.length > 0 && Date.now() < deadline) {
+            // Sequential on purpose: flush() takes one batch and guards itself with
+            // isFlushing, so firing these in parallel would spin the loop on no-ops
+            // instead of emptying the queue.
+            // eslint-disable-next-line no-await-in-loop
             await this.flush();
         }
     }

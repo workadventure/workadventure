@@ -20,8 +20,8 @@ import {
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
-import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { meetingAnalytics, type MeetingParticipant } from "../Services/MeetingAnalytics";
+import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { SpacesWatcher } from "./SpacesWatcher";
 import type { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
