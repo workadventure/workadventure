@@ -29,7 +29,8 @@ export function trackBroadcastAnalytics(space: SpaceInterface): () => void {
     // metadata at join, but nothing stops a space from being told later.
     const broadcastContext = () => ({
         broadcastId: space.getName(),
-        broadcastKind: space.getMetadata().get("isMegaphoneSpace") === true ? "megaphone" : "speaker_zone",
+        broadcastKind:
+            space.getMetadata().get("isMegaphoneSpace") === true ? ("megaphone" as const) : ("speaker_zone" as const),
     });
     const speakers = new Set<string>();
     let endAudience: EndTimedAnalyticsEvent | undefined;
