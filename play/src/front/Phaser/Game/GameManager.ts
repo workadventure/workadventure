@@ -22,6 +22,7 @@ import { PwaInstallSceneName } from "../Login/PwaInstallScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
+import { currentRoomStore } from "../../Stores/CurrentRoomStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
@@ -89,6 +90,7 @@ export class GameManager {
         }
         let nextScene = result.nextScene;
         this.startRoom = result.room;
+        currentRoomStore.set(result.room);
         this._startRoomPromise.resolve(result.room);
         this.loadMap(this.startRoom);
 
@@ -381,6 +383,11 @@ export class GameManager {
         if (this.startRoom === undefined) {
             throw new Error("startRoom not yet initialized");
         }
+        return this.startRoom;
+    }
+
+    /** Returns the current room, or undefined if no room has been started yet. */
+    public get currentStartedRoomOrNull(): Room | undefined {
         return this.startRoom;
     }
 

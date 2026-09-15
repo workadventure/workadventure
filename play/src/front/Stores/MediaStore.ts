@@ -6,6 +6,7 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import * as Sentry from "@sentry/svelte";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
+import { Room } from "../Connection/Room";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { createHeldIntervalTracker } from "../Administration/HeldIntervalTracker";
@@ -19,6 +20,7 @@ import {
     createBackgroundTransformer,
 } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { LL } from "../../i18n/i18n-svelte";
+import { currentRoomStore } from "./CurrentRoomStore";
 import { gameSceneIsLoadedStore } from "./GameSceneStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
@@ -509,6 +511,7 @@ export const mediaStreamConstraintsStore = derived(
         videoConstraintStore,
         audioConstraintStore,
         privacyShutdownStore,
+        currentRoomStore,
         cameraEnergySavingStore,
         availabilityStatusStore,
         batchGetUserMediaStore,
@@ -525,6 +528,7 @@ export const mediaStreamConstraintsStore = derived(
             $videoConstraintStore,
             $audioConstraintStore,
             $privacyShutdownStore,
+            $currentRoomStore,
             $cameraEnergySavingStore,
             $availabilityStatusStore,
             $batchGetUserMediaStore,
@@ -551,9 +555,15 @@ export const mediaStreamConstraintsStore = derived(
             $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
             $availabilityStatusStore === AvailabilityStatus.BUSY;
         const shouldDisableMicrophoneForPrivacy =
-            $privacyShutdownStore === true && !localUserStore.getMicrophonePrivacySettings();
+            $privacyShutdownStore === true &&
+            !localUserStore.getMicrophonePrivacySettings(
+                $currentRoomStore?.defaultMicrophonePrivacySettings ?? Room.DEFAULT_MICROPHONE_PRIVACY_SETTINGS,
+            );
         const shouldDisableCameraForPrivacy =
-            $privacyShutdownStore === true && !localUserStore.getCameraPrivacySettings();
+            $privacyShutdownStore === true &&
+            !localUserStore.getCameraPrivacySettings(
+                $currentRoomStore?.defaultCameraPrivacySettings ?? Room.DEFAULT_CAMERA_PRIVACY_SETTINGS,
+            );
 
         // Audio constraints always apply
         if (

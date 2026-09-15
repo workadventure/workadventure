@@ -249,6 +249,16 @@ export const EnvironmentVariables = z.object({
     SKIP_CAMERA_PAGE: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Whether to skip the camera permission request page. Defaults to false."),
+    DEFAULT_CAMERA_PRIVACY_SETTINGS: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "Initial value of the camera privacy setting ('keep camera enabled when the tab is away') for users who have not set their own preference. Defaults to false.",
+        ),
+    DEFAULT_MICROPHONE_PRIVACY_SETTINGS: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe(
+            "Initial value of the microphone privacy setting ('keep microphone enabled when the tab is away') for users who have not set their own preference. Defaults to true.",
+        ),
     BYPASS_PWA: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe(
