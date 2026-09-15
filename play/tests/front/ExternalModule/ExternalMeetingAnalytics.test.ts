@@ -29,13 +29,18 @@ describe("ExternalMeetingAnalytics", () => {
         vi.restoreAllMocks();
     });
 
-    it("reports a Teams area as an external meeting", () => {
+    it("reports an external area under the name its module declares", () => {
         externalMeetingStarted("teams", "area-1", "https://play.test/@/team/world/room");
 
         expect(opened).toEqual([
             {
                 name: "meeting.ended",
-                properties: { meetingProvider: "teams", meetingKind: "external", meetingId: "area-1" },
+                properties: {
+                    meetingProvider: "external",
+                    externalMeetingProviderName: "teams",
+                    meetingKind: "external",
+                    meetingId: "area-1",
+                },
             },
         ]);
         // The periods this client reports for itself have to name the meeting too.
@@ -46,14 +51,23 @@ describe("ExternalMeetingAnalytics", () => {
         expect(currentMeetingProperties()).toEqual({});
     });
 
-    it("says nothing for a module whose areas are not meetings we can name", () => {
-        // A module declaring a meeting area under a subtype with no provider: an
-        // unattributable row in the meeting series is worse than none, and area.dwell
-        // still measures the visit.
+    it("reports a module it has never heard of, rather than dropping it", () => {
+        // Which extensions exist is not this module's business. A list of the ones we
+        // happen to know would silently stop measuring the next one written.
         externalMeetingStarted("some-other-module", "area-2", "https://play.test/@/team/world/room");
 
-        expect(opened).toEqual([]);
-        expect(currentMeetingProperties()).toEqual({});
+        expect(opened).toEqual([
+            {
+                name: "meeting.ended",
+                properties: {
+                    meetingProvider: "external",
+                    externalMeetingProviderName: "some-other-module",
+                    meetingKind: "external",
+                    meetingId: "area-2",
+                },
+            },
+        ]);
+        expect(currentMeetingProperties()).toEqual({ meetingId: "area-2" });
     });
 
     it("does not leave the previous meeting open when a leave is missed", () => {
@@ -62,6 +76,6 @@ describe("ExternalMeetingAnalytics", () => {
 
         expect(closed).toBe(1);
         expect(opened.map((event) => event.properties.meetingId)).toEqual(["area-1", "area-2"]);
-        expect(opened[1].properties.meetingProvider).toBe("google_meet");
+        expect(opened[1].properties.externalMeetingProviderName).toBe("google");
     });
 });
