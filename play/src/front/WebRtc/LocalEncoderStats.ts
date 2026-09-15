@@ -11,8 +11,14 @@ import type { WebRtcQualityLimitationReason, WebRtcSenderStats } from "../Compon
 export type EncoderCategory = "video" | "screenSharing";
 
 export interface LocalEncoderStats extends WebRtcSenderStats {
-    // Number of encoders aggregated (P2P: one per peer)
-    encoderCount: number;
+    /**
+     * The readings this aggregate was computed from (P2P: one per peer).
+     *
+     * The fields above are a summary meant for the feedback tile; every one of them describes a different encoder
+     * when they disagree, and which one changes from second to second. Anything deciding something
+     * (CpuLimitationDetector) reads the set instead.
+     */
+    encoders: WebRtcSenderStats[];
 }
 
 export type EncoderType = "software" | "hardware" | "unknown";
@@ -58,7 +64,7 @@ export function aggregateSenderStats(values: (WebRtcSenderStats | undefined)[]):
     );
     const largest = stats.reduce((a, b) => (b.frameWidth * b.frameHeight > a.frameWidth * a.frameHeight ? b : a));
     return {
-        source: stats.length > 1 ? `${stats[0].source} (${stats.length} encoders)` : stats[0].source,
+        source: stats[0].source,
         frameWidth: largest.frameWidth,
         frameHeight: largest.frameHeight,
         mimeType: worst.mimeType ?? stats.find((s) => s.mimeType !== undefined)?.mimeType,
@@ -68,7 +74,7 @@ export function aggregateSenderStats(values: (WebRtcSenderStats | undefined)[]):
         encoderImplementation:
             worst.encoderImplementation ??
             stats.find((s) => s.encoderImplementation !== undefined)?.encoderImplementation,
-        encoderCount: stats.length,
+        encoders: stats,
     };
 }
 

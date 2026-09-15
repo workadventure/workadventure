@@ -101,8 +101,9 @@ async function launchBob(): Promise<Browser> {
 async function sentCodec(page: Page): Promise<string> {
     const box = page.getByTestId("encoder-stats").first();
     await expect(box).toBeVisible({ timeout: 60_000 });
-    // The cells of the box run together in textContent ("Codec:video/VP9Source:...")
-    const codecOf = async () => ((await box.textContent()) ?? "").match(/Codec:\s*video\/(av1|vp9|vp8|h264)/i)?.[1];
+    // One encoder here (a single peer): the cell lists them all, joined by "/"
+    const cell = box.getByTestId("encoder-codec");
+    const codecOf = async () => ((await cell.textContent()) ?? "").match(/^(av1|vp9|vp8|h264)$/i)?.[1];
     await expect.poll(codecOf, { timeout: 30_000 }).toBeTruthy();
     const codec = await codecOf();
     if (!codec) throw new Error("No codec displayed");

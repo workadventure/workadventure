@@ -15,6 +15,7 @@ import { localeDetector } from "../Utils/locales";
 import { notificationPlayingStore } from "../Stores/NotificationStore";
 import { LL } from "../../i18n/i18n-svelte";
 import infoIcon from "../Components/images/info.svg";
+import { startCpuLimitationDetectors } from "./CpuLimitationDetector";
 
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
@@ -23,6 +24,7 @@ export class MediaManager {
     private userInputManager?: UserInputManager;
 
     constructor() {
+        startCpuLimitationDetectors();
         localeDetector()
             .catch((e) => {
                 console.error("Cannot load locale on media manager", e);

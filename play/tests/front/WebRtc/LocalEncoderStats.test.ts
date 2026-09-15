@@ -46,26 +46,24 @@ describe("aggregateSenderStats", () => {
     });
 
     it("keeps a single encoder as is", () => {
-        expect(aggregateSenderStats([senderStats()])).toEqual({ ...senderStats(), encoderCount: 1 });
+        expect(aggregateSenderStats([senderStats()])).toEqual({ ...senderStats(), encoders: [senderStats()] });
     });
 
-    it("reports the worst case over several encoders", () => {
-        const aggregate = aggregateSenderStats([
-            senderStats({ fps: 30, bandwidth: 100_000 }),
-            undefined,
-            senderStats({
-                fps: 12,
-                bandwidth: 50_000,
-                frameWidth: 1280,
-                frameHeight: 720,
-                qualityLimitationReason: "cpu",
-                mimeType: "video/AV1",
-                encoderImplementation: "libaom",
-            }),
-            senderStats({ fps: 20, bandwidth: 25_000, qualityLimitationReason: "bandwidth" }),
-        ]);
-        expect(aggregate).toEqual({
-            source: "P2P (3 encoders)",
+    it("reports the worst case over several encoders, and keeps the readings it summarises", () => {
+        const fine = senderStats({ fps: 30, bandwidth: 100_000 });
+        const cpuLimited = senderStats({
+            fps: 12,
+            bandwidth: 50_000,
+            frameWidth: 1280,
+            frameHeight: 720,
+            qualityLimitationReason: "cpu",
+            mimeType: "video/AV1",
+            encoderImplementation: "libaom",
+        });
+        const bandwidthLimited = senderStats({ fps: 20, bandwidth: 25_000, qualityLimitationReason: "bandwidth" });
+
+        expect(aggregateSenderStats([fine, undefined, cpuLimited, bandwidthLimited])).toEqual({
+            source: "P2P",
             frameWidth: 1280,
             frameHeight: 720,
             mimeType: "video/AV1",
@@ -73,7 +71,8 @@ describe("aggregateSenderStats", () => {
             fps: 12,
             qualityLimitationReason: "cpu",
             encoderImplementation: "libaom",
-            encoderCount: 3,
+            // The summary above describes cpuLimited alone: whoever decides something reads these instead
+            encoders: [fine, cpuLimited, bandwidthLimited],
         });
     });
 });
@@ -87,20 +86,16 @@ describe("localEncoderStatsStore", () => {
 
         const unregisterFirst = registerLocalEncoderStats("video", first);
         const unregisterSecond = registerLocalEncoderStats("video", second);
-        expect(get(localEncoderStatsStore.video)?.encoderCount).toBe(1);
+        expect(get(localEncoderStatsStore.video)?.encoders).toHaveLength(1);
         expect(get(localEncoderStatsStore.screenSharing)).toBeUndefined();
 
         second.set(senderStats({ qualityLimitationReason: "cpu" }));
-        expect(get(localEncoderStatsStore.video)).toMatchObject({
-            encoderCount: 2,
-            qualityLimitationReason: "cpu",
-        });
+        expect(get(localEncoderStatsStore.video)?.encoders).toHaveLength(2);
+        expect(get(localEncoderStatsStore.video)).toMatchObject({ qualityLimitationReason: "cpu" });
 
         unregisterSecond();
-        expect(get(localEncoderStatsStore.video)).toMatchObject({
-            encoderCount: 1,
-            qualityLimitationReason: "none",
-        });
+        expect(get(localEncoderStatsStore.video)?.encoders).toHaveLength(1);
+        expect(get(localEncoderStatsStore.video)).toMatchObject({ qualityLimitationReason: "none" });
 
         unregisterFirst();
         expect(get(localEncoderStatsStore.video)).toBeUndefined();
