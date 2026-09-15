@@ -1,209 +1,141 @@
+import { codecPerformance, retryGranted, type CodecDirection } from "./CodecPerformance";
+import { isAndroid, isIOS } from "./DeviceUtils";
+
 export type VideoQualitySetting = "low" | "recommended" | "high";
 
-interface Preset {
-    pixels: number;
-    bitrate: {
-        low: number;
-        recommended: number;
-        high: number;
-    };
-    fps: {
-        low: number;
-        recommended: number;
-        high: number;
-    };
+export type VideoCodec = "av1" | "vp9" | "h264" | "vp8";
+
+/**
+ * Codecs we are willing to encode (or decode) with at a given frame size, best first. The transport keeps the first
+ * one the browser supports.
+ *
+ * AV1 and VP9 are software encoders on most machines. A weak laptop cannot afford them at 720p, and the "low"
+ * quality setting is the user telling us so; but the browser knows better than a rule: it remembers whether each
+ * codec ran smoothly at that size on this machine (see CodecPerformance). A phone only gets a codec its hardware
+ * handles. H.264 is the floor: a hardware encoder nearly everywhere (VideoToolbox, MediaFoundation, MediaCodec), and
+ * always negotiated. VP8 is not listed: every browser negotiates it anyway, and it is only ever software.
+ */
+export function preferredVideoCodecs(
+    category: "video" | "screenSharing",
+    quality: VideoQualitySetting,
+    direction: CodecDirection,
+    pixels: number,
+): VideoCodec[] {
+    const mobile = isAndroid() || isIOS();
+    const candidates: VideoCodec[] =
+        category === "screenSharing" && quality !== "low" ? ["av1", "vp9", "h264"] : ["vp9", "h264"];
+    return candidates.filter((codec) => {
+        if (codec === "h264") {
+            return true;
+        }
+        const performance = codecPerformance(direction, codec, pixels);
+        if (!performance) {
+            // No verdict (probe pending, or a browser without the API): a desktop tries, a phone does not
+            return !mobile;
+        }
+        if (mobile && !performance.powerEfficient) {
+            return false;
+        }
+        return performance.supported && (performance.smooth || retryGranted(direction, codec));
+    });
 }
 
-// Source: https://livekit.io/webrtc/bitrate-guide
-export const videoPresets = {
-    h90: {
-        pixels: 160 * 90,
-        bitrate: {
-            low: 20_000,
-            recommended: 35_000,
-            high: 80_000,
-        },
-        fps: {
-            low: 15,
-            recommended: 20,
-            high: 30,
-        },
-    },
-    h180: {
-        pixels: 320 * 180,
-        bitrate: {
-            low: 50_000,
-            recommended: 90_000,
-            high: 210_000,
-        },
-        fps: {
-            low: 15,
-            recommended: 20,
-            high: 30,
-        },
-    },
-    h216: {
-        pixels: 384 * 216,
-        bitrate: {
-            low: 70_000,
-            recommended: 120_000,
-            high: 250_000,
-        },
-        fps: {
-            low: 15,
-            recommended: 20,
-            high: 30,
-        },
-    },
-    h360: {
-        pixels: 640 * 360,
-        bitrate: {
-            low: 150_000,
-            recommended: 270_000,
-            high: 550_000,
-        },
-        fps: {
-            low: 15,
-            recommended: 20,
-            high: 30,
-        },
-    },
-    h540: {
-        pixels: 960 * 540,
-        bitrate: {
-            low: 260_000,
-            recommended: 450_000,
-            high: 1_100_000,
-        },
-        fps: {
-            low: 15,
-            recommended: 20,
-            high: 30,
-        },
-    },
-    h720: {
-        pixels: 1280 * 720,
-        bitrate: {
-            low: 400_000,
-            recommended: 700_000,
-            high: 1_800_000,
-        },
-        fps: {
-            low: 20,
-            recommended: 30,
-            high: 30,
-        },
-    },
-    h1080: {
-        pixels: 1920 * 1080,
-        bitrate: {
-            low: 700_000,
-            recommended: 1_200_000,
-            high: 4_000_000,
-        },
-        fps: {
-            low: 20,
-            recommended: 30,
-            high: 30,
-        },
-    },
-    h1440: {
-        pixels: 2560 * 1440,
-        bitrate: {
-            low: 1_000_000,
-            recommended: 5_000_000,
-            high: 8_700_000,
-        },
-        fps: {
-            low: 20,
-            recommended: 30,
-            high: 30,
-        },
-    },
-    h2160: {
-        pixels: 3840 * 2160,
-        bitrate: {
-            low: 1_500_000,
-            recommended: 8_000_000,
-            high: 18_000_000,
-        },
-        fps: {
-            low: 20,
-            recommended: 30,
-            high: 30,
-        },
-    },
-} satisfies Record<string, Preset>;
+/**
+ * The codec behind a negotiated mime type ("video/VP9"), if it is one we know.
+ */
+export function videoCodecFromMimeType(mimeType: string | undefined): VideoCodec | undefined {
+    const codec = mimeType?.toLowerCase().split("/").pop();
+    return codec === "av1" || codec === "vp9" || codec === "h264" || codec === "vp8" ? codec : undefined;
+}
 
-const videoMaxPreset: Preset = {
-    pixels: 0,
-    bitrate: {
-        low: 2_000_000,
-        recommended: 8_000_000,
-        high: 10_000_000,
-    },
-    fps: {
-        low: 20,
-        recommended: 30,
-        high: 30,
+/**
+ * What to negotiate on a P2P connection: a browser encodes whatever the peer asks for, so nothing we cannot afford
+ * to encode may be negotiated at all. Ordered by what we prefer to decode.
+ * Judged at 720p, the largest frame we may have to encode, since the set cannot change afterwards.
+ *
+ * An iPhone decodes VP9 in hardware but encodes it in software: this gives H.264 only, both ways.
+ */
+export function negotiableVideoCodecs(category: "video" | "screenSharing", quality: VideoQualitySetting): VideoCodec[] {
+    const encodable = preferredVideoCodecs(category, quality, "encode", 1280 * 720);
+    return preferredVideoCodecs(category, quality, "decode", 1280 * 720).filter((codec) => encodable.includes(codec));
+}
+
+// Bitrate needed for the same visual quality, relative to AV1. Each codec generation saves roughly 30 %; WebRTC
+// negotiates constrained baseline H.264, which is VP8-class.
+const BITRATE_FACTOR: Record<VideoCodec, number> = { av1: 1, vp9: 1.4, h264: 2, vp8: 2 };
+
+// Frames above this size are budgeted as if they were this size
+const MAX_PIXELS = 1920 * 1080;
+
+/**
+ * How the bitrate budget of a stream grows with its size: bitrate = anchor × (pixels / anchorPixels) ^ exponent,
+ * a straight line on a log-log chart. Continuous on purpose: the P2P viewer reports arbitrary tile sizes that move
+ * with the layout, and a stepped table jumps at every step.
+ */
+interface BitrateCurve {
+    // Codec the anchors are expressed for
+    anchorCodec: VideoCodec;
+    anchorPixels: number;
+    // Bitrate at anchorPixels, per quality setting
+    anchor: Record<VideoQualitySetting, number>;
+    // Natural video with motion and noise needs ~0.75, static screen content ~0.5
+    exponent: number;
+    fps: (pixels: number, quality: VideoQualitySetting) => number;
+}
+
+// Fitted on the LiveKit bitrate guide (https://livekit.io/webrtc/bitrate-guide): within 20 % of its table up to 1080p
+const cameraCurve: BitrateCurve = {
+    anchorCodec: "vp9",
+    anchorPixels: 1280 * 720,
+    anchor: { low: 400_000, recommended: 700_000, high: 1_800_000 },
+    exponent: 0.75,
+    // Small tiles are cheaper to watch at a lower frame rate
+    fps: (pixels, quality) => {
+        const large = pixels >= 1280 * 720;
+        switch (quality) {
+            case "low":
+                return large ? 20 : 15;
+            case "recommended":
+                return large ? 30 : 20;
+            case "high":
+                return 30;
+            default: {
+                const _exhaustiveCheck: never = quality;
+                throw new Error(`Unhandled quality setting: ${_exhaustiveCheck}`);
+            }
+        }
     },
 };
 
-/*export const screenSharePresets = {
-    h360: {
-        pixels: 640 * 360,
-        bitrate: {
-            low: 150_000,
-            recommended: 400_000,
-            high: 800_000,
-        },
-        fps: {
-            low: 15,
-            recommended: 30,
-            high: 60,
-        },
-    },
-    h720: {
-        pixels: 1280 * 720,
-        bitrate: {
-            low: 400_000,
-            recommended: 1_500_000,
-            high: 2_500_000,
-        },
-        fps: {
-            low: 15,
-            recommended: 30,
-            high: 60,
-        },
-    },
-    h1080: {
-        pixels: 1920 * 1080,
-        bitrate: {
-            low: 700_000,
-            recommended: 2_500_000,
-            high: 4_000_000,
-        },
-        fps: {
-            low: 15,
-            recommended: 30,
-            high: 60,
-        },
-    },
-} satisfies Record<string, Preset>;
+const screenShareCurve: BitrateCurve = {
+    anchorCodec: "av1",
+    anchorPixels: MAX_PIXELS,
+    anchor: { low: 1_000_000, recommended: 3_000_000, high: 4_500_000 },
+    exponent: 0.5,
+    fps: () => 30,
+};
 
-const screenShareMaxPreset: Preset = {
-    pixels: 0,
-    bitrate: {
-        low: 1_000_000,
-        recommended: 4_000_000,
-        high: 7_000_000,
-    },
-    fps: {
-        low: 15,
-        recommended: 30,
-        high: 60,
-    },
-};*/
+/**
+ * Select the most appropriate bandwidth and fps for your resolution and the codec you encode with.
+ */
+export function selectVideoPreset(
+    displayHeight: number,
+    displayWidth: number,
+    isScreenShare: boolean,
+    quality: VideoQualitySetting,
+    codec: VideoCodec,
+): {
+    bitrate: number;
+    fps: number;
+} {
+    const curve = isScreenShare ? screenShareCurve : cameraCurve;
+    const pixels = Math.min(displayWidth * displayHeight, MAX_PIXELS);
+    const bitrate =
+        curve.anchor[quality] *
+        Math.pow(pixels / curve.anchorPixels, curve.exponent) *
+        (BITRATE_FACTOR[codec] / BITRATE_FACTOR[curve.anchorCodec]);
+    return { bitrate: Math.round(bitrate), fps: curve.fps(pixels, quality) };
+}
 
 /**
  * Maximum capture resolution of a screen share, per quality setting.
@@ -216,78 +148,3 @@ export const screenShareMaxResolution: Record<VideoQualitySetting, MediaTrackCon
     recommended: { width: { max: 1920 }, height: { max: 1080 } },
     high: { width: { max: 2560 }, height: { max: 1440 } },
 };
-
-/**
- * Select the most appropriate bandwidth and fps for your resolution.
- */
-export function selectVideoPreset(
-    displayHeight: number,
-    displayWidth: number,
-    isScreenShare: boolean,
-    quality: VideoQualitySetting,
-): {
-    bitrate: number;
-    fps: number;
-} {
-    if (isScreenShare) {
-        return selectAV1Preset(displayWidth, displayHeight, quality);
-    } else {
-        return selectVP9Preset(displayWidth, displayHeight, Object.values(videoPresets), videoMaxPreset, quality);
-    }
-}
-
-function selectVP9Preset(
-    width: number,
-    height: number,
-    presets: Preset[],
-    maxPreset: Preset,
-    quality: VideoQualitySetting,
-): {
-    bitrate: number;
-    fps: number;
-} {
-    for (const preset of presets) {
-        if (width * height <= preset.pixels) {
-            return {
-                bitrate: preset.bitrate[quality],
-                fps: preset.fps[quality],
-            };
-        }
-    }
-    return {
-        bitrate: maxPreset.bitrate[quality],
-        fps: maxPreset.fps[quality],
-    };
-}
-
-/**
- * The bitrate for AV1 scales with the frame size (sqrt of the pixel ratio vs 1920x1080) and is capped by the selected quality maximum.
- */
-export function selectAV1Preset(
-    width: number,
-    height: number,
-    quality: VideoQualitySetting,
-): { bitrate: number; fps: number } {
-    let maxBitrate: number;
-    switch (quality) {
-        case "low":
-            maxBitrate = 1_000_000;
-            break;
-        case "recommended":
-            maxBitrate = 3_000_000;
-            break;
-        case "high":
-            maxBitrate = 4_500_000;
-            break;
-        default: {
-            const _exhaustiveCheck: never = quality;
-            throw new Error(`Unhandled quality setting: ${_exhaustiveCheck}`);
-        }
-    }
-
-    const bitrate = Math.round(Math.min(maxBitrate, Math.sqrt((width * height) / (1920 * 1080)) * maxBitrate));
-    return {
-        bitrate,
-        fps: 30,
-    };
-}
