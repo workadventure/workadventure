@@ -194,6 +194,24 @@ const meetingActionProperties = z.object({
     ),
 });
 
+/**
+ * What carried the meeting.
+ *
+ * `external` rather than one entry per vendor: a Teams or a Google Meet area belongs
+ * to an extension, and enumerating them here would make this catalog — which every
+ * deployment ships — change every time someone writes a new one. The extension names
+ * itself in `externalMeetingProviderName` instead.
+ */
+const MEETING_PROVIDERS = ["livekit", "jitsi", "webrtc", "external"] as const;
+
+/** Which extension held the meeting. Only meaningful when the provider is `external`. */
+const externalMeetingProviderName = z
+  .string()
+  .optional()
+  .describe(
+    "Name the extension declares itself under, when meetingProvider is `external`. Absent for the providers WorkAdventure carries itself.",
+  );
+
 /** Shared by the meeting lifecycle events emitted from AnalyticsClient. */
 const meetingContextProperties = z.object({
   meetingId: z
@@ -202,9 +220,10 @@ const meetingContextProperties = z.object({
     .describe("Identifier of the meeting, when the provider exposes one."),
   roomId: z.string().optional().describe("Room the meeting belongs to."),
   meetingProvider: z
-    .enum(["livekit", "jitsi", "webrtc"])
+    .enum(MEETING_PROVIDERS)
     .optional()
     .describe("Which media backend carried the meeting."),
+  externalMeetingProviderName,
 });
 
 /**
@@ -722,9 +741,10 @@ export const ANALYTICS_EVENTS = {
     properties: z.object({
       roomId: z.string().describe("Room containing the meeting area."),
       meetingProvider: z
-        .enum(["livekit", "jitsi", "webrtc"])
+        .enum(MEETING_PROVIDERS)
         .optional()
         .describe("Media backend of the area."),
+      externalMeetingProviderName,
     }),
     description: "The user walked into a meeting area.",
   }),
@@ -765,16 +785,17 @@ export const ANALYTICS_EVENTS = {
       // change mid-meeting. Still filled by the one path the back cannot see — Jitsi,
       // whose areas join no space server-side.
       meetingProvider: z
-        .enum(["livekit", "jitsi", "webrtc"])
+        .enum(MEETING_PROVIDERS)
         .optional()
         .describe(
           "Which media backend carried the meeting. It does NOT say what kind of meeting it was — a meeting area of four or fewer never leaves webrtc — which is what meetingKind is for.",
         ),
+      externalMeetingProviderName,
       meetingKind: z
-        .enum(["bubble", "area"])
+        .enum(["bubble", "area", "external"])
         .optional()
         .describe(
-          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet. Filled by the back, which knows a Group from an area Space by construction; absent on the rows a client still opens.",
+          "What the meeting was: a spontaneous proximity bubble, an area people went to in order to meet, or `external` — an area that opens a meeting somewhere else entirely (Teams, Google Meet), where what is measured is time spent in the AREA and not in the call, which happens in another tab or another app. Filled by the back for bubbles and areas; by the client for the ones the back cannot see.",
         ),
       participantCount: z
         .number()
@@ -1394,7 +1415,7 @@ export const ANALYTICS_EVENTS = {
     properties: z.object({
       meetingId: z.string().describe("Meeting this participation belongs to."),
       meetingKind: z
-        .enum(["bubble", "area"])
+        .enum(["bubble", "area", "external"])
         .describe(
           "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet.",
         ),
