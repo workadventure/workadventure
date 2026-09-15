@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/node";
 import { Server, ServerCredentials } from "@grpc/grpc-js";
 import { RoomApiService } from "@workadventure/messages/src/ts-proto-generated/room-api";
 import { setErrorHandler } from "@workadventure/shared-utils";
+import { runDrains } from "@workadventure/shared-utils";
 import app from "./pusher/app";
 import {
     PUSHER_HTTP_PORT,
@@ -19,7 +20,6 @@ import {
     DRAIN_TIMEOUT_MS,
 } from "./pusher/enums/EnvironmentVariable";
 import RoomApiServer from "./room-api/RoomApiServer";
-import { runDrains } from "./pusher/services/ShutdownDrains";
 import { analyticsTimedEventTracker } from "./pusher/services/AnalyticsTimedEventTracker";
 
 // In production, the current working directory is "dist".

@@ -12,6 +12,7 @@ import {
     type VideoQualityReportMessage,
     type VideoQualitySampleMessage,
 } from "@workadventure/messages";
+import { registerDrainableService } from "@workadventure/shared-utils";
 import type { SocketData } from "../models/Websocket/SocketData";
 import {
     ADMIN_API_TOKEN,
@@ -21,7 +22,6 @@ import {
     ANALYTICS_MAX_QUEUE_SIZE,
     ANALYTICS_TIMEOUT_MS,
 } from "../enums/EnvironmentVariable";
-import { registerDrainableService } from "./ShutdownDrains";
 
 const SCHEMA_VERSION = 1;
 const RETRY_JITTER_MIN_MS = 50;
