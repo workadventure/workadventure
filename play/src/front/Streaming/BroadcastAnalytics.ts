@@ -1,7 +1,7 @@
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { isMeetingSpace } from "../Rules/MeetingRules";
-import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
+import type { SpaceInterface } from "../Space/SpaceInterface";
 
 /**
  * Measures a broadcast from both ends, for one space.
@@ -20,9 +20,7 @@ import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface"
  */
 export function trackBroadcastAnalytics(space: SpaceInterface): () => void {
     if (isMeetingSpace(space.filterType)) {
-        return () => {
-            // Nothing was opened.
-        };
+        return () => {};
     }
 
     // Read per open rather than once: the world megaphone space is handed its
@@ -51,29 +49,27 @@ export function trackBroadcastAnalytics(space: SpaceInterface): () => void {
         endAudience = undefined;
     };
 
-    const trackSpeaker = (user: SpaceUserExtended): void => {
+    // Leaving is going off air, which is why the same function takes the three events.
+    const trackSpeaker = (spaceUserId: string, onAir: boolean): void => {
         // Own airtime is the other event. Without this, a speaker would report the
         // whole of their own broadcast as audience time too.
-        if (user.spaceUserId === space.mySpaceUserId) {
+        if (spaceUserId === space.mySpaceUserId) {
             return;
         }
 
-        if (user.megaphoneState) {
-            speakers.add(user.spaceUserId);
+        if (onAir) {
+            speakers.add(spaceUserId);
         } else {
-            speakers.delete(user.spaceUserId);
+            speakers.delete(spaceUserId);
         }
 
         syncAudience();
     };
 
     const subscriptions = [
-        space.observeUserJoined.subscribe(trackSpeaker),
-        space.observeUserUpdated.subscribe(({ newUser }) => trackSpeaker(newUser)),
-        space.observeUserLeft.subscribe((user) => {
-            speakers.delete(user.spaceUserId);
-            syncAudience();
-        }),
+        space.observeUserJoined.subscribe((user) => trackSpeaker(user.spaceUserId, user.megaphoneState)),
+        space.observeUserUpdated.subscribe(({ newUser }) => trackSpeaker(newUser.spaceUserId, newUser.megaphoneState)),
+        space.observeUserLeft.subscribe((user) => trackSpeaker(user.spaceUserId, false)),
     ];
 
     // In a broadcast space this store is the local `megaphoneState` and nothing else —
@@ -100,13 +96,9 @@ export function trackBroadcastAnalytics(space: SpaceInterface): () => void {
     });
 
     return () => {
-        for (const subscription of subscriptions) {
-            subscription.unsubscribe();
-        }
+        subscriptions.forEach((subscription) => subscription.unsubscribe());
         unsubscribeAirtime();
         endAudience?.();
-        endAudience = undefined;
         endAirtime?.();
-        endAirtime = undefined;
     };
 }
