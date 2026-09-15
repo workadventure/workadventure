@@ -195,25 +195,6 @@ const meetingContextProperties = z.object({
  * a broadcast to its audience — without it the two families cannot be related at all,
  * since a listener has no other handle on the broadcast they are hearing.
  */
-/**
- * The meeting a period happened in, when it happened in one.
- *
- * This is what makes a meeting replayable: on its own a speaking period says only
- * that someone spoke, and relating it to a meeting meant joining on time ranges
- * across every participant. Optional because a microphone can be open, and someone
- * can talk, outside any meeting at all.
- *
- * No roomId beside it: the envelope already carries `roomId` as a column of its own.
- */
-const dwellMeetingProperties = z.object({
-  meetingId: z
-    .string()
-    .optional()
-    .describe(
-      "Meeting this period happened in, absent when it happened outside one.",
-    ),
-});
-
 const broadcastProperties = z.object({
   broadcastId: z
     .string()
@@ -228,6 +209,16 @@ const broadcastProperties = z.object({
     .enum(["megaphone", "speaker_zone"])
     .describe(
       "Where the broadcast was started: the world megaphone, or a speaker zone on the map.",
+    ),
+});
+
+/** The meeting a dwell period happened in; roomId is already an envelope column. */
+const dwellMeetingProperties = z.object({
+  meetingId: z
+    .string()
+    .optional()
+    .describe(
+      "Meeting this period happened in, absent when it happened outside one.",
     ),
 });
 

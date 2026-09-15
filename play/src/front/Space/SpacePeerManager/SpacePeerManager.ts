@@ -594,9 +594,9 @@ export class SpacePeerManager {
     }
 
     private endMeetingAnalytics(): void {
-        if (this.endMeeting !== undefined) {
-            meetingEnded(this.space.getName());
-        }
+        // Unguarded: meetingEnded only clears a meeting whose id matches, so calling it
+        // for a meeting that never opened here is a no-op.
+        meetingEnded(this.space.getName());
         this.endMeeting?.();
         this.endMeeting = undefined;
     }
