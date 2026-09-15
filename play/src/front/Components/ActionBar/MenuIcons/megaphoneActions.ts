@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
-import type { EndTimedAnalyticsEvent } from "../../../Administration/TimedAnalyticsEvent";
 import {
     currentLiveStreamingSpaceStore,
     megaphoneSpaceStore,
@@ -28,21 +27,10 @@ function stopStreamingOnSpace(space: SpaceInterface | undefined): void {
     }
 }
 
-/** Ends the broadcast currently on air. One interval, however often start is pressed. */
-let endBroadcast: EndTimedAnalyticsEvent | undefined;
-
 export function startMegaphoneLive(): void {
-    // PostHog counts the press, as it always has. The interval must not restart: this
-    // function is reachable twice without an intervening stop — the modal and the
-    // action bar both lead here — and reopening would lose the time already broadcast.
+    // PostHog counts the press, as it always has. The time on air is measured from the
+    // space itself, by trackBroadcastAnalytics — a speaker zone never comes through here.
     analyticsClient.startMegaphone();
-    endBroadcast ??= analyticsClient.openTimedEvent(
-        "megaphone.ended",
-        {},
-        // A reconnect ends the interval without ending the broadcast, and nothing fires
-        // a second start. This is the case that made the whole reopen mechanism exist.
-        { reopenOnReconnect: true },
-    );
     const megaphoneSpace = get(megaphoneSpaceStore);
     currentLiveStreamingSpaceStore.set(megaphoneSpace);
     requestedMegaphoneStore.set(true);
@@ -51,8 +39,6 @@ export function startMegaphoneLive(): void {
 
 export function stopMegaphoneLive(): void {
     analyticsClient.stopMegaphone();
-    endBroadcast?.();
-    endBroadcast = undefined;
     stopStreamingOnSpace(get(currentLiveStreamingSpaceStore));
     requestedMegaphoneStore.set(false);
     currentLiveStreamingSpaceStore.set(undefined);

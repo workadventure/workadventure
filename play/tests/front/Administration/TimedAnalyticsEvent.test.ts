@@ -124,7 +124,11 @@ describe("openTimedEvent and the reconnect registry", () => {
         // pusher's side, nothing fires a second start — the broadcast never stopped,
         // the user is still in the area — and without this the rest of that stay is
         // invisible for the lifetime of the tab.
-        const endBroadcast = analyticsClient.openTimedEvent("megaphone.ended", {}, { reopenOnReconnect: true });
+        const endBroadcast = analyticsClient.openTimedEvent(
+            "megaphone.ended",
+            { broadcastId: "megaphone-space", broadcastKind: "megaphone" },
+            { reopenOnReconnect: true },
+        );
 
         analyticsClient.setAdminAnalyticsSender(undefined);
         const secondSocket = makeSender();
@@ -176,7 +180,11 @@ describe("openTimedEvent and the reconnect registry", () => {
     });
 
     it("stops resuming once the user has ended it, even while disconnected", () => {
-        const endBroadcast = analyticsClient.openTimedEvent("megaphone.ended", {}, { reopenOnReconnect: true });
+        const endBroadcast = analyticsClient.openTimedEvent(
+            "megaphone.ended",
+            { broadcastId: "megaphone-space", broadcastKind: "megaphone" },
+            { reopenOnReconnect: true },
+        );
 
         analyticsClient.setAdminAnalyticsSender(undefined);
         endBroadcast();

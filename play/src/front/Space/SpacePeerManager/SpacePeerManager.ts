@@ -18,6 +18,8 @@ import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import type { EndTimedAnalyticsEvent } from "../../Administration/TimedAnalyticsEvent";
+import { isMeetingSpace } from "../../Rules/MeetingRules";
+import { trackBroadcastAnalytics } from "../../Streaming/BroadcastAnalytics";
 import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
@@ -144,6 +146,7 @@ export class SpacePeerManager {
      * other one.
      */
     private endMeeting: EndTimedAnalyticsEvent | undefined;
+    private readonly stopBroadcastAnalytics: () => void;
 
     private readonly _effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
 
@@ -187,6 +190,7 @@ export class SpacePeerManager {
         private _recordingStore = recordingStore,
     ) {
         this._communicationState = new DefaultCommunicationState();
+        this.stopBroadcastAnalytics = trackBroadcastAnalytics(space);
 
         this._effectiveScreenSharingLocalStreamStore = deriveSwitchStore(
             _screenSharingLocalStreamStore,
@@ -564,16 +568,23 @@ export class SpacePeerManager {
         this.cancelPendingRecorderNameResolution(this.space.getName());
         this._recordingStore.removeSpace(this.space.getName());
         this.endMeetingAnalytics();
+        this.stopBroadcastAnalytics();
     }
 
     /**
-     * A strategy switch is where a meeting actually starts, and the only place its
-     * media backend is known for certain. `webrtc` is a spontaneous bubble,
-     * `livekit` a meeting area; the space name is the meeting id, so every
-     * participant of one meeting reports the same one.
+     * A strategy switch is the only place a meeting's media backend is known for
+     * certain. `webrtc` is a spontaneous bubble, `livekit` a meeting area; the space
+     * name is the meeting id, so every participant of one meeting reports the same one.
+     *
+     * It is not, on its own, where a meeting starts: the back sends the same switch to
+     * whoever merely joins a media-syncing space, the megaphone space included — hence
+     * the guard. See `isMeetingSpace`.
      */
     private startMeetingAnalytics(meetingProvider: "webrtc" | "livekit"): void {
         this.endMeetingAnalytics();
+        if (!isMeetingSpace(this.space.filterType)) {
+            return;
+        }
         this.endMeeting = analyticsClient.openTimedEvent("meeting.ended", {
             meetingProvider,
             meetingId: this.space.getName(),

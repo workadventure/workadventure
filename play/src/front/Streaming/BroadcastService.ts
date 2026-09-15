@@ -2,7 +2,7 @@ import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { FilterType } from "@workadventure/messages";
 import { get, type Unsubscriber } from "svelte/store";
-import type { Subscription } from "rxjs";
+import { Subscription } from "rxjs";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 
 import * as Sentry from "@sentry/svelte";
@@ -120,43 +120,37 @@ export class BroadcastService {
             },
         );
 
-        // Check for existing speakers when joining the space
-        // This handles the case where a listener joins after speakers are already present
-        if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
-            const existingSpeakersCount = this.countSpeakers(space);
-            if (existingSpeakersCount > 0) {
-                space.startListenerStreaming();
-            }
-        }
-
         this.unsubscribes.push(
             space.observeUserJoined.subscribe((user) => {
                 if (user.megaphoneState) {
                     notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
                     this.playMegaphoneNotificationSound().catch((e) => console.error(e));
-                    if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
-                        // Start listener streaming only if this is the first speaker
-                        const speakersCount = this.countSpeakers(space);
-                        if (speakersCount === 1) {
-                            space.startListenerStreaming();
-                        }
-                    }
                 }
             }),
         );
 
-        this.unsubscribes.push(
-            space.observeUserLeft.subscribe((user) => {
-                // Only react when a speaker leaves, not when a listener leaves
-                if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && user.megaphoneState) {
-                    // Stop listener streaming only if there are no more speakers
-                    const speakersCount = this.countSpeakers(space);
-                    if (speakersCount === 0) {
-                        space.stopListenerStreaming();
-                    }
-                }
-            }),
-        );
+        // The audience only publishes while there is someone to publish to. The store carries
+        // its current value on subscribe, so a listener who joins after the speakers is covered
+        // by the same code path as one who was there first.
+        if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            let listenerStreaming = false;
+            this.unsubscribes.push(
+                new Subscription(
+                    space.hasRemoteSpeakerStore.subscribe((hasSpeaker) => {
+                        if (hasSpeaker === listenerStreaming) {
+                            return;
+                        }
+                        listenerStreaming = hasSpeaker;
+
+                        if (hasSpeaker) {
+                            space.startListenerStreaming();
+                        } else {
+                            space.stopListenerStreaming();
+                        }
+                    }),
+                ),
+            );
+        }
 
         this.broadcastSpaces.push(space);
 
@@ -189,20 +183,6 @@ export class BroadcastService {
         this.unsubscribes.forEach((unsubscribe) => unsubscribe.unsubscribe());
         this.megaphoneSpaceSettingsStoreUnsubscribe();
         await Promise.all(this.broadcastSpaces.map((space) => this.spaceRegistry.leaveSpace(space)));
-    }
-
-    /**
-     * Count the number of users with megaphoneState = true (speakers) in the space
-     */
-    private countSpeakers(space: SpaceInterface): number {
-        const users = get(space.usersStore);
-        let count = 0;
-        for (const user of users.values()) {
-            if (user.megaphoneState) {
-                count++;
-            }
-        }
-        return count;
     }
 
     private async playMegaphoneNotificationSound(): Promise<void> {
