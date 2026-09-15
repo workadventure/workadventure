@@ -84,7 +84,8 @@ export class UploadController {
      * Old map-storage versions answer 404 here and the uploader falls back to its configured URL.
      */
     private getUploadEndpoint() {
-        this.app.get("/upload-endpoint", passportAuthenticator, (req, res) => {
+        // Not authenticated: the URL is public (DNS, Helm values), there is nothing to protect.
+        this.app.get("/upload-endpoint", (req, res) => {
             res.json({
                 url:
                     DIRECT_UPLOAD_URL ??
