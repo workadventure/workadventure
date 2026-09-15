@@ -334,28 +334,24 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     /**
-     * What the policy decides on: the current transport, how many users are in the space, how many of them raised
-     * their cpuLimited flag. Always read here and now — a decision taken on anything else is taken on a space that
-     * may have moved on while a transition was awaited.
+     * Whether the policy wants a transition. Always read on the space here and now — a decision taken on anything
+     * else is taken on a space that may have moved on while a transition was awaited.
      */
-    private policyInputs(): [CommunicationType, number, number] {
+    private shouldTransition(): boolean {
         const users = this.space.getAllUsers();
-        return [
+        return this.policy.shouldTransition(
             this.lifecycleManager.getCurrentState().communicationType as CommunicationType,
             users.length,
             users.filter((user) => user.cpuLimited).length,
-        ];
-    }
-
-    /** Whether the policy wants a transition, on the state of the space right now. */
-    private shouldTransition(): boolean {
-        return this.policy.shouldTransition(...this.policyInputs());
+        );
     }
 
     /** What the policy would transition to, on the state of the space right now. */
     private nextStateType(): CommunicationType | null {
-        const [currentType, userCount] = this.policyInputs();
-        return this.policy.getNextStateType(currentType, userCount);
+        return this.policy.getNextStateType(
+            this.lifecycleManager.getCurrentState().communicationType as CommunicationType,
+            this.space.getAllUsers().length,
+        );
     }
 
     public handleMeetingConnectionRestartMessage(
