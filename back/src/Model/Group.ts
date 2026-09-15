@@ -1,6 +1,7 @@
 import { Subject } from "rxjs";
 import type { Movable } from "@workadventure/shared-utils";
 import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
+import { meetingAnalytics, type MeetingParticipant } from "../Services/MeetingAnalytics";
 import type { PositionInterface } from "./PositionInterface";
 import type { PositionNotifier } from "./PositionNotifier";
 import type { Zone } from "./Zone";
@@ -8,7 +9,6 @@ import type { User } from "./User";
 import type { ConnectCallback, DisconnectCallback } from "./GameRoom";
 import { GameRoom } from "./GameRoom";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { meetingAnalytics, type MeetingParticipant } from "../Services/MeetingAnalytics";
 
 export class Group implements Movable, CustomJsonReplacerInterface {
     private readonly movedSubject = new Subject<PositionInterface>();
