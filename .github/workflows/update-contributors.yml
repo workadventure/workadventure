@@ -1,0 +1,67 @@
+name: "Update contributors"
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/update-contributors.yml"
+      - "contrib/tools/generate-contributors/**"
+  pull_request_target:
+    types: [closed]
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - run: node --test contrib/tools/generate-contributors/update-contributors.test.mjs
+
+  update:
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.event.pull_request.merged == true &&
+      github.repository == 'workadventure/workadventure' &&
+      !(github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.head.ref == 'automation/update-contributors')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: update-contributors
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Always use the merged, trusted branch, never the pull request head.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: master
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - run: node --test contrib/tools/generate-contributors/update-contributors.test.mjs
+      - name: Generate contributor list
+        run: node contrib/tools/generate-contributors/update-contributors.mts
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
+        with:
+          branch: automation/update-contributors
+          base: master
+          add-paths: README.md
+          delete-branch: true
+          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          commit-message: "docs: update contributors"
+          title: "docs: update contributors"
+          body: "Updates contributor avatars from the repository contribution history after a merged pull request."
