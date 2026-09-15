@@ -122,8 +122,8 @@ Why these choices:
   Chromium builds without proprietary codecs). LiveKit rewrites an unsupported codec to VP8 on its own, and in P2P
   the browser's remaining codecs are appended after our list.
 
-A more complete treatment (automatic codec downgrade when the encoder reports it is CPU limited) is designed but not
-implemented; see the "Future work" section.
+This choice is made once per session, from what the browser remembers of past ones. What happens when the encoder
+cannot keep up with it *during* a stream is in "When the encoder cannot keep up" below.
 
 ### Applying the preference
 
@@ -209,12 +209,15 @@ subscribe to the store:
   the remaining codecs whoever initiates the renegotiation, and the bitrate budget follows the new codec on the
   `negotiated` event. The transceivers and ICE stay: viewers get a keyframe and a sub-second freeze.
 
-A raised flag is reported to PostHog as `wa_cpu_limited_flag` and each demotion as `wa_codec_downgrade` (category,
-codec left, transport); the codec change itself shows in the video quality samples through `mimeType`. Firefox
-reports no limitation reason and never reacts.
+A raised flag is reported as `media.livekit_switch.requested` (category) and each demotion as
+`media.codec.degraded` (category, codec left, transport), both declared in `AnalyticsEventCatalog.ts`. Neither has an
+entry in `AnalyticsPostHogKeys.ts`: they were added with this pipeline and PostHog never knew them, so they go to the
+analytics database only. Read them against `media.video_quality.sample`, whose `qualityLimitationReason` is what the
+decision is made on and whose `mimeType` shows the codec change itself. Firefox reports no limitation reason and
+never reacts.
 
 To see it happen: DevTools → Performance → CPU 6× slowdown, share a screen with the quality set to "high" (1440p,
-AV1), enable the video quality stats overlay: the tile reports `Limited by: cpu`, and about 70 s later the codec
+AV1), enable the video quality stats overlay: the tile reports `Limited by: cpu`, and about 40 s later the codec
 changes. The end-to-end test `tests/webrtc_cpu_limitation.spec.ts` (opt-in, `RUN_CPU_LIMITATION_E2E=1`, a few
 minutes) drives the whole chain on a deployment by making one page report every outbound video stream as
 CPU-limited: three users in a bubble, the flag, the switch to LiveKit, the bubble staying there when a member
