@@ -1,5 +1,5 @@
 import type { MatrixClient, Room } from "matrix-js-sdk";
-import { ClientEvent, EventType, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
+import { ClientEvent, EventType, MatrixError, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import type { Readable } from "svelte/store";
@@ -1204,6 +1204,55 @@ describe("MatrixChatConnection", () => {
             await matrixChatConnection["addDMRoomInAccountData"](userId, roomId);
 
             expect(mockSetAccountData).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("isUserExist", () => {
+        const getConnectionWithProfileInfo = async (getProfileInfo: ReturnType<typeof vi.fn>) => {
+            const mockMatrixClient = {
+                isGuest: vi.fn(),
+                on: vi.fn(),
+                once: vi.fn().mockImplementation((_, funcToResolve) => {
+                    funcToResolve(SyncState.Syncing);
+                }),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                startClient: vi.fn(),
+                createRoom: vi.fn(),
+                getRoom: vi.fn().mockReturnValue(null),
+                joinRoom: vi.fn().mockResolvedValue(""),
+                getProfileInfo,
+            } as unknown as MatrixClient;
+
+            return getMatrixConnection(Promise.resolve(mockMatrixClient));
+        };
+
+        it("should look the exact user up instead of searching the user directory", async () => {
+            // The user directory matches on words, so searching it for "@admin:matrix.localhost" returns any
+            // other user of matrix.localhost and reports an existing user as missing.
+            const getProfileInfo = vi.fn().mockResolvedValue({ displayname: "Admin" });
+            const matrixChatConnection = await getConnectionWithProfileInfo(getProfileInfo);
+
+            await expect(matrixChatConnection.isUserExist("@admin:matrix.localhost")).resolves.toBe(true);
+            expect(getProfileInfo).toHaveBeenCalledWith("@admin:matrix.localhost");
+        });
+
+        it("should return false when the homeserver knows no such user", async () => {
+            const matrixChatConnection = await getConnectionWithProfileInfo(
+                vi.fn().mockRejectedValue(new MatrixError({ errcode: "M_NOT_FOUND" }, 404)),
+            );
+
+            await expect(matrixChatConnection.isUserExist("@nobody:matrix.localhost")).resolves.toBe(false);
+        });
+
+        it("should rethrow any other error instead of reporting the user as missing", async () => {
+            const matrixChatConnection = await getConnectionWithProfileInfo(
+                vi.fn().mockRejectedValue(new MatrixError({ errcode: "M_UNKNOWN" }, 500)),
+            );
+
+            await expect(matrixChatConnection.isUserExist("@admin:matrix.localhost")).rejects.toThrow();
         });
     });
 

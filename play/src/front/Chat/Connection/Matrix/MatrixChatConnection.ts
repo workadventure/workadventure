@@ -2092,9 +2092,22 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     }
 
     async isUserExist(address: string): Promise<boolean> {
-        const user = await this.searchChatUsers(address, 1);
-        if (!user) return false;
-        return user && user.some((user) => user.id === address);
+        if (!this.client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
+        // The user directory cannot answer this: it only lists users we already share a room with (or who
+        // are in a public room), it is indexed asynchronously, and it matches on words, so searching for a
+        // full "@someone:my.server" happily returns anybody else on the same server. The profile endpoint
+        // answers about that exact user: 404 means there is no such user.
+        try {
+            await this.client.getProfileInfo(address);
+            return true;
+        } catch (error) {
+            if (error instanceof MatrixError && error.httpStatus === 404) {
+                return false;
+            }
+            throw error;
+        }
     }
 
     getRoomByID(roomId: string): ChatRoom {
