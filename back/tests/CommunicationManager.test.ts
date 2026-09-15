@@ -892,6 +892,137 @@ describe("CommunicationManager", () => {
             );
         });
 
+        it("should notify the admin once when an ended webhook is processed", async () => {
+            const state = createState(CommunicationType.LIVEKIT);
+            const recordingManager = createRecordingManager();
+            const recorder = createSpaceUser("recorder_1", "http://play.test/@/team/world/room");
+            const recordingEventNotifier = vi.fn().mockResolvedValue(undefined);
+
+            recordingManager.mocks.finishRecordingByWebhook.mockReturnValue({
+                processed: true,
+                recorder,
+                unexpected: false,
+                hasActiveSessions: true,
+            });
+
+            const manager = new CommunicationManager(createSpace(), {
+                orchestrator: createOrchestrator(),
+                lifecycleManager: createLifecycleManager(state),
+                recordingManager,
+                policy: createPolicy(false),
+                recordingEventNotifier,
+            });
+
+            manager.handleNormalizedRecordingWebhook(
+                HandleRecordingWebhookRequest.fromPartial({
+                    recordingSessionId: "session-1",
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+                    status: "EGRESS_COMPLETE",
+                    startedAtMs: 1_700_000_000_000,
+                    endedAtMs: 1_700_000_610_000,
+                    fileResults: [{ filename: "uuid-recorder_1/recording-1.mp4", sizeBytes: 123, durationMs: 610_400 }],
+                })
+            );
+            await Promise.resolve();
+
+            expect(recordingEventNotifier).toHaveBeenCalledTimes(1);
+            expect(recordingEventNotifier).toHaveBeenCalledWith({
+                phase: "ended",
+                status: "EGRESS_COMPLETE",
+                egressId: "egress-1",
+                recordingSessionId: "session-1",
+                playUri: "http://play.test/@/team/world/room",
+                recorder: { uuid: "uuid-recorder_1", spaceUserId: "recorder_1" },
+                startedAt: "2023-11-14T22:13:20.000Z",
+                endedAt: "2023-11-14T22:23:30.000Z",
+                error: null,
+                files: [{ filename: "uuid-recorder_1/recording-1.mp4", sizeBytes: 123, durationSeconds: 610 }],
+            });
+        });
+
+        it("should not notify the admin when the ended webhook matches no session", () => {
+            const recordingManager = createRecordingManager();
+            const recordingEventNotifier = vi.fn().mockResolvedValue(undefined);
+
+            const manager = new CommunicationManager(createSpace(), {
+                orchestrator: createOrchestrator(),
+                lifecycleManager: createLifecycleManager(createState(CommunicationType.LIVEKIT)),
+                recordingManager,
+                policy: createPolicy(false),
+                recordingEventNotifier,
+            });
+
+            manager.handleNormalizedRecordingWebhook(
+                HandleRecordingWebhookRequest.fromPartial({
+                    recordingSessionId: "unknown",
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+                })
+            );
+
+            expect(recordingEventNotifier).not.toHaveBeenCalled();
+        });
+
+        it("should not notify the admin when a started webhook arrives, and survive a failing admin on end", async () => {
+            const recordingManager = createRecordingManager();
+            const recorder = createSpaceUser("recorder_1");
+            recordingManager.mocks.confirmRecordingStartedByWebhook.mockReturnValue(true);
+            recordingManager.mocks.finishRecordingByWebhook.mockReturnValue({
+                processed: true,
+                recorder,
+                unexpected: false,
+                hasActiveSessions: true,
+            });
+            const recordingEventNotifier = vi.fn().mockRejectedValue(new Error("admin down"));
+
+            const manager = new CommunicationManager(createSpace(), {
+                orchestrator: createOrchestrator(),
+                lifecycleManager: createLifecycleManager(createState(CommunicationType.LIVEKIT)),
+                recordingManager,
+                policy: createPolicy(false),
+                recordingEventNotifier,
+            });
+
+            manager.handleNormalizedRecordingWebhook(
+                HandleRecordingWebhookRequest.fromPartial({
+                    recordingSessionId: "session-1",
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED,
+                    status: "EGRESS_ACTIVE",
+                })
+            );
+            expect(recordingEventNotifier).not.toHaveBeenCalled();
+
+            expect(() =>
+                manager.handleNormalizedRecordingWebhook(
+                    HandleRecordingWebhookRequest.fromPartial({
+                        recordingSessionId: "session-1",
+                        egressId: "egress-1",
+                        roomName: "test-space",
+                        phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+                        status: "EGRESS_FAILED",
+                        error: "upload failed",
+                    })
+                )
+            ).not.toThrow();
+            await Promise.resolve();
+
+            expect(recordingEventNotifier).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    phase: "ended",
+                    status: "EGRESS_FAILED",
+                    error: "upload failed",
+                    recorder: { uuid: "uuid-recorder_1", spaceUserId: "recorder_1" },
+                    startedAt: null,
+                    files: [],
+                })
+            );
+        });
+
         it("should verify raw LiveKit webhooks in the active recordable state before handling the normalized event", async () => {
             const space = createSpace();
             const orchestrator = createOrchestrator();

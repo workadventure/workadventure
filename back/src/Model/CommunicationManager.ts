@@ -7,6 +7,7 @@ import {
     type SpaceUser,
 } from "@workadventure/messages";
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
+import { adminApi, type RecordingEventPayload } from "../Services/AdminApi";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
@@ -69,6 +70,8 @@ export interface CommunicationManagerDependencies {
     initialStateFactory?: InitialStateFactory;
     livekitToWebRTCDelayMs?: number;
     recordingManager?: IRecordingManager;
+    /** Where recording lifecycle events go; the admin API by default. */
+    recordingEventNotifier?: (payload: RecordingEventPayload) => Promise<void>;
 }
 
 /**
@@ -89,6 +92,7 @@ export class CommunicationManager implements ICommunicationManager {
     private readonly lifecycleManager: IStateLifecycleManager;
     private readonly space: ICommunicationSpace;
     private readonly _recordingManager: IRecordingManager;
+    private readonly recordingEventNotifier: (payload: RecordingEventPayload) => Promise<void>;
 
     private static readonly DEFAULT_LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
@@ -128,6 +132,8 @@ export class CommunicationManager implements ICommunicationManager {
         this._recordingManager =
             dependencies.recordingManager ??
             new RecordingManager(this.space, this.orchestrator, this.userRegistry, this.lifecycleManager);
+        this.recordingEventNotifier =
+            dependencies.recordingEventNotifier ?? ((payload) => adminApi.notifyRecordingEvent(payload));
 
         // Initialize transition policy with LiveKit availability checker
         this.policy =
@@ -408,6 +414,8 @@ export class CommunicationManager implements ICommunicationManager {
                     return;
                 }
 
+                this.notifyRecordingEnded(request, result.recorder);
+
                 if (result.unexpected) {
                     this.space.dispatchPrivateEvent({
                         spaceName: this.space.getSpaceName(),
@@ -431,6 +439,36 @@ export class CommunicationManager implements ICommunicationManager {
             case RecordingWebhookPhase.UNRECOGNIZED:
                 return;
         }
+    }
+
+    /**
+     * Fire-and-forget: the admin turning this into customer webhooks must
+     * never delay or fail the recording flow itself. Only the end of an
+     * egress is reported; the admin reads the status to tell a usable
+     * recording from a failed one.
+     */
+    private notifyRecordingEnded(request: HandleRecordingWebhookRequest, recorder: SpaceUser): void {
+        const payload: RecordingEventPayload = {
+            phase: "ended",
+            status: request.status,
+            egressId: request.egressId,
+            recordingSessionId: request.recordingSessionId,
+            playUri: recorder.playUri,
+            recorder: { uuid: recorder.uuid, spaceUserId: recorder.spaceUserId },
+            startedAt: request.startedAtMs ? new Date(request.startedAtMs).toISOString() : null,
+            endedAt: request.endedAtMs ? new Date(request.endedAtMs).toISOString() : null,
+            error: request.error || null,
+            files: request.fileResults.map((file) => ({
+                filename: file.filename,
+                sizeBytes: file.sizeBytes,
+                durationSeconds: Math.round(file.durationMs / 1_000),
+            })),
+        };
+
+        this.recordingEventNotifier(payload).catch((error) => {
+            console.error(`Failed to notify the admin of a recording end (egress ${request.egressId}):`, error);
+            Sentry.captureException(error);
+        });
     }
 
     private scheduleTransitionAfterRecordingStops(user: SpaceUser): void {
