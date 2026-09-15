@@ -9,7 +9,6 @@ import type {
     MatrixEvent,
     Room,
     SyncStateData,
-    User,
     Visibility,
 } from "matrix-js-sdk";
 import {
@@ -22,9 +21,7 @@ import {
     PushRuleActionName,
     RoomEvent,
     RoomStateEvent,
-    SetPresence,
     SyncState,
-    UserEvent,
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
@@ -33,7 +30,6 @@ import { defaultWoka } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { shortHash } from "@workadventure/shared-utils/src/String/shortHash";
 
-import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { canAcceptVerificationRequest, CryptoEvent } from "matrix-js-sdk/lib/crypto-api";
 import { asError } from "catch-unknown";
@@ -55,7 +51,6 @@ import { chatNotificationStore } from "../../../Stores/ProximityNotificationStor
 import { loginTokenErrorStore } from "../../../Stores/ChatStore";
 import { currentPlayerWokaStore } from "../../../Stores/CurrentPlayerWokaStore";
 import LL from "../../../../i18n/i18n-svelte";
-import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
@@ -63,7 +58,7 @@ import type { MatrixSecurity } from "./MatrixSecurity";
 import { matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { hasValidViaEntries } from "./MatrixSpaceRelations";
-import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
+import { chatUserFactory } from "./MatrixChatUser";
 import { clearMatrixStores } from "./MatrixStoreCleanup";
 import {
     pushLocalWokaAndNameToMatrixProfile,
@@ -94,18 +89,13 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private handleName: (room: Room) => void;
     private handleSync: (state: SyncState, prevState: SyncState | null, res?: SyncStateData) => void;
     private handleAccountDataEvent: (event: MatrixEvent) => void;
-    private handleUserPresence: (event: MatrixEvent | undefined, user: User) => void;
     private handleVerificationRequestReceived: (request: VerificationRequest) => void;
     private handleSessionLoggedOut: (error: MatrixError) => void;
     private directRoomsUnreadAggregateUnsubscriber: Unsubscriber | undefined;
-    private statusUnsubscriber: Unsubscriber | undefined;
     private wokaAvatarMatrixSyncUnsubscriber: Unsubscriber | undefined;
     private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
     private displayNameMatrixSyncDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     private isClientReady = false;
-    // Per-user availability store, shared with the rendered ChatUser and kept live by
-    // onUserPresenceEvent. Persistent across directRoomsUsers recomputes so the UI subscription survives.
-    private readonly userAvailabilityStores = new Map<string, Writable<AvailabilityStatus>>();
     private readonly roomPlacementRetryTimers = new Map<string, ReturnType<typeof setTimeout>>();
     private readonly roomPlacementRetryGenerations = new Map<string, number>();
     private readonly parentRoomIdsByRoomId = new Map<string, Set<string>>();
@@ -155,19 +145,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
     constructor(
         clientPromise: Promise<MatrixClient>,
-        private statusStore: Readable<
-            | AvailabilityStatus.ONLINE
-            | AvailabilityStatus.SILENT
-            | AvailabilityStatus.AWAY
-            | AvailabilityStatus.JITSI
-            | AvailabilityStatus.BBB
-            | AvailabilityStatus.DENY_PROXIMITY_MEETING
-            | AvailabilityStatus.SPEAKER
-            | AvailabilityStatus.LIVEKIT
-            | AvailabilityStatus.LISTENER
-            | AvailabilityStatus.SOUND_BLOCKED
-            | RequestedStatus
-        >,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity,
     ) {
         this.connectionStatus = writable("CONNECTING");
@@ -178,8 +155,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         );
 
         this.directRoomsUsers = derived(
-            [this.directRooms, this.statusStore],
-            ([directRooms, statusStore]) => {
+            this.directRooms,
+            (directRooms) => {
                 const myUserID = this.client?.getSafeUserId();
                 const client = this.client;
 
@@ -192,11 +169,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                         if (member.id !== myUserID) {
                             const user = this.client?.getUser(member.id);
                             if (user) {
-                                const availabilityStatus = this.getOrCreateUserAvailabilityStore(
-                                    user.userId,
-                                    user.presence,
-                                );
-                                acc.push(chatUserFactory(user, client, { availabilityStatus }));
+                                acc.push(chatUserFactory(user, client));
                             }
                         }
                     });
@@ -278,13 +251,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.handleName = this.onRoomNameEvent.bind(this);
         this.handleSync = this.onSyncStateChange.bind(this);
         this.handleAccountDataEvent = this.onAccountDataEvent.bind(this);
-        this.handleUserPresence = this.onUserPresenceEvent.bind(this);
         this.handleVerificationRequestReceived = this.onVerificationRequestReceived.bind(this);
         this.handleSessionLoggedOut = this.onSessionLoggedOut.bind(this);
-
-        this.statusUnsubscriber = this.statusStore.subscribe((status: AvailabilityStatus) => {
-            this.setPresence(status);
-        });
     }
 
     /**
@@ -744,40 +712,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         return `${slug}-${hash}`;
     }
 
-    private setPresence(status: AvailabilityStatus): void {
-        let matrixStatus: SetPresence;
-        if (status === AvailabilityStatus.ONLINE) {
-            matrixStatus = SetPresence.Online;
-        } else {
-            matrixStatus = SetPresence.Unavailable;
-        }
-        this.client?.setSyncPresence(matrixStatus).catch((error) => {
-            console.error("Failed to send presence", error);
-            Sentry.captureException(error);
-        });
-    }
-
-    private getOrCreateUserAvailabilityStore(
-        userId: string,
-        presence: string | undefined,
-    ): Writable<AvailabilityStatus> {
-        let store = this.userAvailabilityStores.get(userId);
-        if (!store) {
-            store = writable(mapMatrixPresenceToAvailabilityStatus(presence));
-            this.userAvailabilityStores.set(userId, store);
-        }
-        return store;
-    }
-
-    private onUserPresenceEvent(event: MatrixEvent | undefined, user: User): void {
-        // Push the new presence into the shared store so the rendered DM peer's availabilityStatus updates
-        // live. (The previous implementation wrote to a map that was never seeded, so it never ran.)
-        const store = this.userAvailabilityStores.get(user.userId);
-        if (store) {
-            store.set(mapMatrixPresenceToAvailabilityStatus(user.presence));
-        }
-    }
-
     private onSyncStateChange(state: SyncState, prevState: SyncState | null, res?: SyncStateData): void {
         if (!this.client) return;
         switch (state) {
@@ -818,7 +752,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.client.on(RoomStateEvent.Events, this.handleRoomStateEvent);
         this.client.on(RoomEvent.Name, this.handleName);
         this.client.on(ClientEvent.AccountData, this.handleAccountDataEvent);
-        this.client.on(UserEvent.Presence, this.handleUserPresence);
         this.client.on(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
         this.client.on(HttpApiEvent.SessionLoggedOut, this.handleSessionLoggedOut);
 
@@ -2149,7 +2082,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.parentRoomIdsByRoomId.clear();
         this.childRoomIdsBySpaceId.clear();
         this.folderShellsByRoomId.clear();
-        this.userAvailabilityStores.clear();
         this.roomList.forEach((room) => {
             this.roomList.delete(room.id);
         });
@@ -2160,7 +2092,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         this.client?.off(RoomStateEvent.Events, this.handleRoomStateEvent);
         this.client?.off(RoomEvent.Name, this.handleName);
         this.client?.off(ClientEvent.AccountData, this.handleAccountDataEvent);
-        this.client?.off(UserEvent.Presence, this.handleUserPresence);
         this.client?.off(CryptoEvent.VerificationRequestReceived, this.handleVerificationRequestReceived);
         this.client?.off(HttpApiEvent.SessionLoggedOut, this.handleSessionLoggedOut);
         if (this.directRoomsUnreadAggregateUnsubscriber) {
@@ -2168,7 +2099,6 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             this.directRoomsUnreadAggregateUnsubscriber = undefined;
         }
         this.resetNbUnreadDirectRoomsMessagesAggregate();
-        if (this.statusUnsubscriber) this.statusUnsubscriber();
         if (this.wokaAvatarMatrixSyncUnsubscriber) {
             this.wokaAvatarMatrixSyncUnsubscriber();
             this.wokaAvatarMatrixSyncUnsubscriber = undefined;
