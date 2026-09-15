@@ -212,6 +212,16 @@ const broadcastProperties = z.object({
     ),
 });
 
+/** The meeting a dwell period happened in; roomId is already an envelope column. */
+const dwellMeetingProperties = z.object({
+  meetingId: z
+    .string()
+    .optional()
+    .describe(
+      "Meeting this period happened in, absent when it happened outside one.",
+    ),
+});
+
 const cowebsiteOpenedProperties = z.object({
   url: z
     .string()
@@ -1291,7 +1301,7 @@ export const ANALYTICS_EVENTS = {
   "media.camera.toggled": signal("The user turned their camera on or off."),
   "media.microphone.dwell": timedEvent({
     openableBy: "client",
-    openProperties: z.object({}),
+    openProperties: dwellMeetingProperties,
     endReasonDescription:
       "Why the microphone stopped being open, or what closed it.",
     description:
@@ -1304,7 +1314,7 @@ export const ANALYTICS_EVENTS = {
 
   "media.speech.dwell": timedEvent({
     openableBy: "client",
-    openProperties: z.object({}),
+    openProperties: dwellMeetingProperties,
     endReasonDescription: "Why the speech period ended, or what ended it.",
     description:
       "Time the user was detected speaking while their microphone was open, from the local volume analyser with a hold applied so ordinary pauses between words do not cut a sentence into fragments. Reported by the speaker's own client and by nobody else, so the same speech cannot be counted once per listener. It is an estimate from loudness, not recognition: no audio is inspected, transmitted or stored.",

@@ -18,6 +18,7 @@ import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import type { EndTimedAnalyticsEvent } from "../../Administration/TimedAnalyticsEvent";
+import { meetingEnded, meetingStarted } from "../../Administration/CurrentMeeting";
 import { isMeetingSpace } from "../../Rules/MeetingRules";
 import { trackBroadcastAnalytics } from "../../Streaming/BroadcastAnalytics";
 import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
@@ -589,9 +590,13 @@ export class SpacePeerManager {
             meetingProvider,
             meetingId: this.space.getName(),
         });
+        meetingStarted(this.space.getName());
     }
 
     private endMeetingAnalytics(): void {
+        // Unguarded: meetingEnded only clears a meeting whose id matches, so calling it
+        // for a meeting that never opened here is a no-op.
+        meetingEnded(this.space.getName());
         this.endMeeting?.();
         this.endMeeting = undefined;
     }
