@@ -43,6 +43,67 @@ describe("AnalyticsTimedEventTracker", () => {
         );
     });
 
+    it("ends a socket that went away at its last proven activity, not at the close", () => {
+        const queue = { enqueueEvent: vi.fn() };
+        let now = Date.parse("2026-04-24T12:00:00.000Z");
+        const tracker = new AnalyticsTimedEventTracker(queue, () => now);
+        // A frozen tab: the machine sleeps at 12:02:30, and the close only lands
+        // SOCKET_IDLE_TIMER + CLIENT_DISCONNECTION_RETENTION_MS later. Those 150 s are
+        // nobody being there, and they used to land inside the interval.
+        const socketData = socketDataFixture({ lastActivityAtMs: Date.parse("2026-04-24T12:02:30.000Z") });
+
+        tracker.open("h1", "area.dwell", { areaId: "focus-room", areaName: "Focus room" }, socketData);
+        now = Date.parse("2026-04-24T12:05:00.000Z");
+        tracker.closeConnection(socketData, "socket_closed");
+
+        expect(queue.enqueueEvent).toHaveBeenCalledWith(
+            expect.objectContaining({
+                clientEventTimeMs: Date.parse("2026-04-24T12:02:30.000Z"),
+                properties: expect.objectContaining({
+                    endedAt: "2026-04-24T12:02:30.000Z",
+                    durationSeconds: 150,
+                    endReason: "socket_closed",
+                }),
+            }),
+            socketData,
+        );
+    });
+
+    it("still ends a clean close at the close", () => {
+        const queue = { enqueueEvent: vi.fn() };
+        let now = Date.parse("2026-04-24T12:00:00.000Z");
+        const tracker = new AnalyticsTimedEventTracker(queue, () => now);
+        // Stale on purpose: a client that says nothing for a while but closes cleanly
+        // was there right up to the close, and its last message says nothing about that.
+        const socketData = socketDataFixture({ lastActivityAtMs: Date.parse("2026-04-24T12:00:10.000Z") });
+
+        tracker.open("h1", "area.dwell", { areaId: "focus-room", areaName: "Focus room" }, socketData);
+        now = Date.parse("2026-04-24T12:05:00.000Z");
+        tracker.close("h1", socketData);
+
+        expect(queue.enqueueEvent).toHaveBeenCalledWith(
+            expect.objectContaining({
+                properties: expect.objectContaining({ endedAt: "2026-04-24T12:05:00.000Z", durationSeconds: 300 }),
+            }),
+            socketData,
+        );
+    });
+
+    it("never runs an interval backwards when the last activity predates it", () => {
+        const queue = { enqueueEvent: vi.fn() };
+        let now = Date.parse("2026-04-24T12:00:00.000Z");
+        const tracker = new AnalyticsTimedEventTracker(queue, () => now);
+        const socketData = socketDataFixture({ lastActivityAtMs: Date.parse("2026-04-24T11:59:00.000Z") });
+
+        tracker.open("h1", "area.dwell", { areaId: "focus-room", areaName: "Focus room" }, socketData);
+        now = Date.parse("2026-04-24T12:05:00.000Z");
+        tracker.closeConnection(socketData, "socket_closed");
+
+        // Clamped to the open, so a zero-length interval rather than a negative one —
+        // and zero is below minDurationMs, so nothing is reported at all.
+        expect(queue.enqueueEvent).not.toHaveBeenCalled();
+    });
+
     it("drops an interval shorter than a second as transition churn", () => {
         const queue = { enqueueEvent: vi.fn() };
         let now = Date.parse("2026-04-24T12:00:00.000Z");
@@ -227,6 +288,7 @@ function socketDataFixture(overrides: Partial<SocketData> = {}): SocketData {
         spaces: new Set(["world.space"]),
         tabId: "tab-id",
         analyticsEventsEnabled: true,
+        lastActivityAtMs: Date.now(),
         ...overrides,
     } as SocketData;
 }

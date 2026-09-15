@@ -476,6 +476,7 @@ export class IoSocketController {
                         roomName,
                         microphoneState,
                         cameraState,
+                        lastActivityAtMs: Date.now(),
                         tabId: query.tabId,
                         connectionId: query.connectionId,
                         attendeesState: false,
@@ -623,6 +624,10 @@ export class IoSocketController {
             message: (socket, message): void => {
                 Sentry.withIsolationScope(() => {
                     const userData = socket.getUserData();
+                    // Before anything can reject or throw: this is a liveness stamp, not a
+                    // record of what the message did. A malformed frame still proves the tab
+                    // was there.
+                    userData.lastActivityAtMs = Date.now();
                     Sentry.setTag("userUuid", userData.userUuid);
                     Sentry.setTag("roomId", userData.roomId);
                     Sentry.setTag("world", userData.world);
