@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mediaPipeMocks = vi.hoisted(() => ({
     createFromOptions: vi.fn(),
-    forVisionTasks: vi.fn(),
+    isSimdSupported: vi.fn(),
     drawingUtilsClose: vi.fn(),
     drawConfidenceMask: vi.fn(),
 }));
@@ -16,7 +16,7 @@ const blurMocks = vi.hoisted(() => ({
 
 vi.mock("@mediapipe/tasks-vision", () => ({
     FilesetResolver: {
-        forVisionTasks: mediaPipeMocks.forVisionTasks,
+        isSimdSupported: mediaPipeMocks.isSimdSupported,
     },
     ImageSegmenter: {
         createFromOptions: mediaPipeMocks.createFromOptions,
@@ -134,7 +134,7 @@ describe("MediaPipeTasksVisionTransformer", () => {
         vi.spyOn(performance, "now").mockReturnValue(42_000);
         vi.spyOn(console, "error").mockImplementation(() => undefined);
         vi.spyOn(console, "info").mockImplementation(() => undefined);
-        mediaPipeMocks.forVisionTasks.mockResolvedValue({});
+        mediaPipeMocks.isSimdSupported.mockResolvedValue(true);
     });
 
     afterEach(() => {
@@ -143,7 +143,7 @@ describe("MediaPipeTasksVisionTransformer", () => {
         vi.restoreAllMocks();
         vi.useRealTimers();
         mediaPipeMocks.createFromOptions.mockReset();
-        mediaPipeMocks.forVisionTasks.mockReset();
+        mediaPipeMocks.isSimdSupported.mockReset();
         mediaPipeMocks.drawingUtilsClose.mockReset();
         mediaPipeMocks.drawConfidenceMask.mockReset();
         blurMocks.compositorClose.mockReset();
