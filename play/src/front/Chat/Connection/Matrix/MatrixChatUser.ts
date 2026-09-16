@@ -1,15 +1,11 @@
 import type { MatrixClient, Room, User } from "matrix-js-sdk";
-import { SetPresence } from "matrix-js-sdk";
-import { readable, writable, type Writable } from "svelte/store";
+import { readable, writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { ChatUser } from "../ChatConnection";
 import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
 
 type ChatUserFactoryOptions = {
     username?: string;
-    // When provided, the caller owns a store shared across factory calls so live presence updates
-    // (MatrixChatConnection.onUserPresenceEvent) reach the rendered ChatUser instead of a snapshot.
-    availabilityStatus?: Writable<AvailabilityStatus>;
 };
 
 export const chatUserFactory: (
@@ -33,8 +29,7 @@ export const chatUserFactory: (
         ),
         color: undefined,
         spaceUserId: undefined,
-        availabilityStatus:
-            options.availabilityStatus ?? writable(mapMatrixPresenceToAvailabilityStatus(matrixChatUser.presence)),
+        availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
     };
 };
 
@@ -63,24 +58,6 @@ export function chatUserFactoryFromRoom(room: Room, userId: string): ChatUser | 
         pictureStore: readable(pictureUrl),
         color: undefined,
         spaceUserId: undefined,
-        availabilityStatus: writable(mapMatrixPresenceToAvailabilityStatus()),
+        availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
     };
-}
-
-export function mapMatrixPresenceToAvailabilityStatus(presence: string = SetPresence.Offline): AvailabilityStatus {
-    switch (presence) {
-        case SetPresence.Offline:
-            return AvailabilityStatus.UNCHANGED;
-        case SetPresence.Online:
-            return AvailabilityStatus.ONLINE;
-        case SetPresence.Unavailable:
-            return AvailabilityStatus.AWAY;
-        //TODO : use SetPresence.Busy after matrix-js-sdk update
-        //case SetPresence.Busy:
-        case "busy":
-            return AvailabilityStatus.BUSY;
-        default:
-            console.error(`Do not handle the status ${presence}`);
-            return AvailabilityStatus.UNCHANGED;
-    }
 }
