@@ -1,5 +1,5 @@
 import { BACKGROUND_TRANSFORMER_ENGINE } from "../../Enum/EnvironmentVariable";
-import { MediaPipeTasksVisionTransformer } from "./MediaPipeTasksVisionTransformer";
+import { MediaPipeTasksVisionWorkerTransformer } from "./MediaPipeTasksVisionWorkerTransformer";
 import { MediaPipeBackgroundTransformer } from "./MediaPipeBackgroundTransformer";
 import { FallbackBackgroundTransformer } from "./FallbackBackgroundTransformer";
 
@@ -40,7 +40,7 @@ export function createBackgroundTransformer(
 
     if (engine === "tasks-vision") {
         try {
-            const transformer = new MediaPipeTasksVisionTransformer(config, onTerminalFailure);
+            const transformer = new MediaPipeTasksVisionWorkerTransformer(config, onTerminalFailure);
             return transformer;
         } catch (error) {
             console.error("[BackgroundTransformer] Failed to create Tasks Vision transformer, using fallback:", error);
