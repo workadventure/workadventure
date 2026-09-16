@@ -1,5 +1,7 @@
+import { writable, type Writable } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoCodec } from "./VideoPresets";
+import type { EncoderCategory } from "./LocalEncoderStats";
 
 /**
  * What the browser knows about encoding and decoding each codec on this machine, asked through
@@ -122,5 +124,16 @@ export function retryGranted(direction: CodecDirection, codec: VideoCodec): bool
     retryDecisions.set(decisionKey, granted);
     return granted;
 }
+
+/**
+ * A codec the CPU limitation detector found too expensive for this machine during this session, per category
+ * (see CpuLimitationDetector). It and every codec above it are left out of the preference lists until the page is
+ * reloaded: the publishers subscribe to reconfigure themselves. Not persisted: the browser's own smooth history
+ * (probed above) is the memory across sessions.
+ */
+export const demotedCodecStore: Record<EncoderCategory, Writable<VideoCodec | undefined>> = {
+    video: writable(undefined),
+    screenSharing: writable(undefined),
+};
 
 probeCodecPerformance().catch((e) => console.error("Codec performance probe failed", e));

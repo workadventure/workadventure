@@ -7,12 +7,16 @@ import {
     type VideoQualitySetting,
 } from "./VideoPresets";
 import { isAndroid, isIOS } from "./DeviceUtils";
-import { codecPerformance, retryGranted } from "./CodecPerformance";
+import { codecPerformance, demotedCodecStore, retryGranted } from "./CodecPerformance";
 
 vi.mock("./DeviceUtils", () => ({ isAndroid: vi.fn(() => false), isIOS: vi.fn(() => false) }));
-vi.mock("./CodecPerformance", () => ({
+vi.mock("./CodecPerformance", async () => ({
     codecPerformance: vi.fn(() => undefined),
     retryGranted: vi.fn(() => false),
+    demotedCodecStore: {
+        video: (await import("svelte/store")).writable(undefined),
+        screenSharing: (await import("svelte/store")).writable(undefined),
+    },
 }));
 
 describe("preferredVideoCodecs", () => {
@@ -23,6 +27,18 @@ describe("preferredVideoCodecs", () => {
         vi.mocked(isIOS).mockReturnValue(false);
         vi.mocked(codecPerformance).mockReturnValue(undefined);
         vi.mocked(retryGranted).mockReturnValue(false);
+        demotedCodecStore.video.set(undefined);
+        demotedCodecStore.screenSharing.set(undefined);
+    });
+
+    it("leaves out a codec demoted this session, and every codec above it", () => {
+        demotedCodecStore.screenSharing.set("vp9");
+
+        expect(preferredVideoCodecs("screenSharing", "recommended", "encode", 1920 * 1080)).toEqual(["h264"]);
+        expect(preferredVideoCodecs("screenSharing", "recommended", "decode", 1920 * 1080)).toEqual(["h264"]);
+        expect(negotiableVideoCodecs("screenSharing", "recommended")).toEqual(["h264"]);
+        // Categories are independent
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720)).toEqual(["vp9", "h264"]);
     });
 
     it("keeps AV1 for a screen share unless the quality setting is low, H.264 as the floor, without a verdict", () => {
