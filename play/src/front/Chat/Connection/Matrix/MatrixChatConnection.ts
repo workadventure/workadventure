@@ -783,6 +783,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             // (BUFFER_PERIOD_MS in matrix-js-sdk's sync.ts), after which it aborts and starts over, forever.
             // The full member list is now fetched per room, when something actually needs to display it.
             lazyLoadMembers: true,
+            // WorkAdventure is not a presence source: a user's real availability comes from the Space /
+            // admin providers, so we neither publish nor read Matrix presence any more. This has to be
+            // explicit - `set_presence` defaults to "online" when the parameter is absent, so simply
+            // dropping our setSyncPresence() calls would mark every user permanently online (and never
+            // away) on any homeserver that still has presence enabled, which is Synapse's default.
+            disablePresence: true,
         });
 
         try {

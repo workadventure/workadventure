@@ -335,6 +335,9 @@ describe("MatrixChatConnection", () => {
                 threadSupport: true,
                 pendingEventOrdering: PendingEventOrdering.Detached,
                 lazyLoadMembers: true,
+                // Guards the regression described on the option itself: without it the SDK omits
+                // `set_presence`, which the spec and Synapse default to "online".
+                disablePresence: true,
             });
         });
     });
