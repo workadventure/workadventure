@@ -142,6 +142,32 @@ describe("WebRTCCommunicationStrategy.handleMeetingConnectionRestartMessage", ()
         expect(dispatchPrivateEvent).not.toHaveBeenCalled();
     });
 
+    it("establishes a fresh connection when the tracking was lost but both users are in the space", () => {
+        const dispatchPrivateEvent = vi.fn();
+        const userA = createUser("user-a");
+        const userB = createUser("user-b");
+        const users = new Map([
+            [userA.spaceUserId, userA],
+            [userB.spaceUserId, userB],
+        ]);
+        const strategy = new WebRTCCommunicationStrategy(
+            createSpace(dispatchPrivateEvent, [userA, userB]),
+            users,
+            users,
+        );
+
+        strategy.handleMeetingConnectionRestartMessage(
+            MeetingConnectionRestartMessage.fromPartial({ userId: "user-b" }),
+            "user-a",
+        );
+
+        const starts = webRtcStartDispatches(dispatchPrivateEvent);
+        expect(starts.map((start) => start.receiverUserId).sort()).toEqual(["user-a", "user-b"]);
+        expect(starts[0]?.spaceEvent.event.webRtcStartMessage?.connectionId).toBe(
+            starts[1]?.spaceEvent.event.webRtcStartMessage?.connectionId,
+        );
+    });
+
     it("ignores a restart without a target userId", async () => {
         const { strategy, dispatchPrivateEvent } = await setupStrategyWithConnection();
 
