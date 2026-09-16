@@ -309,6 +309,9 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     senderUserId,
                     receiverId,
                 );
+                Sentry.captureMessage(
+                    `No existing connection found for meetingConnectionRestartMessage from ${senderUserId} to ${receiverId}`,
+                );
                 return;
             }
             this.establishConnection(receiver, sender);
