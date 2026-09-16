@@ -94,7 +94,6 @@ const actionbar: BaseTranslation = {
         blurMiddle: "Desfoque médio",
         blurHigh: "Desfoque alto",
         images: "Imagens",
-        videos: "Vídeos",
     },
     help: {
         chat: {

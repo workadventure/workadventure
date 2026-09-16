@@ -90,7 +90,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Sfocatura media",
         blurHigh: "Sfocatura alta",
         images: "Immagini",
-        videos: "Video",
     },
     help: {
         chat: {

@@ -89,7 +89,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "เบลอปานกลาง",
         blurHigh: "เบลอมาก",
         images: "ภาพ",
-        videos: "วิดีโอ",
     },
     help: {
         chat: {

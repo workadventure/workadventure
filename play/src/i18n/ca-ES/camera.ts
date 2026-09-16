@@ -106,7 +106,6 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     backgroundEffects: {
         imageTitle: "Imatges de fons",
-        videoTitle: "Vídeos de fons",
         blurTitle: "Desenfocament de fons",
         resetTitle: "Desactivar els efectes de fons",
         title: "Efectes de fons",

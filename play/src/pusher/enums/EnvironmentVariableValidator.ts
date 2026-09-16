@@ -527,12 +527,6 @@ export const EnvironmentVariables = z.object({
         .optional()
         .transform(emptyStringToUndefined)
         .describe("The S3 CDN endpoint for Livekit recording."),
-    BACKGROUND_TRANSFORMER_ENGINE: z
-        .enum(["tasks-vision", "selfie-segmentation", ""])
-        .optional()
-        .describe(
-            "Virtual background transformer engine: 'tasks-vision' (GPU-accelerated, experimental) or 'selfie-segmentation' (CPU-based, stable). Currently defaults to 'selfie-segmentation'; 'tasks-vision' is intended as the future default once considered stable.",
-        ),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

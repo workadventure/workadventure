@@ -90,7 +90,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Srědna njewjasnosć",
         blurHigh: "Wysoka njewjasnosć",
         images: "Wobrazki",
-        videos: "Wideja",
     },
     help: {
         chat: {

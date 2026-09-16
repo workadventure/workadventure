@@ -1,17 +1,22 @@
 import { writable, derived } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
-import type { BackgroundConfig, BackgroundMode } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+import {
+    isBackgroundMode,
+    type BackgroundConfig,
+    type BackgroundMode,
+} from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 
 /**
  * Store for background transformation settings
  */
 function createBackgroundConfigStore() {
+    // A stored mode that no longer exists (e.g. the removed "video" mode) falls back to "none".
+    const storedMode = localUserStore.getBackgroundMode();
     const initialConfig: BackgroundConfig = {
-        mode: (localUserStore.getBackgroundMode() as BackgroundMode) || "none", // Default to blur for testing
-        blurAmount: localUserStore.getBackgroundBlurAmount() || 15, // Nice blur amount for testing
+        mode: isBackgroundMode(storedMode) ? storedMode : "none",
+        blurAmount: localUserStore.getBackgroundBlurAmount() || 15,
         backgroundImage: localUserStore.getBackgroundImage() || undefined,
-        backgroundVideo: localUserStore.getBackgroundVideo() || undefined,
     };
 
     const { subscribe, set, update } = writable<BackgroundConfig>(initialConfig);
@@ -38,14 +43,6 @@ function createBackgroundConfigStore() {
                 const newConfig = { ...config, backgroundImage: imageUrl, mode: "image" as BackgroundMode };
                 localUserStore.setBackgroundImage(imageUrl);
                 localUserStore.setBackgroundMode("image");
-                return newConfig;
-            });
-        },
-        setBackgroundVideo: (videoUrl: string) => {
-            update((config) => {
-                const newConfig = { ...config, backgroundVideo: videoUrl, mode: "video" as BackgroundMode };
-                localUserStore.setBackgroundVideo(videoUrl);
-                localUserStore.setBackgroundMode("video");
                 return newConfig;
             });
         },
@@ -136,23 +133,6 @@ export const backgroundPresets = {
             name: "Ronchi",
             url: "./static/images/background/Ronchi.jpg",
             thumbnail: "./static/images/background/thumbnail/Ronchi.jpg",
-        },
-    ],
-    videos: [
-        {
-            name: "Waterfall",
-            url: "./static/Videos/background/waterfall.mp4",
-            thumbnail: "./static/Videos/background/thumbnail/waterfall.jpg",
-        },
-        {
-            name: "Stars",
-            url: "./static/Videos/background/stars.mp4",
-            thumbnail: "./static/Videos/background/thumbnail/stars.jpg",
-        },
-        {
-            name: "Matrix",
-            url: "./static/Videos/background/matrix.mp4",
-            thumbnail: "./static/Videos/background/thumbnail/matrix.jpg",
         },
     ],
 };

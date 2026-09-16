@@ -29,10 +29,6 @@
         backgroundConfigStore.setBackgroundImage(imageUrl);
     }
 
-    function setBackgroundVideo(videoUrl: string) {
-        backgroundConfigStore.setBackgroundVideo(videoUrl);
-    }
-
     let isNoEffectSelected = $derived($backgroundConfigStore.mode === "none");
 </script>
 
@@ -116,22 +112,6 @@
                     isSelected={$backgroundConfigStore.mode === "image" &&
                         $backgroundConfigStore.backgroundImage === preset.url}
                     onclick={() => setBackgroundImage(preset.url)}
-                />
-            {/each}
-        </div>
-    </div>
-
-    <!-- Videos Section -->
-    <div class="relative z-10 flex flex-col gap-2">
-        <SectionTitle title={$LL.actionbar.background.videos()} />
-        <div class="grid grid-cols-3 gap-1 px-1">
-            {#each backgroundPresets.videos as preset (preset.url)}
-                <BackgroundPresetButton
-                    thumbnail={preset.thumbnail}
-                    name={preset.name}
-                    isSelected={$backgroundConfigStore.mode === "video" &&
-                        $backgroundConfigStore.backgroundVideo === preset.url}
-                    onclick={() => setBackgroundVideo(preset.url)}
                 />
             {/each}
         </div>

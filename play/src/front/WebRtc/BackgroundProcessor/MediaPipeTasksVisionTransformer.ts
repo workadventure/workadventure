@@ -70,7 +70,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private imageSegmenter: ImageSegmenter | null = null;
     private filesetResolver: Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>> | null = null;
     private backgroundImage: HTMLImageElement | null = null;
-    private backgroundVideo: HTMLVideoElement | null = null;
     private outputStream: MediaStream | null = null;
     private inputVideo: HTMLVideoElement;
     private timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -219,16 +218,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             // Pre-render background image to canvas for better GPU performance
             // (HTMLCanvasElement avoids re-uploading texture each frame)
             this.initializeBackgroundCanvas();
-        }
-
-        if (this.config.mode === "video" && this.config.backgroundVideo) {
-            this.backgroundVideo = document.createElement("video");
-            this.backgroundVideo.crossOrigin = "anonymous";
-            this.backgroundVideo.loop = true;
-            this.backgroundVideo.muted = true;
-            this.backgroundVideo.autoplay = true;
-            this.backgroundVideo.src = this.config.backgroundVideo;
-            await this.backgroundVideo.play();
         }
     }
 
@@ -408,7 +397,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
         if (this.config.mode === "blur") {
             this.processBlurMode(mask);
-        } else if (this.config.mode === "image" || this.config.mode === "video") {
+        } else if (this.config.mode === "image") {
             this.processReplaceMode(mask);
         } else {
             throw new Error(`[MediaPipe Tasks Vision] Unknown mode: ${this.config.mode}`);
@@ -501,7 +490,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         // Draw current video frame to foreground canvas (HTMLCanvasElement is faster than HTMLVideoElement)
         this.foregroundCtx!.drawImage(this.inputVideo, 0, 0, width, height);
 
-        // Get the background source (canvas for image, video element for video)
         const backgroundSource = this.getBackgroundSource(width, height);
 
         if (backgroundSource) {
@@ -511,7 +499,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             // Using HTMLCanvasElement instead of HTMLImageElement/HTMLVideoElement avoids GPU texture re-upload
             this.drawingUtils.drawConfidenceMask(
                 mask,
-                backgroundSource, // Background: replacement image (as canvas) or video
+                backgroundSource, // Background: replacement image (as canvas)
                 this.foregroundCanvas!, // Foreground: sharp person (canvas for better perf)
             );
         } else {
@@ -525,11 +513,9 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     }
 
     /**
-     * Get the appropriate background source based on mode.
-     * Returns HTMLCanvasElement for images (better GPU performance - avoids re-upload each frame)
-     * Returns HTMLVideoElement for videos (needs to update each frame anyway)
+     * Returns the background image pre-rendered to a canvas (avoids a GPU re-upload each frame).
      */
-    private getBackgroundSource(width: number, height: number): HTMLCanvasElement | HTMLVideoElement | null {
+    private getBackgroundSource(width: number, height: number): HTMLCanvasElement | null {
         if (this.config.mode === "image" && this.backgroundImage) {
             // Use pre-rendered canvas for static images (avoids GPU re-upload)
             if (!this.backgroundCanvas || !this.backgroundCanvasCtx) {
@@ -553,11 +539,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
             return this.backgroundCanvas!;
         }
-        if (this.config.mode === "video" && this.backgroundVideo) {
-            // For video, we still use HTMLVideoElement as it updates each frame anyway
-            // TODO: Could optimize by using a canvas here too if needed
-            return this.backgroundVideo;
-        }
         return null;
     }
 
@@ -570,7 +551,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         Object.assign(this.config, config);
 
         // Reload background resources if needed
-        if (config.backgroundImage || config.backgroundVideo) {
+        if (config.backgroundImage) {
             await this.loadBackgroundResources();
         }
     }
@@ -606,12 +587,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
         this.disposeMediaPipeResources();
 
-        // Clean up resources
-        if (this.backgroundVideo) {
-            this.backgroundVideo.pause();
-            this.backgroundVideo.src = "";
-            this.backgroundVideo = null;
-        }
         this.backgroundImage = null;
 
         // Clean up fallback canvases

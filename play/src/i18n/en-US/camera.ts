@@ -104,7 +104,6 @@ const camera: BaseTranslation = {
     },
     backgroundEffects: {
         imageTitle: "Background Images",
-        videoTitle: "Background Videos",
         blurTitle: "Background Blur",
         resetTitle: "Disable background effects",
         title: "Background Effects",

@@ -171,7 +171,6 @@ services:
 
       # "selfie-segmentation" or "tasks-vision"
       # TODO: remove "selfie-segmentation" code when tasks-vision is stable enough
-      BACKGROUND_TRANSFORMER_ENGINE: ${BACKGROUND_TRANSFORMER_ENGINE:-}
     labels:
       - "traefik.enable=true"
 
