@@ -1,45 +1,28 @@
-// Type definitions for experimental WebRTC Insertable Streams API
-
-interface MediaStreamTrackProcessor<VideoFrame> {
-    readable: ReadableStream<VideoFrame>;
-}
-
-interface MediaStreamTrackProcessorConstructor {
-    new (init: MediaStreamTrackProcessorInit): MediaStreamTrackProcessor<VideoFrame>;
-}
+// WebRTC insertable streams (MediaStreamTrackProcessor / MediaStreamTrackGenerator).
+// Chromium only, hence not in lib.dom; declared as possibly undefined so callers feature-detect with typeof.
 
 interface MediaStreamTrackProcessorInit {
-    track: MediaStreamVideoTrack;
-}
-
-interface MediaStreamTrackGenerator<VideoFrame> {
-    writable: WritableStream<VideoFrame>;
     track: MediaStreamTrack;
+    maxBufferSize?: number;
 }
 
-interface MediaStreamTrackGeneratorConstructor {
-    new (init: MediaStreamTrackGeneratorInit): MediaStreamTrackGenerator<VideoFrame>;
+interface MediaStreamTrackProcessor {
+    readonly readable: ReadableStream<VideoFrame>;
 }
 
 interface MediaStreamTrackGeneratorInit {
     kind: "audio" | "video";
 }
 
-// Extend the global Window interface
-declare global {
-    interface Window {
-        MediaStreamTrackProcessor: MediaStreamTrackProcessorConstructor;
-        MediaStreamTrackGenerator: MediaStreamTrackGeneratorConstructor;
-    }
-
-    // Make them available globally
-    const MediaStreamTrackProcessor: MediaStreamTrackProcessorConstructor;
-    const MediaStreamTrackGenerator: MediaStreamTrackGeneratorConstructor;
+/** The generator is itself the output track. */
+interface MediaStreamTrackGenerator extends MediaStreamTrack {
+    readonly writable: WritableStream<VideoFrame>;
 }
 
-// Additional type for MediaStreamVideoTrack
-type MediaStreamVideoTrack = MediaStreamTrack & {
-    kind: "video";
-};
+declare const MediaStreamTrackProcessor:
+    | { prototype: MediaStreamTrackProcessor; new (init: MediaStreamTrackProcessorInit): MediaStreamTrackProcessor }
+    | undefined;
 
-export {};
+declare const MediaStreamTrackGenerator:
+    | { prototype: MediaStreamTrackGenerator; new (init: MediaStreamTrackGeneratorInit): MediaStreamTrackGenerator }
+    | undefined;

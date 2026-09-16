@@ -1,0 +1,430 @@
+import { DrawingUtils, ImageSegmenter, type MPMask } from "@mediapipe/tasks-vision";
+import { TasksVisionBlurCompositor } from "./TasksVisionBlurCompositor";
+import {
+    SELFIE_SEGMENTER_MODEL_URL,
+    TASKS_VISION_WORKER_FILESET,
+    installTasksVisionModuleFactory,
+} from "./tasksVisionAssets";
+import type {
+    SerializedWorkerError,
+    TasksVisionWorkerDelegate,
+    TasksVisionWorkerRequest,
+    TasksVisionWorkerResponse,
+} from "./MediaPipeTasksVisionWorkerProtocol";
+import type { BackgroundConfig } from "./createBackgroundTransformer";
+
+const MAX_CONSECUTIVE_RECOVERY_ATTEMPTS = 2;
+const SUCCESSFUL_FRAMES_BEFORE_RECOVERY_RESET = 30;
+
+/** What the two transports hand to the renderer. */
+type FrameSource = ImageBitmap | VideoFrame;
+
+export type PostToMainThread = (message: TasksVisionWorkerResponse, transfer?: Transferable[]) => void;
+
+class UnsupportedError extends Error {}
+
+function serializeError(error: unknown): SerializedWorkerError {
+    if (error instanceof Error) {
+        return { name: error.name, message: error.message, stack: error.stack };
+    }
+    return { name: "Error", message: String(error) };
+}
+
+function closeQuietly(name: string, resource: { close(): void } | null): void {
+    try {
+        resource?.close();
+    } catch (error) {
+        console.warn(`[MediaPipe Tasks Vision Worker] Error closing ${name}:`, error);
+    }
+}
+
+/**
+ * Everything the background worker does, minus the postMessage plumbing, so it can be unit-tested.
+ *
+ * MediaPipe failures (lost WebGL context, segmenter crash) are recovered here, inside the worker, by rebuilding
+ * the segmenter: the insertable-streams pipe transferred to this worker survives, and frames pass through
+ * unprocessed meanwhile. Only exhausted recovery is reported as "fatal".
+ */
+export class MediaPipeTasksVisionWorkerRuntime {
+    private config: BackgroundConfig = { mode: "none" };
+    private glCanvas: OffscreenCanvas | null = null;
+    private gl: WebGL2RenderingContext | null = null;
+    private imageSegmenter: ImageSegmenter | null = null;
+    private drawingUtils: DrawingUtils | null = null;
+    private blurCompositor: TasksVisionBlurCompositor | null = null;
+    private backgroundImage: ImageBitmap | null = null;
+    private backgroundImageUrl: string | null = null;
+    private backgroundCanvas: OffscreenCanvas | null = null;
+    private fallbackBlurredCanvas: OffscreenCanvas | null = null;
+    private lastTimestampMs = -1;
+    private recovery: Promise<void> | null = null;
+    private consecutiveRecoveryAttempts = 0;
+    private successfulFramesSinceRecovery = 0;
+    private fatal = false;
+    private activeStream: { streamId: number; abortController: AbortController } | null = null;
+    private messageQueue: Promise<void> = Promise.resolve();
+
+    constructor(private readonly post: PostToMainThread) {}
+
+    public handleMessage(message: TasksVisionWorkerRequest): void {
+        // Streams are not queued: "start-stream" installs a pipe that runs on its own, and "stop-stream" must not
+        // wait behind a pending config update.
+        if (message.type === "start-stream") {
+            this.startStream(message.streamId, message.readable, message.writable);
+            return;
+        }
+        if (message.type === "stop-stream") {
+            this.stopStream(message.streamId);
+            return;
+        }
+        this.messageQueue = this.messageQueue
+            .then(async () => {
+                if (message.type === "initialize") {
+                    await this.initialize(message.config);
+                } else if (message.type === "update-config") {
+                    await this.updateConfig(message.requestId, message.config);
+                } else {
+                    this.processFrame(message.frameId, message.frame, message.timestampMs);
+                }
+            })
+            .catch((error: unknown) => {
+                console.error("[MediaPipe Tasks Vision Worker] Unexpected worker error:", error);
+            });
+    }
+
+    private async initialize(config: BackgroundConfig): Promise<void> {
+        this.config = { ...config };
+        try {
+            const delegate = await this.initializeMediaPipe();
+            await this.updateBackgroundImage();
+            this.post({ type: "ready", delegate });
+        } catch (error) {
+            this.dispose();
+            if (error instanceof UnsupportedError) {
+                this.post({ type: "unsupported", reason: error.message });
+            } else {
+                this.post({ type: "initialization-error", error: serializeError(error) });
+            }
+        }
+    }
+
+    private async initializeMediaPipe(): Promise<TasksVisionWorkerDelegate> {
+        if (typeof OffscreenCanvas === "undefined") {
+            throw new UnsupportedError("OffscreenCanvas is unavailable");
+        }
+        const glCanvas = new OffscreenCanvas(1, 1);
+        const gl = glCanvas.getContext("webgl2");
+        if (!gl) {
+            throw new UnsupportedError("WebGL2 is unavailable in OffscreenCanvas workers");
+        }
+        this.glCanvas = glCanvas;
+        this.gl = gl;
+
+        const createSegmenter = async (delegate: TasksVisionWorkerDelegate) => {
+            await installTasksVisionModuleFactory();
+            return ImageSegmenter.createFromOptions(TASKS_VISION_WORKER_FILESET, {
+                baseOptions: { modelAssetPath: SELFIE_SEGMENTER_MODEL_URL, delegate },
+                canvas: glCanvas,
+                runningMode: "VIDEO",
+                outputCategoryMask: false,
+                outputConfidenceMasks: true,
+            });
+        };
+        let delegate: TasksVisionWorkerDelegate = "GPU";
+        try {
+            this.imageSegmenter = await createSegmenter("GPU");
+        } catch (gpuError) {
+            console.warn("[MediaPipe Tasks Vision Worker] GPU initialization failed, using CPU:", gpuError);
+            delegate = "CPU";
+            this.imageSegmenter = await createSegmenter("CPU");
+        }
+        this.drawingUtils = new DrawingUtils(gl);
+        this.blurCompositor = new TasksVisionBlurCompositor(gl, glCanvas);
+        this.lastTimestampMs = -1;
+        return delegate;
+    }
+
+    private async updateBackgroundImage(): Promise<void> {
+        const nextUrl = this.config.mode === "image" ? this.config.backgroundImage : undefined;
+        if (nextUrl === this.backgroundImageUrl) {
+            return;
+        }
+
+        let nextBackgroundImage: ImageBitmap | null = null;
+        if (nextUrl) {
+            const response = await fetch(nextUrl);
+            if (!response.ok) {
+                throw new Error(`Failed to load background image: HTTP ${response.status}`);
+            }
+            nextBackgroundImage = await createImageBitmap(await response.blob());
+        }
+
+        this.backgroundImage?.close();
+        this.backgroundImage = nextBackgroundImage;
+        this.backgroundImageUrl = nextUrl ?? null;
+        this.backgroundCanvas = null;
+    }
+
+    private async updateConfig(requestId: number, nextConfig: Partial<BackgroundConfig>): Promise<void> {
+        try {
+            Object.assign(this.config, nextConfig);
+            await this.updateBackgroundImage();
+            this.post({ type: "config-updated", requestId });
+        } catch (error) {
+            this.post({ type: "config-update-error", requestId, error: serializeError(error) });
+        }
+    }
+
+    // ---- image-bitmap transport ----
+
+    private processFrame(frameId: number, frame: ImageBitmap, timestampMs: number): void {
+        let blurBackend: "webgl-blur" | "none" = "none";
+        let output: ImageBitmap = frame;
+        try {
+            const rendered = this.render(frame, frame.width, frame.height, timestampMs);
+            if (rendered) {
+                blurBackend = rendered;
+                output = this.glCanvas!.transferToImageBitmap();
+            }
+        } catch (error) {
+            this.handleRenderFailure(error);
+        }
+        if (output !== frame) {
+            frame.close();
+        }
+        this.post({ type: "frame", frameId, bitmap: output, blurBackend }, [output]);
+    }
+
+    // ---- insertable-streams transport ----
+
+    private startStream(
+        streamId: number,
+        readable: ReadableStream<VideoFrame>,
+        writable: WritableStream<VideoFrame>,
+    ): void {
+        this.stopStream(this.activeStream?.streamId);
+        const abortController = new AbortController();
+        this.activeStream = { streamId, abortController };
+
+        const transformer = new TransformStream<VideoFrame, VideoFrame>({
+            transform: (frame, controller) => this.transformVideoFrame(frame, controller),
+        });
+        readable
+            .pipeThrough(transformer)
+            .pipeTo(writable, { signal: abortController.signal })
+            .catch((error: unknown) => {
+                if (abortController.signal.aborted) {
+                    return;
+                }
+                this.reportFatal(new Error("Background video pipe failed", { cause: error }));
+            })
+            .finally(() => {
+                if (this.activeStream?.streamId === streamId) {
+                    this.activeStream = null;
+                }
+            });
+    }
+
+    private stopStream(streamId: number | undefined): void {
+        if (streamId === undefined || this.activeStream?.streamId !== streamId) {
+            return;
+        }
+        this.activeStream.abortController.abort();
+        this.activeStream = null;
+    }
+
+    private transformVideoFrame(frame: VideoFrame, controller: TransformStreamDefaultController<VideoFrame>): void {
+        let output: VideoFrame = frame;
+        try {
+            // VideoFrame timestamps are microseconds; MediaPipe wants milliseconds.
+            if (this.render(frame, frame.displayWidth, frame.displayHeight, frame.timestamp / 1000)) {
+                output = new VideoFrame(this.glCanvas!, { timestamp: frame.timestamp, alpha: "discard" });
+            }
+        } catch (error) {
+            this.handleRenderFailure(error);
+        }
+        controller.enqueue(output);
+        if (output !== frame) {
+            frame.close();
+        }
+    }
+
+    // ---- rendering ----
+
+    /**
+     * Segments and composites the source onto the WebGL canvas. Returns the blur backend used, or null when the
+     * frame must be passed through untouched (no effect, recovery in progress, no mask).
+     */
+    private render(
+        source: FrameSource,
+        width: number,
+        height: number,
+        timestampMs: number,
+    ): "webgl-blur" | "none" | null {
+        if (this.config.mode === "none" || this.recovery || this.fatal || !width || !height) {
+            return null;
+        }
+        const imageSegmenter = this.imageSegmenter;
+        const glCanvas = this.glCanvas;
+        if (!imageSegmenter || !glCanvas || !this.gl) {
+            throw new Error("MediaPipe worker received a frame before initialization");
+        }
+        if (glCanvas.width !== width || glCanvas.height !== height) {
+            glCanvas.width = width;
+            glCanvas.height = height;
+        }
+
+        // The Tasks Vision API requires strictly increasing timestamps.
+        const monotonicTimestampMs = Math.max(timestampMs, this.lastTimestampMs + 1);
+        this.lastTimestampMs = monotonicTimestampMs;
+
+        let result: "webgl-blur" | "none" | null = null;
+        imageSegmenter.segmentForVideo(source, monotonicTimestampMs, (segmentation) => {
+            const mask = segmentation.confidenceMasks?.[0];
+            if (!mask) {
+                return;
+            }
+            result = this.composite(source, mask, width, height);
+            this.gl?.flush();
+        });
+        if (result !== null) {
+            this.markSuccessfulFrame();
+        }
+        return result;
+    }
+
+    private composite(source: FrameSource, mask: MPMask, width: number, height: number): "webgl-blur" | "none" {
+        const drawingUtils = this.drawingUtils;
+        if (!drawingUtils) {
+            throw new Error("DrawingUtils is unavailable");
+        }
+
+        if (this.config.mode === "blur") {
+            const blurAmount = this.config.blurAmount || 15;
+            if (this.blurCompositor?.draw(source, mask, width, height, blurAmount)) {
+                return "webgl-blur";
+            }
+            const blurredCanvas = this.getSizedCanvas("fallbackBlurredCanvas", width, height);
+            const context = blurredCanvas.getContext("2d")!;
+            context.clearRect(0, 0, width, height);
+            context.filter = `blur(${blurAmount}px)`;
+            context.drawImage(source, 0, 0, width, height);
+            context.filter = "none";
+            drawingUtils.drawConfidenceMask(mask, blurredCanvas, source);
+            return "none";
+        }
+
+        drawingUtils.drawConfidenceMask(mask, this.getBackgroundCanvas(width, height) ?? [0, 0, 0, 255], source);
+        return "none";
+    }
+
+    private getSizedCanvas(field: "fallbackBlurredCanvas" | "backgroundCanvas", width: number, height: number) {
+        let canvas = this[field];
+        if (!canvas) {
+            canvas = new OffscreenCanvas(width, height);
+            this[field] = canvas;
+        } else if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width;
+            canvas.height = height;
+        }
+        return canvas;
+    }
+
+    /** The background image scaled to cover the frame, rendered once per size. */
+    private getBackgroundCanvas(width: number, height: number): OffscreenCanvas | null {
+        const backgroundImage = this.backgroundImage;
+        if (!backgroundImage) {
+            return null;
+        }
+        const existing = this.backgroundCanvas;
+        if (existing && existing.width === width && existing.height === height) {
+            return existing;
+        }
+        const canvas = this.getSizedCanvas("backgroundCanvas", width, height);
+        const scale = Math.max(width / backgroundImage.width, height / backgroundImage.height);
+        const scaledWidth = backgroundImage.width * scale;
+        const scaledHeight = backgroundImage.height * scale;
+        const context = canvas.getContext("2d")!;
+        context.clearRect(0, 0, width, height);
+        context.drawImage(
+            backgroundImage,
+            (width - scaledWidth) / 2,
+            (height - scaledHeight) / 2,
+            scaledWidth,
+            scaledHeight,
+        );
+        return canvas;
+    }
+
+    // ---- recovery ----
+
+    private markSuccessfulFrame(): void {
+        if (this.consecutiveRecoveryAttempts === 0) {
+            return;
+        }
+        this.successfulFramesSinceRecovery++;
+        if (this.successfulFramesSinceRecovery >= SUCCESSFUL_FRAMES_BEFORE_RECOVERY_RESET) {
+            this.consecutiveRecoveryAttempts = 0;
+            this.successfulFramesSinceRecovery = 0;
+        }
+    }
+
+    private handleRenderFailure(error: unknown): void {
+        if (this.recovery || this.fatal) {
+            return;
+        }
+        console.error(
+            `[MediaPipe Tasks Vision Worker] Frame processing failed (webGlContextLost=${this.gl?.isContextLost() ?? true}):`,
+            error,
+        );
+        this.recovery = this.recover()
+            .catch((recoveryError: unknown) => {
+                this.reportFatal(new Error("MediaPipe Tasks Vision recovery failed", { cause: recoveryError }));
+            })
+            .finally(() => {
+                this.recovery = null;
+            });
+    }
+
+    private async recover(): Promise<void> {
+        if (this.consecutiveRecoveryAttempts >= MAX_CONSECUTIVE_RECOVERY_ATTEMPTS) {
+            throw new Error("MediaPipe recovery attempts exhausted");
+        }
+        this.consecutiveRecoveryAttempts++;
+        this.successfulFramesSinceRecovery = 0;
+        this.dispose();
+        try {
+            await this.initializeMediaPipe();
+            await this.updateBackgroundImage();
+        } catch (error) {
+            console.error("[MediaPipe Tasks Vision Worker] Recovery attempt failed:", error);
+            return this.recover();
+        }
+        console.info(
+            `[MediaPipe Tasks Vision Worker] Recovered after attempt ${this.consecutiveRecoveryAttempts}/${MAX_CONSECUTIVE_RECOVERY_ATTEMPTS}`,
+        );
+    }
+
+    private reportFatal(error: Error): void {
+        if (this.fatal) {
+            return;
+        }
+        this.fatal = true;
+        this.dispose();
+        this.post({ type: "fatal", error: serializeError(error) });
+    }
+
+    private dispose(): void {
+        closeQuietly("blur compositor", this.blurCompositor);
+        this.blurCompositor = null;
+        closeQuietly("DrawingUtils", this.drawingUtils);
+        this.drawingUtils = null;
+        closeQuietly("ImageSegmenter", this.imageSegmenter);
+        this.imageSegmenter = null;
+        this.gl?.getExtension("WEBGL_lose_context")?.loseContext();
+        this.gl = null;
+        this.glCanvas = null;
+        this.backgroundCanvas = null;
+        this.fallbackBlurredCanvas = null;
+    }
+}

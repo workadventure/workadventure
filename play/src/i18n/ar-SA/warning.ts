@@ -22,6 +22,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     mapEditorNotEnabled: "محرر الخريطة غير مفعّل في هذا العالم.", // "The map editor is not enabled in this world."
     backgroundProcessing: {
         failedToApply: "فشل في تطبيق تأثيرات الخلفية",
+        notSupportedOnThisBrowser: "تأثيرات الخلفية غير مدعومة في هذا المتصفح",
     },
     popupBlocked: {
         title: "تم حظر النوافذ المنبثقة", // "Popup blocked"

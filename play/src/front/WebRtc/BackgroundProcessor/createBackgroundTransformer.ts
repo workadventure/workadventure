@@ -1,4 +1,4 @@
-import { MediaPipeTasksVisionTransformer } from "./MediaPipeTasksVisionTransformer";
+import { MediaPipeTasksVisionWorkerTransformer } from "./MediaPipeTasksVisionWorkerTransformer";
 import { FallbackBackgroundTransformer } from "./FallbackBackgroundTransformer";
 
 export const BACKGROUND_MODES = ["none", "blur", "image"] as const;
@@ -25,6 +25,14 @@ export interface BackgroundTransformer {
 
 export type BackgroundTransformerFailureHandler = (error: Error) => void;
 
+/** The browser cannot run background effects at all (no worker WebGL2, no OffscreenCanvas...). */
+export class BackgroundProcessingUnsupportedError extends Error {
+    constructor(reason: string) {
+        super(`Background processing is not supported on this browser: ${reason}`);
+        this.name = "BackgroundProcessingUnsupportedError";
+    }
+}
+
 /**
  * Create a MediaPipe Tasks Vision background transformer, or a pass-through fallback
  * when the transformer cannot be constructed.
@@ -34,7 +42,7 @@ export function createBackgroundTransformer(
     onTerminalFailure?: BackgroundTransformerFailureHandler,
 ): BackgroundTransformer {
     try {
-        return new MediaPipeTasksVisionTransformer(config, onTerminalFailure);
+        return new MediaPipeTasksVisionWorkerTransformer(config, onTerminalFailure);
     } catch (error) {
         console.error("[BackgroundTransformer] Failed to create Tasks Vision transformer, using fallback:", error);
         return new FallbackBackgroundTransformer();

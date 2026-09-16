@@ -28,6 +28,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     backgroundProcessing: {
         failedToApply: "Hintergrundeffekte konnten nicht angewendet werden",
+        notSupportedOnThisBrowser: "Hintergrundeffekte werden von diesem Browser nicht unterstützt",
     },
     duplicateUserConnected: {
         title: "Bereits verbunden",
