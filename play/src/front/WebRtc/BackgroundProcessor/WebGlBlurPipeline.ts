@@ -1,31 +1,28 @@
 export type WebGlBlurContext = WebGLRenderingContext | WebGL2RenderingContext;
 
-export const BLUR_ITERATIONS = 2;
-
 const WEBGL_BLUR_BASE_MAX_SIDE = 384;
 const WEBGL_MIN_BLUR_MAX_SIDE = 288;
-const WEBGL_BLUR_MAX_RADIUS = 18;
 const DUAL_KAWASE_MIN_SIDE = 24;
 
 type WebGlCanvas = HTMLCanvasElement | OffscreenCanvas;
-
-type WebGlBlurPipelineOptions<TCanvas extends WebGlCanvas> = {
-    canvas: TCanvas;
-    gl: WebGlBlurContext;
-    ownsContext?: boolean;
-    restoreState?: boolean;
-};
 
 type WebGlStateSnapshot = {
     blendEnabled: boolean;
     depthTestEnabled: boolean;
 };
 
-type KawaseFramebuffer = {
+type FramebufferTexture = {
     texture: WebGLTexture;
     framebuffer: WebGLFramebuffer;
     width: number;
     height: number;
+};
+
+type ProgramLocations = {
+    program: WebGLProgram;
+    position: number;
+    texCoord: number;
+    uniforms: Record<string, WebGLUniformLocation>;
 };
 
 export function getWebGlBlurSize(
@@ -47,14 +44,6 @@ export function getWebGlBlurSize(
         height: Math.max(1, Math.round(height * scale)),
         scale,
     };
-}
-
-export function getWebGlBlurRadius(blurAmount: number, scale: number): number {
-    if (blurAmount <= 0 || scale <= 0) {
-        return 0;
-    }
-
-    return Math.max(1, Math.min(WEBGL_BLUR_MAX_RADIUS, Math.round(blurAmount * scale * 1.1)));
 }
 
 export function getDualKawaseBlurLevels(blurAmount: number): number {
@@ -111,34 +100,6 @@ void main() {
 }
 `;
 
-export const BLUR_FRAGMENT_SHADER = `
-precision mediump float;
-
-uniform sampler2D u_texture;
-uniform vec2 u_texelOffset;
-uniform float u_radius;
-
-varying vec2 v_texCoord;
-
-void main() {
-    float centerWeight = max(u_radius + 1.0, 1.0);
-    vec4 color = texture2D(u_texture, v_texCoord) * centerWeight;
-    float weight = centerWeight;
-
-    for (int i = 1; i <= 18; i++) {
-        float sampleOffset = float(i);
-        float enabled = step(sampleOffset, u_radius);
-        float sampleWeight = (u_radius + 1.0 - sampleOffset) * enabled;
-        vec2 offset = u_texelOffset * sampleOffset;
-        color += texture2D(u_texture, v_texCoord + offset) * sampleWeight;
-        color += texture2D(u_texture, v_texCoord - offset) * sampleWeight;
-        weight += sampleWeight * 2.0;
-    }
-
-    gl_FragColor = color / weight;
-}
-`;
-
 const DUAL_KAWASE_DOWN_FRAGMENT_SHADER = `
 precision mediump float;
 
@@ -187,20 +148,23 @@ void main() {
 }
 `;
 
-export const COMPOSITE_FRAGMENT_SHADER = `
+/**
+ * Feathers the raw confidence mask spatially, then blends it with the previous frame's smoothed mask.
+ * Where the two disagree strongly something moved and the fresh mask wins, so motion stays crisp;
+ * where they agree the blend dampens the per-frame jitter of a static edge.
+ */
+export const MASK_SMOOTH_FRAGMENT_SHADER = `
 precision mediump float;
 
-uniform sampler2D u_sharpTexture;
-uniform sampler2D u_blurredTexture;
 uniform sampler2D u_maskTexture;
-uniform float u_maskAlphaWeight;
+uniform sampler2D u_previousMaskTexture;
 uniform vec2 u_maskTexelSize;
+uniform float u_previousWeight;
 
 varying vec2 v_texCoord;
 
 float readMask(vec2 texCoord) {
-    vec4 maskColor = texture2D(u_maskTexture, texCoord);
-    return mix(maskColor.r, maskColor.a, u_maskAlphaWeight);
+    return texture2D(u_maskTexture, texCoord).r;
 }
 
 void main() {
@@ -215,220 +179,144 @@ void main() {
     confidence += readMask(v_texCoord + vec2( featherOffset.x, -featherOffset.y)) * 0.06;
     confidence += readMask(v_texCoord + vec2(-featherOffset.x, -featherOffset.y)) * 0.06;
 
-    float foregroundAlpha = smoothstep(0.24, 0.62, confidence);
-    vec4 blurredBackground = texture2D(u_blurredTexture, v_texCoord);
-    vec4 sharpForeground = texture2D(u_sharpTexture, v_texCoord);
+    float previous = texture2D(u_previousMaskTexture, v_texCoord).r;
+    float disagreement = abs(confidence - previous);
+    float freshWeight = clamp(0.3 + disagreement * 2.5, 0.3, 1.0);
+    float smoothed = mix(previous, confidence, max(freshWeight, 1.0 - u_previousWeight));
 
-    gl_FragColor = mix(blurredBackground, sharpForeground, foregroundAlpha);
+    gl_FragColor = vec4(smoothed, 0.0, 0.0, 1.0);
 }
 `;
 
-export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> {
-    private downsampleProgram: WebGLProgram | null = null;
-    private upsampleProgram: WebGLProgram | null = null;
-    private compositeProgram: WebGLProgram | null = null;
+export const COMPOSITE_FRAGMENT_SHADER = `
+precision mediump float;
+
+uniform sampler2D u_sharpTexture;
+uniform sampler2D u_backgroundTexture;
+uniform sampler2D u_maskTexture;
+
+varying vec2 v_texCoord;
+
+void main() {
+    float confidence = texture2D(u_maskTexture, v_texCoord).r;
+    float foregroundAlpha = smoothstep(0.24, 0.62, confidence);
+    vec4 background = texture2D(u_backgroundTexture, v_texCoord);
+    vec4 sharpForeground = texture2D(u_sharpTexture, v_texCoord);
+
+    gl_FragColor = mix(background, sharpForeground, foregroundAlpha);
+}
+`;
+
+/**
+ * WebGL compositing of a camera frame with a segmentation mask, on a context shared with MediaPipe.
+ *
+ * Blur mode: Dual Kawase blur of the frame at a reduced size, composited under the sharp frame.
+ * Replace mode: same composite with a background image instead of the blurred frame.
+ * Both modes run the mask through MASK_SMOOTH_FRAGMENT_SHADER, whose output is kept in a ping-pong
+ * framebuffer so the next frame can blend against it.
+ */
+export class WebGlBlurPipeline {
+    private downsample: ProgramLocations | null = null;
+    private upsample: ProgramLocations | null = null;
+    private maskSmooth: ProgramLocations | null = null;
+    private composite: ProgramLocations | null = null;
     private positionBuffer: WebGLBuffer | null = null;
     private texCoordBuffer: WebGLBuffer | null = null;
     private internalTexCoordBuffer: WebGLBuffer | null = null;
     private sourceTexture: WebGLTexture | null = null;
-    private maskTexture: WebGLTexture | null = null;
-    private finalBlurFramebuffer: KawaseFramebuffer | null = null;
-    private kawaseFramebuffers: KawaseFramebuffer[] = [];
+    private backgroundTexture: WebGLTexture | null = null;
+    private backgroundSource: CanvasImageSource | null = null;
+    private blackTexture: WebGLTexture | null = null;
+    private finalBlurFramebuffer: FramebufferTexture | null = null;
+    private kawaseFramebuffers: FramebufferTexture[] = [];
     private framebufferWidth = 0;
     private framebufferHeight = 0;
     private framebufferLevels = 0;
-    private downsamplePositionLocation = -1;
-    private downsampleTexCoordLocation = -1;
-    private downsampleTextureLocation: WebGLUniformLocation | null = null;
-    private downsampleTexelSizeLocation: WebGLUniformLocation | null = null;
-    private downsampleOffsetLocation: WebGLUniformLocation | null = null;
-    private upsamplePositionLocation = -1;
-    private upsampleTexCoordLocation = -1;
-    private upsampleTextureLocation: WebGLUniformLocation | null = null;
-    private upsampleTexelSizeLocation: WebGLUniformLocation | null = null;
-    private upsampleOffsetLocation: WebGLUniformLocation | null = null;
-    private compositePositionLocation = -1;
-    private compositeTexCoordLocation = -1;
-    private sharpTextureLocation: WebGLUniformLocation | null = null;
-    private blurredTextureLocation: WebGLUniformLocation | null = null;
-    private compositeMaskTextureLocation: WebGLUniformLocation | null = null;
-    private maskAlphaWeightLocation: WebGLUniformLocation | null = null;
-    private maskTexelSizeLocation: WebGLUniformLocation | null = null;
+    private maskFramebuffers: FramebufferTexture[] = [];
+    private currentMaskIndex = 0;
+    private hasPreviousMask = false;
     private contextLost = false;
 
-    private readonly canvas: TCanvas;
+    private readonly canvas: WebGlCanvas;
     private readonly gl: WebGlBlurContext;
-    private readonly ownsContext: boolean;
-    private readonly restoreState: boolean;
 
-    private readonly handleContextLost = (event: Event): void => {
-        event.preventDefault();
-        this.contextLost = true;
-        this.releaseResources();
-    };
-
-    private readonly handleContextRestored = (): void => {
-        this.contextLost = false;
-        this.releaseResources();
-    };
-
-    constructor(options: WebGlBlurPipelineOptions<TCanvas>) {
+    constructor(options: { canvas: WebGlCanvas; gl: WebGlBlurContext }) {
         this.canvas = options.canvas;
         this.gl = options.gl;
-        this.ownsContext = options.ownsContext ?? false;
-        this.restoreState = options.restoreState ?? false;
-
-        if (this.ownsContext) {
-            this.canvas.addEventListener("webglcontextlost", this.handleContextLost, false);
-            this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored, false);
-        }
     }
 
-    public drawBlurredImage(
-        source: CanvasImageSource,
-        width: number,
-        height: number,
-        blurAmount: number,
-    ): TCanvas | null {
-        if (this.isUnavailable()) {
-            return null;
-        }
-
-        const blurSize = getWebGlBlurSize(width, height, blurAmount);
-        if (!blurSize.width || !blurSize.height) {
-            return null;
-        }
-
-        if (this.canvas.width !== blurSize.width || this.canvas.height !== blurSize.height) {
-            this.canvas.width = blurSize.width;
-            this.canvas.height = blurSize.height;
-        }
-
-        return this.withOptionalStateRestore(() => {
-            const blurLevels = getDualKawaseBlurLevels(blurAmount);
-            this.ensureDualKawasePrograms();
-            this.ensureBuffers();
-            this.ensureTextures(blurSize.width, blurSize.height, blurLevels);
-
-            const blurredTexture = this.renderBlurredTexture(
-                source,
-                blurSize,
-                blurLevels,
-                getDualKawaseBlurOffset(blurAmount),
-            );
-            this.drawKawasePass(
-                this.upsampleProgram,
-                this.upsamplePositionLocation,
-                this.upsampleTexCoordLocation,
-                this.upsampleTextureLocation,
-                this.upsampleTexelSizeLocation,
-                this.upsampleOffsetLocation,
-                blurredTexture.texture,
-                null,
-                blurSize.width,
-                blurSize.height,
-                blurredTexture.width,
-                blurredTexture.height,
-                0,
-                true,
-            );
-            this.gl.flush();
-
-            return this.canvas;
-        });
-    }
-
-    public drawCompositeWithCanvasMask(
-        source: CanvasImageSource,
-        segmentationMask: CanvasImageSource,
-        width: number,
-        height: number,
-        blurAmount: number,
-    ): TCanvas | null {
-        if (this.isUnavailable()) {
-            return null;
-        }
-
-        const blurSize = getWebGlBlurSize(width, height, blurAmount);
-        if (!blurSize.width || !blurSize.height) {
-            return null;
-        }
-
-        if (this.canvas.width !== width || this.canvas.height !== height) {
-            this.canvas.width = width;
-            this.canvas.height = height;
-        }
-
-        return this.withOptionalStateRestore(() => {
-            const blurLevels = getDualKawaseBlurLevels(blurAmount);
-            this.ensureDualKawasePrograms();
-            this.ensureCompositeProgram();
-            this.ensureBuffers();
-            this.ensureTextures(blurSize.width, blurSize.height, blurLevels);
-            this.ensureMaskTexture();
-
-            const blurredTexture = this.renderBlurredTexture(
-                source,
-                blurSize,
-                blurLevels,
-                getDualKawaseBlurOffset(blurAmount),
-            );
-            this.uploadTexture(this.maskTexture!, segmentationMask, 2);
-            this.drawCompositePass(this.sourceTexture!, blurredTexture.texture, this.maskTexture!, width, height, 1);
-            this.gl.flush();
-
-            return this.canvas;
-        });
-    }
-
-    public drawCompositeWithTextureMask(
+    /**
+     * @param freshMask false when maskTexture is the same mask as the previous call (segmentation is skipped on
+     * some frames): the smoothed mask of the previous call is reused instead of being blended again.
+     */
+    public drawBlur(
         source: CanvasImageSource,
         maskTexture: WebGLTexture,
         width: number,
         height: number,
         blurAmount: number,
+        freshMask: boolean,
     ): boolean {
         if (this.isUnavailable()) {
             return false;
         }
-
         const blurSize = getWebGlBlurSize(width, height, blurAmount);
         if (!blurSize.width || !blurSize.height) {
             return false;
         }
 
-        return this.withOptionalStateRestore(() => {
+        return this.withStateRestore(() => {
             const blurLevels = getDualKawaseBlurLevels(blurAmount);
-            this.ensureDualKawasePrograms();
-            this.ensureCompositeProgram();
+            this.ensurePrograms();
             this.ensureBuffers();
-            this.ensureTextures(blurSize.width, blurSize.height, blurLevels);
+            this.ensureBlurFramebuffers(blurSize.width, blurSize.height, blurLevels);
 
+            const smoothedMask = this.smoothMask(maskTexture, width, height, freshMask);
             const blurredTexture = this.renderBlurredTexture(
                 source,
                 blurSize,
                 blurLevels,
                 getDualKawaseBlurOffset(blurAmount),
             );
-            this.drawCompositePass(this.sourceTexture!, blurredTexture.texture, maskTexture, width, height, 0);
+            this.drawCompositePass(this.sourceTexture!, blurredTexture, smoothedMask, width, height);
             this.gl.flush();
+            return true;
+        });
+    }
 
+    public drawReplace(
+        source: CanvasImageSource,
+        maskTexture: WebGLTexture,
+        background: CanvasImageSource | null,
+        width: number,
+        height: number,
+        freshMask: boolean,
+    ): boolean {
+        if (this.isUnavailable() || !width || !height) {
+            return false;
+        }
+
+        return this.withStateRestore(() => {
+            this.ensurePrograms();
+            this.ensureBuffers();
+            this.ensureSourceTexture();
+
+            const smoothedMask = this.smoothMask(maskTexture, width, height, freshMask);
+            this.uploadTexture(this.sourceTexture!, source, 0);
+            this.drawCompositePass(
+                this.sourceTexture!,
+                this.getBackgroundTexture(background),
+                smoothedMask,
+                width,
+                height,
+            );
+            this.gl.flush();
             return true;
         });
     }
 
     public close(): void {
-        if (this.ownsContext) {
-            this.canvas.removeEventListener("webglcontextlost", this.handleContextLost, false);
-            this.canvas.removeEventListener("webglcontextrestored", this.handleContextRestored, false);
-        }
-
         this.releaseResources();
-
-        if (this.ownsContext) {
-            this.canvas.width = 0;
-            this.canvas.height = 0;
-        }
     }
 
     private isUnavailable(): boolean {
@@ -436,15 +324,10 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
             this.contextLost = true;
             return true;
         }
-
         return false;
     }
 
-    private withOptionalStateRestore<T>(callback: () => T): T {
-        if (!this.restoreState) {
-            return callback();
-        }
-
+    private withStateRestore<T>(callback: () => T): T {
         const snapshot = this.captureState();
         try {
             return callback();
@@ -505,83 +388,33 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
         }
     }
 
-    private ensureDualKawasePrograms(): void {
-        if (!this.downsampleProgram) {
-            const program = this.createProgram(
-                BLUR_VERTEX_SHADER,
-                DUAL_KAWASE_DOWN_FRAGMENT_SHADER,
-                "dual kawase down",
-            );
-            this.downsampleProgram = program;
-            this.downsamplePositionLocation = this.gl.getAttribLocation(program, "a_position");
-            this.downsampleTexCoordLocation = this.gl.getAttribLocation(program, "a_texCoord");
-            this.downsampleTextureLocation = this.gl.getUniformLocation(program, "u_texture");
-            this.downsampleTexelSizeLocation = this.gl.getUniformLocation(program, "u_texelSize");
-            this.downsampleOffsetLocation = this.gl.getUniformLocation(program, "u_offset");
-
-            if (
-                this.downsamplePositionLocation < 0 ||
-                this.downsampleTexCoordLocation < 0 ||
-                !this.downsampleTextureLocation ||
-                !this.downsampleTexelSizeLocation ||
-                !this.downsampleOffsetLocation
-            ) {
-                throw new Error("Unable to resolve WebGL Dual Kawase downsample shader locations");
-            }
-        }
-
-        if (!this.upsampleProgram) {
-            const program = this.createProgram(BLUR_VERTEX_SHADER, DUAL_KAWASE_UP_FRAGMENT_SHADER, "dual kawase up");
-            this.upsampleProgram = program;
-            this.upsamplePositionLocation = this.gl.getAttribLocation(program, "a_position");
-            this.upsampleTexCoordLocation = this.gl.getAttribLocation(program, "a_texCoord");
-            this.upsampleTextureLocation = this.gl.getUniformLocation(program, "u_texture");
-            this.upsampleTexelSizeLocation = this.gl.getUniformLocation(program, "u_texelSize");
-            this.upsampleOffsetLocation = this.gl.getUniformLocation(program, "u_offset");
-
-            if (
-                this.upsamplePositionLocation < 0 ||
-                this.upsampleTexCoordLocation < 0 ||
-                !this.upsampleTextureLocation ||
-                !this.upsampleTexelSizeLocation ||
-                !this.upsampleOffsetLocation
-            ) {
-                throw new Error("Unable to resolve WebGL Dual Kawase upsample shader locations");
-            }
-        }
+    private ensurePrograms(): void {
+        this.downsample ??= this.createProgram(DUAL_KAWASE_DOWN_FRAGMENT_SHADER, "dual kawase down", [
+            "u_texture",
+            "u_texelSize",
+            "u_offset",
+        ]);
+        this.upsample ??= this.createProgram(DUAL_KAWASE_UP_FRAGMENT_SHADER, "dual kawase up", [
+            "u_texture",
+            "u_texelSize",
+            "u_offset",
+        ]);
+        this.maskSmooth ??= this.createProgram(MASK_SMOOTH_FRAGMENT_SHADER, "mask smoothing", [
+            "u_maskTexture",
+            "u_previousMaskTexture",
+            "u_maskTexelSize",
+            "u_previousWeight",
+        ]);
+        this.composite ??= this.createProgram(COMPOSITE_FRAGMENT_SHADER, "composite", [
+            "u_sharpTexture",
+            "u_backgroundTexture",
+            "u_maskTexture",
+        ]);
     }
 
-    private ensureCompositeProgram(): void {
-        if (this.compositeProgram) {
-            return;
-        }
-
-        const program = this.createProgram(BLUR_VERTEX_SHADER, COMPOSITE_FRAGMENT_SHADER, "composite");
-        this.compositeProgram = program;
-        this.compositePositionLocation = this.gl.getAttribLocation(program, "a_position");
-        this.compositeTexCoordLocation = this.gl.getAttribLocation(program, "a_texCoord");
-        this.sharpTextureLocation = this.gl.getUniformLocation(program, "u_sharpTexture");
-        this.blurredTextureLocation = this.gl.getUniformLocation(program, "u_blurredTexture");
-        this.compositeMaskTextureLocation = this.gl.getUniformLocation(program, "u_maskTexture");
-        this.maskAlphaWeightLocation = this.gl.getUniformLocation(program, "u_maskAlphaWeight");
-        this.maskTexelSizeLocation = this.gl.getUniformLocation(program, "u_maskTexelSize");
-
-        if (
-            this.compositePositionLocation < 0 ||
-            this.compositeTexCoordLocation < 0 ||
-            !this.sharpTextureLocation ||
-            !this.blurredTextureLocation ||
-            !this.compositeMaskTextureLocation ||
-            !this.maskAlphaWeightLocation ||
-            !this.maskTexelSizeLocation
-        ) {
-            throw new Error("Unable to resolve WebGL blur composite shader locations");
-        }
-    }
-
-    private createProgram(vertexSource: string, fragmentSource: string, label: string): WebGLProgram {
+    private createProgram(fragmentSource: string, label: string, uniformNames: string[]): ProgramLocations {
         const gl = this.gl;
-        const vertexShader = this.createShader(gl.VERTEX_SHADER, vertexSource, label);
+        const vertexShader = this.createShader(gl.VERTEX_SHADER, BLUR_VERTEX_SHADER, label);
         const fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fragmentSource, label);
         const program = gl.createProgram();
 
@@ -604,7 +437,23 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
 
-        return program;
+        const locations: ProgramLocations = {
+            program,
+            position: gl.getAttribLocation(program, "a_position"),
+            texCoord: gl.getAttribLocation(program, "a_texCoord"),
+            uniforms: {},
+        };
+        for (const name of uniformNames) {
+            const location = gl.getUniformLocation(program, name);
+            if (!location) {
+                throw new Error(`Unable to resolve WebGL ${label} shader uniform ${name}`);
+            }
+            locations.uniforms[name] = location;
+        }
+        if (locations.position < 0 || locations.texCoord < 0) {
+            throw new Error(`Unable to resolve WebGL ${label} shader attributes`);
+        }
+        return locations;
     }
 
     private createShader(type: number, source: string, label: string): WebGLShader {
@@ -632,7 +481,9 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
         }
 
         this.positionBuffer = this.createBuffer(new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]));
+        // Flipped: sampling an uploaded image (or the mask) while drawing to the canvas.
         this.texCoordBuffer = this.createBuffer(new Float32Array([0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0]));
+        // Identity: framebuffer-to-framebuffer passes.
         this.internalTexCoordBuffer = this.createBuffer(new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]));
     }
 
@@ -647,10 +498,12 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
         return buffer;
     }
 
-    private ensureTextures(width: number, height: number, levels: number): void {
-        if (!this.sourceTexture) {
-            this.sourceTexture = this.createTexture();
-        }
+    private ensureSourceTexture(): void {
+        this.sourceTexture ??= this.createTexture();
+    }
+
+    private ensureBlurFramebuffers(width: number, height: number, levels: number): void {
+        this.ensureSourceTexture();
 
         if (
             this.kawaseFramebuffers.length === levels &&
@@ -662,7 +515,7 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
             return;
         }
 
-        this.releaseFramebufferResources();
+        this.releaseBlurFramebuffers();
         this.finalBlurFramebuffer = this.createFramebufferTexture(width, height);
 
         let framebufferWidth = width;
@@ -679,24 +532,40 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
         this.framebufferLevels = levels;
     }
 
-    private ensureMaskTexture(): void {
-        if (!this.maskTexture) {
-            this.maskTexture = this.createTexture();
+    /**
+     * Two mask framebuffers at a reduced size (the model outputs 256x256 anyway) that alternate between
+     * "previous" and "current" so the temporal blend never reads the texture it writes.
+     */
+    private ensureMaskFramebuffers(width: number, height: number): void {
+        const [current] = this.maskFramebuffers;
+        if (current && current.width === width && current.height === height) {
+            return;
         }
+        this.releaseMaskFramebuffers();
+        this.maskFramebuffers = [
+            this.createFramebufferTexture(width, height),
+            this.createFramebufferTexture(width, height),
+        ];
+        this.currentMaskIndex = 0;
+        this.hasPreviousMask = false;
     }
 
     private createTexture(): WebGLTexture {
-        const texture = this.gl.createTexture();
+        const gl = this.gl;
+        const texture = gl.createTexture();
         if (!texture) {
             throw new Error("Unable to create WebGL blur texture");
         }
 
-        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-        this.configureTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         return texture;
     }
 
-    private createFramebufferTexture(width: number, height: number): KawaseFramebuffer {
+    private createFramebufferTexture(width: number, height: number): FramebufferTexture {
         const gl = this.gl;
         const texture = this.createTexture();
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -719,14 +588,6 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
         return { texture, framebuffer, width, height };
     }
 
-    private configureTexture(): void {
-        const gl = this.gl;
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    }
-
     private uploadTexture(texture: WebGLTexture, source: CanvasImageSource, textureUnit: number): void {
         const gl = this.gl;
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -737,12 +598,75 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source as TexImageSource);
     }
 
+    /** The background image is uploaded once and reused until the caller hands over a different object. */
+    private getBackgroundTexture(background: CanvasImageSource | null): WebGLTexture {
+        const gl = this.gl;
+        if (!background) {
+            if (!this.blackTexture) {
+                this.blackTexture = this.createTexture();
+                gl.texImage2D(
+                    gl.TEXTURE_2D,
+                    0,
+                    gl.RGBA,
+                    1,
+                    1,
+                    0,
+                    gl.RGBA,
+                    gl.UNSIGNED_BYTE,
+                    new Uint8Array([0, 0, 0, 255]),
+                );
+            }
+            return this.blackTexture;
+        }
+        this.backgroundTexture ??= this.createTexture();
+        if (this.backgroundSource !== background) {
+            this.uploadTexture(this.backgroundTexture, background, 1);
+            this.backgroundSource = background;
+        }
+        return this.backgroundTexture;
+    }
+
+    private smoothMask(maskTexture: WebGLTexture, width: number, height: number, freshMask: boolean): WebGLTexture {
+        const maskSize = getWebGlBlurSize(width, height, 0);
+        this.ensureMaskFramebuffers(maskSize.width, maskSize.height);
+        const previous = this.maskFramebuffers[this.currentMaskIndex];
+        if (!freshMask && this.hasPreviousMask) {
+            return previous.texture;
+        }
+        const target = this.maskFramebuffers[1 - this.currentMaskIndex];
+
+        const gl = this.gl;
+        const program = this.maskSmooth!;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, target.framebuffer);
+        gl.viewport(0, 0, target.width, target.height);
+        gl.disable(gl.DEPTH_TEST);
+        gl.disable(gl.BLEND);
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.useProgram(program.program);
+        this.bindQuad(program, this.internalTexCoordBuffer);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, maskTexture);
+        gl.uniform1i(program.uniforms.u_maskTexture, 0);
+        gl.activeTexture(gl.TEXTURE0 + 1);
+        gl.bindTexture(gl.TEXTURE_2D, previous.texture);
+        gl.uniform1i(program.uniforms.u_previousMaskTexture, 1);
+        gl.uniform2f(program.uniforms.u_maskTexelSize, 1 / width, 1 / height);
+        gl.uniform1f(program.uniforms.u_previousWeight, this.hasPreviousMask ? 1 : 0);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        this.currentMaskIndex = 1 - this.currentMaskIndex;
+        this.hasPreviousMask = true;
+        return target.texture;
+    }
+
     private renderBlurredTexture(
         source: CanvasImageSource,
         blurSize: { width: number; height: number; scale: number },
         levels: number,
         blurOffset: number,
-    ): { texture: WebGLTexture; width: number; height: number } {
+    ): WebGLTexture {
         const gl = this.gl;
 
         gl.viewport(0, 0, blurSize.width, blurSize.height);
@@ -757,22 +681,7 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
 
         for (let level = 0; level < levels; level++) {
             const target = this.kawaseFramebuffers[level];
-            this.drawKawasePass(
-                this.downsampleProgram,
-                this.downsamplePositionLocation,
-                this.downsampleTexCoordLocation,
-                this.downsampleTextureLocation,
-                this.downsampleTexelSizeLocation,
-                this.downsampleOffsetLocation,
-                sourceTexture,
-                target.framebuffer,
-                target.width,
-                target.height,
-                sourceWidth,
-                sourceHeight,
-                blurOffset,
-                false,
-            );
+            this.drawKawasePass(this.downsample!, sourceTexture, target, sourceWidth, sourceHeight, blurOffset);
             sourceTexture = target.texture;
             sourceWidth = target.width;
             sourceHeight = target.height;
@@ -780,213 +689,151 @@ export class WebGlBlurPipeline<TCanvas extends WebGlCanvas = HTMLCanvasElement> 
 
         for (let level = levels - 2; level >= 0; level--) {
             const target = this.kawaseFramebuffers[level];
-            this.drawKawasePass(
-                this.upsampleProgram,
-                this.upsamplePositionLocation,
-                this.upsampleTexCoordLocation,
-                this.upsampleTextureLocation,
-                this.upsampleTexelSizeLocation,
-                this.upsampleOffsetLocation,
-                sourceTexture,
-                target.framebuffer,
-                target.width,
-                target.height,
-                sourceWidth,
-                sourceHeight,
-                blurOffset,
-                false,
-            );
+            this.drawKawasePass(this.upsample!, sourceTexture, target, sourceWidth, sourceHeight, blurOffset);
             sourceTexture = target.texture;
             sourceWidth = target.width;
             sourceHeight = target.height;
         }
 
         const target = this.finalBlurFramebuffer!;
-        this.drawKawasePass(
-            this.upsampleProgram,
-            this.upsamplePositionLocation,
-            this.upsampleTexCoordLocation,
-            this.upsampleTextureLocation,
-            this.upsampleTexelSizeLocation,
-            this.upsampleOffsetLocation,
-            sourceTexture,
-            target.framebuffer,
-            target.width,
-            target.height,
-            sourceWidth,
-            sourceHeight,
-            blurOffset,
-            false,
-        );
-
-        return { texture: target.texture, width: target.width, height: target.height };
+        this.drawKawasePass(this.upsample!, sourceTexture, target, sourceWidth, sourceHeight, blurOffset);
+        return target.texture;
     }
 
     private drawKawasePass(
-        program: WebGLProgram | null,
-        positionLocation: number,
-        texCoordLocation: number,
-        textureLocation: WebGLUniformLocation | null,
-        texelSizeLocation: WebGLUniformLocation | null,
-        offsetLocation: WebGLUniformLocation | null,
+        program: ProgramLocations,
         texture: WebGLTexture,
-        framebuffer: WebGLFramebuffer | null,
-        targetWidth: number,
-        targetHeight: number,
+        target: FramebufferTexture,
         sourceWidth: number,
         sourceHeight: number,
         offset: number,
-        flipVertically: boolean,
     ): void {
         const gl = this.gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-        gl.viewport(0, 0, targetWidth, targetHeight);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, target.framebuffer);
+        gl.viewport(0, 0, target.width, target.height);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.useProgram(program);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-        gl.enableVertexAttribArray(positionLocation);
-        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, flipVertically ? this.texCoordBuffer : this.internalTexCoordBuffer);
-        gl.enableVertexAttribArray(texCoordLocation);
-        gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+        gl.useProgram(program.program);
+        this.bindQuad(program, this.internalTexCoordBuffer);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.uniform1i(textureLocation, 0);
-        gl.uniform2f(texelSizeLocation, 1 / sourceWidth, 1 / sourceHeight);
-        gl.uniform1f(offsetLocation, offset);
+        gl.uniform1i(program.uniforms.u_texture, 0);
+        gl.uniform2f(program.uniforms.u_texelSize, 1 / sourceWidth, 1 / sourceHeight);
+        gl.uniform1f(program.uniforms.u_offset, offset);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
     private drawCompositePass(
         sharpTexture: WebGLTexture,
-        blurredTexture: WebGLTexture,
+        backgroundTexture: WebGLTexture,
         maskTexture: WebGLTexture,
         width: number,
         height: number,
-        maskAlphaWeight: number,
     ): void {
         const gl = this.gl;
+        const program = this.composite!;
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, width, height);
         gl.disable(gl.DEPTH_TEST);
         gl.disable(gl.BLEND);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.useProgram(this.compositeProgram);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
-        gl.enableVertexAttribArray(this.compositePositionLocation);
-        gl.vertexAttribPointer(this.compositePositionLocation, 2, gl.FLOAT, false, 0, 0);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
-        gl.enableVertexAttribArray(this.compositeTexCoordLocation);
-        gl.vertexAttribPointer(this.compositeTexCoordLocation, 2, gl.FLOAT, false, 0, 0);
+        gl.useProgram(program.program);
+        this.bindQuad(program, this.texCoordBuffer);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, sharpTexture);
-        gl.uniform1i(this.sharpTextureLocation, 0);
+        gl.uniform1i(program.uniforms.u_sharpTexture, 0);
 
         gl.activeTexture(gl.TEXTURE0 + 1);
-        gl.bindTexture(gl.TEXTURE_2D, blurredTexture);
-        gl.uniform1i(this.blurredTextureLocation, 1);
+        gl.bindTexture(gl.TEXTURE_2D, backgroundTexture);
+        gl.uniform1i(program.uniforms.u_backgroundTexture, 1);
 
         gl.activeTexture(gl.TEXTURE0 + 2);
         gl.bindTexture(gl.TEXTURE_2D, maskTexture);
-        gl.uniform1i(this.compositeMaskTextureLocation, 2);
-        gl.uniform1f(this.maskAlphaWeightLocation, maskAlphaWeight);
-        gl.uniform2f(this.maskTexelSizeLocation, 1 / width, 1 / height);
+        gl.uniform1i(program.uniforms.u_maskTexture, 2);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
+    private bindQuad(program: ProgramLocations, texCoordBuffer: WebGLBuffer | null): void {
+        const gl = this.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+        gl.enableVertexAttribArray(program.position);
+        gl.vertexAttribPointer(program.position, 2, gl.FLOAT, false, 0, 0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+        gl.enableVertexAttribArray(program.texCoord);
+        gl.vertexAttribPointer(program.texCoord, 2, gl.FLOAT, false, 0, 0);
+    }
+
     private releaseResources(): void {
-        if (this.gl.isContextLost()) {
-            this.clearReferences();
-            return;
+        const gl = this.gl;
+        if (!gl.isContextLost()) {
+            for (const program of [this.downsample, this.upsample, this.maskSmooth, this.composite]) {
+                if (program) {
+                    gl.deleteProgram(program.program);
+                }
+            }
+            for (const buffer of [this.positionBuffer, this.texCoordBuffer, this.internalTexCoordBuffer]) {
+                if (buffer) {
+                    gl.deleteBuffer(buffer);
+                }
+            }
+            for (const texture of [this.sourceTexture, this.backgroundTexture, this.blackTexture]) {
+                if (texture) {
+                    gl.deleteTexture(texture);
+                }
+            }
+            this.releaseBlurFramebuffers();
+            this.releaseMaskFramebuffers();
         }
 
-        if (this.downsampleProgram) {
-            this.gl.deleteProgram(this.downsampleProgram);
-        }
-        if (this.upsampleProgram) {
-            this.gl.deleteProgram(this.upsampleProgram);
-        }
-        if (this.compositeProgram) {
-            this.gl.deleteProgram(this.compositeProgram);
-        }
-        if (this.positionBuffer) {
-            this.gl.deleteBuffer(this.positionBuffer);
-        }
-        if (this.texCoordBuffer) {
-            this.gl.deleteBuffer(this.texCoordBuffer);
-        }
-        if (this.internalTexCoordBuffer) {
-            this.gl.deleteBuffer(this.internalTexCoordBuffer);
-        }
-        if (this.sourceTexture) {
-            this.gl.deleteTexture(this.sourceTexture);
-        }
-        if (this.maskTexture) {
-            this.gl.deleteTexture(this.maskTexture);
-        }
-
-        this.releaseFramebufferResources();
-        this.clearReferences();
-    }
-
-    private releaseFramebufferResources(): void {
-        if (this.gl.isContextLost()) {
-            this.finalBlurFramebuffer = null;
-            this.kawaseFramebuffers = [];
-            this.framebufferWidth = 0;
-            this.framebufferHeight = 0;
-            this.framebufferLevels = 0;
-            return;
-        }
-
-        if (this.finalBlurFramebuffer) {
-            this.gl.deleteTexture(this.finalBlurFramebuffer.texture);
-            this.gl.deleteFramebuffer(this.finalBlurFramebuffer.framebuffer);
-            this.finalBlurFramebuffer = null;
-        }
-
-        for (const framebuffer of this.kawaseFramebuffers) {
-            this.gl.deleteTexture(framebuffer.texture);
-            this.gl.deleteFramebuffer(framebuffer.framebuffer);
-        }
-
-        this.kawaseFramebuffers = [];
-        this.framebufferWidth = 0;
-        this.framebufferHeight = 0;
-        this.framebufferLevels = 0;
-    }
-
-    private clearReferences(): void {
-        this.downsampleProgram = null;
-        this.upsampleProgram = null;
-        this.compositeProgram = null;
+        this.downsample = null;
+        this.upsample = null;
+        this.maskSmooth = null;
+        this.composite = null;
         this.positionBuffer = null;
         this.texCoordBuffer = null;
         this.internalTexCoordBuffer = null;
         this.sourceTexture = null;
-        this.maskTexture = null;
+        this.backgroundTexture = null;
+        this.backgroundSource = null;
+        this.blackTexture = null;
         this.finalBlurFramebuffer = null;
         this.kawaseFramebuffers = [];
-        this.downsampleTextureLocation = null;
-        this.downsampleTexelSizeLocation = null;
-        this.downsampleOffsetLocation = null;
-        this.upsampleTextureLocation = null;
-        this.upsampleTexelSizeLocation = null;
-        this.upsampleOffsetLocation = null;
-        this.sharpTextureLocation = null;
-        this.blurredTextureLocation = null;
-        this.compositeMaskTextureLocation = null;
-        this.maskAlphaWeightLocation = null;
-        this.maskTexelSizeLocation = null;
+        this.maskFramebuffers = [];
+        this.hasPreviousMask = false;
         this.framebufferWidth = 0;
         this.framebufferHeight = 0;
         this.framebufferLevels = 0;
+    }
+
+    private releaseFramebufferTextures(framebuffers: FramebufferTexture[]): void {
+        if (this.gl.isContextLost()) {
+            return;
+        }
+        for (const framebuffer of framebuffers) {
+            this.gl.deleteTexture(framebuffer.texture);
+            this.gl.deleteFramebuffer(framebuffer.framebuffer);
+        }
+    }
+
+    private releaseBlurFramebuffers(): void {
+        this.releaseFramebufferTextures(
+            this.finalBlurFramebuffer
+                ? [this.finalBlurFramebuffer, ...this.kawaseFramebuffers]
+                : this.kawaseFramebuffers,
+        );
+        this.finalBlurFramebuffer = null;
+        this.kawaseFramebuffers = [];
+        this.framebufferWidth = 0;
+        this.framebufferHeight = 0;
+        this.framebufferLevels = 0;
+    }
+
+    private releaseMaskFramebuffers(): void {
+        this.releaseFramebufferTextures(this.maskFramebuffers);
+        this.maskFramebuffers = [];
+        this.hasPreviousMask = false;
     }
 }

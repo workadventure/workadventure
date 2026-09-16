@@ -2,16 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mediaPipeMocks = vi.hoisted(() => ({
     createFromOptions: vi.fn(),
-    drawConfidenceMask: vi.fn(),
-    drawingUtilsClose: vi.fn(),
 }));
 
 vi.mock("@mediapipe/tasks-vision", () => ({
     ImageSegmenter: { createFromOptions: mediaPipeMocks.createFromOptions },
-    DrawingUtils: class {
-        public close = mediaPipeMocks.drawingUtilsClose;
-        public drawConfidenceMask = mediaPipeMocks.drawConfidenceMask;
-    },
 }));
 
 vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/tasksVisionAssets", () => ({
@@ -20,10 +14,28 @@ vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/tasksVisionAssets", ()
     installTasksVisionModuleFactory: () => Promise.resolve(),
 }));
 
-vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/TasksVisionBlurCompositor", () => ({
-    TasksVisionBlurCompositor: class {
+const compositorMocks = vi.hoisted(() => ({
+    drawBlur: vi.fn(
+        (_source: unknown, _mask: unknown, _width: number, _height: number, _blurAmount: number, _freshMask: boolean) =>
+            true,
+    ),
+    drawReplace: vi.fn(
+        (
+            _source: unknown,
+            _mask: unknown,
+            _background: unknown,
+            _width: number,
+            _height: number,
+            _freshMask: boolean,
+        ) => true,
+    ),
+}));
+
+vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/TasksVisionCompositor", () => ({
+    TasksVisionCompositor: class {
         public close = vi.fn();
-        public draw = vi.fn(() => true);
+        public drawBlur = compositorMocks.drawBlur;
+        public drawReplace = compositorMocks.drawReplace;
     },
 }));
 
@@ -70,6 +82,8 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
     beforeEach(() => {
         posted = [];
         webgl2Available = true;
+        compositorMocks.drawBlur.mockClear();
+        compositorMocks.drawReplace.mockClear();
         mediaPipeMocks.createFromOptions.mockReset();
         mediaPipeMocks.createFromOptions.mockImplementation(() => Promise.resolve(createSegmenter()));
         vi.spyOn(console, "info").mockImplementation(() => undefined);
@@ -149,7 +163,7 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
         const failingFrame = createBitmap();
         send({ type: "process-frame", frameId: 1, frame: failingFrame, timestampMs: 10 });
         await waitForPosted(2);
-        expect(lastPosted()).toMatchObject({ type: "frame", frameId: 1, bitmap: failingFrame, blurBackend: "none" });
+        expect(lastPosted()).toMatchObject({ type: "frame", frameId: 1, bitmap: failingFrame });
         expect(brokenSegmenter.close).toHaveBeenCalledOnce();
 
         // Recovery is asynchronous; once the new segmenter is up, frames are processed again.
@@ -160,7 +174,7 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
             await waitForPosted(3);
             expect(recoveredSegmenter.segmentForVideo).toHaveBeenCalled();
         });
-        expect(lastPosted()).toMatchObject({ type: "frame", bitmap: transferredBitmap, blurBackend: "webgl-blur" });
+        expect(lastPosted()).toMatchObject({ type: "frame", bitmap: transferredBitmap });
         expect(posted.some((message) => message.type === "fatal")).toBe(false);
     });
 
@@ -197,6 +211,42 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
         expect(
             posted.slice(1).every((message) => message.type === "frame" && message.bitmap === transferredBitmap),
         ).toBe(true);
+    });
+
+    it("tells the compositor whether the mask is fresh or reused", async () => {
+        send({ type: "initialize", config: { mode: "blur", blurAmount: 25 } });
+        await waitForPosted(1);
+
+        send({ type: "process-frame", frameId: 1, frame: createBitmap(), timestampMs: 10 });
+        send({ type: "process-frame", frameId: 2, frame: createBitmap(), timestampMs: 20 });
+        await waitForPosted(3);
+
+        expect(compositorMocks.drawBlur.mock.calls.map((call) => [call[4], call[5]])).toEqual([
+            [25, true],
+            [25, false],
+        ]);
+    });
+
+    it("renders the background image scaled to the frame in replace mode", async () => {
+        const backgroundBitmap = { width: 8, height: 6, close: vi.fn() };
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(() => Promise.resolve({ ok: true, blob: () => Promise.resolve({}) })),
+        );
+        vi.stubGlobal(
+            "createImageBitmap",
+            vi.fn(() => Promise.resolve(backgroundBitmap)),
+        );
+        send({ type: "initialize", config: { mode: "image", backgroundImage: "https://example.com/bg.jpg" } });
+        await waitForPosted(1);
+
+        send({ type: "process-frame", frameId: 1, frame: createBitmap(), timestampMs: 10 });
+        await waitForPosted(2);
+
+        expect(fetch).toHaveBeenCalledWith("https://example.com/bg.jpg");
+        const [, , background, width, height, freshMask] = compositorMocks.drawReplace.mock.calls[0];
+        expect(background).toBeInstanceOf(OffscreenCanvas);
+        expect([width, height, freshMask]).toEqual([4, 3, true]);
     });
 
     it("pipes insertable-stream frames through the segmenter and stops on request", async () => {
