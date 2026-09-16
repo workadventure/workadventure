@@ -1,4 +1,5 @@
 import { DrawingUtils, ImageSegmenter, type MPMask } from "@mediapipe/tasks-vision";
+import { ResegmentController } from "./ResegmentController";
 import { TasksVisionBlurCompositor } from "./TasksVisionBlurCompositor";
 import {
     SELFIE_SEGMENTER_MODEL_URL,
@@ -57,6 +58,10 @@ export class MediaPipeTasksVisionWorkerRuntime {
     private backgroundCanvas: OffscreenCanvas | null = null;
     private fallbackBlurredCanvas: OffscreenCanvas | null = null;
     private lastTimestampMs = -1;
+    // Segmentation runs every Nth frame; the mask is cloned and reused in between (see ResegmentController).
+    private readonly resegmentController = new ResegmentController();
+    private lastMask: MPMask | null = null;
+    private framesSinceSegmentation = 0;
     private recovery: Promise<void> | null = null;
     private consecutiveRecoveryAttempts = 0;
     private successfulFramesSinceRecovery = 0;
@@ -278,12 +283,27 @@ export class MediaPipeTasksVisionWorkerRuntime {
         const monotonicTimestampMs = Math.max(timestampMs, this.lastTimestampMs + 1);
         this.lastTimestampMs = monotonicTimestampMs;
 
+        const reusableMask =
+            this.lastMask && this.lastMask.width === width && this.lastMask.height === height ? this.lastMask : null;
+        if (reusableMask && this.framesSinceSegmentation < this.resegmentController.getInterval() - 1) {
+            this.framesSinceSegmentation++;
+            const result = this.composite(source, reusableMask, width, height);
+            this.gl.flush();
+            return result;
+        }
+
         let result: "webgl-blur" | "none" | null = null;
+        const segmentStartedAt = performance.now();
         imageSegmenter.segmentForVideo(source, monotonicTimestampMs, (segmentation) => {
+            this.resegmentController.tick(performance.now() - segmentStartedAt);
             const mask = segmentation.confidenceMasks?.[0];
             if (!mask) {
                 return;
             }
+            // The mask only lives for the duration of the callback: keep a copy for the next frames.
+            this.lastMask?.close();
+            this.lastMask = mask.clone();
+            this.framesSinceSegmentation = 0;
             result = this.composite(source, mask, width, height);
             this.gl?.flush();
         });
@@ -421,6 +441,9 @@ export class MediaPipeTasksVisionWorkerRuntime {
         this.drawingUtils = null;
         closeQuietly("ImageSegmenter", this.imageSegmenter);
         this.imageSegmenter = null;
+        closeQuietly("last mask", this.lastMask);
+        this.lastMask = null;
+        this.framesSinceSegmentation = 0;
         this.gl?.getExtension("WEBGL_lose_context")?.loseContext();
         this.gl = null;
         this.glCanvas = null;

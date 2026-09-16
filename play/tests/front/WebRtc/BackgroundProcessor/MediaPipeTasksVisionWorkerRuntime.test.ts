@@ -35,11 +35,16 @@ import type {
 
 type Segmenter = { segmentForVideo: ReturnType<typeof vi.fn>; close: ReturnType<typeof vi.fn> };
 
+function createMask() {
+    const mask = { width: 4, height: 3, getAsWebGLTexture: () => ({}), close: vi.fn(), clone: () => mask };
+    return mask;
+}
+
 function createSegmenter(): Segmenter {
     return {
         close: vi.fn(),
         segmentForVideo: vi.fn((_source: unknown, _timestamp: number, callback: (result: unknown) => void) => {
-            callback({ confidenceMasks: [{ getAsWebGLTexture: () => ({}) }] });
+            callback({ confidenceMasks: [createMask()] });
         }),
     };
 }
@@ -176,6 +181,22 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
             type: "fatal",
             error: { message: "MediaPipe Tasks Vision recovery failed" },
         });
+    });
+
+    it("segments every 2nd frame and reuses the previous mask in between", async () => {
+        send({ type: "initialize", config: { mode: "blur" } });
+        await waitForPosted(1);
+        const segmenter = await mediaPipeMocks.createFromOptions.mock.results[0].value;
+
+        for (let frameId = 1; frameId <= 4; frameId++) {
+            send({ type: "process-frame", frameId, frame: createBitmap(), timestampMs: frameId * 10 });
+        }
+        await waitForPosted(5);
+
+        expect(segmenter.segmentForVideo).toHaveBeenCalledTimes(2);
+        expect(
+            posted.slice(1).every((message) => message.type === "frame" && message.bitmap === transferredBitmap),
+        ).toBe(true);
     });
 
     it("pipes insertable-stream frames through the segmenter and stops on request", async () => {
