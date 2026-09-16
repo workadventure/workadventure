@@ -2,9 +2,11 @@ import { ImageSegmenter, type MPMask } from "@mediapipe/tasks-vision";
 import { ResegmentController } from "./ResegmentController";
 import { TasksVisionCompositor } from "./TasksVisionCompositor";
 import {
-    SELFIE_SEGMENTER_MODEL_URL,
+    SEGMENTER_MODEL_URLS,
     TASKS_VISION_WORKER_FILESET,
     installTasksVisionModuleFactory,
+    selectSegmenterModel,
+    type SegmenterModel,
 } from "./tasksVisionAssets";
 import type {
     SerializedWorkerError,
@@ -51,6 +53,10 @@ export class MediaPipeTasksVisionWorkerRuntime {
     private glCanvas: OffscreenCanvas | null = null;
     private gl: WebGL2RenderingContext | null = null;
     private imageSegmenter: ImageSegmenter | null = null;
+    private delegate: TasksVisionWorkerDelegate = "GPU";
+    // The model follows the camera aspect ratio, which is only known once the first frame arrives.
+    private model: SegmenterModel = "general";
+    private modelSwitch: Promise<void> | null = null;
     private compositor: TasksVisionCompositor | null = null;
     private backgroundImage: ImageBitmap | null = null;
     private backgroundImageUrl: string | null = null;
@@ -123,27 +129,60 @@ export class MediaPipeTasksVisionWorkerRuntime {
         this.glCanvas = glCanvas;
         this.gl = gl;
 
-        const createSegmenter = async (delegate: TasksVisionWorkerDelegate) => {
-            await installTasksVisionModuleFactory();
-            return ImageSegmenter.createFromOptions(TASKS_VISION_WORKER_FILESET, {
-                baseOptions: { modelAssetPath: SELFIE_SEGMENTER_MODEL_URL, delegate },
-                canvas: glCanvas,
-                runningMode: "VIDEO",
-                outputCategoryMask: false,
-                outputConfidenceMasks: true,
-            });
-        };
-        let delegate: TasksVisionWorkerDelegate = "GPU";
         try {
-            this.imageSegmenter = await createSegmenter("GPU");
+            this.delegate = "GPU";
+            this.imageSegmenter = await this.createSegmenter(this.model);
         } catch (gpuError) {
             console.warn("[MediaPipe Tasks Vision Worker] GPU initialization failed, using CPU:", gpuError);
-            delegate = "CPU";
-            this.imageSegmenter = await createSegmenter("CPU");
+            this.delegate = "CPU";
+            this.imageSegmenter = await this.createSegmenter(this.model);
         }
         this.compositor = new TasksVisionCompositor(gl, glCanvas);
         this.lastTimestampMs = -1;
-        return delegate;
+        return this.delegate;
+    }
+
+    private async createSegmenter(model: SegmenterModel): Promise<ImageSegmenter> {
+        if (!this.glCanvas) {
+            throw new Error("The WebGL canvas is unavailable");
+        }
+        await installTasksVisionModuleFactory();
+        return ImageSegmenter.createFromOptions(TASKS_VISION_WORKER_FILESET, {
+            baseOptions: { modelAssetPath: SEGMENTER_MODEL_URLS[model], delegate: this.delegate },
+            canvas: this.glCanvas,
+            runningMode: "VIDEO",
+            outputCategoryMask: false,
+            outputConfidenceMasks: true,
+        });
+    }
+
+    /**
+     * Builds the segmenter for the camera's aspect ratio next to the running one and swaps it in when ready,
+     * so no frame is skipped. A failed switch keeps the current segmenter.
+     */
+    private switchModel(model: SegmenterModel): void {
+        if (this.modelSwitch) {
+            return;
+        }
+        const previous = this.imageSegmenter;
+        this.modelSwitch = this.createSegmenter(model)
+            .then((next) => {
+                if (this.imageSegmenter !== previous || !previous) {
+                    // Disposed or rebuilt meanwhile: the rebuild already used this.model.
+                    next.close();
+                    return;
+                }
+                this.imageSegmenter = next;
+                previous.close();
+                console.info(`[MediaPipe Tasks Vision Worker] Switched to the ${model} segmentation model`);
+            })
+            .catch((error: unknown) => {
+                console.warn(`[MediaPipe Tasks Vision Worker] Could not load the ${model} model:`, error);
+            })
+            .finally(() => {
+                this.modelSwitch = null;
+            });
+        this.model = model;
     }
 
     private async updateBackgroundImage(): Promise<void> {
@@ -266,6 +305,10 @@ export class MediaPipeTasksVisionWorkerRuntime {
         if (glCanvas.width !== width || glCanvas.height !== height) {
             glCanvas.width = width;
             glCanvas.height = height;
+        }
+        const model = selectSegmenterModel(width, height);
+        if (model !== this.model) {
+            this.switchModel(model);
         }
 
         // The Tasks Vision API requires strictly increasing timestamps.

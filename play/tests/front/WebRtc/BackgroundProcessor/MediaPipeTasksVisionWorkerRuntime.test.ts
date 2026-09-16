@@ -10,7 +10,8 @@ vi.mock("@mediapipe/tasks-vision", () => ({
 
 vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/tasksVisionAssets", () => ({
     TASKS_VISION_WORKER_FILESET: { wasmLoaderPath: "/assets/loader.js", wasmBinaryPath: "/assets/vision.wasm" },
-    SELFIE_SEGMENTER_MODEL_URL: "/assets/selfie_segmenter.tflite",
+    SEGMENTER_MODEL_URLS: { general: "/assets/general.tflite", landscape: "/assets/landscape.tflite" },
+    selectSegmenterModel: (width: number, height: number) => (width / height >= 4 / 3 ? "landscape" : "general"),
     installTasksVisionModuleFactory: () => Promise.resolve(),
 }));
 
@@ -47,8 +48,8 @@ import type {
 
 type Segmenter = { segmentForVideo: ReturnType<typeof vi.fn>; close: ReturnType<typeof vi.fn> };
 
-function createMask() {
-    const mask = { width: 4, height: 3, getAsWebGLTexture: () => ({}), close: vi.fn(), clone: () => mask };
+function createMask(width = 3, height = 4) {
+    const mask = { width, height, getAsWebGLTexture: () => ({}), close: vi.fn(), clone: () => mask };
     return mask;
 }
 
@@ -61,12 +62,13 @@ function createSegmenter(): Segmenter {
     };
 }
 
-function createBitmap(): ImageBitmap {
-    return { width: 4, height: 3, close: vi.fn() };
+// Portrait by default: the landscape model switch has its own test.
+function createBitmap(width = 3, height = 4): ImageBitmap {
+    return { width, height, close: vi.fn() };
 }
 
 function createVideoFrame(timestamp: number): VideoFrame {
-    return { displayWidth: 4, displayHeight: 3, timestamp, close: vi.fn() } as unknown as VideoFrame;
+    return { displayWidth: 3, displayHeight: 4, timestamp, close: vi.fn() } as unknown as VideoFrame;
 }
 
 describe("MediaPipeTasksVisionWorkerRuntime", () => {
@@ -246,7 +248,32 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
         expect(fetch).toHaveBeenCalledWith("https://example.com/bg.jpg");
         const [, , background, width, height, freshMask] = compositorMocks.drawReplace.mock.calls[0];
         expect(background).toBeInstanceOf(OffscreenCanvas);
-        expect([width, height, freshMask]).toEqual([4, 3, true]);
+        expect([width, height, freshMask]).toEqual([3, 4, true]);
+    });
+
+    it("switches to the landscape model once a landscape frame arrives, without skipping frames", async () => {
+        send({ type: "initialize", config: { mode: "blur" } });
+        await waitForPosted(1);
+        const generalSegmenter = await mediaPipeMocks.createFromOptions.mock.results[0].value;
+        expect(mediaPipeMocks.createFromOptions.mock.calls[0][1]).toMatchObject({
+            baseOptions: { modelAssetPath: "/assets/general.tflite" },
+        });
+
+        send({ type: "process-frame", frameId: 1, frame: createBitmap(16, 9), timestampMs: 10 });
+        await waitForPosted(2);
+        expect(generalSegmenter.segmentForVideo).toHaveBeenCalledOnce();
+        expect(mediaPipeMocks.createFromOptions.mock.calls[1][1]).toMatchObject({
+            baseOptions: { modelAssetPath: "/assets/landscape.tflite", delegate: "GPU" },
+        });
+
+        await vi.waitFor(() => expect(generalSegmenter.close).toHaveBeenCalledOnce());
+        const landscapeSegmenter = await mediaPipeMocks.createFromOptions.mock.results[1].value;
+        send({ type: "process-frame", frameId: 2, frame: createBitmap(16, 9), timestampMs: 20 });
+        send({ type: "process-frame", frameId: 3, frame: createBitmap(16, 9), timestampMs: 30 });
+        send({ type: "process-frame", frameId: 4, frame: createBitmap(16, 9), timestampMs: 40 });
+        await waitForPosted(5);
+        expect(landscapeSegmenter.segmentForVideo).toHaveBeenCalled();
+        expect(mediaPipeMocks.createFromOptions).toHaveBeenCalledTimes(2);
     });
 
     it("pipes insertable-stream frames through the segmenter and stops on request", async () => {
