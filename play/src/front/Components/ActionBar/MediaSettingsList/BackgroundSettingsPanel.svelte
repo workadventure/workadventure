@@ -87,6 +87,7 @@
                         $backgroundConfigStore.mode === "blur" && $backgroundConfigStore.blurAmount === option.amount}
                     <button
                         class="flex flex-col items-center group px-0"
+                        data-testid="background-blur-{option.amount}"
                         onclick={() => setBackgroundBlur(option.amount)}
                     >
                         <div class="relative w-full aspect-square transition-all hover:brightness-50">

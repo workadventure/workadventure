@@ -37,6 +37,7 @@
                 appearance="ghost"
                 size="sm"
                 class="w-full rounded text-nowrap {mode === 'background' ? '!bg-white/10' : ''}"
+                dataTestId="background-settings-tab"
                 onclick={() => {
                     mode = "background";
                     analyticsClient.trackAdminEvent("settings.background.opened");

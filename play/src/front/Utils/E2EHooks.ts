@@ -1,6 +1,8 @@
 import * as Phaser from "phaser";
+import { get } from "svelte/store";
 import type { ForceFirstPeerUnilateralDestroyResult } from "../Space/SpacePeerManager/SpacePeerManager";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { backgroundProcessedLocalVideoTrackStore, rawLocalVideoTrackStore } from "../Stores/MediaStore";
 
 import Camera = Phaser.Cameras.Scene2D.Camera;
 
@@ -310,6 +312,58 @@ export function decrementLivekitRoomCount() {
     livekitRoomCount--;
 }
 
+const FRAME_SAMPLE_SIDE = 16;
+
+/** One frame of a video track reduced to a 16x16 grid of gray levels. */
+async function sampleTrackFrame(track: MediaStreamTrack): Promise<number[]> {
+    const video = document.createElement("video");
+    video.muted = true;
+    video.playsInline = true;
+    video.srcObject = new MediaStream([track]);
+    await video.play();
+    await new Promise<void>((resolve) => {
+        video.requestVideoFrameCallback(() => resolve());
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = FRAME_SAMPLE_SIDE;
+    canvas.height = FRAME_SAMPLE_SIDE;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) {
+        throw new Error("Unable to create a 2D context");
+    }
+    context.drawImage(video, 0, 0, FRAME_SAMPLE_SIDE, FRAME_SAMPLE_SIDE);
+    video.pause();
+    video.srcObject = null;
+    const { data } = context.getImageData(0, 0, FRAME_SAMPLE_SIDE, FRAME_SAMPLE_SIDE);
+    const gray: number[] = [];
+    for (let i = 0; i < data.length; i += 4) {
+        gray.push((data[i] + data[i + 1] + data[i + 2]) / 3);
+    }
+    return gray;
+}
+
+/**
+ * Compares one frame of the raw camera track with one frame of the track that goes out after background
+ * processing: mean gray level of the processed frame and mean absolute difference between the two.
+ * Null while either track is missing.
+ */
+async function compareLocalVideoFrames(): Promise<{ processedMeanGray: number; meanAbsDiff: number } | null> {
+    const raw = get(rawLocalVideoTrackStore);
+    const processed = get(backgroundProcessedLocalVideoTrackStore);
+    if (raw.type !== "success" || !raw.track || processed.type !== "success" || !processed.track) {
+        return null;
+    }
+    const [rawGray, processedGray] = await Promise.all([
+        sampleTrackFrame(raw.track),
+        sampleTrackFrame(processed.track),
+    ]);
+    const mean = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
+    return {
+        processedMeanGray: mean(processedGray),
+        meanAbsDiff: mean(processedGray.map((value, index) => Math.abs(value - rawGray[index]))),
+    };
+}
+
 /**
  * The e2eHooks object contains methods used for E2E tests.
  * We should refrain from growing this object too much but it can be useful in very specific circumstances (usually linked to Phaser testing)
@@ -342,4 +396,8 @@ export const e2eHooks = {
      * [DEBUG] Forces a server disconnected event to test the reconnection flow.
      */
     triggerServerDisconnected,
+    /**
+     * Used by the virtual background smoke test.
+     */
+    compareLocalVideoFrames,
 };
