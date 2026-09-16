@@ -786,6 +786,9 @@ mapstorage:
     domainNames: []
     # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
+    # Annotations added to the map-storage ingress on top of (root.ingress.annotationsRoot).
+    # A key set here overrides the same key from annotationsRoot.
+    annotations: {}
 
 ingress:
   enabled: false
