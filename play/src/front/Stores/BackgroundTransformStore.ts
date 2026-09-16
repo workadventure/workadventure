@@ -1,6 +1,7 @@
-import { writable, derived } from "svelte/store";
+import { writable, derived, readable } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
 import {
+    getBackgroundProcessingUnsupportedReason,
     isBackgroundMode,
     type BackgroundConfig,
     type BackgroundMode,
@@ -65,9 +66,12 @@ export const backgroundProcessingEnabledStore = derived(
 );
 
 /**
- * Store indicating if MediaPipe is supported
+ * Whether this device can run background effects at all. Probed on first subscription (it creates a WebGL2
+ * context), so opening the settings panel is what pays for it.
  */
-export const mediaPipeSupported = writable(true); // Will be updated after checking browser support
+export const backgroundProcessingSupportedStore = readable(true, (set) => {
+    set(getBackgroundProcessingUnsupportedReason() === null);
+});
 
 /**
  * Predefined background options

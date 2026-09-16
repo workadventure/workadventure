@@ -25,6 +25,34 @@ export interface BackgroundTransformer {
 
 export type BackgroundTransformerFailureHandler = (error: Error) => void;
 
+/**
+ * Segmentation next to Phaser and WebRTC needs a few cores to spare, and the worker needs WebGL2 (probed on
+ * the main thread here; the worker checks its own OffscreenCanvas context again).
+ */
+const MIN_HARDWARE_CONCURRENCY = 4;
+
+/** Why background effects cannot run on this device, or null when they can. */
+export function getBackgroundProcessingUnsupportedReason(): string | null {
+    if (
+        typeof Worker === "undefined" ||
+        typeof OffscreenCanvas === "undefined" ||
+        typeof createImageBitmap === "undefined"
+    ) {
+        return "required worker canvas APIs are unavailable";
+    }
+    // Undefined when the browser hides it: give the device the benefit of the doubt.
+    const cores = navigator.hardwareConcurrency ?? MIN_HARDWARE_CONCURRENCY;
+    if (cores < MIN_HARDWARE_CONCURRENCY) {
+        return `only ${cores} CPU cores`;
+    }
+    const gl = document.createElement("canvas").getContext("webgl2");
+    if (!gl) {
+        return "WebGL2 is unavailable";
+    }
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return null;
+}
+
 /** The browser cannot run background effects at all (no worker WebGL2, no OffscreenCanvas...). */
 export class BackgroundProcessingUnsupportedError extends Error {
     constructor(reason: string) {
