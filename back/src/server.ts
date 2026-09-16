@@ -10,7 +10,6 @@ import {
     SENTRY_TRACES_SAMPLE_RATE,
 } from "./Enum/EnvironmentVariable";
 import { telemetryService } from "./Services/TelemetryService";
-import { analyticsEventsQueue } from "./Services/AnalyticsEventsQueue";
 import { spaceSessionAnalytics } from "./Services/SpaceSessionAnalytics";
 
 if (ENABLE_TELEMETRY) {
@@ -34,8 +33,6 @@ if (SENTRY_DSN != undefined) {
         console.error("Error while initializing Sentry", e);
     }
 }
-
-analyticsEventsQueue.start();
 
 /**
  * How long the process may spend flushing before it exits anyway. Under the grace

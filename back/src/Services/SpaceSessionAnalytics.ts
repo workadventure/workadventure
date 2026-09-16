@@ -1,5 +1,6 @@
 import type { AnalyticsStoredEvent } from "@workadventure/messages";
-import { analyticsEventsQueue, type AnalyticsEventsQueue } from "./AnalyticsEventsQueue";
+import type { AnalyticsEventsQueue } from "@workadventure/shared-utils";
+import { analyticsEventsQueue } from "./AnalyticsEventsQueue";
 
 /**
  * What a space is a session of. A bubble and an area are meetings; the megaphone space
