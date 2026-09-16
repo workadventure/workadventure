@@ -8,6 +8,7 @@
 import wasmLoaderPath from "@mediapipe/tasks-vision/vision_wasm_module_internal.js?url";
 import wasmBinaryPath from "@mediapipe/tasks-vision/vision_wasm_module_internal.wasm?url";
 import selfieSegmenterModelUrl from "./models/selfie_segmenter.tflite?url";
+import selfieSegmenterLandscapeModelUrl from "./models/selfie_segmenter_landscape.tflite?url";
 
 export const TASKS_VISION_WORKER_FILESET = { wasmLoaderPath, wasmBinaryPath };
 
@@ -16,7 +17,7 @@ let moduleFactory: Promise<unknown> | undefined;
 /**
  * MediaPipe loads the wasm through import(wasmLoaderPath), reads the ModuleFactory the loader sets on the
  * worker scope, then clears it. A later import() of the same URL is served from the module cache without
- * running again, so every segmenter after the first (CPU fallback, recovery) would fail with
+ * running again, so every segmenter after the first (CPU fallback, recovery, model switch) would fail with
  * "ModuleFactory not set". Keep the factory from the first load and put it back before each instantiation.
  */
 export async function installTasksVisionModuleFactory(): Promise<void> {
@@ -26,4 +27,19 @@ export async function installTasksVisionModuleFactory(): Promise<void> {
     (self as { ModuleFactory?: unknown }).ModuleFactory = await moduleFactory;
 }
 
-export const SELFIE_SEGMENTER_MODEL_URL: string = selfieSegmenterModelUrl;
+export type SegmenterModel = "general" | "landscape";
+
+/**
+ * MediaPipe selfie segmenter models: the general one runs on a 256x256 input, the landscape one on 144x256,
+ * i.e. about 40% fewer pixels for the same result on a landscape camera.
+ * https://ai.google.dev/edge/mediapipe/solutions/vision/image_segmenter#selfie-model
+ */
+export const SEGMENTER_MODEL_URLS: Record<SegmenterModel, string> = {
+    general: selfieSegmenterModelUrl,
+    landscape: selfieSegmenterLandscapeModelUrl,
+};
+
+/** Practically every webcam is 4:3 or wider; phones held upright are the portrait case. */
+export function selectSegmenterModel(width: number, height: number): SegmenterModel {
+    return width / height >= 4 / 3 ? "landscape" : "general";
+}
