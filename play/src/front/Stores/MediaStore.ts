@@ -1078,19 +1078,23 @@ async function runLocalVideoTrackUpdate(
 
     if (!backgroundTransformer) {
         const currentConfig = get(backgroundConfigStore);
-        const transformer = createBackgroundTransformer(currentConfig, (error) => {
-            if (backgroundTransformer !== transformer) {
-                return;
-            }
+        const transformer = createBackgroundTransformer(
+            currentConfig,
+            (error) => {
+                if (backgroundTransformer !== transformer) {
+                    return;
+                }
 
-            console.warn("[MediaStore] Background transformer stopped after a terminal failure:", error);
-            Sentry.captureException(error);
-            warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
-            transformer.close();
-            backgroundTransformer = undefined;
-            lastBackgroundConfig = undefined;
-            backgroundConfigStore.reset();
-        });
+                console.warn("[MediaStore] Background transformer stopped after a terminal failure:", error);
+                Sentry.captureException(error);
+                warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
+                transformer.close();
+                backgroundTransformer = undefined;
+                lastBackgroundConfig = undefined;
+                backgroundConfigStore.reset();
+            },
+            (sample) => analyticsClient.trackAdminEvent("media.background_effect.sample", sample),
+        );
         backgroundTransformer = transformer;
     }
 

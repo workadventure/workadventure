@@ -1,4 +1,5 @@
 import type { BackgroundConfig } from "./createBackgroundTransformer";
+import type { SegmenterModel } from "./tasksVisionAssets";
 
 export type TasksVisionWorkerRequest =
     | { type: "initialize"; config: BackgroundConfig }
@@ -22,6 +23,16 @@ export type SerializedWorkerError = {
 
 export type TasksVisionWorkerDelegate = "GPU" | "CPU";
 
+/** Performance of the pipeline over the last sampling window, posted by the worker every 15 s of rendering. */
+export type TasksVisionWorkerStats = {
+    type: "stats";
+    delegate: TasksVisionWorkerDelegate;
+    model: SegmenterModel;
+    meanSegmentationMs: number;
+    fps: number;
+    resegmentInterval: number;
+};
+
 export type TasksVisionWorkerResponse =
     | { type: "ready"; delegate: TasksVisionWorkerDelegate }
     | { type: "unsupported"; reason: string }
@@ -30,5 +41,6 @@ export type TasksVisionWorkerResponse =
     | { type: "config-update-error"; requestId: number; error: SerializedWorkerError }
     /** The answer to "process-frame". The bitmap is the input frame itself when nothing could be rendered. */
     | { type: "frame"; frameId: number; bitmap: ImageBitmap }
+    | TasksVisionWorkerStats
     /** MediaPipe recovery failed (or the stream pipe broke); the worker is no longer usable. */
     | { type: "fatal"; error: SerializedWorkerError };

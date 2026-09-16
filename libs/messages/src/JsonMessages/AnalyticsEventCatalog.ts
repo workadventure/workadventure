@@ -1084,6 +1084,52 @@ export const ANALYTICS_EVENTS = {
     description: "The user changed the auto-lower-volume setting.",
   }),
 
+  "media.background_effect.sample": event({
+    properties: z.object({
+      mode: z.enum(["blur", "image"]).describe("The effect running."),
+      transport: z
+        .enum(["insertable-streams", "image-bitmap"])
+        .describe(
+          "How camera frames reach the segmentation worker: insertable streams (Chromium, no main-thread work per frame) or ImageBitmap copies through postMessage (Firefox, Safari).",
+        ),
+      delegate: z
+        .enum(["GPU", "CPU"])
+        .describe("The MediaPipe delegate running the segmenter."),
+      model: z
+        .enum(["general", "landscape"])
+        .describe(
+          "The selfie segmenter model, picked from the camera's aspect ratio.",
+        ),
+      meanSegmentationMs: z
+        .number()
+        .nonnegative()
+        .describe(
+          "Mean duration of one segmentation over the sampling window.",
+        ),
+      fps: z
+        .number()
+        .nonnegative()
+        .describe("Composited frames per second over the sampling window."),
+      resegmentInterval: z
+        .number()
+        .int()
+        .min(1)
+        .max(4)
+        .describe(
+          "Segmentation runs every Nth frame and the mask is reused in between; adapted from meanSegmentationMs.",
+        ),
+      hardwareConcurrency: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "navigator.hardwareConcurrency, 0 when the browser hides it.",
+        ),
+    }),
+    description:
+      "How the virtual background pipeline performs on this device: once per session after the effect starts, then once after each change of effect. What decides the defaults of the segmentation cadence, the model choice and the capability gate.",
+  }),
+
   "settings.background.changed": event({
     properties: z.object({
       backgroundType: z
