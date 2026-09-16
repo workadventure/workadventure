@@ -505,6 +505,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private handleConnectionFailure(userId: string, connectionId: string | undefined): void {
         // Cancel any pending delayed attempt reset - we want to keep the history
         this.cancelDelayedAttemptReset(userId);
+        this.cancelRestartAnswerTimeout(userId);
         // Don't handle failures if shutdown has been called
         if (this.abortController.signal.aborted) {
             return;
@@ -517,7 +518,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             return;
         }
 
-        this.retryManager.scheduleRetry(userId, () => {
+        const scheduled = this.retryManager.scheduleRetry(userId, () => {
             // Double-check user is still in space before retrying
             const spaceUserForRetry = this._space.getSpaceUserBySpaceUserId(userId);
             if (spaceUserForRetry) {
@@ -525,6 +526,22 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             } else {
                 this.retryManager.cancel(userId);
             }
+        });
+
+        const attempt = this.retryManager.getAttemptCount(userId);
+        if (scheduled) {
+            Sentry.addBreadcrumb({
+                category: "webrtc",
+                level: "warning",
+                message: "Peer connection lost, retry scheduled",
+                data: { userId, connectionId, attempt, delayMs: this.retryManager.calculateDelay(attempt - 1) },
+            });
+            return;
+        }
+        // Terminal outcome: the tile stays in error until the user reloads or the back restarts the connection.
+        Sentry.captureMessage("WebRTC connection to a peer given up after the maximum number of retries", {
+            level: "warning",
+            extra: { userId, connectionId, attempt },
         });
     }
 
@@ -569,7 +586,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 if (this.abortController.signal.aborted || this.videoPeers.has(userId)) {
                     return;
                 }
-                this._customWebRTCLogger.info("no answer to the connection restart request, retrying", { userId });
+                Sentry.addBreadcrumb({
+                    category: "webrtc",
+                    level: "warning",
+                    message: "No answer from the back to the connection restart request, retrying",
+                    data: { userId, connectionId, timeoutMs: this.RESTART_ANSWER_TIMEOUT_MS },
+                });
                 this.handleConnectionFailure(userId, undefined);
             }, this.RESTART_ANSWER_TIMEOUT_MS),
         );

@@ -170,12 +170,34 @@ export class RemotePeer extends Peer implements Streamable {
         }
     };
 
+    /**
+     * Leaves a trace of the connection lifecycle in Sentry, so that a later error carries the sequence of
+     * events (disconnection, ICE restart, teardown) that led to it.
+     */
+    private breadcrumb(message: string, level: "info" | "warning", data: Record<string, unknown> = {}): void {
+        Sentry.addBreadcrumb({
+            category: "webrtc",
+            level,
+            message,
+            data: {
+                spaceUserId: this._spaceUserId,
+                connectionId: this._connectionId,
+                type: this.type,
+                initiator: this.initiator,
+                ...data,
+            },
+        });
+    }
+
     private readonly iceStateChangeHandler = (iceConnectionState: RTCIceConnectionState) => {
         // Before the first "connect", the connect deadline covers a stalled negotiation.
         if (this.closing || !this._connected) {
             return;
         }
         if (iceConnectionState === "connected" || iceConnectionState === "completed") {
+            if (this.iceRecoveryTimeout) {
+                this.breadcrumb("ICE recovered", "info", { iceConnectionState });
+            }
             this.clearIceRecoveryTimeouts();
             this._statusStore.set("connected");
             return;
@@ -183,7 +205,7 @@ export class RemotePeer extends Peer implements Streamable {
         if (iceConnectionState !== "disconnected" || this.iceRecoveryTimeout) {
             return;
         }
-        debug(`ICE disconnected with ${this._spaceUserId}, attempting to recover`);
+        this.breadcrumb("ICE disconnected, attempting to recover", "warning", { iceConnectionState });
         // Displayed as "reconnecting" by the VideoBox
         this._statusStore.set("connecting");
         this.iceRestartTimeout = setTimeout(() => {
@@ -191,14 +213,17 @@ export class RemotePeer extends Peer implements Streamable {
             const pc = this._pc;
             // The offer must come from the initiator; the fork only sends offers from that side.
             if (this.initiator && pc && typeof pc.restartIce === "function") {
-                debug(`Restarting ICE with ${this._spaceUserId}`);
+                this.breadcrumb("Restarting ICE", "info", { iceConnectionState: pc.iceConnectionState });
                 pc.restartIce();
                 this.negotiate();
             }
         }, ICE_RESTART_DELAY_MS);
         this.iceRecoveryTimeout = setTimeout(() => {
             this.iceRecoveryTimeout = undefined;
-            debug(`ICE did not recover with ${this._spaceUserId}, destroying the peer to trigger a retry`);
+            this.breadcrumb("ICE did not recover, destroying the peer to trigger a retry", "warning", {
+                iceConnectionState: this._pc?.iceConnectionState,
+                connectionState: this._pc?.connectionState,
+            });
             this.destroy();
         }, ICE_RECOVERY_TIMEOUT_MS);
     };
@@ -213,7 +238,10 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly connectionStateChangeHandler = () => {
         const pc = this._pc;
         if (pc?.connectionState === "failed" && !this.closing) {
-            debug(`Connection failed with ${this._spaceUserId}, destroying the peer to trigger a retry`);
+            this.breadcrumb("Connection failed, destroying the peer to trigger a retry", "warning", {
+                iceConnectionState: pc.iceConnectionState,
+                connectionState: pc.connectionState,
+            });
             this.destroy();
         }
     };
@@ -526,7 +554,16 @@ export class RemotePeer extends Peer implements Streamable {
         this.connectDeadline = setTimeout(() => {
             this.connectDeadline = undefined;
             if (!this._connected && !this.closing) {
-                debug(`Peer ${this._spaceUserId} did not connect within ${CONNECT_DEADLINE_MS}ms, destroying it`);
+                this.breadcrumb(
+                    "Peer did not connect within the deadline, destroying it to trigger a retry",
+                    "warning",
+                    {
+                        deadlineMs: CONNECT_DEADLINE_MS,
+                        iceConnectionState: this._pc?.iceConnectionState,
+                        iceGatheringState: this._pc?.iceGatheringState,
+                        signalingState: this._pc?.signalingState,
+                    },
+                );
                 this.destroy();
             }
         }, CONNECT_DEADLINE_MS);
