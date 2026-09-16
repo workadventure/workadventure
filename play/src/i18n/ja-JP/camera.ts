@@ -105,7 +105,6 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     backgroundEffects: {
         imageTitle: "背景画像",
-        videoTitle: "背景動画",
         blurTitle: "背景ぼかし",
         resetTitle: "背景効果を無効化",
         title: "背景効果",

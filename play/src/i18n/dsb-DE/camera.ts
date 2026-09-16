@@ -104,7 +104,6 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     backgroundEffects: {
         imageTitle: "Wobrazki slězynka",
-        videoTitle: "Wideja slězynka",
         blurTitle: "Slězynk njewjasnosć",
         resetTitle: "Slězynk efekty deaktiwěrowaś",
         title: "Slězynk efekty",

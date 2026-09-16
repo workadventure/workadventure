@@ -823,14 +823,6 @@ class LocalUserStore {
         return localStorage.getItem("backgroundImage");
     }
 
-    setBackgroundVideo(value: string) {
-        localStorage.setItem("backgroundVideo", value);
-    }
-
-    getBackgroundVideo(): string | null {
-        return localStorage.getItem("backgroundVideo");
-    }
-
     setNoiseSuppressionEnabled(value: boolean) {
         localStorage.setItem(noiseSuppressionEnabledKey, value.toString());
     }

@@ -104,7 +104,6 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     backgroundEffects: {
         imageTitle: "Wobrazki pozadka",
-        videoTitle: "Wideja pozadka",
         blurTitle: "Pozadk njewjasnosć",
         resetTitle: "Pozadk efekty deaktiwěrowaś",
         title: "Pozadk efekty",

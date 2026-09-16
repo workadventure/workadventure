@@ -30,8 +30,6 @@ declare global {
     interface Window {
         MediaStreamTrackProcessor: MediaStreamTrackProcessorConstructor;
         MediaStreamTrackGenerator: MediaStreamTrackGeneratorConstructor;
-        // MediaPipe types
-        SelfieSegmentation?: unknown;
     }
 
     // Make them available globally

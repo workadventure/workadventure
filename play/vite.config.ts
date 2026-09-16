@@ -1,6 +1,5 @@
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs";
 import { defineConfig, loadEnv } from "vite";
 import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
@@ -46,7 +45,6 @@ export default defineConfig(({ mode }) => {
         },
         plugins: [
             tailwindcss(),
-            mediapipe_workaround(),
             noiseSuppressionAudioWorkletVitePlugin(),
             nodePolyfills({
                 include: ["events", "buffer"],
@@ -94,7 +92,7 @@ export default defineConfig(({ mode }) => {
             },
         },
         optimizeDeps: {
-            exclude: ["svelte-modals", "@mediapipe/selfie_segmentation"],
+            exclude: ["svelte-modals"],
             esbuildOptions: {
                 define: {
                     global: "globalThis",
@@ -132,21 +130,3 @@ export default defineConfig(({ mode }) => {
     }
     return config;
 });
-
-// use to fix the module export issue with mediapipe ==> https://github.com/tensorflow/tfjs/issues/7165
-// TODO: remove this when we migrate to mediapipe/tasks-vision
-function mediapipe_workaround() {
-    return {
-        name: "mediapipe_workaround",
-        load(id: string) {
-            const filePath = id.split("?")[0];
-            if (path.basename(filePath) === "selfie_segmentation.js" && fs.existsSync(filePath)) {
-                let code = fs.readFileSync(filePath, "utf-8");
-                code += "\nexport const SelfieSegmentation = globalThis.SelfieSegmentation;\n";
-                return { code };
-            } else {
-                return null;
-            }
-        },
-    };
-}
