@@ -1,6 +1,6 @@
-import { DrawingUtils, ImageSegmenter, type MPMask } from "@mediapipe/tasks-vision";
+import { ImageSegmenter, type MPMask } from "@mediapipe/tasks-vision";
 import { ResegmentController } from "./ResegmentController";
-import { TasksVisionBlurCompositor } from "./TasksVisionBlurCompositor";
+import { TasksVisionCompositor } from "./TasksVisionCompositor";
 import {
     SELFIE_SEGMENTER_MODEL_URL,
     TASKS_VISION_WORKER_FILESET,
@@ -51,12 +51,10 @@ export class MediaPipeTasksVisionWorkerRuntime {
     private glCanvas: OffscreenCanvas | null = null;
     private gl: WebGL2RenderingContext | null = null;
     private imageSegmenter: ImageSegmenter | null = null;
-    private drawingUtils: DrawingUtils | null = null;
-    private blurCompositor: TasksVisionBlurCompositor | null = null;
+    private compositor: TasksVisionCompositor | null = null;
     private backgroundImage: ImageBitmap | null = null;
     private backgroundImageUrl: string | null = null;
     private backgroundCanvas: OffscreenCanvas | null = null;
-    private fallbackBlurredCanvas: OffscreenCanvas | null = null;
     private lastTimestampMs = -1;
     // Segmentation runs every Nth frame; the mask is cloned and reused in between (see ResegmentController).
     private readonly resegmentController = new ResegmentController();
@@ -143,8 +141,7 @@ export class MediaPipeTasksVisionWorkerRuntime {
             delegate = "CPU";
             this.imageSegmenter = await createSegmenter("CPU");
         }
-        this.drawingUtils = new DrawingUtils(gl);
-        this.blurCompositor = new TasksVisionBlurCompositor(gl, glCanvas);
+        this.compositor = new TasksVisionCompositor(gl, glCanvas);
         this.lastTimestampMs = -1;
         return delegate;
     }
@@ -183,12 +180,9 @@ export class MediaPipeTasksVisionWorkerRuntime {
     // ---- image-bitmap transport ----
 
     private processFrame(frameId: number, frame: ImageBitmap, timestampMs: number): void {
-        let blurBackend: "webgl-blur" | "none" = "none";
         let output: ImageBitmap = frame;
         try {
-            const rendered = this.render(frame, frame.width, frame.height, timestampMs);
-            if (rendered) {
-                blurBackend = rendered;
+            if (this.render(frame, frame.width, frame.height, timestampMs)) {
                 output = this.glCanvas!.transferToImageBitmap();
             }
         } catch (error) {
@@ -197,7 +191,7 @@ export class MediaPipeTasksVisionWorkerRuntime {
         if (output !== frame) {
             frame.close();
         }
-        this.post({ type: "frame", frameId, bitmap: output, blurBackend }, [output]);
+        this.post({ type: "frame", frameId, bitmap: output }, [output]);
     }
 
     // ---- insertable-streams transport ----
@@ -257,17 +251,12 @@ export class MediaPipeTasksVisionWorkerRuntime {
     // ---- rendering ----
 
     /**
-     * Segments and composites the source onto the WebGL canvas. Returns the blur backend used, or null when the
-     * frame must be passed through untouched (no effect, recovery in progress, no mask).
+     * Segments and composites the source onto the WebGL canvas. Returns false when the frame must be passed
+     * through untouched (no effect, recovery in progress, no mask).
      */
-    private render(
-        source: FrameSource,
-        width: number,
-        height: number,
-        timestampMs: number,
-    ): "webgl-blur" | "none" | null {
+    private render(source: FrameSource, width: number, height: number, timestampMs: number): boolean {
         if (this.config.mode === "none" || this.recovery || this.fatal || !width || !height) {
-            return null;
+            return false;
         }
         const imageSegmenter = this.imageSegmenter;
         const glCanvas = this.glCanvas;
@@ -287,12 +276,12 @@ export class MediaPipeTasksVisionWorkerRuntime {
             this.lastMask && this.lastMask.width === width && this.lastMask.height === height ? this.lastMask : null;
         if (reusableMask && this.framesSinceSegmentation < this.resegmentController.getInterval() - 1) {
             this.framesSinceSegmentation++;
-            const result = this.composite(source, reusableMask, width, height);
+            this.composite(source, reusableMask, width, height, false);
             this.gl.flush();
-            return result;
+            return true;
         }
 
-        let result: "webgl-blur" | "none" | null = null;
+        let rendered = false;
         const segmentStartedAt = performance.now();
         imageSegmenter.segmentForVideo(source, monotonicTimestampMs, (segmentation) => {
             this.resegmentController.tick(performance.now() - segmentStartedAt);
@@ -304,50 +293,35 @@ export class MediaPipeTasksVisionWorkerRuntime {
             this.lastMask?.close();
             this.lastMask = mask.clone();
             this.framesSinceSegmentation = 0;
-            result = this.composite(source, mask, width, height);
+            this.composite(source, mask, width, height, true);
             this.gl?.flush();
+            rendered = true;
         });
-        if (result !== null) {
+        if (rendered) {
             this.markSuccessfulFrame();
         }
-        return result;
+        return rendered;
     }
 
-    private composite(source: FrameSource, mask: MPMask, width: number, height: number): "webgl-blur" | "none" {
-        const drawingUtils = this.drawingUtils;
-        if (!drawingUtils) {
-            throw new Error("DrawingUtils is unavailable");
+    private composite(source: FrameSource, mask: MPMask, width: number, height: number, freshMask: boolean): void {
+        const compositor = this.compositor;
+        if (!compositor) {
+            throw new Error("The WebGL compositor is unavailable");
         }
-
-        if (this.config.mode === "blur") {
-            const blurAmount = this.config.blurAmount || 15;
-            if (this.blurCompositor?.draw(source, mask, width, height, blurAmount)) {
-                return "webgl-blur";
-            }
-            const blurredCanvas = this.getSizedCanvas("fallbackBlurredCanvas", width, height);
-            const context = blurredCanvas.getContext("2d")!;
-            context.clearRect(0, 0, width, height);
-            context.filter = `blur(${blurAmount}px)`;
-            context.drawImage(source, 0, 0, width, height);
-            context.filter = "none";
-            drawingUtils.drawConfidenceMask(mask, blurredCanvas, source);
-            return "none";
+        const drawn =
+            this.config.mode === "blur"
+                ? compositor.drawBlur(source, mask, width, height, this.config.blurAmount || 15, freshMask)
+                : compositor.drawReplace(
+                      source,
+                      mask,
+                      this.getBackgroundCanvas(width, height),
+                      width,
+                      height,
+                      freshMask,
+                  );
+        if (!drawn) {
+            throw new Error("WebGL compositing failed");
         }
-
-        drawingUtils.drawConfidenceMask(mask, this.getBackgroundCanvas(width, height) ?? [0, 0, 0, 255], source);
-        return "none";
-    }
-
-    private getSizedCanvas(field: "fallbackBlurredCanvas" | "backgroundCanvas", width: number, height: number) {
-        let canvas = this[field];
-        if (!canvas) {
-            canvas = new OffscreenCanvas(width, height);
-            this[field] = canvas;
-        } else if (canvas.width !== width || canvas.height !== height) {
-            canvas.width = width;
-            canvas.height = height;
-        }
-        return canvas;
     }
 
     /** The background image scaled to cover the frame, rendered once per size. */
@@ -360,7 +334,9 @@ export class MediaPipeTasksVisionWorkerRuntime {
         if (existing && existing.width === width && existing.height === height) {
             return existing;
         }
-        const canvas = this.getSizedCanvas("backgroundCanvas", width, height);
+        // A new canvas object each time: the compositor caches the uploaded texture by object identity.
+        const canvas = new OffscreenCanvas(width, height);
+        this.backgroundCanvas = canvas;
         const scale = Math.max(width / backgroundImage.width, height / backgroundImage.height);
         const scaledWidth = backgroundImage.width * scale;
         const scaledHeight = backgroundImage.height * scale;
@@ -435,10 +411,8 @@ export class MediaPipeTasksVisionWorkerRuntime {
     }
 
     private dispose(): void {
-        closeQuietly("blur compositor", this.blurCompositor);
-        this.blurCompositor = null;
-        closeQuietly("DrawingUtils", this.drawingUtils);
-        this.drawingUtils = null;
+        closeQuietly("compositor", this.compositor);
+        this.compositor = null;
         closeQuietly("ImageSegmenter", this.imageSegmenter);
         this.imageSegmenter = null;
         closeQuietly("last mask", this.lastMask);
@@ -448,6 +422,5 @@ export class MediaPipeTasksVisionWorkerRuntime {
         this.gl = null;
         this.glCanvas = null;
         this.backgroundCanvas = null;
-        this.fallbackBlurredCanvas = null;
     }
 }

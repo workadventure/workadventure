@@ -29,6 +29,6 @@ export type TasksVisionWorkerResponse =
     | { type: "config-updated"; requestId: number }
     | { type: "config-update-error"; requestId: number; error: SerializedWorkerError }
     /** The answer to "process-frame". The bitmap is the input frame itself when nothing could be rendered. */
-    | { type: "frame"; frameId: number; bitmap: ImageBitmap; blurBackend: "webgl-blur" | "none" }
+    | { type: "frame"; frameId: number; bitmap: ImageBitmap }
     /** MediaPipe recovery failed (or the stream pipe broke); the worker is no longer usable. */
     | { type: "fatal"; error: SerializedWorkerError };

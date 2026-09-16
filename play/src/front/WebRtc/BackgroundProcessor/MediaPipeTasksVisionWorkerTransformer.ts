@@ -80,7 +80,6 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
     private processingEnabled = false;
     private frameCount = 0;
     private readonly startTime = performance.now();
-    private blurBackend: "webgl-blur" | "none" = "none";
 
     constructor(
         config: BackgroundConfig,
@@ -252,7 +251,6 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
             // Frame accounting only exists on the main thread for the image-bitmap transport.
             fps: this.frameCount > 0 && elapsed > 0 ? Math.round((this.frameCount / elapsed) * 1000) : 0,
             frameCount: this.frameCount,
-            blurBackend: this.config.mode === "blur" ? this.blurBackend : "none",
         };
     }
 
@@ -463,7 +461,6 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
         this.activeFrameId = null;
         if (!this.closed && this.outputCanvas && this.outputContext) {
             this.outputContext.drawImage(message.bitmap, 0, 0, this.outputCanvas.width, this.outputCanvas.height);
-            this.blurBackend = message.blurBackend;
             this.frameCount++;
         }
         message.bitmap.close();
