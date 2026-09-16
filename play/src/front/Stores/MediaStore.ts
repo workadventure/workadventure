@@ -15,6 +15,7 @@ import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import {
+    BackgroundProcessingUnsupportedError,
     type BackgroundConfig,
     type BackgroundMode,
     type BackgroundTransformer,
@@ -1110,9 +1111,14 @@ async function runLocalVideoTrackUpdate(
         if (isAbort) {
             return;
         }
-        console.warn("[MediaStore] Failed to transform stream:", error);
-        Sentry.captureException(error);
-        warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
+        if (error instanceof BackgroundProcessingUnsupportedError) {
+            console.warn("[MediaStore] Background processing is not supported on this browser:", error.message);
+            warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.notSupportedOnThisBrowser());
+        } else {
+            console.warn("[MediaStore] Failed to transform stream:", error);
+            Sentry.captureException(error);
+            warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
+        }
         backgroundConfigStore.reset();
         setIfCurrent({
             type: "error",

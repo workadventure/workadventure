@@ -22,6 +22,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     mapEditorNotEnabled: "Editor kórtow njejo na toś tom swěśe zmóžnjony.",
     backgroundProcessing: {
         failedToApply: "Zastosowanje pozadkowych efektow jo se njeraźiło",
+        notSupportedOnThisBrowser: "Pozadkowe efekty njejsu w toś tom wobglědowaku pódpěrane",
     },
     popupBlocked: {
         title: "Pop-up-bloker",

@@ -22,6 +22,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     mapEditorNotEnabled: "地图编辑器在此世界中未启用。",
     backgroundProcessing: {
         failedToApply: "应用背景效果失败",
+        notSupportedOnThisBrowser: "此浏览器不支持背景效果",
     },
     popupBlocked: {
         title: "弹出窗口被阻止",

@@ -27,6 +27,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     backgroundProcessing: {
         failedToApply: "Không thể áp dụng hiệu ứng nền",
+        notSupportedOnThisBrowser: "Trình duyệt này không hỗ trợ hiệu ứng nền",
     },
     duplicateUserConnected: {
         title: "Đã kết nối ở nơi khác",

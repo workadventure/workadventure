@@ -28,6 +28,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     backgroundProcessing: {
         failedToApply: "Impossibile applicare gli effetti di sfondo",
+        notSupportedOnThisBrowser: "Gli effetti di sfondo non sono supportati da questo browser",
     },
     duplicateUserConnected: {
         title: "Già connesso",

@@ -27,6 +27,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     backgroundProcessing: {
         failedToApply: "ไม่สามารถใช้เอฟเฟกต์พื้นหลังได้",
+        notSupportedOnThisBrowser: "เบราว์เซอร์นี้ไม่รองรับเอฟเฟกต์พื้นหลัง",
     },
     duplicateUserConnected: {
         title: "เชื่อมต่ออยู่แล้ว",
