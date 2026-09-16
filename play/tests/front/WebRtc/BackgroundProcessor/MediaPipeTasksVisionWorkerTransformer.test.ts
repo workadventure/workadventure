@@ -106,6 +106,9 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
         vi.stubGlobal("createImageBitmap", vi.fn());
         vi.stubGlobal("MediaStreamTrackProcessor", undefined);
         vi.stubGlobal("MediaStreamTrackGenerator", undefined);
+        vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+            getExtension: () => null,
+        } as unknown as WebGL2RenderingContext);
         vi.spyOn(console, "info").mockImplementation(() => undefined);
         vi.spyOn(console, "error").mockImplementation(() => undefined);
     });
@@ -145,6 +148,16 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
         expect(worker.messages[2]).toEqual({ type: "stop-stream", streamId: 1 });
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(generatorTrack.stop).toHaveBeenCalledOnce();
+    });
+
+    it("rejects transform() with an unsupported error on a device with too few cores", async () => {
+        vi.spyOn(navigator, "hardwareConcurrency", "get").mockReturnValue(2);
+        transformer = new MediaPipeTasksVisionWorkerTransformer({ mode: "blur" });
+
+        await expect(transformer.transform(new MediaStream())).rejects.toThrow(
+            "Background processing is not supported on this browser: only 2 CPU cores",
+        );
+        expect(workerMocks.instances).toHaveLength(0);
     });
 
     it("rejects transform() with an unsupported error when the worker cannot run WebGL2", async () => {

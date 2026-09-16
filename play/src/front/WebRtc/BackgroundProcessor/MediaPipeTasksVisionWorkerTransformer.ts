@@ -10,6 +10,7 @@ import type {
 } from "./MediaPipeTasksVisionWorkerProtocol";
 import {
     BackgroundProcessingUnsupportedError,
+    getBackgroundProcessingUnsupportedReason,
     type BackgroundConfig,
     type BackgroundTransformer,
     type BackgroundTransformerFailureHandler,
@@ -94,12 +95,9 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
     }
 
     private async startWorker(): Promise<void> {
-        if (
-            typeof Worker === "undefined" ||
-            typeof OffscreenCanvas === "undefined" ||
-            typeof createImageBitmap === "undefined"
-        ) {
-            throw new BackgroundProcessingUnsupportedError("required worker canvas APIs are unavailable");
+        const unsupportedReason = getBackgroundProcessingUnsupportedReason();
+        if (unsupportedReason) {
+            throw new BackgroundProcessingUnsupportedError(unsupportedReason);
         }
 
         const worker = new Worker(tasksVisionWorkerUrl, { type: "module" });
