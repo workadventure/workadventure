@@ -1,11 +1,12 @@
 import type { MPMask } from "@mediapipe/tasks-vision";
-import { ImageSegmenter, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
+import { ImageSegmenter, DrawingUtils } from "@mediapipe/tasks-vision";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { isFirefox, isIOS } from "../DeviceUtils";
 import { CanvasBlurRenderer, type BlurBackend } from "./CanvasBlurRenderer";
 import { logOnce } from "./logOnce";
 import { TasksVisionBlurCompositor } from "./TasksVisionBlurCompositor";
+import { SELFIE_SEGMENTER_MODEL_URL, resolveTasksVisionFileset, type TasksVisionFileset } from "./tasksVisionAssets";
 import type {
     BackgroundConfig,
     BackgroundTransformer,
@@ -68,7 +69,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private outputCtx: CanvasRenderingContext2D;
 
     private imageSegmenter: ImageSegmenter | null = null;
-    private filesetResolver: Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>> | null = null;
+    private filesetResolver: TasksVisionFileset | null = null;
     private backgroundImage: HTMLImageElement | null = null;
     private outputStream: MediaStream | null = null;
     private inputVideo: HTMLVideoElement;
@@ -132,12 +133,8 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     }
 
     private async initializeMediaPipe(): Promise<void> {
-        // Use local WASM files
-        const wasmPath = "./static/tasksVision/wasm";
-        this.filesetResolver = await FilesetResolver.forVisionTasks(wasmPath);
-
-        // Use local selfie segmentation model
-        const modelPath = "./static/tasksVision/selfie_segmenter.tflite";
+        this.filesetResolver = await resolveTasksVisionFileset();
+        const modelPath = SELFIE_SEGMENTER_MODEL_URL;
 
         // Try GPU first, fallback to CPU if it fails
         try {
