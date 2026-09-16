@@ -75,6 +75,9 @@ export class BroadcastService {
                 )
                     .then((space) => {
                         megaphoneSpaceStore.set(space);
+                        // The local metadata above never leaves the tab. The back tells
+                        // a megaphone broadcast from a speaker zone by this key.
+                        space.emitUpdateSpaceMetadata(new Map([["isMegaphoneSpace", true]]));
                     })
                     .catch((e) => {
                         console.error(e);

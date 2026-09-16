@@ -114,11 +114,6 @@ export class GameRoom implements BrothersFinder {
     private readonly _destroyRoomStream = new Subject<void>();
     public readonly destroyRoomStream = this._destroyRoomStream.asObservable();
 
-    /** The world this room belongs to, as the admin names it. */
-    public get world(): string {
-        return this._roomGroup ?? "";
-    }
-
     private constructor(
         public readonly _roomUrl: string,
         private _roomGroup: string | null,
@@ -467,7 +462,6 @@ export class GameRoom implements BrothersFinder {
                     const closestUser: User = closestItem;
                     const group: Group = new Group(
                         this._roomUrl,
-                        this.world,
                         [user, closestUser],
                         this.groupRadius,
                         this.connectCallback,
@@ -552,7 +546,6 @@ export class GameRoom implements BrothersFinder {
                     // Re-create a group with the followers
                     const newGroup: Group = new Group(
                         this._roomUrl,
-                        this.world,
                         [user, ...followingMembers],
                         this.groupRadius,
                         this.connectCallback,

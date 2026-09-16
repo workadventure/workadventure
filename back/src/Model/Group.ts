@@ -1,7 +1,6 @@
 import { Subject } from "rxjs";
 import type { Movable } from "@workadventure/shared-utils";
 import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
-import { meetingAnalytics, type MeetingParticipant } from "../Services/MeetingAnalytics";
 import type { PositionInterface } from "./PositionInterface";
 import type { PositionNotifier } from "./PositionNotifier";
 import type { Zone } from "./Zone";
@@ -35,8 +34,6 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
     constructor(
         roomId: string,
-        /** World the room belongs to, carried for analytics and nothing else. */
-        private readonly world: string,
         users: User[],
         private groupRadius: number,
         private connectCallback: ConnectCallback,
@@ -49,12 +46,8 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         Group.nextId++;
 
         // TODO: SECURE SPACES WITH JWT tokens.
+        // The shape is what tells the back's Space it is a bubble — see isBubbleSpaceName.
         this._spaceName = `${this.roomId}#${this.id}#${new Date().getTime()}`;
-
-        // Before the joins below, which report themselves as participations: a bubble
-        // is born with two people in it, and they are participants of a meeting that
-        // has to exist first.
-        meetingAnalytics.meetingStarted(this._spaceName, this.world, this.roomId, "bubble");
 
         users.forEach((user: User) => {
             this.join(user);
@@ -178,7 +171,6 @@ export class Group implements Movable, CustomJsonReplacerInterface {
     join(user: User): void {
         // Broadcast on the right event
         this.users.add(user);
-        meetingAnalytics.participantJoined(this._spaceName, this.asParticipant(user));
         user.group = this;
         this.connectCallback(user, this);
         this.positionNotifier.emitGroupUsersUpdatedEvent(this);
@@ -190,7 +182,6 @@ export class Group implements Movable, CustomJsonReplacerInterface {
             throw new Error(`Could not find user ${user.id} in the group ${this.id}`);
         }
         user.group = undefined;
-        meetingAnalytics.participantLeft(this._spaceName, String(user.id));
 
         if (this.users.size !== 0) {
             this.updatePosition();
@@ -222,24 +213,6 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         for (const user of this.users) {
             this.leave(user);
         }
-
-        // After the leaves, so a participation never ends after the meeting holding it.
-        meetingAnalytics.meetingEnded(this._spaceName);
-    }
-
-    /** The bubble's view of a participant: the game-room user is all it has. */
-    private asParticipant(user: User): MeetingParticipant {
-        return {
-            key: String(user.id),
-            uuid: user.uuid,
-            userId: user.id,
-            // Same shape the pusher builds for a socket, so a back-emitted row and a
-            // pusher-emitted one name the same person the same way.
-            spaceUserId: `${this.roomId}_${user.id}`,
-            roomId: this.roomId,
-            tabId: user.tabId ?? null,
-            clientIp: user.IPAddress,
-        };
     }
 
     get getSize() {

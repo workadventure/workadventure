@@ -11,7 +11,7 @@ import {
 } from "./Enum/EnvironmentVariable";
 import { telemetryService } from "./Services/TelemetryService";
 import { analyticsEventsQueue } from "./Services/AnalyticsEventsQueue";
-import { meetingAnalytics } from "./Services/MeetingAnalytics";
+import { spaceSessionAnalytics } from "./Services/SpaceSessionAnalytics";
 
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));
@@ -45,11 +45,11 @@ analyticsEventsQueue.start();
 const DRAIN_TIMEOUT_MS = 10_000;
 
 /**
- * A meeting only exists once it has ended: there is no start row, the whole interval
+ * A session only exists once it has ended: there is no start row, the whole interval
  * rides on the closing one. So every reachable end has to be wired, and until now this
  * process had none at all — a deploy killed it with every live conversation inside it,
  * silently. The one gap left is SIGKILL/OOM, where the map dies with the process;
- * persisting it would not help, since on recovery we would know a meeting was open but
+ * persisting it would not help, since on recovery we would know a session was open but
  * not when it ended, and inventing that timestamp is worse than losing it.
  */
 let shuttingDown = false;
@@ -61,8 +61,8 @@ const shutdown = (reason: string, exitCode: number): void => {
 
     // Close BEFORE draining: closeAll only enqueues, so draining first would leave
     // everything it produced behind.
-    const closed = meetingAnalytics.closeAll("back_shutdown");
-    console.info(`${reason}: closed ${closed} meeting(s), draining the analytics queue before exit…`);
+    const closed = spaceSessionAnalytics.closeAll("back_shutdown");
+    console.info(`${reason}: closed ${closed} session(s), draining the analytics queue before exit…`);
 
     runDrains(DRAIN_TIMEOUT_MS).then(
         () => process.exit(exitCode),
@@ -80,7 +80,7 @@ process.once("SIGINT", (signal) => shutdown(`Received ${signal}`, 0));
 // flushing what it already knows, which is the difference between a conversation being
 // reported and never having existed.
 process.once("uncaughtException", (error) => {
-    console.error("Uncaught exception — closing open meetings before exit", error);
+    console.error("Uncaught exception — closing open sessions before exit", error);
     Sentry.captureException(error);
     shutdown("Uncaught exception", 1);
 });

@@ -74,12 +74,12 @@ const EMITTED_FROM_EXTERNAL_MODULES = ["external_module.opened", "external_modul
  * its own tsconfig, and Vite refuses to inline `?raw` files from outside the project
  * root — the same reason `src/front/external-modules/` is excluded above.
  *
- * These are the rows the back emits as the authority on a meeting: it owns the
- * lifecycle (a Group for a bubble, an area Space for a meeting area), so it is the
- * only party that can say a meeting happened once rather than once per participant.
- * See back/src/Services/MeetingAnalytics.ts.
+ * These are the rows the back emits as the authority on a space session — a meeting
+ * or a broadcast: it owns the space, so it is the only party that can say a session
+ * happened once rather than once per participant.
+ * See back/src/Services/SpaceSessionAnalytics.ts.
  */
-const EMITTED_FROM_BACK = ["meeting.participation.ended"];
+const EMITTED_FROM_BACK = ["meeting.participation.ended", "broadcast.ended", "broadcast.participation.ended"];
 
 /**
  * The names the front asks the pusher to time, e.g. openTimedEvent("area.dwell", …).
@@ -194,7 +194,7 @@ describe("AnalyticsEventCatalog", () => {
         expect([...requested].filter((name) => !openable.has(name)).sort()).toEqual([]);
     });
 
-    it("exposes exactly nine client-openable timed events", () => {
+    it("exposes exactly seven client-openable timed events", () => {
         // A canary, not a tautology. TIMED_ANALYTICS_EVENT_NAMES is derived from the
         // catalog, so adding a `timedEvent` entry silently widens the set of rows a
         // *client* can ask the pusher to sign with source "pusher" — the admin
@@ -203,13 +203,11 @@ describe("AnalyticsEventCatalog", () => {
         // documenting a new event.
         expect([...TIMED_ANALYTICS_EVENT_NAMES].sort()).toEqual([
             "area.dwell",
-            "broadcast.audience.ended",
             "cowebsite.closed",
             "media.microphone.dwell",
             "media.speech.dwell",
             "meeting.ended",
             "meeting.screenshare.ended",
-            "megaphone.ended",
             "status.dwell",
         ]);
     });

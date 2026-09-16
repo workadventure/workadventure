@@ -259,7 +259,7 @@ class AnalyticsClient {
     }
 
     // The two ends of one broadcast, named for PostHog, which counts each press. The
-    // admin gets one `megaphone.ended` row carrying the duration instead.
+    // admin gets the time on air from the back instead, as `broadcast.participation.ended`.
     //
     // The interval is the caller's: startMegaphoneLive is reachable twice without an
     // intervening stop (the modal and the action bar both lead there), and only the

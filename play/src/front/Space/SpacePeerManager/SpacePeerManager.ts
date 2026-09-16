@@ -19,7 +19,6 @@ import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { meetingEnded, meetingStarted } from "../../Administration/CurrentMeeting";
 import { isMeetingSpace } from "../../Rules/MeetingRules";
-import { trackBroadcastAnalytics } from "../../Streaming/BroadcastAnalytics";
 import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
@@ -138,8 +137,6 @@ export class SpacePeerManager {
 
     private _communicationState: ICommunicationState;
     private _toFinalizeState: ICommunicationState | undefined;
-    private readonly stopBroadcastAnalytics: () => void;
-
     private readonly _effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
 
     private readonly _videoPeerAdded = new Subject<Streamable>();
@@ -182,7 +179,6 @@ export class SpacePeerManager {
         private _recordingStore = recordingStore,
     ) {
         this._communicationState = new DefaultCommunicationState();
-        this.stopBroadcastAnalytics = trackBroadcastAnalytics(space);
 
         this._effectiveScreenSharingLocalStreamStore = deriveSwitchStore(
             _screenSharingLocalStreamStore,
@@ -206,7 +202,7 @@ export class SpacePeerManager {
 
                 // create factory for the new state instead of creating the state directly ?
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
-                    this.startMeetingAnalytics();
+                    this.recordCurrentMeeting();
                     this._communicationState = new WebRTCState(
                         this.space,
                         this._streamableSubjects,
@@ -214,7 +210,7 @@ export class SpacePeerManager {
                         this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
-                    this.startMeetingAnalytics();
+                    this.recordCurrentMeeting();
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
@@ -222,7 +218,7 @@ export class SpacePeerManager {
                         this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else {
-                    this.endMeetingAnalytics();
+                    this.forgetCurrentMeeting();
                     console.error("Unknown communication strategy: " + message.switchMessage.strategy);
                     Sentry.captureMessage("Unknown communication strategy: " + message.switchMessage.strategy);
                 }
@@ -567,35 +563,29 @@ export class SpacePeerManager {
         this.metadataSubscription.unsubscribe();
         this.cancelPendingRecorderNameResolution(this.space.getName());
         this._recordingStore.removeSpace(this.space.getName());
-        this.endMeetingAnalytics();
-        this.stopBroadcastAnalytics();
+        this.forgetCurrentMeeting();
     }
 
     /**
-     * Records which meeting this tab is in. It no longer REPORTS the meeting: the back
-     * does, once per meeting instead of once per participant, because it is the only
-     * party that can count the participants of one.
+     * Records which meeting this tab is in. It does not REPORT the meeting — the back
+     * does, once per meeting — but the periods this client does report, the microphone
+     * it held open and the times it was speaking, have to say which meeting they
+     * happened in, and nobody else can: they are measured from the local analyser.
      *
-     * What is still needed here is the id, so that the periods this client does report
-     * — the microphone it held open, the times it was speaking — can say which meeting
-     * they happened in. Nobody else can: those are measured from the local analyser and
-     * never leave this tab until they are reported.
-     *
-     * Still gated on the space being a conversation: the back sends the same strategy
-     * switch to whoever merely joins a media-syncing space, the megaphone space
-     * included, and a speaking period in a broadcast belongs to no meeting.
+     * Gated on the space being a conversation: the back sends the same strategy switch
+     * to whoever merely joins a media-syncing space, the megaphone space included, and
+     * a speaking period in a broadcast belongs to no meeting.
      */
-    private startMeetingAnalytics(): void {
-        this.endMeetingAnalytics();
+    private recordCurrentMeeting(): void {
+        this.forgetCurrentMeeting();
         if (!isMeetingSpace(this.space.filterType)) {
             return;
         }
         meetingStarted(this.space.getName());
     }
 
-    private endMeetingAnalytics(): void {
-        // Unguarded: meetingEnded only clears a meeting whose id matches, so calling it
-        // for a meeting that never opened here is a no-op.
+    /** Guarded on the id by the store itself, so this is safe to call for any space. */
+    private forgetCurrentMeeting(): void {
         meetingEnded(this.space.getName());
     }
 

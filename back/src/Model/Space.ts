@@ -20,7 +20,12 @@ import {
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
-import { meetingAnalytics, type MeetingParticipant } from "../Services/MeetingAnalytics";
+import {
+    isBubbleSpaceName,
+    spaceSessionAnalytics,
+    type SessionKind,
+    type SessionMember,
+} from "../Services/SpaceSessionAnalytics";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { SpacesWatcher } from "./SpacesWatcher";
 import type { EventProcessor } from "./EventProcessor";
@@ -35,20 +40,11 @@ const debug = Debug("space");
 type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
 
 /**
- * Whether this space is a meeting area — a place people go TO meet — as opposed to
- * every other space the app opens.
- *
- * Three exclusions, each for a space that would otherwise be counted as a meeting:
- *
- * - the megaphone space and the speaker/listener zones are broadcasts, and they are
- *   the ones that made "connected" mean "in a meeting". They are told apart by their
- *   filter, which is set at join time on every path.
- * - the world space and the chat spaces carry no media to sync, so nobody is meeting
- *   in them; this is the same predicate the communication manager already uses to
- *   decide a space has media at all.
- * - a proximity bubble also matches both tests above — it IS a meeting, but one the
- *   `Group` already owns, and counting it twice is worse than not counting it here.
- *   Its meeting is registered before the space exists, so the id is already taken.
+ * What makes an `ALL_USERS` space a meeting: it syncs media. The world space and the
+ * chat spaces do not, so nobody is meeting in them — the same predicate the
+ * communication manager uses to decide a space has media at all. A bubble and an area
+ * both pass; the name tells them apart. The megaphone space and the speaker zones are
+ * broadcasts, told apart by their filter, which is set at join time on every path.
  */
 const MEETING_MEDIA_PROPERTIES = ["cameraState", "microphoneState", "screenSharingState"];
 
@@ -95,6 +91,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             }
             this._spaceUpdatedSubject.next(this);
 
+            // Before the filter below: a listener in a broadcast space is not in the
+            // filter, and their time listening is exactly what has to be measured.
+            this.trackSessionJoin(spaceUser);
+
             if (!this.filterOneUser(spaceUser)) {
                 return;
             }
@@ -108,8 +108,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     }),
                 },
             });
-
-            this.trackMeetingJoin(spaceUser);
 
             this.communicationManager.handleUserAdded(spaceUser).catch((e) => {
                 Sentry.captureException(e);
@@ -144,6 +142,12 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
             const updateValues = applyFieldMask(spaceUser, updateMask);
             deepmergeInto(user, updateValues);
+
+            // Only the megaphone: `attendeesState` is the audience choosing to be seen,
+            // not a speaker going on air. In a meeting, present is active.
+            if (this.isBroadcast) {
+                spaceSessionAnalytics.setActive(this.name, user.spaceUserId, user.megaphoneState);
+            }
 
             const newFilter = this.filterOneUser(user);
 
@@ -252,7 +256,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 this._nbWatchers = 0;
             }
             this._spaceUpdatedSubject.next(this);
-            this.trackMeetingLeave(spaceUserId);
+            spaceSessionAnalytics.leave(this.name, spaceUserId);
             debug(`${this.name} : user => removed ${spaceUserId}`);
         } catch (e) {
             console.error("Error while removing user", e);
@@ -365,6 +369,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         if (spaceUsers) {
             for (const spaceUser of spaceUsers.values()) {
+                // A pusher going away takes its users with it; without this they would
+                // stay "present" until the back itself shut down.
+                spaceSessionAnalytics.leave(this.name, spaceUser.spaceUserId);
                 this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
@@ -738,58 +745,39 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return this._propertiesToSync;
     }
 
+    private get isBroadcast(): boolean {
+        return this._filterType !== FilterType.ALL_USERS;
+    }
+
     /**
-     * A meeting area is a space people go TO meet: everyone sees everyone
-     * (`ALL_USERS`, which excludes the megaphone and the speaker/listener zones) and
-     * it syncs media (which excludes the world space and the chat spaces).
+     * What this space is a session of, or undefined for a space nobody meets in.
      *
-     * A proximity bubble passes both tests, and deliberately: it is a meeting, but one
-     * the `Group` owns. Its id is registered before this space exists, so the calls
-     * below are no-ops on it — a bubble is never counted twice.
+     * Read when a session opens rather than once: the megaphone space is told it is
+     * one by metadata, which arrives after the first join.
      */
-    private isMeetingArea(): boolean {
-        return (
-            this._filterType === FilterType.ALL_USERS &&
-            this._propertiesToSync.some((property) => MEETING_MEDIA_PROPERTIES.includes(property))
-        );
+    private sessionKind(): SessionKind | undefined {
+        if (this.isBroadcast) {
+            return this.getMetadataValue("isMegaphoneSpace") === true ? "megaphone" : "speaker_zone";
+        }
+        if (!this._propertiesToSync.some((property) => MEETING_MEDIA_PROPERTIES.includes(property))) {
+            return undefined;
+        }
+        return isBubbleSpaceName(this.name) ? "bubble" : "area";
     }
 
-    private trackMeetingJoin(spaceUser: SpaceUser): void {
-        if (!this.isMeetingArea()) {
+    private trackSessionJoin(spaceUser: SpaceUser): void {
+        if (this.sessionKind() === undefined) {
             return;
         }
 
-        meetingAnalytics.meetingStarted(this.name, this.world, spaceUser.playUri, "area");
-        meetingAnalytics.participantJoined(this.name, this.asMeetingParticipant(spaceUser));
-    }
-
-    private trackMeetingLeave(spaceUserId: string): void {
-        if (meetingAnalytics.kindOf(this.name) !== "area") {
-            return;
-        }
-
-        meetingAnalytics.participantLeft(this.name, spaceUserId);
-        // An area meeting ends when the last person walks out. Anyone arriving later
-        // starts a new one, which is the honest reading: two meetings happened in that
-        // room, not one with a gap in the middle.
-        if (meetingAnalytics.presentCount(this.name) === 0) {
-            meetingAnalytics.meetingEnded(this.name);
-        }
-    }
-
-    private asMeetingParticipant(spaceUser: SpaceUser): MeetingParticipant {
-        return {
+        spaceSessionAnalytics.track(this.name, this.world, spaceUser.playUri, () => this.sessionKind() ?? "area");
+        const member: SessionMember = {
             key: spaceUser.spaceUserId,
             uuid: spaceUser.uuid,
-            // A space user carries no numeric member id, no tab and no IP: the back
-            // sees the space through the pusher, not through the socket. The admin
-            // takes all three as nullable.
-            userId: null,
             spaceUserId: spaceUser.spaceUserId,
             roomId: spaceUser.playUri,
-            tabId: null,
-            clientIp: null,
         };
+        spaceSessionAnalytics.join(this.name, member, this.isBroadcast ? spaceUser.megaphoneState : true);
     }
 
     private isPublishing(spaceUser: SpaceUser): boolean {
@@ -840,6 +828,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return this.communicationManager.getRecordingState();
     }
     public destroy() {
+        spaceSessionAnalytics.untrack(this.name);
         this.communicationManager.destroy();
         debug(`${this.name} => destroyed`);
     }

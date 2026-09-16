@@ -177,6 +177,33 @@ export const timedEventProperties = z.object({
 });
 
 /**
+ * The interval of a session the back closed — a meeting or a broadcast — and why.
+ * The back is the only party that can close one, so the reasons are its own.
+ */
+const sessionIntervalProperties = timedEventProperties.extend({
+  endReason: z
+    .enum(["closed", "back_shutdown"])
+    .describe(
+      "`back_shutdown` means the server closed it, not the people in it.",
+    ),
+});
+
+const sessionCountProperties = z.object({
+  participantCount: z
+    .number()
+    .describe("How many distinct people passed through it."),
+  peakParticipantCount: z
+    .number()
+    .describe("The most people in it at any one moment."),
+});
+
+const joinRankProperty = z
+  .number()
+  .describe(
+    "Where this participant came in the arrival order, counted from when the session opened.",
+  );
+
+/**
  * Which meeting an in-meeting action happened in.
  *
  * Attached centrally by AnalyticsClient rather than passed at each of the dozen call
@@ -207,12 +234,7 @@ const meetingContextProperties = z.object({
     .describe("Which media backend carried the meeting."),
 });
 
-/**
- * The space a broadcast runs in, carried by both halves of it: the speaker's
- * `megaphone.ended` and every listener's `broadcast.audience.ended`. It is what joins
- * a broadcast to its audience — without it the two families cannot be related at all,
- * since a listener has no other handle on the broadcast they are hearing.
- */
+/** Carried by the broadcast row and every participation in it: it is what joins them. */
 const broadcastProperties = z.object({
   broadcastId: z
     .string()
@@ -1259,20 +1281,6 @@ export const ANALYTICS_EVENTS = {
   "auth.logged_token": signal("The user signed in with a token."),
   "auth.login_clicked": signal("The user clicked sign in."),
   "auth.logout_clicked": signal("The user clicked sign out."),
-  // The other half of a broadcast. `megaphone.ended` measures the speaker, and on its
-  // own it says how long someone talked to an empty room just as readily as to a full
-  // one. Audience time is reported by each listener, so it adds up to reach × duration
-  // rather than duration — which is why it is a family of its own and must never be
-  // summed into conversation time: listening is not collaborating.
-  "broadcast.audience.ended": timedEvent({
-    openableBy: "client",
-    openProperties: broadcastProperties,
-    endReasonDescription:
-      "Why the listening period ended: the last speaker stopped, the listener walked out of the zone, or the tab went away.",
-    description:
-      "Time one user spent with a broadcast live in a space they were in, measured by the pusher. It opens when a speaker other than this user goes on air and closes when the last one stops, so an empty megaphone space accrues nothing. A user who is broadcasting themselves is still counted as audience of the other speakers on a panel; their own airtime is megaphone.ended.",
-  }),
-
   "bubble.lock.toggled": signal(
     "The user locked or unlocked their conversation bubble.",
   ),
@@ -1410,34 +1418,60 @@ export const ANALYTICS_EVENTS = {
     description: "A moderator muted everyone's microphone.",
   }),
   "meeting.participation.ended": event({
-    properties: z.object({
-      meetingId: z.string().describe("Meeting this participation belongs to."),
-      meetingKind: z
-        .enum(["bubble", "area"])
-        .describe(
-          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet.",
-        ),
-      joinRank: z
-        .number()
-        .describe(
-          "Where this participant came in the arrival order. The first two opened the meeting; anyone after joined a conversation already running.",
-        ),
-      startedAt: z.string().datetime().describe("When they joined."),
-      endedAt: z
-        .string()
-        .datetime()
-        .describe("When they left, or when the meeting ended around them."),
-      durationSeconds: z
-        .number()
-        .describe("How long they were in the meeting."),
-      endReason: z
-        .string()
-        .describe(
-          "`back_shutdown` means the server closed it, not the participant.",
-        ),
-    }),
+    properties: z
+      .object({
+        meetingId: z
+          .string()
+          .describe("Meeting this participation belongs to."),
+        meetingKind: z
+          .enum(["bubble", "area"])
+          .describe(
+            "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet.",
+          ),
+        joinRank: joinRankProperty,
+      })
+      .merge(sessionIntervalProperties),
     description:
-      "One person's time in one meeting, emitted by the back when the meeting ends. This is the per-user view of a meeting: meeting.ended is deliberately attributed to nobody, because a meeting belongs to no one participant. NOT to be joined to itself: grouping these rows by meetingId yields who was in a meeting with whom, and aggregated over months that is a map of who works with whom — a different product from a record of what happened, and one with a different legal footing. Nothing builds that query today, and the decision to leave it unbuilt is the reason this sentence exists: it is two lines of SQL away, so it will not stay unbuilt by accident.",
+      "One person's time in one meeting, clipped to it: someone alone in an area before the second person arrived starts when the meeting opens. Emitted by the back when the meeting ends. This is the per-user view of a meeting: meeting.ended is deliberately attributed to nobody, because a meeting belongs to no one participant. NOT to be joined to itself: grouping these rows by meetingId yields who was in a meeting with whom, and aggregated over months that is a map of who works with whom — a different product from a record of what happened, and one with a different legal footing. Nothing builds that query today, and the decision to leave it unbuilt is the reason this sentence exists: it is two lines of SQL away, so it will not stay unbuilt by accident.",
+    source: "pusher",
+  }),
+
+  // A broadcast is measured exactly like a meeting — one row for the thing, one per
+  // person in it — because it IS the same thing: a space with people in it, open for
+  // as long as its predicate holds. Only the predicate differs: a meeting needs two
+  // people present, a broadcast one speaker on air.
+  "broadcast.ended": event({
+    properties: broadcastProperties
+      .extend({
+        speakerCount: z
+          .number()
+          .describe("How many distinct people went on air during it."),
+      })
+      .merge(sessionCountProperties)
+      .merge(sessionIntervalProperties),
+    description:
+      "A broadcast, measured: from the first speaker going on air to the last one going off, in the world megaphone space or a speaker zone. One row per broadcast, emitted by the back, which owns the space; attributed to nobody, because a broadcast belongs to no one person. An empty megaphone space accrues nothing.",
+    source: "pusher",
+  }),
+  "broadcast.participation.ended": event({
+    properties: broadcastProperties
+      .extend({
+        role: z
+          .enum(["speaker", "listener"])
+          .describe(
+            "`speaker` if they were on air at any point during the broadcast; a panelist who also listened to the others is a speaker.",
+          ),
+        airtimeSeconds: z
+          .number()
+          .nonnegative()
+          .describe(
+            "This person's own time on air, summed over their stints. Zero for a listener. Never to be summed into conversation time: broadcasting is not collaborating, and neither is listening.",
+          ),
+        joinRank: joinRankProperty,
+      })
+      .merge(sessionIntervalProperties),
+    description:
+      "One person's time in one broadcast, clipped to it: a listener present before anyone went on air starts when the broadcast opens. Emitted by the back when the broadcast ends. The per-user view of a broadcast — audience time is reported once per listener, so it adds up to reach × duration rather than duration.",
     source: "pusher",
   }),
 
@@ -1469,34 +1503,9 @@ export const ANALYTICS_EVENTS = {
     properties: meetingActionProperties,
     description: "A moderator turned off everyone's camera.",
   }),
-  // A broadcast is an interval, and the two halves used to be two loose signals with
-  // nothing carrying the time between them — while the SaaS seeder already fabricated
-  // a `durationSeconds` for it, which is a fair summary of how obviously it was
-  // missing. `megaphone.opened` is a different thing and stays a click: it means the
-  // panel was opened, not that anything was broadcast.
-  "megaphone.ended": timedEvent({
-    openableBy: "client",
-    opensWith: "megaphone.started",
-    openProperties: broadcastProperties,
-    // Mandatory with opensWith — see the note on meeting.ended.
-    minDurationMs: 0,
-    endReasonDescription:
-      "`socket_closed` and the `pusher_*` values mean nobody closed it: the tab went away mid-broadcast, or the pusher restarted.",
-    description:
-      "A megaphone broadcast, measured. One row per broadcast, emitted by the pusher when the interval closes and timestamped at its end. Only one broadcast can be live per connection, so it carries no id of its own.",
-  }),
+  // A click, not a broadcast: it means the panel was opened, not that anything went
+  // on air. Time on air is broadcast.participation.ended, measured by the back.
   "megaphone.opened": signal("The user opened the megaphone."),
-  "megaphone.started": event({
-    properties: broadcastProperties.extend({
-      startedAt: z
-        .string()
-        .datetime()
-        .describe("ISO-8601 instant the broadcast began."),
-    }),
-    description:
-      "A megaphone broadcast began. Emitted by the pusher when the interval opens, so it pairs one-to-one with the megaphone.ended that closes it.",
-    source: "pusher",
-  }),
   "menu.chat.opened": signal("The user opened the chat from the menu."),
   "menu.contact.opened": signal("The user opened the contact page."),
   "menu.credit.opened": signal("The user opened the credits."),
