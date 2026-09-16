@@ -60,7 +60,7 @@ import type { SocketData, BackConnection } from "../models/Websocket/SocketData"
 
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
-import { EMBEDDED_DOMAINS_WHITELIST, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from "../enums/EnvironmentVariable";
+import { EMBEDDED_DOMAINS_WHITELIST, FRONT_URL, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from "../enums/EnvironmentVariable";
 import type { SpaceInterface } from "../models/Space";
 import { Space } from "../models/Space";
 import { SpaceConnection } from "../models/SpaceConnection";
@@ -77,6 +77,7 @@ import { matrixProvider } from "./MatrixProvider";
 import RecordingService from "./RecordingService";
 import type { PusherWebSocket } from "./PusherWebSocket";
 import { analyticsTimedEventTracker, CONNECTION_SESSION_HANDLE } from "./AnalyticsTimedEventTracker";
+import { isFrameable } from "./EmbeddableHeaders";
 
 const debug = Debug("socket");
 
@@ -1428,19 +1429,7 @@ export class SocketManager implements ZoneEventListener {
             }
         };
 
-        const isAllowed = (response: AxiosResponse) => {
-            const headers = response.headers;
-            if (!headers) {
-                return true;
-            }
-            let xFrameOption = headers["x-frame-options"];
-            if (!xFrameOption) {
-                return true;
-            }
-            xFrameOption = xFrameOption.toLowerCase();
-
-            return xFrameOption !== "deny" && xFrameOption !== "sameorigin";
-        };
+        const isAllowed = (response: AxiosResponse) => isFrameable(response.headers ?? {}, FRONT_URL);
 
         await axios
             .head(url, { timeout: 5_000 })
