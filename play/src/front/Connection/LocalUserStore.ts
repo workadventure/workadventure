@@ -44,6 +44,7 @@ const matrixAccessTokenExpireDate = "matrixAccessTokenExpireDate";
 const matrixRefreshToken = "matrixRefreshToken";
 const matrixDeviceId = "matrixDeviceId";
 const matrixLoginToken = "matrixLoginToken";
+const matrixLoginTokenReceivedAt = "matrixLoginTokenReceivedAt";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
 const pwaInstallPromptShownKey = "workadventure_pwa_install_prompt_shown";
@@ -962,13 +963,21 @@ class LocalUserStore {
     setMatrixLoginToken(value: string | null) {
         if (value !== null) {
             localStorage.setItem(matrixLoginToken, value);
+            localStorage.setItem(matrixLoginTokenReceivedAt, Date.now().toString());
         } else {
             localStorage.removeItem(matrixLoginToken);
+            localStorage.removeItem(matrixLoginTokenReceivedAt);
         }
     }
 
     getMatrixLoginToken() {
         return localStorage.getItem(matrixLoginToken);
+    }
+
+    /** When the pending login token was stored, i.e. when the browser landed here from the Matrix SSO. */
+    getMatrixLoginTokenReceivedAt(): Date | null {
+        const value = Number(localStorage.getItem(matrixLoginTokenReceivedAt));
+        return value > 0 ? new Date(value) : null;
     }
 
     /**
