@@ -12,6 +12,7 @@ import {
     BackgroundProcessingUnsupportedError,
     getBackgroundProcessingUnsupportedReason,
     type BackgroundConfig,
+    type BackgroundEffectSampleHandler,
     type BackgroundTransformer,
     type BackgroundTransformerFailureHandler,
 } from "./createBackgroundTransformer";
@@ -61,6 +62,8 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
     private readonly pendingConfigRequests = new Map<number, PendingRequest>();
     private nextConfigRequestId = 1;
     private workerDelegate: TasksVisionWorkerDelegate | "none" = "none";
+    // The next worker stats are reported once after start and once after each change of effect.
+    private sampleRequested = true;
     private closed = false;
 
     // Insertable-streams transport.
@@ -85,6 +88,7 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
     constructor(
         config: BackgroundConfig,
         private readonly onTerminalFailure?: BackgroundTransformerFailureHandler,
+        private readonly onSample?: BackgroundEffectSampleHandler,
     ) {
         this.config = { ...config };
         this.transport = selectBackgroundTransport();
@@ -172,6 +176,21 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
             case "fatal":
                 this.fail(deserializeError(message.error));
                 return;
+            case "stats":
+                if (this.sampleRequested && this.config.mode !== "none") {
+                    this.sampleRequested = false;
+                    this.onSample?.({
+                        mode: this.config.mode,
+                        transport: this.transport,
+                        delegate: message.delegate,
+                        model: message.model,
+                        meanSegmentationMs: message.meanSegmentationMs,
+                        fps: message.fps,
+                        resegmentInterval: message.resegmentInterval,
+                        hardwareConcurrency: navigator.hardwareConcurrency ?? 0,
+                    });
+                }
+                return;
         }
     }
 
@@ -194,6 +213,9 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
     }
 
     public async updateConfig(nextConfig: Partial<BackgroundConfig>): Promise<void> {
+        if (nextConfig.mode !== undefined && nextConfig.mode !== this.config.mode) {
+            this.sampleRequested = true;
+        }
         Object.assign(this.config, nextConfig);
         await this.initPromise;
 

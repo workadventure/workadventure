@@ -198,6 +198,44 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
         expect(transformer.getPerformanceStats()).toMatchObject({ closed: true });
     });
 
+    it("reports one sample after start and one after each change of effect", async () => {
+        const onSample = vi.fn();
+        vi.spyOn(navigator, "hardwareConcurrency", "get").mockReturnValue(8);
+        transformer = new MediaPipeTasksVisionWorkerTransformer({ mode: "blur" }, undefined, onSample);
+        await transformer.waitForInitialization();
+        const stats = {
+            type: "stats",
+            delegate: "GPU",
+            model: "landscape",
+            meanSegmentationMs: 7.5,
+            fps: 29,
+            resegmentInterval: 2,
+        };
+
+        workerMocks.instances[0].reply(stats);
+        workerMocks.instances[0].reply(stats);
+        expect(onSample).toHaveBeenCalledOnce();
+        expect(onSample).toHaveBeenCalledWith({
+            mode: "blur",
+            transport: "image-bitmap",
+            delegate: "GPU",
+            model: "landscape",
+            meanSegmentationMs: 7.5,
+            fps: 29,
+            resegmentInterval: 2,
+            hardwareConcurrency: 8,
+        });
+
+        await transformer.updateConfig({ blurAmount: 50 });
+        workerMocks.instances[0].reply(stats);
+        expect(onSample).toHaveBeenCalledOnce();
+
+        await transformer.updateConfig({ mode: "image", backgroundImage: "https://example.com/bg.jpg" });
+        workerMocks.instances[0].reply(stats);
+        expect(onSample).toHaveBeenCalledTimes(2);
+        expect(onSample).toHaveBeenLastCalledWith(expect.objectContaining({ mode: "image" }));
+    });
+
     it("closes and reports a terminal failure when the worker gives up", async () => {
         const onTerminalFailure = vi.fn();
         transformer = new MediaPipeTasksVisionWorkerTransformer({ mode: "blur" }, onTerminalFailure);

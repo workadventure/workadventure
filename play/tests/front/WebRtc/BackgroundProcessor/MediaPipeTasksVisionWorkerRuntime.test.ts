@@ -276,6 +276,43 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
         expect(mediaPipeMocks.createFromOptions).toHaveBeenCalledTimes(2);
     });
 
+    it("posts pipeline stats once a 15 s window of rendering has elapsed", async () => {
+        let nowMs = 0;
+        vi.spyOn(performance, "now").mockImplementation(() => nowMs);
+        send({ type: "initialize", config: { mode: "blur" } });
+        await waitForPosted(1);
+
+        // 4 frames over 16 s: two segmentations (every 2nd frame) that each take 6 ms.
+        const segmenter = await mediaPipeMocks.createFromOptions.mock.results[0].value;
+        segmenter.segmentForVideo.mockImplementation(
+            (_source: unknown, _timestamp: number, callback: (result: unknown) => void) => {
+                nowMs += 6;
+                callback({ confidenceMasks: [createMask()] });
+            },
+        );
+        for (const [frameId, atMs] of [
+            [1, 0],
+            [2, 5_000],
+            [3, 10_000],
+            [4, 16_000],
+        ]) {
+            nowMs = atMs;
+            send({ type: "process-frame", frameId, frame: createBitmap(), timestampMs: atMs });
+            // Frames are processed one at a time so the clock is read at each frame's own time.
+            // eslint-disable-next-line no-await-in-loop
+            await waitForPosted(1 + frameId);
+        }
+
+        const stats = posted.find((message) => message.type === "stats");
+        expect(stats).toMatchObject({
+            delegate: "GPU",
+            model: "general",
+            meanSegmentationMs: 6,
+            resegmentInterval: 2,
+        });
+        expect(stats && stats.type === "stats" ? stats.fps : NaN).toBeCloseTo(4000 / 16_006, 2);
+    });
+
     it("pipes insertable-stream frames through the segmenter and stops on request", async () => {
         send({ type: "initialize", config: { mode: "blur" } });
         await waitForPosted(1);

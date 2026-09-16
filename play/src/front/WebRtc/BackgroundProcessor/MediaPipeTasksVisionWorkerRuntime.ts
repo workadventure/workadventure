@@ -17,6 +17,7 @@ import type {
 import type { BackgroundConfig } from "./createBackgroundTransformer";
 
 const MAX_CONSECUTIVE_RECOVERY_ATTEMPTS = 2;
+const STATS_WINDOW_MS = 15_000;
 const SUCCESSFUL_FRAMES_BEFORE_RECOVERY_RESET = 30;
 
 /** What the two transports hand to the renderer. */
@@ -66,6 +67,10 @@ export class MediaPipeTasksVisionWorkerRuntime {
     private readonly resegmentController = new ResegmentController();
     private lastMask: MPMask | null = null;
     private framesSinceSegmentation = 0;
+    private statsWindowStartedAt = -1;
+    private statsRenderedFrames = 0;
+    private statsSegmentations = 0;
+    private statsSegmentationMs = 0;
     private recovery: Promise<void> | null = null;
     private consecutiveRecoveryAttempts = 0;
     private successfulFramesSinceRecovery = 0;
@@ -321,13 +326,17 @@ export class MediaPipeTasksVisionWorkerRuntime {
             this.framesSinceSegmentation++;
             this.composite(source, reusableMask, width, height, false);
             this.gl.flush();
+            this.recordRenderedFrame();
             return true;
         }
 
         let rendered = false;
         const segmentStartedAt = performance.now();
         imageSegmenter.segmentForVideo(source, monotonicTimestampMs, (segmentation) => {
-            this.resegmentController.tick(performance.now() - segmentStartedAt);
+            const segmentationMs = performance.now() - segmentStartedAt;
+            this.resegmentController.tick(segmentationMs);
+            this.statsSegmentations++;
+            this.statsSegmentationMs += segmentationMs;
             const mask = segmentation.confidenceMasks?.[0];
             if (!mask) {
                 return;
@@ -342,8 +351,33 @@ export class MediaPipeTasksVisionWorkerRuntime {
         });
         if (rendered) {
             this.markSuccessfulFrame();
+            this.recordRenderedFrame();
         }
         return rendered;
+    }
+
+    private recordRenderedFrame(): void {
+        const now = performance.now();
+        if (this.statsWindowStartedAt < 0) {
+            this.statsWindowStartedAt = now;
+        }
+        this.statsRenderedFrames++;
+        const elapsedMs = now - this.statsWindowStartedAt;
+        if (elapsedMs < STATS_WINDOW_MS) {
+            return;
+        }
+        this.post({
+            type: "stats",
+            delegate: this.delegate,
+            model: this.model,
+            meanSegmentationMs: this.statsSegmentations ? this.statsSegmentationMs / this.statsSegmentations : 0,
+            fps: (this.statsRenderedFrames * 1000) / elapsedMs,
+            resegmentInterval: this.resegmentController.getInterval(),
+        });
+        this.statsWindowStartedAt = now;
+        this.statsRenderedFrames = 0;
+        this.statsSegmentations = 0;
+        this.statsSegmentationMs = 0;
     }
 
     private composite(source: FrameSource, mask: MPMask, width: number, height: number, freshMask: boolean): void {

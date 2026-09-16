@@ -25,6 +25,20 @@ export interface BackgroundTransformer {
 
 export type BackgroundTransformerFailureHandler = (error: Error) => void;
 
+/** One measurement of the running pipeline; see the media.background_effect.sample analytics event. */
+export type BackgroundEffectSample = {
+    mode: Exclude<BackgroundMode, "none">;
+    transport: "insertable-streams" | "image-bitmap";
+    delegate: "GPU" | "CPU";
+    model: "general" | "landscape";
+    meanSegmentationMs: number;
+    fps: number;
+    resegmentInterval: number;
+    hardwareConcurrency: number;
+};
+
+export type BackgroundEffectSampleHandler = (sample: BackgroundEffectSample) => void;
+
 /**
  * Segmentation next to Phaser and WebRTC needs a few cores to spare, and the worker needs WebGL2 (probed on
  * the main thread here; the worker checks its own OffscreenCanvas context again).
@@ -68,9 +82,10 @@ export class BackgroundProcessingUnsupportedError extends Error {
 export function createBackgroundTransformer(
     config: BackgroundConfig,
     onTerminalFailure?: BackgroundTransformerFailureHandler,
+    onSample?: BackgroundEffectSampleHandler,
 ): BackgroundTransformer {
     try {
-        return new MediaPipeTasksVisionWorkerTransformer(config, onTerminalFailure);
+        return new MediaPipeTasksVisionWorkerTransformer(config, onTerminalFailure, onSample);
     } catch (error) {
         console.error("[BackgroundTransformer] Failed to create Tasks Vision transformer, using fallback:", error);
         return new FallbackBackgroundTransformer();
