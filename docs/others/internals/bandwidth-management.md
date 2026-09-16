@@ -122,8 +122,8 @@ Why these choices:
   Chromium builds without proprietary codecs). LiveKit rewrites an unsupported codec to VP8 on its own, and in P2P
   the browser's remaining codecs are appended after our list.
 
-A more complete treatment (automatic codec downgrade when the encoder reports it is CPU limited) is designed but not
-implemented; see the "Future work" section.
+This choice is made once per session, from what the browser remembers of past ones. What happens when the encoder
+cannot keep up with it *during* a stream is in "When the encoder cannot keep up" below.
 
 ### Applying the preference
 
@@ -169,7 +169,8 @@ the local feedback tiles show) and takes one sample a second. The reason stays s
 so the share of `cpu` samples over a window is the share of time the encoder was limited: gaps in a long episode
 are tolerated, a lone spike is ignored.
 
-- Window of 60 samples, threshold 70 % (Jitsi waits for a 60 s streak; same length, gaps tolerated). The first 10
+- Window of 30 samples, threshold 70 % (Jitsi waits for a 60 s streak; half the length, and gaps tolerated rather
+  than a streak, so the same episode is caught about twice as fast). The first 10
   samples after a stream starts are ignored: keyframes and rate-control ramp-up look like overload.
 - The window starts over when the stream stops, the transport changes (P2P ↔ LiveKit) or the codec changes.
 - One decision per full window, then a full window of cooldown.
@@ -177,10 +178,27 @@ are tolerated, a lone spike is ignored.
 - The camera holds back while a screen share is being sent: the screen share is the heavy encoder and goes first;
   demoting the camera in the meantime would mark the wrong codec.
 
-A decision **demotes** the codec for the rest of the session: `demotedCodecStore` in `CodecPerformance.ts` records
-it per category, and `preferredVideoCodecs()` leaves it out together with every codec above it (screen share
-AV1 → VP9 → H.264, camera VP9 → H.264). Nothing is persisted, the browser's own smooth history is the memory across
-sessions, and nothing goes back up before the page is reloaded. The publishers subscribe to the store:
+A decision takes one of two actions, then waits a full window.
+
+**Fewer encoders first.** In P2P, Chrome runs one encoder per `RTCPeerConnection`: with three peers the machine
+encodes every frame three times. On LiveKit it encodes once (SVC or simulcast add a fraction, not a multiple), and
+the viewers lose nothing. So when the limited encoders serve more than one P2P peer, the first action is to raise
+the `cpuLimited` flag of our `SpaceUser` (`cpuLimitedStore`, synchronised to the space by `SpacePeerManager` like
+the camera state). The back's `TransitionPolicy` then moves the bubble to LiveKit even below `MAX_USERS_FOR_WEBRTC`,
+provided the bubble has more than two users (a pair gives one encoder each), and refuses to bring it back while a
+flagged user is present, whatever the count, the way an ongoing recording pins it. The two legs are asymmetric so
+that a third member coming and going never bounces the bubble; the flagged user leaving takes the usual delayed
+LiveKit → WebRTC path. The flag stays up for the session and never goes down (lowering it on LiveKit, where the
+load is gone, would bounce the bubble), so the next bubbles start on LiveKit without paying the window again. The
+transport switch resets the detector's window; if the back cannot switch (no LiveKit, or
+`LIVEKIT_SWITCH_ON_CPU_LIMITATION=false` for self-hosters who would rather not pay SFU bandwidth for small bubbles),
+the next window falls through to the codec.
+
+**Then the codec.** Otherwise the decision **demotes** the codec for the rest of the session: `demotedCodecStore`
+in `CodecPerformance.ts` records it per category, and `preferredVideoCodecs()` leaves it out together with every
+codec above it (screen share AV1 → VP9 → H.264, camera VP9 → H.264). Nothing is persisted, the browser's own smooth
+history is the memory across sessions, and nothing goes back up before the page is reloaded. The publishers
+subscribe to the store:
 
 - **LiveKit**: the codec of a publication is fixed at `publishTrack()`, so `LiveKitRoom` unpublishes and publishes
   again, the same two updates a share that stops and starts goes through. The camera publication is normally reused
@@ -191,13 +209,20 @@ sessions, and nothing goes back up before the page is reloaded. The publishers s
   the remaining codecs whoever initiates the renegotiation, and the bitrate budget follows the new codec on the
   `negotiated` event. The transceivers and ICE stay: viewers get a keyframe and a sub-second freeze.
 
-Each demotion is reported to PostHog as `wa_codec_downgrade` (category, codec left, transport); the codec change
-itself shows in the video quality samples through `mimeType`. Firefox reports no limitation reason and never
-demotes.
+A raised flag is reported as `media.livekit_switch.requested` (category) and each demotion as
+`media.codec.degraded` (category, codec left, transport), both declared in `AnalyticsEventCatalog.ts`. Neither has an
+entry in `AnalyticsPostHogKeys.ts`: they were added with this pipeline and PostHog never knew them, so they go to the
+analytics database only. Read them against `media.video_quality.sample`, whose `qualityLimitationReason` is what the
+decision is made on and whose `mimeType` shows the codec change itself. Firefox reports no limitation reason and
+never reacts.
 
 To see it happen: DevTools → Performance → CPU 6× slowdown, share a screen with the quality set to "high" (1440p,
-AV1), enable the video quality stats overlay: the tile reports `Limited by: cpu`, and about 70 s later the codec
-changes.
+AV1), enable the video quality stats overlay: the tile reports `Limited by: cpu`, and about 40 s later the codec
+changes. The end-to-end test `tests/webrtc_cpu_limitation.spec.ts` (opt-in, `RUN_CPU_LIMITATION_E2E=1`, a few
+minutes) drives the whole chain on a deployment by making one page report every outbound video stream as
+CPU-limited: three users in a bubble, the flag, the switch to LiveKit, the bubble staying there when a member
+leaves, then the camera republished in H.264; with `CPU_LIMITATION_EXPECT=demote` it checks the codec
+renegotiation with both peers instead.
 
 ## Bitrate Budget
 
@@ -386,9 +411,9 @@ times.
 
 ## Future work
 
-The codec downgrade above is client-only. Its counterpart on the back, an earlier P2P → LiveKit switch when a
-CPU-limited machine encodes for several peers (N encoders → 1), is written up separately: the detector already
-provides the signal, the back needs to learn it and pin the bubble to LiveKit the way a recording does.
+Left for later: persisting a demotion across sessions with an expiry, an encode-time-per-frame signal for Firefox,
+and asymmetric codecs in P2P (a desktop sending VP9 to a phone that decodes it in hardware while the phone sends
+H.264), which needs each peer to signal what it can encode before the offer.
 
 ## Related Files
 
