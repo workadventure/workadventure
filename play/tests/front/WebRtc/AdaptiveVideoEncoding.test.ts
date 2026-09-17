@@ -41,4 +41,20 @@ describe("computeVideoEncoding", () => {
             scaleResolutionDownBy: 4,
         });
     });
+
+    it("leaves the resolution to the browser when it cannot be scaled safely", () => {
+        // Firefox: the bitrate and frame rate caps still apply, the scale never does
+        expect(computeVideoEncoding({ width: 320, height: 180, maxBitrate: 0 }, capture, selectPreset, false)).toEqual({
+            active: true,
+            maxBitrate: 320 * 180,
+            maxFramerate: 15,
+            scaleResolutionDownBy: undefined,
+        });
+    });
+
+    it("still stops the encoder for a hidden viewer when it cannot scale", () => {
+        expect(computeVideoEncoding({ width: 0, height: 0, maxBitrate: 0 }, capture, selectPreset, false)).toEqual({
+            active: false,
+        });
+    });
 });

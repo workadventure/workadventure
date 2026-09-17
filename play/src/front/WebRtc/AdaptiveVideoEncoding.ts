@@ -34,6 +34,15 @@ export function computeVideoEncoding(
     viewer: ViewerDisplay,
     capture: { width: number; height: number },
     selectPreset: (width: number, height: number) => { bitrate: number; fps: number },
+    /**
+     * False to leave the resolution to the browser and only cap bitrate and frame rate.
+     *
+     * Firefox's VP9 encoder stops producing frames for good as soon as a scaled frame has an odd width or
+     * height, and the scale applies to the frames the encoder really receives, whose size we do not control:
+     * a camera ramps its resolution up and down on its own, so no scale we compute here is safe for long.
+     * Firefox's own quality scaler picks even sizes and honours maxBitrate, so it does this job for us.
+     */
+    canScaleResolution = true,
 ): VideoEncodingUpdate {
     if (isViewerDisplayHidden(viewer)) {
         // Nobody looks at it: stop the encoder for this connection (audio is not affected).
@@ -48,7 +57,7 @@ export function computeVideoEncoding(
     }
 
     const preset = selectPreset(width, height);
-    const scaleFactor = Math.max(1, Math.min(capture.width / width, capture.height / height));
+    const scaleFactor = canScaleResolution ? Math.max(1, Math.min(capture.width / width, capture.height / height)) : 1;
 
     return {
         active: true,

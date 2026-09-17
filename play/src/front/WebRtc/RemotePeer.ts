@@ -1165,7 +1165,11 @@ export class RemotePeer extends Peer implements Streamable {
             return;
         }
 
-        this.cutVideoUnlessViewerReports();
+        // Firefox has encodings before the connection is even negotiated (Chrome does not): the viewer cannot
+        // report anything before the connection is up, so the countdown starts once it is.
+        if (this._connected) {
+            this.cutVideoUnlessViewerReports();
+        }
 
         const settings = videoSender.track.getSettings();
         // The negotiated codecs come in the order the peer prefers to receive them, and the browser sends the first
@@ -1174,6 +1178,8 @@ export class RemotePeer extends Peer implements Streamable {
             this.viewerDisplay,
             { width: settings.width || 1280, height: settings.height || 720 },
             (width, height) => this.getPresetForDimensions(width, height, codec),
+            // Firefox is left to pick the resolution itself, see computeVideoEncoding
+            !isFirefox(),
         );
 
         if (this.type === "screenSharing") {
