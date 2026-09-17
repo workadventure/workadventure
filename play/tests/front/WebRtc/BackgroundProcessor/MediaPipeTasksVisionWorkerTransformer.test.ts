@@ -198,7 +198,7 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
         expect(transformer.getPerformanceStats()).toMatchObject({ closed: true });
     });
 
-    it("reports one sample after start and one after each change of effect", async () => {
+    it("reports the third stats window after start, then the next one after each change of effect", async () => {
         const onSample = vi.fn();
         vi.spyOn(navigator, "hardwareConcurrency", "get").mockReturnValue(8);
         transformer = new MediaPipeTasksVisionWorkerTransformer({ mode: "blur" }, undefined, onSample);
@@ -214,6 +214,9 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
 
         workerMocks.instances[0].reply(stats);
         workerMocks.instances[0].reply(stats);
+        expect(onSample).not.toHaveBeenCalled();
+        workerMocks.instances[0].reply({ ...stats, resegmentInterval: 1 });
+        workerMocks.instances[0].reply(stats);
         expect(onSample).toHaveBeenCalledOnce();
         expect(onSample).toHaveBeenCalledWith({
             mode: "blur",
@@ -222,7 +225,7 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
             model: "landscape",
             meanSegmentationMs: 7.5,
             fps: 29,
-            resegmentInterval: 2,
+            resegmentInterval: 1,
             hardwareConcurrency: 8,
         });
 
