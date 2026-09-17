@@ -244,28 +244,39 @@ export class AuthenticateController extends BaseHttpController {
                     return;
                 }
 
-                const authToken = checkResult.refreshed
-                    ? await jwtTokenManager.createAuthToken(
-                          authTokenData.identifier,
-                          checkResult.accessToken,
-                          username,
-                          locale,
-                          tags,
-                          authTokenData.matrixUserId,
-                          checkResult.encryptedRefreshToken,
-                      )
-                    : token;
+                try {
+                    const checkResult = await openIDClient.checkTokenAuthWithRefresh(
+                        authTokenData.accessToken,
+                        authTokenData.encryptedRefreshToken,
+                    );
+                    const resCheckTokenAuth = checkResult.userInfo;
 
-                res.json({
-                    username,
-                    authToken,
-                    locale,
-                    matrixUserId: authTokenData?.matrixUserId,
-                    matrixServerUrl: (checkResult.userInfo.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
-                    // TODO: replace ... with each property
-                    ...resUserData,
-                    ...checkResult.userInfo,
-                } satisfies MeResponse);
+                    const authToken = checkResult.refreshed
+                        ? await jwtTokenManager.createAuthToken(
+                              authTokenData.identifier,
+                              checkResult.accessToken,
+                              authTokenData.username,
+                              authTokenData.locale,
+                              authTokenData.tags,
+                              authTokenData.matrixUserId,
+                              checkResult.encryptedRefreshToken,
+                          )
+                        : token;
+
+                    res.json({
+                        username: authTokenData?.username,
+                        authToken,
+                        locale: authTokenData?.locale,
+                        matrixUserId: authTokenData?.matrixUserId,
+                        matrixServerUrl: (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
+                        // TODO: replace ... with each property
+                        ...resUserData,
+                        ...resCheckTokenAuth,
+                    } satisfies MeResponse);
+                } catch (err) {
+                    console.warn("Error while checking token auth", err);
+                    throw new errors.JWTInvalid("Invalid token");
+                }
                 return;
             } catch (err) {
                 if (err instanceof errors.JWTInvalid || err instanceof errors.JWTExpired) {

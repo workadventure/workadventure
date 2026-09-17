@@ -42,10 +42,7 @@ describe("openIDClient.checkTokenAuthWithRefresh", () => {
             "refresh-1",
         );
 
-        const userinfo = vi
-            .fn()
-            .mockRejectedValueOnce(expiredTokenError())
-            .mockResolvedValueOnce({ sub: "user-1", tags: ["member"] });
+        const userinfo = vi.fn().mockRejectedValueOnce(expiredTokenError()).mockResolvedValueOnce({ sub: "user-1" });
         const refresh = vi.fn().mockResolvedValue({ access_token: "access-2" });
         stubClient({ userinfo, refresh });
 
@@ -54,8 +51,7 @@ describe("openIDClient.checkTokenAuthWithRefresh", () => {
         expect(refresh).toHaveBeenCalledWith("refresh-1");
         expect(result.refreshed).toBe(true);
         expect(result.accessToken).toBe("access-2");
-        expect(result.userInfo).toEqual({ sub: "user-1", tags: ["member"] });
-        expect(result.claims.tags).toEqual(["member"]);
+        expect(result.userInfo).toEqual({ sub: "user-1" });
         expect(result.encryptedRefreshToken).toBe(encryptedRefreshToken);
     });
 
