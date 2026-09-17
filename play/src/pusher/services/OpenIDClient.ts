@@ -171,7 +171,9 @@ class OpenIDClient {
                             encrypted_refresh_token: tokenSet.refresh_token
                                 ? this.encrypt(tokenSet.refresh_token)
                                 : undefined,
-                            ...userClaims(res),
+                            username: res[OPID_USERNAME_CLAIM] as string,
+                            locale: res[OPID_LOCALE_CLAIM] as string,
+                            tags: res[OPID_TAGS_CLAIM] as string[],
                             matrix_url: res.matrix_url as string | undefined,
                             matrix_identity_provider: res.matrix_identity_provider as string | undefined,
                         };
@@ -206,16 +208,13 @@ class OpenIDClient {
         encryptedRefreshToken: string | undefined,
     ): Promise<{
         userInfo: IntrospectionResponse;
-        claims: ReturnType<typeof userClaims>;
         accessToken: string;
         encryptedRefreshToken: string | undefined;
         refreshed: boolean;
     }> {
         try {
-            const userInfo = await this.checkTokenAuth(accessToken);
             return {
-                userInfo,
-                claims: userClaims(userInfo),
+                userInfo: await this.checkTokenAuth(accessToken),
                 accessToken,
                 encryptedRefreshToken,
                 refreshed: false,
@@ -233,10 +232,8 @@ class OpenIDClient {
                 });
             }
 
-            const userInfo = await this.checkTokenAuth(tokenSet.access_token);
             return {
-                userInfo,
-                claims: userClaims(userInfo),
+                userInfo: await client.userinfo(tokenSet.access_token),
                 accessToken: tokenSet.access_token,
                 encryptedRefreshToken: tokenSet.refresh_token
                     ? this.encrypt(tokenSet.refresh_token)
@@ -273,14 +270,6 @@ class OpenIDClient {
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted.toString();
     }
-}
-
-function userClaims(userInfo: Record<string, unknown>) {
-    return {
-        username: userInfo[OPID_USERNAME_CLAIM] as string,
-        locale: userInfo[OPID_LOCALE_CLAIM] as string,
-        tags: userInfo[OPID_TAGS_CLAIM] as string[],
-    };
 }
 
 function isExpiredTokenError(err: unknown): boolean {
