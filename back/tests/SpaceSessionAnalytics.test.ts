@@ -163,18 +163,24 @@ describe("SpaceSessionAnalytics", () => {
         expect(rows.at(-1)?.properties).toMatchObject({ broadcastKind: "megaphone", speakerCount: 2 });
     });
 
-    it("reads the kind when the session opens, not when the space is tracked", () => {
+    it("waits for the space to say what it is before opening anything", () => {
         const enqueue: Enqueue = vi.fn();
-        const analytics = new SpaceSessionAnalytics({ enqueue }, () => 0);
-        let kind: SessionKind = "speaker_zone";
+        let now = 0;
+        const analytics = new SpaceSessionAnalytics({ enqueue }, () => now);
+        let kind: SessionKind | undefined = undefined;
         analytics.track("space", "world", "room", () => kind);
 
-        analytics.join("space", member("s"), false);
-        kind = "megaphone";
-        analytics.setActive("space", "room_s", true);
-        analytics.setActive("space", "room_s", false);
+        // Two people met before either declared the space: nothing opens yet.
+        analytics.join("space", member("1"), true);
+        analytics.join("space", member("2"), true);
+        now = 5_000;
+        kind = "bubble";
+        analytics.kindChanged("space");
+        now = 65_000;
+        analytics.untrack("space");
 
-        expect(rowsOf(enqueue).every((row) => row.properties.broadcastKind === "megaphone")).toBe(true);
+        const meeting = rowsOf(enqueue).find((row) => row.eventName === "meeting.ended");
+        expect(meeting?.properties).toMatchObject({ meetingKind: "bubble", durationSeconds: 60, participantCount: 2 });
     });
 
     it("closes every open session on shutdown and says so", () => {

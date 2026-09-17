@@ -5,6 +5,7 @@ import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
+import type { SpaceKind } from "@workadventure/shared-utils";
 import type { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import type { VideoBox } from "../VideoBox";
@@ -279,6 +280,12 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             metadata?: Map<string, unknown>;
             // True if the user is allowed to start/stop recording in the space. Defaults to false.
             canRecord?: boolean;
+            /**
+             * What the space is, told to the back as well as kept here: a space that
+             * declares nothing is nobody's meeting and nobody's broadcast, so the back
+             * measures nothing in it.
+             */
+            spaceKind?: SpaceKind;
         },
     ): Promise<SpaceInterface> {
         const leavingPromise = this.leavingSpacesPromises.get(spaceName);
@@ -302,15 +309,18 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         // Reserve the space name synchronously (before the first await) so concurrent joins coalesce.
         const creationPromise = (async () => {
-            const newSpace = await Space.create(
-                spaceName,
-                filterType,
-                this.roomConnection,
-                propertiesToSync,
-                signal,
-                options,
-            );
+            const metadata = options?.metadata ?? new Map<string, unknown>();
+            if (options?.spaceKind) {
+                metadata.set("spaceKind", options.spaceKind);
+            }
+            const newSpace = await Space.create(spaceName, filterType, this.roomConnection, propertiesToSync, signal, {
+                ...options,
+                metadata,
+            });
             this.spaces.set(newSpace.getName(), newSpace);
+            if (options?.spaceKind) {
+                newSpace.emitUpdateSpaceMetadata(new Map([["spaceKind", options.spaceKind]]));
+            }
             return newSpace;
         })();
         this.joiningSpacesPromises.set(spaceName, creationPromise);

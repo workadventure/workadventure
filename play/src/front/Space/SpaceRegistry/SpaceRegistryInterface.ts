@@ -1,4 +1,5 @@
 import type { FilterType } from "@workadventure/messages";
+import type { SpaceKind } from "@workadventure/shared-utils";
 import type { Readable } from "svelte/store";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { VideoBox } from "../VideoBox";
@@ -15,6 +16,8 @@ export interface SpaceRegistryInterface {
             metadata?: Map<string, unknown>;
             // True if the user is allowed to start/stop recording in the space. Defaults to false.
             canRecord?: boolean;
+            // What the space is, declared to the back; a space that declares nothing is measured as nothing.
+            spaceKind?: SpaceKind;
         },
     ): Promise<SpaceInterface>;
     exist(spaceName: string): boolean;

@@ -56,7 +56,7 @@ declare global {
  * meeting — the microphone is heard in all of them.
  */
 function needsMeetingContext(eventName: string, properties: object): boolean {
-    return eventName.startsWith("meeting.") && (properties as { meetingId?: unknown }).meetingId === undefined;
+    return eventName.startsWith("meeting.") && !("meetingId" in properties && properties.meetingId !== undefined);
 }
 
 class AnalyticsClient {

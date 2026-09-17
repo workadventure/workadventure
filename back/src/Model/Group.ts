@@ -46,7 +46,6 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         Group.nextId++;
 
         // TODO: SECURE SPACES WITH JWT tokens.
-        // The shape is what tells the back's Space it is a bubble — see isBubbleSpaceName.
         this._spaceName = `${this.roomId}#${this.id}#${new Date().getTime()}`;
 
         users.forEach((user: User) => {

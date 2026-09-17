@@ -1,13 +1,12 @@
 import type { AnalyticsStoredEvent } from "@workadventure/messages";
-import type { AnalyticsEventsQueue } from "@workadventure/shared-utils";
+import { isMeetingKind, type AnalyticsEventsQueue, type SpaceKind } from "@workadventure/shared-utils";
 import { analyticsEventsQueue } from "./AnalyticsEventsQueue";
 
 /**
- * What a space is a session of. A bubble and an area are meetings; the megaphone space
- * and a speaker zone are broadcasts. Decided from what the space IS — its filter, its
- * name, its metadata — never from how its media happened to be carried.
+ * What a space is a session of: the kind its client declared, validated on the way in.
+ * Never derived from how its media happened to be carried.
  */
-export type SessionKind = "bubble" | "area" | "megaphone" | "speaker_zone";
+export type SessionKind = SpaceKind;
 
 /** Why a session or a participation ended. */
 export type SessionEndReason = "closed" | "back_shutdown";
@@ -34,15 +33,6 @@ export type SessionMember = {
  */
 const MIN_ACTIVE: Record<SessionKind, number> = { bubble: 2, area: 2, megaphone: 1, speaker_zone: 1 };
 
-const isMeeting = (kind: SessionKind): boolean => kind === "bubble" || kind === "area";
-
-/**
- * A bubble is known by its name: `Group` mints `${roomId}#${id}#${timestamp}` and the
- * pusher only prefixes the world. Lives here rather than next to `Group` so `Space`
- * does not have to import the whole game-room graph for one regex.
- */
-export const isBubbleSpaceName = (name: string): boolean => /#\d+#\d+$/.test(name);
-
 type Participation = {
     member: SessionMember;
     joinRank: number;
@@ -66,8 +56,11 @@ type TrackedSpace = {
     id: string;
     world: string;
     roomId: string;
-    /** Resolved when a session opens, not when the space is tracked: a broadcast's kind lives in metadata that arrives after the first join. */
-    kind: () => SessionKind;
+    /**
+     * Resolved when a session opens, not when the space is tracked: the kind is metadata,
+     * and it arrives after the first join. Undefined keeps the session closed.
+     */
+    kind: () => SessionKind | undefined;
     members: Map<string, { member: SessionMember; active: boolean }>;
     activeCount: number;
     session?: Session;
@@ -96,9 +89,17 @@ export class SpaceSessionAnalytics {
     ) {}
 
     /** Idempotent: the first call wins, later ones are free. */
-    public track(id: string, world: string, roomId: string, kind: () => SessionKind): void {
+    public track(id: string, world: string, roomId: string, kind: () => SessionKind | undefined): void {
         if (!this.spaces.has(id)) {
             this.spaces.set(id, { id, world, roomId, kind, members: new Map(), activeCount: 0 });
+        }
+    }
+
+    /** The space learnt what it is: a session waiting on that may open now. */
+    public kindChanged(id: string): void {
+        const space = this.spaces.get(id);
+        if (space) {
+            this.sync(space);
         }
     }
 
@@ -181,17 +182,18 @@ export class SpaceSessionAnalytics {
 
     /** The predicate. Opening pulls every present member in; closing ends every participation. */
     private sync(space: TrackedSpace): void {
-        const wanted = space.activeCount >= MIN_ACTIVE[space.kind()];
+        const kind = space.kind();
+        const wanted = kind !== undefined && space.activeCount >= MIN_ACTIVE[kind];
         if (wanted && !space.session) {
-            this.open(space);
+            this.open(space, kind);
         } else if (!wanted && space.session) {
             this.close(space, "closed");
         }
     }
 
-    private open(space: TrackedSpace): void {
+    private open(space: TrackedSpace, kind: SessionKind): void {
         space.session = {
-            kind: space.kind(),
+            kind,
             openedAtMs: this.nowMs(),
             participations: new Map(),
             seen: 0,
@@ -246,7 +248,7 @@ export class SpaceSessionAnalytics {
         space.session = undefined;
 
         const endedAtMs = this.nowMs();
-        const meeting = isMeeting(session.kind);
+        const meeting = isMeetingKind(session.kind);
         const idKey = meeting ? "meetingId" : "broadcastId";
         const kindKey = meeting ? "meetingKind" : "broadcastKind";
         const interval = (startedAtMs: number, atMs: number) => ({

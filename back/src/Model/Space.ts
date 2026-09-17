@@ -19,13 +19,9 @@ import {
 } from "@workadventure/messages";
 import Debug from "debug";
 import { asError } from "catch-unknown";
+import { spaceKindSchema } from "@workadventure/shared-utils";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
-import {
-    isBubbleSpaceName,
-    spaceSessionAnalytics,
-    type SessionKind,
-    type SessionMember,
-} from "../Services/SpaceSessionAnalytics";
+import { spaceSessionAnalytics, type SessionKind, type SessionMember } from "../Services/SpaceSessionAnalytics";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { SpacesWatcher } from "./SpacesWatcher";
 import type { EventProcessor } from "./EventProcessor";
@@ -40,11 +36,10 @@ const debug = Debug("space");
 type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
 
 /**
- * What makes an `ALL_USERS` space a meeting: it syncs media. The world space and the
- * chat spaces do not, so nobody is meeting in them — the same predicate the
- * communication manager uses to decide a space has media at all. A bubble and an area
- * both pass; the name tells them apart. The megaphone space and the speaker zones are
- * broadcasts, told apart by their filter, which is set at join time on every path.
+ * A space can only be a session if it syncs media — the same predicate the
+ * communication manager uses to decide a space has media at all. Which session it is,
+ * its client declares under `spaceKind`; the world space and the chat spaces sync
+ * nothing and declare nothing.
  */
 const MEETING_MEDIA_PROPERTIES = ["cameraState", "microphoneState", "screenSharingState"];
 
@@ -750,20 +745,15 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     /**
-     * What this space is a session of, or undefined for a space nobody meets in.
+     * What this space is a session of, or undefined while its client has not said.
      *
-     * Read when a session opens rather than once: a broadcast's kind is the `spaceKind`
-     * metadata, validated on the way in and arriving after the first join. Absent, it is
-     * a speaker zone: only the world megaphone declares itself.
+     * Read when a session opens rather than once: the kind is the `spaceKind` metadata,
+     * validated on the way in — against the enum and against this space's filter — and
+     * it arrives after the first join. A space that never declares one never opens.
      */
     private sessionKind(): SessionKind | undefined {
-        if (this.isBroadcast) {
-            return this.getMetadataValue("spaceKind") === "megaphone" ? "megaphone" : "speaker_zone";
-        }
-        if (!this._propertiesToSync.some((property) => MEETING_MEDIA_PROPERTIES.includes(property))) {
-            return undefined;
-        }
-        return isBubbleSpaceName(this.name) ? "bubble" : "area";
+        const kind = spaceKindSchema.safeParse(this.getMetadataValue("spaceKind"));
+        return kind.success ? kind.data : undefined;
     }
 
     /**
@@ -775,11 +765,11 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
      * media is carried, not who is there.
      */
     private trackSessionJoin(spaceUser: SpaceUser): void {
-        if (this.sessionKind() === undefined) {
+        if (!this._propertiesToSync.some((property) => MEETING_MEDIA_PROPERTIES.includes(property))) {
             return;
         }
 
-        spaceSessionAnalytics.track(this.name, this.world, spaceUser.playUri, () => this.sessionKind() ?? "area");
+        spaceSessionAnalytics.track(this.name, this.world, spaceUser.playUri, () => this.sessionKind());
         const member: SessionMember = {
             key: spaceUser.spaceUserId,
             uuid: spaceUser.uuid,
@@ -849,6 +839,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         for (const [key, value] of Object.entries(metadata)) {
             this.metadata.set(key, value);
+        }
+        if ("spaceKind" in metadata) {
+            spaceSessionAnalytics.kindChanged(this.name);
         }
 
         this.notifyWatchers({

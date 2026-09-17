@@ -71,14 +71,11 @@ export class BroadcastService {
                     spaceName,
                     this.abortSignal,
                     audienceVideoFeedbackActivated,
-                    new Map([["spaceKind", "megaphone" satisfies SpaceKind]]),
+                    "megaphone",
                     newSpaceSettings.canRecord,
                 )
                     .then((space) => {
                         megaphoneSpaceStore.set(space);
-                        // The local metadata above never leaves the tab. The back tells
-                        // a megaphone broadcast from a speaker zone by this key.
-                        space.emitUpdateSpaceMetadata(new Map([["spaceKind", "megaphone" satisfies SpaceKind]]));
                     })
                     .catch((e) => {
                         console.error(e);
@@ -97,14 +94,14 @@ export class BroadcastService {
      * @param spaceName The name of the space to join
      * @param abortSignal Signal to abort the join operation
      * @param audienceVideoFeedbackActivated If true, use LIVE_STREAMING_USERS_WITH_FEEDBACK to allow speaker to see attendees
-     * @param metadata Optional metadata to set when joining the space
+     * @param spaceKind What the space is: the world megaphone, or a speaker zone on the map
      * @returns The broadcast space
      */
     public async joinSpace(
         spaceName: string,
         abortSignal: AbortSignal,
         audienceVideoFeedbackActivated = false,
-        metadata: Map<string, unknown> = new Map(),
+        spaceKind: SpaceKind = "speaker_zone",
         canRecord = WAMSettingsUtils.canStartRecordingMegaphone(this.wamSettings, this.tags, localUserStore.isLogged()),
     ): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
@@ -120,7 +117,7 @@ export class BroadcastService {
             abortSignal,
             {
                 canRecord,
-                metadata,
+                spaceKind,
             },
         );
 
