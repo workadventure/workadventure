@@ -1,5 +1,6 @@
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import type { SpaceKind } from "@workadventure/shared-utils";
 import { FilterType } from "@workadventure/messages";
 import { get, type Unsubscriber } from "svelte/store";
 import { Subscription } from "rxjs";
@@ -70,14 +71,14 @@ export class BroadcastService {
                     spaceName,
                     this.abortSignal,
                     audienceVideoFeedbackActivated,
-                    new Map([["isMegaphoneSpace", true]]),
+                    new Map([["spaceKind", "megaphone" satisfies SpaceKind]]),
                     newSpaceSettings.canRecord,
                 )
                     .then((space) => {
                         megaphoneSpaceStore.set(space);
                         // The local metadata above never leaves the tab. The back tells
                         // a megaphone broadcast from a speaker zone by this key.
-                        space.emitUpdateSpaceMetadata(new Map([["isMegaphoneSpace", true]]));
+                        space.emitUpdateSpaceMetadata(new Map([["spaceKind", "megaphone" satisfies SpaceKind]]));
                     })
                     .catch((e) => {
                         console.error(e);

@@ -752,12 +752,13 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     /**
      * What this space is a session of, or undefined for a space nobody meets in.
      *
-     * Read when a session opens rather than once: the megaphone space is told it is
-     * one by metadata, which arrives after the first join.
+     * Read when a session opens rather than once: a broadcast's kind is the `spaceKind`
+     * metadata, validated on the way in and arriving after the first join. Absent, it is
+     * a speaker zone: only the world megaphone declares itself.
      */
     private sessionKind(): SessionKind | undefined {
         if (this.isBroadcast) {
-            return this.getMetadataValue("isMegaphoneSpace") === true ? "megaphone" : "speaker_zone";
+            return this.getMetadataValue("spaceKind") === "megaphone" ? "megaphone" : "speaker_zone";
         }
         if (!this._propertiesToSync.some((property) => MEETING_MEDIA_PROPERTIES.includes(property))) {
             return undefined;

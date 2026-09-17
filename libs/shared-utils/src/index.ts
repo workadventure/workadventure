@@ -28,6 +28,7 @@ export * from "./Application/MediaLink";
 export * from "./Deferred";
 export * from "./ShutdownDrains";
 export * from "./AnalyticsEventsQueue";
+export * from "./SpaceKind";
 export * from "./LockByKey";
 export * from "./Movable";
 export * from "./SpatialMap";
