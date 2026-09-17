@@ -29,7 +29,11 @@ import { pwaInstallProfileMenuEligibleStore, pwaInstallSceneVisibleStore } from 
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
-import { InvalidLoginTokenError, MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
+import {
+    InvalidLoginTokenError,
+    MatrixClientWrapper,
+    MissingMatrixCredentialsError,
+} from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
@@ -454,7 +458,9 @@ export class GameManager {
         const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
 
         matrixClientPromise.catch((e) => {
-            if (e instanceof InvalidLoginTokenError) {
+            // Both cases end the same way: only a new OpenID login can mint the Matrix login token this
+            // browser is missing, so show the "reconnect" prompt instead of a bare error banner.
+            if (e instanceof InvalidLoginTokenError || e instanceof MissingMatrixCredentialsError) {
                 loginTokenErrorStore.set(true);
             }
         });
