@@ -43,9 +43,9 @@ const DRAIN_TIMEOUT_MS = 10_000;
 
 /**
  * A session only exists once it has ended: there is no start row, the whole interval
- * rides on the closing one. So every reachable end has to be wired, and until now this
- * process had none at all — a deploy killed it with every live conversation inside it,
- * silently. The one gap left is SIGKILL/OOM, where the map dies with the process;
+ * rides on the closing one. So every reachable end has to be wired: a deploy that kills
+ * the process takes every live conversation with it, silently. The one gap left is
+ * SIGKILL/OOM, where the map dies with the process;
  * persisting it would not help, since on recovery we would know a session was open but
  * not when it ended, and inventing that timestamp is worse than losing it.
  */

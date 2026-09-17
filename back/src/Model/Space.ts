@@ -765,6 +765,14 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return isBubbleSpaceName(this.name) ? "bubble" : "area";
     }
 
+    /**
+     * Tracked here and not in the CommunicationManager: the manager only receives the
+     * users who pass the filter — a listener never reaches it, and a listener raising the
+     * megaphone reaches it as an added user — and ICommunicationSpace exposes neither the
+     * filter, nor the metadata, nor the world. It also has no notion of a session opening:
+     * its initial state exists from the moment the space is created. It knows how the
+     * media is carried, not who is there.
+     */
     private trackSessionJoin(spaceUser: SpaceUser): void {
         if (this.sessionKind() === undefined) {
             return;

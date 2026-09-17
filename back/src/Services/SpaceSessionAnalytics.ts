@@ -30,7 +30,7 @@ export type SessionMember = {
  *
  * In a meeting every present member is active. In a broadcast only the speakers are, so
  * a listener alone in the megaphone space accrues nothing — that room is where every
- * client of the world sits, and counting it made "connected" mean "in a meeting".
+ * client of the world sits, and counting it would make "connected" mean "in a meeting".
  */
 const MIN_ACTIVE: Record<SessionKind, number> = { bubble: 2, area: 2, megaphone: 1, speaker_zone: 1 };
 
@@ -77,11 +77,11 @@ type TrackedSpace = {
  * One row per session, and one per participation — emitted by the only party that can
  * count either honestly.
  *
- * Every participant's client used to open its own interval, so a meeting of four
- * produced four rows and a broadcast was measured once per listener. Here a session is
- * a thing with a lifecycle rather than a thing each client believes it is in: it opens
- * when its predicate becomes true, closes when it stops holding, and participations are
- * clipped to it — a listener present before anyone went on air starts at the open.
+ * Counted by the back rather than by each client: a client can only say what it believes
+ * it is in, and a meeting of four reported by four clients is four rows, not one. Here a
+ * session is a thing with a lifecycle: it opens when its predicate becomes true, closes
+ * when it stops holding, and participations are clipped to it — a listener present
+ * before anyone went on air starts at the open.
  *
  * Every row is emitted when the session CLOSES, participations included: a participation
  * cannot be emitted before we know the session it belongs to happened. A second session

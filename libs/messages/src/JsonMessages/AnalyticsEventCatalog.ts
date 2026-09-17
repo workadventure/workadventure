@@ -773,10 +773,10 @@ export const ANALYTICS_EVENTS = {
     // meetingProvider spelled out rather than `.required()` on the shared shape:
     // required() rebuilds the field and drops its .describe().
     openProperties: meetingContextProperties.extend({
-      // Optional since the back took the meeting over: it reports what a meeting IS
-      // (`meetingKind`) rather than which transport carried it, and the transport can
-      // change mid-meeting. Still filled by the one path the back cannot see — Jitsi,
-      // whose areas join no space server-side.
+      // Optional: the row the back emits says what a meeting IS (`meetingKind`) rather
+      // than which transport carried it, and the transport can change mid-meeting.
+      // Filled by the one path the back cannot see — Jitsi, whose areas join no space
+      // server-side.
       meetingProvider: z
         .enum(["livekit", "jitsi", "webrtc"])
         .optional()
@@ -787,7 +787,7 @@ export const ANALYTICS_EVENTS = {
         .enum(["bubble", "area"])
         .optional()
         .describe(
-          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet. Filled by the back, which knows a Group from an area Space by construction; absent on the rows a client still opens.",
+          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet. Filled by the back, which tells a bubble's space from an area's by construction; absent on the rows a client opens (Jitsi).",
         ),
       participantCount: z
         .number()
@@ -801,7 +801,7 @@ export const ANALYTICS_EVENTS = {
     endReasonDescription:
       "`socket_closed` and the `pusher_*` values mean the client never got to close it — a tab closed mid-meeting, or the pusher restarted.",
     description:
-      "A meeting, measured. One row per meeting — by the back, which owns the meeting's lifecycle and counts its participants; the row is attributed to nobody, because a meeting belongs to no one participant. Historical rows, and Jitsi ones, were opened once per participant by each client and carry participant-seconds instead: `meetingKind` is present on the former and absent on the latter.",
+      "A meeting, measured. One row per meeting — by the back, which owns the meeting's lifecycle and counts its participants; the row is attributed to nobody, because a meeting belongs to no one participant. Rows without `meetingKind` were opened by a client, once per participant, and carry participant-seconds: Jitsi meetings, and every row older than the back-emitted ones.",
   }),
 
   "meeting.screenshare.ended": timedEvent({
