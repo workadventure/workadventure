@@ -62,8 +62,10 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
     private readonly pendingConfigRequests = new Map<number, PendingRequest>();
     private nextConfigRequestId = 1;
     private workerDelegate: TasksVisionWorkerDelegate | "none" = "none";
-    // The next worker stats are reported once after start and once after each change of effect.
-    private sampleRequested = true;
+    // Worker stats come every 15 s. One sample is reported per session, and one more after each change of effect.
+    // The session sample waits for the third window: the resegment controller needs two consecutive 15 s
+    // checkpoints to move, so anything earlier would only echo its default interval.
+    private statsUntilSample = 3;
     private closed = false;
 
     // Insertable-streams transport.
@@ -177,8 +179,7 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
                 this.fail(deserializeError(message.error));
                 return;
             case "stats":
-                if (this.sampleRequested && this.config.mode !== "none") {
-                    this.sampleRequested = false;
+                if (this.statsUntilSample > 0 && this.config.mode !== "none" && --this.statsUntilSample === 0) {
                     this.onSample?.({
                         mode: this.config.mode,
                         transport: this.transport,
@@ -214,7 +215,8 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
 
     public async updateConfig(nextConfig: Partial<BackgroundConfig>): Promise<void> {
         if (nextConfig.mode !== undefined && nextConfig.mode !== this.config.mode) {
-            this.sampleRequested = true;
+            // The controller keeps its interval across a change of effect: the next window is already telling.
+            this.statsUntilSample = 1;
         }
         Object.assign(this.config, nextConfig);
         await this.initPromise;

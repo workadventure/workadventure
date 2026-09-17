@@ -1127,7 +1127,7 @@ export const ANALYTICS_EVENTS = {
         ),
     }),
     description:
-      "How the virtual background pipeline performs on this device: once per session after the effect starts, then once after each change of effect. What decides the defaults of the segmentation cadence, the model choice and the capability gate.",
+      "How the virtual background pipeline performs on this device: once per session, after 45 s of rendering so the segmentation cadence has had two checkpoints to settle, then once after each change of effect. What decides the defaults of the segmentation cadence, the model choice and the capability gate.",
   }),
 
   "settings.background.changed": event({
