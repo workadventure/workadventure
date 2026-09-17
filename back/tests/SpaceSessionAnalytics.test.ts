@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, type Mock } from "vitest";
 import type { AnalyticsStoredEvent } from "@workadventure/messages";
-import { SpaceSessionAnalytics, type SessionKind, type SessionMember } from "../src/Services/SpaceSessionAnalytics";
+import type { SpaceKind } from "@workadventure/shared-utils";
+import { SpaceSessionAnalytics, type SessionMember } from "../src/Services/SpaceSessionAnalytics";
 
 type Enqueue = Mock<(row: AnalyticsStoredEvent) => void>;
 
 const member = (id: string): SessionMember => ({
-    key: `room_${id}`,
     uuid: `uuid-${id}`,
     spaceUserId: `room_${id}`,
     roomId: "https://play.example/room",
@@ -13,7 +13,7 @@ const member = (id: string): SessionMember => ({
 
 const rowsOf = (enqueue: Enqueue): AnalyticsStoredEvent[] => enqueue.mock.calls.map(([row]) => row);
 
-const harness = (kind: SessionKind) => {
+const harness = (kind: SpaceKind) => {
     const enqueue: Enqueue = vi.fn();
     let now = Date.parse("2026-04-24T12:00:00.000Z");
     const analytics = new SpaceSessionAnalytics({ enqueue }, () => now);
@@ -167,7 +167,7 @@ describe("SpaceSessionAnalytics", () => {
         const enqueue: Enqueue = vi.fn();
         let now = 0;
         const analytics = new SpaceSessionAnalytics({ enqueue }, () => now);
-        let kind: SessionKind | undefined = undefined;
+        let kind: SpaceKind | undefined = undefined;
         analytics.track("space", "world", "room", () => kind);
 
         // Two people met before either declared the space: nothing opens yet.
@@ -194,7 +194,7 @@ describe("SpaceSessionAnalytics", () => {
         analytics.join("megaphone", member("s"), true);
         analytics.join("idle", member("3"), true);
 
-        expect(analytics.closeAll("back_shutdown")).toBe(2);
+        expect(analytics.closeAll()).toBe(2);
         const rows = rowsOf(enqueue);
         expect(rows).toHaveLength(5);
         expect(rows.every((row) => row.properties.endReason === "back_shutdown")).toBe(true);

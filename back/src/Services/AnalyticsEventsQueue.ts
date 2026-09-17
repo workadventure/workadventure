@@ -1,12 +1,5 @@
 import { AnalyticsEventsQueue, registerDrainableService } from "@workadventure/shared-utils";
-import {
-    ADMIN_API_TOKEN,
-    ADMIN_API_URL,
-    ANALYTICS_FLUSH_INTERVAL_MS,
-    ANALYTICS_MAX_BATCH_SIZE,
-    ANALYTICS_MAX_QUEUE_SIZE,
-    ANALYTICS_TIMEOUT_MS,
-} from "../Enum/EnvironmentVariable";
+import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 
 /**
  * The back's own analytics rows, on their way to the admin.
@@ -26,10 +19,11 @@ import {
 export const analyticsEventsQueue = new AnalyticsEventsQueue({
     adminApiUrl: ADMIN_API_URL,
     adminApiToken: ADMIN_API_TOKEN,
-    flushIntervalMs: ANALYTICS_FLUSH_INTERVAL_MS,
-    timeoutMs: ANALYTICS_TIMEOUT_MS,
-    maxQueueSize: ANALYTICS_MAX_QUEUE_SIZE,
-    maxBatchSize: ANALYTICS_MAX_BATCH_SIZE,
+    // ponytail: the pusher's defaults, hardcoded; expose as env vars when an operator needs to tune them.
+    flushIntervalMs: 10_000,
+    timeoutMs: 2_000,
+    maxQueueSize: 10_000,
+    maxBatchSize: 1_000,
     pusherInstanceId: `back:${process.env.HOSTNAME || process.env.SERVER_NAME || "back"}`,
 });
 

@@ -2,12 +2,6 @@ import type { AnalyticsStoredEvent } from "@workadventure/messages";
 import { isMeetingKind, type AnalyticsEventsQueue, type SpaceKind } from "@workadventure/shared-utils";
 import { analyticsEventsQueue } from "./AnalyticsEventsQueue";
 
-/**
- * What a space is a session of: the kind its client declared, validated on the way in.
- * Never derived from how its media happened to be carried.
- */
-export type SessionKind = SpaceKind;
-
 /** Why a session or a participation ended. */
 export type SessionEndReason = "closed" | "back_shutdown";
 
@@ -16,8 +10,6 @@ export type SessionEndReason = "closed" | "back_shutdown";
  * through a socket: no member id, no tab, no IP — the admin takes all three as nullable.
  */
 export type SessionMember = {
-    /** Dedupe key, stable for the length of the membership. */
-    key: string;
     uuid: string;
     spaceUserId: string;
     roomId: string;
@@ -31,7 +23,7 @@ export type SessionMember = {
  * a listener alone in the megaphone space accrues nothing — that room is where every
  * client of the world sits, and counting it would make "connected" mean "in a meeting".
  */
-const MIN_ACTIVE: Record<SessionKind, number> = { bubble: 2, area: 2, megaphone: 1, speaker_zone: 1 };
+const MIN_ACTIVE: Record<SpaceKind, number> = { bubble: 2, area: 2, megaphone: 1, speaker_zone: 1 };
 
 type Participation = {
     member: SessionMember;
@@ -44,10 +36,9 @@ type Participation = {
 };
 
 type Session = {
-    kind: SessionKind;
+    kind: SpaceKind;
     openedAtMs: number;
     participations: Map<string, Participation>;
-    seen: number;
     present: number;
     peak: number;
 };
@@ -60,7 +51,7 @@ type TrackedSpace = {
      * Resolved when a session opens, not when the space is tracked: the kind is metadata,
      * and it arrives after the first join. Undefined keeps the session closed.
      */
-    kind: () => SessionKind | undefined;
+    kind: () => SpaceKind | undefined;
     members: Map<string, { member: SessionMember; active: boolean }>;
     activeCount: number;
     session?: Session;
@@ -89,7 +80,7 @@ export class SpaceSessionAnalytics {
     ) {}
 
     /** Idempotent: the first call wins, later ones are free. */
-    public track(id: string, world: string, roomId: string, kind: () => SessionKind | undefined): void {
+    public track(id: string, world: string, roomId: string, kind: () => SpaceKind | undefined): void {
         if (!this.spaces.has(id)) {
             this.spaces.set(id, { id, world, roomId, kind, members: new Map(), activeCount: 0 });
         }
@@ -104,28 +95,28 @@ export class SpaceSessionAnalytics {
     }
 
     /** The space is gone: close whatever is open and forget its members. */
-    public untrack(id: string, endReason: SessionEndReason = "closed"): void {
+    public untrack(id: string): void {
         const space = this.spaces.get(id);
         if (!space) {
             return;
         }
         this.spaces.delete(id);
         if (space.session) {
-            this.close(space, endReason);
+            this.close(space, "closed");
         }
     }
 
     public join(id: string, member: SessionMember, active: boolean): void {
         const space = this.spaces.get(id);
-        if (!space || space.members.has(member.key)) {
+        if (!space || space.members.has(member.spaceUserId)) {
             return;
         }
-        space.members.set(member.key, { member, active });
+        space.members.set(member.spaceUserId, { member, active });
         if (active) {
             space.activeCount += 1;
         }
         if (space.session) {
-            this.addParticipation(space, member.key);
+            this.addParticipation(space, member.spaceUserId);
         }
         this.sync(space);
     }
@@ -169,11 +160,11 @@ export class SpaceSessionAnalytics {
     }
 
     /** Closes every open session, for a graceful shutdown. Only enqueues. */
-    public closeAll(endReason: SessionEndReason = "back_shutdown"): number {
+    public closeAll(): number {
         let closed = 0;
         for (const space of this.spaces.values()) {
             if (space.session) {
-                this.close(space, endReason);
+                this.close(space, "back_shutdown");
                 closed += 1;
             }
         }
@@ -191,12 +182,11 @@ export class SpaceSessionAnalytics {
         }
     }
 
-    private open(space: TrackedSpace, kind: SessionKind): void {
+    private open(space: TrackedSpace, kind: SpaceKind): void {
         space.session = {
             kind,
             openedAtMs: this.nowMs(),
             participations: new Map(),
-            seen: 0,
             present: 0,
             peak: 0,
         };
@@ -212,12 +202,11 @@ export class SpaceSessionAnalytics {
         if (!session || !entry) {
             return;
         }
-        session.seen += 1;
         session.present += 1;
         session.peak = Math.max(session.peak, session.present);
         const participation: Participation = {
             member: entry.member,
-            joinRank: session.seen,
+            joinRank: session.participations.size + 1,
             startedAtMs: this.nowMs(),
             airtimeMs: 0,
             spoke: false,
@@ -273,7 +262,7 @@ export class SpaceSessionAnalytics {
                     space,
                     member: participation.member,
                     atMs,
-                    eventId: `${space.id}:${session.openedAtMs}:${participation.member.key}`,
+                    eventId: `${space.id}:${session.openedAtMs}:${participation.member.spaceUserId}`,
                     properties: {
                         [idKey]: space.id,
                         [kindKey]: session.kind,
@@ -303,7 +292,7 @@ export class SpaceSessionAnalytics {
                 properties: {
                     [idKey]: space.id,
                     [kindKey]: session.kind,
-                    participantCount: session.seen,
+                    participantCount: session.participations.size,
                     peakParticipantCount: session.peak,
                     ...interval(session.openedAtMs, endedAtMs),
                     ...(meeting ? {} : { speakerCount }),

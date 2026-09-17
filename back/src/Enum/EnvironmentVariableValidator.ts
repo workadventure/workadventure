@@ -149,22 +149,6 @@ Note that anonymous players don't have any TTL limit because their data is store
     LIVEKIT_HOST: z.string().optional().describe("The Livekit host."),
     LIVEKIT_API_KEY: z.string().optional().describe("The Livekit API key."),
     LIVEKIT_API_SECRET: z.string().optional().describe("The Livekit API secret."),
-    ANALYTICS_FLUSH_INTERVAL_MS: PositiveIntAsString.optional()
-        .or(z.string().max(0))
-        .transform((val) => toNumber(val, 10000))
-        .describe("Interval in milliseconds between analytics batch flushes. Defaults to 10000."),
-    ANALYTICS_TIMEOUT_MS: PositiveIntAsString.optional()
-        .or(z.string().max(0))
-        .transform((val) => toNumber(val, 2000))
-        .describe("HTTP timeout in milliseconds for analytics ingestion calls. Defaults to 2000."),
-    ANALYTICS_MAX_QUEUE_SIZE: PositiveIntAsString.optional()
-        .or(z.string().max(0))
-        .transform((val) => toNumber(val, 10000))
-        .describe("Maximum number of analytics events queued in back memory. Defaults to 10000."),
-    ANALYTICS_MAX_BATCH_SIZE: PositiveIntAsString.optional()
-        .or(z.string().max(0))
-        .transform((val) => toNumber(val, 1000))
-        .describe("Maximum number of analytics events sent in one admin batch. Defaults to 1000."),
     MAX_USERS_FOR_WEBRTC: PositiveIntAsString.optional()
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 4))

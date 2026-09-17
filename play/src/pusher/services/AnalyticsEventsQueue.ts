@@ -13,7 +13,7 @@ import {
 import {
     AnalyticsEventsQueue as SharedAnalyticsEventsQueue,
     registerDrainableService,
-    type AnalyticsEventsBatch as SharedAnalyticsEventsBatch,
+    type AnalyticsEventsBatch,
     type AnalyticsEventsQueueConfig,
     type AnalyticsEventsQueueStats as SharedAnalyticsEventsQueueStats,
 } from "@workadventure/shared-utils";
@@ -27,7 +27,7 @@ import {
     ANALYTICS_TIMEOUT_MS,
 } from "../enums/EnvironmentVariable";
 
-export type { AnalyticsEventsQueueConfig };
+export type { AnalyticsEventsBatch, AnalyticsEventsQueueConfig };
 
 /**
  * Hard cap on a single event's serialized properties size. The admin API will
@@ -75,9 +75,6 @@ export type AnalyticsEventInput = AnalyticsEventEnvelope;
  */
 export type AnalyticsEvent = Omit<AnalyticsStoredEvent, "eventName"> & { eventName: AnalyticsEventName };
 
-/** The batch on the wire, with `events` narrowed to the pusher's own AnalyticsEvent. */
-export type AnalyticsEventsBatch = SharedAnalyticsEventsBatch<AnalyticsEvent>;
-
 export type AnalyticsEventsQueueStats = SharedAnalyticsEventsQueueStats & {
     droppedByWorldSettings: number;
 };
@@ -88,7 +85,7 @@ export type AnalyticsEventsQueueStats = SharedAnalyticsEventsQueueStats & {
  * retries, the bounded drain — is `@workadventure/shared-utils`, and the back
  * uses the same one.
  */
-export class AnalyticsEventsQueue extends SharedAnalyticsEventsQueue<AnalyticsEvent> {
+export class AnalyticsEventsQueue extends SharedAnalyticsEventsQueue {
     private droppedByWorldSettings = 0;
 
     public enqueueEvent(event: AnalyticsEventInput, socketData: SocketData): void {

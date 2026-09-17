@@ -35,15 +35,13 @@ export type AnalyticsEventsQueueStats = {
 /**
  * Derived from the schema Swagger publishes, rather than written out again here:
  * the two used to be separate declarations that could disagree without anything
- * noticing. `events` is narrowed to whatever the sender queues.
+ * noticing.
  */
-export type AnalyticsEventsBatch<E extends AnalyticsStoredEvent> = Omit<AnalyticsEventsBatchPayload, "events"> & {
-    events: E[];
-};
+export type AnalyticsEventsBatch = AnalyticsEventsBatchPayload;
 
-export type AnalyticsEventsHttpPost<E extends AnalyticsStoredEvent> = (
+export type AnalyticsEventsHttpPost = (
     url: string,
-    payload: AnalyticsEventsBatch<E>,
+    payload: AnalyticsEventsBatch,
     options: { headers: Record<string, string>; timeout: number },
 ) => Promise<unknown>;
 
@@ -60,8 +58,8 @@ export type AnalyticsEventsHttpPost<E extends AnalyticsStoredEvent> = (
  * Nothing is sent until `setEnabled(true)`: the pusher gates on the admin
  * advertising the endpoint, the back on being configured at all.
  */
-export class AnalyticsEventsQueue<E extends AnalyticsStoredEvent = AnalyticsStoredEvent> {
-    private readonly queue: E[] = [];
+export class AnalyticsEventsQueue {
+    private readonly queue: AnalyticsStoredEvent[] = [];
     private readonly endpointUrl: string | undefined;
     private readonly timer: NodeJS.Timeout | undefined;
     private isFlushing = false;
@@ -75,8 +73,7 @@ export class AnalyticsEventsQueue<E extends AnalyticsStoredEvent = AnalyticsStor
 
     public constructor(
         protected readonly config: AnalyticsEventsQueueConfig,
-        private readonly post: AnalyticsEventsHttpPost<E> = (url, payload, options) =>
-            axios.post(url, payload, options),
+        private readonly post: AnalyticsEventsHttpPost = (url, payload, options) => axios.post(url, payload, options),
         protected readonly now: () => Date = () => new Date(),
         private readonly random: () => number = Math.random,
     ) {
@@ -137,7 +134,7 @@ export class AnalyticsEventsQueue<E extends AnalyticsStoredEvent = AnalyticsStor
         }
     }
 
-    public enqueue(event: E): void {
+    public enqueue(event: AnalyticsStoredEvent): void {
         if (!this.canSend()) {
             return;
         }
@@ -160,7 +157,7 @@ export class AnalyticsEventsQueue<E extends AnalyticsStoredEvent = AnalyticsStor
 
         this.isFlushing = true;
         const batchEvents = this.queue.splice(0, this.config.maxBatchSize);
-        const batch: AnalyticsEventsBatch<E> = {
+        const batch: AnalyticsEventsBatch = {
             schemaVersion: SCHEMA_VERSION,
             sentAt: this.now().toISOString(),
             pusherInstanceId: this.config.pusherInstanceId,
@@ -200,7 +197,7 @@ export class AnalyticsEventsQueue<E extends AnalyticsStoredEvent = AnalyticsStor
         return this.endpointUrl !== undefined && this.config.adminApiToken !== undefined;
     }
 
-    private async sendWithRetry(batch: AnalyticsEventsBatch<E>, deadline?: number): Promise<number> {
+    private async sendWithRetry(batch: AnalyticsEventsBatch, deadline?: number): Promise<number> {
         if (!this.endpointUrl) {
             return 0;
         }
@@ -261,7 +258,7 @@ export class AnalyticsEventsQueue<E extends AnalyticsStoredEvent = AnalyticsStor
         return status >= 400 && status < 500;
     }
 
-    private async postBatch(batch: AnalyticsEventsBatch<E>, deadline?: number): Promise<void> {
+    private async postBatch(batch: AnalyticsEventsBatch, deadline?: number): Promise<void> {
         if (!this.endpointUrl || this.config.adminApiToken === undefined) {
             return;
         }
@@ -289,7 +286,7 @@ export class AnalyticsEventsQueue<E extends AnalyticsStoredEvent = AnalyticsStor
      * succeeded individually. A non-validation error aborts the loop and the
      * remaining unsent events are recorded against `droppedAfterSendFailure`.
      */
-    private async sendEventsIndividually(batch: AnalyticsEventsBatch<E>, deadline?: number): Promise<number> {
+    private async sendEventsIndividually(batch: AnalyticsEventsBatch, deadline?: number): Promise<number> {
         let sentEvents = 0;
         for (let i = 0; i < batch.events.length; i++) {
             const event = batch.events[i];
@@ -343,7 +340,7 @@ export class AnalyticsEventsQueue<E extends AnalyticsStoredEvent = AnalyticsStor
         return sentEvents;
     }
 
-    private shouldSplitInvalidBatch(error: unknown, batch: AnalyticsEventsBatch<E>): boolean {
+    private shouldSplitInvalidBatch(error: unknown, batch: AnalyticsEventsBatch): boolean {
         return batch.events.length > 1 && this.isValidationError(error);
     }
 

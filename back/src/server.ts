@@ -58,16 +58,12 @@ const shutdown = (reason: string, exitCode: number): void => {
 
     // Close BEFORE draining: closeAll only enqueues, so draining first would leave
     // everything it produced behind.
-    const closed = spaceSessionAnalytics.closeAll("back_shutdown");
+    const closed = spaceSessionAnalytics.closeAll();
     console.info(`${reason}: closed ${closed} session(s), draining the analytics queue before exit…`);
 
-    runDrains(DRAIN_TIMEOUT_MS).then(
-        () => process.exit(exitCode),
-        (error: unknown) => {
-            console.error("Unexpected error while draining during shutdown", error);
-            process.exit(exitCode);
-        },
-    );
+    runDrains(DRAIN_TIMEOUT_MS)
+        .catch((error: unknown) => console.error("Unexpected error while draining during shutdown", error))
+        .finally(() => process.exit(exitCode));
 };
 
 process.once("SIGTERM", (signal) => shutdown(`Received ${signal}`, 0));

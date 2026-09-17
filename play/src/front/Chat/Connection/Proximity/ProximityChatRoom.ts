@@ -140,10 +140,6 @@ const SPACE_KIND_OF_ROOM: Record<ProximityChatRoomKind, SpaceKind | undefined> =
     area: undefined,
 };
 
-function spaceKindOfRoom(kind: ProximityChatRoomKind): SpaceKind | undefined {
-    return SPACE_KIND_OF_ROOM[kind];
-}
-
 export class ProximityChatRoom implements ChatRoom {
     id: string;
     conversationKind = "room" as const;
@@ -982,7 +978,7 @@ export class ProximityChatRoom implements ChatRoom {
         try {
             this._space = await this.spaceRegistry.joinSpace(spaceName, filterType, propertiesToSync, joinSignal, {
                 canRecord: WAMSettingsUtils.canStartRecording(this.wamSettings, this.tags, localUserStore.isLogged()),
-                spaceKind: spaceKindOfRoom(get(this.kind)),
+                spaceKind: SPACE_KIND_OF_ROOM[get(this.kind)],
             });
         } catch (e) {
             this.joinSpaceAbortController = undefined;

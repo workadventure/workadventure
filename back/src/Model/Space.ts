@@ -19,9 +19,9 @@ import {
 } from "@workadventure/messages";
 import Debug from "debug";
 import { asError } from "catch-unknown";
-import { spaceKindSchema } from "@workadventure/shared-utils";
+import { spaceKindSchema, type SpaceKind } from "@workadventure/shared-utils";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
-import { spaceSessionAnalytics, type SessionKind, type SessionMember } from "../Services/SpaceSessionAnalytics";
+import { spaceSessionAnalytics, type SessionMember } from "../Services/SpaceSessionAnalytics";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { SpacesWatcher } from "./SpacesWatcher";
 import type { EventProcessor } from "./EventProcessor";
@@ -34,14 +34,6 @@ import { metadataProcessor } from "./MetadataProcessorInit";
 const debug = Debug("space");
 
 type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
-
-/**
- * A space can only be a session if it syncs media — the same predicate the
- * communication manager uses to decide a space has media at all. Which session it is,
- * its client declares under `spaceKind`; the world space and the chat spaces sync
- * nothing and declare nothing.
- */
-const MEETING_MEDIA_PROPERTIES = ["cameraState", "microphoneState", "screenSharingState"];
 
 export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     readonly name: string;
@@ -751,7 +743,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
      * validated on the way in — against the enum and against this space's filter — and
      * it arrives after the first join. A space that never declares one never opens.
      */
-    private sessionKind(): SessionKind | undefined {
+    private sessionKind(): SpaceKind | undefined {
         const kind = spaceKindSchema.safeParse(this.getMetadataValue("spaceKind"));
         return kind.success ? kind.data : undefined;
     }
@@ -765,13 +757,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
      * media is carried, not who is there.
      */
     private trackSessionJoin(spaceUser: SpaceUser): void {
-        if (!this._propertiesToSync.some((property) => MEETING_MEDIA_PROPERTIES.includes(property))) {
-            return;
-        }
-
         spaceSessionAnalytics.track(this.name, this.world, spaceUser.playUri, () => this.sessionKind());
         const member: SessionMember = {
-            key: spaceUser.spaceUserId,
             uuid: spaceUser.uuid,
             spaceUserId: spaceUser.spaceUserId,
             roomId: spaceUser.playUri,
