@@ -1,4 +1,5 @@
 import type { PostHog } from "@posthog/types";
+import { z } from "zod";
 import type {
     AnalyticsEventArgs,
     AnalyticsEventName,
@@ -55,8 +56,10 @@ declare global {
  * Without one, the event is about this tab as a whole and is reported once per live
  * meeting — the microphone is heard in all of them.
  */
+const namesItsMeeting = z.object({ meetingId: z.string() });
+
 function needsMeetingContext(eventName: string, properties: object): boolean {
-    return eventName.startsWith("meeting.") && !("meetingId" in properties && properties.meetingId !== undefined);
+    return eventName.startsWith("meeting.") && !namesItsMeeting.safeParse(properties).success;
 }
 
 class AnalyticsClient {
