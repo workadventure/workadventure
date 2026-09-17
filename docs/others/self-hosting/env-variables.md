@@ -182,6 +182,10 @@ Environment variables for the Back service (backend API).
 | `LIVEKIT_HOST` | No | The Livekit host. |
 | `LIVEKIT_API_KEY` | No | The Livekit API key. |
 | `LIVEKIT_API_SECRET` | No | The Livekit API secret. |
+| `ANALYTICS_FLUSH_INTERVAL_MS` | Yes | Interval in milliseconds between analytics batch flushes. Defaults to 10000. |
+| `ANALYTICS_TIMEOUT_MS` | Yes | HTTP timeout in milliseconds for analytics ingestion calls. Defaults to 2000. |
+| `ANALYTICS_MAX_QUEUE_SIZE` | Yes | Maximum number of analytics events queued in back memory. Defaults to 10000. |
+| `ANALYTICS_MAX_BATCH_SIZE` | Yes | Maximum number of analytics events sent in one admin batch. Defaults to 1000. |
 | `MAX_USERS_FOR_WEBRTC` | Yes | The maximum number of users for WebRTC. |
 | `LIVEKIT_SWITCH_ON_CPU_LIMITATION` | No | Move a bubble of more than two users to LiveKit as soon as one of them reports that its video encoders cannot keep up in WebRTC (one encoder per peer), even below MAX_USERS_FOR_WEBRTC, and keep it there while that user is present. Costs LiveKit bandwidth for bubbles that would have stayed peer-to-peer. Defaults to true |
 | `LIVEKIT_RECORDING_S3_ENDPOINT` | No | The S3 endpoint for Livekit recording. |
