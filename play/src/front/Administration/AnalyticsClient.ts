@@ -13,7 +13,7 @@ import type {
 import { postHogEventKey, postHogIntervalKeys } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { hasCapability } from "../Connection/Capabilities";
-import { currentMeetingProperties } from "./CurrentMeeting";
+import { liveMeetingContexts, openTimedEventPerMeeting } from "./CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
 import {
     forgetOpenTimedAnalyticsEvents,
@@ -43,22 +43,20 @@ declare global {
 }
 
 /**
- * Adds the meeting an in-meeting action happened in.
+ * Whether an in-meeting event has to be placed on the meetings this tab is in.
  *
  * Centrally rather than at each of the dozen call sites: the answer is the same for
- * all of them — the meeting this tab is in — and a field that has to be remembered
- * eleven times is a field that will be forgotten once. Without it these rows say a
- * microphone was muted somewhere, by someone, and cannot be placed on a meeting.
+ * all of them and a field that has to be remembered eleven times is a field that will
+ * be forgotten once. Without it these rows say a microphone was muted somewhere, by
+ * someone, and cannot be placed on a meeting.
  *
- * Explicit properties win: the Jitsi lifecycle events state their own id, and they
- * are the authority on themselves.
+ * An explicit `meetingId` wins: an action on one participant belongs to that
+ * participant's space, and the Jitsi lifecycle events are the authority on themselves.
+ * Without one, the event is about this tab as a whole and is reported once per live
+ * meeting — the microphone is heard in all of them.
  */
-function withMeetingContext<T extends object>(eventName: string, properties: T): T {
-    if (!eventName.startsWith("meeting.")) {
-        return properties;
-    }
-
-    return { ...currentMeetingProperties(), ...properties };
+function needsMeetingContext(eventName: string, properties: object): boolean {
+    return eventName.startsWith("meeting.") && (properties as { meetingId?: unknown }).meetingId === undefined;
 }
 
 class AnalyticsClient {
@@ -126,31 +124,32 @@ class AnalyticsClient {
      */
     public trackAdminEvent<N extends AnalyticsEventName>(eventName: N, ...args: AnalyticsEventArgs<N>): void {
         const [given = {}] = args;
-        const properties = withMeetingContext(eventName, given);
 
         // Ahead of the capability gate, and deliberately: PostHog is the sink that
         // predates this pipeline, and on a world whose pusher does not advertise
         // api/analytics/events-batch it is the only one there is. Gating it on that
-        // capability would switch analytics off for every such world.
-        const postHogKey = postHogEventKey(eventName, properties);
+        // capability would switch analytics off for every such world. Once, whatever
+        // the number of meetings: PostHog counts the action, not where it happened.
+        const postHogKey = postHogEventKey(eventName, given);
         if (postHogKey) {
-            this.posthog?.capture(postHogKey, properties);
+            this.posthog?.capture(postHogKey, given);
         }
 
         if (!this.canSendAdminAnalytics()) {
             return;
         }
 
-        const clientEventTimeMs = Date.now();
-        const event = {
-            eventName,
-            source: "front",
-            clientEventTimeMs,
-            eventId: `${eventName}:${clientEventTimeMs}:${Math.random().toString(36).slice(2)}`,
-            properties,
-        } satisfies AdminAnalyticsEvent;
-
-        this.dispatchAdminEvent(event);
+        const contexts = needsMeetingContext(eventName, given) ? liveMeetingContexts() : [{}];
+        for (const context of contexts) {
+            const clientEventTimeMs = Date.now();
+            this.dispatchAdminEvent({
+                eventName,
+                source: "front",
+                clientEventTimeMs,
+                eventId: `${eventName}:${clientEventTimeMs}:${Math.random().toString(36).slice(2)}`,
+                properties: { ...context, ...given },
+            } satisfies AdminAnalyticsEvent);
+        }
     }
 
     /**
@@ -166,18 +165,19 @@ class AnalyticsClient {
         openProperties: TimedAnalyticsEventOpenProperties<N>,
         options: { reopenOnReconnect?: boolean } = {},
     ): EndTimedAnalyticsEvent {
-        const properties = withMeetingContext(eventName, openProperties);
         // Ahead of the capability gate, exactly as in trackAdminEvent and for the same
         // reason: on a world whose pusher does not advertise the batch endpoint,
         // PostHog is the only sink there is.
         const keys = postHogIntervalKeys(eventName);
         if (keys) {
-            this.posthog?.capture(keys.opens, pick(properties, keys.opensProperties));
+            this.posthog?.capture(keys.opens, pick(openProperties, keys.opensProperties));
         }
 
-        const end = this.canSendAdminAnalytics()
-            ? openTimedAnalyticsEvent(eventName, properties, this.sendTimedEventReport, options)
-            : NO_INTERVAL;
+        const end = needsMeetingContext(eventName, openProperties)
+            ? openTimedEventPerMeeting((context) =>
+                  this.openAdminInterval(eventName, { ...context, ...openProperties }, options),
+              )
+            : this.openAdminInterval(eventName, openProperties, options);
 
         if (!keys?.closes) {
             return end;
@@ -193,8 +193,18 @@ class AnalyticsClient {
                 return;
             }
             captured = true;
-            this.posthog?.capture(closes, pick(properties, keys.opensProperties));
+            this.posthog?.capture(closes, pick(openProperties, keys.opensProperties));
         };
+    }
+
+    private openAdminInterval<N extends TimedAnalyticsEventName>(
+        eventName: N,
+        properties: TimedAnalyticsEventOpenProperties<N>,
+        options: { reopenOnReconnect?: boolean },
+    ): EndTimedAnalyticsEvent {
+        return this.canSendAdminAnalytics()
+            ? openTimedAnalyticsEvent(eventName, properties, this.sendTimedEventReport, options)
+            : NO_INTERVAL;
     }
 
     private dispatchAdminEvent(event: AdminAnalyticsEvent): void {

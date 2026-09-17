@@ -237,20 +237,30 @@ describe("AnalyticsClient admin analytics sink", () => {
         });
     });
 
-    it("places an in-meeting action on the meeting it happened in", () => {
+    it("places an in-meeting action on every meeting this tab is in, once each", () => {
         const sendAdmin = vi.fn();
         analyticsClient.setAdminAnalyticsSender(sendAdmin);
         window.capabilities = { "api/analytics/events-batch": "v1" };
         meetingStarted("bubble-1");
+        meetingStarted("area-2");
 
         analyticsClient.trackAdminEvent("meeting.microphone.muted");
         // Not a meeting event: it carries no meeting, whatever this tab is in.
         analyticsClient.trackAdminEvent("bubble.say.opened");
 
-        expect(sendAdmin.mock.calls[0][0].events[0].properties).toEqual({ meetingId: "bubble-1" });
-        expect(sendAdmin.mock.calls[1][0].events[0].properties).toEqual({});
+        const rows = sendAdmin.mock.calls.flatMap(([message]) => message.events);
+        expect(rows.map((row) => row.properties)).toEqual([{ meetingId: "bubble-1" }, { meetingId: "area-2" }, {}]);
+        expect(new Set(rows.map((row) => row.eventId)).size).toBe(3);
+
+        // An action on one participant belongs to that participant's meeting alone.
+        sendAdmin.mockClear();
+        analyticsClient.trackAdminEvent("meeting.participant.kicked", { meetingId: "area-2" });
+        expect(sendAdmin.mock.calls.flatMap(([message]) => message.events).map((row) => row.properties)).toEqual([
+            { meetingId: "area-2" },
+        ]);
 
         meetingEnded("bubble-1");
+        meetingEnded("area-2");
         sendAdmin.mockClear();
         analyticsClient.trackAdminEvent("meeting.microphone.muted");
 

@@ -572,13 +572,15 @@ export class SpacePeerManager {
      * it held open and the times it was speaking, have to say which meeting they
      * happened in, and nobody else can: they are measured from the local analyser.
      *
-     * Gated on the space being a conversation: the back sends the same strategy switch
-     * to whoever merely joins a media-syncing space, the megaphone space included, and
-     * a speaking period in a broadcast belongs to no meeting.
+     * Gated on this tab sending its audio into a conversation: the back sends the same
+     * strategy switch to whoever merely joins a media-syncing space, the megaphone
+     * space and the listener zones included, and a speaking period belongs only to the
+     * meetings that hear it — a bubble formed inside a listener zone reports to the
+     * bubble alone.
      */
     private recordCurrentMeeting(): void {
         this.forgetCurrentMeeting();
-        if (!isMeetingSpace(this.space.filterType)) {
+        if (!isMeetingSpace(this.space.filterType) || !get(this.space.isStreamingAudioStore)) {
             return;
         }
         meetingStarted(this.space.getName());

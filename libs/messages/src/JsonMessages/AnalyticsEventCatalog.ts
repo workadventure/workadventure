@@ -206,18 +206,20 @@ const joinRankProperty = z
 /**
  * Which meeting an in-meeting action happened in.
  *
- * Attached centrally by AnalyticsClient rather than passed at each of the dozen call
- * sites, because the answer is the same for all of them — the meeting this tab is in —
- * and a field that has to be remembered eleven times is a field that will be forgotten
- * once. Without it these rows say a microphone was muted somewhere, by someone, and
- * cannot be placed on the meeting they belong to.
+ * An action on one participant — muting them, kicking them, pinning them — names that
+ * participant's meeting. An action on this tab as a whole — its own camera, its
+ * layout, its screen share — is attached centrally by AnalyticsClient, once per
+ * meeting the tab is in, rather than passed at each of the dozen call sites: a field
+ * that has to be remembered eleven times is a field that will be forgotten once.
+ * Without it these rows say a camera was turned off somewhere, by someone, and cannot
+ * be placed on the meeting they belong to.
  */
 const meetingActionProperties = z.object({
   meetingId: z
     .string()
     .optional()
     .describe(
-      "Meeting the action happened in. Absent when the action somehow fired outside one.",
+      "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several.",
     ),
 });
 
@@ -252,13 +254,20 @@ const broadcastProperties = z.object({
     ),
 });
 
-/** The meeting a dwell period happened in; roomId is already an envelope column. */
+/**
+ * The meeting a dwell period happened in; roomId is already an envelope column.
+ *
+ * One row per meeting that heard the period: a tab in two meetings at once — two
+ * areas drawn over each other, a Jitsi zone over a LiveKit area — sends its
+ * microphone to both, so each meeting gets the period whole and a total across
+ * meetings counts the overlap twice. A period is cut at every meeting boundary.
+ */
 const dwellMeetingProperties = z.object({
   meetingId: z
     .string()
     .optional()
     .describe(
-      "Meeting this period happened in, absent when it happened outside one.",
+      "Meeting this period happened in, absent when it happened outside one. A period heard by several meetings is one row per meeting.",
     ),
 });
 

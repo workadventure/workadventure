@@ -1,5 +1,5 @@
 import { get, readable, writable } from "svelte/store";
-import type { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
+import { FilterType, type PrivateSpaceEvent, type SpaceEvent } from "@workadventure/messages";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { availabilityStatusStore } from "../Stores/MediaStore";
@@ -46,6 +46,9 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
                 throw new Error("should not be called");
             },
             canAskToMuteAudioOrTurnOffVideo: writable(false),
+            // The local user stands in no space of their own: no action on them names a meeting.
+            filterType: FilterType.LIVE_STREAMING_USERS,
+            getName: () => "",
         },
         reactiveUser: {
             spaceUserId: "",
