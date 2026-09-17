@@ -47,6 +47,14 @@ export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
 // Firefox needs more time for ICE negotiation
 const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000; // 10s for Firefox, 5s for others
+// A peer that has not connected by then never will (offer lost, remote peer never created, ICE stuck in
+// "checking"). Destroying it is what hands it over to the retry mechanism, which only reacts to destroyed peers.
+const CONNECT_DEADLINE_MS = 20_000;
+// Browsers often recover from ICE "disconnected" on their own within a couple of seconds: give them that
+// chance before restarting ICE, then give the ICE restart its own chance before tearing the peer down.
+// Without this, a peer whose ICE never reaches "failed" (Firefox, dead TURN allocation) stays muted forever.
+const ICE_RESTART_DELAY_MS = 3_000;
+const ICE_RECOVERY_TIMEOUT_MS = 15_000;
 
 const debug = Debug("webrtc:RemotePeer");
 
@@ -162,8 +170,62 @@ export class RemotePeer extends Peer implements Streamable {
         }
     };
 
-    private readonly iceTimeoutHandler = () => {
-        this._statusStore.set("error");
+    /**
+     * Leaves a trace of the connection lifecycle in Sentry, so that a later error carries the sequence of
+     * events (disconnection, ICE restart, teardown) that led to it.
+     */
+    private breadcrumb(message: string, level: "info" | "warning", data: Record<string, unknown> = {}): void {
+        Sentry.addBreadcrumb({
+            category: "webrtc",
+            level,
+            message,
+            data: {
+                spaceUserId: this._spaceUserId,
+                connectionId: this._connectionId,
+                type: this.type,
+                initiator: this.initiator,
+                ...data,
+            },
+        });
+    }
+
+    private readonly iceStateChangeHandler = (iceConnectionState: RTCIceConnectionState) => {
+        // Before the first "connect", the connect deadline covers a stalled negotiation.
+        if (this.closing || !this._connected) {
+            return;
+        }
+        if (iceConnectionState === "connected" || iceConnectionState === "completed") {
+            if (this.iceRecoveryTimeout) {
+                this.breadcrumb("ICE recovered", "info", { iceConnectionState });
+            }
+            this.clearIceRecoveryTimeouts();
+            this._statusStore.set("connected");
+            return;
+        }
+        if (iceConnectionState !== "disconnected" || this.iceRecoveryTimeout) {
+            return;
+        }
+        this.breadcrumb("ICE disconnected, attempting to recover", "warning", { iceConnectionState });
+        // Displayed as "reconnecting" by the VideoBox
+        this._statusStore.set("connecting");
+        this.iceRestartTimeout = setTimeout(() => {
+            this.iceRestartTimeout = undefined;
+            const pc = this._pc;
+            // The offer must come from the initiator; the fork only sends offers from that side.
+            if (this.initiator && pc && typeof pc.restartIce === "function") {
+                this.breadcrumb("Restarting ICE", "info", { iceConnectionState: pc.iceConnectionState });
+                pc.restartIce();
+                this.negotiate();
+            }
+        }, ICE_RESTART_DELAY_MS);
+        this.iceRecoveryTimeout = setTimeout(() => {
+            this.iceRecoveryTimeout = undefined;
+            this.breadcrumb("ICE did not recover, destroying the peer to trigger a retry", "warning", {
+                iceConnectionState: this._pc?.iceConnectionState,
+                connectionState: this._pc?.connectionState,
+            });
+            this.destroy();
+        }, ICE_RECOVERY_TIMEOUT_MS);
     };
 
     private readonly negotiatedHandler = () => {
@@ -172,9 +234,36 @@ export class RemotePeer extends Peer implements Streamable {
         }
     };
 
+    // DTLS / SCTP failures surface here while iceConnectionState may still say "connected".
+    private readonly connectionStateChangeHandler = () => {
+        const pc = this._pc;
+        if (pc?.connectionState === "failed" && !this.closing) {
+            this.breadcrumb("Connection failed, destroying the peer to trigger a retry", "warning", {
+                iceConnectionState: pc.iceConnectionState,
+                connectionState: pc.connectionState,
+            });
+            this.destroy();
+        }
+    };
+
+    private clearIceRecoveryTimeouts(): void {
+        if (this.iceRestartTimeout) {
+            clearTimeout(this.iceRestartTimeout);
+            this.iceRestartTimeout = undefined;
+        }
+        if (this.iceRecoveryTimeout) {
+            clearTimeout(this.iceRecoveryTimeout);
+            this.iceRecoveryTimeout = undefined;
+        }
+    }
+
     private readonly connectHandler = () => {
         if (this.connectTimeout) {
             clearTimeout(this.connectTimeout);
+        }
+        if (this.connectDeadline) {
+            clearTimeout(this.connectDeadline);
+            this.connectDeadline = undefined;
         }
         if (this.closing) {
             return;
@@ -232,7 +321,9 @@ export class RemotePeer extends Peer implements Streamable {
                         this.isReceivingStream = false;
                     }
                     if (!this.localStream || this.preparingClose) {
-                        // If the remote stream stopped and we are not sending a local stream, close the connection
+                        // If the remote stream stopped and we are not sending a local stream, close the connection.
+                        // The remote peer decided to stop: not a failure, so no retry.
+                        this.intentionalClose = true;
                         this.closeHandler();
                     }
                     break;
@@ -267,6 +358,9 @@ export class RemotePeer extends Peer implements Streamable {
     };
 
     private connectTimeout: ReturnType<typeof setTimeout> | undefined;
+    private connectDeadline: ReturnType<typeof setTimeout> | undefined;
+    private iceRestartTimeout: ReturnType<typeof setTimeout> | undefined;
+    private iceRecoveryTimeout: ReturnType<typeof setTimeout> | undefined;
     private localStream: MediaStream | undefined;
 
     constructor(
@@ -444,7 +538,7 @@ export class RemotePeer extends Peer implements Streamable {
 
         this.on("error", this.errorHandler);
 
-        this.on("iceTimeout", this.iceTimeoutHandler);
+        this.on("iceStateChange", this.iceStateChangeHandler);
 
         this.on("connect", this.connectHandler);
 
@@ -454,6 +548,25 @@ export class RemotePeer extends Peer implements Streamable {
         this.on("data", this.dataHandler);
 
         this.once("finish", this.finishHandler);
+
+        this._pc?.addEventListener("connectionstatechange", this.connectionStateChangeHandler);
+
+        this.connectDeadline = setTimeout(() => {
+            this.connectDeadline = undefined;
+            if (!this._connected && !this.closing) {
+                this.breadcrumb(
+                    "Peer did not connect within the deadline, destroying it to trigger a retry",
+                    "warning",
+                    {
+                        deadlineMs: CONNECT_DEADLINE_MS,
+                        iceConnectionState: this._pc?.iceConnectionState,
+                        iceGatheringState: this._pc?.iceGatheringState,
+                        signalingState: this._pc?.signalingState,
+                    },
+                );
+                this.destroy();
+            }
+        }, CONNECT_DEADLINE_MS);
 
         this.localStreamStoreSubscribe = deriveSwitchStore(
             this.localStreamStore,
@@ -733,15 +846,20 @@ export class RemotePeer extends Peer implements Streamable {
             this.off("stream", this.streamHandler);
             this.off("close", this.closeHandler);
             this.off("error", this.errorHandler);
-            this.off("iceTimeout", this.iceTimeoutHandler);
+            this.off("iceStateChange", this.iceStateChangeHandler);
             this.off("connect", this.connectHandler);
             this.off("negotiated", this.negotiatedHandler);
             this.off("data", this.dataHandler);
             this.off("finish", this.finishHandler);
+            this._pc?.removeEventListener("connectionstatechange", this.connectionStateChangeHandler);
 
             if (this.connectTimeout) {
                 clearTimeout(this.connectTimeout);
             }
+            if (this.connectDeadline) {
+                clearTimeout(this.connectDeadline);
+            }
+            this.clearIceRecoveryTimeouts();
             if (this.closeStreamableTimeout) {
                 clearTimeout(this.closeStreamableTimeout);
             }

@@ -77,6 +77,7 @@ vi.mock("../../../src/front/Stores/StreamableCollectionStore", async () => {
 });
 
 import { SimplePeer } from "../../../src/front/WebRtc/SimplePeer";
+import { iceServersManager } from "../../../src/front/WebRtc/IceServersManager";
 import type { SpaceInterface } from "../../../src/front/Space/SpaceInterface";
 
 const BOB = "bob";
@@ -93,6 +94,7 @@ function makeSpace() {
     });
 
     const emitBackEvent = vi.fn();
+    const userLeft = new Subject<{ spaceUserId: string }>();
     const getSpaceUserBySpaceUserId = vi.fn(() => ({ spaceUserId: BOB, uuid: `uuid-${BOB}` }));
 
     const space = {
@@ -100,6 +102,7 @@ function makeSpace() {
         emitBackEvent,
         getSpaceUserBySpaceUserId,
         getSpaceName: () => "test-space",
+        observeUserLeft: userLeft,
     } as unknown as SpaceInterface;
 
     const emitWebRtcStart = (connectionId: string, initiator: boolean) => {
@@ -109,7 +112,7 @@ function makeSpace() {
         });
     };
 
-    return { space, emitBackEvent, emitWebRtcStart };
+    return { space, emitBackEvent, emitWebRtcStart, userLeft };
 }
 
 function makeStreamableSubjects() {
@@ -169,17 +172,135 @@ describe("SimplePeer connectionId replacement", () => {
         expect(firstPeer.destroy).toHaveBeenCalled();
         // ...so the internal replacement never enters the retry flow, and no stale restart / analytics is produced.
         expect(handleConnectionFailureSpy).not.toHaveBeenCalled();
-        expect(analyticsClient.trackAdminEvent).not.toHaveBeenCalledWith(
-            "media.connection_retry",
-            expect.anything()
-        );
+        expect(analyticsClient.trackAdminEvent).not.toHaveBeenCalledWith("media.connection_retry", expect.anything());
         expect(
-            emitBackEvent.mock.calls.some(
-                (call) => call[0]?.event?.$case === "meetingConnectionRestartMessage",
-            ),
+            emitBackEvent.mock.calls.some((call) => call[0]?.event?.$case === "meetingConnectionRestartMessage"),
         ).toBe(false);
 
         // The replacement peer is created with the new connectionId.
         expect(remotePeerInstances[1].connectionId).toBe("conn-2");
+    });
+});
+
+describe("SimplePeer restart request without answer", () => {
+    beforeEach(() => {
+        remotePeerInstances.length = 0;
+        vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.restoreAllMocks();
+    });
+
+    it("schedules the next backoff attempt when the back never answers the restart request", async () => {
+        const { space, emitBackEvent, emitWebRtcStart } = makeSpace();
+        const restartRequests = () =>
+            emitBackEvent.mock.calls
+                .map((call) => call[0]?.event)
+                .filter((event) => event?.$case === "meetingConnectionRestartMessage")
+                .map((event) => event.meetingConnectionRestartMessage);
+
+        new SimplePeer(
+            space,
+            makeStreamableSubjects() as never,
+            writable(new Set<string>()),
+            writable(undefined),
+            { trackAdminEvent: vi.fn() } as never,
+            { info: vi.fn() } as never,
+            writable(undefined) as never,
+        );
+
+        emitWebRtcStart("conn-1", true);
+        await vi.waitFor(() => expect(remotePeerInstances).toHaveLength(1));
+
+        // The peer dies for real: first backoff attempt (500 ms) sends a restart for conn-1.
+        remotePeerInstances[0].destroy();
+        await vi.advanceTimersByTimeAsync(500);
+        expect(restartRequests()).toEqual([{ userId: BOB, connectionId: "conn-1" }]);
+
+        // No webRtcStartMessage comes back: the next attempt (600 ms) fires after the answer timeout,
+        // without the connectionId so that the back does not discard it as stale.
+        await vi.advanceTimersByTimeAsync(10_000 + 600);
+        expect(restartRequests()).toEqual([
+            { userId: BOB, connectionId: "conn-1" },
+            { userId: BOB, connectionId: undefined },
+        ]);
+
+        // The back finally answers: no further restart is sent.
+        emitWebRtcStart("conn-2", false);
+        await vi.waitFor(() => expect(remotePeerInstances).toHaveLength(2));
+        await vi.advanceTimersByTimeAsync(30_000);
+        expect(restartRequests()).toHaveLength(2);
+    });
+});
+
+describe("SimplePeer peer lifecycle", () => {
+    beforeEach(() => {
+        remotePeerInstances.length = 0;
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    function createSimplePeer(space: SpaceInterface) {
+        return new SimplePeer(
+            space,
+            makeStreamableSubjects() as never,
+            writable(new Set<string>()),
+            writable(undefined),
+            { trackAdminEvent: vi.fn() } as never,
+            { info: vi.fn() } as never,
+            writable(undefined) as never,
+        );
+    }
+
+    function spyOnRetryEntrypoint() {
+        return vi.spyOn(
+            SimplePeer.prototype as unknown as { handleConnectionFailure: (...args: unknown[]) => void },
+            "handleConnectionFailure",
+        );
+    }
+
+    it("closes the peer of a user who left the space without entering the retry flow", async () => {
+        const { space, emitWebRtcStart, userLeft } = makeSpace();
+        const handleConnectionFailureSpy = spyOnRetryEntrypoint();
+        createSimplePeer(space);
+
+        emitWebRtcStart("conn-1", true);
+        await vi.waitFor(() => expect(remotePeerInstances).toHaveLength(1));
+
+        userLeft.next({ spaceUserId: BOB });
+
+        expect(remotePeerInstances[0].markAsIntentionalClose).toHaveBeenCalled();
+        expect(remotePeerInstances[0].destroy).toHaveBeenCalled();
+        expect(handleConnectionFailureSpy).not.toHaveBeenCalled();
+    });
+
+    it("registers the replacement peer even when the superseded one is still starting up", async () => {
+        const { space, emitWebRtcStart } = makeSpace();
+        const handleConnectionFailureSpy = spyOnRetryEntrypoint();
+        let releaseFirstStartup: (iceServers: never[]) => void = () => {};
+        vi.mocked(iceServersManager).getIceServersConfig.mockReturnValueOnce(
+            new Promise((resolve) => {
+                releaseFirstStartup = resolve;
+            }),
+        );
+        createSimplePeer(space);
+
+        // The first start is stuck waiting for the ICE servers when the replacement arrives.
+        emitWebRtcStart("conn-1", true);
+        emitWebRtcStart("conn-2", false);
+        await vi.waitFor(() => expect(remotePeerInstances).toHaveLength(1));
+        expect(remotePeerInstances[0].connectionId).toBe("conn-2");
+
+        // The superseded start completes: it must neither create a peer nor count as a failure.
+        releaseFirstStartup([]);
+        await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+        expect(remotePeerInstances).toHaveLength(1);
+        expect(handleConnectionFailureSpy).not.toHaveBeenCalled();
     });
 });
