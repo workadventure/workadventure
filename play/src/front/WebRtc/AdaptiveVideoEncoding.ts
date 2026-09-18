@@ -54,6 +54,37 @@ export function computeVideoEncoding(
         active: true,
         maxBitrate: viewer.maxBitrate > 0 ? Math.min(preset.bitrate, viewer.maxBitrate) : preset.bitrate,
         maxFramerate: preset.fps,
-        scaleResolutionDownBy: scaleFactor > 1 ? scaleFactor : undefined,
+        scaleResolutionDownBy: scaleFactor > 1 ? evenScaleFactor(capture, scaleFactor) : undefined,
     };
+}
+
+const floorEven = (value: number) => Math.floor(value / 2) * 2;
+// Both dimensions truncate (Firefox) and round (Chrome) to the same even integer
+const landsEven = (value: number) => Math.floor(value) % 2 === 0 && value % 1 < 0.5;
+
+/**
+ * The smallest scale at or above `minScale` whose scaled width and height are both even.
+ *
+ * Firefox's VP9 encoder (154 and later) stops producing frames as soon as a scaled frame has an odd width or
+ * height, and a viewer's tile is an arbitrary size: nearly every scale lands on an odd frame. Scanning the even
+ * heights downwards, the scale must lie within the window where the height truncates to that even height and
+ * within the window where the width truncates to an even width; the first pair of windows that overlap wins.
+ */
+export function evenScaleFactor(capture: { width: number; height: number }, minScale: number): number {
+    if (landsEven(capture.width / minScale) && landsEven(capture.height / minScale)) {
+        return minScale;
+    }
+    for (let height = floorEven(capture.height / minScale); height >= 2; height -= 2) {
+        // Widths reachable while the height still truncates to `height`
+        const widthMin = (capture.width * height) / capture.height;
+        const widthMax = (capture.width * (height + 0.5)) / capture.height;
+        for (let width = floorEven(widthMax); width > widthMin - 0.5 && width >= 2; width -= 2) {
+            const low = Math.max(minScale, capture.width / (width + 0.5), capture.height / (height + 0.5));
+            const high = Math.min(capture.width / width, capture.height / height);
+            if (low < high) {
+                return (low + high) / 2;
+            }
+        }
+    }
+    return minScale;
 }

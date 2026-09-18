@@ -1178,6 +1178,11 @@ export class RemotePeer extends Peer implements Streamable {
 
         if (this.type === "screenSharing") {
             parameters.degradationPreference = get(bandwidthConstrainedPreferenceStore);
+        } else if (isFirefox()) {
+            // The scale above is computed for the capture size so that the frame stays even-sized (see
+            // evenScaleFactor). Under congestion or CPU overuse, Firefox would otherwise shrink the frame it feeds
+            // the encoder first, and our scale would then land on an odd size: make it drop frames instead.
+            parameters.degradationPreference = "maintain-resolution";
         }
         parameters.encodings[0].active = encoding.active;
         if (encoding.active) {
