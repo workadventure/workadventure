@@ -121,12 +121,12 @@ describe("openTimedEvent and the reconnect registry", () => {
 
     it("resumes an interval the socket ended but the user did not", () => {
         // The case the whole mechanism exists for: a reconnect ends the interval on the
-        // pusher's side, nothing fires a second start — the broadcast never stopped,
+        // pusher's side, nothing fires a second start — the status never changed,
         // the user is still in the area — and without this the rest of that stay is
         // invisible for the lifetime of the tab.
-        const endBroadcast = analyticsClient.openTimedEvent(
-            "megaphone.ended",
-            { broadcastId: "megaphone-space", broadcastKind: "megaphone" },
+        const endStay = analyticsClient.openTimedEvent(
+            "status.dwell",
+            { status: "ONLINE" },
             { reopenOnReconnect: true },
         );
 
@@ -136,11 +136,11 @@ describe("openTimedEvent and the reconnect registry", () => {
 
         const reopened = framesFrom(secondSocket).opens;
         expect(reopened).toHaveLength(1);
-        expect(reopened[0].properties.eventName).toBe("megaphone.ended");
+        expect(reopened[0].properties.eventName).toBe("status.dwell");
 
         // And it is a NEW interval, not the spent one: closing it must pair with the
         // handle just reopened, or the pusher drops the close and the stay is lost.
-        endBroadcast();
+        endStay();
         const closes = framesFrom(secondSocket).closes;
         expect(closes).toHaveLength(1);
         expect(closes[0].properties.handle).toBe(reopened[0].properties.handle);
@@ -180,14 +180,14 @@ describe("openTimedEvent and the reconnect registry", () => {
     });
 
     it("stops resuming once the user has ended it, even while disconnected", () => {
-        const endBroadcast = analyticsClient.openTimedEvent(
-            "megaphone.ended",
-            { broadcastId: "megaphone-space", broadcastKind: "megaphone" },
+        const endStay = analyticsClient.openTimedEvent(
+            "status.dwell",
+            { status: "ONLINE" },
             { reopenOnReconnect: true },
         );
 
         analyticsClient.setAdminAnalyticsSender(undefined);
-        endBroadcast();
+        endStay();
 
         const secondSocket = makeSender();
         analyticsClient.setAdminAnalyticsSender(secondSocket);

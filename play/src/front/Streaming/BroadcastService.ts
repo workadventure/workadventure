@@ -1,5 +1,6 @@
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import type { SpaceKind } from "@workadventure/shared-utils";
 import { FilterType } from "@workadventure/messages";
 import { get, type Unsubscriber } from "svelte/store";
 import { Subscription } from "rxjs";
@@ -70,7 +71,7 @@ export class BroadcastService {
                     spaceName,
                     this.abortSignal,
                     audienceVideoFeedbackActivated,
-                    new Map([["isMegaphoneSpace", true]]),
+                    "megaphone",
                     newSpaceSettings.canRecord,
                 )
                     .then((space) => {
@@ -93,14 +94,14 @@ export class BroadcastService {
      * @param spaceName The name of the space to join
      * @param abortSignal Signal to abort the join operation
      * @param audienceVideoFeedbackActivated If true, use LIVE_STREAMING_USERS_WITH_FEEDBACK to allow speaker to see attendees
-     * @param metadata Optional metadata to set when joining the space
+     * @param spaceKind What the space is: the world megaphone, or a speaker zone on the map
      * @returns The broadcast space
      */
     public async joinSpace(
         spaceName: string,
         abortSignal: AbortSignal,
         audienceVideoFeedbackActivated = false,
-        metadata: Map<string, unknown> = new Map(),
+        spaceKind: SpaceKind = "speaker_zone",
         canRecord = WAMSettingsUtils.canStartRecordingMegaphone(this.wamSettings, this.tags, localUserStore.isLogged()),
     ): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
@@ -116,7 +117,7 @@ export class BroadcastService {
             abortSignal,
             {
                 canRecord,
-                metadata,
+                spaceKind,
             },
         );
 

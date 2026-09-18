@@ -6,6 +6,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { meetingOf } from "../../Administration/CurrentMeeting";
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import RangeSlider from "../Input/RangeSlider.svelte";
@@ -31,7 +32,7 @@
     let moreActionOpened = $state(false);
 
     function muteAudio(spaceUser: SpaceUserExtended) {
-        analyticsClient.trackAdminEvent("meeting.microphone.muted");
+        analyticsClient.trackAdminEvent("meeting.microphone.muted", meetingOf(spaceUser.space));
         spaceUser.emitPrivateEvent({
             $case: "muteAudio",
             muteAudio: {
@@ -42,7 +43,7 @@
     }
 
     function muteAudioEveryBody(spaceUser: SpaceUserExtended) {
-        analyticsClient.trackAdminEvent("meeting.microphone.muted_for_everybody");
+        analyticsClient.trackAdminEvent("meeting.microphone.muted_for_everybody", meetingOf(spaceUser.space));
         spaceUser.space.emitPublicMessage({
             $case: "muteAudioForEverybody",
             muteAudioForEverybody: {},
@@ -51,7 +52,7 @@
     }
 
     function muteVideo(spaceUser: SpaceUserExtended) {
-        analyticsClient.trackAdminEvent("meeting.video.muted");
+        analyticsClient.trackAdminEvent("meeting.video.muted", meetingOf(spaceUser.space));
         spaceUser.emitPrivateEvent({
             $case: "muteVideo",
             muteVideo: {
@@ -62,7 +63,7 @@
     }
 
     function muteVideoEveryBody(spaceUser: SpaceUserExtended) {
-        analyticsClient.trackAdminEvent("meeting.video.muted_for_everybody");
+        analyticsClient.trackAdminEvent("meeting.video.muted_for_everybody", meetingOf(spaceUser.space));
         spaceUser.space.emitPublicMessage({
             $case: "muteVideoForEverybody",
             muteVideoForEverybody: {},
@@ -78,7 +79,7 @@
     }*/
 
     function kickoff(spaceUser: SpaceUserExtended) {
-        analyticsClient.trackAdminEvent("meeting.participant.kicked");
+        analyticsClient.trackAdminEvent("meeting.participant.kicked", meetingOf(spaceUser.space));
         spaceUser.emitPrivateEvent({
             $case: "kickOffUser",
             kickOffUser: {},
@@ -92,7 +93,7 @@
     }
 
     function openBlockOrReportPopup(spaceUser: SpaceUserExtended) {
-        analyticsClient.trackAdminEvent("meeting.report.clicked");
+        analyticsClient.trackAdminEvent("meeting.report.clicked", meetingOf(spaceUser.space));
         showReportScreenStore.set({ userUuid: spaceUser.uuid, userName: spaceUser.name });
         close();
     }
@@ -114,7 +115,7 @@
     onclick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        analyticsClient.trackAdminEvent("meeting.actions.opened");
+        analyticsClient.trackAdminEvent("meeting.actions.opened", meetingOf(spaceUser.space));
         toggleActionMenu(!moreActionOpened);
     }}
     role="button"

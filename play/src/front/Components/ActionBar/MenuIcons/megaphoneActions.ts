@@ -28,8 +28,8 @@ function stopStreamingOnSpace(space: SpaceInterface | undefined): void {
 }
 
 export function startMegaphoneLive(): void {
-    // PostHog counts the press, as it always has. The time on air is measured from the
-    // space itself, by trackBroadcastAnalytics — a speaker zone never comes through here.
+    // PostHog counts the press. The time on air is measured by the
+    // back, as broadcast.participation.ended — a speaker zone never comes through here.
     analyticsClient.startMegaphone();
     const megaphoneSpace = get(megaphoneSpaceStore);
     currentLiveStreamingSpaceStore.set(megaphoneSpace);

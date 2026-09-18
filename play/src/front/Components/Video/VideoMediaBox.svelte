@@ -8,6 +8,7 @@
     import type { VideoBox } from "../../Space/VideoBox";
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { meetingOf } from "../../Administration/CurrentMeeting";
     import loaderImg from "../images/loader.svg";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
@@ -272,7 +273,7 @@
 
     function highlightPeer() {
         highlightedEmbedScreen.highlight(videoBox);
-        analyticsClient.trackAdminEvent("meeting.participant.pinned");
+        analyticsClient.trackAdminEvent("meeting.participant.pinned", meetingOf(videoBox.spaceUser.space));
         window.focus();
     }
 
