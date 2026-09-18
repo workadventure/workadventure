@@ -63,12 +63,17 @@ const floorEven = (value: number) => Math.floor(value / 2) * 2;
 const landsEven = (value: number) => Math.floor(value) % 2 === 0 && value % 1 < 0.5;
 
 /**
- * The smallest scale at or above `minScale` whose scaled width and height are both even.
+ * WORKAROUND for Firefox bug https://bugzilla.mozilla.org/show_bug.cgi?id=2073405 (regression in Firefox 154):
+ * the built-in VP9 encoder stops producing frames as soon as a scaled frame has an odd width or height, and a
+ * viewer's tile is an arbitrary size, so nearly every scale lands on an odd frame. Once the bug is fixed in every
+ * Firefox version we care about, delete this function and pass the plain scale factor again (and drop the
+ * "maintain-resolution" degradation preference set for Firefox in RemotePeer.applyVideoEncoding).
  *
- * Firefox's VP9 encoder (154 and later) stops producing frames as soon as a scaled frame has an odd width or
- * height, and a viewer's tile is an arbitrary size: nearly every scale lands on an odd frame. Scanning the even
- * heights downwards, the scale must lie within the window where the height truncates to that even height and
- * within the window where the width truncates to an even width; the first pair of windows that overlap wins.
+ * The smallest scale at or above `minScale` whose scaled width and height are both even. Scanning the even heights
+ * downwards, the scale must lie within the window where the height truncates to that even height and within the
+ * window where the width truncates to an even width; the first pair of windows that overlap wins. Both dimensions
+ * also round to the same even integers, so the result holds whether the browser truncates (Firefox) or rounds
+ * (Chrome).
  */
 export function evenScaleFactor(capture: { width: number; height: number }, minScale: number): number {
     if (landsEven(capture.width / minScale) && landsEven(capture.height / minScale)) {
