@@ -814,7 +814,8 @@ class DesktopApi {
         const openDmConversation = async (chatId: string) => {
             try {
                 const room =
-                    chatConnection?.getDirectRoomFor(chatId) ?? (await chatConnection?.createDirectRoom(chatId));
+                    (await chatConnection?.getDirectRoomFor(chatId)) ??
+                    (await chatConnection?.createDirectRoom(chatId));
                 if (room) {
                     selectedConversationId = room.id;
                     markConversationRead(room.id);
