@@ -65,10 +65,11 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
             return height >= low && height <= high;
         };
 
+        // The sender snaps the scale so that the frame is even-sized (evenScaleFactor), up to 10 px below the tile
         await expect
             .poll(
                 async () => {
-                    return isHeightBetween(124, 126);
+                    return isHeightBetween(116, 126);
                 },
                 {
                     timeout: 60_000,
@@ -85,10 +86,10 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
             .poll(
                 async () => {
                     return (
-                        (await isHeightBetween(269, 271)) || // In CI
-                        (await isHeightBetween(359, 361)) || // In CI
-                        (await isHeightBetween(499, 501)) || // In CI
-                        (await isHeightBetween(719, 721))
+                        (await isHeightBetween(260, 271)) || // In CI
+                        (await isHeightBetween(350, 361)) || // In CI
+                        (await isHeightBetween(490, 501)) || // In CI
+                        (await isHeightBetween(710, 721))
                     ); // In real usage
                 },
                 {
