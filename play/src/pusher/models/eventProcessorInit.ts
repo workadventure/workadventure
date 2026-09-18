@@ -28,6 +28,12 @@ eventProcessor.registerPrivateEventProcessor("revokeFloor", (event, sender, filt
     return event;
 });
 
+// Same gate: lowering someone else's hand is moderating the same queue the floor is handed out from.
+eventProcessor.registerPrivateEventProcessor("lowerHand", (event, sender, filterType) => {
+    assertCanManageFloor(sender, filterType);
+    return event;
+});
+
 eventProcessor.registerPublicEventProcessor("muteAudioForEverybody", (event, sender) => {
     if (!sender || !sender.tags.includes("admin")) {
         throw new Error("Only admins can mute everyone");

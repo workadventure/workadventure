@@ -1415,6 +1415,9 @@ export const ANALYTICS_EVENTS = {
   "meeting.floor.given_back": signal(
     "A participant handed the floor back themselves.",
   ),
+  "meeting.hand.lowered_for_participant": signal(
+    "A moderator lowered a participant's raised hand to clear the queue.",
+  ),
   "meeting.hand.toggled": event({
     properties: z.object({
       raised: z

@@ -190,6 +190,8 @@ const actionbar: BaseTranslation = {
         title: "Raised hands",
         empty: "No one has raised their hand",
         help: "See who raised their hand, in order, and give them the floor.",
+        lowerHand: "Lower hand",
+        lowerAllHands: "Lower all",
     },
     listStatusTitle: {
         enable: "Change your status",

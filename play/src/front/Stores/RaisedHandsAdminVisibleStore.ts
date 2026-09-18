@@ -22,25 +22,24 @@ import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
  * AreasPropertiesListener.supersedeGrantedFloor), and admins moderate regardless. So the speaker branch is
  * gated on givenFloorSpaceStore being undefined.
  *
+ * `canModerateRaisedHandsStore` is that "may promote" test on its own: the panel also offers it as the gate
+ * for lowering someone else's hand.
+ *
  * It lives apart from RaisedHandsStore on purpose: that module is imported by GameScene, and MediaStore is
  * (transitively) part of GameScene's own import cycle, so deriving from isSpeakerStore there evaluated
  * against a half-initialised MediaStore ("derived() expects stores as input, got a falsy value"). Only the
  * dock component needs this store, and it is imported well after the stores are initialised.
  */
+export const canModerateRaisedHandsStore: Readable<boolean> = derived(
+    [userIsAdminStore, isSpeakerStore, givenFloorSpaceStore],
+    ([$userIsAdmin, $isSpeaker, $givenFloorSpace]) => $userIsAdmin || ($isSpeaker && $givenFloorSpace === undefined),
+);
+
 export const raisedHandsAdminVisibleStore: Readable<boolean> = derived(
-    [
-        userIsAdminStore,
-        isSpeakerStore,
-        givenFloorSpaceStore,
-        raisedHandsStore,
-        speakingUsersStore,
-        currentPlayerGroupIdStore,
-        inLivekitStore,
-    ],
-    ([$userIsAdmin, $isSpeaker, $givenFloorSpace, $raisedHands, $speakers, $playerGroupId, $inLivekit]) => {
-        const canModerate = $userIsAdmin || ($isSpeaker && $givenFloorSpace === undefined);
+    [canModerateRaisedHandsStore, raisedHandsStore, speakingUsersStore, currentPlayerGroupIdStore, inLivekitStore],
+    ([$canModerate, $raisedHands, $speakers, $playerGroupId, $inLivekit]) => {
         const everyoneIsEqual = $playerGroupId !== undefined || $inLivekit;
-        return (canModerate || everyoneIsEqual) && ($raisedHands.length > 0 || $speakers.length > 0);
+        return ($canModerate || everyoneIsEqual) && ($raisedHands.length > 0 || $speakers.length > 0);
     },
 );
 

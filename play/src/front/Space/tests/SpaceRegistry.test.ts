@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
 import { FilterType } from "@workadventure/messages";
+import { RAISED_HANDS_METADATA_KEY } from "@workadventure/shared-utils";
 import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import type { SpaceInterface } from "../SpaceInterface";
@@ -241,6 +242,47 @@ describe("SpaceProviderInterface implementation", () => {
                 expect(spaceRegistry.getAll()).toHaveLength(0);
 
                 expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledTimes(3);
+            });
+        });
+        describe("SpaceRegistry lowerHand", () => {
+            it("should ask only the space that holds the raised hand to lower it", async () => {
+                const roomConnectionMock = new MockRoomConnectionForSpaces();
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
+
+                await spaceRegistry.joinSpace(
+                    "space-without-hands",
+                    FilterType.ALL_USERS,
+                    [],
+                    new AbortController().signal,
+                );
+                const spaceWithHands = await spaceRegistry.joinSpace(
+                    "space-with-hands",
+                    FilterType.ALL_USERS,
+                    [],
+                    new AbortController().signal,
+                );
+                spaceWithHands.setMetadata(
+                    new Map([[RAISED_HANDS_METADATA_KEY, [{ spaceUserId: "user-1", name: "Alice", at: 1 }]]]),
+                );
+
+                spaceRegistry.lowerHand("user-1");
+
+                expect(roomConnectionMock.emitPrivateSpaceEvent).toHaveBeenCalledOnce();
+                expect(roomConnectionMock.emitPrivateSpaceEvent).toHaveBeenCalledWith(
+                    spaceWithHands.getName(),
+                    { $case: "lowerHand", lowerHand: {} },
+                    "user-1",
+                );
+            });
+            it("should do nothing when nobody raised that hand", async () => {
+                const roomConnectionMock = new MockRoomConnectionForSpaces();
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
+
+                await spaceRegistry.joinSpace("space-test", FilterType.ALL_USERS, [], new AbortController().signal);
+
+                spaceRegistry.lowerHand("nobody");
+
+                expect(roomConnectionMock.emitPrivateSpaceEvent).not.toHaveBeenCalled();
             });
         });
         describe("SpaceRegistry race condition handling", () => {

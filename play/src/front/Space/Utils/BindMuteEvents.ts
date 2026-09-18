@@ -154,6 +154,15 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
         notificationPlayingStore.playNotification(get(LL).notification.floorRevoked(), "microphone-off.png");
     });
 
+    // A moderator lowered the local user's hand to clean up the queue (the queue is server-authoritative and
+    // only its owner may change their own entry, so the lowering happens here).
+    // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
+    // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
+    space.observePrivateEvent("lowerHand").subscribe(() => {
+        requestedHandRaiseState.lowerHand();
+        notificationPlayingStore.playNotification(get(LL).notification.handLowered());
+    });
+
     // If the local user leaves the space while holding a floor granted through a raised hand, drop the
     // promotion state so the "give back the floor" control does not linger, pointing at a space we left.
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.

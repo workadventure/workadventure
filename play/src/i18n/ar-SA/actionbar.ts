@@ -189,6 +189,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         title: "الأيدي المرفوعة",
         empty: "لا أحد رفع يده",
         help: "اطّلع على من رفع يده، بالترتيب، وأعطه الكلمة.",
+        lowerHand: "خفض اليد",
+        lowerAllHands: "خفض الكل",
     },
     listStatusTitle: {
         enable: "تغيير حالتك",

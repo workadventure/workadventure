@@ -191,6 +191,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         title: "Mans aixecades",
         empty: "Ningú no ha aixecat la mà",
         help: "Mira qui ha aixecat la mà, per ordre, i dóna-li la paraula.",
+        lowerHand: "Abaixa la mà",
+        lowerAllHands: "Abaixa-les totes",
     },
     listStatusTitle: {
         enable: "Canviar el teu estat",

@@ -189,6 +189,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         title: "举手",
         empty: "没有人举手",
         help: "按顺序查看谁举了手，并把发言权交给他。",
+        lowerHand: "放下手",
+        lowerAllHands: "全部放下",
     },
     listStatusTitle: {
         enable: "更改您的状态",
