@@ -59,7 +59,8 @@ export function computeVideoEncoding(
 }
 
 const floorEven = (value: number) => Math.floor(value / 2) * 2;
-// Both dimensions truncate (Firefox) and round (Chrome) to the same even integer
+// The dimension truncates (Firefox) and rounds (Chrome) to the same even integer. No epsilon on purpose: the
+// browser divides the same doubles, so a ratio that lands a hair below an even integer here does there too.
 const landsEven = (value: number) => Math.floor(value) % 2 === 0 && value % 1 < 0.5;
 
 /**
