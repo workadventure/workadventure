@@ -300,6 +300,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "以麥克風靜音開始",
                 startWithVideoMuted: "以視訊關閉開始",
                 disableChat: "停用聊天",
+                raiseHandEnabled: "允許舉手",
                 livekitRoomAdminTag: "會議室的版主標籤",
                 cancel: "取消",
                 validate: "驗證",
@@ -321,6 +322,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         advancedOptions: "進階選項",
         chatEnabled: "關聯專用聊天頻道",
         allowTalking: "允許交談和形成氣泡",
+        raiseHandEnabled: "允許舉手",
         noProperties: "未定義屬性",
     },
     areaEditor: {

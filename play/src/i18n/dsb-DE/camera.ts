@@ -94,6 +94,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         closeMenu: "Meny zacyniś",
         senPrivateMessage: "Pśewatne powěsće posłaś (Pśichadźe)",
         kickoffUser: "Wužiwarja wotmětowaś",
+        giveFloor: "Słowo daś",
+        revokeFloor: "Słowo wótewześ",
         muteAudioUser: "Audio stummschalten",
         askToMuteAudioUser: "Pšosyś, aby audio stummschalten",
         muteAudioEveryBody: "Audio za wšěch stummschalten",

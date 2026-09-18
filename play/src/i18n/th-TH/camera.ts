@@ -93,6 +93,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         closeMenu: "ปิดเมนู",
         senPrivateMessage: "ส่งข้อความส่วนตัว (เร็ว ๆ นี้)",
         kickoffUser: "เชิญผู้ใช้ออก",
+        giveFloor: "ให้สิทธิ์การพูด",
+        revokeFloor: "เรียกคืนสิทธิ์การพูด",
         muteAudioUser: "ปิดเสียง",
         askToMuteAudioUser: "ขอให้ปิดเสียง",
         muteAudioEveryBody: "ปิดเสียงสำหรับทุกคน",

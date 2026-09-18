@@ -1406,6 +1406,26 @@ export const ANALYTICS_EVENTS = {
   "meeting.camera_layout_resized": signal(
     "The user resized the camera layout.",
   ),
+  "meeting.floor.given": signal(
+    "A moderator gave the floor to a participant who had raised their hand.",
+  ),
+  "meeting.floor.revoked": signal(
+    "A moderator took the floor back from a participant.",
+  ),
+  "meeting.floor.given_back": signal(
+    "A participant handed the floor back themselves.",
+  ),
+  "meeting.hand.lowered_for_participant": signal(
+    "A moderator lowered a participant's raised hand to clear the queue.",
+  ),
+  "meeting.hand.toggled": event({
+    properties: z.object({
+      raised: z
+        .boolean()
+        .describe("True when the hand was raised, false when lowered."),
+    }),
+    description: "The user raised or lowered their hand in a meeting.",
+  }),
   "meeting.microphone.muted": signal(
     "The user muted their microphone in a meeting.",
   ),
