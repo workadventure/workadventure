@@ -190,6 +190,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         title: "挙手",
         empty: "挙手している人はいません",
         help: "誰が挙手したかを順番に確認し、発言権を与えましょう。",
+        lowerHand: "手を下げる",
+        lowerAllHands: "すべて下げる",
     },
     listStatusTitle: {
         enable: "ステータスを変更",

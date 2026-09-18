@@ -191,6 +191,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         title: "Zběhnjene ruce",
         empty: "Nichtó njeje ruku zběhnył",
         help: "Hladaj, štó je ruku zběhnył po rjedźe, a daj jemu słowo.",
+        lowerHand: "Ruku spušćić",
+        lowerAllHands: "Wšě spušćić",
     },
     listStatusTitle: {
         enable: "Waš status změnić",

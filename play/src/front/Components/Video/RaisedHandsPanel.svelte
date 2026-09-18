@@ -1,7 +1,7 @@
 <script lang="ts">
     import { LL } from "../../../i18n/i18n-svelte";
     import { raisedHandsStore, speakingUsersStore } from "../../Stores/PeerStore";
-    import { floorControlsVisibleStore } from "../../Stores/RaisedHandsAdminVisibleStore";
+    import { canModerateRaisedHandsStore, floorControlsVisibleStore } from "../../Stores/RaisedHandsAdminVisibleStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import type { PictureStore } from "../../Stores/PictureStore";
@@ -22,6 +22,19 @@
         gameManager.getCurrentGameScene().spaceRegistry.revokeFloor(spaceUserId);
     }
 
+    // Lowering someone else's hand goes through their own client (the queue is server-authoritative and only
+    // its owner may change their own entry) — same path for one hand and for clearing the whole list.
+    function lowerHand(spaceUserId: string) {
+        analyticsClient.trackAdminEvent("meeting.hand.lowered_for_participant");
+        gameManager.getCurrentGameScene().spaceRegistry.lowerHand(spaceUserId);
+    }
+
+    function lowerAllHands() {
+        for (const entry of $raisedHandsStore) {
+            lowerHand(entry.spaceUserId);
+        }
+    }
+
     // Resolve a user's Woka picture across the spaces the host is in. Returns undefined for a megaphone
     // listener the host cannot see (no SpaceUser) — RaisedHandAvatar then falls back to the name's initial.
     function getPictureStore(spaceUserId: string): PictureStore | undefined {
@@ -37,7 +50,14 @@
 
 <div class="flex flex-col gap-1 select-none" data-testid="raised-hands-panel">
     {#if $raisedHandsStore.length > 0}
-        <div class="text-white/70 text-xs font-bold uppercase px-1 pb-0.5">{$LL.actionbar.raisedHands.title()}</div>
+        <div class="flex items-center gap-2 px-1 pb-0.5">
+            <span class="text-white/70 text-xs font-bold uppercase grow">{$LL.actionbar.raisedHands.title()}</span>
+            {#if $canModerateRaisedHandsStore}
+                <Button variant="light" size="xs" dataTestId="panel-lower-all-hands" onclick={lowerAllHands}>
+                    {$LL.actionbar.raisedHands.lowerAllHands()}
+                </Button>
+            {/if}
+        </div>
         {#each $raisedHandsStore as entry (entry.spaceUserId)}
             <div class="flex items-center gap-2 p-1 rounded hover:bg-white/10">
                 <RaisedHandAvatar pictureStore={getPictureStore(entry.spaceUserId)} name={entry.name} />
@@ -50,6 +70,16 @@
                         onclick={() => giveFloor(entry.spaceUserId)}
                     >
                         {$LL.camera.menu.giveFloor()}
+                    </Button>
+                {/if}
+                {#if $canModerateRaisedHandsStore}
+                    <Button
+                        variant="light"
+                        size="xs"
+                        dataTestId="panel-lower-hand"
+                        onclick={() => lowerHand(entry.spaceUserId)}
+                    >
+                        {$LL.actionbar.raisedHands.lowerHand()}
                     </Button>
                 {/if}
             </div>

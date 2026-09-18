@@ -172,6 +172,19 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
     }
 
+    /**
+     * Asks a user who raised their hand to lower it. The queue is authoritative server-side and only its owner
+     * may change their own entry, so a moderator clearing the list goes through the owner's own client.
+     */
+    public lowerHand(spaceUserId: string): void {
+        for (const space of this.spaces.values()) {
+            if (get(space.raisedHandsStore).some((entry) => entry.spaceUserId === spaceUserId)) {
+                space.emitPrivateMessage({ $case: "lowerHand", lowerHand: {} }, spaceUserId);
+                return;
+            }
+        }
+    }
+
     public readonly isLiveStreamingAudioStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {
         if ($spaces.size === 0) {
             set(false);
