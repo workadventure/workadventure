@@ -1324,6 +1324,11 @@ message GiveFloorPrivateMessage {
 message RevokeFloorPrivateMessage {
 }
 
+// Sent to a user who raised their hand to lower it on their behalf: the queue is authoritative server-side and
+// only its owner may change their own entry, so a moderator clearing the list asks each user to lower their hand.
+message LowerHandPrivateMessage {
+}
+
 message RecordingUnexpectedlyStoppedPrivateMessage {
 }
 
@@ -1375,6 +1380,7 @@ message PrivateSpaceEvent {
     RecordingUnexpectedlyStoppedPrivateMessage recordingUnexpectedlyStoppedMessage = 23;
     GiveFloorPrivateMessage giveFloor = 24;
     RevokeFloorPrivateMessage revokeFloor = 25;
+    LowerHandPrivateMessage lowerHand = 26;
   }
 }
 

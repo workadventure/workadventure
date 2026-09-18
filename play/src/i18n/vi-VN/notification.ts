@@ -13,6 +13,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     givenTheFloorEnableMicrophone: "Đến lượt bạn phát biểu — hãy bật micrô",
     floorRevoked: "Bạn không còn quyền phát biểu",
     floorGivenBack: "Bạn đã trả lại quyền phát biểu",
+    handLowered: "Người điều hành đã hạ tay của bạn",
     notificationSentToMuteMicrophone: "Đã gửi thông báo yêu cầu {name} tắt micrô",
     notificationSentToMuteCamera: "Đã gửi thông báo yêu cầu {name} tắt camera",
     announcement: "Thông báo chung",

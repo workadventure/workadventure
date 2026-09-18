@@ -30,6 +30,7 @@ export interface SpaceRegistryInterface {
     readonly speakingUsersStore: Readable<FloorSpeaker[]>;
     giveFloor(spaceUserId: string): void;
     revokeFloor(spaceUserId: string): void;
+    lowerHand(spaceUserId: string): void;
     readonly shouldPublishScreenShareStore: Readable<boolean>;
     spacesEligibleForRecording: Readable<SpaceInterface[]>;
 }

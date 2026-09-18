@@ -193,6 +193,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         title: "Mains levées",
         empty: "Personne n’a levé la main",
         help: "Voyez qui a levé la main, dans l’ordre, et donnez-lui la parole.",
+        lowerHand: "Baisser la main",
+        lowerAllHands: "Tout baisser",
     },
     listStatusTitle: {
         enable: "Changer de statut",

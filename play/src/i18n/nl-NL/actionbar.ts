@@ -192,6 +192,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         title: "Opgestoken handen",
         empty: "Niemand heeft de hand opgestoken",
         help: "Bekijk wie zijn hand heeft opgestoken, op volgorde, en geef diegene het woord.",
+        lowerHand: "Hand laten zakken",
+        lowerAllHands: "Alle laten zakken",
     },
     listStatusTitle: {
         enable: "Wijzig je status",

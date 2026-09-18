@@ -30,6 +30,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     addNewTag: "إضافة علامة جديدة: '{tag}'", // add new tag: '{tag}'
     screenSharingError: "تعذر بدء مشاركة الشاشة",
     floorGivenBack: "لقد أعدت الكلمة",
+    handLowered: "قام أحد المشرفين بخفض يدك",
     notificationSentToMuteMicrophone: "تم إرسال إشعار إلى {name} لكتم ميكروفونه",
     notificationSentToMuteCamera: "تم إرسال إشعار إلى {name} لكتم كاميرته",
     recordingStarted: "بدأ شخص واحد في المناقشة تسجيلاً.",

@@ -1541,6 +1541,11 @@ export const ANALYTICS_EVENTS = {
     properties: meetingActionProperties,
     description: "A moderator took the floor back from a participant.",
   }),
+  "meeting.hand.lowered_for_participant": event({
+    properties: meetingActionProperties,
+    description:
+      "A moderator lowered a participant's raised hand to clear the queue.",
+  }),
   "meeting.hand.toggled": event({
     properties: meetingActionProperties.extend({
       raised: z
