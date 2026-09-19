@@ -29,7 +29,7 @@ export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInter
     public emitAddSpaceFilter = vi.fn();
     public emitUpdateSpaceFilter = vi.fn();
     public emitLeaveSpace = vi.fn();
-    public emitJoinSpace = vi.fn();
+    public emitJoinSpace = vi.fn().mockResolvedValue({ spaceUserId: "space-user-id", activeMicrophoneCount: 0 });
     public startRecording = vi.fn();
     public stopRecording = vi.fn();
     public emitUpdateSpaceMetadata = vi.fn();

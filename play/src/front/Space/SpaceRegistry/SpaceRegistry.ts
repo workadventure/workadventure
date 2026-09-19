@@ -9,6 +9,7 @@ import type { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import type { VideoBox } from "../VideoBox";
 import { Space } from "../Space";
+import { evaluateMicrophoneAutoMute, restoreMicrophoneAutoMuteOnLeave } from "../MicrophoneAutoMute";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import type { SpaceRegistryInterface } from "./SpaceRegistryInterface";
@@ -316,7 +317,12 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.joiningSpacesPromises.set(spaceName, creationPromise);
 
         try {
-            return await creationPromise;
+            const space = await creationPromise;
+            // Auto-mute the local microphone if this meeting already has too many active microphones.
+            // The count comes from the back in the join answer, so this runs before the media connection
+            // publishes audio — the auto-muted track is therefore never published (no publish-then-mute).
+            evaluateMicrophoneAutoMute(space, space.initialActiveMicrophoneCount);
+            return space;
         } finally {
             this.joiningSpacesPromises.delete(spaceName);
         }
@@ -330,6 +336,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         if (!spaceInRegistry) {
             throw new SpaceDoesNotExistError(spaceName);
         }
+
+        // If we auto-muted the local microphone when entering this meeting, restore the previous state.
+        restoreMicrophoneAutoMuteOnLeave(spaceInRegistry);
 
         const leavingPromise = this.performLeaveSpace(spaceInRegistry, spaceName);
         this.leavingSpacesPromises.set(spaceName, leavingPromise);

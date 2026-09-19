@@ -7,6 +7,8 @@ const notification: BaseTranslation = {
     askToMuteMicrophone: "Can I mute your microphone?",
     askToMuteCamera: "Can I mute your camera?",
     microphoneMuted: "Your microphone was muted by a moderator",
+    microphoneAutoMuted: "Your microphone was muted automatically",
+    unmute: "Unmute",
     cameraMuted: "Your camera was muted by a moderator",
     notificationSentToMuteMicrophone: "A notification was sent to {name} to mute their microphone",
     notificationSentToMuteCamera: "A notification was sent to {name} to mute their camera",
