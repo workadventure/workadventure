@@ -29,7 +29,11 @@ import { pwaInstallProfileMenuEligibleStore, pwaInstallSceneVisibleStore } from 
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
-import { InvalidLoginTokenError, MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
+import {
+    InvalidLoginTokenError,
+    loginTokenAgeTag,
+    MatrixClientWrapper,
+} from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
@@ -59,6 +63,7 @@ export class GameManager {
     private matrixServerUrl: string | undefined = undefined;
     private chatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
     private pendingChatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
+    private pendingLoginTokenExchange: Promise<void> | undefined;
     private matrixClientWrapper: MatrixClientWrapper | undefined;
     private _chatConnection: ChatConnectionInterface | undefined;
     private chatVisibilitySubscription: Unsubscriber | undefined;
@@ -91,6 +96,7 @@ export class GameManager {
         this.startRoom = result.room;
         this._startRoomPromise.resolve(result.room);
         this.loadMap(this.startRoom);
+        this.exchangeMatrixLoginTokenEarly();
 
         const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
         const preferredVideoInputDeviceId = localUserStore.getPreferredVideoInputDevice();
@@ -434,8 +440,34 @@ export class GameManager {
         return this.pendingChatConnectionPromise;
     }
 
+    /**
+     * Spends the Matrix login token the browser just landed with, as soon as the homeserver is known.
+     *
+     * The token lives two minutes on Synapse. Exchanging it from openChatConnection() only, once the game
+     * scene starts, left the Woka, camera and lobby screens for it to expire in, and never spent it on a
+     * room where the chat is disabled - every later page load then failed on the dead token. Runs in the
+     * background; openChatConnection() waits for it so the two never race on a single-use token.
+     */
+    private exchangeMatrixLoginTokenEarly(): void {
+        const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
+        if (!matrixServerUrl || localUserStore.getMatrixLoginToken() === null) {
+            return;
+        }
+        this.pendingLoginTokenExchange = new MatrixClientWrapper(matrixServerUrl, localUserStore)
+            .exchangePendingLoginToken()
+            .catch((e: unknown) => {
+                console.error("Unable to exchange the Matrix login token", e);
+                if (e instanceof InvalidLoginTokenError) {
+                    loginTokenErrorStore.set(true);
+                    Sentry.captureException(e, { tags: { matrix_login_token_age: loginTokenAgeTag(e) } });
+                }
+                // Anything else kept the token: initMatrixClient() retries and reports it.
+            });
+    }
+
     private async openChatConnection(): Promise<ChatConnectionInterface> {
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
+        await this.pendingLoginTokenExchange;
 
         // The chat setting is checked *before* the client is built, on purpose. Opening a Matrix session on a
         // room where the chat is disabled used to mean a full connection and initial sync, immediately
