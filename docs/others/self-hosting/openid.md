@@ -24,6 +24,7 @@ There are additional environment variables which can be used to configure the Op
 - `OPENID_USERNAME_CLAIM` (*play container*): the claim attribute to be used as the username on login. (Default: username)
 - `OPENID_LOCALE_CLAIM`: (*play container*): the claim attribute to use used as the locale on login. (Default: locale)
 - `OPENID_SCOPE`: (*play container*): the OpenID scope identifiers to use (Default: openid email profile)
+- `OPENID_ACCESS_TYPE`: (*play container*): the `access_type` parameter to send on the authorization request. Set to `offline` to get a refresh token from Google-style providers (spec-compliant providers should instead add `offline_access` to `OPENID_SCOPE`). When a refresh token is obtained, WorkAdventure uses it to renew the access token instead of forcing the user to log in again once it expires.
 
 ## Complete flow
 

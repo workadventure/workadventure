@@ -136,10 +136,12 @@ const createStubContext = () => {
     } as unknown as CanvasRenderingContext2D;
 };
 
-// @ts-ignore Override getContext to return our stub instead of throwing "not implemented".
-HTMLCanvasElement.prototype.getContext = function getContext() {
-    return createStubContext();
-};
+if (typeof HTMLCanvasElement !== "undefined") {
+    // @ts-ignore Override getContext to return our stub instead of throwing "not implemented".
+    HTMLCanvasElement.prototype.getContext = function getContext() {
+        return createStubContext();
+    };
+}
 
 // Note: do not import Phaser here. Setup files run once per test file and, with `isolate: true`,
 // in a fresh module registry every time, so a global import re-evaluates Phaser's 8.8 MB bundle
