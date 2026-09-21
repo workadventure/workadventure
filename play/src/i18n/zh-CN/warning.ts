@@ -24,6 +24,10 @@ const warning: DeepPartial<Translation["warning"]> = {
         failedToApply: "应用背景效果失败",
         notSupportedOnThisBrowser: "此浏览器不支持背景效果",
     },
+    livekitConnection: {
+        critical: "您可能会遇到与其他用户的通信问题。",
+        warning: "您的音视频质量可能会降低。",
+    },
     popupBlocked: {
         title: "弹出窗口被阻止",
         content: "请在您的浏览器设置中允许此网站的弹出窗口。",

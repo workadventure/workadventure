@@ -24,6 +24,10 @@ const warning: DeepPartial<Translation["warning"]> = {
         failedToApply: "Achtergrondeffecten toepassen mislukt",
         notSupportedOnThisBrowser: "Achtergrondeffecten worden niet ondersteund door deze browser",
     },
+    livekitConnection: {
+        critical: "U kunt communicatieproblemen ervaren met andere gebruikers.",
+        warning: "De audio- of videokwaliteit kan verminderd zijn.",
+    },
     popupBlocked: {
         title: "Popup geblokkeerd",
         content: "Sta popups toe voor deze website in je browserinstellingen.",

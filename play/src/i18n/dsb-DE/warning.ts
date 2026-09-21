@@ -24,6 +24,10 @@ const warning: DeepPartial<Translation["warning"]> = {
         failedToApply: "Zastosowanje pozadkowych efektow jo se njeraźiło",
         notSupportedOnThisBrowser: "Pozadkowe efekty njejsu w toś tom wobglědowaku pódpěrane",
     },
+    livekitConnection: {
+        critical: "You might encounter communication problems with other users.",
+        warning: "Your audio or video quality might be reduced.",
+    },
     popupBlocked: {
         title: "Pop-up-bloker",
         content: "Zwól pop-upy za ten webbok we nastajenjach browsera.",

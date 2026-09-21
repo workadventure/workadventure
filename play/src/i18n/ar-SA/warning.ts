@@ -24,6 +24,10 @@ const warning: DeepPartial<Translation["warning"]> = {
         failedToApply: "فشل في تطبيق تأثيرات الخلفية",
         notSupportedOnThisBrowser: "تأثيرات الخلفية غير مدعومة في هذا المتصفح",
     },
+    livekitConnection: {
+        critical: "قد تواجه مشكلات في التواصل مع المستخدمين الآخرين.",
+        warning: "قد تنخفض جودة الصوت أو الفيديو لديك.",
+    },
     popupBlocked: {
         title: "تم حظر النوافذ المنبثقة", // "Popup blocked"
         content: "يرجى السماح بالنوافذ المنبثقة لهذا الموقع في إعدادات متصفحك.", // "Please allow popups for this site in your browser settings."

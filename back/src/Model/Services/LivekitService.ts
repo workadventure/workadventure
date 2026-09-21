@@ -23,6 +23,8 @@ import {
     LIVEKIT_RECORDING_S3_REGION,
 } from "../../Enum/EnvironmentVariable";
 
+import type { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
+
 const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
 
@@ -105,6 +107,35 @@ export class LiveKitService {
         this.roomServiceClient = createRoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
         this.egressClient = createEgressClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
         this.webhookReceiver = createWebhookReceiver(this.livekitApiKey, this.livekitApiSecret);
+    }
+
+    static createTokenForTestOfConnection(livekitCredentials: LivekitCredentialsResponse): Promise<string> {
+        const uuid = crypto.randomUUID();
+        const hashedRoomName = getLivekitRoomName(uuid);
+
+        const { livekitApiKey, livekitApiSecret } = livekitCredentials;
+
+        const token = new AccessToken(livekitApiKey, livekitApiSecret, {
+            identity: uuid,
+            name: uuid,
+            // This token is only used for a one-shot connection test right after joining, so keep it short-lived.
+            ttl: "5m",
+        });
+        token.addGrant({
+            room: hashedRoomName,
+            // Note: everyone can publish in Livekit, moderation is handled at application level. If a user should
+            // not have published, its VideoBox will never be visible by anyone anyway.
+            canPublish: true,
+            canSubscribe: true,
+            roomJoin: true,
+            canPublishSources: [
+                TrackSource.CAMERA,
+                TrackSource.MICROPHONE,
+                TrackSource.SCREEN_SHARE,
+                TrackSource.SCREEN_SHARE_AUDIO,
+            ],
+        });
+        return token.toJwt();
     }
 
     async createRoom(roomName: string): Promise<void> {

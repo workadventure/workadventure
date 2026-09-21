@@ -24,6 +24,10 @@ const warning: DeepPartial<Translation["warning"]> = {
         failedToApply: "Error al aplicar los efectos de fondo",
         notSupportedOnThisBrowser: "Los efectos de fondo no son compatibles con este navegador",
     },
+    livekitConnection: {
+        critical: "Es posible que experimente problemas de comunicación con otros usuarios.",
+        warning: "La calidad de audio o video podría verse reducida.",
+    },
     popupBlocked: {
         title: "Bloqueo de ventanas emergentes",
         content: "Por favor, permita ventanas emergentes para este sitio web en la configuración de su navegador.",
