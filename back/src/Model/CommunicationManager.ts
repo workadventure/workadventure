@@ -10,6 +10,7 @@ import {
     FilterType,
 } from "@workadventure/messages";
 import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
+import { SpaceSessionAnalytics, type SessionEndReason } from "../Services/SpaceSessionAnalytics";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
@@ -19,7 +20,6 @@ import { VoidState } from "./States/VoidState";
 import type { IRecordingManager, ManagedRecordingState } from "./RecordingManager";
 import { RecordingManager } from "./RecordingManager";
 import { UserRegistry } from "./Services/UserRegistry";
-import { SpaceSessionAnalytics, type SessionEndReason } from "../Services/SpaceSessionAnalytics";
 import { TransitionPolicy } from "./Policies/TransitionPolicy";
 import { TransitionOrchestrator } from "./Services/TransitionOrchestrator";
 import { StateLifecycleManager } from "./Services/StateLifecycleManager";
