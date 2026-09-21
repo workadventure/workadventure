@@ -136,6 +136,16 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
         // Wait for the list of users to have been received from the back and then send all the users to the front
         await this.dispatcher.notifyMeInit(watcher);
+
+        // That wait is a full round trip to the back for the first watcher of a space. The user may have left
+        // or stopped watching in the meantime; both paths already told the back to drop them and both clear
+        // _localWatchers. Forwarding now would put them back in the back's "users to notify" list, where they
+        // would stay until this pusher disconnects.
+        if (!this._localWatchers.has(spaceUser.spaceUserId)) {
+            debug(`${this.name} : filter dropped before init completed for ${watcher.getUserData().userId}`);
+            return;
+        }
+
         this.forwarder.addUserToNotify(spaceUser);
     }
 
