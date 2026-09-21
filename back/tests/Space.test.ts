@@ -1126,4 +1126,54 @@ describe("Space with filter", () => {
             expect(space.canBeDeleted()).toBe(false);
         });
     });
+
+    describe("removeUser and usersToNotify", () => {
+        const createCommunicationManagerMock = () => ({
+            handleUserDeleted: vi.fn().mockResolvedValue(undefined),
+            handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
+            handleRecorderLeftSpace: vi.fn().mockResolvedValue(false),
+        });
+
+        const setup = (usersToNotify: Map<string, SpaceUser>) => {
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+            const communicationManager = createCommunicationManagerMock();
+            const watcher = mock<SpacesWatcher>({ id: "watcher-1", write: vi.fn() });
+            const user = SpaceUser.fromPartial({ spaceUserId: "foo_1", uuid: "uuid-test" });
+
+            (space as unknown as { communicationManager: typeof communicationManager }).communicationManager =
+                communicationManager;
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", user]])
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher,
+                usersToNotify
+            );
+
+            return { space, communicationManager, watcher, user };
+        };
+
+        // Without this, the CommunicationManager keeps the departed user in its "users to notify" registry
+        // forever: removeUser drops the entry from the space map, so removeWatcher can no longer repair it.
+        it("should notify the communication manager when it drops the user from usersToNotify itself", () => {
+            const user = SpaceUser.fromPartial({ spaceUserId: "foo_1", uuid: "uuid-test" });
+            const { space, communicationManager, watcher } = setup(new Map([["foo_1", user]]));
+
+            space.removeUser(watcher, "foo_1");
+
+            expect(communicationManager.handleUserToNotifyDeleted).toHaveBeenCalledTimes(1);
+            expect(communicationManager.handleUserToNotifyDeleted).toHaveBeenCalledWith(
+                expect.objectContaining({ spaceUserId: "foo_1" })
+            );
+        });
+
+        it("should not notify the communication manager when the pusher already unwatched the user", () => {
+            const { space, communicationManager, watcher } = setup(new Map());
+
+            space.removeUser(watcher, "foo_1");
+
+            expect(communicationManager.handleUserToNotifyDeleted).not.toHaveBeenCalled();
+        });
+    });
 });
