@@ -13,6 +13,41 @@ export const isClientAnalyticsEventSource = isAnalyticsEventSource.extract([
   "media",
 ]);
 
+/**
+ * What a space is, declared by the client that joins it under the `spaceKind` metadata
+ * key: a proximity bubble, a meeting area, the world megaphone, a speaker zone. A space
+ * that declares nothing — the world space, a chat space, a space a script opened — is
+ * nobody's meeting and nobody's broadcast.
+ *
+ * It is the client's own claim, not a fact the server established: the back checks the
+ * value is in the enum and stops there. Good enough to file a row under, and good enough
+ * for a label the front shows itself; never an input to a decision the server enforces.
+ *
+ * One key with a closed set of values rather than one boolean per kind — the kinds a row
+ * may name are cut out of it, below.
+ */
+export const spaceKindSchema = z.enum([
+  "bubble",
+  "area",
+  "megaphone",
+  "speaker_zone",
+]);
+
+export type SpaceKind = z.infer<typeof spaceKindSchema>;
+
+/** A bubble and an area are meetings; the megaphone and a speaker zone are broadcasts. */
+export const isMeetingKind = (kind: SpaceKind): boolean =>
+  kind === "bubble" || kind === "area";
+
+/** The kinds a meeting row can name. */
+export const meetingKindSchema = spaceKindSchema.extract(["bubble", "area"]);
+
+/** The kinds a broadcast row can name. */
+export const broadcastKindSchema = spaceKindSchema.extract([
+  "megaphone",
+  "speaker_zone",
+]);
+
 /** Mirrors the admin's `max:255` on eventName / eventId. */
 export const MAX_EVENT_NAME_LENGTH = 255;
 export const MAX_EVENT_ID_LENGTH = 255;
@@ -247,11 +282,9 @@ const broadcastProperties = z.object({
   // meeting.ended: a megaphone broadcast and a speaker-zone one are the same act on
   // the same kind of space, so splitting them by name would make every "how much was
   // broadcast" query a union — and the next broadcast surface a three-way one.
-  broadcastKind: z
-    .enum(["megaphone", "speaker_zone"])
-    .describe(
-      "Where the broadcast was started: the world megaphone, or a speaker zone on the map.",
-    ),
+  broadcastKind: broadcastKindSchema.describe(
+    "Where the broadcast was started: the world megaphone, or a speaker zone on the map.",
+  ),
 });
 
 /**
@@ -792,8 +825,7 @@ export const ANALYTICS_EVENTS = {
         .describe(
           "Which media backend carried the meeting. It does NOT say what kind of meeting it was — a meeting area of four or fewer never leaves webrtc — which is what meetingKind is for.",
         ),
-      meetingKind: z
-        .enum(["bubble", "area"])
+      meetingKind: meetingKindSchema
         .optional()
         .describe(
           "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet. Filled by the back, which tells a bubble's space from an area's by construction; absent on the rows a client opens (Jitsi).",
@@ -1432,11 +1464,9 @@ export const ANALYTICS_EVENTS = {
         meetingId: z
           .string()
           .describe("Meeting this participation belongs to."),
-        meetingKind: z
-          .enum(["bubble", "area"])
-          .describe(
-            "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet.",
-          ),
+        meetingKind: meetingKindSchema.describe(
+          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet.",
+        ),
         joinRank: joinRankProperty,
       })
       .merge(sessionIntervalProperties),

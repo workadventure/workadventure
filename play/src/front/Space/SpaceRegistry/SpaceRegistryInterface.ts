@@ -1,5 +1,4 @@
-import type { FilterType } from "@workadventure/messages";
-import type { SpaceKind } from "@workadventure/shared-utils";
+import type { FilterType, SpaceKind } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { VideoBox } from "../VideoBox";

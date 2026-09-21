@@ -1,5 +1,4 @@
-import type { RecordingButtonState } from "@workadventure/messages";
-import type { SpaceKind } from "@workadventure/shared-utils";
+import type { RecordingButtonState, SpaceKind } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
 

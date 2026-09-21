@@ -1,7 +1,6 @@
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import type { SpaceKind } from "@workadventure/shared-utils";
-import { FilterType } from "@workadventure/messages";
+import { FilterType, type SpaceKind } from "@workadventure/messages";
 import { get, type Unsubscriber } from "svelte/store";
 import { Subscription } from "rxjs";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
