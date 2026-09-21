@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { analyticsClient } from "../../../src/front/Administration/AnalyticsClient";
-import { currentMeetingProperties } from "../../../src/front/Administration/CurrentMeeting";
+import { liveMeetingContexts } from "../../../src/front/Administration/CurrentMeeting";
 import {
     clearExternalMeetings,
     externalMeetingEnded,
@@ -44,11 +44,13 @@ describe("ExternalMeetingAnalytics", () => {
             },
         ]);
         // The periods this client reports for itself have to name the meeting too.
-        expect(currentMeetingProperties()).toEqual({ meetingId: "area-1" });
+        expect(liveMeetingContexts()).toEqual([{ meetingId: "area-1" }]);
 
         externalMeetingEnded("teams");
         expect(closed).toBe(1);
-        expect(currentMeetingProperties()).toEqual({});
+        // Outside any meeting the context list is one empty entry, not an empty list:
+        // a row is still emitted, it just names no meeting. See liveMeetingContexts.
+        expect(liveMeetingContexts()).toEqual([{}]);
     });
 
     it("reports a module it has never heard of, rather than dropping it", () => {
@@ -67,7 +69,7 @@ describe("ExternalMeetingAnalytics", () => {
                 },
             },
         ]);
-        expect(currentMeetingProperties()).toEqual({ meetingId: "area-2" });
+        expect(liveMeetingContexts()).toEqual([{ meetingId: "area-2" }]);
     });
 
     it("does not leave the previous meeting open when a leave is missed", () => {
