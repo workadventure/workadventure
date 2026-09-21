@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ICreateClientOpts } from "matrix-js-sdk";
+import { MatrixError } from "matrix-js-sdk";
 import type { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import type { MatrixClientWrapperInterface, MatrixLocalUserStore } from "../MatrixClientWrapper";
 import { MatrixClientWrapper } from "../MatrixClientWrapper";
@@ -269,6 +270,55 @@ describe("MatrixClientWrapper", () => {
             expect(lastCreateClientArg.userId).toBe(userId);
             expect(lastCreateClientArg.accessToken).toBe(accessToken);
             expect(lastCreateClientArg.refreshToken).toBe(refreshToken);
+        });
+
+        it("should fall back to the stored session when the login token is rejected", async () => {
+            const createClient = vi.fn().mockReturnValue({
+                ...basicMockClient,
+                loginRequest: () =>
+                    Promise.reject(new MatrixError({ errcode: "M_FORBIDDEN", error: "Invalid login token" }, 403)),
+            });
+
+            const localUserStoreMock: MatrixLocalUserStore = {
+                ...basicLocalUserStoreMock,
+                getLocalUser: vi.fn().mockReturnValue({ uuid: "myUuid", email: "", matrixUserId: "" }),
+                getMatrixAccessToken: vi.fn().mockReturnValue("StoredAccessToken"),
+                getMatrixUserId: vi.fn().mockReturnValue("UserId"),
+                getMatrixDeviceId: vi.fn().mockReturnValue("DeviceId"),
+                getMatrixLoginToken: vi.fn().mockReturnValue("DeadLoginToken"),
+            };
+
+            await new MatrixClientWrapper("testUrl", localUserStoreMock, createClient).initMatrixClient();
+
+            // The dead token must not be replayed, and the stored session must be the one used.
+            // eslint-disable-next-line
+            expect(localUserStoreMock.setMatrixLoginToken).toHaveBeenCalledWith(null);
+            const lastCreateClientArg = createClient.mock.calls[1][0] as ICreateClientOpts;
+            expect(lastCreateClientArg.accessToken).toBe("StoredAccessToken");
+        });
+
+        it("should spend the pending login token early and store the session", async () => {
+            const createClient = vi.fn().mockReturnValue({
+                ...basicMockClient,
+                loginRequest: () =>
+                    Promise.resolve({
+                        user_id: "Alice",
+                        access_token: "FreshAccessToken",
+                        refresh_token: null,
+                        device_id: "DeviceId",
+                    }),
+            });
+            const localUserStoreMock: MatrixLocalUserStore = {
+                ...basicLocalUserStoreMock,
+                getMatrixLoginToken: vi.fn().mockReturnValue("LoginToken"),
+            };
+
+            await new MatrixClientWrapper("testUrl", localUserStoreMock, createClient).exchangePendingLoginToken();
+
+            // eslint-disable-next-line
+            expect(localUserStoreMock.setMatrixAccessToken).toHaveBeenCalledWith("FreshAccessToken");
+            // eslint-disable-next-line
+            expect(localUserStoreMock.setMatrixLoginToken).toHaveBeenCalledWith(null);
         });
 
         it("should call create client with 2 crypto callback", async () => {

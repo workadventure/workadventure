@@ -20,6 +20,7 @@ window.Buffer = Buffer;
 
 export interface MatrixClientWrapperInterface {
     initMatrixClient(): Promise<MatrixClient>;
+    exchangePendingLoginToken(): Promise<void>;
     cacheSecretStorageKey(keyId: string, key: Uint8Array<ArrayBuffer>): void;
 }
 
@@ -35,6 +36,9 @@ export interface MatrixLocalUserStore {
     getMatrixUserId(): string | null;
 
     getMatrixLoginToken(): string | null;
+
+    /** When the pending login token landed in this browser. Optional: only used to qualify a rejection. */
+    getMatrixLoginTokenReceivedAt?(): Date | null;
 
     setMatrixDeviceId(deviceId: string, userId: string): void;
 
@@ -52,10 +56,27 @@ export interface MatrixLocalUserStore {
 }
 
 export class InvalidLoginTokenError extends Error {
-    constructor(message: string) {
+    /**
+     * @param tokenAgeMs How long the token sat in this browser before the homeserver rejected it, when known.
+     *                   Synapse login tokens live two minutes, so an age above that means "expired" and
+     *                   anything below means "already used" or "unknown" - Synapse answers the same
+     *                   "Invalid login token" in every case.
+     */
+    constructor(
+        message: string,
+        public readonly tokenAgeMs: number | null = null,
+    ) {
         super(message);
         this.name = "InvalidLoginTokenError";
     }
+}
+
+/** Sentry tag value qualifying an InvalidLoginTokenError, see InvalidLoginTokenError.tokenAgeMs. */
+export function loginTokenAgeTag(error: InvalidLoginTokenError): "expired" | "fresh" | "unknown" {
+    if (error.tokenAgeMs === null) {
+        return "unknown";
+    }
+    return error.tokenAgeMs > 2 * 60 * 1000 ? "expired" : "fresh";
 }
 
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
@@ -96,16 +117,26 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         const oldMatrixUserId: string | null = matrixUserIdFromLocalStorage;
 
         if (matrixLoginToken !== null) {
-            const {
-                accessToken: accessTokenFromLoginToken,
-                refreshToken: refreshTokenFromLoginToken,
-                matrixUserId: userIdFromLoginToken,
-                deviceId,
-            } = await this.retrieveMatrixConnectionDataFromLoginToken(this.baseUrl, matrixLoginToken);
-            accessToken = accessTokenFromLoginToken;
-            refreshToken = refreshTokenFromLoginToken;
-            matrixUserId = userIdFromLoginToken;
-            matrixDeviceId = deviceId;
+            try {
+                const {
+                    accessToken: accessTokenFromLoginToken,
+                    refreshToken: refreshTokenFromLoginToken,
+                    matrixUserId: userIdFromLoginToken,
+                    deviceId,
+                } = await this.retrieveMatrixConnectionDataFromLoginToken(this.baseUrl, matrixLoginToken);
+                accessToken = accessTokenFromLoginToken;
+                refreshToken = refreshTokenFromLoginToken;
+                matrixUserId = userIdFromLoginToken;
+                matrixDeviceId = deviceId;
+            } catch (e) {
+                // A rejected token is not worth locking the user out of a session this browser already
+                // holds - typically the very same token, spent by an earlier page load. The token is gone
+                // from the store by now, so a plain reload would have used the stored session anyway.
+                if (!(e instanceof InvalidLoginTokenError) || !accessTokenFromLocalStorage) {
+                    throw e;
+                }
+                console.warn("Matrix login token rejected, falling back to the stored Matrix session");
+            }
         }
 
         if (!accessToken) {
@@ -161,6 +192,25 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         }
 
         return this.client;
+    }
+
+    /**
+     * Spends the pending login token now, storing the session it yields, without building a client.
+     *
+     * Synapse login tokens are single use and live two minutes. Exchanging them from initMatrixClient()
+     * only, i.e. once the game scene starts, leaves the whole Woka / camera / lobby sequence for the token
+     * to die in - and never spends it at all on a room where the chat is disabled. Callers run this as soon
+     * as the homeserver URL is known; initMatrixClient() then finds a stored session and no pending token.
+     *
+     * Resolves without doing anything when no token is pending. Rejects like initMatrixClient() would:
+     * InvalidLoginTokenError (token already cleared) or a network error (token kept for the next attempt).
+     */
+    public async exchangePendingLoginToken(): Promise<void> {
+        const matrixLoginToken = this.localUserStore.getMatrixLoginToken();
+        if (matrixLoginToken === null) {
+            return;
+        }
+        await this.retrieveMatrixConnectionDataFromLoginToken(this.baseUrl, matrixLoginToken);
     }
 
     private retrieveMatrixConnectionDataFromLocalStorage(): {
@@ -250,9 +300,13 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 // runs before the stored access token is even looked at, so keeping a dead token here would
                 // make every later initMatrixClient() fail on it - locking the user out of the chat for good,
                 // even though perfectly valid credentials are sitting in local storage.
+                const receivedAt = this.localUserStore.getMatrixLoginTokenReceivedAt?.() ?? null;
                 this.localUserStore.setMatrixLoginToken(null);
                 console.error("Invalid login token", e);
-                throw new InvalidLoginTokenError("Invalid login token");
+                throw new InvalidLoginTokenError(
+                    "Invalid login token",
+                    receivedAt ? Date.now() - receivedAt.getTime() : null,
+                );
             }
 
             // No answer from the homeserver (network failure, CORS, aborted request): the token was most
