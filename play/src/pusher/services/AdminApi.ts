@@ -1247,4 +1247,117 @@ class AdminApi implements AdminInterface {
     }
 }
 
+/**
+ * Not called by the pusher: the back POSTs this one when a LiveKit recording egress ends
+ * (see back/src/Services/AdminApi.ts). The annotation lives here because Swagger is served
+ * by the pusher and only scans ./src/pusher/services/*.ts.
+ *
+ * @openapi
+ * /api/recordings/events:
+ *   post:
+ *     tags: ["AdminAPI"]
+ *     description: |
+ *       Notifies the admin that a recording egress ended, so it can be turned into a
+ *       customer-facing webhook. Only the end of an egress is reported, whether it succeeded
+ *       or not: read `status` to tell a usable recording from a failed one.
+ *       Retried 3 times on transport or 5xx errors; a 4xx is taken as a definitive rejection
+ *       and is not retried. Never called when ADMIN_API_URL is unset.
+ *     security:
+ *      - Bearer: []
+ *     consumes:
+ *      - "application/json"
+ *     parameters:
+ *      - name: "body"
+ *        in: "body"
+ *        required: true
+ *        schema:
+ *          type: "object"
+ *          required:
+ *            - phase
+ *            - status
+ *            - egressId
+ *            - recordingSessionId
+ *            - playUri
+ *            - recorder
+ *            - files
+ *          properties:
+ *            phase:
+ *              type: "string"
+ *              enum: ["ended"]
+ *              description: "Always `ended`. Nothing is sent when an egress starts."
+ *              example: "ended"
+ *            status:
+ *              type: "string"
+ *              description: "The LiveKit egress status. `EGRESS_COMPLETE` means the recording is usable."
+ *              example: "EGRESS_COMPLETE"
+ *            egressId:
+ *              type: "string"
+ *              description: "The LiveKit egress identifier."
+ *              example: "EG_ftzDC3TLqcHR"
+ *            recordingSessionId:
+ *              type: "string"
+ *              description: "The WorkAdventure recording session this egress belongs to."
+ *              example: "01J8Z7K3QW9V0000000000"
+ *            playUri:
+ *              type: "string"
+ *              description: "The full URL of the room that was recorded."
+ *              example: "http://play.workadventure.localhost/@/teamSlug/worldSlug/roomSlug"
+ *            recorder:
+ *              type: "object"
+ *              description: "The user who started the recording."
+ *              required:
+ *                - uuid
+ *                - spaceUserId
+ *              properties:
+ *                uuid:
+ *                  type: "string"
+ *                  example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+ *                spaceUserId:
+ *                  type: "string"
+ *                  example: "998ce839-3dea-4698-8b41-ebbdf7688ad9_0"
+ *            startedAt:
+ *              type: "string"
+ *              format: "date-time"
+ *              description: "When the egress started, ISO 8601. Null when LiveKit did not report it."
+ *              example: "2025-09-18T09:12:04.000Z"
+ *            endedAt:
+ *              type: "string"
+ *              format: "date-time"
+ *              description: "When the egress ended, ISO 8601. Null when LiveKit did not report it."
+ *              example: "2025-09-18T09:47:31.000Z"
+ *            error:
+ *              type: "string"
+ *              description: "The LiveKit error message when the egress failed, null otherwise."
+ *              example: null
+ *            files:
+ *              type: "array"
+ *              description: "The files LiveKit wrote. Empty when the egress failed."
+ *              items:
+ *                type: "object"
+ *                required:
+ *                  - filename
+ *                  - sizeBytes
+ *                  - durationSeconds
+ *                properties:
+ *                  filename:
+ *                    type: "string"
+ *                    description: "The object key LiveKit wrote in the configured storage."
+ *                    example: "recordings/teamSlug/worldSlug/roomSlug/2025-09-18T09-12-04.mp4"
+ *                  sizeBytes:
+ *                    type: "integer"
+ *                    example: 148283392
+ *                  durationSeconds:
+ *                    type: "integer"
+ *                    description: "The recording duration, rounded to the second."
+ *                    example: 2127
+ *     responses:
+ *       200:
+ *         description: The event has been taken into account.
+ *       4XX:
+ *         description: |
+ *           The event is rejected. The back does not retry, and the notification is lost:
+ *           only answer a 4xx for a payload you will never accept.
+ *       5XX:
+ *         description: Transient failure. The back retries 3 times (250 ms, 1 s, 4 s) before giving up.
+ */
 export const adminApi = new AdminApi();
