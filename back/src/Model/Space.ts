@@ -77,10 +77,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             }
             this._spaceUpdatedSubject.next(this);
 
-            // Before the filter below: a listener in a broadcast space is not in the
-            // filter, and their time listening is exactly what has to be measured.
-            this.trackSessionJoin(spaceUser);
-
             if (!this.filterOneUser(spaceUser)) {
                 return;
             }
@@ -218,6 +214,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string): void {
         let user: SpaceUser | undefined;
+        let wasToNotify = false;
         try {
             const usersList = this.usersList(sourceWatcher);
             user = usersList.get(spaceUserId);
@@ -228,7 +225,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             }
 
             const usersToNotifyList = this.usersListToNotify(sourceWatcher);
-            usersToNotifyList.delete(spaceUserId);
+            wasToNotify = usersToNotifyList.delete(spaceUserId);
 
             usersList.delete(spaceUserId);
 
@@ -242,13 +239,23 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 this._nbWatchers = 0;
             }
             this._spaceUpdatedSubject.next(this);
-            this.communicationManager.handleMemberLeft(spaceUserId);
             debug(`${this.name} : user => removed ${spaceUserId}`);
         } catch (e) {
             console.error("Error while removing user", e);
             Sentry.captureException(e);
             debug("Error while removing user", e);
         } finally {
+            // Before handleUserDeleted, and unconditionally: the manager reads presence
+            // as the union of its two registries, so a user dropped from one while still
+            // in the other has not left. Without this the watching half never empties on
+            // a leave and the user stays "present" until their pusher dies.
+            if (user && wasToNotify) {
+                this.communicationManager.handleUserToNotifyDeleted(user).catch((error) => {
+                    console.error("Error while deleting user to notify", error);
+                    Sentry.captureException(error);
+                });
+            }
+
             if (user && this.filterOneUser(user)) {
                 this.communicationManager.handleUserDeleted(user).catch((error) => {
                     console.error("Error while deleting user", error);
@@ -357,7 +364,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             for (const spaceUser of spaceUsers.values()) {
                 // A pusher going away takes its users with it; without this they would
                 // stay "present" until the back itself shut down.
-                this.communicationManager.handleMemberLeft(spaceUser.spaceUserId);
                 this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
@@ -733,27 +739,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
     private get isBroadcast(): boolean {
         return this._filterType !== FilterType.ALL_USERS;
-    }
-
-    /**
-     * Tracked here and not in the CommunicationManager, which is the tempting place: for
-     * ALL_USERS and for LIVE_STREAMING_USERS its filter crossings ARE this predicate —
-     * everyone passes the first, and the second IS megaphoneState.
-     *
-     * What it does not have is the rest. It receives crossings, not arrivals: a listener's
-     * join and leave never reach it. The snapshot does cover them — getAllUsers() is on
-     * ICommunicationSpace — but a participation needs the edge, arrived at t0 and left at
-     * t1, and a snapshot has none. Neither has usersToNotify, which follows the front's
-     * store subscriptions: a remounted component reads there as a leave and a join.
-     *
-     * ICommunicationSpace exposes no filterType — so on LIVE_STREAMING_USERS_WITH_FEEDBACK
-     * a crossing stops meaning "on air", which is what setActive above is for — no
-     * metadata, and no world. And the manager has no notion of a session opening: its
-     * initial state exists from the moment the space is created, and it transitions on
-     * load, not on presence. It knows how the media is carried, not who is there.
-     */
-    private trackSessionJoin(spaceUser: SpaceUser): void {
-        this.communicationManager.handleMemberJoined(spaceUser, this.isBroadcast ? spaceUser.megaphoneState : true);
     }
 
     private isPublishing(spaceUser: SpaceUser): boolean {

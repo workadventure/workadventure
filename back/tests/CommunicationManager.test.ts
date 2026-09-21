@@ -5,6 +5,7 @@ import {
     HandleRecordingWebhookRequest,
     RecordingWebhookPhase,
     SpaceUser,
+    FilterType,
 } from "@workadventure/messages";
 import type { InitialStateFactory } from "../src/Model/CommunicationManager";
 import { CommunicationManager } from "../src/Model/CommunicationManager";
@@ -78,6 +79,7 @@ describe("CommunicationManager", () => {
         getUser: vi.fn(),
         world: "world",
         getMetadataValue: vi.fn(),
+        filterType: FilterType.ALL_USERS,
     });
 
     const createRecordingManager = (): IRecordingManager & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
@@ -1126,51 +1128,155 @@ describe("CommunicationManager", () => {
         // delegation and skip exactly the part that can break.
         const rowsFrom = (enqueue: Mock) => enqueue.mock.calls.map(([row]) => row as { eventName: string });
 
-        it("measures a meeting from the kind the space declares", () => {
+        const withQueue = async (
+            body: (enqueue: Mock, rows: () => { eventName: string }[]) => Promise<void> | void,
+        ) => {
             const enqueue = vi.spyOn(analyticsEventsQueue, "enqueue").mockImplementation(() => {});
             try {
+                await body(enqueue, () => rowsFrom(enqueue));
+            } finally {
+                enqueue.mockRestore();
+            }
+        };
+
+        const managerFor = (space: ICommunicationSpace) =>
+            new CommunicationManager(space, {
+                lifecycleManager: createLifecycleManager(createState(CommunicationType.WEBRTC)),
+                recordingManager: createRecordingManager(),
+            });
+
+        it("measures a meeting from the kind the space declares", async () => {
+            await withQueue(async (enqueue, rows) => {
                 const space = createSpace();
                 space.getMetadataValue = vi.fn().mockReturnValue("bubble");
-                const manager = new CommunicationManager(space, {
-                    lifecycleManager: createLifecycleManager(createState(CommunicationType.WEBRTC)),
-                    recordingManager: createRecordingManager(),
-                });
+                const manager = managerFor(space);
 
-                manager.handleMemberJoined(createSpaceUser("1"), true);
-                expect(rowsFrom(enqueue)).toEqual([]);
+                await manager.handleUserAdded(createSpaceUser("1"));
+                expect(rows()).toEqual([]);
 
                 // Second arrival opens it; nothing is emitted until it closes.
-                manager.handleMemberJoined(createSpaceUser("2"), true);
-                expect(rowsFrom(enqueue)).toEqual([]);
+                await manager.handleUserAdded(createSpaceUser("2"));
+                expect(rows()).toEqual([]);
 
                 expect(manager.closeSession("back_shutdown")).toBe(true);
-                expect(rowsFrom(enqueue).map((row) => row.eventName)).toEqual([
+                expect(rows().map((row) => row.eventName)).toEqual([
                     "meeting.participation.ended",
                     "meeting.participation.ended",
                     "meeting.ended",
                 ]);
-            } finally {
-                enqueue.mockRestore();
-            }
+            });
         });
 
-        it("measures nothing for a space whose client declared no kind", () => {
-            const enqueue = vi.spyOn(analyticsEventsQueue, "enqueue").mockImplementation(() => {});
-            try {
+        it("measures nothing for a space whose client declared no kind", async () => {
+            await withQueue(async (enqueue) => {
                 const space = createSpace();
                 space.getMetadataValue = vi.fn().mockReturnValue(undefined);
-                const manager = new CommunicationManager(space, {
-                    lifecycleManager: createLifecycleManager(createState(CommunicationType.WEBRTC)),
-                    recordingManager: createRecordingManager(),
-                });
+                const manager = managerFor(space);
 
-                manager.handleMemberJoined(createSpaceUser("1"), true);
-                manager.handleMemberJoined(createSpaceUser("2"), true);
+                await manager.handleUserAdded(createSpaceUser("1"));
+                await manager.handleUserAdded(createSpaceUser("2"));
 
                 expect(manager.closeSession("back_shutdown")).toBe(false);
                 expect(enqueue).not.toHaveBeenCalled();
+            });
+        });
+
+        it("counts a member once, whichever registry they arrive through", async () => {
+            // The point of deriving presence from the union: a listener is only ever in
+            // usersToNotify, a speaker is in both, and going on air is not an arrival.
+            await withQueue(async (enqueue, rows) => {
+                const space = createSpace();
+                space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                const manager = managerFor(space);
+
+                const watcher = createSpaceUser("watcher");
+                const both = createSpaceUser("both");
+
+                await manager.handleUserToNotifyAdded(watcher);
+                await manager.handleUserToNotifyAdded(both);
+                // Already present: crossing the filter must not add them a second time.
+                await manager.handleUserAdded(both);
+
+                expect(manager.closeSession("back_shutdown")).toBe(true);
+                expect(rows().filter((row) => row.eventName === "meeting.participation.ended")).toHaveLength(2);
+            });
+        });
+
+        it("keeps a member until they have left both registries", async () => {
+            await withQueue(async (enqueue, rows) => {
+                const space = createSpace();
+                space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                const manager = managerFor(space);
+
+                const staying = createSpaceUser("staying");
+                const leaving = createSpaceUser("leaving");
+                await manager.handleUserToNotifyAdded(staying);
+                await manager.handleUserToNotifyAdded(leaving);
+                await manager.handleUserAdded(leaving);
+
+                // Off air but still watching: not a departure, so the meeting holds.
+                await manager.handleUserDeleted(leaving);
+                expect(manager.closeSession("closed")).toBe(true);
+                expect(rows().filter((row) => row.eventName === "meeting.ended")).toHaveLength(1);
+                expect(rows().filter((row) => row.eventName === "meeting.participation.ended")).toHaveLength(2);
+            });
+        });
+
+        it("reports the space whose users reach neither registry, once the clients have had time to watch", async () => {
+            // The guard on the assumption this whole derivation rests on: everyone in the
+            // space watches it. Nothing enforces that, and its failure is otherwise silent.
+            // Asserted through console.error rather than Sentry, whose ESM export cannot be
+            // spied on — the guard writes to both.
+            vi.useFakeTimers();
+            const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+            try {
+                await withQueue(async () => {
+                    const space = createSpace([createSpaceUser("ghost"), createSpaceUser("seen")]);
+                    space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                    const manager = managerFor(space);
+
+                    await manager.handleUserToNotifyAdded(createSpaceUser("seen"));
+
+                    // Not on the spot: a listener is in the space before their client has
+                    // watched it, and that round trip must not be reported as a break.
+                    expect(consoleError).not.toHaveBeenCalled();
+
+                    await vi.advanceTimersByTimeAsync(30_000);
+                    expect(consoleError).toHaveBeenCalledOnce();
+                    expect(String(consoleError.mock.calls[0][0])).toContain("neither registry");
+                    expect(consoleError.mock.calls[0][1]).toEqual(["ghost"]);
+
+                    // Once per space: a later arrival does not report it again.
+                    await manager.handleUserToNotifyAdded(createSpaceUser("third"));
+                    await vi.advanceTimersByTimeAsync(30_000);
+                    expect(consoleError).toHaveBeenCalledOnce();
+                });
             } finally {
-                enqueue.mockRestore();
+                consoleError.mockRestore();
+                vi.useRealTimers();
+            }
+        });
+
+        it("says nothing when the stragglers catch up before the check", async () => {
+            vi.useFakeTimers();
+            const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+            try {
+                await withQueue(async () => {
+                    const listener = createSpaceUser("listener");
+                    const space = createSpace([listener, createSpaceUser("seen")]);
+                    space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                    const manager = managerFor(space);
+
+                    await manager.handleUserToNotifyAdded(createSpaceUser("seen"));
+                    await vi.advanceTimersByTimeAsync(1_000);
+                    await manager.handleUserToNotifyAdded(listener);
+
+                    await vi.advanceTimersByTimeAsync(30_000);
+                    expect(consoleError).not.toHaveBeenCalled();
+                });
+            } finally {
+                consoleError.mockRestore();
+                vi.useRealTimers();
             }
         });
     });

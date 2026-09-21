@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SpaceUser } from "@workadventure/messages";
+import { FilterType, SpaceUser } from "@workadventure/messages";
 import { RecordingManager } from "../src/Model/RecordingManager";
 import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
 import type { IRecordableState } from "../src/Model/Interfaces/ICommunicationState";
@@ -63,6 +63,7 @@ function createDependencies(state: IRecordableState<IRecordableStrategy>) {
         getUser: vi.fn(),
         world: "world",
         getMetadataValue: vi.fn(),
+        filterType: FilterType.ALL_USERS,
     };
     const orchestrator: ITransitionOrchestrator = {
         executeImmediateTransition: vi.fn().mockResolvedValue(state),

@@ -14,9 +14,7 @@ export interface ICommunicationManager {
     handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void>;
     handleUserToNotifyAdded(user: SpaceUser): Promise<void>;
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
-    handleMemberJoined(user: SpaceUser, active: boolean): void;
     handleMemberActiveChanged(spaceUserId: string, active: boolean): void;
-    handleMemberLeft(spaceUserId: string): void;
     handleSpaceKindChanged(): void;
     closeSession(endReason: SessionEndReason): boolean;
     handleMeetingConnectionRestartMessage(

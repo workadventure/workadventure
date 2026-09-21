@@ -14,7 +14,9 @@ export type ICommunicationSpace = Pick<
     | "stopRecordingByServer"
     | "getUser"
     // What the session analytics need and the transport does not: the world a row
-    // belongs to, and the `spaceKind` this space's client declared.
+    // belongs to, the `spaceKind` this space's client declared, and the filter — which
+    // says whether "active" means "on air" or just "present".
     | "world"
     | "getMetadataValue"
+    | "filterType"
 >;
