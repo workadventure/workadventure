@@ -15,8 +15,7 @@ const rowsOf = (enqueue: Enqueue): AnalyticsStoredEvent[] => enqueue.mock.calls.
 const harness = (kind: SpaceKind) => {
     const enqueue: Enqueue = vi.fn();
     let now = Date.parse("2026-04-24T12:00:00.000Z");
-    const analytics = new SpaceSessionAnalytics({ enqueue }, () => now);
-    analytics.track("space", "world", "https://play.example/room", () => kind);
+    const analytics = new SpaceSessionAnalytics("space", "world", () => kind, { enqueue }, () => now);
     const tick = (seconds: number) => {
         now += seconds * 1000;
     };
@@ -27,12 +26,12 @@ describe("SpaceSessionAnalytics", () => {
     it("reports one meeting and three participations for a bubble of three", () => {
         const { analytics, enqueue, tick } = harness("bubble");
 
-        analytics.join("space", member("1"), true);
-        analytics.join("space", member("2"), true);
+        analytics.join(member("1"), true);
+        analytics.join(member("2"), true);
         tick(60);
-        analytics.join("space", member("3"), true);
+        analytics.join(member("3"), true);
         tick(60);
-        analytics.untrack("space");
+        analytics.close();
 
         const rows = rowsOf(enqueue);
         const participations = rows.filter((row) => row.eventName === "meeting.participation.ended");
@@ -57,13 +56,13 @@ describe("SpaceSessionAnalytics", () => {
     it("never lets a participation end after the meeting holding it", () => {
         const { analytics, enqueue, tick } = harness("bubble");
 
-        analytics.join("space", member("1"), true);
-        analytics.join("space", member("2"), true);
-        analytics.join("space", member("3"), true);
+        analytics.join(member("1"), true);
+        analytics.join(member("2"), true);
+        analytics.join(member("3"), true);
         tick(30);
-        analytics.leave("space", "room_1");
+        analytics.leave("room_1");
         tick(30);
-        analytics.untrack("space");
+        analytics.close();
 
         const rows = rowsOf(enqueue);
         expect(rows[0].properties.endedAt).toBe("2026-04-24T12:00:30.000Z");
@@ -73,10 +72,10 @@ describe("SpaceSessionAnalytics", () => {
     it("reports nothing for an area one person visited", () => {
         const { analytics, enqueue, tick } = harness("area");
 
-        analytics.join("space", member("1"), true);
+        analytics.join(member("1"), true);
         tick(600);
-        analytics.leave("space", "room_1");
-        analytics.untrack("space");
+        analytics.leave("room_1");
+        analytics.close();
 
         expect(enqueue).not.toHaveBeenCalled();
     });
@@ -84,15 +83,15 @@ describe("SpaceSessionAnalytics", () => {
     it("opens an area meeting on the second arrival, closes it below two, and reopens as a new one", () => {
         const { analytics, enqueue, tick } = harness("area");
 
-        analytics.join("space", member("1"), true);
+        analytics.join(member("1"), true);
         tick(10);
-        analytics.join("space", member("2"), true);
+        analytics.join(member("2"), true);
         tick(30);
-        analytics.leave("space", "room_2");
+        analytics.leave("room_2");
         tick(60);
-        analytics.join("space", member("3"), true);
+        analytics.join(member("3"), true);
         tick(30);
-        analytics.untrack("space");
+        analytics.close();
 
         const rows = rowsOf(enqueue);
         const meetings = rows.filter((row) => row.eventName === "meeting.ended");
@@ -110,13 +109,13 @@ describe("SpaceSessionAnalytics", () => {
     it("opens a broadcast on the first speaker, clips the audience to it, and ends it on the last off-air", () => {
         const { analytics, enqueue, tick } = harness("speaker_zone");
 
-        analytics.join("space", member("listener"), false);
+        analytics.join(member("listener"), false);
         tick(10);
-        analytics.join("space", member("speaker"), false);
+        analytics.join(member("speaker"), false);
         tick(10);
-        analytics.setActive("space", "room_speaker", true);
+        analytics.setActive("room_speaker", true);
         tick(30);
-        analytics.setActive("space", "room_speaker", false);
+        analytics.setActive("room_speaker", false);
 
         const rows = rowsOf(enqueue);
         const broadcasts = rows.filter((row) => row.eventName === "broadcast.ended");
@@ -147,14 +146,14 @@ describe("SpaceSessionAnalytics", () => {
     it("sums a speaker's airtime across their stints", () => {
         const { analytics, enqueue, tick } = harness("megaphone");
 
-        analytics.join("space", member("s1"), true);
-        analytics.join("space", member("s2"), true);
+        analytics.join(member("s1"), true);
+        analytics.join(member("s2"), true);
         tick(10);
-        analytics.setActive("space", "room_s1", false);
+        analytics.setActive("room_s1", false);
         tick(10);
-        analytics.setActive("space", "room_s1", true);
+        analytics.setActive("room_s1", true);
         tick(10);
-        analytics.untrack("space");
+        analytics.close();
 
         const rows = rowsOf(enqueue);
         const s1 = rows.find((row) => row.userUuid === "uuid-s1");
@@ -165,37 +164,48 @@ describe("SpaceSessionAnalytics", () => {
     it("waits for the space to say what it is before opening anything", () => {
         const enqueue: Enqueue = vi.fn();
         let now = 0;
-        const analytics = new SpaceSessionAnalytics({ enqueue }, () => now);
         let kind: SpaceKind | undefined = undefined;
-        analytics.track("space", "world", "room", () => kind);
+        const analytics = new SpaceSessionAnalytics("space", "world", () => kind, { enqueue }, () => now);
 
         // Two people met before either declared the space: nothing opens yet.
-        analytics.join("space", member("1"), true);
-        analytics.join("space", member("2"), true);
+        analytics.join(member("1"), true);
+        analytics.join(member("2"), true);
         now = 5_000;
         kind = "bubble";
-        analytics.kindChanged("space");
+        analytics.kindChanged();
         now = 65_000;
-        analytics.untrack("space");
+        analytics.close();
 
         const meeting = rowsOf(enqueue).find((row) => row.eventName === "meeting.ended");
         expect(meeting?.properties).toMatchObject({ meetingKind: "bubble", durationSeconds: 60, participantCount: 2 });
     });
 
-    it("closes every open session on shutdown and says so", () => {
+    it("closes an open session on shutdown and says whether there was one", () => {
+        // SocketManager runs this over every space and adds up the answers, so what one
+        // space owes it is a truthful yes/no — an idle space must not inflate the count.
         const enqueue: Enqueue = vi.fn();
-        const analytics = new SpaceSessionAnalytics({ enqueue }, () => 0);
-        analytics.track("bubble", "world", "room", () => "bubble");
-        analytics.track("megaphone", "world", "room", () => "megaphone");
-        analytics.track("idle", "world", "room", () => "area");
-        analytics.join("bubble", member("1"), true);
-        analytics.join("bubble", member("2"), true);
-        analytics.join("megaphone", member("s"), true);
-        analytics.join("idle", member("3"), true);
+        const open = new SpaceSessionAnalytics("bubble", "world", () => "bubble", { enqueue }, () => 0);
+        open.join(member("1"), true);
+        open.join(member("2"), true);
+        const idle = new SpaceSessionAnalytics("idle", "world", () => "area", { enqueue }, () => 0);
+        idle.join(member("3"), true);
 
-        expect(analytics.closeAll()).toBe(2);
+        expect(idle.close("back_shutdown")).toBe(false);
+        expect(open.close("back_shutdown")).toBe(true);
+
         const rows = rowsOf(enqueue);
-        expect(rows).toHaveLength(5);
+        expect(rows).toHaveLength(3);
         expect(rows.every((row) => row.properties.endReason === "back_shutdown")).toBe(true);
+    });
+
+    it("stays shut once closed, so a shutdown after a destroy emits nothing twice", () => {
+        const { analytics, enqueue } = harness("bubble");
+
+        analytics.join(member("1"), true);
+        analytics.join(member("2"), true);
+
+        expect(analytics.close()).toBe(true);
+        expect(analytics.close("back_shutdown")).toBe(false);
+        expect(rowsOf(enqueue)).toHaveLength(3);
     });
 });

@@ -43,20 +43,6 @@ type Session = {
     peak: number;
 };
 
-type TrackedSpace = {
-    id: string;
-    world: string;
-    roomId: string;
-    /**
-     * Resolved when a session opens, not when the space is tracked: the kind is metadata,
-     * and it arrives after the first join. Undefined keeps the session closed.
-     */
-    kind: () => SpaceKind | undefined;
-    members: Map<string, { member: SessionMember; active: boolean }>;
-    activeCount: number;
-    session?: Session;
-};
-
 /**
  * One row per session, and one per participation — emitted by the only party that can
  * count either honestly.
@@ -70,66 +56,65 @@ type TrackedSpace = {
  * Every row is emitted when the session CLOSES, participations included: a participation
  * cannot be emitted before we know the session it belongs to happened. A second session
  * in the same space is a second row under the same id, told apart by `startedAt`.
+ *
+ * One instance per space, owned by it, like RecordingManager — the other session this
+ * back keeps. A space's sessions are its own, so there is nothing to key by and nothing
+ * to register: the instance dies with the space that made it.
  */
 export class SpaceSessionAnalytics {
-    private readonly spaces = new Map<string, TrackedSpace>();
+    private readonly members = new Map<string, { member: SessionMember; active: boolean }>();
+    private activeCount = 0;
+    private session?: Session;
+    /**
+     * The room of whoever arrived first, for the row a session emits about nobody. A
+     * space has no room of its own — every member carries theirs, and a space spans as
+     * many rooms as the map has.
+     */
+    private roomId = "";
 
     public constructor(
+        private readonly id: string,
+        private readonly world: string,
+        /**
+         * Read when a session opens rather than once: the kind is the `spaceKind`
+         * metadata, and it arrives after the first join. Undefined keeps the session
+         * closed, so a space that never declares one never opens.
+         */
+        private readonly kind: () => SpaceKind | undefined,
         private readonly queue: Pick<AnalyticsEventsQueue, "enqueue"> = analyticsEventsQueue,
         private readonly nowMs: () => number = Date.now,
     ) {}
 
-    /** Idempotent: the first call wins, later ones are free. */
-    public track(id: string, world: string, roomId: string, kind: () => SpaceKind | undefined): void {
-        if (!this.spaces.has(id)) {
-            this.spaces.set(id, { id, world, roomId, kind, members: new Map(), activeCount: 0 });
-        }
-    }
-
     /** The space learnt what it is: a session waiting on that may open now. */
-    public kindChanged(id: string): void {
-        const space = this.spaces.get(id);
-        if (space) {
-            this.sync(space);
-        }
+    public kindChanged(): void {
+        this.sync();
     }
 
-    /** The space is gone: close whatever is open and forget its members. */
-    public untrack(id: string): void {
-        const space = this.spaces.get(id);
-        if (!space) {
+    public join(member: SessionMember, active: boolean): void {
+        if (this.members.has(member.spaceUserId)) {
             return;
         }
-        this.spaces.delete(id);
-        if (space.session) {
-            this.close(space, "closed");
+        if (this.roomId === "") {
+            this.roomId = member.roomId;
         }
-    }
-
-    public join(id: string, member: SessionMember, active: boolean): void {
-        const space = this.spaces.get(id);
-        if (!space || space.members.has(member.spaceUserId)) {
-            return;
-        }
-        space.members.set(member.spaceUserId, { member, active });
+        this.members.set(member.spaceUserId, { member, active });
         if (active) {
-            space.activeCount += 1;
+            this.activeCount += 1;
         }
-        if (space.session) {
-            this.addParticipation(space, member.spaceUserId);
+        if (this.session) {
+            this.addParticipation(member.spaceUserId);
         }
-        this.sync(space);
+        this.sync();
     }
 
-    public setActive(id: string, key: string, active: boolean): void {
-        const space = this.spaces.get(id);
-        const entry = space?.members.get(key);
-        if (!space || !entry || entry.active === active) {
+    public setActive(key: string, active: boolean): void {
+        const entry = this.members.get(key);
+        if (!entry || entry.active === active) {
             return;
         }
         entry.active = active;
-        space.activeCount += active ? 1 : -1;
-        const participation = space.session?.participations.get(key);
+        this.activeCount += active ? 1 : -1;
+        const participation = this.session?.participations.get(key);
         if (participation) {
             if (active) {
                 this.goOnAir(participation);
@@ -137,53 +122,119 @@ export class SpaceSessionAnalytics {
                 this.goOffAir(participation);
             }
         }
-        this.sync(space);
+        this.sync();
     }
 
-    public leave(id: string, key: string): void {
-        const space = this.spaces.get(id);
-        const entry = space?.members.get(key);
-        if (!space || !entry) {
+    public leave(key: string): void {
+        const entry = this.members.get(key);
+        if (!entry) {
             return;
         }
-        space.members.delete(key);
+        this.members.delete(key);
         if (entry.active) {
-            space.activeCount -= 1;
+            this.activeCount -= 1;
         }
-        const participation = space.session?.participations.get(key);
-        if (space.session && participation && participation.endedAtMs === undefined) {
+        const participation = this.session?.participations.get(key);
+        if (this.session && participation && participation.endedAtMs === undefined) {
             this.goOffAir(participation);
             participation.endedAtMs = this.nowMs();
-            space.session.present -= 1;
+            this.session.present -= 1;
         }
-        this.sync(space);
+        this.sync();
     }
 
-    /** Closes every open session, for a graceful shutdown. Only enqueues. */
-    public closeAll(): number {
-        let closed = 0;
-        for (const space of this.spaces.values()) {
-            if (space.session) {
-                this.close(space, "back_shutdown");
-                closed += 1;
-            }
+    /**
+     * Closes whatever is open — because the predicate stopped holding, because the space
+     * is gone, or because the back is. Only enqueues. Members are kept: an area that
+     * drops below two and fills up again opens a second session, which is a second row.
+     *
+     * Returns whether there was a session to close, which is what a shutdown counts.
+     */
+    public close(endReason: SessionEndReason = "closed"): boolean {
+        const session = this.session;
+        if (!session) {
+            return false;
         }
-        return closed;
+        this.session = undefined;
+
+        const endedAtMs = this.nowMs();
+        const meeting = isMeetingKind(session.kind);
+        const idKey = meeting ? "meetingId" : "broadcastId";
+        const kindKey = meeting ? "meetingKind" : "broadcastKind";
+        const interval = (startedAtMs: number, atMs: number) => ({
+            startedAt: new Date(startedAtMs).toISOString(),
+            endedAt: new Date(atMs).toISOString(),
+            durationSeconds: Math.max(0, (atMs - startedAtMs) / 1000),
+            endReason,
+        });
+
+        let speakerCount = 0;
+        // Participations first, so none of them ends after the session containing it —
+        // the admin drops an inner row whose end falls past its container's.
+        for (const participation of session.participations.values()) {
+            this.goOffAir(participation);
+            const atMs = participation.endedAtMs ?? endedAtMs;
+            if (participation.spoke) {
+                speakerCount += 1;
+            }
+            this.queue.enqueue(
+                this.row({
+                    eventName: meeting ? "meeting.participation.ended" : "broadcast.participation.ended",
+                    member: participation.member,
+                    atMs,
+                    eventId: `${this.id}:${session.openedAtMs}:${participation.member.spaceUserId}`,
+                    properties: {
+                        [idKey]: this.id,
+                        [kindKey]: session.kind,
+                        joinRank: participation.joinRank,
+                        ...interval(participation.startedAtMs, atMs),
+                        ...(meeting
+                            ? {}
+                            : {
+                                  role: participation.spoke ? "speaker" : "listener",
+                                  airtimeSeconds: participation.airtimeMs / 1000,
+                              }),
+                    },
+                }),
+            );
+        }
+
+        this.queue.enqueue(
+            this.row({
+                eventName: meeting ? "meeting.ended" : "broadcast.ended",
+                // A session belongs to no one. The per-user view is the participation
+                // row; attributing the session to one of its members would count the
+                // whole thing as that person's.
+                member: undefined,
+                atMs: endedAtMs,
+                eventId: `${this.id}:${session.openedAtMs}`,
+                properties: {
+                    [idKey]: this.id,
+                    [kindKey]: session.kind,
+                    participantCount: session.participations.size,
+                    peakParticipantCount: session.peak,
+                    ...interval(session.openedAtMs, endedAtMs),
+                    ...(meeting ? {} : { speakerCount }),
+                },
+            }),
+        );
+
+        return true;
     }
 
     /** The predicate. Opening pulls every present member in; closing ends every participation. */
-    private sync(space: TrackedSpace): void {
-        const kind = space.kind();
-        const wanted = kind !== undefined && space.activeCount >= MIN_ACTIVE[kind];
-        if (wanted && !space.session) {
-            this.open(space, kind);
-        } else if (!wanted && space.session) {
-            this.close(space, "closed");
+    private sync(): void {
+        const kind = this.kind();
+        const wanted = kind !== undefined && this.activeCount >= MIN_ACTIVE[kind];
+        if (wanted && !this.session) {
+            this.open(kind);
+        } else if (!wanted && this.session) {
+            this.close("closed");
         }
     }
 
-    private open(space: TrackedSpace, kind: SpaceKind): void {
-        space.session = {
+    private open(kind: SpaceKind): void {
+        this.session = {
             kind,
             openedAtMs: this.nowMs(),
             participations: new Map(),
@@ -191,14 +242,14 @@ export class SpaceSessionAnalytics {
             peak: 0,
         };
         // Insertion order is arrival order, which is what joinRank means.
-        for (const key of space.members.keys()) {
-            this.addParticipation(space, key);
+        for (const key of this.members.keys()) {
+            this.addParticipation(key);
         }
     }
 
-    private addParticipation(space: TrackedSpace, key: string): void {
-        const session = space.session;
-        const entry = space.members.get(key);
+    private addParticipation(key: string): void {
+        const session = this.session;
+        const entry = this.members.get(key);
         if (!session || !entry) {
             return;
         }
@@ -229,81 +280,8 @@ export class SpaceSessionAnalytics {
         }
     }
 
-    private close(space: TrackedSpace, endReason: SessionEndReason): void {
-        const session = space.session;
-        if (!session) {
-            return;
-        }
-        space.session = undefined;
-
-        const endedAtMs = this.nowMs();
-        const meeting = isMeetingKind(session.kind);
-        const idKey = meeting ? "meetingId" : "broadcastId";
-        const kindKey = meeting ? "meetingKind" : "broadcastKind";
-        const interval = (startedAtMs: number, atMs: number) => ({
-            startedAt: new Date(startedAtMs).toISOString(),
-            endedAt: new Date(atMs).toISOString(),
-            durationSeconds: Math.max(0, (atMs - startedAtMs) / 1000),
-            endReason,
-        });
-
-        let speakerCount = 0;
-        // Participations first, so none of them ends after the session containing it —
-        // the admin drops an inner row whose end falls past its container's.
-        for (const participation of session.participations.values()) {
-            this.goOffAir(participation);
-            const atMs = participation.endedAtMs ?? endedAtMs;
-            if (participation.spoke) {
-                speakerCount += 1;
-            }
-            this.queue.enqueue(
-                this.row({
-                    eventName: meeting ? "meeting.participation.ended" : "broadcast.participation.ended",
-                    space,
-                    member: participation.member,
-                    atMs,
-                    eventId: `${space.id}:${session.openedAtMs}:${participation.member.spaceUserId}`,
-                    properties: {
-                        [idKey]: space.id,
-                        [kindKey]: session.kind,
-                        joinRank: participation.joinRank,
-                        ...interval(participation.startedAtMs, atMs),
-                        ...(meeting
-                            ? {}
-                            : {
-                                  role: participation.spoke ? "speaker" : "listener",
-                                  airtimeSeconds: participation.airtimeMs / 1000,
-                              }),
-                    },
-                }),
-            );
-        }
-
-        this.queue.enqueue(
-            this.row({
-                eventName: meeting ? "meeting.ended" : "broadcast.ended",
-                space,
-                // A session belongs to no one. The per-user view is the participation
-                // row; attributing the session to one of its members would count the
-                // whole thing as that person's.
-                member: undefined,
-                atMs: endedAtMs,
-                eventId: `${space.id}:${session.openedAtMs}`,
-                properties: {
-                    [idKey]: space.id,
-                    [kindKey]: session.kind,
-                    participantCount: session.participations.size,
-                    peakParticipantCount: session.peak,
-                    ...interval(session.openedAtMs, endedAtMs),
-                    ...(meeting ? {} : { speakerCount }),
-                },
-            }),
-        );
-    }
-
     private row(input: {
         eventName: string;
-        space: TrackedSpace;
         member: SessionMember | undefined;
         atMs: number;
         eventId: string;
@@ -325,12 +303,10 @@ export class SpaceSessionAnalytics {
             userId: null,
             spaceUserId: input.member?.spaceUserId ?? "",
             clientIp: null,
-            world: input.space.world,
-            roomId: input.member?.roomId ?? input.space.roomId,
+            world: this.world,
+            roomId: input.member?.roomId ?? this.roomId,
             tabId: null,
             properties: input.properties,
         };
     }
 }
-
-export const spaceSessionAnalytics = new SpaceSessionAnalytics();

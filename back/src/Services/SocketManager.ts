@@ -77,6 +77,7 @@ import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import type { Zone, ZonePosition } from "../Model/Zone";
 import type { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
+import type { SessionEndReason } from "./SpaceSessionAnalytics";
 import type { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
 import { gaugeManager } from "./GaugeManager";
@@ -1729,6 +1730,23 @@ export class SocketManager {
                 externalModuleMessage: externalModuleMessage,
             });
         }
+    }
+
+    /**
+     * Ends every open meeting and broadcast, for a shutdown that is about to take the
+     * process with them. A session only exists once it has ended, so a deploy that kills
+     * the back without this loses every live conversation silently.
+     *
+     * Only enqueues — the caller drains afterwards. Returns how many were closed.
+     */
+    closeAllSpaceSessions(endReason: SessionEndReason): number {
+        let closed = 0;
+        for (const space of this.spaces.values()) {
+            if (space.closeSession(endReason)) {
+                closed += 1;
+            }
+        }
+        return closed;
     }
 
     /*

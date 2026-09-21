@@ -10,7 +10,7 @@ import {
     SENTRY_TRACES_SAMPLE_RATE,
 } from "./Enum/EnvironmentVariable";
 import { telemetryService } from "./Services/TelemetryService";
-import { spaceSessionAnalytics } from "./Services/SpaceSessionAnalytics";
+import { socketManager } from "./Services/SocketManager";
 
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));
@@ -56,9 +56,9 @@ const shutdown = (reason: string, exitCode: number): void => {
     }
     shuttingDown = true;
 
-    // Close BEFORE draining: closeAll only enqueues, so draining first would leave
+    // Close BEFORE draining: closing only enqueues, so draining first would leave
     // everything it produced behind.
-    const closed = spaceSessionAnalytics.closeAll();
+    const closed = socketManager.closeAllSpaceSessions("back_shutdown");
     console.info(`${reason}: closed ${closed} session(s), draining the analytics queue before exit…`);
 
     runDrains(DRAIN_TIMEOUT_MS)

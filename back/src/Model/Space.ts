@@ -21,7 +21,7 @@ import Debug from "debug";
 import { asError } from "catch-unknown";
 import { spaceKindSchema, type SpaceKind } from "@workadventure/messages";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
-import { spaceSessionAnalytics, type SessionMember } from "../Services/SpaceSessionAnalytics";
+import { SpaceSessionAnalytics, type SessionEndReason, type SessionMember } from "../Services/SpaceSessionAnalytics";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { SpacesWatcher } from "./SpacesWatcher";
 import type { EventProcessor } from "./EventProcessor";
@@ -47,6 +47,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     private _nbUsers = 0;
     // If there is at least one publishers, nbWatchers = nbUsers. Otherwise nbWatchers = 0
     private _nbWatchers = 0;
+    private readonly sessionAnalytics: SpaceSessionAnalytics;
 
     constructor(
         name: string,
@@ -62,6 +63,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.usersToNotify = new Map<SpacesWatcher, Map<SpaceUser["spaceUserId"], SpaceUser>>();
         this.metadata = new Map<string, unknown>();
         this.communicationManager = new CommunicationManager(this);
+        this.sessionAnalytics = new SpaceSessionAnalytics(name, world, () => this.sessionKind());
         debug(`${name} => created`);
     }
 
@@ -133,7 +135,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             // Only the megaphone: `attendeesState` is the audience choosing to be seen,
             // not a speaker going on air. In a meeting, present is active.
             if (this.isBroadcast) {
-                spaceSessionAnalytics.setActive(this.name, user.spaceUserId, user.megaphoneState);
+                this.sessionAnalytics.setActive(user.spaceUserId, user.megaphoneState);
             }
 
             const newFilter = this.filterOneUser(user);
@@ -243,7 +245,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 this._nbWatchers = 0;
             }
             this._spaceUpdatedSubject.next(this);
-            spaceSessionAnalytics.leave(this.name, spaceUserId);
+            this.sessionAnalytics.leave(spaceUserId);
             debug(`${this.name} : user => removed ${spaceUserId}`);
         } catch (e) {
             console.error("Error while removing user", e);
@@ -358,7 +360,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             for (const spaceUser of spaceUsers.values()) {
                 // A pusher going away takes its users with it; without this they would
                 // stay "present" until the back itself shut down.
-                spaceSessionAnalytics.leave(this.name, spaceUser.spaceUserId);
+                this.sessionAnalytics.leave(spaceUser.spaceUserId);
                 this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
@@ -766,13 +768,12 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
      * load, not on presence. It knows how the media is carried, not who is there.
      */
     private trackSessionJoin(spaceUser: SpaceUser): void {
-        spaceSessionAnalytics.track(this.name, this.world, spaceUser.playUri, () => this.sessionKind());
         const member: SessionMember = {
             uuid: spaceUser.uuid,
             spaceUserId: spaceUser.spaceUserId,
             roomId: spaceUser.playUri,
         };
-        spaceSessionAnalytics.join(this.name, member, this.isBroadcast ? spaceUser.megaphoneState : true);
+        this.sessionAnalytics.join(member, this.isBroadcast ? spaceUser.megaphoneState : true);
     }
 
     private isPublishing(spaceUser: SpaceUser): boolean {
@@ -822,8 +823,17 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     public getRecordingState(): ManagedRecordingState {
         return this.communicationManager.getRecordingState();
     }
+    /**
+     * Closes an open session early, for a shutdown that is about to take the process —
+     * and with it every session, which only exists once it has ended. Says whether there
+     * was one, which is what the caller counts.
+     */
+    public closeSession(endReason: SessionEndReason): boolean {
+        return this.sessionAnalytics.close(endReason);
+    }
+
     public destroy() {
-        spaceSessionAnalytics.untrack(this.name);
+        this.sessionAnalytics.close();
         this.communicationManager.destroy();
         debug(`${this.name} => destroyed`);
     }
@@ -837,7 +847,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             this.metadata.set(key, value);
         }
         if ("spaceKind" in metadata) {
-            spaceSessionAnalytics.kindChanged(this.name);
+            this.sessionAnalytics.kindChanged();
         }
 
         this.notifyWatchers({
