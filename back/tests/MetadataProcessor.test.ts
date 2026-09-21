@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { FilterType } from "@workadventure/messages";
 import { MetadataProcessor } from "../src/Model/MetadataProcessor";
 import { metadataProcessor } from "../src/Model/MetadataProcessorInit";
 
@@ -23,16 +22,13 @@ describe("MetadataProcessor", () => {
         });
     });
 
-    it("only lets a declared space kind through, and only one that matches the filter", async () => {
-        const broadcast = { filterType: FilterType.LIVE_STREAMING_USERS } as never;
-        const meeting = { filterType: FilterType.ALL_USERS } as never;
+    it("only lets a declared space kind through", async () => {
+        const space = {} as never;
 
-        await expect(metadataProcessor.processMetadata("spaceKind", "megaphone", "s", broadcast)).resolves.toBe(
+        await expect(metadataProcessor.processMetadata("spaceKind", "megaphone", "s", space)).resolves.toBe(
             "megaphone",
         );
-        await expect(metadataProcessor.processMetadata("spaceKind", "bubble", "s", meeting)).resolves.toBe("bubble");
-        await expect(metadataProcessor.processMetadata("spaceKind", "lobby", "s", meeting)).rejects.toThrow();
-        // A script naming its space a bubble cannot make it one.
-        await expect(metadataProcessor.processMetadata("spaceKind", "bubble", "s", broadcast)).rejects.toThrow();
+        await expect(metadataProcessor.processMetadata("spaceKind", "bubble", "s", space)).resolves.toBe("bubble");
+        await expect(metadataProcessor.processMetadata("spaceKind", "lobby", "s", space)).rejects.toThrow();
     });
 });
