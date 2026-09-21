@@ -740,8 +740,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
      * What this space is a session of, or undefined while its client has not said.
      *
      * Read when a session opens rather than once: the kind is the `spaceKind` metadata,
-     * validated on the way in — against the enum and against this space's filter — and
-     * it arrives after the first join. A space that never declares one never opens.
+     * checked against the enum on the way in, and it arrives after the first join. A space
+     * that never declares one never opens.
      */
     private sessionKind(): SpaceKind | undefined {
         const kind = spaceKindSchema.safeParse(this.getMetadataValue("spaceKind"));
@@ -749,12 +749,21 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     /**
-     * Tracked here and not in the CommunicationManager: the manager only receives the
-     * users who pass the filter — a listener never reaches it, and a listener raising the
-     * megaphone reaches it as an added user — and ICommunicationSpace exposes neither the
-     * filter, nor the metadata, nor the world. It also has no notion of a session opening:
-     * its initial state exists from the moment the space is created. It knows how the
-     * media is carried, not who is there.
+     * Tracked here and not in the CommunicationManager, which is the tempting place: for
+     * ALL_USERS and for LIVE_STREAMING_USERS its filter crossings ARE this predicate —
+     * everyone passes the first, and the second IS megaphoneState.
+     *
+     * What it does not have is the rest. It receives crossings, not arrivals: a listener's
+     * join and leave never reach it. The snapshot does cover them — getAllUsers() is on
+     * ICommunicationSpace — but a participation needs the edge, arrived at t0 and left at
+     * t1, and a snapshot has none. Neither has usersToNotify, which follows the front's
+     * store subscriptions: a remounted component reads there as a leave and a join.
+     *
+     * ICommunicationSpace exposes no filterType — so on LIVE_STREAMING_USERS_WITH_FEEDBACK
+     * a crossing stops meaning "on air", which is what setActive above is for — no
+     * metadata, and no world. And the manager has no notion of a session opening: its
+     * initial state exists from the moment the space is created, and it transitions on
+     * load, not on presence. It knows how the media is carried, not who is there.
      */
     private trackSessionJoin(spaceUser: SpaceUser): void {
         spaceSessionAnalytics.track(this.name, this.world, spaceUser.playUri, () => this.sessionKind());
