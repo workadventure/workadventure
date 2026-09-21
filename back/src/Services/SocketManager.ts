@@ -79,7 +79,7 @@ import type { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
 import type { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
-import type { SessionEndReason } from "./SpaceSessionAnalytics";
+import type { SessionEndReason } from "../Model/SessionAnalytics";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";

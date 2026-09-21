@@ -77,7 +77,7 @@ const EMITTED_FROM_EXTERNAL_MODULES = ["external_module.opened", "external_modul
  * These are the rows the back emits as the authority on a space session — a meeting
  * or a broadcast: it owns the space, so it is the only party that can say a session
  * happened once rather than once per participant.
- * See back/src/Services/SpaceSessionAnalytics.ts.
+ * See back/src/Model/SessionAnalytics.ts.
  */
 const EMITTED_FROM_BACK = ["meeting.participation.ended", "broadcast.ended", "broadcast.participation.ended"];
 

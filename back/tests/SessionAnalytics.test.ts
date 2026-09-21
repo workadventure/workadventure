@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, type Mock } from "vitest";
 import type { AnalyticsStoredEvent, SpaceKind } from "@workadventure/messages";
-import { SpaceSessionAnalytics, type SessionMember } from "../src/Services/SpaceSessionAnalytics";
+import { SessionAnalytics, type SessionMember } from "../src/Model/SessionAnalytics";
 
 type Enqueue = Mock<(row: AnalyticsStoredEvent) => void>;
 
@@ -15,14 +15,14 @@ const rowsOf = (enqueue: Enqueue): AnalyticsStoredEvent[] => enqueue.mock.calls.
 const harness = (kind: SpaceKind) => {
     const enqueue: Enqueue = vi.fn();
     let now = Date.parse("2026-04-24T12:00:00.000Z");
-    const analytics = new SpaceSessionAnalytics("space", "world", () => kind, { enqueue }, () => now);
+    const analytics = new SessionAnalytics("space", "world", () => kind, { enqueue }, () => now);
     const tick = (seconds: number) => {
         now += seconds * 1000;
     };
     return { analytics, enqueue, tick };
 };
 
-describe("SpaceSessionAnalytics", () => {
+describe("SessionAnalytics", () => {
     it("reports one meeting and three participations for a bubble of three", () => {
         const { analytics, enqueue, tick } = harness("bubble");
 
@@ -165,7 +165,7 @@ describe("SpaceSessionAnalytics", () => {
         const enqueue: Enqueue = vi.fn();
         let now = 0;
         let kind: SpaceKind | undefined = undefined;
-        const analytics = new SpaceSessionAnalytics("space", "world", () => kind, { enqueue }, () => now);
+        const analytics = new SessionAnalytics("space", "world", () => kind, { enqueue }, () => now);
 
         // Two people met before either declared the space: nothing opens yet.
         analytics.join(member("1"), true);
@@ -184,10 +184,10 @@ describe("SpaceSessionAnalytics", () => {
         // SocketManager runs this over every space and adds up the answers, so what one
         // space owes it is a truthful yes/no — an idle space must not inflate the count.
         const enqueue: Enqueue = vi.fn();
-        const open = new SpaceSessionAnalytics("bubble", "world", () => "bubble", { enqueue }, () => 0);
+        const open = new SessionAnalytics("bubble", "world", () => "bubble", { enqueue }, () => 0);
         open.join(member("1"), true);
         open.join(member("2"), true);
-        const idle = new SpaceSessionAnalytics("idle", "world", () => "area", { enqueue }, () => 0);
+        const idle = new SessionAnalytics("idle", "world", () => "area", { enqueue }, () => 0);
         idle.join(member("3"), true);
 
         expect(idle.close("back_shutdown")).toBe(false);

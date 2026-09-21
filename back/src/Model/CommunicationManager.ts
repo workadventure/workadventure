@@ -10,7 +10,6 @@ import {
     FilterType,
 } from "@workadventure/messages";
 import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
-import { SpaceSessionAnalytics, type SessionEndReason } from "../Services/SpaceSessionAnalytics";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
@@ -19,6 +18,7 @@ import { WebRTCState } from "./States/WebRTCState";
 import { VoidState } from "./States/VoidState";
 import type { IRecordingManager, ManagedRecordingState } from "./RecordingManager";
 import { RecordingManager } from "./RecordingManager";
+import { SessionAnalytics, type SessionEndReason } from "./SessionAnalytics";
 import { UserRegistry } from "./Services/UserRegistry";
 import { TransitionPolicy } from "./Policies/TransitionPolicy";
 import { TransitionOrchestrator } from "./Services/TransitionOrchestrator";
@@ -73,7 +73,7 @@ export interface CommunicationManagerDependencies {
     initialStateFactory?: InitialStateFactory;
     livekitToWebRTCDelayMs?: number;
     recordingManager?: IRecordingManager;
-    sessionAnalytics?: SpaceSessionAnalytics;
+    sessionAnalytics?: SessionAnalytics;
 }
 
 /**
@@ -110,7 +110,7 @@ export class CommunicationManager implements ICommunicationManager {
      * present only because every front happens to subscribe to a store of its space.
      * `Space.addUser` IS presence, and a participation's start and end have to be.
      */
-    private readonly _sessionAnalytics: SpaceSessionAnalytics;
+    private readonly _sessionAnalytics: SessionAnalytics;
     private _presenceMismatchReported = false;
     private _presenceCheckTimer: NodeJS.Timeout | undefined;
 
@@ -155,7 +155,7 @@ export class CommunicationManager implements ICommunicationManager {
 
         this._sessionAnalytics =
             dependencies.sessionAnalytics ??
-            new SpaceSessionAnalytics(this.space.getSpaceName(), this.space.world, () => this.sessionKind());
+            new SessionAnalytics(this.space.getSpaceName(), this.space.world, () => this.sessionKind());
 
         // Initialize transition policy with LiveKit availability checker
         this.policy =

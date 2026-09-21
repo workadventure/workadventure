@@ -1,6 +1,6 @@
 import { isMeetingKind, type AnalyticsStoredEvent, type SpaceKind } from "@workadventure/messages";
 import type { AnalyticsEventsQueue } from "@workadventure/shared-utils";
-import { analyticsEventsQueue } from "./AnalyticsEventsQueue";
+import { analyticsEventsQueue } from "../Services/AnalyticsEventsQueue";
 
 /** Why a session or a participation ended. */
 export type SessionEndReason = "closed" | "back_shutdown";
@@ -57,11 +57,12 @@ type Session = {
  * cannot be emitted before we know the session it belongs to happened. A second session
  * in the same space is a second row under the same id, told apart by `startedAt`.
  *
- * One instance per space, owned by it, like RecordingManager — the other session this
- * back keeps. A space's sessions are its own, so there is nothing to key by and nothing
- * to register: the instance dies with the space that made it.
+ * One instance per space, built by that space's CommunicationManager the way it builds
+ * RecordingManager — the other session a space keeps. So there is nothing to key by and
+ * nothing to register: the instance dies with the space. The manager also feeds it, from
+ * the two rosters it already maintains; see `syncPresence` there.
  */
-export class SpaceSessionAnalytics {
+export class SessionAnalytics {
     private readonly members = new Map<string, { member: SessionMember; active: boolean }>();
     private activeCount = 0;
     private session?: Session;

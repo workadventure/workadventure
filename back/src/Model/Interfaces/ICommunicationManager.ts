@@ -1,6 +1,6 @@
 import type { HandleLivekitWebhookRequest, MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import type { ManagedRecordingState } from "../RecordingManager";
-import type { SessionEndReason } from "../../Services/SpaceSessionAnalytics";
+import type { SessionEndReason } from "../SessionAnalytics";
 
 export interface ICommunicationManager {
     getRecordingState(): ManagedRecordingState;
