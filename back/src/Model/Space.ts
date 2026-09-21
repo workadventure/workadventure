@@ -219,6 +219,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string): void {
         let user: SpaceUser | undefined;
+        let wasToNotify = false;
         try {
             const usersList = this.usersList(sourceWatcher);
             user = usersList.get(spaceUserId);
@@ -229,7 +230,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             }
 
             const usersToNotifyList = this.usersListToNotify(sourceWatcher);
-            usersToNotifyList.delete(spaceUserId);
+            wasToNotify = usersToNotifyList.delete(spaceUserId);
 
             usersList.delete(spaceUserId);
 
@@ -250,6 +251,13 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             Sentry.captureException(e);
             debug("Error while removing user", e);
         } finally {
+            if (user && wasToNotify) {
+                this.communicationManager.handleUserToNotifyDeleted(user).catch((error) => {
+                    console.error("Error while deleting user to notify", error);
+                    Sentry.captureException(error);
+                });
+            }
+
             if (user && this.filterOneUser(user)) {
                 this.communicationManager.handleUserDeleted(user).catch((error) => {
                     console.error("Error while deleting user", error);
