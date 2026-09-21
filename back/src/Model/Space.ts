@@ -733,50 +733,60 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     /**
-     * Adds or removes a user from the "raised hands" queue stored in the space metadata, server-authoritatively.
+     * Adds or removes the sender from one of the space's membership lists, server-authoritatively.
      *
-     * This is the single source of truth for who raised their hand: the queue is stored in metadata (which is
-     * broadcast to ALL members regardless of role, unlike SpaceUser) so that a megaphone speaker without the
-     * seeAttendees option still receives it. This method is synchronous so that read-modify-write is atomic
-     * (the back is single-threaded), avoiding lost updates when several listeners raise their hand at once.
-     * The timestamp and name are stamped server-side, and the identity is the trusted senderId.
-     */
-    public applyRaisedHand(senderId: string, raised: boolean): RaisedHandEntry[] {
-        const queue = this.raisedHandsQueue();
-        const existingIndex = queue.findIndex((entry) => entry.spaceUserId === senderId);
-        if (raised) {
-            if (existingIndex === -1) {
-                queue.push({ spaceUserId: senderId, name: this.getUser(senderId)?.name ?? "", at: Date.now() });
-                queue.sort((a, b) => a.at - b.at);
-            }
-        } else if (existingIndex !== -1) {
-            queue.splice(existingIndex, 1);
-        }
-        this.metadata.set(RAISED_HANDS_METADATA_KEY, queue);
-        return queue;
-    }
-
-    /**
-     * Adds or removes a user from the "floor holders" list stored in the space metadata, server-authoritatively.
+     * Both lists live in the space metadata, which is broadcast to ALL members regardless of role -- unlike
+     * SpaceUser, which a broadcast space filters -- so a megaphone speaker without the seeAttendees option
+     * still receives them. The identity is the trusted senderId and the display name is stamped here, so a
+     * client can only ever toggle its own entry.
      *
-     * This list contains only the users who were GIVEN the floor after raising their hand (self-reported by the
-     * holder via { holds: boolean }), never the original speakers/hosts. Like the raised-hands queue it lives in
-     * metadata (broadcast to ALL members regardless of role), so the host panel can offer taking the floor back
-     * even without seeAttendees, and a promoted guest can only ever act on other granted guests, not the host.
-     * Synchronous so read-modify-write is atomic; identity is the trusted senderId.
+     * The list is kept in insertion order, which IS the order the front displays: it numbers the entries by
+     * their index, so appending is all the ordering there is to do.
+     *
+     * Synchronous, so that read-modify-write is atomic (the back is single-threaded): two members toggling
+     * at the same time cannot lose an update.
      */
-    public applyFloorHolder(senderId: string, holds: boolean): FloorHolderEntry[] {
-        const list = this.floorHolders();
+    private applyMemberList<T extends { spaceUserId: string }>(
+        key: string,
+        list: T[],
+        senderId: string,
+        present: boolean,
+        createEntry: (name: string) => T,
+    ): T[] {
         const existingIndex = list.findIndex((entry) => entry.spaceUserId === senderId);
-        if (holds) {
+        if (present) {
             if (existingIndex === -1) {
-                list.push({ spaceUserId: senderId, name: this.getUser(senderId)?.name ?? "" });
+                list.push(createEntry(this.getUser(senderId)?.name ?? ""));
             }
         } else if (existingIndex !== -1) {
             list.splice(existingIndex, 1);
         }
-        this.metadata.set(FLOOR_HOLDERS_METADATA_KEY, list);
+        this.metadata.set(key, list);
         return list;
+    }
+
+    /**
+     * The queue of members who raised their hand, in the order they did. `at` is stamped server-side so that
+     * every client agrees on it, whatever their own clock says.
+     */
+    public applyRaisedHand(senderId: string, raised: boolean): RaisedHandEntry[] {
+        return this.applyMemberList(RAISED_HANDS_METADATA_KEY, this.raisedHandsQueue(), senderId, raised, (name) => ({
+            spaceUserId: senderId,
+            name,
+            at: Date.now(),
+        }));
+    }
+
+    /**
+     * The members who were GIVEN the floor after raising their hand (self-reported by the holder via
+     * { holds: boolean }), never the original speakers/hosts -- so the host panel can offer taking the floor
+     * back, and a promoted guest can only ever act on other granted guests, not on the host.
+     */
+    public applyFloorHolder(senderId: string, holds: boolean): FloorHolderEntry[] {
+        return this.applyMemberList(FLOOR_HOLDERS_METADATA_KEY, this.floorHolders(), senderId, holds, (name) => ({
+            spaceUserId: senderId,
+            name,
+        }));
     }
 
     // Both lists are written only by the two methods above, so the catalogue check is a safety net: an

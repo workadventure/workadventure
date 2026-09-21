@@ -1119,3 +1119,60 @@ describe("Space with filter", () => {
         });
     });
 });
+
+describe("Space membership lists (raised hands / floor holders)", () => {
+    function spaceWithUsers(...names: [string, string][]): Space {
+        const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+        const watcher = mock<SpacesWatcher>({ id: "uuid-watcher", write: () => true });
+        (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+            watcher,
+            new Map(names.map(([spaceUserId, name]) => [spaceUserId, SpaceUser.fromPartial({ spaceUserId, name })])),
+        );
+        return space;
+    }
+
+    it("keeps the raise order, stamps the name server-side and re-numbers on lower", () => {
+        const space = spaceWithUsers(["foo_1", "Alice"], ["foo_2", "Bob"], ["foo_3", "Carol"]);
+
+        space.applyRaisedHand("foo_2", true);
+        space.applyRaisedHand("foo_1", true);
+        const queue = space.applyRaisedHand("foo_3", true);
+
+        // Insertion order is the displayed order: Bob raised first, so he is first whatever his id.
+        expect(queue.map((entry) => entry.spaceUserId)).toEqual(["foo_2", "foo_1", "foo_3"]);
+        expect(queue.map((entry) => entry.name)).toEqual(["Bob", "Alice", "Carol"]);
+        expect(queue.every((entry) => entry.at > 0)).toBe(true);
+
+        expect(space.applyRaisedHand("foo_1", false).map((entry) => entry.spaceUserId)).toEqual(["foo_2", "foo_3"]);
+    });
+
+    it("ignores a hand raised twice, and lowering a hand that is not raised", () => {
+        const space = spaceWithUsers(["foo_1", "Alice"]);
+
+        space.applyRaisedHand("foo_1", true);
+        expect(space.applyRaisedHand("foo_1", true)).toHaveLength(1);
+
+        expect(space.applyRaisedHand("foo_1", false)).toHaveLength(0);
+        expect(space.applyRaisedHand("foo_1", false)).toHaveLength(0);
+    });
+
+    it("stamps an empty name for a sender who is no longer in the space", () => {
+        const space = spaceWithUsers(["foo_1", "Alice"]);
+
+        const queue = space.applyRaisedHand("gone_9", true);
+        expect(queue).toHaveLength(1);
+        expect(queue[0].spaceUserId).toBe("gone_9");
+        expect(queue[0].name).toBe("");
+    });
+
+    it("keeps the floor holders as a separate list, with no timestamp", () => {
+        const space = spaceWithUsers(["foo_1", "Alice"], ["foo_2", "Bob"]);
+
+        space.applyRaisedHand("foo_1", true);
+        expect(space.applyFloorHolder("foo_2", true)).toEqual([{ spaceUserId: "foo_2", name: "Bob" }]);
+
+        // Taking the floor back must not touch the raise-hand queue.
+        expect(space.applyFloorHolder("foo_2", false)).toEqual([]);
+        expect(space.applyRaisedHand("foo_1", true).map((entry) => entry.spaceUserId)).toEqual(["foo_1"]);
+    });
+});
