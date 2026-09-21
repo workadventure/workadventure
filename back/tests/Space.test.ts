@@ -876,6 +876,11 @@ describe("Space with filter", () => {
             handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
             handleMeetingConnectionRestartMessage: vi.fn(),
+            handleMemberJoined: vi.fn(),
+            handleMemberActiveChanged: vi.fn(),
+            handleMemberLeft: vi.fn(),
+            handleSpaceKindChanged: vi.fn(),
+            closeSession: vi.fn().mockReturnValue(false),
             destroy: vi.fn(),
         });
 

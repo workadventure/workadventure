@@ -13,4 +13,8 @@ export type ICommunicationSpace = Pick<
     | "publishMetadata"
     | "stopRecordingByServer"
     | "getUser"
+    // What the session analytics need and the transport does not: the world a row
+    // belongs to, and the `spaceKind` this space's client declared.
+    | "world"
+    | "getMetadataValue"
 >;

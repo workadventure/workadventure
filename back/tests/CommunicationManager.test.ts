@@ -20,6 +20,7 @@ import type { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifec
 import { UserRegistry } from "../src/Model/Services/UserRegistry";
 import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy";
 import type { IRecordingManager } from "../src/Model/RecordingManager";
+import { analyticsEventsQueue } from "../src/Services/AnalyticsEventsQueue";
 
 describe("CommunicationManager", () => {
     // Helper to create real SpaceUser objects
@@ -75,6 +76,8 @@ describe("CommunicationManager", () => {
         publishMetadata: vi.fn(),
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: vi.fn(),
+        world: "world",
+        getMetadataValue: vi.fn(),
     });
 
     const createRecordingManager = (): IRecordingManager & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
@@ -1113,6 +1116,62 @@ describe("CommunicationManager", () => {
             capturedCallback?.(newState);
 
             expect(lifecycleManager.mocks.transitionTo).not.toHaveBeenCalled();
+        });
+    });
+    describe("session analytics", () => {
+        // The manager builds its own tracker, so this covers the wiring the refactor
+        // introduced end to end: the `spaceKind` metadata read off the space, the
+        // predicate that opens a meeting on the second arrival, and the rows that only
+        // exist once the session has ended. Injecting a fake tracker would test the
+        // delegation and skip exactly the part that can break.
+        const rowsFrom = (enqueue: Mock) => enqueue.mock.calls.map(([row]) => row as { eventName: string });
+
+        it("measures a meeting from the kind the space declares", () => {
+            const enqueue = vi.spyOn(analyticsEventsQueue, "enqueue").mockImplementation(() => {});
+            try {
+                const space = createSpace();
+                space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                const manager = new CommunicationManager(space, {
+                    lifecycleManager: createLifecycleManager(createState(CommunicationType.WEBRTC)),
+                    recordingManager: createRecordingManager(),
+                });
+
+                manager.handleMemberJoined(createSpaceUser("1"), true);
+                expect(rowsFrom(enqueue)).toEqual([]);
+
+                // Second arrival opens it; nothing is emitted until it closes.
+                manager.handleMemberJoined(createSpaceUser("2"), true);
+                expect(rowsFrom(enqueue)).toEqual([]);
+
+                expect(manager.closeSession("back_shutdown")).toBe(true);
+                expect(rowsFrom(enqueue).map((row) => row.eventName)).toEqual([
+                    "meeting.participation.ended",
+                    "meeting.participation.ended",
+                    "meeting.ended",
+                ]);
+            } finally {
+                enqueue.mockRestore();
+            }
+        });
+
+        it("measures nothing for a space whose client declared no kind", () => {
+            const enqueue = vi.spyOn(analyticsEventsQueue, "enqueue").mockImplementation(() => {});
+            try {
+                const space = createSpace();
+                space.getMetadataValue = vi.fn().mockReturnValue(undefined);
+                const manager = new CommunicationManager(space, {
+                    lifecycleManager: createLifecycleManager(createState(CommunicationType.WEBRTC)),
+                    recordingManager: createRecordingManager(),
+                });
+
+                manager.handleMemberJoined(createSpaceUser("1"), true);
+                manager.handleMemberJoined(createSpaceUser("2"), true);
+
+                expect(manager.closeSession("back_shutdown")).toBe(false);
+                expect(enqueue).not.toHaveBeenCalled();
+            } finally {
+                enqueue.mockRestore();
+            }
         });
     });
 });

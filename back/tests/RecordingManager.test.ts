@@ -61,6 +61,8 @@ function createDependencies(state: IRecordableState<IRecordableStrategy>) {
         publishMetadata,
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: vi.fn(),
+        world: "world",
+        getMetadataValue: vi.fn(),
     };
     const orchestrator: ITransitionOrchestrator = {
         executeImmediateTransition: vi.fn().mockResolvedValue(state),

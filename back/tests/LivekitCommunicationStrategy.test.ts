@@ -28,6 +28,8 @@ describe("LivekitCommunicationStrategy", () => {
             publishMetadata: vi.fn(),
             stopRecordingByServer,
             getUser: vi.fn(),
+            world: "world",
+            getMetadataValue: vi.fn(),
         };
 
         const livekitService = {
@@ -72,6 +74,8 @@ describe("LivekitCommunicationStrategy", () => {
             publishMetadata: vi.fn(),
             stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
             getUser: vi.fn(),
+            world: "world",
+            getMetadataValue: vi.fn(),
         };
 
         const livekitService = {

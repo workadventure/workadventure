@@ -1,5 +1,6 @@
 import type { HandleLivekitWebhookRequest, MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import type { ManagedRecordingState } from "../RecordingManager";
+import type { SessionEndReason } from "../../Services/SpaceSessionAnalytics";
 
 export interface ICommunicationManager {
     getRecordingState(): ManagedRecordingState;
@@ -13,6 +14,11 @@ export interface ICommunicationManager {
     handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void>;
     handleUserToNotifyAdded(user: SpaceUser): Promise<void>;
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
+    handleMemberJoined(user: SpaceUser, active: boolean): void;
+    handleMemberActiveChanged(spaceUserId: string, active: boolean): void;
+    handleMemberLeft(spaceUserId: string): void;
+    handleSpaceKindChanged(): void;
+    closeSession(endReason: SessionEndReason): boolean;
     handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
         senderUserId: string,

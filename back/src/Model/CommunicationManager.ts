@@ -5,6 +5,8 @@ import {
     type HandleRecordingWebhookRequest,
     type MeetingConnectionRestartMessage,
     type SpaceUser,
+    type SpaceKind,
+    spaceKindSchema,
 } from "@workadventure/messages";
 import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
@@ -16,6 +18,7 @@ import { VoidState } from "./States/VoidState";
 import type { IRecordingManager, ManagedRecordingState } from "./RecordingManager";
 import { RecordingManager } from "./RecordingManager";
 import { UserRegistry } from "./Services/UserRegistry";
+import { SpaceSessionAnalytics, type SessionEndReason } from "../Services/SpaceSessionAnalytics";
 import { TransitionPolicy } from "./Policies/TransitionPolicy";
 import { TransitionOrchestrator } from "./Services/TransitionOrchestrator";
 import { StateLifecycleManager } from "./Services/StateLifecycleManager";
@@ -69,6 +72,7 @@ export interface CommunicationManagerDependencies {
     initialStateFactory?: InitialStateFactory;
     livekitToWebRTCDelayMs?: number;
     recordingManager?: IRecordingManager;
+    sessionAnalytics?: SpaceSessionAnalytics;
 }
 
 /**
@@ -89,6 +93,17 @@ export class CommunicationManager implements ICommunicationManager {
     private readonly lifecycleManager: IStateLifecycleManager;
     private readonly space: ICommunicationSpace;
     private readonly _recordingManager: IRecordingManager;
+    /**
+     * The meetings and broadcasts this space held, measured. Owned here like the
+     * recording, the other session a space keeps: both begin and end inside the space,
+     * and neither is the space's own business to hold.
+     *
+     * It is fed from `Space`, not derived from the registries above. Those carry who
+     * crossed the filter and who is watching — transport facts, true today of everyone
+     * present only because every front happens to subscribe to a store of its space.
+     * `Space.addUser` IS presence, and a participation's start and end have to be.
+     */
+    private readonly _sessionAnalytics: SpaceSessionAnalytics;
 
     private static readonly DEFAULT_LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
@@ -128,6 +143,10 @@ export class CommunicationManager implements ICommunicationManager {
         this._recordingManager =
             dependencies.recordingManager ??
             new RecordingManager(this.space, this.orchestrator, this.userRegistry, this.lifecycleManager);
+
+        this._sessionAnalytics =
+            dependencies.sessionAnalytics ??
+            new SpaceSessionAnalytics(this.space.getSpaceName(), this.space.world, () => this.sessionKind());
 
         // Initialize transition policy with LiveKit availability checker
         this.policy =
@@ -469,7 +488,47 @@ export class CommunicationManager implements ICommunicationManager {
         return "handleStartRecording" in state && "handleStopRecording" in state && "handleLivekitWebhook" in state;
     }
 
+    /**
+     * What this space is a session of, or undefined while its client has not said.
+     *
+     * Read when a session opens rather than once: the kind is the `spaceKind` metadata,
+     * checked against the enum on the way in, and it arrives after the first join. A
+     * space that never declares one never opens a session.
+     */
+    private sessionKind(): SpaceKind | undefined {
+        const kind = spaceKindSchema.safeParse(this.space.getMetadataValue("spaceKind"));
+        return kind.success ? kind.data : undefined;
+    }
+
+    /** A member entered the space. `active` is "on air" in a broadcast, always true in a meeting. */
+    public handleMemberJoined(user: SpaceUser, active: boolean): void {
+        this._sessionAnalytics.join({ uuid: user.uuid, spaceUserId: user.spaceUserId, roomId: user.playUri }, active);
+    }
+
+    /** A speaker went on or off air. Meetings never call this: present is active there. */
+    public handleMemberActiveChanged(spaceUserId: string, active: boolean): void {
+        this._sessionAnalytics.setActive(spaceUserId, active);
+    }
+
+    public handleMemberLeft(spaceUserId: string): void {
+        this._sessionAnalytics.leave(spaceUserId);
+    }
+
+    /** The space learnt what it is: a session waiting on that may open now. */
+    public handleSpaceKindChanged(): void {
+        this._sessionAnalytics.kindChanged();
+    }
+
+    /**
+     * Ends an open session early, for a shutdown about to take the process with it —
+     * a session only exists once it has ended. Says whether there was one to end.
+     */
+    public closeSession(endReason: SessionEndReason): boolean {
+        return this._sessionAnalytics.close(endReason);
+    }
+
     public destroy(): void {
+        this._sessionAnalytics.close();
         this._recordingManager.destroy();
     }
 }
