@@ -1,5 +1,5 @@
-import type { AnalyticsStoredEvent } from "@workadventure/messages";
-import { isMeetingKind, type AnalyticsEventsQueue, type SpaceKind } from "@workadventure/shared-utils";
+import { isMeetingKind, type AnalyticsStoredEvent, type SpaceKind } from "@workadventure/messages";
+import type { AnalyticsEventsQueue } from "@workadventure/shared-utils";
 import { analyticsEventsQueue } from "./AnalyticsEventsQueue";
 
 /** Why a session or a participation ended. */
@@ -314,9 +314,7 @@ export class SpaceSessionAnalytics {
         return {
             eventName: input.eventName,
             // "pusher" means "a trusted server", which is what the admin gates on: the
-            // value a socket may never claim. A dedicated "back" would say more, but it
-            // is a JsonMessages edit, and that bumps apiVersionHash — a forced reload of
-            // every connected front, to relabel rows nothing reads by source.
+            // value a socket may never claim.
             source: "pusher",
             // Both ends measured on the same clock, and it is the server's: nothing here
             // came from a browser, so there is no skew to clamp.

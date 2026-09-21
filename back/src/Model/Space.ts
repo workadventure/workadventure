@@ -19,7 +19,7 @@ import {
 } from "@workadventure/messages";
 import Debug from "debug";
 import { asError } from "catch-unknown";
-import { spaceKindSchema, type SpaceKind } from "@workadventure/shared-utils";
+import { spaceKindSchema, type SpaceKind } from "@workadventure/messages";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
 import { spaceSessionAnalytics, type SessionMember } from "../Services/SpaceSessionAnalytics";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";

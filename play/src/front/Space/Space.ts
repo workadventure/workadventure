@@ -9,7 +9,8 @@ import { applyFieldMask } from "protobuf-fieldmask";
 import type { Subscription } from "rxjs";
 import { Observable, Subject } from "rxjs";
 import { deepmergeInto } from "deepmerge-ts";
-import { Deferred, spaceKindSchema } from "@workadventure/shared-utils";
+import { Deferred } from "@workadventure/shared-utils";
+import { spaceKindSchema } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import type {
     PublicEvent,

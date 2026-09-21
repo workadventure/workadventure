@@ -1,6 +1,5 @@
 import { describe, expect, it, vi, type Mock } from "vitest";
-import type { AnalyticsStoredEvent } from "@workadventure/messages";
-import type { SpaceKind } from "@workadventure/shared-utils";
+import type { AnalyticsStoredEvent, SpaceKind } from "@workadventure/messages";
 import { SpaceSessionAnalytics, type SessionMember } from "../src/Services/SpaceSessionAnalytics";
 
 type Enqueue = Mock<(row: AnalyticsStoredEvent) => void>;

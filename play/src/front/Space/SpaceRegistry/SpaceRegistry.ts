@@ -1,11 +1,10 @@
 import * as Sentry from "@sentry/svelte";
-import type { FilterType } from "@workadventure/messages";
+import type { FilterType, SpaceKind } from "@workadventure/messages";
 import type { Subscription } from "rxjs";
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
-import type { SpaceKind } from "@workadventure/shared-utils";
 import type { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import type { VideoBox } from "../VideoBox";
