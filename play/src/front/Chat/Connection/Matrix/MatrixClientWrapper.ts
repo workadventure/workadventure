@@ -58,6 +58,19 @@ export class InvalidLoginTokenError extends Error {
     }
 }
 
+/**
+ * The user is logged in to WorkAdventure but this browser holds no Matrix session at all: no access token
+ * and no login token to exchange (storage evicted, session revoked on an earlier visit, ...). Nothing in the
+ * current page can recover from that; only a fresh OpenID login mints a new Matrix login token, so the UI
+ * must offer the "reconnect" prompt rather than a dead-end error banner.
+ */
+export class MissingMatrixCredentialsError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "MissingMatrixCredentialsError";
+    }
+}
+
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
     private client!: MatrixClient;
     private secretStorageKeys: Record<string, Uint8Array<ArrayBuffer>> = {};
@@ -110,17 +123,17 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         if (!accessToken) {
             console.error("Unable to connect to matrix, access token is null");
-            throw new Error("Unable to connect to matrix, access token is null");
+            throw new MissingMatrixCredentialsError("Unable to connect to matrix, access token is null");
         }
 
         if (!matrixUserId) {
             console.error("Unable to connect to matrix, matrixUserId is null");
-            throw new Error("Unable to connect to matrix, matrixUserId is null");
+            throw new MissingMatrixCredentialsError("Unable to connect to matrix, matrixUserId is null");
         }
 
         if (!matrixDeviceId) {
             console.error("Unable to connect to matrix, matrixDeviceId is null");
-            throw new Error("Unable to connect to matrix, matrixDeviceId is null");
+            throw new MissingMatrixCredentialsError("Unable to connect to matrix, matrixDeviceId is null");
         }
 
         const { matrixStore, matrixCryptoStore } = this.matrixWebClientStore(matrixUserId);

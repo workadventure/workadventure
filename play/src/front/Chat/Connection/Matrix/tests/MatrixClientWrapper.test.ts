@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ICreateClientOpts } from "matrix-js-sdk";
 import type { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import type { MatrixClientWrapperInterface, MatrixLocalUserStore } from "../MatrixClientWrapper";
-import { MatrixClientWrapper } from "../MatrixClientWrapper";
+import { MatrixClientWrapper, MissingMatrixCredentialsError } from "../MatrixClientWrapper";
 import { matrixSecurity } from "../MatrixSecurity";
 import { modals } from "@wa-modals";
 
@@ -106,6 +106,10 @@ describe("MatrixClientWrapper", () => {
 
             await expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow(
                 "Unable to connect to matrix, access token is null",
+            );
+            // A missing session must be typed so the UI can offer the "reconnect" prompt.
+            await expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toBeInstanceOf(
+                MissingMatrixCredentialsError,
             );
         });
         it("should throw a error when matrixUserId is null", async () => {
