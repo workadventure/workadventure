@@ -1134,7 +1134,11 @@ export class SocketManager {
         }
     }
 
-    public async banUser(roomId: string, recipientUuid: string, message: string): Promise<void> {
+    /**
+     * Ejects a user from the room.
+     * @param type "banned" (permanent, persisted by the admin) or "kicked" (ejection only)
+     */
+    public async banUser(roomId: string, recipientUuid: string, message: string, type = "banned"): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             console.error(
@@ -1174,12 +1178,12 @@ export class SocketManager {
                 $case: "banUserMessage",
                 banUserMessage: {
                     message,
-                    type: "banned",
+                    type,
                     // The user is kicked right away, there is nothing to acknowledge.
                     id: "",
                 },
             });
-            endUserConnectionWithReason(recipient.socket, `User was banned: ${message}`);
+            endUserConnectionWithReason(recipient.socket, `User was ${type}: ${message}`);
         }
     }
 

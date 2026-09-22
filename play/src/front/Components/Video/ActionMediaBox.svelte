@@ -8,7 +8,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { meetingOf } from "../../Administration/CurrentMeeting";
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
-    import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
+    import { openModerationModal } from "../Moderation/openModerationModal";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import type { StreamCategory } from "../../Space/Streamable";
     import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
@@ -94,7 +94,7 @@
 
     function openBlockOrReportPopup(spaceUser: SpaceUserExtended) {
         analyticsClient.trackAdminEvent("meeting.report.clicked", meetingOf(spaceUser.space));
-        showReportScreenStore.set({ userUuid: spaceUser.uuid, userName: spaceUser.name });
+        openModerationModal(spaceUser.uuid, spaceUser.name);
         close();
     }
 

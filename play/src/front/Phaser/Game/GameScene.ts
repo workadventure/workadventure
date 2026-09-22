@@ -2219,6 +2219,7 @@ export class GameScene extends DirtyScene {
                 this._sayManager = new SayManager(this.connection, this.CurrentPlayer);
 
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
+                userMessageManager.setReceiveKickListener(this.kickedUser.bind(this));
 
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedInterface) => {
                     this.handleCurrentPlayerHasMovedEvent(event);
@@ -4491,14 +4492,14 @@ ${escapedMessage}
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
-    private bannedUser() {
+    private bannedUser(reason = "") {
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({
                 type: "error",
                 code: "USER_BANNED",
-                title: "BANNED",
-                subtitle: "You were banned from WorkAdventure",
-                details: "If you want more information, you may contact us at: hello@workadventu.re",
+                title: get(LL).report.banned.title(),
+                subtitle: get(LL).report.banned.subtitle(),
+                details: GameScene.detailsWithReason(get(LL).report.banned.details(), reason),
             }),
         );
 
@@ -4506,6 +4507,30 @@ ${escapedMessage}
 
         this.userInputManager.disableControls("errorScreen");
         this.userInputManager.disableRightClick();
+    }
+
+    /**
+     * A kick only ejects the user from the room: nothing is persisted, a reload brings them back.
+     */
+    private kickedUser(reason = "") {
+        errorScreenStore.setError(
+            ErrorScreenMessage.fromPartial({
+                type: "error",
+                code: "USER_KICKED",
+                title: get(LL).report.kicked.title(),
+                subtitle: get(LL).report.kicked.subtitle(),
+                details: GameScene.detailsWithReason(get(LL).report.kicked.details(), reason),
+            }),
+        );
+
+        this.cleanupClosingScene();
+
+        this.userInputManager.disableControls("errorScreen");
+        this.userInputManager.disableRightClick();
+    }
+
+    private static detailsWithReason(details: string, reason: string): string {
+        return reason.trim() === "" ? details : `${get(LL).report.reasonGiven({ reason })} ${details}`;
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)

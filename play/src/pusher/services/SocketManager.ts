@@ -785,22 +785,23 @@ export class SocketManager implements ZoneEventListener {
 
     async handleBanPlayerMessage(client: PusherWebSocket, banPlayerMessage: BanPlayerMessage): Promise<void> {
         const socketData = client.getUserData();
-        // Ban player only if the user is admin
+        // Kick and ban are reserved to the admins of the world
         if (!socketData.tags.includes("admin")) return;
+        const reason = banPlayerMessage.reason.trim();
         try {
+            if (banPlayerMessage.kick) {
+                // A kick only ejects the user from the room: nothing is persisted in the admin.
+                await this.emitBan(banPlayerMessage.banUserUuid, reason, "kicked", socketData.roomId);
+                return;
+            }
             await adminService.banUserByUuid(
                 banPlayerMessage.banUserUuid,
                 socketData.roomId,
                 banPlayerMessage.banUserName,
-                `User banned by admin ${socketData.userUuid}`,
+                reason !== "" ? reason : `User banned by admin ${socketData.userUuid}`,
                 socketData.userUuid,
             );
-            await this.emitBan(
-                banPlayerMessage.banUserUuid,
-                "You have been banned by an admin",
-                "ban",
-                socketData.roomId,
-            );
+            await this.emitBan(banPlayerMessage.banUserUuid, reason, "banned", socketData.roomId);
         } catch (e) {
             Sentry.captureException(`An error occurred on "handleBanPlayerMessage" ${e}`);
             console.error(`An error occurred on "handleBanPlayerMessage" ${e}`);
