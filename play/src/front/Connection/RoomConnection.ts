@@ -800,8 +800,11 @@ export class RoomConnection implements RoomConnection {
 
         // If the socket closes after connection but before the room is joined,
         // reject the roomJoined promise to avoid leaving callers hanging.
+        // Wrap the raw CloseEvent (a DOM object with no message/stack) into an Error so Sentry gets a readable issue.
         if (!this.userId && !this._closed) {
-            this._roomJoinedPromise.reject(event);
+            this._roomJoinedPromise.reject(
+                new Error(`Room join failed: WebSocket closed (code=${event.code}, reason="${event.reason}")`)
+            );
         }
         if (event.code !== 1000) {
             Sentry.captureMessage(
