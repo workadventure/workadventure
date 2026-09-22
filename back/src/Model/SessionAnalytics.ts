@@ -1,4 +1,4 @@
-import { isMeetingKind, type AnalyticsStoredEvent, type SpaceKind } from "@workadventure/messages";
+import type { AnalyticsStoredEvent, SpaceKind } from "@workadventure/messages";
 import type { AnalyticsEventsQueue } from "@workadventure/shared-utils";
 import { analyticsEventsQueue } from "../Services/AnalyticsEventsQueue";
 
@@ -158,10 +158,9 @@ export class SessionAnalytics {
         }
         this.session = undefined;
 
+        // Every kind emits the same two rows; `meetingKind` is what tells a broadcast
+        // from a conversation, and the admin filters on it where the business does.
         const endedAtMs = this.nowMs();
-        const meeting = isMeetingKind(session.kind);
-        const idKey = meeting ? "meetingId" : "broadcastId";
-        const kindKey = meeting ? "meetingKind" : "broadcastKind";
         const interval = (startedAtMs: number, atMs: number) => ({
             startedAt: new Date(startedAtMs).toISOString(),
             endedAt: new Date(atMs).toISOString(),
@@ -180,21 +179,20 @@ export class SessionAnalytics {
             }
             this.queue.enqueue(
                 this.row({
-                    eventName: meeting ? "meeting.participation.ended" : "broadcast.participation.ended",
+                    eventName: "meeting.participation.ended",
                     member: participation.member,
                     atMs,
                     eventId: `${this.id}:${session.openedAtMs}:${participation.member.spaceUserId}`,
                     properties: {
-                        [idKey]: this.id,
-                        [kindKey]: session.kind,
+                        meetingId: this.id,
+                        meetingKind: session.kind,
                         joinRank: participation.joinRank,
                         ...interval(participation.startedAtMs, atMs),
-                        ...(meeting
-                            ? {}
-                            : {
-                                  role: participation.spoke ? "speaker" : "listener",
-                                  airtimeSeconds: participation.airtimeMs / 1000,
-                              }),
+                        // In a meeting everyone is on air from the moment they are in it, so
+                        // these are `speaker` and the full duration there; they only carry
+                        // information under a broadcast kind.
+                        role: participation.spoke ? "speaker" : "listener",
+                        airtimeSeconds: participation.airtimeMs / 1000,
                     },
                 }),
             );
@@ -202,7 +200,7 @@ export class SessionAnalytics {
 
         this.queue.enqueue(
             this.row({
-                eventName: meeting ? "meeting.ended" : "broadcast.ended",
+                eventName: "meeting.ended",
                 // A session belongs to no one. The per-user view is the participation
                 // row; attributing the session to one of its members would count the
                 // whole thing as that person's.
@@ -210,12 +208,12 @@ export class SessionAnalytics {
                 atMs: endedAtMs,
                 eventId: `${this.id}:${session.openedAtMs}`,
                 properties: {
-                    [idKey]: this.id,
-                    [kindKey]: session.kind,
+                    meetingId: this.id,
+                    meetingKind: session.kind,
                     participantCount: session.participations.size,
                     peakParticipantCount: session.peak,
+                    speakerCount,
                     ...interval(session.openedAtMs, endedAtMs),
-                    ...(meeting ? {} : { speakerCount }),
                 },
             }),
         );

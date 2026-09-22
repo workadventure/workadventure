@@ -15,7 +15,13 @@ const rowsOf = (enqueue: Enqueue): AnalyticsStoredEvent[] => enqueue.mock.calls.
 const harness = (kind: SpaceKind) => {
     const enqueue: Enqueue = vi.fn();
     let now = Date.parse("2026-04-24T12:00:00.000Z");
-    const analytics = new SessionAnalytics("space", "world", () => kind, { enqueue }, () => now);
+    const analytics = new SessionAnalytics(
+        "space",
+        "world",
+        () => kind,
+        { enqueue },
+        () => now,
+    );
     const tick = (seconds: number) => {
         now += seconds * 1000;
     };
@@ -51,6 +57,11 @@ describe("SessionAnalytics", () => {
         expect(participations.map((row) => row.properties.durationSeconds)).toEqual([120, 120, 60]);
         expect(participations.map((row) => row.userUuid)).toEqual(["uuid-1", "uuid-2", "uuid-3"]);
         expect(participations.every((row) => row.properties.meetingId === "space")).toBe(true);
+        // Same row shape as a broadcast, and in a meeting everyone is on air: the
+        // broadcast-only fields are filled, not omitted, and they say exactly that.
+        expect(meetings[0].properties.speakerCount).toBe(3);
+        expect(participations.every((row) => row.properties.role === "speaker")).toBe(true);
+        expect(participations.map((row) => row.properties.airtimeSeconds)).toEqual([120, 120, 60]);
     });
 
     it("never lets a participation end after the meeting holding it", () => {
@@ -118,12 +129,12 @@ describe("SessionAnalytics", () => {
         analytics.setActive("room_speaker", false);
 
         const rows = rowsOf(enqueue);
-        const broadcasts = rows.filter((row) => row.eventName === "broadcast.ended");
+        const broadcasts = rows.filter((row) => row.eventName === "meeting.ended");
         expect(broadcasts).toHaveLength(1);
         expect(broadcasts[0].userUuid).toBe("");
         expect(broadcasts[0].properties).toMatchObject({
-            broadcastId: "space",
-            broadcastKind: "speaker_zone",
+            meetingId: "space",
+            meetingKind: "speaker_zone",
             participantCount: 2,
             speakerCount: 1,
             startedAt: "2026-04-24T12:00:20.000Z",
@@ -131,7 +142,7 @@ describe("SessionAnalytics", () => {
         });
 
         const byUuid = Object.fromEntries(
-            rows.filter((row) => row.eventName === "broadcast.participation.ended").map((row) => [row.userUuid, row]),
+            rows.filter((row) => row.eventName === "meeting.participation.ended").map((row) => [row.userUuid, row]),
         );
         expect(byUuid["uuid-listener"].properties).toMatchObject({
             role: "listener",
@@ -158,14 +169,20 @@ describe("SessionAnalytics", () => {
         const rows = rowsOf(enqueue);
         const s1 = rows.find((row) => row.userUuid === "uuid-s1");
         expect(s1?.properties).toMatchObject({ role: "speaker", airtimeSeconds: 20, durationSeconds: 30 });
-        expect(rows.at(-1)?.properties).toMatchObject({ broadcastKind: "megaphone", speakerCount: 2 });
+        expect(rows.at(-1)?.properties).toMatchObject({ meetingKind: "megaphone", speakerCount: 2 });
     });
 
     it("waits for the space to say what it is before opening anything", () => {
         const enqueue: Enqueue = vi.fn();
         let now = 0;
         let kind: SpaceKind | undefined = undefined;
-        const analytics = new SessionAnalytics("space", "world", () => kind, { enqueue }, () => now);
+        const analytics = new SessionAnalytics(
+            "space",
+            "world",
+            () => kind,
+            { enqueue },
+            () => now,
+        );
 
         // Two people met before either declared the space: nothing opens yet.
         analytics.join(member("1"), true);
@@ -184,10 +201,22 @@ describe("SessionAnalytics", () => {
         // SocketManager runs this over every space and adds up the answers, so what one
         // space owes it is a truthful yes/no — an idle space must not inflate the count.
         const enqueue: Enqueue = vi.fn();
-        const open = new SessionAnalytics("bubble", "world", () => "bubble", { enqueue }, () => 0);
+        const open = new SessionAnalytics(
+            "bubble",
+            "world",
+            () => "bubble",
+            { enqueue },
+            () => 0,
+        );
         open.join(member("1"), true);
         open.join(member("2"), true);
-        const idle = new SessionAnalytics("idle", "world", () => "area", { enqueue }, () => 0);
+        const idle = new SessionAnalytics(
+            "idle",
+            "world",
+            () => "area",
+            { enqueue },
+            () => 0,
+        );
         idle.join(member("3"), true);
 
         expect(idle.close("back_shutdown")).toBe(false);

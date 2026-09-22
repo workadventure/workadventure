@@ -23,8 +23,8 @@ export const isClientAnalyticsEventSource = isAnalyticsEventSource.extract([
  * value is in the enum and stops there. Good enough to file a row under, and good enough
  * for a label the front shows itself; never an input to a decision the server enforces.
  *
- * One key with a closed set of values rather than one boolean per kind — the kinds a row
- * may name are cut out of it, below.
+ * One key with a closed set of values rather than one boolean per kind; a meeting row
+ * names one of them under `meetingKind`.
  */
 export const spaceKindSchema = z.enum([
   "bubble",
@@ -35,18 +35,13 @@ export const spaceKindSchema = z.enum([
 
 export type SpaceKind = z.infer<typeof spaceKindSchema>;
 
-/** A bubble and an area are meetings; the megaphone and a speaker zone are broadcasts. */
-export const isMeetingKind = (kind: SpaceKind): boolean =>
-  kind === "bubble" || kind === "area";
-
-/** The kinds a meeting row can name. */
-export const meetingKindSchema = spaceKindSchema.extract(["bubble", "area"]);
-
-/** The kinds a broadcast row can name. */
-export const broadcastKindSchema = spaceKindSchema.extract([
-  "megaphone",
-  "speaker_zone",
-]);
+/**
+ * What a meeting row can name: every kind of space. A broadcast — the world megaphone,
+ * a speaker zone — is a meeting whose predicate is one speaker on air rather than two
+ * people present. Same row, same lifecycle, same two events; this is what tells them
+ * apart, and anything that reads meeting time as conversation time filters on it.
+ */
+export const meetingKindSchema = spaceKindSchema;
 
 /** Mirrors the admin's `max:255` on eventName / eventId. */
 export const MAX_EVENT_NAME_LENGTH = 255;
@@ -223,15 +218,6 @@ const sessionIntervalProperties = timedEventProperties.extend({
     ),
 });
 
-const sessionCountProperties = z.object({
-  participantCount: z
-    .number()
-    .describe("How many distinct people passed through it."),
-  peakParticipantCount: z
-    .number()
-    .describe("The most people in it at any one moment."),
-});
-
 const joinRankProperty = z
   .number()
   .describe(
@@ -269,22 +255,6 @@ const meetingContextProperties = z.object({
     .enum(["livekit", "jitsi", "webrtc"])
     .optional()
     .describe("Which media backend carried the meeting."),
-});
-
-/** Carried by the broadcast row and every participation in it: it is what joins them. */
-const broadcastProperties = z.object({
-  broadcastId: z
-    .string()
-    .describe(
-      "Space the broadcast runs in: the world megaphone space, or a speaker zone's.",
-    ),
-  // A discriminator rather than two event names, for the reason spelled out on
-  // meeting.ended: a megaphone broadcast and a speaker-zone one are the same act on
-  // the same kind of space, so splitting them by name would make every "how much was
-  // broadcast" query a union — and the next broadcast surface a three-way one.
-  broadcastKind: broadcastKindSchema.describe(
-    "Where the broadcast was started: the world megaphone, or a speaker zone on the map.",
-  ),
 });
 
 /**
@@ -828,7 +798,7 @@ export const ANALYTICS_EVENTS = {
       meetingKind: meetingKindSchema
         .optional()
         .describe(
-          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet. Filled by the back, which tells a bubble's space from an area's by construction; absent on the rows a client opens (Jitsi).",
+          "What the meeting was: a spontaneous proximity bubble, an area people went to in order to meet, the world megaphone, or a speaker zone. The last two are broadcasts — a meeting whose predicate is one speaker on air rather than two people present — so anything reading meeting time as conversation time filters them out. Filled by the back from what the space's client declared; absent on the rows a client opens (Jitsi).",
         ),
       participantCount: z
         .number()
@@ -838,11 +808,17 @@ export const ANALYTICS_EVENTS = {
         .number()
         .optional()
         .describe("The most people in it at any one moment."),
+      speakerCount: z
+        .number()
+        .optional()
+        .describe(
+          "How many distinct people were on air at any point. In a bubble or an area everyone is, so it equals participantCount there; it only says something under a broadcast kind. Absent on the rows a client opens.",
+        ),
     }),
     endReasonDescription:
       "`socket_closed` and the `pusher_*` values mean the client never got to close it — a tab closed mid-meeting, or the pusher restarted.",
     description:
-      "A meeting, measured. One row per meeting — by the back, which owns the meeting's lifecycle and counts its participants; the row is attributed to nobody, because a meeting belongs to no one participant. Rows without `meetingKind` were opened by a client, once per participant, and carry participant-seconds: Jitsi meetings, and every row older than the back-emitted ones.",
+      "A meeting, measured. One row per meeting — by the back, which owns the meeting's lifecycle and counts its participants; the row is attributed to nobody, because a meeting belongs to no one participant. Rows without `meetingKind` were opened by a client, once per participant, and carry participant-seconds: Jitsi meetings, and every row older than the back-emitted ones. A broadcast is the same row under a `megaphone` or `speaker_zone` kind: from the first speaker going on air to the last going off, and an empty megaphone space accrues nothing.",
   }),
 
   "meeting.screenshare.ended": timedEvent({
@@ -1465,52 +1441,24 @@ export const ANALYTICS_EVENTS = {
           .string()
           .describe("Meeting this participation belongs to."),
         meetingKind: meetingKindSchema.describe(
-          "What the meeting was: a spontaneous proximity bubble, or an area people went to in order to meet.",
+          "What the meeting was: a bubble, an area, the world megaphone, or a speaker zone. The last two are broadcasts; see meeting.ended.",
         ),
         joinRank: joinRankProperty,
-      })
-      .merge(sessionIntervalProperties),
-    description:
-      "One person's time in one meeting, clipped to it: someone alone in an area before the second person arrived starts when the meeting opens. Emitted by the back when the meeting ends. This is the per-user view of a meeting: meeting.ended is deliberately attributed to nobody, because a meeting belongs to no one participant. NOT to be joined to itself: grouping these rows by meetingId yields who was in a meeting with whom, and aggregated over months that is a map of who works with whom — a different product from a record of what happened, and one with a different legal footing. Nothing builds that query today, and the decision to leave it unbuilt is the reason this sentence exists: it is two lines of SQL away, so it will not stay unbuilt by accident.",
-    source: "pusher",
-  }),
-
-  // A broadcast is measured exactly like a meeting — one row for the thing, one per
-  // person in it — because it IS the same thing: a space with people in it, open for
-  // as long as its predicate holds. Only the predicate differs: a meeting needs two
-  // people present, a broadcast one speaker on air.
-  "broadcast.ended": event({
-    properties: broadcastProperties
-      .extend({
-        speakerCount: z
-          .number()
-          .describe("How many distinct people went on air during it."),
-      })
-      .merge(sessionCountProperties)
-      .merge(sessionIntervalProperties),
-    description:
-      "A broadcast, measured: from the first speaker going on air to the last one going off, in the world megaphone space or a speaker zone. One row per broadcast, emitted by the back, which owns the space; attributed to nobody, because a broadcast belongs to no one person. An empty megaphone space accrues nothing.",
-    source: "pusher",
-  }),
-  "broadcast.participation.ended": event({
-    properties: broadcastProperties
-      .extend({
         role: z
           .enum(["speaker", "listener"])
           .describe(
-            "`speaker` if they were on air at any point during the broadcast; a panelist who also listened to the others is a speaker.",
+            "`speaker` if they were on air at any point; a panelist who also listened to the others is a speaker. In a bubble or an area everyone is on air, so it is always `speaker` there — it only distinguishes anyone under a broadcast kind.",
           ),
         airtimeSeconds: z
           .number()
           .nonnegative()
           .describe(
-            "This person's own time on air, summed over their stints. Zero for a listener. Never to be summed into conversation time: broadcasting is not collaborating, and neither is listening.",
+            "This person's own time on air, summed over their stints. Equals durationSeconds in a bubble or an area; zero for a listener. Never to be summed into conversation time: broadcasting is not collaborating, and neither is listening.",
           ),
-        joinRank: joinRankProperty,
       })
       .merge(sessionIntervalProperties),
     description:
-      "One person's time in one broadcast, clipped to it: a listener present before anyone went on air starts when the broadcast opens. Emitted by the back when the broadcast ends. The per-user view of a broadcast — audience time is reported once per listener, so it adds up to reach × duration rather than duration.",
+      "One person's time in one meeting, clipped to it: someone alone in an area before the second person arrived starts when the meeting opens, and a listener present before anyone went on air starts when the broadcast does. Emitted by the back when the meeting ends. Under a broadcast kind this is audience time, reported once per listener: it adds up to reach × duration, not duration. This is the per-user view of a meeting: meeting.ended is deliberately attributed to nobody, because a meeting belongs to no one participant. NOT to be joined to itself: grouping these rows by meetingId yields who was in a meeting with whom, and aggregated over months that is a map of who works with whom — a different product from a record of what happened, and one with a different legal footing. Nothing builds that query today, and the decision to leave it unbuilt is the reason this sentence exists: it is two lines of SQL away, so it will not stay unbuilt by accident.",
     source: "pusher",
   }),
 
@@ -1543,7 +1491,7 @@ export const ANALYTICS_EVENTS = {
     description: "A moderator turned off everyone's camera.",
   }),
   // A click, not a broadcast: it means the panel was opened, not that anything went
-  // on air. Time on air is broadcast.participation.ended, measured by the back.
+  // on air. Time on air is meeting.participation.ended, measured by the back.
   "megaphone.opened": signal("The user opened the megaphone."),
   "menu.chat.opened": signal("The user opened the chat from the menu."),
   "menu.contact.opened": signal("The user opened the contact page."),

@@ -79,7 +79,7 @@ const EMITTED_FROM_EXTERNAL_MODULES = ["external_module.opened", "external_modul
  * happened once rather than once per participant.
  * See back/src/Model/SessionAnalytics.ts.
  */
-const EMITTED_FROM_BACK = ["meeting.participation.ended", "broadcast.ended", "broadcast.participation.ended"];
+const EMITTED_FROM_BACK = ["meeting.participation.ended"];
 
 /**
  * The names the front asks the pusher to time, e.g. openTimedEvent("area.dwell", …).
