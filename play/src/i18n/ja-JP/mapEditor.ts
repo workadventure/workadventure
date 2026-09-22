@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "ミュージックの再生",
             error: "サウンドを読み込めませんでした",
             actionButtonLabel: "ミュージックを再生",
+            playForAllUsersLabel: "マップ上のすべてのユーザーに再生",
+            audibleRadiusLabel: "可聴半径（ピクセル）",
+            audibleRadiusPlaceholder: "空欄の場合はどこでも聞こえます",
         },
         openWebsite: {
             hideUrlLabel: "Hide URL",

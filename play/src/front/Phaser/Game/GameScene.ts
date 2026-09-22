@@ -212,6 +212,7 @@ import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingServic
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
+import { EntityAudioManager } from "./EntityAudioManager";
 import { OutlineManager } from "./UI/OutlineManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
@@ -356,6 +357,7 @@ export class GameScene extends DirtyScene {
     private outlineManager!: OutlineManager;
     private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
+    private entityAudioManager!: EntityAudioManager;
     private cameraManager!: CameraManager;
     private mapEditorModeManager: MapEditorModeManager | undefined;
     private entitiesCollectionsManager!: EntitiesCollectionsManager;
@@ -1212,6 +1214,7 @@ export class GameScene extends DirtyScene {
         this.shouldPublishScreenShareUnsubscriber?.();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
+        this.entityAudioManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.gameMapPropertiesListener?.destroy();
@@ -1807,6 +1810,10 @@ export class GameScene extends DirtyScene {
         return this.outlineManager;
     }
 
+    public getEntityAudioManager(): EntityAudioManager {
+        return this.entityAudioManager;
+    }
+
     /**
      * Quickfix for phaser last version breaking the outline on
      * objects and characters
@@ -2251,6 +2258,7 @@ export class GameScene extends DirtyScene {
                 this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
 
                 this.emoteManager = new EmoteManager(this, this.connection);
+                this.entityAudioManager = new EntityAudioManager(this, this.connection);
 
                 const context = audioContextManager.getContext();
 

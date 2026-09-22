@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "播放音乐",
             error: "无法加载声音",
             actionButtonLabel: "播放音乐",
+            playForAllUsersLabel: "为地图上所有用户播放",
+            audibleRadiusLabel: "可听半径（像素）",
+            audibleRadiusPlaceholder: "留空则处处可听",
         },
         openWebsite: {
             label: "打开链接",

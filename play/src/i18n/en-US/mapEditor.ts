@@ -86,6 +86,9 @@ const mapEditor: BaseTranslation = {
             defaultButtonLabel: "Play music",
             error: "Could not load sound",
             actionButtonLabel: "Play music",
+            playForAllUsersLabel: "Play for all users on the map",
+            audibleRadiusLabel: "Audible radius (in pixels)",
+            audibleRadiusPlaceholder: "Heard everywhere if empty",
         },
         openWebsite: {
             label: "Open Link",
