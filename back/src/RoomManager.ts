@@ -566,10 +566,12 @@ const roomManager = {
     },
     ban(call: ServerUnaryCall<BanMessage, Empty>, callback: sendUnaryData<Empty>): void {
         // FIXME Work in progress
-        socketManager.banUser(call.request.roomId, call.request.recipientUuid, call.request.message).catch((e) => {
-            console.error(e);
-            Sentry.captureException(e);
-        });
+        socketManager
+            .banUser(call.request.roomId, call.request.recipientUuid, call.request.message, call.request.type)
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
 
         callback(null, {});
     },

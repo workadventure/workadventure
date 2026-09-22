@@ -1160,13 +1160,19 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitBanPlayerMessage(banUserUuid: string, banUserName: string): void {
+    /**
+     * Ejects a user from the room. Reserved to the admins of the world (enforced by the pusher).
+     * @param kick true to only eject the user, false to also ban them from the world (permanent)
+     */
+    public emitBanPlayerMessage(banUserUuid: string, banUserName: string, kick = false, reason = ""): void {
         this.send({
             message: {
                 $case: "banPlayerMessage",
                 banPlayerMessage: {
                     banUserUuid,
                     banUserName,
+                    kick,
+                    reason,
                 },
             },
         });

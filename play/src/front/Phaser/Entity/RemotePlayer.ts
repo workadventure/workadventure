@@ -16,7 +16,7 @@ import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import { LL } from "../../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
-import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
+import { openModerationModal } from "../../Components/Moderation/openModerationModal";
 import { iframeListener } from "../../Api/IframeListener";
 import banIcon from "../../Components/images/ban-icon.svg";
 import { openDirectChatRoom } from "../../Chat/Utils";
@@ -209,9 +209,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     private getDefaultWokaMenuActions(): WokaMenuAction[] {
         const actions: WokaMenuAction[] = [];
         actions.push({
-            actionName: blackListManager.isBlackListed(this.userUuid)
-                ? get(LL).report.block.unblock()
-                : get(LL).report.block.block(),
+            actionName: get(LL).report.moderate.action(),
             protected: true,
             priority: -1,
             style: "is-error bg-white/10 hover:bg-white/30 text-red-500",
@@ -220,7 +218,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 // Track the report user action
                 analyticsClient.trackAdminEvent("user.report.clicked");
 
-                showReportScreenStore.set({ userUuid: this.userUuid, userName: this.playerName });
+                openModerationModal(this.userUuid, this.playerName);
             },
             actionIcon: banIcon,
         });
