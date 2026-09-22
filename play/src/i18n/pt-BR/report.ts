@@ -22,7 +22,44 @@ const report: DeepPartial<Translation["report"]> = {
         block: "Bloquear",
         report: "Relatório",
         noSelect: "ERRO: Não há nenhuma ação selecionada.",
+        action: "Moderar",
+        reason: {
+            label: "Motivo",
+            placeholder: "Opcional. Guardado para os administradores deste mundo.",
+        },
+        adminOnly: "Reservado aos administradores",
+        cancel: "Cancelar",
+        hint: {
+            block: "Parar de ver e ouvir essa pessoa. Só para você, e reversível.",
+            report: "Avisar os administradores deste mundo.",
+            kick: "Desconectar agora. A pessoa pode voltar.",
+            ban: "Desconectar definitivamente.",
+        },
+        kick: {
+            title: "Remover do mapa",
+            content: "{userName} é desconectado imediatamente e pode voltar mais tarde.",
+            submit: "Remover",
+        },
+        ban: {
+            title: "Banir do mundo",
+            content: "{userName} é desconectado e não poderá mais entrar neste mundo, nem mesmo com outra conta.",
+            submit: "Banir",
+            confirmTitle: "Banir {userName} definitivamente?",
+            confirmContent:
+                "Isso não pode ser desfeito pelo jogo. Só um administrador pode remover o banimento pelo back-office.",
+        },
     },
+    kicked: {
+        title: "REMOVIDO",
+        subtitle: "Um moderador removeu você deste mapa",
+        details: "Recarregue a página para entrar novamente.",
+    },
+    banned: {
+        title: "BANIDO",
+        subtitle: "Você foi banido do WorkAdventure",
+        details: "Para mais informações, entre em contato conosco em: hello@workadventu.re",
+    },
+    reasonGiven: "Motivo: {reason}",
 };
 
 export default report;
