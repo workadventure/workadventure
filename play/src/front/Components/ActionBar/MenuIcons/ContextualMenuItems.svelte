@@ -5,6 +5,8 @@
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
     import { inLivekitStore } from "../../../Stores/MediaStore";
+    import { inExternalServiceStore } from "../../../Stores/MyMediaStore";
+    import { raiseHandAvailableStore } from "../../../Stores/RaiseHandAvailabilityStore";
     import { onboardingStore } from "../../../Stores/OnboardingStore";
     import { followStateStore } from "../../../Stores/FollowStore";
     import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
@@ -20,6 +22,7 @@
     import MusicMenuItem from "./MusicMenuItem.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import MegaphoneMenuItem from "./MegaphoneMenuItem.svelte";
+    import RaiseHandMenuItem from "./RaiseHandMenuItem.svelte";
     import RecordingMenuItem from "./RecordingMenuItem.svelte";
     import { createRecordingMenuStateStore } from "./RecordingMenuUtils";
 
@@ -66,6 +69,13 @@
 
 {#if $requestedMegaphoneStore}
     <MegaphoneMenuItem />
+{/if}
+
+<!-- Single control for the whole "ask to speak" lifecycle: shown to raise the hand in every remote conversation
+     (meeting room, megaphone audience, proximity bubble — a zone can turn it off), and kept on stage (green "live"
+     state) once the floor is granted so the user can hand it back. See raiseHandAvailableStore. -->
+{#if !$inExternalServiceStore && $raiseHandAvailableStore}
+    <RaiseHandMenuItem />
 {/if}
 
 {#if inProfileMenu}
