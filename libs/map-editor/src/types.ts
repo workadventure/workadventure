@@ -82,6 +82,16 @@ export const PlayAudioPropertyData = PropertyBase.extend({
     audioLink: z.string(),
     volume: z.number().default(1).optional(),
     triggerMessage: z.string().optional(),
+    /**
+     * Broadcast the sound to every player of the map instead of only the one who activates it.
+     * Entities only: on an area this would fire for anyone walking in.
+     */
+    playForAllUsers: z.boolean().optional(),
+    /**
+     * Distance in pixels beyond which a broadcast sound is not heard, the volume decreasing as it
+     * is approached. Undefined means the sound is heard at full volume anywhere on the map.
+     */
+    audibleRadius: z.number().min(0).optional(),
 });
 
 export const OpenWebsitePropertyData = PropertyBase.extend({

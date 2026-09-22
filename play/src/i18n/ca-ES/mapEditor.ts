@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Reproduir música",
             error: "No s'ha pogut carregar el so",
             actionButtonLabel: "Reproduir música",
+            playForAllUsersLabel: "Reproduir per a tots els usuaris del mapa",
+            audibleRadiusLabel: "Radi audible (en píxels)",
+            audibleRadiusPlaceholder: "Audible arreu si és buit",
         },
         openWebsite: {
             label: "Obrir enllaç",

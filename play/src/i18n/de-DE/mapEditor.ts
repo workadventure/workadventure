@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Musik abspielen",
             error: "Sound konnte nicht geladen werden",
             actionButtonLabel: "Musik abspielen",
+            playForAllUsersLabel: "Für alle Benutzer der Karte abspielen",
+            audibleRadiusLabel: "Hörradius (in Pixeln)",
+            audibleRadiusPlaceholder: "Überall hörbar, wenn leer",
         },
         openWebsite: {
             label: "Link öffnen",

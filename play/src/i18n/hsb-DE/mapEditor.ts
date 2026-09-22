@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "sylnosć zwuka",
             error: "Zwuk njemóže so začitać",
             actionButtonLabel: "Hudźbu wothrać",
+            playForAllUsersLabel: "Za wšitkich wužiwarjow na karće wothrać",
+            audibleRadiusLabel: "Radius słyšenja (w pikselach)",
+            audibleRadiusPlaceholder: "Wšudźe słyšomny, jeli prózdny",
         },
         openWebsite: {
             label: "Link wočinić",
