@@ -223,6 +223,10 @@ const roomManager = {
                             );
                             break;
                         }
+                        case "entityMessageFrontToPusher": {
+                            socketManager.handleEntityMessage(room, user, message.message.entityMessageFrontToPusher);
+                            break;
+                        }
                         default: {
                             const _exhaustiveCheck: never = message.message;
                         }

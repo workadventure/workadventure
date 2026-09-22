@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "음악 재생",
             error: "사운드를 불러오지 못했습니다",
             actionButtonLabel: "음악 재생",
+            playForAllUsersLabel: "맵의 모든 사용자에게 재생",
+            audibleRadiusLabel: "가청 반경 (픽셀)",
+            audibleRadiusPlaceholder: "비워두면 어디서나 들립니다",
         },
         openWebsite: {
             label: "링크 열기",

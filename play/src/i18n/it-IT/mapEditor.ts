@@ -88,6 +88,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Riproduci musica",
             error: "Impossibile caricare il suono",
             actionButtonLabel: "Riproduci musica",
+            playForAllUsersLabel: "Riproduci per tutti gli utenti della mappa",
+            audibleRadiusLabel: "Raggio udibile (in pixel)",
+            audibleRadiusPlaceholder: "Udibile ovunque se vuoto",
         },
         openWebsite: {
             hideUrlLabel: "Hide URL",

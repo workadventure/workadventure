@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "Volume",
             error: "Impossible de charger le son",
             actionButtonLabel: "Jouer de la musique",
+            playForAllUsersLabel: "Jouer pour tous les utilisateurs de la carte",
+            audibleRadiusLabel: "Rayon d'audibilité (en pixels)",
+            audibleRadiusPlaceholder: "Audible partout si vide",
         },
         openWebsite: {
             label: "Ouvrir un lien",

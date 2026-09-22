@@ -128,6 +128,25 @@
                                 onchange={onValueChange}
                             />
                         </div>
+                        <InputSwitch
+                            id="playForAllUsers"
+                            label={$LL.mapEditor.properties.playAudio.playForAllUsersLabel()}
+                            bind:value={property.playForAllUsers}
+                            onchange={onValueChange}
+                        />
+                        {#if property.playForAllUsers}
+                            <div class="value-input">
+                                <Input
+                                    label={$LL.mapEditor.properties.playAudio.audibleRadiusLabel()}
+                                    id="audibleRadius"
+                                    type="number"
+                                    min={0}
+                                    placeholder={$LL.mapEditor.properties.playAudio.audibleRadiusPlaceholder()}
+                                    bind:value={property.audibleRadius}
+                                    onchange={onValueChange}
+                                />
+                            </div>
+                        {/if}
                     {/if}
                     <div class="value-input">
                         <RangeSlider

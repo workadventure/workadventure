@@ -20,3 +20,19 @@ When editing an area or an entity, you can add the play sound property to it. Yo
 3. You can define the label of the button that will be displayed to the user. (optional)
 
 ![](../../images/editor/play_sound.png)
+
+## Playing a sound for everyone
+
+By default the sound is only heard by the player who triggers it. On an **entity**, the advanced
+options offer a "Play for all users on the map" switch: every player of the map then hears the
+sound, wherever they are standing. This is what turns an object into a gong or a jukebox.
+
+When the switch is on, you can also set an **audible radius**, in pixels. Players further away than
+this radius from the object hear nothing, and the sound fades as the radius is approached. Leave it
+empty for the sound to be heard everywhere on the map.
+
+The volume set on the property is applied on top of the radius, and each player keeps control of
+their own audio player, so anyone can stop the sound on their side.
+
+This option is not offered on areas: a sound played for everyone whenever anybody walks into a zone
+would be a nuisance rather than a feature.

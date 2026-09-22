@@ -47,6 +47,7 @@ import type {
     DeleteSpaceUserToNotifyMessage,
     AbortQueryMessage,
     SetAreaPropertyVariableMessage,
+    EntityMessageFrontToPusher,
     BackEventMessage,
     ConnectToRoomMessage,
     HandleLivekitWebhookRequest,
@@ -85,6 +86,7 @@ import { getMapStorageClient } from "./MapStorageClient";
 import { emitError, endUserConnectionWithReason } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
 import { isValidEmote } from "./EmoteValidator";
+import { findBroadcastablePlayAudioProperty } from "./EntitySoundValidator";
 
 const debug = Debug("socketmanager");
 
@@ -317,6 +319,29 @@ export class SocketManager {
             // Note: We don't send an error back to the client as this is a security check
             // The client should have already verified permissions before allowing the action
         }
+    }
+
+    handleEntityMessage(room: GameRoom, user: User, message: EntityMessageFrontToPusher): void {
+        const entityEvent = message.entityEvent;
+        if (entityEvent?.event?.$case !== "entitySoundPlayed") {
+            return;
+        }
+
+        // The sound is relayed to the whole room: refuse any URL the entity does not carry itself.
+        const property = findBroadcastablePlayAudioProperty(
+            room.getWam(),
+            message.entityId,
+            entityEvent.event.entitySoundPlayed.soundUrl,
+        );
+        if (!property) {
+            console.warn(
+                `User ${user.uuid} tried to broadcast a sound that entity ${message.entityId} does not carry. ` +
+                    `Dropping message.`,
+            );
+            return;
+        }
+
+        room.dispatchEntityEvent(message.entityId, entityEvent);
     }
 
     async readVariable(roomUrl: string, variable: string): Promise<string | undefined> {

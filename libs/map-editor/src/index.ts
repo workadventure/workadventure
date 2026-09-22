@@ -15,6 +15,7 @@ export * from "./GameMap/GameMap";
 export * from "./GameMap/GameMapAreas";
 export * from "./GameMap/WamFile";
 export * from "./GameMap/LayersFlattener";
+export * from "./EntitySound";
 export * from "./types";
 // MapFetcher is not exported because it is using Node imports that are not available in the browser
 //export * from "./MapFetcher";

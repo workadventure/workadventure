@@ -17,6 +17,7 @@ import type {
     EditMapCommandMessage,
     EmbeddableWebsiteAnswer,
     EmoteEventMessage as EmoteEventMessageTsProto,
+    EntityMessage as EntityMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
     FollowAbortMessage,
@@ -215,6 +216,8 @@ export class RoomConnection implements RoomConnection {
         value: unknown;
     }>();
     public readonly areaPropertyVariableMessageStream = this._areaPropertyVariableMessageStream.asObservable();
+    private readonly _entityMessageStream = new Subject<EntityMessageTsProto>();
+    public readonly entityMessageStream = this._entityMessageStream.asObservable();
     private readonly _editMapCommandMessageStream = new Subject<EditMapCommandMessage>();
     public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
@@ -415,6 +418,10 @@ export class RoomConnection implements RoomConnection {
                                         key,
                                         value: RoomConnection.unserializeVariable(value),
                                     });
+                                    break;
+                                }
+                                case "entityMessage": {
+                                    this._entityMessageStream.next(subMessage.entityMessage);
                                     break;
                                 }
                                 case "pingMessage": {
@@ -1043,6 +1050,28 @@ export class RoomConnection implements RoomConnection {
                     propertyId,
                     key,
                     value: JSON.stringify(value),
+                },
+            },
+        });
+    }
+
+    /**
+     * Asks the server to play a sound carried by an entity for every player of the map. The server
+     * checks the URL against the entity before relaying it, and the sender hears the sound through
+     * the broadcast it gets back, like everybody else.
+     */
+    emitEntitySoundPlayed(entityId: string, soundUrl: string): void {
+        this.send({
+            message: {
+                $case: "entityMessageFrontToPusher",
+                entityMessageFrontToPusher: {
+                    entityId,
+                    entityEvent: {
+                        event: {
+                            $case: "entitySoundPlayed",
+                            entitySoundPlayed: { soundUrl },
+                        },
+                    },
                 },
             },
         });
@@ -2155,6 +2184,7 @@ export class RoomConnection implements RoomConnection {
         this._emoteEventMessageStream.complete();
         this._variableMessageStream.complete();
         this._areaPropertyVariableMessageStream.complete();
+        this._entityMessageStream.complete();
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
         this._websocketErrorStream.complete();

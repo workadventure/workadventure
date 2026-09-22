@@ -475,18 +475,16 @@ export class Entity extends Image implements ActivatableInterface, OutlineableIn
                     break;
                 }
                 case "playAudio": {
-                    const audioLink = property.audioLink;
+                    const playAudioProperty = property;
                     actions.push({
                         actionName: property.buttonLabel ?? "",
                         protected: true,
                         priority: 1,
                         callback: () => {
-                            this.emit(EntityEvent.PropertyActivated, {
-                                propertyName: GameMapProperties.PLAY_AUDIO,
-                                propertyValue: audioLink,
-                            });
-                            // Fixme: close the menu without impact audio manager and playing
-                            //actionsMenuStore.clear();
+                            // Not routed through EntityEvent.PropertyActivated: that path only
+                            // reacts to values that change, so the same sound could not be played
+                            // twice in a row, and it carries the URL alone, losing the volume.
+                            (this.scene as GameScene).getEntityAudioManager().play(this.entityId, playAudioProperty);
                         },
                     });
                     break;

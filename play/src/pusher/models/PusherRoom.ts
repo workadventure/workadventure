@@ -207,6 +207,19 @@ export class PusherRoom {
                             }
                             break;
                         }
+                        case "entityMessage": {
+                            // Entity events are room-wide: a sound carries further than a zone
+                            const entityMessage = message.message.entityMessage;
+                            for (const listener of this.listeners) {
+                                listener.emitInBatch({
+                                    message: {
+                                        $case: "entityMessage",
+                                        entityMessage: entityMessage,
+                                    },
+                                });
+                            }
+                            break;
+                        }
                         default: {
                             const _exhaustiveCheck: never = message.message;
                         }

@@ -457,6 +457,7 @@ message ClientToServerMessage {
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 46;
     VideoQualityReportMessage videoQualityReportMessage = 50;
     UserMessageReadMessage userMessageReadMessage = 51;
+    EntityMessageFrontToPusher entityMessageFrontToPusher = 52;
   }
 }
 
@@ -502,6 +503,30 @@ message AreaPropertyVariableMessage {
   string propertyId = 2;
   string key = 3;
   string value = 4;
+}
+
+// A sound attached to an entity was activated and must be played by every player of the map.
+message EntitySoundPlayed {
+  string soundUrl = 1;
+}
+
+// Events that happen on a given entity. New entity events are added to this oneof.
+message EntityEvent {
+  oneof event {
+    EntitySoundPlayed entitySoundPlayed = 1;
+  }
+}
+
+// An entity event sent by a player
+message EntityMessageFrontToPusher {
+  string entityId = 1;
+  EntityEvent entityEvent = 2;
+}
+
+// An entity event broadcast to the whole room
+message EntityMessage {
+  string entityId = 1;
+  EntityEvent entityEvent = 2;
 }
 
 message SetPlayerVariableMessage {
@@ -969,6 +994,7 @@ message SubMessage {
     InitSpaceUsersMessage initSpaceUsersMessage = 25;
     AreaPropertyVariableMessage areaPropertyVariableMessage = 26;
     DuplicateUserConnectedMessage duplicateUserConnectedMessage = 27;
+    EntityMessage entityMessage = 31;
   }
 }
 
@@ -1552,6 +1578,7 @@ message PusherToBackMessage {
     MeetingInvitationRequestMessage meetingInvitationRequestMessage = 32;
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 33;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 34;
+    EntityMessageFrontToPusher entityMessageFrontToPusher = 35;
   }
 }
 
@@ -1567,6 +1594,7 @@ message SubToPusherRoomMessage {
     ErrorMessage errorMessage = 2;
     EditMapCommandMessage editMapCommandMessage = 3;
     ReceivedEventMessage receivedEventMessage = 6;
+    EntityMessage entityMessage = 9;
     // Zone-specific messages (all grouped in ZoneMessage)
     ZoneMessage zoneMessage = 7;
     AreaPropertyVariableMessage areaPropertyVariableMessage = 8;
