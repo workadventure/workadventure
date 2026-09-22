@@ -13,6 +13,36 @@ export const isClientAnalyticsEventSource = isAnalyticsEventSource.extract([
   "media",
 ]);
 
+/**
+ * What a space is, declared by the client that joins it under the `spaceKind` metadata
+ * key: a proximity bubble, a meeting area, the world megaphone, a speaker zone. A space
+ * that declares nothing — the world space, a chat space, a space a script opened — is
+ * nobody's meeting and nobody's broadcast.
+ *
+ * It is the client's own claim, not a fact the server established: the back checks the
+ * value is in the enum and stops there. Good enough to file a row under, and good enough
+ * for a label the front shows itself; never an input to a decision the server enforces.
+ *
+ * One key with a closed set of values rather than one boolean per kind; a meeting row
+ * names one of them under `meetingKind`.
+ */
+export const spaceKindSchema = z.enum([
+  "bubble",
+  "area",
+  "megaphone",
+  "speaker_zone",
+]);
+
+export type SpaceKind = z.infer<typeof spaceKindSchema>;
+
+/**
+ * What a meeting row can name: every kind of space. A broadcast — the world megaphone,
+ * a speaker zone — is a meeting whose predicate is one speaker on air rather than two
+ * people present. Same row, same lifecycle, same two events; this is what tells them
+ * apart, and anything that reads meeting time as conversation time filters on it.
+ */
+export const meetingKindSchema = spaceKindSchema;
+
 /** Mirrors the admin's `max:255` on eventName / eventId. */
 export const MAX_EVENT_NAME_LENGTH = 255;
 export const MAX_EVENT_ID_LENGTH = 255;
@@ -176,6 +206,44 @@ export const timedEventProperties = z.object({
     ),
 });
 
+/**
+ * The interval of a session the back closed — a meeting or a broadcast — and why.
+ * The back is the only party that can close one, so the reasons are its own.
+ */
+const sessionIntervalProperties = timedEventProperties.extend({
+  endReason: z
+    .enum(["closed", "back_shutdown"])
+    .describe(
+      "`back_shutdown` means the server closed it, not the people in it.",
+    ),
+});
+
+const joinRankProperty = z
+  .number()
+  .describe(
+    "Where this participant came in the arrival order, counted from when the session opened.",
+  );
+
+/**
+ * Which meeting an in-meeting action happened in.
+ *
+ * An action on one participant — muting them, kicking them, pinning them — names that
+ * participant's meeting. An action on this tab as a whole — its own camera, its
+ * layout, its screen share — is attached centrally by AnalyticsClient, once per
+ * meeting the tab is in, rather than passed at each of the dozen call sites: a field
+ * that has to be remembered eleven times is a field that will be forgotten once.
+ * Without it these rows say a camera was turned off somewhere, by someone, and cannot
+ * be placed on the meeting they belong to.
+ */
+const meetingActionProperties = z.object({
+  meetingId: z
+    .string()
+    .optional()
+    .describe(
+      "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several.",
+    ),
+});
+
 /** Shared by the meeting lifecycle events emitted from AnalyticsClient. */
 const meetingContextProperties = z.object({
   meetingId: z
@@ -190,35 +258,19 @@ const meetingContextProperties = z.object({
 });
 
 /**
- * The space a broadcast runs in, carried by both halves of it: the speaker's
- * `megaphone.ended` and every listener's `broadcast.audience.ended`. It is what joins
- * a broadcast to its audience — without it the two families cannot be related at all,
- * since a listener has no other handle on the broadcast they are hearing.
+ * The meeting a dwell period happened in; roomId is already an envelope column.
+ *
+ * One row per meeting that heard the period: a tab in two meetings at once — two
+ * areas drawn over each other, a Jitsi zone over a LiveKit area — sends its
+ * microphone to both, so each meeting gets the period whole and a total across
+ * meetings counts the overlap twice. A period is cut at every meeting boundary.
  */
-const broadcastProperties = z.object({
-  broadcastId: z
-    .string()
-    .describe(
-      "Space the broadcast runs in: the world megaphone space, or a speaker zone's.",
-    ),
-  // A discriminator rather than two event names, for the reason spelled out on
-  // meeting.ended: a megaphone broadcast and a speaker-zone one are the same act on
-  // the same kind of space, so splitting them by name would make every "how much was
-  // broadcast" query a union — and the next broadcast surface a three-way one.
-  broadcastKind: z
-    .enum(["megaphone", "speaker_zone"])
-    .describe(
-      "Where the broadcast was started: the world megaphone, or a speaker zone on the map.",
-    ),
-});
-
-/** The meeting a dwell period happened in; roomId is already an envelope column. */
 const dwellMeetingProperties = z.object({
   meetingId: z
     .string()
     .optional()
     .describe(
-      "Meeting this period happened in, absent when it happened outside one.",
+      "Meeting this period happened in, absent when it happened outside one. A period heard by several meetings is one row per meeting.",
     ),
 });
 
@@ -733,21 +785,45 @@ export const ANALYTICS_EVENTS = {
     // meetingProvider spelled out rather than `.required()` on the shared shape:
     // required() rebuilds the field and drops its .describe().
     openProperties: meetingContextProperties.extend({
+      // Optional: the row the back emits says what a meeting IS (`meetingKind`) rather
+      // than which transport carried it, and the transport can change mid-meeting.
+      // Filled by the one path the back cannot see — Jitsi, whose areas join no space
+      // server-side.
       meetingProvider: z
         .enum(["livekit", "jitsi", "webrtc"])
+        .optional()
         .describe(
-          "Which media backend carried the meeting, and therefore what kind of meeting it was: `webrtc` is a spontaneous bubble, `livekit` and `jitsi` are meeting areas.",
+          "Which media backend carried the meeting. It does NOT say what kind of meeting it was — a meeting area of four or fewer never leaves webrtc — which is what meetingKind is for.",
+        ),
+      meetingKind: meetingKindSchema
+        .optional()
+        .describe(
+          "What the meeting was: a spontaneous proximity bubble, an area people went to in order to meet, the world megaphone, or a speaker zone. The last two are broadcasts — a meeting whose predicate is one speaker on air rather than two people present — so anything reading meeting time as conversation time filters them out. Filled by the back from what the space's client declared; absent on the rows a client opens (Jitsi).",
+        ),
+      participantCount: z
+        .number()
+        .optional()
+        .describe("How many distinct people passed through the meeting."),
+      peakParticipantCount: z
+        .number()
+        .optional()
+        .describe("The most people in it at any one moment."),
+      speakerCount: z
+        .number()
+        .optional()
+        .describe(
+          "How many distinct people were on air at any point. In a bubble or an area everyone is, so it equals participantCount there; it only says something under a broadcast kind. Absent on the rows a client opens.",
         ),
     }),
     endReasonDescription:
       "`socket_closed` and the `pusher_*` values mean the client never got to close it — a tab closed mid-meeting, or the pusher restarted.",
     description:
-      "A meeting, measured. One row per meeting, emitted by the pusher when the interval closes and timestamped at its end. `meetingProvider` is what tells a spontaneous bubble (`webrtc`) from a meeting area (`livekit` / `jitsi`).",
+      "A meeting, measured. One row per meeting — by the back, which owns the meeting's lifecycle and counts its participants; the row is attributed to nobody, because a meeting belongs to no one participant. Rows without `meetingKind` were opened by a client, once per participant, and carry participant-seconds: Jitsi meetings, and every row older than the back-emitted ones. A broadcast is the same row under a `megaphone` or `speaker_zone` kind: from the first speaker going on air to the last going off, and an empty megaphone space accrues nothing.",
   }),
 
   "meeting.screenshare.ended": timedEvent({
     openableBy: "client",
-    openProperties: z.object({
+    openProperties: meetingActionProperties.extend({
       hasAudio: z
         .boolean()
         .describe("Whether the shared screen carried audio."),
@@ -1268,20 +1344,6 @@ export const ANALYTICS_EVENTS = {
   "auth.logged_token": signal("The user signed in with a token."),
   "auth.login_clicked": signal("The user clicked sign in."),
   "auth.logout_clicked": signal("The user clicked sign out."),
-  // The other half of a broadcast. `megaphone.ended` measures the speaker, and on its
-  // own it says how long someone talked to an empty room just as readily as to a full
-  // one. Audience time is reported by each listener, so it adds up to reach × duration
-  // rather than duration — which is why it is a family of its own and must never be
-  // summed into conversation time: listening is not collaborating.
-  "broadcast.audience.ended": timedEvent({
-    openableBy: "client",
-    openProperties: broadcastProperties,
-    endReasonDescription:
-      "Why the listening period ended: the last speaker stopped, the listener walked out of the zone, or the tab went away.",
-    description:
-      "Time one user spent with a broadcast live in a space they were in, measured by the pusher. It opens when a speaker other than this user goes on air and closes when the last one stops, so an empty megaphone space accrues nothing. A user who is broadcasting themselves is still counted as audience of the other speakers on a panel; their own airtime is megaphone.ended.",
-  }),
-
   "bubble.lock.toggled": signal(
     "The user locked or unlocked their conversation bubble.",
   ),
@@ -1402,59 +1464,81 @@ export const ANALYTICS_EVENTS = {
   "media.video_stream_missing": signal(
     "A video stream was expected but never arrived. Counted as an experience issue.",
   ),
-  "meeting.actions.opened": signal("The user opened the meeting actions menu."),
-  "meeting.camera_layout_resized": signal(
-    "The user resized the camera layout.",
-  ),
-  "meeting.microphone.muted": signal(
-    "The user muted their microphone in a meeting.",
-  ),
-  "meeting.microphone.muted_for_everybody": signal(
-    "A moderator muted everyone's microphone.",
-  ),
-  "meeting.participant.kicked": signal("A moderator removed a participant."),
-  "meeting.participant.pinned": signal(
-    "The user pinned a participant's video.",
-  ),
-  "meeting.private_message.clicked": signal(
-    "The user started a private message from a meeting.",
-  ),
-  "meeting.report.clicked": signal("The user reported someone from a meeting."),
-  "meeting.screenshare.toggled": signal("The user toggled screen sharing."),
-  "meeting.video.muted": signal(
-    "The user turned their camera off in a meeting.",
-  ),
-  "meeting.video.muted_for_everybody": signal(
-    "A moderator turned off everyone's camera.",
-  ),
-  // A broadcast is an interval, and the two halves used to be two loose signals with
-  // nothing carrying the time between them — while the SaaS seeder already fabricated
-  // a `durationSeconds` for it, which is a fair summary of how obviously it was
-  // missing. `megaphone.opened` is a different thing and stays a click: it means the
-  // panel was opened, not that anything was broadcast.
-  "megaphone.ended": timedEvent({
-    openableBy: "client",
-    opensWith: "megaphone.started",
-    openProperties: broadcastProperties,
-    // Mandatory with opensWith — see the note on meeting.ended.
-    minDurationMs: 0,
-    endReasonDescription:
-      "`socket_closed` and the `pusher_*` values mean nobody closed it: the tab went away mid-broadcast, or the pusher restarted.",
-    description:
-      "A megaphone broadcast, measured. One row per broadcast, emitted by the pusher when the interval closes and timestamped at its end. Only one broadcast can be live per connection, so it carries no id of its own.",
+  "meeting.actions.opened": event({
+    properties: meetingActionProperties,
+    description: "The user opened the meeting actions menu.",
   }),
-  "megaphone.opened": signal("The user opened the megaphone."),
-  "megaphone.started": event({
-    properties: broadcastProperties.extend({
-      startedAt: z
-        .string()
-        .datetime()
-        .describe("ISO-8601 instant the broadcast began."),
-    }),
+  "meeting.camera_layout_resized": event({
+    properties: meetingActionProperties,
+    description: "The user resized the camera layout.",
+  }),
+  "meeting.microphone.muted": event({
+    properties: meetingActionProperties,
+    description: "The user muted their microphone in a meeting.",
+  }),
+  "meeting.microphone.muted_for_everybody": event({
+    properties: meetingActionProperties,
+    description: "A moderator muted everyone's microphone.",
+  }),
+  "meeting.participation.ended": event({
+    properties: z
+      .object({
+        meetingId: z
+          .string()
+          .describe("Meeting this participation belongs to."),
+        meetingKind: meetingKindSchema.describe(
+          "What the meeting was: a bubble, an area, the world megaphone, or a speaker zone. The last two are broadcasts; see meeting.ended.",
+        ),
+        joinRank: joinRankProperty,
+        role: z
+          .enum(["speaker", "listener"])
+          .describe(
+            "`speaker` if they were on air at any point; a panelist who also listened to the others is a speaker. In a bubble or an area everyone is on air, so it is always `speaker` there — it only distinguishes anyone under a broadcast kind.",
+          ),
+        airtimeSeconds: z
+          .number()
+          .nonnegative()
+          .describe(
+            "This person's own time on air, summed over their stints. Equals durationSeconds in a bubble or an area; zero for a listener. Never to be summed into conversation time: broadcasting is not collaborating, and neither is listening.",
+          ),
+      })
+      .merge(sessionIntervalProperties),
     description:
-      "A megaphone broadcast began. Emitted by the pusher when the interval opens, so it pairs one-to-one with the megaphone.ended that closes it.",
+      "One person's time in one meeting, clipped to it: someone alone in an area before the second person arrived starts when the meeting opens, and a listener present before anyone went on air starts when the broadcast does. Emitted by the back when the meeting ends. Under a broadcast kind this is audience time, reported once per listener: it adds up to reach × duration, not duration. This is the per-user view of a meeting: meeting.ended is deliberately attributed to nobody, because a meeting belongs to no one participant. NOT to be joined to itself: grouping these rows by meetingId yields who was in a meeting with whom, and aggregated over months that is a map of who works with whom — a different product from a record of what happened, and one with a different legal footing. Nothing builds that query today, and the decision to leave it unbuilt is the reason this sentence exists: it is two lines of SQL away, so it will not stay unbuilt by accident.",
     source: "pusher",
   }),
+
+  "meeting.participant.kicked": event({
+    properties: meetingActionProperties,
+    description: "A moderator removed a participant.",
+  }),
+  "meeting.participant.pinned": event({
+    properties: meetingActionProperties,
+    description: "The user pinned a participant's video.",
+  }),
+  "meeting.private_message.clicked": event({
+    properties: meetingActionProperties,
+    description: "The user started a private message from a meeting.",
+  }),
+  "meeting.report.clicked": event({
+    properties: meetingActionProperties,
+    description: "The user reported someone from a meeting.",
+  }),
+  "meeting.screenshare.toggled": event({
+    properties: meetingActionProperties,
+    description: "The user toggled screen sharing.",
+  }),
+  "meeting.video.muted": event({
+    properties: meetingActionProperties,
+    description: "The user turned their camera off in a meeting.",
+  }),
+  "meeting.video.muted_for_everybody": event({
+    properties: meetingActionProperties,
+    description: "A moderator turned off everyone's camera.",
+  }),
+  // A click, not a broadcast: it means the panel was opened, not that anything went
+  // on air. Time on air is meeting.participation.ended, measured by the back.
+  "megaphone.opened": signal("The user opened the megaphone."),
   "menu.chat.opened": signal("The user opened the chat from the menu."),
   "menu.contact.opened": signal("The user opened the contact page."),
   "menu.credit.opened": signal("The user opened the credits."),

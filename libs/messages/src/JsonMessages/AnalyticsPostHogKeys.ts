@@ -7,11 +7,10 @@
  *
  * - An event added with this pipeline, which PostHog never knew. Adding a key here
  *   would invent volume rather than migrate it, so leave it out.
- * - An interval whose PostHog counterpart does not coincide with it. `megaphone.ended`
- *   is the example worth keeping in mind: PostHog counts each press of the start
- *   button, while the interval covers the whole broadcast however often start is
- *   pressed, so the two count different things and only the caller can tell them
- *   apart. It captures its own, at the call site.
+ * - An interval whose PostHog counterpart does not coincide with it. The megaphone is
+ *   the example worth keeping in mind: PostHog counts each press of the start button,
+ *   while the time on air covers the whole broadcast however often start is pressed,
+ *   so the two count different things. The press captures its own, at the call site.
  *
  * Intervals whose ends DO coincide with a PostHog event are ordinary entries, in the
  * third form below.

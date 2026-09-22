@@ -5,6 +5,9 @@ import {
     type HandleRecordingWebhookRequest,
     type MeetingConnectionRestartMessage,
     type SpaceUser,
+    type SpaceKind,
+    spaceKindSchema,
+    FilterType,
 } from "@workadventure/messages";
 import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
@@ -15,6 +18,7 @@ import { WebRTCState } from "./States/WebRTCState";
 import { VoidState } from "./States/VoidState";
 import type { IRecordingManager, ManagedRecordingState } from "./RecordingManager";
 import { RecordingManager } from "./RecordingManager";
+import { SessionAnalytics, type SessionEndReason } from "./SessionAnalytics";
 import { UserRegistry } from "./Services/UserRegistry";
 import { TransitionPolicy } from "./Policies/TransitionPolicy";
 import { TransitionOrchestrator } from "./Services/TransitionOrchestrator";
@@ -69,6 +73,7 @@ export interface CommunicationManagerDependencies {
     initialStateFactory?: InitialStateFactory;
     livekitToWebRTCDelayMs?: number;
     recordingManager?: IRecordingManager;
+    sessionAnalytics?: SessionAnalytics;
 }
 
 /**
@@ -89,6 +94,17 @@ export class CommunicationManager implements ICommunicationManager {
     private readonly lifecycleManager: IStateLifecycleManager;
     private readonly space: ICommunicationSpace;
     private readonly _recordingManager: IRecordingManager;
+    /**
+     * The meetings and broadcasts this space held, measured. Owned here like the
+     * recording, the other session a space keeps: both begin and end inside the space,
+     * and neither is the space's own business to hold.
+     *
+     * It is fed from `Space`, not derived from the registries above. Those carry who
+     * crossed the filter and who is watching — transport facts, true today of everyone
+     * present only because every front happens to subscribe to a store of its space.
+     * `Space.addUser` IS presence, and a participation's start and end have to be.
+     */
+    private readonly _sessionAnalytics: SessionAnalytics;
 
     private static readonly DEFAULT_LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
@@ -129,6 +145,10 @@ export class CommunicationManager implements ICommunicationManager {
             dependencies.recordingManager ??
             new RecordingManager(this.space, this.orchestrator, this.userRegistry, this.lifecycleManager);
 
+        this._sessionAnalytics =
+            dependencies.sessionAnalytics ??
+            new SessionAnalytics(this.space.getSpaceName(), this.space.world, () => this.sessionKind());
+
         // Initialize transition policy with LiveKit availability checker
         this.policy =
             dependencies.policy ??
@@ -145,8 +165,10 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserAdded(user: SpaceUser): Promise<void> {
+        const wasPresent = this.isPresent(user.spaceUserId);
         this._recordingManager.handleAddUser(user);
         this.userRegistry.addUser(user);
+        this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
 
         // Decide the strategy before telling the joiner which one to use. If this join tips the
@@ -160,7 +182,9 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserDeleted(user: SpaceUser): Promise<void> {
+        const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.deleteUser(user.spaceUserId);
+        this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
 
         await this.lifecycleManager.getCurrentState().handleUserDeleted(user);
@@ -178,7 +202,9 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
+        const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.addUserToNotify(user);
+        this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
 
         // Same ordering as handleUserAdded.
@@ -190,7 +216,9 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
+        const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.deleteUserToNotify(user.spaceUserId);
+        this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
 
         await this.lifecycleManager.getCurrentState().handleUserToNotifyDeleted(user);
@@ -469,7 +497,82 @@ export class CommunicationManager implements ICommunicationManager {
         return "handleStartRecording" in state && "handleStopRecording" in state && "handleLivekitWebhook" in state;
     }
 
+    /**
+     * What this space is a session of, or undefined while its client has not said.
+     *
+     * Read when a session opens rather than once: the kind is the `spaceKind` metadata,
+     * checked against the enum on the way in, and it arrives after the first join. A
+     * space that never declares one never opens a session.
+     */
+    private sessionKind(): SpaceKind | undefined {
+        const kind = spaceKindSchema.safeParse(this.space.getMetadataValue("spaceKind"));
+        return kind.success ? kind.data : undefined;
+    }
+
+    /**
+     * Whether someone takes part in this space, as this manager sees it.
+     *
+     * Neither registry answers that alone: `users` holds who crossed the filter — in a
+     * broadcast, the speakers — and `usersToNotify` holds who is watching. A megaphone
+     * listener is only ever in the second; a speaker is in both.
+     *
+     * Their union is not an approximation of `getAllUsers()`, it is the narrower set we
+     * mean. Watching is how a client receives anything at all: the pusher dispatches the
+     * user list and every add, update and remove to `_localWatchers` alone — see
+     * `SpaceToFrontDispatcher.notifyAll`, "Notification is done only to watchers". A
+     * member of a broadcast space who neither speaks nor watches is shown nobody and
+     * hears nobody, and counting them would inflate the audience with tabs that received
+     * none of it. In an `ALL_USERS` space the question does not arise: the filter admits
+     * everyone, so `users` already holds the room.
+     */
+    private isPresent(spaceUserId: string): boolean {
+        return this.userRegistry.hasUser(spaceUserId) || this.userRegistry.hasUserToNotify(spaceUserId);
+    }
+
+    /**
+     * Turns a change in either registry into the arrival or departure it is — or into
+     * nothing, which is the common case: a speaker going on air enters `users` while
+     * already watching, and that is not an arrival.
+     *
+     * Sampling `isPresent` on both sides of the mutation is what makes this work without
+     * a third roster: the two registries remember for us.
+     */
+    private syncPresence(user: SpaceUser, wasPresent: boolean): void {
+        const isPresent = this.isPresent(user.spaceUserId);
+        if (isPresent === wasPresent) {
+            return;
+        }
+        if (isPresent) {
+            this._sessionAnalytics.join(
+                { uuid: user.uuid, spaceUserId: user.spaceUserId, roomId: user.playUri },
+                // In a broadcast only a speaker is active; in a meeting, being there is.
+                this.space.filterType === FilterType.ALL_USERS ? true : user.megaphoneState,
+            );
+        } else {
+            this._sessionAnalytics.leave(user.spaceUserId);
+        }
+    }
+
+    /** A speaker went on or off air. Meetings never call this: present is active there. */
+    public handleMemberActiveChanged(spaceUserId: string, active: boolean): void {
+        this._sessionAnalytics.setActive(spaceUserId, active);
+    }
+
+    /** The space learnt what it is: a session waiting on that may open now. */
+    public handleSpaceKindChanged(): void {
+        this._sessionAnalytics.kindChanged();
+    }
+
+    /**
+     * Ends an open session early, for a shutdown about to take the process with it —
+     * a session only exists once it has ended. Says whether there was one to end.
+     */
+    public closeSession(endReason: SessionEndReason): boolean {
+        return this._sessionAnalytics.close(endReason);
+    }
+
     public destroy(): void {
+        this._sessionAnalytics.close();
         this._recordingManager.destroy();
     }
 }

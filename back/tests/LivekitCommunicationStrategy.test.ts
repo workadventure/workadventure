@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SpaceUser } from "@workadventure/messages";
+import { FilterType, SpaceUser } from "@workadventure/messages";
 import { LivekitCommunicationStrategy } from "../src/Model/Strategies/LivekitCommunicationStrategy";
 import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
 
@@ -28,6 +28,9 @@ describe("LivekitCommunicationStrategy", () => {
             publishMetadata: vi.fn(),
             stopRecordingByServer,
             getUser: vi.fn(),
+            world: "world",
+            getMetadataValue: vi.fn(),
+            filterType: FilterType.ALL_USERS,
         };
 
         const livekitService = {
@@ -72,6 +75,9 @@ describe("LivekitCommunicationStrategy", () => {
             publishMetadata: vi.fn(),
             stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
             getUser: vi.fn(),
+            world: "world",
+            getMetadataValue: vi.fn(),
+            filterType: FilterType.ALL_USERS,
         };
 
         const livekitService = {

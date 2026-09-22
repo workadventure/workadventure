@@ -2,10 +2,13 @@
  * Where services say "I hold something in memory that must reach its destination
  * before this process exits".
  *
- * server.ts used to name each drainable service, import it and hand-write its
+ * A server would otherwise name each drainable service, import it and hand-write its
  * drain-then-stop pair, so adding one meant editing a file that has nothing to do
  * with it — and forgetting to meant losing its buffer on every deploy, silently.
  * A service now registers itself where it is built.
+ *
+ * Shared by the back and the pusher: both hold analytics in memory that a deploy
+ * would otherwise throw away, and the registry has nothing process-specific in it.
  *
  * Registration only records the callback: nothing runs until `runDrains` is
  * called. That ordering is the point. The previous version built an array of

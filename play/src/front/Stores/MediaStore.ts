@@ -8,7 +8,7 @@ import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { Room } from "../Connection/Room";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { currentMeetingIdStore, currentMeetingProperties } from "../Administration/CurrentMeeting";
+import { openTimedEventPerMeeting } from "../Administration/CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { createHeldIntervalTracker } from "../Administration/HeldIntervalTracker";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
@@ -1366,15 +1366,15 @@ const SPEECH_HOLD_MS = 1500;
 let endMicrophoneDwell: EndTimedAnalyticsEvent | undefined;
 let unsubscribeEffectiveMicrophone: Unsubscriber | undefined;
 let unsubscribeVoiceIndicator: Unsubscriber | undefined;
-let unsubscribeCurrentMeeting: Unsubscriber | undefined;
-// Which meeting the OPEN microphone period was opened against, so a change of
-// meeting can be told from the subscription's initial call.
-let microphoneDwellMeetingId: string | undefined;
 
+// Both periods are opened once per meeting that hears them and cut at every meeting
+// boundary — half of a period that straddles one happened in the meeting and half did
+// not, and a row can only name one meeting. See CurrentMeeting.
 const speechIntervals = createHeldIntervalTracker(
-    // Read per interval rather than captured once: a speaking period belongs to the
-    // meeting it started in, and the next one may start in another.
-    () => analyticsClient.openTimedEvent("media.speech.dwell", currentMeetingProperties(), { reopenOnReconnect: true }),
+    () =>
+        openTimedEventPerMeeting((context) =>
+            analyticsClient.openTimedEvent("media.speech.dwell", context, { reopenOnReconnect: true }),
+        ),
     SPEECH_HOLD_MS,
 );
 
@@ -1384,18 +1384,17 @@ const closeMicrophoneDwell = (): void => {
     unsubscribeVoiceIndicator = undefined;
     endMicrophoneDwell?.();
     endMicrophoneDwell = undefined;
-    microphoneDwellMeetingId = undefined;
 };
 
 const openMicrophoneDwell = (): void => {
-    const properties = currentMeetingProperties();
-    microphoneDwellMeetingId = properties.meetingId;
-    endMicrophoneDwell ??= analyticsClient.openTimedEvent(
-        "media.microphone.dwell",
-        properties,
-        // The microphone did not close because the socket did: after a reconnect it
-        // is still open, and nothing will say so again.
-        { reopenOnReconnect: true },
+    endMicrophoneDwell ??= openTimedEventPerMeeting((context) =>
+        analyticsClient.openTimedEvent(
+            "media.microphone.dwell",
+            context,
+            // The microphone did not close because the socket did: after a reconnect it
+            // is still open, and nothing will say so again.
+            { reopenOnReconnect: true },
+        ),
     );
 
     // Same reasoning one level down: subscribing is what starts the SoundMeter, so
@@ -1417,8 +1416,6 @@ gameSceneIsLoadedStore.subscribe((inRoom: boolean) => {
     if (!inRoom) {
         unsubscribeEffectiveMicrophone?.();
         unsubscribeEffectiveMicrophone = undefined;
-        unsubscribeCurrentMeeting?.();
-        unsubscribeCurrentMeeting = undefined;
         closeMicrophoneDwell();
         return;
     }
@@ -1429,20 +1426,6 @@ gameSceneIsLoadedStore.subscribe((inRoom: boolean) => {
             return;
         }
 
-        openMicrophoneDwell();
-    });
-
-    // A microphone period that straddles the start or end of a meeting is cut at the
-    // boundary rather than attributed whole: half of it happened in the meeting and
-    // half did not, and one row can only name one meeting. Microphones stay open
-    // across several meetings, so without this the field would be decided by wherever
-    // the user happened to be when they unmuted.
-    unsubscribeCurrentMeeting ??= currentMeetingIdStore.subscribe((meetingId: string | undefined) => {
-        if (endMicrophoneDwell === undefined || meetingId === microphoneDwellMeetingId) {
-            return;
-        }
-
-        closeMicrophoneDwell();
         openMicrophoneDwell();
     });
 });

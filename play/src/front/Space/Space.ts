@@ -10,6 +10,7 @@ import type { Subscription } from "rxjs";
 import { Observable, Subject } from "rxjs";
 import { deepmergeInto } from "deepmerge-ts";
 import { Deferred } from "@workadventure/shared-utils";
+import { spaceKindSchema } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import type {
     PublicEvent,
@@ -1136,11 +1137,11 @@ export class Space implements SpaceInterface {
         // Use zod to parse the metadata
         const metadata = z
             .object({
-                isMegaphoneSpace: z.boolean().default(false),
+                spaceKind: spaceKindSchema.optional(),
             })
             .parse(Object.fromEntries(this.getMetadata().entries()));
 
-        return VideoBox.fromRemoteSpaceUser(user, isScreenSharing, metadata.isMegaphoneSpace);
+        return VideoBox.fromRemoteSpaceUser(user, isScreenSharing, metadata.spaceKind === "megaphone");
     }
 
     /**

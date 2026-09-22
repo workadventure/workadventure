@@ -20,6 +20,7 @@ import {
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
+import type { SessionEndReason } from "./SessionAnalytics";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { SpacesWatcher } from "./SpacesWatcher";
 import type { EventProcessor } from "./EventProcessor";
@@ -124,6 +125,12 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             const updateValues = applyFieldMask(spaceUser, updateMask);
             deepmergeInto(user, updateValues);
 
+            // Only the megaphone: `attendeesState` is the audience choosing to be seen,
+            // not a speaker going on air. In a meeting, present is active.
+            if (this.isBroadcast) {
+                this.communicationManager.handleMemberActiveChanged(user.spaceUserId, user.megaphoneState);
+            }
+
             const newFilter = this.filterOneUser(user);
 
             usersList.set(spaceUser.spaceUserId, user);
@@ -207,6 +214,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string): void {
         let user: SpaceUser | undefined;
+        let wasToNotify = false;
         try {
             const usersList = this.usersList(sourceWatcher);
             user = usersList.get(spaceUserId);
@@ -217,7 +225,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             }
 
             const usersToNotifyList = this.usersListToNotify(sourceWatcher);
-            usersToNotifyList.delete(spaceUserId);
+            wasToNotify = usersToNotifyList.delete(spaceUserId);
 
             usersList.delete(spaceUserId);
 
@@ -237,6 +245,17 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             Sentry.captureException(e);
             debug("Error while removing user", e);
         } finally {
+            // Before handleUserDeleted, and unconditionally: the manager reads presence
+            // as the union of its two registries, so a user dropped from one while still
+            // in the other has not left. Without this the watching half never empties on
+            // a leave and the user stays "present" until their pusher dies.
+            if (user && wasToNotify) {
+                this.communicationManager.handleUserToNotifyDeleted(user).catch((error) => {
+                    console.error("Error while deleting user to notify", error);
+                    Sentry.captureException(error);
+                });
+            }
+
             if (user && this.filterOneUser(user)) {
                 this.communicationManager.handleUserDeleted(user).catch((error) => {
                     console.error("Error while deleting user", error);
@@ -343,6 +362,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         if (spaceUsers) {
             for (const spaceUser of spaceUsers.values()) {
+                // A pusher going away takes its users with it; without this they would
+                // stay "present" until the back itself shut down.
                 this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
@@ -716,6 +737,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return this._propertiesToSync;
     }
 
+    private get isBroadcast(): boolean {
+        return this._filterType !== FilterType.ALL_USERS;
+    }
+
     private isPublishing(spaceUser: SpaceUser): boolean {
         if (this.filterType === FilterType.ALL_USERS) {
             return spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState;
@@ -763,7 +788,17 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     public getRecordingState(): ManagedRecordingState {
         return this.communicationManager.getRecordingState();
     }
+    /**
+     * Closes an open session early, for a shutdown that is about to take the process —
+     * and with it every session, which only exists once it has ended. Says whether there
+     * was one, which is what the caller counts.
+     */
+    public closeSession(endReason: SessionEndReason): boolean {
+        return this.communicationManager.closeSession(endReason);
+    }
+
     public destroy() {
+        // The manager closes the session it owns.
         this.communicationManager.destroy();
         debug(`${this.name} => destroyed`);
     }
@@ -775,6 +810,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         for (const [key, value] of Object.entries(metadata)) {
             this.metadata.set(key, value);
+        }
+        if ("spaceKind" in metadata) {
+            this.communicationManager.handleSpaceKindChanged();
         }
 
         this.notifyWatchers({
