@@ -87,12 +87,6 @@ export interface CommunicationManagerDependencies {
  *
  * Single Responsibility: Coordinate the services and expose a simple API.
  */
-/**
- * How long a user may be in the space without being in either registry before it counts
- * as a broken assumption rather than a client still on its way to watching.
- */
-const PRESENCE_CHECK_DELAY_MS = 30_000;
-
 export class CommunicationManager implements ICommunicationManager {
     private readonly userRegistry: IUserRegistry;
     private readonly policy: ITransitionPolicy;
@@ -111,8 +105,6 @@ export class CommunicationManager implements ICommunicationManager {
      * `Space.addUser` IS presence, and a participation's start and end have to be.
      */
     private readonly _sessionAnalytics: SessionAnalytics;
-    private _presenceMismatchReported = false;
-    private _presenceCheckTimer: NodeJS.Timeout | undefined;
 
     private static readonly DEFAULT_LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
@@ -518,11 +510,20 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     /**
-     * Whether someone is in the space at all, as this manager sees it.
+     * Whether someone takes part in this space, as this manager sees it.
      *
      * Neither registry answers that alone: `users` holds who crossed the filter — in a
      * broadcast, the speakers — and `usersToNotify` holds who is watching. A megaphone
      * listener is only ever in the second; a speaker is in both.
+     *
+     * Their union is not an approximation of `getAllUsers()`, it is the narrower set we
+     * mean. Watching is how a client receives anything at all: the pusher dispatches the
+     * user list and every add, update and remove to `_localWatchers` alone — see
+     * `SpaceToFrontDispatcher.notifyAll`, "Notification is done only to watchers". A
+     * member of a broadcast space who neither speaks nor watches is shown nobody and
+     * hears nobody, and counting them would inflate the audience with tabs that received
+     * none of it. In an `ALL_USERS` space the question does not arise: the filter admits
+     * everyone, so `users` already holds the room.
      */
     private isPresent(spaceUserId: string): boolean {
         return this.userRegistry.hasUser(spaceUserId) || this.userRegistry.hasUserToNotify(spaceUserId);
@@ -547,51 +548,9 @@ export class CommunicationManager implements ICommunicationManager {
                 // In a broadcast only a speaker is active; in a meeting, being there is.
                 this.space.filterType === FilterType.ALL_USERS ? true : user.megaphoneState,
             );
-            this.schedulePresenceCheck();
         } else {
             this._sessionAnalytics.leave(user.spaceUserId);
         }
-    }
-
-    /**
-     * The union above is everyone in the space only as long as every client watches the
-     * space it joined — which `ProximityChatRoom.joinSpace` and `BroadcastService.joinSpace`
-     * both do, unconditionally, but which nothing enforces.
-     *
-     * `Space.getAllUsers()` is presence by construction. If the two ever disagree, the
-     * rows are quietly short of people and nothing else would say so. Reported once per
-     * space: the point is to learn that the assumption broke, not to count how often.
-     */
-    private schedulePresenceCheck(): void {
-        if (this._presenceMismatchReported || this._presenceCheckTimer) {
-            return;
-        }
-        // Not now: a broadcast listener is in the space before they are in either
-        // registry — they join, then their client watches, and that is a round trip
-        // through the pusher. Checking on the spot would cry wolf on every broadcast.
-        this._presenceCheckTimer = setTimeout(() => {
-            this._presenceCheckTimer = undefined;
-            this.checkPresenceAgainstSpace();
-        }, PRESENCE_CHECK_DELAY_MS);
-        // Never a reason to hold the process open during a shutdown.
-        this._presenceCheckTimer.unref?.();
-    }
-
-    private checkPresenceAgainstSpace(): void {
-        if (this._presenceMismatchReported) {
-            return;
-        }
-        const missing = this.space
-            .getAllUsers()
-            .filter((user) => !this.isPresent(user.spaceUserId))
-            .map((user) => user.spaceUserId);
-        if (missing.length === 0) {
-            return;
-        }
-        this._presenceMismatchReported = true;
-        const message = `Session analytics: ${missing.length} user(s) of space ${this.space.getSpaceName()} are in neither registry, so they are missing from its meeting and broadcast rows. A client joined a space without watching it.`;
-        console.error(message, missing);
-        Sentry.captureMessage(message, "warning");
     }
 
     /** A speaker went on or off air. Meetings never call this: present is active there. */
@@ -613,10 +572,6 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public destroy(): void {
-        if (this._presenceCheckTimer) {
-            clearTimeout(this._presenceCheckTimer);
-            this._presenceCheckTimer = undefined;
-        }
         this._sessionAnalytics.close();
         this._recordingManager.destroy();
     }
