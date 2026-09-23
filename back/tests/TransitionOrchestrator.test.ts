@@ -56,6 +56,7 @@ describe("TransitionOrchestrator", () => {
         handleUserToNotifyAdded: async () => {},
         handleUserToNotifyDeleted: async () => {},
         handleMeetingConnectionRestartMessage: () => {},
+        handleUserReconnected: () => {},
     });
 
     beforeEach(() => {

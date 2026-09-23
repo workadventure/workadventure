@@ -153,6 +153,7 @@ export class RoomConnection implements RoomConnection {
     public readonly socket: WorkAdventureWebSocket;
     public readonly websocketReconnectingStream: Observable<boolean>;
     private userId: number | null = null;
+    private spaceUserId: string | null = null;
     private _closed = false;
     private readonly cleanupCallbacks: Array<() => void> = [];
     private tags: string[] = [];
@@ -594,6 +595,7 @@ export class RoomConnection implements RoomConnection {
                     }*/
 
                     this.userId = roomJoinedMessage.currentUserId;
+                    this.spaceUserId = roomJoinedMessage.spaceUserId;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
                     //define if there is invite user option activated
                     inviteUserActivated.set(
@@ -1070,7 +1072,8 @@ export class RoomConnection implements RoomConnection {
     }
 
     public getSpaceUserId(): string {
-        return this.roomUrl + "_" + this.getUserId();
+        // An older pusher does not send it yet: fall back to the id it derives itself.
+        return this.spaceUserId || this.roomUrl + "_" + this.getUserId();
     }
 
     emitActionableEvent(itemId: number, event: string, state: unknown, parameters: unknown): void {

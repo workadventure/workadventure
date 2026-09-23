@@ -49,6 +49,7 @@ describe("CommunicationManager", () => {
             handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
             handleMeetingConnectionRestartMessage: vi.fn().mockResolvedValue(undefined),
+            handleUserReconnected: vi.fn(),
         };
         return {
             communicationType: type,
@@ -61,6 +62,7 @@ describe("CommunicationManager", () => {
             handleUserToNotifyAdded: mocks.handleUserToNotifyAdded,
             handleUserToNotifyDeleted: mocks.handleUserToNotifyDeleted,
             handleMeetingConnectionRestartMessage: mocks.handleMeetingConnectionRestartMessage,
+            handleUserReconnected: mocks.handleUserReconnected,
             mocks,
         };
     };
