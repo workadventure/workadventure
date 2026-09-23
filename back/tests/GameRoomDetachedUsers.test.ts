@@ -109,3 +109,80 @@ describe("GameRoom users whose pusher went away", () => {
         expect(alice.write({ $case: "errorMessage", errorMessage: { message: "lost" } })).toBe(false);
     });
 });
+
+describe("GameRoom bubbles re-formed after a back restart", () => {
+    function rejoin(uuid: string, x: number, previousBubbleSpaceName: string): JoinRoomMessage {
+        return JoinRoomMessage.fromPartial({
+            ...joinMessage(uuid, x, `${uuid}-tab`),
+            spaceUserId: `room_${uuid}`,
+            previousBubbleSpaceName,
+            world: "world",
+        });
+    }
+
+    async function freshRoom(allowed: boolean) {
+        const room = await GameRoom.create(
+            ROOM_URL,
+            () => {},
+            () => {},
+            160,
+            160,
+            () => {},
+            () => {},
+            () => {},
+            () => {},
+            () => {},
+            () => {},
+            () => {},
+        );
+        const validator = vi.fn().mockResolvedValue(allowed);
+        room.bubbleResumeValidator = validator;
+        return { room, validator };
+    }
+
+    const FORMER_BUBBLE = `${ROOM_URL}#12#1700000000000`;
+
+    it("gives a bubble re-formed by two of its members its former space", async () => {
+        const { room, validator } = await freshRoom(true);
+
+        await room.join(socket(), rejoin("alice", 100, FORMER_BUBBLE));
+        const bob = await room.join(socket(), rejoin("bob", 150, FORMER_BUBBLE));
+
+        expect(bob.group?.spaceName).toBe(FORMER_BUBBLE);
+        expect(validator).toHaveBeenCalledWith({
+            spaceName: FORMER_BUBBLE,
+            world: "world",
+            spaceUserId: "room_bob",
+            playUri: ROOM_URL,
+        });
+    });
+
+    it("does not when the user may not bring it back", async () => {
+        const { room } = await freshRoom(false);
+
+        await room.join(socket(), rejoin("alice", 100, FORMER_BUBBLE));
+        const bob = await room.join(socket(), rejoin("bob", 150, FORMER_BUBBLE));
+
+        expect(bob.group?.spaceName).not.toBe(FORMER_BUBBLE);
+    });
+
+    it("does not when only one of the two was in it", async () => {
+        const { room } = await freshRoom(true);
+
+        await room.join(socket(), rejoin("alice", 100, FORMER_BUBBLE));
+        const carol = await room.join(socket(), joinMessage("carol", 150, "carol-tab"));
+
+        expect(carol.group?.spaceName).not.toBe(FORMER_BUBBLE);
+    });
+
+    it("ignores a name that is not one of this room's bubbles", async () => {
+        const { room, validator } = await freshRoom(true);
+        const elsewhere = "https://play.workadventu.re/_/global/localhost/other.json#12#1700000000000";
+
+        await room.join(socket(), rejoin("alice", 100, elsewhere));
+        const bob = await room.join(socket(), rejoin("bob", 150, elsewhere));
+
+        expect(validator).not.toHaveBeenCalled();
+        expect(bob.group?.spaceName).not.toBe(elsewhere);
+    });
+});

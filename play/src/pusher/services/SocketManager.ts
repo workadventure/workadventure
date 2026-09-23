@@ -426,6 +426,9 @@ export class SocketManager implements ZoneEventListener {
                 userRoomToken: socketData.userRoomToken ?? "", // TODO: turn this into an optional field
                 chatID: socketData.chatID,
                 tabId: socketData.tabId,
+                spaceUserId: computeSpaceUserId(socketData.roomId, socketData.userUuid, socketData.tabId, SECRET_KEY),
+                previousBubbleSpaceName: socketData.previousBubbleSpaceName ?? "",
+                world: socketData.world,
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");

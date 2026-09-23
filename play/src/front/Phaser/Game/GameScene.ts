@@ -1203,6 +1203,7 @@ export class GameScene extends DirtyScene {
             // First: everything torn down below leaves its spaces, which a suspended registry keeps
             this._spaceRegistry.suspend();
             this.keptSpaceRegistry = this._spaceRegistry;
+            connectionManager.previousBubbleSpaceName = this.proximitySpaceManager?.currentBubbleSpaceName;
         } else {
             // A registry handed to this scene that it never got to resume (it failed to connect): its conversations
             // end here.

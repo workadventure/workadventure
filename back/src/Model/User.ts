@@ -39,6 +39,11 @@ export class User implements Movable, CustomJsonReplacerInterface {
      * the same tab reconnects through another pusher. Its socket is dead meanwhile.
      */
     public detached = false;
+    /**
+     * The bubble this user was in before the back restarted, checked (see GameRoom.join): a bubble it re-forms with
+     * someone holding the same hint gets its former space back. Dropped once the user is in a group.
+     */
+    public bubbleSpaceNameHint: string | undefined;
     private isRoomJoinedMessage = false;
     private pendingMessages: NonNullable<ServerToClientMessage["message"]>[] = [];
     /**

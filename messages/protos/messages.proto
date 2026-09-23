@@ -1517,6 +1517,14 @@ message JoinRoomMessage {
   // and kill stale connections immediately instead of waiting for ping timeout
   //TODO : remove the optional when the tabId is always present in the query string (next version of the app )
   optional string tabId = 19;
+  // The id this tab holds in the room's spaces (see play/src/pusher/services/SpaceUserId.ts)
+  string spaceUserId = 20;
+  // The proximity bubble this tab was in before it reconnected (a play or back restart). A back that just restarted
+  // gives a bubble re-formed by the same people its former space back, so the conversation goes on in the same
+  // LiveKit room (see GameRoom.join).
+  string previousBubbleSpaceName = 21;
+  // The world the room belongs to: space names, and LiveKit room names, are prefixed with it by the pusher.
+  string world = 22;
 }
 
 message UserJoinedZoneMessage {

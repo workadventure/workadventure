@@ -62,6 +62,7 @@ import { AreaPropertyVariablesManager } from "../Services/AreaPropertyVariablesM
 import { AreaZoneTracker } from "./AreaZoneTracker";
 import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
+import { canResumeBubbleAfterRestart, type BubbleResumeValidator } from "./Services/BubbleResume";
 import { PositionNotifier } from "./PositionNotifier";
 import { WamManager } from "./Services/WamManager";
 import type { UserSocket } from "./User";
@@ -87,6 +88,8 @@ export class GameRoom implements BrothersFinder {
     private readonly usersByTabKey = new Map<string, User>();
     // Grace timers of detached users (see detach())
     private readonly detachTimers = new Map<User, NodeJS.Timeout>();
+    // Replaced in tests
+    public bubbleResumeValidator: BubbleResumeValidator = canResumeBubbleAfterRestart;
     private readonly groups: SpatialMap<number, Group>;
     private readonly admins = new Set<Admin>();
 
@@ -305,6 +308,8 @@ export class GameRoom implements BrothersFinder {
             }
         }
 
+        const bubbleSpaceNameHint = await this.checkBubbleSpaceNameHint(joinRoomMessage);
+
         // Same-tab reconnections should not be reported as duplicate sessions.
         const sameUserAlreadyConnected = (this.getUsersByUuid(joinRoomMessage.userUuid)?.size ?? 0) >= 1;
 
@@ -336,6 +341,7 @@ export class GameRoom implements BrothersFinder {
             tabId,
         );
 
+        user.bubbleSpaceNameHint = bubbleSpaceNameHint;
         this.users.set(user.id, user);
         let set = this.usersByUuid.get(user.uuid);
         if (set === undefined) {
@@ -369,6 +375,39 @@ export class GameRoom implements BrothersFinder {
         }
 
         return user;
+    }
+
+    /**
+     * A user reconnecting after a back restart names the bubble it was in (see JoinRoomMessage): keep that name only
+     * if it is one of this room's bubbles, no current bubble uses it, and the user is allowed to bring it back.
+     */
+    private async checkBubbleSpaceNameHint(joinRoomMessage: JoinRoomMessage): Promise<string | undefined> {
+        const spaceName = joinRoomMessage.previousBubbleSpaceName;
+        if (!spaceName || !spaceName.startsWith(`${this._roomUrl}#`) || this.isBubbleSpaceNameInUse(spaceName)) {
+            return undefined;
+        }
+        try {
+            const allowed = await this.bubbleResumeValidator({
+                spaceName,
+                world: joinRoomMessage.world,
+                spaceUserId: joinRoomMessage.spaceUserId,
+                playUri: this._roomUrl,
+            });
+            return allowed ? spaceName : undefined;
+        } catch (e) {
+            console.error("Error while checking the bubble a reconnecting user was in", e);
+            Sentry.captureException(e);
+            return undefined;
+        }
+    }
+
+    private isBubbleSpaceNameInUse(spaceName: string): boolean {
+        for (const group of this.groups.values()) {
+            if (group.spaceName === spaceName) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -493,6 +532,15 @@ export class GameRoom implements BrothersFinder {
                     closestItem.setOutOfBounds(false);
                 } else {
                     const closestUser: User = closestItem;
+                    // Two members of a bubble the back lost when it restarted re-form it: give it its former space,
+                    // so the conversation goes on in the same LiveKit room.
+                    const hint = user.bubbleSpaceNameHint;
+                    const resumedSpaceName =
+                        hint !== undefined &&
+                        hint === closestUser.bubbleSpaceNameHint &&
+                        !this.isBubbleSpaceNameInUse(hint)
+                            ? hint
+                            : undefined;
                     const group: Group = new Group(
                         this._roomUrl,
                         [user, closestUser],
@@ -500,6 +548,7 @@ export class GameRoom implements BrothersFinder {
                         this.connectCallback,
                         this.disconnectCallback,
                         this.positionNotifier,
+                        resumedSpaceName,
                     );
                     this.groups.set(group.getId(), group);
                 }

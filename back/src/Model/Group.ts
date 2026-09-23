@@ -39,6 +39,8 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         private connectCallback: ConnectCallback,
         private disconnectCallback: DisconnectCallback,
         private positionNotifier: PositionNotifier,
+        // The name of a bubble re-formed after a back restart (see GameRoom.updateUserGroup)
+        spaceName?: string,
     ) {
         this.roomId = roomId;
         this.users = new Set<User>();
@@ -46,7 +48,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         Group.nextId++;
 
         // TODO: SECURE SPACES WITH JWT tokens.
-        this._spaceName = `${this.roomId}#${this.id}#${new Date().getTime()}`;
+        this._spaceName = spaceName ?? `${this.roomId}#${this.id}#${new Date().getTime()}`;
 
         users.forEach((user: User) => {
             this.join(user);
@@ -171,6 +173,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         // Broadcast on the right event
         this.users.add(user);
         user.group = this;
+        user.bubbleSpaceNameHint = undefined;
         this.connectCallback(user, this);
         this.positionNotifier.emitGroupUsersUpdatedEvent(this);
     }

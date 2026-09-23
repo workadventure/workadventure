@@ -319,6 +319,10 @@ export class RoomConnection implements RoomConnection {
         params.set("cameraState", get(requestedCameraState) ? "true" : "false");
         params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
         params.set("tabId", connectionManager.tabId);
+        if (connectionManager.previousBubbleSpaceName) {
+            params.set("previousBubbleSpaceName", connectionManager.previousBubbleSpaceName);
+            connectionManager.previousBubbleSpaceName = undefined;
+        }
         // TODO: check if the screenSharingState variable is used
         params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
 
