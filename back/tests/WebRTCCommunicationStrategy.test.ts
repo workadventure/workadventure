@@ -224,19 +224,6 @@ describe("WebRTCCommunicationStrategy.reconnectUser", () => {
         expect(newConnectionIds.has(connectionId)).toBe(false);
     });
 
-    it("leaves out a peer that is still detached: it re-establishes the connection when it comes back", async () => {
-        const { strategy, dispatchPrivateEvent, userA, usersInSpace } = await setupStrategyWithConnection();
-        // user-b lost the same pusher and is not back yet
-        usersInSpace.splice(
-            usersInSpace.findIndex((user) => user.spaceUserId === "user-b"),
-            1,
-        );
-
-        strategy.reconnectUser(userA);
-
-        expect(dispatchPrivateEvent).not.toHaveBeenCalled();
-    });
-
     it("does nothing for a user without connections", async () => {
         const { strategy, dispatchPrivateEvent } = await setupStrategyWithConnection();
 

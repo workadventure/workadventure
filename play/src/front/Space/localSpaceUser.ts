@@ -35,17 +35,9 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
             try {
                 player = gameManager.getCurrentGameScene().CurrentPlayer;
             } catch {
-                player = undefined;
+                // No current scene
             }
-            if (!player) {
-                return () => {};
-            }
-            const unsubscribe = player.pictureStore.subscribe((pictureStore) => {
-                set(pictureStore);
-            });
-            return () => {
-                unsubscribe();
-            };
+            return player?.pictureStore.subscribe(set) ?? (() => {});
         }),
         emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
             throw new Error("should not be called");

@@ -548,14 +548,9 @@ export class SpacePeerManager {
      */
     public resendMediaState(): void {
         if (!this.isMediaStateSynchronized()) return;
-
-        const screenSharing = get(this._effectiveScreenSharingLocalStreamStore);
-        this.space.emitUpdateUser({
-            microphoneState: get(this.microphoneStateStore),
-            cameraState: get(this.cameraStateStore),
-            cpuLimited: get(cpuLimitedStore),
-            screenSharingState: screenSharing?.type === "success" && !!screenSharing.stream,
-        });
+        // Subscribing again sends every current value
+        this.desynchronizeMediaState();
+        this.synchronizeMediaState();
     }
 
     private desynchronizeMediaState(): void {

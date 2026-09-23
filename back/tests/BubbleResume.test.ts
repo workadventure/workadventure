@@ -18,7 +18,7 @@ vi.mock("../src/Model/Services/LivekitAvailabilityService", () => ({
 }));
 const { roomHasLivekit } = vi.hoisted(() => ({ roomHasLivekit: { value: true } }));
 vi.mock("../src/Model/Services/LivekitCredentials", () => ({
-    getLivekitCredentialsIfAny: () =>
+    getLivekitCredentials: () =>
         Promise.resolve(
             roomHasLivekit.value
                 ? { livekitHost: "http://livekit", livekitApiKey: "key", livekitApiSecret: "secret" }

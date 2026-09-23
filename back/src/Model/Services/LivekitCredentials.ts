@@ -8,8 +8,12 @@ const LIVEKIT_CREDENTIALS_VERSION = "v1";
 
 /**
  * The LiveKit server a space uses: the admin's (per space) when it provides them, the environment's otherwise.
+ * undefined when the admin gives the room none.
  */
-export async function getLivekitCredentials(spaceName: string, playUri?: string): Promise<LivekitCredentialsResponse> {
+export async function getLivekitCredentials(
+    spaceName: string,
+    playUri?: string,
+): Promise<LivekitCredentialsResponse | undefined> {
     if (getCapability(LIVEKIT_CREDENTIALS_CAPABILITY) === LIVEKIT_CREDENTIALS_VERSION) {
         if (!playUri) {
             throw new Error("playUri is required when using AdminAPI for Livekit credentials");
@@ -24,17 +28,4 @@ export async function getLivekitCredentials(spaceName: string, playUri?: string)
         livekitApiKey: LIVEKIT_API_KEY,
         livekitApiSecret: LIVEKIT_API_SECRET,
     };
-}
-
-/**
- * Same as getLivekitCredentials, but undefined when the admin gives the room no LiveKit server.
- */
-export async function getLivekitCredentialsIfAny(
-    spaceName: string,
-    playUri: string,
-): Promise<LivekitCredentialsResponse | undefined> {
-    if (getCapability(LIVEKIT_CREDENTIALS_CAPABILITY) === LIVEKIT_CREDENTIALS_VERSION) {
-        return adminApi.fetchLivekitCredentialsIfAny(spaceName, playUri);
-    }
-    return getLivekitCredentials(spaceName, playUri);
 }

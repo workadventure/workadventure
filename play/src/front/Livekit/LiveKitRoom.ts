@@ -115,10 +115,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this._livekitRoomCounter.increment();
     }
 
-    public isConnected(): boolean {
-        return !this.destroyed && this.isRoomConnected();
-    }
-
     public async prepareConnection(): Promise<Room> {
         this.room = new Room({
             adaptiveStream: {
@@ -389,7 +385,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      * rejects AND stops the MediaStreamTrack we handed it, killing the user's own camera/microphone.
      * Publications are therefore skipped while the room is not connected and replayed by handleReconnected().
      */
-    private isRoomConnected(): boolean {
+    public isRoomConnected(): boolean {
         return this.room?.state === ConnectionState.Connected;
     }
 

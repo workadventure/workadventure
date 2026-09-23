@@ -9,7 +9,7 @@ import {
     spaceKindSchema,
     FilterType,
 } from "@workadventure/messages";
-import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
+import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC, PLAY_URL } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
@@ -29,7 +29,8 @@ import type { ITransitionPolicy } from "./Interfaces/ITransitionPolicy";
 import type { ITransitionOrchestrator, TransitionContext } from "./Interfaces/ITransitionOrchestrator";
 import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
 import type { ICommunicationStrategy, IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
-import { getLivekitCredentialsIfAny } from "./Services/LivekitCredentials";
+import { getLivekitCredentials } from "./Services/LivekitCredentials";
+import { LiveKitService } from "./Services/LivekitService";
 import { isWithinBackRestartWindow } from "./Services/BackRestartWindow";
 import { LivekitState } from "./States/LivekitState";
 
@@ -64,19 +65,20 @@ export const findRunningLivekitStateAfterRestart: RunningLivekitStateFinder = as
     usersToNotify,
     playUri,
 ) => {
-    const credentials = await getLivekitCredentialsIfAny(space.getSpaceName(), playUri);
+    const credentials = await getLivekitCredentials(space.getSpaceName(), playUri);
     if (!credentials) {
         // No LiveKit server for this room: no LiveKit room to resume
         return undefined;
     }
-    const state = new LivekitState(space, credentials, users, usersToNotify);
+    const { livekitHost, livekitApiKey, livekitApiSecret } = credentials;
+    const service = new LiveKitService(livekitHost, livekitApiKey, livekitApiSecret, livekitHost, PLAY_URL);
     const running = await Promise.race([
-        state.hasRunningRoom(),
+        service.roomHasParticipants(space.getSpaceName()),
         new Promise<boolean>((resolve) => {
             setTimeout(() => resolve(false), RUNNING_ROOM_CHECK_TIMEOUT_MS);
         }),
     ]);
-    return running ? state : undefined;
+    return running ? new LivekitState(space, credentials, users, usersToNotify) : undefined;
 };
 
 /**

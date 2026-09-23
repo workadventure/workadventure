@@ -118,8 +118,7 @@ export class LiveKitService {
     }
 
     async roomHasParticipants(roomName: string): Promise<boolean> {
-        const rooms = await this.roomServiceClient.listRooms([getLivekitRoomName(roomName)]);
-        return (rooms?.[0]?.numParticipants ?? 0) > 0;
+        return (await this.participantIdentities(roomName)).length > 0;
     }
 
     async createRoom(roomName: string): Promise<void> {

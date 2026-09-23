@@ -56,7 +56,7 @@ export class LivekitConnection {
     private initialize() {
         this.unsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_INVITATION_MESSAGE).subscribe((message) => {
-                if (this.livekitRoom?.isConnected()) {
+                if (this.livekitRoom?.isRoomConnected()) {
                     // The back invites us again after we reconnected to the server (a play or back restart), but our
                     // connection to the LiveKit server never went down: the same identity in the same room, keep it.
                     debug("Ignoring a Livekit invitation: already connected to the room");

@@ -6,7 +6,11 @@ import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LivekitCredentialsResponse } from "./Repository/LivekitCredentialsResponse";
 
 class AdminApi {
-    private async fetchLivekitCredentialsData(spaceId: string, playUri: string): Promise<unknown> {
+    /**
+     * undefined when the admin gives this room no LiveKit server: it answers an empty list for a room that is not
+     * one of its worlds' (a public map, say).
+     */
+    async fetchLivekitCredentials(spaceId: string, playUri: string): Promise<LivekitCredentialsResponse | undefined> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
@@ -23,25 +27,10 @@ class AdminApi {
             params,
         });
 
-        return res.data;
-    }
-    async fetchLivekitCredentials(spaceId: string, playUri: string): Promise<LivekitCredentialsResponse> {
-        return LivekitCredentialsResponse.parse(await this.fetchLivekitCredentialsData(spaceId, playUri));
-    }
-
-    /**
-     * undefined when the admin gives this room no LiveKit server: it answers an empty list for a room that is not
-     * one of its worlds' (a public map, say).
-     */
-    async fetchLivekitCredentialsIfAny(
-        spaceId: string,
-        playUri: string,
-    ): Promise<LivekitCredentialsResponse | undefined> {
-        const data = await this.fetchLivekitCredentialsData(spaceId, playUri);
-        if (Array.isArray(data) && data.length === 0) {
+        if (Array.isArray(res.data) && res.data.length === 0) {
             return undefined;
         }
-        return LivekitCredentialsResponse.parse(data);
+        return LivekitCredentialsResponse.parse(res.data);
     }
 
     async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect | ErrorApiData> {

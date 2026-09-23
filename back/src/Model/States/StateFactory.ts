@@ -47,6 +47,9 @@ export class StateFactory {
         playUri?: string,
     ): Promise<LivekitState> {
         const credentials = await getLivekitCredentials(space.getSpaceName(), playUri);
+        if (!credentials) {
+            throw new Error(`No LiveKit server for the room of space ${space.getSpaceName()}`);
+        }
         return new LivekitState(space, credentials, users, usersToNotify);
     }
 }
