@@ -64,6 +64,32 @@ describe("SessionAnalytics", () => {
         expect(participations.map((row) => row.properties.airtimeSeconds)).toEqual([120, 120, 60]);
     });
 
+    it("reports the meeting under the name the clients use, without the world prefix", () => {
+        // The back holds spaces as `<world>.<name>`; the front's microphone and speech
+        // rows carry `<name>`. Reported with the prefix, no meeting ever found its
+        // talking time again (staging, 2026-09-23).
+        const world = "https://play.example/@/team/world/";
+        const enqueue: Enqueue = vi.fn();
+        const analytics = new SessionAnalytics(
+            `${world}.https://play.example/@/team/world/room#8#1790171774899`,
+            world,
+            () => "bubble",
+            {
+                enqueue,
+            },
+        );
+
+        analytics.join(member("1"), true);
+        analytics.join(member("2"), true);
+        analytics.close();
+
+        const rows = rowsOf(enqueue);
+        expect(rows).toHaveLength(3);
+        expect(
+            rows.every((row) => row.properties.meetingId === "https://play.example/@/team/world/room#8#1790171774899"),
+        ).toBe(true);
+    });
+
     it("never lets a participation end after the meeting holding it", () => {
         const { analytics, enqueue, tick } = harness("bubble");
 

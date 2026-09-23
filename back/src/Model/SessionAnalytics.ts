@@ -72,6 +72,15 @@ export class SessionAnalytics {
      * many rooms as the map has.
      */
     private roomId = "";
+    /**
+     * The space name as the clients know it. The back holds every space under
+     * `<world>.<name>` (the pusher prefixes it), but the front's own rows — the
+     * microphone and speech dwells — carry the bare name, and a meetingId is only
+     * useful if it is the one they carry: the admin reads a person's talking time back
+     * into a meeting by that id. Queries are always scoped by world, so the prefix
+     * adds nothing there.
+     */
+    private readonly meetingId: string;
 
     public constructor(
         private readonly id: string,
@@ -84,7 +93,10 @@ export class SessionAnalytics {
         private readonly kind: () => SpaceKind | undefined,
         private readonly queue: Pick<AnalyticsEventsQueue, "enqueue"> = analyticsEventsQueue,
         private readonly nowMs: () => number = Date.now,
-    ) {}
+    ) {
+        const worldPrefix = `${world}.`;
+        this.meetingId = id.startsWith(worldPrefix) ? id.slice(worldPrefix.length) : id;
+    }
 
     /** The space learnt what it is: a session waiting on that may open now. */
     public kindChanged(): void {
@@ -184,7 +196,7 @@ export class SessionAnalytics {
                     atMs,
                     eventId: `${this.id}:${session.openedAtMs}:${participation.member.spaceUserId}`,
                     properties: {
-                        meetingId: this.id,
+                        meetingId: this.meetingId,
                         meetingKind: session.kind,
                         joinRank: participation.joinRank,
                         ...interval(participation.startedAtMs, atMs),
@@ -208,7 +220,7 @@ export class SessionAnalytics {
                 atMs: endedAtMs,
                 eventId: `${this.id}:${session.openedAtMs}`,
                 properties: {
-                    meetingId: this.id,
+                    meetingId: this.meetingId,
                     meetingKind: session.kind,
                     participantCount: session.participations.size,
                     peakParticipantCount: session.peak,
