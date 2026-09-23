@@ -29,7 +29,7 @@ import type { ITransitionPolicy } from "./Interfaces/ITransitionPolicy";
 import type { ITransitionOrchestrator, TransitionContext } from "./Interfaces/ITransitionOrchestrator";
 import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
 import type { ICommunicationStrategy, IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
-import { StateFactory } from "./States/StateFactory";
+import { getLivekitCredentialsIfAny } from "./Services/LivekitCredentials";
 import { isWithinBackRestartWindow } from "./Services/BackRestartWindow";
 import { LivekitState } from "./States/LivekitState";
 
@@ -64,10 +64,12 @@ export const findRunningLivekitStateAfterRestart: RunningLivekitStateFinder = as
     usersToNotify,
     playUri,
 ) => {
-    const state = await StateFactory.createState(CommunicationType.LIVEKIT, space, users, usersToNotify, { playUri });
-    if (!(state instanceof LivekitState)) {
+    const credentials = await getLivekitCredentialsIfAny(space.getSpaceName(), playUri);
+    if (!credentials) {
+        // No LiveKit server for this room: no LiveKit room to resume
         return undefined;
     }
+    const state = new LivekitState(space, credentials, users, usersToNotify);
     const running = await Promise.race([
         state.hasRunningRoom(),
         new Promise<boolean>((resolve) => {

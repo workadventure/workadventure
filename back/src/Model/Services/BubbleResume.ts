@@ -2,7 +2,7 @@ import { PLAY_URL } from "../../Enum/EnvironmentVariable";
 import { LiveKitService } from "./LivekitService";
 import { LivekitAvailabilityService } from "./LivekitAvailabilityService";
 import { isWithinBackRestartWindow } from "./BackRestartWindow";
-import { getLivekitCredentials } from "./LivekitCredentials";
+import { getLivekitCredentialsIfAny } from "./LivekitCredentials";
 
 export interface BubbleResumeRequest {
     // The bubble's space name, as the back named it (Group.spaceName)
@@ -43,7 +43,11 @@ export const canResumeBubbleAfterRestart: BubbleResumeValidator = async ({
     }
     // The pusher prefixes space names with the world; LiveKit rooms are named after the back's spaces.
     const livekitSpaceName = `${world}.${spaceName}`;
-    const credentials = await getLivekitCredentials(livekitSpaceName, playUri);
+    const credentials = await getLivekitCredentialsIfAny(livekitSpaceName, playUri);
+    if (!credentials) {
+        // No LiveKit server for this room: its bubbles are P2P, as above
+        return true;
+    }
     const service = new LiveKitService(
         credentials.livekitHost,
         credentials.livekitApiKey,

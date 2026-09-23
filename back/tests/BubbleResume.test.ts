@@ -16,9 +16,14 @@ vi.mock("../src/Model/Services/LivekitAvailabilityService", () => ({
         }
     },
 }));
+const { roomHasLivekit } = vi.hoisted(() => ({ roomHasLivekit: { value: true } }));
 vi.mock("../src/Model/Services/LivekitCredentials", () => ({
-    getLivekitCredentials: () =>
-        Promise.resolve({ livekitHost: "http://livekit", livekitApiKey: "key", livekitApiSecret: "secret" }),
+    getLivekitCredentialsIfAny: () =>
+        Promise.resolve(
+            roomHasLivekit.value
+                ? { livekitHost: "http://livekit", livekitApiKey: "key", livekitApiSecret: "secret" }
+                : undefined,
+        ),
 }));
 vi.mock("../src/Model/Services/LivekitService", () => ({
     LiveKitService: class {
@@ -40,6 +45,13 @@ describe("canResumeBubbleAfterRestart", () => {
         withinWindow.value = true;
         livekitAvailable.value = true;
         identities.value = [];
+        roomHasLivekit.value = true;
+    });
+
+    it("allows a bubble of a room the admin gives no LiveKit server: it is P2P", async () => {
+        roomHasLivekit.value = false;
+        identities.value = ["room_bob"];
+        expect(await canResumeBubbleAfterRestart(request)).toBe(true);
     });
 
     it("refuses once the back has been up for a while", async () => {
