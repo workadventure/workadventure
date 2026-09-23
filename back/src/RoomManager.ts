@@ -110,6 +110,8 @@ const roomManager = {
                                 socketManager.leaveRoom(room, myUser);
                             }
                         }
+                    } else if (message.message.$case === "leaveRoomMessage") {
+                        closeConnection();
                     } else if (message.message.$case !== "pingMessage") {
                         throw new Error(
                             `The first message sent MUST be of type ConnectToRoomMessage and the second message joinRoomMessage. Got ${message.message.$case}`,
@@ -122,6 +124,10 @@ const roomManager = {
                         }
                         case "joinRoomMessage": {
                             throw new Error("Cannot call JoinRoomMessage twice!");
+                        }
+                        case "leaveRoomMessage": {
+                            closeConnection();
+                            break;
                         }
                         case "userMovesMessage": {
                             socketManager.handleUserMovesMessage(room, user, message.message.userMovesMessage);
@@ -279,17 +285,22 @@ const roomManager = {
             setUser(null);
         };
 
-        // The pusher ends the stream when its client leaves: the user leaves at once.
+        // A pusher tells us when its client leaves (leaveRoomMessage, handled above): the user leaves at once. A stream
+        // that ends, is cancelled or fails without it is a pusher going away (restart, crash): its users keep their
+        // place for a while, in case they reconnect through another pusher.
+        // Behind the messages still being processed, so that a leaveRoomMessage right before the end is seen first.
+        const detachAfterPendingMessages = () => {
+            messageProcessingPromise = messageProcessingPromise.then(() => closeConnection(undefined, true));
+        };
+
         call.on("end", () => {
             debug("joinRoom ended for user %s", user?.name);
-            closeConnection();
+            detachAfterPendingMessages();
         });
 
-        // A pusher that dies (restart, crash) cannot end its streams: they are cancelled or fail. Its users keep their
-        // place for a while, in case they reconnect through another pusher.
         call.on("cancelled", () => {
             debug("joinRoom cancelled for user %s", user?.name);
-            closeConnection(undefined, true);
+            detachAfterPendingMessages();
         });
 
         call.on("error", (err: unknown) => {
@@ -298,7 +309,7 @@ const roomManager = {
             Sentry.captureException(err, {
                 user: user ?? undefined,
             });
-            closeConnection(undefined, true);
+            detachAfterPendingMessages();
         });
 
         // Let's set up a ping mechanism

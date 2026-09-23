@@ -1624,7 +1624,13 @@ message PusherToBackMessage {
     MeetingInvitationRequestMessage meetingInvitationRequestMessage = 32;
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 33;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 34;
+    // The client left: sent by the pusher right before it ends the stream. A stream that ends without it is a pusher
+    // going away (restart, crash): the back keeps the user's place for a while (see RoomManager.connectToRoom).
+    LeaveRoomMessage leaveRoomMessage = 35;
   }
+}
+
+message LeaveRoomMessage {
 }
 
 
