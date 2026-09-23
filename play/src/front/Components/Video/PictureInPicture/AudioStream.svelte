@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy } from "svelte";
     import Debug from "debug";
     import * as Sentry from "@sentry/svelte";
     import type { Readable } from "svelte/store";
@@ -36,19 +36,30 @@
         }
     });
 
-    let lastRequestedDeviceId: string | undefined;
+    // The sink request currently applied (or in flight) and the element/device it targets. De-duplication is
+    // done on the *promise*, not on the requested device id: callers must be able to await the actual
+    // completion of setSinkId(), which is what the srcObject attach below relies on. Keying on the element
+    // too makes the sink re-apply when the <audio> tag is recreated (see the {#if !$isBlocked} block).
+    let sinkPromise: Promise<boolean> | undefined;
+    let sinkDeviceId: string | undefined;
+    let sinkElement: HTMLAudioElement | undefined;
+
+    function ensureSinkId(deviceId: string, el: HTMLAudioElement): Promise<boolean> {
+        if (!sinkPromise || sinkDeviceId !== deviceId || sinkElement !== el) {
+            sinkDeviceId = deviceId;
+            sinkElement = el;
+            sinkPromise = safeSetSinkId(deviceId, el);
+        }
+        return sinkPromise;
+    }
 
     async function safeSetSinkId(deviceId: string, el: HTMLAudioElement) {
         if (destroyed) {
             return false;
         }
-        if (lastRequestedDeviceId === deviceId) {
-            return true;
-        }
         if (typeof el.setSinkId !== "function") {
             return false;
         }
-        lastRequestedDeviceId = deviceId;
         try {
             debug("Setting output device to ", deviceId);
             await el.setSinkId(deviceId);
@@ -65,8 +76,10 @@
                 console.warn("Error setting the audio output device. We fallback to default.");
 
                 try {
-                    lastRequestedDeviceId = "";
                     await el.setSinkId("");
+                    // The element is back on the default output: forget the failed request so that the same
+                    // device can be requested again later.
+                    sinkDeviceId = "";
                 } catch (e) {
                     console.error("Error resetting the audio output device: ", e);
                 }
@@ -79,9 +92,11 @@
         }
     }
 
+    // Apply the selected output device as soon as the element exists, even before a stream is attached (the
+    // attach below waits for this very request to resolve).
     $effect(() => {
         if (outputDeviceId && audioElement) {
-            safeSetSinkId(outputDeviceId, audioElement).catch((e) => {
+            ensureSinkId(outputDeviceId, audioElement).catch((e) => {
                 console.error("Error setting the audio output device: ", e);
                 Sentry.captureException(e);
             });
@@ -210,35 +225,49 @@
 
     let stream = $derived($streamStore ? $streamStore : undefined);
 
+    function attachStream(el: HTMLAudioElement, mediaStream: MediaStream): void {
+        if (destroyed) {
+            return;
+        }
+        if (el.srcObject !== mediaStream) {
+            el.srcObject = mediaStream;
+        }
+        playAudio();
+    }
+
     // Assign srcObject with $effect.pre (runs *before* the DOM update, matching the Svelte 4 `$:` block this
     // replaced) and then start playback via playAudio(). The explicit play() is what actually restores sound
     // in Brave/Vivaldi — those browsers ignore the `autoplay` attribute for a MediaStream even with correct
     // pre-DOM timing; .pre is kept only for parity with the pre-migration behavior.
+    // Because of a bug in Chrome, the stream must not be attached before setSinkId() has resolved, otherwise
+    // playback stays on the default output device. This is the only place attaching the stream, so that this
+    // ordering cannot be bypassed. Deferring the attach by a microtask does not break the Brave/Vivaldi
+    // play() above: it only needs *sticky* user activation, which is not consumed by the wait.
     $effect.pre(() => {
-        if (audioElement && stream) {
-            if (audioElement.srcObject !== stream) {
-                audioElement.srcObject = stream;
-            }
-            playAudio();
+        const el = audioElement;
+        const currentStream = stream;
+        const deviceId = outputDeviceId;
+        if (!el || !currentStream) {
+            return;
         }
-    });
 
-    onMount(() => {
-        (async () => {
-            if (outputDeviceId && audioElement) {
-                // Because of a bug in Chrome, we need to wait for setSinkId to resolve before setting the srcObject.
-                await safeSetSinkId(outputDeviceId, audioElement);
-                if (destroyed || !audioElement) {
-                    return;
+        if (!deviceId) {
+            attachStream(el, currentStream);
+            return;
+        }
+
+        ensureSinkId(deviceId, el)
+            .then(() => {
+                // Reads inside this callback are not tracked by the effect (it already ran synchronously);
+                // they only guard against the element or the stream having changed while we waited.
+                if (!destroyed && audioElement === el && stream === currentStream) {
+                    attachStream(el, currentStream);
                 }
-                audioElement.srcObject = stream ?? null;
-                audioElement.volume = $volume;
-                playAudio();
-            }
-        })().catch((e) => {
-            console.error(e);
-            Sentry.captureException(e);
-        });
+            })
+            .catch((e: unknown) => {
+                console.error("Error setting the audio output device: ", e);
+                Sentry.captureException(e);
+            });
     });
 
     onDestroy(() => {
