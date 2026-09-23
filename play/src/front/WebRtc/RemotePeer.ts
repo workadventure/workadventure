@@ -944,10 +944,13 @@ export class RemotePeer extends Peer implements Streamable {
         this._connectionId = connectionId;
         // While it reconnected, the viewer may have torn its tile down (the full-screen reconnection screen) and
         // reported 0x0; its new tile only reports its size once frames arrive, which a paused encoder never sends.
-        // Start over from the default assumption, as on a fresh connection.
-        this.viewerDisplay = DEFAULT_VIEWER_DISPLAY;
-        this.viewerReportedDisplay = false;
-        this.applyVideoEncoding();
+        // Start over from the default assumption, as on a fresh connection. A tile that stayed displayed keeps its
+        // size: it will not report it again.
+        if (isViewerDisplayHidden(this.viewerDisplay)) {
+            this.viewerDisplay = DEFAULT_VIEWER_DISPLAY;
+            this.viewerReportedDisplay = false;
+            this.applyVideoEncoding();
+        }
     }
 
     public stopStreamToRemoteUser() {
