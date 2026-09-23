@@ -10,6 +10,8 @@ const { RemotePeerMock, remotePeerInstances } = vi.hoisted(() => {
         public readonly connectionId: string;
         public readonly uniqueId: string;
         public destroyed = false;
+        public _connected = false;
+        public readonly adoptConnectionId = vi.fn();
         private intentionalClose = false;
         private readonly onDestroy: (intentionalClose: boolean) => void;
 
@@ -179,6 +181,36 @@ describe("SimplePeer connectionId replacement", () => {
 
         // The replacement peer is created with the new connectionId.
         expect(remotePeerInstances[1].connectionId).toBe("conn-2");
+    });
+});
+
+describe("SimplePeer connection kept across a reconnection to the server", () => {
+    beforeEach(() => {
+        remotePeerInstances.length = 0;
+    });
+
+    it("keeps a live connection the back re-establishes under a new id", async () => {
+        const { space, emitWebRtcStart } = makeSpace();
+        new SimplePeer(
+            space,
+            makeStreamableSubjects() as never,
+            writable(new Set<string>()),
+            writable(undefined),
+            { trackAdminEvent: vi.fn() } as never,
+            { info: vi.fn() } as never,
+            writable(undefined) as never,
+        );
+        emitWebRtcStart("conn-1", true);
+        await vi.waitFor(() => expect(remotePeerInstances).toHaveLength(1));
+        const livePeer = remotePeerInstances[0];
+        livePeer._connected = true;
+
+        emitWebRtcStart("conn-2", false);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(remotePeerInstances).toHaveLength(1);
+        expect(livePeer.destroy).not.toHaveBeenCalled();
+        expect(livePeer.adoptConnectionId).toHaveBeenCalledWith("conn-2");
     });
 });
 
