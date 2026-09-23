@@ -64,6 +64,7 @@ export enum SubMenusInterface {
     profile = "profile",
     aboutRoom = "credit",
     globalMessages = "globalMessages",
+    moderation = "moderation",
     contact = "contact",
     report = "report",
     chat = "chat",
@@ -122,6 +123,11 @@ function createSubMenusStore() {
         {
             type: "translated",
             key: SubMenusInterface.globalMessages,
+            visible: userIsAdminStore,
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.moderation,
             visible: userIsAdminStore,
         },
         {

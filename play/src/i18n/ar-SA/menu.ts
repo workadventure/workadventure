@@ -157,11 +157,26 @@ const menu: DeepPartial<Translation["menu"]> = {
             },
         },
     },
+    moderation: {
+        title: "المستخدمون المحظورون",
+        description: "الأشخاص المحظورون من هذا العالم. رفع الحظر يتيح لهم العودة بأي حساب.",
+        loading: "جارٍ التحميل…",
+        empty: "لا أحد محظور من هذا العالم.",
+        error: "تعذر تحميل قائمة الحظر. حاول مجددًا.",
+        name: "المستخدم",
+        reason: "السبب",
+        bannedAt: "تاريخ الحظر",
+        bannedBy: "حُظر بواسطة",
+        unknownUser: "مستخدم غير معروف",
+        unban: "رفع الحظر",
+        refresh: "تحديث",
+    },
     sub: {
         profile: "الملف الشخصي", // Profile
         settings: "الإعدادات", // Settings
         credit: "حول هذه الخريطة", // About this map
         globalMessages: "رسائل عالمية", // Global messages
+        moderation: "الإشراف",
         contact: "اتصال", // Contact
         report: "الإبلاغ عن خطأ", // Report an error
         chat: "الدردشة",

@@ -34,6 +34,9 @@ import type {
     ReportPlayerMessage,
     SearchMemberAnswer,
     SearchMemberQuery,
+    BannedUsersAnswer,
+    UnbanUserQuery,
+    UnbanUserAnswer,
     SearchTagsAnswer,
     SearchTagsQuery,
     ServerToAdminClientMessage,
@@ -1471,6 +1474,24 @@ export class SocketManager implements ZoneEventListener {
                 email: member.email ?? undefined,
             })),
         };
+    }
+
+    async handleBannedUsersQuery(client: PusherWebSocket): Promise<BannedUsersAnswer> {
+        const { roomId, userUuid, tags } = client.getUserData();
+        if (!tags.includes("admin")) {
+            throw new Error("Only an admin of the world can list its bans");
+        }
+        const bannedUsers = await adminService.listBannedUsers(roomId, userUuid);
+        return { bannedUsers };
+    }
+
+    async handleUnbanUserQuery(client: PusherWebSocket, unbanUserQuery: UnbanUserQuery): Promise<UnbanUserAnswer> {
+        const { roomId, userUuid, tags } = client.getUserData();
+        if (!tags.includes("admin")) {
+            throw new Error("Only an admin of the world can lift a ban");
+        }
+        await adminService.unbanUser(roomId, unbanUserQuery.banId, userUuid);
+        return {};
     }
 
     async handleSearchTagsQuery(client: PusherWebSocket, searchTagsQuery: SearchTagsQuery): Promise<SearchTagsAnswer> {
