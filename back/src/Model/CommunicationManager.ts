@@ -30,6 +30,7 @@ import type { ITransitionOrchestrator, TransitionContext } from "./Interfaces/IT
 import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
 import type { ICommunicationStrategy, IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
 import { StateFactory } from "./States/StateFactory";
+import { isWithinBackRestartWindow } from "./Services/BackRestartWindow";
 import { LivekitState } from "./States/LivekitState";
 
 /**
@@ -42,13 +43,11 @@ export type RunningLivekitStateFinder = (
     playUri: string,
 ) => Promise<ICommunicationState<ICommunicationStrategy> | undefined>;
 
-// Only the spaces created this soon after the back started can be ones it held before a restart.
-const BACK_RESTART_WINDOW_MS = 120_000;
 // Joining a space never waits longer than this for LiveKit to answer.
 const RUNNING_ROOM_CHECK_TIMEOUT_MS = 2_000;
 
 function mayHaveRunningLivekitRoomAfterRestart(): boolean {
-    if (process.uptime() * 1000 > BACK_RESTART_WINDOW_MS) {
+    if (!isWithinBackRestartWindow()) {
         return false;
     }
     try {
