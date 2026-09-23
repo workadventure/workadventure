@@ -181,9 +181,31 @@ describe("SpaceRegistry across a reconnection to the server", () => {
         registry.resume(newConnection);
 
         newConnection.initSpaceUsersMessageStream.next({ spaceName: "meeting", users: [bob], metadata: "" });
+        await vi.advanceTimersByTimeAsync(30_000);
 
         expect(space.getSpaceUserBySpaceUserId("room_bob")).toBeDefined();
         expect(space.getSpaceUserBySpaceUserId("room_carol")).toBeUndefined();
+    });
+
+    it("keeps a user a restarted back lists late, without removing it in between", async () => {
+        const { registry, space } = await registryWithSpace();
+        const bob = SpaceUser.fromPartial({ spaceUserId: "room_bob", name: "Bob" });
+        space.initUsers([bob]);
+        const bobBefore = space.getSpaceUserBySpaceUserId("room_bob");
+        const removeUser = vi.spyOn(space, "removeUser");
+        registry.suspend();
+        const newConnection = new MockRoomConnectionForSpaces();
+        newConnection.emitJoinSpace.mockResolvedValue("room_me");
+        registry.resume(newConnection);
+
+        // Bob is not back yet when the back first lists the space, and comes back a few seconds later
+        newConnection.initSpaceUsersMessageStream.next({ spaceName: "meeting", users: [], metadata: "" });
+        await vi.advanceTimersByTimeAsync(5_000);
+        newConnection.addSpaceUserMessageStream.next({ spaceName: "meeting", user: bob });
+        await vi.advanceTimersByTimeAsync(30_000);
+
+        expect(removeUser).not.toHaveBeenCalled();
+        expect(space.getSpaceUserBySpaceUserId("room_bob")).toBe(bobBefore);
     });
 
     it("leaves for good a kept space the next scene does not join again", async () => {

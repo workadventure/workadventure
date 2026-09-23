@@ -51,6 +51,10 @@ import { VideoBox } from "./VideoBox";
 import { LOCAL_SCREEN_SHARING_STREAM_ID } from "./Streamable";
 import type { Streamable } from "./Streamable";
 
+// How long, after joining a space again through a new server connection, a user the server does not list again may
+// still come back (the back's own grace period, DETACHED_USER_GRACE_MS)
+const UNCONFIRMED_USERS_GRACE_MS = 30_000;
+
 export class Space implements SpaceInterface {
     private readonly name: string;
 
@@ -119,8 +123,11 @@ export class Space implements SpaceInterface {
 
     private _isDestroyed = false;
     private initPromise: Deferred<void> | undefined;
-    // Set when this space was joined again through a new server connection (see rejoinThrough)
-    private resyncUsersOnNextInit = false;
+    // After this space was joined again through a new server connection (see rejoinThrough): the users the server has
+    // not confirmed yet. A restarted back lists them as they come back, one by one: dropping one right away would
+    // unmount its video tile, which pauses its P2P video for good (see RemotePeer.viewerDisplay).
+    private unconfirmedUsers: Set<string> | undefined;
+    private unconfirmedUsersTimeout: ReturnType<typeof setTimeout> | undefined;
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -571,6 +578,7 @@ export class Space implements SpaceInterface {
      */
     async destroy() {
         this._isDestroyed = true;
+        clearTimeout(this.unconfirmedUsersTimeout);
 
         this.retryAbortController?.abort();
         if (this.retryTimeout) {
@@ -684,15 +692,8 @@ export class Space implements SpaceInterface {
         }
     }
     initUsers(users: SpaceUser[]): void {
-        if (this.resyncUsersOnNextInit) {
-            // Joined again after a reconnection to the server: whoever left meanwhile was never announced to us.
-            this.resyncUsersOnNextInit = false;
-            const listed = new Set(users.map((user) => user.spaceUserId));
-            for (const spaceUserId of Array.from(this._users.keys())) {
-                if (!listed.has(spaceUserId) && spaceUserId !== this._mySpaceUserId) {
-                    this.removeUser(spaceUserId);
-                }
-            }
+        for (const user of users) {
+            this.unconfirmedUsers?.delete(user.spaceUserId);
         }
         for (const user of users) {
             const extendSpaceUser = this.extendSpaceUser(user);
@@ -762,6 +763,7 @@ export class Space implements SpaceInterface {
     }
 
     addUser(user: SpaceUser): SpaceUserExtended {
+        this.unconfirmedUsers?.delete(user.spaceUserId);
         const extendSpaceUser = this.extendSpaceUser(user);
 
         if (!this._users.has(user.spaceUserId)) {
@@ -820,6 +822,7 @@ export class Space implements SpaceInterface {
 
     updateUserData(newData: SpaceUser, updateMask: string[]): void {
         if (!newData.spaceUserId && newData.spaceUserId !== "") return;
+        this.unconfirmedUsers?.delete(newData.spaceUserId);
 
         const userToUpdate = this._users.get(newData.spaceUserId);
 
@@ -1271,7 +1274,16 @@ export class Space implements SpaceInterface {
      */
     public rejoinThrough(connection: RoomConnectionForSpacesInterface): void {
         this._connection = connection;
-        this.resyncUsersOnNextInit = true;
+        // Whoever left meanwhile was never announced to us: drop the users the server has not confirmed in time
+        this.unconfirmedUsers = new Set(Array.from(this._users.keys()).filter((id) => id !== this._mySpaceUserId));
+        clearTimeout(this.unconfirmedUsersTimeout);
+        this.unconfirmedUsersTimeout = setTimeout(() => {
+            const unconfirmed = this.unconfirmedUsers ?? new Set<string>();
+            this.unconfirmedUsers = undefined;
+            for (const spaceUserId of unconfirmed) {
+                this.removeUser(spaceUserId);
+            }
+        }, UNCONFIRMED_USERS_GRACE_MS);
         this.reconnect(() => this._peerManager.resendMediaState());
     }
 
