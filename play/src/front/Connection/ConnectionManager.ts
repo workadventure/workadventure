@@ -60,7 +60,7 @@ class ConnectionManager {
     // kill each other's connection in a loop.
     private readonly _tabId: string = uuidv4();
     /**
-     * The proximity bubble we were in when the connection to the server was lost, sent once with the next connection:
+     * The proximity bubble we were in when the connection to the server was lost, sent until we are connected again:
      * a back that restarted meanwhile gives the bubble, re-formed by the same people, its former space back.
      */
     public previousBubbleSpaceName: string | undefined;

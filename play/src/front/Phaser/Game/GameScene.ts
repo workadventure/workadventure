@@ -2050,6 +2050,7 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                connectionManager.previousBubbleSpaceName = undefined;
 
                 // Subscribed before any await: the admin messages of the login come right after the connection.
                 // These streams are completed in the RoomConnection. No need to unsubscribe.
