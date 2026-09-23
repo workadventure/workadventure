@@ -269,6 +269,38 @@ describe("CommunicationManager", () => {
             expect(lifecycleManager.mocks.transitionTo).not.toHaveBeenCalled();
         });
 
+        it("handles a join and a watch that arrive during the check one after the other", async () => {
+            const space = createSpace();
+            const userRegistry = new UserRegistry();
+            const state = createState(CommunicationType.WEBRTC);
+            // What the real state decides on: whether the user is told the strategy depends on the other registry
+            const seenByJoin: boolean[] = [];
+            state.mocks.handleUserAdded.mockImplementation((user: SpaceUser) => {
+                seenByJoin.push(userRegistry.hasUserToNotify(user.spaceUserId));
+                return Promise.resolve();
+            });
+            let resolveCheck!: (state: undefined) => void;
+            const manager = new CommunicationManager(space, {
+                userRegistry,
+                lifecycleManager: createLifecycleManager(state),
+                policy: createPolicy(false),
+                findRunningLivekitState: () =>
+                    new Promise((resolve) => {
+                        resolveCheck = resolve;
+                    }),
+            });
+
+            const user = createSpaceUser("user_1");
+            const join = manager.handleUserAdded(user);
+            const watch = manager.handleUserToNotifyAdded(user);
+            resolveCheck(undefined);
+            await Promise.all([join, watch]);
+
+            // The join was handled completely before the watch registered the user
+            expect(seenByJoin).toEqual([false]);
+            expect(state.mocks.handleUserToNotifyAdded).toHaveBeenCalledTimes(1);
+        });
+
         it("keeps WebRTC when no LiveKit room is running", async () => {
             const space = createSpace();
             const lifecycleManager = createLifecycleManager(createState(CommunicationType.WEBRTC));

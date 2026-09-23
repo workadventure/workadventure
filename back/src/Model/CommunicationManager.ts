@@ -260,11 +260,39 @@ export class CommunicationManager implements ICommunicationManager {
         return this.runningLivekitRoomCheck;
     }
 
-    public async handleUserAdded(user: SpaceUser): Promise<void> {
-        const runningLivekitRoomCheck = this.resumeRunningLivekitRoom(user);
-        if (runningLivekitRoomCheck) {
-            await runningLivekitRoomCheck;
+    /**
+     * While the first-user check runs (resumeRunningLivekitRoom), and until the events that queued behind it are handled,
+     * user events are handled one after the other, in the order they came. Resumed together behind the check, a join
+     * and a watch of the same user would each find the other already registered, and neither would tell the user which
+     * strategy is in use. Otherwise, events are handled as they come, as before.
+     */
+    private serializedEvents: Promise<void> | undefined;
+
+    private handleInOrder(handle: () => Promise<void>, firstUserOf?: SpaceUser): Promise<void> {
+        if (!this.serializedEvents) {
+            const check = firstUserOf ? this.resumeRunningLivekitRoom(firstUserOf) : undefined;
+            if (!check) {
+                return handle();
+            }
+            this.serializedEvents = check;
         }
+        const run = this.serializedEvents.then(handle);
+        // Failures are reported to the caller through run
+        const tail = run.catch(() => undefined);
+        this.serializedEvents = tail;
+        tail.then(() => {
+            if (this.serializedEvents === tail) {
+                this.serializedEvents = undefined;
+            }
+        }).catch(() => undefined);
+        return run;
+    }
+
+    public handleUserAdded(user: SpaceUser): Promise<void> {
+        return this.handleInOrder(() => this.doHandleUserAdded(user), user);
+    }
+
+    private async doHandleUserAdded(user: SpaceUser): Promise<void> {
         const wasPresent = this.isPresent(user.spaceUserId);
         this._recordingManager.handleAddUser(user);
         this.userRegistry.addUser(user);
@@ -281,7 +309,11 @@ export class CommunicationManager implements ICommunicationManager {
         }
     }
 
-    public async handleUserDeleted(user: SpaceUser): Promise<void> {
+    public handleUserDeleted(user: SpaceUser): Promise<void> {
+        return this.handleInOrder(() => this.doHandleUserDeleted(user));
+    }
+
+    private async doHandleUserDeleted(user: SpaceUser): Promise<void> {
         const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.deleteUser(user.spaceUserId);
         this.syncPresence(user, wasPresent);
@@ -291,7 +323,11 @@ export class CommunicationManager implements ICommunicationManager {
         await this.evaluateAndHandleTransition(user);
     }
 
-    public async handleUserUpdated(user: SpaceUser, updateMask: string[] = []): Promise<void> {
+    public handleUserUpdated(user: SpaceUser, updateMask: string[] = []): Promise<void> {
+        return this.handleInOrder(() => this.doHandleUserUpdated(user, updateMask));
+    }
+
+    private async doHandleUserUpdated(user: SpaceUser, updateMask: string[]): Promise<void> {
         await this.lifecycleManager.getCurrentState().handleUserUpdated(user);
 
         // The one field update the policy looks at: a member raising its cpuLimited flag
@@ -301,11 +337,11 @@ export class CommunicationManager implements ICommunicationManager {
         }
     }
 
-    public async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
-        const runningLivekitRoomCheck = this.resumeRunningLivekitRoom(user);
-        if (runningLivekitRoomCheck) {
-            await runningLivekitRoomCheck;
-        }
+    public handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
+        return this.handleInOrder(() => this.doHandleUserToNotifyAdded(user), user);
+    }
+
+    private async doHandleUserToNotifyAdded(user: SpaceUser): Promise<void> {
         const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.addUserToNotify(user);
         this.syncPresence(user, wasPresent);
@@ -319,7 +355,11 @@ export class CommunicationManager implements ICommunicationManager {
         }
     }
 
-    public async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
+    public handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
+        return this.handleInOrder(() => this.doHandleUserToNotifyDeleted(user));
+    }
+
+    private async doHandleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
         const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.deleteUserToNotify(user.spaceUserId);
         this.syncPresence(user, wasPresent);

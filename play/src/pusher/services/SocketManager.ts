@@ -851,9 +851,9 @@ export class SocketManager implements ZoneEventListener {
                 }
             }
         } finally {
-            if (socketData.backConnection) {
+            if (socketData.backConnection?.writable) {
                 // Tell the back the user left: a stream that just ends is this pusher going away, and the back
-                // would keep the user's place in case it reconnects elsewhere.
+                // would keep the user's place in case it reconnects elsewhere. (Not when the back already closed it.)
                 socketData.backConnection.write({
                     message: {
                         $case: "leaveRoomMessage",
