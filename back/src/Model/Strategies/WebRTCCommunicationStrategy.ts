@@ -331,6 +331,25 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         this.sendWebRTCStart(senderUserId, receiverId, false, connectionId);
     }
 
+    reconnectUser(user: SpaceUser): void {
+        const peerIds = new Set<string>();
+        for (const [senderId, receiverId] of this._connections.getAllConnections()) {
+            if (senderId === user.spaceUserId) peerIds.add(receiverId);
+            if (receiverId === user.spaceUserId) peerIds.add(senderId);
+        }
+        for (const peerId of peerIds) {
+            const peer = this.users.get(peerId) ?? this.usersToNotify.get(peerId);
+            if (!peer) continue;
+            try {
+                // A fresh connection id: the peer's front replaces its old connection to this user.
+                this.establishConnection(user, peer);
+            } catch (error) {
+                console.error("An error occurred while reconnecting a user in WebRTC", user, peer, error);
+                Sentry.captureException(error);
+            }
+        }
+    }
+
     cleanup(): void {
         for (const [senderId, receiverId] of this._connections.getAllConnections()) {
             this._space.dispatchPrivateEvent({

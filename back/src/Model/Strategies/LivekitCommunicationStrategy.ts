@@ -262,6 +262,22 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         });
     }
 
+    reconnectUser(user: SpaceUser): void {
+        this.queueUserOperation(user.spaceUserId, async () => {
+            if (!this.streamingUsers.has(user.spaceUserId) && !this.receivingUsers.has(user.spaceUserId)) {
+                return;
+            }
+            if (!this.createRoomPromise) {
+                return;
+            }
+            await this.createRoomPromise;
+            await this.sendLivekitInvitationMessage(user);
+        }).catch((error) => {
+            console.error(`Error in reconnectUser for ${user.spaceUserId}:`, error);
+            Sentry.captureException(error);
+        });
+    }
+
     cleanup(): void {
         for (const user of this.streamingUsers.values()) {
             this.deleteUser(user);

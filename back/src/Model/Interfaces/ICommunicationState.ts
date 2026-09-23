@@ -21,6 +21,7 @@ export interface ICommunicationState<T extends ICommunicationStrategy> {
     handleUserToNotifyDeleted(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     switchState(targetCommunicationType: string): void;
     finalize(): void;
+    handleUserReconnected(user: SpaceUser): void;
     handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
         senderUserId: string,

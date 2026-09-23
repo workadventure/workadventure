@@ -16,6 +16,9 @@ export class VoidState implements ICommunicationState<ICommunicationStrategy> {
     ): void {
         return;
     }
+    handleUserReconnected(user: SpaceUser): void {
+        return;
+    }
     handleUserAdded(
         user: SpaceUser,
     ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {

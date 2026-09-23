@@ -68,6 +68,7 @@ import { ClientNotPartOfSpaceError, SpaceDestroyedError } from "../models/SpaceV
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
 import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
+import { computeSpaceUserId } from "./SpaceUserId";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
@@ -265,8 +266,13 @@ export class SocketManager implements ZoneEventListener {
                     switch (message.message.$case) {
                         case "roomJoinedMessage": {
                             socketData.userId = message.message.roomJoinedMessage.currentUserId;
-                            socketData.spaceUserId =
-                                socketData.roomId + "_" + message.message.roomJoinedMessage.currentUserId;
+                            socketData.spaceUserId = computeSpaceUserId(
+                                socketData.roomId,
+                                socketData.userUuid,
+                                socketData.tabId,
+                                SECRET_KEY,
+                            );
+                            message.message.roomJoinedMessage.spaceUserId = socketData.spaceUserId;
 
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, client.getUserData().viewport);

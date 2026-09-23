@@ -1124,6 +1124,9 @@ message RoomJoinedMessage {
   bool canEdit = 16;
   CompanionTextureMessage companionTexture = 18;
   repeated AreaPropertyVariableMessage areaPropertyVariable = 19;
+  // Filled by the pusher, not the back. Stable across reconnections of the same browser tab (see
+  // play/src/pusher/services/SpaceUserId.ts), so a call can be picked up again after a play/back restart.
+  string spaceUserId = 20;
 }
 
 message WebRtcStartMessage {

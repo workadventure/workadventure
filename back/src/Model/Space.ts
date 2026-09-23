@@ -34,12 +34,28 @@ const debug = Debug("space");
 
 type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
 
+/**
+ * How long the back keeps the place of users whose pusher went away without a goodbye (a play pod restarting or
+ * crashing). The same browser tab reconnecting through another pusher within that time takes its place back:
+ * nobody sees it leave, and the LiveKit room is not torn down under the others' feet.
+ * Matches the pusher's own retention of a dropped WebSocket (CLIENT_DISCONNECTION_RETENTION_MS).
+ */
+export const DETACHED_USER_GRACE_MS = 30_000;
+
+interface DetachedUser {
+    user?: SpaceUser;
+    userToNotify?: SpaceUser;
+    timer: NodeJS.Timeout;
+}
+
 export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
     private communicationManager: ICommunicationManager;
     private usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>>;
+    // Still present for everyone (counters, communication, other fronts), but reachable through no pusher yet.
+    private readonly detachedUsers = new Map<string, DetachedUser>();
     // Number of users publishing at least one stream (camera, screen or microphone)
     private _nbPublishers = 0;
     // Number of users (number of users in this space)
@@ -65,6 +81,14 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser): void {
+        const detached = this.detachedUsers.get(spaceUser.spaceUserId);
+        if (detached?.user) {
+            const previous = detached.user;
+            detached.user = undefined;
+            this.reattachUser(sourceWatcher, previous, spaceUser);
+            this.settleDetachedUser(spaceUser.spaceUserId, detached);
+            return;
+        }
         try {
             const usersList = this.usersList(sourceWatcher);
             usersList.set(spaceUser.spaceUserId, spaceUser);
@@ -329,6 +353,12 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             const filteredSpaceUsers = Array.from(spaceUsers.values()).filter((user) => this.filterOneUser(user));
             allSpaceUsers.push(...filteredSpaceUsers);
         }
+        // Detached users are still present: a watcher that does not know them could not follow their reattachment.
+        for (const { user } of this.detachedUsers.values()) {
+            if (user && this.filterOneUser(user)) {
+                allSpaceUsers.push(user);
+            }
+        }
 
         const metadata: { [key: string]: unknown } = {};
 
@@ -408,9 +438,150 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         debug(`${this.name} => watcher removed ${watcher.id}`);
     }
 
+    /**
+     * The pusher behind this watcher is gone without saying goodbye. Unlike removeWatcher, its users keep their place
+     * for DETACHED_USER_GRACE_MS: the same tab reconnecting through another pusher gets it back (see addUser and
+     * addUserToNotify). Those who don't come back leave for good when it runs out, then onGraceOver is called so the
+     * space can be deleted if nobody is left.
+     */
+    public detachWatcher(watcher: SpacesWatcher, onGraceOver: () => void): void {
+        const spaceUsers = this.users.get(watcher);
+        const spaceUsersToNotify = this.usersToNotify.get(watcher);
+
+        this.users.delete(watcher);
+        this.usersToNotify.delete(watcher);
+
+        const detach = (spaceUserId: string): DetachedUser => {
+            let detached = this.detachedUsers.get(spaceUserId);
+            if (!detached) {
+                detached = {
+                    timer: setTimeout(() => {
+                        this.expireDetachedUser(spaceUserId);
+                        onGraceOver();
+                    }, DETACHED_USER_GRACE_MS),
+                };
+                this.detachedUsers.set(spaceUserId, detached);
+            }
+            return detached;
+        };
+
+        for (const spaceUser of spaceUsers?.values() ?? []) {
+            detach(spaceUser.spaceUserId).user = spaceUser;
+        }
+        for (const spaceUser of spaceUsersToNotify?.values() ?? []) {
+            detach(spaceUser.spaceUserId).userToNotify = spaceUser;
+        }
+
+        debug(`${this.name} => watcher detached ${watcher.id}, ${this.detachedUsers.size} user(s) on hold`);
+    }
+
+    /**
+     * Puts a detached user back under a live watcher, silently: every watcher already knows it (it was added before,
+     * or listed in the initSpaceUsersMessage of watchers that came since). Only what changed with the new connection
+     * is sent, as an update.
+     */
+    private reattachUser(sourceWatcher: SpacesWatcher, previous: SpaceUser, spaceUser: SpaceUser): void {
+        this.usersList(sourceWatcher).set(previous.spaceUserId, previous);
+
+        const updateMask: string[] = [];
+        for (const key of Object.keys(spaceUser) as (keyof SpaceUser)[]) {
+            if (JSON.stringify(previous[key]) === JSON.stringify(spaceUser[key])) {
+                continue;
+            }
+            if (Array.isArray(spaceUser[key])) {
+                // updateUser deep-merges, which would concatenate arrays: replace them in place instead.
+                Object.assign(previous, { [key]: spaceUser[key] });
+                continue;
+            }
+            updateMask.push(key);
+        }
+
+        if (updateMask.length > 0) {
+            this.updateUser(sourceWatcher, spaceUser, updateMask);
+        }
+        debug(`${this.name} : user => reattached ${spaceUser.spaceUserId}`);
+    }
+
+    /**
+     * Once every part of a detached user is back, it is whole again: its front, which lost its media when its pusher
+     * went away, is told to signal them anew.
+     */
+    private settleDetachedUser(spaceUserId: string, detached: DetachedUser): void {
+        if (detached.user || detached.userToNotify) {
+            return;
+        }
+        clearTimeout(detached.timer);
+        this.detachedUsers.delete(spaceUserId);
+
+        const user = this.getUser(spaceUserId) ?? this.getUsersToNotify().find((u) => u.spaceUserId === spaceUserId);
+        if (user) {
+            this.communicationManager.handleUserReconnected(user);
+        }
+    }
+
+    /**
+     * The grace period ran out: what removeUser and deleteUserToNotify would have done at the time.
+     */
+    private expireDetachedUser(spaceUserId: string): void {
+        const detached = this.detachedUsers.get(spaceUserId);
+        if (!detached) {
+            return;
+        }
+        this.detachedUsers.delete(spaceUserId);
+        clearTimeout(detached.timer);
+
+        const { user, userToNotify } = detached;
+
+        if (userToNotify) {
+            this.communicationManager.handleUserToNotifyDeleted(userToNotify).catch((error) => {
+                console.error("Error while deleting detached user to notify", error);
+                Sentry.captureException(error);
+            });
+        }
+
+        if (user) {
+            if (this.isPublishing(user)) {
+                this._nbPublishers--;
+            }
+            this._nbUsers--;
+            this._nbWatchers = this._nbPublishers > 0 ? this._nbUsers : 0;
+            this._spaceUpdatedSubject.next(this);
+
+            if (this.filterOneUser(user)) {
+                this.communicationManager.handleUserDeleted(user).catch((error) => {
+                    console.error("Error while deleting detached user", error);
+                    Sentry.captureException(error);
+                });
+                this.notifyWatchers({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId,
+                        }),
+                    },
+                });
+            }
+        }
+
+        this.stopRecordingIfUserCompletelyLeftSpace(spaceUserId).catch((error) => {
+            console.error("Error while stopping recording after detached user expired", error);
+            Sentry.captureException(error);
+        });
+        debug(`${this.name} : detached user => expired ${spaceUserId}`);
+    }
+
     public addUserToNotify(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersListToNotify(sourceWatcher);
         usersList.set(spaceUser.spaceUserId, spaceUser);
+
+        const detached = this.detachedUsers.get(spaceUser.spaceUserId);
+        if (detached?.userToNotify) {
+            // The communication manager never saw this user leave: nothing to tell it but the reconnection.
+            detached.userToNotify = undefined;
+            this.settleDetachedUser(spaceUser.spaceUserId, detached);
+            return;
+        }
 
         this.communicationManager.handleUserToNotifyAdded(spaceUser).catch((e) => {
             Sentry.captureException(e);
@@ -447,7 +618,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
     public canBeDeleted(): boolean {
         debug(`${this.name} : canBeDeleted => size ${this.users.size}`);
-        return this.users.size === 0;
+        return this.users.size === 0 && this.detachedUsers.size === 0;
     }
 
     private usersList(watcher: SpacesWatcher): Map<string, SpaceUser> {
@@ -798,6 +969,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     public destroy() {
+        for (const { timer } of this.detachedUsers.values()) {
+            clearTimeout(timer);
+        }
+        this.detachedUsers.clear();
         // The manager closes the session it owns.
         this.communicationManager.destroy();
         debug(`${this.name} => destroyed`);

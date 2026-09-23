@@ -39,6 +39,7 @@ function createRecordableState() {
         handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
         handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
         handleMeetingConnectionRestartMessage: vi.fn(),
+        handleUserReconnected: vi.fn(),
         handleStartRecording: mocks.handleStartRecording,
         handleStopRecording: mocks.handleStopRecording,
         handleLivekitWebhook: mocks.handleLivekitWebhook,

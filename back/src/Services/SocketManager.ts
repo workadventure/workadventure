@@ -1521,14 +1521,25 @@ export class SocketManager {
                 console.error(`In handleUnwatchAllSpaces, can't unwatch space ${spaceName}, space not found`);
                 return;
             }
-            this.removeSpaceWatcher(pusher, space);
+            // The pusher is gone (stream ended, or it stopped answering pings): its users keep their place for a
+            // while, in case they reconnect through another pusher.
+            pusher.unwatchSpace(space.name);
+            space.detachWatcher(pusher, () => this.deleteSpaceIfEmpty(space));
+            this.deleteSpaceIfEmpty(space);
         });
     }
 
     private removeSpaceWatcher(watcher: SpacesWatcher, space: Space) {
         watcher.unwatchSpace(space.name);
         space.removeWatcher(watcher);
+        this.deleteSpaceIfEmpty(space);
+    }
 
+    private deleteSpaceIfEmpty(space: Space) {
+        // Another space may have taken the name since (this one was deleted, then joined again).
+        if (this.spaces.get(space.name) !== space) {
+            return;
+        }
         // If there are no more watchers, we delete the space
         if (space.canBeDeleted()) {
             debug("[space] Space %s => deleted", space.name);

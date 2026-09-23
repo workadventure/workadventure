@@ -382,6 +382,10 @@ export class CommunicationManager implements ICommunicationManager {
         );
     }
 
+    public handleUserReconnected(user: SpaceUser): void {
+        this.lifecycleManager.getCurrentState().handleUserReconnected(user);
+    }
+
     public handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
         senderUserId: string,

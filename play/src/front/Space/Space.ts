@@ -46,7 +46,6 @@ import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
-import { lookupUserById } from "./Utils/UserLookup";
 import { recordingSchema, spaceMetadataValidator } from "./SpaceMetadataValidator";
 import { VideoBox } from "./VideoBox";
 import { LOCAL_SCREEN_SHARING_STREAM_ID } from "./Streamable";
@@ -998,10 +997,6 @@ export class Space implements SpaceInterface {
                 return this.mySpaceUserId !== user.spaceUserId;
             })
             .find((user) => user.uuid === uuid);
-    }
-
-    public getSpaceUserByUserId(id: number): SpaceUserExtended | undefined {
-        return lookupUserById(id, this);
     }
 
     public getScreenSharingPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined {
