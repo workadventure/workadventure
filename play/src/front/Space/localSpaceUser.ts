@@ -30,11 +30,19 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
         attendeesState: false,
         cpuLimited: false,
         pictureStore: readable<string | undefined>(undefined, (set) => {
-            const unsubscribe = gameManager
-                .getCurrentGameScene()
-                .CurrentPlayer.pictureStore.subscribe((pictureStore) => {
-                    set(pictureStore);
-                });
+            // No player while the game reconnects to the server: the tile shows no Woka meanwhile
+            let player: ReturnType<typeof gameManager.getCurrentGameScene>["CurrentPlayer"] | undefined;
+            try {
+                player = gameManager.getCurrentGameScene().CurrentPlayer;
+            } catch {
+                player = undefined;
+            }
+            if (!player) {
+                return () => {};
+            }
+            const unsubscribe = player.pictureStore.subscribe((pictureStore) => {
+                set(pictureStore);
+            });
             return () => {
                 unsubscribe();
             };
