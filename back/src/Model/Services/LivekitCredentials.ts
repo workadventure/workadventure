@@ -25,3 +25,16 @@ export async function getLivekitCredentials(spaceName: string, playUri?: string)
         livekitApiSecret: LIVEKIT_API_SECRET,
     };
 }
+
+/**
+ * Same as getLivekitCredentials, but undefined when the admin gives the room no LiveKit server.
+ */
+export async function getLivekitCredentialsIfAny(
+    spaceName: string,
+    playUri: string,
+): Promise<LivekitCredentialsResponse | undefined> {
+    if (getCapability(LIVEKIT_CREDENTIALS_CAPABILITY) === LIVEKIT_CREDENTIALS_VERSION) {
+        return adminApi.fetchLivekitCredentialsIfAny(spaceName, playUri);
+    }
+    return getLivekitCredentials(spaceName, playUri);
+}
