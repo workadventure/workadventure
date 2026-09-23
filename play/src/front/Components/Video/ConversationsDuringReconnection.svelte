@@ -9,8 +9,9 @@
     they do not go through the server. Keep them seen and heard. Unmounted, the video tiles would also tell the other
     side to stop sending video (they report a 0x0 display).
 -->
-<!-- The layout takes its container's height: the top third, the reconnection message stays visible below -->
-<div class="fixed top-0 inset-x-0 h-[35vh] z-[3000] pointer-events-none">
+<!-- The layout takes its container's height, and the camera strip a quarter of it: the whole screen, as in the game.
+     Transparent and click-through: the reconnection message stays visible below. -->
+<div class="fixed inset-0 z-[3000] pointer-events-none">
     <PresentationLayout inPictureInPicture={false} />
 </div>
 {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
