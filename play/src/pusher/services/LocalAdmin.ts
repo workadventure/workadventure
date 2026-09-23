@@ -57,7 +57,7 @@ import {
     MATRIX_ADMIN_PASSWORD,
     MATRIX_DOMAIN,
 } from "../enums/EnvironmentVariable";
-import type { FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { BannedUserData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { AdminInterface } from "./AdminInterface";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
@@ -412,6 +412,14 @@ class LocalAdmin implements AdminInterface {
         message: string,
         byUserUuid: string,
     ): Promise<void> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    listBannedUsers(playUri: string, byUserUuid: string): Promise<BannedUserData[]> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    unbanUser(playUri: string, banId: string, byUserUuid: string): Promise<void> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 

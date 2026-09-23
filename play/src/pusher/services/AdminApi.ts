@@ -33,6 +33,18 @@ import { ShortMapDescriptionList } from "./ShortMapDescription";
 import { WorldChatMembersData } from "./WorldChatMembersData";
 import { iceServersService } from "./IceServersService";
 
+/** One ban of a world, as GET /api/ban/list returns it: nothing the in-game admin does not need. */
+export const BannedUserData = z.object({
+    id: z.string(),
+    uuid: z.string(),
+    name: z.string(),
+    reason: z.string(),
+    bannedAt: z.string(),
+    bannedBy: z.string(),
+});
+
+export type BannedUserData = z.infer<typeof BannedUserData>;
+
 export const AdminLoginMessage = z.object({
     type: z.string(),
     message: z.string(),
@@ -722,6 +734,27 @@ class AdminApi implements AdminInterface {
         if (z.object({ status: z.literal("error") }).safeParse(response.data).success) {
             throw new Error(`The admin refused to ban the user: ${JSON.stringify(response.data)}`);
         }
+    }
+
+    async listBannedUsers(playUri: string, byUserUuid: string): Promise<BannedUserData[]> {
+        const response = await axios.get<unknown>(ADMIN_API_URL + "/api/ban/list", {
+            params: { playUri, byUserUuid },
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        // The admin answers authorization errors with a 200 and an error payload: the array
+        // parse is what turns that into a failure.
+        return BannedUserData.array().parse(response.data);
+    }
+
+    async unbanUser(playUri: string, banId: string, byUserUuid: string): Promise<void> {
+        const response = await axios.post<unknown>(
+            ADMIN_API_URL + "/api/unban",
+            { playUri, banId, byUserUuid },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            },
+        );
+        z.object({ is_banned: z.literal(false) }).parse(response.data);
     }
 
     public getCapabilities(): Promise<Capabilities> {
