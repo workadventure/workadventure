@@ -42,6 +42,18 @@ type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
  */
 export const DETACHED_USER_GRACE_MS = 30_000;
 
+// A pusher registers every user with its media off: on a reattachment, these stay as they were until the front,
+// which kept its media, sends them again itself. Taking them from the new registration would flash "camera off" to
+// everyone for nothing.
+const MEDIA_STATE_FIELDS: ReadonlySet<string> = new Set([
+    "cameraState",
+    "microphoneState",
+    "screenSharingState",
+    "megaphoneState",
+    "attendeesState",
+    "cpuLimited",
+]);
+
 interface DetachedUser {
     user?: SpaceUser;
     userToNotify?: SpaceUser;
@@ -493,7 +505,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         const updateMask: string[] = [];
         for (const key of Object.keys(spaceUser) as (keyof SpaceUser)[]) {
-            if (JSON.stringify(previous[key]) === JSON.stringify(spaceUser[key])) {
+            if (MEDIA_STATE_FIELDS.has(key) || JSON.stringify(previous[key]) === JSON.stringify(spaceUser[key])) {
                 continue;
             }
             if (Array.isArray(spaceUser[key])) {

@@ -29,6 +29,54 @@ import type { ITransitionPolicy } from "./Interfaces/ITransitionPolicy";
 import type { ITransitionOrchestrator, TransitionContext } from "./Interfaces/ITransitionOrchestrator";
 import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
 import type { ICommunicationStrategy, IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
+import { StateFactory } from "./States/StateFactory";
+import { LivekitState } from "./States/LivekitState";
+
+/**
+ * Finds the LiveKit state of a space whose LiveKit room still holds participants, if any.
+ */
+export type RunningLivekitStateFinder = (
+    space: ICommunicationSpace,
+    users: ReadonlyMap<string, SpaceUser>,
+    usersToNotify: ReadonlyMap<string, SpaceUser>,
+    playUri: string,
+) => Promise<ICommunicationState<ICommunicationStrategy> | undefined>;
+
+// Only the spaces created this soon after the back started can be ones it held before a restart.
+const BACK_RESTART_WINDOW_MS = 120_000;
+// Joining a space never waits longer than this for LiveKit to answer.
+const RUNNING_ROOM_CHECK_TIMEOUT_MS = 2_000;
+
+function mayHaveRunningLivekitRoomAfterRestart(): boolean {
+    if (process.uptime() * 1000 > BACK_RESTART_WINDOW_MS) {
+        return false;
+    }
+    try {
+        return new LivekitAvailabilityService().isAvailable();
+    } catch {
+        // Capabilities not fetched from the admin yet
+        return false;
+    }
+}
+
+export const findRunningLivekitStateAfterRestart: RunningLivekitStateFinder = async (
+    space,
+    users,
+    usersToNotify,
+    playUri,
+) => {
+    const state = await StateFactory.createState(CommunicationType.LIVEKIT, space, users, usersToNotify, { playUri });
+    if (!(state instanceof LivekitState)) {
+        return undefined;
+    }
+    const running = await Promise.race([
+        state.hasRunningRoom(),
+        new Promise<boolean>((resolve) => {
+            setTimeout(() => resolve(false), RUNNING_ROOM_CHECK_TIMEOUT_MS);
+        }),
+    ]);
+    return running ? state : undefined;
+};
 
 /**
  * Factory interface for creating the initial communication state.
@@ -74,6 +122,7 @@ export interface CommunicationManagerDependencies {
     livekitToWebRTCDelayMs?: number;
     recordingManager?: IRecordingManager;
     sessionAnalytics?: SessionAnalytics;
+    findRunningLivekitState?: RunningLivekitStateFinder;
 }
 
 /**
@@ -108,6 +157,11 @@ export class CommunicationManager implements ICommunicationManager {
 
     private static readonly DEFAULT_LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
+    // Injected in tests; otherwise the restart window and LiveKit availability are checked on the first user
+    private readonly injectedRunningLivekitStateFinder: RunningLivekitStateFinder | undefined;
+    private runningLivekitRoomCheck: Promise<void> | undefined;
+    private runningLivekitRoomChecked = false;
+
     /**
      * Creates a new CommunicationManager.
      *
@@ -118,6 +172,7 @@ export class CommunicationManager implements ICommunicationManager {
         this.space = space;
 
         const delayMs = dependencies.livekitToWebRTCDelayMs ?? CommunicationManager.DEFAULT_LIVEKIT_TO_WEBRTC_DELAY_MS;
+        this.injectedRunningLivekitStateFinder = dependencies.findRunningLivekitState;
 
         // Initialize user registry
         this.userRegistry = dependencies.userRegistry ?? new UserRegistry();
@@ -164,7 +219,53 @@ export class CommunicationManager implements ICommunicationManager {
         return this._recordingManager.getRecordingState();
     }
 
+    /**
+     * A space created just after the back started may be one it held before a restart, with a meeting still going on
+     * in its LiveKit room: the fronts that kept their connection to it are coming back. A new space starts in WebRTC,
+     * which would move them out of the room and cut the meeting: resume the LiveKit room instead. Checked once, on the
+     * first user, before anybody is told which strategy is in use.
+     */
+    private resumeRunningLivekitRoom(user: SpaceUser): Promise<void> | undefined {
+        // Nothing to wait for once checked, or when there is nothing to check: no extra tick on every join.
+        if (this.runningLivekitRoomChecked) {
+            return undefined;
+        }
+        const findRunningLivekitState =
+            this.injectedRunningLivekitStateFinder ??
+            (mayHaveRunningLivekitRoomAfterRestart() ? findRunningLivekitStateAfterRestart : undefined);
+        if (
+            !findRunningLivekitState ||
+            this.lifecycleManager.getCurrentState().communicationType !== CommunicationType.WEBRTC
+        ) {
+            this.runningLivekitRoomChecked = true;
+            return undefined;
+        }
+        this.runningLivekitRoomCheck ??= (async () => {
+            const state = await findRunningLivekitState(
+                this.space,
+                this.userRegistry.getUsers(),
+                this.userRegistry.getUsersToNotify(),
+                user.playUri,
+            );
+            if (state) {
+                await this.lifecycleManager.replaceInitialState(state);
+            }
+        })()
+            .catch((e) => {
+                console.error("Error while looking for a running LiveKit room", e);
+                Sentry.captureException(e);
+            })
+            .finally(() => {
+                this.runningLivekitRoomChecked = true;
+            });
+        return this.runningLivekitRoomCheck;
+    }
+
     public async handleUserAdded(user: SpaceUser): Promise<void> {
+        const runningLivekitRoomCheck = this.resumeRunningLivekitRoom(user);
+        if (runningLivekitRoomCheck) {
+            await runningLivekitRoomCheck;
+        }
         const wasPresent = this.isPresent(user.spaceUserId);
         this._recordingManager.handleAddUser(user);
         this.userRegistry.addUser(user);
@@ -202,6 +303,10 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
+        const runningLivekitRoomCheck = this.resumeRunningLivekitRoom(user);
+        if (runningLivekitRoomCheck) {
+            await runningLivekitRoomCheck;
+        }
         const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.addUserToNotify(user);
         this.syncPresence(user, wasPresent);

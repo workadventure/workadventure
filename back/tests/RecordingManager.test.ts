@@ -90,6 +90,7 @@ function createDependencies(state: IRecordableState<IRecordableStrategy>) {
     const lifecycleManager: IStateLifecycleManager = {
         getCurrentState: vi.fn().mockReturnValue(state),
         transitionTo: vi.fn().mockResolvedValue(undefined),
+        replaceInitialState: vi.fn().mockResolvedValue(undefined),
         dispatchSwitchEvent: vi.fn(),
         dispose: vi.fn(),
     };

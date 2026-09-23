@@ -23,6 +23,11 @@ export interface IStateLifecycleManager {
     transitionTo(newState: ICommunicationState<ICommunicationStrategy>): Promise<void>;
 
     /**
+     * Replaces the initial state before anybody used it: no switch event, nothing to finalize.
+     */
+    replaceInitialState(newState: ICommunicationState<ICommunicationStrategy>): Promise<void>;
+
+    /**
      * Dispatches a switch event from the previous state.
      * @param targetCommunicationType - The type being switched to
      */
