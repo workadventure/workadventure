@@ -98,6 +98,9 @@
                     activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
                     analyticsClient.trackAdminEvent("global_message.opened", { source: "menu" });
                     break;
+                case SubMenusInterface.moderation:
+                    activeComponent = (await import("./ModerationSubMenu.svelte")).default;
+                    break;
                 case SubMenusInterface.report:
                     activeComponent = ReportSubMenu;
                     analyticsClient.trackAdminEvent("feedback.opened", { feedbackSource: "external_report_url" });

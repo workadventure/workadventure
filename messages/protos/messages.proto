@@ -623,6 +623,8 @@ message QueryMessage {
     StartRecordingQuery startRecordingQuery = 21;
     StopRecordingQuery stopRecordingQuery = 22;
     GetRecordingThumbnailsQuery getRecordingThumbnailsQuery = 23;
+    BannedUsersQuery bannedUsersQuery = 24;
+    UnbanUserQuery unbanUserQuery = 25;
   }
 }
 
@@ -751,6 +753,8 @@ message AnswerMessage {
     StartRecordingAnswer startRecordingAnswer = 22;
     StopRecordingAnswer stopRecordingAnswer = 23;
     GetRecordingThumbnailsAnswer getRecordingThumbnailsAnswer = 24;
+    BannedUsersAnswer bannedUsersAnswer = 25;
+    UnbanUserAnswer unbanUserAnswer = 26;
   }
 }
 
@@ -852,6 +856,36 @@ message DeleteRecordingAnswer {
 
 message GetSignedUrlAnswer {
   string signedUrl = 1;
+}
+
+// The bans of the current world. Reserved to the admins of the world (enforced by the pusher).
+message BannedUsersQuery {
+}
+
+// One ban, as the admin API exposes it to the game: no IP address, no email.
+message BannedUser {
+  // id of the ban itself, what UnbanUserQuery expects
+  string id = 1;
+  string uuid = 2;
+  string name = 3;
+  // reason given by the moderator, empty when none was given
+  string reason = 4;
+  // ISO-8601 instant
+  string bannedAt = 5;
+  // display name of the moderator, empty when unknown
+  string bannedBy = 6;
+}
+
+message BannedUsersAnswer {
+  repeated BannedUser bannedUsers = 1;
+}
+
+// Lifts one ban of the current world. Reserved to the admins of the world (enforced by the pusher).
+message UnbanUserQuery {
+  string banId = 1;
+}
+
+message UnbanUserAnswer {
 }
 
 message Member {

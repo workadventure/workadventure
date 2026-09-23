@@ -776,6 +776,28 @@ export class IoSocketController {
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
+                                        case "bannedUsersQuery": {
+                                            const bannedUsersAnswer =
+                                                await socketManager.handleBannedUsersQuery(socket);
+                                            answerMessage.answer = {
+                                                $case: "bannedUsersAnswer",
+                                                bannedUsersAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "unbanUserQuery": {
+                                            const unbanUserAnswer = await socketManager.handleUnbanUserQuery(
+                                                socket,
+                                                message.message.queryMessage.query.unbanUserQuery,
+                                            );
+                                            answerMessage.answer = {
+                                                $case: "unbanUserAnswer",
+                                                unbanUserAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
                                         case "chatMembersQuery": {
                                             const chatMembersAnswer = await socketManager.handleChatMembersQuery(
                                                 socket,

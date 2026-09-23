@@ -27,6 +27,7 @@ import type {
     JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
     Member,
+    BannedUser,
     ModifiyWAMMetadataMessage,
     ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
@@ -1825,6 +1826,33 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.searchMemberAnswer.members;
+    }
+
+    /**
+     * The bans of the current world. The pusher refuses it to anyone but the admins of the world.
+     */
+    public async queryBannedUsers(): Promise<BannedUser[]> {
+        const answer = await this.query({
+            $case: "bannedUsersQuery",
+            bannedUsersQuery: {},
+        });
+        if (answer.$case !== "bannedUsersAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.bannedUsersAnswer.bannedUsers;
+    }
+
+    /**
+     * Lifts one ban of the current world. Same restriction as queryBannedUsers.
+     */
+    public async queryUnbanUser(banId: string): Promise<void> {
+        const answer = await this.query({
+            $case: "unbanUserQuery",
+            unbanUserQuery: { banId },
+        });
+        if (answer.$case !== "unbanUserAnswer") {
+            throw new Error("Unexpected answer");
+        }
     }
 
     public async queryMember(memberUUID: string): Promise<Member> {
