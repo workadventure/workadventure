@@ -86,6 +86,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         const spaceUser: SpaceUserExtended = {
             ...SpaceUser.fromPartial({
                 spaceUserId,
+                roomUserId: socketData.userId,
                 uuid: socketData.userUuid,
                 name: socketData.name,
                 playUri: socketData.roomId,

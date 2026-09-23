@@ -113,6 +113,7 @@ const signal = new AbortController().signal;
 function createSpaceUser(overrides: Partial<SpaceUser> & Pick<SpaceUser, "spaceUserId">): SpaceUser {
     return {
         spaceUserId: overrides.spaceUserId,
+        roomUserId: overrides.roomUserId ?? 0,
         name: overrides.name ?? "",
         playUri: overrides.playUri ?? "",
         color: overrides.color ?? "",
