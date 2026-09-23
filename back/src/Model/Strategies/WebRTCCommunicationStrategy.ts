@@ -339,8 +339,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         }
         for (const peerId of peerIds) {
             const peer = this.users.get(peerId) ?? this.usersToNotify.get(peerId);
-            // A peer still detached (it lost the same pusher) re-establishes the connection itself when it comes back
-            if (!peer || !this._space.getUser(peerId)) continue;
+            if (!peer) continue;
             try {
                 // A fresh connection id: the peer's front replaces its old connection to this user.
                 this.establishConnection(user, peer);
