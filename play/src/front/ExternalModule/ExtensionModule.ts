@@ -1,4 +1,9 @@
-import type { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
+import type {
+    AvailabilityStatus,
+    ExternalModuleMessage,
+    MapDetailsData,
+    OauthRefreshToken,
+} from "@workadventure/messages";
 import type { Readable, Updater } from "svelte/store";
 import type { CalendarEventInterface, TodoListInterface } from "@workadventure/shared-utils";
 import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
@@ -23,6 +28,8 @@ export interface ExternalSvelteComponentServiceInterface {
 export interface ExtensionModuleOptions {
     workadventureStatusStore: Readable<AvailabilityStatus>;
     userAccessToken: string;
+    /** OAuth tokens of the player (generic Google/Microsoft/Discord logins included). Never pass them to scripts. */
+    accessTokens?: MapDetailsData["extensionModuleAccessTokens"];
     roomId: string;
     externalModuleMessage: Observable<ExternalModuleMessage>;
     externalSvelteComponent: ExternalSvelteComponentServiceInterface;
