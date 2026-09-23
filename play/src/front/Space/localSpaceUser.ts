@@ -8,6 +8,7 @@ import type { SpaceUserExtended } from "./SpaceInterface";
 
 export const localSpaceUser = (name?: string): SpaceUserExtended => {
     return {
+        roomUserId: 0,
         isLogged: localUserStore.isLogged(),
         availabilityStatus: get(availabilityStatusStore),
         roomName: undefined,
@@ -60,6 +61,7 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
         },
         reactiveUser: {
             spaceUserId: "",
+            roomUserId: writable(0),
             playUri: "",
             roomName: "",
             name: writable(localUserStore.getName() ?? ""),

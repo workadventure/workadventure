@@ -12,6 +12,7 @@ import crypto from "crypto";
  * need their tab id, which never leaves the pusher.
  */
 export function computeSpaceUserId(roomId: string, userUuid: string, tabId: string, secret: string): string {
-    const digest = crypto.createHmac("sha256", secret).update(`${userUuid}\n${tabId}`).digest("base64url");
-    return `${roomId}_${digest.slice(0, 22)}`;
+    // Hex, not base64url: no "_" in the digest, so the room is still what precedes the last "_"
+    const digest = crypto.createHmac("sha256", secret).update(`${userUuid}\n${tabId}`).digest("hex");
+    return `${roomId}_${digest.slice(0, 32)}`;
 }

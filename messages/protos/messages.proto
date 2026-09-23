@@ -1976,6 +1976,9 @@ message SpaceUser{
   bool cpuLimited = 20;
   // Raise-hand state is NOT stored per-user here: it lives in the space state (SpaceStateQuery / SpaceStatePatchMessage),
   // which is broadcast to all members, including a megaphone speaker without seeAttendees.
+  // The user's id in the room (its Woka), which changes on every connection while spaceUserId does not. The front
+  // used to parse it out of spaceUserId. (21 was briefly handRaised on master, never released: left unused.)
+  int32 roomUserId = 22;
 }
 
 /*message PartialSpaceUser{
