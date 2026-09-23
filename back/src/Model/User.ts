@@ -34,6 +34,11 @@ export class User implements Movable, CustomJsonReplacerInterface {
     private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
     public disconnected = false;
+    /**
+     * Its pusher went away without a goodbye: the user keeps its place (and its bubble) for a grace period, in case
+     * the same tab reconnects through another pusher. Its socket is dead meanwhile.
+     */
+    public detached = false;
     private isRoomJoinedMessage = false;
     private pendingMessages: NonNullable<ServerToClientMessage["message"]>[] = [];
     /**
@@ -365,6 +370,9 @@ export class User implements Movable, CustomJsonReplacerInterface {
      * "roomJoinedMessage" message is received.
      */
     public write(chunk: NonNullable<ServerToClientMessage["message"]>, cb?: (...args: unknown[]) => void): boolean {
+        if (this.detached) {
+            return false;
+        }
         if (this.isRoomJoinedMessage) {
             return this.socket.write(
                 {

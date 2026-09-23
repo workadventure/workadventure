@@ -85,6 +85,8 @@ export class GameRoom implements BrothersFinder {
     // Users indexed by composite key (userUuid + tabId), used to detect reconnections from the same tab
     // and immediately kill stale connections instead of waiting for ping timeout
     private readonly usersByTabKey = new Map<string, User>();
+    // Grace timers of detached users (see detach())
+    private readonly detachTimers = new Map<User, NodeJS.Timeout>();
     private readonly groups: SpatialMap<number, Group>;
     private readonly admins = new Set<Admin>();
 
@@ -282,6 +284,7 @@ export class GameRoom implements BrothersFinder {
         // Check if there's a stale connection from the same browser tab and kill it immediately
         // This prevents "ghost" users appearing when a user reconnects after a network disruption
         const tabId = joinRoomMessage.tabId;
+        let inheritedGroup: Group | undefined;
         if (tabId) {
             const tabKey = `${joinRoomMessage.userUuid}_${tabId}`;
             const existingUser = this.usersByTabKey.get(tabKey);
@@ -289,6 +292,10 @@ export class GameRoom implements BrothersFinder {
                 console.info(
                     `Detected reconnection from same tab for user ${joinRoomMessage.userUuid}. Killing stale connection.`,
                 );
+                // The new connection takes over the stale one's bubble instead of breaking it up: the bubble keeps its
+                // space, so the conversation (and its LiveKit room) goes on.
+                inheritedGroup = existingUser.group;
+                inheritedGroup?.handOver(existingUser);
                 // Remove the stale user from the room
                 this.leave(existingUser);
                 endUserConnectionWithReason(
@@ -343,6 +350,9 @@ export class GameRoom implements BrothersFinder {
             this.usersByTabKey.set(tabKey, user);
         }
 
+        if (inheritedGroup && inheritedGroup.getSize > 0 && !user.silent) {
+            inheritedGroup.join(user);
+        }
         this.updateUserGroup(user);
 
         // Notify admins
@@ -361,7 +371,30 @@ export class GameRoom implements BrothersFinder {
         return user;
     }
 
+    /**
+     * The user's pusher went away without a goodbye: keep its place (position, bubble) for graceMs, in case the same
+     * tab reconnects (see the tab-key handling in join()). onGraceOver is called if it does not.
+     */
+    public detach(user: User, graceMs: number, onGraceOver: () => void): void {
+        if (user.disconnected || user.detached) {
+            return;
+        }
+        user.detached = true;
+        this.detachTimers.set(
+            user,
+            setTimeout(() => {
+                this.detachTimers.delete(user);
+                onGraceOver();
+            }, graceMs),
+        );
+    }
+
     public leave(user: User) {
+        const detachTimer = this.detachTimers.get(user);
+        if (detachTimer) {
+            clearTimeout(detachTimer);
+            this.detachTimers.delete(user);
+        }
         if (user.disconnected === true) {
             console.warn("User ", user.id, "already disconnected!");
             return;
@@ -618,7 +651,7 @@ export class GameRoom implements BrothersFinder {
             if (currentUser === user) {
                 continue;
             }
-            if (currentUser.silent) {
+            if (currentUser.silent || currentUser.detached) {
                 continue;
             }
 

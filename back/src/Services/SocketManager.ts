@@ -76,7 +76,7 @@ import type { PositionInterface } from "../Model/PositionInterface";
 import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import type { Zone, ZonePosition } from "../Model/Zone";
 import type { Admin } from "../Model/Admin";
-import { Space } from "../Model/Space";
+import { DETACHED_USER_GRACE_MS, Space } from "../Model/Space";
 import type { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
 import type { SessionEndReason } from "../Model/SessionAnalytics";
@@ -330,6 +330,14 @@ export class SocketManager {
     async saveVariable(roomUrl: string, variable: string, newValue: string): Promise<void> {
         const room = await this.getOrCreateRoom(roomUrl);
         await room.setVariable(variable, newValue, "RoomApi");
+    }
+
+    /**
+     * The user's pusher went away without a goodbye (a play pod restarting or crashing): the user keeps its place,
+     * and its bubble, for as long as spaces keep theirs, in case the same tab reconnects through another pusher.
+     */
+    detachFromRoom(room: GameRoom, user: User) {
+        room.detach(user, DETACHED_USER_GRACE_MS, () => this.leaveRoom(room, user));
     }
 
     leaveRoom(room: GameRoom, user: User) {

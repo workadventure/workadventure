@@ -254,9 +254,14 @@ const roomManager = {
                 });
         });
 
-        const closeConnection = (reason?: string) => {
+        // detach: the pusher went away rather than closing this stream (see the "cancelled" and "error" handlers)
+        const closeConnection = (reason?: string, detach = false) => {
             if (user !== null && room !== null) {
-                socketManager.leaveRoom(room, user);
+                if (detach) {
+                    socketManager.detachFromRoom(room, user);
+                } else {
+                    socketManager.leaveRoom(room, user);
+                }
             }
             if (pingIntervalId) {
                 clearInterval(pingIntervalId);
@@ -274,9 +279,17 @@ const roomManager = {
             setUser(null);
         };
 
+        // The pusher ends the stream when its client leaves: the user leaves at once.
         call.on("end", () => {
             debug("joinRoom ended for user %s", user?.name);
             closeConnection();
+        });
+
+        // A pusher that dies (restart, crash) cannot end its streams: they are cancelled or fail. Its users keep their
+        // place for a while, in case they reconnect through another pusher.
+        call.on("cancelled", () => {
+            debug("joinRoom cancelled for user %s", user?.name);
+            closeConnection(undefined, true);
         });
 
         call.on("error", (err: unknown) => {
@@ -285,7 +298,7 @@ const roomManager = {
             Sentry.captureException(err, {
                 user: user ?? undefined,
             });
-            closeConnection();
+            closeConnection(undefined, true);
         });
 
         // Let's set up a ping mechanism

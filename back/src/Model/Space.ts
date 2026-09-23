@@ -89,6 +89,14 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             this.settleDetachedUser(spaceUser.spaceUserId, detached);
             return;
         }
+        // The same tab reconnected through another pusher while its old one is still alive: move it over, or the
+        // old pusher removing it later would remove the user that just came back.
+        const stale = this.takeFromOtherWatcher(this.users, sourceWatcher, spaceUser.spaceUserId);
+        if (stale) {
+            this.reattachUser(sourceWatcher, stale, spaceUser);
+            this.communicationManager.handleUserReconnected(this.getUser(spaceUser.spaceUserId) ?? spaceUser);
+            return;
+        }
         try {
             const usersList = this.usersList(sourceWatcher);
             usersList.set(spaceUser.spaceUserId, spaceUser);
@@ -502,6 +510,24 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         debug(`${this.name} : user => reattached ${spaceUser.spaceUserId}`);
     }
 
+    private takeFromOtherWatcher(
+        lists: Map<SpacesWatcher, Map<string, SpaceUser>>,
+        sourceWatcher: SpacesWatcher,
+        spaceUserId: string,
+    ): SpaceUser | undefined {
+        for (const [watcher, list] of lists) {
+            if (watcher === sourceWatcher) {
+                continue;
+            }
+            const user = list.get(spaceUserId);
+            if (user) {
+                list.delete(spaceUserId);
+                return user;
+            }
+        }
+        return undefined;
+    }
+
     /**
      * Once every part of a detached user is back, it is whole again: its front, which lost its media when its pusher
      * went away, is told to signal them anew.
@@ -580,6 +606,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             // The communication manager never saw this user leave: nothing to tell it but the reconnection.
             detached.userToNotify = undefined;
             this.settleDetachedUser(spaceUser.spaceUserId, detached);
+            return;
+        }
+        if (this.takeFromOtherWatcher(this.usersToNotify, sourceWatcher, spaceUser.spaceUserId)) {
             return;
         }
 
