@@ -262,6 +262,10 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         });
     }
 
+    hasRunningRoom(): Promise<boolean> {
+        return this.livekitService.roomHasParticipants(this.space.getSpaceName());
+    }
+
     reconnectUser(user: SpaceUser): void {
         this.queueUserOperation(user.spaceUserId, async () => {
             if (!this.streamingUsers.has(user.spaceUserId) && !this.receivingUsers.has(user.spaceUserId)) {

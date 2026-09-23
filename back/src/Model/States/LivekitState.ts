@@ -79,4 +79,11 @@ export class LivekitState
     ): Promise<HandleRecordingWebhookRequest | "ignored"> {
         return this._currentStrategy.handleLivekitWebhook(rawBody, authorizationHeader, spaceName, recordingSessionId);
     }
+
+    /**
+     * Whether the LiveKit room of this space already holds participants: a meeting started before the back restarted.
+     */
+    public hasRunningRoom(): Promise<boolean> {
+        return this._currentStrategy.hasRunningRoom();
+    }
 }

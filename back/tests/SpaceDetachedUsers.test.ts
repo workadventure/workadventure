@@ -105,18 +105,32 @@ describe("Space users of a pusher that went away", () => {
         const { space, makeWatcher } = setup();
         const dying = makeWatcher("dying");
         const other = makeWatcher("other");
-        space.addUser(dying.watcher, { ...alice, cameraState: true });
+        space.addUser(dying.watcher, alice);
         space.detachWatcher(dying.watcher, vi.fn());
         other.write.mockClear();
 
-        space.addUser(other.watcher, { ...alice, cameraState: false });
+        space.addUser(other.watcher, { ...alice, name: "Alice B." });
 
         expect(other.write).toHaveBeenCalledTimes(1);
         const message = other.write.mock.calls[0][0].message;
         expect(message?.$case).toBe("updateSpaceUserMessage");
         if (message?.$case === "updateSpaceUserMessage") {
-            expect(message.updateSpaceUserMessage.updateMask).toEqual(["cameraState"]);
+            expect(message.updateSpaceUserMessage.updateMask).toEqual(["name"]);
         }
+    });
+
+    it("keeps the media state it had rather than the blank one of the new registration", () => {
+        const { space, makeWatcher } = setup();
+        const dying = makeWatcher("dying");
+        const other = makeWatcher("other");
+        space.addUser(dying.watcher, { ...alice, cameraState: true, microphoneState: true });
+        space.detachWatcher(dying.watcher, vi.fn());
+        other.write.mockClear();
+
+        space.addUser(other.watcher, { ...alice, cameraState: false, microphoneState: false });
+
+        expect(other.write).not.toHaveBeenCalled();
+        expect(space.getUser(alice.spaceUserId)?.cameraState).toBe(true);
     });
 
     it("lists detached users to a pusher that starts watching meanwhile", () => {

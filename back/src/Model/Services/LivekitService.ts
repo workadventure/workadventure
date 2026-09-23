@@ -107,6 +107,11 @@ export class LiveKitService {
         this.webhookReceiver = createWebhookReceiver(this.livekitApiKey, this.livekitApiSecret);
     }
 
+    async roomHasParticipants(roomName: string): Promise<boolean> {
+        const rooms = await this.roomServiceClient.listRooms([getLivekitRoomName(roomName)]);
+        return (rooms?.[0]?.numParticipants ?? 0) > 0;
+    }
+
     async createRoom(roomName: string): Promise<void> {
         // First check if the room already exists
         const livekitRoomName = getLivekitRoomName(roomName);
