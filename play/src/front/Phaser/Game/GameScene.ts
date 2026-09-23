@@ -2022,6 +2022,7 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                connectionManager.previousBubbleSpaceName = undefined;
 
                 // The serverDisconnected stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe

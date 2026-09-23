@@ -320,8 +320,8 @@ export class RoomConnection implements RoomConnection {
         params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
         params.set("tabId", connectionManager.tabId);
         if (connectionManager.previousBubbleSpaceName) {
+            // Cleared once connected (see GameScene): the first attempts fail while a restarted back comes back
             params.set("previousBubbleSpaceName", connectionManager.previousBubbleSpaceName);
-            connectionManager.previousBubbleSpaceName = undefined;
         }
         // TODO: check if the screenSharingState variable is used
         params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
