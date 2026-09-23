@@ -6,7 +6,8 @@
     import { enableCameraSceneVisibilityStore } from "../Stores/MediaStore";
     import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
-    import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
+    import { gameSceneIsLoadedStore, mainLayoutMountedStore } from "../Stores/GameSceneStore";
+    import { videoStreamStore } from "../Stores/PeerStore";
     import { pwaInstallSceneVisibleStore } from "../Stores/PwaInstallStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
@@ -19,6 +20,7 @@
     import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
     import { draggingFile } from "../Stores/FileUploadStore";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
+    import ConversationsDuringReconnection from "./Video/ConversationsDuringReconnection.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
@@ -57,6 +59,10 @@
     <div class="bg-contrast">
         <LoaderScene />
     </div>
+{/if}
+<!-- Remote participants only: nobody to keep seeing or hearing when loading the game for the first time -->
+{#if !$mainLayoutMountedStore && $videoStreamStore.size > 0}
+    <ConversationsDuringReconnection />
 {/if}
 {#if $draggingFile}
     <div>
