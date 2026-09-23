@@ -154,6 +154,25 @@ describe("Space users of a pusher that went away", () => {
         expect(space.getUser("room_alice")).toBeUndefined();
     });
 
+    it("moves the same tab over from a pusher that is still alive, so its late removal changes nothing", () => {
+        const { space, communicationManager, makeWatcher } = setup();
+        const oldPusher = makeWatcher("old");
+        const newPusher = makeWatcher("new");
+        space.addUser(oldPusher.watcher, alice);
+        space.addUserToNotify(oldPusher.watcher, alice);
+        newPusher.write.mockClear();
+        communicationManager.handleUserDeleted.mockClear();
+
+        space.addUser(newPusher.watcher, { ...alice });
+        space.addUserToNotify(newPusher.watcher, { ...alice });
+        space.removeUser(oldPusher.watcher, alice.spaceUserId);
+
+        expect(casesSent(newPusher.write)).toEqual([]);
+        expect(communicationManager.handleUserDeleted).not.toHaveBeenCalled();
+        expect(communicationManager.handleUserReconnected).toHaveBeenCalledTimes(1);
+        expect(space.getUser(alice.spaceUserId)).toBeDefined();
+    });
+
     it("still removes the users of a pusher that leaves the space explicitly, at once", () => {
         const { space, communicationManager, makeWatcher } = setup();
         const leaving = makeWatcher("leaving");

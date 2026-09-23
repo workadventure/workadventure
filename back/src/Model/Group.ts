@@ -145,7 +145,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
         for (const user of this.positionNotifier.getAllUsersInSquareAroundZone(this.currentZone)) {
             //  Todo: Merge two groups with a leader
-            if (user.silent || user.group || this.isFull()) return; //we ignore users that are already in a group.
+            if (user.silent || user.detached || user.group || this.isFull()) return; //we ignore users that are already in a group.
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), this.getPosition());
             if (distance < this.groupRadius) {
                 this.join(user);
@@ -192,6 +192,17 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         if (!this.wasDestroyed) {
             this.positionNotifier.emitGroupUsersUpdatedEvent(this);
         }
+    }
+
+    /**
+     * Takes a user out without breaking the group up, even if it is left alone for a moment: the same browser tab,
+     * reconnecting, is about to take the place (see GameRoom.join()). Nobody is told: the leaver's socket is stale.
+     */
+    handOver(user: User): void {
+        if (!this.users.delete(user)) {
+            throw new Error(`Could not find user ${user.id} in the group ${this.id}`);
+        }
+        user.group = undefined;
     }
 
     lock(lock = true): void {
