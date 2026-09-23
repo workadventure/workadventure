@@ -119,6 +119,8 @@ export class Space implements SpaceInterface {
 
     private _isDestroyed = false;
     private initPromise: Deferred<void> | undefined;
+    // Set when this space was joined again through a new server connection (see rejoinThrough)
+    private resyncUsersOnNextInit = false;
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -682,6 +684,16 @@ export class Space implements SpaceInterface {
         }
     }
     initUsers(users: SpaceUser[]): void {
+        if (this.resyncUsersOnNextInit) {
+            // Joined again after a reconnection to the server: whoever left meanwhile was never announced to us.
+            this.resyncUsersOnNextInit = false;
+            const listed = new Set(users.map((user) => user.spaceUserId));
+            for (const spaceUserId of Array.from(this._users.keys())) {
+                if (!listed.has(spaceUserId) && spaceUserId !== this._mySpaceUserId) {
+                    this.removeUser(spaceUserId);
+                }
+            }
+        }
         for (const user of users) {
             const extendSpaceUser = this.extendSpaceUser(user);
             if (!this._users.has(user.spaceUserId)) {
@@ -1252,6 +1264,17 @@ export class Space implements SpaceInterface {
      * When called: we mimic a full user removal and we clear all the data related to the space.
      * Then, we retry to join the space.
      */
+    /**
+     * The server connection this space was joined through is gone (a play or back restart) but its media went on:
+     * join it again through the new connection without tearing anything down. The back gives us our place back, and
+     * our peers keep their connections to us (see SimplePeer.createPeerConnection and LivekitConnection).
+     */
+    public rejoinThrough(connection: RoomConnectionForSpacesInterface): void {
+        this._connection = connection;
+        this.resyncUsersOnNextInit = true;
+        this.reconnect(() => this._peerManager.resendMediaState());
+    }
+
     public onDisconnect() {
         // Mimic a full user removal
         const users = Array.from(this._users.values());
@@ -1269,7 +1292,7 @@ export class Space implements SpaceInterface {
     private retryAbortController: AbortController | undefined = undefined;
     private retryTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
-    private reconnect() {
+    private reconnect(onRejoined?: () => void) {
         if (this.retryAbortController) {
             // Let's cancel the previous reconnection before retrying
             this.retryAbortController.abort(new AbortError());
@@ -1311,13 +1334,14 @@ export class Space implements SpaceInterface {
                     },
                 });
             }
+            onRejoined?.();
         })().catch((e) => {
             if (e instanceof AbortError && !(e instanceof TimeoutError)) {
                 // Retry was aborted, do nothing
                 return;
             }
             this.retryTimeout = setTimeout(() => {
-                this.reconnect();
+                this.reconnect(onRejoined);
             }, 5000);
         });
     }

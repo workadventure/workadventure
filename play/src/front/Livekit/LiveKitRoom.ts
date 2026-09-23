@@ -115,6 +115,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this._livekitRoomCounter.increment();
     }
 
+    public isConnected(): boolean {
+        return !this.destroyed && this.isRoomConnected();
+    }
+
     public async prepareConnection(): Promise<Room> {
         this.room = new Room({
             adaptiveStream: {

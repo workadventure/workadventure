@@ -936,6 +936,14 @@ export class RemotePeer extends Peer implements Streamable {
         return this._connectionId;
     }
 
+    /**
+     * The back re-established this connection under a new id (one of the two users reconnected to the server), but
+     * the connection itself never went down: keep it, and match the signals of the new id.
+     */
+    public adoptConnectionId(connectionId: string): void {
+        this._connectionId = connectionId;
+    }
+
     public stopStreamToRemoteUser() {
         if (!this.localStream) {
             return;
