@@ -206,7 +206,9 @@ describe("SimplePeer connection kept across a reconnection to the server", () =>
         livePeer._connected = true;
 
         emitWebRtcStart("conn-2", false);
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
 
         expect(remotePeerInstances).toHaveLength(1);
         expect(livePeer.destroy).not.toHaveBeenCalled();
