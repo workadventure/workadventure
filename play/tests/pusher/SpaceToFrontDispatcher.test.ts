@@ -436,9 +436,9 @@ describe("SpaceToFrontDispatcher", () => {
                     },
                 });
 
-                const newcomer = mock<PusherWebSocket>({ emitInBatch: vi.fn() });
-                await spaceDispatcher.notifyMeState(newcomer);
-                expect(newcomer.emitInBatch).toHaveBeenCalledWith({
+                const newcomerEmitInBatch = vi.fn();
+                await spaceDispatcher.notifyMeState(mock<PusherWebSocket>({ emitInBatch: newcomerEmitInBatch }));
+                expect(newcomerEmitInBatch).toHaveBeenCalledWith({
                     message: {
                         $case: "spaceStatePatchMessage",
                         spaceStatePatchMessage: {

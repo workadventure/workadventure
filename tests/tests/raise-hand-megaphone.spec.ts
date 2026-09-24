@@ -37,7 +37,7 @@ async function drawAreaWithProperties(
 
 // This test covers the webinar gap that the proximity raise-hand test cannot: a megaphone speaker whose podium
 // has "See attendees" OFF does not receive listeners' SpaceUser, so the listener has no video tile for the
-// speaker. The raised-hands queue travels through the space metadata (broadcast to every member regardless of
+// speaker. The raised-hands queue travels through the space state (broadcast to every member regardless of
 // the visibility filter), so the speaker still sees the queue in the host panel and can give the floor — which
 // promotes the listener to speaker via a private event.
 test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
@@ -84,7 +84,7 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
             timeout: 10_000,
         });
 
-        // Bob raises his hand. The metadata queue reaches the speaker despite "See attendees" being OFF.
+        // Bob raises his hand. The state queue reaches the speaker despite "See attendees" being OFF.
         await bob.getByTestId("raise-hand-button").click();
 
         // The host's docked raised-hands panel appears (expanded) and lists Bob.
