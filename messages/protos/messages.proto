@@ -616,10 +616,11 @@ message QueryMessage {
     GetRecordingsQuery getRecordingsQuery = 17;
     DeleteRecordingQuery deleteRecordingQuery = 18;
     GetSignedUrlQuery getSignedUrlQuery = 19;
-    StartRecordingQuery startRecordingQuery = 21;
-    StopRecordingQuery stopRecordingQuery = 22;
     GetRecordingThumbnailsQuery getRecordingThumbnailsQuery = 23;
+    SpaceStateQueryFrontToPusher spaceStateQuery = 24;
   }
+  // 21 and 22 were startRecordingQuery / stopRecordingQuery: recording now goes through spaceStateQuery.
+  reserved 21, 22;
 }
 
 message GetSignedUrlQuery {
@@ -713,13 +714,6 @@ message DeleteRecordingQuery {
   string recordingId = 1;
 }
 
-message StartRecordingQuery {
-  string spaceName = 1;
-}
-
-message StopRecordingQuery {
-  string spaceName = 1;
-}
 
 message AnswerMessage {
   int32 id = 1;
@@ -744,10 +738,10 @@ message AnswerMessage {
     GetRecordingsAnswer getRecordingsAnswer = 19;
     DeleteRecordingAnswer deleteRecordingAnswer = 20;
     GetSignedUrlAnswer getSignedUrlAnswer = 21;
-    StartRecordingAnswer startRecordingAnswer = 22;
-    StopRecordingAnswer stopRecordingAnswer = 23;
     GetRecordingThumbnailsAnswer getRecordingThumbnailsAnswer = 24;
+    SpaceStateAnswer spaceStateAnswer = 25;
   }
+  reserved 22, 23;
 }
 
 
@@ -795,11 +789,6 @@ message RoomsFromSameWorldAnswer {
 message SendEventAnswer {
 }
 
-message StartRecordingAnswer {
-}
-
-message StopRecordingAnswer {
-}
 
 message SearchMemberAnswer {
   repeated Member members = 1;
@@ -901,9 +890,9 @@ message SpaceQueryMessage {
   oneof query {
     AddSpaceUserQuery addSpaceUserQuery = 5;
     RemoveSpaceUserQuery removeSpaceUserQuery = 6;
-    StartSpaceRecordingQuery startSpaceRecordingQuery = 7;
-    StopSpaceRecordingQuery stopSpaceRecordingQuery = 8;
+    SpaceStateQueryPusherToBack spaceStateQuery = 9;
   }
+  reserved 7, 8;
 }
 
 message AddSpaceUserQuery {
@@ -917,14 +906,99 @@ message RemoveSpaceUserQuery {
   string spaceUserId = 2;
 }
 
-message StartSpaceRecordingQuery {
-  string spaceName = 1;
-  string spaceUserId = 2;
+/*********** SPACE STATE *************/
+
+// The typed, server-owned state of a space (raised hands, floor holders, recording, proximity polls and Q&A).
+// Clients never write it: they send a SpaceStateQuery, the back applies it to its SpaceState and broadcasts the
+// change as a JSON Patch (SpaceStatePatchMessage). The shape of the state lives in @workadventure/shared-utils.
+message SpaceStateQuery {
+  oneof query {
+    RaiseHandQuery raiseHand = 1;
+    LowerHandQuery lowerHand = 2;
+    GiveFloorQuery giveFloor = 3;
+    RevokeFloorQuery revokeFloor = 4;
+    StartRecordingQuery startRecording = 5;
+    StopRecordingQuery stopRecording = 6;
+    CreatePollQuery createPoll = 7;
+    VotePollQuery votePoll = 8;
+    ClosePollQuery closePoll = 9;
+    DeletePollQuery deletePoll = 10;
+    AskQuestionQuery askQuestion = 11;
+    UpvoteQuestionQuery upvoteQuestion = 12;
+    AnswerQuestionQuery answerQuestion = 13;
+    DeleteQuestionQuery deleteQuestion = 14;
+  }
 }
 
-message StopSpaceRecordingQuery {
+// Raises or lowers the sender's own hand.
+message RaiseHandQuery {
+  bool raised = 1;
+}
+// Moderator only: lowers someone else's hand.
+message LowerHandQuery {
+  string targetSpaceUserId = 1;
+}
+// Moderator only: gives the floor to a user (lowers their hand at the same time).
+message GiveFloorQuery {
+  string targetSpaceUserId = 1;
+}
+// Moderator only: takes the floor back. A floor holder may also revoke their own floor.
+message RevokeFloorQuery {
+  string targetSpaceUserId = 1;
+}
+message StartRecordingQuery {
+}
+message StopRecordingQuery {
+}
+message CreatePollQuery {
+  string question = 1;
+  // "open" or "closed"
+  string kind = 2;
+  repeated string answers = 3;
+  int32 maxSelections = 4;
+}
+message VotePollQuery {
+  string pollId = 1;
+  repeated string answerIds = 2;
+}
+message ClosePollQuery {
+  string pollId = 1;
+  optional string closingMessage = 2;
+}
+message DeletePollQuery {
+  string pollId = 1;
+}
+message AskQuestionQuery {
+  string body = 1;
+}
+message UpvoteQuestionQuery {
+  string questionId = 1;
+  bool upvoted = 2;
+}
+message AnswerQuestionQuery {
+  string questionId = 1;
+}
+message DeleteQuestionQuery {
+  string questionId = 1;
+}
+
+message SpaceStateQueryFrontToPusher {
   string spaceName = 1;
-  string spaceUserId = 2;
+  SpaceStateQuery query = 2;
+}
+
+message SpaceStateQueryPusherToBack {
+  string spaceUserId = 1;
+  SpaceStateQuery query = 2;
+}
+
+message SpaceStateAnswer {
+}
+
+// A JSON Patch (RFC 6902, serialized as JSON) to apply to the SpaceState of the space.
+message SpaceStatePatchMessage {
+  string spaceName = 1;
+  string patch = 2;
 }
 
 /*********** PUSHER TO BACK ANSWER MESSAGES *************/
@@ -938,9 +1012,9 @@ message SpaceAnswerMessage {
     RemoveSpaceUserAnswer removeSpaceUserAnswer = 5;
     JoinSpaceAnswer joinSpaceAnswer = 6;
     LeaveSpaceAnswer leaveSpaceAnswer = 7;
-    StartSpaceRecordingAnswer startSpaceRecordingAnswer = 8;
-    StopSpaceRecordingAnswer stopSpaceRecordingAnswer = 9;
+    SpaceStateAnswer spaceStateAnswer = 10;
   }
+  reserved 8, 9;
 }
 
 message AddSpaceUserAnswer {
@@ -953,11 +1027,6 @@ message RemoveSpaceUserAnswer {
   string spaceUserId = 2;
 }
 
-message StartSpaceRecordingAnswer {
-}
-
-message StopSpaceRecordingAnswer {
-}
 
 enum RecordingWebhookPhase {
   RECORDING_WEBHOOK_PHASE_UNSPECIFIED = 0;
@@ -1030,6 +1099,7 @@ message SubMessage {
     InitSpaceUsersMessage initSpaceUsersMessage = 25;
     AreaPropertyVariableMessage areaPropertyVariableMessage = 26;
     DuplicateUserConnectedMessage duplicateUserConnectedMessage = 27;
+    SpaceStatePatchMessage spaceStatePatchMessage = 31;
   }
 }
 
@@ -1269,20 +1339,6 @@ message MuteVideoForEverybodyPublicMessage {
 message KickOffUserPrivateMessage {
 }
 
-// Sent within a megaphone space to give the floor to a user who raised their hand (promote them to speaker).
-// In an ALL_USERS (proximity) space it simply lowers the recipient's hand and notifies them it is their turn.
-message GiveFloorPrivateMessage {
-}
-
-// Sent within a megaphone space to take the floor back from a user (demote them from speaker).
-message RevokeFloorPrivateMessage {
-}
-
-// Sent to a user who raised their hand to lower it on their behalf: the queue is authoritative server-side and
-// only its owner may change their own entry, so a moderator clearing the list asks each user to lower their hand.
-message LowerHandPrivateMessage {
-}
-
 message RecordingUnexpectedlyStoppedPrivateMessage {
 }
 
@@ -1332,10 +1388,9 @@ message PrivateSpaceEvent {
     UnblockUserMessage unblockUserMessage = 21;
     MeetingConnectionRestartMessage meetingConnectionRestartMessage = 22;
     RecordingUnexpectedlyStoppedPrivateMessage recordingUnexpectedlyStoppedMessage = 23;
-    GiveFloorPrivateMessage giveFloor = 24;
-    RevokeFloorPrivateMessage revokeFloor = 25;
-    LowerHandPrivateMessage lowerHand = 26;
   }
+  // 24-26 were giveFloor / revokeFloor / lowerHand: they are now SpaceStateQuery cases.
+  reserved 24, 25, 26;
 }
 
 message CommunicationStrategyMessage {
@@ -1804,6 +1859,7 @@ message BackToPusherSpaceMessage{
     PrivateEventBackToPusher privateEvent = 14;
     SpaceAnswerMessage spaceAnswerMessage = 15;
     InitSpaceUsersMessage initSpaceUsersMessage = 16;
+    SpaceStatePatchMessage spaceStatePatchMessage = 17;
   }
 }
 
@@ -1850,7 +1906,7 @@ message SpaceUser{
   // Raised by a client whose video encoders could not keep up while it encoded for several P2P peers: the back moves
   // the space to LiveKit and keeps it there while such a user is present. Never lowered within a session.
   bool cpuLimited = 20;
-  // Raise-hand state is NOT stored per-user here: it lives in the space metadata key "raisedHands",
+  // Raise-hand state is NOT stored per-user here: it lives in the space state (SpaceStateQuery / SpaceStatePatchMessage),
   // which is broadcast to all members, including a megaphone speaker without seeAttendees.
 }
 
@@ -1885,6 +1941,9 @@ message InitSpaceUsersMessage{
   string spaceName = 1;
   repeated SpaceUser users = 2;
   string metadata = 3;
+  // Back to pusher only: the whole SpaceState, as JSON. Later changes arrive as SpaceStatePatchMessage. The pusher
+  // hands the state to a user who joins the space as a patch replacing the root.
+  string state = 4;
 }
 
 /**
