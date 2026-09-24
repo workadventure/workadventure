@@ -499,6 +499,17 @@ availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
 
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
 let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
+let previousComputedKeepAudioWarm = false;
+
+export interface MediaStreamConstraintsValue {
+    video: false | MediaTrackConstraints;
+    audio: false | MediaTrackConstraints;
+    /**
+     * True when the microphone is off only because the user muted it during a conversation: the audio track
+     * is then kept open (disabled) so that unmuting does not have to reopen the device.
+     */
+    keepAudioWarm: boolean;
+}
 
 /**
  * A store containing the media constraints we want to apply.
@@ -519,6 +530,9 @@ export const mediaStreamConstraintsStore = derived(
         availabilityStatusStore,
         batchGetUserMediaStore,
         inBackgroundSettingsStore,
+        currentPlayerGroupIdStore,
+        inLivekitStore,
+        isLiveStreamingStore,
     ],
     (
         [
@@ -536,6 +550,9 @@ export const mediaStreamConstraintsStore = derived(
             $availabilityStatusStore,
             $batchGetUserMediaStore,
             $inBackgroundSettingsStore,
+            $currentPlayerGroupIdStore,
+            $inLivekitStore,
+            $isLiveStreamingStore,
         ],
         set,
     ) => {
@@ -580,6 +597,19 @@ export const mediaStreamConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
+        // Unmuting must be instant during a conversation: reopening the microphone with getUserMedia takes
+        // 1 to 3 seconds (much more with Bluetooth headsets switching to their call profile).
+        // Only a mute by the user keeps the track open; every other reason really releases the device.
+        const isInConversation = $currentPlayerGroupIdStore !== undefined || $inLivekitStore || $isLiveStreamingStore;
+        const keepAudioWarm =
+            isInConversation &&
+            $requestedMicrophoneState === false &&
+            $myMicrophoneStore !== false &&
+            !isInExternalService &&
+            !shouldDisableMicrophoneForPrivacy &&
+            !isEnergySaving &&
+            !isUnavailableStatus;
+
         // Video constraints only apply when NOT in background settings (to allow camera preview)
         if (!$inBackgroundSettingsStore) {
             if (
@@ -596,10 +626,12 @@ export const mediaStreamConstraintsStore = derived(
         // Let's make the changes only if the new value is different from the old one.
         if (
             !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
-            !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
+            !deepEqual(previousComputedAudioConstraint, currentAudioConstraint) ||
+            previousComputedKeepAudioWarm !== keepAudioWarm
         ) {
             previousComputedVideoConstraint = currentVideoConstraint;
             previousComputedAudioConstraint = currentAudioConstraint;
+            previousComputedKeepAudioWarm = keepAudioWarm;
             // Let's copy the objects.
             if (typeof previousComputedVideoConstraint !== "boolean") {
                 previousComputedVideoConstraint = { ...previousComputedVideoConstraint };
@@ -611,21 +643,49 @@ export const mediaStreamConstraintsStore = derived(
             set({
                 video: currentVideoConstraint,
                 audio: currentAudioConstraint,
+                keepAudioWarm,
             });
         }
     },
     {
         video: false,
         audio: false,
-    } as {
-        video: false | MediaTrackConstraints;
-        audio: false | MediaTrackConstraints;
-    },
+        keepAudioWarm: false,
+    } as MediaStreamConstraintsValue,
 );
 
 export type { LocalStreamStoreValue } from "./LocalStreamTypes";
 
 let currentStream: MediaStream | undefined = undefined;
+/**
+ * The microphone track muted during a conversation, kept open but disabled (see keepAudioWarm).
+ * It is out of currentStream, so the rest of the application sees the microphone as off.
+ */
+let warmAudio: { track: MediaStreamTrack; constraints: MediaTrackConstraints } | undefined = undefined;
+
+function releaseWarmAudio(): void {
+    warmAudio?.track.stop();
+    warmAudio = undefined;
+}
+
+/**
+ * Returns the warm microphone track if it can serve the requested audio constraints, re-enabled.
+ */
+function takeWarmAudio(audioConstraints: false | MediaTrackConstraints): MediaStreamTrack | undefined {
+    if (
+        warmAudio === undefined ||
+        audioConstraints === false ||
+        warmAudio.track.readyState !== "live" ||
+        !deepEqual(warmAudio.constraints, audioConstraints)
+    ) {
+        return undefined;
+    }
+    const track = warmAudio.track;
+    warmAudio = undefined;
+    track.enabled = true;
+    return track;
+}
+
 let oldConstraints: { video: MediaTrackConstraints | false; audio: MediaTrackConstraints | false } = {
     video: false,
     audio: false,
@@ -724,7 +784,7 @@ function emitCurrentStreamOrError(setIfCurrent: SetRawStreamIfCurrent, error: un
 }
 
 async function runRawStreamUpdate(
-    constraints: { video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints },
+    constraints: MediaStreamConstraintsValue,
     setIfCurrent: SetRawStreamIfCurrent,
     generation: number,
 ): Promise<{ video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints }> {
@@ -769,17 +829,27 @@ async function runRawStreamUpdate(
         audio: constraints.audio ?? false,
     };
 
+    const warmAudioTrack = takeWarmAudio(constraints.audio);
+    // Keep the warm track only while the microphone stays muted in the conversation. Otherwise, release it
+    // before any getUserMedia call (see the Chromium issue below).
+    if (constraints.audio !== false || !constraints.keepAudioWarm) {
+        releaseWarmAudio();
+    }
+
     const hasLiveVideoTrack = currentStream ? hasLiveTrack(currentStream.getVideoTracks()) : false;
     const hasLiveAudioTrack = currentStream ? hasLiveTrack(currentStream.getAudioTracks()) : false;
     const mustRequestNewVideo =
         constraints.video !== false && (!deepEqual(oldConstraints.video, constraints.video) || !hasLiveVideoTrack);
     const mustRequestNewAudio =
-        constraints.audio !== false && (!deepEqual(oldConstraints.audio, constraints.audio) || !hasLiveAudioTrack);
+        constraints.audio !== false &&
+        warmAudioTrack === undefined &&
+        (!deepEqual(oldConstraints.audio, constraints.audio) || !hasLiveAudioTrack);
 
     if (currentStream) {
         const oldStream = currentStream;
         const mustStopVideo = oldConstraints.video !== false && constraints.video === false;
-        const mustStopAudio = oldConstraints.audio !== false && constraints.audio === false;
+        const oldAudioConstraints = oldConstraints.audio;
+        const mustStopAudio = oldAudioConstraints !== false && constraints.audio === false;
 
         if (mustStopVideo) {
             oldStream.getVideoTracks().forEach((t) => {
@@ -789,8 +859,14 @@ async function runRawStreamUpdate(
         }
         if (mustStopAudio) {
             oldStream.getAudioTracks().forEach((t) => {
-                t.stop();
                 oldStream.removeTrack(t);
+                if (constraints.keepAudioWarm && t.readyState === "live") {
+                    releaseWarmAudio();
+                    t.enabled = false;
+                    warmAudio = { track: t, constraints: oldAudioConstraints };
+                } else {
+                    t.stop();
+                }
             });
         }
         if (mustStopVideo || mustStopAudio) {
@@ -799,6 +875,17 @@ async function runRawStreamUpdate(
                 stream: oldStream,
             });
         }
+    }
+
+    if (warmAudioTrack) {
+        currentStream = new MediaStream([
+            ...(currentStream?.getVideoTracks().filter((track) => track.readyState !== "ended") ?? []),
+            warmAudioTrack,
+        ]);
+        setIfCurrent({
+            type: "success",
+            stream: currentStream,
+        });
     }
 
     if (mustRequestNewVideo || mustRequestNewAudio) {
