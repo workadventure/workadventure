@@ -208,6 +208,45 @@ https://{{ .Values.domainName }}/maps
 {{- end -}}
 {{- end }}
 
+{{- define "workadventure.excalidrawDomainName" -}}
+{{- coalesce .Values.excalidraw.ingress.domainName (printf "excalidraw%s%s" .Values.domainNamePrefix .Values.domainName) }}
+{{- end -}}
+{{- define "workadventure.excalidrawUrl" -}}
+{{- if .Values.singleDomain -}}
+/excalidraw/
+{{- else -}}
+{{- if .Values.excalidraw.ingress.domainName -}}
+{{ printf "https://%s" .Values.excalidraw.ingress.domainName }}
+{{- else -}}
+{{- printf "https://excalidraw%s%s" .Values.domainNamePrefix .Values.domainName }}
+{{- end }}
+{{- end -}}
+{{- end }}
+
+{{- define "workadventure.excalidrawStorageUrl" -}}
+{{- if .Values.singleDomain -}}
+/excalidraw-storage/
+{{- else -}}
+{{- if .Values.excalidraw.ingress.domainName -}}
+{{ printf "https://%s/excalidraw-storage/" .Values.excalidraw.ingress.domainName }}
+{{- else -}}
+{{- printf "https://excalidraw%s%s/excalidraw-storage/" .Values.domainNamePrefix .Values.domainName }}
+{{- end }}
+{{- end -}}
+{{- end }}
+
+{{- define "workadventure.excalidrawRoomUrl" -}}
+{{- if .Values.singleDomain -}}
+/excalidraw-room/
+{{- else -}}
+{{- if .Values.excalidraw.ingress.domainName -}}
+{{ printf "https://%s/excalidraw-room/" .Values.excalidraw.ingress.domainName }}
+{{- else -}}
+{{- printf "https://excalidraw%s%s/excalidraw-room/" .Values.domainNamePrefix .Values.domainName }}
+{{- end }}
+{{- end -}}
+{{- end }}
+
 {{- define "workadventure.isBooleanText" -}}
 {{- if or (or (or (eq . "false") (eq . "0")) (not .)) (eq . "FALSE") -}}{{- else -}}1{{- end -}}
 {{- end }}
