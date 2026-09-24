@@ -19,7 +19,7 @@ function getPlayerIdFromSpaceUserId(spaceUserId: string): number | undefined {
  * Readable map: spaceUserId → 1-based position in the raise-hand queue (ordered by the moment the hand was
  * raised, server-stamped). A participant is absent from the map when their hand is not raised.
  *
- * The queue comes from the space metadata (see PeerStore.raisedHandsStore), so it is consistent for every
+ * The queue comes from the space state (see PeerStore.raisedHandsStore), so it is consistent for every
  * participant — including a megaphone speaker who does not receive the listeners' SpaceUser.
  */
 export const raisedHandsOrderStore: Readable<Map<string, number>> = derived(raisedHandsStore, (queue) => {

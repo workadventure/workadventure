@@ -16,7 +16,7 @@ test.use({
 
 // These tests exercise the raise-hand feature in a LiveKit meeting area, one of the two zones that offer it
 // (the other being a megaphone audience, covered in raise-hand-megaphone.spec.ts). The raise-hand state
-// travels through the space metadata queue, so this also covers that pipeline end to end (badge ordering).
+// travels through the space state queue, so this also covers that pipeline end to end (badge ordering).
 //
 // In a meeting area, as in a proximity bubble, everybody already speaks: the raised hands are an ordered
 // queue every participant sees (badge on the tile + panel) with no "give the floor" control, whoever leads
