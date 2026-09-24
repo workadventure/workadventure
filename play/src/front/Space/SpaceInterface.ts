@@ -76,7 +76,6 @@ export interface SpaceInterface {
     getVideoPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined;
 
     getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
-    getSpaceUserByUserId(id: number): SpaceUserExtended | undefined;
     getSpaceUserByUuid(uuid: string): SpaceUserExtended | undefined;
     simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;

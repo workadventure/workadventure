@@ -34,12 +34,41 @@ const debug = Debug("space");
 
 type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
 
+/**
+ * How long the back keeps the place of users whose pusher went away without a goodbye (a play pod restarting or
+ * crashing). The same browser tab reconnecting through another pusher within that time takes its place back:
+ * nobody sees it leave, and the LiveKit room is not torn down under the others' feet.
+ * Matches the pusher's own retention of a dropped WebSocket (CLIENT_DISCONNECTION_RETENTION_MS).
+ */
+export const DETACHED_USER_GRACE_MS = 30_000;
+
+// A pusher registers every user with its media off: on a reattachment, these stay as they were until the front,
+// which kept its media, sends them again itself. Taking them from the new registration would flash "camera off" to
+// everyone for nothing.
+const MEDIA_STATE_FIELDS: ReadonlySet<string> = new Set([
+    "cameraState",
+    "microphoneState",
+    "screenSharingState",
+    "megaphoneState",
+    "attendeesState",
+    "cpuLimited",
+]);
+
 export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
     private communicationManager: ICommunicationManager;
     private usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>>;
+    // Holds, in users and usersToNotify, the users of a pusher that went away (see detachWatcher): still present for
+    // everyone, but reachable through no pusher. Writing to it goes nowhere.
+    private readonly detachedWatcher = {
+        id: "detached",
+        write: () => undefined,
+        error: () => undefined,
+        end: () => undefined,
+    } as unknown as SpacesWatcher;
+    private readonly detachTimers = new Map<string, NodeJS.Timeout>();
     // Number of users publishing at least one stream (camera, screen or microphone)
     private _nbPublishers = 0;
     // Number of users (number of users in this space)
@@ -65,6 +94,14 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser): void {
+        // The same tab reconnected through another pusher, after its old one went away (detached) or while it is still
+        // alive: move it over, or the old pusher removing it later would remove the user that just came back.
+        const previous = this.takeFromOtherWatcher(this.users, sourceWatcher, spaceUser.spaceUserId);
+        if (previous) {
+            this.reattachUser(sourceWatcher, previous, spaceUser);
+            this.settleReattachedUser(spaceUser.spaceUserId);
+            return;
+        }
         try {
             const usersList = this.usersList(sourceWatcher);
             usersList.set(spaceUser.spaceUserId, spaceUser);
@@ -408,9 +445,143 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         debug(`${this.name} => watcher removed ${watcher.id}`);
     }
 
+    /**
+     * The pusher behind this watcher is gone without saying goodbye. Unlike removeWatcher, its users keep their place
+     * for DETACHED_USER_GRACE_MS: the same tab reconnecting through another pusher gets it back (see addUser and
+     * addUserToNotify). Those who don't come back leave for good when it runs out, then onGraceOver is called so the
+     * space can be deleted if nobody is left.
+     */
+    public detachWatcher(watcher: SpacesWatcher, onGraceOver: () => void): void {
+        const spaceUsers = this.users.get(watcher) ?? new Map<string, SpaceUser>();
+        const spaceUsersToNotify = this.usersToNotify.get(watcher) ?? new Map<string, SpaceUser>();
+        this.users.delete(watcher);
+        this.usersToNotify.delete(watcher);
+
+        const detachedUsers = this.users.get(this.detachedWatcher) ?? new Map<string, SpaceUser>();
+        const detachedUsersToNotify = this.usersToNotify.get(this.detachedWatcher) ?? new Map<string, SpaceUser>();
+        spaceUsers.forEach((user, id) => detachedUsers.set(id, user));
+        spaceUsersToNotify.forEach((user, id) => detachedUsersToNotify.set(id, user));
+        this.users.set(this.detachedWatcher, detachedUsers);
+        this.usersToNotify.set(this.detachedWatcher, detachedUsersToNotify);
+
+        for (const spaceUserId of new Set([...spaceUsers.keys(), ...spaceUsersToNotify.keys()])) {
+            if (!this.detachTimers.has(spaceUserId)) {
+                this.detachTimers.set(
+                    spaceUserId,
+                    setTimeout(() => {
+                        this.expireDetachedUser(spaceUserId);
+                        onGraceOver();
+                    }, DETACHED_USER_GRACE_MS),
+                );
+            }
+        }
+        debug(`${this.name} => watcher detached ${watcher.id}, ${this.detachTimers.size} user(s) on hold`);
+    }
+
+    /**
+     * Puts a detached user back under a live watcher, silently: every watcher already knows it (it was added before,
+     * or listed in the initSpaceUsersMessage of watchers that came since). Only what changed with the new connection
+     * is sent, as an update.
+     */
+    private reattachUser(sourceWatcher: SpacesWatcher, previous: SpaceUser, spaceUser: SpaceUser): void {
+        this.usersList(sourceWatcher).set(previous.spaceUserId, previous);
+
+        const updateMask: string[] = [];
+        for (const key of Object.keys(spaceUser) as (keyof SpaceUser)[]) {
+            if (MEDIA_STATE_FIELDS.has(key) || JSON.stringify(previous[key]) === JSON.stringify(spaceUser[key])) {
+                continue;
+            }
+            if (Array.isArray(spaceUser[key])) {
+                // updateUser deep-merges, which would concatenate arrays: replace them in place instead.
+                Object.assign(previous, { [key]: spaceUser[key] });
+                continue;
+            }
+            updateMask.push(key);
+        }
+
+        if (updateMask.length > 0) {
+            this.updateUser(sourceWatcher, spaceUser, updateMask);
+        }
+        debug(`${this.name} : user => reattached ${spaceUser.spaceUserId}`);
+    }
+
+    private takeFromOtherWatcher(
+        lists: Map<SpacesWatcher, Map<string, SpaceUser>>,
+        sourceWatcher: SpacesWatcher,
+        spaceUserId: string,
+    ): SpaceUser | undefined {
+        for (const [watcher, list] of lists) {
+            if (watcher === sourceWatcher) {
+                continue;
+            }
+            const user = list.get(spaceUserId);
+            if (user) {
+                list.delete(spaceUserId);
+                return user;
+            }
+        }
+        return undefined;
+    }
+
+    private isOnHold(spaceUserId: string): boolean {
+        return (
+            !!this.users.get(this.detachedWatcher)?.has(spaceUserId) ||
+            !!this.usersToNotify.get(this.detachedWatcher)?.has(spaceUserId)
+        );
+    }
+
+    private dropDetachedWatcherIfEmpty(): void {
+        if (!this.users.get(this.detachedWatcher)?.size && !this.usersToNotify.get(this.detachedWatcher)?.size) {
+            this.users.delete(this.detachedWatcher);
+            this.usersToNotify.delete(this.detachedWatcher);
+        }
+    }
+
+    /**
+     * A user moved over to a live watcher. Once every part of it is back (a detached user comes back as a user and a
+     * user to notify), its front, which lost its media when its pusher went away, is told to signal them anew.
+     */
+    private settleReattachedUser(spaceUserId: string): void {
+        const timer = this.detachTimers.get(spaceUserId);
+        if (timer) {
+            if (this.isOnHold(spaceUserId)) {
+                return;
+            }
+            clearTimeout(timer);
+            this.detachTimers.delete(spaceUserId);
+            this.dropDetachedWatcherIfEmpty();
+        }
+        const user = this.getUser(spaceUserId) ?? this.getUsersToNotify().find((u) => u.spaceUserId === spaceUserId);
+        if (user) {
+            this.communicationManager.handleUserReconnected(user);
+        }
+    }
+
+    // The grace period ran out: the user leaves, as if its pusher had said goodbye.
+    private expireDetachedUser(spaceUserId: string): void {
+        this.detachTimers.delete(spaceUserId);
+        const userToNotify = this.usersToNotify.get(this.detachedWatcher)?.get(spaceUserId);
+        if (userToNotify) {
+            this.deleteUserToNotify(this.detachedWatcher, userToNotify);
+        }
+        if (this.users.get(this.detachedWatcher)?.has(spaceUserId)) {
+            this.removeUser(this.detachedWatcher, spaceUserId);
+        }
+        this.dropDetachedWatcherIfEmpty();
+        debug(`${this.name} : detached user => expired ${spaceUserId}`);
+    }
+
     public addUserToNotify(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersListToNotify(sourceWatcher);
         usersList.set(spaceUser.spaceUserId, spaceUser);
+
+        // Moved over (see addUser): the communication manager never saw this user leave
+        if (this.takeFromOtherWatcher(this.usersToNotify, sourceWatcher, spaceUser.spaceUserId)) {
+            if (this.detachTimers.has(spaceUser.spaceUserId)) {
+                this.settleReattachedUser(spaceUser.spaceUserId);
+            }
+            return;
+        }
 
         this.communicationManager.handleUserToNotifyAdded(spaceUser).catch((e) => {
             Sentry.captureException(e);
@@ -798,6 +969,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     public destroy() {
+        this.detachTimers.forEach((timer) => clearTimeout(timer));
+        this.detachTimers.clear();
         // The manager closes the session it owns.
         this.communicationManager.destroy();
         debug(`${this.name} => destroyed`);

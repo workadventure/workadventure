@@ -48,6 +48,7 @@ describe("CommunicationManager", () => {
             handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
             handleMeetingConnectionRestartMessage: vi.fn().mockResolvedValue(undefined),
+            handleUserReconnected: vi.fn(),
         };
         return {
             communicationType: type,
@@ -60,6 +61,7 @@ describe("CommunicationManager", () => {
             handleUserToNotifyAdded: mocks.handleUserToNotifyAdded,
             handleUserToNotifyDeleted: mocks.handleUserToNotifyDeleted,
             handleMeetingConnectionRestartMessage: mocks.handleMeetingConnectionRestartMessage,
+            handleUserReconnected: mocks.handleUserReconnected,
             mocks,
         };
     };
@@ -162,12 +164,14 @@ describe("CommunicationManager", () => {
         const mocks = {
             getCurrentState: vi.fn().mockReturnValue(initialState),
             transitionTo: vi.fn().mockResolvedValue(undefined),
+            replaceInitialState: vi.fn().mockResolvedValue(undefined),
             dispatchSwitchEvent: vi.fn(),
             dispose: vi.fn(),
         };
         return {
             getCurrentState: mocks.getCurrentState,
             transitionTo: mocks.transitionTo,
+            replaceInitialState: mocks.replaceInitialState,
             dispatchSwitchEvent: mocks.dispatchSwitchEvent,
             dispose: mocks.dispose,
             mocks,
@@ -242,6 +246,88 @@ describe("CommunicationManager", () => {
                 expect.any(Map),
                 expect.any(Map),
             );
+        });
+    });
+
+    describe("resuming a LiveKit room still running after a back restart", () => {
+        it("starts in the running LiveKit room instead of WebRTC, before handling the first user", async () => {
+            const space = createSpace();
+            const lifecycleManager = createLifecycleManager(createState(CommunicationType.WEBRTC));
+            const runningState = createState(CommunicationType.LIVEKIT);
+            const findRunningLivekitState = vi.fn().mockResolvedValue(runningState);
+            const manager = new CommunicationManager(space, {
+                lifecycleManager,
+                policy: createPolicy(false),
+                findRunningLivekitState,
+            });
+
+            await manager.handleUserAdded(createSpaceUser("user_1"));
+            await manager.handleUserAdded(createSpaceUser("user_2"));
+
+            expect(findRunningLivekitState).toHaveBeenCalledTimes(1);
+            expect(lifecycleManager.mocks.replaceInitialState).toHaveBeenCalledWith(runningState);
+            expect(lifecycleManager.mocks.transitionTo).not.toHaveBeenCalled();
+        });
+
+        it("handles a join and a watch that arrive during the check one after the other", async () => {
+            const space = createSpace();
+            const userRegistry = new UserRegistry();
+            const state = createState(CommunicationType.WEBRTC);
+            // What the real state decides on: whether the user is told the strategy depends on the other registry
+            const seenByJoin: boolean[] = [];
+            state.mocks.handleUserAdded.mockImplementation((user: SpaceUser) => {
+                seenByJoin.push(userRegistry.hasUserToNotify(user.spaceUserId));
+                return Promise.resolve();
+            });
+            let resolveCheck!: (state: undefined) => void;
+            const manager = new CommunicationManager(space, {
+                userRegistry,
+                lifecycleManager: createLifecycleManager(state),
+                policy: createPolicy(false),
+                findRunningLivekitState: () =>
+                    new Promise((resolve) => {
+                        resolveCheck = resolve;
+                    }),
+            });
+
+            const user = createSpaceUser("user_1");
+            const join = manager.handleUserAdded(user);
+            const watch = manager.handleUserToNotifyAdded(user);
+            resolveCheck(undefined);
+            await Promise.all([join, watch]);
+
+            // The join was handled completely before the watch registered the user
+            expect(seenByJoin).toEqual([false]);
+            expect(state.mocks.handleUserToNotifyAdded).toHaveBeenCalledTimes(1);
+        });
+
+        it("keeps WebRTC when no LiveKit room is running", async () => {
+            const space = createSpace();
+            const lifecycleManager = createLifecycleManager(createState(CommunicationType.WEBRTC));
+            const manager = new CommunicationManager(space, {
+                lifecycleManager,
+                policy: createPolicy(false),
+                findRunningLivekitState: vi.fn().mockResolvedValue(undefined),
+            });
+
+            await manager.handleUserAdded(createSpaceUser("user_1"));
+
+            expect(lifecycleManager.mocks.replaceInitialState).not.toHaveBeenCalled();
+        });
+
+        it("does not look for one in a space that does not start in WebRTC", async () => {
+            const space = createSpace();
+            const lifecycleManager = createLifecycleManager(createState(CommunicationType.NONE));
+            const findRunningLivekitState = vi.fn();
+            const manager = new CommunicationManager(space, {
+                lifecycleManager,
+                policy: createPolicy(false),
+                findRunningLivekitState,
+            });
+
+            await manager.handleUserAdded(createSpaceUser("user_1"));
+
+            expect(findRunningLivekitState).not.toHaveBeenCalled();
         });
     });
 

@@ -46,11 +46,14 @@ import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
-import { lookupUserById } from "./Utils/UserLookup";
 import { recordingSchema, spaceMetadataValidator } from "./SpaceMetadataValidator";
 import { VideoBox } from "./VideoBox";
 import { LOCAL_SCREEN_SHARING_STREAM_ID } from "./Streamable";
 import type { Streamable } from "./Streamable";
+
+// How long, after joining a space again through a new server connection, a user the server does not list again may
+// still come back (the back's own grace period, DETACHED_USER_GRACE_MS)
+const UNCONFIRMED_USERS_GRACE_MS = 30_000;
 
 export class Space implements SpaceInterface {
     private readonly name: string;
@@ -120,6 +123,11 @@ export class Space implements SpaceInterface {
 
     private _isDestroyed = false;
     private initPromise: Deferred<void> | undefined;
+    // After this space was joined again through a new server connection (see rejoinThrough): the users the server has
+    // not confirmed yet. A restarted back lists them as they come back, one by one: dropping one right away would
+    // unmount its video tile, which pauses its P2P video for good (see RemotePeer.viewerDisplay).
+    private unconfirmedUsers: Set<string> | undefined;
+    private unconfirmedUsersTimeout: ReturnType<typeof setTimeout> | undefined;
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -570,23 +578,16 @@ export class Space implements SpaceInterface {
      */
     async destroy() {
         this._isDestroyed = true;
+        clearTimeout(this.unconfirmedUsersTimeout);
 
         this.retryAbortController?.abort();
         if (this.retryTimeout) {
             clearTimeout(this.retryTimeout);
         }
 
-        try {
-            await this.userLeaveSpace();
-        } catch (e) {
-            if (e instanceof ConnectionClosedError) {
-                // It is not uncommon to try to leave a space after the connection is closed.
-                // In that case, we just skip logging the error.
-            } else {
-                console.error("Error while leaving space", e);
-                Sentry.captureException(e);
-            }
-        }
+        // Told to the server first, but the media below are closed without waiting for its answer: it may be
+        // unreachable for a while (the socket resuming after a network loss)
+        const leaving = this.userLeaveSpace();
 
         for (const subscription of Object.values(this.publicEventsObservables)) {
             subscription.complete();
@@ -623,6 +624,18 @@ export class Space implements SpaceInterface {
 
         if (this._registerRefCount > 0) {
             this.unregisterSpaceFilter();
+        }
+
+        try {
+            await leaving;
+        } catch (e) {
+            if (e instanceof ConnectionClosedError) {
+                // It is not uncommon to try to leave a space after the connection is closed.
+                // In that case, we just skip logging the error.
+            } else {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            }
         }
 
         this.isDestroyed = true;
@@ -683,6 +696,9 @@ export class Space implements SpaceInterface {
         }
     }
     initUsers(users: SpaceUser[]): void {
+        for (const user of users) {
+            this.unconfirmedUsers?.delete(user.spaceUserId);
+        }
         for (const user of users) {
             const extendSpaceUser = this.extendSpaceUser(user);
             if (!this._users.has(user.spaceUserId)) {
@@ -751,6 +767,7 @@ export class Space implements SpaceInterface {
     }
 
     addUser(user: SpaceUser): SpaceUserExtended {
+        this.unconfirmedUsers?.delete(user.spaceUserId);
         const extendSpaceUser = this.extendSpaceUser(user);
 
         if (!this._users.has(user.spaceUserId)) {
@@ -809,6 +826,7 @@ export class Space implements SpaceInterface {
 
     updateUserData(newData: SpaceUser, updateMask: string[]): void {
         if (!newData.spaceUserId && newData.spaceUserId !== "") return;
+        this.unconfirmedUsers?.delete(newData.spaceUserId);
 
         const userToUpdate = this._users.get(newData.spaceUserId);
 
@@ -998,10 +1016,6 @@ export class Space implements SpaceInterface {
                 return this.mySpaceUserId !== user.spaceUserId;
             })
             .find((user) => user.uuid === uuid);
-    }
-
-    public getSpaceUserByUserId(id: number): SpaceUserExtended | undefined {
-        return lookupUserById(id, this);
     }
 
     public getScreenSharingPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined {
@@ -1257,6 +1271,26 @@ export class Space implements SpaceInterface {
      * When called: we mimic a full user removal and we clear all the data related to the space.
      * Then, we retry to join the space.
      */
+    /**
+     * The server connection this space was joined through is gone (a play or back restart) but its media went on:
+     * join it again through the new connection without tearing anything down. The back gives us our place back, and
+     * our peers keep their connections to us (see SimplePeer.createPeerConnection and LivekitConnection).
+     */
+    public rejoinThrough(connection: RoomConnectionForSpacesInterface): void {
+        this._connection = connection;
+        // Whoever left meanwhile was never announced to us: drop the users the server has not confirmed in time
+        this.unconfirmedUsers = new Set(Array.from(this._users.keys()).filter((id) => id !== this._mySpaceUserId));
+        clearTimeout(this.unconfirmedUsersTimeout);
+        this.unconfirmedUsersTimeout = setTimeout(() => {
+            const unconfirmed = this.unconfirmedUsers ?? new Set<string>();
+            this.unconfirmedUsers = undefined;
+            for (const spaceUserId of unconfirmed) {
+                this.removeUser(spaceUserId);
+            }
+        }, UNCONFIRMED_USERS_GRACE_MS);
+        this.reconnect(() => this._peerManager.resendMediaState());
+    }
+
     public onDisconnect() {
         // Mimic a full user removal
         const users = Array.from(this._users.values());
@@ -1274,7 +1308,7 @@ export class Space implements SpaceInterface {
     private retryAbortController: AbortController | undefined = undefined;
     private retryTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
-    private reconnect() {
+    private reconnect(onRejoined?: () => void) {
         if (this.retryAbortController) {
             // Let's cancel the previous reconnection before retrying
             this.retryAbortController.abort(new AbortError());
@@ -1316,13 +1350,14 @@ export class Space implements SpaceInterface {
                     },
                 });
             }
+            onRejoined?.();
         })().catch((e) => {
             if (e instanceof AbortError && !(e instanceof TimeoutError)) {
                 // Retry was aborted, do nothing
                 return;
             }
             this.retryTimeout = setTimeout(() => {
-                this.reconnect();
+                this.reconnect(onRejoined);
             }, 5000);
         });
     }

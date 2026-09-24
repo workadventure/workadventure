@@ -62,6 +62,7 @@ import { AreaPropertyVariablesManager } from "../Services/AreaPropertyVariablesM
 import { AreaZoneTracker } from "./AreaZoneTracker";
 import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
+import { canResumeBubbleAfterRestart, type BubbleResumeValidator } from "./Services/BubbleResume";
 import { PositionNotifier } from "./PositionNotifier";
 import { WamManager } from "./Services/WamManager";
 import type { UserSocket } from "./User";
@@ -85,6 +86,10 @@ export class GameRoom implements BrothersFinder {
     // Users indexed by composite key (userUuid + tabId), used to detect reconnections from the same tab
     // and immediately kill stale connections instead of waiting for ping timeout
     private readonly usersByTabKey = new Map<string, User>();
+    // Grace timers of detached users (see detach())
+    private readonly detachTimers = new Map<User, NodeJS.Timeout>();
+    // Replaced in tests
+    public bubbleResumeValidator: BubbleResumeValidator = canResumeBubbleAfterRestart;
     private readonly groups: SpatialMap<number, Group>;
     private readonly admins = new Set<Admin>();
 
@@ -282,6 +287,7 @@ export class GameRoom implements BrothersFinder {
         // Check if there's a stale connection from the same browser tab and kill it immediately
         // This prevents "ghost" users appearing when a user reconnects after a network disruption
         const tabId = joinRoomMessage.tabId;
+        let inheritedGroup: Group | undefined;
         if (tabId) {
             const tabKey = `${joinRoomMessage.userUuid}_${tabId}`;
             const existingUser = this.usersByTabKey.get(tabKey);
@@ -289,6 +295,10 @@ export class GameRoom implements BrothersFinder {
                 console.info(
                     `Detected reconnection from same tab for user ${joinRoomMessage.userUuid}. Killing stale connection.`,
                 );
+                // The new connection takes over the stale one's bubble instead of breaking it up: the bubble keeps its
+                // space, so the conversation (and its LiveKit room) goes on.
+                inheritedGroup = existingUser.group;
+                inheritedGroup?.handOver(existingUser);
                 // Remove the stale user from the room
                 this.leave(existingUser);
                 endUserConnectionWithReason(
@@ -297,6 +307,8 @@ export class GameRoom implements BrothersFinder {
                 );
             }
         }
+
+        const bubbleSpaceNameHint = await this.checkBubbleSpaceNameHint(joinRoomMessage);
 
         // Same-tab reconnections should not be reported as duplicate sessions.
         const sameUserAlreadyConnected = (this.getUsersByUuid(joinRoomMessage.userUuid)?.size ?? 0) >= 1;
@@ -329,6 +341,7 @@ export class GameRoom implements BrothersFinder {
             tabId,
         );
 
+        user.bubbleSpaceNameHint = bubbleSpaceNameHint;
         this.users.set(user.id, user);
         let set = this.usersByUuid.get(user.uuid);
         if (set === undefined) {
@@ -343,6 +356,9 @@ export class GameRoom implements BrothersFinder {
             this.usersByTabKey.set(tabKey, user);
         }
 
+        if (inheritedGroup && inheritedGroup.getSize > 0 && !user.silent) {
+            inheritedGroup.join(user);
+        }
         this.updateUserGroup(user);
 
         // Notify admins
@@ -361,7 +377,63 @@ export class GameRoom implements BrothersFinder {
         return user;
     }
 
+    /**
+     * A user reconnecting after a back restart names the bubble it was in (see JoinRoomMessage): keep that name only
+     * if it is one of this room's bubbles, no current bubble uses it, and the user is allowed to bring it back.
+     */
+    private async checkBubbleSpaceNameHint(joinRoomMessage: JoinRoomMessage): Promise<string | undefined> {
+        const spaceName = joinRoomMessage.previousBubbleSpaceName;
+        if (!spaceName || !spaceName.startsWith(`${this._roomUrl}#`) || this.isBubbleSpaceNameInUse(spaceName)) {
+            return undefined;
+        }
+        try {
+            const allowed = await this.bubbleResumeValidator({
+                spaceName,
+                world: joinRoomMessage.world,
+                spaceUserId: joinRoomMessage.spaceUserId,
+                playUri: this._roomUrl,
+            });
+            return allowed ? spaceName : undefined;
+        } catch (e) {
+            console.error("Error while checking the bubble a reconnecting user was in", e);
+            Sentry.captureException(e);
+            return undefined;
+        }
+    }
+
+    private isBubbleSpaceNameInUse(spaceName: string): boolean {
+        for (const group of this.groups.values()) {
+            if (group.spaceName === spaceName) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The user's pusher went away without a goodbye: keep its place (position, bubble) for graceMs, in case the same
+     * tab reconnects (see the tab-key handling in join()). onGraceOver is called if it does not.
+     */
+    public detach(user: User, graceMs: number, onGraceOver: () => void): void {
+        if (user.disconnected || user.detached) {
+            return;
+        }
+        user.detached = true;
+        this.detachTimers.set(
+            user,
+            setTimeout(() => {
+                this.detachTimers.delete(user);
+                onGraceOver();
+            }, graceMs),
+        );
+    }
+
     public leave(user: User) {
+        const detachTimer = this.detachTimers.get(user);
+        if (detachTimer) {
+            clearTimeout(detachTimer);
+            this.detachTimers.delete(user);
+        }
         if (user.disconnected === true) {
             console.warn("User ", user.id, "already disconnected!");
             return;
@@ -460,6 +532,15 @@ export class GameRoom implements BrothersFinder {
                     closestItem.setOutOfBounds(false);
                 } else {
                     const closestUser: User = closestItem;
+                    // Two members of a bubble the back lost when it restarted re-form it: give it its former space,
+                    // so the conversation goes on in the same LiveKit room.
+                    const hint = user.bubbleSpaceNameHint;
+                    const resumedSpaceName =
+                        hint !== undefined &&
+                        hint === closestUser.bubbleSpaceNameHint &&
+                        !this.isBubbleSpaceNameInUse(hint)
+                            ? hint
+                            : undefined;
                     const group: Group = new Group(
                         this._roomUrl,
                         [user, closestUser],
@@ -467,6 +548,7 @@ export class GameRoom implements BrothersFinder {
                         this.connectCallback,
                         this.disconnectCallback,
                         this.positionNotifier,
+                        resumedSpaceName,
                     );
                     this.groups.set(group.getId(), group);
                 }
@@ -618,7 +700,7 @@ export class GameRoom implements BrothersFinder {
             if (currentUser === user) {
                 continue;
             }
-            if (currentUser.silent) {
+            if (currentUser.silent || currentUser.detached) {
                 continue;
             }
 

@@ -286,6 +286,7 @@ describe("", () => {
             showVoiceIndicator: false,
             attendeesState: false,
             cpuLimited: false,
+            roomUserId: 0,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -343,6 +344,7 @@ describe("", () => {
             showVoiceIndicator: false,
             attendeesState: false,
             cpuLimited: false,
+            roomUserId: 0,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -395,6 +397,7 @@ describe("", () => {
             showVoiceIndicator: false,
             attendeesState: false,
             cpuLimited: false,
+            roomUserId: 0,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -541,6 +544,7 @@ describe("", () => {
                 jitsiParticipantId: undefined,
                 attendeesState: false,
                 cpuLimited: false,
+                roomUserId: 0,
             },
             $case: "muteVideo",
             muteVideo: {

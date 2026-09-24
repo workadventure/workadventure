@@ -8,6 +8,7 @@ import type { SpaceUserExtended } from "./SpaceInterface";
 
 export const localSpaceUser = (name?: string): SpaceUserExtended => {
     return {
+        roomUserId: 0,
         isLogged: localUserStore.isLogged(),
         availabilityStatus: get(availabilityStatusStore),
         roomName: undefined,
@@ -29,14 +30,14 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
         attendeesState: false,
         cpuLimited: false,
         pictureStore: readable<string | undefined>(undefined, (set) => {
-            const unsubscribe = gameManager
-                .getCurrentGameScene()
-                .CurrentPlayer.pictureStore.subscribe((pictureStore) => {
-                    set(pictureStore);
-                });
-            return () => {
-                unsubscribe();
-            };
+            // No player while the game reconnects to the server: the tile shows no Woka meanwhile
+            let player: ReturnType<typeof gameManager.getCurrentGameScene>["CurrentPlayer"] | undefined;
+            try {
+                player = gameManager.getCurrentGameScene().CurrentPlayer;
+            } catch {
+                // No current scene
+            }
+            return player?.pictureStore.subscribe(set) ?? (() => {});
         }),
         emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
             throw new Error("should not be called");
@@ -52,6 +53,7 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
         },
         reactiveUser: {
             spaceUserId: "",
+            roomUserId: writable(0),
             playUri: "",
             roomName: "",
             name: writable(localUserStore.getName() ?? ""),

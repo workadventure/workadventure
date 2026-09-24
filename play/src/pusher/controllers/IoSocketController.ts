@@ -282,6 +282,7 @@ export class IoSocketController {
                 microphoneState: z.string().transform((val) => val === "true"),
                 tabId: z.string().min(1),
                 connectionId: z.string().optional(),
+                previousBubbleSpaceName: z.string().max(512).optional(),
             }),
             upgrade: async ({ query, request, isAborted, upgrade, reject }) => {
                 debug(
@@ -479,6 +480,7 @@ export class IoSocketController {
                         lastActivityAtMs: Date.now(),
                         tabId: query.tabId,
                         connectionId: query.connectionId,
+                        previousBubbleSpaceName: query.previousBubbleSpaceName,
                         attendeesState: false,
                         analyticsEventsEnabled: userData.analyticsEventsEnabled ?? true,
                         queryAbortControllers: new Map<number, AbortController>(),

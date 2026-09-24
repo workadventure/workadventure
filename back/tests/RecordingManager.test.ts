@@ -39,6 +39,7 @@ function createRecordableState() {
         handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
         handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
         handleMeetingConnectionRestartMessage: vi.fn(),
+        handleUserReconnected: vi.fn(),
         handleStartRecording: mocks.handleStartRecording,
         handleStopRecording: mocks.handleStopRecording,
         handleLivekitWebhook: mocks.handleLivekitWebhook,
@@ -89,6 +90,7 @@ function createDependencies(state: IRecordableState<IRecordableStrategy>) {
     const lifecycleManager: IStateLifecycleManager = {
         getCurrentState: vi.fn().mockReturnValue(state),
         transitionTo: vi.fn().mockResolvedValue(undefined),
+        replaceInitialState: vi.fn().mockResolvedValue(undefined),
         dispatchSwitchEvent: vi.fn(),
         dispose: vi.fn(),
     };

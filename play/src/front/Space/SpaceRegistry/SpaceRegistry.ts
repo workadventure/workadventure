@@ -41,6 +41,15 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitVideoQualityReport"
 >;
 
+// How long a space kept across a reconnection to the server waits for the new GameScene to join it again. Past that,
+// the user is no longer in it (they walked out of the meeting room during the outage, say) and its media are closed.
+// Matches the back's own grace period (DETACHED_USER_GRACE_MS).
+const ORPHAN_GRACE_MS = 30_000;
+// How long the conversations go on once the connection to the server is lost. Nobody can join, be kicked or leave them
+// through the server meanwhile: if it is not back by then, they are hung up. Long enough for a back to restart (it
+// takes the conversations back for as long, see BACK_RESTART_WINDOW_MS in the back).
+const SERVER_LOST_GRACE_MS = 120_000;
+
 /**
  * This class is in charge of creating, joining, leaving and deleting Spaces.
  * It acts both as a factory and a registry.
@@ -50,14 +59,15 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     public readonly spacesEligibleForRecording: Readable<Space[]>;
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private joiningSpacesPromises: Map<string, Promise<Space>> = new Map<string, Promise<Space>>();
-    private initSpaceUsersMessageStreamSubscription: Subscription;
-    private addSpaceUserMessageStreamSubscription: Subscription;
-    private updateSpaceUserMessageStreamSubscription: Subscription;
-    private removeSpaceUserMessageStreamSubscription: Subscription;
-    private updateSpaceMetadataMessageStreamSubscription: Subscription;
-    private proximityPublicMessageEventSubscription: Subscription;
-    private proximityPrivateMessageEventSubscription: Subscription;
-    private spaceDestroyedMessageSubscription: Subscription;
+    private connectionSubscriptions: Subscription[] = [];
+    // Set between suspend() and resume(): the server connection is gone, the spaces and their media are kept.
+    private suspended = false;
+    // Spaces kept across a reconnection to the server, that the new GameScene has not joined again yet (see resume).
+    private orphans = new Map<string, ReturnType<typeof setTimeout>>();
+    // Set while the connection to the server is lost (see setServerLost)
+    private hangUpTimeout: ReturnType<typeof setTimeout> | undefined;
+    // Spaces hung up by setServerLost(), that the scene may still try to leave
+    private hungUpSpaces = new WeakSet<SpaceInterface>();
 
     public readonly videoStreamStore: Readable<Map<string, VideoBox>> = derived(this.spaces, ($spaces, set) => {
         if ($spaces.size === 0) {
@@ -147,25 +157,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream,
     ) {
-        this.initSpaceUsersMessageStreamSubscription = roomConnection.initSpaceUsersMessageStream.subscribe(
-            (message) => {
-                if (!message.users) {
-                    console.error(message);
-                    throw new Error("initSpaceUsersMessage is missing users");
-                }
-
-                const space = this.spaces.get(message.spaceName);
-
-                if (!space) {
-                    console.error("Space does not exist", message.spaceName);
-                    return;
-                }
-
-                space.initUsers(message.users);
-                space.initMetadata(message.metadata);
-            },
-        );
-
         this.spacesEligibleForRecording = derived(this.spaces, ($spaces, set) => {
             const spaces = Array.from($spaces.values());
 
@@ -180,37 +171,131 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             ).subscribe(set);
         });
 
-        this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
-            if (!message.user) {
-                console.error(message);
-                throw new Error("addSpaceUserMessage is missing a user");
+        this.subscribeTo(roomConnection);
+    }
+
+    /**
+     * The server connection is gone (a play or back restart) and the GameScene is about to be rebuilt: keep the
+     * spaces and their media instead of destroying them, and hand this registry to the next scene (see resume). While
+     * suspended, leaving a space keeps it: the scene being torn down leaves everything, the next one joins back
+     * whatever it is still in.
+     */
+    public suspend(): void {
+        this.suspended = true;
+        this.unsubscribeFromConnection();
+    }
+
+    /**
+     * Called by the next GameScene with its new connection. Every space kept is an orphan until the scene joins it
+     * again (joinSpace adopts it, without tearing its media down); one that nobody joins again within
+     * ORPHAN_GRACE_MS is left for good.
+     */
+    public resume(connection: RoomConnectionForSpacesInterface): void {
+        this.setServerLost(false);
+        this.suspended = false;
+        this.roomConnection = connection;
+        this.subscribeTo(connection);
+        for (const space of this.spaces.values()) {
+            space.rejoinThrough(connection);
+            this.orphans.set(
+                space.getName(),
+                setTimeout(() => {
+                    this.orphans.delete(space.getName());
+                    this.leaveSpace(space).catch((e) => {
+                        console.error("Error while leaving a space nobody joined again", e);
+                        Sentry.captureException(e);
+                    });
+                }, ORPHAN_GRACE_MS),
+            );
+        }
+    }
+
+    /**
+     * Whether the connection to the server is lost. The conversations go on without it, but not for ever: past
+     * SERVER_LOST_GRACE_MS without it coming back, every space is left, and its media closed.
+     */
+    public setServerLost(lost: boolean): void {
+        if (!lost) {
+            clearTimeout(this.hangUpTimeout);
+            this.hangUpTimeout = undefined;
+            return;
+        }
+        this.hangUpTimeout ??= setTimeout(() => {
+            this.hangUpTimeout = undefined;
+            for (const timeout of this.orphans.values()) {
+                clearTimeout(timeout);
             }
+            this.orphans.clear();
+            for (const space of this.spaces.values()) {
+                this.hungUpSpaces.add(space);
+                this.performLeaveSpace(space, space.getName()).catch((e) => {
+                    console.error("Error while hanging up a space after the server was lost", e);
+                    Sentry.captureException(e);
+                });
+            }
+        }, SERVER_LOST_GRACE_MS);
+    }
 
-            this.spaces.get(message.spaceName)?.addUser(message.user);
-        });
+    private unsubscribeFromConnection(): void {
+        for (const subscription of this.connectionSubscriptions) {
+            subscription.unsubscribe();
+        }
+        this.connectionSubscriptions = [];
+    }
 
-        this.updateSpaceUserMessageStreamSubscription = roomConnection.updateSpaceUserMessageStream.subscribe(
-            (message) => {
+    private subscribeTo(connection: RoomConnectionForSpacesInterface): void {
+        this.connectionSubscriptions.push(
+            connection.initSpaceUsersMessageStream.subscribe((message) => {
+                if (!message.users) {
+                    console.error(message);
+                    throw new Error("initSpaceUsersMessage is missing users");
+                }
+
+                const space = this.spaces.get(message.spaceName);
+
+                if (!space) {
+                    console.error("Space does not exist", message.spaceName);
+                    return;
+                }
+
+                space.initUsers(message.users);
+                space.initMetadata(message.metadata);
+            }),
+        );
+
+        this.connectionSubscriptions.push(
+            connection.addSpaceUserMessageStream.subscribe((message) => {
+                if (!message.user) {
+                    console.error(message);
+                    throw new Error("addSpaceUserMessage is missing a user");
+                }
+
+                this.spaces.get(message.spaceName)?.addUser(message.user);
+            }),
+        );
+
+        this.connectionSubscriptions.push(
+            connection.updateSpaceUserMessageStream.subscribe((message) => {
                 if (!message.user || !message.updateMask) {
                     throw new Error("updateSpaceUserMessage is missing a user or an updateMask");
                 }
 
                 this.spaces.get(message.spaceName)?.updateUserData(message.user, message.updateMask);
-            },
+            }),
         );
 
-        this.removeSpaceUserMessageStreamSubscription = roomConnection.removeSpaceUserMessageStream.subscribe(
-            (message) => {
+        this.connectionSubscriptions.push(
+            connection.removeSpaceUserMessageStream.subscribe((message) => {
                 if (!message.spaceUserId) {
                     throw new Error("removeSpaceUserMessage is missing a spaceUserId");
                 }
 
                 this.spaces.get(message.spaceName)?.removeUser(message.spaceUserId);
-            },
+            }),
         );
 
-        this.updateSpaceMetadataMessageStreamSubscription = roomConnection.updateSpaceMetadataMessageStream.subscribe(
-            (message) => {
+        this.connectionSubscriptions.push(
+            connection.updateSpaceMetadataMessageStream.subscribe((message) => {
                 const isMetadata = z.record(z.string(), z.unknown()).safeParse(JSON.parse(message.metadata));
                 if (!isMetadata.success) {
                     console.error("Error while parsing metadata", isMetadata.error);
@@ -232,42 +317,48 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 }
 
                 space.setMetadata(metadata);
-            },
+            }),
         );
 
-        this.proximityPublicMessageEventSubscription = roomConnection.spacePublicMessageEvent.subscribe((message) => {
-            const space = this.spaces.get(message.spaceName);
-            if (!space) {
-                console.warn(
-                    `Received a public message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`,
+        this.connectionSubscriptions.push(
+            connection.spacePublicMessageEvent.subscribe((message) => {
+                const space = this.spaces.get(message.spaceName);
+                if (!space) {
+                    console.warn(
+                        `Received a public message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`,
+                    );
+                    return;
+                }
+                space.dispatchPublicMessage(message);
+            }),
+        );
+
+        this.connectionSubscriptions.push(
+            connection.spacePrivateMessageEvent.subscribe((message) => {
+                const space = this.spaces.get(message.spaceName);
+                if (!space) {
+                    console.warn(
+                        `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`,
+                    );
+                    return;
+                }
+                space.dispatchPrivateMessage(message);
+            }),
+        );
+
+        this.connectionSubscriptions.push(
+            connection.spaceDestroyedMessage.subscribe((message) => {
+                console.error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`);
+                Sentry.captureException(
+                    new Error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`),
                 );
-                return;
-            }
-            space.dispatchPublicMessage(message);
-        });
 
-        this.proximityPrivateMessageEventSubscription = roomConnection.spacePrivateMessageEvent.subscribe((message) => {
-            const space = this.spaces.get(message.spaceName);
-            if (!space) {
-                console.warn(
-                    `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`,
-                );
-                return;
-            }
-            space.dispatchPrivateMessage(message);
-        });
-
-        this.spaceDestroyedMessageSubscription = roomConnection.spaceDestroyedMessage.subscribe((message) => {
-            console.error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`);
-            Sentry.captureException(
-                new Error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`),
-            );
-
-            const space = this.spaces.get(message.spaceName);
-            if (space) {
-                space.onDisconnect();
-            }
-        });
+                const space = this.spaces.get(message.spaceName);
+                if (space) {
+                    space.onDisconnect();
+                }
+            }),
+        );
     }
 
     async joinSpace(
@@ -287,6 +378,20 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             spaceKind?: SpaceKind;
         },
     ): Promise<SpaceInterface> {
+        const orphanTimeout = this.orphans.get(spaceName);
+        if (orphanTimeout !== undefined) {
+            // Kept across a reconnection to the server, and already joined again through the new connection
+            clearTimeout(orphanTimeout);
+            this.orphans.delete(spaceName);
+            const space = this.spaces.get(spaceName);
+            if (space) {
+                if (options?.canRecord !== undefined) {
+                    space.setCanRecord(options.canRecord);
+                }
+                return space;
+            }
+        }
+
         const leavingPromise = this.leavingSpacesPromises.get(spaceName);
         if (leavingPromise) {
             await leavingPromise;
@@ -337,7 +442,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         const spaceName = space.getName();
         const spaceInRegistry = this.spaces.get(spaceName);
         if (!spaceInRegistry) {
+            if (this.hungUpSpaces.has(space)) {
+                return;
+            }
             throw new SpaceDoesNotExistError(spaceName);
+        }
+        if (this.suspended) {
+            return;
         }
 
         const leavingPromise = this.performLeaveSpace(spaceInRegistry, spaceName);
@@ -366,14 +477,12 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     }
 
     async destroy() {
-        this.initSpaceUsersMessageStreamSubscription.unsubscribe();
-        this.addSpaceUserMessageStreamSubscription.unsubscribe();
-        this.updateSpaceUserMessageStreamSubscription.unsubscribe();
-        this.removeSpaceUserMessageStreamSubscription.unsubscribe();
-        this.updateSpaceMetadataMessageStreamSubscription.unsubscribe();
-        this.proximityPublicMessageEventSubscription.unsubscribe();
-        this.proximityPrivateMessageEventSubscription.unsubscribe();
-        this.spaceDestroyedMessageSubscription.unsubscribe();
+        this.unsubscribeFromConnection();
+        clearTimeout(this.hangUpTimeout);
+        for (const timeout of this.orphans.values()) {
+            clearTimeout(timeout);
+        }
+        this.orphans.clear();
 
         // Wait for any in-flight join to settle so it does not register a space after we have
         // iterated this.spaces below (which would leak it). allSettled because a join may reject.

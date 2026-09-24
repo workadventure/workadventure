@@ -76,7 +76,7 @@ import type { PositionInterface } from "../Model/PositionInterface";
 import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import type { Zone, ZonePosition } from "../Model/Zone";
 import type { Admin } from "../Model/Admin";
-import { Space } from "../Model/Space";
+import { DETACHED_USER_GRACE_MS, Space } from "../Model/Space";
 import type { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
 import type { SessionEndReason } from "../Model/SessionAnalytics";
@@ -330,6 +330,14 @@ export class SocketManager {
     async saveVariable(roomUrl: string, variable: string, newValue: string): Promise<void> {
         const room = await this.getOrCreateRoom(roomUrl);
         await room.setVariable(variable, newValue, "RoomApi");
+    }
+
+    /**
+     * The user's pusher went away without a goodbye (a play pod restarting or crashing): the user keeps its place,
+     * and its bubble, for as long as spaces keep theirs, in case the same tab reconnects through another pusher.
+     */
+    detachFromRoom(room: GameRoom, user: User) {
+        room.detach(user, DETACHED_USER_GRACE_MS, () => this.leaveRoom(room, user));
     }
 
     leaveRoom(room: GameRoom, user: User) {
@@ -1521,14 +1529,25 @@ export class SocketManager {
                 console.error(`In handleUnwatchAllSpaces, can't unwatch space ${spaceName}, space not found`);
                 return;
             }
-            this.removeSpaceWatcher(pusher, space);
+            // The pusher is gone (stream ended, or it stopped answering pings): its users keep their place for a
+            // while, in case they reconnect through another pusher.
+            pusher.unwatchSpace(space.name);
+            space.detachWatcher(pusher, () => this.deleteSpaceIfEmpty(space));
+            this.deleteSpaceIfEmpty(space);
         });
     }
 
     private removeSpaceWatcher(watcher: SpacesWatcher, space: Space) {
         watcher.unwatchSpace(space.name);
         space.removeWatcher(watcher);
+        this.deleteSpaceIfEmpty(space);
+    }
 
+    private deleteSpaceIfEmpty(space: Space) {
+        // Another space may have taken the name since (this one was deleted, then joined again).
+        if (this.spaces.get(space.name) !== space) {
+            return;
+        }
         // If there are no more watchers, we delete the space
         if (space.canBeDeleted()) {
             debug("[space] Space %s => deleted", space.name);

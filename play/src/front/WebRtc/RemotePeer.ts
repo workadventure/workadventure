@@ -936,6 +936,23 @@ export class RemotePeer extends Peer implements Streamable {
         return this._connectionId;
     }
 
+    /**
+     * The back re-established this connection under a new id (one of the two users reconnected to the server), but
+     * the connection itself never went down: keep it, and match the signals of the new id.
+     */
+    public adoptConnectionId(connectionId: string): void {
+        this._connectionId = connectionId;
+        // While it reconnected, the viewer may have torn its tile down (the full-screen reconnection screen) and
+        // reported 0x0; its new tile only reports its size once frames arrive, which a paused encoder never sends.
+        // Start over from the default assumption, as on a fresh connection. A tile that stayed displayed keeps its
+        // size: it will not report it again.
+        if (isViewerDisplayHidden(this.viewerDisplay)) {
+            this.viewerDisplay = DEFAULT_VIEWER_DISPLAY;
+            this.viewerReportedDisplay = false;
+            this.applyVideoEncoding();
+        }
+    }
+
     public stopStreamToRemoteUser() {
         if (!this.localStream) {
             return;

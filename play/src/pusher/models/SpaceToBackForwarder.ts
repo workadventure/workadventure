@@ -51,6 +51,13 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             throw new SpaceUserIdNotFoundError();
         }
 
+        // spaceUserId is stable per browser tab: the same tab reconnecting to this pusher can get here before its
+        // previous socket was swept. Remove that stale registration first, or the id would collide.
+        const previousSocket = this._space._localConnectedUser.get(spaceUserId);
+        if (previousSocket && previousSocket !== client) {
+            await this.unregisterUser(previousSocket);
+        }
+
         if (this._space._localConnectedUser.has(spaceUserId)) {
             throw new UserAlreadyAddedInSpaceError(
                 `User ${spaceUserId} already added in space ${this._space.name}`,
@@ -79,6 +86,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         const spaceUser: SpaceUserExtended = {
             ...SpaceUser.fromPartial({
                 spaceUserId,
+                roomUserId: socketData.userId,
                 uuid: socketData.userUuid,
                 name: socketData.name,
                 playUri: socketData.roomId,
@@ -174,7 +182,15 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             throw new Error("spaceUserId not found");
         }
 
-        if (!this._space._localConnectedUser.has(spaceUserId)) {
+        const owner = this._space._localConnectedUser.get(spaceUserId);
+        if (owner && owner !== socket) {
+            // The same tab already registered again with a newer socket: removing the id would remove that one.
+            userData.spaces.delete(this._space.name);
+            this._space._localConnectedUserWithSpaceUser.delete(socket);
+            return;
+        }
+
+        if (!owner) {
             console.error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`);
             Sentry.captureException(
                 new Error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`),

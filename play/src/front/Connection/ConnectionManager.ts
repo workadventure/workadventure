@@ -59,6 +59,11 @@ class ConnectionManager {
     // "Reopen closed tab" copy sessionStorage, which would give two live pages the same id and make them
     // kill each other's connection in a loop.
     private readonly _tabId: string = uuidv4();
+    /**
+     * The proximity bubble we were in when the connection to the server was lost, sent until we are connected again:
+     * a back that restarted meanwhile gives the bubble, re-formed by the same people, its former space back.
+     */
+    public previousBubbleSpaceName: string | undefined;
 
     get unloading() {
         return this._unloading;

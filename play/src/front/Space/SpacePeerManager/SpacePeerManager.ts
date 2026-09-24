@@ -187,6 +187,17 @@ export class SpacePeerManager {
 
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.SWITCH_MESSAGE).subscribe((message) => {
+                if (
+                    (message.switchMessage.strategy === CommunicationType.WEBRTC &&
+                        this._communicationState instanceof WebRTCState) ||
+                    (message.switchMessage.strategy === CommunicationType.LIVEKIT &&
+                        this._communicationState instanceof LivekitState)
+                ) {
+                    // The back never switches to the strategy in place: this is it telling us which one is current
+                    // after we reconnected to the server. Recreating the state would cut the media that went on.
+                    debug("Already using communication strategy " + message.switchMessage.strategy);
+                    return;
+                }
                 debug("Switching communication strategy to " + message.switchMessage.strategy);
                 console.warn("Switching communication strategy to " + message.switchMessage.strategy);
                 if (this._toFinalizeState && !(this._toFinalizeState instanceof DefaultCommunicationState)) {
@@ -530,6 +541,16 @@ export class SpacePeerManager {
                 }
             }),
         );
+    }
+
+    /**
+     * After a reconnection to the server, the new pusher registered us with our media off: tell it what they are.
+     */
+    public resendMediaState(): void {
+        if (!this.isMediaStateSynchronized()) return;
+        // Subscribing again sends every current value
+        this.desynchronizeMediaState();
+        this.synchronizeMediaState();
     }
 
     private desynchronizeMediaState(): void {

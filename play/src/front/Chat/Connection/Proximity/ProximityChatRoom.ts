@@ -454,9 +454,10 @@ export class ProximityChatRoom implements ChatRoom {
             this.hasUnreadMessages.set(true);
             this.unreadNotificationCount.set(get(this.unreadNotificationCount) + 1);
         }
-        // Send bubble message to WorkAdventure scripting API
+        // Send bubble message to WorkAdventure scripting API. Scripts read the author's room id at the end of the sender
+        // id (roomID_userID): hand them that, whatever the spaceUserId looks like.
         try {
-            iframeListener.sendUserInputChat(message, senderUserId);
+            iframeListener.sendUserInputChat(message, this.toScriptingSenderId(senderUserId));
         } catch (e) {
             console.error("Error while sending message to WorkAdventure scripting API", e);
         }
@@ -1399,10 +1400,20 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private getRemotePlayerFromSpaceUserId(spaceUserId: string) {
-        const { /*roomUrl,*/ userId } = this.extractUserIdAndRoomUrlFromSpaceId(spaceUserId);
-        // Technically, we should check the roomUrl is the same as the current one.
         // In practice, all users in this space are in the same room.
-        return this.remotePlayersRepository.getPlayers().get(userId);
+        return this.remotePlayersRepository.getPlayers().get(this.getRoomUserId(spaceUserId));
+    }
+
+    /**
+     * The id of a space user in the room (its Woka). The pusher sends it; an older one did not, and the front parsed
+     * it out of the spaceUserId, which ended with it back then.
+     */
+    private getRoomUserId(spaceUserId: string): number {
+        const roomUserId = this.users?.get(spaceUserId)?.roomUserId;
+        if (roomUserId) {
+            return roomUserId;
+        }
+        return this.extractUserIdAndRoomUrlFromSpaceId(spaceUserId).userId;
     }
 
     /**
@@ -1415,7 +1426,7 @@ export class ProximityChatRoom implements ChatRoom {
         if (spaceUserId === this._spaceUserId) {
             return undefined;
         }
-        const { userId } = this.extractUserIdAndRoomUrlFromSpaceId(spaceUserId);
+        const userId = this.getRoomUserId(spaceUserId);
         try {
             return await this.remotePlayersRepository.getPlayer(userId);
         } catch (e) {
@@ -1433,6 +1444,15 @@ export class ProximityChatRoom implements ChatRoom {
             }),
         );
         return players.filter((player): player is MessageUserJoined => player !== undefined);
+    }
+
+    private toScriptingSenderId(spaceUserId: string): string {
+        try {
+            const roomUrl = spaceUserId.substring(0, spaceUserId.lastIndexOf("_"));
+            return `${roomUrl}_${this.getRoomUserId(spaceUserId)}`;
+        } catch {
+            return spaceUserId;
+        }
     }
 
     private extractUserIdAndRoomUrlFromSpaceId(spaceId: string): { roomUrl: string; userId: number } {

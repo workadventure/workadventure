@@ -68,6 +68,7 @@ import { ClientNotPartOfSpaceError, SpaceDestroyedError } from "../models/SpaceV
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
 import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
+import { computeSpaceUserId } from "./SpaceUserId";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
@@ -265,8 +266,13 @@ export class SocketManager implements ZoneEventListener {
                     switch (message.message.$case) {
                         case "roomJoinedMessage": {
                             socketData.userId = message.message.roomJoinedMessage.currentUserId;
-                            socketData.spaceUserId =
-                                socketData.roomId + "_" + message.message.roomJoinedMessage.currentUserId;
+                            socketData.spaceUserId = computeSpaceUserId(
+                                socketData.roomId,
+                                socketData.userUuid,
+                                socketData.tabId,
+                                SECRET_KEY,
+                            );
+                            message.message.roomJoinedMessage.spaceUserId = socketData.spaceUserId;
 
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, client.getUserData().viewport);
@@ -420,6 +426,9 @@ export class SocketManager implements ZoneEventListener {
                 userRoomToken: socketData.userRoomToken ?? "", // TODO: turn this into an optional field
                 chatID: socketData.chatID,
                 tabId: socketData.tabId,
+                spaceUserId: computeSpaceUserId(socketData.roomId, socketData.userUuid, socketData.tabId, SECRET_KEY),
+                previousBubbleSpaceName: socketData.previousBubbleSpaceName ?? "",
+                world: socketData.world,
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
@@ -842,7 +851,15 @@ export class SocketManager implements ZoneEventListener {
                 }
             }
         } finally {
-            if (socketData.backConnection) {
+            if (socketData.backConnection?.writable) {
+                // Tell the back the user left: a stream that just ends is this pusher going away, and the back
+                // would keep the user's place in case it reconnects elsewhere. (Not when the back already closed it.)
+                socketData.backConnection.write({
+                    message: {
+                        $case: "leaveRoomMessage",
+                        leaveRoomMessage: {},
+                    },
+                });
                 socketData.backConnection.end();
             }
         }

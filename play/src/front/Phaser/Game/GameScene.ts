@@ -54,6 +54,7 @@ import {
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
     MAX_PER_GROUP,
+    MINIMUM_DISTANCE,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
     WOKA_SPEED,
@@ -264,6 +265,8 @@ const CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE = 64;
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
+    // Spaces kept, media included, across a reconnection to the server (see SpaceRegistry.suspend)
+    spaceRegistry?: SpaceRegistry;
 }
 
 interface GroupCreatedUpdatedEventInterface {
@@ -325,6 +328,7 @@ export class GameScene extends DirtyScene {
     public userInputManager!: UserInputManager;
     public readonly superLoad: SuperLoaderPlugin;
     private initPosition?: PositionInterface;
+    private keptSpaceRegistry?: SpaceRegistry;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     // Promise resolved when we receive the first message of the roomConnection (RoomConnectedMessage)
     private connectionAnswerPromiseDeferred: Deferred<void>;
@@ -382,6 +386,10 @@ export class GameScene extends DirtyScene {
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent = false;
     private currentPlayerGroupId?: number;
+    // The connection to the server is lost: the socket is trying to resume, or given up and this scene waits for the
+    // server to come back
+    private serverLost = false;
+    private serverDisconnected = false;
     private showVoiceIndicatorChangeMessageSent = false;
     private jitsiDominantSpeaker = false;
     private jitsiParticipantsCount = 0;
@@ -412,7 +420,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     private _applicationManager: ApplicationManager | undefined;
-    private _spaceRegistry: SpaceRegistryInterface | undefined;
+    private _spaceRegistry: SpaceRegistry | undefined;
     private spaceScriptingBridgeService: SpaceScriptingBridgeService | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private isLiveStreamingUnsubscriber: Unsubscriber | undefined;
@@ -645,6 +653,7 @@ export class GameScene extends DirtyScene {
 
     //hook initialisation
     init(initData: GameSceneInitInterface) {
+        this.keptSpaceRegistry = initData.spaceRegistry;
         if (initData.initPosition !== undefined) {
             this.initPosition = initData.initPosition; //todo: still used?
         }
@@ -1186,14 +1195,32 @@ export class GameScene extends DirtyScene {
         this.playSound(`meeting-out`);
     }
 
-    public cleanupClosingScene(): void {
+    /**
+     * @param keepSpaces The scene is reloaded after the connection to the server was lost: the spaces, and the media
+     * of the conversations going on in them, are handed to the next scene instead of being destroyed.
+     */
+    public cleanupClosingScene({ keepSpaces = false }: { keepSpaces?: boolean } = {}): void {
         this.abortController?.abort();
         this.unregisterAudioContextPlaybackRetry?.();
         this.unregisterAudioContextPlaybackRetry = undefined;
 
-        // make sure we restart own medias
-        mediaManager.disableMyCamera();
-        mediaManager.disableMyMicrophone();
+        if (keepSpaces && this._spaceRegistry) {
+            // First: everything torn down below leaves its spaces, which a suspended registry keeps
+            this._spaceRegistry.suspend();
+            this.keptSpaceRegistry = this._spaceRegistry;
+            connectionManager.previousBubbleSpaceName = this.proximitySpaceManager?.currentBubbleSpaceName;
+        } else {
+            // A registry handed to this scene that it never got to resume (it failed to connect): its conversations
+            // end here.
+            this.keptSpaceRegistry?.destroy().catch((e) => {
+                console.error("Error while destroying the space registry kept across a reconnection", e);
+                Sentry.captureException(e);
+            });
+            this.keptSpaceRegistry = undefined;
+            // make sure we restart own medias
+            mediaManager.disableMyCamera();
+            mediaManager.disableMyMicrophone();
+        }
         // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
         coWebsiteManager.cleanup();
 
@@ -1304,10 +1331,12 @@ export class GameScene extends DirtyScene {
 
         this._focusFx?.destroy();
 
-        this._spaceRegistry?.destroy().catch((e) => {
-            console.error("Error while destroying space registry", e);
-            Sentry.captureException(e);
-        });
+        if (!this.keptSpaceRegistry) {
+            this._spaceRegistry?.destroy().catch((e) => {
+                console.error("Error while destroying space registry", e);
+                Sentry.captureException(e);
+            });
+        }
 
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
@@ -1473,6 +1502,10 @@ export class GameScene extends DirtyScene {
             }
         });
 
+        if (this.hasMovedThisFrame && this.serverLost) {
+            this.leaveBubbleWalkedOutOf();
+        }
+
         if (this.hasMovedThisFrame && currentPlayerPreviousPosition !== undefined) {
             this.addConversationBubblesAffectedByPlayerMove(
                 this.connection?.getUserId(),
@@ -1493,6 +1526,38 @@ export class GameScene extends DirtyScene {
         if (DEBUG_MODE) {
             this.updateServerViewportDebugOverlay();
         }
+    }
+
+    private setServerLost(lost: boolean): void {
+        this.serverLost = lost;
+        this._spaceRegistry?.setServerLost(lost);
+    }
+
+    /**
+     * The server is lost, so it cannot take us out of our bubble when we walk away: do it here, once we are away from
+     * everyone in it (their positions are frozen meanwhile).
+     */
+    private leaveBubbleWalkedOutOf(): void {
+        const groupId = this.currentPlayerGroupId;
+        const bubble = groupId !== undefined ? this.groups.get(groupId) : undefined;
+        if (groupId === undefined || !bubble) {
+            return;
+        }
+        const myUserId = this.connection?.getUserId();
+        // ponytail: the back's rule (distance to the bubble's barycenter, against GROUP_RADIUS) is unknown here; twice
+        // the distance at which a bubble forms is close enough, and the back decides again once it is back.
+        const stillNearSomeone = bubble.getUserIds().some((userId) => {
+            const player = userId !== myUserId ? this.MapPlayersByKey.get(userId) : undefined;
+            return (
+                player !== undefined &&
+                Math.hypot(player.x - this.CurrentPlayer.x, player.y - this.CurrentPlayer.y) <= 2 * MINIMUM_DISTANCE
+            );
+        });
+        if (stillNearSomeone) {
+            return;
+        }
+        this.proximitySpaceManager?.leaveCurrentBubble();
+        this.pendingEvents.enqueue({ type: "DeleteGroupEvent", groupId });
     }
 
     private addConversationBubblesAffectedByPlayerMove(
@@ -1755,6 +1820,7 @@ export class GameScene extends DirtyScene {
                   }
                 : undefined,
             reconnecting: reconnecting,
+            spaceRegistry: this.keptSpaceRegistry,
         } satisfies GameSceneInitInterface);
 
         // Register the new scene as current when not autostarting (so GameManager can start it) or when
@@ -1997,17 +2063,22 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                connectionManager.previousBubbleSpaceName = undefined;
 
                 // The serverDisconnected stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.serverDisconnected.subscribe(() => {
                     showConnectionIssueMessage();
+                    this.serverDisconnected = true;
+                    this.setServerLost(true);
                     console.info("Player disconnected from server. Waiting for pusher ping.");
                     connectionManager
                         .waitForPusherPing()
                         .then(() => {
                             console.info("Pusher reachable again. Reloading scene.");
-                            this.cleanupClosingScene();
+                            // The conversations going on (LiveKit, P2P) do not go through the server: keep them
+                            // alive across the reload, the next scene joins their spaces again.
+                            this.cleanupClosingScene({ keepSpaces: true });
                             this.createSuccessorGameScene(true, true);
                         })
                         .catch((e) => {
@@ -2027,6 +2098,21 @@ export class GameScene extends DirtyScene {
                         });
                 });
                 hideConnectionIssueMessage();
+
+                // The websocketReconnectingStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.websocketReconnectingStream.subscribe((reconnecting) => {
+                    if (reconnecting) {
+                        this.setServerLost(true);
+                        return;
+                    }
+                    // Also emitted right before the socket gives up, and serverDisconnected follows synchronously
+                    queueMicrotask(() => {
+                        if (!this.serverDisconnected) {
+                            this.setServerLost(false);
+                        }
+                    });
+                });
 
                 const commandsToApply = onConnect.roomConnectedMessage.editMapCommandsArrayMessage?.editMapCommands;
                 if (commandsToApply) {
@@ -2054,7 +2140,13 @@ export class GameScene extends DirtyScene {
 
                 this.enterLeaveScriptingService = new EnterLeaveScriptingService(this.gameMapFrontWrapper, this);
 
-                this._spaceRegistry = new SpaceRegistry(this.connection);
+                if (this.keptSpaceRegistry) {
+                    this.keptSpaceRegistry.resume(this.connection);
+                    this._spaceRegistry = this.keptSpaceRegistry;
+                    this.keptSpaceRegistry = undefined;
+                } else {
+                    this._spaceRegistry = new SpaceRegistry(this.connection);
+                }
                 this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
 
                 videoStreamStore.forward(this._spaceRegistry.videoStreamStore);
