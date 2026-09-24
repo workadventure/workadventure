@@ -85,21 +85,33 @@ export class PusherWebSocket {
             return;
         }
 
-        this.batchTimeout = setTimeout(() => {
-            this.batchTimeout = undefined;
-            if (this.isDisconnecting()) {
-                this.resetBatch();
-                return;
-            }
+        this.batchTimeout = setTimeout(() => this.flushBatch(), 100);
+    }
 
-            this.send({
-                message: {
-                    $case: "batchMessage",
-                    batchMessage: this.batchedMessages,
-                },
-            });
+    /**
+     * Sends the pending batch now. Use it before a message that must not overtake what was batched before it
+     * (e.g. the answer to a space state query, which must arrive after the patch it caused).
+     */
+    public flushBatch(): void {
+        if (this.batchTimeout) {
+            clearTimeout(this.batchTimeout);
+            this.batchTimeout = undefined;
+        }
+        if (this.isDisconnecting()) {
             this.resetBatch();
-        }, 100);
+            return;
+        }
+        if (this.batchedMessages.payload.length === 0) {
+            return;
+        }
+
+        this.send({
+            message: {
+                $case: "batchMessage",
+                batchMessage: this.batchedMessages,
+            },
+        });
+        this.resetBatch();
     }
 
     public decodeIncomingMessage(payload: ArrayBuffer | ArrayBufferView): ClientToServerMessage | undefined {

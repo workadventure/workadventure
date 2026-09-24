@@ -2,6 +2,7 @@ import type { SubMessage, PusherToBackSpaceMessage } from "@workadventure/messag
 import { SpaceUser } from "@workadventure/messages";
 import { describe, it, vi, expect } from "vitest";
 import { mock } from "vitest-mock-extended";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import { EventProcessor } from "../../src/pusher/models/EventProcessor";
 import type { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
 import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
@@ -392,6 +393,64 @@ describe("SpaceToFrontDispatcher", () => {
                 expect(mockEmitInBatch).toHaveBeenCalledOnce();
             });
         });
+        describe("spaceStatePatchMessage", () => {
+            it("applies the patch to the space copy, forwards it, and sends the patched state to a user who joins", async () => {
+                const mockEmitInBatch = vi.fn();
+                const mockSocket = mock<PusherWebSocket>({ emitInBatch: mockEmitInBatch });
+                const mockSpace = {
+                    users: new Map<string, SpaceUser>(),
+                    _localWatchers: new Set<string>(),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map(),
+                    metadata: new Map(),
+                    state: emptySpaceState(),
+                    localName: "localTest",
+                } as unknown as Space;
+                const spaceDispatcher = new SpaceToFrontDispatcher(mockSpace, new EventProcessor());
+                const entry = { spaceUserId: "foo_1", name: "Alice", at: 1 };
+                const patch = JSON.stringify([{ op: "add", path: "/raisedHands/0", value: entry }]);
+
+                spaceDispatcher.handleMessage({
+                    message: {
+                        $case: "initSpaceUsersMessage",
+                        initSpaceUsersMessage: {
+                            spaceName: "test",
+                            users: [],
+                            metadata: "{}",
+                            state: JSON.stringify(emptySpaceState()),
+                        },
+                    },
+                });
+                spaceDispatcher.handleMessage({
+                    message: {
+                        $case: "spaceStatePatchMessage",
+                        spaceStatePatchMessage: { spaceName: "test", patch },
+                    },
+                });
+
+                expect(mockSpace.state.raisedHands).toEqual([entry]);
+                expect(mockEmitInBatch).toHaveBeenCalledWith({
+                    message: {
+                        $case: "spaceStatePatchMessage",
+                        spaceStatePatchMessage: { spaceName: "localTest", patch },
+                    },
+                });
+
+                const newcomer = mock<PusherWebSocket>({ emitInBatch: vi.fn() });
+                await spaceDispatcher.notifyMeState(newcomer);
+                expect(newcomer.emitInBatch).toHaveBeenCalledWith({
+                    message: {
+                        $case: "spaceStatePatchMessage",
+                        spaceStatePatchMessage: {
+                            spaceName: "localTest",
+                            patch: JSON.stringify([{ op: "replace", path: "", value: mockSpace.state }]),
+                        },
+                    },
+                });
+                expect(mockSpace.state.raisedHands).toEqual([entry]);
+            });
+        });
+
         describe("pingMessage", () => {
             it.skip("should throw error because it should not be received by the dispatcher - pingMessage should be handle by the space class", () => {
                 const spaceUser = SpaceUser.fromPartial({
