@@ -20,7 +20,8 @@ import {
 } from "@workadventure/messages";
 import type { SpaceState } from "@workadventure/shared-utils";
 import { emptySpaceState } from "@workadventure/shared-utils";
-import { compare } from "fast-json-patch";
+// Default import: under Node ESM this CommonJS package exposes no named exports.
+import jsonpatch from "fast-json-patch";
 import { Subject } from "rxjs";
 import Debug from "debug";
 import { asError } from "catch-unknown";
@@ -734,7 +735,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace, 
     public updateState(mutate: (state: SpaceState) => void): void {
         const next = structuredClone(this.state);
         mutate(next);
-        const patch = compare(this.state, next);
+        const patch = jsonpatch.compare(this.state, next);
         this.state = next;
         if (patch.length === 0) {
             return;
