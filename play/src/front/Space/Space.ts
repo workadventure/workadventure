@@ -585,17 +585,9 @@ export class Space implements SpaceInterface {
             clearTimeout(this.retryTimeout);
         }
 
-        try {
-            await this.userLeaveSpace();
-        } catch (e) {
-            if (e instanceof ConnectionClosedError) {
-                // It is not uncommon to try to leave a space after the connection is closed.
-                // In that case, we just skip logging the error.
-            } else {
-                console.error("Error while leaving space", e);
-                Sentry.captureException(e);
-            }
-        }
+        // Told to the server first, but the media below are closed without waiting for its answer: it may be
+        // unreachable for a while (the socket resuming after a network loss)
+        const leaving = this.userLeaveSpace();
 
         for (const subscription of Object.values(this.publicEventsObservables)) {
             subscription.complete();
@@ -632,6 +624,18 @@ export class Space implements SpaceInterface {
 
         if (this._registerRefCount > 0) {
             this.unregisterSpaceFilter();
+        }
+
+        try {
+            await leaving;
+        } catch (e) {
+            if (e instanceof ConnectionClosedError) {
+                // It is not uncommon to try to leave a space after the connection is closed.
+                // In that case, we just skip logging the error.
+            } else {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            }
         }
 
         this.isDestroyed = true;

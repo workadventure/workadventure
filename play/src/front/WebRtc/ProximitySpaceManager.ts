@@ -31,17 +31,28 @@ export class ProximitySpaceManager {
             },
         );
 
-        this.leaveSpaceRequestMessageSubscription = roomConnection.leaveSpaceRequestMessage.subscribe(
-            ({ spaceName }) => {
-                if (this._currentBubbleSpaceName === spaceName) {
-                    this._currentBubbleSpaceName = undefined;
-                }
-                this.proximityChatRoomManager.leaveDefaultSpace(spaceName).catch((e) => {
-                    console.error("Error while leaving space", e);
-                    Sentry.captureException(e);
-                });
-            },
+        this.leaveSpaceRequestMessageSubscription = roomConnection.leaveSpaceRequestMessage.subscribe(({ spaceName }) =>
+            this.leave(spaceName),
         );
+    }
+
+    /**
+     * Leaves the bubble without the back telling us to: it is unreachable, and we walked out of the bubble meanwhile.
+     */
+    public leaveCurrentBubble(): void {
+        if (this._currentBubbleSpaceName !== undefined) {
+            this.leave(this._currentBubbleSpaceName);
+        }
+    }
+
+    private leave(spaceName: string): void {
+        if (this._currentBubbleSpaceName === spaceName) {
+            this._currentBubbleSpaceName = undefined;
+        }
+        this.proximityChatRoomManager.leaveDefaultSpace(spaceName).catch((e) => {
+            console.error("Error while leaving space", e);
+            Sentry.captureException(e);
+        });
     }
 
     get currentBubbleSpaceName(): string | undefined {

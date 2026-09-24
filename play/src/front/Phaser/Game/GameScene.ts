@@ -54,6 +54,7 @@ import {
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
     MAX_PER_GROUP,
+    MINIMUM_DISTANCE,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
     WOKA_SPEED,
@@ -385,6 +386,10 @@ export class GameScene extends DirtyScene {
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent = false;
     private currentPlayerGroupId?: number;
+    // The connection to the server is lost: the socket is trying to resume, or given up and this scene waits for the
+    // server to come back
+    private serverLost = false;
+    private serverDisconnected = false;
     private showVoiceIndicatorChangeMessageSent = false;
     private jitsiDominantSpeaker = false;
     private jitsiParticipantsCount = 0;
@@ -1497,6 +1502,10 @@ export class GameScene extends DirtyScene {
             }
         });
 
+        if (this.hasMovedThisFrame && this.serverLost) {
+            this.leaveBubbleWalkedOutOf();
+        }
+
         if (this.hasMovedThisFrame && currentPlayerPreviousPosition !== undefined) {
             this.addConversationBubblesAffectedByPlayerMove(
                 this.connection?.getUserId(),
@@ -1517,6 +1526,38 @@ export class GameScene extends DirtyScene {
         if (DEBUG_MODE) {
             this.updateServerViewportDebugOverlay();
         }
+    }
+
+    private setServerLost(lost: boolean): void {
+        this.serverLost = lost;
+        this._spaceRegistry?.setServerLost(lost);
+    }
+
+    /**
+     * The server is lost, so it cannot take us out of our bubble when we walk away: do it here, once we are away from
+     * everyone in it (their positions are frozen meanwhile).
+     */
+    private leaveBubbleWalkedOutOf(): void {
+        const groupId = this.currentPlayerGroupId;
+        const bubble = groupId !== undefined ? this.groups.get(groupId) : undefined;
+        if (groupId === undefined || !bubble) {
+            return;
+        }
+        const myUserId = this.connection?.getUserId();
+        // ponytail: the back's rule (distance to the bubble's barycenter, against GROUP_RADIUS) is unknown here; twice
+        // the distance at which a bubble forms is close enough, and the back decides again once it is back.
+        const stillNearSomeone = bubble.getUserIds().some((userId) => {
+            const player = userId !== myUserId ? this.MapPlayersByKey.get(userId) : undefined;
+            return (
+                player !== undefined &&
+                Math.hypot(player.x - this.CurrentPlayer.x, player.y - this.CurrentPlayer.y) <= 2 * MINIMUM_DISTANCE
+            );
+        });
+        if (stillNearSomeone) {
+            return;
+        }
+        this.proximitySpaceManager?.leaveCurrentBubble();
+        this.pendingEvents.enqueue({ type: "DeleteGroupEvent", groupId });
     }
 
     private addConversationBubblesAffectedByPlayerMove(
@@ -2028,6 +2069,8 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.serverDisconnected.subscribe(() => {
                     showConnectionIssueMessage();
+                    this.serverDisconnected = true;
+                    this.setServerLost(true);
                     console.info("Player disconnected from server. Waiting for pusher ping.");
                     connectionManager
                         .waitForPusherPing()
@@ -2055,6 +2098,21 @@ export class GameScene extends DirtyScene {
                         });
                 });
                 hideConnectionIssueMessage();
+
+                // The websocketReconnectingStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.websocketReconnectingStream.subscribe((reconnecting) => {
+                    if (reconnecting) {
+                        this.setServerLost(true);
+                        return;
+                    }
+                    // Also emitted right before the socket gives up, and serverDisconnected follows synchronously
+                    queueMicrotask(() => {
+                        if (!this.serverDisconnected) {
+                            this.setServerLost(false);
+                        }
+                    });
+                });
 
                 const commandsToApply = onConnect.roomConnectedMessage.editMapCommandsArrayMessage?.editMapCommands;
                 if (commandsToApply) {

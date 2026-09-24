@@ -45,6 +45,10 @@ export type RoomConnectionForSpacesInterface = Pick<
 // the user is no longer in it (they walked out of the meeting room during the outage, say) and its media are closed.
 // Matches the back's own grace period (DETACHED_USER_GRACE_MS).
 const ORPHAN_GRACE_MS = 30_000;
+// How long the conversations go on once the connection to the server is lost. Nobody can join, be kicked or leave them
+// through the server meanwhile: if it is not back by then, they are hung up. Long enough for a back to restart (it
+// takes the conversations back for as long, see BACK_RESTART_WINDOW_MS in the back).
+const SERVER_LOST_GRACE_MS = 120_000;
 
 /**
  * This class is in charge of creating, joining, leaving and deleting Spaces.
@@ -60,6 +64,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private suspended = false;
     // Spaces kept across a reconnection to the server, that the new GameScene has not joined again yet (see resume).
     private orphans = new Map<string, ReturnType<typeof setTimeout>>();
+    // Set while the connection to the server is lost (see setServerLost)
+    private hangUpTimeout: ReturnType<typeof setTimeout> | undefined;
+    // Spaces hung up by setServerLost(), that the scene may still try to leave
+    private hungUpSpaces = new WeakSet<SpaceInterface>();
 
     public readonly videoStreamStore: Readable<Map<string, VideoBox>> = derived(this.spaces, ($spaces, set) => {
         if ($spaces.size === 0) {
@@ -183,6 +191,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
      * ORPHAN_GRACE_MS is left for good.
      */
     public resume(connection: RoomConnectionForSpacesInterface): void {
+        this.setServerLost(false);
         this.suspended = false;
         this.roomConnection = connection;
         this.subscribeTo(connection);
@@ -199,6 +208,32 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 }, ORPHAN_GRACE_MS),
             );
         }
+    }
+
+    /**
+     * Whether the connection to the server is lost. The conversations go on without it, but not for ever: past
+     * SERVER_LOST_GRACE_MS without it coming back, every space is left, and its media closed.
+     */
+    public setServerLost(lost: boolean): void {
+        if (!lost) {
+            clearTimeout(this.hangUpTimeout);
+            this.hangUpTimeout = undefined;
+            return;
+        }
+        this.hangUpTimeout ??= setTimeout(() => {
+            this.hangUpTimeout = undefined;
+            for (const timeout of this.orphans.values()) {
+                clearTimeout(timeout);
+            }
+            this.orphans.clear();
+            for (const space of this.spaces.values()) {
+                this.hungUpSpaces.add(space);
+                this.performLeaveSpace(space, space.getName()).catch((e) => {
+                    console.error("Error while hanging up a space after the server was lost", e);
+                    Sentry.captureException(e);
+                });
+            }
+        }, SERVER_LOST_GRACE_MS);
     }
 
     private unsubscribeFromConnection(): void {
@@ -407,6 +442,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         const spaceName = space.getName();
         const spaceInRegistry = this.spaces.get(spaceName);
         if (!spaceInRegistry) {
+            if (this.hungUpSpaces.has(space)) {
+                return;
+            }
             throw new SpaceDoesNotExistError(spaceName);
         }
         if (this.suspended) {
@@ -440,6 +478,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
     async destroy() {
         this.unsubscribeFromConnection();
+        clearTimeout(this.hangUpTimeout);
         for (const timeout of this.orphans.values()) {
             clearTimeout(timeout);
         }

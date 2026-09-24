@@ -221,4 +221,47 @@ describe("SpaceRegistry across a reconnection to the server", () => {
         expect(destroy).toHaveBeenCalledTimes(1);
         expect(registry.exist("meeting")).toBe(false);
     });
+
+    it("hangs up the conversations when the server is not back within 2 minutes", async () => {
+        const { registry, space } = await registryWithSpace();
+        const destroy = vi.spyOn(space, "destroy");
+
+        registry.setServerLost(true);
+        await vi.advanceTimersByTimeAsync(119_000);
+        expect(destroy).not.toHaveBeenCalled();
+        await vi.advanceTimersByTimeAsync(1_000);
+
+        expect(destroy).toHaveBeenCalledTimes(1);
+        expect(registry.exist("meeting")).toBe(false);
+        // The scene, torn down later, leaves the space it still knows of
+        await expect(registry.leaveSpace(space)).resolves.toBeUndefined();
+    });
+
+    it("keeps the conversations when the server is back in time", async () => {
+        const { registry, space } = await registryWithSpace();
+        const destroy = vi.spyOn(space, "destroy");
+
+        registry.setServerLost(true);
+        await vi.advanceTimersByTimeAsync(100_000);
+        registry.suspend();
+        const newConnection = new MockRoomConnectionForSpaces();
+        newConnection.emitJoinSpace.mockResolvedValue("room_me");
+        registry.resume(newConnection);
+        await registry.joinSpace("meeting", FilterType.ALL_USERS, [], new AbortController().signal);
+        await vi.advanceTimersByTimeAsync(200_000);
+
+        expect(destroy).not.toHaveBeenCalled();
+    });
+
+    it("keeps the conversations when the connection resumes on its own", async () => {
+        const { registry, space } = await registryWithSpace();
+        const destroy = vi.spyOn(space, "destroy");
+
+        registry.setServerLost(true);
+        await vi.advanceTimersByTimeAsync(10_000);
+        registry.setServerLost(false);
+        await vi.advanceTimersByTimeAsync(200_000);
+
+        expect(destroy).not.toHaveBeenCalled();
+    });
 });
