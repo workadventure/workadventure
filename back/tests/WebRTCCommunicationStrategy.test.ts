@@ -32,7 +32,7 @@ function createSpace(dispatchPrivateEvent = vi.fn(), usersInSpace: SpaceUser[] =
         dispatchPublicEvent: vi.fn(),
         getSpaceName: () => "test-space",
         getPropertiesToSync: () => [],
-        publishMetadata: vi.fn(),
+        updateState: vi.fn(),
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: (spaceUserId: string) => usersInSpace.find((user) => user.spaceUserId === spaceUserId),
     } as unknown as ICommunicationSpace;

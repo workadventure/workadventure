@@ -417,12 +417,12 @@ export class RecordingManager implements IRecordingManager {
 
     private publishState(): void {
         const snapshot = this.buildStateSnapshot();
-        this._space.publishMetadata({
-            recording: {
+        this._space.updateState((state) => {
+            state.recording = {
                 recorder: snapshot.recorder,
                 recording: snapshot.status === "recording" || snapshot.status === "stopping",
                 status: snapshot.status,
-            },
+            };
         });
     }
 

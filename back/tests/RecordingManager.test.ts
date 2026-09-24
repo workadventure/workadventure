@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { FilterType, SpaceUser } from "@workadventure/messages";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import { RecordingManager } from "../src/Model/RecordingManager";
 import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
 import type { IRecordableState } from "../src/Model/Interfaces/ICommunicationState";
@@ -48,7 +49,8 @@ function createRecordableState() {
 }
 
 function createDependencies(state: IRecordableState<IRecordableStrategy>) {
-    const publishMetadata = vi.fn();
+    // Records the recording slice each updateState call produces, so the tests read like the broadcast state.
+    const publishState = vi.fn();
     const space: ICommunicationSpace = {
         getAllUsers: () => [],
         getUsersInFilter: () => [],
@@ -58,7 +60,11 @@ function createDependencies(state: IRecordableState<IRecordableStrategy>) {
         dispatchPublicEvent: vi.fn(),
         getSpaceName: () => "test-space",
         getPropertiesToSync: () => ["cameraState", "microphoneState"],
-        publishMetadata,
+        updateState: (mutate) => {
+            const spaceState = emptySpaceState();
+            mutate(spaceState);
+            publishState({ recording: spaceState.recording });
+        },
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: vi.fn(),
         world: "world",
@@ -93,11 +99,11 @@ function createDependencies(state: IRecordableState<IRecordableStrategy>) {
         dispose: vi.fn(),
     };
 
-    return { space, publishMetadata, orchestrator, userRegistry, lifecycleManager };
+    return { space, publishState, orchestrator, userRegistry, lifecycleManager };
 }
 
 function getRecordingSessionId(
-    handleStartRecording: ReturnType<typeof vi.fn<(user: SpaceUser, recordingSessionId: string) => Promise<unknown>>>
+    handleStartRecording: ReturnType<typeof vi.fn<(user: SpaceUser, recordingSessionId: string) => Promise<unknown>>>,
 ): string {
     const lastCall = handleStartRecording.mock.calls.at(-1);
     expect(lastCall).toBeDefined();
@@ -110,7 +116,7 @@ function getRecordingSessionId(
 describe("RecordingManager", () => {
     it("stays in starting until the start webhook confirms the egress", async () => {
         const { state, mocks } = createRecordableState();
-        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const { space, publishState, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
         const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
         const user = createUser("user-1");
 
@@ -119,8 +125,8 @@ describe("RecordingManager", () => {
 
         expect(manager.getRecordingState().status).toBe("starting");
         expect(mocks.handleStartRecording).toHaveBeenCalledWith(user, recordingSessionId);
-        expect(publishMetadata).toHaveBeenCalledTimes(1);
-        expect(publishMetadata).toHaveBeenNthCalledWith(1, {
+        expect(publishState).toHaveBeenCalledTimes(1);
+        expect(publishState).toHaveBeenNthCalledWith(1, {
             recording: {
                 recorder: "user-1",
                 recording: false,
@@ -129,7 +135,7 @@ describe("RecordingManager", () => {
         });
 
         expect(manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "test-space")).toBe(true);
-        expect(publishMetadata).toHaveBeenNthCalledWith(2, {
+        expect(publishState).toHaveBeenNthCalledWith(2, {
             recording: {
                 recorder: "user-1",
                 recording: true,
@@ -145,9 +151,9 @@ describe("RecordingManager", () => {
             () =>
                 new Promise<{ egressId: string; roomName: string }>((resolve) => {
                     resolveStart = resolve;
-                })
+                }),
         );
-        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const { space, publishState, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
         const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
         const user = createUser("user-1");
 
@@ -161,12 +167,12 @@ describe("RecordingManager", () => {
         await startPromise;
 
         expect(manager.getRecordingState().status).toBe("recording");
-        expect(publishMetadata).toHaveBeenCalledTimes(2);
+        expect(publishState).toHaveBeenCalledTimes(2);
     });
 
     it("ignores mismatched webhook events", async () => {
         const { state, mocks } = createRecordableState();
-        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const { space, publishState, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
         const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
 
         await manager.startRecording(createUser("user-1"));
@@ -174,12 +180,12 @@ describe("RecordingManager", () => {
 
         expect(manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-2", "test-space")).toBe(false);
         expect(manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "wrong-room")).toBe(false);
-        expect(publishMetadata).toHaveBeenCalledTimes(1);
+        expect(publishState).toHaveBeenCalledTimes(1);
     });
 
     it("returns recorder information when an unexpected end webhook is processed", async () => {
         const { state, mocks } = createRecordableState();
-        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const { space, publishState, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
         const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
         const user = createUser("user-1");
 
@@ -195,7 +201,7 @@ describe("RecordingManager", () => {
             unexpected: true,
             hasActiveSessions: false,
         });
-        expect(publishMetadata).toHaveBeenNthCalledWith(3, {
+        expect(publishState).toHaveBeenNthCalledWith(3, {
             recording: {
                 recorder: null,
                 recording: false,
@@ -207,19 +213,19 @@ describe("RecordingManager", () => {
     it("rolls back to idle when start fails", async () => {
         const { state, mocks } = createRecordableState();
         mocks.handleStartRecording.mockRejectedValueOnce(new Error("boom"));
-        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const { space, publishState, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
         const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
 
         await expect(manager.startRecording(createUser("user-1"))).rejects.toThrow("boom");
 
-        expect(publishMetadata).toHaveBeenNthCalledWith(1, {
+        expect(publishState).toHaveBeenNthCalledWith(1, {
             recording: {
                 recorder: "user-1",
                 recording: false,
                 status: "starting",
             },
         });
-        expect(publishMetadata).toHaveBeenNthCalledWith(2, {
+        expect(publishState).toHaveBeenNthCalledWith(2, {
             recording: {
                 recorder: null,
                 recording: false,
@@ -235,9 +241,9 @@ describe("RecordingManager", () => {
             () =>
                 new Promise<{ egressId: string; roomName: string }>((resolve) => {
                     resolveStart = resolve;
-                })
+                }),
         );
-        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const { space, publishState, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
         const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
         const user = createUser("user-1");
 
@@ -248,7 +254,7 @@ describe("RecordingManager", () => {
         resolveStart?.({ egressId: "egress-1", roomName: "test-space" });
         await Promise.all([firstStart, secondStart]);
 
-        expect(publishMetadata).toHaveBeenCalledTimes(1);
+        expect(publishState).toHaveBeenCalledTimes(1);
     });
 
     it("rejects start and stop requests from another user while a recording is owned", async () => {
@@ -273,9 +279,9 @@ describe("RecordingManager", () => {
             () =>
                 new Promise<{ egressId: string; roomName: string }>((resolve) => {
                     resolveStart = resolve;
-                })
+                }),
         );
-        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const { space, publishState, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
         const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
         const user = createUser("user-1");
 
@@ -292,21 +298,21 @@ describe("RecordingManager", () => {
         manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "test-space");
         expect(mocks.handleStopRecording).toHaveBeenCalledTimes(1);
         expect(mocks.handleStopRecording).toHaveBeenCalledWith("egress-1");
-        expect(publishMetadata).toHaveBeenNthCalledWith(1, {
+        expect(publishState).toHaveBeenNthCalledWith(1, {
             recording: {
                 recorder: "user-1",
                 recording: false,
                 status: "starting",
             },
         });
-        expect(publishMetadata).toHaveBeenNthCalledWith(2, {
+        expect(publishState).toHaveBeenNthCalledWith(2, {
             recording: {
                 recorder: "user-1",
                 recording: true,
                 status: "recording",
             },
         });
-        expect(publishMetadata).toHaveBeenNthCalledWith(3, {
+        expect(publishState).toHaveBeenNthCalledWith(3, {
             recording: {
                 recorder: "user-1",
                 recording: true,
@@ -320,7 +326,7 @@ describe("RecordingManager", () => {
             unexpected: false,
             hasActiveSessions: false,
         });
-        expect(publishMetadata).toHaveBeenNthCalledWith(4, {
+        expect(publishState).toHaveBeenNthCalledWith(4, {
             recording: {
                 recorder: null,
                 recording: false,
@@ -332,7 +338,7 @@ describe("RecordingManager", () => {
     it("rolls back to recording when stop fails", async () => {
         const { state, mocks } = createRecordableState();
         mocks.handleStopRecording.mockRejectedValueOnce(new Error("stop-failed"));
-        const { space, publishMetadata, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const { space, publishState, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
         const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
         const user = createUser("user-1");
 
@@ -341,14 +347,14 @@ describe("RecordingManager", () => {
         manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "test-space");
         await expect(manager.stopRecording(user)).rejects.toThrow("stop-failed");
 
-        expect(publishMetadata).toHaveBeenNthCalledWith(3, {
+        expect(publishState).toHaveBeenNthCalledWith(3, {
             recording: {
                 recorder: "user-1",
                 recording: true,
                 status: "stopping",
             },
         });
-        expect(publishMetadata).toHaveBeenNthCalledWith(4, {
+        expect(publishState).toHaveBeenNthCalledWith(4, {
             recording: {
                 recorder: "user-1",
                 recording: true,
