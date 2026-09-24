@@ -14,6 +14,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     floorRevoked: "คุณไม่มีสิทธิ์การพูดแล้ว",
     floorGivenBack: "คุณคืนสิทธิ์การพูดแล้ว",
     handLowered: "ผู้ควบคุมได้ลดมือของคุณลงแล้ว",
+    actionFailed: "ไม่สามารถดำเนินการนี้ได้",
     notificationSentToMuteMicrophone: "ส่งการแจ้งเตือนถึง {name} เพื่อขอให้ปิดไมโครโฟนแล้ว",
     notificationSentToMuteCamera: "ส่งการแจ้งเตือนถึง {name} เพื่อขอให้ปิดกล้องแล้ว",
     announcement: "ประกาศ",
