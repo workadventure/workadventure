@@ -23,12 +23,12 @@ describe("SocketManager space state queries", () => {
         });
     };
 
-    const createManager = (querySend: ReturnType<typeof vi.fn>): SocketManager => {
+    const createManager = (querySend: (...args: unknown[]) => unknown): SocketManager => {
         const manager = new SocketManager();
         const space = mock<SpaceInterface>({
             name: "world.space-name",
             query: mock<Query>({
-                send: querySend,
+                send: querySend as Query["send"],
             }),
         });
         (manager as unknown as { spaces: Map<string, SpaceInterface> }).spaces.set("world.space-name", space);

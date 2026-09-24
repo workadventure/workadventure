@@ -472,6 +472,8 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     spaceName: this._space.localName,
                     users,
                     metadata: JSON.stringify(Object.fromEntries(this._space.metadata)),
+                    // The front gets the state when it joins the space (notifyMeState), not when it watches it.
+                    state: "",
                 },
             },
         };
