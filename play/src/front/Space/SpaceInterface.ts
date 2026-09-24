@@ -11,14 +11,13 @@ import type {
 } from "@workadventure/messages";
 import type { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
-import type { FloorHolderEntry, RaisedHandEntry } from "@workadventure/shared-utils";
+import type { FloorHolderEntry, RaisedHandEntry, SpaceState } from "@workadventure/shared-utils";
 import type { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import type { VideoBox } from "./VideoBox";
 
 /**
- * An entry of the "raised hands" queue, stored in the space metadata (key "raisedHands"), ordered by `at`.
+ * An entry of the "raised hands" queue of the space state, in the order hands were raised.
  * Carries the name because a megaphone speaker without seeAttendees has no SpaceUser for the listeners.
- * The shape comes from the shared space-metadata catalogue, so front and back cannot drift apart.
  */
 export type RaisedHand = RaisedHandEntry;
 
@@ -79,11 +78,32 @@ export interface SpaceInterface {
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     startRecording(): Promise<void>;
     stopRecording(): Promise<void>;
+    /** The server-owned state of the space, with the local user's pending changes already applied. */
+    readonly stateStore: Readable<SpaceState>;
+    observeState<K extends keyof SpaceState>(key: K): Readable<SpaceState[K]>;
+    // The methods below change the state. A refused change is reported to the user; they never reject.
+    raiseHand(raised: boolean): Promise<void>;
+    lowerHand(targetSpaceUserId: SpaceUser["spaceUserId"]): Promise<void>;
+    giveFloor(targetSpaceUserId: SpaceUser["spaceUserId"]): Promise<void>;
+    revokeFloor(targetSpaceUserId: SpaceUser["spaceUserId"]): Promise<void>;
+    createPoll(poll: {
+        question: string;
+        kind: "open" | "closed";
+        answers: string[];
+        maxSelections: number;
+    }): Promise<void>;
+    votePoll(pollId: string, answerIds: string[], voterId: string): Promise<void>;
+    closePoll(pollId: string, closingMessage?: string): Promise<void>;
+    deletePoll(pollId: string): Promise<void>;
+    askQuestion(body: string): Promise<void>;
+    upvoteQuestion(questionId: string, upvoted: boolean, voterId: string): Promise<void>;
+    answerQuestion(questionId: string): Promise<void>;
+    deleteQuestion(questionId: string): Promise<void>;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
     watchInitSpaceUsersMessage(): Observable<InitSpaceUsersMessage>;
     videoStreamStore: Readable<Map<string, VideoBox>>;
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
-    /** Ordered queue of users who raised their hand in this space, derived from the space metadata. */
+    /** Ordered queue of users who raised their hand in this space, derived from the space state. */
     readonly raisedHandsStore: Readable<RaisedHand[]>;
     /** Users (other than the local user) who currently hold the floor in this space (megaphoneState === true). */
     readonly speakingUsersStore: Readable<FloorSpeaker[]>;
@@ -194,6 +214,9 @@ export type ReactiveSpaceUser = {
 export type SpaceUserExtended = SpaceUser & {
     pictureStore: Readable<string | undefined>;
     emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => void;
-    space: Pick<SpaceInterface, "emitPublicMessage" | "canAskToMuteAudioOrTurnOffVideo" | "filterType">;
+    space: Pick<
+        SpaceInterface,
+        "emitPublicMessage" | "canAskToMuteAudioOrTurnOffVideo" | "filterType" | "giveFloor" | "revokeFloor"
+    >;
     reactiveUser: ReactiveSpaceUser;
 };

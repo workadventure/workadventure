@@ -1,8 +1,7 @@
-import {
-    FLOOR_HOLDERS_METADATA_KEY,
-    RAISED_HANDS_METADATA_KEY,
-    parseStoredSpaceMetadata,
-} from "@workadventure/shared-utils";
+import type { SpaceState } from "@workadventure/shared-utils";
+import { emptySpaceState, spaceStateSchema } from "@workadventure/shared-utils";
+import type { Operation } from "fast-json-patch";
+import { applyPatch } from "fast-json-patch";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
@@ -21,6 +20,7 @@ import type {
     SpaceEvent,
     UpdateSpaceMetadataMessage,
     SpaceUser,
+    SpaceStateQuery,
     PrivateSpaceEvent,
     PrivateEventPusherToFront,
     BackEventFrontToPusherMessage,
@@ -36,6 +36,8 @@ import type { BlackListManager } from "../WebRtc/BlackListManager";
 import { blackListManager } from "../WebRtc/BlackListManager";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+import { notificationPlayingStore } from "../Stores/NotificationStore";
+import { LL } from "../../i18n/i18n-svelte";
 
 import type {
     FloorSpeaker,
@@ -50,20 +52,13 @@ import type {
 } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 
-// Shapes come from the shared space-metadata catalogue, which is also what the back validates against, so
-// there is a single definition of what a raised hand or a floor holder looks like.
-function parseRaisedHands(value: unknown): RaisedHand[] {
-    return parseStoredSpaceMetadata(RAISED_HANDS_METADATA_KEY, value) ?? [];
-}
+const RECORDING_QUERY_TIMEOUT_MS = 60_000;
 
-function parseFloorHolders(value: unknown): FloorSpeaker[] {
-    return parseStoredSpaceMetadata(FLOOR_HOLDERS_METADATA_KEY, value) ?? [];
-}
+type StateChange = (state: SpaceState) => void;
 import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
-import { recordingSchema, spaceMetadataValidator } from "./SpaceMetadataValidator";
 import { VideoBox } from "./VideoBox";
 import { LOCAL_SCREEN_SHARING_STREAM_ID } from "./Streamable";
 import type { Streamable } from "./Streamable";
@@ -83,6 +78,11 @@ export class Space implements SpaceInterface {
     public allScreenShareStreamStore: MapStore<string, VideoBox> = new MapStore<string, VideoBox>();
     public readonly videoStreamStore: Readable<Map<string, VideoBox>>;
     public readonly screenShareStreamStore: Readable<Map<string, VideoBox>>;
+    // The state as the back last sent it, and the local changes it has not confirmed yet (optimistic updates).
+    private readonly _serverStateStore = writable<SpaceState>(emptySpaceState());
+    private _isStateInitialized = false;
+    private readonly _pendingStateChangesStore = writable<StateChange[]>([]);
+    public readonly stateStore: Readable<SpaceState>;
     public readonly raisedHandsStore: Readable<RaisedHand[]>;
     public readonly speakingUsersStore: Readable<FloorSpeaker[]>;
     // private readonly blockedUsersVideoBox: Map<string, VideoBox> = new Map<string, VideoBox>();
@@ -127,7 +127,7 @@ export class Space implements SpaceInterface {
     private readonly _isStreamingVideoStore: Readable<boolean>;
     private readonly _isStreamingAudioStore: Readable<boolean>;
     private readonly _canRecordStore: Writable<boolean>;
-    private readonly _isRecordingStore: Writable<boolean> = writable(false);
+    private readonly _isRecordingStore: Readable<boolean>;
     public readonly shouldPublishScreenShareStore: Readable<boolean>;
     private readonly observeSyncBlockUser: Subscription;
     private readonly observeSyncUnblockUser: Subscription;
@@ -260,27 +260,34 @@ export class Space implements SpaceInterface {
             },
         );
 
-        // The raised-hands queue lives in the space metadata (broadcast to all members, unlike SpaceUser),
-        // so it reaches every participant including a megaphone speaker without seeAttendees.
-        this.raisedHandsStore = readable<RaisedHand[]>([], (set) => {
-            set(parseRaisedHands(this.getMetadata().get(RAISED_HANDS_METADATA_KEY)));
-            const subscription = this.observeMetadataProperty(RAISED_HANDS_METADATA_KEY).subscribe((value) => {
-                set(parseRaisedHands(value));
-            });
-            return () => subscription.unsubscribe();
-        });
+        // Unlike the users, the state reaches every member of the space, watching it or not: no filter to register.
+        const localStateStore = derived(
+            [this._serverStateStore, this._pendingStateChangesStore],
+            ([$serverState, $pendingChanges]) => {
+                if ($pendingChanges.length === 0) {
+                    return $serverState;
+                }
+                const state = structuredClone($serverState);
+                for (const change of $pendingChanges) {
+                    change(state);
+                }
+                return state;
+            },
+        );
+        this.stateStore = localStateStore;
 
-        // List of the OTHER users who currently hold a GRANTED floor (given after a raised hand), derived from the
-        // space metadata (broadcast to all members, so the host receives it even without seeAttendees). The local
-        // user is filtered out. Only granted guests appear here — never the hosts/original speakers — so a promoted
-        // guest can never take the floor back from the presenter.
-        this.speakingUsersStore = readable<FloorSpeaker[]>([], (set) => {
-            const compute = (value: unknown) =>
-                set(parseFloorHolders(value).filter((entry) => entry.spaceUserId !== this._mySpaceUserId));
-            compute(this.getMetadata().get(FLOOR_HOLDERS_METADATA_KEY));
-            const subscription = this.observeMetadataProperty(FLOOR_HOLDERS_METADATA_KEY).subscribe(compute);
-            return () => subscription.unsubscribe();
-        });
+        // The raised-hands queue lives in the space state (broadcast to all members, unlike SpaceUser),
+        // so it reaches every participant including a megaphone speaker without seeAttendees.
+        this.raisedHandsStore = this.observeState("raisedHands");
+
+        // The OTHER users who currently hold a GRANTED floor (given after a raised hand). Only granted guests appear
+        // here — never the hosts/original speakers — so a promoted guest can never take the floor back from the
+        // presenter.
+        this.speakingUsersStore = derived(this.observeState("floorHolders"), ($floorHolders) =>
+            $floorHolders.filter((entry) => entry.spaceUserId !== this._mySpaceUserId),
+        );
+
+        this._isRecordingStore = derived(this.observeState("recording"), ($recording) => $recording.status !== "idle");
 
         this.onBlockSubscribe = this._blackListManager.onBlockStream.subscribe((userUuid) => {
             const spaceUser = this.getSpaceUserByUuid(userUuid);
@@ -437,7 +444,6 @@ export class Space implements SpaceInterface {
     setMetadata(metadata: Map<string, unknown>): void {
         metadata.forEach((value, key) => {
             this._metadata.set(key, value);
-            this.updateRecordingStore(key, value);
             const observable = this.metadataObservables[key];
             if (observable) {
                 observable.next(value);
@@ -465,12 +471,153 @@ export class Space implements SpaceInterface {
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
+    // Unlike the other state changes, a refused recording is reported by the caller (the recording menu).
     public async startRecording(): Promise<void> {
-        await this._connection.startRecording(this.name);
+        await this.queryState({ $case: "startRecording", startRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
     }
 
     public async stopRecording(): Promise<void> {
-        await this._connection.stopRecording(this.name);
+        await this.queryState({ $case: "stopRecording", stopRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
+    }
+
+    public observeState<K extends keyof SpaceState>(key: K): Readable<SpaceState[K]> {
+        return derived(this.stateStore, ($state) => $state[key]);
+    }
+
+    public raiseHand(raised: boolean): Promise<void> {
+        const mySpaceUserId = this._mySpaceUserId;
+        return this.changeState({ $case: "raiseHand", raiseHand: { raised } }, (state) => {
+            const index = state.raisedHands.findIndex((entry) => entry.spaceUserId === mySpaceUserId);
+            if (!raised && index !== -1) {
+                state.raisedHands.splice(index, 1);
+            } else if (raised && index === -1) {
+                // The back stamps the real name and time; the local user never shows its own name in the queue.
+                state.raisedHands.push({ spaceUserId: mySpaceUserId, name: "", at: Date.now() });
+            }
+        });
+    }
+
+    public lowerHand(targetSpaceUserId: SpaceUser["spaceUserId"]): Promise<void> {
+        return this.changeState({ $case: "lowerHand", lowerHand: { targetSpaceUserId } });
+    }
+
+    public giveFloor(targetSpaceUserId: SpaceUser["spaceUserId"]): Promise<void> {
+        return this.changeState({ $case: "giveFloor", giveFloor: { targetSpaceUserId } });
+    }
+
+    public revokeFloor(targetSpaceUserId: SpaceUser["spaceUserId"]): Promise<void> {
+        return this.changeState({ $case: "revokeFloor", revokeFloor: { targetSpaceUserId } });
+    }
+
+    public createPoll(poll: {
+        question: string;
+        kind: "open" | "closed";
+        answers: string[];
+        maxSelections: number;
+    }): Promise<void> {
+        return this.changeState({ $case: "createPoll", createPoll: poll });
+    }
+
+    public votePoll(pollId: string, answerIds: string[], voterId: string): Promise<void> {
+        return this.changeState({ $case: "votePoll", votePoll: { pollId, answerIds } }, (state) => {
+            const poll = state.polls[pollId];
+            if (!poll) {
+                return;
+            }
+            if (answerIds.length === 0) {
+                delete poll.votes[voterId];
+            } else {
+                poll.votes[voterId] = { answerIds, updatedAt: Date.now() };
+            }
+        });
+    }
+
+    public closePoll(pollId: string, closingMessage?: string): Promise<void> {
+        return this.changeState({ $case: "closePoll", closePoll: { pollId, closingMessage } });
+    }
+
+    public deletePoll(pollId: string): Promise<void> {
+        return this.changeState({ $case: "deletePoll", deletePoll: { pollId } });
+    }
+
+    public askQuestion(body: string): Promise<void> {
+        return this.changeState({ $case: "askQuestion", askQuestion: { body } });
+    }
+
+    public upvoteQuestion(questionId: string, upvoted: boolean, voterId: string): Promise<void> {
+        return this.changeState({ $case: "upvoteQuestion", upvoteQuestion: { questionId, upvoted } }, (state) => {
+            const question = state.questions[questionId];
+            if (!question) {
+                return;
+            }
+            if (upvoted) {
+                question.upvotes[voterId] ??= Date.now();
+            } else {
+                delete question.upvotes[voterId];
+            }
+        });
+    }
+
+    public answerQuestion(questionId: string): Promise<void> {
+        return this.changeState({ $case: "answerQuestion", answerQuestion: { questionId } });
+    }
+
+    public deleteQuestion(questionId: string): Promise<void> {
+        return this.changeState({ $case: "deleteQuestion", deleteQuestion: { questionId } });
+    }
+
+    /**
+     * Sends a state change and reports a refusal to the user. `optimisticChange` is shown right away, and dropped
+     * once the back answered: by then its patch (if accepted) is already in the server state.
+     */
+    private changeState(query: NonNullable<SpaceStateQuery["query"]>, optimisticChange?: StateChange): Promise<void> {
+        return this.queryState(query, { optimisticChange }).catch((error) => {
+            console.error(`Space state change "${query.$case}" failed in space ${this.name}`, error);
+            notificationPlayingStore.playNotification(get(LL).notification.actionFailed());
+        });
+    }
+
+    private async queryState(
+        query: NonNullable<SpaceStateQuery["query"]>,
+        options: { optimisticChange?: StateChange; timeout?: number },
+    ): Promise<void> {
+        if (this._isDestroyed) {
+            throw new Error(`Space ${this.name} is destroyed`);
+        }
+        const { optimisticChange, timeout } = options;
+        if (optimisticChange) {
+            this._pendingStateChangesStore.update((changes) => [...changes, optimisticChange]);
+        }
+        try {
+            await this._connection.querySpaceState(this.name, query, { timeout });
+        } finally {
+            if (optimisticChange) {
+                this._pendingStateChangesStore.update((changes) =>
+                    changes.filter((change) => change !== optimisticChange),
+                );
+            }
+        }
+    }
+
+    /**
+     * Applies a JSON Patch sent by the back. Right after joining, the pusher sends the whole state as a patch that
+     * replaces the root: anything received before it is already included in it.
+     */
+    applyStatePatch(patchJson: string): void {
+        try {
+            const patch = JSON.parse(patchJson) as Operation[];
+            const replacesRoot = patch[0]?.op === "replace" && patch[0].path === "";
+            if (!this._isStateInitialized && !replacesRoot) {
+                return;
+            }
+            const state = applyPatch(structuredClone(get(this._serverStateStore)), patch).newDocument;
+            this._serverStateStore.set(spaceStateSchema.parse(state));
+            this._isStateInitialized = true;
+        } catch (error) {
+            // Our copy no longer matches the back's: it stays as it was until the next full state (next join).
+            console.error(`Could not apply a state patch in space ${this.name}`, error);
+            Sentry.captureException(error);
+        }
     }
 
     public observePublicEvent<K extends keyof PublicEventsObservables>(
@@ -500,20 +647,6 @@ export class Space implements SpaceInterface {
             return newObservable;
         }
         return observable;
-    }
-
-    private updateRecordingStore(key: string, value: unknown): void {
-        if (key !== "recording") {
-            return;
-        }
-
-        const recording = recordingSchema.safeParse(value);
-
-        if (!recording.success) {
-            return;
-        }
-
-        this._isRecordingStore.set(recording.data.status !== "idle");
     }
 
     /**
@@ -706,12 +839,6 @@ export class Space implements SpaceInterface {
         const metadataMap = new Map(Object.entries(JSON.parse(metadata)));
         for (const [key, value] of metadataMap.entries()) {
             this._metadata.set(key, value);
-            this.updateRecordingStore(key, value);
-
-            const validator = spaceMetadataValidator.get(key);
-            if (validator && validator.shouldSkipInitialValueFunction(value)) {
-                continue;
-            }
 
             const observable = this.metadataObservables[key];
             if (observable) {

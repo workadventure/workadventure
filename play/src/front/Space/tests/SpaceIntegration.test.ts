@@ -17,6 +17,7 @@ import type {
     SpaceIsTyping,
     SpaceMessage,
     InitSpaceUsersMessage,
+    SpaceStatePatchMessage,
 } from "@workadventure/messages";
 import { SpaceUser, FilterType } from "@workadventure/messages";
 import { Subject } from "rxjs";
@@ -40,8 +41,8 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public emitRemoveSpaceFilter = vi.fn();
     public emitJoinSpace = vi.fn();
     public emitLeaveSpace = vi.fn();
-    public startRecording = vi.fn();
-    public stopRecording = vi.fn();
+    public querySpaceState = vi.fn().mockResolvedValue(undefined);
+    public spaceStatePatchMessageStream = new Subject<SpaceStatePatchMessage>();
     public spacePublicMessageEvent = new Subject<PublicEvent>();
     public spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
     public spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();

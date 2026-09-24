@@ -14,6 +14,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     floorRevoked: "Nimaš wjace słowo",
     floorGivenBack: "Sy słowo wróćo dał",
     handLowered: "Moderator je twoju ruku spušćił",
+    actionFailed: "Tuta akcija njeje so poradźiła",
     notificationSentToMuteMicrophone: "Powěźeńka je so na {name} pósłała, zo by jeho mikrofon němy činiła",
     notificationSentToMuteCamera: "Powěźeńka je so na {name} pósłała, zo by jeho kameru němy činiła",
     announcement: "Připowěźeńka",

@@ -32,8 +32,8 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitAddSpaceFilter"
     | "emitLeaveSpace"
     | "emitJoinSpace"
-    | "startRecording"
-    | "stopRecording"
+    | "querySpaceState"
+    | "spaceStatePatchMessageStream"
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
@@ -55,6 +55,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceMetadataMessageStreamSubscription: Subscription;
+    private spaceStatePatchMessageStreamSubscription: Subscription;
     private proximityPublicMessageEventSubscription: Subscription;
     private proximityPrivateMessageEventSubscription: Subscription;
     private spaceDestroyedMessageSubscription: Subscription;
@@ -150,39 +151,30 @@ export class SpaceRegistry implements SpaceRegistryInterface {
      * Used by the host "raised hands" panel, which only has the spaceUserId (not the SpaceUserExtended) — in
      * particular for a megaphone speaker who does not receive listeners' SpaceUser.
      */
-    public giveFloor(spaceUserId: string): void {
-        for (const space of this.spaces.values()) {
-            if (get(space.raisedHandsStore).some((entry) => entry.spaceUserId === spaceUserId)) {
-                space.emitPrivateMessage({ $case: "giveFloor", giveFloor: {} }, spaceUserId);
-                return;
-            }
-        }
+    public async giveFloor(spaceUserId: string): Promise<void> {
+        await this.findSpaceWithEntry(spaceUserId, (space) => space.raisedHandsStore)?.giveFloor(spaceUserId);
     }
 
     /**
      * Takes the floor back from a user identified by their spaceUserId, resolving the space from the list of
      * current speakers. Counterpart of giveFloor for the host "raised hands" panel.
      */
-    public revokeFloor(spaceUserId: string): void {
-        for (const space of this.spaces.values()) {
-            if (get(space.speakingUsersStore).some((entry) => entry.spaceUserId === spaceUserId)) {
-                space.emitPrivateMessage({ $case: "revokeFloor", revokeFloor: {} }, spaceUserId);
-                return;
-            }
-        }
+    public async revokeFloor(spaceUserId: string): Promise<void> {
+        await this.findSpaceWithEntry(spaceUserId, (space) => space.speakingUsersStore)?.revokeFloor(spaceUserId);
     }
 
-    /**
-     * Asks a user who raised their hand to lower it. The queue is authoritative server-side and only its owner
-     * may change their own entry, so a moderator clearing the list goes through the owner's own client.
-     */
-    public lowerHand(spaceUserId: string): void {
-        for (const space of this.spaces.values()) {
-            if (get(space.raisedHandsStore).some((entry) => entry.spaceUserId === spaceUserId)) {
-                space.emitPrivateMessage({ $case: "lowerHand", lowerHand: {} }, spaceUserId);
-                return;
-            }
-        }
+    /** Lowers the hand of a user who raised it (moderation), resolving the space from the raised-hands queue. */
+    public async lowerHand(spaceUserId: string): Promise<void> {
+        await this.findSpaceWithEntry(spaceUserId, (space) => space.raisedHandsStore)?.lowerHand(spaceUserId);
+    }
+
+    private findSpaceWithEntry(
+        spaceUserId: string,
+        list: (space: Space) => Readable<{ spaceUserId: string }[]>,
+    ): Space | undefined {
+        return Array.from(this.spaces.values()).find((space) =>
+            get(list(space)).some((entry) => entry.spaceUserId === spaceUserId),
+        );
     }
 
     public readonly isLiveStreamingAudioStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {
@@ -294,6 +286,12 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 }
 
                 space.setMetadata(metadata);
+            },
+        );
+
+        this.spaceStatePatchMessageStreamSubscription = roomConnection.spaceStatePatchMessageStream.subscribe(
+            (message) => {
+                this.spaces.get(message.spaceName)?.applyStatePatch(message.patch);
             },
         );
 
@@ -424,6 +422,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.updateSpaceUserMessageStreamSubscription.unsubscribe();
         this.removeSpaceUserMessageStreamSubscription.unsubscribe();
         this.updateSpaceMetadataMessageStreamSubscription.unsubscribe();
+        this.spaceStatePatchMessageStreamSubscription.unsubscribe();
         this.proximityPublicMessageEventSubscription.unsubscribe();
         this.proximityPrivateMessageEventSubscription.unsubscribe();
         this.spaceDestroyedMessageSubscription.unsubscribe();

@@ -9,6 +9,7 @@ import type {
     PrivateEventPusherToFront,
     SpaceDestroyedMessage,
     InitSpaceUsersMessage,
+    SpaceStatePatchMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
@@ -30,8 +31,8 @@ export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInter
     public emitUpdateSpaceFilter = vi.fn();
     public emitLeaveSpace = vi.fn();
     public emitJoinSpace = vi.fn();
-    public startRecording = vi.fn();
-    public stopRecording = vi.fn();
+    public querySpaceState = vi.fn().mockResolvedValue(undefined);
+    public spaceStatePatchMessageStream = new Subject<SpaceStatePatchMessage>();
     public emitUpdateSpaceMetadata = vi.fn();
     public emitUpdateSpaceUserMessage = vi.fn();
     public emitBackEvent = vi.fn();

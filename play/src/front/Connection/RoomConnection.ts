@@ -65,8 +65,8 @@ import type {
     UploadFileMessage,
     MapStorageJwtAnswer,
     DeleteRecordingAnswer,
-    StartRecordingAnswer,
-    StopRecordingAnswer,
+    SpaceStatePatchMessage,
+    SpaceStateQuery,
     PrivateEventPusherToFront,
     InitSpaceUsersMessage,
     NonUndefinedFields,
@@ -145,7 +145,6 @@ import { WorkAdventureWebSocket } from "./WorkAdventureWebSocket";
 
 // This must be greater than RoomManager's PING_INTERVAL
 const manualPingDelay = 100_000;
-const recordingQueryTimeoutMs = 60_000;
 
 export class RoomConnection implements RoomConnection {
     public readonly socket: WorkAdventureWebSocket;
@@ -253,6 +252,8 @@ export class RoomConnection implements RoomConnection {
     public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
     private readonly _updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
     public readonly updateSpaceMetadataMessageStream = this._updateSpaceMetadataMessageStream.asObservable();
+    private readonly _spaceStatePatchMessageStream = new Subject<SpaceStatePatchMessage>();
+    public readonly spaceStatePatchMessageStream = this._spaceStatePatchMessageStream.asObservable();
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
     private readonly _spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
@@ -449,6 +450,10 @@ export class RoomConnection implements RoomConnection {
                                 }
                                 case "removeSpaceUserMessage": {
                                     this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
+                                    break;
+                                }
+                                case "spaceStatePatchMessage": {
+                                    this._spaceStatePatchMessageStream.next(subMessage.spaceStatePatchMessage);
                                     break;
                                 }
                                 case "updateSpaceMetadataMessage": {
@@ -1922,44 +1927,29 @@ export class RoomConnection implements RoomConnection {
         return answer.deleteRecordingAnswer;
     }
 
-    public async startRecording(spaceName: string): Promise<StartRecordingAnswer> {
+    /**
+     * Sends a query that changes the state of a space. The back answers once the change is applied; by then the
+     * patch it caused has already been received (the pusher flushes it before answering).
+     */
+    public async querySpaceState(
+        spaceName: string,
+        query: SpaceStateQuery["query"],
+        options?: { timeout?: number },
+    ): Promise<void> {
         const answer = await this.query(
             {
-                $case: "startRecordingQuery",
-                startRecordingQuery: {
+                $case: "spaceStateQuery",
+                spaceStateQuery: {
                     spaceName,
+                    query: { query },
                 },
             },
-            {
-                timeout: recordingQueryTimeoutMs,
-            },
+            options,
         );
 
-        if (answer.$case !== "startRecordingAnswer") {
+        if (answer.$case !== "spaceStateAnswer") {
             throw new Error("Unexpected answer");
         }
-
-        return answer.startRecordingAnswer;
-    }
-
-    public async stopRecording(spaceName: string): Promise<StopRecordingAnswer> {
-        const answer = await this.query(
-            {
-                $case: "stopRecordingQuery",
-                stopRecordingQuery: {
-                    spaceName,
-                },
-            },
-            {
-                timeout: recordingQueryTimeoutMs,
-            },
-        );
-
-        if (answer.$case !== "stopRecordingAnswer") {
-            throw new Error("Unexpected answer");
-        }
-
-        return answer.stopRecordingAnswer;
     }
 
     public async getOauthRefreshToken(
@@ -2231,6 +2221,7 @@ export class RoomConnection implements RoomConnection {
         this._updateSpaceUserMessageStream.complete();
         this._removeSpaceUserMessageStream.complete();
         this._updateSpaceMetadataMessageStream.complete();
+        this._spaceStatePatchMessageStream.complete();
         this._receivedEventMessageStream.complete();
         this._spacePrivateMessageEvent.complete();
         this._spacePublicMessageEvent.complete();
