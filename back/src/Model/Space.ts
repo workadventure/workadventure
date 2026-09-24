@@ -33,7 +33,6 @@ import { CommunicationManager } from "./CommunicationManager";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ManagedRecordingState } from "./RecordingManager";
-import { metadataProcessor } from "./MetadataProcessorInit";
 import type { SpaceStateHost } from "./SpaceStateHost";
 import { RaiseHandManager } from "./RaiseHandManager";
 import { ProximityPollManager } from "./ProximityPollManager";
@@ -284,25 +283,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace, 
                 });
             }
         }
-    }
-
-    public async updateMetadata(metadata: { [key: string]: unknown }, senderId: string) {
-        const processedMetadata: { [key: string]: unknown } = {};
-        const promises: Promise<void>[] = [];
-
-        for (const key in metadata) {
-            promises.push(
-                metadataProcessor.processMetadata(key, metadata[key], senderId, this).then((processedValue) => {
-                    if (processedValue !== undefined) {
-                        processedMetadata[key] = processedValue;
-                    }
-                }),
-            );
-        }
-
-        await Promise.allSettled(promises);
-
-        this.publishMetadata(processedMetadata);
     }
 
     private filterOneUser(user: SpaceUser): boolean {
