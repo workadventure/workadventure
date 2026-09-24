@@ -729,8 +729,7 @@ export class SocketManager {
                 case "banIpPreviewQuery":
                 case "deleteRecordingQuery":
                 case "getSignedUrlQuery":
-                case "startRecordingQuery":
-                case "stopRecordingQuery":
+                case "spaceStateQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
