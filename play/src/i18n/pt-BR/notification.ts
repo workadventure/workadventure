@@ -30,6 +30,7 @@ const notification: BaseTranslation = {
     addNewTag: "adicionar uma nova tag: '{tag}'",
     floorGivenBack: "Você devolveu a palavra",
     handLowered: "Um moderador baixou sua mão",
+    actionFailed: "Não foi possível concluir esta ação",
     notificationSentToMuteMicrophone: "Uma notificação foi enviada para {name} para silenciar o microfone",
     notificationSentToMuteCamera: "Uma notificação foi enviada para {name} para silenciar a câmera",
     screenSharingError: "Não é possível iniciar o compartilhamento de tela",
