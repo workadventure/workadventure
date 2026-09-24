@@ -106,7 +106,8 @@ export class SpaceConnection implements SpaceConnectionInterface {
                         case "kickOffMessage":
                         case "publicEvent":
                         case "privateEvent":
-                        case "spaceAnswerMessage": {
+                        case "spaceAnswerMessage":
+                        case "spaceStatePatchMessage": {
                             const spaceName = this.extractSpaceName(message);
                             if (spaceName) {
                                 const space = this.spacePerBackId.get(backId)?.get(spaceName);
@@ -328,6 +329,8 @@ export class SpaceConnection implements SpaceConnectionInterface {
             case "spaceAnswerMessage": {
                 return message.message.spaceAnswerMessage?.spaceName;
             }
+            case "spaceStatePatchMessage":
+                return message.message.spaceStatePatchMessage.spaceName;
             case "pingMessage":
                 return undefined;
             default: {

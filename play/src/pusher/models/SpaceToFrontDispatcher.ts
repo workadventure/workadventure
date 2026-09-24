@@ -12,7 +12,9 @@ import debug from "debug";
 import { deepmergeInto } from "deepmerge-ts";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { z } from "zod";
-import { Deferred } from "@workadventure/shared-utils";
+import { Deferred, spaceStateSchema } from "@workadventure/shared-utils";
+import type { Operation } from "fast-json-patch";
+import { applyPatch } from "fast-json-patch";
 import { asError } from "catch-unknown";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
 import type { EventProcessor } from "./EventProcessor";
@@ -25,6 +27,7 @@ export interface SpaceToFrontDispatcherInterface {
     notifyMe(watcher: PusherWebSocket, subMessage: SubMessage): void;
     notifyMeAddUser(watcher: PusherWebSocket, user: SpaceUserExtended): void;
     notifyMeInit(watcher: PusherWebSocket): Promise<void>;
+    notifyMeState(socket: PusherWebSocket): Promise<void>;
     /**
      * Notify all watchers in this space. Notification is done only to watchers.
      */
@@ -117,6 +120,10 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     this.updateMetadata(isMetadata.data);
                     break;
                 }
+                case "spaceStatePatchMessage": {
+                    this.applyStatePatch(message.message.spaceStatePatchMessage.patch);
+                    break;
+                }
                 case "pingMessage": {
                     throw new Error(`${message.message.$case} should not be received by the dispatcher`);
                 }
@@ -165,7 +172,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
 
     // This function is called when we received a message from the back (initialization of the user list)
     private initSpaceUsersMessage(initMessage: InitSpaceUsersMessage) {
-        const { users: spaceUsers, metadata: metadataJson } = initMessage;
+        const { users: spaceUsers, metadata: metadataJson, state: stateJson } = initMessage;
 
         for (const spaceUser of spaceUsers) {
             if (this._space.users.has(spaceUser.spaceUserId)) {
@@ -209,6 +216,9 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         debug(`${this._space.name} : init done. User count ${this._space.users.size}`);
 
         try {
+            if (stateJson) {
+                this._space.state = spaceStateSchema.parse(JSON.parse(stateJson));
+            }
             if (metadataJson) {
                 const parsedMetadata = JSON.parse(metadataJson);
                 const isMetadata = z.record(z.string(), z.unknown()).safeParse(parsedMetadata);
@@ -369,6 +379,24 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         this.notifyAllMetadata(subMessage);
     }
 
+    private applyStatePatch(patchJson: string) {
+        const patch = JSON.parse(patchJson) as Operation[];
+        this._space.state = applyPatch(this._space.state, patch).newDocument;
+
+        // Like metadata, the state goes to every user connected to the space, watching or not.
+        this._space._localConnectedUser.forEach((socket) => {
+            socket.emitInBatch({
+                message: {
+                    $case: "spaceStatePatchMessage",
+                    spaceStatePatchMessage: {
+                        spaceName: this._space.localName,
+                        patch: patchJson,
+                    },
+                },
+            });
+        });
+    }
+
     private notifyAllMetadata(subMessage: SubMessage) {
         this._space._localConnectedUser.forEach((watcher) => {
             const socketData = watcher.getUserData();
@@ -451,6 +479,23 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         this.notifyMe(watcher, subMessage);
     }
 
+    /**
+     * Sends the whole state to a user who just joined the space, as a patch replacing the root. The patches that
+     * follow reach every user of the space, watching it or not, so from then on their copy stays up to date.
+     */
+    public async notifyMeState(socket: PusherWebSocket) {
+        await this.waitForInit();
+        socket.emitInBatch({
+            message: {
+                $case: "spaceStatePatchMessage",
+                spaceStatePatchMessage: {
+                    spaceName: this._space.localName,
+                    patch: JSON.stringify([{ op: "replace", path: "", value: this._space.state }]),
+                },
+            },
+        });
+    }
+
     private sendPublicEvent(message: NonUndefinedFields<PublicEvent>) {
         const spaceEvent = noUndefined(message.spaceEvent);
 
@@ -523,11 +568,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     sender: extendedSender,
                     receiverUserId: message.receiverUserId,
                     spaceEvent: {
-                        event: this.eventProcessor.processPrivateEvent(
-                            spaceEvent.event,
-                            extendedSender,
-                            this._space.filterType,
-                        ),
+                        event: this.eventProcessor.processPrivateEvent(spaceEvent.event, extendedSender),
                     },
                     // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
                     spaceName: this._space.localName,
