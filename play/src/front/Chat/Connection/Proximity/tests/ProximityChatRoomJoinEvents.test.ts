@@ -4,7 +4,8 @@ globalThis.Phaser = Phaser;
 
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { Subject } from "rxjs";
-import { writable } from "svelte/store";
+import { readable, writable } from "svelte/store";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { loadLocaleAsync } from "../../../../../i18n/i18n-util.async";
 import { setLocale } from "../../../../../i18n/i18n-svelte";
@@ -103,7 +104,7 @@ function createFakeSpace(users: Map<string, SpaceUserExtended>) {
         destroyed: false,
         usersStore: writable(users),
         getMetadata: () => new Map(),
-        observeMetadata: new Subject(),
+        stateStore: readable(emptySpaceState()),
         observePublicEvent: () => new Subject(),
         observeUserJoined,
         observeUserLeft,

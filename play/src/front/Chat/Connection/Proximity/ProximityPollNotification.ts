@@ -1,16 +1,13 @@
-import { parseProximityPollMetadata, type ProximityPollDefinitionMetadata } from "./ProximityPollMetadata";
+import type { ProximityPoll } from "@workadventure/shared-utils";
 
 export function getNewRemoteProximityPolls(
-    previousMetadata: Map<string, unknown>,
-    nextMetadata: Map<string, unknown>,
+    previousPolls: Readonly<Record<string, ProximityPoll>>,
+    nextPolls: Readonly<Record<string, ProximityPoll>>,
     currentVoterId: string,
-): ProximityPollDefinitionMetadata[] {
-    const previousPollIds = new Set(parseProximityPollMetadata(previousMetadata).polls.map((poll) => poll.id));
-    return parseProximityPollMetadata(nextMetadata).polls.filter(
-        (poll) => !previousPollIds.has(poll.id) && poll.senderId !== currentVoterId,
-    );
+): ProximityPoll[] {
+    return Object.values(nextPolls).filter((poll) => !(poll.id in previousPolls) && poll.senderId !== currentVoterId);
 }
 
-export function getProximityPollNotificationMessage(poll: ProximityPollDefinitionMetadata, pollTitle = "Poll"): string {
+export function getProximityPollNotificationMessage(poll: ProximityPoll, pollTitle = "Poll"): string {
     return `${pollTitle}: ${poll.question}`;
 }

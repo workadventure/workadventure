@@ -1,43 +1,37 @@
 import { get } from "svelte/store";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import type { ProximityPoll } from "@workadventure/shared-utils";
 import { ProximityChatPoll } from "../ProximityChatPoll";
-import {
-    getProximityPollDeleteMetadataKey,
-    getProximityPollEndMetadataKey,
-    getProximityPollVoteMetadataKey,
-    type ProximityPollDefinitionMetadata,
-} from "../ProximityPollMetadata";
+
+function createSpace() {
+    return {
+        votePoll: vi.fn().mockResolvedValue(undefined),
+        closePoll: vi.fn().mockResolvedValue(undefined),
+        deletePoll: vi.fn().mockResolvedValue(undefined),
+    };
+}
 
 describe("ProximityChatPoll", () => {
-    it("should write the current user's latest vote to a dedicated metadata key", async () => {
-        const metadataUpdates: Map<string, unknown>[] = [];
+    it("should send the current user's vote to the space, as themselves", async () => {
+        const space = createSpace();
         const poll = new ProximityChatPoll({
-            definition: createPollDefinition(),
-            votes: [],
-            end: undefined,
+            poll: createPoll(),
             currentVoterId: "alice-uuid",
             sender: undefined,
-            updateMetadata: (metadata) => metadataUpdates.push(metadata),
+            space,
         });
 
         await poll.vote(["banana"]);
 
-        expect(metadataUpdates).toHaveLength(1);
-        expect(metadataUpdates[0].get(getProximityPollVoteMetadataKey("poll-1", "alice-uuid"))).toMatchObject({
-            pollId: "poll-1",
-            voterId: "alice-uuid",
-            answerIds: ["banana"],
-        });
+        expect(space.votePoll).toHaveBeenCalledWith("poll-1", ["banana"], "alice-uuid");
     });
 
-    it("should update the same state store when metadata votes change", () => {
+    it("should update the same state store when the votes change", () => {
         const poll = new ProximityChatPoll({
-            definition: createPollDefinition(),
-            votes: [],
-            end: undefined,
+            poll: createPoll(),
             currentVoterId: "alice-uuid",
             sender: undefined,
-            updateMetadata: () => {},
+            space: createSpace(),
         });
         const observedAnswerIds: string[][] = [];
         const unsubscribe = poll.state.subscribe((state) => {
@@ -45,8 +39,7 @@ describe("ProximityChatPoll", () => {
         });
 
         poll.update({
-            votes: [{ pollId: "poll-1", voterId: "alice-uuid", answerIds: ["banana"], updatedAt: 11 }],
-            end: undefined,
+            poll: { ...createPoll(), votes: { "alice-uuid": { answerIds: ["banana"], updatedAt: 11 } } },
             currentVoterId: "alice-uuid",
             sender: undefined,
         });
@@ -57,22 +50,18 @@ describe("ProximityChatPoll", () => {
     });
 
     it("should allow only the creator to end and delete the poll", async () => {
-        const metadataUpdates: Map<string, unknown>[] = [];
+        const space = createSpace();
         const participantPoll = new ProximityChatPoll({
-            definition: createPollDefinition(),
-            votes: [],
-            end: undefined,
+            poll: createPoll(),
             currentVoterId: "alice-uuid",
             sender: undefined,
-            updateMetadata: (metadata) => metadataUpdates.push(metadata),
+            space,
         });
         const creatorPoll = new ProximityChatPoll({
-            definition: createPollDefinition(),
-            votes: [],
-            end: undefined,
+            poll: createPoll(),
             currentVoterId: "creator-uuid",
             sender: undefined,
-            updateMetadata: (metadata) => metadataUpdates.push(metadata),
+            space,
         });
 
         await expect(participantPoll.end()).rejects.toThrow("Only the poll creator can close this poll");
@@ -81,18 +70,26 @@ describe("ProximityChatPoll", () => {
 
         expect(get(participantPoll.canEnd)).toBe(false);
         expect(get(creatorPoll.canEnd)).toBe(true);
-        expect(metadataUpdates[0].get(getProximityPollEndMetadataKey("poll-1"))).toMatchObject({
-            pollId: "poll-1",
-            senderId: "creator-uuid",
+        expect(space.closePoll).toHaveBeenCalledOnce();
+        expect(space.closePoll).toHaveBeenCalledWith("poll-1");
+        expect(space.deletePoll).toHaveBeenCalledWith("poll-1");
+    });
+
+    it("should refuse a vote on a closed poll without asking the space", async () => {
+        const space = createSpace();
+        const poll = new ProximityChatPoll({
+            poll: { ...createPoll(), end: { closedAt: 12 } },
+            currentVoterId: "alice-uuid",
+            sender: undefined,
+            space,
         });
-        expect(metadataUpdates[1].get(getProximityPollDeleteMetadataKey("poll-1"))).toMatchObject({
-            pollId: "poll-1",
-            senderId: "creator-uuid",
-        });
+
+        await expect(poll.vote(["banana"])).rejects.toThrow();
+        expect(space.votePoll).not.toHaveBeenCalled();
     });
 });
 
-function createPollDefinition(): ProximityPollDefinitionMetadata {
+function createPoll(): ProximityPoll {
     return {
         id: "poll-1",
         question: "Best fruit?",
@@ -105,5 +102,6 @@ function createPollDefinition(): ProximityPollDefinitionMetadata {
         senderId: "creator-uuid",
         senderName: "Creator",
         createdAt: 10,
+        votes: {},
     };
 }

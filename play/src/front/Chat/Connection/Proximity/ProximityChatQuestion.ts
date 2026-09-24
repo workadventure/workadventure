@@ -1,14 +1,8 @@
 import { get, writable, type Readable, type Writable } from "svelte/store";
+import type { ProximityQuestion } from "@workadventure/shared-utils";
+import type { SpaceInterface } from "../../../Space/SpaceInterface";
 import type { AnyKindOfUser, ChatQuestionItem, ChatQuestionState } from "../ChatConnection";
-import {
-    computeProximityQAState,
-    getProximityQAAnswerMetadataKey,
-    getProximityQADeleteMetadataKey,
-    getProximityQAUpvoteMetadataKey,
-    type ProximityQAAnswerMetadata,
-    type ProximityQAQuestionMetadata,
-    type ProximityQAUpvoteMetadata,
-} from "./ProximityQAMetadata";
+import { computeProximityQAState } from "./ProximityQAState";
 
 export class ProximityQuestionPermissionError extends Error {
     constructor(message: string) {
@@ -18,19 +12,16 @@ export class ProximityQuestionPermissionError extends Error {
 }
 
 export type ProximityChatQuestionOptions = {
-    definition: ProximityQAQuestionMetadata;
-    upvotes: ProximityQAUpvoteMetadata[];
-    answer: ProximityQAAnswerMetadata | undefined;
+    question: ProximityQuestion;
     currentVoterId: string;
     sender: AnyKindOfUser | undefined;
     canMarkAnswered: boolean;
     canDeleteAny: boolean;
-    updateMetadata: (metadata: Map<string, unknown>) => void;
+    space: Pick<SpaceInterface, "upvoteQuestion" | "answerQuestion" | "deleteQuestion">;
 };
 
 export type ProximityChatQuestionUpdate = {
-    upvotes: ProximityQAUpvoteMetadata[];
-    answer: ProximityQAAnswerMetadata | undefined;
+    question: ProximityQuestion;
     currentVoterId: string;
     sender: AnyKindOfUser | undefined;
     canMarkAnswered: boolean;
@@ -46,23 +37,26 @@ export class ProximityChatQuestion implements ChatQuestionItem {
     readonly canDelete: Readable<boolean>;
     readonly canMarkAnswered: Readable<boolean>;
 
-    private readonly definition: ProximityQAQuestionMetadata;
     private currentVoterId: string;
-    private readonly updateMetadata: (metadata: Map<string, unknown>) => void;
+    private readonly space: ProximityChatQuestionOptions["space"];
     private readonly stateStore: Writable<ChatQuestionState>;
     private readonly canUpvoteStore: Writable<boolean>;
     private readonly canDeleteStore: Writable<boolean>;
     private readonly canMarkAnsweredStore: Writable<boolean>;
 
     constructor(options: ProximityChatQuestionOptions) {
-        this.id = options.definition.id;
+        this.id = options.question.id;
         this.sender = options.sender;
-        this.date = new Date(options.definition.createdAt);
-        this.definition = options.definition;
+        this.date = new Date(options.question.createdAt);
         this.currentVoterId = options.currentVoterId;
-        this.updateMetadata = options.updateMetadata;
+        this.space = options.space;
 
-        const state = this.computeState(options.upvotes, options.answer, options.canMarkAnswered, options.canDeleteAny);
+        const state = computeProximityQAState(
+            options.question,
+            options.currentVoterId,
+            options.canMarkAnswered,
+            options.canDeleteAny,
+        );
         this.stateStore = writable(state);
         this.canUpvoteStore = writable(state.canUpvote);
         this.canDeleteStore = writable(state.canDelete);
@@ -76,7 +70,12 @@ export class ProximityChatQuestion implements ChatQuestionItem {
     update(update: ProximityChatQuestionUpdate): void {
         this.sender = update.sender;
         this.currentVoterId = update.currentVoterId;
-        const state = this.computeState(update.upvotes, update.answer, update.canMarkAnswered, update.canDeleteAny);
+        const state = computeProximityQAState(
+            update.question,
+            update.currentVoterId,
+            update.canMarkAnswered,
+            update.canDeleteAny,
+        );
         this.stateStore.set(state);
         this.canUpvoteStore.set(state.canUpvote);
         this.canDeleteStore.set(state.canDelete);
@@ -88,20 +87,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
             return Promise.reject(new ProximityQuestionPermissionError("Cannot upvote this question"));
         }
 
-        this.updateMetadata(
-            new Map([
-                [
-                    getProximityQAUpvoteMetadataKey(this.definition.id, this.currentVoterId),
-                    {
-                        questionId: this.definition.id,
-                        voterId: this.currentVoterId,
-                        upvoted: !get(this.state).hasUpvoted,
-                        updatedAt: Date.now(),
-                    },
-                ],
-            ]),
-        );
-        return Promise.resolve();
+        return this.space.upvoteQuestion(this.id, !get(this.state).hasUpvoted, this.currentVoterId);
     }
 
     remove(): Promise<void> {
@@ -111,19 +97,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
             );
         }
 
-        this.updateMetadata(
-            new Map([
-                [
-                    getProximityQADeleteMetadataKey(this.definition.id),
-                    {
-                        questionId: this.definition.id,
-                        senderId: this.currentVoterId,
-                        deletedAt: Date.now(),
-                    },
-                ],
-            ]),
-        );
-        return Promise.resolve();
+        return this.space.deleteQuestion(this.id);
     }
 
     markAnswered(): Promise<void> {
@@ -133,34 +107,6 @@ export class ProximityChatQuestion implements ChatQuestionItem {
             );
         }
 
-        this.updateMetadata(
-            new Map([
-                [
-                    getProximityQAAnswerMetadataKey(this.definition.id),
-                    {
-                        questionId: this.definition.id,
-                        moderatorId: this.currentVoterId,
-                        answeredAt: Date.now(),
-                    },
-                ],
-            ]),
-        );
-        return Promise.resolve();
-    }
-
-    private computeState(
-        upvotes: ProximityQAUpvoteMetadata[],
-        answer: ProximityQAAnswerMetadata | undefined,
-        canMarkAnswered: boolean,
-        canDeleteAny: boolean,
-    ): ChatQuestionState {
-        return computeProximityQAState(
-            this.definition,
-            upvotes,
-            answer,
-            this.currentVoterId,
-            canMarkAnswered,
-            canDeleteAny,
-        );
+        return this.space.answerQuestion(this.id);
     }
 }

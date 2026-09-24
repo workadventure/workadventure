@@ -1,19 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { getProximityPollDefinitionMetadataKey, type ProximityPollDefinitionMetadata } from "../ProximityPollMetadata";
+import type { ProximityPoll } from "@workadventure/shared-utils";
 import { getNewRemoteProximityPolls, getProximityPollNotificationMessage } from "../ProximityPollNotification";
 
 describe("ProximityPollNotification", () => {
     it("should return only new polls created by another participant", () => {
-        const previousMetadata = new Map<string, unknown>([
-            [getProximityPollDefinitionMetadataKey("poll-1"), createPoll("poll-1", "Existing poll", "bob-uuid")],
-        ]);
-        const nextMetadata = new Map<string, unknown>([
-            [getProximityPollDefinitionMetadataKey("poll-1"), createPoll("poll-1", "Existing poll", "bob-uuid")],
-            [getProximityPollDefinitionMetadataKey("poll-2"), createPoll("poll-2", "Remote poll", "bob-uuid")],
-            [getProximityPollDefinitionMetadataKey("poll-3"), createPoll("poll-3", "My poll", "alice-uuid")],
-        ]);
+        const existing = createPoll("poll-1", "Existing poll", "bob-uuid");
+        const previousPolls = { "poll-1": existing };
+        const nextPolls = {
+            "poll-1": existing,
+            "poll-2": createPoll("poll-2", "Remote poll", "bob-uuid"),
+            "poll-3": createPoll("poll-3", "My poll", "alice-uuid"),
+        };
 
-        const polls = getNewRemoteProximityPolls(previousMetadata, nextMetadata, "alice-uuid");
+        const polls = getNewRemoteProximityPolls(previousPolls, nextPolls, "alice-uuid");
 
         expect(polls.map((poll) => poll.id)).toEqual(["poll-2"]);
     });
@@ -28,7 +27,7 @@ describe("ProximityPollNotification", () => {
     });
 });
 
-function createPoll(id: string, question: string, senderId: string): ProximityPollDefinitionMetadata {
+function createPoll(id: string, question: string, senderId: string): ProximityPoll {
     return {
         id,
         question,
@@ -41,5 +40,6 @@ function createPoll(id: string, question: string, senderId: string): ProximityPo
         senderId,
         senderName: senderId,
         createdAt: 10,
+        votes: {},
     };
 }

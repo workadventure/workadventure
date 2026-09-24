@@ -1,15 +1,11 @@
-import { parseProximityQAMetadata } from "./ProximityQAMetadata";
+import type { ProximityQuestion } from "@workadventure/shared-utils";
 
 export function getUnreadRemoteQuestionIds(
-    previousMetadata: Map<string, unknown>,
-    nextMetadata: Map<string, unknown>,
+    previousQuestions: Readonly<Record<string, ProximityQuestion>>,
+    nextQuestions: Readonly<Record<string, ProximityQuestion>>,
     currentVoterId: string,
 ): string[] {
-    const previousQuestionIds = new Set(
-        parseProximityQAMetadata(previousMetadata).questions.map((question) => question.id),
-    );
-
-    return parseProximityQAMetadata(nextMetadata)
-        .questions.filter((question) => !previousQuestionIds.has(question.id) && question.senderId !== currentVoterId)
+    return Object.values(nextQuestions)
+        .filter((question) => !(question.id in previousQuestions) && question.senderId !== currentVoterId)
         .map((question) => question.id);
 }
