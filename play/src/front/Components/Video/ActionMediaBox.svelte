@@ -100,19 +100,13 @@
 
     function giveFloor(spaceUser: SpaceUserExtended) {
         analyticsClient.trackAdminEvent("meeting.floor.given");
-        spaceUser.emitPrivateEvent({
-            $case: "giveFloor",
-            giveFloor: {},
-        });
+        spaceUser.space.giveFloor(spaceUser.spaceUserId).catch((error) => console.error(error));
         close();
     }
 
     function revokeFloor(spaceUser: SpaceUserExtended) {
         analyticsClient.trackAdminEvent("meeting.floor.revoked");
-        spaceUser.emitPrivateEvent({
-            $case: "revokeFloor",
-            revokeFloor: {},
-        });
+        spaceUser.space.revokeFloor(spaceUser.spaceUserId).catch((error) => console.error(error));
         close();
     }
 
