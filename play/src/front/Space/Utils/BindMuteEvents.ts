@@ -1,7 +1,7 @@
+import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
-import { FilterType } from "@workadventure/messages";
 import type { PrivateEvents, SpaceInterface } from "../SpaceInterface";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
@@ -116,53 +116,6 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
         chatZoneLiveStore.set(false);
     });
 
-    // The local user has been given the floor: promote to speaker (in megaphone spaces) and lower the raised hand.
-    // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
-    // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
-    space.observePrivateEvent("giveFloor").subscribe(() => {
-        // In an ALL_USERS (proximity) space everyone already speaks, so there is nothing to promote.
-        if (space.filterType !== FilterType.ALL_USERS) {
-            space.startStreaming();
-            // Promote to a full speaker: this guarantees the local return feed (self-view) shows even when the
-            // user's availability status would otherwise hide it, and remembers the space so the raise-hand
-            // button can switch to its "on stage" state and hand the floor back (see RaiseHandMenuItem).
-            isSpeakerStore.set(true);
-            givenFloorSpaceStore.set(space);
-        }
-        requestedHandRaiseState.lowerHand();
-        // We never force the microphone on; if it is muted we invite the user to enable it.
-        if (get(requestedMicrophoneState)) {
-            notificationPlayingStore.playNotification(get(LL).notification.givenTheFloor());
-        } else {
-            notificationPlayingStore.playNotification(get(LL).notification.givenTheFloorEnableMicrophone());
-        }
-    });
-
-    // The floor has been taken back from the local user: demote from speaker (in megaphone spaces).
-    // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
-    // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
-    space.observePrivateEvent("revokeFloor").subscribe(() => {
-        if (space.filterType !== FilterType.ALL_USERS) {
-            space.stopStreaming();
-            // Undo the promotion only if we got the floor via a raised hand (not for a megaphone/zone speaker
-            // whose speaker state is owned by the zone listeners).
-            if (get(givenFloorSpaceStore) === space) {
-                isSpeakerStore.set(false);
-                givenFloorSpaceStore.set(undefined);
-            }
-        }
-        notificationPlayingStore.playNotification(get(LL).notification.floorRevoked(), "microphone-off.png");
-    });
-
-    // A moderator lowered the local user's hand to clean up the queue (the queue is server-authoritative and
-    // only its owner may change their own entry, so the lowering happens here).
-    // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
-    // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
-    space.observePrivateEvent("lowerHand").subscribe(() => {
-        requestedHandRaiseState.lowerHand();
-        notificationPlayingStore.playNotification(get(LL).notification.handLowered());
-    });
-
     // If the local user leaves the space while holding a floor granted through a raised hand, drop the
     // promotion state so the "give back the floor" control does not linger, pointing at a space we left.
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
@@ -186,5 +139,55 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
     space.observePublicEvent("muteVideoForEverybody").subscribe((event) => {
         notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
         requestedCameraState.disableWebcam();
+    });
+}
+
+/**
+ * Reacts to what others did to the local user's raised hand, as seen in the space state: being given the floor,
+ * having it taken back, or having the hand lowered by a moderator. The state is server-owned, so these are not
+ * requests the local client could ignore: this only brings the local UI and media in line with it.
+ */
+export function watchRaiseHandState(space: SpaceInterface): Unsubscriber {
+    const me = space.mySpaceUserId;
+    let wasRaised = false;
+    let wasFloorHolder = false;
+
+    return space.stateStore.subscribe((state) => {
+        const isRaised = state.raisedHands.some((entry) => entry.spaceUserId === me);
+        const isFloorHolder = state.floorHolders.some((entry) => entry.spaceUserId === me);
+        const gotTheFloor = !wasFloorHolder && isFloorHolder;
+        const lostTheFloor = wasFloorHolder && !isFloorHolder;
+        const handLoweredByOthers = wasRaised && !isRaised && !gotTheFloor && get(requestedHandRaiseState).raised;
+        wasRaised = isRaised;
+        wasFloorHolder = isFloorHolder;
+
+        if (gotTheFloor) {
+            space.startStreaming();
+            // Promote to a full speaker: this guarantees the local return feed (self-view) shows even when the
+            // user's availability status would otherwise hide it, and remembers the space so the raise-hand
+            // button can switch to its "on stage" state and hand the floor back (see RaiseHandMenuItem).
+            isSpeakerStore.set(true);
+            givenFloorSpaceStore.set(space);
+            requestedHandRaiseState.lowerHand();
+            // We never force the microphone on; if it is muted we invite the user to enable it.
+            if (get(requestedMicrophoneState)) {
+                notificationPlayingStore.playNotification(get(LL).notification.givenTheFloor());
+            } else {
+                notificationPlayingStore.playNotification(get(LL).notification.givenTheFloorEnableMicrophone());
+            }
+        }
+
+        // Only when the floor was taken back: a user who handed it back already cleared givenFloorSpaceStore.
+        if (lostTheFloor && get(givenFloorSpaceStore) === space) {
+            space.stopStreaming();
+            isSpeakerStore.set(false);
+            givenFloorSpaceStore.set(undefined);
+            notificationPlayingStore.playNotification(get(LL).notification.floorRevoked(), "microphone-off.png");
+        }
+
+        if (handLoweredByOthers) {
+            requestedHandRaiseState.lowerHand();
+            notificationPlayingStore.playNotification(get(LL).notification.handLowered());
+        }
     });
 }
