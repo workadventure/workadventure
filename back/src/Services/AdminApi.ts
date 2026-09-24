@@ -4,6 +4,7 @@ import { isMapDetailsData, isRoomRedirect, isErrorApiErrorData } from "@workadve
 import * as Sentry from "@sentry/node";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LivekitCredentialsResponse } from "./Repository/LivekitCredentialsResponse";
+import { getCapability } from "./Capabilities";
 
 /**
  * What the admin learns when a recording egress ends. It turns a completed
@@ -28,10 +29,11 @@ class AdminApi {
     /**
      * Tells the admin that a recording egress ended. Retried a few times on
      * transport or server errors; a 4xx means the admin rejected the payload
-     * and is not retried. Resolves silently when no admin is configured.
+     * and is not retried. Resolves silently when no admin is configured or
+     * when the admin does not advertise the endpoint in its capabilities.
      */
     async notifyRecordingEvent(payload: RecordingEventPayload): Promise<void> {
-        if (!ADMIN_API_URL) {
+        if (!ADMIN_API_URL || getCapability("api/recordings/events") !== "v1") {
             return;
         }
 

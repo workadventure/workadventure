@@ -8,6 +8,7 @@ vi.mock("../src/Enum/EnvironmentVariable", () => ({
 }));
 
 const { adminApi } = await import("../src/Services/AdminApi");
+const { setCapabilities } = await import("../src/Services/Capabilities");
 
 const payload: RecordingEventPayload = {
     phase: "ended",
@@ -35,6 +36,7 @@ function httpError(status: number): AxiosError {
 describe("AdminApi.notifyRecordingEvent", () => {
     beforeEach(() => {
         vi.useFakeTimers();
+        setCapabilities({ "api/recordings/events": "v1" });
     });
 
     afterEach(() => {
@@ -53,9 +55,18 @@ describe("AdminApi.notifyRecordingEvent", () => {
             "http://admin.test/api/recordings/events",
             payload,
             expect.objectContaining({
-                headers: expect.objectContaining({ Authorization: "admin-token" }),
+                headers: expect.objectContaining({ Authorization: "admin-token" }) as unknown,
             }),
         );
+    });
+
+    it("does not post when the admin does not advertise the recordings endpoint", async () => {
+        setCapabilities({});
+        const post = vi.spyOn(axios, "post");
+
+        await adminApi.notifyRecordingEvent(payload);
+
+        expect(post).not.toHaveBeenCalled();
     });
 
     it("retries transport and server errors, then gives up", async () => {
