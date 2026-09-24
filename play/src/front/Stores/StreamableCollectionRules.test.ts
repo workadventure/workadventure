@@ -12,6 +12,7 @@ const defaultOptions = {
     isInActiveConversation: false,
     isListener: false,
     listenerSharingCamera: false,
+    isSpeaker: false,
     availabilityStatus: AvailabilityStatus.ONLINE,
 };
 
@@ -51,5 +52,13 @@ describe("shouldDisplayLocalCameraPeer", () => {
                 requestedCameraState: false,
             }),
         ).toBe(false);
+    });
+
+    it("hides the local camera of a listener who does not share it", () => {
+        expect(shouldDisplayLocalCameraPeer({ ...defaultOptions, isListener: true })).toBe(false);
+    });
+
+    it("shows the local camera of a listener who was given the floor", () => {
+        expect(shouldDisplayLocalCameraPeer({ ...defaultOptions, isListener: true, isSpeaker: true })).toBe(true);
     });
 });
