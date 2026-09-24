@@ -334,11 +334,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             throw new Error("Event is required in spaceEvent");
         }
 
-        const processedEvent = this.eventProcessor.processPrivateEvent(
-            event.spaceEvent.event,
-            senderSpaceUser,
-            this._space.filterType,
-        );
+        const processedEvent = this.eventProcessor.processPrivateEvent(event.spaceEvent.event, senderSpaceUser);
 
         this.forwardMessageToSpaceBack({
             $case: "privateEvent",
