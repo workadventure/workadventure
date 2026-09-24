@@ -14,7 +14,8 @@ import { applyFieldMask } from "protobuf-fieldmask";
 import { z } from "zod";
 import { Deferred, spaceStateSchema } from "@workadventure/shared-utils";
 import type { Operation } from "fast-json-patch";
-import { applyPatch } from "fast-json-patch";
+// Default import: under Node ESM this CommonJS package exposes no named exports.
+import jsonpatch from "fast-json-patch";
 import { asError } from "catch-unknown";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
 import type { EventProcessor } from "./EventProcessor";
@@ -381,7 +382,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
 
     private applyStatePatch(patchJson: string) {
         const patch = JSON.parse(patchJson) as Operation[];
-        this._space.state = applyPatch(this._space.state, patch).newDocument;
+        this._space.state = jsonpatch.applyPatch(this._space.state, patch).newDocument;
 
         // Like metadata, the state goes to every user connected to the space, watching or not.
         this._space._localConnectedUser.forEach((socket) => {
