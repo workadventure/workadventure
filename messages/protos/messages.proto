@@ -619,8 +619,6 @@ message QueryMessage {
     GetRecordingThumbnailsQuery getRecordingThumbnailsQuery = 23;
     SpaceStateQueryFrontToPusher spaceStateQuery = 24;
   }
-  // 21 and 22 were startRecordingQuery / stopRecordingQuery: recording now goes through spaceStateQuery.
-  reserved 21, 22;
 }
 
 message GetSignedUrlQuery {
@@ -741,7 +739,6 @@ message AnswerMessage {
     GetRecordingThumbnailsAnswer getRecordingThumbnailsAnswer = 24;
     SpaceStateAnswer spaceStateAnswer = 25;
   }
-  reserved 22, 23;
 }
 
 
@@ -892,7 +889,6 @@ message SpaceQueryMessage {
     RemoveSpaceUserQuery removeSpaceUserQuery = 6;
     SpaceStateQueryPusherToBack spaceStateQuery = 9;
   }
-  reserved 7, 8;
 }
 
 message AddSpaceUserQuery {
@@ -1014,7 +1010,6 @@ message SpaceAnswerMessage {
     LeaveSpaceAnswer leaveSpaceAnswer = 7;
     SpaceStateAnswer spaceStateAnswer = 10;
   }
-  reserved 8, 9;
 }
 
 message AddSpaceUserAnswer {
@@ -1389,8 +1384,6 @@ message PrivateSpaceEvent {
     MeetingConnectionRestartMessage meetingConnectionRestartMessage = 22;
     RecordingUnexpectedlyStoppedPrivateMessage recordingUnexpectedlyStoppedMessage = 23;
   }
-  // 24-26 were giveFloor / revokeFloor / lowerHand: they are now SpaceStateQuery cases.
-  reserved 24, 25, 26;
 }
 
 message CommunicationStrategyMessage {
