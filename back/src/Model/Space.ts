@@ -9,6 +9,7 @@ import type {
     PublicEvent,
     SpaceAnswerMessage,
     SpaceQueryMessage,
+    SpaceStateQuery,
     SpaceUser,
 } from "@workadventure/messages";
 import {
@@ -17,12 +18,10 @@ import {
     RemoveSpaceUserMessage,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
-import type { FloorHolderEntry, RaisedHandEntry, StoredSpaceMetadata } from "@workadventure/shared-utils";
-import {
-    FLOOR_HOLDERS_METADATA_KEY,
-    RAISED_HANDS_METADATA_KEY,
-    parseStoredSpaceMetadata,
-} from "@workadventure/shared-utils";
+import type { SpaceState } from "@workadventure/shared-utils";
+import { emptySpaceState } from "@workadventure/shared-utils";
+import { compare } from "fast-json-patch";
+import { Subject } from "rxjs";
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
@@ -34,15 +33,27 @@ import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ManagedRecordingState } from "./RecordingManager";
 import { metadataProcessor } from "./MetadataProcessorInit";
+import type { SpaceStateHost } from "./SpaceStateHost";
+import { RaiseHandManager } from "./RaiseHandManager";
+import { ProximityPollManager } from "./ProximityPollManager";
+import { ProximityQAManager } from "./ProximityQAManager";
 
 const debug = Debug("space");
 
 type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
 
-export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
+export class Space implements CustomJsonReplacerInterface, ICommunicationSpace, SpaceStateHost {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
+    // Server-owned, typed state. Only changed through updateState(), which broadcasts the change as a JSON Patch.
+    private state: SpaceState = emptySpaceState();
+    // Emitted whatever the filter says, so managers also see users the filter hides (a megaphone audience).
+    public readonly userAdded$ = new Subject<SpaceUser>();
+    public readonly userRemoved$ = new Subject<SpaceUser>();
+    private readonly raiseHandManager: RaiseHandManager;
+    private readonly proximityPollManager: ProximityPollManager;
+    private readonly proximityQAManager: ProximityQAManager;
     private communicationManager: ICommunicationManager;
     private usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>>;
     // Number of users publishing at least one stream (camera, screen or microphone)
@@ -66,6 +77,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.usersToNotify = new Map<SpacesWatcher, Map<SpaceUser["spaceUserId"], SpaceUser>>();
         this.metadata = new Map<string, unknown>();
         this.communicationManager = new CommunicationManager(this);
+        this.raiseHandManager = new RaiseHandManager(this);
+        this.proximityPollManager = new ProximityPollManager(this);
+        this.proximityQAManager = new ProximityQAManager(this);
         debug(`${name} => created`);
     }
 
@@ -81,6 +95,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 this._nbWatchers = this._nbUsers;
             }
             this._spaceUpdatedSubject.next(this);
+            this.userAdded$.next(spaceUser);
 
             if (!this.filterOneUser(spaceUser)) {
                 return;
@@ -226,18 +241,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             usersToNotifyList.delete(spaceUserId);
 
             usersList.delete(spaceUserId);
-
-            // Remove the leaving user from the raised-hands queue (metadata) if present, so it does not keep
-            // a ghost entry, and broadcast the updated queue to everyone.
-            if (this.raisedHandsQueue().some((entry) => entry.spaceUserId === spaceUserId)) {
-                this.publishMetadata({ [RAISED_HANDS_METADATA_KEY]: this.applyRaisedHand(spaceUserId, false) });
-            }
-
-            // Same cleanup for the floor-holders list, so a user who leaves while holding the floor does not stay
-            // in the host's "take back" panel forever.
-            if (this.floorHolders().some((entry) => entry.spaceUserId === spaceUserId)) {
-                this.publishMetadata({ [FLOOR_HOLDERS_METADATA_KEY]: this.applyFloorHolder(spaceUserId, false) });
-            }
+            this.userRemoved$.next(user);
 
             if (this.isPublishing(user)) {
                 this._nbPublishers--;
@@ -342,6 +346,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     spaceName: this.name,
                     users: allSpaceUsers,
                     metadata: JSON.stringify(metadata),
+                    state: JSON.stringify(this.state),
                 },
             },
         });
@@ -361,6 +366,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         if (spaceUsers) {
             for (const spaceUser of spaceUsers.values()) {
+                this.userRemoved$.next(spaceUser);
                 this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
@@ -639,35 +645,22 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                         },
                     };
                 }
-                case "startSpaceRecordingQuery": {
-                    const { spaceUserId } = spaceQueryMessage.query.startSpaceRecordingQuery;
-                    const user = this.getUser(spaceUserId);
-
-                    if (!user) {
+                case "spaceStateQuery": {
+                    const { spaceUserId, query } = spaceQueryMessage.query.spaceStateQuery;
+                    const sender = this.getUser(spaceUserId);
+                    if (!sender) {
                         throw new Error(`Could not find user ${spaceUserId} in space ${this.name}`);
                     }
-
-                    await this.startRecording(user);
-                    return {
-                        answer: {
-                            $case: "startSpaceRecordingAnswer",
-                            startSpaceRecordingAnswer: {},
-                        },
-                    };
-                }
-                case "stopSpaceRecordingQuery": {
-                    const { spaceUserId } = spaceQueryMessage.query.stopSpaceRecordingQuery;
-                    const user = this.getUser(spaceUserId);
-
-                    if (!user) {
-                        throw new Error(`Could not find user ${spaceUserId} in space ${this.name}`);
+                    if (!query?.query) {
+                        throw new Error("SpaceStateQuery has no query");
                     }
-
-                    await this.stopRecording(user);
+                    // The patch is written to the watcher before the answer, on the same stream: when the sender
+                    // gets the answer, its copy of the state already reflects the change.
+                    await this.handleStateQuery(sender, query.query);
                     return {
                         answer: {
-                            $case: "stopSpaceRecordingAnswer",
-                            stopSpaceRecordingAnswer: {},
+                            $case: "spaceStateAnswer",
+                            spaceStateAnswer: {},
                         },
                     };
                 }
@@ -690,6 +683,72 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 },
             };
         }
+    }
+
+    private async handleStateQuery(sender: SpaceUser, query: NonNullable<SpaceStateQuery["query"]>): Promise<void> {
+        switch (query.$case) {
+            case "raiseHand":
+            case "lowerHand":
+            case "giveFloor":
+            case "revokeFloor": {
+                this.raiseHandManager.handleQuery(sender, query);
+                return;
+            }
+            case "startRecording": {
+                await this.startRecording(sender);
+                return;
+            }
+            case "stopRecording": {
+                await this.stopRecording(sender);
+                return;
+            }
+            case "createPoll":
+            case "votePoll":
+            case "closePoll":
+            case "deletePoll": {
+                this.proximityPollManager.handleQuery(sender, query);
+                return;
+            }
+            case "askQuestion":
+            case "upvoteQuestion":
+            case "answerQuestion":
+            case "deleteQuestion": {
+                this.proximityQAManager.handleQuery(sender, query);
+                return;
+            }
+            default: {
+                const _exhaustiveCheck: never = query;
+                throw new Error("Unknown space state query");
+            }
+        }
+    }
+
+    public getState(): Readonly<SpaceState> {
+        return this.state;
+    }
+
+    /**
+     * The only way to change the state: `mutate` works on a copy, and the difference is broadcast to every watcher
+     * as a JSON Patch. If `mutate` throws, the state is left untouched and nothing is sent.
+     */
+    public updateState(mutate: (state: SpaceState) => void): void {
+        const next = structuredClone(this.state);
+        mutate(next);
+        const patch = compare(this.state, next);
+        this.state = next;
+        if (patch.length === 0) {
+            return;
+        }
+        this.notifyWatchers({
+            message: {
+                $case: "spaceStatePatchMessage",
+                spaceStatePatchMessage: {
+                    spaceName: this.name,
+                    patch: JSON.stringify(patch),
+                },
+            },
+        });
+        debug(`${this.name} : state => patched`);
     }
 
     public get filterType(): Filter {
@@ -721,83 +780,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return Array.from(this.users.values())
             .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
             .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
-    }
-
-    /**
-     * Reads a metadata value back, validated against the shared catalogue so the caller gets the type the
-     * key declares instead of `unknown`. Returns undefined when the stored value does not match, and hands
-     * back scripting API metadata (keys the catalogue does not describe) untouched.
-     */
-    public getMetadataValue<K extends string>(key: K): StoredSpaceMetadata<K> | undefined {
-        return parseStoredSpaceMetadata(key, this.metadata.get(key));
-    }
-
-    /**
-     * Adds or removes the sender from one of the space's membership lists, server-authoritatively.
-     *
-     * Both lists live in the space metadata, which is broadcast to ALL members regardless of role -- unlike
-     * SpaceUser, which a broadcast space filters -- so a megaphone speaker without the seeAttendees option
-     * still receives them. The identity is the trusted senderId and the display name is stamped here, so a
-     * client can only ever toggle its own entry.
-     *
-     * The list is kept in insertion order, which IS the order the front displays: it numbers the entries by
-     * their index, so appending is all the ordering there is to do.
-     *
-     * Synchronous, so that read-modify-write is atomic (the back is single-threaded): two members toggling
-     * at the same time cannot lose an update.
-     */
-    private applyMemberList<T extends { spaceUserId: string }>(
-        key: string,
-        list: T[],
-        senderId: string,
-        present: boolean,
-        createEntry: (name: string) => T,
-    ): T[] {
-        const existingIndex = list.findIndex((entry) => entry.spaceUserId === senderId);
-        if (present) {
-            if (existingIndex === -1) {
-                list.push(createEntry(this.getUser(senderId)?.name ?? ""));
-            }
-        } else if (existingIndex !== -1) {
-            list.splice(existingIndex, 1);
-        }
-        this.metadata.set(key, list);
-        return list;
-    }
-
-    /**
-     * The queue of members who raised their hand, in the order they did. `at` is stamped server-side so that
-     * every client agrees on it, whatever their own clock says.
-     */
-    public applyRaisedHand(senderId: string, raised: boolean): RaisedHandEntry[] {
-        return this.applyMemberList(RAISED_HANDS_METADATA_KEY, this.raisedHandsQueue(), senderId, raised, (name) => ({
-            spaceUserId: senderId,
-            name,
-            at: Date.now(),
-        }));
-    }
-
-    /**
-     * The members who were GIVEN the floor after raising their hand (self-reported by the holder via
-     * { holds: boolean }), never the original speakers/hosts -- so the host panel can offer taking the floor
-     * back, and a promoted guest can only ever act on other granted guests, not on the host.
-     */
-    public applyFloorHolder(senderId: string, holds: boolean): FloorHolderEntry[] {
-        return this.applyMemberList(FLOOR_HOLDERS_METADATA_KEY, this.floorHolders(), senderId, holds, (name) => ({
-            spaceUserId: senderId,
-            name,
-        }));
-    }
-
-    // Both lists are written only by the two methods above, so the catalogue check is a safety net: an
-    // unparseable value (nothing we ever stored) restarts from an empty list instead of throwing. Each call
-    // returns a fresh array, so the caller can mutate it before storing it back.
-    private raisedHandsQueue(): RaisedHandEntry[] {
-        return this.getMetadataValue(RAISED_HANDS_METADATA_KEY) ?? [];
-    }
-
-    private floorHolders(): FloorHolderEntry[] {
-        return this.getMetadataValue(FLOOR_HOLDERS_METADATA_KEY) ?? [];
     }
 
     public getSpaceName(): string {
@@ -856,6 +838,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
     public destroy() {
         this.communicationManager.destroy();
+        this.raiseHandManager.destroy();
+        this.userAdded$.complete();
+        this.userRemoved$.complete();
         debug(`${this.name} => destroyed`);
     }
 

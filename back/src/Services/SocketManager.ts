@@ -720,8 +720,7 @@ export class SocketManager {
                 case "getRecordingThumbnailsQuery":
                 case "deleteRecordingQuery":
                 case "getSignedUrlQuery":
-                case "startRecordingQuery":
-                case "stopRecordingQuery":
+                case "spaceStateQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
