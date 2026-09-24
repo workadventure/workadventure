@@ -2674,14 +2674,14 @@ export class GameScene extends DirtyScene {
 
         this.unsubscribers.push(
             requestedHandRaiseState.subscribe((state) => {
-                // Reflect the local user's raised hand on their own woka immediately. The state is broadcast to
-                // other participants as a SpaceUser property (see SpacePeerManager.synchronizeMediaState), which
+                // Reflect the local user's raised hand on their own woka immediately. The state reaches the
+                // other participants through the space state (see SpacePeerManager.synchronizeMediaState), which
                 // drives both their video tile badge and the indicator above their woka on the map.
                 this.CurrentPlayer?.setRaisedHand(state.raised);
             }),
         );
 
-        // Drive the raised-hand indicator above REMOTE players' wokas from the (space-persisted) SpaceUser state.
+        // Drive the raised-hand indicator above REMOTE players' wokas from the raised-hands queue of the space state.
         // The store is keyed by numeric player id (derived from each participant's spaceUserId).
         this.unsubscribers.push(
             raisedHandPlayerIdsStore.subscribe((raisedPlayerIds) => {

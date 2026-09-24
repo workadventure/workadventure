@@ -1147,7 +1147,7 @@ describe("Space state", () => {
             .filter((message) => message?.$case === "spaceStatePatchMessage")
             .map((message) =>
                 message?.$case === "spaceStatePatchMessage"
-                    ? JSON.parse(message.spaceStatePatchMessage.patch)
+                    ? (JSON.parse(message.spaceStatePatchMessage.patch) as unknown)
                     : undefined,
             );
     }

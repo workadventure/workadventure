@@ -29,7 +29,7 @@
     let isMicrophoneEnabled = $derived(spaceUser.reactiveUser.microphoneState);
     let isVideoEnabled = $derived(spaceUser.reactiveUser.cameraState);
     let canAskToMuteAudioOrTurnOffVideo = $derived(spaceUser.space.canAskToMuteAudioOrTurnOffVideo);
-    // Raise-hand state comes from the space metadata queue (not SpaceUser), so it is known even for a
+    // Raise-hand state comes from the space state queue (not SpaceUser), so it is known even for a
     // listener whose SpaceUser the local user does not receive.
     let isHandRaised = $derived($raisedHandsOrderStore.has(spaceUser.spaceUserId));
     let hasFloor = $derived(spaceUser.reactiveUser.megaphoneState);
