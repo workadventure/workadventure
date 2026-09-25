@@ -35,6 +35,7 @@ import {
     type ViewerDisplay,
 } from "./AdaptiveVideoEncoding";
 import { registerLocalEncoderStats } from "./LocalEncoderStats";
+import { tuneAudioSdp } from "./AudioSdp";
 import {
     negotiableVideoCodecs,
     selectVideoPreset,
@@ -403,6 +404,8 @@ export class RemotePeer extends Peer implements Streamable {
             // What we prefer to receive, among what we can afford to encode: a browser sends the codecs of the
             // remote description, so this list restricts both directions (see negotiableVideoCodecs)
             receiveCodecs: receiveCodecs(),
+            // Audio as LiveKit receives it: RED and Opus up to 48 kbps (simple-peer's codec preferences skip RED)
+            sdpTransform: tuneAudioSdp,
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
         };
