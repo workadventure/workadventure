@@ -74,6 +74,11 @@ export interface SpaceInterface {
     allScreenShareStreamStore: MapStore<string, VideoBox>;
     getScreenSharingPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined;
     getVideoPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined;
+    /**
+     * Sets the users currently speaking, most active first (as reported by the video transport),
+     * and reorders the video boxes accordingly.
+     */
+    setActiveSpeakers(spaceUserIds: SpaceUser["spaceUserId"][]): void;
 
     getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
     getSpaceUserByUserId(id: number): SpaceUserExtended | undefined;
