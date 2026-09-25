@@ -35,10 +35,8 @@ describe("tuneAudioSdp", () => {
             "a=rtpmap:111 opus/48000/2",
             "a=fmtp:111 maxaveragebitrate=64000",
         ].join("\n");
-        const lines = tuneAudioSdp(sdp).split("\r\n");
 
-        expect(lines).toContain("m=audio 9 RTP/SAVPF 111 0");
-        expect(lines).toContain("a=fmtp:111 maxaveragebitrate=64000");
+        expect(tuneAudioSdp(sdp)).toBe(sdp);
     });
 
     it("is idempotent", () => {
