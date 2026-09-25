@@ -418,7 +418,8 @@
                                     class:text-white={$activePictureInPictureStore}
                                     class:opacity-20={$activePictureInPictureStore}
                                 >
-                                    {#if $hasAudioStore && !audioStateMismatch}
+                                    <!-- A muted P2P peer keeps its audio track (paused sender): trust the space state too -->
+                                    {#if $hasAudioStore && $microphoneStateStore !== false && !audioStateMismatch}
                                         <SoundMeterWidget
                                             volume={volumeMeter}
                                             cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
