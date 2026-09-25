@@ -322,7 +322,7 @@ export class RemotePeer extends Peer implements Streamable {
                     if (this.isReceivingStream) {
                         this.isReceivingStream = false;
                     }
-                    if (!this.localStream || this.preparingClose) {
+                    if (!this.isSendingStream || this.preparingClose) {
                         // If the remote stream stopped and we are not sending a local stream, close the connection.
                         // The remote peer decided to stop: not a failure, so no retry.
                         this.intentionalClose = true;
@@ -577,12 +577,9 @@ export class RemotePeer extends Peer implements Streamable {
             try {
                 if (streamValue === undefined || streamValue.type !== "success" || !streamValue.stream) {
                     if (this.localStream) {
-                        if (this.pausedAudioTrack) {
-                            this.removeTrack(this.pausedAudioTrack, this.localStream);
-                        }
+                        this.removePausedAudioSender();
                         this.removeStream(this.localStream);
                     }
-                    this.pausedAudioTrack = undefined;
                     this.localStream = undefined;
                     return;
                 }
@@ -966,10 +963,22 @@ export class RemotePeer extends Peer implements Streamable {
         return this._connectionId;
     }
 
+    /**
+     * Removes the sender paused on mute (see pausedAudioTrack): the stream it belongs to is going away, and a sender
+     * left behind could not be resumed from another stream.
+     */
+    private removePausedAudioSender(): void {
+        if (this.pausedAudioTrack && this.localStream) {
+            this.removeTrack(this.pausedAudioTrack, this.localStream);
+        }
+        this.pausedAudioTrack = undefined;
+    }
+
     public stopStreamToRemoteUser() {
         if (!this.localStream) {
             return;
         }
+        this.removePausedAudioSender();
         this.removeStream(this.localStream);
         this.localStream = undefined;
         this.write(
@@ -989,7 +998,8 @@ export class RemotePeer extends Peer implements Streamable {
      * Returns true when this peer is sending a media stream to the remote peer.
      */
     public get isSendingStream(): boolean {
-        return this.localStream !== undefined;
+        // While muted with the camera off, the stream is kept (empty) for the paused audio sender: nothing is sent
+        return this.localStream !== undefined && this.localStream.getTracks().length > 0;
     }
 
     /**
@@ -1077,6 +1087,7 @@ export class RemotePeer extends Peer implements Streamable {
                 console.warn("RemotePeer::dispatchStream called with the same MediaStream as already set. Ignoring.");
                 return;
             }
+            this.removePausedAudioSender();
             this.removeStream(this.localStream);
         }
         this.localStream = mediaStream;
