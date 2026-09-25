@@ -480,6 +480,11 @@ export class Space implements SpaceInterface {
         await this.queryState({ $case: "stopRecording", stopRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
     }
 
+    /** False until the whole state has arrived (right after joining): until then, stateStore is empty. */
+    public isStateInitialized(): boolean {
+        return this._isStateInitialized;
+    }
+
     public observeState<K extends keyof SpaceState>(key: K): Readable<SpaceState[K]> {
         return derived(this.stateStore, ($state) => $state[key]);
     }
@@ -610,9 +615,12 @@ export class Space implements SpaceInterface {
             if (!this._isStateInitialized && !replacesRoot) {
                 return;
             }
-            const state = applyPatch(structuredClone(get(this._serverStateStore)), patch).newDocument;
-            this._serverStateStore.set(spaceStateSchema.parse(state));
+            const state = spaceStateSchema.parse(
+                applyPatch(structuredClone(get(this._serverStateStore)), patch).newDocument,
+            );
+            // Before the set: subscribers run during it and may ask whether the state is complete.
             this._isStateInitialized = true;
+            this._serverStateStore.set(state);
         } catch (error) {
             // Our copy no longer matches the back's: it stays as it was until the next full state (next join).
             console.error(`Could not apply a state patch in space ${this.name}`, error);

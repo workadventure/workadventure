@@ -914,15 +914,17 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.spaceUsersStore.forward(this._space.usersStore);
         this.spaceStateUnsubscriber?.();
-        let isFirstState = true;
-        this.spaceStateUnsubscriber = this._space.stateStore.subscribe((state) => {
-            // What was already there when we joined is not news.
-            if (!isFirstState) {
+        const joinedSpace = this._space;
+        // The polls and questions already there when we joined are not news. They are only known once the whole
+        // state has arrived, which can be after we subscribe (the store is empty until then).
+        let hasBaseline = false;
+        this.spaceStateUnsubscriber = joinedSpace.stateStore.subscribe((state) => {
+            if (hasBaseline) {
                 const previousState = get(this.spaceStateStore);
                 this.notifyNewPolls(previousState, state);
                 this.notifyNewQuestions(previousState, state);
             }
-            isFirstState = false;
+            hasBaseline ||= joinedSpace.isStateInitialized();
             this.spaceStateStore.set(state);
         });
 
