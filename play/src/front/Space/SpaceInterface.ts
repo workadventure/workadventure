@@ -80,6 +80,8 @@ export interface SpaceInterface {
     stopRecording(): Promise<void>;
     /** The server-owned state of the space, with the local user's pending changes already applied. */
     readonly stateStore: Readable<SpaceState>;
+    /** False until the whole state has arrived (right after joining): until then, stateStore is empty. */
+    isStateInitialized(): boolean;
     observeState<K extends keyof SpaceState>(key: K): Readable<SpaceState[K]>;
     // The methods below change the state. A refused change is reported to the user; they never reject.
     raiseHand(raised: boolean): Promise<void>;
