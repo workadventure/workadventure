@@ -21,7 +21,43 @@ const report: DeepPartial<Translation["report"]> = {
         block: "حظر", // Block
         report: "الإبلاغ", // Report
         noSelect: "خطأ: لم يتم اختيار أي إجراء.", // ERROR: No action selected.
+        action: "إدارة",
+        reason: {
+            label: "السبب",
+            placeholder: "اختياري. يُحفظ لمديري هذا العالم.",
+        },
+        adminOnly: "مخصص للمديرين",
+        cancel: "إلغاء",
+        hint: {
+            block: "التوقف عن رؤيته وسماعه. لك وحدك، ويمكن التراجع عنه.",
+            report: "تنبيه مديري هذا العالم.",
+            kick: "فصله الآن. يمكنه العودة.",
+            ban: "فصله نهائيًا.",
+        },
+        kick: {
+            title: "إخراج من الخريطة",
+            content: "يتم فصل {userName} فورًا، ويمكنه العودة لاحقًا.",
+            submit: "إخراج",
+        },
+        ban: {
+            title: "حظر من العالم",
+            content: "يتم فصل {userName} ولن يتمكن من الانضمام إلى هذا العالم مجددًا، حتى بحساب آخر.",
+            submit: "حظر",
+            confirmTitle: "حظر {userName} نهائيًا؟",
+            confirmContent: "لا يمكن التراجع عن هذا من داخل اللعبة. المدير وحده يمكنه رفع الحظر من لوحة الإدارة.",
+        },
     },
+    kicked: {
+        title: "تم إخراجك",
+        subtitle: "قام مشرف بإخراجك من هذه الخريطة",
+        details: "أعد تحميل الصفحة للانضمام مجددًا.",
+    },
+    banned: {
+        title: "محظور",
+        subtitle: "تم حظرك من WorkAdventure",
+        details: "لمزيد من المعلومات، يمكنك التواصل معنا على: hello@workadventu.re",
+    },
+    reasonGiven: "السبب: {reason}",
 };
 
 export default report;

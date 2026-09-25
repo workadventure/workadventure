@@ -231,6 +231,10 @@ message ReportPlayerMessage {
 message BanPlayerMessage {
   string banUserUuid = 1;
   string banUserName = 2;
+  // true: kick the user out of the room only, without persisting anything in the admin
+  bool kick = 3;
+  // reason given by the moderator, displayed to the kicked/banned user and stored with the ban
+  string reason = 4;
 }
 
 message UpdateChatIdMessage {

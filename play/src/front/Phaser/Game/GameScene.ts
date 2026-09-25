@@ -2211,7 +2211,8 @@ export class GameScene extends DirtyScene {
 
                 this._sayManager = new SayManager(this.connection, this.CurrentPlayer);
 
-                userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
+                userMessageManager.setReceiveBanListener((reason) => this.ejectedUser("banned", reason));
+                userMessageManager.setReceiveKickListener((reason) => this.ejectedUser("kicked", reason));
 
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedInterface) => {
                     this.handleCurrentPlayerHasMovedEvent(event);
@@ -4482,14 +4483,21 @@ ${escapedMessage}
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
-    private bannedUser() {
+    /**
+     * A ban is persisted by the admin; a kick only ejects the user from the room, a reload brings them back.
+     */
+    private ejectedUser(kind: "banned" | "kicked", reason = "") {
+        const texts = get(LL).report[kind];
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({
                 type: "error",
-                code: "USER_BANNED",
-                title: "BANNED",
-                subtitle: "You were banned from WorkAdventure",
-                details: "If you want more information, you may contact us at: hello@workadventu.re",
+                code: kind === "banned" ? "USER_BANNED" : "USER_KICKED",
+                title: texts.title(),
+                subtitle: texts.subtitle(),
+                details:
+                    reason.trim() === ""
+                        ? texts.details()
+                        : `${get(LL).report.reasonGiven({ reason })} ${texts.details()}`,
             }),
         );
 

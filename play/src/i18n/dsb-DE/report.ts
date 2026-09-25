@@ -21,7 +21,44 @@ const report: DeepPartial<Translation["report"]> = {
         block: "Blokěrowanje",
         report: "Mjeldowanje",
         noSelect: "ZMÓLKA: Žedna akcije njejo wuzwólona.",
+        action: "Moderěrowaś",
+        reason: {
+            label: "Pśicyna",
+            placeholder: "Opcionalne. Wobchowa se za administratorow togo swěta.",
+        },
+        adminOnly: "Jano za administratorow",
+        cancel: "Pśetergnuś",
+        hint: {
+            block: "Wužywarja wěcej njewiźeś a njesłyšaś. Jano za tebje, a wótwołajobne.",
+            report: "Administratorow togo swěta informěrowaś.",
+            kick: "Něnto źěliś. Wužywaŕ móžo se wrośiś.",
+            ban: "Na pśecej źěliś.",
+        },
+        kick: {
+            title: "Z kórty wótwónoźeś",
+            content: "{userName} se ned źěli a móžo se pózdźej wrośiś.",
+            submit: "Wótwónoźeś",
+        },
+        ban: {
+            title: "Ze swěta wuzamknuś",
+            content: "{userName} se źěli a njamóžo wěcej do togo swěta stupiś, teke nic z drugim kontom.",
+            submit: "Wuzamknuś",
+            confirmTitle: "{userName} na pśecej wuzamknuś?",
+            confirmContent:
+                "To njedajo se w graśu wótwołaś. Jano administrator móžo wuzamknjenje w backoffice zběgnuś.",
+        },
     },
+    kicked: {
+        title: "WÓTWÓNOŹONY",
+        subtitle: "Moderator jo śi z teje kórty wótwónoźeł",
+        details: "Zacytaj bok znowego, aby zasej pśistupił.",
+    },
+    banned: {
+        title: "WUZAMKNJONY",
+        subtitle: "Sy z WorkAdventure wuzamknjony",
+        details: "Za dalšne informacije móžoš se na nas wobrośiś: hello@workadventu.re",
+    },
+    reasonGiven: "Pśicyna: {reason}",
 };
 
 export default report;

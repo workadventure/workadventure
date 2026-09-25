@@ -785,22 +785,32 @@ export class SocketManager implements ZoneEventListener {
 
     async handleBanPlayerMessage(client: PusherWebSocket, banPlayerMessage: BanPlayerMessage): Promise<void> {
         const socketData = client.getUserData();
-        // Ban player only if the user is admin
+        // Kick and ban are reserved to the admins of the world
         if (!socketData.tags.includes("admin")) return;
+        const reason = banPlayerMessage.reason.trim();
         try {
-            await adminService.banUserByUuid(
-                banPlayerMessage.banUserUuid,
-                socketData.roomId,
-                banPlayerMessage.banUserName,
-                `User banned by admin ${socketData.userUuid}`,
-                socketData.userUuid,
-            );
-            await this.emitBan(
-                banPlayerMessage.banUserUuid,
-                "You have been banned by an admin",
-                "ban",
-                socketData.roomId,
-            );
+            if (banPlayerMessage.kick) {
+                // A kick only ejects the user from the room: nothing is persisted in the admin.
+                await this.emitBan(banPlayerMessage.banUserUuid, reason, "kicked", socketData.roomId);
+                return;
+            }
+            try {
+                await adminService.banUserByUuid(
+                    banPlayerMessage.banUserUuid,
+                    socketData.roomId,
+                    banPlayerMessage.banUserName,
+                    reason !== "" ? reason : `User banned by admin ${socketData.userUuid}`,
+                    socketData.userUuid,
+                );
+            } catch (e) {
+                // The ban could not be recorded (no admin back office, admin down...): still get the user out
+                // of the room, as a kick, since nothing will stop them from coming back.
+                Sentry.captureException(`Could not record the ban in "handleBanPlayerMessage" ${e}`);
+                console.error(`Could not record the ban in "handleBanPlayerMessage" ${e}`);
+                await this.emitBan(banPlayerMessage.banUserUuid, reason, "kicked", socketData.roomId);
+                return;
+            }
+            await this.emitBan(banPlayerMessage.banUserUuid, reason, "banned", socketData.roomId);
         } catch (e) {
             Sentry.captureException(`An error occurred on "handleBanPlayerMessage" ${e}`);
             console.error(`An error occurred on "handleBanPlayerMessage" ${e}`);
