@@ -32,6 +32,7 @@ import type { BlackListManager } from "../WebRtc/BlackListManager";
 import { blackListManager } from "../WebRtc/BlackListManager";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 
 import type {
     PrivateEventsObservables,
@@ -49,6 +50,7 @@ import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
 import { recordingSchema, spaceMetadataValidator } from "./SpaceMetadataValidator";
 import { VideoBox } from "./VideoBox";
+import { idleVideoBoxPriority, VIDEO_STARTING_PRIORITY } from "./VideoBoxPriorities";
 import { LOCAL_SCREEN_SHARING_STREAM_ID } from "./Streamable";
 import type { Streamable } from "./Streamable";
 
@@ -115,6 +117,8 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
     private readonly onUnBlockSubscribe: Subscription;
+    // spaceUserIds of the users currently speaking, most active first
+    private activeSpeakerIds: SpaceUser["spaceUserId"][] = [];
 
     public readonly shouldDisplayRecordButton: Readable<boolean>;
 
@@ -867,6 +871,10 @@ export class Space implements SpaceInterface {
             }
         }
 
+        if (maskedNewData.cameraState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
+            this.updateVideoBoxPriorities();
+        }
+
         if (maskedNewData.screenSharingState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
             if (maskedNewData.screenSharingState) {
                 const videoBox = this.getEmptyVideoBox(userToUpdate, true);
@@ -1014,6 +1022,43 @@ export class Space implements SpaceInterface {
             return undefined;
         }
         return videoBox;
+    }
+
+    public setActiveSpeakers(spaceUserIds: SpaceUser["spaceUserId"][]): void {
+        const now = Date.now();
+        const stillSpeaking = new Set(spaceUserIds);
+        for (const previousSpeakerId of this.activeSpeakerIds) {
+            if (!stillSpeaking.has(previousSpeakerId)) {
+                const videoBox = this.allVideoStreamStore.get(previousSpeakerId);
+                if (videoBox) {
+                    videoBox.lastSpeakTimestamp = now;
+                }
+            }
+        }
+        this.activeSpeakerIds = spaceUserIds;
+        this.updateVideoBoxPriorities();
+    }
+
+    /**
+     * Active speakers come first, in speaking order. The other users are ranked by how recently they spoke
+     * and whether their camera is on (see idleVideoBoxPriority). Screen shares keep their fixed priority.
+     */
+    private updateVideoBoxPriorities(): void {
+        const now = Date.now();
+        for (const videoBox of this.allVideoStreamStore.values()) {
+            videoBox.priority = idleVideoBoxPriority(videoBox.spaceUser.cameraState, videoBox.lastSpeakTimestamp, now);
+        }
+
+        let rank = 0;
+        for (const speakerId of this.activeSpeakerIds) {
+            const videoBox = this.allVideoStreamStore.get(speakerId);
+            if (videoBox) {
+                videoBox.priority = VIDEO_STARTING_PRIORITY + rank++;
+            }
+        }
+
+        // The value is meaningless: changing it makes orderedStreamableCollectionStore sort again.
+        triggerReorderStore.update((value) => value + 1);
     }
 
     public async dispatchSound(url: URL): Promise<void> {

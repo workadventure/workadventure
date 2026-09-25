@@ -25,7 +25,6 @@ import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrai
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
-import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import {
     preferredVideoCodecs,
@@ -39,7 +38,6 @@ import { createLivekitSenderStats } from "../WebRtc/WebRtcStatsFactory";
 import { registerLocalEncoderStats } from "../WebRtc/LocalEncoderStats";
 import { subscribeToOutboundVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
-import { VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
 import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
@@ -944,67 +942,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.pendingParticipants.delete(id);
     }
 
-    /**
-     * A set of previous participant SIDs who were speaking
-     */
-    private previousSpeakers: Set<string> = new Set();
-
     private handleActiveSpeakersChanged(speakers: Participant[]) {
-        let priority = 0;
-        const speakersSet = new Set(speakers.map((s) => s.sid));
-
-        //TODO: review implementation - iterating over all participants each time
-        this.participants.forEach((participant) => {
-            if (!speakersSet.has(participant.participant.sid)) {
-                if (this.previousSpeakers.has(participant.participant.sid)) {
-                    // If the participant was previously speaking but is not speaking anymore, we set it as recently spoken
-                    const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(
-                        participant.participant.identity,
-                    );
-                    if (previousSpeakerVideoBox) {
-                        previousSpeakerVideoBox.lastSpeakTimestamp = Date.now();
-                    }
-                }
-            }
-        });
-
-        // Let's reset the priority of the participant
-        for (const videoStream of this.space.allVideoStreamStore.values()) {
-            const lastSpeakTimestamp = videoStream.lastSpeakTimestamp;
-            let bonusPriority = 0;
-            if (lastSpeakTimestamp) {
-                // If a participant has spoken but is not speaking anymore, we give a bonus priority based on the time since the last speak.
-                const lastTimeSinceLastSpeak = Date.now() - lastSpeakTimestamp;
-                // The bonus priority is calculated based on the time since the last speak and cannot be greater than 100.
-                bonusPriority = 100 * Math.exp(-lastTimeSinceLastSpeak / 100000);
-            }
-            videoStream.priority = VIDEO_STARTING_PRIORITY + 9999 - bonusPriority;
-        }
-
-        for (const speaker of speakers) {
-            // The current user is always displayed first, so we skip it
-            if (this.space.mySpaceUserId === speaker.identity) {
-                continue;
-            }
-            const extendedVideoStream = this.space.getVideoPeerVideoBox(speaker.identity);
-
-            if (!extendedVideoStream) {
-                continue;
-            }
-
-            extendedVideoStream.priority = priority + VIDEO_STARTING_PRIORITY;
-            priority++;
-        }
-
-        // Let's trigger an update on the space's videoStreamStore to reorder the view
-        // To do so, we just take the first element of the map and put it back in the store at the same key.
-        if (get(triggerReorderStore) === 0) {
-            triggerReorderStore.set(1);
-        } else {
-            triggerReorderStore.set(0);
-        }
-
-        this.previousSpeakers = speakersSet;
+        this.space.setActiveSpeakers(speakers.map((speaker) => speaker.identity));
     }
 
     /**
