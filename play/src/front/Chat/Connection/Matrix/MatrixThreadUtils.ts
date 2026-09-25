@@ -127,7 +127,7 @@ function getEventSenderName(event: MatrixEvent | undefined, room: Room): string 
         return undefined;
     }
 
-    return room.getMember(senderId)?.name ?? senderId;
+    return (room.getMember(senderId) ?? event?.sender)?.name ?? senderId;
 }
 
 function getRawEventPreview(event: { content?: IContent } | undefined): string | undefined {

@@ -102,7 +102,7 @@ export class MatrixChatMessage implements ChatMessage {
 
     private getSender() {
         const senderUserId = this.event.getSender();
-        return senderUserId ? chatUserFactoryFromRoom(this.room, senderUserId) : undefined;
+        return senderUserId ? chatUserFactoryFromRoom(this.room, senderUserId, this.event.sender) : undefined;
     }
 
     private initMessageContent(): Writable<ChatMessageContent> {
