@@ -640,6 +640,24 @@ describe("Space test", () => {
         );
     });
 
+    it("only notifies the readers of the slice a patch changed", async () => {
+        const space = await Space.create("space-name", FilterType.ALL_USERS, defaultRoomConnectionMock, [], signal);
+        receiveState(space, {});
+        const pollsListener = vi.fn();
+        const raisedHandsListener = vi.fn();
+        const unsubscribePolls = space.observeState("polls").subscribe(pollsListener);
+        const unsubscribeHands = space.observeState("raisedHands").subscribe(raisedHandsListener);
+
+        space.applyStatePatch(
+            JSON.stringify([{ op: "add", path: "/raisedHands/-", value: { spaceUserId: "bob", name: "Bob", at: 1 } }]),
+        );
+
+        expect(raisedHandsListener).toHaveBeenCalledTimes(2);
+        expect(pollsListener).toHaveBeenCalledTimes(1);
+        unsubscribePolls();
+        unsubscribeHands();
+    });
+
     it("ignores patches until the whole state arrives, then applies them", async () => {
         const space = await Space.create("space-name", FilterType.ALL_USERS, defaultRoomConnectionMock, [], signal);
         const alice = { spaceUserId: "alice-id", name: "Alice", at: 1 };
