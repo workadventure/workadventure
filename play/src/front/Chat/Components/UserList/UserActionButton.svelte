@@ -323,6 +323,7 @@
                     onclick={(event) => {
                         event.stopPropagation();
                         openModerationModal(user.uuid ?? "", user.username ?? "");
+                        closeChatUserMenu();
                     }}><IconForbid font-size="13" /> {$LL.report.moderate.action()}</span
                 >
             {/if}
