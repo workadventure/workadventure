@@ -69,6 +69,10 @@ export class ProximityChatPoll implements ChatPollItem {
 
     update(update: ProximityChatPollUpdate): void {
         this.sender = update.sender;
+        // The space state keeps an unchanged poll's object: nothing to recompute, nothing to re-render.
+        if (update.poll === this.poll && update.currentVoterId === this.currentVoterId) {
+            return;
+        }
         this.poll = update.poll;
         this.currentVoterId = update.currentVoterId;
         this.stateStore.set(this.computeState());

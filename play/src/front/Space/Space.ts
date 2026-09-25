@@ -51,6 +51,7 @@ import type {
     SpaceUserExtended,
 } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
+import { shareUnchanged } from "./SpaceStateSharing";
 
 const RECORDING_QUERY_TIMEOUT_MS = 60_000;
 
@@ -271,7 +272,7 @@ export class Space implements SpaceInterface {
                 for (const change of $pendingChanges) {
                     change(state);
                 }
-                return state;
+                return shareUnchanged($serverState, state);
             },
         );
         this.stateStore = localStateStore;
@@ -485,8 +486,22 @@ export class Space implements SpaceInterface {
         return this._isStateInitialized;
     }
 
+    /**
+     * Notifies only when this slice changed. The state store notifies on any patch, and Svelte counts any object as
+     * changed, so a plain derived() would wake every slice's readers; slices are shared by reference when unchanged
+     * (see shareUnchanged), which makes the check a cheap `!==`.
+     */
     public observeState<K extends keyof SpaceState>(key: K): Readable<SpaceState[K]> {
-        return derived(this.stateStore, ($state) => $state[key]);
+        // What the returned store holds: it keeps its value between subscriptions, so compare with that.
+        let current = get(this.stateStore)[key];
+        return readable(current, (set) => {
+            return this.stateStore.subscribe(($state) => {
+                if ($state[key] !== current) {
+                    current = $state[key];
+                    set(current);
+                }
+            });
+        });
     }
 
     public raiseHand(raised: boolean): Promise<void> {
@@ -615,8 +630,10 @@ export class Space implements SpaceInterface {
             if (!this._isStateInitialized && !replacesRoot) {
                 return;
             }
-            const state = spaceStateSchema.parse(
-                applyPatch(structuredClone(get(this._serverStateStore)), patch).newDocument,
+            const previous = get(this._serverStateStore);
+            const state = shareUnchanged(
+                previous,
+                spaceStateSchema.parse(applyPatch(structuredClone(previous), patch).newDocument),
             );
             // Before the set: subscribers run during it and may ask whether the state is complete.
             this._isStateInitialized = true;

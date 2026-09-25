@@ -87,6 +87,22 @@ describe("ProximityChatPoll", () => {
         await expect(poll.vote(["banana"])).rejects.toThrow();
         expect(space.votePoll).not.toHaveBeenCalled();
     });
+    it("does not recompute nor re-emit when the poll did not change", () => {
+        const pollState = createPoll();
+        const poll = new ProximityChatPoll({
+            poll: pollState,
+            currentVoterId: "alice-uuid",
+            sender: undefined,
+            space: createSpace(),
+        });
+        const listener = vi.fn();
+        const unsubscribe = poll.state.subscribe(listener);
+
+        poll.update({ poll: pollState, currentVoterId: "alice-uuid", sender: undefined });
+        unsubscribe();
+
+        expect(listener).toHaveBeenCalledTimes(1);
+    });
 });
 
 function createPoll(): ProximityPoll {

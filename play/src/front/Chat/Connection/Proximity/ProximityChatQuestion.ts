@@ -38,6 +38,8 @@ export class ProximityChatQuestion implements ChatQuestionItem {
     readonly canMarkAnswered: Readable<boolean>;
 
     private currentVoterId: string;
+    // What the state was last computed from, to skip recomputing (and re-rendering) when none of it changed.
+    private lastUpdate: Omit<ProximityChatQuestionUpdate, "sender">;
     private readonly space: ProximityChatQuestionOptions["space"];
     private readonly stateStore: Writable<ChatQuestionState>;
     private readonly canUpvoteStore: Writable<boolean>;
@@ -50,6 +52,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
         this.date = new Date(options.question.createdAt);
         this.currentVoterId = options.currentVoterId;
         this.space = options.space;
+        this.lastUpdate = options;
 
         const state = computeProximityQAState(
             options.question,
@@ -69,6 +72,16 @@ export class ProximityChatQuestion implements ChatQuestionItem {
 
     update(update: ProximityChatQuestionUpdate): void {
         this.sender = update.sender;
+        const last = this.lastUpdate;
+        if (
+            update.question === last.question &&
+            update.currentVoterId === last.currentVoterId &&
+            update.canMarkAnswered === last.canMarkAnswered &&
+            update.canDeleteAny === last.canDeleteAny
+        ) {
+            return;
+        }
+        this.lastUpdate = update;
         this.currentVoterId = update.currentVoterId;
         const state = computeProximityQAState(
             update.question,

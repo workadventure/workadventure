@@ -12,7 +12,6 @@ import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAb
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { Deferred } from "@workadventure/shared-utils";
 import type { ProximityPoll, ProximityQuestion, SpaceState } from "@workadventure/shared-utils";
-import { emptySpaceState } from "@workadventure/shared-utils";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
@@ -132,10 +131,12 @@ export class ProximityChatRoom implements ChatRoom {
     /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
     public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
     // The polls and questions of the space state (owned by the back).
-    private readonly spaceStateStore = writable<SpaceState>(emptySpaceState());
+    // One store per slice, set only when the slice changed: a raised hand must not rebuild the polls.
+    private readonly pollsStore = writable<SpaceState["polls"]>({});
+    private readonly questionsStore = writable<SpaceState["questions"]>({});
     readonly pollItems: Readable<readonly ChatPollItem[]> = derived(
-        [this.spaceStateStore, this.spaceUsersStore],
-        ([$state, $users]) => this.createPollItems($state.polls, $users),
+        [this.pollsStore, this.spaceUsersStore],
+        ([$polls, $users]) => this.createPollItems($polls, $users),
     );
     readonly canModerateQuestions: Readable<boolean> = derived(this.spaceUsersStore, (users) =>
         this.computeCanModerateQuestions(users),
@@ -144,9 +145,9 @@ export class ProximityChatRoom implements ChatRoom {
         this.computeCanDeleteAnyQuestion(users),
     );
     readonly qaItems: Readable<readonly ChatQuestionItem[]> = derived(
-        [this.spaceStateStore, this.spaceUsersStore, this.canModerateQuestions, this.canDeleteQuestions],
-        ([$state, $users, $canModerateQuestions, $canDeleteQuestions]) =>
-            this.createQuestionItems($state.questions, $users, $canModerateQuestions, $canDeleteQuestions),
+        [this.questionsStore, this.spaceUsersStore, this.canModerateQuestions, this.canDeleteQuestions],
+        ([$questions, $users, $canModerateQuestions, $canDeleteQuestions]) =>
+            this.createQuestionItems($questions, $users, $canModerateQuestions, $canDeleteQuestions),
     );
     private readonly unreadQuestionIdsStore = writable<ReadonlySet<string>>(new Set());
     readonly unreadQuestionCount: Readable<number> = derived(this.unreadQuestionIdsStore, (ids) => ids.size);
@@ -455,10 +456,10 @@ export class ProximityChatRoom implements ChatRoom {
         return this._space?.askQuestion(body) ?? Promise.resolve();
     }
 
-    private notifyNewPolls(previousState: SpaceState, nextState: SpaceState): void {
+    private notifyNewPolls(previousPolls: SpaceState["polls"], nextPolls: SpaceState["polls"]): void {
         const currentVoterId = this.getCurrentVoterId(this.users ?? new Map());
-        const newPolls = Object.values(nextState.polls).filter(
-            (poll) => !(poll.id in previousState.polls) && poll.senderId !== currentVoterId,
+        const newPolls = Object.values(nextPolls).filter(
+            (poll) => !(poll.id in previousPolls) && poll.senderId !== currentVoterId,
         );
         if (newPolls.length === 0) {
             return;
@@ -486,10 +487,13 @@ export class ProximityChatRoom implements ChatRoom {
         }
     }
 
-    private notifyNewQuestions(previousState: SpaceState, nextState: SpaceState): void {
+    private notifyNewQuestions(
+        previousQuestions: SpaceState["questions"],
+        nextQuestions: SpaceState["questions"],
+    ): void {
         const currentVoterId = this.getCurrentVoterId(this.users ?? new Map());
-        const newQuestions = Object.values(nextState.questions).filter(
-            (question) => !(question.id in previousState.questions) && question.senderId !== currentVoterId,
+        const newQuestions = Object.values(nextQuestions).filter(
+            (question) => !(question.id in previousQuestions) && question.senderId !== currentVoterId,
         );
         const newQuestionIds = newQuestions.map((question) => question.id);
         if (newQuestions.length === 0) {
@@ -920,12 +924,17 @@ export class ProximityChatRoom implements ChatRoom {
         let hasBaseline = false;
         this.spaceStateUnsubscriber = joinedSpace.stateStore.subscribe((state) => {
             if (hasBaseline) {
-                const previousState = get(this.spaceStateStore);
-                this.notifyNewPolls(previousState, state);
-                this.notifyNewQuestions(previousState, state);
+                this.notifyNewPolls(get(this.pollsStore), state.polls);
+                this.notifyNewQuestions(get(this.questionsStore), state.questions);
             }
             hasBaseline ||= joinedSpace.isStateInitialized();
-            this.spaceStateStore.set(state);
+            // writable.set() notifies for any object, even the same one: compare first.
+            if (state.polls !== get(this.pollsStore)) {
+                this.pollsStore.set(state.polls);
+            }
+            if (state.questions !== get(this.questionsStore)) {
+                this.questionsStore.set(state.questions);
+            }
         });
 
         this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
@@ -1235,7 +1244,8 @@ export class ProximityChatRoom implements ChatRoom {
             this.screenWakeRelease = undefined;
         }
         this.spaceUsersStore.forward(readable(new Map()));
-        this.spaceStateStore.set(emptySpaceState());
+        this.pollsStore.set({});
+        this.questionsStore.set({});
         this.unreadQuestionIdsStore.set(new Set());
         this._space = undefined;
         this.isJoined.set(false);
@@ -1399,7 +1409,8 @@ export class ProximityChatRoom implements ChatRoom {
         chatNotificationStore.clearRoom(this.id);
 
         this.spaceUsersStore.forward(readable(new Map()));
-        this.spaceStateStore.set(emptySpaceState());
+        this.pollsStore.set({});
+        this.questionsStore.set({});
         this.unreadQuestionIdsStore.set(new Set());
         this._space = undefined;
         this.isJoined.set(false);
