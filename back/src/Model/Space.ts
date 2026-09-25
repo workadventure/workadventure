@@ -33,7 +33,6 @@ import { CommunicationManager } from "./CommunicationManager";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ManagedRecordingState } from "./RecordingManager";
-import type { SpaceStateHost } from "./SpaceStateHost";
 import { RaiseHandManager } from "./RaiseHandManager";
 import { ProximityPollManager } from "./ProximityPollManager";
 import { ProximityQAManager } from "./ProximityQAManager";
@@ -42,14 +41,13 @@ const debug = Debug("space");
 
 type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
 
-export class Space implements CustomJsonReplacerInterface, ICommunicationSpace, SpaceStateHost {
+export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
     // Server-owned, typed state. Only changed through updateState(), which broadcasts the change as a JSON Patch.
     private state: SpaceState = emptySpaceState();
     // Emitted whatever the filter says, so managers also see users the filter hides (a megaphone audience).
-    public readonly userAdded$ = new Subject<SpaceUser>();
     public readonly userRemoved$ = new Subject<SpaceUser>();
     private readonly raiseHandManager: RaiseHandManager;
     private readonly proximityPollManager: ProximityPollManager;
@@ -95,7 +93,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace, 
                 this._nbWatchers = this._nbUsers;
             }
             this._spaceUpdatedSubject.next(this);
-            this.userAdded$.next(spaceUser);
 
             if (!this.filterOneUser(spaceUser)) {
                 return;
@@ -820,7 +817,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace, 
     public destroy() {
         this.communicationManager.destroy();
         this.raiseHandManager.destroy();
-        this.userAdded$.complete();
         this.userRemoved$.complete();
         debug(`${this.name} => destroyed`);
     }

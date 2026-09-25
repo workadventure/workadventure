@@ -8,7 +8,7 @@ import { RaiseHandManager } from "../src/Model/RaiseHandManager";
 import { ProximityPollManager } from "../src/Model/ProximityPollManager";
 import { ProximityQAManager } from "../src/Model/ProximityQAManager";
 
-function fakeSpace(filterType: FilterType, ...partialUsers: Partial<SpaceUser>[]) {
+function fakeSpace(filterType: SpaceStateHost["filterType"], ...partialUsers: Partial<SpaceUser>[]) {
     const users = partialUsers.map((user) => SpaceUser.fromPartial(user));
     const userRemoved$ = new Subject<SpaceUser>();
     let state: SpaceState = emptySpaceState();

@@ -12,6 +12,7 @@ import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAb
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { Deferred } from "@workadventure/shared-utils";
 import type { ProximityPoll, ProximityQuestion, SpaceState } from "@workadventure/shared-utils";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
@@ -64,19 +65,10 @@ import { ProximityChatQuestion } from "./ProximityChatQuestion";
 import { canCreateProximityContent } from "./ProximityCreationPermissions";
 import { ProximityChatPoll } from "./ProximityChatPoll";
 import { muteProximityChatNotifications, unmuteProximityChatNotifications } from "./ProximityNotificationControl";
-import { getNewRemoteProximityPolls, getProximityPollNotificationMessage } from "./ProximityPollNotification";
-import { sortProximityPolls } from "./ProximityPollState";
-import { sortProximityQuestions } from "./ProximityQAState";
-import { getUnreadRemoteQuestionIds } from "./ProximityQAUnread";
+import { sortByCreatedAt } from "./ProximityPollState";
 import { createProximityTimelineItemsStore } from "./ProximityTimelineItemsStore";
 
 const debug = Debug("ProximityChatRoom");
-
-type ProximityContent = Pick<SpaceState, "polls" | "questions">;
-
-function emptyProximityContent(): ProximityContent {
-    return { polls: {}, questions: {} };
-}
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -140,7 +132,7 @@ export class ProximityChatRoom implements ChatRoom {
     /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
     public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
     // The polls and questions of the space state (owned by the back).
-    private readonly spaceStateStore = writable<ProximityContent>(emptyProximityContent());
+    private readonly spaceStateStore = writable<SpaceState>(emptySpaceState());
     readonly pollItems: Readable<readonly ChatPollItem[]> = derived(
         [this.spaceStateStore, this.spaceUsersStore],
         ([$state, $users]) => this.createPollItems($state.polls, $users),
@@ -463,9 +455,11 @@ export class ProximityChatRoom implements ChatRoom {
         return this._space?.askQuestion(body) ?? Promise.resolve();
     }
 
-    private notifyNewPolls(previousState: ProximityContent, nextState: ProximityContent): void {
+    private notifyNewPolls(previousState: SpaceState, nextState: SpaceState): void {
         const currentVoterId = this.getCurrentVoterId(this.users ?? new Map());
-        const newPolls = getNewRemoteProximityPolls(previousState.polls, nextState.polls, currentVoterId);
+        const newPolls = Object.values(nextState.polls).filter(
+            (poll) => !(poll.id in previousState.polls) && poll.senderId !== currentVoterId,
+        );
         if (newPolls.length === 0) {
             return;
         }
@@ -485,17 +479,19 @@ export class ProximityChatRoom implements ChatRoom {
         for (const poll of newPolls) {
             chatNotificationStore.addNotification(
                 poll.senderName ?? this.unknownUserName,
-                getProximityPollNotificationMessage(poll, get(LL).chat.poll.title()),
+                `${get(LL).chat.poll.title()}: ${poll.question}`,
                 this,
                 poll.id,
             );
         }
     }
 
-    private notifyNewQuestions(previousState: ProximityContent, nextState: ProximityContent): void {
+    private notifyNewQuestions(previousState: SpaceState, nextState: SpaceState): void {
         const currentVoterId = this.getCurrentVoterId(this.users ?? new Map());
-        const newQuestionIds = getUnreadRemoteQuestionIds(previousState.questions, nextState.questions, currentVoterId);
-        const newQuestions = newQuestionIds.map((questionId) => nextState.questions[questionId]);
+        const newQuestions = Object.values(nextState.questions).filter(
+            (question) => !(question.id in previousState.questions) && question.senderId !== currentVoterId,
+        );
+        const newQuestionIds = newQuestions.map((question) => question.id);
         if (newQuestions.length === 0) {
             return;
         }
@@ -531,7 +527,7 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private createPollItems(
-        polls: ProximityContent["polls"],
+        polls: SpaceState["polls"],
         users: Map<string, SpaceUserExtended>,
     ): readonly ChatPollItem[] {
         const space = this._space;
@@ -541,7 +537,7 @@ export class ProximityChatRoom implements ChatRoom {
         const activePollIds = new Set<string>();
         const currentVoterId = this.getCurrentVoterId(users);
 
-        const pollItems = sortProximityPolls(polls).map((poll) => {
+        const pollItems = sortByCreatedAt(polls).map((poll) => {
             activePollIds.add(poll.id);
             const sender = this.findPollSender(poll, users);
             const existingPoll = this.proximityPolls.get(poll.id);
@@ -560,7 +556,7 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private createQuestionItems(
-        questions: ProximityContent["questions"],
+        questions: SpaceState["questions"],
         users: Map<string, SpaceUserExtended>,
         canMarkAnswered: boolean,
         canDeleteAny: boolean,
@@ -572,7 +568,7 @@ export class ProximityChatRoom implements ChatRoom {
         const activeQuestionIds = new Set<string>();
         const currentVoterId = this.getCurrentVoterId(users);
 
-        const questionItems = sortProximityQuestions(questions)
+        const questionItems = sortByCreatedAt(questions)
             .map((question) => {
                 activeQuestionIds.add(question.id);
                 const sender = this.findQuestionSender(question, users);
@@ -920,15 +916,14 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceStateUnsubscriber?.();
         let isFirstState = true;
         this.spaceStateUnsubscriber = this._space.stateStore.subscribe((state) => {
-            const nextState = { polls: state.polls, questions: state.questions };
             // What was already there when we joined is not news.
             if (!isFirstState) {
                 const previousState = get(this.spaceStateStore);
-                this.notifyNewPolls(previousState, nextState);
-                this.notifyNewQuestions(previousState, nextState);
+                this.notifyNewPolls(previousState, state);
+                this.notifyNewQuestions(previousState, state);
             }
             isFirstState = false;
-            this.spaceStateStore.set(nextState);
+            this.spaceStateStore.set(state);
         });
 
         this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
@@ -1238,7 +1233,7 @@ export class ProximityChatRoom implements ChatRoom {
             this.screenWakeRelease = undefined;
         }
         this.spaceUsersStore.forward(readable(new Map()));
-        this.spaceStateStore.set(emptyProximityContent());
+        this.spaceStateStore.set(emptySpaceState());
         this.unreadQuestionIdsStore.set(new Set());
         this._space = undefined;
         this.isJoined.set(false);
@@ -1402,7 +1397,7 @@ export class ProximityChatRoom implements ChatRoom {
         chatNotificationStore.clearRoom(this.id);
 
         this.spaceUsersStore.forward(readable(new Map()));
-        this.spaceStateStore.set(emptyProximityContent());
+        this.spaceStateStore.set(emptySpaceState());
         this.unreadQuestionIdsStore.set(new Set());
         this._space = undefined;
         this.isJoined.set(false);
