@@ -7,18 +7,21 @@ import { publicTestMapUrl } from "./utils/urls";
 
 const mapUrl = () => publicTestMapUrl("tests/E2E/empty.json", "moderation");
 
-/** Opens the moderation modal on `nickname` from the chat user list. */
-async function openModerationModal(page: Page, nickname: string) {
-    await chatUtils.openUserList(page, false);
+/** Opens the moderation modal on `nickname` from the chat user list (opened first unless `listIsOpen`). */
+async function openModerationModal(page: Page, nickname: string, listIsOpen = false) {
+    if (!listIsOpen) {
+        await chatUtils.openUserList(page, false);
+    }
     const user = page.locator(".user", { hasText: nickname });
     await user.locator(".wa-dropdown button").click();
     await user.getByText("Moderate").click();
     await expect(page.getByTestId("blockmenu-block-user-button")).toBeVisible();
 }
 
-test.describe("In-game moderation @oidc @nomobile", () => {
-    test.beforeEach(({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile");
+// The chat user list is not tested on WebKit (see userlist.spec.ts).
+test.describe("In-game moderation @oidc @nomobile @nowebkit", () => {
+    test.beforeEach(({ page, browserName }) => {
+        test.skip(isMobile(page) || browserName === "webkit", "Skip on mobile and WebKit");
     });
 
     test("an admin can kick a user, with a reason", async ({ browser }) => {
@@ -51,7 +54,7 @@ test.describe("In-game moderation @oidc @nomobile", () => {
         await expect(admin.getByTestId("moderation-submit")).toBeHidden();
         await expect(alice.locator(".errorScreen")).toBeHidden();
 
-        await openModerationModal(admin, "Alice");
+        await openModerationModal(admin, "Alice", true);
         await admin.getByTestId("moderation-ban-action").click();
         await admin.getByTestId("moderation-submit").click();
 
