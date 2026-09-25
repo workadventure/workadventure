@@ -16,10 +16,6 @@ export type ProximityQAState = {
     canMarkAnswered: boolean;
 };
 
-export function sortProximityQuestions(questions: Readonly<Record<string, ProximityQuestion>>): ProximityQuestion[] {
-    return Object.values(questions).sort((left, right) => left.createdAt - right.createdAt);
-}
-
 export function computeProximityQAState(
     question: ProximityQuestion,
     currentVoterId: string,

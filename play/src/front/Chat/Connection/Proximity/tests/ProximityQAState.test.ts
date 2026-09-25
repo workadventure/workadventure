@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ProximityQuestion } from "@workadventure/shared-utils";
-import { computeProximityQAState, sortProximityQuestions } from "../ProximityQAState";
+import { computeProximityQAState } from "../ProximityQAState";
 
 function createQuestion(overrides: Partial<ProximityQuestion> = {}): ProximityQuestion {
     return {
@@ -15,15 +15,6 @@ function createQuestion(overrides: Partial<ProximityQuestion> = {}): ProximityQu
 }
 
 describe("ProximityQAState", () => {
-    it("should list the questions of the state by creation date", () => {
-        const questions = {
-            "question-2": createQuestion({ id: "question-2", createdAt: 20 }),
-            "question-1": createQuestion({ id: "question-1", createdAt: 10 }),
-        };
-
-        expect(sortProximityQuestions(questions).map((question) => question.id)).toEqual(["question-1", "question-2"]);
-    });
-
     it("should count one upvote per voter and ignore the author's own", () => {
         const question = createQuestion({ upvotes: { "alice-uuid": 11, "bob-uuid": 12 } });
 
