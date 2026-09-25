@@ -130,11 +130,10 @@
 
         // Subscriptions for store changes
         const unsubscriber = orderedStreamableCollectionStore.subscribe((orderedStreamableCollection) => {
-            // Sort the collection by priority
-            const sortedCollection = [...orderedStreamableCollection].sort((a, b) => b.priority - a.priority);
-            // Each time the order of the videos changes, we update the displayOrder of each videoBox
-            for (let i = 0; i < sortedCollection.length; i++) {
-                sortedCollection[i].displayOrder.set(i);
+            // Each time the order of the videos changes, we update the displayOrder of each videoBox.
+            // The collection is already ordered by stableNSort: re-sorting it here by priority would override that order.
+            for (let i = 0; i < orderedStreamableCollection.length; i++) {
+                orderedStreamableCollection[i].displayOrder.set(i);
             }
         });
 
