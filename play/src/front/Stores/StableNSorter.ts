@@ -24,57 +24,49 @@ export function stableNSort<T extends { uniqueId: string; priority: number }>(
 
     // Let's do a diff between currentOrder and the new streamableCollectionStore.
     // First, let's remove from currentOrder all items that are not in the new streamableCollectionStore.
-    for (let i = currentOrder.length - 1; i >= 0; i--) {
-        const uniqueId = currentOrder[i];
-        if (!items.has(uniqueId)) {
-            currentOrder.splice(i, 1);
-            foundDifference = true;
-        }
+    const remainingOrder = currentOrder.filter((uniqueId) => items.has(uniqueId));
+    if (remainingOrder.length !== currentOrder.length) {
+        currentOrder.length = 0;
+        currentOrder.push(...remainingOrder);
+        foundDifference = true;
     }
 
     // Now, let's add to currentOrder all items that are in the new streamableCollectionStore but not in currentOrder.
+    const knownUniqueIds = new Set(currentOrder);
     items.forEach((streamable) => {
-        if (!currentOrder.includes(streamable.uniqueId)) {
+        if (!knownUniqueIds.has(streamable.uniqueId)) {
             currentOrder.push(streamable.uniqueId);
             foundDifference = true;
         }
     });
 
+    // Position of each item in currentOrder, kept up to date when items are swapped below.
+    // Looking positions up with indexOf / includes instead made the sort O(n² log n) (a few ms with 500 users).
+    const positions = new Map(currentOrder.map((uniqueId, index) => [uniqueId, index]));
+    const positionOf = (uniqueId: string): number => positions.get(uniqueId) ?? Number.MAX_SAFE_INTEGER;
+
     // Now, we need to sort the items by priority.
-    const sortedCollectionStore = Array.from(items.values()).sort((a, b) => {
-        if (a.priority === b.priority) {
-            // We need a stable sort. If 2 items have the same priority (probably because none is speaking), we need to keep the previous order from currentOrder.
-            const indexA = currentOrder.indexOf(a.uniqueId);
-            const indexB = currentOrder.indexOf(b.uniqueId);
-            if (indexA !== -1 && indexB !== -1) {
-                return indexA - indexB; // Maintain the order from currentOrder
-            } else if (indexA !== -1) {
-                // Should never happen, but let's handle it gracefully.
-                return -1; // a is in currentOrder, b is not
-            } else if (indexB !== -1) {
-                // Should never happen, but let's handle it gracefully.
-                return 1; // b is in currentOrder, a is not
-            }
-        }
-        return a.priority - b.priority;
-    });
+    // We need a stable sort. If 2 items have the same priority (probably because none is speaking), we need to keep
+    // the previous order from currentOrder.
+    const sortedCollectionStore = Array.from(items.values()).sort(
+        (a, b) => a.priority - b.priority || positionOf(a.uniqueId) - positionOf(b.uniqueId),
+    );
 
     // For the first n items of sortedCollectionStore, we need to make sure they are in the first n items of currentOrder.
-    const currentOrderVisibleItems = currentOrder.slice(0, n);
+    const visibleCount = Math.min(n, currentOrder.length);
 
     for (let i = 0; i < n && i < sortedCollectionStore.length; i++) {
         const streamable = sortedCollectionStore[i];
-        if (!currentOrderVisibleItems.includes(streamable.uniqueId)) {
-            // One of the items in the first n items of sortedCollectionStore is not in currentOrderVisibleItems.
-            // Let's switch the less important item in currentOrderVisibleItems with the current streamable.
-            // Let's find the less important item in currentOrderVisibleItems.
+        const indexToSwitch = positionOf(streamable.uniqueId);
+        if (indexToSwitch >= visibleCount) {
+            // One of the items in the first n items of sortedCollectionStore is not in the first n items of currentOrder.
+            // Let's switch the less important item in the first n items of currentOrder with the current streamable.
+            // Let's find the less important item in the first n items of currentOrder.
             let lessImportantItemIndex = -1;
             let lessImportantItemPriority = Number.MIN_SAFE_INTEGER;
-            for (let j = 0; j < currentOrderVisibleItems.length; j++) {
-                const uniqueId = currentOrderVisibleItems[j];
-                const item = items.get(uniqueId);
+            for (let j = 0; j < visibleCount; j++) {
+                const item = items.get(currentOrder[j]);
                 if (item && item.priority > lessImportantItemPriority) {
-                    foundDifference = true;
                     lessImportantItemPriority = item.priority;
                     lessImportantItemIndex = j;
                 }
@@ -82,16 +74,16 @@ export function stableNSort<T extends { uniqueId: string; priority: number }>(
             if (lessImportantItemIndex === -1) {
                 throw new Error("No less important item found in currentOrderVisibleItems");
             }
-            // Now let's find the index of the item we want to switch with the less important item.
-            const indexToSwitch = currentOrder.indexOf(streamable.uniqueId);
-            if (indexToSwitch === -1) {
+            if (indexToSwitch >= currentOrder.length) {
                 throw new Error("Item to switch not found in currentOrder");
             }
             // Now let's switch the items.
             const lessImportantItemUniqueId = currentOrder[lessImportantItemIndex];
             currentOrder[lessImportantItemIndex] = streamable.uniqueId;
-            currentOrderVisibleItems[lessImportantItemIndex] = streamable.uniqueId;
             currentOrder[indexToSwitch] = lessImportantItemUniqueId;
+            positions.set(streamable.uniqueId, lessImportantItemIndex);
+            positions.set(lessImportantItemUniqueId, indexToSwitch);
+            foundDifference = true;
         }
     }
 
