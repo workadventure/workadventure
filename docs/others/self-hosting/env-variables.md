@@ -41,6 +41,7 @@ Environment variables for the Play service (frontend and pusher).
 | `OPENID_PROFILE_SCREEN_PROVIDER` | No | URL of the 'profile' page (typically part of the optionnal Admin component) |
 | `OPENID_SCOPE` | No | OAuth2 scopes to request (space-separated). Defaults to 'openid email profile' |
 | `OPENID_PROMPT` | No | OpenID Connect prompt parameter (e.g., 'login', 'consent') |
+| `OPENID_ACCESS_TYPE` | No | OAuth2 'access_type' parameter sent on the authorization request (e.g. 'offline') |
 | `OPENID_USERNAME_CLAIM` | No | JWT claim to use as the username. Defaults to 'preferred_username' |
 | `OPENID_LOCALE_CLAIM` | No | JWT claim to use for user locale. Defaults to 'locale' |
 | `OPENID_WOKA_NAME_POLICY` | No | Policy for avatar naming: 'user_input', 'allow_override_opid', or 'force_opid' |
