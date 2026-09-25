@@ -1,4 +1,4 @@
-import type { MatrixClient, Room, User } from "matrix-js-sdk";
+import type { MatrixClient, Room, RoomMember, User } from "matrix-js-sdk";
 import { SetPresence } from "matrix-js-sdk";
 import { readable, writable, type Writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
@@ -38,9 +38,17 @@ export const chatUserFactory: (
     };
 };
 
-export function chatUserFactoryFromRoom(room: Room, userId: string): ChatUser | undefined {
+/**
+ * @param eventSender - the sender as the timeline saw it (`MatrixEvent.sender`). With lazy-loaded members, someone who
+ * only appears in older history is missing from the room's current state, and this is the only place their name is.
+ */
+export function chatUserFactoryFromRoom(
+    room: Room,
+    userId: string,
+    eventSender?: RoomMember | null,
+): ChatUser | undefined {
     const matrixUser = room.client.getUser(userId);
-    const roomMember = room.getMember(userId);
+    const roomMember = room.getMember(userId) ?? eventSender;
     const displayName =
         roomMember?.name?.trim() || matrixUser?.displayName?.trim() || matrixUser?.rawDisplayName?.trim();
     const pictureUrl = roomMember?.getAvatarUrl(room.client.baseUrl, 48, 48, "scale", false, false) ?? undefined;

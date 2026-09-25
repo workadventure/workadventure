@@ -153,7 +153,7 @@ export class MatrixChatPoll implements ChatPollItem {
 
     private getSender(): ChatUser | undefined {
         const senderUserId = this.poll.rootEvent.getSender();
-        return senderUserId ? chatUserFactoryFromRoom(this.room, senderUserId) : undefined;
+        return senderUserId ? chatUserFactoryFromRoom(this.room, senderUserId, this.poll.rootEvent.sender) : undefined;
     }
 
     private getEndEvent(): MatrixEvent | undefined {
