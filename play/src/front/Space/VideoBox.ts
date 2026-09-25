@@ -3,7 +3,7 @@ import { type Writable, type Readable, writable, type Unsubscriber, get } from "
 import type { PeerStatus } from "../WebRtc/RemotePeer";
 import type { SpaceUserExtended } from "./SpaceInterface";
 import { localSpaceUser } from "./localSpaceUser";
-import { LAST_VIDEO_BOX_PRIORITY, SCREEN_SHARE_STARTING_PRIORITY } from "./VideoBoxPriorities";
+import { idleVideoBoxPriority, SCREEN_SHARE_STARTING_PRIORITY } from "./VideoBoxPriorities";
 import type { Streamable } from "./Streamable";
 
 const CONNECTING_TIMEOUT_MS = 10000;
@@ -86,7 +86,9 @@ export class VideoBox {
             spaceUser,
             undefined,
             // Screen shares keep a fixed priority so they always come before remote cameras.
-            isScreenSharing ? SCREEN_SHARE_STARTING_PRIORITY : LAST_VIDEO_BOX_PRIORITY,
+            isScreenSharing
+                ? SCREEN_SHARE_STARTING_PRIORITY
+                : idleVideoBoxPriority(spaceUser.cameraState, undefined, Date.now()),
             9999,
             isMegaphoneSpace,
         );
