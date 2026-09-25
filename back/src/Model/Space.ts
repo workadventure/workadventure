@@ -49,6 +49,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     private state: SpaceState = emptySpaceState();
     // Emitted whatever the filter says, so managers also see users the filter hides (a megaphone audience).
     public readonly userRemoved$ = new Subject<SpaceUser>();
+    // `previous` is a shallow copy of the user before the update, to tell what changed.
+    public readonly userUpdated$ = new Subject<{ user: SpaceUser; previous: SpaceUser }>();
     private readonly raiseHandManager: RaiseHandManager;
     private readonly proximityPollManager: ProximityPollManager;
     private readonly proximityQAManager: ProximityQAManager;
@@ -139,8 +141,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
             const oldFilter = this.filterOneUser(user);
 
+            const previous = { ...user };
             const updateValues = applyFieldMask(spaceUser, updateMask);
             deepmergeInto(user, updateValues);
+            this.userUpdated$.next({ user, previous });
 
             const newFilter = this.filterOneUser(user);
 
@@ -821,6 +825,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.communicationManager.destroy();
         this.raiseHandManager.destroy();
         this.userRemoved$.complete();
+        this.userUpdated$.complete();
         debug(`${this.name} => destroyed`);
     }
 

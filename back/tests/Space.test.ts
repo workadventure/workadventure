@@ -1239,6 +1239,35 @@ describe("Space state", () => {
         expect(answer.answer?.$case).toBe("error");
     });
 
+    it("takes the floor back from a holder whose stream stops", async () => {
+        const { space, watcher } = spaceWithUsers(
+            FilterType.LIVE_STREAMING_USERS,
+            { spaceUserId: "speaker", name: "Sam", megaphoneState: true },
+            { spaceUserId: "guest", name: "Gus" },
+        );
+        await space.handleQuery(watcher, {
+            id: 1,
+            spaceName: "test",
+            query: {
+                $case: "spaceStateQuery",
+                spaceStateQuery: {
+                    spaceUserId: "speaker",
+                    query: { query: { $case: "giveFloor", giveFloor: { targetSpaceUserId: "guest" } } },
+                },
+            },
+        });
+        space.updateUser(watcher, SpaceUser.fromPartial({ spaceUserId: "guest", megaphoneState: true }), [
+            "megaphoneState",
+        ]);
+        expect(space.getState().floorHolders).toHaveLength(1);
+
+        space.updateUser(watcher, SpaceUser.fromPartial({ spaceUserId: "guest", megaphoneState: false }), [
+            "megaphoneState",
+        ]);
+
+        expect(space.getState().floorHolders).toEqual([]);
+    });
+
     it("drops a leaving user from the raised hands", () => {
         const { space, watcher } = spaceWithUsers(
             FilterType.ALL_USERS,

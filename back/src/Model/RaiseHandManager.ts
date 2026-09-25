@@ -13,16 +13,29 @@ import { isAdmin } from "./SpaceStateHost";
  * panel can offer taking the floor back.
  */
 export class RaiseHandManager {
-    private readonly subscription: Subscription;
+    private readonly subscriptions: Subscription[];
 
     constructor(private readonly space: SpaceStateHost) {
-        // A user who leaves must not keep a ghost entry in the queue, nor in the host's "take back" panel.
-        this.subscription = space.userRemoved$.subscribe((user) => {
-            this.space.updateState((state) => {
-                removeEntry(state.raisedHands, user.spaceUserId);
-                removeEntry(state.floorHolders, user.spaceUserId);
-            });
-        });
+        this.subscriptions = [
+            // A user who leaves must not keep a ghost entry in the queue, nor in the host's "take back" panel.
+            space.userRemoved$.subscribe((user) => {
+                this.space.updateState((state) => {
+                    removeEntry(state.raisedHands, user.spaceUserId);
+                    removeEntry(state.floorHolders, user.spaceUserId);
+                });
+            }),
+            // A floor holder who stops streaming (leaves the stage, loses the stream...) no longer holds the floor,
+            // whether or not their own client hands it back. Only on the true -> false transition: right after
+            // giveFloor, the holder is not streaming YET.
+            space.userUpdated$.subscribe(({ user, previous }) => {
+                if (!previous.megaphoneState || user.megaphoneState) {
+                    return;
+                }
+                this.space.updateState((state) => {
+                    removeEntry(state.floorHolders, user.spaceUserId);
+                });
+            }),
+        ];
     }
 
     /** Raises or lowers the sender's own hand. */
@@ -72,7 +85,7 @@ export class RaiseHandManager {
     }
 
     public destroy(): void {
-        this.subscription.unsubscribe();
+        this.subscriptions.forEach((subscription) => subscription.unsubscribe());
     }
 
     /**
