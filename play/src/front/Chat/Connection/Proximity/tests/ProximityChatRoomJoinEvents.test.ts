@@ -4,7 +4,9 @@ globalThis.Phaser = Phaser;
 
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { Subject } from "rxjs";
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
+import type { ProximityPoll, SpaceState } from "@workadventure/shared-utils";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { loadLocaleAsync } from "../../../../../i18n/i18n-util.async";
 import { setLocale } from "../../../../../i18n/i18n-svelte";
@@ -15,6 +17,7 @@ import { RemotePlayersRepository } from "../../../../Phaser/Game/RemotePlayersRe
 import { iframeListener } from "../../../../Api/IframeListener";
 import { ProximityChatRoom } from "../ProximityChatRoom";
 import { DEFAULT_PROXIMITY_SPACE_NAME } from "../ProximityChatRoomManager";
+import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 
 vi.mock("../../../../Api/IframeListener", () => {
     // Anything the room (or a module it pulls in) calls is a spy; anything it subscribes to is a stream.
@@ -98,18 +101,26 @@ function player(userId: number): MessageUserJoined {
 function createFakeSpace(users: Map<string, SpaceUserExtended>) {
     const observeUserJoined = new Subject<SpaceUserExtended>();
     const observeUserLeft = new Subject<SpaceUserExtended>();
+    const stateStore = writable<SpaceState>(emptySpaceState());
+    let isStateInitialized = false;
+    // What the pusher does right after the join: the whole state arrives, as one patch.
+    const receiveState = (state: SpaceState) => {
+        isStateInitialized = true;
+        stateStore.set(state);
+    };
     const space = {
         getName: () => "bubble",
         destroyed: false,
         usersStore: writable(users),
         getMetadata: () => new Map(),
-        observeMetadata: new Subject(),
+        stateStore,
+        isStateInitialized: () => isStateInitialized,
         observePublicEvent: () => new Subject(),
         observeUserJoined,
         observeUserLeft,
         getUsers: () => Promise.resolve(users),
     } as unknown as SpaceInterface;
-    return { space, observeUserJoined, observeUserLeft, users };
+    return { space, observeUserJoined, observeUserLeft, users, stateStore, receiveState };
 }
 
 function createRoom(space: SpaceInterface, repository: RemotePlayersRepository): ProximityChatRoom {
@@ -226,4 +237,39 @@ describe("ProximityChatRoom join events", () => {
         );
         expect(iframeListener.sendJoinProximityMeetingEvent).toHaveBeenCalledTimes(1);
     });
+
+    it("does not notify the polls already there when the state arrives after joining, only the new ones", async () => {
+        const users = new Map([1, 2].map((id) => [`room_${id}`, spaceUser(id)]));
+        const { space, stateStore, receiveState } = createFakeSpace(users);
+        const repository = new RemotePlayersRepository();
+        repository.addPlayer(player(2));
+        const room = createRoom(space, repository);
+        await room.joinSpace("bubble", [], false, FilterType.ALL_USERS, false);
+        // Joining selects the room; the user looking at another one is what makes a poll count as unread.
+        selectedRoomStore.set(undefined);
+
+        // The store was still empty when the room subscribed; then the whole state arrives, with an older poll.
+        receiveState({ ...emptySpaceState(), polls: { "poll-1": poll("poll-1") } });
+        expect(get(room.unreadNotificationCount)).toBe(0);
+
+        stateStore.update((state) => ({ ...state, polls: { ...state.polls, "poll-2": poll("poll-2") } }));
+        expect(get(room.unreadNotificationCount)).toBe(1);
+    });
 });
+
+function poll(id: string): ProximityPoll {
+    return {
+        id,
+        question: "Lunch?",
+        kind: "open",
+        answers: [
+            { id: "a", text: "Pizza" },
+            { id: "b", text: "Sushi" },
+        ],
+        maxSelections: 1,
+        senderId: "uuid-2",
+        senderName: "User 2",
+        createdAt: 10,
+        votes: {},
+    };
+}

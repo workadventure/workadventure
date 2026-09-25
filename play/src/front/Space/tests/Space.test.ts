@@ -4,6 +4,8 @@ globalThis.Phaser = Phaser;
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { FilterType, type SpaceUser } from "@workadventure/messages";
+import type { SpaceState } from "@workadventure/shared-utils";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import { get, writable } from "svelte/store";
 import { Space } from "../Space";
 import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
@@ -95,17 +97,20 @@ vi.mock(
     () => import("../../../../tests/front/mocks/frontEnvironmentVariableMock"),
 );
 
-const startRecordingSpy = vi.fn();
-const stopRecordingSpy = vi.fn();
+const querySpaceStateSpy = vi.fn().mockResolvedValue(undefined);
 
 const defaultRoomConnectionMock = {
     emitJoinSpace: vi.fn(),
     emitLeaveSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
     emitRemoveSpaceFilter: vi.fn(),
-    startRecording: startRecordingSpy,
-    stopRecording: stopRecordingSpy,
+    querySpaceState: querySpaceStateSpy,
 } as unknown as RoomConnection;
+
+// What the pusher sends when the space is joined: the whole state, as a patch replacing the root.
+function receiveState(space: Space, changes: Partial<SpaceState>): void {
+    space.applyStatePatch(JSON.stringify([{ op: "replace", path: "", value: { ...emptySpaceState(), ...changes } }]));
+}
 
 const defaultPropertiesToSync = ["x", "y", "z"];
 const videoPropertiesToSync = ["cameraState", "microphoneState", "screenSharingState"];
@@ -516,17 +521,7 @@ describe("Space test", () => {
         const showInfoPopupSpy = vi.spyOn(recordingStore, "showInfoPopup");
         const showGenericInfoPopupSpy = vi.spyOn(recordingStore, "showGenericInfoPopup");
 
-        space.setMetadata(
-            new Map<string, unknown>([
-                [
-                    "recording",
-                    {
-                        recording: true,
-                        recorder: "alice-id",
-                    },
-                ],
-            ]),
-        );
+        receiveState(space, { recording: { recording: true, recorder: "alice-id", status: "recording" } });
 
         expect(showInfoPopupSpy).toHaveBeenCalledWith("Alice");
         expect(showGenericInfoPopupSpy).not.toHaveBeenCalled();
@@ -547,17 +542,7 @@ describe("Space test", () => {
         const showInfoPopupSpy = vi.spyOn(recordingStore, "showInfoPopup");
         const showGenericInfoPopupSpy = vi.spyOn(recordingStore, "showGenericInfoPopup");
 
-        space.setMetadata(
-            new Map<string, unknown>([
-                [
-                    "recording",
-                    {
-                        recording: true,
-                        recorder: "alice-id",
-                    },
-                ],
-            ]),
-        );
+        receiveState(space, { recording: { recording: true, recorder: "alice-id", status: "recording" } });
 
         await vi.advanceTimersByTimeAsync(5_000);
 
@@ -591,18 +576,7 @@ describe("Space test", () => {
         const showInfoPopupSpy = vi.spyOn(recordingStore, "showInfoPopup");
         const showGenericInfoPopupSpy = vi.spyOn(recordingStore, "showGenericInfoPopup");
 
-        space.setMetadata(
-            new Map<string, unknown>([
-                [
-                    "recording",
-                    {
-                        recording: false,
-                        recorder: "alice-id",
-                        status: "starting",
-                    },
-                ],
-            ]),
-        );
+        receiveState(space, { recording: { recording: false, recorder: "alice-id", status: "starting" } });
 
         expect(showInfoPopupSpy).not.toHaveBeenCalled();
         expect(showGenericInfoPopupSpy).not.toHaveBeenCalled();
@@ -639,7 +613,7 @@ describe("Space test", () => {
         expect(playNotificationSpy).toHaveBeenCalledTimes(1);
     });
 
-    it("should forward startRecording and stopRecording to the room connection", async () => {
+    it("should send startRecording and stopRecording as space state queries", async () => {
         const space = await Space.create(
             "space-name",
             FilterType.ALL_USERS,
@@ -654,8 +628,92 @@ describe("Space test", () => {
         await space.startRecording();
         await space.stopRecording();
 
-        expect(startRecordingSpy).toHaveBeenCalledWith("space-name");
-        expect(stopRecordingSpy).toHaveBeenCalledWith("space-name");
+        expect(querySpaceStateSpy).toHaveBeenCalledWith(
+            "space-name",
+            { $case: "startRecording", startRecording: {} },
+            { timeout: 60_000 },
+        );
+        expect(querySpaceStateSpy).toHaveBeenCalledWith(
+            "space-name",
+            { $case: "stopRecording", stopRecording: {} },
+            { timeout: 60_000 },
+        );
+    });
+
+    it("only notifies the readers of the slice a patch changed", async () => {
+        const space = await Space.create("space-name", FilterType.ALL_USERS, defaultRoomConnectionMock, [], signal);
+        receiveState(space, {});
+        const pollsListener = vi.fn();
+        const raisedHandsListener = vi.fn();
+        const unsubscribePolls = space.observeState("polls").subscribe(pollsListener);
+        const unsubscribeHands = space.observeState("raisedHands").subscribe(raisedHandsListener);
+
+        space.applyStatePatch(
+            JSON.stringify([{ op: "add", path: "/raisedHands/-", value: { spaceUserId: "bob", name: "Bob", at: 1 } }]),
+        );
+
+        expect(raisedHandsListener).toHaveBeenCalledTimes(2);
+        expect(pollsListener).toHaveBeenCalledTimes(1);
+        unsubscribePolls();
+        unsubscribeHands();
+    });
+
+    it("ignores patches until the whole state arrives, then applies them", async () => {
+        const space = await Space.create("space-name", FilterType.ALL_USERS, defaultRoomConnectionMock, [], signal);
+        const alice = { spaceUserId: "alice-id", name: "Alice", at: 1 };
+        const addAlice = JSON.stringify([{ op: "add", path: "/raisedHands/-", value: alice }]);
+
+        space.applyStatePatch(addAlice);
+        expect(get(space.raisedHandsStore)).toEqual([]);
+
+        receiveState(space, {});
+        space.applyStatePatch(addAlice);
+        expect(get(space.raisedHandsStore)).toEqual([alice]);
+    });
+
+    it("shows a personal change right away and drops it once the back answered", async () => {
+        let answer: () => void = () => {};
+        const querySpaceState = vi.fn(
+            () =>
+                new Promise<void>((resolve) => {
+                    answer = resolve;
+                }),
+        );
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            { ...defaultRoomConnectionMock, querySpaceState } as unknown as RoomConnection,
+            [],
+            signal,
+        );
+        receiveState(space, {});
+
+        const raising = space.raiseHand(true);
+        expect(get(space.raisedHandsStore).map((entry) => entry.spaceUserId)).toEqual([space.mySpaceUserId]);
+
+        answer();
+        await raising;
+        // The back did not send the patch: nothing is left of the optimistic change.
+        expect(get(space.raisedHandsStore)).toEqual([]);
+    });
+
+    it("reports a refused change without rejecting", async () => {
+        const querySpaceState = vi.fn().mockRejectedValue(new Error("refused"));
+        const playNotification = vi.spyOn(notificationPlayingStore, "playNotification");
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        const space = await Space.create(
+            "space-name",
+            FilterType.ALL_USERS,
+            { ...defaultRoomConnectionMock, querySpaceState } as unknown as RoomConnection,
+            [],
+            signal,
+        );
+        receiveState(space, {});
+
+        await space.raiseHand(true);
+
+        expect(playNotification).toHaveBeenCalled();
+        expect(get(space.raisedHandsStore)).toEqual([]);
     });
 
     it("should add metadata when key is not in metadata map", async () => {

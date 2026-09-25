@@ -26,9 +26,9 @@ export interface SpaceRegistryInterface {
     readonly isLiveStreamingAudioStore: Readable<boolean>;
     readonly raisedHandsStore: Readable<RaisedHand[]>;
     readonly speakingUsersStore: Readable<FloorSpeaker[]>;
-    giveFloor(spaceUserId: string): void;
-    revokeFloor(spaceUserId: string): void;
-    lowerHand(spaceUserId: string): void;
+    giveFloor(spaceUserId: string): Promise<void>;
+    revokeFloor(spaceUserId: string): Promise<void>;
+    lowerHand(spaceUserId: string): Promise<void>;
     readonly shouldPublishScreenShareStore: Readable<boolean>;
     spacesEligibleForRecording: Readable<SpaceInterface[]>;
 }

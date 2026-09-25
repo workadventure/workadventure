@@ -1,32 +1,17 @@
 import { get } from "svelte/store";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import type { ProximityQuestion } from "@workadventure/shared-utils";
 import { ProximityChatQuestion } from "../ProximityChatQuestion";
-import {
-    getProximityQAAnswerMetadataKey,
-    getProximityQADeleteMetadataKey,
-    getProximityQAUpvoteMetadataKey,
-    type ProximityQAQuestionMetadata,
-} from "../ProximityQAMetadata";
 
 describe("ProximityChatQuestion", () => {
-    it("should toggle the current user's upvote in a dedicated metadata key", async () => {
-        const metadataUpdates: Map<string, unknown>[] = [];
-        const question = createQuestion({
-            currentVoterId: "alice-uuid",
-            updateMetadata: (metadata) => metadataUpdates.push(metadata),
-        });
+    it("should toggle the current user's upvote through the space", async () => {
+        const { question, space } = createQuestion({ currentVoterId: "alice-uuid" });
 
         await question.toggleUpvote();
-
-        expect(metadataUpdates[0].get(getProximityQAUpvoteMetadataKey("question-1", "alice-uuid"))).toMatchObject({
-            questionId: "question-1",
-            voterId: "alice-uuid",
-            upvoted: true,
-        });
+        expect(space.upvoteQuestion).toHaveBeenLastCalledWith("question-1", true, "alice-uuid");
 
         question.update({
-            upvotes: [{ questionId: "question-1", voterId: "alice-uuid", upvoted: true, updatedAt: 10 }],
-            answer: undefined,
+            question: { ...questionState(), upvotes: { "alice-uuid": 10 } },
             currentVoterId: "alice-uuid",
             sender: undefined,
             canMarkAnswered: false,
@@ -34,48 +19,29 @@ describe("ProximityChatQuestion", () => {
         });
 
         await question.toggleUpvote();
-
-        expect(metadataUpdates[1].get(getProximityQAUpvoteMetadataKey("question-1", "alice-uuid"))).toMatchObject({
-            questionId: "question-1",
-            voterId: "alice-uuid",
-            upvoted: false,
-        });
+        expect(space.upvoteQuestion).toHaveBeenLastCalledWith("question-1", false, "alice-uuid");
     });
 
     it("should allow authors and moderators to delete questions", async () => {
-        const metadataUpdates: Map<string, unknown>[] = [];
-        const authorQuestion = createQuestion({
-            currentVoterId: "author-uuid",
-            updateMetadata: (metadata) => metadataUpdates.push(metadata),
-        });
-        const participantQuestion = createQuestion({
-            currentVoterId: "alice-uuid",
-            canModerate: false,
-            updateMetadata: (metadata) => metadataUpdates.push(metadata),
-        });
+        const { question: authorQuestion, space } = createQuestion({ currentVoterId: "author-uuid" });
+        const { question: participantQuestion } = createQuestion({ currentVoterId: "alice-uuid", canModerate: false });
 
         await expect(participantQuestion.remove()).rejects.toThrow("Only question authors or moderators can delete");
         await authorQuestion.remove();
 
         expect(get(authorQuestion.canDelete)).toBe(true);
         expect(get(participantQuestion.canDelete)).toBe(false);
-        expect(metadataUpdates[0].get(getProximityQADeleteMetadataKey("question-1"))).toMatchObject({
-            questionId: "question-1",
-            senderId: "author-uuid",
-        });
+        expect(space.deleteQuestion).toHaveBeenCalledWith("question-1");
     });
 
     it("should allow only moderators to mark a question as answered", async () => {
-        const metadataUpdates: Map<string, unknown>[] = [];
-        const moderatorQuestion = createQuestion({
+        const { question: moderatorQuestion, space } = createQuestion({
             currentVoterId: "moderator-uuid",
             canMarkAnswered: true,
-            updateMetadata: (metadata) => metadataUpdates.push(metadata),
         });
-        const participantQuestion = createQuestion({
+        const { question: participantQuestion } = createQuestion({
             currentVoterId: "alice-uuid",
             canMarkAnswered: false,
-            updateMetadata: (metadata) => metadataUpdates.push(metadata),
         });
 
         await expect(participantQuestion.markAnswered()).rejects.toThrow("Only moderators can mark");
@@ -83,19 +49,14 @@ describe("ProximityChatQuestion", () => {
 
         expect(get(moderatorQuestion.canMarkAnswered)).toBe(true);
         expect(get(participantQuestion.canMarkAnswered)).toBe(false);
-        expect(metadataUpdates[0].get(getProximityQAAnswerMetadataKey("question-1"))).toMatchObject({
-            questionId: "question-1",
-            moderatorId: "moderator-uuid",
-        });
+        expect(space.answerQuestion).toHaveBeenCalledWith("question-1");
     });
 
     it("should allow speakers to mark answered without allowing them to delete someone else's question", async () => {
-        const metadataUpdates: Map<string, unknown>[] = [];
-        const speakerQuestion = createQuestion({
+        const { question: speakerQuestion, space } = createQuestion({
             currentVoterId: "speaker-uuid",
             canMarkAnswered: true,
             canDeleteAny: false,
-            updateMetadata: (metadata) => metadataUpdates.push(metadata),
         });
 
         await speakerQuestion.markAnswered();
@@ -103,36 +64,40 @@ describe("ProximityChatQuestion", () => {
 
         expect(get(speakerQuestion.canMarkAnswered)).toBe(true);
         expect(get(speakerQuestion.canDelete)).toBe(false);
-        expect(metadataUpdates[0].get(getProximityQAAnswerMetadataKey("question-1"))).toMatchObject({
-            questionId: "question-1",
-            moderatorId: "speaker-uuid",
-        });
+        expect(space.answerQuestion).toHaveBeenCalledWith("question-1");
     });
 });
+
+function questionState(): ProximityQuestion {
+    return {
+        id: "question-1",
+        body: "Can we record?",
+        senderId: "author-uuid",
+        senderName: "Author",
+        createdAt: 10,
+        upvotes: {},
+    };
+}
 
 function createQuestion(options: {
     currentVoterId: string;
     canModerate?: boolean;
     canMarkAnswered?: boolean;
     canDeleteAny?: boolean;
-    updateMetadata: (metadata: Map<string, unknown>) => void;
 }) {
-    const definition: ProximityQAQuestionMetadata = {
-        id: "question-1",
-        body: "Can we record?",
-        senderId: "author-uuid",
-        senderName: "Author",
-        createdAt: 10,
+    const space = {
+        upvoteQuestion: vi.fn().mockResolvedValue(undefined),
+        answerQuestion: vi.fn().mockResolvedValue(undefined),
+        deleteQuestion: vi.fn().mockResolvedValue(undefined),
     };
 
-    return new ProximityChatQuestion({
-        definition,
-        upvotes: [],
-        answer: undefined,
+    const question = new ProximityChatQuestion({
+        question: questionState(),
         currentVoterId: options.currentVoterId,
         sender: undefined,
         canMarkAnswered: options.canMarkAnswered ?? options.canModerate ?? false,
         canDeleteAny: options.canDeleteAny ?? options.canModerate ?? false,
-        updateMetadata: options.updateMetadata,
+        space,
     });
+    return { question, space };
 }

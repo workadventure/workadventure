@@ -38,6 +38,7 @@ import type {
     SearchTagsQuery,
     ServerToAdminClientMessage,
     SetPlayerDetailsMessage,
+    SpaceStateQuery,
     IceServersAnswer,
     UpdateSpaceUserMessage,
     UserMessageReadMessage,
@@ -56,7 +57,7 @@ import axios, { isAxiosError } from "axios";
 import type { WebSocket } from "uWebSockets.js";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { PusherRoom } from "../models/PusherRoom";
-import type { SocketData, BackConnection } from "../models/Websocket/SocketData";
+import type { BackConnection } from "../models/Websocket/SocketData";
 
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
@@ -579,6 +580,10 @@ export class SocketManager implements ZoneEventListener {
                 }
             });
         });
+    }
+
+    public async sendSpaceState(client: PusherWebSocket, spaceName: string): Promise<void> {
+        await this.spaces.get(spaceName)?.dispatcher.notifyMeState(client);
     }
 
     private closeAdminWebsocketConnection(client: AdminSocket, code: number, reason: string): void {
@@ -1545,52 +1550,46 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
-    async handleStartRecording(
+    /**
+     * Relays a space state query to the back, which is the authority on the state and on most permissions. The only
+     * check done here is the one the back cannot do: `canRecord` only exists in the socket data.
+     */
+    async handleSpaceStateQuery(
         client: PusherWebSocket,
         spaceName: string,
+        query: SpaceStateQuery | undefined,
         options: { signal: AbortSignal },
     ): Promise<void> {
-        const { socketData, space } = await this.getValidatedRecordingSpace(client, spaceName);
-        const answer = await space.query.send(
-            {
-                $case: "startSpaceRecordingQuery",
-                startSpaceRecordingQuery: {
-                    spaceName,
-                    spaceUserId: socketData.spaceUserId,
-                },
-            },
-            {
-                signal: options.signal,
-                timeout: SocketManager.RECORDING_QUERY_TIMEOUT_MS,
-            },
-        );
-
-        if (answer.$case !== "startSpaceRecordingAnswer") {
-            throw new Error("Unexpected answer");
+        await this.checkClientIsPartOfSpace(client, spaceName);
+        const socketData = client.getUserData();
+        if (!socketData.spaceUserId) {
+            throw new Error("Space user id not found");
         }
-    }
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            throw new Error(`Trying to query a space that does not exist: "${spaceName}"`);
+        }
+        const queryCase = query?.query?.$case;
+        const isRecordingQuery = queryCase === "startRecording" || queryCase === "stopRecording";
+        if (isRecordingQuery && !socketData.canRecord) {
+            throw new Error("You are not allowed to record");
+        }
 
-    async handleStopRecording(
-        client: PusherWebSocket,
-        spaceName: string,
-        options: { signal: AbortSignal },
-    ): Promise<void> {
-        const { socketData, space } = await this.getValidatedRecordingSpace(client, spaceName);
         const answer = await space.query.send(
             {
-                $case: "stopSpaceRecordingQuery",
-                stopSpaceRecordingQuery: {
-                    spaceName,
+                $case: "spaceStateQuery",
+                spaceStateQuery: {
                     spaceUserId: socketData.spaceUserId,
+                    query,
                 },
             },
             {
                 signal: options.signal,
-                timeout: SocketManager.RECORDING_QUERY_TIMEOUT_MS,
+                timeout: isRecordingQuery ? SocketManager.RECORDING_QUERY_TIMEOUT_MS : undefined,
             },
         );
 
-        if (answer.$case !== "stopSpaceRecordingAnswer") {
+        if (answer.$case !== "spaceStateAnswer") {
             throw new Error("Unexpected answer");
         }
     }
@@ -1606,31 +1605,6 @@ export class SocketManager implements ZoneEventListener {
         const signedUrl = await RecordingService.getSignedUrl(key);
         return {
             signedUrl,
-        };
-    }
-
-    private async getValidatedRecordingSpace(
-        client: PusherWebSocket,
-        spaceName: string,
-    ): Promise<{ socketData: SocketData; space: SpaceInterface }> {
-        await this.checkClientIsPartOfSpace(client, spaceName);
-
-        const socketData = client.getUserData();
-        if (!socketData.canRecord) {
-            throw new Error("You are not allowed to record");
-        }
-        if (!socketData.spaceUserId) {
-            throw new Error("Space user id not found");
-        }
-
-        const space = this.spaces.get(spaceName);
-        if (!space) {
-            throw new Error(`Trying to record a space that does not exist: "${spaceName}"`);
-        }
-
-        return {
-            socketData,
-            space,
         };
     }
 

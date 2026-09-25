@@ -47,6 +47,12 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
             },
             canAskToMuteAudioOrTurnOffVideo: writable(false),
             filterType: FilterType.ALL_USERS,
+            giveFloor: () => {
+                throw new Error("should not be called");
+            },
+            revokeFloor: () => {
+                throw new Error("should not be called");
+            },
         },
         reactiveUser: {
             spaceUserId: "",

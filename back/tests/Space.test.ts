@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { BackToPusherSpaceMessage, FilterType, PrivateEvent, PublicEvent, SpaceUser } from "@workadventure/messages";
 import { mock } from "vitest-mock-extended";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import { Space } from "../src/Model/Space";
 import type { SpacesWatcher } from "../src/Model/SpacesWatcher";
 import type { EventProcessor } from "../src/Model/EventProcessor";
@@ -58,6 +59,7 @@ describe("Space with filter", () => {
                             spaceName: "test",
                             users: [spaceUser1, spaceUser2, spaceUser3],
                             metadata: JSON.stringify({}),
+                            state: JSON.stringify(emptySpaceState()),
                         },
                     },
                 }),
@@ -1120,59 +1122,165 @@ describe("Space with filter", () => {
     });
 });
 
-describe("Space membership lists (raised hands / floor holders)", () => {
-    function spaceWithUsers(...names: [string, string][]): Space {
-        const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
-        const watcher = mock<SpacesWatcher>({ id: "uuid-watcher", write: () => true });
+describe("Space state", () => {
+    function spaceWithUsers(
+        filterType: FilterType.ALL_USERS | FilterType.LIVE_STREAMING_USERS,
+        ...users: Partial<SpaceUser>[]
+    ) {
+        const space = new Space("test", filterType, mock<EventProcessor>(), [], "world");
+        const write = vi.fn();
+        const watcher = mock<SpacesWatcher>({ id: "uuid-watcher", write });
         (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
             watcher,
-            new Map(names.map(([spaceUserId, name]) => [spaceUserId, SpaceUser.fromPartial({ spaceUserId, name })])),
+            new Map(users.map((user) => [user.spaceUserId ?? "", SpaceUser.fromPartial(user)])),
         );
-        return space;
+        (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+            watcher,
+            new Map(),
+        );
+        return { space, watcher, write };
     }
 
-    it("keeps the raise order, stamps the name server-side and re-numbers on lower", () => {
-        const space = spaceWithUsers(["foo_1", "Alice"], ["foo_2", "Bob"], ["foo_3", "Carol"]);
+    function sentPatches(write: ReturnType<typeof vi.fn>): unknown[] {
+        return write.mock.calls
+            .map(([message]) => (message as BackToPusherSpaceMessage).message)
+            .filter((message) => message?.$case === "spaceStatePatchMessage")
+            .map((message) =>
+                message?.$case === "spaceStatePatchMessage"
+                    ? (JSON.parse(message.spaceStatePatchMessage.patch) as unknown)
+                    : undefined,
+            );
+    }
 
-        space.applyRaisedHand("foo_2", true);
-        space.applyRaisedHand("foo_1", true);
-        const queue = space.applyRaisedHand("foo_3", true);
+    it("broadcasts a change as a JSON Patch, and nothing when nothing changed", () => {
+        const { space, write } = spaceWithUsers(FilterType.ALL_USERS);
 
-        // Insertion order is the displayed order: Bob raised first, so he is first whatever his id.
-        expect(queue.map((entry) => entry.spaceUserId)).toEqual(["foo_2", "foo_1", "foo_3"]);
-        expect(queue.map((entry) => entry.name)).toEqual(["Bob", "Alice", "Carol"]);
-        expect(queue.every((entry) => entry.at > 0)).toBe(true);
+        space.updateState((state) => {
+            state.raisedHands.push({ spaceUserId: "foo_1", name: "Alice", at: 1 });
+        });
+        space.updateState(() => {});
 
-        expect(space.applyRaisedHand("foo_1", false).map((entry) => entry.spaceUserId)).toEqual(["foo_2", "foo_3"]);
+        expect(sentPatches(write)).toEqual([
+            [{ op: "add", path: "/raisedHands/0", value: { spaceUserId: "foo_1", name: "Alice", at: 1 } }],
+        ]);
     });
 
-    it("ignores a hand raised twice, and lowering a hand that is not raised", () => {
-        const space = spaceWithUsers(["foo_1", "Alice"]);
+    it("leaves the state untouched when the mutation throws", () => {
+        const { space, write } = spaceWithUsers(FilterType.ALL_USERS);
 
-        space.applyRaisedHand("foo_1", true);
-        expect(space.applyRaisedHand("foo_1", true)).toHaveLength(1);
+        expect(() =>
+            space.updateState((state) => {
+                state.raisedHands.push({ spaceUserId: "foo_1", name: "Alice", at: 1 });
+                throw new Error("refused");
+            }),
+        ).toThrow("refused");
 
-        expect(space.applyRaisedHand("foo_1", false)).toHaveLength(0);
-        expect(space.applyRaisedHand("foo_1", false)).toHaveLength(0);
+        expect(space.getState().raisedHands).toEqual([]);
+        expect(sentPatches(write)).toEqual([]);
     });
 
-    it("stamps an empty name for a sender who is no longer in the space", () => {
-        const space = spaceWithUsers(["foo_1", "Alice"]);
+    it("sends the whole state to a new watcher", () => {
+        const { space } = spaceWithUsers(FilterType.ALL_USERS);
+        space.updateState((state) => {
+            state.raisedHands.push({ spaceUserId: "foo_1", name: "Alice", at: 1 });
+        });
+        const write = vi.fn();
 
-        const queue = space.applyRaisedHand("gone_9", true);
-        expect(queue).toHaveLength(1);
-        expect(queue[0].spaceUserId).toBe("gone_9");
-        expect(queue[0].name).toBe("");
+        space.addWatcher(mock<SpacesWatcher>({ id: "uuid-watcher-2", write }));
+
+        const message = (write.mock.calls[0][0] as BackToPusherSpaceMessage).message;
+        expect(message?.$case).toBe("initSpaceUsersMessage");
+        if (message?.$case === "initSpaceUsersMessage") {
+            expect(JSON.parse(message.initSpaceUsersMessage.state)).toEqual(space.getState());
+        }
     });
 
-    it("keeps the floor holders as a separate list, with no timestamp", () => {
-        const space = spaceWithUsers(["foo_1", "Alice"], ["foo_2", "Bob"]);
+    it("applies a state query sent by a user, and answers after the patch", async () => {
+        const { space, watcher, write } = spaceWithUsers(FilterType.ALL_USERS, {
+            spaceUserId: "foo_1",
+            name: "Alice",
+        });
 
-        space.applyRaisedHand("foo_1", true);
-        expect(space.applyFloorHolder("foo_2", true)).toEqual([{ spaceUserId: "foo_2", name: "Bob" }]);
+        const answer = await space.handleQuery(watcher, {
+            id: 1,
+            spaceName: "test",
+            query: {
+                $case: "spaceStateQuery",
+                spaceStateQuery: {
+                    spaceUserId: "foo_1",
+                    query: { query: { $case: "raiseHand", raiseHand: { raised: true } } },
+                },
+            },
+        });
 
-        // Taking the floor back must not touch the raise-hand queue.
-        expect(space.applyFloorHolder("foo_2", false)).toEqual([]);
-        expect(space.applyRaisedHand("foo_1", true).map((entry) => entry.spaceUserId)).toEqual(["foo_1"]);
+        expect(answer.answer?.$case).toBe("spaceStateAnswer");
+        expect(space.getState().raisedHands.map((entry) => entry.name)).toEqual(["Alice"]);
+        expect(sentPatches(write)).toHaveLength(1);
+    });
+
+    it("answers an error when the query is refused", async () => {
+        const { space, watcher } = spaceWithUsers(FilterType.LIVE_STREAMING_USERS, {
+            spaceUserId: "foo_1",
+            name: "Alice",
+        });
+
+        const answer = await space.handleQuery(watcher, {
+            id: 1,
+            spaceName: "test",
+            query: {
+                $case: "spaceStateQuery",
+                spaceStateQuery: {
+                    spaceUserId: "foo_1",
+                    query: { query: { $case: "lowerHand", lowerHand: { targetSpaceUserId: "foo_2" } } },
+                },
+            },
+        });
+
+        expect(answer.answer?.$case).toBe("error");
+    });
+
+    it("takes the floor back from a holder whose stream stops", async () => {
+        const { space, watcher } = spaceWithUsers(
+            FilterType.LIVE_STREAMING_USERS,
+            { spaceUserId: "speaker", name: "Sam", megaphoneState: true },
+            { spaceUserId: "guest", name: "Gus" },
+        );
+        await space.handleQuery(watcher, {
+            id: 1,
+            spaceName: "test",
+            query: {
+                $case: "spaceStateQuery",
+                spaceStateQuery: {
+                    spaceUserId: "speaker",
+                    query: { query: { $case: "giveFloor", giveFloor: { targetSpaceUserId: "guest" } } },
+                },
+            },
+        });
+        space.updateUser(watcher, SpaceUser.fromPartial({ spaceUserId: "guest", megaphoneState: true }), [
+            "megaphoneState",
+        ]);
+        expect(space.getState().floorHolders).toHaveLength(1);
+
+        space.updateUser(watcher, SpaceUser.fromPartial({ spaceUserId: "guest", megaphoneState: false }), [
+            "megaphoneState",
+        ]);
+
+        expect(space.getState().floorHolders).toEqual([]);
+    });
+
+    it("drops a leaving user from the raised hands", () => {
+        const { space, watcher } = spaceWithUsers(
+            FilterType.ALL_USERS,
+            { spaceUserId: "foo_1", name: "Alice" },
+            { spaceUserId: "foo_2", name: "Bob" },
+        );
+        space.updateState((state) => {
+            state.raisedHands.push({ spaceUserId: "foo_1", name: "Alice", at: 1 });
+            state.raisedHands.push({ spaceUserId: "foo_2", name: "Bob", at: 2 });
+        });
+
+        space.removeUser(watcher, "foo_1");
+
+        expect(space.getState().raisedHands.map((entry) => entry.spaceUserId)).toEqual(["foo_2"]);
     });
 });

@@ -720,8 +720,7 @@ export class SocketManager {
                 case "getRecordingThumbnailsQuery":
                 case "deleteRecordingQuery":
                 case "getSignedUrlQuery":
-                case "startRecordingQuery":
-                case "stopRecordingQuery":
+                case "spaceStateQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
@@ -1570,12 +1569,9 @@ export class SocketManager {
             return;
         }
 
-        if (space) {
-            space.updateMetadata(isMetadata.data, updateSpaceMetadataMessage.senderId).catch((error) => {
-                console.error("Error updating metadata", error);
-                Sentry.captureException(error);
-            });
-        }
+        // Free-form metadata (scripting API, external modules): published as sent. Data the server is the
+        // authority on lives in the space state instead.
+        space?.publishMetadata(isMetadata.data);
     }
 
     handleKickSpaceUserMessage(pusher: SpacesWatcher, kickUserMessage: KickOffMessage) {

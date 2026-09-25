@@ -2,6 +2,8 @@ import * as Sentry from "@sentry/node";
 import type { FilterType, UpdateSpaceUserMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
 import { SpaceUser, AvailabilityStatus } from "@workadventure/messages";
 import Debug from "debug";
+import type { SpaceState } from "@workadventure/shared-utils";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
 import type { BackSpaceConnection } from "./Websocket/SocketData";
 import type { EventProcessor } from "./EventProcessor";
@@ -69,6 +71,9 @@ export class Space implements SpaceForSpaceConnectionInterface {
     public readonly users: Map<string, SpaceUserExtended>;
 
     public readonly metadata: Map<string, unknown>;
+
+    // Copy of the back's SpaceState, kept up to date by applying its patches, so a user joining gets it whole.
+    public state: SpaceState = emptySpaceState();
 
     // The list of users connected to THIS pusher specifically.
     // Note: Space._localConnectedUser, Space._localConnectedUserWithSpaceUser and SocketData.spaces must be in sync.

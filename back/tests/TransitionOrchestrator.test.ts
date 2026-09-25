@@ -33,7 +33,7 @@ describe("TransitionOrchestrator", () => {
             dispatchPublicEvent: () => {},
             getSpaceName: () => "test-space",
             getPropertiesToSync: () => ["cameraState", "microphoneState"],
-            publishMetadata: vi.fn(),
+            updateState: vi.fn(),
             stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
             getUser: vi.fn(),
         } as unknown as ICommunicationSpace,
@@ -93,7 +93,7 @@ describe("TransitionOrchestrator", () => {
                 context.space,
                 context.users,
                 context.usersToNotify,
-                { playUri: context.playUri }
+                { playUri: context.playUri },
             );
         });
 

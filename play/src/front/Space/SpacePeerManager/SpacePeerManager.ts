@@ -16,8 +16,7 @@ import { givenFloorSpaceStore } from "../../Stores/MegaphoneStore";
 import { recordingStore } from "../../Stores/RecordingStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
-import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
-import { recordingSchema } from "../SpaceMetadataValidator";
+import { bindMuteEventsToSpace, watchRaiseHandState } from "../Utils/BindMuteEvents";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import type { EndTimedAnalyticsEvent } from "../../Administration/TimedAnalyticsEvent";
@@ -179,7 +178,8 @@ export class SpacePeerManager {
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
     };
 
-    private metadataSubscription: Subscription;
+    private recordingStateUnsubscriber: Unsubscriber;
+    private readonly raiseHandStateUnsubscriber: Unsubscriber;
     private pendingRecorderNameResolutionBySpace = new Map<string, PendingRecorderNameResolution>();
     private nextRecorderNameResolutionToken = 0;
 
@@ -310,22 +310,24 @@ export class SpacePeerManager {
         );
 
         _bindMuteEventsToSpace(this.space);
+        this.raiseHandStateUnsubscriber = watchRaiseHandState(this.space);
 
-        this.metadataSubscription = this.space.observeMetadataProperty("recording").subscribe((value) => {
-            const recording = recordingSchema.safeParse(value);
-            const spaceName = this.space.getName();
-
-            if (!recording.success) {
-                console.error("Invalid recording metadata", recording.error);
+        // The state store re-emits on every change of the space state: only react when the recording changed.
+        // Starting from "idle" also skips the initial idle state, which is not an event worth reacting to.
+        let lastRecording: { status: string; recorder: string | null } = { status: "idle", recorder: null };
+        this.recordingStateUnsubscriber = this.space.observeState("recording").subscribe((value) => {
+            if (value.status === lastRecording.status && value.recorder === lastRecording.recorder) {
                 return;
             }
+            lastRecording = { status: value.status, recorder: value.recorder };
+            const spaceName = this.space.getName();
 
             // Read enableSounds from WAM file settings (default to true if not specified)
             const enableSounds = gameManager.getCurrentGameScene().wamFile?.settings?.recording?.enableSounds ?? true;
             const currentRecordingState = get(this._recordingStore).recordingsBySpace[spaceName];
             const previousStatus = currentRecordingState?.status ?? "idle";
 
-            if (recording.data.status === "idle") {
+            if (value.status === "idle") {
                 this.cancelPendingRecorderNameResolution(spaceName);
                 this._recordingStore.setRecordingState(spaceName, "idle", false, null, null);
                 this._recordingStore.syncInfoPopup();
@@ -354,26 +356,24 @@ export class SpacePeerManager {
                 return;
             }
 
-            if (recording.data.status !== "recording") {
+            if (value.status !== "recording") {
                 this.cancelPendingRecorderNameResolution(spaceName);
             }
 
-            const isRecorder = recording.data.recorder === this.space.mySpaceUserId;
-            const recorderSpaceUserId = recording.data.recorder ?? null;
+            const isRecorder = value.recorder === this.space.mySpaceUserId;
+            const recorderSpaceUserId = value.recorder;
             const recorderName = this.getRecorderName(recorderSpaceUserId);
 
             this._recordingStore.setRecordingState(
                 spaceName,
-                recording.data.status,
+                value.status,
                 isRecorder,
                 recorderSpaceUserId,
                 recorderName,
             );
 
             const enteredConfirmedRecording =
-                recording.data.status === "recording" &&
-                previousStatus !== "recording" &&
-                previousStatus !== "stopping";
+                value.status === "recording" && previousStatus !== "recording" && previousStatus !== "stopping";
 
             if (enteredConfirmedRecording) {
                 if (isRecorder) {
@@ -547,24 +547,33 @@ export class SpacePeerManager {
             }),
         );
 
-        // Raise-hand state is synchronized through the space METADATA (key "raisedHands"), not via SpaceUser,
-        // so it reaches every meeting participant — including a megaphone speaker without seeAttendees, who
-        // does not receive the listeners' SpaceUser. The client only sends its own intent; the server keeps
-        // the authoritative, ordered queue (see Space.applyRaisedHand on the back). It is replayed to late
-        // joiners and drives the video tile badge, the woka indicator and the speaker's queue.
+        // Raise-hand state lives in the space state, not in SpaceUser, so it reaches every meeting participant —
+        // including a megaphone speaker without seeAttendees, who does not receive the listeners' SpaceUser.
+        // requestedHandRaiseState is the local user's intent; only a difference with the space is sent.
         this.unsubscribes.push(
             requestedHandRaiseState.subscribe((state) => {
-                this.space.emitUpdateSpaceMetadata(new Map([["raisedHands", { raised: state.raised }]]));
+                const isRaisedHere = get(this.space.raisedHandsStore).some(
+                    (entry) => entry.spaceUserId === this.space.mySpaceUserId,
+                );
+                if (state.raised !== isRaisedHere) {
+                    this.space.raiseHand(state.raised).catch((error) => console.error(error));
+                }
             }),
         );
 
-        // The floor-holders list (key "floorHolders") is the counterpart used by the host "take back" panel: the
-        // local user reports whether it currently holds a floor granted in THIS space. Only granted users ever
-        // appear, so the host panel never lists the presenters. Cleared here on give-back/revoke/podium-entry; a
-        // user leaving is cleaned up server-side (see Space.removeUser on the back).
+        // Handing a granted floor back (the raise-hand button, or entering a podium as a real speaker) clears
+        // givenFloorSpaceStore: take our entry out of the floor holders so the host panel stops offering it.
+        let grantedHere = get(givenFloorSpaceStore) === this.space;
         this.unsubscribes.push(
             givenFloorSpaceStore.subscribe((grantedSpace) => {
-                this.space.emitUpdateSpaceMetadata(new Map([["floorHolders", { holds: grantedSpace === this.space }]]));
+                const wasGrantedHere = grantedHere;
+                grantedHere = grantedSpace === this.space;
+                const isFloorHolder = get(this.space.observeState("floorHolders")).some(
+                    (entry) => entry.spaceUserId === this.space.mySpaceUserId,
+                );
+                if (wasGrantedHere && !grantedHere && isFloorHolder) {
+                    this.space.revokeFloor(this.space.mySpaceUserId).catch((error) => console.error(error));
+                }
             }),
         );
     }
@@ -597,7 +606,8 @@ export class SpacePeerManager {
             subscription.unsubscribe();
         }
 
-        this.metadataSubscription.unsubscribe();
+        this.recordingStateUnsubscriber();
+        this.raiseHandStateUnsubscriber();
         this.cancelPendingRecorderNameResolution(this.space.getName());
         this._recordingStore.removeSpace(this.space.getName());
         this.endMeetingAnalytics();

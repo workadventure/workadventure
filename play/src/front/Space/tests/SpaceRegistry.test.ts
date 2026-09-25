@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
 import { FilterType } from "@workadventure/messages";
-import { RAISED_HANDS_METADATA_KEY } from "@workadventure/shared-utils";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import type { SpaceInterface } from "../SpaceInterface";
@@ -261,17 +261,27 @@ describe("SpaceProviderInterface implementation", () => {
                     [],
                     new AbortController().signal,
                 );
-                spaceWithHands.setMetadata(
-                    new Map([[RAISED_HANDS_METADATA_KEY, [{ spaceUserId: "user-1", name: "Alice", at: 1 }]]]),
-                );
+                roomConnectionMock.spaceStatePatchMessageStream.next({
+                    spaceName: spaceWithHands.getName(),
+                    patch: JSON.stringify([
+                        {
+                            op: "replace",
+                            path: "",
+                            value: {
+                                ...emptySpaceState(),
+                                raisedHands: [{ spaceUserId: "user-1", name: "Alice", at: 1 }],
+                            },
+                        },
+                    ]),
+                });
 
-                spaceRegistry.lowerHand("user-1");
+                await spaceRegistry.lowerHand("user-1");
 
-                expect(roomConnectionMock.emitPrivateSpaceEvent).toHaveBeenCalledOnce();
-                expect(roomConnectionMock.emitPrivateSpaceEvent).toHaveBeenCalledWith(
+                expect(roomConnectionMock.querySpaceState).toHaveBeenCalledOnce();
+                expect(roomConnectionMock.querySpaceState).toHaveBeenCalledWith(
                     spaceWithHands.getName(),
-                    { $case: "lowerHand", lowerHand: {} },
-                    "user-1",
+                    { $case: "lowerHand", lowerHand: { targetSpaceUserId: "user-1" } },
+                    { timeout: undefined },
                 );
             });
             it("should do nothing when nobody raised that hand", async () => {
@@ -280,9 +290,9 @@ describe("SpaceProviderInterface implementation", () => {
 
                 await spaceRegistry.joinSpace("space-test", FilterType.ALL_USERS, [], new AbortController().signal);
 
-                spaceRegistry.lowerHand("nobody");
+                await spaceRegistry.lowerHand("nobody");
 
-                expect(roomConnectionMock.emitPrivateSpaceEvent).not.toHaveBeenCalled();
+                expect(roomConnectionMock.querySpaceState).not.toHaveBeenCalled();
             });
         });
         describe("SpaceRegistry race condition handling", () => {

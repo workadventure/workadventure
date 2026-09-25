@@ -37,7 +37,7 @@ async function drawAreaWithProperties(
 
 // This test covers the webinar gap that the proximity raise-hand test cannot: a megaphone speaker whose podium
 // has "See attendees" OFF does not receive listeners' SpaceUser, so the listener has no video tile for the
-// speaker. The raised-hands queue travels through the space metadata (broadcast to every member regardless of
+// speaker. The raised-hands queue travels through the space state (broadcast to every member regardless of
 // the visibility filter), so the speaker still sees the queue in the host panel and can give the floor — which
 // promotes the listener to speaker via a private event.
 test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
@@ -84,7 +84,7 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
             timeout: 10_000,
         });
 
-        // Bob raises his hand. The metadata queue reaches the speaker despite "See attendees" being OFF.
+        // Bob raises his hand. The state queue reaches the speaker despite "See attendees" being OFF.
         await bob.getByTestId("raise-hand-button").click();
 
         // The host's docked raised-hands panel appears (expanded) and lists Bob.
@@ -242,5 +242,43 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
             timeout: 30_000,
         });
+    });
+
+    // Regression test: in a MAP listener zone of a podium without "See attendees", a listener does not see their
+    // own camera (they are not streamed). Once given the floor they are, so the return feed must show.
+    test("a listener given the floor in a map listener zone sees their own camera @nofirefox", async ({
+        browser,
+        request,
+    }) => {
+        test.skip(browser.browserType().name() === "firefox", "WebRTC promotion is sometimes flaky on Firefox");
+
+        await resetWamMaps(request);
+
+        await using speaker = await getPage(browser, "Admin1", Map.url("empty"));
+        const podiumName = `${browser.browserType().name()}RaiseHandListenerZone`;
+        await Menu.openMapEditor(speaker);
+        await MapEditor.openAreaEditor(speaker);
+        await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
+        await AreaEditor.addProperty(speaker, "speakerMegaphone");
+        await AreaEditor.setPodiumNameProperty(speaker, podiumName, false, false);
+        await AreaEditor.drawArea(speaker, { x: 1 * 32, y: 6 * 32 }, { x: 9 * 32, y: 9 * 32 });
+        await AreaEditor.addProperty(speaker, "listenerMegaphone");
+        await AreaEditor.setMatchingPodiumZoneProperty(speaker, podiumName.toLowerCase());
+        await Menu.closeMapEditor(speaker);
+        await Map.teleportToPosition(speaker, 4 * 32, 3 * 32);
+
+        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(bob, 4 * 32, 7 * 32);
+        await expect(bob.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
+        await expect(bob.locator("#cameras-container").getByText("You")).toBeHidden();
+
+        await bob.getByTestId("raise-hand-button").click();
+        await expect(speaker.getByTestId("raised-hands-dock")).toBeVisible({ timeout: 20_000 });
+        await speaker.getByTestId("panel-give-floor").first().click();
+
+        await expect(speaker.locator("#cameras-container").getByText("Bob", { exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(bob.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 20_000 });
     });
 });

@@ -19,6 +19,7 @@ import {
     cameraEnergySavingStore,
     inLivekitStore,
     isListenerStore,
+    isSpeakerStore,
     listenerSharingCameraStore,
     localStreamStore,
     localVoiceIndicatorStore,
@@ -187,6 +188,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             isInActiveConversationStore,
             isListenerStore,
             listenerSharingCameraStore,
+            isSpeakerStore,
             availabilityStatusStore,
         ],
         (
@@ -204,6 +206,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $isInActiveConversationStore,
                 $isListenerStore,
                 $listenerSharingCameraStore,
+                $isSpeakerStore,
                 $availabilityStatusStore,
             ] /*, set*/,
         ) => {
@@ -229,6 +232,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                     isInActiveConversation: $isInActiveConversationStore,
                     isListener: $isListenerStore,
                     listenerSharingCamera: $listenerSharingCameraStore,
+                    isSpeaker: $isSpeakerStore,
                     availabilityStatus: $availabilityStatusStore,
                 })
             ) {

@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readable } from "svelte/store";
+import type { RecordingState as SpaceRecordingState } from "@workadventure/shared-utils";
 import type { SpaceInterface } from "../../../Space/SpaceInterface";
 import type { RecordingState } from "../../../Stores/RecordingStore";
 import {
@@ -12,12 +14,13 @@ function createSpace(
     name: string,
     options?: {
         isMegaphone?: boolean;
-        metadata?: Map<string, unknown>;
+        recording?: SpaceRecordingState;
         mySpaceUserId?: string;
         recorderNamesById?: Record<string, string>;
     },
 ): SpaceInterface {
-    const metadata = options?.metadata ?? new Map<string, unknown>();
+    const metadata = new Map<string, unknown>();
+    const recording = options?.recording ?? { recording: false, recorder: null, status: "idle" };
     if (options?.isMegaphone) {
         metadata.set("isMegaphoneSpace", true);
     }
@@ -26,13 +29,14 @@ function createSpace(
         mySpaceUserId: options?.mySpaceUserId ?? "me",
         getName: () => name,
         getMetadata: () => metadata,
+        observeState: () => readable(recording),
         getSpaceUserBySpaceUserId: (spaceUserId: string) => {
             const nameById = options?.recorderNamesById?.[spaceUserId];
             return nameById
                 ? ({ name: nameById } as ReturnType<SpaceInterface["getSpaceUserBySpaceUserId"]>)
                 : undefined;
         },
-    } as SpaceInterface;
+    } as unknown as SpaceInterface;
 }
 
 function createStartRow(space: SpaceInterface): RecordingSpaceRow {
@@ -61,15 +65,7 @@ describe("RecordingMenuUtils", () => {
 
     it("shows the recording button when another recording is already active, even without startable spaces", () => {
         const discussionSpace = createSpace("discussion-space", {
-            metadata: new Map([
-                [
-                    "recording",
-                    {
-                        recording: true,
-                        recorder: "alice-id",
-                    },
-                ],
-            ]),
+            recording: { recording: true, recorder: "alice-id", status: "recording" },
             recorderNamesById: {
                 "alice-id": "Alice",
             },
@@ -88,18 +84,9 @@ describe("RecordingMenuUtils", () => {
         expect(rows[0]?.action).toBeNull();
     });
 
-    it("reflects pending recording metadata from the server", () => {
+    it("reflects a pending recording from the server", () => {
         const discussionSpace = createSpace("discussion-space", {
-            metadata: new Map([
-                [
-                    "recording",
-                    {
-                        recording: false,
-                        recorder: "alice-id",
-                        status: "starting",
-                    },
-                ],
-            ]),
+            recording: { recording: false, recorder: "alice-id", status: "starting" },
         });
         const recordingState: RecordingState = {
             recordingsBySpace: {},
@@ -163,15 +150,7 @@ describe("RecordingMenuUtils", () => {
 
     it("keeps the recording button visible when the room policy is hidden but a recording is already active", () => {
         const discussionSpace = createSpace("discussion-space", {
-            metadata: new Map([
-                [
-                    "recording",
-                    {
-                        recording: true,
-                        recorder: "alice-id",
-                    },
-                ],
-            ]),
+            recording: { recording: true, recorder: "alice-id", status: "recording" },
             recorderNamesById: {
                 "alice-id": "Alice",
             },

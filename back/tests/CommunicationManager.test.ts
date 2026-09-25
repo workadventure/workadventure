@@ -72,7 +72,7 @@ describe("CommunicationManager", () => {
         dispatchPublicEvent: vi.fn().mockResolvedValue(undefined),
         getSpaceName: () => "test-space",
         getPropertiesToSync: () => ["cameraState", "microphoneState"],
-        publishMetadata: vi.fn(),
+        updateState: vi.fn(),
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: vi.fn(),
     });

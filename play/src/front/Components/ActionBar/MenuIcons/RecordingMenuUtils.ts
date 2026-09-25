@@ -1,10 +1,9 @@
 import type { RecordingButtonState } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
-import { derived } from "svelte/store";
+import { derived, get } from "svelte/store";
 
 import type { SpaceInterface } from "../../../Space/SpaceInterface";
 import type { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
-import { recordingSchema } from "../../../Space/SpaceMetadataValidator";
 import type { RecordingState } from "../../../Stores/RecordingStore";
 import { recordingStore } from "../../../Stores/RecordingStore";
 
@@ -52,8 +51,8 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
         };
     }
 
-    const recordingMetadata = recordingSchema.safeParse(space.getMetadata().get("recording"));
-    if (!recordingMetadata.success || recordingMetadata.data.status === "idle") {
+    const recording = get(space.observeState("recording"));
+    if (recording.status === "idle") {
         return {
             status: "idle" as const,
             isCurrentUserRecorder: false,
@@ -62,10 +61,10 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
         };
     }
 
-    const recorderSpaceUserId = recordingMetadata.data.recorder ?? null;
+    const recorderSpaceUserId = recording.recorder;
 
     return {
-        status: recordingMetadata.data.status,
+        status: recording.status,
         isCurrentUserRecorder: recorderSpaceUserId === space.mySpaceUserId,
         recorderName: getRecorderDisplayName(space, recorderSpaceUserId, null),
         recorderSpaceUserId,

@@ -935,36 +935,22 @@ export class IoSocketController {
                                             }
                                             break;
                                         }
-                                        case "startRecordingQuery": {
-                                            const localSpaceName =
-                                                message.message.queryMessage.query.startRecordingQuery.spaceName;
+                                        case "spaceStateQuery": {
+                                            const { spaceName: localSpaceName, query } =
+                                                message.message.queryMessage.query.spaceStateQuery;
                                             const worldSpaceName = `${userData.world}.${localSpaceName}`;
 
-                                            await socketManager.handleStartRecording(socket, worldSpaceName, {
+                                            await socketManager.handleSpaceStateQuery(socket, worldSpaceName, query, {
                                                 signal: abortController.signal,
                                             });
 
                                             answerMessage.answer = {
-                                                $case: "startRecordingAnswer",
-                                                startRecordingAnswer: {},
+                                                $case: "spaceStateAnswer",
+                                                spaceStateAnswer: {},
                                             };
-                                            this.sendAnswerMessage(socket, answerMessage);
-                                            userData.queryAbortControllers.delete(message.message.queryMessage.id);
-                                            break;
-                                        }
-                                        case "stopRecordingQuery": {
-                                            const localSpaceName =
-                                                message.message.queryMessage.query.stopRecordingQuery.spaceName;
-                                            const worldSpaceName = `${userData.world}.${localSpaceName}`;
-
-                                            await socketManager.handleStopRecording(socket, worldSpaceName, {
-                                                signal: abortController.signal,
-                                            });
-
-                                            answerMessage.answer = {
-                                                $case: "stopRecordingAnswer",
-                                                stopRecordingAnswer: {},
-                                            };
+                                            // The patch the query caused sits in the batch: it must reach the front
+                                            // before the answer does.
+                                            socket.flushBatch();
                                             this.sendAnswerMessage(socket, answerMessage);
                                             userData.queryAbortControllers.delete(message.message.queryMessage.id);
                                             break;
@@ -991,6 +977,11 @@ export class IoSocketController {
                                                 },
                                             };
                                             this.sendAnswerMessage(socket, answerMessage);
+                                            // After the answer: the front only knows the space once it got it.
+                                            await socketManager.sendSpaceState(
+                                                socket,
+                                                message.message.queryMessage.query.joinSpaceQuery.spaceName,
+                                            );
 
                                             break;
                                         }

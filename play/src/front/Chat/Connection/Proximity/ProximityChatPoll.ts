@@ -1,14 +1,8 @@
 import { writable, type Readable, type Writable } from "svelte/store";
+import type { ProximityPoll } from "@workadventure/shared-utils";
+import type { SpaceInterface } from "../../../Space/SpaceInterface";
 import type { AnyKindOfUser, ChatPollContext, ChatPollItem, ChatPollState } from "../ChatConnection";
-import {
-    computeProximityPollState,
-    getProximityPollDeleteMetadataKey,
-    getProximityPollEndMetadataKey,
-    getProximityPollVoteMetadataKey,
-    type ProximityPollDefinitionMetadata,
-    type ProximityPollEndMetadata,
-    type ProximityPollVoteMetadata,
-} from "./ProximityPollMetadata";
+import { computeProximityPollState } from "./ProximityPollState";
 
 export class ProximityPollPermissionError extends Error {
     constructor(message: string) {
@@ -25,17 +19,14 @@ export class ProximityPollClosedError extends Error {
 }
 
 export type ProximityChatPollOptions = {
-    definition: ProximityPollDefinitionMetadata;
-    votes: ProximityPollVoteMetadata[];
-    end: ProximityPollEndMetadata | undefined;
+    poll: ProximityPoll;
     currentVoterId: string;
     sender: AnyKindOfUser | undefined;
-    updateMetadata: (metadata: Map<string, unknown>) => void;
+    space: Pick<SpaceInterface, "votePoll" | "closePoll" | "deletePoll">;
 };
 
 export type ProximityChatPollUpdate = {
-    votes: ProximityPollVoteMetadata[];
-    end: ProximityPollEndMetadata | undefined;
+    poll: ProximityPoll;
     currentVoterId: string;
     sender: AnyKindOfUser | undefined;
 };
@@ -50,27 +41,25 @@ export class ProximityChatPoll implements ChatPollItem {
     readonly canEnd: Readable<boolean>;
     readonly canDelete: Readable<boolean>;
 
-    private readonly definition: ProximityPollDefinitionMetadata;
-    private endMetadata: ProximityPollEndMetadata | undefined;
+    private poll: ProximityPoll;
     private currentVoterId: string;
-    private readonly updateMetadata: (metadata: Map<string, unknown>) => void;
+    private readonly space: ProximityChatPollOptions["space"];
     private readonly stateStore: Writable<ChatPollState>;
     private readonly canVoteStore: Writable<boolean>;
     private readonly canEndStore: Writable<boolean>;
     private readonly canDeleteStore: Writable<boolean>;
 
     constructor(options: ProximityChatPollOptions) {
-        this.id = options.definition.id;
+        this.id = options.poll.id;
         this.sender = options.sender;
-        this.date = new Date(options.definition.createdAt);
-        this.definition = options.definition;
-        this.endMetadata = options.end;
+        this.date = new Date(options.poll.createdAt);
+        this.poll = options.poll;
         this.currentVoterId = options.currentVoterId;
-        this.updateMetadata = options.updateMetadata;
+        this.space = options.space;
 
-        this.stateStore = writable(this.computeState(options.votes, options.end));
-        this.canVoteStore = writable(this.computeCanVote(options.end));
-        this.canEndStore = writable(this.computeCanEnd(options.end));
+        this.stateStore = writable(this.computeState());
+        this.canVoteStore = writable(this.computeCanVote());
+        this.canEndStore = writable(this.computeCanEnd());
         this.canDeleteStore = writable(this.computeCanDelete());
         this.state = this.stateStore;
         this.canVote = this.canVoteStore;
@@ -80,33 +69,24 @@ export class ProximityChatPoll implements ChatPollItem {
 
     update(update: ProximityChatPollUpdate): void {
         this.sender = update.sender;
-        this.endMetadata = update.end;
+        // The space state keeps an unchanged poll's object: nothing to recompute, nothing to re-render.
+        if (update.poll === this.poll && update.currentVoterId === this.currentVoterId) {
+            return;
+        }
+        this.poll = update.poll;
         this.currentVoterId = update.currentVoterId;
-        this.stateStore.set(this.computeState(update.votes, update.end));
-        this.canVoteStore.set(this.computeCanVote(update.end));
-        this.canEndStore.set(this.computeCanEnd(update.end));
+        this.stateStore.set(this.computeState());
+        this.canVoteStore.set(this.computeCanVote());
+        this.canEndStore.set(this.computeCanEnd());
         this.canDeleteStore.set(this.computeCanDelete());
     }
 
     vote(answerIds: string[]): Promise<void> {
-        if (this.endMetadata !== undefined) {
+        if (this.poll.end !== undefined) {
             return Promise.reject(new ProximityPollClosedError("Cannot vote on a closed poll"));
         }
 
-        this.updateMetadata(
-            new Map([
-                [
-                    getProximityPollVoteMetadataKey(this.definition.id, this.currentVoterId),
-                    {
-                        pollId: this.definition.id,
-                        voterId: this.currentVoterId,
-                        answerIds,
-                        updatedAt: Date.now(),
-                    },
-                ],
-            ]),
-        );
-        return Promise.resolve();
+        return this.space.votePoll(this.id, answerIds, this.currentVoterId);
     }
 
     end(): Promise<void> {
@@ -115,23 +95,11 @@ export class ProximityChatPoll implements ChatPollItem {
             return Promise.reject(permissionError);
         }
 
-        if (this.endMetadata !== undefined) {
+        if (this.poll.end !== undefined) {
             return Promise.resolve();
         }
 
-        this.updateMetadata(
-            new Map([
-                [
-                    getProximityPollEndMetadataKey(this.definition.id),
-                    {
-                        pollId: this.definition.id,
-                        senderId: this.currentVoterId,
-                        closedAt: Date.now(),
-                    },
-                ],
-            ]),
-        );
-        return Promise.resolve();
+        return this.space.closePoll(this.id);
     }
 
     remove(): Promise<void> {
@@ -140,42 +108,30 @@ export class ProximityChatPoll implements ChatPollItem {
             return Promise.reject(permissionError);
         }
 
-        this.updateMetadata(
-            new Map([
-                [
-                    getProximityPollDeleteMetadataKey(this.definition.id),
-                    {
-                        pollId: this.definition.id,
-                        senderId: this.currentVoterId,
-                        deletedAt: Date.now(),
-                    },
-                ],
-            ]),
-        );
-        return Promise.resolve();
+        return this.space.deletePoll(this.id);
     }
 
     private getCreatorPermissionError(message: string): ProximityPollPermissionError | undefined {
-        if (this.definition.senderId === this.currentVoterId) {
+        if (this.poll.senderId === this.currentVoterId) {
             return undefined;
         }
 
         return new ProximityPollPermissionError(message);
     }
 
-    private computeState(votes: ProximityPollVoteMetadata[], end: ProximityPollEndMetadata | undefined): ChatPollState {
-        return computeProximityPollState(this.definition, votes, end, this.currentVoterId);
+    private computeState(): ChatPollState {
+        return computeProximityPollState(this.poll, this.currentVoterId);
     }
 
-    private computeCanVote(end: ProximityPollEndMetadata | undefined): boolean {
-        return end === undefined;
+    private computeCanVote(): boolean {
+        return this.poll.end === undefined;
     }
 
-    private computeCanEnd(end: ProximityPollEndMetadata | undefined): boolean {
-        return this.definition.senderId === this.currentVoterId && end === undefined;
+    private computeCanEnd(): boolean {
+        return this.poll.senderId === this.currentVoterId && this.poll.end === undefined;
     }
 
     private computeCanDelete(): boolean {
-        return this.definition.senderId === this.currentVoterId;
+        return this.poll.senderId === this.currentVoterId;
     }
 }

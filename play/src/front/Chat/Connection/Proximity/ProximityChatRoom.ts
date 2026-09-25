@@ -11,6 +11,7 @@ import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { Deferred } from "@workadventure/shared-utils";
+import type { ProximityPoll, ProximityQuestion, SpaceState } from "@workadventure/shared-utils";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
@@ -63,20 +64,7 @@ import { ProximityChatQuestion } from "./ProximityChatQuestion";
 import { canCreateProximityContent } from "./ProximityCreationPermissions";
 import { ProximityChatPoll } from "./ProximityChatPoll";
 import { muteProximityChatNotifications, unmuteProximityChatNotifications } from "./ProximityNotificationControl";
-import { getNewRemoteProximityPolls, getProximityPollNotificationMessage } from "./ProximityPollNotification";
-import {
-    getProximityPollDefinitionMetadataKey,
-    isProximityPollDeleted,
-    parseProximityPollMetadata,
-    type ProximityPollDefinitionMetadata,
-} from "./ProximityPollMetadata";
-import {
-    getProximityQAQuestionMetadataKey,
-    isProximityQAQuestionDeleted,
-    parseProximityQAMetadata,
-    type ProximityQAQuestionMetadata,
-} from "./ProximityQAMetadata";
-import { getUnreadRemoteQuestionIds } from "./ProximityQAUnread";
+import { sortByCreatedAt } from "./ProximityPollState";
 import { createProximityTimelineItemsStore } from "./ProximityTimelineItemsStore";
 
 const debug = Debug("ProximityChatRoom");
@@ -142,10 +130,13 @@ export class ProximityChatRoom implements ChatRoom {
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
     /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
     public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
-    private readonly spaceMetadataStore = writable<Map<string, unknown>>(new Map());
+    // The polls and questions of the space state (owned by the back).
+    // One store per slice, set only when the slice changed: a raised hand must not rebuild the polls.
+    private readonly pollsStore = writable<SpaceState["polls"]>({});
+    private readonly questionsStore = writable<SpaceState["questions"]>({});
     readonly pollItems: Readable<readonly ChatPollItem[]> = derived(
-        [this.spaceMetadataStore, this.spaceUsersStore],
-        ([$metadata, $users]) => this.createPollItems($metadata, $users),
+        [this.pollsStore, this.spaceUsersStore],
+        ([$polls, $users]) => this.createPollItems($polls, $users),
     );
     readonly canModerateQuestions: Readable<boolean> = derived(this.spaceUsersStore, (users) =>
         this.computeCanModerateQuestions(users),
@@ -154,9 +145,9 @@ export class ProximityChatRoom implements ChatRoom {
         this.computeCanDeleteAnyQuestion(users),
     );
     readonly qaItems: Readable<readonly ChatQuestionItem[]> = derived(
-        [this.spaceMetadataStore, this.spaceUsersStore, this.canModerateQuestions, this.canDeleteQuestions],
-        ([$metadata, $users, $canModerateQuestions, $canDeleteQuestions]) =>
-            this.createQuestionItems($metadata, $users, $canModerateQuestions, $canDeleteQuestions),
+        [this.questionsStore, this.spaceUsersStore, this.canModerateQuestions, this.canDeleteQuestions],
+        ([$questions, $users, $canModerateQuestions, $canDeleteQuestions]) =>
+            this.createQuestionItems($questions, $users, $canModerateQuestions, $canDeleteQuestions),
     );
     private readonly unreadQuestionIdsStore = writable<ReadonlySet<string>>(new Set());
     readonly unreadQuestionCount: Readable<number> = derived(this.unreadQuestionIdsStore, (ids) => ids.size);
@@ -170,7 +161,7 @@ export class ProximityChatRoom implements ChatRoom {
     private _space: SpaceInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
-    private spaceMetadataSubscription: Subscription | undefined;
+    private spaceStateUnsubscriber: Unsubscriber | undefined;
     private roomSidePanelUnsubscriber: Unsubscriber;
     private selectedRoomUnsubscriber: Unsubscriber;
     private readonly proximityPolls = new Map<string, ProximityChatPoll>();
@@ -453,24 +444,7 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private createPoll(options: ChatPollCreateOptions): Promise<void> {
-        const currentVoterId = this.getCurrentVoterId(this.users ?? new Map());
-        const pollId = uuidv4();
-        const definition: ProximityPollDefinitionMetadata = {
-            id: pollId,
-            question: options.question,
-            kind: options.kind,
-            answers: options.answers.map((answer) => ({
-                id: uuidv4(),
-                text: answer,
-            })),
-            maxSelections: 1,
-            senderId: currentVoterId,
-            senderName: this.users?.get(this._spaceUserId)?.name,
-            createdAt: Date.now(),
-        };
-
-        this.emitPollMetadataUpdate(new Map([[getProximityPollDefinitionMetadataKey(pollId), definition]]));
-        return Promise.resolve();
+        return this._space?.createPoll({ ...options, maxSelections: 1 }) ?? Promise.resolve();
     }
 
     private createQuestion(options: ChatQuestionCreateOptions): Promise<void> {
@@ -479,24 +453,14 @@ export class ProximityChatRoom implements ChatRoom {
             return Promise.resolve();
         }
 
-        const questionId = uuidv4();
-        const definition: ProximityQAQuestionMetadata = {
-            id: questionId,
-            body,
-            // Use the stable voter id (uuid when available) like polls do, so the
-            // author keeps delete/upvote rights and attribution across reconnects.
-            senderId: this.getCurrentVoterId(this.users ?? new Map()),
-            senderName: this.getCurrentUserName(),
-            createdAt: Date.now(),
-        };
-
-        this.emitPollMetadataUpdate(new Map([[getProximityQAQuestionMetadataKey(questionId), definition]]));
-        return Promise.resolve();
+        return this._space?.askQuestion(body) ?? Promise.resolve();
     }
 
-    private notifyNewPolls(previousMetadata: Map<string, unknown>, nextMetadata: Map<string, unknown>): void {
+    private notifyNewPolls(previousPolls: SpaceState["polls"], nextPolls: SpaceState["polls"]): void {
         const currentVoterId = this.getCurrentVoterId(this.users ?? new Map());
-        const newPolls = getNewRemoteProximityPolls(previousMetadata, nextMetadata, currentVoterId);
+        const newPolls = Object.values(nextPolls).filter(
+            (poll) => !(poll.id in previousPolls) && poll.senderId !== currentVoterId,
+        );
         if (newPolls.length === 0) {
             return;
         }
@@ -516,19 +480,22 @@ export class ProximityChatRoom implements ChatRoom {
         for (const poll of newPolls) {
             chatNotificationStore.addNotification(
                 poll.senderName ?? this.unknownUserName,
-                getProximityPollNotificationMessage(poll, get(LL).chat.poll.title()),
+                `${get(LL).chat.poll.title()}: ${poll.question}`,
                 this,
                 poll.id,
             );
         }
     }
 
-    private notifyNewQuestions(previousMetadata: Map<string, unknown>, nextMetadata: Map<string, unknown>): void {
+    private notifyNewQuestions(
+        previousQuestions: SpaceState["questions"],
+        nextQuestions: SpaceState["questions"],
+    ): void {
         const currentVoterId = this.getCurrentVoterId(this.users ?? new Map());
-        const newQuestionIds = getUnreadRemoteQuestionIds(previousMetadata, nextMetadata, currentVoterId);
-        const newQuestions = parseProximityQAMetadata(nextMetadata).questions.filter((question) =>
-            newQuestionIds.includes(question.id),
+        const newQuestions = Object.values(nextQuestions).filter(
+            (question) => !(question.id in previousQuestions) && question.senderId !== currentVoterId,
         );
+        const newQuestionIds = newQuestions.map((question) => question.id);
         if (newQuestions.length === 0) {
             return;
         }
@@ -564,89 +531,65 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private createPollItems(
-        metadata: Map<string, unknown>,
+        polls: SpaceState["polls"],
         users: Map<string, SpaceUserExtended>,
     ): readonly ChatPollItem[] {
-        const parsedMetadata = parseProximityPollMetadata(metadata);
+        const space = this._space;
+        if (!space) {
+            return [];
+        }
         const activePollIds = new Set<string>();
+        const currentVoterId = this.getCurrentVoterId(users);
 
-        const pollItems = parsedMetadata.polls
-            .filter((poll) => !isProximityPollDeleted(poll, parsedMetadata.deletions))
-            .map((poll) => {
-                activePollIds.add(poll.id);
-                const sender = this.findPollSender(poll, users);
-                const end = parsedMetadata.ends.find(
-                    (candidateEnd) => candidateEnd.pollId === poll.id && candidateEnd.senderId === poll.senderId,
-                );
-                const existingPoll = this.proximityPolls.get(poll.id);
+        const pollItems = sortByCreatedAt(polls).map((poll) => {
+            activePollIds.add(poll.id);
+            const sender = this.findPollSender(poll, users);
+            const existingPoll = this.proximityPolls.get(poll.id);
 
-                if (existingPoll) {
-                    existingPoll.update({
-                        votes: parsedMetadata.votes,
-                        end,
-                        currentVoterId: this.getCurrentVoterId(users),
-                        sender,
-                    });
-                    return existingPoll;
-                }
+            if (existingPoll) {
+                existingPoll.update({ poll, currentVoterId, sender });
+                return existingPoll;
+            }
 
-                const proximityPoll = new ProximityChatPoll({
-                    definition: poll,
-                    votes: parsedMetadata.votes,
-                    end,
-                    currentVoterId: this.getCurrentVoterId(users),
-                    sender,
-                    updateMetadata: (update) => this.emitPollMetadataUpdate(update),
-                });
-
-                this.proximityPolls.set(poll.id, proximityPoll);
-                return proximityPoll;
-            });
+            const proximityPoll = new ProximityChatPoll({ poll, currentVoterId, sender, space });
+            this.proximityPolls.set(poll.id, proximityPoll);
+            return proximityPoll;
+        });
         this.deleteInactivePolls(activePollIds);
         return pollItems;
     }
 
     private createQuestionItems(
-        metadata: Map<string, unknown>,
+        questions: SpaceState["questions"],
         users: Map<string, SpaceUserExtended>,
         canMarkAnswered: boolean,
         canDeleteAny: boolean,
     ): readonly ChatQuestionItem[] {
-        const parsedMetadata = parseProximityQAMetadata(metadata);
+        const space = this._space;
+        if (!space) {
+            return [];
+        }
         const activeQuestionIds = new Set<string>();
         const currentVoterId = this.getCurrentVoterId(users);
 
-        const questionItems = parsedMetadata.questions
-            .filter((question) => !isProximityQAQuestionDeleted(question, parsedMetadata.deletions))
+        const questionItems = sortByCreatedAt(questions)
             .map((question) => {
                 activeQuestionIds.add(question.id);
                 const sender = this.findQuestionSender(question, users);
-                const answer = parsedMetadata.answers.find(
-                    (candidateAnswer) => candidateAnswer.questionId === question.id,
-                );
                 const existingQuestion = this.proximityQuestions.get(question.id);
 
                 if (existingQuestion) {
-                    existingQuestion.update({
-                        upvotes: parsedMetadata.upvotes,
-                        answer,
-                        currentVoterId,
-                        sender,
-                        canMarkAnswered,
-                        canDeleteAny,
-                    });
+                    existingQuestion.update({ question, currentVoterId, sender, canMarkAnswered, canDeleteAny });
                     return existingQuestion;
                 }
 
                 const proximityQuestion = new ProximityChatQuestion({
-                    definition: question,
-                    upvotes: parsedMetadata.upvotes,
-                    answer,
+                    question,
                     currentVoterId,
                     sender,
                     canMarkAnswered,
                     canDeleteAny,
-                    updateMetadata: (update) => this.emitPollMetadataUpdate(update),
+                    space,
                 });
 
                 this.proximityQuestions.set(question.id, proximityQuestion);
@@ -681,10 +624,7 @@ export class ProximityChatRoom implements ChatRoom {
         }
     }
 
-    private findPollSender(
-        poll: ProximityPollDefinitionMetadata,
-        users: Map<string, SpaceUserExtended>,
-    ): AnyKindOfUser | undefined {
+    private findPollSender(poll: ProximityPoll, users: Map<string, SpaceUserExtended>): AnyKindOfUser | undefined {
         for (const user of users.values()) {
             if (this.getUserVoterId(user) === poll.senderId) {
                 return mapExtendedSpaceUserToChatUser(user);
@@ -701,7 +641,7 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private findQuestionSender(
-        question: ProximityQAQuestionMetadata,
+        question: ProximityQuestion,
         users: Map<string, SpaceUserExtended>,
     ): AnyKindOfUser | undefined {
         for (const user of users.values()) {
@@ -786,11 +726,6 @@ export class ProximityChatRoom implements ChatRoom {
     private isQuestionsSectionOpen(): boolean {
         const sidePanelState = get(roomSidePanelStore);
         return sidePanelState.isOpen && sidePanelState.activeSection === "questions" && get(selectedRoomStore) === this;
-    }
-
-    private emitPollMetadataUpdate(metadata: Map<string, unknown>): void {
-        this._space?.setMetadata(metadata);
-        this._space?.emitUpdateSpaceMetadata(metadata);
     }
 
     setTimelineAsRead(): void {
@@ -982,14 +917,24 @@ export class ProximityChatRoom implements ChatRoom {
         let hasUserInProximityChat = false;
 
         this.spaceUsersStore.forward(this._space.usersStore);
-        this.spaceMetadataStore.set(new Map(this._space.getMetadata()));
-        this.spaceMetadataSubscription?.unsubscribe();
-        this.spaceMetadataSubscription = this._space.observeMetadata.subscribe((metadata) => {
-            const previousMetadata = get(this.spaceMetadataStore);
-            const nextMetadata = new Map(metadata);
-            this.notifyNewPolls(previousMetadata, nextMetadata);
-            this.notifyNewQuestions(previousMetadata, nextMetadata);
-            this.spaceMetadataStore.set(nextMetadata);
+        this.spaceStateUnsubscriber?.();
+        const joinedSpace = this._space;
+        // The polls and questions already there when we joined are not news. They are only known once the whole
+        // state has arrived, which can be after we subscribe (the store is empty until then).
+        let hasBaseline = false;
+        this.spaceStateUnsubscriber = joinedSpace.stateStore.subscribe((state) => {
+            if (hasBaseline) {
+                this.notifyNewPolls(get(this.pollsStore), state.polls);
+                this.notifyNewQuestions(get(this.questionsStore), state.questions);
+            }
+            hasBaseline ||= joinedSpace.isStateInitialized();
+            // writable.set() notifies for any object, even the same one: compare first.
+            if (state.polls !== get(this.pollsStore)) {
+                this.pollsStore.set(state.polls);
+            }
+            if (state.questions !== get(this.questionsStore)) {
+                this.questionsStore.set(state.questions);
+            }
         });
 
         this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
@@ -1280,8 +1225,8 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceMessageSubscription = undefined;
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceIsTypingSubscription = undefined;
-        this.spaceMetadataSubscription?.unsubscribe();
-        this.spaceMetadataSubscription = undefined;
+        this.spaceStateUnsubscriber?.();
+        this.spaceStateUnsubscriber = undefined;
         this.spaceWatcherUserJoinedObserver?.unsubscribe();
         this.spaceWatcherUserJoinedObserver = undefined;
         this.spaceWatcherUserLeftObserver?.unsubscribe();
@@ -1299,7 +1244,8 @@ export class ProximityChatRoom implements ChatRoom {
             this.screenWakeRelease = undefined;
         }
         this.spaceUsersStore.forward(readable(new Map()));
-        this.spaceMetadataStore.set(new Map());
+        this.pollsStore.set({});
+        this.questionsStore.set({});
         this.unreadQuestionIdsStore.set(new Set());
         this._space = undefined;
         this.isJoined.set(false);
@@ -1463,7 +1409,8 @@ export class ProximityChatRoom implements ChatRoom {
         chatNotificationStore.clearRoom(this.id);
 
         this.spaceUsersStore.forward(readable(new Map()));
-        this.spaceMetadataStore.set(new Map());
+        this.pollsStore.set({});
+        this.questionsStore.set({});
         this.unreadQuestionIdsStore.set(new Set());
         this._space = undefined;
         this.isJoined.set(false);
@@ -1527,8 +1474,8 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
-        this.spaceMetadataSubscription?.unsubscribe();
-        this.spaceMetadataSubscription = undefined;
+        this.spaceStateUnsubscriber?.();
+        this.spaceStateUnsubscriber = undefined;
 
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
@@ -1630,7 +1577,7 @@ export class ProximityChatRoom implements ChatRoom {
     public destroy(): void {
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
-        this.spaceMetadataSubscription?.unsubscribe();
+        this.spaceStateUnsubscriber?.();
         this.roomSidePanelUnsubscriber();
         this.selectedRoomUnsubscriber();
 

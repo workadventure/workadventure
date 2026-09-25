@@ -12,7 +12,7 @@ function createUser(spaceUserId: string): SpaceUser {
 }
 
 describe("LivekitCommunicationStrategy", () => {
-    it("stops recording through the server path when the last streaming user leaves",async () => {
+    it("stops recording through the server path when the last streaming user leaves", async () => {
         const dispatchPrivateEvent = vi.fn();
         const stopRecordingByServer = vi.fn().mockResolvedValue(undefined);
 
@@ -25,7 +25,7 @@ describe("LivekitCommunicationStrategy", () => {
             dispatchPublicEvent: vi.fn(),
             getSpaceName: () => "test-space",
             getPropertiesToSync: () => [],
-            publishMetadata: vi.fn(),
+            updateState: vi.fn(),
             stopRecordingByServer,
             getUser: vi.fn(),
         };
@@ -69,7 +69,7 @@ describe("LivekitCommunicationStrategy", () => {
             dispatchPublicEvent: vi.fn(),
             getSpaceName: () => "test-space",
             getPropertiesToSync: () => [],
-            publishMetadata: vi.fn(),
+            updateState: vi.fn(),
             stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
             getUser: vi.fn(),
         };
@@ -101,7 +101,7 @@ describe("LivekitCommunicationStrategy", () => {
                     strategy as unknown as {
                         streamingUsers: Map<string, SpaceUser>;
                     }
-                ).streamingUsers.has(secondStreamer.spaceUserId)
+                ).streamingUsers.has(secondStreamer.spaceUserId),
             ).toBe(true);
         });
 
