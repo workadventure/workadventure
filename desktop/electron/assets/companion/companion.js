@@ -1,0 +1,1123 @@
+// Companion panel renderer (sandboxed, vanilla JS).
+//
+// Video-first quick-access panel shown by the main process when WorkAdventure is backgrounded.
+// The body has three views: the meeting video (HTML <video> tiles rendered right here in
+// #c-video-area, WebRTC-mirrored from the WA renderer via the WAHud meeting bridge), a People list
+// (the out-of-meeting home), and Chat — People/Chat slide in over the video. Stateless: the active
+// world renderer pushes the full CompanionState on every change and every action goes back as a
+// command via the generic WAHud bridge (onState / sendCommand / ready + the meeting signaling).
+(function () {
+    "use strict";
+
+    var api = window.WAHud;
+    if (!api) {
+        // eslint-disable-next-line no-console
+        console.error("Companion panel: WAHud not exposed");
+        return;
+    }
+
+    var STATUS_KEYS = ["online", "busy", "back_in_a_moment", "do_not_disturb", "away"];
+    var NEARBY_ID = "nearby";
+
+    var ICON_DM =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1"/></svg>';
+    var ICON_LOCATE =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/><path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"/></svg>';
+    var ICON_INVITE =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M16 19h6"/><path d="M19 16v6"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4"/></svg>';
+    var ICON_KIND_NEARBY =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.364 19.364a9 9 0 1 0 -12.728 0"/><path d="M15.536 16.536a5 5 0 1 0 -7.072 0"/><path d="M12 13m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/></svg>';
+    var ICON_KIND_DIRECT =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>';
+    var ICON_KIND_ROOM =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l14 0"/><path d="M5 15l14 0"/><path d="M11 4l-4 16"/><path d="M17 4l-4 16"/></svg>';
+    // Down chevron appended to a tile name tag (the app's UserTag dropdown affordance).
+    var CHEVRON_DOWN =
+        '<svg class="name-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6l6 -6"/></svg>';
+
+    // Tile-menu icons (Tabler), stroked via currentColor.
+    var SVG_OPEN =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+    var ICON_MIC_OFF =
+        SVG_OPEN + '<path d="M3 3l18 18"/><path d="M9 5a3 3 0 0 1 6 0v5a3 3 0 0 1 -.13 .874m-2 2a3 3 0 0 1 -3.87 -2.872v-1"/><path d="M5 10a7 7 0 0 0 10.846 5.85m2 -2a6.967 6.967 0 0 0 1.152 -3.85"/><path d="M8 21l8 0"/><path d="M12 17l0 4"/></svg>';
+    var ICON_CAM_OFF =
+        SVG_OPEN + '<path d="M3 3l18 18"/><path d="M15 11v-1l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -.675 .946"/><path d="M10 6h3a2 2 0 0 1 2 2v3m0 4v1a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-8a2 2 0 0 1 2 -2h1"/></svg>';
+    var ICON_BAN =
+        SVG_OPEN + '<path d="M18.364 5.636a9 9 0 1 0 0 12.728a9 9 0 0 0 0 -12.728z"/><path d="M5.636 5.636l12.728 12.728"/></svg>';
+    var ICON_CARD =
+        SVG_OPEN + '<path d="M3 5m0 3a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z"/><path d="M7 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M7 16.5c0 -1.5 1.5 -2.5 3 -2.5s3 1 3 2.5"/><path d="M15 8l4 0"/><path d="M15 12l3 0"/></svg>';
+    var ICON_ALERT =
+        SVG_OPEN + '<path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></svg>';
+    var ICON_VOL_ON =
+        SVG_OPEN + '<path d="M15 8a5 5 0 0 1 0 8"/><path d="M17.7 5a9 9 0 0 1 0 14"/><path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"/></svg>';
+    var ICON_VOL_OFF =
+        SVG_OPEN + '<path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5"/><path d="M16 10l4 4m0 -4l-4 4"/></svg>';
+
+    function byId(id) {
+        return document.getElementById(id);
+    }
+
+    var els = {
+        openChat: byId("c-open-chat"),
+        openPeople: byId("c-open-people"),
+        chatBadge: byId("c-chat-badge"),
+        peopleCount: byId("c-people-count"),
+        peopleCountH: byId("c-people-count-h"),
+        hdrMic: byId("c-hdr-mic"),
+        hdrCam: byId("c-hdr-cam"),
+        hdrShare: byId("c-hdr-share"),
+        hdrPip: byId("c-hdr-pip"),
+        expand: byId("c-expand"),
+        statusBtn: byId("c-status-btn"),
+        selfDot: byId("c-self-dot"),
+        selfName: byId("c-self-name"),
+        statusMenu: byId("c-status-menu"),
+        statusLocked: byId("c-status-locked"),
+        invitation: byId("c-invitation"),
+        invitationName: byId("c-invitation-name"),
+        inviteAccept: byId("c-invite-accept"),
+        inviteDecline: byId("c-invite-decline"),
+        body: byId("c-body"),
+        videoArea: byId("c-video-area"),
+        videos: byId("c-videos"),
+        videoEmpty: byId("c-video-empty"),
+        viewPeople: byId("c-view-people"),
+        viewChat: byId("c-view-chat"),
+        peopleClose: byId("c-people-close"),
+        chatClose: byId("c-chat-close"),
+        people: byId("c-people"),
+        peopleEmpty: byId("c-people-empty"),
+        conversations: byId("c-conversations"),
+        conversationsEmpty: byId("c-conversations-empty"),
+        conversation: byId("c-conversation"),
+        convBack: byId("c-conv-back"),
+        convTitle: byId("c-conv-title"),
+        convOpenMain: byId("c-conv-open-main"),
+        messages: byId("c-messages"),
+        messagesEmpty: byId("c-messages-empty"),
+        composer: byId("c-composer"),
+        chatInput: byId("c-chat-input"),
+    };
+
+    function send(command) {
+        try {
+            api.sendCommand(command);
+        } catch (e) {
+            /* best-effort */
+        }
+    }
+
+    function setEmpty(emptyEl, isEmpty) {
+        if (emptyEl) {
+            emptyEl.classList.toggle("is-visible", isEmpty);
+        }
+    }
+
+    function normStatus(key) {
+        return STATUS_KEYS.indexOf(key) !== -1 || key === "offline" ? key : "offline";
+    }
+
+    // ── Meeting video (WebRTC) ───────────────────────────────────────────────
+    // Ported from the former native PiP renderer. tileKey-centric: `tiles: Map<tileKey, TileElement>`
+    // is the ONLY source of truth for the visible grid; the WA renderer offers, we answer, and
+    // pc.ontrack just binds a track into the matching persistent tile. Tile lifecycle is decoupled
+    // from WebRTC track lifecycle, so renegotiations / cam toggles / simulcast swaps never reflow.
+    var peerConnection;
+    var tiles = new Map(); // tileKey → TileElement
+    var tileKeyByTrackId = new Map(); // trackId → tileKey (rebuilt on every tile state)
+    var pendingTracks = new Map(); // trackId → MediaStreamTrack parked until its tile lands
+    // Meeting-wide moderation permissions (from the WA renderer), gate the tile menu items.
+    var meetingCanModerate = false;
+    var meetingCanAskToMute = false;
+
+    function computeInitials(name) {
+        if (!name) return "?";
+        var parts = String(name).trim().split(/\s+/).filter(Boolean);
+        if (parts.length === 0) return "?";
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    // Name → color using the EXACT algorithm the web app uses (shared-utils Color.getColorByString),
+    // so a participant's tile color matches the color WorkAdventure gives them everywhere else.
+    function getColorByString(name) {
+        var s = String(name || "");
+        if (s.length === 0) return "#000000";
+        var hash = 0;
+        for (var i = 0; i < s.length; i++) {
+            hash = s.charCodeAt(i) + ((hash << 5) - hash);
+            hash = hash & hash;
+        }
+        var color = "#";
+        for (var j = 0; j < 3; j++) {
+            var value = (hash >> (j * 8)) & 255;
+            var radix = "00" + value.toString(16);
+            color += radix.substring(radix.length - 2);
+        }
+        return color;
+    }
+    // Readable text (black/white) over a background — same brightness rule as the app.
+    function getTextColorByBackgroundColor(hex) {
+        if (!hex || hex.length < 7) return "#ffffff";
+        var brightness = Math.round(
+            (parseInt(hex.slice(1, 3), 16) * 299 +
+                parseInt(hex.slice(3, 5), 16) * 587 +
+                parseInt(hex.slice(5, 7), 16) * 114) /
+                1000
+        );
+        return brightness > 125 ? "#000000" : "#ffffff";
+    }
+    // Darken a #rrggbb toward black (keep = fraction of each channel), for the camera-off tile
+    // backdrop behind the avatar — a subtle per-person tint that stays dark like the app's tiles.
+    function darken(hex, keep) {
+        if (!hex || hex.length < 7) return "#12202f";
+        var r = Math.round(parseInt(hex.slice(1, 3), 16) * keep);
+        var g = Math.round(parseInt(hex.slice(3, 5), 16) * keep);
+        var b = Math.round(parseInt(hex.slice(5, 7), 16) * keep);
+        return "rgb(" + r + ", " + g + ", " + b + ")";
+    }
+    function makeMicBadge() {
+        var span = document.createElement("span");
+        span.className = "mic-off-badge";
+        span.setAttribute("aria-hidden", "true");
+        span.innerHTML =
+            '<svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M9 5a3 3 0 0 1 6 0v5a3 3 0 0 1 -.13 .874m-2 2a3 3 0 0 1 -3.87 -2.872v-1"/><path d="M5 10a7 7 0 0 0 10.846 5.85m2 -2a6.967 6.967 0 0 0 1.152 -3.85"/></svg>';
+        return span;
+    }
+
+    function TileElement(tileKey, meta) {
+        this.tileKey = tileKey;
+        this.trackId = null;
+        var container = document.createElement("div");
+        container.className = "tile";
+        container.dataset.tileKey = tileKey;
+        this.container = container;
+
+        var videoLayer = document.createElement("div");
+        videoLayer.className = "video-layer";
+        var video = document.createElement("video");
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = true; // audio stays in the main window — never duplicate playback
+        videoLayer.appendChild(video);
+        container.appendChild(videoLayer);
+
+        var avatarLayer = document.createElement("div");
+        avatarLayer.className = "avatar-layer";
+        var wokaImg = document.createElement("img");
+        wokaImg.className = "tile-woka";
+        wokaImg.alt = "";
+        avatarLayer.appendChild(wokaImg);
+        var avatarEl = document.createElement("div");
+        avatarEl.className = "avatar";
+        avatarLayer.appendChild(avatarEl);
+        container.appendChild(avatarLayer);
+
+        var nameChip = document.createElement("button");
+        nameChip.type = "button";
+        nameChip.className = "name-chip";
+        var nameText = document.createElement("span");
+        nameText.className = "name-text";
+        nameChip.appendChild(nameText);
+        nameChip.insertAdjacentHTML("beforeend", CHEVRON_DOWN);
+        container.appendChild(nameChip);
+        container.appendChild(makeMicBadge());
+
+        this.video = video;
+        this.avatarEl = avatarEl;
+        this.wokaImg = wokaImg;
+        this.nameChip = nameChip;
+        this.nameText = nameText;
+        var self = this;
+        nameChip.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openTileMenu(self, nameChip);
+        });
+        this.update(meta);
+    }
+    TileElement.prototype.update = function (meta) {
+        this.meta = meta;
+        var name = meta.name || (meta.isSelf ? "You" : "");
+        var color = getColorByString(name);
+        var textColor = getTextColorByBackgroundColor(color);
+        this.nameText.textContent = name;
+        this.nameChip.style.display = name ? "" : "none";
+        // Name tag uses the app's fixed colours (contrast, or the accent when speaking — driven by
+        // CSS from the is-speaking class), not a per-person colour.
+        this.container.style.setProperty("--tile-bg", darken(color, 0.32));
+        this.avatarEl.style.background = color;
+        this.avatarEl.style.color = textColor;
+        this.avatarEl.textContent = computeInitials(name);
+        // Camera-off placeholder: the participant's real Woka when we have it (like the app), else the
+        // colour initials disc. Only reset src when it actually changes to avoid re-decoding the image.
+        if (meta.woka) {
+            if (this.wokaImg.getAttribute("src") !== meta.woka) this.wokaImg.src = meta.woka;
+        } else if (this.wokaImg.getAttribute("src")) {
+            this.wokaImg.removeAttribute("src");
+        }
+        this.container.classList.toggle("has-woka", !!meta.woka);
+        this.container.classList.toggle("is-self", meta.isSelf === true);
+        this.container.classList.toggle("is-muted", meta.hasAudio === false);
+        this.container.classList.toggle("is-speaking", meta.speaking === true);
+        // Track presence wins over the meta hint (avoids a black flicker before pc.ontrack lands).
+        this.container.classList.toggle("has-video", this.trackId !== null);
+    };
+    TileElement.prototype.attachTrack = function (track) {
+        if (this.trackId === track.id) return;
+        this.trackId = track.id;
+        try {
+            this.video.srcObject = new MediaStream([track]);
+        } catch (e) {
+            /* ignore */
+        }
+        this.container.classList.add("has-video");
+        var self = this;
+        track.addEventListener("ended", function () {
+            if (self.trackId === track.id) self.detachTrack();
+        });
+        var p = this.video.play();
+        if (p && typeof p.catch === "function") {
+            p.catch(function (err) {
+                // eslint-disable-next-line no-console
+                console.warn("Companion video play() rejected", err);
+            });
+        }
+    };
+    TileElement.prototype.detachTrack = function () {
+        if (this.trackId === null) return;
+        this.trackId = null;
+        try {
+            this.video.srcObject = null;
+        } catch (e) {
+            /* ignore */
+        }
+        this.container.classList.remove("has-video");
+    };
+    TileElement.prototype.destroy = function () {
+        if (tileMenuOpenFor === this) closeTileMenu();
+        try {
+            this.video.srcObject = null;
+        } catch (e) {
+            /* ignore */
+        }
+        this.container.remove();
+    };
+
+    function reorderSelfTilesFirst() {
+        var selfTiles = [];
+        tiles.forEach(function (tile) {
+            if (tile.container.classList.contains("is-self") && tile.container.parentNode === els.videos) {
+                selfTiles.push(tile.container);
+            }
+        });
+        for (var i = selfTiles.length - 1; i >= 0; i--) {
+            els.videos.insertBefore(selfTiles[i], els.videos.firstChild);
+        }
+    }
+    function updateVideoLayout() {
+        var count = tiles.size;
+        els.videoEmpty.style.display = count === 0 ? "" : "none";
+        els.videos.style.display = count === 0 ? "none" : "grid";
+        var cols = count <= 1 ? 1 : count <= 4 ? 2 : 3;
+        els.videos.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+    }
+
+    function ensurePeerConnection() {
+        if (peerConnection) return peerConnection;
+        peerConnection = new RTCPeerConnection({ iceServers: [] });
+        peerConnection.addEventListener("icecandidate", function (event) {
+            if (event.candidate) api.sendMeetingIce(event.candidate.toJSON());
+        });
+        peerConnection.addEventListener("track", function (event) {
+            if (event.track && event.track.kind === "video") onIncomingTrack(event.track);
+        });
+        peerConnection.addEventListener("connectionstatechange", function () {
+            var s = peerConnection.connectionState;
+            if (s === "failed" || s === "closed") {
+                teardownMeeting();
+            }
+        });
+        return peerConnection;
+    }
+    function onIncomingTrack(track) {
+        var tileKey = tileKeyByTrackId.get(track.id);
+        if (tileKey && tiles.has(tileKey)) {
+            tiles.get(tileKey).attachTrack(track);
+            return;
+        }
+        pendingTracks.set(track.id, track); // park until the matching tile state lands
+    }
+    function flushPendingTracks() {
+        if (pendingTracks.size === 0) return;
+        pendingTracks.forEach(function (track, trackId) {
+            var tileKey = tileKeyByTrackId.get(trackId);
+            if (tileKey && tiles.has(tileKey)) {
+                tiles.get(tileKey).attachTrack(track);
+                pendingTracks.delete(trackId);
+            }
+        });
+    }
+    function applyMeetingTiles(state) {
+        if (!state || typeof state !== "object") return;
+        meetingCanModerate = state.canModerate === true;
+        meetingCanAskToMute = state.canAskToMute === true;
+        var incoming = Array.isArray(state.tiles) ? state.tiles : [];
+        var byKey = new Map();
+        incoming.forEach(function (t) {
+            if (!t || typeof t.tileKey !== "string") return;
+            if (!byKey.has(t.tileKey)) byKey.set(t.tileKey, t);
+        });
+        tileKeyByTrackId.clear();
+        incoming.forEach(function (t) {
+            if (t && t.trackId && t.tileKey) tileKeyByTrackId.set(t.trackId, t.tileKey);
+        });
+        Array.from(tiles.keys()).forEach(function (key) {
+            if (!byKey.has(key)) {
+                tiles.get(key).destroy();
+                tiles.delete(key);
+            }
+        });
+        byKey.forEach(function (meta, key) {
+            var tile = tiles.get(key);
+            if (!tile) {
+                tile = new TileElement(key, meta);
+                tiles.set(key, tile);
+                els.videos.appendChild(tile.container);
+            } else {
+                tile.update(meta);
+            }
+            if (tile.trackId !== null && tile.trackId !== meta.trackId) {
+                tile.detachTrack();
+            }
+        });
+        flushPendingTracks();
+        reorderSelfTilesFirst();
+        updateVideoLayout();
+    }
+    function teardownMeeting() {
+        if (peerConnection) {
+            try {
+                peerConnection.close();
+            } catch (e) {
+                /* ignore */
+            }
+            peerConnection = undefined;
+        }
+        tiles.forEach(function (tile) {
+            tile.destroy();
+        });
+        tiles.clear();
+        tileKeyByTrackId.clear();
+        pendingTracks.clear();
+        closeTileMenu();
+        updateVideoLayout();
+    }
+
+    // ── Tile action menu — parity with the app's ActionMediaBox ──────────────
+    var tileMenuEl = null;
+    var tileMenuOpenFor = null;
+    var tileMenuAnchor = null;
+    function onTileMenuOutside(e) {
+        // Ignore clicks on the anchoring name chip: its own click handler toggles the menu closed.
+        // Closing here (on mousedown, before that click) would let the click re-open it.
+        if (tileMenuAnchor && tileMenuAnchor.contains(e.target)) return;
+        if (tileMenuEl && !tileMenuEl.contains(e.target)) closeTileMenu();
+    }
+    function onTileMenuKey(e) {
+        if (e.key === "Escape") closeTileMenu();
+    }
+    function closeTileMenu() {
+        if (tileMenuEl) {
+            tileMenuEl.remove();
+            tileMenuEl = null;
+        }
+        tileMenuOpenFor = null;
+        tileMenuAnchor = null;
+        document.removeEventListener("mousedown", onTileMenuOutside, true);
+        document.removeEventListener("keydown", onTileMenuKey, true);
+    }
+    function tileMenuItem(label, icon, opts) {
+        opts = opts || {};
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "tile-menu-item" + (opts.danger ? " danger" : "");
+        if (opts.disabled) b.disabled = true;
+        b.insertAdjacentHTML("afterbegin", icon);
+        var span = document.createElement("span");
+        span.textContent = label;
+        b.appendChild(span);
+        b.addEventListener("click", function (e) {
+            e.stopPropagation();
+            if (b.disabled) return;
+            opts.onClick();
+            closeTileMenu();
+        });
+        return b;
+    }
+    function tileAction(key, action, alsoFocus) {
+        return function () {
+            send({ type: "tile-action", tileKey: key, action: action });
+            if (alsoFocus) send({ type: "focus-main" });
+        };
+    }
+    function openTileMenu(tile, anchorEl) {
+        if (tileMenuOpenFor === tile) {
+            closeTileMenu();
+            return;
+        }
+        closeTileMenu();
+        var meta = tile.meta || {};
+        if (meta.isSelf) return; // no actions on your own tile, like the app
+        var key = tile.tileKey;
+
+        var menu = document.createElement("div");
+        menu.className = "tile-menu";
+
+        // Local volume: a slider + mute/unmute toggle (does not affect the meeting, only my playback).
+        var volRow = document.createElement("div");
+        volRow.className = "tile-menu-vol";
+        var muteBtn = document.createElement("button");
+        muteBtn.type = "button";
+        muteBtn.className = "tile-menu-mute";
+        var slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = "0";
+        slider.max = "1";
+        slider.step = "0.01";
+        slider.value = String(typeof meta.volume === "number" ? meta.volume : 1);
+        slider.className = "tile-menu-slider";
+        var paintMute = function () {
+            muteBtn.innerHTML = Number(slider.value) === 0 ? ICON_VOL_OFF : ICON_VOL_ON;
+        };
+        paintMute();
+        muteBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            slider.value = Number(slider.value) === 0 ? "1" : "0";
+            paintMute();
+            send({ type: "tile-volume", tileKey: key, value: Number(slider.value) });
+        });
+        slider.addEventListener("input", function (e) {
+            e.stopPropagation();
+            paintMute();
+            send({ type: "tile-volume", tileKey: key, value: Number(slider.value) });
+        });
+        volRow.appendChild(muteBtn);
+        volRow.appendChild(slider);
+        menu.appendChild(volRow);
+
+        var canMute = meetingCanModerate || meetingCanAskToMute;
+        if (canMute) {
+            menu.appendChild(
+                tileMenuItem(meetingCanModerate ? "Mute microphone" : "Ask to mute microphone", ICON_MIC_OFF, {
+                    disabled: meta.hasAudio === false,
+                    onClick: tileAction(key, "mute-audio"),
+                })
+            );
+        }
+        if (meetingCanModerate) {
+            menu.appendChild(
+                tileMenuItem("Mute everyone's microphone", ICON_MIC_OFF, { onClick: tileAction(key, "mute-audio-all") })
+            );
+        }
+        if (canMute) {
+            menu.appendChild(
+                tileMenuItem(meetingCanModerate ? "Turn off camera" : "Ask to turn off camera", ICON_CAM_OFF, {
+                    disabled: meta.hasVideo === false,
+                    onClick: tileAction(key, "mute-video"),
+                })
+            );
+        }
+        if (meetingCanModerate) {
+            menu.appendChild(
+                tileMenuItem("Turn off everyone's camera", ICON_CAM_OFF, { onClick: tileAction(key, "mute-video-all") })
+            );
+        }
+        if (meetingCanModerate) {
+            menu.appendChild(
+                tileMenuItem("Kick out of the meeting", ICON_BAN, { danger: true, onClick: tileAction(key, "kick") })
+            );
+        }
+        if (meta.hasVisitCard) {
+            menu.appendChild(tileMenuItem("Visit card", ICON_CARD, { onClick: tileAction(key, "visit-card", true) }));
+        }
+        menu.appendChild(
+            tileMenuItem("Block or report", ICON_ALERT, { danger: true, onClick: tileAction(key, "report", true) })
+        );
+
+        document.body.appendChild(menu);
+        tileMenuEl = menu;
+        tileMenuOpenFor = tile;
+        tileMenuAnchor = anchorEl;
+        positionTileMenu(menu, anchorEl);
+        // The menu opens on `click`, so the opening `mousedown` has already passed — attaching now
+        // only catches subsequent clicks, and the anchor-skip in onTileMenuOutside handles re-clicks
+        // on the chevron.
+        document.addEventListener("mousedown", onTileMenuOutside, true);
+        document.addEventListener("keydown", onTileMenuKey, true);
+    }
+    function positionTileMenu(menu, anchorEl) {
+        var r = anchorEl.getBoundingClientRect();
+        menu.style.visibility = "hidden";
+        var mw = menu.offsetWidth;
+        var mh = menu.offsetHeight;
+        var left = r.left;
+        var top = r.top - mh - 6; // prefer above the name chip
+        if (top < 6) top = r.bottom + 6; // otherwise drop below
+        if (left + mw > window.innerWidth - 6) left = window.innerWidth - mw - 6;
+        if (left < 6) left = 6;
+        menu.style.left = Math.round(left) + "px";
+        menu.style.top = Math.round(top) + "px";
+        menu.style.visibility = "";
+    }
+
+    // Serialize offer handling: two offers in quick succession would otherwise interleave and hit
+    // "Called in wrong state: stable". Chain onto a queue so each offer→answer completes in order.
+    var offerQueue = Promise.resolve();
+    api.onMeetingOffer(function (sdp) {
+        offerQueue = offerQueue.then(function () {
+            var pc = ensurePeerConnection();
+            return pc
+                .setRemoteDescription(sdp)
+                .then(function () {
+                    return pc.createAnswer();
+                })
+                .then(function (answer) {
+                    return pc.setLocalDescription(answer);
+                })
+                .then(function () {
+                    if (pc.localDescription) {
+                        api.sendMeetingAnswer({ type: pc.localDescription.type, sdp: pc.localDescription.sdp });
+                    }
+                })
+                .catch(function (err) {
+                    // eslint-disable-next-line no-console
+                    console.warn("Companion meeting offer handling failed", err);
+                });
+        });
+    });
+    api.onMeetingIce(function (candidate) {
+        ensurePeerConnection()
+            .addIceCandidate(candidate)
+            .catch(function (err) {
+                // eslint-disable-next-line no-console
+                console.warn("Companion addIceCandidate failed", err);
+            });
+    });
+    api.onMeetingClose(function () {
+        teardownMeeting();
+    });
+    api.onMeetingTiles(function (state) {
+        try {
+            applyMeetingTiles(state);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error("Companion meeting tiles render failed", e);
+        }
+    });
+    window.addEventListener("pagehide", teardownMeeting);
+
+    // ── Views: "video" | "people" | "chat" ──────────────────────────────────
+    // Base view is the meeting video (HTML tiles in #c-video-area) while in a meeting, People
+    // otherwise. People/Chat are left side panels that slide over the video (z-index); closing them
+    // reveals the video again.
+    var currentView = "people";
+    var inMeeting = false;
+    var chatSub = "list"; // "list" | "conversation"
+    var currentConvId = null;
+
+    function baseView() {
+        return inMeeting ? "video" : "people";
+    }
+
+    function applyView() {
+        // People and Chat are both left side panels. Out of a meeting they take the full width; in a
+        // meeting they are side panels and the HTML meeting video (in #c-video-area behind them,
+        // z-index 0) shows through on the right — no native view, so no rect coordination needed.
+        els.viewPeople.dataset.open = currentView === "people" ? "true" : "false";
+        els.viewChat.dataset.open = currentView === "chat" ? "true" : "false";
+        els.viewPeople.classList.toggle("full", !inMeeting);
+        els.viewChat.classList.toggle("full", !inMeeting);
+        els.openPeople.dataset.active = currentView === "people" ? "true" : "false";
+        els.openChat.dataset.active = currentView === "chat" ? "true" : "false";
+    }
+
+    function setView(view) {
+        currentView = view;
+        applyView();
+    }
+
+    els.openPeople.addEventListener("click", function () {
+        setView(currentView === "people" ? baseView() : "people");
+    });
+    els.openChat.addEventListener("click", function () {
+        setView(currentView === "chat" ? baseView() : "chat");
+    });
+    els.peopleClose.addEventListener("click", function () {
+        setView(baseView());
+    });
+    els.chatClose.addEventListener("click", function () {
+        setView(baseView());
+    });
+
+    // ── Header actions ──────────────────────────────────────────────────────
+    els.expand.addEventListener("click", function () {
+        send({ type: "focus-main" });
+    });
+    els.hdrMic.addEventListener("click", function () {
+        send({ type: "toggle-mic" });
+    });
+    els.hdrCam.addEventListener("click", function () {
+        send({ type: "toggle-camera" });
+    });
+    els.hdrShare.addEventListener("click", function () {
+        if (els.hdrShare.disabled) return;
+        send({ type: "toggle-screenshare" });
+    });
+    els.hdrPip.addEventListener("click", function () {
+        if (els.hdrPip.disabled) return;
+        send({ type: "toggle-pip" });
+    });
+
+    // ── Status dropdown ─────────────────────────────────────────────────────
+    function openStatusMenu(open) {
+        els.statusMenu.hidden = !open;
+        els.statusBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+    els.statusBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        openStatusMenu(els.statusMenu.hidden);
+    });
+    els.statusMenu.addEventListener("click", function (e) {
+        var btn = e.target.closest(".status-opt");
+        if (btn && btn.dataset.status && !els.statusMenu.classList.contains("is-locked")) {
+            send({ type: "set-status", status: btn.dataset.status });
+            openStatusMenu(false);
+        }
+    });
+    document.addEventListener("click", function () {
+        if (!els.statusMenu.hidden) {
+            openStatusMenu(false);
+        }
+    });
+
+    // ── Meeting invitation banner ───────────────────────────────────────────
+    els.inviteAccept.addEventListener("click", function () {
+        send({ type: "focus-main" });
+        send({ type: "accept-invitation" });
+    });
+    els.inviteDecline.addEventListener("click", function () {
+        send({ type: "decline-invitation" });
+    });
+
+    // ── Chat (list <-> conversation) ────────────────────────────────────────
+    function showConversationView(show) {
+        chatSub = show ? "conversation" : "list";
+        els.conversation.hidden = !show;
+        els.conversations.hidden = show;
+    }
+    els.conversations.addEventListener("click", function (e) {
+        var row = e.target.closest(".conversation-row");
+        if (!row || !row.dataset.conversationId) {
+            return;
+        }
+        send({ type: "select-conversation", conversationId: row.dataset.conversationId });
+        currentConvId = row.dataset.conversationId;
+        showConversationView(true);
+    });
+    els.convBack.addEventListener("click", function () {
+        showConversationView(false);
+    });
+    els.convOpenMain.addEventListener("click", function () {
+        if (currentConvId && currentConvId !== NEARBY_ID) {
+            send({ type: "focus-main" });
+            send({ type: "open-conversation-in-main", conversationId: currentConvId });
+        }
+    });
+    els.composer.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var text = els.chatInput.value.trim();
+        if (!text || !currentConvId) {
+            return;
+        }
+        send({ type: "send-message", conversationId: currentConvId, text: text });
+        els.chatInput.value = "";
+    });
+
+    // ── People per-row actions ──────────────────────────────────────────────
+    els.people.addEventListener("click", function (e) {
+        var btn = e.target.closest(".mini-btn");
+        if (!btn) {
+            return;
+        }
+        var userId = btn.dataset.userId;
+        var action = btn.dataset.action;
+        if (!userId || !action) {
+            return;
+        }
+        if (action === "invite") {
+            send({ type: "invite", userId: userId });
+        } else if (action === "dm") {
+            send({ type: "dm", userId: userId });
+            setView("chat");
+            showConversationView(true);
+        } else if (action === "locate") {
+            send({ type: "focus-main" });
+            send({ type: "locate", userId: userId });
+        }
+    });
+
+    // ── Rendering ───────────────────────────────────────────────────────────
+    function miniButton(action, userId, title, iconSvg) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "mini-btn";
+        btn.dataset.action = action;
+        btn.dataset.userId = userId;
+        btn.title = title;
+        btn.setAttribute("aria-label", title);
+        btn.innerHTML = iconSvg;
+        return btn;
+    }
+
+    // The user's Woka avatar (the app's real avatar) when the front provides one; otherwise a
+    // colour-coded initials disc using the same per-name colour the app assigns.
+    function makePersonAvatar(name, woka) {
+        var av = document.createElement("span");
+        av.className = "person-avatar";
+        if (woka) {
+            av.className = "person-avatar has-woka";
+            var img = document.createElement("img");
+            img.src = woka;
+            img.alt = "";
+            av.appendChild(img);
+        } else {
+            var c = getColorByString(name || "");
+            av.style.background = c;
+            av.style.color = getTextColorByBackgroundColor(c);
+            av.textContent = computeInitials(name || "");
+        }
+        return av;
+    }
+
+    // Row: [avatar] [name] … [actions on hover] [status dot, right].
+    function buildPersonRow(u) {
+        var row = document.createElement("div");
+        row.className = "person";
+        row.appendChild(makePersonAvatar(u.name, u.woka));
+
+        var name = document.createElement("span");
+        name.className = "person-name";
+        // In the people list you are just "You" (with the "you" chip); the real name lives in the
+        // status button up top.
+        name.textContent = u.isSelf ? "You" : u.name || "Someone";
+        row.appendChild(name);
+
+        if (u.isSelf) {
+            var you = document.createElement("span");
+            you.className = "person-you";
+            you.textContent = "you";
+            row.appendChild(you);
+        } else {
+            var actions = document.createElement("div");
+            actions.className = "person-actions";
+            actions.appendChild(miniButton("invite", u.id, "Invite to meeting", ICON_INVITE));
+            actions.appendChild(miniButton("dm", u.id, "Message", ICON_DM));
+            actions.appendChild(miniButton("locate", u.id, "Locate", ICON_LOCATE));
+            row.appendChild(actions);
+        }
+
+        var dot = document.createElement("span");
+        dot.className = "dot";
+        dot.dataset.status = normStatus(u.status);
+        row.appendChild(dot);
+        return row;
+    }
+
+    // The People view is just the connected users — a flat list (the "discussion bubble" belongs to
+    // the Chat list, not here).
+    function renderPeople(users) {
+        els.people.textContent = "";
+        setEmpty(els.peopleEmpty, users.length === 0);
+        var selfName = "You";
+        for (var i = 0; i < users.length; i++) {
+            var u = users[i];
+            if (u.isSelf && u.name) {
+                selfName = u.name;
+            }
+            els.people.appendChild(buildPersonRow(u));
+        }
+        // Header self name + people count badges.
+        els.selfName.textContent = selfName;
+        var count = users.length;
+        els.peopleCountH.textContent = String(count);
+        els.peopleCount.textContent = count > 99 ? "99+" : String(count);
+        els.peopleCount.hidden = count === 0;
+    }
+
+    function conversationIcon(kind, woka) {
+        var span = document.createElement("span");
+        span.className = "conv-icon kind-" + (kind || "room");
+        if (woka) {
+            span.className += " has-woka";
+            var img = document.createElement("img");
+            img.src = woka;
+            img.alt = "";
+            span.appendChild(img);
+        } else {
+            span.innerHTML = kind === "nearby" ? ICON_KIND_NEARBY : kind === "direct" ? ICON_KIND_DIRECT : ICON_KIND_ROOM;
+        }
+        return span;
+    }
+
+    function renderConversationList(conversations) {
+        els.conversations.textContent = "";
+        for (var i = 0; i < conversations.length; i++) {
+            var c = conversations[i];
+            var row = document.createElement("button");
+            row.type = "button";
+            row.className = "conversation-row";
+            row.dataset.conversationId = c.id;
+            row.appendChild(conversationIcon(c.kind, c.woka));
+
+            var main = document.createElement("div");
+            main.className = "conv-main";
+
+            var top = document.createElement("div");
+            top.className = "conv-top";
+            var name = document.createElement("span");
+            name.className = "conv-name";
+            name.textContent = c.name || "Conversation";
+            top.appendChild(name);
+            main.appendChild(top);
+
+            if (c.preview) {
+                var pv = document.createElement("div");
+                pv.className = "conv-preview";
+                pv.textContent = c.preview;
+                main.appendChild(pv);
+            }
+            row.appendChild(main);
+
+            // Unread indicator, right-aligned like the design: a green dot for unread, or the "@N"
+            // mention badge when there are highlights (mentions stay distinct from a plain unread).
+            var highlight = Number(c.highlightCount) || 0;
+            var unread = Number(c.unreadCount) || 0;
+            if (highlight > 0) {
+                var hl = document.createElement("span");
+                hl.className = "conv-badge hl";
+                hl.textContent = "@" + (highlight > 99 ? "99+" : highlight);
+                row.appendChild(hl);
+            } else if (unread > 0) {
+                var d = document.createElement("span");
+                d.className = "conv-unread-dot";
+                d.title = unread + (unread > 1 ? " unread messages" : " unread message");
+                row.appendChild(d);
+            }
+            els.conversations.appendChild(row);
+        }
+    }
+
+    function formatTime(ts) {
+        try {
+            return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        } catch (e) {
+            return "";
+        }
+    }
+    function formatDaySeparator(ts) {
+        var d = new Date(ts);
+        var now = new Date();
+        var startOfDay = function (x) {
+            return new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+        };
+        var diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+        if (diffDays === 0) return "Today";
+        if (diffDays === 1) return "Yesterday";
+        return d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+    }
+
+    function renderMessages(messages) {
+        els.messages.textContent = "";
+        setEmpty(els.messagesEmpty, messages.length === 0);
+        var lastDayKey = null;
+        for (var i = 0; i < messages.length; i++) {
+            var m = messages[i];
+            var ts = Number(m.ts) || 0;
+            if (ts) {
+                var dayKey = new Date(ts).toDateString();
+                if (dayKey !== lastDayKey) {
+                    lastDayKey = dayKey;
+                    var sep = document.createElement("div");
+                    sep.className = "date-sep";
+                    var sepLabel = document.createElement("span");
+                    sepLabel.textContent = formatDaySeparator(ts);
+                    sep.appendChild(sepLabel);
+                    els.messages.appendChild(sep);
+                }
+            }
+            // Proximity system notices ("New discussion with X", join/leave) — a centered notice, not
+            // a chat bubble (they'd otherwise look like the user's own message).
+            if (m.system) {
+                var notice = document.createElement("div");
+                notice.className = "msg-system";
+                notice.textContent = m.text || "";
+                els.messages.appendChild(notice);
+                continue;
+            }
+            var wrap = document.createElement("div");
+            wrap.className = "msg" + (m.isSelf ? " is-self" : "");
+            if (!m.isSelf && m.author) {
+                var author = document.createElement("div");
+                author.className = "msg-author";
+                author.textContent = m.author;
+                wrap.appendChild(author);
+            }
+            var text = document.createElement("div");
+            text.className = "msg-text";
+            text.textContent = m.text || "";
+            wrap.appendChild(text);
+            if (ts) {
+                var time = document.createElement("div");
+                time.className = "msg-time";
+                time.textContent = formatTime(ts);
+                wrap.appendChild(time);
+            }
+            els.messages.appendChild(wrap);
+        }
+        els.messages.scrollTop = els.messages.scrollHeight;
+    }
+
+    function renderChat(conversations, selected, chatStatus) {
+        var highlights = 0;
+        for (var i = 0; i < conversations.length; i++) {
+            highlights += Number(conversations[i].highlightCount) || 0;
+        }
+        if (highlights > 0) {
+            els.chatBadge.textContent = highlights > 99 ? "99+" : String(highlights);
+            els.chatBadge.hidden = false;
+        } else {
+            els.chatBadge.hidden = true;
+        }
+
+        renderConversationList(conversations);
+        currentConvId = selected ? selected.id : currentConvId;
+
+        var inConversation = chatSub === "conversation";
+        els.conversation.hidden = !inConversation;
+        els.conversations.hidden = inConversation;
+        var showEmpty = !inConversation && conversations.length === 0;
+        if (showEmpty) {
+            els.conversationsEmpty.textContent =
+                chatStatus === "connecting"
+                    ? "Connecting to chat…"
+                    : chatStatus === "unavailable"
+                    ? "Chat unavailable."
+                    : "No conversations yet.";
+        }
+        setEmpty(els.conversationsEmpty, showEmpty);
+
+        if (inConversation) {
+            var name = selected ? selected.name : "Conversation";
+            els.convTitle.textContent = name || "Conversation";
+            els.convOpenMain.hidden = currentConvId === NEARBY_ID;
+            renderMessages(selected && Array.isArray(selected.messages) ? selected.messages : []);
+        }
+    }
+
+    function renderMedia(media) {
+        // Mic/cam: icon swaps on data-state; "off" turns the button danger-red (like the app bar).
+        els.hdrMic.dataset.state = media.micEnabled ? "on" : "off";
+        els.hdrMic.classList.toggle("is-forbidden", !media.micEnabled);
+        els.hdrCam.dataset.state = media.cameraEnabled ? "on" : "off";
+        els.hdrCam.classList.toggle("is-forbidden", !media.cameraEnabled);
+        // Share: single icon; active (sharing) turns it secondary-blue. Sharing needs a bubble, so
+        // the button stays disabled outside one — except while a share is already running, so the
+        // presenter can always stop it even if availability flipped underneath them.
+        els.hdrShare.classList.toggle("is-active", media.screenSharing === true);
+        els.hdrShare.disabled = !media.canScreenShare && !media.screenSharing;
+        els.hdrShare.title = media.screenSharing
+            ? "Stop sharing your screen"
+            : els.hdrShare.disabled
+              ? "Join a meeting to share your screen"
+              : "Share your screen";
+        els.hdrShare.setAttribute("aria-label", els.hdrShare.title);
+        // Picture-in-picture: single icon; active turns it secondary-blue. Only meaningful in a meeting.
+        els.hdrPip.classList.toggle("is-active", media.pipOpen === true);
+        els.hdrPip.disabled = !media.inMeeting;
+        els.hdrPip.title = media.pipOpen
+            ? "Close picture-in-picture"
+            : els.hdrPip.disabled
+              ? "Join a meeting to open picture-in-picture"
+              : "Picture-in-picture";
+        els.hdrPip.setAttribute("aria-label", els.hdrPip.title);
+
+        // Self status dot + status dropdown current/locked.
+        els.selfDot.dataset.status = normStatus(media.status);
+        var locked = media.statusLocked === true;
+        els.statusMenu.classList.toggle("is-locked", locked);
+        els.statusLocked.hidden = !locked;
+        var opts = els.statusMenu.querySelectorAll(".status-opt");
+        for (var i = 0; i < opts.length; i++) {
+            opts[i].classList.toggle("is-current", !locked && opts[i].dataset.status === media.status);
+        }
+    }
+
+    function renderMeeting(media) {
+        var was = inMeeting;
+        inMeeting = media.inMeeting === true;
+        if (inMeeting && !was) {
+            // Entering a meeting: jump to the video (edge-triggered, so the user can switch away).
+            setView("video");
+        } else if (!inMeeting && was) {
+            setView("people");
+        } else if (!inMeeting && currentView === "video") {
+            setView("people");
+        }
+        els.videoArea.classList.toggle("has-video", inMeeting);
+    }
+
+    function renderInvitation(invitation) {
+        if (invitation && typeof invitation === "object") {
+            els.invitationName.textContent = invitation.name || "Someone";
+            els.invitation.hidden = false;
+        } else {
+            els.invitation.hidden = true;
+        }
+    }
+
+    function render(state) {
+        renderInvitation(state.invitation);
+        renderPeople(Array.isArray(state.users) ? state.users : []);
+        renderChat(
+            Array.isArray(state.conversations) ? state.conversations : [],
+            state.selectedConversation || null,
+            state.chatStatus
+        );
+        var media = state.media || {
+            micEnabled: false,
+            cameraEnabled: false,
+            screenSharing: false,
+            canScreenShare: false,
+            inMeeting: false,
+            status: "online",
+            statusLocked: false,
+        };
+        renderMeeting(media);
+        renderMedia(media);
+    }
+
+    api.onState(function (state) {
+        if (!state || typeof state !== "object") {
+            return;
+        }
+        try {
+            render(state);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error("Companion panel: render failed", e);
+        }
+    });
+
+    // Establish the initial view (People home) with the main process.
+    applyView();
+    api.ready();
+})();
