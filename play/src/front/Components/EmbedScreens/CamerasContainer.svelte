@@ -1,35 +1,27 @@
 <!--
     CamerasContainer.svelte
 
-    This component displays a collection of WebRTC video streams in a responsive layout.
-    It supports two display modes controlled by the isOnOneLine prop:
+    This component displays the video boxes of the current meeting. The "mode" prop picks the layout:
 
-    1. Single-line mode (isOnOneLine = true):
-       - Videos are displayed in a single horizontal line
-       - Video sizes are automatically adjusted to fit the container width
-       - If container is too narrow, videos will maintain minimum width (120px) and overflow horizontally
-       - Videos are centered in the container with equal spacing
-       - No vertical scrolling
-
-    2. Multi-line mode (isOnOneLine = false):
+    1. "grid" (in a conversation, while the player does not move):
        - Videos wrap to multiple lines to maximize available space
        - Uses an optimal layout algorithm that:
          a) Calculates maximum possible videos per row at minimum size
          b) Works backwards to find the largest video size that fits without scrolling
          c) Maintains 16:9 aspect ratio for all videos
          d) Ensures videos never go below minimum width (120px)
-       - Videos are aligned to the top of the container
-       - Vertical scrolling is enabled if needed
-       - Maintains consistent gap between videos
+       - Vertical scrolling is enabled if needed, and the container can be resized with a handle
 
-    The component automatically adjusts its layout when:
-    - Container dimensions change
-    - Number of videos changes
-    - Display mode changes
+    2. "row" (while moving, out of a conversation, next to a highlighted video, or in a portrait picture-in-picture):
+       - Videos are displayed in a single horizontal line, centered
+       - Video sizes are adjusted to fit the container width, down to a minimum width, then the line scrolls horizontally
+
+    3. "pipGrid" (picture-in-picture window):
+       - Up to PIP_GRID_MAX_VIDEOS videos fill a CSS grid adapted to the window's aspect ratio
 
     Props:
-    - oneLineMaxHeight: Maximum height for videos in single-line mode
-    - isOnOneLine: Toggle between single-line and multi-line modes
+    - oneLineMaxHeight: Maximum height for videos in "row" mode
+    - mode: see above
 
 -->
 <script lang="ts">
@@ -37,7 +29,7 @@
     import { myCameraPeerStore } from "../../Stores/StreamableCollectionStore";
     import type { VideoBox as VideoBoxModel } from "../../Space/VideoBox";
     import VideoBox from "../Video/VideoBox.svelte";
-    import type { VideoBoxLayout } from "../Video/VideoBoxLayout";
+    import type { CamerasContainerMode, VideoBoxLayout } from "../Video/VideoBoxLayout";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
@@ -74,11 +66,10 @@
 
     interface Props {
         oneLineMaxHeight: number;
-        isOnOneLine: boolean;
-        oneLineMode: "vertical" | "horizontal";
+        mode: CamerasContainerMode;
     }
 
-    let { oneLineMaxHeight, isOnOneLine, oneLineMode = "horizontal" }: Props = $props();
+    let { oneLineMaxHeight, mode }: Props = $props();
 
     let containerWidth: number = $state(0);
     let maxContainerHeight: number = $state(0);
@@ -98,9 +89,8 @@
         return videoBoxes.filter((box) => box.uniqueId !== LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID);
     }
 
-    let isPictureInPictureGridMode = $derived($activePictureInPictureStore && oneLineMode === "vertical");
     let pipDockLocalCamera = $derived(
-        isPictureInPictureGridMode &&
+        mode === "pipGrid" &&
             $oneLineStreamableCollectionStore.length > PIP_GRID_MAX_VIDEOS &&
             $oneLineStreamableCollectionStore.some((box) => box.uniqueId === LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID),
     );
@@ -138,7 +128,7 @@
     let maxMediaBoxWidth = $derived((oneLineMaxHeight * 16) / 9);
 
     $effect(() => {
-        if (!isOnOneLine) {
+        if (mode === "grid") {
             containerHeight = maxContainerHeight * localUserStore.getCameraContainerHeight();
             if (camerasContainer) {
                 camerasContainer.style.height = `${containerHeight}px`;
@@ -151,37 +141,19 @@
     });
 
     $effect(() => {
-        if (isOnOneLine) {
-            const oneLineCount = Math.max(1, $oneLineStreamableCollectionStore.length);
-            const pipVerticalGrid = $activePictureInPictureStore && oneLineMode === "vertical" && isOnOneLine;
-            const pipSortWindowCount = pipDockLocalCamera ? pipRemoteParticipantCount : oneLineCount;
-
-            if (oneLineMode === "horizontal") {
-                const countForTileSizing = pipVerticalGrid
-                    ? Math.min(PIP_GRID_MAX_VIDEOS, pipSortWindowCount)
-                    : oneLineCount;
-                const currentVideoWidth = Math.max(
-                    Math.min(maxMediaBoxWidth, containerWidth / countForTileSizing),
-                    minMediaBoxWidth,
-                );
-                videoWidth = currentVideoWidth;
-                videoHeight = undefined;
-                if (pipVerticalGrid) {
-                    maxVisibleVideosStore.set(Math.min(PIP_GRID_MAX_VIDEOS, pipSortWindowCount));
-                } else {
-                    maxVisibleVideosStore.set(Math.ceil(containerWidth / currentVideoWidth));
-                }
-            } else {
-                const currentVideoWidth = containerWidth;
-                const currentVideoHeight = currentVideoWidth * (9 / 16);
-                videoWidth = currentVideoWidth;
-                videoHeight = currentVideoHeight;
-                if (pipVerticalGrid) {
-                    maxVisibleVideosStore.set(Math.min(PIP_GRID_MAX_VIDEOS, pipSortWindowCount));
-                } else {
-                    maxVisibleVideosStore.set(Math.ceil(containerHeight / currentVideoHeight));
-                }
-            }
+        const oneLineCount = Math.max(1, $oneLineStreamableCollectionStore.length);
+        if (mode === "row") {
+            const currentVideoWidth = Math.max(
+                Math.min(maxMediaBoxWidth, containerWidth / oneLineCount),
+                minMediaBoxWidth,
+            );
+            videoWidth = currentVideoWidth;
+            videoHeight = undefined;
+            maxVisibleVideosStore.set(Math.ceil(containerWidth / currentVideoWidth));
+        } else if (mode === "pipGrid") {
+            // The grid sizes its tiles itself: only the number of tiles matters.
+            const pipTileCount = pipDockLocalCamera ? pipRemoteParticipantCount : oneLineCount;
+            maxVisibleVideosStore.set(Math.min(PIP_GRID_MAX_VIDEOS, pipTileCount));
         } else {
             const layout = calculateOptimalLayout(containerWidth, containerHeight);
             videoWidth = layout.videoWidth;
@@ -329,7 +301,7 @@
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         $oneLineStreamableCollectionStore;
 
-        if (isWebkit && isOnOneLine && oneLineMode === "horizontal") {
+        if (isWebkit && mode === "row") {
             setTimeout(() => {
                 if (camerasContainer) {
                     if (camerasContainer.scrollWidth > containerWidth) {
@@ -367,7 +339,7 @@
     let canScrollBottom = $state(false);
     // The boxes shown in the picture-in-picture grid, in display order (the docked local camera is shown apart).
     let pipVideoBoxes = $derived(
-        isPictureInPictureGridMode
+        mode === "pipGrid"
             ? (pipDockLocalCamera
                   ? excludeLocalCamera($orderedStreamableCollectionStore)
                   : $orderedStreamableCollectionStore
@@ -385,28 +357,22 @@
     // Position of each box in the display order (grid / row layouts) or in the picture-in-picture grid.
     let displayPositions = $derived(
         new Map<VideoBoxModel, number>(
-            (isPictureInPictureGridMode ? pipVideoBoxes : $orderedStreamableCollectionStore).map((box, index) => [
-                box,
-                index,
-            ]),
+            (mode === "pipGrid" ? pipVideoBoxes : $orderedStreamableCollectionStore).map((box, index) => [box, index]),
         ),
     );
 
     /**
      * Returns the layout of a box, or undefined if the box must not be displayed in the container (beyond the
      * picture-in-picture grid capacity, or local camera docked apart).
-     *
-     * The vertical one-line mode only exists in picture-in-picture, where it is always the picture-in-picture grid.
-     * So outside of that grid, a one-line layout is always a horizontal row.
      */
     function videoBoxLayout(videoBox: VideoBoxModel): VideoBoxLayout | undefined {
         const position = displayPositions.get(videoBox);
-        if (isPictureInPictureGridMode) {
+        if (mode === "pipGrid") {
             return position === undefined ? undefined : { kind: "pipGrid", tile: pipLayout.tiles[position] };
         }
         // Not ordered yet (should not happen, the ordered store derives synchronously from the displayed one): last.
         const order = position ?? $oneLineStreamableCollectionStore.length;
-        if (isOnOneLine) {
+        if (mode === "row") {
             return {
                 kind: "row",
                 order,
@@ -420,7 +386,7 @@
 
     function updateScrollIndicators() {
         if (!camerasContainer) return;
-        if (isPictureInPictureGridMode) {
+        if (mode === "pipGrid") {
             canScrollLeft = false;
             canScrollRight = false;
             canScrollTop = false;
@@ -430,7 +396,7 @@
         const { scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth, clientHeight } = camerasContainer;
         const threshold = 4; // pixels tolerance
 
-        if (isOnOneLine && oneLineMode === "horizontal") {
+        if (mode === "row") {
             canScrollTop = false;
             canScrollBottom = false;
             canScrollLeft = scrollWidth > clientWidth && scrollLeft > threshold;
@@ -472,62 +438,49 @@
     // Re-run scroll indicator check when layout or content changes
     $effect(() => {
         if (camerasContainer) {
-            const _exhaustiveCheck = [
-                $oneLineStreamableCollectionStore,
-                containerWidth,
-                containerHeight,
-                isOnOneLine,
-                oneLineMode,
-            ];
+            const _exhaustiveCheck = [$oneLineStreamableCollectionStore, containerWidth, containerHeight, mode];
             updateScrollIndicators();
         }
     });
 </script>
 
-<div
-    class="group/cameras-container w-full"
-    bind:clientHeight={maxContainerHeight}
-    class:h-full={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
->
+<div class="group/cameras-container w-full" bind:clientHeight={maxContainerHeight} class:h-full={mode !== "row"}>
     <div
         bind:clientWidth={containerWidth}
         bind:clientHeight={camerasContainerHeight}
         bind:this={camerasContainer}
         class="no-scroll-bar mx-1"
-        class:justify-center-safe={isOnOneLine && oneLineMode === "horizontal"}
-        class:justify-center={!isOnOneLine || oneLineMode !== "horizontal"}
+        class:justify-center-safe={mode === "row"}
+        class:justify-center={mode !== "row"}
         class:pointer-events-none={!grabPointerEvents}
         class:pointer-events-auto={grabPointerEvents}
-        class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
-        class:flex={!isPictureInPictureGridMode}
-        class:grid={isPictureInPictureGridMode}
-        style={isPictureInPictureGridMode
+        class:hidden={$highlightFullScreen && $highlightedEmbedScreen && mode !== "pipGrid"}
+        class:flex={mode !== "pipGrid"}
+        class:grid={mode === "pipGrid"}
+        style={mode === "pipGrid"
             ? `grid-template-columns: ${pipGridTemplateColumns(pipLayout.columnTracks)}; grid-template-rows: ${pipGridTemplateRows(pipLayout.rowTracks)};`
             : ""}
-        class:gap-2={isPictureInPictureGridMode}
-        class:p-2={isPictureInPictureGridMode}
-        class:gap-4={!isPictureInPictureGridMode}
-        class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
-        class:max-w-full={!isOnOneLine || (isOnOneLine && oneLineMode === "horizontal")}
-        class:flex-col={isOnOneLine && oneLineMode === "vertical" && !isPictureInPictureGridMode}
-        class:flex-wrap={!isOnOneLine}
-        class:content-start={!isOnOneLine}
-        class:whitespace-nowrap={isOnOneLine}
+        class:gap-2={mode === "pipGrid"}
+        class:p-2={mode === "pipGrid"}
+        class:gap-4={mode !== "pipGrid"}
+        class:max-h-full={mode === "row"}
+        class:max-w-full={mode !== "pipGrid"}
+        class:flex-wrap={mode === "grid"}
+        class:content-start={mode === "grid"}
+        class:whitespace-nowrap={mode !== "grid"}
         class:relative={true}
-        class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal" && !isPictureInPictureGridMode}
-        class:overflow-x-hidden={!isOnOneLine}
-        class:overflow-y-auto={!isOnOneLine ||
-            (isOnOneLine && oneLineMode === "vertical" && !isPictureInPictureGridMode)}
-        class:overflow-hidden={isPictureInPictureGridMode}
-        class:overflow-y-hidden={isOnOneLine && oneLineMode === "horizontal"}
-        class:pb-3={isOnOneLine && !$highlightedEmbedScreen}
-        class:m-0={isOnOneLine}
-        class:my-0={isOnOneLine}
-        class:w-full={!isOnOneLine && oneLineMode !== "horizontal"}
-        class:items-start={!isOnOneLine}
-        class:not-highlighted={!isOnOneLine}
-        class:mt-0={!isOnOneLine}
-        class:h-full={isOnOneLine && oneLineMode === "vertical"}
+        class:overflow-x-auto={mode === "row"}
+        class:overflow-x-hidden={mode === "grid"}
+        class:overflow-y-auto={mode === "grid"}
+        class:overflow-hidden={mode === "pipGrid"}
+        class:overflow-y-hidden={mode === "row"}
+        class:pb-3={mode !== "grid" && !$highlightedEmbedScreen}
+        class:m-0={mode !== "grid"}
+        class:my-0={mode !== "grid"}
+        class:items-start={mode === "grid"}
+        class:not-highlighted={mode === "grid"}
+        class:mt-0={mode === "grid"}
+        class:h-full={mode === "pipGrid"}
         class:m-2={$activePictureInPictureStore}
         id="cameras-container"
         data-testid="cameras-container"
@@ -543,7 +496,7 @@
                 <VideoBox
                     {videoBox}
                     {layout}
-                    intersectionObserver={isPictureInPictureGridMode ? undefined : intersectionObserver}
+                    intersectionObserver={mode === "pipGrid" ? undefined : intersectionObserver}
                 />
             {/if}
         {/each}
@@ -556,7 +509,7 @@
             <MediaBox videoBox={$myCameraPeerStore} />
         </div>
     {/if}
-    {#if !isOnOneLine}
+    {#if mode === "grid"}
         <ResizeHandle
             minHeight={maxContainerHeight * 0.1}
             maxHeight={maxContainerHeight * 0.9}
@@ -574,7 +527,7 @@
         />
     {/if}
     <!-- Scroll buttons: show when more cameras are available, click to scroll -->
-    {#if isOnOneLine && oneLineMode === "horizontal"}
+    {#if mode === "row"}
         {#if canScrollLeft}
             <button
                 type="button"

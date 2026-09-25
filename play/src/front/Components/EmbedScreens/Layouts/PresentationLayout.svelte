@@ -10,6 +10,7 @@
     import { isOnOneLine, playerMovedInTheLast10Seconds } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
+    import type { CamerasContainerMode } from "../../Video/VideoBoxLayout";
 
     interface Props {
         inPictureInPicture: boolean;
@@ -98,14 +99,14 @@
                 : "flex: 0 0 80%; max-height: 80%; min-height: 80%;"
             : "",
     );
-    let pipOneLineMode: "vertical" | "horizontal" = $derived(
-        pipHighlightLayoutEnabled
-            ? pipHighlightLandscape
-                ? "vertical"
-                : "horizontal"
-            : inPictureInPicture
-              ? "vertical"
-              : "horizontal",
+    // In picture-in-picture, the cameras fill a grid, except beside a portrait highlight where they form a row.
+    // ($isOnOneLine is always true in picture-in-picture.)
+    let camerasContainerMode: CamerasContainerMode = $derived(
+        (pipHighlightLayoutEnabled ? pipHighlightLandscape : inPictureInPicture)
+            ? "pipGrid"
+            : $isOnOneLine
+              ? "row"
+              : "grid",
     );
 </script>
 
@@ -128,7 +129,7 @@
                 style={pipCameraContainerStyle}
                 bind:this={camContainer}
             >
-                <CamerasContainer {oneLineMaxHeight} isOnOneLine={$isOnOneLine} oneLineMode={pipOneLineMode} />
+                <CamerasContainer {oneLineMaxHeight} mode={camerasContainerMode} />
             </div>
         {/if}
 
