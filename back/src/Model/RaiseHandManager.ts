@@ -1,14 +1,9 @@
 import type { Subscription } from "rxjs";
-import type { SpaceStateQuery, SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import type { SpaceState } from "@workadventure/shared-utils";
 import type { SpaceStateHost } from "./SpaceStateHost";
 import { isAdmin } from "./SpaceStateHost";
-
-export type RaiseHandQuery = Extract<
-    NonNullable<SpaceStateQuery["query"]>,
-    { $case: "raiseHand" | "lowerHand" | "giveFloor" | "revokeFloor" }
->;
 
 /**
  * Owns the `raisedHands` queue and the `floorHolders` list of a space's state.
@@ -30,54 +25,50 @@ export class RaiseHandManager {
         });
     }
 
-    public handleQuery(sender: SpaceUser, query: RaiseHandQuery): void {
-        switch (query.$case) {
-            case "raiseHand": {
-                this.space.updateState((state) => {
-                    if (!query.raiseHand.raised) {
-                        removeEntry(state.raisedHands, sender.spaceUserId);
-                    } else if (!state.raisedHands.some((entry) => entry.spaceUserId === sender.spaceUserId)) {
-                        state.raisedHands.push({ spaceUserId: sender.spaceUserId, name: sender.name, at: Date.now() });
-                    }
-                });
-                return;
+    /** Raises or lowers the sender's own hand. */
+    public raiseHand(sender: SpaceUser, raised: boolean): void {
+        this.space.updateState((state) => {
+            if (!raised) {
+                removeEntry(state.raisedHands, sender.spaceUserId);
+            } else if (!state.raisedHands.some((entry) => entry.spaceUserId === sender.spaceUserId)) {
+                state.raisedHands.push({ spaceUserId: sender.spaceUserId, name: sender.name, at: Date.now() });
             }
-            case "lowerHand": {
-                this.assertCanModerate(sender);
-                this.space.updateState((state) => {
-                    removeEntry(state.raisedHands, query.lowerHand.targetSpaceUserId);
-                });
-                return;
-            }
-            case "giveFloor": {
-                this.assertCanModerate(sender);
-                const target = this.getTarget(query.giveFloor.targetSpaceUserId);
-                this.space.updateState((state) => {
-                    removeEntry(state.raisedHands, target.spaceUserId);
-                    // In a proximity (ALL_USERS) space everyone already speaks: there is no floor to hold.
-                    if (
-                        this.space.filterType !== FilterType.ALL_USERS &&
-                        !state.floorHolders.some((entry) => entry.spaceUserId === target.spaceUserId)
-                    ) {
-                        state.floorHolders.push({ spaceUserId: target.spaceUserId, name: target.name });
-                    }
-                });
-                return;
-            }
-            case "revokeFloor": {
-                // A floor holder may always hand the floor back themselves.
-                if (query.revokeFloor.targetSpaceUserId !== sender.spaceUserId) {
-                    this.assertCanModerate(sender);
-                }
-                this.space.updateState((state) => {
-                    removeEntry(state.floorHolders, query.revokeFloor.targetSpaceUserId);
-                });
-                return;
-            }
-            default: {
-                const _exhaustiveCheck: never = query;
-            }
+        });
+    }
+
+    public lowerHand(sender: SpaceUser, targetSpaceUserId: string): void {
+        this.assertCanModerate(sender);
+        this.space.updateState((state) => {
+            removeEntry(state.raisedHands, targetSpaceUserId);
+        });
+    }
+
+    public giveFloor(sender: SpaceUser, targetSpaceUserId: string): void {
+        this.assertCanModerate(sender);
+        const target = this.space.getUser(targetSpaceUserId);
+        if (!target) {
+            throw new Error(`User ${targetSpaceUserId} is not in the space`);
         }
+        this.space.updateState((state) => {
+            removeEntry(state.raisedHands, target.spaceUserId);
+            // In a proximity (ALL_USERS) space everyone already speaks: there is no floor to hold.
+            if (
+                this.space.filterType !== FilterType.ALL_USERS &&
+                !state.floorHolders.some((entry) => entry.spaceUserId === target.spaceUserId)
+            ) {
+                state.floorHolders.push({ spaceUserId: target.spaceUserId, name: target.name });
+            }
+        });
+    }
+
+    public revokeFloor(sender: SpaceUser, targetSpaceUserId: string): void {
+        // A floor holder may always hand the floor back themselves.
+        if (targetSpaceUserId !== sender.spaceUserId) {
+            this.assertCanModerate(sender);
+        }
+        this.space.updateState((state) => {
+            removeEntry(state.floorHolders, targetSpaceUserId);
+        });
     }
 
     public destroy(): void {
@@ -99,14 +90,6 @@ export class RaiseHandManager {
             return;
         }
         throw new Error("Only a speaker or an admin can manage the floor");
-    }
-
-    private getTarget(spaceUserId: string): SpaceUser {
-        const target = this.space.getUser(spaceUserId);
-        if (!target) {
-            throw new Error(`User ${spaceUserId} is not in the space`);
-        }
-        return target;
     }
 }
 

@@ -666,34 +666,37 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     private async handleStateQuery(sender: SpaceUser, query: NonNullable<SpaceStateQuery["query"]>): Promise<void> {
         switch (query.$case) {
             case "raiseHand":
+                return this.raiseHandManager.raiseHand(sender, query.raiseHand.raised);
             case "lowerHand":
+                return this.raiseHandManager.lowerHand(sender, query.lowerHand.targetSpaceUserId);
             case "giveFloor":
-            case "revokeFloor": {
-                this.raiseHandManager.handleQuery(sender, query);
-                return;
-            }
-            case "startRecording": {
-                await this.startRecording(sender);
-                return;
-            }
-            case "stopRecording": {
-                await this.stopRecording(sender);
-                return;
-            }
+                return this.raiseHandManager.giveFloor(sender, query.giveFloor.targetSpaceUserId);
+            case "revokeFloor":
+                return this.raiseHandManager.revokeFloor(sender, query.revokeFloor.targetSpaceUserId);
+            case "startRecording":
+                return this.startRecording(sender);
+            case "stopRecording":
+                return this.stopRecording(sender);
             case "createPoll":
+                return this.proximityPollManager.create(sender, query.createPoll);
             case "votePoll":
+                return this.proximityPollManager.vote(sender, query.votePoll.pollId, query.votePoll.answerIds);
             case "closePoll":
-            case "deletePoll": {
-                this.proximityPollManager.handleQuery(sender, query);
-                return;
-            }
+                return this.proximityPollManager.close(sender, query.closePoll.pollId, query.closePoll.closingMessage);
+            case "deletePoll":
+                return this.proximityPollManager.delete(sender, query.deletePoll.pollId);
             case "askQuestion":
+                return this.proximityQAManager.ask(sender, query.askQuestion.body);
             case "upvoteQuestion":
+                return this.proximityQAManager.upvote(
+                    sender,
+                    query.upvoteQuestion.questionId,
+                    query.upvoteQuestion.upvoted,
+                );
             case "answerQuestion":
-            case "deleteQuestion": {
-                this.proximityQAManager.handleQuery(sender, query);
-                return;
-            }
+                return this.proximityQAManager.markAnswered(sender, query.answerQuestion.questionId);
+            case "deleteQuestion":
+                return this.proximityQAManager.delete(sender, query.deleteQuestion.questionId);
             default: {
                 const _exhaustiveCheck: never = query;
                 throw new Error("Unknown space state query");
