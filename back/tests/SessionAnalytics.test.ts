@@ -64,6 +64,58 @@ describe("SessionAnalytics", () => {
         expect(participations.map((row) => row.properties.airtimeSeconds)).toEqual([120, 120, 60]);
     });
 
+    it("splits a meeting that outgrew WebRTC into seconds per transport", () => {
+        const enqueue: Enqueue = vi.fn();
+        let now = Date.parse("2026-04-24T12:00:00.000Z");
+        let transport = "WEBRTC";
+        const analytics = new SessionAnalytics(
+            "space",
+            "world",
+            () => "area",
+            { enqueue },
+            () => now,
+            () => transport,
+        );
+
+        analytics.join(member("1"), true);
+        analytics.join(member("2"), true);
+        now += 60_000;
+        analytics.join(member("3"), true);
+        transport = "LIVEKIT";
+        analytics.transportChanged();
+        now += 120_000;
+        analytics.leave("room_1");
+        now += 30_000;
+        analytics.close();
+
+        const rows = rowsOf(enqueue);
+        const meeting = rows.find((row) => row.eventName === "meeting.ended");
+        expect(meeting?.properties).toMatchObject({ durationSeconds: 210, webrtcSeconds: 60, livekitSeconds: 150 });
+        // Each participation is clipped to the segments it overlapped.
+        expect(
+            rows
+                .filter((row) => row.eventName === "meeting.participation.ended")
+                .map((row) => [row.properties.webrtcSeconds, row.properties.livekitSeconds]),
+        ).toEqual([
+            [60, 120],
+            [60, 150],
+            [0, 150],
+        ]);
+    });
+
+    it("counts no transport for a space without media, and ignores a switch outside a session", () => {
+        const { analytics, enqueue } = harness("bubble");
+
+        analytics.transportChanged();
+        analytics.join(member("1"), true);
+        analytics.join(member("2"), true);
+        analytics.close();
+
+        expect(
+            rowsOf(enqueue).every((row) => row.properties.webrtcSeconds === 0 && row.properties.livekitSeconds === 0),
+        ).toBe(true);
+    });
+
     it("reports the meeting under the name the clients use, without the world prefix", () => {
         // The back holds spaces as `<world>.<name>`; the front's microphone and speech
         // rows carry `<name>`. Reported with the prefix, no meeting ever found its

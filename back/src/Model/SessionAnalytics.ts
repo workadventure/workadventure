@@ -35,9 +35,14 @@ type Participation = {
     spoke: boolean;
 };
 
+/** Which media transport carried the space from `fromMs` on. */
+type TransportSegment = { transport: string; fromMs: number };
+
 type Session = {
     kind: SpaceKind;
     openedAtMs: number;
+    /** In order; each segment runs until the next one starts, the last until the close. */
+    transports: TransportSegment[];
     participations: Map<string, Participation>;
     present: number;
     peak: number;
@@ -93,6 +98,13 @@ export class SessionAnalytics {
         private readonly kind: () => SpaceKind | undefined,
         private readonly queue: Pick<AnalyticsEventsQueue, "enqueue"> = analyticsEventsQueue,
         private readonly nowMs: () => number = Date.now,
+        /**
+         * The space's current media transport (`WEBRTC`, `LIVEKIT`, `NONE`). Read when a
+         * session opens and on every `transportChanged()`: a meeting that outgrows
+         * WebRTC switches to LiveKit mid-way, and the seconds each carried are what
+         * the admin bills and plans servers on.
+         */
+        private readonly transport: () => string = () => "NONE",
     ) {
         const worldPrefix = `${world}.`;
         this.meetingId = id.startsWith(worldPrefix) ? id.slice(worldPrefix.length) : id;
@@ -101,6 +113,19 @@ export class SessionAnalytics {
     /** The space learnt what it is: a session waiting on that may open now. */
     public kindChanged(): void {
         this.sync();
+    }
+
+    /** The space switched transport: the open session, if any, starts a new segment. */
+    public transportChanged(): void {
+        const session = this.session;
+        if (!session) {
+            return;
+        }
+        const transport = this.transport();
+        if (session.transports[session.transports.length - 1]?.transport === transport) {
+            return;
+        }
+        session.transports.push({ transport, fromMs: this.nowMs() });
     }
 
     public join(member: SessionMember, active: boolean): void {
@@ -205,6 +230,7 @@ export class SessionAnalytics {
                         // information under a broadcast kind.
                         role: participation.spoke ? "speaker" : "listener",
                         airtimeSeconds: participation.airtimeMs / 1000,
+                        ...this.transportSeconds(session, participation.startedAtMs, atMs),
                     },
                 }),
             );
@@ -226,6 +252,7 @@ export class SessionAnalytics {
                     peakParticipantCount: session.peak,
                     speakerCount,
                     ...interval(session.openedAtMs, endedAtMs),
+                    ...this.transportSeconds(session, session.openedAtMs, endedAtMs),
                 },
             }),
         );
@@ -248,6 +275,7 @@ export class SessionAnalytics {
         this.session = {
             kind,
             openedAtMs: this.nowMs(),
+            transports: [{ transport: this.transport(), fromMs: this.nowMs() }],
             participations: new Map(),
             present: 0,
             peak: 0,
@@ -289,6 +317,32 @@ export class SessionAnalytics {
             participation.airtimeMs += this.nowMs() - participation.onAirSinceMs;
             participation.onAirSinceMs = undefined;
         }
+    }
+
+    /**
+     * Seconds of [fromMs, toMs] each transport carried, clipped to the segments. The two
+     * are not required to add up to durationSeconds: a space with no media (`NONE`) is
+     * in neither.
+     */
+    private transportSeconds(
+        session: Session,
+        fromMs: number,
+        toMs: number,
+    ): { webrtcSeconds: number; livekitSeconds: number } {
+        const totals = { webrtcSeconds: 0, livekitSeconds: 0 };
+        session.transports.forEach((segment, index) => {
+            const segmentEndMs = session.transports[index + 1]?.fromMs ?? toMs;
+            const overlapMs = Math.min(segmentEndMs, toMs) - Math.max(segment.fromMs, fromMs);
+            if (overlapMs <= 0) {
+                return;
+            }
+            if (segment.transport === "WEBRTC") {
+                totals.webrtcSeconds += overlapMs / 1000;
+            } else if (segment.transport === "LIVEKIT") {
+                totals.livekitSeconds += overlapMs / 1000;
+            }
+        });
+        return totals;
     }
 
     private row(input: {
