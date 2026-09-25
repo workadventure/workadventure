@@ -723,6 +723,8 @@ export class SocketManager {
                 case "getSignedUrlQuery":
                 case "startRecordingQuery":
                 case "stopRecordingQuery":
+                case "bannedUsersQuery":
+                case "unbanUserQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }

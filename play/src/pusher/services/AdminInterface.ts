@@ -7,7 +7,7 @@ import type {
     RoomRedirect,
     Capabilities,
 } from "@workadventure/messages";
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { AdminBannedData, BannedUserData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { ShortMapDescriptionList } from "./ShortMapDescription";
 import type { WorldChatMembersData } from "./WorldChatMembersData";
 
@@ -114,6 +114,16 @@ export interface AdminInterface {
         message: string,
         byUserUuid: string,
     ): Promise<boolean>;
+
+    /**
+     * The bans of the world of playUri, for byUserUuid who must be an admin of that world.
+     */
+    listBannedUsers(playUri: string, byUserUuid: string): Promise<BannedUserData[]>;
+
+    /**
+     * Lifts one ban of the world of playUri, for byUserUuid who must be an admin of that world.
+     */
+    unbanUser(playUri: string, banId: string, byUserUuid: string): Promise<void>;
 
     getTagsList(roomUrl: string): Promise<string[]>;
 
