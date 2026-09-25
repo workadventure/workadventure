@@ -10,7 +10,7 @@ import type {
     ChatUser,
 } from "../ChatConnection";
 import { computePollState } from "./MatrixPollUtils";
-import { chatUserFactoryFromRoom } from "./MatrixChatUser";
+import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 
 export class MatrixChatLightPoll implements ChatPollItem {
     readonly id: string;
@@ -93,7 +93,6 @@ export class MatrixChatLightPoll implements ChatPollItem {
     }
 
     private getSender(): ChatUser | undefined {
-        const senderUserId = this.poll.rootEvent.getSender();
-        return senderUserId ? chatUserFactoryFromRoom(this.room, senderUserId) : undefined;
+        return chatUserFactoryFromEvent(this.room, this.poll.rootEvent);
     }
 }

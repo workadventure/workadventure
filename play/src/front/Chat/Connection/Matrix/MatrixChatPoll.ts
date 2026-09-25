@@ -16,7 +16,7 @@ import type {
 } from "../ChatConnection";
 import LL from "../../../../i18n/i18n-svelte";
 import { computePollState, type ComputedPollState } from "./MatrixPollUtils";
-import { chatUserFactoryFromRoom } from "./MatrixChatUser";
+import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 
 export class MatrixChatPoll implements ChatPollItem {
     id: string;
@@ -152,8 +152,7 @@ export class MatrixChatPoll implements ChatPollItem {
     }
 
     private getSender(): ChatUser | undefined {
-        const senderUserId = this.poll.rootEvent.getSender();
-        return senderUserId ? chatUserFactoryFromRoom(this.room, senderUserId) : undefined;
+        return chatUserFactoryFromEvent(this.room, this.poll.rootEvent);
     }
 
     private getEndEvent(): MatrixEvent | undefined {
