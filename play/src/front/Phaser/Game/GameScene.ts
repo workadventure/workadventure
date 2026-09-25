@@ -2211,8 +2211,8 @@ export class GameScene extends DirtyScene {
 
                 this._sayManager = new SayManager(this.connection, this.CurrentPlayer);
 
-                userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
-                userMessageManager.setReceiveKickListener(this.kickedUser.bind(this));
+                userMessageManager.setReceiveBanListener((reason) => this.ejectedUser("banned", reason));
+                userMessageManager.setReceiveKickListener((reason) => this.ejectedUser("kicked", reason));
 
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedInterface) => {
                     this.handleCurrentPlayerHasMovedEvent(event);
@@ -4483,34 +4483,21 @@ ${escapedMessage}
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
-    private bannedUser(reason = "") {
-        errorScreenStore.setError(
-            ErrorScreenMessage.fromPartial({
-                type: "error",
-                code: "USER_BANNED",
-                title: get(LL).report.banned.title(),
-                subtitle: get(LL).report.banned.subtitle(),
-                details: GameScene.detailsWithReason(get(LL).report.banned.details(), reason),
-            }),
-        );
-
-        this.cleanupClosingScene();
-
-        this.userInputManager.disableControls("errorScreen");
-        this.userInputManager.disableRightClick();
-    }
-
     /**
-     * A kick only ejects the user from the room: nothing is persisted, a reload brings them back.
+     * A ban is persisted by the admin; a kick only ejects the user from the room, a reload brings them back.
      */
-    private kickedUser(reason = "") {
+    private ejectedUser(kind: "banned" | "kicked", reason = "") {
+        const texts = get(LL).report[kind];
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({
                 type: "error",
-                code: "USER_KICKED",
-                title: get(LL).report.kicked.title(),
-                subtitle: get(LL).report.kicked.subtitle(),
-                details: GameScene.detailsWithReason(get(LL).report.kicked.details(), reason),
+                code: kind === "banned" ? "USER_BANNED" : "USER_KICKED",
+                title: texts.title(),
+                subtitle: texts.subtitle(),
+                details:
+                    reason.trim() === ""
+                        ? texts.details()
+                        : `${get(LL).report.reasonGiven({ reason })} ${texts.details()}`,
             }),
         );
 
@@ -4518,10 +4505,6 @@ ${escapedMessage}
 
         this.userInputManager.disableControls("errorScreen");
         this.userInputManager.disableRightClick();
-    }
-
-    private static detailsWithReason(details: string, reason: string): string {
-        return reason.trim() === "" ? details : `${get(LL).report.reasonGiven({ reason })} ${details}`;
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)

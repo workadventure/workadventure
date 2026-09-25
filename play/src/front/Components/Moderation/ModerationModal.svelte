@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { onDestroy, onMount, type Snippet } from "svelte";
-    import { modals } from "@wa-modals";
+    import { onMount, type Snippet } from "svelte";
     import Popup from "../Modal/Popup.svelte";
     import Button from "../UI/Button.svelte";
     import TextArea from "../Input/TextArea.svelte";
@@ -9,7 +8,7 @@
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { userIsAdminStore } from "../../Stores/GameStore";
-    import { inputFormFocusStore } from "../../Stores/UserInputStore";
+    import { modals } from "@wa-modals";
     import { IconAlertTriangle, IconArrowLeft, IconDoorExit, IconForbid, IconForbid2 } from "@wa-icons";
 
     interface Props {
@@ -33,12 +32,6 @@
 
     onMount(() => {
         userIsBlocked = blackListManager.isBlackListed(userUuid);
-        // Keep the keyboard out of the game while the moderator types.
-        inputFormFocusStore.set(true);
-    });
-
-    onDestroy(() => {
-        inputFormFocusStore.set(false);
     });
 
     function pick(next: Step) {
@@ -200,7 +193,7 @@
     {/snippet}
 
     {#snippet action()}
-        <Button class="flex-1" onclick={() => (step = undefined)}>
+        <Button class="flex-1" dataTestId="moderation-cancel" onclick={() => modals.close()}>
             {$LL.report.moderate.cancel()}
         </Button>
         <Button

@@ -794,13 +794,22 @@ export class SocketManager implements ZoneEventListener {
                 await this.emitBan(banPlayerMessage.banUserUuid, reason, "kicked", socketData.roomId);
                 return;
             }
-            await adminService.banUserByUuid(
-                banPlayerMessage.banUserUuid,
-                socketData.roomId,
-                banPlayerMessage.banUserName,
-                reason !== "" ? reason : `User banned by admin ${socketData.userUuid}`,
-                socketData.userUuid,
-            );
+            try {
+                await adminService.banUserByUuid(
+                    banPlayerMessage.banUserUuid,
+                    socketData.roomId,
+                    banPlayerMessage.banUserName,
+                    reason !== "" ? reason : `User banned by admin ${socketData.userUuid}`,
+                    socketData.userUuid,
+                );
+            } catch (e) {
+                // The ban could not be recorded (no admin back office, admin down...): still get the user out
+                // of the room, as a kick, since nothing will stop them from coming back.
+                Sentry.captureException(`Could not record the ban in "handleBanPlayerMessage" ${e}`);
+                console.error(`Could not record the ban in "handleBanPlayerMessage" ${e}`);
+                await this.emitBan(banPlayerMessage.banUserUuid, reason, "kicked", socketData.roomId);
+                return;
+            }
             await this.emitBan(banPlayerMessage.banUserUuid, reason, "banned", socketData.roomId);
         } catch (e) {
             Sentry.captureException(`An error occurred on "handleBanPlayerMessage" ${e}`);

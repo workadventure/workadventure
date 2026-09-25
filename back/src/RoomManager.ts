@@ -567,7 +567,13 @@ const roomManager = {
     ban(call: ServerUnaryCall<BanMessage, Empty>, callback: sendUnaryData<Empty>): void {
         // FIXME Work in progress
         socketManager
-            .banUser(call.request.roomId, call.request.recipientUuid, call.request.message, call.request.type)
+            .banUser(
+                call.request.roomId,
+                call.request.recipientUuid,
+                call.request.message,
+                // The type ends up in the ejected user's client: only let through the two it knows.
+                call.request.type === "kicked" ? "kicked" : "banned",
+            )
             .catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);

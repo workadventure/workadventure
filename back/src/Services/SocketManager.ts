@@ -1131,7 +1131,12 @@ export class SocketManager {
      * Ejects a user from the room.
      * @param type "banned" (permanent, persisted by the admin) or "kicked" (ejection only)
      */
-    public async banUser(roomId: string, recipientUuid: string, message: string, type = "banned"): Promise<void> {
+    public async banUser(
+        roomId: string,
+        recipientUuid: string,
+        message: string,
+        type: "banned" | "kicked" = "banned",
+    ): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             console.error(
