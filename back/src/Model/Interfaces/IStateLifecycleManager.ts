@@ -11,6 +11,9 @@ export interface IStateLifecycleManager {
      */
     getCurrentState(): ICommunicationState<ICommunicationStrategy>;
 
+    /** Called right after the current state changed, before the new one is initialized. */
+    onTransition?: () => void;
+
     /**
      * Transitions to a new state.
      * Handles:

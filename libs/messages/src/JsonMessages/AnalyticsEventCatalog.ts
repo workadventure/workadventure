@@ -50,7 +50,29 @@ export const meetingKindSchema = spaceKindSchema;
  * the client reports it, and what it measures is time spent in the AREA and not in
  * the call.
  */
-export const reportedMeetingKindSchema = z.enum([
+export /**
+ * Seconds of a back-measured interval each media transport carried. A meeting that
+ * outgrows WebRTC switches to LiveKit mid-way, so one field naming "the" provider would
+ * be wrong for exactly the meetings that cost server capacity.
+ */
+const transportSecondsProperties = {
+  webrtcSeconds: z
+    .number()
+    .nonnegative()
+    .optional()
+    .describe(
+      "Seconds carried peer-to-peer over WebRTC. With livekitSeconds, adds up to durationSeconds unless the space had no media at all. Filled by the back only.",
+    ),
+  livekitSeconds: z
+    .number()
+    .nonnegative()
+    .optional()
+    .describe(
+      "Seconds carried by the LiveKit SFU, which the space switches to past the WebRTC size limit or to record. Filled by the back only.",
+    ),
+};
+
+const reportedMeetingKindSchema = z.enum([
   ...meetingKindSchema.options,
   "external",
 ]);
@@ -847,6 +869,7 @@ export const ANALYTICS_EVENTS = {
         .describe(
           "How many distinct people were on air at any point. In a bubble or an area everyone is, so it equals participantCount there; it only says something under a broadcast kind. Absent on the rows a client opens.",
         ),
+      ...transportSecondsProperties,
     }),
     endReasonDescription:
       "`socket_closed` and the `pusher_*` values mean the client never got to close it — a tab closed mid-meeting, or the pusher restarted.",
@@ -1534,6 +1557,7 @@ export const ANALYTICS_EVENTS = {
           .describe(
             "This person's own time on air, summed over their stints. Equals durationSeconds in a bubble or an area; zero for a listener. Never to be summed into conversation time: broadcasting is not collaborating, and neither is listening.",
           ),
+        ...transportSecondsProperties,
       })
       .merge(sessionIntervalProperties),
     description:
