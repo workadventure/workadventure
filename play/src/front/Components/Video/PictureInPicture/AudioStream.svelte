@@ -121,6 +121,20 @@
         if (destroyed || context.state !== "running") {
             return false;
         }
+        // Without this, the fallback plays on the OS default output instead of the speaker the user picked
+        // (AudioContext.setSinkId: Chromium 110+, not in TypeScript's DOM lib yet)
+        const sinkContext = context as AudioContext & { setSinkId?: (sinkId: string) => Promise<void> };
+        if (outputDeviceId && sinkContext.setSinkId) {
+            try {
+                await sinkContext.setSinkId(outputDeviceId);
+            } catch (e) {
+                debug("Could not route the WebAudio playback fallback to the selected speaker", e);
+            }
+            if (destroyed) {
+                return false;
+            }
+        }
+        // Checked after the awaits: playAudio() may have started a concurrent fallback for the same stream
         if (webAudioStream === stream && webAudioSource && webAudioGain) {
             return true;
         }
@@ -248,5 +262,6 @@
 </script>
 
 {#if !$isBlocked}
-    <audio bind:this={audioElement} autoplay={true}></audio>
+    <!-- The element may start on its own (autoplay) after the fallback took over: never play the stream twice -->
+    <audio bind:this={audioElement} autoplay={true} onplaying={stopWebAudioPlayback}></audio>
 {/if}
