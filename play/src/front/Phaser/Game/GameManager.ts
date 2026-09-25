@@ -9,7 +9,6 @@ import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
 import { showHelpCameraSettings } from "../../Stores/HelpSettingsStore";
 import {
-    availabilityStatusStore,
     requestedCameraDeviceIdStore,
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
@@ -472,7 +471,7 @@ export class GameManager {
             }
         });
 
-        const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
+        const matrixChatConnection = new MatrixChatConnection(matrixClientPromise);
         this._chatConnection = matrixChatConnection;
 
         this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
