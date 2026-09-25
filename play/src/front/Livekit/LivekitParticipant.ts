@@ -14,7 +14,7 @@ import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerMana
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
-import { videoQualityStore } from "../Stores/MediaStore";
+import { createVolumeStore, videoQualityStore } from "../Stores/MediaStore";
 import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 
 import { subscribeToVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
@@ -35,6 +35,11 @@ export class LiveKitParticipant {
     private _audioScreenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(
         undefined,
     );
+
+    // Volume meters (7-bar SoundMeter spectrum) derived from the LiveKit audio streams.
+    // Built once and shared, mirroring the WebRTC path (see RemotePeer.ts).
+    private readonly _videoVolumeStore: Readable<number[] | undefined>;
+    private readonly _screenShareVolumeStore: Readable<number[] | undefined>;
 
     private _nameStore: Writable<string>;
     private _hasVideo = writable<boolean>(false);
@@ -113,6 +118,16 @@ export class LiveKitParticipant {
         this._nameStore = writable(this.participant.name);
         this.videoWebrtcStats = this.getWebrtcStats("video");
         this.screenShareWebrtcStats = this.getWebrtcStats("screenShare");
+        this._videoVolumeStore = derived<Readable<MediaStream | undefined>, number[] | undefined>(
+            this._audioStreamStore,
+            ($audioStream, set) => createVolumeStore($audioStream, set),
+            undefined,
+        );
+        this._screenShareVolumeStore = derived<Readable<MediaStream | undefined>, number[] | undefined>(
+            this._audioScreenShareStreamStore,
+            ($audioStream, set) => createVolumeStore($audioStream, set),
+            undefined,
+        );
         for (const publication of this.participant.getTrackPublications()) {
             if (publication.isLocal) {
                 continue;
@@ -540,7 +555,7 @@ export class LiveKitParticipant {
                 ),
                 acquireVideoSubscription: () => this.acquireVideoSubscription("camera"),
             },
-            volumeStore: writable(undefined),
+            volumeStore: this._videoVolumeStore,
             volume: writable(this.defaultVolume),
             closeStreamable: () => {},
             canCloseStreamable: () => false,
@@ -573,7 +588,7 @@ export class LiveKitParticipant {
                 ),
                 acquireVideoSubscription: () => this.acquireVideoSubscription("screenShare"),
             },
-            volumeStore: writable(undefined),
+            volumeStore: this._screenShareVolumeStore,
             volume: writable(this.defaultVolume),
             closeStreamable: () => {},
             canCloseStreamable: () => false,
