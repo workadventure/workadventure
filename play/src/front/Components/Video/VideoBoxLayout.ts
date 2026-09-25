@@ -18,3 +18,8 @@ export type VideoBoxLayout =
     | { kind: "row"; order: number; width: number; isFirst: boolean; isLast: boolean }
     // Picture-in-picture window: the box fills its tile of the CSS grid.
     | { kind: "pipGrid"; tile: PipGridTile };
+
+/**
+ * How the cameras container lays its boxes out. Every box of the container gets a layout of this kind.
+ */
+export type CamerasContainerMode = VideoBoxLayout["kind"];
