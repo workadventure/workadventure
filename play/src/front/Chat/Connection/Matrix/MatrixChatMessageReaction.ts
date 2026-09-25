@@ -6,7 +6,7 @@ import { get, writable } from "svelte/store";
 import type { ChatMessageReaction, ChatUser } from "../ChatConnection";
 import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../../../types/component";
 import ReactionIcon from "../../Components/Room/ReactionIcon.svelte";
-import { chatUserFactoryFromRoom } from "./MatrixChatUser";
+import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 
 type EventId = string;
 type ChatUserWithEventId = ChatUser & { eventId: EventId };
@@ -46,17 +46,19 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
                     .getState(Direction.Backward)
                     ?.maySendEvent(EventType.Reaction, this.matrixRoom.client.getSafeUserId()) ?? false,
             );
-        this.addUser(event.getSender(), event.getId());
+        this.addUser(event);
     }
 
-    public addUser(userId: string | undefined, userReactionEventId: string | undefined) {
+    public addUser(event: MatrixEvent) {
+        const userId = event.getSender();
+        const userReactionEventId = event.getId();
         if (userId === undefined || userReactionEventId === undefined) {
             return;
         }
         if (this.users.get(userId) !== undefined) {
             return;
         }
-        const user = chatUserFactoryFromRoom(this.matrixRoom, userId);
+        const user = chatUserFactoryFromEvent(this.matrixRoom, event);
         if (user) {
             this.users.set(user.chatId, {
                 ...user,

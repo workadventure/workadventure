@@ -371,7 +371,7 @@ export class MatrixChatThread implements ChatThread {
 
         const existingReaction = message.reactions.get(reactionKey);
         if (existingReaction) {
-            existingReaction.addUser(event.getSender(), event.getId());
+            existingReaction.addUser(event);
             return;
         }
 

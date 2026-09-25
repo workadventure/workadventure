@@ -1563,7 +1563,7 @@ export class MatrixChatRoom
             if (existingMessageWithReactions) {
                 const existingMessageReaction = existingMessageWithReactions.reactions.get(reactionKey);
                 if (existingMessageReaction) {
-                    existingMessageReaction.addUser(event.getSender(), event.getId());
+                    existingMessageReaction.addUser(event);
                     return;
                 }
                 existingMessageWithReactions.reactions.set(

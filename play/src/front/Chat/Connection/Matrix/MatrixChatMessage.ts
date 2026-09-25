@@ -13,7 +13,7 @@ import type {
     ChatUser,
 } from "../ChatConnection";
 import { canRenderImageOrVideoInline } from "../../../Utils/InlineMimeType";
-import { chatUserFactoryFromRoom } from "./MatrixChatUser";
+import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
 import { resolveAttachmentMediaFromEvent, resolveImageMediaFromEvent } from "./MatrixMediaResolver";
@@ -101,8 +101,7 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     private getSender() {
-        const senderUserId = this.event.getSender();
-        return senderUserId ? chatUserFactoryFromRoom(this.room, senderUserId) : undefined;
+        return chatUserFactoryFromEvent(this.room, this.event);
     }
 
     private initMessageContent(): Writable<ChatMessageContent> {

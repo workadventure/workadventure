@@ -2,6 +2,7 @@ import type { IContent, MatrixEvent, Room } from "matrix-js-sdk";
 import type { IThreadBundledRelationship } from "matrix-js-sdk/lib/models/event";
 import type { Thread } from "matrix-js-sdk/lib/models/thread";
 import type { ChatThreadSummary } from "../ChatConnection";
+import { getEventSenderMember } from "./MatrixChatUser";
 
 type ThreadRelationContent = {
     rel_type: "m.thread";
@@ -123,11 +124,11 @@ function getEventPreview(event: MatrixEvent | undefined): string | undefined {
 
 function getEventSenderName(event: MatrixEvent | undefined, room: Room): string | undefined {
     const senderId = event?.getSender();
-    if (!senderId) {
+    if (!event || !senderId) {
         return undefined;
     }
 
-    return room.getMember(senderId)?.name ?? senderId;
+    return getEventSenderMember(room, event)?.name ?? senderId;
 }
 
 function getRawEventPreview(event: { content?: IContent } | undefined): string | undefined {

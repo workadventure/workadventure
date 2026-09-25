@@ -1,4 +1,4 @@
-import type { MatrixClient, Room, User } from "matrix-js-sdk";
+import type { MatrixClient, MatrixEvent, Room, RoomMember, User } from "matrix-js-sdk";
 import { SetPresence } from "matrix-js-sdk";
 import { readable, writable, type Writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
@@ -38,9 +38,27 @@ export const chatUserFactory: (
     };
 };
 
-export function chatUserFactoryFromRoom(room: Room, userId: string): ChatUser | undefined {
+/**
+ * The sender as they were when the event was sent, like Element: a later rename does not change older messages.
+ * This is also the only place the name of someone who only appears in older history is, as lazy-loaded members
+ * leave them out of the room's current state.
+ */
+export function getEventSenderMember(room: Room, event: MatrixEvent): RoomMember | null {
+    // Without a membership event, the SDK's sentinel is a blank member whose name is the user ID.
+    if (event.sender?.events.member) {
+        return event.sender;
+    }
+    const senderId = event.getSender();
+    return senderId ? room.getMember(senderId) : null;
+}
+
+export function chatUserFactoryFromEvent(room: Room, event: MatrixEvent): ChatUser | undefined {
+    const userId = event.getSender();
+    if (!userId) {
+        return undefined;
+    }
     const matrixUser = room.client.getUser(userId);
-    const roomMember = room.getMember(userId);
+    const roomMember = getEventSenderMember(room, event);
     const displayName =
         roomMember?.name?.trim() || matrixUser?.displayName?.trim() || matrixUser?.rawDisplayName?.trim();
     const pictureUrl = roomMember?.getAvatarUrl(room.client.baseUrl, 48, 48, "scale", false, false) ?? undefined;
