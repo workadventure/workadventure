@@ -37,9 +37,6 @@ interface SetNewStreamableOptions {
 export class VideoBox {
     private readonly _streamable: Writable<Streamable | undefined>;
     private readonly _streamables: Writable<VideoBoxStreamableEntry[]>;
-    // The order in which the video boxes are displayed. Lower means more to the left/top.
-    // The displayOrder is derived from the priority using the StableNSorter.
-    public readonly displayOrder: Writable<number> = writable(0);
     // Timestamp of the last time the streamable was speaking
     public lastSpeakTimestamp?: number;
     public boxStyle?: { [key: string]: unknown };
@@ -62,18 +59,16 @@ export class VideoBox {
         // From 1000 - 2000: other screen sharing streams
         // 2000+: other streams
         public priority: number,
-        displayOrder: number,
         // If true, the video box is a megaphone space
         public readonly isMegaphoneSpace = false,
     ) {
         this._streamable = writable(undefined);
         this._streamables = writable([]);
-        this.displayOrder = writable(displayOrder);
         this.setNewStreamable(streamable);
     }
 
     public static fromLocalStreamable(streamable: Streamable, priority: number): VideoBox {
-        return new VideoBox(streamable.uniqueId, localSpaceUser(get(streamable.name)), streamable, priority, 9999);
+        return new VideoBox(streamable.uniqueId, localSpaceUser(get(streamable.name)), streamable, priority);
     }
 
     public static fromRemoteSpaceUser(
@@ -89,7 +84,6 @@ export class VideoBox {
             isScreenSharing
                 ? SCREEN_SHARE_STARTING_PRIORITY
                 : idleVideoBoxPriority(spaceUser.cameraState, undefined, Date.now()),
-            9999,
             isMegaphoneSpace,
         );
     }
