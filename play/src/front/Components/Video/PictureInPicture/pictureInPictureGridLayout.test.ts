@@ -18,13 +18,13 @@ describe("pictureInPictureGridLayout", () => {
         });
 
         it("uses landscape mode when width >= height", () => {
-            // Below isFullWidth (width > height × 3) so we exercise the ratio-based 2‑video row, not « plein cadre » strip.
+            // Below isFullWidth (width > height × 3) so we exercise the ratio-based 2‑video row, not the single-row strip.
             const layout = computePictureInPictureGridLayout(2, 300, 100);
 
             expect(layout.portrait).toBe(false);
             expect(layout.columnTracks).toBe(2);
             expect(layout.rowTracks).toBe(1);
-            expect(layout.description).toContain("paysage");
+            expect(layout.description).toContain("landscape");
         });
 
         it("is landscape when height equals width", () => {
@@ -42,7 +42,7 @@ describe("pictureInPictureGridLayout", () => {
             expect(layout.columnTracks).toBe(5);
             expect(layout.rowTracks).toBe(1);
             expect(layout.tiles).toHaveLength(5);
-            expect(layout.description).toContain("plein cadre");
+            expect(layout.description).toContain("single row");
         });
     });
 
