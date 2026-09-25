@@ -4,6 +4,12 @@ import { SKIP_RENDER_OPTIMIZATIONS } from "../../Enum/EnvironmentVariable";
 import { ResizableScene } from "../Login/ResizableScene";
 
 /**
+ * Minimum time between two game steps: caps the game at 60 steps (hence renders) per second on high refresh rate
+ * screens. Without it the game steps at the display refresh rate, 120 or 144 times per second.
+ */
+const MIN_STEP_INTERVAL = 1000 / 60;
+
+/**
  * A specialization of the main Phaser Game scene.
  * It comes with an optimization to skip rendering.
  *
@@ -26,6 +32,9 @@ export class Game extends Phaser.Game {
         });
     }
 
+    private nextStepTime = 0;
+    private skippedDelta = 0;
+
     public step(time: number, delta: number) {
         // @ts-ignore
         if (this.pendingDestroy) {
@@ -36,6 +45,20 @@ export class Game extends Phaser.Game {
         if (this.isPaused) {
             return;
         }
+
+        // Phaser's own `fps.limit` is not used: it hands its leftover time to the step and carries it over too, so the
+        // physics runs up to 40% too fast. Skipped frames add their delta up instead, and the next step gets exactly it.
+        // The 1 ms tolerance keeps a 60 Hz screen from dropping frames on timestamp jitter.
+        if (time < this.nextStepTime - 1) {
+            this.skippedDelta += delta;
+            return;
+        }
+        this.nextStepTime =
+            time - this.nextStepTime > MIN_STEP_INTERVAL
+                ? time + MIN_STEP_INTERVAL
+                : this.nextStepTime + MIN_STEP_INTERVAL;
+        delta += this.skippedDelta;
+        this.skippedDelta = 0;
 
         const eventEmitter = this.events;
 
