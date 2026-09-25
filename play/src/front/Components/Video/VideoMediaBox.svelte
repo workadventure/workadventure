@@ -97,6 +97,11 @@
             $microphoneStateStore === true &&
             $hasAudioStore === false,
     );
+    // A muted P2P peer keeps its audio track (paused sender, see RemotePeer): hasAudio alone would still show it as
+    // speaking. Only for remote cameras: the local user's space state is a constant, and a screen share carries tab audio.
+    let remoteMicrophoneMuted = $derived(
+        streamable?.videoType === "video" && !isLocalUser && $microphoneStateStore === false,
+    );
     // Like audioStateMismatch, but with a 3 seconds delay.
     let showAudioStateMismatch = $state(false);
     let loggedAudioMismatchKey: string | undefined = undefined;
@@ -418,7 +423,7 @@
                                     class:text-white={$activePictureInPictureStore}
                                     class:opacity-20={$activePictureInPictureStore}
                                 >
-                                    {#if $hasAudioStore && !audioStateMismatch}
+                                    {#if $hasAudioStore && !remoteMicrophoneMuted && !audioStateMismatch}
                                         <SoundMeterWidget
                                             volume={volumeMeter}
                                             cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"

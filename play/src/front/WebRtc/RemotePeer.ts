@@ -107,6 +107,8 @@ export class RemotePeer extends Peer implements Streamable {
     // Cuts the video if the viewer never tells us how it displays it (see VIEWER_REPORT_TIMEOUT_MS)
     private viewerReportTimeout: ReturnType<typeof setTimeout> | undefined;
     private videoEncodingRetryTimeout: ReturnType<typeof setTimeout> | undefined;
+    // While muted, the audio sender is kept but sends nothing: simple-peer still knows it by this (stopped) track
+    private pausedAudioTrack: MediaStreamTrack | undefined;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -320,7 +322,7 @@ export class RemotePeer extends Peer implements Streamable {
                     if (this.isReceivingStream) {
                         this.isReceivingStream = false;
                     }
-                    if (!this.localStream || this.preparingClose) {
+                    if (!this.isSendingStream || this.preparingClose) {
                         // If the remote stream stopped and we are not sending a local stream, close the connection.
                         // The remote peer decided to stop: not a failure, so no retry.
                         this.intentionalClose = true;
@@ -575,6 +577,7 @@ export class RemotePeer extends Peer implements Streamable {
             try {
                 if (streamValue === undefined || streamValue.type !== "success" || !streamValue.stream) {
                     if (this.localStream) {
+                        this.removePausedAudioSender();
                         this.removeStream(this.localStream);
                     }
                     this.localStream = undefined;
@@ -644,19 +647,49 @@ export class RemotePeer extends Peer implements Streamable {
                             this.localStream.removeTrack(oldAudioTrack);
                         }
                     } else if (newAudioTrack && !oldAudioTrack) {
-                        debug("Adding audio track in P2P connection");
                         this.localStream.addTrack(newAudioTrack);
-                        this.addTrack(newAudioTrack, this.localStream);
+                        const pausedAudioTrack = this.pausedAudioTrack;
+                        this.pausedAudioTrack = undefined;
+                        if (pausedAudioTrack) {
+                            debug("Resuming audio track in P2P connection");
+                            try {
+                                this.replaceTrack(pausedAudioTrack, newAudioTrack, this.localStream);
+                            } catch (e) {
+                                // Never stay silent: a new sender costs a renegotiation, nothing more
+                                Sentry.captureException(e);
+                                this.addTrack(newAudioTrack, this.localStream);
+                            }
+                        } else {
+                            debug("Adding audio track in P2P connection");
+                            this.addTrack(newAudioTrack, this.localStream);
+                        }
                     } else if (oldAudioTrack && !newAudioTrack) {
-                        debug("Removing audio track in P2P connection");
+                        // On mute, keep the sender and send nothing, as LiveKit does with pauseUpstream(). Removing it
+                        // would renegotiate on every mute and unmute, add a new m-line each time, and hand the viewer a
+                        // new track: its <audio> element and jitter buffer would start over, and a new <audio> cannot
+                        // start playing in picture-in-picture (no user activation there).
+                        const audioSender = (this._pc as RTCPeerConnection | undefined)
+                            ?.getSenders()
+                            .find((sender) => sender.track === oldAudioTrack);
                         try {
-                            this.removeTrack(oldAudioTrack, this.localStream);
+                            if (audioSender) {
+                                debug("Pausing audio track in P2P connection");
+                                this.pausedAudioTrack = oldAudioTrack;
+                                audioSender.replaceTrack(null).catch((e: unknown) => {
+                                    console.error("Could not pause the audio track in P2P connection", e);
+                                    Sentry.captureException(e);
+                                });
+                            } else {
+                                debug("Removing audio track in P2P connection");
+                                this.removeTrack(oldAudioTrack, this.localStream);
+                            }
                         } finally {
                             this.localStream.removeTrack(oldAudioTrack);
                         }
                     }
 
-                    if (!newAudioTrack && !newVideoTrack) {
+                    // A paused audio sender still belongs to this stream: keep the stream for the unmute
+                    if (!newAudioTrack && !newVideoTrack && !this.pausedAudioTrack) {
                         debug("No tracks left, removing stream in P2P connection");
                         // No tracks left, remove the stream
                         this.removeStream(this.localStream);
@@ -936,10 +969,22 @@ export class RemotePeer extends Peer implements Streamable {
         return this._connectionId;
     }
 
+    /**
+     * Removes the sender paused on mute (see pausedAudioTrack): the stream it belongs to is going away, and a sender
+     * left behind could not be resumed from another stream.
+     */
+    private removePausedAudioSender(): void {
+        if (this.pausedAudioTrack && this.localStream) {
+            this.removeTrack(this.pausedAudioTrack, this.localStream);
+        }
+        this.pausedAudioTrack = undefined;
+    }
+
     public stopStreamToRemoteUser() {
         if (!this.localStream) {
             return;
         }
+        this.removePausedAudioSender();
         this.removeStream(this.localStream);
         this.localStream = undefined;
         this.write(
@@ -959,7 +1004,8 @@ export class RemotePeer extends Peer implements Streamable {
      * Returns true when this peer is sending a media stream to the remote peer.
      */
     public get isSendingStream(): boolean {
-        return this.localStream !== undefined;
+        // While muted with the camera off, the stream is kept (empty) for the paused audio sender: nothing is sent
+        return this.localStream !== undefined && this.localStream.getTracks().length > 0;
     }
 
     /**
@@ -1047,6 +1093,7 @@ export class RemotePeer extends Peer implements Streamable {
                 console.warn("RemotePeer::dispatchStream called with the same MediaStream as already set. Ignoring.");
                 return;
             }
+            this.removePausedAudioSender();
             this.removeStream(this.localStream);
         }
         this.localStream = mediaStream;
