@@ -1,5 +1,5 @@
-import { modals } from "@wa-modals";
 import ModerationModal from "./ModerationModal.svelte";
+import { modals } from "@wa-modals";
 
 /**
  * Single entry point for the moderation actions on another user (block, report, kick, ban).
