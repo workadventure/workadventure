@@ -2,7 +2,6 @@
     import { onMount } from "svelte";
     import MediaBox from "../Video/MediaBox.svelte";
     import type { VideoBox } from "../../Space/VideoBox";
-    import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import type { TokenRemovalHandle } from "../../Utils/TokenBucket";
     import type { DocumentPictureInPictureEvent } from "./PictureInPicture/PictureInPictureWindow";
@@ -144,11 +143,10 @@
         switch (layout.kind) {
             case "pipGrid":
                 return "h-full w-full min-h-0 min-w-0";
-            case "row": {
-                const isFirst = layout.order === 0;
-                const isLast = layout.order === $oneLineStreamableCollectionStore.length - 1;
-                return `aspect-video basis-40 shrink-0 min-w-40 grow ${isFirst ? "ml-auto" : ""} ${isLast ? "mr-auto" : ""}`;
-            }
+            case "row":
+                return `aspect-video basis-40 shrink-0 min-w-40 grow ${layout.isFirst ? "ml-auto" : ""} ${
+                    layout.isLast ? "mr-auto" : ""
+                }`;
             case "grid":
                 return `shrink-0 ${layout.height === undefined ? "aspect-video" : ""}`;
         }

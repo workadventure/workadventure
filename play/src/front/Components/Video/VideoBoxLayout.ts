@@ -11,6 +11,10 @@ export type VideoBoxLayout =
     // Multi-line layout, the videos wrap. Without a height, the box keeps a 16:9 ratio.
     | { kind: "grid"; order: number; width: number; height?: number }
     // Single horizontal line. The box keeps a 16:9 ratio.
-    | { kind: "row"; order: number; width: number }
+    // isFirst / isLast give the first and last boxes an auto margin: this centers the row when it fits and keeps it
+    // left-aligned (so fully scrollable) when it overflows. The container also has "justify-content: safe center",
+    // which does the same, but "safe" is only supported from Chrome 115 / Safari 17.6. When those versions are old
+    // enough, isFirst and isLast can be dropped.
+    | { kind: "row"; order: number; width: number; isFirst: boolean; isLast: boolean }
     // Picture-in-picture window: the box fills its tile of the CSS grid.
     | { kind: "pipGrid"; tile: PipGridTile };

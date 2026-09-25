@@ -407,7 +407,13 @@
         // Not ordered yet (should not happen, the ordered store derives synchronously from the displayed one): last.
         const order = position ?? $oneLineStreamableCollectionStore.length;
         if (isOnOneLine) {
-            return { kind: "row", order, width: videoWidth };
+            return {
+                kind: "row",
+                order,
+                width: videoWidth,
+                isFirst: order === 0,
+                isLast: order === $orderedStreamableCollectionStore.length - 1,
+            };
         }
         return { kind: "grid", order, width: videoWidth, height: videoHeight };
     }
