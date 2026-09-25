@@ -11,10 +11,12 @@ import { ProximityQAManager } from "../src/Model/ProximityQAManager";
 function fakeSpace(filterType: SpaceStateHost["filterType"], ...partialUsers: Partial<SpaceUser>[]) {
     const users = partialUsers.map((user) => SpaceUser.fromPartial(user));
     const userRemoved$ = new Subject<SpaceUser>();
+    const userUpdated$ = new Subject<{ user: SpaceUser; previous: SpaceUser }>();
     let state: SpaceState = emptySpaceState();
     const host: SpaceStateHost = {
         filterType,
         userRemoved$,
+        userUpdated$,
         getUser: (spaceUserId) => users.find((user) => user.spaceUserId === spaceUserId),
         getState: () => state,
         updateState: (mutate) => {
@@ -28,7 +30,14 @@ function fakeSpace(filterType: SpaceStateHost["filterType"], ...partialUsers: Pa
         if (!found) throw new Error(`no user ${spaceUserId}`);
         return found;
     };
-    return { host, userRemoved$, user, state: () => state };
+    // What Space.updateUser does: merge the change, then tell what the user looked like before.
+    const updateUser = (spaceUserId: string, changes: Partial<SpaceUser>) => {
+        const updated = user(spaceUserId);
+        const previous = { ...updated };
+        Object.assign(updated, changes);
+        userUpdated$.next({ user: updated, previous });
+    };
+    return { host, userRemoved$, user, updateUser, state: () => state };
 }
 
 describe("RaiseHandManager", () => {
@@ -95,6 +104,26 @@ describe("RaiseHandManager", () => {
         manager.giveFloor(user("b"), "a");
 
         expect(state().raisedHands).toEqual([]);
+        expect(state().floorHolders).toEqual([]);
+    });
+
+    it("drops a floor holder who stops streaming, but not one who has not started yet", () => {
+        const { host, user, updateUser, state } = fakeSpace(
+            FilterType.LIVE_STREAMING_USERS,
+            { spaceUserId: "speaker", name: "Sam", megaphoneState: true },
+            { spaceUserId: "guest", name: "Gus" },
+        );
+        const manager = new RaiseHandManager(host);
+        manager.giveFloor(user("speaker"), "guest");
+
+        // Given the floor, not streaming yet: an unrelated update keeps them as floor holder.
+        updateUser("guest", { cameraState: true });
+        expect(state().floorHolders).toHaveLength(1);
+
+        updateUser("guest", { megaphoneState: true });
+        expect(state().floorHolders).toHaveLength(1);
+
+        updateUser("guest", { megaphoneState: false });
         expect(state().floorHolders).toEqual([]);
     });
 

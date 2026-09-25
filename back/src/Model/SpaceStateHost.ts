@@ -6,7 +6,10 @@ import type { Space } from "./Space";
  * enough to read and change the state, and to react to users leaving -- nothing that would let it grow back into
  * the Space class.
  */
-export type SpaceStateHost = Pick<Space, "filterType" | "userRemoved$" | "getUser" | "getState" | "updateState">;
+export type SpaceStateHost = Pick<
+    Space,
+    "filterType" | "userRemoved$" | "userUpdated$" | "getUser" | "getState" | "updateState"
+>;
 
 /** The identity polls and questions are attributed to: the user's uuid, or their spaceUserId when they have none. */
 export function voterIdOf(user: SpaceUser): string {
