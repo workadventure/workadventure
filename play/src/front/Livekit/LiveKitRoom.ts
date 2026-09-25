@@ -39,7 +39,7 @@ import { createLivekitSenderStats } from "../WebRtc/WebRtcStatsFactory";
 import { registerLocalEncoderStats } from "../WebRtc/LocalEncoderStats";
 import { subscribeToOutboundVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
-import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
+import { VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
 import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
@@ -988,16 +988,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             }
             const extendedVideoStream = this.space.getVideoPeerVideoBox(speaker.identity);
 
-            // If this is a video and not a screen share, we add 2000 to the priority
             if (!extendedVideoStream) {
                 continue;
             }
 
-            if (get(extendedVideoStream.streamable)?.displayMode === "cover") {
-                extendedVideoStream.priority = priority + VIDEO_STARTING_PRIORITY;
-            } else {
-                extendedVideoStream.priority = priority + SCREEN_SHARE_STARTING_PRIORITY;
-            }
+            extendedVideoStream.priority = priority + VIDEO_STARTING_PRIORITY;
             priority++;
         }
 
