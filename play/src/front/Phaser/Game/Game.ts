@@ -13,6 +13,7 @@ import { ResizableScene } from "../Login/ResizableScene";
  */
 export class Game extends Phaser.Game {
     private _isDirty = false;
+    private _coveredByUi = false;
 
     constructor(GameConfig: Phaser.Types.Core.GameConfig) {
         super(GameConfig);
@@ -56,7 +57,7 @@ export class Game extends Phaser.Game {
         eventEmitter.emit(Phaser.Core.Events.POST_STEP, time, delta);
 
         // This "if" is the changed introduced by the new "Game" class to avoid rendering unnecessarily.
-        if (SKIP_RENDER_OPTIMIZATIONS || this.isDirty()) {
+        if (SKIP_RENDER_OPTIMIZATIONS || (!this._coveredByUi && this.isDirty())) {
             const renderer = this.renderer;
 
             //  Run the Pre-render (clearing the canvas, setting background colors, etc)
@@ -119,6 +120,19 @@ export class Game extends Phaser.Game {
      */
     public markDirty(): void {
         this._isDirty = true;
+    }
+
+    /**
+     * Skips rendering while the UI covers the game (full screen co-website or meeting), which the browser cannot know:
+     * it only pauses the game when the whole tab is hidden. The game keeps updating, so the player can still walk and
+     * the map stays in sync; only the drawing stops.
+     */
+    public setCoveredByUi(covered: boolean): void {
+        if (this._coveredByUi && !covered) {
+            // The map kept changing under the cover: redraw it even if nothing moves anymore.
+            this.markDirty();
+        }
+        this._coveredByUi = covered;
     }
 
     /**
