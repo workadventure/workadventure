@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import type { LegalsData, OpidWokaNamePolicy, RecordingData } from "@workadventure/messages";
+import type { LegalsData, MapDetailsData, OpidWokaNamePolicy, RecordingData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, ErrorApiData } from "@workadventure/messages";
 import {
     CONTACT_URL,
@@ -47,6 +47,7 @@ export class Room {
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
     private _metadata: unknown;
+    private _extensionModuleAccessTokens: MapDetailsData["extensionModuleAccessTokens"];
     private _backgroundSceneImage: string | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
@@ -194,6 +195,7 @@ export class Room {
                 this._backgroundColor = data.backgroundColor ?? undefined;
                 this._primaryColor = data.primaryColor ?? undefined;
                 this._metadata = data.metadata ?? undefined;
+                this._extensionModuleAccessTokens = data.extensionModuleAccessTokens;
 
                 this._roomName = data.roomName ?? undefined;
 
@@ -358,6 +360,10 @@ export class Room {
 
     get metadata(): unknown {
         return this._metadata;
+    }
+
+    get extensionModuleAccessTokens(): MapDetailsData["extensionModuleAccessTokens"] {
+        return this._extensionModuleAccessTokens;
     }
 
     get roomName(): string | undefined {
