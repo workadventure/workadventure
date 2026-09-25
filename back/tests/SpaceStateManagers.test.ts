@@ -39,8 +39,7 @@ describe("RaiseHandManager", () => {
             { spaceUserId: "b", name: "Bob" },
         );
         const manager = new RaiseHandManager(host);
-        const raise = (id: string, raised: boolean) =>
-            manager.handleQuery(user(id), { $case: "raiseHand", raiseHand: { raised } });
+        const raise = (id: string, raised: boolean) => manager.raiseHand(user(id), raised);
 
         raise("b", true);
         raise("a", true);
@@ -58,16 +57,11 @@ describe("RaiseHandManager", () => {
             { spaceUserId: "listener", name: "Lea" },
         );
         const manager = new RaiseHandManager(host);
-        manager.handleQuery(user("listener"), { $case: "raiseHand", raiseHand: { raised: true } });
+        manager.raiseHand(user("listener"), true);
 
-        expect(() =>
-            manager.handleQuery(user("listener"), {
-                $case: "giveFloor",
-                giveFloor: { targetSpaceUserId: "listener" },
-            }),
-        ).toThrow();
+        expect(() => manager.giveFloor(user("listener"), "listener")).toThrow();
 
-        manager.handleQuery(user("speaker"), { $case: "giveFloor", giveFloor: { targetSpaceUserId: "listener" } });
+        manager.giveFloor(user("speaker"), "listener");
         expect(state().raisedHands).toEqual([]);
         expect(state().floorHolders).toEqual([{ spaceUserId: "listener", name: "Lea" }]);
     });
@@ -80,14 +74,12 @@ describe("RaiseHandManager", () => {
             { spaceUserId: "other", name: "Oli" },
         );
         const manager = new RaiseHandManager(host);
-        manager.handleQuery(user("speaker"), { $case: "giveFloor", giveFloor: { targetSpaceUserId: "guest" } });
-        manager.handleQuery(user("other"), { $case: "raiseHand", raiseHand: { raised: true } });
+        manager.giveFloor(user("speaker"), "guest");
+        manager.raiseHand(user("other"), true);
 
-        expect(() =>
-            manager.handleQuery(user("guest"), { $case: "lowerHand", lowerHand: { targetSpaceUserId: "other" } }),
-        ).toThrow();
+        expect(() => manager.lowerHand(user("guest"), "other")).toThrow();
 
-        manager.handleQuery(user("guest"), { $case: "revokeFloor", revokeFloor: { targetSpaceUserId: "guest" } });
+        manager.revokeFloor(user("guest"), "guest");
         expect(state().floorHolders).toEqual([]);
     });
 
@@ -98,9 +90,9 @@ describe("RaiseHandManager", () => {
             { spaceUserId: "b", name: "Bob" },
         );
         const manager = new RaiseHandManager(host);
-        manager.handleQuery(user("a"), { $case: "raiseHand", raiseHand: { raised: true } });
+        manager.raiseHand(user("a"), true);
 
-        manager.handleQuery(user("b"), { $case: "giveFloor", giveFloor: { targetSpaceUserId: "a" } });
+        manager.giveFloor(user("b"), "a");
 
         expect(state().raisedHands).toEqual([]);
         expect(state().floorHolders).toEqual([]);
@@ -114,8 +106,8 @@ describe("RaiseHandManager", () => {
             { spaceUserId: "b", name: "Bob" },
         );
         const manager = new RaiseHandManager(host);
-        manager.handleQuery(user("a"), { $case: "raiseHand", raiseHand: { raised: true } });
-        manager.handleQuery(user("speaker"), { $case: "giveFloor", giveFloor: { targetSpaceUserId: "b" } });
+        manager.raiseHand(user("a"), true);
+        manager.giveFloor(user("speaker"), "b");
 
         userRemoved$.next(user("a"));
         userRemoved$.next(user("b"));
@@ -127,10 +119,7 @@ describe("RaiseHandManager", () => {
 
 describe("ProximityPollManager", () => {
     function createPoll(manager: ProximityPollManager, sender: SpaceUser, maxSelections = 1): void {
-        manager.handleQuery(sender, {
-            $case: "createPoll",
-            createPoll: { question: "Lunch?", kind: "open", answers: ["Pizza", "Sushi"], maxSelections },
-        });
+        manager.create(sender, { question: "Lunch?", kind: "open", answers: ["Pizza", "Sushi"], maxSelections });
     }
 
     it("creates a poll with server-generated ids, attributed to the sender", () => {
@@ -149,10 +138,7 @@ describe("ProximityPollManager", () => {
         const manager = new ProximityPollManager(host);
 
         expect(() =>
-            manager.handleQuery(user("a"), {
-                $case: "createPoll",
-                createPoll: { question: "Lunch?", kind: "open", answers: ["Pizza"], maxSelections: 1 },
-            }),
+            manager.create(user("a"), { question: "Lunch?", kind: "open", answers: ["Pizza"], maxSelections: 1 }),
         ).toThrow();
         expect(() => createPoll(manager, user("a"), 3)).toThrow();
     });
@@ -167,8 +153,7 @@ describe("ProximityPollManager", () => {
         createPoll(manager, user("a"));
         const poll = Object.values(state().polls)[0];
         const [pizza, sushi] = poll.answers.map((answer) => answer.id);
-        const vote = (answerIds: string[]) =>
-            manager.handleQuery(user("b"), { $case: "votePoll", votePoll: { pollId: poll.id, answerIds } });
+        const vote = (answerIds: string[]) => manager.vote(user("b"), poll.id, answerIds);
 
         vote([pizza]);
         vote([sushi]);
@@ -178,8 +163,8 @@ describe("ProximityPollManager", () => {
         vote([]);
         expect(state().polls[poll.id].votes).toEqual({});
 
-        expect(() => manager.handleQuery(user("b"), { $case: "closePoll", closePoll: { pollId: poll.id } })).toThrow();
-        manager.handleQuery(user("a"), { $case: "closePoll", closePoll: { pollId: poll.id, closingMessage: "Bye" } });
+        expect(() => manager.close(user("b"), poll.id)).toThrow();
+        manager.close(user("a"), poll.id, "Bye");
         expect(state().polls[poll.id].end?.closingMessage).toBe("Bye");
         expect(() => vote([pizza])).toThrow();
     });
@@ -194,15 +179,15 @@ describe("ProximityPollManager", () => {
         createPoll(manager, user("a"));
         const pollId = Object.keys(state().polls)[0];
 
-        expect(() => manager.handleQuery(user("b"), { $case: "deletePoll", deletePoll: { pollId } })).toThrow();
-        manager.handleQuery(user("a"), { $case: "deletePoll", deletePoll: { pollId } });
+        expect(() => manager.delete(user("b"), pollId)).toThrow();
+        manager.delete(user("a"), pollId);
         expect(state().polls).toEqual({});
     });
 });
 
 describe("ProximityQAManager", () => {
     function ask(manager: ProximityQAManager, sender: SpaceUser): void {
-        manager.handleQuery(sender, { $case: "askQuestion", askQuestion: { body: "Can we record?" } });
+        manager.ask(sender, "Can we record?");
     }
 
     it("upvotes, but never one's own question nor an answered one", () => {
@@ -215,8 +200,7 @@ describe("ProximityQAManager", () => {
         const manager = new ProximityQAManager(host);
         ask(manager, user("a"));
         const questionId = Object.keys(state().questions)[0];
-        const upvote = (id: string, upvoted: boolean) =>
-            manager.handleQuery(user(id), { $case: "upvoteQuestion", upvoteQuestion: { questionId, upvoted } });
+        const upvote = (id: string, upvoted: boolean) => manager.upvote(user(id), questionId, upvoted);
 
         expect(() => upvote("a", true)).toThrow();
         upvote("b", true);
@@ -224,10 +208,8 @@ describe("ProximityQAManager", () => {
         upvote("b", false);
         expect(state().questions[questionId].upvotes).toEqual({});
 
-        expect(() =>
-            manager.handleQuery(user("b"), { $case: "answerQuestion", answerQuestion: { questionId } }),
-        ).toThrow();
-        manager.handleQuery(user("mod"), { $case: "answerQuestion", answerQuestion: { questionId } });
+        expect(() => manager.markAnswered(user("b"), questionId)).toThrow();
+        manager.markAnswered(user("mod"), questionId);
         expect(state().questions[questionId].answer?.moderatorId).toBe("mod");
         expect(() => upvote("b", true)).toThrow();
     });
@@ -243,8 +225,7 @@ describe("ProximityQAManager", () => {
         ask(manager, user("a"));
         ask(manager, user("a"));
         const [first, second] = Object.keys(state().questions);
-        const remove = (id: string, questionId: string) =>
-            manager.handleQuery(user(id), { $case: "deleteQuestion", deleteQuestion: { questionId } });
+        const remove = (id: string, questionId: string) => manager.delete(user(id), questionId);
 
         expect(() => remove("b", first)).toThrow();
         remove("a", first);
