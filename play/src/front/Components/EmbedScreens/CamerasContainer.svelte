@@ -37,6 +37,7 @@
     import { myCameraPeerStore } from "../../Stores/StreamableCollectionStore";
     import type { VideoBox as VideoBoxModel } from "../../Space/VideoBox";
     import VideoBox from "../Video/VideoBox.svelte";
+    import type { VideoBoxLayout } from "../Video/VideoBoxLayout";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
@@ -58,7 +59,6 @@
         computePictureInPictureGridLayout,
         pipGridTemplateColumns,
         pipGridTemplateRows,
-        pipTileStyle,
         PIP_GRID_MAX_VIDEOS,
     } from "../Video/PictureInPicture/pictureInPictureGridLayout";
     import ResizeHandle from "./ResizeHandle.svelte";
@@ -91,7 +91,7 @@
     // The minimum width of a media box in pixels
     const minMediaBoxWidth = 160;
 
-    /** Webcam locale dans `streamableCollectionStore` (`myCameraPeerStore`). */
+    /** uniqueId of the local webcam in `streamableCollectionStore` (`myCameraPeerStore`). */
     const LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID = "-1";
 
     function excludeLocalCamera(videoBoxes: VideoBoxModel[]): VideoBoxModel[] {
@@ -128,17 +128,7 @@
             );
         }
 
-        // Subscriptions for store changes
-        const unsubscriber = orderedStreamableCollectionStore.subscribe((orderedStreamableCollection) => {
-            // Each time the order of the videos changes, we update the displayOrder of each videoBox.
-            // The collection is already ordered by stableNSort: re-sorting it here by priority would override that order.
-            for (let i = 0; i < orderedStreamableCollection.length; i++) {
-                orderedStreamableCollection[i].displayOrder.set(i);
-            }
-        });
-
         return () => {
-            unsubscriber();
             if (intersectionObserver) {
                 intersectionObserver.disconnect();
             }
@@ -375,12 +365,14 @@
     let canScrollRight = $state(false);
     let canScrollTop = $state(false);
     let canScrollBottom = $state(false);
+    // The boxes shown in the picture-in-picture grid, in display order (the docked local camera is shown apart).
     let pipVideoBoxes = $derived(
         isPictureInPictureGridMode
-            ? pipDockLocalCamera
-                ? excludeLocalCamera($orderedStreamableCollectionStore).slice(0, PIP_GRID_MAX_VIDEOS)
-                : $orderedStreamableCollectionStore.slice(0, PIP_GRID_MAX_VIDEOS)
-            : $oneLineStreamableCollectionStore,
+            ? (pipDockLocalCamera
+                  ? excludeLocalCamera($orderedStreamableCollectionStore)
+                  : $orderedStreamableCollectionStore
+              ).slice(0, PIP_GRID_MAX_VIDEOS)
+            : [],
     );
     let pipLayout = $derived(
         computePictureInPictureGridLayout(
@@ -389,6 +381,36 @@
             Math.max(1, camerasContainerHeight || 0),
         ),
     );
+
+    // Position of each box in the display order (grid / row layouts) or in the picture-in-picture grid.
+    let displayPositions = $derived(
+        new Map<VideoBoxModel, number>(
+            (isPictureInPictureGridMode ? pipVideoBoxes : $orderedStreamableCollectionStore).map((box, index) => [
+                box,
+                index,
+            ]),
+        ),
+    );
+
+    /**
+     * Returns the layout of a box, or undefined if the box must not be displayed in the container (beyond the
+     * picture-in-picture grid capacity, or local camera docked apart).
+     *
+     * The vertical one-line mode only exists in picture-in-picture, where it is always the picture-in-picture grid.
+     * So outside of that grid, a one-line layout is always a horizontal row.
+     */
+    function videoBoxLayout(videoBox: VideoBoxModel): VideoBoxLayout | undefined {
+        const position = displayPositions.get(videoBox);
+        if (isPictureInPictureGridMode) {
+            return position === undefined ? undefined : { kind: "pipGrid", tile: pipLayout.tiles[position] };
+        }
+        // Not ordered yet (should not happen, the ordered store derives synchronously from the displayed one): last.
+        const order = position ?? $oneLineStreamableCollectionStore.length;
+        if (isOnOneLine) {
+            return { kind: "row", order, width: videoWidth };
+        }
+        return { kind: "grid", order, width: videoWidth, height: videoHeight };
+    }
 
     function updateScrollIndicators() {
         if (!camerasContainer) return;
@@ -505,27 +527,19 @@
         data-testid="cameras-container"
         onscroll={updateScrollIndicators}
     >
-        {#each pipVideoBoxes as videoBox, i (videoBox.uniqueId)}
-            <div
-                style={isPictureInPictureGridMode ? pipTileStyle(pipLayout.tiles[i]) : ""}
-                class:min-h-0={isPictureInPictureGridMode}
-                class:min-w-0={isPictureInPictureGridMode}
-            >
+        <!--
+            Always iterate on the displayed boxes in their arrival order, never in display order: reordering must only
+            change the "order" / grid placement of each box, not move its DOM node (see VideoBoxLayout).
+        -->
+        {#each $oneLineStreamableCollectionStore as videoBox (videoBox.uniqueId)}
+            {@const layout = videoBoxLayout(videoBox)}
+            {#if layout}
                 <VideoBox
                     {videoBox}
-                    {isOnOneLine}
-                    {oneLineMode}
-                    {videoWidth}
-                    {videoHeight}
+                    {layout}
                     intersectionObserver={isPictureInPictureGridMode ? undefined : intersectionObserver}
-                    forceDisplay={isPictureInPictureGridMode ||
-                        (videoBox.uniqueId === LOCAL_CAMERA_VIDEO_BOX_UNIQUE_ID &&
-                            isOnOneLine &&
-                            oneLineMode === "vertical" &&
-                            !pipDockLocalCamera)}
-                    fitContainer={isPictureInPictureGridMode}
                 />
-            </div>
+            {/if}
         {/each}
     </div>
     {#if pipDockLocalCamera}

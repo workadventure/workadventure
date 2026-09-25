@@ -7,37 +7,20 @@
     import type { TokenRemovalHandle } from "../../Utils/TokenBucket";
     import type { DocumentPictureInPictureEvent } from "./PictureInPicture/PictureInPictureWindow";
     import { videoBoxVisibilityTokenBucket } from "./VideoBoxVisibilityTokenBucket";
+    import { pipTileStyle } from "./PictureInPicture/pictureInPictureGridLayout";
+    import type { VideoBoxLayout } from "./VideoBoxLayout";
 
     interface Props {
         videoBox: VideoBox;
-        isOnOneLine?: boolean;
-        oneLineMode?: "vertical" | "horizontal";
-        videoWidth?: number;
-        videoHeight?: number;
+        layout: VideoBoxLayout;
+        // Only loads the video while the box intersects the observer's root. Without an observer, it is always loaded.
         intersectionObserver?: IntersectionObserver;
-        forceVisible?: boolean;
-        fitContainer?: boolean;
     }
 
-    let {
-        videoBox,
-        isOnOneLine,
-        oneLineMode,
-        videoWidth,
-        videoHeight,
-        intersectionObserver,
-        forceVisible = false,
-        fitContainer = false,
-    }: Props = $props();
+    let { videoBox, layout, intersectionObserver }: Props = $props();
 
-    let isVisible = $state((() => forceVisible || !intersectionObserver)());
+    let isVisible = $state((() => !intersectionObserver)());
     let videoBoxElement: HTMLDivElement | undefined = $state();
-
-    let orderStore = $derived(videoBox.displayOrder);
-
-    let isFirst = $derived($orderStore === 0);
-
-    let isLast = $derived($orderStore === $oneLineStreamableCollectionStore.length - 1);
 
     let currentDocumentPictureInPictureWindow: Window | undefined;
     let intersectionObserverRefreshTimeout: number | undefined;
@@ -134,9 +117,7 @@
     let oldIntersectionObserver: IntersectionObserver | undefined = $state(undefined);
 
     $effect(() => {
-        if (forceVisible) {
-            isVisible = true;
-        } else if (videoBoxElement && oldIntersectionObserver !== intersectionObserver) {
+        if (videoBoxElement && oldIntersectionObserver !== intersectionObserver) {
             oldIntersectionObserver?.unobserve(videoBoxElement);
             oldIntersectionObserver = intersectionObserver;
             intersectionObserver?.observe(videoBoxElement);
@@ -145,28 +126,44 @@
             }
         }
     });
+
+    let layoutStyle = $derived.by(() => {
+        switch (layout.kind) {
+            case "pipGrid":
+                return `width: 100%; max-width: 100%; height: 100%; max-height: 100%; ${pipTileStyle(layout.tile)}`;
+            case "row":
+                return `order: ${layout.order}; width: ${layout.width}px; max-width: ${layout.width}px;`;
+            case "grid":
+                return `order: ${layout.order}; width: ${layout.width}px; max-width: ${layout.width}px;${
+                    layout.height !== undefined ? ` height: ${layout.height}px; max-height: ${layout.height}px;` : ""
+                }`;
+        }
+    });
+
+    let layoutClass = $derived.by(() => {
+        switch (layout.kind) {
+            case "pipGrid":
+                return "h-full w-full min-h-0 min-w-0";
+            case "row": {
+                const isFirst = layout.order === 0;
+                const isLast = layout.order === $oneLineStreamableCollectionStore.length - 1;
+                return `aspect-video basis-40 shrink-0 min-w-40 grow ${isFirst ? "ml-auto" : ""} ${isLast ? "mr-auto" : ""}`;
+            }
+            case "grid":
+                return `shrink-0 ${layout.height === undefined ? "aspect-video" : ""}`;
+        }
+    });
 </script>
 
+<!--
+    This element must be a direct child of the cameras container (no wrapper in between): it carries all the
+    flex/grid item styles ("order", flex basis/grow/shrink, ml-auto / mr-auto,
+    grid placement in picture-in-picture). On a nested element, the parent layout would ignore them.
+-->
 <div
     bind:this={videoBoxElement}
-    style={fitContainer
-        ? `order: ${$orderStore}; width: 100%; max-width: 100%; height: 100%; max-height: 100%;`
-        : `order: ${$orderStore}; width: ${videoWidth}px; max-width: ${videoWidth}px;${
-              videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
-          }`}
-    class={` overflow-hidden
-    ${
-        fitContainer
-            ? "pointer-events-auto h-full w-full min-h-0 min-w-0 camera-box"
-            : isOnOneLine
-              ? oneLineMode === "horizontal"
-                  ? `pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box ${isFirst ? "ml-auto" : ""} ${
-                        isLast ? "mr-auto" : ""
-                    }`
-                  : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
-              : "pointer-events-auto shrink-0 camera-box"
-    }`}
-    class:aspect-video={!fitContainer && videoHeight === undefined}
+    style={layoutStyle}
+    class={`pointer-events-auto overflow-hidden camera-box ${layoutClass}`}
 >
     {#if isVisible}
         <MediaBox {videoBox} />
