@@ -1,11 +1,11 @@
 /**
- * Grilles simples pour la bande vidéo Picture-in-Picture (max 8 tuiles).
- * Règles demandées : adapter au ratio du conteneur (portrait = height > width).
+ * Simple grid layouts for the Picture-in-Picture video strip (8 tiles max).
+ * The layout adapts to the container's aspect ratio (portrait = height > width).
  */
 
 export const PIP_GRID_MAX_VIDEOS = 8;
 
-/** Lignes de grille CSS 1-based, fin **exclusive** (comme grid-column: a / b). */
+/** 1-based CSS grid lines, **exclusive** end (like grid-column: a / b). */
 export type PipGridTile = {
     columnStart: number;
     columnEnd: number;
@@ -16,12 +16,12 @@ export type PipGridTile = {
 export type PipGridLayout = {
     portrait: boolean;
     videoCount: number;
-    /** Nombre de colonnes de piste (lignes de grille = colonnes + 1). */
+    /** Number of column tracks (grid lines = tracks + 1). */
     columnTracks: number;
-    /** Nombre de lignes de piste. */
+    /** Number of row tracks. */
     rowTracks: number;
     tiles: PipGridTile[];
-    /** Résumé lisible pour debug / page de test. */
+    /** Human-readable summary, for debugging. */
     description: string;
 };
 
@@ -33,8 +33,8 @@ function clampCount(n: number): number {
 }
 
 /**
- * Colonnes égales : `repeat(n, minmax(0, 1fr))`.
- * Lignes égales : idem avec `rowTracks`.
+ * Equal columns: `repeat(n, minmax(0, 1fr))`.
+ * Equal rows: same, with `rowTracks`.
  */
 export function pipGridTemplateColumns(columnTracks: number): string {
     return `repeat(${Math.max(1, columnTracks)}, minmax(0, 1fr))`;
@@ -45,7 +45,7 @@ export function pipGridTemplateRows(rowTracks: number): string {
 }
 
 /**
- * Calcule la disposition des tuiles (indices 0 … n-1).
+ * Computes where each tile (indices 0 … n-1) goes.
  */
 export function computePictureInPictureGridLayout(
     videoCount: number,
@@ -69,7 +69,7 @@ export function computePictureInPictureGridLayout(
                 rowStart: 1,
                 rowEnd: 2,
             })),
-            description: `${n} vidéos : plein cadre (w×4 > h)`,
+            description: `${n} videos: single row (w > h×3)`,
         };
     }
 
@@ -86,7 +86,7 @@ export function computePictureInPictureGridLayout(
                 rowStart: i + 1,
                 rowEnd: i + 2,
             })),
-            description: `${n} vidéos : plein hauteur (h×4 > w)`,
+            description: `${n} videos: single column (h > w×2)`,
         };
     }
 
@@ -97,7 +97,7 @@ export function computePictureInPictureGridLayout(
             columnTracks: 1,
             rowTracks: 1,
             tiles: [],
-            description: "Aucune vidéo",
+            description: "No video",
         };
     }
 
@@ -108,7 +108,7 @@ export function computePictureInPictureGridLayout(
             columnTracks: 1,
             rowTracks: 1,
             tiles: [{ columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 }],
-            description: "1 vidéo : plein cadre",
+            description: "1 video: fills the frame",
         };
     }
 
@@ -123,7 +123,7 @@ export function computePictureInPictureGridLayout(
                     { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
                     { columnStart: 1, columnEnd: 2, rowStart: 2, rowEnd: 3 },
                 ],
-                description: "2 vidéos portrait : colonne",
+                description: "2 portrait: column",
             };
         }
         return {
@@ -135,13 +135,13 @@ export function computePictureInPictureGridLayout(
                 { columnStart: 1, columnEnd: 2, rowStart: 1, rowEnd: 2 },
                 { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
             ],
-            description: "2 vidéos paysage : ligne",
+            description: "2 landscape: row",
         };
     }
 
     if (n === 3) {
         if (portrait) {
-            // 2 en haut, 1 en bas (pleine largeur)
+            // 2 on top, 1 full-width below
             return {
                 portrait,
                 videoCount: n,
@@ -152,10 +152,10 @@ export function computePictureInPictureGridLayout(
                     { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
                     { columnStart: 1, columnEnd: 3, rowStart: 2, rowEnd: 3 },
                 ],
-                description: "3 portrait : 2 haut + 1 bas",
+                description: "3 portrait: 2 on top + 1 below",
             };
         }
-        // 1 à gauche (hauteur pleine), 2 empilées à droite
+        // 1 full-height on the left, 2 stacked on the right
         return {
             portrait,
             videoCount: n,
@@ -166,7 +166,7 @@ export function computePictureInPictureGridLayout(
                 { columnStart: 2, columnEnd: 3, rowStart: 1, rowEnd: 2 },
                 { columnStart: 2, columnEnd: 3, rowStart: 2, rowEnd: 3 },
             ],
-            description: "3 paysage : 1 gauche + 2 colonne droite",
+            description: "3 landscape: 1 left + 2 stacked right",
         };
     }
 
@@ -182,13 +182,13 @@ export function computePictureInPictureGridLayout(
                 { columnStart: 1, columnEnd: 2, rowStart: 2, rowEnd: 3 },
                 { columnStart: 2, columnEnd: 3, rowStart: 2, rowEnd: 3 },
             ],
-            description: "4 : grille 2×2",
+            description: "4: 2×2 grid",
         };
     }
 
     if (n === 5) {
         if (portrait) {
-            // 2 gauche empilées, 3 droite empilées (grille 2 col × 3 lignes)
+            // 2 on top, 1 full-width in the middle, 2 at the bottom (2 columns × 3 rows)
             return {
                 portrait,
                 videoCount: n,
@@ -201,10 +201,10 @@ export function computePictureInPictureGridLayout(
                     { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
                     { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
                 ],
-                description: "5 paysage : 2 colonne gauche + 2 colonne droite + 1 ligne en bas",
+                description: "5 portrait: 2 on top + 1 full-width + 2 at the bottom",
             };
         }
-        // 3 en haut, 2 en bas — 6 colonnes virtuelles : haut 2+2+2, bas 3+3
+        // 3 on top, 2 below: 6 virtual columns, top tiles span 2 each, bottom tiles span 3 each
         return {
             portrait,
             videoCount: n,
@@ -217,7 +217,7 @@ export function computePictureInPictureGridLayout(
                 { columnStart: 1, columnEnd: 4, rowStart: 2, rowEnd: 3 },
                 { columnStart: 4, columnEnd: 7, rowStart: 2, rowEnd: 3 },
             ],
-            description: "5 portrait : 3 haut + 2 bas",
+            description: "5 landscape: 3 on top + 2 below",
         };
     }
 
@@ -236,7 +236,7 @@ export function computePictureInPictureGridLayout(
                     { columnStart: 1, columnEnd: 2, rowStart: 3, rowEnd: 4 },
                     { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
                 ],
-                description: "6 paysage : 2×3",
+                description: "6 portrait: 2 columns × 3 rows",
             };
         }
         return {
@@ -252,13 +252,13 @@ export function computePictureInPictureGridLayout(
                 { columnStart: 2, columnEnd: 3, rowStart: 2, rowEnd: 3 },
                 { columnStart: 3, columnEnd: 4, rowStart: 2, rowEnd: 3 },
             ],
-            description: "6 portrait : 3×2",
+            description: "6 landscape: 3 columns × 2 rows",
         };
     }
 
     if (n === 7) {
         if (portrait) {
-            // 3 gauche + 4 droite (4 lignes)
+            // 2 on top, 1 full-width, then 2 rows of 2 (2 columns × 4 rows)
             return {
                 portrait,
                 videoCount: n,
@@ -273,10 +273,10 @@ export function computePictureInPictureGridLayout(
                     { columnStart: 2, columnEnd: 3, rowStart: 3, rowEnd: 4 },
                     { columnStart: 2, columnEnd: 3, rowStart: 4, rowEnd: 5 },
                 ],
-                description: "7 paysage : 3 gauche + 4 droite",
+                description: "7 portrait: 2 on top + 1 full-width + 2×2",
             };
         }
-        // 4 haut + 3 bas (12 colonnes : haut 3 chacune, bas 4 chacune)
+        // 4 on top, 3 below: 12 virtual columns, top tiles span 3 each, bottom tiles span 4 each
         return {
             portrait,
             videoCount: n,
@@ -291,7 +291,7 @@ export function computePictureInPictureGridLayout(
                 { columnStart: 5, columnEnd: 9, rowStart: 2, rowEnd: 3 },
                 { columnStart: 9, columnEnd: 13, rowStart: 2, rowEnd: 3 },
             ],
-            description: "7 portrait : 4 haut + 3 bas",
+            description: "7 landscape: 4 on top + 3 below",
         };
     }
 
@@ -312,7 +312,7 @@ export function computePictureInPictureGridLayout(
                 { columnStart: 1, columnEnd: 2, rowStart: 4, rowEnd: 5 },
                 { columnStart: 2, columnEnd: 3, rowStart: 4, rowEnd: 5 },
             ],
-            description: "8 paysage : 2×4",
+            description: "8 portrait: 2 columns × 4 rows",
         };
     }
     return {
@@ -330,7 +330,7 @@ export function computePictureInPictureGridLayout(
             { columnStart: 3, columnEnd: 4, rowStart: 2, rowEnd: 3 },
             { columnStart: 4, columnEnd: 5, rowStart: 2, rowEnd: 3 },
         ],
-        description: "8 portrait : 4×2",
+        description: "8 landscape: 4 columns × 2 rows",
     };
 }
 
