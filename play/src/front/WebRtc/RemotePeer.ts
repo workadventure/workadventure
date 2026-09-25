@@ -652,7 +652,13 @@ export class RemotePeer extends Peer implements Streamable {
                         this.pausedAudioTrack = undefined;
                         if (pausedAudioTrack) {
                             debug("Resuming audio track in P2P connection");
-                            this.replaceTrack(pausedAudioTrack, newAudioTrack, this.localStream);
+                            try {
+                                this.replaceTrack(pausedAudioTrack, newAudioTrack, this.localStream);
+                            } catch (e) {
+                                // Never stay silent: a new sender costs a renegotiation, nothing more
+                                Sentry.captureException(e);
+                                this.addTrack(newAudioTrack, this.localStream);
+                            }
                         } else {
                             debug("Adding audio track in P2P connection");
                             this.addTrack(newAudioTrack, this.localStream);
