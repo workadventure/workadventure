@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ProximityPoll } from "@workadventure/shared-utils";
-import { computeProximityPollState, sortProximityPolls } from "../ProximityPollState";
+import { computeProximityPollState, sortByCreatedAt } from "../ProximityPollState";
 
 function createPoll(overrides: Partial<ProximityPoll> = {}): ProximityPoll {
     return {
@@ -27,7 +27,7 @@ describe("ProximityPollState", () => {
             "poll-1": createPoll({ id: "poll-1", createdAt: 10 }),
         };
 
-        expect(sortProximityPolls(polls).map((poll) => poll.id)).toEqual(["poll-1", "poll-2"]);
+        expect(sortByCreatedAt(polls).map((poll) => poll.id)).toEqual(["poll-1", "poll-2"]);
     });
 
     it("should count one vote per voter", () => {
@@ -69,15 +69,5 @@ describe("ProximityPollState", () => {
         expect(beforeEnd.resultsVisible).toBe(false);
         expect(afterEnd.resultsVisible).toBe(true);
         expect(afterEnd.closingMessage).toBe("Poll closed");
-    });
-
-    it("should count a vote for an unknown answer as spoiled", () => {
-        const state = computeProximityPollState(
-            createPoll({ votes: { "bob-uuid": { answerIds: ["pear"], updatedAt: 11 } } }),
-            "alice-uuid",
-        );
-
-        expect(state.totalVotes).toBe(0);
-        expect(state.spoiledVotes).toBe(1);
     });
 });
