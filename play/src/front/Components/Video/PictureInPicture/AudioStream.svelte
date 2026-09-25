@@ -86,6 +86,12 @@
                 Sentry.captureException(e);
             });
         }
+        // The speaker changed while the fallback plays: follow it there too
+        if (outputDeviceId && webAudioSource) {
+            routeWebAudioToSelectedSpeaker(audioContextManager.getContext()).catch((e) => {
+                Sentry.captureException(e);
+            });
+        }
     });
 
     let destroyed = false;
@@ -99,6 +105,22 @@
         webAudioStream = undefined;
         webAudioSource = undefined;
         webAudioGain = undefined;
+    }
+
+    /**
+     * Without this, the fallback plays on the OS default output instead of the speaker the user picked, which the
+     * <audio> element honours with setSinkId. AudioContext.setSinkId: Chromium 110+, not in TypeScript's DOM lib yet.
+     */
+    async function routeWebAudioToSelectedSpeaker(context: AudioContext): Promise<void> {
+        const sinkContext = context as AudioContext & { setSinkId?: (sinkId: string) => Promise<void> };
+        if (!outputDeviceId || !sinkContext.setSinkId) {
+            return;
+        }
+        try {
+            await sinkContext.setSinkId(outputDeviceId);
+        } catch (e) {
+            debug("Could not route the WebAudio playback fallback to the selected speaker", e);
+        }
     }
 
     async function startWebAudioPlayback(stream: MediaStream): Promise<boolean> {
@@ -121,18 +143,9 @@
         if (destroyed || context.state !== "running") {
             return false;
         }
-        // Without this, the fallback plays on the OS default output instead of the speaker the user picked
-        // (AudioContext.setSinkId: Chromium 110+, not in TypeScript's DOM lib yet)
-        const sinkContext = context as AudioContext & { setSinkId?: (sinkId: string) => Promise<void> };
-        if (outputDeviceId && sinkContext.setSinkId) {
-            try {
-                await sinkContext.setSinkId(outputDeviceId);
-            } catch (e) {
-                debug("Could not route the WebAudio playback fallback to the selected speaker", e);
-            }
-            if (destroyed) {
-                return false;
-            }
+        await routeWebAudioToSelectedSpeaker(context);
+        if (destroyed) {
+            return false;
         }
         // Checked after the awaits: playAudio() may have started a concurrent fallback for the same stream
         if (webAudioStream === stream && webAudioSource && webAudioGain) {
