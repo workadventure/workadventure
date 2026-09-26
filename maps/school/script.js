@@ -41,6 +41,8 @@ WA.onInit().then(() => {
         WA.nav.openCoWebSite(UI + "math.html?loc=math&tool=challenges", true, "allow")));
     safe(() => WA.ui.registerMenuCommand("🛎️ الاستقبال (قراءة)", () =>
         WA.nav.openCoWebSite(UI + "reception.html?loc=reception&tool=reception", true, "allow")));
+    safe(() => WA.ui.registerMenuCommand("🔬 فصل العلوم (قراءة)", () =>
+        WA.nav.openCoWebSite(UI + "science.html?loc=science&tool=title", true, "allow")));
 
     // --- welcome toast on arrival ---
     safe(() => WA.ui.displayActionMessage("أهلاً في NG Academy — توجّه نحو البوابة ثم ردهة الدرج لمكتب المدير 🦉"));

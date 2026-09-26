@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — فصل العلوم</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-counter">
+    <div class="content" id="body"></div>
+  </div>
+  <div class="hint" id="hint"></div>
+</div>
+<script src="shared.js"></script>
+<script>
+const tool = new URLSearchParams(location.search).get("tool") || "title";
+const body = document.getElementById("body");
+const hint = document.getElementById("hint");
+
+const UNITS = {
+  space:  { n: "الفضاء",       t: ["الكواكب والثقوب السوداء", "دورة القمر والنجوم", "رحلة إلى المريخ"] },
+  nature: { n: "الطبيعة",     t: ["دورة الماء", "النباتات كيف تنمو", "الموارد والمحافظة عليها"] },
+  body:   { n: "جسم الإنسان",  t: ["الحواس الخمس", "القلب والدورة الدموية", "التغذية الصحية"] },
+  matter: { n: "المادة",       t: ["الحالات الثلاث للمادة", "الكثافة: يطفو أم يغرق؟", "الخصائص: لون، رائحة، ملمس"] },
+  energy: { n: "الطاقة",       t: ["الضوء والظل", "الحرارة والمغناطيس", "الطاقة المتجددة"] },
+  lab:    { n: "التجارب",     t: ["كيف نصيغ سؤالًا علميًا", "نلاحظ ونقيس ونسجّل", "نتشارك النتائج"] },
+};
+
+if (tool === "themes") {
+  NGA.shell("فصل العلوم — لوحة الوحدات");
+  let unit = NGA.store("sci-unit", "nature");
+  function draw() {
+    body.innerHTML = `
+      <h3 style="color:var(--navy)">🔬 الوحدات العلمية — اختر الوحدة الحالية</h3>
+      <div class="mode-row">${Object.entries(UNITS).map(([k, u]) =>
+        `<button class="btn ghost ${k === unit ? "on" : ""}" data-k="${k}" style="${k === unit ? "background:#7ABA7A; color:#14331f; border-color:#7ABA7A; font-weight:700" : ""}">${u.n}</button>`).join("")}</div>
+      <div class="big-display" style="background:#1E4664; color:#fff; font-family:inherit; letter-spacing:0; font-size:22px">الوحدة الحالية: ${UNITS[unit].n} 🔬</div>
+      <div class="rowlist">${UNITS[unit].t.map((t, i) =>
+        `<div class="rowitem"><b>${["1", "2", "3"][i]}</b> ${t}</div>`).join("")}</div>
+      <p class="muted" style="margin-top:8px">💡 غيّر الوحدة فتتبدل المحطات: السبورة، ركن الاستكشاف، والتجارب الأمامية.</p>`;
+    document.querySelectorAll(".mode-row .btn").forEach(b => b.onclick = () => {
+      unit = b.dataset.k; NGA.save("sci-unit", unit); draw();
+    });
+  }
+  draw();
+  hint.innerHTML = "📌 لوحة الوحدات على الجدار الرئيسي — تتغير مع كل وحدة يدرسها الأطفال. Esc للعودة.";
+}
+
+else if (tool === "screen") {
+  NGA.shell("فصل العلوم — السبورة التفاعلية");
+  const P = [
+    ["💧", "دورة الماء", "الشمس تُبخر الماء ← تتكوّن السحابة ← تمطر ← تعود للنهر"],
+    ["🧲", "المغناطيس", "الجذب من بعيد دون لمس — ماذا يجذب؟ وماذا لا يجذب؟"],
+    ["🌋", "البراكين", "الحركة في باطن الأرض تُخرج اللبابة… ماذا لو جربنا في كوب؟"],
+    ["🪐", "الكواكب", "ثمانية كواكب تدور حول الشمس — أيها الأقرب وأيها الأكبر؟"],
+    ["🥚", "الكثافة", "البيضة تغرق في الماء العذب… وتطفو في الماء المالح!"],
+    ["🌗", "الظل", "الظل يتغير طولًا واتجاهًا مع حركة الشمس خلال اليوم"],
+  ];
+  let i = 0;
+  body.innerHTML = `
+    <div class="big-display" id="ph" style="background:#1E4664; color:#fff; font-family:inherit; letter-spacing:0; font-size:24px; min-height:96px"></div>
+    <div class="rowitem" id="why" style="margin-top:10px"></div>
+    <div class="rowitem muted" style="margin-top:8px">❓ اسأل المجموعة أولًا: <b>ماذا تتوقع أن يحدث؟</b> ثم نفحص التوقع بالتجربة.</div>`;
+  function show() {
+    document.getElementById("ph").textContent = `${P[i][0]}  ${P[i][1]}`;
+    document.getElementById("why").innerHTML = `<div>${P[i][2]}</div>`;
+  }
+  show();
+  setInterval(() => { i = (i + 1) % P.length; show(); }, 5000);
+  hint.innerHTML = "🖥️ السبورة التفاعلية فوق طاولة العرض — تعرض الظاهرة العلمية للمجموعة. Esc للعودة.";
+}
+
+else if (tool === "experiment") {
+  NGA.shell("فصل العلوم — التجربة الأمامية");
+  const X = [
+    { n: "🌋 بركان الكولا", m: ["كوب ورقي (البركان)", "صودا خبز", "خل", "قطرات طعام", "صينية"],
+      s: ["ضع الصودا في الكوب", "أضف القطرات ثم الخل من قطّارة", "راقب الانفجار على الصينية", "اسأل: أي فقاعة تخرج ولماذا؟"],
+      w: "تفاعل يُطلق غاز ثاني أكسيد الكربون، فهو الذي يدفع «اللبابة» لأعلى." },
+    { n: "🥚 البيضة الطافية", m: ["بيضة مسلوقة", "كوبان ماء", "ملح", "ملعقة"],
+      s: ["جرّب: البيضة في الماء العذب تغرق", "املح الماء الثاني جيدًا", "ضع البيضة في الملح: تطفو!", "لماذا؟ كثافة أكبر ترفعها."],
+      w: "ماء البحر أكثر كثافة من ماء العذب، لذلك يطفو ما يغرق في النهر." },
+    { n: "🧲 المغناطيس والكلمات", m: ["مغناطيس حذاء", "قطع حديد وبلاستيك وخشب", "وعاء صغير"],
+      s: ["صنّف المواد قبل التجربة (توقع!)", "قرّب المغناطيس من كل قطعة", "سجّل ما اجتُذب وما لم يجتذب", "قارن: توقعك أو الواقع؟"],
+      w: "المغناطيس يجذب الحديد والنحاس الأحمر فقط — الخاصية تُسمى المغنطيسية." },
+    { n: "💧 سحابة في كيس", m: ["كيس شفاف كبير", "ماء دافئ", "جليد"],
+      s: ["ضع قليلًا من الماء الدافئ في الكيس", "أغلقه جيدًا", "علّقه عند النافذة المشمسة", "راقب: يتكثف الماء على الجدار ← مطر!"],
+      w: "هكذا تتكوّن السحابة: تبخر ثم تكاثف ثم أمطار." },
+  ];
+  let sel = 0;
+  function draw() {
+    body.innerHTML = `
+      <div class="mode-row">${X.map((x, i) =>
+        `<button class="btn ghost ${i === sel ? "on" : ""}" data-i="${i}" style="${i === sel ? "background:#7ABA7A; color:#14331f; border-color:#7ABA7A; font-weight:700" : ""}">${x.n}</button>`).join("")}</div>
+      <h3 style="color:var(--navy)">🧪 ${X[sel].n}</h3>
+      <div class="rowitem"><b>المواد:</b> <span class="muted">${X[sel].m.join(" • ")}</span></div>
+      <div class="rowlist" style="margin-top:8px">${X[sel].s.map((s, i) =>
+        `<div class="rowitem"><b>${i + 1}</b> ${s}</div>`).join("")}</div>
+      <div class="rowitem" style="margin-top:8px; background:#f0f7f0"><b>💡 لماذا يحدث؟</b> ${X[sel].w}</div>`;
+    document.querySelectorAll(".mode-row .btn").forEach(b => b.onclick = () => { sel = +b.dataset.i; draw(); });
+  }
+  draw();
+  hint.innerHTML = "🧪 طاولة التجربة الأمامية — يشرح المدرب الخطوات قبل أن يعمل الأطفال في مجموعات. Esc للعودة.";
+}
+
+else if (tool === "discover") {
+  NGA.shell("فصل العلوم — ركن الاستكشاف");
+  const PLANETS = ["☀️ الشمس (نجم)", "🔴 عطارد", "🟡 الزهرة", "🌍 الأرض", "🔴 المريخ", "🟠 المشتري", "🪐 زحل", "🔵 أورانوس", "🔵 نبتون"];
+  const ROCKS = [
+    ["الحجر الجيري", "ناعم — نجده في الصخور العظمية"],
+    ["الباذنجان الأسود (الحمم)", "متشقق — من براكين قديمة"],
+    ["الكوارتز", "يصك ولا ينكسر، يتلألأ قليلًا"],
+    ["الصدف", "أثر كائن حي — حافرة علمية!"],
+  ];
+  body.innerHTML = `
+    <h3 style="color:var(--navy)">🪐 المجموعة الشمسية (على المجسم)</h3>
+    <div class="rowlist">${PLANETS.map(p => `<div class="rowitem">${p}</div>`).join("")}</div>
+    <h3 style="color:var(--navy); margin-top:14px">🪨 الأحجار والمعادن (علبة العينات)</h3>
+    <div class="rowlist">${ROCKS.map(r =>
+      `<div class="rowitem"><b>${r[0]}</b><span class="muted" style="margin-inline-start:auto">${r[1]}</span></div>`).join("")}</div>
+    <h3 style="color:var(--navy); margin-top:14px">🦋 عينات محفوظة</h3>
+    <div class="rowlist">
+      <div class="rowitem">فراشة مجنحة — كيف تتحول اليرقة فراشة؟</div>
+      <div class="rowitem">ورقتان شتويان — عروق الورقة كالشعيرات الدموية</div>
+    </div>
+    <p class="muted" style="margin-top:8px">🔍 القاعدة: ننظر بفضول، نلمس بلطف، ونعيد كل شيء مكانه.</p>`;
+  hint.innerHTML = "🔭 ركن الاستكشاف — الكواكب، العينات، والبركان: الطفل يكتشف بيده وعينه. Esc للعودة.";
+}
+
+else {
+  NGA.shell("فصل العلوم — مختبر المبدعين الصغار");
+  body.innerHTML = `
+    <h3 style="color:var(--navy)">🔬 مختبر المبدعين الصغار</h3>
+    <p>«تعال واكتشف ماذا سيحدث!» — مساحة علمية آمنة وممتعة: مجموعات صغيرة حول طاولات
+    تجارب مرتبة، سبورة تفاعلية، طاولة عرض أمامية، وركن استكشاف بالكواكب والبركان
+    والعينات الطبيعية. لا جدران مليئة صيغًا — فقط فضول منظم.</p>
+    <h3 style="color:var(--navy); margin-top:10px">🦺 قواعد السلامة (مرئية وبسيطة)</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>1</b> نغسل يدينا عند الحوض قبل البدء وبعده — ${"🧼"}</div>
+      <div class="rowitem"><b>2</b> لا نلمس المواد قبل إشارة المدرب 🙋</div>
+      <div class="rowitem"><b>3</b> أدوات خطرة في <b>الخزانة المقفلة</b> — لا نفتحها 🔒</div>
+      <div class="rowitem"><b>4</b> انسكبت مادة؟ أخبر فورًا ولا تمسح بيدك ⚠️</div>
+      <div class="rowitem"><b>5</b> نرتب أدواتنا ونعيد كل شيء صندوقه 📦</div>
+    </div>
+    <p class="muted" style="margin-top:10px">الطابع: أبيض + أزرق NG + لمسات خضراء/صفراء + خشب فاتح — زوايا مستديرة وأرضية سهلة التنظيف. ✨</p>`;
+  hint.innerHTML = "🛡️ هوية المختبر وقواعد السلامة — السلامة أولًا، والفضول بعدها مباشرة. Esc للعودة.";
+}
+</script>
+</body>
+</html>

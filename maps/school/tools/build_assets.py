@@ -998,6 +998,398 @@ def _(d):
     d.rectangle([20, 50, 44, 56], fill=(160, 160, 160))
 
 # ============================================================
+# SCIENCE — فصل العلوم (bright, curious, safe kids' lab)
+# ============================================================
+LAB_GRN = (122, 186, 122)
+LAB_GRN_D = (86, 148, 96)
+LAB_FLOOR = (224, 233, 241)
+
+
+def lab_wall_base(d):
+    """Bright white wall, fresh azure cap, thin green trim."""
+    d.rectangle([0, 0, TW, TW], fill=(248, 250, 252))
+    d.rectangle([0, 0, TW, 42], fill=(96, 146, 180))
+    d.rectangle([0, 42, TW, 47], fill=(82, 130, 164))
+    d.rectangle([0, 47, TW, 51], fill=LAB_GRN)
+    d.rectangle([0, TW - 23, TW, TW - 20], fill=(238, 240, 243))
+    d.rectangle([0, TW - 20, TW, TW], fill=(204, 208, 212))
+    d.rectangle([0, 0, 4, TW], fill=(238, 240, 243))
+
+
+def microscope(d, cx, cy, s=1):
+    """Flat microscope icon, s = scale (SS px base 40)."""
+    d.rectangle([cx - 2 * s, cy + 6 * s, cx + 4 * s, cy + 14 * s], fill=NG_NAVY)  # base
+    d.line([(cx + 8 * s, cy + 12 * s), (cx + 2 * s, cy - 6 * s)], fill=NG_NAVY, width=int(5 * s))
+    d.line([(cx - 6 * s, cy - 10 * s), (cx + 2 * s, cy - 6 * s)], fill=NG_NAVY, width=int(5 * s))
+    d.ellipse([cx - 10 * s, cy - 16 * s, cx - 2 * s, cy - 8 * s], fill=NG_BLUE)  # eyepiece
+    d.rectangle([cx - 8 * s, cy + 4 * s, cx + 8 * s, cy + 8 * s], fill=NG_BLUE)   # stage
+
+
+@tile("lab_title_r")
+def _(d):
+    """Title (right): 🔬 مختبر — microscope + word."""
+    lab_wall_base(d)
+    d.rounded_rectangle([2, 12, TW - 6, 118], radius=10, fill=NG_NAVY,
+                        outline=(12, 30, 48), width=3)
+    d.rectangle([TW - 12, 12, TW - 8, 118], fill=AMBER)
+    d.rounded_rectangle([6, 16, TW - 10, 114], radius=8, outline=(60, 100, 130), width=2)
+    microscope(d, 40, 62, 1.4)
+    ar_text(d, 88, 58, "مختبر", 22, WHITE, bold=True)
+    d.rectangle([62, 78, 114, 82], fill=LAB_GRN)
+    ar_text(d, 88, 100, "الأمان أولًا", 13, (170, 220, 175))
+
+
+@tile("lab_title_l")
+def _(d):
+    """Title (left): المبدعين الصغار + planet & leaf."""
+    lab_wall_base(d)
+    d.rounded_rectangle([2, 12, TW - 2, 118], radius=10, fill=NG_NAVY,
+                        outline=(12, 30, 48), width=3)
+    d.rounded_rectangle([6, 16, TW - 6, 114], radius=8, outline=(60, 100, 130), width=2)
+    ar_text(d, 64, 52, "المبدعين الصغار", 19, GOLD_TXT, bold=True)
+    # planet with ring
+    d.ellipse([28, 78, 52, 102], fill=NG_BLUE)
+    d.arc([20, 74, 60, 106], 200, 340, fill=(150, 200, 235), width=3)
+    # leaf
+    d.polygon([(86, 100), (104, 76), (112, 100)], fill=LAB_GRN)
+    d.line([(99, 100), (99, 82)], fill=LAB_GRN_D, width=2)
+    d.rectangle([20, 110, 108, 113], fill=AMBER)
+
+
+def _theme_card(d, x0, icon, label):
+    d.rounded_rectangle([x0, 24, x0 + 58, 108], radius=8, fill=WHITE,
+                        outline=(170, 186, 200), width=2)
+    cy = 54
+    if icon == "space":
+        d.ellipse([x0 + 16, cy - 14, x0 + 42, cy + 12], fill=NG_BLUE)
+        d.arc([x0 + 8, cy - 20, x0 + 50, cy + 18], 200, 340, fill=(150, 200, 235), width=3)
+    elif icon == "nature":
+        d.polygon([(x0 + 18, cy + 12), (x0 + 36, cy - 14), (x0 + 46, cy + 12)], fill=LAB_GRN)
+        d.line([(x0 + 33, cy + 12), (x0 + 33, cy - 6)], fill=LAB_GRN_D, width=2)
+    elif icon == "body":
+        d.ellipse([x0 + 14, cy - 12, x0 + 44, cy + 14], fill=CORAL)
+        d.ellipse([x0 + 20, cy - 8, x0 + 38, cy + 8], fill=(250, 190, 180))
+    elif icon == "matter":
+        d.polygon([(x0 + 31, cy - 14), (x0 + 42, cy + 12), (x0 + 20, cy + 12)], fill=TEAL)
+        d.rectangle([x0 + 26, cy - 20, x0 + 36, cy - 12], fill=TEAL_D)
+    elif icon == "energy":
+        d.polygon([(x0 + 34, cy - 16), (x0 + 20, cy + 4), (x0 + 30, cy + 4),
+                   (x0 + 26, cy + 16), (x0 + 42, cy - 6), (x0 + 32, cy - 6)], fill=AMBER)
+    elif icon == "lab":
+        for i, c in enumerate((CORAL, AMBER, TEAL)):
+            d.rectangle([x0 + 18 + i * 10, cy - 12, x0 + 24 + i * 10, cy + 12],
+                        fill=WHITE, outline=c, width=2)
+            d.rectangle([x0 + 19 + i * 10, cy + 2, x0 + 23 + i * 10, cy + 11], fill=c)
+    ar_text(d, x0 + 29, 92, label, 13, NG_NAVY, bold=True)
+
+
+@tile("lab_theme")
+def _(d):
+    """Unit board tile: two science-theme cards."""
+    lab_wall_base(d)
+    _theme_card(d, 6, "space", "الفضاء")
+    _theme_card(d, 68, "nature", "الطبيعة")
+
+
+@tile("lab_theme_b")
+def _(d):
+    _lab = None
+    lab_wall_base(d)
+    _theme_card(d, 6, "body", "جسم الإنسان")
+    _theme_card(d, 68, "matter", "المادة")
+
+
+@tile("lab_theme_c")
+def _(d):
+    lab_wall_base(d)
+    _theme_card(d, 6, "energy", "الطاقة")
+    _theme_card(d, 68, "lab", "التجارب")
+
+
+def _board(d, side):
+    lab_wall_base(d)
+    x0 = 4 if side == "l" else 2
+    x1 = 124 if side == "r" else 126
+    d.rectangle([x0, 20, x1, 108], fill=WHITE, outline=(96, 146, 180), width=4)
+    if side == "l":
+        # molecule diagram
+        for (cx, cy) in ((30, 48), (52, 70), (30, 92)):
+            d.ellipse([cx - 9, cy - 9, cx + 9, cy + 9], fill=NG_BLUE)
+        d.line([(30, 48), (52, 70)], fill=(150, 170, 190), width=3)
+        d.line([(52, 70), (30, 92)], fill=(150, 170, 190), width=3)
+        d.rectangle([70, 40, 92, 44], fill=LAB_GRN)
+        d.rectangle([70, 52, 86, 56], fill=(170, 190, 205))
+        d.rectangle([70, 64, 90, 68], fill=(170, 190, 205))
+        d.polygon([(96, 60), (112, 72), (96, 84)], fill=AMBER)  # arrow
+    if side == "r":
+        d.ellipse([30, 40, 66, 76], fill=(235, 244, 250), outline=NG_BLUE, width=3)
+        d.ellipse([38, 50, 58, 70], fill=NG_BLUE)
+        d.line([(48, 76), (58, 96)], fill=NG_NAVY, width=4)
+        d.rounded_rectangle([80, 36, 116, 72], radius=6, fill=(235, 244, 250),
+                            outline=TEAL, width=3)
+        for y in (44, 52, 60):
+            d.line([(86, y), (110, y)], fill=(160, 190, 200), width=2)
+        d.rectangle([28, 84, 112, 98], fill=(226, 236, 244))  # pen tray
+        d.rectangle([32, 88, 52, 94], fill=CORAL)
+        d.rectangle([56, 88, 76, 94], fill=NG_BLUE)
+        d.rectangle([80, 88, 100, 94], fill=AMBER)
+
+
+@tile("lab_board_l")
+def _(d):
+    """Interactive whiteboard — left half."""
+    _board(d, "l")
+
+
+@tile("lab_board_r")
+def _(d):
+    """Interactive whiteboard — right half."""
+    _board(d, "r")
+
+
+@tile("lab_floor")
+def _(d):
+    """Easy-clean bright floor: large soft blue-gray tiles."""
+    d.rectangle([0, 0, TW, TW], fill=LAB_FLOOR)
+    d.line([(TW // 2, 0), (TW // 2, TW)], fill=(206, 218, 228), width=2)
+    d.line([(0, TW // 2), (TW, TW // 2)], fill=(206, 218, 228), width=2)
+    speckle(d, (2, 2, TW - 2, TW - 2), (216, 228, 238), 8, 1)
+
+
+@tile("lab_rug")
+def _(d):
+    """Soft gathering rug in front of the demo table."""
+    d.rectangle([0, 0, TW, TW], fill=(214, 228, 238))
+    d.rectangle([3, 3, TW - 4, TW - 4], outline=(170, 200, 222), width=2)
+    d.ellipse([TW // 2 - 10, TW // 2 - 10, TW // 2 + 10, TW // 2 + 10],
+              outline=(170, 200, 222), width=2)
+    speckle(d, (6, 6, TW - 6, TW - 6), (198, 216, 230), 10, 1)
+
+
+@tile("lab_bench")
+def _(d):
+    """Group workbench: light wood top with safe lab tools on it."""
+    d.rectangle([12, 110, 116, 122], fill=(196, 208, 218))
+    d.rounded_rectangle([14, 52, 114, 110], radius=10, fill=(250, 250, 252),
+                        outline=(188, 196, 206), width=2)
+    d.rectangle([14, 92, 114, 104], fill=(214, 230, 242))
+    d.rounded_rectangle([8, 36, 120, 54], radius=8, fill=RECV_WOOD,
+                        outline=RECV_WOOD_D, width=2)
+    # test tube rack (3 tubes)
+    d.rectangle([18, 8, 44, 14], fill=(170, 180, 192))
+    for i, c in enumerate((CORAL, AMBER, LAB_GRN)):
+        d.rounded_rectangle([20 + i * 8, 14, 26 + i * 8, 34], radius=3,
+                            fill=WHITE, outline=(150, 160, 172), width=2)
+        d.rectangle([21 + i * 8, 24, 25 + i * 8, 33], fill=c)
+    # beaker with blue liquid
+    d.rounded_rectangle([50, 16, 72, 36], radius=3, fill=(235, 244, 250),
+                        outline=(150, 168, 184), width=2)
+    d.rectangle([52, 26, 70, 35], fill=NG_BLUE)
+    # balance
+    d.line([(84, 34), (84, 14)], fill=(120, 130, 142), width=3)
+    d.line([(74, 18), (94, 18)], fill=(120, 130, 142), width=2)
+    d.ellipse([72, 18, 78, 24], fill=(150, 160, 170))
+    d.ellipse([92, 18, 98, 24], fill=(150, 160, 170))
+    # magnet + magnifier
+    d.arc([96, 22, 112, 36], 180, 360, fill=CORAL, width=5)
+    d.rectangle([96, 30, 100, 36], fill=WHITE)
+    d.rectangle([108, 30, 112, 36], fill=WHITE)
+    d.ellipse([58, 8, 74, 24], outline=NG_NAVY, width=3)
+    d.line([(72, 22), (80, 32)], fill=NG_NAVY, width=4)
+
+
+@tile("lab_chair")
+def _(d):
+    """Small rounded child chair."""
+    d.rectangle([26, 108, 102, 118], fill=(196, 208, 218))
+    d.rounded_rectangle([30, 18, 98, 52], radius=16, fill=(238, 242, 246),
+                        outline=(196, 204, 214), width=3)
+    d.rounded_rectangle([42, 28, 86, 48], radius=10, fill=NG_BLUE)
+    d.rounded_rectangle([24, 52, 104, 88], radius=12, fill=(248, 250, 252),
+                        outline=(200, 208, 218), width=2)
+    d.rectangle([28, 88, 100, 98], fill=(228, 232, 238))
+    d.rectangle([34, 98, 46, 112], fill=RECV_WOOD_D)
+    d.rectangle([82, 98, 94, 112], fill=RECV_WOOD_D)
+
+
+def _demo(d, side):
+    d.rectangle([10, 108, 118, 122], fill=(196, 208, 218))
+    d.rounded_rectangle([12, 54, 116, 108], radius=12, fill=(250, 250, 252),
+                        outline=(188, 196, 206), width=2)
+    d.rectangle([12, 92, 116, 102], fill=(214, 230, 242))
+    d.rectangle([12, 88, 116, 91], fill=(240, 214, 150))
+    d.rounded_rectangle([6, 38, 122, 56], radius=8, fill=RECV_WOOD,
+                        outline=RECV_WOOD_D, width=2)
+    if side == "l":
+        # bowls + cups
+        d.ellipse([18, 26, 50, 44], fill=(235, 244, 250), outline=(150, 168, 184), width=2)
+        d.ellipse([24, 30, 44, 40], fill=LAB_GRN)
+        d.rounded_rectangle([58, 22, 74, 44], radius=3, fill=WHITE,
+                            outline=(150, 160, 172), width=2)
+        d.rounded_rectangle([80, 22, 96, 44], radius=3, fill=WHITE,
+                            outline=(150, 160, 172), width=2)
+        d.ellipse([100, 18, 116, 34], outline=NG_NAVY, width=3)
+        d.line([(114, 32), (120, 40)], fill=NG_NAVY, width=4)
+    if side == "r":
+        # big beaker with bubbling blue liquid
+        d.rounded_rectangle([20, 10, 62, 46], radius=4, fill=(238, 246, 252),
+                            outline=(150, 168, 184), width=3)
+        d.rectangle([23, 26, 59, 44], fill=NG_BLUE)
+        for (bx, by) in ((30, 22), (44, 18), (52, 24)):
+            d.ellipse([bx, by, bx + 5, by + 5], fill=(180, 220, 245))
+        # magnet + spoons tray
+        d.arc([78, 20, 98, 40], 180, 360, fill=CORAL, width=6)
+        d.rectangle([78, 34, 84, 42], fill=WHITE)
+        d.rectangle([92, 34, 98, 42], fill=WHITE)
+        d.rectangle([104, 26, 118, 42], fill=(235, 244, 250),
+                    outline=(170, 180, 192), width=2)
+
+
+@tile("lab_demo_l")
+def _(d):
+    """Front demo table — left (bowls, cups, magnifier)."""
+    _demo(d, "l")
+
+
+@tile("lab_demo_r")
+def _(d):
+    """Front demo table — right (bubbling beaker, magnet)."""
+    _demo(d, "r")
+
+
+def _cablock(d, top=False):
+    d.rectangle([20, 116, 108, 124], fill=(196, 208, 218))
+    d.rounded_rectangle([16, 14 if top else 0, 112, 118], radius=8,
+                        fill=(244, 247, 250), outline=(180, 190, 200), width=3)
+    d.rounded_rectangle([22, 22 if top else 2, 106, 112], radius=6,
+                        fill=NG_BLUE, outline=(50, 100, 140), width=3)
+    if top:
+        d.rectangle([30, 30, 98, 40], fill=(210, 230, 245))
+        d.rectangle([30, 44, 98, 48], fill=(150, 190, 220))
+        ar_text(d, 64, 78, "خزانة مقفلة", 14, WHITE, bold=True)
+    if not top:
+        d.ellipse([58, 50, 70, 62], fill=GOLD_TXT)          # lock
+        d.rectangle([60, 58, 68, 72], fill=(180, 140, 40))
+        d.rounded_rectangle([38, 84, 90, 104], radius=4, fill=WHITE,
+                            outline=CORAL, width=3)
+        d.rectangle([62, 88, 66, 100], fill=CORAL)
+        d.rectangle([57, 93, 71, 97], fill=CORAL)
+
+
+@tile("lab_cablock_t")
+def _(d):
+    """Locked safety cabinet — top."""
+    _cablock(d, top=True)
+
+
+@tile("lab_cablock_b")
+def _(d):
+    """Locked safety cabinet — bottom."""
+    _cablock(d)
+
+
+@tile("lab_sink")
+def _(d):
+    """Wash sink near the experiment area: basin, tap, soap, towel."""
+    d.rectangle([16, 112, 112, 122], fill=(196, 208, 218))
+    d.rounded_rectangle([18, 44, 110, 112], radius=10, fill=(248, 250, 252),
+                        outline=(188, 196, 206), width=3)
+    d.rounded_rectangle([26, 56, 102, 100], radius=8, fill=(226, 238, 246),
+                        outline=(160, 184, 202), width=2)
+    d.ellipse([32, 66, 96, 94], fill=(206, 228, 242))
+    d.arc([54, 16, 74, 40], 180, 360, fill=(150, 160, 172), width=4)
+    d.rectangle([62, 30, 68, 44], fill=(150, 160, 172))
+    d.rectangle([26, 18, 40, 40], fill=LAB_GRN, outline=LAB_GRN_D, width=2)  # soap
+    d.rectangle([88, 20, 104, 34], fill=WHITE, outline=NG_BLUE, width=2)     # towel
+    d.line([(90, 24), (102, 24)], fill=(170, 200, 224), width=2)
+    d.line([(90, 29), (102, 29)], fill=(170, 200, 224), width=2)
+
+
+@tile("lab_safety")
+def _(d):
+    """Visible safety kit: extinguisher + first-aid box on a mat."""
+    d.rounded_rectangle([10, 88, 118, 118], radius=8, fill=(226, 232, 238),
+                        outline=(196, 204, 214), width=2)
+    d.rounded_rectangle([30, 30, 58, 92], radius=10, fill=CORAL,
+                        outline=(150, 50, 40), width=3)
+    d.rectangle([38, 20, 50, 32], fill=(60, 66, 74))
+    d.line([(44, 24), (62, 18)], fill=(60, 66, 74), width=4)
+    d.rectangle([34, 48, 54, 62], fill=WHITE)
+    d.rounded_rectangle([66, 44, 112, 92], radius=6, fill=WHITE,
+                        outline=(150, 158, 168), width=3)
+    d.rectangle([86, 52, 92, 78], fill=LAB_GRN_D)
+    d.rectangle([78, 60, 100, 66], fill=LAB_GRN_D)
+
+
+@tile("lab_rock")
+def _(d):
+    """Specimen crate: rocks, minerals, shells in a clear box."""
+    d.rectangle([14, 112, 114, 122], fill=(196, 208, 218))
+    d.rounded_rectangle([24, 84, 104, 112], radius=4, fill=RECV_WOOD,
+                        outline=RECV_WOOD_D, width=2)
+    d.rounded_rectangle([14, 34, 114, 88], radius=6, fill=(238, 246, 252),
+                        outline=(160, 184, 202), width=3)
+    d.polygon([(26, 80), (40, 62), (52, 80)], fill=(150, 150, 158))     # rock
+    d.polygon([(54, 82), (66, 68), (76, 82)], fill=(120, 130, 148))
+    d.polygon([(48, 58), (56, 42), (62, 56)], fill=LILAC)               # crystal
+    d.polygon([(52, 58), (56, 42), (60, 58)], fill=(170, 150, 210))
+    d.ellipse([80, 66, 100, 84], fill=(240, 236, 228), outline=(190, 184, 172), width=2)  # shell
+    d.arc([82, 68, 98, 82], 0, 180, fill=(190, 184, 172), width=2)
+    d.rectangle([18, 38, 40, 50], fill=AMBER)                           # label tag
+    d.line([(22, 42), (36, 42)], fill=WHITE, width=2)
+    d.line([(22, 46), (32, 46)], fill=WHITE, width=2)
+
+
+@tile("lab_planets")
+def _(d):
+    """Solar system on a stand: sun + orbiting planets + stars."""
+    d.rectangle([14, 112, 114, 122], fill=(196, 208, 218))
+    d.rounded_rectangle([44, 96, 84, 116], radius=4, fill=(210, 220, 230),
+                        outline=(170, 180, 192), width=2)
+    d.rectangle([62, 30, 68, 100], fill=(150, 162, 176))
+    d.ellipse([48, 40, 80, 72], fill=AMBER)                              # sun
+    d.ellipse([44, 36, 84, 76], outline=(240, 190, 90), width=3)
+    d.arc([30, 50, 98, 100], 180, 360, fill=(170, 190, 210), width=2)
+    d.ellipse([34, 78, 46, 90], fill=NG_BLUE)                            # planet
+    d.ellipse([90, 66, 102, 78], fill=CORAL)
+    d.ellipse([52, 20, 62, 30], fill=TEAL)
+    for (sx, sy) in ((104, 28), (20, 24), (108, 88)):
+        d.polygon([(sx, sy - 4), (sx + 2, sy), (sx, sy + 4), (sx - 2, sy)], fill=GOLD_TXT)
+
+
+@tile("lab_volcano")
+def _(d):
+    """Volcano model on a low table: cone, lava, smoke, water pool."""
+    d.rectangle([14, 112, 114, 122], fill=(196, 208, 218))
+    d.rounded_rectangle([18, 92, 110, 112], radius=4, fill=RECV_WOOD,
+                        outline=RECV_WOOD_D, width=2)
+    d.ellipse([30, 84, 98, 98], fill=(196, 226, 244))                    # pool
+    d.polygon([(44, 88), (64, 40), (84, 88)], fill=(140, 110, 84))       # cone
+    d.polygon([(58, 46), (64, 40), (72, 48), (66, 58), (60, 54)], fill=CORAL)
+    d.line([(64, 52), (66, 84)], fill=(220, 90, 60), width=4)
+    d.ellipse([52, 22, 70, 38], fill=(228, 232, 236))                    # smoke
+    d.ellipse([62, 14, 78, 30], fill=(218, 222, 228))
+    d.polygon([(30, 88), (36, 78), (42, 88)], fill=LAB_GRN)              # plants
+    d.polygon([(88, 88), (94, 78), (100, 88)], fill=LAB_GRN)
+
+
+@tile("lab_shelf")
+def _(d):
+    """Wall shelf with organized clear bins of materials."""
+    lab_wall_base(d)
+    d.rectangle([8, 78, TW - 8, 88], fill=RECV_WOOD, outline=RECV_WOOD_D, width=2)
+    for i, c in enumerate((NG_BLUE, LAB_GRN, AMBER)):
+        x = 14 + i * 36
+        d.rounded_rectangle([x, 44, x + 30, 78], radius=4, fill=(240, 248, 252),
+                            outline=(160, 184, 202), width=2)
+        d.ellipse([x + 6, 58, x + 14, 66], fill=c)
+        d.ellipse([x + 16, 62, x + 24, 70], fill=c)
+        d.rectangle([x + 8, 48, x + 22, 52], fill=(220, 228, 236))
+    d.rectangle([TW // 2 - 12, 96, TW // 2 + 12, 106], fill=AMBER)
+    d.line([(TW // 2 - 8, 100), (TW // 2 + 8, 100)], fill=WHITE, width=2)
+
+
+# ============================================================
 # RECEPTION — غرفة الاستقبال (warm, professional, welcoming)
 # ============================================================
 RECV_WOOD = (222, 192, 150)

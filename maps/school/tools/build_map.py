@@ -72,6 +72,8 @@ fill("floor", "floor_path", 13, 23, 5, 40)                     # west corridor
 fill("floor", "floor_class", 5, 24, 8, 7)                      # أنشطة x5-12 y24-30
 fill("floor", "floor_service", 5, 32, 8, 7)                    # حاسوب
 fill("floor", "floor_service", 5, 40, 8, 7)                    # علوم
+fill("floor", "lab_floor", 5, 41, 7, 6)                        # علوم — أرضية سهلة التنظيف
+fill("floor", "lab_rug", 5, 43, 5, 3)                          # سجادة التجمع أمام طاولة العرض
 fill("floor", "floor_parquet", 5, 48, 8, 8)                    # مكتبة y48-55
 fill("floor", "floor_lobby", 5, 57, 8, 5)                      # مقصف y58-61 (wall 56/57?)
 fill("floor", "floor_service", 5, 57, 8, 5)                    # مقصف flooring service-ish
@@ -149,6 +151,13 @@ wall("wall", 4, 23, 1, 40)
 wall("wall", 5, 23, 8, 1); wall("wall", 5, 31, 8, 1)           # أنشطة box
 wall("wall", 5, 32, 8, 1); wall("wall", 5, 39, 8, 1)           # حاسوب box
 wall("wall", 5, 40, 8, 1); wall("wall", 5, 47, 8, 1)           # علوم box
+# علوم: الجدار الرئيسي — عنوان + لوحة الوحدات + السبورة التفاعلية
+GRID["walls"][40][5] = g("lab_title_l"); GRID["walls"][40][6] = g("lab_title_r")
+for _xx, _tt in ((7, "lab_theme"), (8, "lab_theme_b"), (9, "lab_theme_c")):
+    GRID["walls"][40][_xx] = g(_tt)
+GRID["walls"][40][10] = g("lab_board_l"); GRID["walls"][40][11] = g("lab_board_r")
+# رفوف منظمة على الجدار الجنوبي
+GRID["walls"][47][5] = g("lab_shelf"); GRID["walls"][47][6] = g("lab_shelf")
 wall("wall", 5, 47, 8, 1); wall("wall", 5, 56, 8, 1)           # مكتبة box (y48-55)
 wall("wall", 5, 57, 8, 1); wall("wall", 5, 62, 8, 1)           # مقصف box (y58-61)
 wall("wall", 12, 23, 1, 40)                                    # rooms|corridor partition
@@ -290,10 +299,24 @@ for yy in (33, 35, 37):
         solid("desk_comp", xx, yy)
 solid("cab_files", 11, 32)
 stamp("walls", "projector", 8, 32)                             # جهاز عرض الحاسوب
-# ---- علوم x5-12 y40-46 ----
-for yy in (41, 43, 45):
-    solid("desk_stu2", 6, yy, 2, 1); solid("desk_stu2", 9, yy, 2, 1)
-solid("cab_wood", 5, 40, 1, 2); solid("water", 11, 40); solid("plant_s", 5, 46)
+# ---- علوم x5-11 y41-46 (مختبر أطفال: آمن، مشرق، فضولي) ----
+# مجموعة A (2 أطفال) + ركن الاستكشاف شمال شرق
+solid("lab_bench", 7, 41); solid("lab_bench", 8, 41)
+solid("lab_chair", 6, 41); solid("lab_chair", 9, 41)
+solid("lab_rock", 10, 41); solid("lab_planets", 11, 41)
+# الخزانة المقفلة (أدوات خطرة بعيدًا عن الأطفال) + مسار ي42 واضح
+solid("lab_cablock_t", 5, 41); solid("lab_cablock_b", 5, 42)
+# منطقة المدرب: طاولة عرض أمامية + مساحة تجمع + أدوات السلامة والحوض
+solid("lab_safety", 5, 43)
+solid("lab_demo_l", 6, 43); solid("lab_demo_r", 7, 43)
+solid("lab_sink", 5, 44)
+# مجموعة B (2 أطفال) + مجموعة C (4 أطفال)
+solid("lab_chair", 6, 44); solid("lab_bench", 7, 44); solid("lab_bench", 8, 44)
+solid("lab_chair", 9, 44); solid("lab_bench", 10, 44); solid("lab_bench", 11, 44)
+solid("lab_chair", 10, 43); solid("lab_chair", 11, 43)
+solid("lab_chair", 10, 45); solid("lab_chair", 11, 45)
+# ركن البركان + نبات
+solid("lab_volcano", 11, 46); solid("plant_s", 5, 46)
 # ---- مكتبة x5-12 y48-55 ----
 solid("shelf_books", 5, 49, 1, 3); solid("shelf_books", 7, 49, 1, 3)
 solid("shelf_books", 9, 49, 1, 3); solid("shelf_books2", 11, 49, 1, 3)
@@ -771,6 +794,17 @@ obj("level-wall", 129, 44, 2, 1, web_props(UI + "math.html?loc=math&tool=levels"
     msg="مستويات الأطفال المحفّزة — كل طفل يتحدى نفسه فقط"))
 obj("trainer-easel", 124, 40, 1, 1, web_props(UI + "math.html?loc=math&tool=strategy",
     msg="سبورة المدرب — اشرح استراتيجية اليوم للمجموعة"))
+# ---- فصل العلوم ----
+obj("lab-title", 5, 40, 2, 1, web_props(UI + "science.html?loc=science&tool=title",
+    msg="🔬 مختبر المبدعين الصغار — تعال واكتشف ماذا سيحدث!"))
+obj("theme-board", 7, 40, 3, 1, web_props(UI + "science.html?loc=science&tool=themes",
+    msg="لوحة الوحدات — الفضاء، الطبيعة، جسم الإنسان، المادة، الطاقة، التجارب (تتغيّر مع الوحدة)"))
+obj("lab-screen", 10, 40, 2, 1, web_props(UI + "science.html?loc=science&tool=screen",
+    msg="السبورة التفاعلية — اشرح التجربة قبل تنفيذها وراقب الظاهرة"))
+obj("trainer-demo", 6, 43, 2, 1, web_props(UI + "science.html?loc=science&tool=experiment",
+    msg="طاولة التجربة الأمامية — المواد والخطوات ليشاهدها كل الأطفال"))
+obj("discovery", 10, 41, 2, 1, web_props(UI + "science.html?loc=science&tool=discover",
+    msg="ركن الاستكشاف — الكواكب، الأحجار والمعادن، والعينات الطبيعية"))
 
 # ================================================================ MAP JSON
 def flatten(name):
