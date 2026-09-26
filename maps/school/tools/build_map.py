@@ -39,10 +39,16 @@ def solid(name, x, y, w=1, h=1, layer="furniture"):
     stamp(layer, name, x, y, w, h)
     stamp("collisions", "mark_collide", x, y, w, h)
 
+DOOR_CELLS = []
+
 def wall(name, x, y, w=1, h=1, door=False):
     layer = "walls"
     stamp(layer, name, x, y, w, h)
-    if not door:
+    if door:
+        for yy in range(y, y + h):
+            for xx in range(x, x + w):
+                DOOR_CELLS.append((xx, yy))
+    else:
         stamp("collisions", "mark_collide", x, y, w, h)
 
 def fill(layer, name, x, y, w=1, h=1):
@@ -73,7 +79,7 @@ fill("floor", "floor_class", 5, 24, 8, 7)                      # أنشطة x5-1
 fill("floor", "floor_service", 5, 32, 8, 7)                    # حاسوب
 fill("floor", "floor_service", 5, 40, 8, 7)                    # علوم
 fill("floor", "lab_floor", 5, 41, 7, 6)                        # علوم — أرضية سهلة التنظيف
-fill("floor", "lab_rug", 5, 43, 5, 3)                          # سجادة التجمع أمام طاولة العرض
+fill("floor", "lab_rug", 5, 43, 5, 2)                          # سجادة التجمع أمام طاولة العرض (y43-44 فقط: صف الطاولات يقطع y44)
 fill("floor", "floor_parquet", 5, 48, 8, 8)                    # مكتبة y48-55
 fill("floor", "floor_lobby", 5, 57, 8, 5)                      # مقصف y58-61 (wall 56/57?)
 fill("floor", "floor_service", 5, 57, 8, 5)                    # مقصف flooring service-ish
@@ -323,11 +329,10 @@ solid("plant_s", 5, 46)
 GRID["walls"][45][12] = g("lab_vent")
 # ---- مكتبة x5-12 y48-55 ----
 solid("shelf_books", 5, 49, 1, 3); solid("shelf_books", 7, 49, 1, 3)
-solid("shelf_books", 9, 49, 1, 3); solid("shelf_books2", 11, 49, 1, 3)
+solid("shelf_books", 9, 49, 1, 3)   # لا رف عند x11: الباب (12,50-51) يجب أن يفتح على أرضية
 solid("shelf_books", 5, 53, 1, 3); solid("shelf_books", 7, 53, 1, 3)
 solid("shelf_books2", 9, 53, 1, 3); solid("shelf_books", 11, 53, 1, 3)
-solid("table_round", 6, 52); solid("chair_wood", 5, 52); solid("chair_wood", 7, 52)
-solid("bench_wait", 10, 48, 2, 1)
+solid("chair_wood", 10, 48); solid("table_round", 11, 48)       # طاولة قراءة في الزاوية (لا تحجب الممر الأوسط)
 # ---- مقصف x5-12 y58-61 ----
 solid("counter_l", 5, 58); solid("counter_m", 5, 59); solid("counter_r", 5, 60)
 solid("coffee", 5, 57) if False else solid("coffee", 6, 57)
@@ -809,6 +814,20 @@ obj("trainer-demo", 6, 43, 2, 1, web_props(UI + "science.html?loc=science&tool=e
     msg="طاولة التجربة الأمامية — المواد والخطوات ليشاهدها كل الأطفال"))
 obj("discovery", 10, 41, 2, 1, web_props(UI + "science.html?loc=science&tool=discover",
     msg="ركن الاستكشاف — الكواكب، الأحجار والمعادن، والعينات الطبيعية"))
+
+# ================================================================ DOORS (FIX)
+# A door must be walkable: partitions are drawn in bulk first, so a
+# pre-drawn wall left a collision on every doorway cell. Carve the
+# collision and give the cell its neighbour's floor (no floating doors).
+for (xx, yy) in DOOR_CELLS:
+    if not (0 <= xx < W and 0 <= yy < H):
+        continue
+    GRID["collisions"][yy][xx] = 0
+    if not GRID["floor"][yy][xx]:
+        for (nx, ny) in ((xx, yy + 1), (xx, yy - 1), (xx + 1, yy), (xx - 1, yy)):
+            if 0 <= nx < W and 0 <= ny < H and GRID["floor"][ny][nx]:
+                GRID["floor"][yy][xx] = GRID["floor"][ny][nx]
+                break
 
 # ================================================================ MAP JSON
 def flatten(name):
