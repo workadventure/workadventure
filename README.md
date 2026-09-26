@@ -55,6 +55,22 @@ Please check the [Setting up a production environment](docs/others/self-hosting/
 > These installation instructions are for local development only. They will not work on
 > remote servers as local environments do not have HTTPS certificates.
 
+### Without Docker
+
+You don't need Docker to try or develop WorkAdventure. With only Node.js (>= 20) and git installed, run:
+
+```
+node no-docker/start.mjs
+```
+
+This bootstraps everything (npm install, protobuf + i18n generation) and starts all services behind a
+small built-in gateway that replaces Traefik. Then browse to the printed URL
+(usually http://play.workadventure.localhost/).
+See [no-docker/README.md](no-docker/README.md) for details, options and troubleshooting
+(also available in Arabic / بالعربية).
+
+### With Docker
+
 Install Docker and clone this repository.
 
 > [!WARNING]

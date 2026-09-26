@@ -267,7 +267,10 @@ class LocalAdmin implements AdminInterface {
         const roomUrl = new URL(playUri);
 
         if (roomUrl.pathname === "/") {
-            roomUrl.pathname = START_ROOM_URL;
+            // The "{host}" placeholder is replaced with the host (and port) the user is
+            // currently browsing. This lets a Docker-free setup behind a single gateway
+            // (see no-docker/) work without hard-coding the public hostname.
+            roomUrl.pathname = START_ROOM_URL.replace(/\{host\}/g, roomUrl.host);
             return Promise.resolve({
                 redirectUrl: roomUrl.toString(),
             });

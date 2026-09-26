@@ -69,7 +69,7 @@
 
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
-    const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
+    const ROOM_AREA_PUSHER_URL = new URL("roomArea", ABSOLUTE_PUSHER_URL).toString();
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
