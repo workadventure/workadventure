@@ -1195,6 +1195,14 @@ def _(d):
     d.rectangle([96, 30, 100, 36], fill=WHITE)
     d.rectangle([108, 30, 112, 36], fill=WHITE)
     d.ellipse([58, 8, 74, 24], outline=NG_NAVY, width=3)
+    # ruler + dropper (simple measuring + drops) on the open top
+    d.rounded_rectangle([26, 60, 92, 74], radius=3, fill=AMBER,
+                        outline=(190, 150, 60), width=2)
+    for x in range(32, 90, 8):
+        d.line([(x, 62), (x, 68)], fill=WHITE, width=2)
+    d.ellipse([100, 54, 112, 66], fill=NG_BLUE, outline=(60, 100, 160), width=2)
+    d.rectangle([104, 66, 107, 90], fill=(210, 228, 244), outline=(150, 168, 184), width=1)
+    d.polygon([(103, 90), (108, 90), (105.5, 96)], fill=(150, 168, 184))
     d.line([(72, 22), (80, 32)], fill=NG_NAVY, width=4)
 
 
@@ -1427,6 +1435,74 @@ def _(d):
                         outline=(150, 158, 168), width=3)
     for y in (66, 76, 86, 96):
         d.line([(30, y), (TW - 30, y)], fill=(180, 190, 200), width=3)
+
+
+@tile("lab_body")
+def _(d):
+    """Kids-friendly human body model: friendly child in a lab coat with
+    visible heart + lungs, on a wooden display stand."""
+    d.rectangle([18, 114, 110, 124], fill=(196, 208, 218))
+    d.rounded_rectangle([34, 100, 94, 114], radius=4, fill=RECV_WOOD,
+                        outline=RECV_WOOD_D, width=2)
+    d.rectangle([58, 88, 70, 102], fill=RECV_WOOD_D)
+    # legs + shoes
+    d.rectangle([50, 82, 58, 98], fill=NG_BLUE, outline=(60, 100, 160), width=2)
+    d.rectangle([70, 82, 78, 98], fill=NG_BLUE, outline=(60, 100, 160), width=2)
+    d.rounded_rectangle([48, 96, 60, 102], radius=3, fill=(70, 80, 94))
+    d.rounded_rectangle([68, 96, 80, 102], radius=3, fill=(70, 80, 94))
+    # arms (skin) + lab coat torso
+    d.rounded_rectangle([36, 48, 44, 76], radius=4, fill=(250, 234, 220),
+                        outline=(196, 168, 140), width=2)
+    d.rounded_rectangle([84, 48, 92, 76], radius=4, fill=(250, 234, 220),
+                        outline=(196, 168, 140), width=2)
+    d.rounded_rectangle([44, 44, 84, 84], radius=8, fill=WHITE,
+                        outline=(170, 180, 192), width=2)
+    d.line([(64, 46), (64, 82)], fill=(214, 226, 238), width=2)
+    # heart + lungs (the lesson)
+    d.ellipse([48, 54, 58, 70], fill=(214, 232, 246), outline=(120, 160, 196), width=2)
+    d.ellipse([70, 54, 80, 70], fill=(214, 232, 246), outline=(120, 160, 196), width=2)
+    d.ellipse([57, 56, 65, 64], fill=CORAL)
+    d.ellipse([63, 56, 71, 64], fill=CORAL)
+    d.polygon([(57, 62), (71, 62), (64, 72)], fill=CORAL)
+    # head + hair + smile
+    d.ellipse([48, 6, 80, 38], fill=(250, 234, 220), outline=(196, 168, 140), width=2)
+    d.arc([48, 2, 80, 30], 200, 340, fill=NG_NAVY, width=7)
+    d.ellipse([56, 16, 60, 22], fill=(40, 46, 58))
+    d.ellipse([68, 16, 72, 22], fill=(40, 46, 58))
+    d.arc([58, 20, 70, 30], 10, 170, fill=(160, 120, 90), width=2)
+    # specimen tag
+    d.rectangle([36, 88, 54, 98], fill=AMBER)
+    d.line([(39, 91), (51, 91)], fill=WHITE, width=2)
+    d.line([(39, 95), (47, 95)], fill=WHITE, width=2)
+
+
+@tile("lab_animal")
+def _(d):
+    """Frog model on a stand — animals lesson, educational style."""
+    d.rectangle([20, 114, 108, 124], fill=(196, 208, 218))
+    d.rounded_rectangle([36, 100, 92, 114], radius=4, fill=RECV_WOOD,
+                        outline=RECV_WOOD_D, width=2)
+    # hind legs
+    d.ellipse([30, 84, 52, 104], fill=LAB_GRN, outline=LAB_GRN_D, width=2)
+    d.ellipse([76, 84, 98, 104], fill=LAB_GRN, outline=LAB_GRN_D, width=2)
+    # body + belly
+    d.ellipse([38, 56, 90, 102], fill=LAB_GRN, outline=LAB_GRN_D, width=2)
+    d.ellipse([50, 72, 78, 98], fill=(234, 244, 228))
+    # eye bumps
+    d.ellipse([42, 42, 58, 60], fill=LAB_GRN, outline=LAB_GRN_D, width=2)
+    d.ellipse([70, 42, 86, 60], fill=LAB_GRN, outline=LAB_GRN_D, width=2)
+    d.ellipse([45, 45, 55, 55], fill=WHITE, outline=(120, 130, 142), width=1)
+    d.ellipse([73, 45, 83, 55], fill=WHITE, outline=(120, 130, 142), width=1)
+    d.ellipse([48, 47, 52, 53], fill=(40, 46, 58))
+    d.ellipse([76, 47, 80, 53], fill=(40, 46, 58))
+    # smile + spots
+    d.arc([54, 66, 74, 78], 10, 170, fill=LAB_GRN_D, width=2)
+    d.ellipse([44, 66, 49, 71], fill=LAB_GRN_D)
+    d.ellipse([79, 66, 84, 71], fill=LAB_GRN_D)
+    d.ellipse([62, 60, 66, 64], fill=LAB_GRN_D)
+    # tag
+    d.rectangle([38, 90, 52, 99], fill=AMBER)
+    d.line([(40, 94), (50, 94)], fill=WHITE, width=2)
 
 
 # ============================================================

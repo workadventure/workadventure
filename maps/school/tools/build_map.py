@@ -316,7 +316,9 @@ solid("lab_chair", 9, 44); solid("lab_bench", 10, 44); solid("lab_bench", 11, 44
 solid("lab_chair", 10, 43); solid("lab_chair", 11, 43)
 solid("lab_chair", 10, 45); solid("lab_chair", 11, 45)
 # ركن البركان + العينات المثبتة + نبات
-solid("lab_volcano", 11, 46); solid("lab_pinned", 10, 46); solid("plant_s", 5, 46)
+solid("lab_volcano", 11, 46); solid("lab_pinned", 10, 46)
+solid("lab_body", 9, 46); solid("lab_animal", 8, 46)   # مجسمات: جسم الإنسان + حيوان
+solid("plant_s", 5, 46)
 # تهوية على جدار الممر الشرقي
 GRID["walls"][45][12] = g("lab_vent")
 # ---- مكتبة x5-12 y48-55 ----
