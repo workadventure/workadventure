@@ -315,8 +315,10 @@ solid("lab_chair", 6, 44); solid("lab_bench", 7, 44); solid("lab_bench", 8, 44)
 solid("lab_chair", 9, 44); solid("lab_bench", 10, 44); solid("lab_bench", 11, 44)
 solid("lab_chair", 10, 43); solid("lab_chair", 11, 43)
 solid("lab_chair", 10, 45); solid("lab_chair", 11, 45)
-# ركن البركان + نبات
-solid("lab_volcano", 11, 46); solid("plant_s", 5, 46)
+# ركن البركان + العينات المثبتة + نبات
+solid("lab_volcano", 11, 46); solid("lab_pinned", 10, 46); solid("plant_s", 5, 46)
+# تهوية على جدار الممر الشرقي
+GRID["walls"][45][12] = g("lab_vent")
 # ---- مكتبة x5-12 y48-55 ----
 solid("shelf_books", 5, 49, 1, 3); solid("shelf_books", 7, 49, 1, 3)
 solid("shelf_books", 9, 49, 1, 3); solid("shelf_books2", 11, 49, 1, 3)

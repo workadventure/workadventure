@@ -1389,6 +1389,46 @@ def _(d):
     d.line([(TW // 2 - 8, 100), (TW // 2 + 8, 100)], fill=WHITE, width=2)
 
 
+@tile("lab_pinned")
+def _(d):
+    """Educational pinned specimens: butterfly + fern leaf in a glass case."""
+    d.rectangle([14, 112, 114, 122], fill=(196, 208, 218))
+    d.rounded_rectangle([22, 88, 106, 112], radius=4, fill=RECV_WOOD,
+                        outline=RECV_WOOD_D, width=2)
+    d.rectangle([14, 20, 114, 92], fill=(240, 248, 252), outline=(160, 184, 202), width=3)
+    d.rectangle([18, 24, 110, 88], fill=(250, 252, 254), outline=(200, 214, 226), width=2)
+    # pinned butterfly (center-right)
+    d.ellipse([66, 40, 82, 58], fill=LILAC, outline=(90, 74, 140), width=2)   # upper wings
+    d.ellipse([66, 58, 82, 74], fill=(170, 150, 215), outline=(90, 74, 140), width=2)  # lower
+    d.ellipse([84, 40, 100, 58], fill=LILAC, outline=(90, 74, 140), width=2)
+    d.ellipse([84, 58, 100, 74], fill=(170, 150, 215), outline=(90, 74, 140), width=2)
+    d.rectangle([73, 42, 77, 72], fill=(70, 60, 90))
+    d.line([(75, 42), (70, 34)], fill=(70, 60, 90), width=2)
+    d.line([(75, 42), (80, 34)], fill=(70, 60, 90), width=2)
+    d.rectangle([74, 30, 76, 34], fill=AMBER)                            # pin
+    # fern leaf (left)
+    d.line([(24, 78), (48, 38)], fill=LAB_GRN_D, width=3)
+    for i in range(5):
+        y = 74 - i * 8
+        d.line([(26 + i * 4, y), (36 + i * 4, y - 6)], fill=LAB_GRN, width=3)
+        d.line([(26 + i * 4, y), (20 + i * 4, y - 8)], fill=LAB_GRN, width=3)
+    d.rectangle([24, 82, 40, 88], fill=AMBER)                            # tag
+    d.line([(27, 85), (37, 85)], fill=WHITE, width=2)
+
+
+@tile("lab_vent")
+def _(d):
+    """Wall ventilation grille — quiet fresh air."""
+    d.rectangle([0, 0, TW, TW], fill=(237, 233, 227))
+    d.rectangle([0, 0, TW, 42], fill=(62, 70, 80))
+    d.rectangle([0, 42, TW, 48], fill=(46, 54, 64))
+    d.rectangle([0, TW - 22, TW, TW], fill=BASE)
+    d.rounded_rectangle([22, 56, TW - 22, 104], radius=6, fill=(248, 250, 252),
+                        outline=(150, 158, 168), width=3)
+    for y in (66, 76, 86, 96):
+        d.line([(30, y), (TW - 30, y)], fill=(180, 190, 200), width=3)
+
+
 # ============================================================
 # RECEPTION — غرفة الاستقبال (warm, professional, welcoming)
 # ============================================================
