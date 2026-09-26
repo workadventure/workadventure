@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — المكتبة</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-shelf">
+    <div class="content">
+      <h3 style="color:var(--wood-d);margin-bottom:10px">📚 فهرس المكتبة — الإعارة</h3>
+      <table class="data">
+        <thead><tr><th>الكتاب</th><th>الكاتب</th><th>الرف</th><th>الحالة</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="muted" style="margin-top:10px">الغرفة صامتة حسب قواعد المكتبة — مناسبة للقراءة الهادئة داخل العالم.</p>
+    </div>
+  </div>
+  <div class="hint">💡 أنت بين <b>رفوف الكتب</b> في مكتبة الجناح الغربي. Esc للعودة للغرفة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("فهرس المكتبة والإعارة");
+const seed = [
+  ["حكايات من الصحراء", "عبد الحميد بن هدوقة", "أ-١", "ok", "متاح"],
+  ["موسوعة العلوم للناشئة", "هيئة التأليف", "أ-٢", "late", "مُعار"],
+  ["ألف ليلة وليلة (مختصر)", "مجهول", "ب-١", "ok", "متاح"],
+  ["رياضيات ممتعة", "د. نبيل صايغ", "ب-٣", "late", "مُعار"],
+  ["شجرة المعرفة — قصص قصيرة", "تلميذو NG Academy", "ج-١", "ok", "متاح"],
+  ["أطلس الجزائر المدرسي", "الديوان الوطني", "ج-٢", "absent", "قيد الترميم"],
+];
+const rows = NGA.store("library", seed);
+document.getElementById("rows").innerHTML = rows.map(r =>
+  `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td><span class="tag ${r[3]}">${r[4]}</span></td></tr>`).join("");
+</script>
+</body>
+</html>

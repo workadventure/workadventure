@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — الإشعارات</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-phone">
+    <div class="content">
+      <h3 style="color:var(--blue);margin-bottom:10px">☎️ الهاتف الداخلي — الإشعارات</h3>
+      <div class="rowlist" id="msgs"></div>
+    </div>
+  </div>
+  <div class="hint">💡 مفتوح من <b>هاتف المكتب</b> — رسائل المدرسة الداخليّة. Esc للعودة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("الإشعارات والرسائل");
+const seed = [
+  ["أ. سارة بن عيسى", "تأكيد جاهزية قاعة اللغة لاجتماع أولياء الأمور.", "منذ ١٠ د", "ok", "جديد"],
+  ["الاستقبال", "وصل زائر لموعد ١١:٠٠ — في انتظار قاعة الاجتماعات.", "منذ ٢٥ د", "info", "عاجل"],
+  ["أ. كريم زروقي", "طلب تغيير حصتي الرياضة يوم الخميس (مسيرة الأنشطة).", "منذ ساعة", "late", "قيد المعالجة"],
+  ["أمين المكتبة", "انتهاء مهلة إعارة ٦ كتب — أُرسلت تذكيرات.", "أمس", "ok", "منتهي"],
+];
+const msgs = NGA.store("msgs", seed);
+document.getElementById("msgs").innerHTML = msgs.map(m => `
+  <div class="rowitem" style="background:#0e1a24;border-color:#22405a">
+    <div><b style="color:var(--blue)">${m[0]}</b><div style="margin-top:4px">${m[1]}</div></div>
+    <div style="text-align:left"><span class="tag ${m[3]}">${m[4]}</span><div class="muted" style="margin-top:4px">${m[2]}</div></div>
+  </div>`).join("");
+</script>
+</body>
+</html>

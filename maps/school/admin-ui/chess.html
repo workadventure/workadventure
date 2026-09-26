@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — فصل الشطرنج</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-chess">
+    <div class="topbar">
+      <span>♟️ عالم الشطرنج</span>
+      <span class="muted" style="color:#cfe0ee; font-size:12px">فكّر • لاحظ • تحرك</span>
+    </div>
+    <div class="content" id="body"></div>
+  </div>
+  <div class="hint">💡 ستة طاولات حقيقية + رقعة تعليمية كبيرة + مدرب يتحرك بين اللاعبين. <b>فكّر قبل أن تتحرك.</b> Esc للعودة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("فصل الشطرنج");
+const params = new URLSearchParams(location.search);
+const tool = params.get("tool") || "digital-board";
+const body = document.getElementById("body");
+
+const GL = { K: "♚", Q: "♛", R: "♜", B: "♝", N: "♞", P: "♟" };
+const START = [
+  "RNBQKBNR", "PPPPPPPP", "........", "........",
+  "........", "........", "pppppppp", "rnbqkbnr"];
+const PUZZLE = [
+  "........", "........", "........", "........",
+  "........", "..q.....", "..k.....", "..K.R..."]; // mate in 1: Rh1#? (queen on f2 blocks)
+const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
+
+let board, sel = null, moving = "w";
+function setBoard(rows) {
+  board = rows.map(r => r.split(""));
+}
+function glyph(k) {
+  if (!k) return "";
+  const white = k === k.toUpperCase();
+  const g = GL[k.toUpperCase()];
+  return `<span class="${white ? "pw" : "pb"}">${g}</span>`;
+}
+function drawBoard(el) {
+  el.innerHTML = "";
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+    const sq = document.createElement("div");
+    sq.className = "sq " + ((r + c) % 2 ? "d" : "l");
+    const k = board[r][c];
+    if (k) sq.innerHTML = glyph(k);
+    if (sel && sel[0] === r && sel[1] === c) sq.classList.add("sel");
+    sq.onclick = () => tap(r, c);
+    el.appendChild(sq);
+  }
+}
+function tap(r, c) {
+  const k = board[r][c];
+  if (sel) {
+    const [sr, sc] = sel;
+    if (sr === r && sc === c) { sel = null; }
+    else if (k && ((k === k.toUpperCase()) === (board[sr][sc] === board[sr][sc].toUpperCase()))) { sel = [r, c]; }
+    else { const m = board[sr][sc]; board[sr][sc] = k; board[r][c] = m; sel = null; moving = moving === "w" ? "b" : "w"; }
+  } else if (k) sel = [r, c];
+  drawBoard(document.getElementById("bg"));
+}
+function clockUI(parent) {
+  parent.innerHTML = `
+    <span class="timerbox" id="clk" style="font-size:20px">05:00 | 05:00</span>
+    <button class="btn ghost" id="cgo">▶ ابدأ</button>
+    <button class="btn ghost" id="crst">↺</button>
+    <span class="muted" style="font-size:11px">ساعة الشطرنج (٥ دقائق لكل لاعب)</span>`;
+  let a = 300, b = 300, iv = null, on = false, turn = 0;
+  const clk = document.getElementById("clk");
+  const fmt = s => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+  const up = () => { clk.textContent = fmt(a) + " | " + fmt(b);
+    clk.style.color = turn ? "#ffd28a" : "#9fd8ff"; };
+  document.getElementById("cgo").onclick = () => {
+    on = !on;
+    if (on) iv = setInterval(() => {
+      if (turn === 0) a = Math.max(0, a - 1); else b = Math.max(0, b - 1);
+      if (a === 0 || b === 0) { clearInterval(iv); on = false; clk.textContent = "انتهت الجولة ⏱️"; }
+      else up();
+    }, 1000);
+    document.getElementById("cgo").textContent = on ? "⏸ إيقاف" : "▶ ابدأ";
+  };
+  document.getElementById("crst").onclick = () => {
+    clearInterval(iv); on = false; a = 300; b = 300; turn = 0;
+    document.getElementById("cgo").textContent = "▶ ابدأ"; up();
+  };
+  up();
+}
+
+function digitalBoard() {
+  setBoard(START);
+  body.innerHTML = `
+    <h3>🖥️ الرقعة الرقمية — رقعة تفاعلية للشرح</h3>
+    <div class="chessgrid" id="bg"></div>
+    <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:10px">
+      <button class="btn" id="pStart">الترتيب الافتتاحي</button>
+      <button class="btn" id="pPuzzle">لغز: كش مات في جولة</button>
+      <button class="btn ghost" id="pClear">رقعة فارغة</button>
+    </div>
+    <div id="clkbox" class="rowitem"></div>
+    <p class="muted" style="margin-top:8px">انقر قطعة ثم انقر خانة لنقلها (للعرض — بدون قواعد). يبدّل المدرب المواقع أثناء الشرح. 🎯</p>`;
+  drawBoard(document.getElementById("bg"));
+  document.getElementById("pStart").onclick = () => { setBoard(START); sel = null; drawBoard(document.getElementById("bg")); };
+  document.getElementById("pPuzzle").onclick = () => { setBoard(PUZZLE); sel = null; drawBoard(document.getElementById("bg")); };
+  document.getElementById("pClear").onclick = () => { setBoard(Array(8).fill("........")); sel = null; drawBoard(document.getElementById("bg")); };
+  clockUI(document.getElementById("clkbox"));
+}
+
+function title() {
+  body.innerHTML = `
+    <h3>♟️ هوية الفصل — عالم الشطرنج</h3>
+    <p>غرفة <b>تفكير ومنافسة ودية</b>: ستة طاولات شطرنج حقيقية (طفلان متقابلان)،
+    والمنصة الخشبية المرفوعة في المقدمة هي <b>منطقة المدرب</b>: رقعة تعليمية كبيرة
+    وشاشة رقمية ومكتب وساعة شطرنج — يتحرك المدرب بين الطاولات ويتابع كل مباراة.</p>
+    <h3>قوانين الدائرة… بل قوانين الرقعة</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>1</b> فكّر قبل أن تتحرك.</div>
+      <div class="rowitem"><b>2</b> كل نقلة لها هدف.</div>
+      <div class="rowitem"><b>3</b> خطط، لاحظ، ثم تحرك.</div>
+      <div class="rowitem"><b>4</b> راقب الساعة — الوقت جزء من اللعبة.</div>
+      <div class="rowitem"><b>5</b> بعد كل مباراة: مصافحة، ومراجعة قصيرة للنقطة الأهم.</div>
+    </div>
+    <p class="muted" style="margin-top:8px">الطابع: هادئ، راقٍ، استراتيجي — أبيض وأزرق NG ولمسات خشب طبيعي. 🏛️</p>`;
+}
+
+function movements() {
+  const M = [
+    ["♔", "الملك", "خانة واحدة في أي اتجاه. أهم قطعة — إن أُصِيب انتهت الجولة."],
+    ["♕", "الملكة", "كم تريد من الخانات: أفقي، عمودي، أو قطري. أقوى القطع."],
+    ["♖", "الرخ (القلعة)", "خطوط مستقيمة فقط — أفقي أو عمودي. قوي في النهايات."],
+    ["♗", "الفيصل (الأسقف)", "خانات قطرية فقط، ويبقى على لونه إلى الأبد."],
+    ["♘", "الحصان", "نقطة L: خانتان في خط ثم خانة جانبية. الوحيد الذي يقفز فوق القطع!"],
+    ["♙", "الجندي (البيادق)", "خطوة للأمام (أو خانتان من البداية)، ويأكل قطريًا. عند آخر صف يتوّج!"],
+  ];
+  body.innerHTML = `
+    <h3>🧭 حركة القطع — مخطط الجدار</h3>
+    <div class="rowlist">${M.map(([g, n, d]) =>
+      `<div class="rowitem"><b style="font-size:20px">${g}</b> <b>${n}</b>
+       <div class="muted" style="margin-top:2px">${d}</div></div>`).join("")}</div>
+    <p class="muted" style="margin-top:8px">على اللوحة الكبيرة خلف الطاولات: L الفرس، القطر، والخط مسترسلة بالألوان. ✏️</p>`;
+}
+
+function puzzles() {
+  const P = [
+    ["مات الخلف (Back-rank)", "ملك أسود في e8 وبيادقه تحاصره في الصف الثامن، وملك أبيض بعيد…", "الرخ ينزلق إلى a8 → ⚡ كش مات!"],
+    ["السُلَّم (Ladder)", "ملك أسود في الهامش، وملكان (الرخ) يحاصران من أعلى وأسفل.", "حرّك الرخ الأعلى صفًا، ثم السفلي — حتى الزاوية!"],
+    ["الشوكة (Fork)", "فرس أبيض في d5 وملك أسود في e7 مع رخ في f8.", "الفارس ينتقل ويهجم على الاثنين في نقلة واحدة!"],
+    ["لا تنسَ الوقاية", "الخصم يهدد ملكك بفيصله، وتريد مهاجمته بالملكة…", "أولًا ادفع عن ملكك، ثم فكر في الهجوم. الدفاع أول!"],
+  ];
+  body.innerHTML = `
+    <h3>🧩 ألغاز الشطرنج — تحدٍّ جديد كل جلسة</h3>
+    <p class="muted">تُعرض اللوحة على الشاشة الرقمية خلف الطاولات، وتُقلب الإجابة بعد أن تخمّن الدائرة.</p>
+    <div class="rowlist" id="pl"></div>`;
+  function render() {
+    document.getElementById("pl").innerHTML = P.map(([t, s, a]) =>
+      `<div class="rowitem"><b>❓ ${t}</b>
+        <div class="muted" style="margin:3px 0">${s}</div>
+        <button class="btn ghost" data-i="${t}">👁️ الإجابة</button>
+        <div class="tag ok ans" hidden>💡 ${a}</div></div>`).join("");
+    document.querySelectorAll("#pl .btn.ghost").forEach(b => b.onclick = () => {
+      const ans = b.parentElement.querySelector(".ans");
+      ans.hidden = !ans.hidden; b.hidden = ans.hidden;
+    });
+  }
+  render();
+}
+
+function tournament() {
+  const rows = [
+    ["كريم زروقي", 14, "غالب ٤ • تعادل ٢"],
+    ["لينا مرابط", 13, "غالب ٤ • تعادل ١"],
+    ["أحمد بوزيد", 11, "غالب ٣ • تعادل ٢"],
+    ["سارة بن عيسى", 10, "غالب ٣ • تعادل ١"],
+    ["يوسف حمداني", 9, "غالب ٢ • تعادل ٣"],
+  ];
+  body.innerHTML = `
+    <h3>🏆 التحديات والبطولات الداخلية</h3>
+    <p class="muted">بطولة الفصل: «تحدّي الفرس الذهبي» — نقطة للفوز، نصف نقطة للتعادل.</p>
+    <div class="rowlist" id="tl"></div>
+    <div class="rowitem" style="display:flex; gap:8px; margin-top:8px">
+      <input id="tn" style="flex:1" placeholder="اسم اللاعب…">
+      <button class="btn" id="tadd">➕ نتيجة</button>
+    </div>
+    <p class="muted" style="margin-top:8px">بطل الفصل يتسلم الكأس المذهّب على المنصة أمام قاعة النجوم في الحفل السنوي. 🎖️</p>`;
+  let table = rows.slice();
+  function render() {
+    table.sort((a, b) => b[1] - a[1]);
+    document.getElementById("tl").innerHTML = table.map(([n, p, r], i) =>
+      `<div class="rowitem"><b>${i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1) + "."}</b>
+       ${n} <span class="tag ${i < 3 ? "ok" : "late"}" style="margin-inline-start:auto">${p} نقطة</span>
+       <span class="muted" style="font-size:11px">${r}</span></div>`).join("");
+  }
+  render();
+  document.getElementById("tadd").onclick = () => {
+    const n = document.getElementById("tn").value.trim();
+    if (!n) return;
+    document.getElementById("tn").value = "";
+    const i = table.findIndex(r => r[0] === n);
+    if (i >= 0) table[i][1] += 1; else table.push([n, 1, "غالب ١"]);
+    render();
+  };
+}
+({ "digital-board": digitalBoard, title, movements, puzzles, tournament })[tool]();
+</script>
+</body>
+</html>

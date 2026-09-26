@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — دفتر الحضور</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-ledger">
+    <div class="content">
+      <h3 style="color:#2f5138;margin-bottom:10px">📗 سجل الحضور والانصراف — اليوم</h3>
+      <div class="kpis">
+        <div class="kpi"><b>٨</b><span>صفوف</span></div>
+        <div class="kpi"><b>٩٦٪</b><span>نسبة الحضور</span></div>
+        <div class="kpi"><b>٣</b><span>متأخرون</span></div>
+        <div class="kpi"><b>٢</b><span>غياب مبرَّر</span></div>
+      </div>
+      <table class="data">
+        <thead><tr><th>الصف</th><th>المعلم/ة المسؤول</th><th>الطلاب</th><th>حاضر</th><th>الحالة</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="muted" style="margin-top:10px">تُراجع الإدخالات من دفتر الحضور الورقي على المكتب — تُحدَّث البيانات هنا للمطالعة والمقارنة.</p>
+    </div>
+  </div>
+  <div class="hint">💡 هذه الصفحة داخل إطار <b>دفتر الحضور</b> الورقي على المكتب. Esc للعودة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("دفتر الحضور والانصراف");
+const seed = [
+  ["الأول", "أ. سارة بن عيسى", 32, 32, "ok", "حاضر"],
+  ["الثاني", "أ. خالد بوعلام", 30, 28, "late", "٣ متأخرين"],
+  ["الثالث", "أ. منى قاسمي", 31, 31, "ok", "حاضر"],
+  ["الرابع", "أ. يوسف حمداني", 29, 27, "absent", "غياب مبرَّر ×٢"],
+  ["الخامس", "أ. ليلى مرابط", 30, 30, "ok", "حاضر"],
+  ["السادس", "أ. كريم زروقي", 28, 27, "late", "متأخر ×١"],
+];
+const rows = NGA.store("attendance", seed);
+document.getElementById("rows").innerHTML = rows.map(r =>
+  `<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="tag ${r[4]}">${r[5]}</span></td></tr>`).join("");
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — لوحة تحكم المسرح</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-console">
+    <div class="content">
+      <h3 style="margin-bottom:12px">🎛️ طاولة الإخراج — قاعة النجوم</h3>
+      <div class="stage-preview closed house" id="prev">
+        <div class="cur r"></div><div class="cur l"></div>
+        <div class="scr"></div><div class="glow"></div>
+      </div>
+
+      <div class="rowlist">
+        <div class="rowitem"><b>🎭 الستائر الجانبية</b>
+          <div><button class="btn ghost" id="cOpen">فتح</button> <button class="btn" id="cClose">إغلاق</button></div>
+        </div>
+        <div class="rowitem"><b>🖼️ الخلفية المسرحية (تُغيَّر حسب المناسبة)</b>
+          <div>
+            <button class="btn ghost bd on" data-bd="#2864a0">شاشة LED</button>
+            <button class="btn ghost bd" data-bd="#c6b8a4">دريّ محايد</button>
+            <button class="btn ghost bd" data-bd="#26355e">أفق النجوم</button>
+            <button class="btn ghost bd" data-bd="#1E4664">شعار NG</button>
+          </div>
+        </div>
+        <div class="rowitem"><b>💡 الإضاءة المسرحية</b>
+          <div>
+            <button class="btn ghost lt" data-lt="house">عامة</button>
+            <button class="btn ghost lt" data-lt="show">عرض مسرحي</button>
+            <button class="btn lt" data-lt="show">حفل / تكريم</button>
+          </div>
+        </div>
+        <div class="rowitem"><b>🎙️ النظام الصوتي</b>
+          <div><span class="tag ok" id="micState">٣ ميكروفونات جاهزة</span> <button class="btn ghost" id="micTest">اختبار المنصّة</button></div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:10px">غرفة التحكم خلف المقاعد — الإضاءة المسرحية منفصلة عن الإضاءة العامة للسقف ✓</p>
+    </div>
+  </div>
+  <div class="hint">💡 <b>طاولة الإخراج والصوت</b> أسفل قاعة النجوم. Esc للعودة للقاعة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("لوحة تحكم المسرح");
+const prev = document.getElementById("prev");
+document.getElementById("cOpen").onclick = () => prev.classList.remove("closed");
+document.getElementById("cClose").onclick = () => prev.classList.add("closed");
+document.querySelectorAll(".bd").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".bd").forEach(x => x.classList.remove("on"));
+  b.classList.add("on");
+  prev.querySelector(".scr").style.background = b.dataset.bd;
+});
+document.querySelectorAll(".lt").forEach(b => b.onclick = () => {
+  prev.classList.remove("house", "lights-show");
+  prev.classList.add(b.dataset.lt === "house" ? "house" : "lights-show");
+});
+document.getElementById("micTest").onclick = () => {
+  const el = document.getElementById("micState");
+  el.textContent = "🔊 اختبار البث… (يُسمع على المنصّة للجمهور)";
+  el.className = "tag info";
+  setTimeout(() => { el.textContent = "✓ النظام الصوتي سليم"; el.className = "tag ok"; }, 1400);
+};
+</script>
+</body>
+</html>

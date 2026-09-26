@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — شاشة الحفل</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-led">
+    <div class="content">
+      <h2 style="margin-bottom:4px">✨ NG Academy — قاعة النجوم ✨</h2>
+      <p class="muted" style="color:#8fb6d4">شاشة العرض الكبيرة خلف المسرح</p>
+      <div class="mode-grid" id="modes"></div>
+      <div id="body" style="text-align:right; min-height:180px"></div>
+      <div class="ticker"><span id="tick"></span></div>
+    </div>
+  </div>
+  <div class="hint">💡 هذه <b>شاشة LED</b> خلف المسرح — أو من سجل الزوار وطاولة الجوائز. Esc للعودة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("شاشة الحفل والعروض");
+const modes = {
+  lecture: { ico: "🎤", name: "محاضرة أولياء", body: `
+    <h3>🎤 محاضرة لأولياء الأمور</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>كلمة مدير الأكاديمية</b><span class="muted">١٠:٠٠ — على المسرح</span></div>
+      <div class="rowitem"><b>عرض: رحلة الطفل في NG Academy</b><span class="muted">١٠:٢٠ — الشاشة خلفه</span></div>
+      <div class="rowitem"><b>أسئلة ونقاش</b><span class="muted">١٠:٥٠ — الميكروفون في الممر المركزي</span></div>
+    </div>` },
+  ceremony: { ico: "🎭", name: "حفل مدرسي", body: `
+    <h3>🎭 حفل NG Academy السنوي</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>افتتاح — النشيد والراية</b><span class="tag info">المنصّة</span></div>
+      <div class="rowitem"><b>فقرات الصفوف</b><span class="tag ok">العرض الجماعي</span></div>
+      <div class="rowitem"><b>ختام — شكر الأسر</b><span class="tag late">٣٠ دقيقة</span></div>
+    </div>` },
+  talents: { ico: "🌟", name: "عرض مواهب", body: `
+    <h3>🌟 مواهب أطفالنا</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>سلمى — العزف على آلة</b><span class="muted">الصف الثالث</span></div>
+      <div class="rowitem"><b>فريق الروبوت — عرض تقني</b><span class="muted">الصف السادس</span></div>
+      <div class="rowitem"><b>مسرحية «شجرة المعرفة»</b><span class="muted">الصف الخامس</span></div>
+    </div>` },
+  graduation: { ico: "🎓", name: "حفل التخرج", body: `
+    <h3>🎓 دفعة NG Academy</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>أمين بوزيد</b><span class="tag ok">تخرّج بامتياز</span></div>
+      <div class="rowitem"><b>لينا مرابط</b><span class="tag ok">تخرّج بامتياز</span></div>
+      <div class="rowitem"><b>ياسين حمداني</b><span class="tag ok">تخرّج</span></div>
+      <div class="rowitem"><b>مريم قاسمي</b><span class="tag ok">تخرّج بامتياز</span></div>
+    </div>` },
+  story: { ico: "🎬", name: "مسرح قصص", body: `
+    <h3>🎬 مسرحية: «البومة التي أحبّت القراءة»</h3>
+    <p class="quote" style="text-align:right">«كل كتابٍ بابٌ … وكل قارئٍ بومةٌ تضيء الليل.»</p>
+    <p class="muted" style="margin-top:10px">الديكور يتحوّل إلى غابة المعرفة — الستائر مفتوحة والعرض على كامل المنصّة.</p>` },
+  honors: { ico: "🏆", name: "تكريم الطلاب", body: `
+    <h3>🏆 منصّة التكريم</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>أحسن قارئ — سارة بن عيسى</b><span class="tag ok">استدعاء للمنصّة</span></div>
+      <div class="rowitem"><b>مبادرة العام — «شجرة المعرفة»</b><span class="tag info">فريق الصف الرابع</span></div>
+      <div class="rowitem"><b>المركز الأول — أولمبياد الرياضيات</b><span class="tag ok">كريم زروقي</span></div>
+    </div>
+    <p class="muted" style="margin-top:8px">طاولة الجوائز على المسرح — يُستدعى الطفل واحدًا تلو الآخر 🎤</p>` },
+};
+const params = new URLSearchParams(location.search);
+let cur = params.get("mode") || (params.get("tool") === "honors" ? "honors" : "ceremony");
+const modesEl = document.getElementById("modes");
+function drawModes() {
+  modesEl.innerHTML = Object.entries(modes).map(([k, m]) =>
+    `<button class="mode-btn ${k === cur ? "on" : ""}" data-k="${k}">${m.ico} ${m.name}</button>`).join("");
+  modesEl.querySelectorAll("button").forEach(b => b.onclick = () => { cur = b.dataset.k; draw(); });
+}
+function draw() {
+  drawModes();
+  document.getElementById("body").innerHTML = modes[cur].body;
+}
+draw();
+document.getElementById("tick").textContent =
+  "🎓 تخرّج دفعة NG Academy · 🌟 مواهب أطفالنا · 🏆 تكريم المتفوقين · «العلم نورٌ وطلابنا نجوم» · ";
+</script>
+</body>
+</html>

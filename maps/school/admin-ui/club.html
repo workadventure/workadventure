@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — نادي المبدعين الصغار</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-club">
+    <div class="topbar">
+      <span>✨ نادي المبدعين الصغار</span>
+      <span class="muted" style="color:#bcd7ea; font-size:12px">نتحدث • نفكر • نختلف • نبدع</span>
+      <span class="vals">
+        <i style="background:#5FB4E8" title="نتحدث"></i>
+        <i style="background:#3FA39C" title="نفكر"></i>
+        <i style="background:#E4A54A" title="نختلف"></i>
+        <i style="background:#8E7CC3" title="نبدع"></i>
+      </span>
+    </div>
+    <div class="content" id="body"></div>
+  </div>
+  <div class="hint">💡 جالِسوا في الدائرة — كل المقاعد متساوية والمشرف جزءٌ من الدائرة. <b>هنا صوتك مهم.</b> Esc للعودة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("نادي المبدعين الصغار");
+const params = new URLSearchParams(location.search);
+const tool = params.get("tool") || "board";
+const body = document.getElementById("body");
+
+const TOPICS = [
+  "هل يمكن أن يكون الفشل مفيدًا؟",
+  "الفضاء: هل يسكنه أحد؟",
+  "الصداقة: ما الذي يغيّرها؟",
+  "التكنولوجيا: صديقةٌ أم متسلّطة؟",
+  "الحيوانات: هل تفكّر مثلنا؟",
+  "المدرسة: لو صمّمتها أنت؟",
+  "الأحلام: لماذا نحلم؟",
+  "المجتمع: من يصنع القواعد؟",
+  "كتاب قرأناه: ما سؤالك له؟",
+  "سؤالٌ طرحه أحدُ الأطفال",
+  "العدالة: هل هي الإحساس بالعدل؟",
+  "المستقبل: ماذا سنبتكر؟",
+];
+let topic = 0;
+const QUESTIONS = [
+  "لماذا السماء لونها أزرق؟",
+  "ما أصعب شعورٍ شعرت به هذا الشهر؟",
+  "لو كانت الحيوانات تتكلم: ماذا سيقول الكلب؟",
+  "ما الفكرة التي غيّرت رأيك؟",
+];
+const IDEAS = [
+  ["سارة", "أنا أعتقد أن الفشل يعلّم أكثر من النجاح…"],
+  ["كريم", "أختلف لأن الخطأ يجعلنا نبحث أكثر…"],
+  ["لينا", "لم أفكر في الأمر بهذه الطريقة!"],
+  ["يوسف", "لدي سؤال: ماذا لو عكسنا الترتيب؟"],
+];
+const PHRASES = [
+  ["#5FB4E8", "أنا أعتقد…", "مثال: «أنا أعتقد أن الكلاب أذكى مما نظن.»"],
+  ["#E4A54A", "أختلف لأن…", "مثال: «أختلف لأن التجربة كانت مختلفة.»"],
+  ["#3FA39C", "لم أفكر في الأمر بهذه الطريقة…", "مثال: «لم أفكر أن السؤال له جوابان!»"],
+  ["#8E7CC3", "لدي سؤال…", "مثال: «لدي سؤال: لماذا نبدأ من هنا؟»"],
+  ["#E0705C", "هل يمكنك التوضيح أكثر؟", "مثال: «هل يمكنك التوضيح أكثر؟»"],
+  ["#1E4664", "إذا بدأنا من…", "مثال: «إذا بدأنا من السؤال، سنجد الحل.»"],
+];
+const GAMES = [
+  ["🪑 «لو كان…»", "يبدأ القائد: «لو كان اليوم بلا ضحك…» — يُكمل كل طفل جملة من كلمة أو كلمتين، دون أن يكرّر."],
+  ["⚖️ مناظرة صغيرة", "موضوع من اللوحة: فريق «لأنعم» وفريق «لأ». ثلاث دقائق لكل فريق، ثم نغيّر الجوانب ونعيد!"],
+  ["2️⃣✔️ و1️⃣✖️", "يقرأ القائد ثلاثة جمل عن موضوع اليوم — جملتان صواب وواحدة خطأ. الدائرة تحسم بالأصابع المرفوعة."],
+  ["🎤 مرّر الميكروفون", "من يمسك الميكروفون يُكمل جملة، ويمرّره يسارًا. الجملة تزداد غرابة في كل دور."],
+  ["🧩 لغز اليوم", "لغزٌ من صندوق الألعاب يُحلّ بالدائرة: لا يُخمن أحد قبل أن يسمع رأي جاره."],
+  ["🌉 جسر الجُمل", "طفل يبدأ بجمة، وكل طفل يضيف جملة واحدة حتى تُبنى قصة كاملة على السبورة."],
+];
+
+function board() {
+  body.innerHTML = `
+    <h3>💡 موضوع اليوم</h3>
+    <div class="topic-big" id="topic">${TOPICS[topic]}</div>
+    <div class="rowlist">
+      <div class="rowitem"><b>⏱️ مؤقت دور الحديث</b>
+        <div><span class="timerbox" id="t">03:00</span>
+        <button class="btn ghost" id="tgo">▶ ابدأ</button>
+        <button class="btn ghost" id="trst">↺</button></div>
+      </div>
+    </div>
+    <h3 style="margin-top:14px">📚 مكتبة المواضيع <span class="muted" style="font-weight:400">— اللوحة تُغيَّر في كل جلسة</span></h3>
+    <div class="chips" id="chips"></div>
+    <p class="muted">النادي ليس مرتبطًا بموضوع واحد: اليوم فضاء، غدًا صداقة، وبعد غدٍ سؤالٌ طرحه أحد الأطفال. ⬇</p>`;
+  drawChips();
+  let left = 180, on = false, iv = null;
+  const t = document.getElementById("t");
+  const fmt = s => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+  document.getElementById("tgo").onclick = () => {
+    on = !on;
+    if (on) { iv = setInterval(() => { left = Math.max(0, left - 1); t.textContent = fmt(left);
+      if (left === 0) { clearInterval(iv); on = false; t.style.color = "#ffd28a"; } }, 1000); }
+    else { clearInterval(iv); t.style.color = "#9fd8ff"; }
+    document.getElementById("tgo").textContent = on ? "⏸ إيقاف" : "▶ ابدأ";
+  };
+  document.getElementById("trst").onclick = () => {
+    clearInterval(iv); on = false; left = 180; t.textContent = fmt(180); t.style.color = "#9fd8ff";
+    document.getElementById("tgo").textContent = "▶ ابدأ";
+  };
+}
+function drawChips() {
+  const el = document.getElementById("chips");
+  el.innerHTML = TOPICS.map((tp, i) =>
+    `<button class="chip ${i === topic ? "on" : ""}" data-i="${i}">${tp}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(c => c.onclick = () => {
+    topic = +c.dataset.i;
+    document.getElementById("topic").textContent = TOPICS[topic];
+    drawChips();
+  });
+}
+function questions() {
+  const list = QUESTIONS.slice();
+  body.innerHTML = `
+    <h3>🧠 لوحة الأسئلة <span class="muted" style="font-weight:400">— يكتب الطفل سؤاله وتُعلّق اللوحة</span></h3>
+    <div class="rowlist" id="ql"></div>
+    <div class="rowitem" style="display:flex; gap:8px; margin-top:8px">
+      <input id="qi" style="flex:1" placeholder="اكتب سؤالًا من قلبك…">
+      <button class="btn" id="qa">📌 علّق</button>
+    </div>`;
+  function render() {
+    document.getElementById("ql").innerHTML = list.map(q =>
+      `<div class="rowitem"><b>❓</b> ${q}</div>`).join("");
+  }
+  render();
+  document.getElementById("qa").onclick = () => {
+    const v = document.getElementById("qi").value.trim();
+    if (!v) return;
+    list.push(v); document.getElementById("qi").value = ""; render();
+  };
+}
+function ideas() {
+  const list = IDEAS.slice();
+  body.innerHTML = `
+    <h3>💬 جدار الأفكار <span class="muted" style="font-weight:400">— بطاقة صغيرة على رأي كل طفل</span></h3>
+    <div class="flipgrid" id="ig"></div>
+    <div class="rowitem" style="display:flex; gap:8px">
+      <input id="ii" style="flex:1" placeholder="اسم الطفل…">
+      <input id="it" style="flex:2" placeholder="رأيي في جملة…">
+      <button class="btn" id="ia">➕ بطاقة</button>
+    </div>`;
+  function render() {
+    document.getElementById("ig").innerHTML = list.map(([n, t], i) =>
+      `<div class="flipcard" style="--fc:${PHRASES[i % 6][0]}"><div class="in">
+        <div class="face front"><div><b>${n}</b><div style="font-weight:400; font-size:12.5px">${t}</div></div></div>
+        <div class="face back">«هنا صوتك مهم» ✨</div></div></div>`).join("");
+    document.querySelectorAll("#ig .flipcard").forEach(c => c.onclick = () => c.classList.toggle("flipped"));
+  }
+  render();
+  document.getElementById("ia").onclick = () => {
+    const n = document.getElementById("ii").value.trim() || "طفل من الدائرة";
+    const t = document.getElementById("it").value.trim();
+    if (!t) return;
+    list.push([n, t]); document.getElementById("it").value = ""; render();
+  };
+}
+function cards() {
+  let order = PHRASES.slice();
+  body.innerHTML = `
+    <h3>📝 بطاقات الحوار <span class="muted" style="font-weight:400">— اقلب البطاقة لترى مثالًا</span></h3>
+    <div class="flipgrid" id="cg"></div>
+    <button class="btn" id="shuf">🔀 خلط البطاقات</button>`;
+  function render() {
+    document.getElementById("cg").innerHTML = order.map(([c, p, ex]) =>
+      `<div class="flipcard" style="--fc:${c}; height:104px"><div class="in">
+        <div class="face front">${p}</div>
+        <div class="face back">${ex}</div></div></div>`).join("");
+    document.querySelectorAll("#cg .flipcard").forEach(f => f.onclick = () => f.classList.toggle("flipped"));
+  }
+  render();
+  document.getElementById("shuf").onclick = () => {
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    render();
+  };
+}
+function games() {
+  body.innerHTML = `
+    <h3>🧩 ألعاب التفكير والألغاز والمناظرات</h3>
+    <div class="rowlist">${GAMES.map(([n, d]) =>
+      `<div class="rowitem"><b>${n}</b><div class="muted" style="margin-top:2px">${d}</div></div>`).join("")}</div>
+    <p class="muted" style="margin-top:8px">تُلعَب الألعاب داخل الدائرة — الميكروفون الرمزي يدير الدور.</p>`;
+}
+function mic() {
+  let seat = null;
+  body.innerHTML = `
+    <h3>🎤 دور المتحدث</h3>
+    <p class="muted">الميكروفون رمزي: يمرَّر في الدائرة، ومن يمسكه يُكمل الجملة أو يطرح سؤاله.</p>
+    <div style="text-align:center; margin:14px 0">
+      <div style="font-size:44px">🎤</div>
+      <div class="timerbox" id="seat">—</div>
+      <div class="muted" id="phrase" style="margin-top:8px; min-height:22px"></div>
+    </div>
+    <div style="text-align:center">
+      <button class="btn" id="pick" style="font-size:15px; padding:10px 22px">🎲 من يتحدث الآن؟</button>
+    </div>`;
+  document.getElementById("pick").onclick = () => {
+    seat = 1 + Math.floor(Math.random() * 12);
+    document.getElementById("seat").textContent = "المقعد رقم " + seat;
+    document.getElementById("phrase").textContent = "اقترح عليه بطاقة: «" + PHRASES[Math.floor(Math.random() * PHRASES.length)][1] + "»";
+  };
+}
+function about() {
+  body.innerHTML = `
+    <div class="topic-big" style="font-size:22px">«هنا صوتك مهم» 🎙️</div>
+    <h3>هوية النادي</h3>
+    <p>غرفةٌ مبنية حول <b>الحوار والتفاعل وجهًا لوجه</b> — لا معلم أمام الطلاب: دائرةٌ من الكراسي المتساوية،
+    والمشرف يجلس داخلها مع الأطفال، ولوحةٌ كبيرة خلف المجموعة تُكتب عليها فكرة الجلسة وتُغيَّر كل مرة.</p>
+    <h3>قواعد الدائرة</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>1</b> كل المقاعد متساوية — حتى كرسي المشرف.</div>
+      <div class="rowitem"><b>2</b> نستمع حتى ينتهي المتحدث.</div>
+      <div class="rowitem"><b>3</b> نختلف بأدب: «أنا أختلف لأن…».</div>
+      <div class="rowitem"><b>4</b> لا توجد أسئلة سخيفة — كل سؤال يُعلّق على اللوحة.</div>
+      <div class="rowitem"><b>5</b> الموضوع ليس ثابتًا: اليوم فضاء، غدًا صداقة، وبعد غدٍ سؤال طفل.</div>
+    </div>
+    <p class="muted" style="margin-top:8px">مكان النادي: الضِلع الشمالي الشرقي من الحرم — عبر الممر الشرقي ثم الشرفة الخضراء. 🌿</p>`;
+}
+({ board, questions, ideas, cards, games, mic, about })[tool]();
+</script>
+</body>
+</html>

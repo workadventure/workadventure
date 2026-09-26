@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — لوحة الإعلانات</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-cork">
+    <div class="content" id="pins"></div>
+  </div>
+  <div class="frame frame-plaque" style="margin-top:2px">
+    <div class="content" style="padding:14px">
+      <b>📌 تثبيت إعلان جديد</b>
+      <div class="form-row">
+        <input id="ttl" placeholder="عنوان الإعلان">
+        <input id="body" placeholder="نص الإعلان">
+        <button class="btn" id="pinBtn">تثبيت</button>
+      </div>
+    </div>
+  </div>
+  <div class="hint">💡 <b>لوحة الإعلانات المعلّقة غرب المكتب</b> — الأوراق مثبّتة بدبابيس. Esc للعودة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("لوحة الإعلانات المثبّتة");
+const seed = [
+  ["مسيرة الأنشطة — الخميس", "التجمع على منصة الطابور الساعة ٨:٠٠ صباحًا بزي رياضي.", "أمس"],
+  ["اجتماع أولياء الأمور", "قاعة الاجتماعات — الأحد ١٠:٠٠. محور المناقشة: نتائج الفصل.", "قبل يومين"],
+  ["تجديد إعارة المكتبة", "آخر موعد لإرجاع الكتب الخميس — المكتبة مفتوحة الفسحة.", "هذا الأسبوع"],
+];
+let pins = NGA.store("pins", seed);
+function draw() {
+  document.getElementById("pins").innerHTML = pins.map(p => `
+    <div class="pinned"><h4>${p[0]}</h4><div class="meta">${p[2]}</div><p>${p[1]}</p></div>`).join("");
+}
+draw();
+document.getElementById("pinBtn").onclick = () => {
+  const t = document.getElementById("ttl").value.trim();
+  const b = document.getElementById("body").value.trim();
+  if (!t || !b) return;
+  pins = [[t, b, "الآن"], ...pins];
+  NGA.save("pins", pins); draw();
+  document.getElementById("ttl").value = ""; document.getElementById("body").value = "";
+};
+</script>
+</body>
+</html>

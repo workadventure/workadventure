@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — الاستقبال</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-counter">
+    <div class="content" id="body"></div>
+  </div>
+  <div class="hint" id="hint"></div>
+</div>
+<script src="shared.js"></script>
+<script>
+const tool = new URLSearchParams(location.search).get("tool") || "reception";
+const body = document.getElementById("body");
+const hint = document.getElementById("hint");
+
+if (tool === "screen") {
+  NGA.shell("NG Academy — الشاشة التعريفية");
+  const hero = ["برامجنا صُممت حول طفلنا", "بيئة تُنصت للطفل، وتمنحه مساحة ليبدع",
+                "تعلّم باللعب: رياضيات، شطرنج، إبداع، علوم", "من رياض الأطفال إلى المرحلة الابتدائية"];
+  let hi = 0;
+  body.innerHTML = `
+    <div class="big-display" style="background:linear-gradient(135deg,#1E4664,#2C6E9E); color:#fff; font-family:inherit; letter-spacing:0; font-size:20px; min-height:88px" id="hero">${hero[0]}</div>
+    <h3 style="color:var(--navy)">🎓 برامج الأكاديمية</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>🧠 الحساب الذهني</b><span class="muted" style="margin-inline-start:auto">سرعة تفكير وتركيز</span></div>
+      <div class="rowitem"><b>♟️ الشطرنج</b><span class="muted" style="margin-inline-start:auto">منطق وتركيز واستراتيجية</span></div>
+      <div class="rowitem"><b>💬 نادي المبدعين الصغار</b><span class="muted" style="margin-inline-start:auto">فكر وحوار وإبداع</span></div>
+      <div class="rowitem"><b>🎨 الفنون والإبداع</b><span class="muted" style="margin-inline-start:auto">رسم وأعمال يدوية</span></div>
+      <div class="rowitem"><b>🔬 العلوم و🖥️ الحاسوب</b><span class="muted" style="margin-inline-start:auto">تجارب وبرمجة مبكرة</span></div>
+      <div class="rowitem"><b>⭐ قاعة النجوم</b><span class="muted" style="margin-inline-start:auto">مسابقات واحتفالات وإنجازات</span></div>
+    </div>
+    <h3 style="color:var(--navy); margin-top:14px">🏆 إنجازاتنا</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>+٢٤٠</b> طالب وطالبة هذا العام</div>
+      <div class="rowitem"><b>+٤٠</b> ورشة وأنشطة كل فصل</div>
+      <div class="rowitem"><b>١٢</b> مسابقة و بطولة داخلية</div>
+    </div>`;
+  setInterval(() => { hi = (hi + 1) % hero.length;
+    document.getElementById("hero").textContent = hero[hi]; }, 4000);
+  hint.innerHTML = "🖥️ هذه الشاشة على جدار الاستقبال — تعرض برامج الأكاديمية وإنجازاتها للأولياء الزوار. Esc للعودة.";
+} else {
+  NGA.shell("الاستقبال ومواعيد الزوار");
+  let items = NGA.store("visits", [
+    ["و. أم حنان", "مدير المدرسة", "١١:٠٠", "ok", "في الطريق"],
+    ["سيد علي (صيانة)", "الحارس العام", "١٠:٣٠", "info", "وصل"],
+    ["جمعية الأصدقاء", "نائب المدير", "١٣:٠٠", "late", "مؤجَّل"],
+  ]);
+  body.innerHTML = `
+    <h3 style="color:var(--navy);margin-bottom:10px">🛎️ الاستقبال — مواعيد الزوار اليوم</h3>
+    <div class="rowlist" id="list"></div>
+    <h3 style="color:var(--navy);margin:14px 0 0">📝 تسجيل زيارة</h3>
+    <div class="form-row">
+      <input id="vname" placeholder="اسم الزائر">
+      <input id="vwho" placeholder="مقابلة (مثال: مدير المدرسة)">
+      <input id="vtime" placeholder="الساعة">
+      <button class="btn" id="addBtn">تسجيل</button>
+    </div>`;
+  function draw() {
+    document.getElementById("list").innerHTML = items.map(it => `
+      <div class="rowitem">
+        <div><b>${it[0]}</b><div class="muted">مقابلة: ${it[1]} — الساعة ${it[2]}</div></div>
+        <span class="tag ${it[3]}">${it[4]}</span>
+      </div>`).join("");
+  }
+  draw();
+  document.getElementById("addBtn").onclick = () => {
+    const n = document.getElementById("vname").value.trim();
+    const w = document.getElementById("vwho").value.trim();
+    const t = document.getElementById("vtime").value.trim();
+    if (!n || !t) return;
+    items = [[n, w || "—", t, "info", "مسجَّل"], ...items];
+    NGA.save("visits", items); draw();
+    document.getElementById("vname").value = ""; document.getElementById("vwho").value = ""; document.getElementById("vtime").value = "";
+  };
+  hint.innerHTML = "💡 أنت عند <b>مكتب الاستقبال</b> — سجّل زيارة أو اطّلع على مواعيد اليوم. Esc للعودة.";
+}
+</script>
+</body>
+</html>

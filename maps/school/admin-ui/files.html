@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — خزانة الملفات</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-drawers">
+    <div class="content" id="drawers"></div>
+  </div>
+  <div class="hint">💡 هذه <b>خزانة ملفات المدير</b> الفولاذية — كل درج يفتح فئة وثائق. Esc للعودة للمكتب.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("خزانة الملفات");
+const cats = [
+  ["الوثائق", ["شهادات الميلاد", "صور شخصية", "ملفات التحاق"]],
+  ["المدفوعات", ["رسوم الفصل الأول", "قسائم الصندوق", "تعويضات"]],
+  ["جداول المعلمين", ["توزيع الحصص", "الإشراف", "البديلون"]],
+  ["السجلات", ["محاضر الاجتماعات", "قرارات التأديب", "طلبات النقل"]],
+];
+document.getElementById("drawers").innerHTML = cats.map(([name, files], i) => `
+  <div class="drawer">
+    <span class="tab">درج ${i + 1}</span>
+    <b>${name}</b>
+    <div class="muted" style="margin-top:6px">${files.join(" · ")}</div>
+    <div class="knob"></div>
+  </div>`).join("");
+</script>
+</body>
+</html>
