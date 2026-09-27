@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
             port: Number(env.FRONT_VITE_PORT) || 8080,
             // Vite (>=5.4) rejects unknown Host headers. Set WA_DEV_ALLOWED_HOSTS=true when
             // serving through custom hostnames (local gateway / tunnels / previews).
-            ...(env.WA_DEV_ALLOWED_HOSTS === "true" ? { allowedHosts: true } : {}),
+            ...(env.WA_DEV_ALLOWED_HOSTS === "true" ? { allowedHosts: true as const } : {}),
             ...(env.WA_DEV_HMR === "false" ? { hmr: false } : {}),
             ws: {
                 // workaround for development in docker

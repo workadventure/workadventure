@@ -23,6 +23,7 @@ layers_def = [
     "start", "collisions", "zones_silent", "zones_jitsi_meeting",
     "zones_jitsi_director", "zones_jitsi_hall", "zones_jitsi_club", "zones_jitsi_chess",
     "zones_jitsi_math", "zones_speaker", "zones_listener",
+    "zones_teacher", "zones_class",
     "floor", "walls", "furniture", "abovePlayer1", "abovePlayer2",
 ]
 GRID = {n: [[0] * W for _ in range(H)] for n in layers_def}
@@ -815,6 +816,20 @@ obj("trainer-demo", 6, 43, 2, 1, web_props(UI + "science.html?loc=science&tool=e
 obj("discovery", 10, 41, 2, 1, web_props(UI + "science.html?loc=science&tool=discover",
     msg="ركن الاستكشاف — الكواكب، الأحجار والمعادن، والعينات الطبيعية"))
 
+# ================================================================ LIFE ZONES
+# NG Academy character life system — roles by LOCATION (teachers are real
+# users, not NPCs): a character standing in a teacher zone acts as the
+# teacher of that room; students in the class zone face them.
+for (cx0, tz) in ((15, 17), (23, 25), (31, 33), (49, 51), (57, 59), (65, 67)):
+    fill("zones_class", "mark_zone", cx0, 5, 7, 9)        # أرضية كل فصل
+    fill("zones_teacher", "mark_zone", tz, 6, 2, 2)       # أمام سبورة كل فصل
+fill("zones_class", "mark_zone", 5, 41, 7, 6)             # فصل العلوم
+fill("zones_teacher", "mark_zone", 6, 42, 5, 1)           # المقدمة: أمام السبورة التفاعلية وطاولة العرض
+fill("zones_class", "mark_zone", 119, 31, 12, 13)         # الحساب الذهني
+fill("zones_teacher", "mark_zone", 123, 39, 3, 1)         # أمام اللوحة القابلة
+fill("zones_class", "mark_zone", 119, 15, 12, 11)         # الشطرنج
+fill("zones_teacher", "mark_zone", 122, 23, 5, 1)         # منصّة التدريب (أمام مكتب المدرب)
+
 # ================================================================ DOORS (FIX)
 # A door must be walkable: partitions are drawn in bulk first, so a
 # pre-drawn wall left a collision on every doorway cell. Carve the
@@ -880,7 +895,7 @@ zone_props = {
 
 layers = []
 lid = 1
-for name in ["start", "collisions"]:
+for name in ["start", "collisions", "zones_teacher", "zones_class"]:
     layers.append(tilelayer(lid, name)); lid += 1
 for name in ["zones_silent", "zones_jitsi_meeting", "zones_jitsi_director", "zones_jitsi_hall", "zones_jitsi_club", "zones_jitsi_chess", "zones_jitsi_math", "zones_speaker", "zones_listener"]:
     tl = tilelayer(lid, name)
@@ -911,6 +926,21 @@ tileset = {
     "tiles": [
         {"id": GIDS["mark_collide"] - 1,
          "properties": [prop("collides", "bool", True)]},
+    ]
+    # NG Academy character life system: marked seat tiles (client sits on them).
+    # chair → work/class benches · seat → auditorium · sofa → sofas & benches
+    + [
+        {"id": GIDS[name] - 1,
+         "properties": [prop("sit", "bool", True), prop("sitType", "string", kind)]}
+        for name, kind in (
+            ("lab_chair", "chair"), ("math_chair", "chair"), ("chess_chair", "chair"),
+            ("recv_chair", "chair"), ("chair_blue", "chair"), ("chair_wood", "chair"),
+            ("chair_amber", "chair"), ("chair_teal", "chair"), ("chair_lilac", "chair"),
+            ("chair_coral", "chair"),
+            ("seat_hall", "seat"), ("seat_hall_fold", "seat"),
+            ("sofa", "sofa"), ("bench_wait", "sofa"), ("bench_park", "sofa"),
+        )
+        if name in GIDS
     ],
     "type": "tileset",
     "version": "1.10",

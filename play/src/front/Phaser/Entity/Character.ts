@@ -20,6 +20,8 @@ import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 
 import { UsernameDisplay } from "../Components/UsernameDisplay";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
+import { CharacterLife } from "../Player/Life/CharacterLife";
+import { LifeRegistry } from "../Player/Life/LifeRegistry";
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
 import { ThinkingCloud } from "./ThinkingCloud";
@@ -73,6 +75,12 @@ export abstract class Character extends Container implements OutlineableInterfac
     private textsToBuild = new Map();
     scene: GameScene;
     private lastRenderedSprite: string | undefined;
+    // NG Academy character life system
+    private life?: CharacterLife;
+    private userIdValue: string | null | undefined;
+    public isSelf = false;
+    public isSitting = false;
+    public lastMoveAt = 0;
     private readonly _pictureStore: Readable<string | undefined>;
     protected readonly outlineColorStore = createColorStore();
     private outlineColorStoreUnsubscribe: Unsubscriber | undefined;
@@ -110,6 +118,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.playerName = name;
         this.invisible = true;
         this.clickable = false;
+        this.userIdValue = userId;
+        this.isSelf = userId === "me";
 
         this.sprites = new Map<string, Sprite>();
 
@@ -145,6 +155,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.addTextures(textures, frame);
                 this.invisible = false;
                 this.playAnimation(direction, moving);
+                this.startLife();
                 this.textureLoadedDeferred.resolve();
             })
             .catch(() => {
@@ -162,6 +173,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                         this.addTextures(textures, frame);
                         this.invisible = false;
                         this.playAnimation(direction, moving);
+                        this.startLife();
                         this.textureLoadedDeferred.resolve();
                     })
                     .catch((e) => {
@@ -378,6 +390,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     protected playAnimation(direction: PositionMessage_Direction, moving: boolean): void {
         if (this.invisible) return;
+        this.life?.onAnimation(direction, moving);
         for (const [texture, sprite] of this.sprites.entries()) {
             if (!sprite.anims) {
                 console.error("ANIMS IS NOT DEFINED!!!");
@@ -387,9 +400,58 @@ export abstract class Character extends Container implements OutlineableInterfac
             if (moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== directionStr)) {
                 sprite.play(texture + "-" + directionStr + "-" + PlayerAnimationTypes.Walk, true);
             } else if (!moving) {
+                // NG Academy: smooth walk->idle transition (brief settle frame)
+                if (this.life?.handleStop(direction, sprite)) {
+                    continue;
+                }
                 sprite.anims.play(texture + "-" + directionStr + "-" + PlayerAnimationTypes.Idle, true);
             }
         }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* NG Academy character life system hooks                              */
+    /* ------------------------------------------------------------------ */
+
+    /** Starts the per-character life director (breathing / look-around / settle). */
+    public startLife(): void {
+        if (this.life || this.destroyed) return;
+        this.life = new CharacterLife(this.scene, this);
+    }
+
+    /** Sprites that should breathe / crouch with the body. */
+    public getLifeSprites(): Phaser.GameObjects.Sprite[] {
+        return Array.from(this.sprites.values());
+    }
+
+    /** Life director overrides the displayed facing for a short while. */
+    public setLifeDirection(dir: PositionMessage_Direction): void {
+        if (this.destroyed || this.invisible) return;
+        this._lastDirection = dir;
+        this.companion?.setTarget(this.x, this.y, dir);
+        this.playAnimation(dir, false);
+    }
+
+    /** Plays the idle animation of a given direction (used after a walk settle). */
+    public playIdleForLife(dir: PositionMessage_Direction): void {
+        if (this.destroyed || this.invisible) return;
+        for (const [texture, sprite] of this.sprites.entries()) {
+            const directionStr = ProtobufClientUtils.toDirectionString(dir);
+            sprite.anims.play(texture + "-" + directionStr + "-" + PlayerAnimationTypes.Idle, true);
+        }
+    }
+
+    /** True while following a scripted path (life must not steal the facing). */
+    public isOnPath(): boolean {
+        return this.isFollowingPath();
+    }
+
+    public pauseLifeBreath(): void {
+        this.life?.stopBreath();
+    }
+
+    public resumeLifeBreath(): void {
+        this.life?.startBreath();
     }
 
     protected getBody(): Body {
@@ -398,6 +460,11 @@ export abstract class Character extends Container implements OutlineableInterfac
             throw new Error("Container does not have arcade body");
         }
         return body;
+    }
+
+    /** Public physics body accessor (used by the NG Academy life system). */
+    public getPublicBody(): Body {
+        return this.getBody();
     }
 
     protected updateUsernameDisplayPosition(x = this.x, y = this.y): void {
@@ -562,6 +629,8 @@ export abstract class Character extends Container implements OutlineableInterfac
                     speechBubble.getElement(),
                 );
                 this.add(this.bubble);
+                // NG Academy: nearby idle characters turn to face the speaker
+                LifeRegistry.announce(this.scene, { name: this.playerName, x: this.x, y: this.y });
                 break;
             }
             case SayMessageType.ThinkingCloud: {
