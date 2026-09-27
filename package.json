@@ -13,6 +13,9 @@
     "check-env-docs": "npm run check --workspace=contrib/tools/generate-env-docs",
     "e2e:report": "npm exec --workspace=@workadventure/e2e-report -- tsx src/cli.ts"
   },
+  "overrides": {
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0"
+  },
   "workspaces": [
     "play",
     "back",
