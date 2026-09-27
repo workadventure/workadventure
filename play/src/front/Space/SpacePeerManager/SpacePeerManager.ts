@@ -7,6 +7,7 @@ import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
+import { cpuLimitedStore } from "../../WebRtc/CpuLimitationDetector";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import { effectiveCameraStateStore, effectiveMicrophoneStateStore } from "../../Stores/MediaStore";
@@ -16,8 +17,8 @@ import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintS
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
-import { analyticsClient } from "../../Administration/AnalyticsClient";
-import type { EndTimedAnalyticsEvent } from "../../Administration/TimedAnalyticsEvent";
+import { meetingEnded, meetingStarted } from "../../Administration/CurrentMeeting";
+import { isMeetingSpace } from "../../Rules/MeetingRules";
 import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
@@ -136,15 +137,6 @@ export class SpacePeerManager {
 
     private _communicationState: ICommunicationState;
     private _toFinalizeState: ICommunicationState | undefined;
-    /**
-     * The meeting this space is currently carrying, if any.
-     *
-     * Per instance, not global: SpaceRegistry keeps several spaces live at once,
-     * so a single shared value meant leaving one space ended the meeting of every
-     * other one.
-     */
-    private endMeeting: EndTimedAnalyticsEvent | undefined;
-
     private readonly _effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
 
     private readonly _videoPeerAdded = new Subject<Streamable>();
@@ -210,7 +202,7 @@ export class SpacePeerManager {
 
                 // create factory for the new state instead of creating the state directly ?
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
-                    this.startMeetingAnalytics("webrtc");
+                    this.recordCurrentMeeting();
                     this._communicationState = new WebRTCState(
                         this.space,
                         this._streamableSubjects,
@@ -218,7 +210,7 @@ export class SpacePeerManager {
                         this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
-                    this.startMeetingAnalytics("livekit");
+                    this.recordCurrentMeeting();
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
@@ -226,7 +218,7 @@ export class SpacePeerManager {
                         this._effectiveScreenSharingLocalStreamStore,
                     );
                 } else {
-                    this.endMeetingAnalytics();
+                    this.forgetCurrentMeeting();
                     console.error("Unknown communication strategy: " + message.switchMessage.strategy);
                     Sentry.captureMessage("Unknown communication strategy: " + message.switchMessage.strategy);
                 }
@@ -516,6 +508,14 @@ export class SpacePeerManager {
                 });
             }),
         );
+        // The back moves the bubble to LiveKit for a member whose encoders cannot keep up (see CpuLimitationDetector)
+        this.unsubscribes.push(
+            cpuLimitedStore.subscribe((state) => {
+                this.space.emitUpdateUser({
+                    cpuLimited: state,
+                });
+            }),
+        );
 
         this.unsubscribes.push(
             this._effectiveScreenSharingLocalStreamStore.subscribe((state) => {
@@ -563,26 +563,32 @@ export class SpacePeerManager {
         this.metadataSubscription.unsubscribe();
         this.cancelPendingRecorderNameResolution(this.space.getName());
         this._recordingStore.removeSpace(this.space.getName());
-        this.endMeetingAnalytics();
+        this.forgetCurrentMeeting();
     }
 
     /**
-     * A strategy switch is where a meeting actually starts, and the only place its
-     * media backend is known for certain. `webrtc` is a spontaneous bubble,
-     * `livekit` a meeting area; the space name is the meeting id, so every
-     * participant of one meeting reports the same one.
+     * Records which meeting this tab is in. It does not REPORT the meeting — the back
+     * does, once per meeting — but the periods this client does report, the microphone
+     * it held open and the times it was speaking, have to say which meeting they
+     * happened in, and nobody else can: they are measured from the local analyser.
+     *
+     * Gated on this tab sending its audio into a conversation: the back sends the same
+     * strategy switch to whoever merely joins a media-syncing space, the megaphone
+     * space and the listener zones included, and a speaking period belongs only to the
+     * meetings that hear it — a bubble formed inside a listener zone reports to the
+     * bubble alone.
      */
-    private startMeetingAnalytics(meetingProvider: "webrtc" | "livekit"): void {
-        this.endMeetingAnalytics();
-        this.endMeeting = analyticsClient.openTimedEvent("meeting.ended", {
-            meetingProvider,
-            meetingId: this.space.getName(),
-        });
+    private recordCurrentMeeting(): void {
+        this.forgetCurrentMeeting();
+        if (!isMeetingSpace(this.space.filterType) || !get(this.space.isStreamingAudioStore)) {
+            return;
+        }
+        meetingStarted(this.space.getName());
     }
 
-    private endMeetingAnalytics(): void {
-        this.endMeeting?.();
-        this.endMeeting = undefined;
+    /** Guarded on the id by the store itself, so this is safe to call for any space. */
+    private forgetCurrentMeeting(): void {
+        meetingEnded(this.space.getName());
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {

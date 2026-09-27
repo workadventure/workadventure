@@ -20,8 +20,13 @@ import * as Sentry from "@sentry/node";
 import bodyParser from "body-parser";
 import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import axios from "axios";
-import { decodeStoragePath, mapPath } from "../Services/PathMapper";
-import { ENTITY_COLLECTION_URLS, MAX_UNCOMPRESSED_SIZE, WAM_TEMPLATE_URL } from "../Enum/EnvironmentVariable";
+import { decodeStoragePath, getRequestDomain, mapPath } from "../Services/PathMapper";
+import {
+    DIRECT_UPLOAD_URL,
+    ENTITY_COLLECTION_URLS,
+    MAX_UNCOMPRESSED_SIZE,
+    WAM_TEMPLATE_URL,
+} from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
 import { uploadDetector } from "../Services/UploadDetector";
 import type { MapListService } from "../Services/MapListService";
@@ -54,6 +59,7 @@ export class UploadController {
     ) {
         this.uploadLimiter = new Map<string, LimitFunction>();
         this.index();
+        this.getUploadEndpoint();
         this.postUpload();
         this.putUpload();
         this.getDownload();
@@ -67,6 +73,24 @@ export class UploadController {
     private index() {
         this.app.get("/", passportAuthenticator, (req, res) => {
             res.redirect(`${process.env.PATH_PREFIX || ""}/ui/`);
+        });
+    }
+
+    /**
+     * Tells the map uploader where to POST the ZIP file.
+     * Production sits behind a proxy that rejects request bodies over 100MB (Cloudflare), so DIRECT_UPLOAD_URL can
+     * point to a host that bypasses it. The uploader keeps identifying the world by the hostname of its configured
+     * MAP_STORAGE_URL, sent in the "X-Map-Storage-Host" header (see getRequestDomain).
+     * Old map-storage versions answer 404 here and the uploader falls back to its configured URL.
+     */
+    private getUploadEndpoint() {
+        // Not authenticated: the URL is public (DNS, Helm values), there is nothing to protect.
+        this.app.get("/upload-endpoint", (req, res) => {
+            res.json({
+                url:
+                    DIRECT_UPLOAD_URL ??
+                    `${req.protocol}://${req.hostname}${req.header("x-forwarded-prefix") || ""}/upload`,
+            });
         });
     }
 
@@ -222,7 +246,7 @@ export class UploadController {
                                 promises.push(this.createWAMFileIfMissing(key, zipEntry, zipDirectory));
                             }
                         } else if (path.extname(key) === ".wam") {
-                            const wamUrl = `${req.protocol}://${req.hostname}${directory}/${zipEntry.path}`;
+                            const wamUrl = `${req.protocol}://${getRequestDomain(req)}${directory}/${zipEntry.path}`;
                             wamToPurge.push(wamUrl);
                         }
                     }
@@ -243,7 +267,7 @@ export class UploadController {
                             Sentry.captureException(err);
                         });
                     }
-                    await this.mapListService.generateCacheFile(req.hostname);
+                    await this.mapListService.generateCacheFile(getRequestDomain(req));
 
                     res.send("File successfully uploaded.");
                 });

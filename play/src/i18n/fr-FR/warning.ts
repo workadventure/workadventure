@@ -27,6 +27,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     backgroundProcessing: {
         failedToApply: "Échec de l'application des effets de fond",
+        notSupportedOnThisBrowser: "Les effets de fond ne sont pas pris en charge par ce navigateur",
     },
     duplicateUserConnected: {
         title: "Déjà connecté",

@@ -743,6 +743,7 @@ mapstorage:
     AWS_ENDPOINT: ""
     S3_UPLOAD_CONCURRENCY_LIMIT: ""
     MAX_UNCOMPRESSED_SIZE: ""
+    DIRECT_UPLOAD_URL: ""
     USE_DOMAIN_NAME_IN_PATH: "false"
     CACHE_CONTROL: ""
     ENABLE_WEB_HOOK: "false"
@@ -785,6 +786,9 @@ mapstorage:
     domainNames: []
     # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
+    # Annotations added to the map-storage ingress on top of (root.ingress.annotationsRoot).
+    # A key set here overrides the same key from annotationsRoot.
+    annotations: {}
 
 ingress:
   enabled: false

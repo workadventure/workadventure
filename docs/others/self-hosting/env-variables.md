@@ -55,6 +55,8 @@ Environment variables for the Play service (frontend and pusher).
 | `DEFAULT_WOKA_NAME` | No | Default name to use for users when they join the room. |
 | `DEFAULT_WOKA_TEXTURE` | No | Default avatar texture URL to use for users. |
 | `SKIP_CAMERA_PAGE` | No | Whether to skip the camera permission request page. Defaults to false. |
+| `DEFAULT_CAMERA_PRIVACY_SETTINGS` | No | Initial value of the camera privacy setting ('keep camera enabled when the tab is away') for users who have not set their own preference. Defaults to false. |
+| `DEFAULT_MICROPHONE_PRIVACY_SETTINGS` | No | Initial value of the microphone privacy setting ('keep microphone enabled when the tab is away') for users who have not set their own preference. Defaults to true. |
 | `BYPASS_PWA` | No | When true, LocalAdmin map details set bypassPwa so the client never shows the Web App install flow. Defaults to false. |
 | `PROVIDE_DEFAULT_WOKA_NAME` | No | How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended). |
 | `PROVIDE_DEFAULT_WOKA_TEXTURE` | No | How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE). |
@@ -78,7 +80,7 @@ Environment variables for the Play service (frontend and pusher).
 | `TURN_USER` | No | Username for TURN server authentication |
 | `TURN_PASSWORD` | No | Password for TURN server authentication |
 | `TURN_STATIC_AUTH_SECRET` | No | The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn). |
-| `TURN_CREDENTIALS_RENEWAL_TIME` | No | Time interval (in milliseconds) for renewing TURN server credentials. Defaults to 10800000 milliseconds (3 hours) |
+| `TURN_CREDENTIALS_RENEWAL_TIME` | No | Time interval (in milliseconds) for renewing TURN server credentials. Defaults to 3600000 milliseconds (1 hour). Must stay well below the 24 hours validity of the generated credentials. |
 | `JITSI_URL` | No | URL of the Jitsi Meet server for video conferencing |
 | `JITSI_PRIVATE_MODE` | No | If true, Jitsi rooms are private and require authentication. Defaults to false |
 | `MAX_USERNAME_LENGTH` | No | Maximum allowed length for usernames. Defaults to 10 |
@@ -136,7 +138,6 @@ Environment variables for the Play service (frontend and pusher).
 | `LIVEKIT_RECORDING_S3_BUCKET` | No | The S3 bucket for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_REGION` | No | The S3 region for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_CDN_ENDPOINT` | No | The S3 CDN endpoint for Livekit recording. |
-| `BACKGROUND_TRANSFORMER_ENGINE` | No | Virtual background transformer engine: 'tasks-vision' (GPU-accelerated, experimental) or 'selfie-segmentation' (CPU-based, stable). Currently defaults to 'selfie-segmentation'; 'tasks-vision' is intended as the future default once considered stable. |
 
 ## Back Service
 
@@ -183,6 +184,7 @@ Environment variables for the Back service (backend API).
 | `LIVEKIT_API_KEY` | No | The Livekit API key. |
 | `LIVEKIT_API_SECRET` | No | The Livekit API secret. |
 | `MAX_USERS_FOR_WEBRTC` | Yes | The maximum number of users for WebRTC. |
+| `LIVEKIT_SWITCH_ON_CPU_LIMITATION` | No | Move a bubble of more than two users to LiveKit as soon as one of them reports that its video encoders cannot keep up in WebRTC (one encoder per peer), even below MAX_USERS_FOR_WEBRTC, and keep it there while that user is present. Costs LiveKit bandwidth for bubbles that would have stayed peer-to-peer. Defaults to true |
 | `LIVEKIT_RECORDING_S3_ENDPOINT` | No | The S3 endpoint for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_ACCESS_KEY` | No | The S3 access key for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |
@@ -229,6 +231,7 @@ Environment variables for the Map Storage service.
 | `WAM_TEMPLATE_URL` | No | The URL to fetch an empty WAM template |
 | `ENTITY_COLLECTION_URLS` | No | A comma separated list of entity collection URLs to be used when a new TMJ map is uploaded. Note: ignored if WAM_TEMPLATE_URL is set. |
 | `MAP_STORAGE_API_TOKEN` | Yes | API token to access the map-storage REST API |
+| `DIRECT_UPLOAD_URL` | No | Absolute URL of the /upload endpoint reached without going through a proxy that limits request body size (e.g. Cloudflare's 100MB limit). Advertised to the map uploader via GET /upload-endpoint. If empty, the uploader keeps using the URL it was configured with. |
 | `PUSHER_URL` | Yes | URL of the pusher service |
 | `WHITELISTED_RESOURCE_URLS` | No | Comma-separated list of allowed URLs for loading external resources |
 | `SECRET_KEY` | No | The JWT token to use when the map-storage is used as a file server. This token will be used to authenticate the user when accessing files. |

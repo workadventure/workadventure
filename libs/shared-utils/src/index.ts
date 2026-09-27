@@ -26,6 +26,8 @@ export * from "./TodoList/TodoListInterface";
 export { errorHandler, setErrorHandler } from "./ErrorHandler";
 export * from "./Application/MediaLink";
 export * from "./Deferred";
+export * from "./ShutdownDrains";
+export * from "./AnalyticsEventsQueue";
 export * from "./LockByKey";
 export * from "./Movable";
 export * from "./SpatialMap";

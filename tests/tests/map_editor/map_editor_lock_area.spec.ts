@@ -171,13 +171,22 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         // enter an area he is not allowed to enter otherwise.
         await page2.getByTestId("lock-button").click();
         await expect(page2.getByTestId("lock-button")).not.toHaveClass(/bg-danger/);
-        // Give the unlock broadcast time to reach Admin1's page before he starts his pathfinding move.
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await page.waitForTimeout(500);
 
-        await Map.walkToPosition(page, 4 * 32, 4 * 32);
-        const adminPositionAfterUnlock = await Map.getPosition(page);
-        expect(adminPositionAfterUnlock.x).toBeGreaterThan(areaLeftBoundX);
+        // The unlock broadcast reaches Admin1's client a bit after it has updated Alice's lock button, and a
+        // move started before it arrives runs on a stale collision grid: since #6480 it walks up to the
+        // still-locked area and resolves there, leaving Admin1 outside. Retry the move until his grid has
+        // caught up instead of guessing how long the broadcast takes.
+        await expect
+            .poll(
+                async () => {
+                    await Map.walkToPosition(page, 4 * 32, 4 * 32).catch(() => {
+                        // Still locked on Admin1's side: retry.
+                    });
+                    return (await Map.getPosition(page)).x;
+                },
+                { timeout: 10_000 },
+            )
+            .toBeGreaterThan(areaLeftBoundX);
     });
 
     test("Locking an area mid-walk stops or reroutes a pathfinding move", async ({ browser, request }) => {

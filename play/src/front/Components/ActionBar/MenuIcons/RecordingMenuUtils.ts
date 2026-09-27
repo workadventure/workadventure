@@ -1,4 +1,4 @@
-import type { RecordingButtonState } from "@workadventure/messages";
+import type { RecordingButtonState, SpaceKind } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
 
@@ -26,7 +26,7 @@ export interface RecordingSpaceRow {
 }
 
 function isMegaphoneSpace(space: SpaceInterface): boolean {
-    return space.getMetadata().get("isMegaphoneSpace") === true;
+    return space.getMetadata().get("spaceKind") === ("megaphone" satisfies SpaceKind);
 }
 
 function getRecorderDisplayName(

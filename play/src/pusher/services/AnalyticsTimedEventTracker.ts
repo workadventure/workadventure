@@ -191,7 +191,7 @@ export class AnalyticsTimedEventTracker {
     }
 
     private emit(connectionId: string, handle: string, entry: OpenTimedEvent, endReason: TimedEventEndReason): void {
-        const endedAtMs = this.nowMs();
+        const endedAtMs = this.endInstant(entry, endReason);
         const definition = timedAnalyticsEventDefinition(entry.eventName);
         const fields = definition?.intervalFields ?? { start: "startedAt", end: "endedAt", reason: "endReason" };
 
@@ -232,6 +232,36 @@ export class AnalyticsTimedEventTracker {
             },
             entry.socketData,
         );
+    }
+
+    /**
+     * When the interval actually ended.
+     *
+     * `now` for every reason but one. `socket_closed` is the exception because the
+     * close is not when the client left: a frozen tab — a sleeping laptop, a
+     * backgrounded phone — stops sending, uWS waits out SOCKET_IDLE_TIMER, then
+     * PusherRoomSocketController defers the permanent close by
+     * CLIENT_DISCONNECTION_RETENTION_MS in case the tab comes back. On the defaults
+     * that is 150 s of nobody being there, and it was landing inside every open
+     * interval and inside the session itself.
+     *
+     * The last inbound message is the last moment the client is proven to have been
+     * there, so it is the honest end. Not a fixed 150 s subtraction: a real network
+     * drop mid-conversation takes the same path, and there the client was there right
+     * up to the drop — its last message is recent, and this returns very nearly `now`.
+     *
+     * Clamped to the interval's own bounds: a stamp older than the open (an interval
+     * opened by the close path itself) would otherwise produce a negative duration.
+     */
+    private endInstant(entry: OpenTimedEvent, endReason: TimedEventEndReason): number {
+        const nowMs = this.nowMs();
+        if (endReason !== "socket_closed") {
+            return nowMs;
+        }
+
+        const lastActivityAtMs = entry.socketData.lastActivityAtMs;
+
+        return Math.max(entry.startedAtMs, Math.min(nowMs, lastActivityAtMs));
     }
 }
 

@@ -74,6 +74,11 @@ export interface SpaceInterface {
     allScreenShareStreamStore: MapStore<string, VideoBox>;
     getScreenSharingPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined;
     getVideoPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined;
+    /**
+     * Sets the users currently speaking, most active first (as reported by the video transport),
+     * and reorders the video boxes accordingly.
+     */
+    setActiveSpeakers(spaceUserIds: SpaceUser["spaceUserId"][]): void;
 
     getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
     getSpaceUserByUserId(id: number): SpaceUserExtended | undefined;
@@ -122,6 +127,16 @@ export interface SpaceInterface {
      * In a LIVE_STREAMING_USERS_WITH_FEEDBACK, this store will return true when the startStreaming() method has been called, and false when the stopStreaming() method has been called.
      */
     readonly isStreamingAudioStore: Readable<boolean>;
+
+    /**
+     * True while at least one user *other than the local one* has `megaphoneState` — someone
+     * is on air in this space. The local user's own airtime is `isStreamingAudioStore`.
+     *
+     * Use this rather than deriving it from `usersStore`: that store only re-emits when a user
+     * is added or removed, never when one is updated, so a `megaphoneState` toggled mid-stay
+     * would go unseen. This one is refreshed on all three.
+     */
+    readonly hasRemoteSpeakerStore: Readable<boolean>;
     readonly canAskToMuteAudioOrTurnOffVideo: Readable<boolean>;
     readonly shouldPublishScreenShareStore: Readable<boolean>;
 
@@ -166,6 +181,6 @@ export type ReactiveSpaceUser = {
 export type SpaceUserExtended = SpaceUser & {
     pictureStore: Readable<string | undefined>;
     emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => void;
-    space: Pick<SpaceInterface, "emitPublicMessage" | "canAskToMuteAudioOrTurnOffVideo">;
+    space: Pick<SpaceInterface, "emitPublicMessage" | "canAskToMuteAudioOrTurnOffVideo" | "filterType" | "getName">;
     reactiveUser: ReactiveSpaceUser;
 };

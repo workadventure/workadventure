@@ -1,0 +1,4390 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.workadventu.re/docs/schema/analytics-events.json",
+  "title": "WorkAdventure analytics event",
+  "description": "One analytics event: its `eventName` and the `properties` that name carries. Properties may be missing (the world's consent policy removes some) and new ones may appear. New event names appear too: they match the last branch.",
+  "type": "object",
+  "required": [
+    "eventName"
+  ],
+  "oneOf": [
+    {
+      "title": "area.dwell",
+      "properties": {
+        "eventName": {
+          "const": "area.dwell"
+        },
+        "properties": {
+          "$ref": "#/$defs/area.dwell"
+        }
+      }
+    },
+    {
+      "title": "asset.error",
+      "properties": {
+        "eventName": {
+          "const": "asset.error"
+        },
+        "properties": {
+          "$ref": "#/$defs/asset.error"
+        }
+      }
+    },
+    {
+      "title": "auth.logged_sso",
+      "properties": {
+        "eventName": {
+          "const": "auth.logged_sso"
+        },
+        "properties": {
+          "$ref": "#/$defs/auth.logged_sso"
+        }
+      }
+    },
+    {
+      "title": "auth.logged_token",
+      "properties": {
+        "eventName": {
+          "const": "auth.logged_token"
+        },
+        "properties": {
+          "$ref": "#/$defs/auth.logged_token"
+        }
+      }
+    },
+    {
+      "title": "auth.login_clicked",
+      "properties": {
+        "eventName": {
+          "const": "auth.login_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/auth.login_clicked"
+        }
+      }
+    },
+    {
+      "title": "auth.logout_clicked",
+      "properties": {
+        "eventName": {
+          "const": "auth.logout_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/auth.logout_clicked"
+        }
+      }
+    },
+    {
+      "title": "auth.user_identified",
+      "properties": {
+        "eventName": {
+          "const": "auth.user_identified"
+        },
+        "properties": {
+          "$ref": "#/$defs/auth.user_identified"
+        }
+      }
+    },
+    {
+      "title": "bubble.lock.toggled",
+      "properties": {
+        "eventName": {
+          "const": "bubble.lock.toggled"
+        },
+        "properties": {
+          "$ref": "#/$defs/bubble.lock.toggled"
+        }
+      }
+    },
+    {
+      "title": "bubble.say.opened",
+      "properties": {
+        "eventName": {
+          "const": "bubble.say.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/bubble.say.opened"
+        }
+      }
+    },
+    {
+      "title": "bubble.think.opened",
+      "properties": {
+        "eventName": {
+          "const": "bubble.think.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/bubble.think.opened"
+        }
+      }
+    },
+    {
+      "title": "chat.matrix_encryption_configuration.started",
+      "properties": {
+        "eventName": {
+          "const": "chat.matrix_encryption_configuration.started"
+        },
+        "properties": {
+          "$ref": "#/$defs/chat.matrix_encryption_configuration.started"
+        }
+      }
+    },
+    {
+      "title": "chat.matrix_folder.created",
+      "properties": {
+        "eventName": {
+          "const": "chat.matrix_folder.created"
+        },
+        "properties": {
+          "$ref": "#/$defs/chat.matrix_folder.created"
+        }
+      }
+    },
+    {
+      "title": "chat.matrix_room.created",
+      "properties": {
+        "eventName": {
+          "const": "chat.matrix_room.created"
+        },
+        "properties": {
+          "$ref": "#/$defs/chat.matrix_room.created"
+        }
+      }
+    },
+    {
+      "title": "chat.message_from_user_list_clicked",
+      "properties": {
+        "eventName": {
+          "const": "chat.message_from_user_list_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/chat.message_from_user_list_clicked"
+        }
+      }
+    },
+    {
+      "title": "chat.message_list_opened",
+      "properties": {
+        "eventName": {
+          "const": "chat.message_list_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/chat.message_list_opened"
+        }
+      }
+    },
+    {
+      "title": "chat.message_sent",
+      "properties": {
+        "eventName": {
+          "const": "chat.message_sent"
+        },
+        "properties": {
+          "$ref": "#/$defs/chat.message_sent"
+        }
+      }
+    },
+    {
+      "title": "chat.opened",
+      "properties": {
+        "eventName": {
+          "const": "chat.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/chat.opened"
+        }
+      }
+    },
+    {
+      "title": "conversation.participant_added",
+      "properties": {
+        "eventName": {
+          "const": "conversation.participant_added"
+        },
+        "properties": {
+          "$ref": "#/$defs/conversation.participant_added"
+        }
+      }
+    },
+    {
+      "title": "cowebsite.closed",
+      "properties": {
+        "eventName": {
+          "const": "cowebsite.closed"
+        },
+        "properties": {
+          "$ref": "#/$defs/cowebsite.closed"
+        }
+      }
+    },
+    {
+      "title": "cowebsite.fullscreen_opened",
+      "properties": {
+        "eventName": {
+          "const": "cowebsite.fullscreen_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/cowebsite.fullscreen_opened"
+        }
+      }
+    },
+    {
+      "title": "cowebsite.link_copied",
+      "properties": {
+        "eventName": {
+          "const": "cowebsite.link_copied"
+        },
+        "properties": {
+          "$ref": "#/$defs/cowebsite.link_copied"
+        }
+      }
+    },
+    {
+      "title": "cowebsite.opened",
+      "properties": {
+        "eventName": {
+          "const": "cowebsite.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/cowebsite.opened"
+        }
+      }
+    },
+    {
+      "title": "cowebsite.opened_in_new_tab",
+      "properties": {
+        "eventName": {
+          "const": "cowebsite.opened_in_new_tab"
+        },
+        "properties": {
+          "$ref": "#/$defs/cowebsite.opened_in_new_tab"
+        }
+      }
+    },
+    {
+      "title": "cowebsite.switched",
+      "properties": {
+        "eventName": {
+          "const": "cowebsite.switched"
+        },
+        "properties": {
+          "$ref": "#/$defs/cowebsite.switched"
+        }
+      }
+    },
+    {
+      "title": "custom_button.clicked",
+      "properties": {
+        "eventName": {
+          "const": "custom_button.clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/custom_button.clicked"
+        }
+      }
+    },
+    {
+      "title": "emote.edit_opened",
+      "properties": {
+        "eventName": {
+          "const": "emote.edit_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/emote.edit_opened"
+        }
+      }
+    },
+    {
+      "title": "emote.launched",
+      "properties": {
+        "eventName": {
+          "const": "emote.launched"
+        },
+        "properties": {
+          "$ref": "#/$defs/emote.launched"
+        }
+      }
+    },
+    {
+      "title": "external_module.calendar_opened",
+      "properties": {
+        "eventName": {
+          "const": "external_module.calendar_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/external_module.calendar_opened"
+        }
+      }
+    },
+    {
+      "title": "external_module.chat_band.clicked",
+      "properties": {
+        "eventName": {
+          "const": "external_module.chat_band.clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/external_module.chat_band.clicked"
+        }
+      }
+    },
+    {
+      "title": "external_module.opened",
+      "properties": {
+        "eventName": {
+          "const": "external_module.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/external_module.opened"
+        }
+      }
+    },
+    {
+      "title": "external_module.todo_list_opened",
+      "properties": {
+        "eventName": {
+          "const": "external_module.todo_list_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/external_module.todo_list_opened"
+        }
+      }
+    },
+    {
+      "title": "feedback.opened",
+      "properties": {
+        "eventName": {
+          "const": "feedback.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/feedback.opened"
+        }
+      }
+    },
+    {
+      "title": "feedback.submitted",
+      "properties": {
+        "eventName": {
+          "const": "feedback.submitted"
+        },
+        "properties": {
+          "$ref": "#/$defs/feedback.submitted"
+        }
+      }
+    },
+    {
+      "title": "file.drag_dropped",
+      "properties": {
+        "eventName": {
+          "const": "file.drag_dropped"
+        },
+        "properties": {
+          "$ref": "#/$defs/file.drag_dropped"
+        }
+      }
+    },
+    {
+      "title": "global_audio.opened",
+      "properties": {
+        "eventName": {
+          "const": "global_audio.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/global_audio.opened"
+        }
+      }
+    },
+    {
+      "title": "global_message.opened",
+      "properties": {
+        "eventName": {
+          "const": "global_message.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/global_message.opened"
+        }
+      }
+    },
+    {
+      "title": "global_message.sound_sent",
+      "properties": {
+        "eventName": {
+          "const": "global_message.sound_sent"
+        },
+        "properties": {
+          "$ref": "#/$defs/global_message.sound_sent"
+        }
+      }
+    },
+    {
+      "title": "global_message.text_sent",
+      "properties": {
+        "eventName": {
+          "const": "global_message.text_sent"
+        },
+        "properties": {
+          "$ref": "#/$defs/global_message.text_sent"
+        }
+      }
+    },
+    {
+      "title": "invite.accepted",
+      "properties": {
+        "eventName": {
+          "const": "invite.accepted"
+        },
+        "properties": {
+          "$ref": "#/$defs/invite.accepted"
+        }
+      }
+    },
+    {
+      "title": "invite.opened",
+      "properties": {
+        "eventName": {
+          "const": "invite.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/invite.opened"
+        }
+      }
+    },
+    {
+      "title": "invite.sent",
+      "properties": {
+        "eventName": {
+          "const": "invite.sent"
+        },
+        "properties": {
+          "$ref": "#/$defs/invite.sent"
+        }
+      }
+    },
+    {
+      "title": "invite.walk_link_option_changed",
+      "properties": {
+        "eventName": {
+          "const": "invite.walk_link_option_changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/invite.walk_link_option_changed"
+        }
+      }
+    },
+    {
+      "title": "map_editor.application.opened",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.application.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.application.opened"
+        }
+      }
+    },
+    {
+      "title": "map_editor.application_picker.opened",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.application_picker.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.application_picker.opened"
+        }
+      }
+    },
+    {
+      "title": "map_editor.area.created",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.area.created"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.area.created"
+        }
+      }
+    },
+    {
+      "title": "map_editor.area.lock.toggled",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.area.lock.toggled"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.area.lock.toggled"
+        }
+      }
+    },
+    {
+      "title": "map_editor.area.removed",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.area.removed"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.area.removed"
+        }
+      }
+    },
+    {
+      "title": "map_editor.area.updated",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.area.updated"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.area.updated"
+        }
+      }
+    },
+    {
+      "title": "map_editor.closed",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.closed"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.closed"
+        }
+      }
+    },
+    {
+      "title": "map_editor.entity.added",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.entity.added"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.entity.added"
+        }
+      }
+    },
+    {
+      "title": "map_editor.entity.removed",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.entity.removed"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.entity.removed"
+        }
+      }
+    },
+    {
+      "title": "map_editor.entity.updated",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.entity.updated"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.entity.updated"
+        }
+      }
+    },
+    {
+      "title": "map_editor.opened",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.opened"
+        }
+      }
+    },
+    {
+      "title": "map_editor.property.added",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.property.added"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.property.added"
+        }
+      }
+    },
+    {
+      "title": "map_editor.property.clicked",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.property.clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.property.clicked"
+        }
+      }
+    },
+    {
+      "title": "map_editor.property.removed",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.property.removed"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.property.removed"
+        }
+      }
+    },
+    {
+      "title": "map_editor.save.failed",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.save.failed"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.save.failed"
+        }
+      }
+    },
+    {
+      "title": "map_editor.tool.opened",
+      "properties": {
+        "eventName": {
+          "const": "map_editor.tool.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_editor.tool.opened"
+        }
+      }
+    },
+    {
+      "title": "map_explorer.center_to_user_clicked",
+      "properties": {
+        "eventName": {
+          "const": "map_explorer.center_to_user_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_explorer.center_to_user_clicked"
+        }
+      }
+    },
+    {
+      "title": "map_explorer.closed",
+      "properties": {
+        "eventName": {
+          "const": "map_explorer.closed"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_explorer.closed"
+        }
+      }
+    },
+    {
+      "title": "map_explorer.filtered",
+      "properties": {
+        "eventName": {
+          "const": "map_explorer.filtered"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_explorer.filtered"
+        }
+      }
+    },
+    {
+      "title": "map_explorer.opened",
+      "properties": {
+        "eventName": {
+          "const": "map_explorer.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_explorer.opened"
+        }
+      }
+    },
+    {
+      "title": "map_explorer.top_button_clicked",
+      "properties": {
+        "eventName": {
+          "const": "map_explorer.top_button_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_explorer.top_button_clicked"
+        }
+      }
+    },
+    {
+      "title": "map_explorer.zoom_in_clicked",
+      "properties": {
+        "eventName": {
+          "const": "map_explorer.zoom_in_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_explorer.zoom_in_clicked"
+        }
+      }
+    },
+    {
+      "title": "map_explorer.zoom_out_clicked",
+      "properties": {
+        "eventName": {
+          "const": "map_explorer.zoom_out_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_explorer.zoom_out_clicked"
+        }
+      }
+    },
+    {
+      "title": "map_loading.failed",
+      "properties": {
+        "eventName": {
+          "const": "map_loading.failed"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_loading.failed"
+        }
+      }
+    },
+    {
+      "title": "map_loading.started",
+      "properties": {
+        "eventName": {
+          "const": "map_loading.started"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_loading.started"
+        }
+      }
+    },
+    {
+      "title": "map_loading.succeeded",
+      "properties": {
+        "eventName": {
+          "const": "map_loading.succeeded"
+        },
+        "properties": {
+          "$ref": "#/$defs/map_loading.succeeded"
+        }
+      }
+    },
+    {
+      "title": "media.background_effect.sample",
+      "properties": {
+        "eventName": {
+          "const": "media.background_effect.sample"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.background_effect.sample"
+        }
+      }
+    },
+    {
+      "title": "media.camera.toggled",
+      "properties": {
+        "eventName": {
+          "const": "media.camera.toggled"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.camera.toggled"
+        }
+      }
+    },
+    {
+      "title": "media.codec.degraded",
+      "properties": {
+        "eventName": {
+          "const": "media.codec.degraded"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.codec.degraded"
+        }
+      }
+    },
+    {
+      "title": "media.connection_retry",
+      "properties": {
+        "eventName": {
+          "const": "media.connection_retry"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.connection_retry"
+        }
+      }
+    },
+    {
+      "title": "media.device_error",
+      "properties": {
+        "eventName": {
+          "const": "media.device_error"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.device_error"
+        }
+      }
+    },
+    {
+      "title": "media.livekit_switch.requested",
+      "properties": {
+        "eventName": {
+          "const": "media.livekit_switch.requested"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.livekit_switch.requested"
+        }
+      }
+    },
+    {
+      "title": "media.microphone.dwell",
+      "properties": {
+        "eventName": {
+          "const": "media.microphone.dwell"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.microphone.dwell"
+        }
+      }
+    },
+    {
+      "title": "media.microphone.toggled",
+      "properties": {
+        "eventName": {
+          "const": "media.microphone.toggled"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.microphone.toggled"
+        }
+      }
+    },
+    {
+      "title": "media.permission_denied",
+      "properties": {
+        "eventName": {
+          "const": "media.permission_denied"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.permission_denied"
+        }
+      }
+    },
+    {
+      "title": "media.speech.dwell",
+      "properties": {
+        "eventName": {
+          "const": "media.speech.dwell"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.speech.dwell"
+        }
+      }
+    },
+    {
+      "title": "media.turn_test.failed",
+      "properties": {
+        "eventName": {
+          "const": "media.turn_test.failed"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.turn_test.failed"
+        }
+      }
+    },
+    {
+      "title": "media.turn_test.succeeded",
+      "properties": {
+        "eventName": {
+          "const": "media.turn_test.succeeded"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.turn_test.succeeded"
+        }
+      }
+    },
+    {
+      "title": "media.turn_test.timeout",
+      "properties": {
+        "eventName": {
+          "const": "media.turn_test.timeout"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.turn_test.timeout"
+        }
+      }
+    },
+    {
+      "title": "media.video_quality.sample",
+      "properties": {
+        "eventName": {
+          "const": "media.video_quality.sample"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.video_quality.sample"
+        }
+      }
+    },
+    {
+      "title": "media.video_stream_missing",
+      "properties": {
+        "eventName": {
+          "const": "media.video_stream_missing"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.video_stream_missing"
+        }
+      }
+    },
+    {
+      "title": "meeting.actions.opened",
+      "properties": {
+        "eventName": {
+          "const": "meeting.actions.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.actions.opened"
+        }
+      }
+    },
+    {
+      "title": "meeting.area_entered",
+      "properties": {
+        "eventName": {
+          "const": "meeting.area_entered"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.area_entered"
+        }
+      }
+    },
+    {
+      "title": "meeting.camera_layout_resized",
+      "properties": {
+        "eventName": {
+          "const": "meeting.camera_layout_resized"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.camera_layout_resized"
+        }
+      }
+    },
+    {
+      "title": "meeting.ended",
+      "properties": {
+        "eventName": {
+          "const": "meeting.ended"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.ended"
+        }
+      }
+    },
+    {
+      "title": "meeting.layout_changed",
+      "properties": {
+        "eventName": {
+          "const": "meeting.layout_changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.layout_changed"
+        }
+      }
+    },
+    {
+      "title": "meeting.microphone.muted",
+      "properties": {
+        "eventName": {
+          "const": "meeting.microphone.muted"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.microphone.muted"
+        }
+      }
+    },
+    {
+      "title": "meeting.microphone.muted_for_everybody",
+      "properties": {
+        "eventName": {
+          "const": "meeting.microphone.muted_for_everybody"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.microphone.muted_for_everybody"
+        }
+      }
+    },
+    {
+      "title": "meeting.participant.kicked",
+      "properties": {
+        "eventName": {
+          "const": "meeting.participant.kicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.participant.kicked"
+        }
+      }
+    },
+    {
+      "title": "meeting.participant.pinned",
+      "properties": {
+        "eventName": {
+          "const": "meeting.participant.pinned"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.participant.pinned"
+        }
+      }
+    },
+    {
+      "title": "meeting.participation.ended",
+      "properties": {
+        "eventName": {
+          "const": "meeting.participation.ended"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.participation.ended"
+        }
+      }
+    },
+    {
+      "title": "meeting.picture_in_picture.toggled",
+      "properties": {
+        "eventName": {
+          "const": "meeting.picture_in_picture.toggled"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.picture_in_picture.toggled"
+        }
+      }
+    },
+    {
+      "title": "meeting.private_message.clicked",
+      "properties": {
+        "eventName": {
+          "const": "meeting.private_message.clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.private_message.clicked"
+        }
+      }
+    },
+    {
+      "title": "meeting.report.clicked",
+      "properties": {
+        "eventName": {
+          "const": "meeting.report.clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.report.clicked"
+        }
+      }
+    },
+    {
+      "title": "meeting.screenshare.ended",
+      "properties": {
+        "eventName": {
+          "const": "meeting.screenshare.ended"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.screenshare.ended"
+        }
+      }
+    },
+    {
+      "title": "meeting.screenshare.toggled",
+      "properties": {
+        "eventName": {
+          "const": "meeting.screenshare.toggled"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.screenshare.toggled"
+        }
+      }
+    },
+    {
+      "title": "meeting.started",
+      "properties": {
+        "eventName": {
+          "const": "meeting.started"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.started"
+        }
+      }
+    },
+    {
+      "title": "meeting.video.muted",
+      "properties": {
+        "eventName": {
+          "const": "meeting.video.muted"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.video.muted"
+        }
+      }
+    },
+    {
+      "title": "meeting.video.muted_for_everybody",
+      "properties": {
+        "eventName": {
+          "const": "meeting.video.muted_for_everybody"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.video.muted_for_everybody"
+        }
+      }
+    },
+    {
+      "title": "megaphone.opened",
+      "properties": {
+        "eventName": {
+          "const": "megaphone.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/megaphone.opened"
+        }
+      }
+    },
+    {
+      "title": "menu.chat.opened",
+      "properties": {
+        "eventName": {
+          "const": "menu.chat.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/menu.chat.opened"
+        }
+      }
+    },
+    {
+      "title": "menu.contact.opened",
+      "properties": {
+        "eventName": {
+          "const": "menu.contact.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/menu.contact.opened"
+        }
+      }
+    },
+    {
+      "title": "menu.credit.opened",
+      "properties": {
+        "eventName": {
+          "const": "menu.credit.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/menu.credit.opened"
+        }
+      }
+    },
+    {
+      "title": "menu.custom.opened",
+      "properties": {
+        "eventName": {
+          "const": "menu.custom.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/menu.custom.opened"
+        }
+      }
+    },
+    {
+      "title": "menu.opened",
+      "properties": {
+        "eventName": {
+          "const": "menu.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/menu.opened"
+        }
+      }
+    },
+    {
+      "title": "menu.shortcuts.opened",
+      "properties": {
+        "eventName": {
+          "const": "menu.shortcuts.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/menu.shortcuts.opened"
+        }
+      }
+    },
+    {
+      "title": "onboarding.companion_selected",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.companion_selected"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.companion_selected"
+        }
+      }
+    },
+    {
+      "title": "onboarding.custom_woka_selected",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.custom_woka_selected"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.custom_woka_selected"
+        }
+      }
+    },
+    {
+      "title": "onboarding.name_validated",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.name_validated"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.name_validated"
+        }
+      }
+    },
+    {
+      "title": "onboarding.video_validated",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.video_validated"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.video_validated"
+        }
+      }
+    },
+    {
+      "title": "onboarding.woka_selected",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.woka_selected"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.woka_selected"
+        }
+      }
+    },
+    {
+      "title": "onboarding.woka_validated",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.woka_validated"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.woka_validated"
+        }
+      }
+    },
+    {
+      "title": "personal_desk.entered",
+      "properties": {
+        "eventName": {
+          "const": "personal_desk.entered"
+        },
+        "properties": {
+          "$ref": "#/$defs/personal_desk.entered"
+        }
+      }
+    },
+    {
+      "title": "personal_desk.unclaimed",
+      "properties": {
+        "eventName": {
+          "const": "personal_desk.unclaimed"
+        },
+        "properties": {
+          "$ref": "#/$defs/personal_desk.unclaimed"
+        }
+      }
+    },
+    {
+      "title": "popup.opened",
+      "properties": {
+        "eventName": {
+          "const": "popup.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/popup.opened"
+        }
+      }
+    },
+    {
+      "title": "profile.camera_edit_opened",
+      "properties": {
+        "eventName": {
+          "const": "profile.camera_edit_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/profile.camera_edit_opened"
+        }
+      }
+    },
+    {
+      "title": "profile.companion_edit_opened",
+      "properties": {
+        "eventName": {
+          "const": "profile.companion_edit_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/profile.companion_edit_opened"
+        }
+      }
+    },
+    {
+      "title": "profile.name_edit_opened",
+      "properties": {
+        "eventName": {
+          "const": "profile.name_edit_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/profile.name_edit_opened"
+        }
+      }
+    },
+    {
+      "title": "profile.opened",
+      "properties": {
+        "eventName": {
+          "const": "profile.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/profile.opened"
+        }
+      }
+    },
+    {
+      "title": "profile.woka_edit_opened",
+      "properties": {
+        "eventName": {
+          "const": "profile.woka_edit_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/profile.woka_edit_opened"
+        }
+      }
+    },
+    {
+      "title": "pwa.continue_in_browser_clicked",
+      "properties": {
+        "eventName": {
+          "const": "pwa.continue_in_browser_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/pwa.continue_in_browser_clicked"
+        }
+      }
+    },
+    {
+      "title": "pwa.install_clicked",
+      "properties": {
+        "eventName": {
+          "const": "pwa.install_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/pwa.install_clicked"
+        }
+      }
+    },
+    {
+      "title": "pwa.install_from_profile_menu_clicked",
+      "properties": {
+        "eventName": {
+          "const": "pwa.install_from_profile_menu_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/pwa.install_from_profile_menu_clicked"
+        }
+      }
+    },
+    {
+      "title": "pwa.install_outcome",
+      "properties": {
+        "eventName": {
+          "const": "pwa.install_outcome"
+        },
+        "properties": {
+          "$ref": "#/$defs/pwa.install_outcome"
+        }
+      }
+    },
+    {
+      "title": "pwa.install_prompt_shown",
+      "properties": {
+        "eventName": {
+          "const": "pwa.install_prompt_shown"
+        },
+        "properties": {
+          "$ref": "#/$defs/pwa.install_prompt_shown"
+        }
+      }
+    },
+    {
+      "title": "recording.list_opened",
+      "properties": {
+        "eventName": {
+          "const": "recording.list_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/recording.list_opened"
+        }
+      }
+    },
+    {
+      "title": "recording.started",
+      "properties": {
+        "eventName": {
+          "const": "recording.started"
+        },
+        "properties": {
+          "$ref": "#/$defs/recording.started"
+        }
+      }
+    },
+    {
+      "title": "recording.stopped",
+      "properties": {
+        "eventName": {
+          "const": "recording.stopped"
+        },
+        "properties": {
+          "$ref": "#/$defs/recording.stopped"
+        }
+      }
+    },
+    {
+      "title": "room.changed",
+      "properties": {
+        "eventName": {
+          "const": "room.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/room.changed"
+        }
+      }
+    },
+    {
+      "title": "room.visited",
+      "properties": {
+        "eventName": {
+          "const": "room.visited"
+        },
+        "properties": {
+          "$ref": "#/$defs/room.visited"
+        }
+      }
+    },
+    {
+      "title": "room_list.opened",
+      "properties": {
+        "eventName": {
+          "const": "room_list.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/room_list.opened"
+        }
+      }
+    },
+    {
+      "title": "room_list.room_clicked",
+      "properties": {
+        "eventName": {
+          "const": "room_list.room_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/room_list.room_clicked"
+        }
+      }
+    },
+    {
+      "title": "scripting.website_opened",
+      "properties": {
+        "eventName": {
+          "const": "scripting.website_opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/scripting.website_opened"
+        }
+      }
+    },
+    {
+      "title": "session.ended",
+      "properties": {
+        "eventName": {
+          "const": "session.ended"
+        },
+        "properties": {
+          "$ref": "#/$defs/session.ended"
+        }
+      }
+    },
+    {
+      "title": "session.started",
+      "properties": {
+        "eventName": {
+          "const": "session.started"
+        },
+        "properties": {
+          "$ref": "#/$defs/session.started"
+        }
+      }
+    },
+    {
+      "title": "settings.ask_website.changed",
+      "properties": {
+        "eventName": {
+          "const": "settings.ask_website.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.ask_website.changed"
+        }
+      }
+    },
+    {
+      "title": "settings.audio_volume.opened",
+      "properties": {
+        "eventName": {
+          "const": "settings.audio_volume.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.audio_volume.opened"
+        }
+      }
+    },
+    {
+      "title": "settings.background.changed",
+      "properties": {
+        "eventName": {
+          "const": "settings.background.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.background.changed"
+        }
+      }
+    },
+    {
+      "title": "settings.background.opened",
+      "properties": {
+        "eventName": {
+          "const": "settings.background.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.background.opened"
+        }
+      }
+    },
+    {
+      "title": "settings.camera.changed",
+      "properties": {
+        "eventName": {
+          "const": "settings.camera.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.camera.changed"
+        }
+      }
+    },
+    {
+      "title": "settings.camera.selected",
+      "properties": {
+        "eventName": {
+          "const": "settings.camera.selected"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.camera.selected"
+        }
+      }
+    },
+    {
+      "title": "settings.decrease_audio_volume.changed",
+      "properties": {
+        "eventName": {
+          "const": "settings.decrease_audio_volume.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.decrease_audio_volume.changed"
+        }
+      }
+    },
+    {
+      "title": "settings.fullscreen.changed",
+      "properties": {
+        "eventName": {
+          "const": "settings.fullscreen.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.fullscreen.changed"
+        }
+      }
+    },
+    {
+      "title": "settings.microphone.changed",
+      "properties": {
+        "eventName": {
+          "const": "settings.microphone.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.microphone.changed"
+        }
+      }
+    },
+    {
+      "title": "settings.microphone.selected",
+      "properties": {
+        "eventName": {
+          "const": "settings.microphone.selected"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.microphone.selected"
+        }
+      }
+    },
+    {
+      "title": "settings.notification.changed",
+      "properties": {
+        "eventName": {
+          "const": "settings.notification.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.notification.changed"
+        }
+      }
+    },
+    {
+      "title": "settings.opened",
+      "properties": {
+        "eventName": {
+          "const": "settings.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.opened"
+        }
+      }
+    },
+    {
+      "title": "settings.picture_in_picture.changed",
+      "properties": {
+        "eventName": {
+          "const": "settings.picture_in_picture.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.picture_in_picture.changed"
+        }
+      }
+    },
+    {
+      "title": "settings.request_follow.changed",
+      "properties": {
+        "eventName": {
+          "const": "settings.request_follow.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.request_follow.changed"
+        }
+      }
+    },
+    {
+      "title": "settings.speaker.selected",
+      "properties": {
+        "eventName": {
+          "const": "settings.speaker.selected"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.speaker.selected"
+        }
+      }
+    },
+    {
+      "title": "status.dwell",
+      "properties": {
+        "eventName": {
+          "const": "status.dwell"
+        },
+        "properties": {
+          "$ref": "#/$defs/status.dwell"
+        }
+      }
+    },
+    {
+      "title": "user.business_card.opened",
+      "properties": {
+        "eventName": {
+          "const": "user.business_card.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/user.business_card.opened"
+        }
+      }
+    },
+    {
+      "title": "user.connected",
+      "properties": {
+        "eventName": {
+          "const": "user.connected"
+        },
+        "properties": {
+          "$ref": "#/$defs/user.connected"
+        }
+      }
+    },
+    {
+      "title": "user.disconnected",
+      "properties": {
+        "eventName": {
+          "const": "user.disconnected"
+        },
+        "properties": {
+          "$ref": "#/$defs/user.disconnected"
+        }
+      }
+    },
+    {
+      "title": "user.follow_requested",
+      "properties": {
+        "eventName": {
+          "const": "user.follow_requested"
+        },
+        "properties": {
+          "$ref": "#/$defs/user.follow_requested"
+        }
+      }
+    },
+    {
+      "title": "user.go_to_clicked",
+      "properties": {
+        "eventName": {
+          "const": "user.go_to_clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/user.go_to_clicked"
+        }
+      }
+    },
+    {
+      "title": "user.report.clicked",
+      "properties": {
+        "eventName": {
+          "const": "user.report.clicked"
+        },
+        "properties": {
+          "$ref": "#/$defs/user.report.clicked"
+        }
+      }
+    },
+    {
+      "title": "user.woka_menu.opened",
+      "properties": {
+        "eventName": {
+          "const": "user.woka_menu.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/user.woka_menu.opened"
+        }
+      }
+    },
+    {
+      "title": "user_list.opened",
+      "properties": {
+        "eventName": {
+          "const": "user_list.opened"
+        },
+        "properties": {
+          "$ref": "#/$defs/user_list.opened"
+        }
+      }
+    },
+    {
+      "title": "websocket.connection_lost",
+      "properties": {
+        "eventName": {
+          "const": "websocket.connection_lost"
+        },
+        "properties": {
+          "$ref": "#/$defs/websocket.connection_lost"
+        }
+      }
+    },
+    {
+      "title": "websocket.reconnected",
+      "properties": {
+        "eventName": {
+          "const": "websocket.reconnected"
+        },
+        "properties": {
+          "$ref": "#/$defs/websocket.reconnected"
+        }
+      }
+    },
+    {
+      "title": "websocket.reconnecting",
+      "properties": {
+        "eventName": {
+          "const": "websocket.reconnecting"
+        },
+        "properties": {
+          "$ref": "#/$defs/websocket.reconnecting"
+        }
+      }
+    },
+    {
+      "title": "world.entered",
+      "properties": {
+        "eventName": {
+          "const": "world.entered"
+        },
+        "properties": {
+          "$ref": "#/$defs/world.entered"
+        }
+      }
+    },
+    {
+      "title": "Any other event",
+      "properties": {
+        "eventName": {
+          "not": {
+            "enum": [
+              "area.dwell",
+              "asset.error",
+              "auth.logged_sso",
+              "auth.logged_token",
+              "auth.login_clicked",
+              "auth.logout_clicked",
+              "auth.user_identified",
+              "bubble.lock.toggled",
+              "bubble.say.opened",
+              "bubble.think.opened",
+              "chat.matrix_encryption_configuration.started",
+              "chat.matrix_folder.created",
+              "chat.matrix_room.created",
+              "chat.message_from_user_list_clicked",
+              "chat.message_list_opened",
+              "chat.message_sent",
+              "chat.opened",
+              "conversation.participant_added",
+              "cowebsite.closed",
+              "cowebsite.fullscreen_opened",
+              "cowebsite.link_copied",
+              "cowebsite.opened",
+              "cowebsite.opened_in_new_tab",
+              "cowebsite.switched",
+              "custom_button.clicked",
+              "emote.edit_opened",
+              "emote.launched",
+              "external_module.calendar_opened",
+              "external_module.chat_band.clicked",
+              "external_module.opened",
+              "external_module.todo_list_opened",
+              "feedback.opened",
+              "feedback.submitted",
+              "file.drag_dropped",
+              "global_audio.opened",
+              "global_message.opened",
+              "global_message.sound_sent",
+              "global_message.text_sent",
+              "invite.accepted",
+              "invite.opened",
+              "invite.sent",
+              "invite.walk_link_option_changed",
+              "map_editor.application.opened",
+              "map_editor.application_picker.opened",
+              "map_editor.area.created",
+              "map_editor.area.lock.toggled",
+              "map_editor.area.removed",
+              "map_editor.area.updated",
+              "map_editor.closed",
+              "map_editor.entity.added",
+              "map_editor.entity.removed",
+              "map_editor.entity.updated",
+              "map_editor.opened",
+              "map_editor.property.added",
+              "map_editor.property.clicked",
+              "map_editor.property.removed",
+              "map_editor.save.failed",
+              "map_editor.tool.opened",
+              "map_explorer.center_to_user_clicked",
+              "map_explorer.closed",
+              "map_explorer.filtered",
+              "map_explorer.opened",
+              "map_explorer.top_button_clicked",
+              "map_explorer.zoom_in_clicked",
+              "map_explorer.zoom_out_clicked",
+              "map_loading.failed",
+              "map_loading.started",
+              "map_loading.succeeded",
+              "media.background_effect.sample",
+              "media.camera.toggled",
+              "media.codec.degraded",
+              "media.connection_retry",
+              "media.device_error",
+              "media.livekit_switch.requested",
+              "media.microphone.dwell",
+              "media.microphone.toggled",
+              "media.permission_denied",
+              "media.speech.dwell",
+              "media.turn_test.failed",
+              "media.turn_test.succeeded",
+              "media.turn_test.timeout",
+              "media.video_quality.sample",
+              "media.video_stream_missing",
+              "meeting.actions.opened",
+              "meeting.area_entered",
+              "meeting.camera_layout_resized",
+              "meeting.ended",
+              "meeting.layout_changed",
+              "meeting.microphone.muted",
+              "meeting.microphone.muted_for_everybody",
+              "meeting.participant.kicked",
+              "meeting.participant.pinned",
+              "meeting.participation.ended",
+              "meeting.picture_in_picture.toggled",
+              "meeting.private_message.clicked",
+              "meeting.report.clicked",
+              "meeting.screenshare.ended",
+              "meeting.screenshare.toggled",
+              "meeting.started",
+              "meeting.video.muted",
+              "meeting.video.muted_for_everybody",
+              "megaphone.opened",
+              "menu.chat.opened",
+              "menu.contact.opened",
+              "menu.credit.opened",
+              "menu.custom.opened",
+              "menu.opened",
+              "menu.shortcuts.opened",
+              "onboarding.companion_selected",
+              "onboarding.custom_woka_selected",
+              "onboarding.name_validated",
+              "onboarding.video_validated",
+              "onboarding.woka_selected",
+              "onboarding.woka_validated",
+              "personal_desk.entered",
+              "personal_desk.unclaimed",
+              "popup.opened",
+              "profile.camera_edit_opened",
+              "profile.companion_edit_opened",
+              "profile.name_edit_opened",
+              "profile.opened",
+              "profile.woka_edit_opened",
+              "pwa.continue_in_browser_clicked",
+              "pwa.install_clicked",
+              "pwa.install_from_profile_menu_clicked",
+              "pwa.install_outcome",
+              "pwa.install_prompt_shown",
+              "recording.list_opened",
+              "recording.started",
+              "recording.stopped",
+              "room.changed",
+              "room.visited",
+              "room_list.opened",
+              "room_list.room_clicked",
+              "scripting.website_opened",
+              "session.ended",
+              "session.started",
+              "settings.ask_website.changed",
+              "settings.audio_volume.opened",
+              "settings.background.changed",
+              "settings.background.opened",
+              "settings.camera.changed",
+              "settings.camera.selected",
+              "settings.decrease_audio_volume.changed",
+              "settings.fullscreen.changed",
+              "settings.microphone.changed",
+              "settings.microphone.selected",
+              "settings.notification.changed",
+              "settings.opened",
+              "settings.picture_in_picture.changed",
+              "settings.request_follow.changed",
+              "settings.speaker.selected",
+              "status.dwell",
+              "user.business_card.opened",
+              "user.connected",
+              "user.disconnected",
+              "user.follow_requested",
+              "user.go_to_clicked",
+              "user.report.clicked",
+              "user.woka_menu.opened",
+              "user_list.opened",
+              "websocket.connection_lost",
+              "websocket.reconnected",
+              "websocket.reconnecting",
+              "world.entered"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "area.dwell": {
+      "type": "object",
+      "properties": {
+        "areaId": {
+          "type": "string",
+          "description": "Identifier of the area."
+        },
+        "areaName": {
+          "type": "string",
+          "description": "Human-readable area name, as authored on the map."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval began."
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval ended."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length of the interval in seconds, reported so nothing has to pair rows."
+        },
+        "endReason": {
+          "type": "string",
+          "enum": [
+            "closed_by_client",
+            "socket_closed",
+            "join_failed",
+            "pusher_shutdown",
+            "pusher_crashed"
+          ],
+          "description": "Why the dwell ended, or what ended it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "area.dwell",
+      "description": "Time the user spent inside an area. One row per visit, emitted by the pusher when the interval closes and timestamped at its end. This replaced an area.entered/area.left pair that the admin re-paired with a window function over every event in the room."
+    },
+    "asset.error": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "tile",
+            "asset"
+          ],
+          "description": "Whether a tileset or another asset failed."
+        },
+        "reason": {
+          "type": "string",
+          "description": "What failed to load."
+        }
+      },
+      "additionalProperties": true,
+      "title": "asset.error",
+      "description": "A map tile or asset failed to load. Counted as an experience issue."
+    },
+    "auth.logged_sso": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user signed in through SSO.",
+      "title": "auth.logged_sso"
+    },
+    "auth.logged_token": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user signed in with a token.",
+      "title": "auth.logged_token"
+    },
+    "auth.login_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user clicked sign in.",
+      "title": "auth.login_clicked"
+    },
+    "auth.logout_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user clicked sign out.",
+      "title": "auth.logout_clicked"
+    },
+    "auth.user_identified": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Room the user was identified in, when known."
+        }
+      },
+      "additionalProperties": true,
+      "title": "auth.user_identified",
+      "description": "The user was identified, i.e. attached to an account rather than anonymous."
+    },
+    "bubble.lock.toggled": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user locked or unlocked their conversation bubble.",
+      "title": "bubble.lock.toggled"
+    },
+    "bubble.say.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the say bubble.",
+      "title": "bubble.say.opened"
+    },
+    "bubble.think.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the think bubble.",
+      "title": "bubble.think.opened"
+    },
+    "chat.matrix_encryption_configuration.started": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user started configuring chat encryption.",
+      "title": "chat.matrix_encryption_configuration.started"
+    },
+    "chat.matrix_folder.created": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user created a chat folder.",
+      "title": "chat.matrix_folder.created"
+    },
+    "chat.matrix_room.created": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user created a chat room.",
+      "title": "chat.matrix_room.created"
+    },
+    "chat.message_from_user_list_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user started a chat from the user list.",
+      "title": "chat.message_from_user_list_clicked"
+    },
+    "chat.message_list_opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the message list.",
+      "title": "chat.message_list_opened"
+    },
+    "chat.message_sent": {
+      "type": "object",
+      "properties": {
+        "chatContext": {
+          "type": "string",
+          "enum": [
+            "proximity",
+            "room"
+          ],
+          "description": "Whether the message went to a nearby group or to the whole room."
+        }
+      },
+      "additionalProperties": true,
+      "title": "chat.message_sent",
+      "description": "The user sent a chat message. Content is never collected."
+    },
+    "chat.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the chat.",
+      "title": "chat.opened"
+    },
+    "conversation.participant_added": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "Someone joined the user's conversation.",
+      "title": "conversation.participant_added"
+    },
+    "cowebsite.closed": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Origin only. The query and hash carry auth tokens, and the path carries the document name — which is reported separately as fileName so it can be gated on its own."
+        },
+        "targetUrl": {
+          "type": "string",
+          "description": "Origin of the opened target, reduced the same way as url."
+        },
+        "mediaKind": {
+          "type": "string",
+          "enum": [
+            "pdf",
+            "image",
+            "video",
+            "audio",
+            "document",
+            "presentation",
+            "spreadsheet",
+            "website",
+            "other"
+          ],
+          "description": "What kind of thing was opened, inferred in the browser from the full URL."
+        },
+        "triggerProperty": {
+          "type": "string",
+          "enum": [
+            "openLink",
+            "openWebsite",
+            "other"
+          ],
+          "description": "What caused the cowebsite to open."
+        },
+        "fileName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The document's name. Deliberately absent from the admin's anonymization allowlist, so a world that opts out of user-level activity has it stripped at ingestion — and the internal Kiosk does not project it, so only the world's own back-office sees it."
+        },
+        "fileExtension": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Extension derived in the browser from the full URL, so only the extension leaves it."
+        },
+        "areaId": {
+          "type": "string",
+          "description": "Area the cowebsite was opened from."
+        },
+        "areaName": {
+          "type": "string",
+          "description": "Human-readable area name."
+        },
+        "schemaVersion": {
+          "type": "number",
+          "description": "Payload version for the cowebsite family."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval began."
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval ended."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length of the interval in seconds, reported so nothing has to pair rows."
+        },
+        "endReason": {
+          "type": "string",
+          "enum": [
+            "closed_by_client",
+            "socket_closed",
+            "join_failed",
+            "pusher_shutdown",
+            "pusher_crashed"
+          ],
+          "description": "`socket_closed` and the `pusher_*` values mean the tab went away with the cowebsite still open."
+        }
+      },
+      "additionalProperties": true,
+      "title": "cowebsite.closed",
+      "description": "A cowebsite visit, measured. One row per cowebsite when it closes, carrying the context it was opened with plus how long it stayed open."
+    },
+    "cowebsite.fullscreen_opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user put a cowebsite fullscreen.",
+      "title": "cowebsite.fullscreen_opened"
+    },
+    "cowebsite.link_copied": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user copied a cowebsite's link.",
+      "title": "cowebsite.link_copied"
+    },
+    "cowebsite.opened": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Origin only. The query and hash carry auth tokens, and the path carries the document name — which is reported separately as fileName so it can be gated on its own."
+        },
+        "targetUrl": {
+          "type": "string",
+          "description": "Origin of the opened target, reduced the same way as url."
+        },
+        "mediaKind": {
+          "type": "string",
+          "enum": [
+            "pdf",
+            "image",
+            "video",
+            "audio",
+            "document",
+            "presentation",
+            "spreadsheet",
+            "website",
+            "other"
+          ],
+          "description": "What kind of thing was opened, inferred in the browser from the full URL."
+        },
+        "triggerProperty": {
+          "type": "string",
+          "enum": [
+            "openLink",
+            "openWebsite",
+            "other"
+          ],
+          "description": "What caused the cowebsite to open."
+        },
+        "fileName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The document's name. Deliberately absent from the admin's anonymization allowlist, so a world that opts out of user-level activity has it stripped at ingestion — and the internal Kiosk does not project it, so only the world's own back-office sees it."
+        },
+        "fileExtension": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Extension derived in the browser from the full URL, so only the extension leaves it."
+        },
+        "areaId": {
+          "type": "string",
+          "description": "Area the cowebsite was opened from."
+        },
+        "areaName": {
+          "type": "string",
+          "description": "Human-readable area name."
+        },
+        "schemaVersion": {
+          "type": "number",
+          "description": "Payload version for the cowebsite family."
+        }
+      },
+      "additionalProperties": true,
+      "title": "cowebsite.opened",
+      "description": "The user opened a cowebsite — a document, app or website embedded in the world. Emitted by the pusher when the visit's interval opens, so it pairs one-to-one with the cowebsite.closed that ends it."
+    },
+    "cowebsite.opened_in_new_tab": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened a cowebsite in a browser tab.",
+      "title": "cowebsite.opened_in_new_tab"
+    },
+    "cowebsite.switched": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user switched between open cowebsites.",
+      "title": "cowebsite.switched"
+    },
+    "custom_button.clicked": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The button's id."
+        },
+        "label": {
+          "type": "string",
+          "description": "The button's visible label."
+        }
+      },
+      "additionalProperties": true,
+      "title": "custom_button.clicked",
+      "description": "The user clicked a world-defined custom button."
+    },
+    "emote.edit_opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the emote editor.",
+      "title": "emote.edit_opened"
+    },
+    "emote.launched": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The emote played."
+        }
+      },
+      "additionalProperties": true,
+      "title": "emote.launched",
+      "description": "The user played an emote."
+    },
+    "external_module.calendar_opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the calendar module.",
+      "title": "external_module.calendar_opened"
+    },
+    "external_module.chat_band.clicked": {
+      "type": "object",
+      "properties": {
+        "externalModuleName": {
+          "type": "string",
+          "description": "Which external module the band belongs to."
+        },
+        "action": {
+          "type": "string",
+          "description": "What the user clicked."
+        }
+      },
+      "additionalProperties": true,
+      "title": "external_module.chat_band.clicked",
+      "description": "The user clicked an external module's chat band."
+    },
+    "external_module.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened an external module.",
+      "title": "external_module.opened"
+    },
+    "external_module.todo_list_opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the todo list module.",
+      "title": "external_module.todo_list_opened"
+    },
+    "feedback.opened": {
+      "type": "object",
+      "properties": {
+        "feedbackSource": {
+          "type": "string",
+          "enum": [
+            "sentry",
+            "external_report_url"
+          ],
+          "description": "Which feedback channel was used."
+        }
+      },
+      "additionalProperties": true,
+      "title": "feedback.opened",
+      "description": "The user opened the feedback form."
+    },
+    "feedback.submitted": {
+      "type": "object",
+      "properties": {
+        "feedbackSource": {
+          "type": "string",
+          "enum": [
+            "sentry",
+            "external_report_url"
+          ],
+          "description": "Which feedback channel was used."
+        },
+        "hasScreenshot": {
+          "type": "boolean",
+          "description": "Whether the user attached a screenshot."
+        }
+      },
+      "additionalProperties": true,
+      "title": "feedback.submitted",
+      "description": "The user submitted feedback. Content is never collected."
+    },
+    "file.drag_dropped": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user dropped a file into the world.",
+      "title": "file.drag_dropped"
+    },
+    "global_audio.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the global audio panel.",
+      "title": "global_audio.opened"
+    },
+    "global_message.opened": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "menu",
+            "action_bar"
+          ],
+          "description": "Which control opened the composer."
+        }
+      },
+      "additionalProperties": true,
+      "title": "global_message.opened",
+      "description": "The user opened the global message composer."
+    },
+    "global_message.sound_sent": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user broadcast a sound to the world.",
+      "title": "global_message.sound_sent"
+    },
+    "global_message.text_sent": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user broadcast a text message to the world.",
+      "title": "global_message.text_sent"
+    },
+    "invite.accepted": {
+      "type": "object",
+      "properties": {
+        "inviteType": {
+          "type": "string",
+          "description": "How the invite was received."
+        }
+      },
+      "additionalProperties": true,
+      "title": "invite.accepted",
+      "description": "An invite was accepted. One of the signals the admin treats as a world's first useful moment."
+    },
+    "invite.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the invite panel.",
+      "title": "invite.opened"
+    },
+    "invite.sent": {
+      "type": "object",
+      "properties": {
+        "inviteType": {
+          "type": "string",
+          "description": "How the invite was sent, e.g. a copied link."
+        }
+      },
+      "additionalProperties": true,
+      "title": "invite.sent",
+      "description": "The user sent an invite."
+    },
+    "invite.walk_link_option_changed": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "boolean",
+          "description": "Whether the walk-to-me link option was turned on."
+        }
+      },
+      "additionalProperties": true,
+      "title": "invite.walk_link_option_changed",
+      "description": "The user toggled the walk-to-me option on an invite link."
+    },
+    "map_editor.application.opened": {
+      "type": "object",
+      "properties": {
+        "applicationName": {
+          "type": "string",
+          "description": "The application opened."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.application.opened",
+      "description": "The user opened an application from the map editor."
+    },
+    "map_editor.application_picker.opened": {
+      "type": "object",
+      "properties": {
+        "applicationName": {
+          "type": "string",
+          "description": "The application whose picker was opened."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.application_picker.opened",
+      "description": "The user opened an application picker in the map editor."
+    },
+    "map_editor.area.created": {
+      "type": "object",
+      "properties": {
+        "areaType": {
+          "type": "string",
+          "description": "Kind of area involved."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.area.created",
+      "description": "An area was created on the map."
+    },
+    "map_editor.area.lock.toggled": {
+      "type": "object",
+      "properties": {
+        "areaId": {
+          "type": "string",
+          "description": "Area whose lock changed."
+        },
+        "areaName": {
+          "type": "string",
+          "description": "Human-readable area name."
+        },
+        "locked": {
+          "type": "boolean",
+          "description": "True when the area was locked."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.area.lock.toggled",
+      "description": "The user locked or unlocked an area."
+    },
+    "map_editor.area.removed": {
+      "type": "object",
+      "properties": {
+        "areaType": {
+          "type": "string",
+          "description": "Kind of area involved."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.area.removed",
+      "description": "An area was removed from the map."
+    },
+    "map_editor.area.updated": {
+      "type": "object",
+      "properties": {
+        "areaType": {
+          "type": "string",
+          "description": "Kind of area involved."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.area.updated",
+      "description": "An area on the map was updated."
+    },
+    "map_editor.closed": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user closed the map editor.",
+      "title": "map_editor.closed"
+    },
+    "map_editor.entity.added": {
+      "type": "object",
+      "properties": {
+        "entityType": {
+          "type": "string",
+          "description": "Kind of entity involved."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.entity.added",
+      "description": "An entity was added to the map."
+    },
+    "map_editor.entity.removed": {
+      "type": "object",
+      "properties": {
+        "entityType": {
+          "type": "string",
+          "description": "Kind of entity involved."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.entity.removed",
+      "description": "An entity was removed from the map."
+    },
+    "map_editor.entity.updated": {
+      "type": "object",
+      "properties": {
+        "entityType": {
+          "type": "string",
+          "description": "Kind of entity involved."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.entity.updated",
+      "description": "An entity on the map was updated."
+    },
+    "map_editor.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the map editor.",
+      "title": "map_editor.opened"
+    },
+    "map_editor.property.added": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The property's name."
+        },
+        "type": {
+          "type": "string",
+          "description": "The property's type."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.property.added",
+      "description": "A property was added to a map object."
+    },
+    "map_editor.property.clicked": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The property that was clicked."
+        },
+        "style": {
+          "type": "string",
+          "description": "Which rendering of the property was clicked."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.property.clicked",
+      "description": "A map property was clicked in-world."
+    },
+    "map_editor.property.removed": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The property's name."
+        },
+        "type": {
+          "type": "string",
+          "description": "The property's type."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.property.removed",
+      "description": "A property was removed from a map object."
+    },
+    "map_editor.save.failed": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "Why the save failed."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.save.failed",
+      "description": "The map-storage refused an edit. There is no matching `.started`/`.succeeded`: a map editor command is sent fire-and-forget, so the front only ever learns about the failures — count these against the `map_editor.area.*` / `map_editor.entity.*` events to get an edit failure rate."
+    },
+    "map_editor.tool.opened": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The tool opened."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_editor.tool.opened",
+      "description": "The user opened a map editor tool."
+    },
+    "map_explorer.center_to_user_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user recentred the explorer on themselves.",
+      "title": "map_explorer.center_to_user_clicked"
+    },
+    "map_explorer.closed": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user closed the map explorer.",
+      "title": "map_explorer.closed"
+    },
+    "map_explorer.filtered": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user filtered the map explorer.",
+      "title": "map_explorer.filtered"
+    },
+    "map_explorer.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the map explorer.",
+      "title": "map_explorer.opened"
+    },
+    "map_explorer.top_button_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the explorer from the top button.",
+      "title": "map_explorer.top_button_clicked"
+    },
+    "map_explorer.zoom_in_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user zoomed in on the map explorer.",
+      "title": "map_explorer.zoom_in_clicked"
+    },
+    "map_explorer.zoom_out_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user zoomed out on the map explorer.",
+      "title": "map_explorer.zoom_out_clicked"
+    },
+    "map_loading.failed": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "Why the load failed."
+        },
+        "durationMs": {
+          "type": "number",
+          "description": "How long the attempt took before failing."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_loading.failed",
+      "description": "A map failed to load. One of the events the admin counts as an experience issue."
+    },
+    "map_loading.started": {
+      "type": "object",
+      "properties": {
+        "mapUrl": {
+          "type": "string",
+          "description": "The map being loaded, with query string and hash stripped — those carry auth tokens. The path is kept on purpose: for a map it *is* the signal, naming which map loaded."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_loading.started",
+      "description": "A map started loading."
+    },
+    "map_loading.succeeded": {
+      "type": "object",
+      "properties": {
+        "durationMs": {
+          "type": "number",
+          "description": "How long the map took to load."
+        }
+      },
+      "additionalProperties": true,
+      "title": "map_loading.succeeded",
+      "description": "A map finished loading."
+    },
+    "media.background_effect.sample": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "blur",
+            "image"
+          ],
+          "description": "The effect running."
+        },
+        "transport": {
+          "type": "string",
+          "enum": [
+            "insertable-streams",
+            "image-bitmap"
+          ],
+          "description": "How camera frames reach the segmentation worker: insertable streams (Chromium, no main-thread work per frame) or ImageBitmap copies through postMessage (Firefox, Safari)."
+        },
+        "delegate": {
+          "type": "string",
+          "enum": [
+            "GPU",
+            "CPU"
+          ],
+          "description": "The MediaPipe delegate running the segmenter."
+        },
+        "model": {
+          "type": "string",
+          "enum": [
+            "general",
+            "landscape"
+          ],
+          "description": "The selfie segmenter model, picked from the camera's aspect ratio."
+        },
+        "meanSegmentationMs": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Mean duration of one segmentation over the sampling window."
+        },
+        "fps": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Composited frames per second over the sampling window."
+        },
+        "resegmentInterval": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "Segmentation runs every Nth frame and the mask is reused in between; adapted from meanSegmentationMs."
+        },
+        "hardwareConcurrency": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "navigator.hardwareConcurrency, 0 when the browser hides it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.background_effect.sample",
+      "description": "How the virtual background pipeline performs on this device: once per session, after 45 s of rendering so the segmentation cadence has had two checkpoints to settle, then once after each change of effect. What decides the defaults of the segmentation cadence, the model choice and the capability gate."
+    },
+    "media.camera.toggled": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user turned their camera on or off.",
+      "title": "media.camera.toggled"
+    },
+    "media.codec.degraded": {
+      "type": "object",
+      "properties": {
+        "streamCategory": {
+          "type": "string",
+          "enum": [
+            "video",
+            "screenSharing"
+          ],
+          "description": "Whether the camera or the screen share was demoted."
+        },
+        "codec": {
+          "type": "string",
+          "enum": [
+            "av1",
+            "vp9",
+            "h264",
+            "vp8"
+          ],
+          "description": "The codec being left. It and everything above it are dropped from what this client offers for the rest of the session, so the next one down is what gets negotiated."
+        },
+        "transportType": {
+          "type": "string",
+          "enum": [
+            "P2P",
+            "SFU"
+          ],
+          "description": "Direct peer connection, or relayed through an SFU."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.codec.degraded",
+      "description": "This client's encoder could not keep up with its codec and left it for a cheaper one. Read against media.video_quality.sample, whose qualityLimitationReason is what this decision is made on: the sample says the machine is struggling, this says what was given up about it. Once per codec per session — nothing goes back up before a reload."
+    },
+    "media.connection_retry": {
+      "type": "object",
+      "properties": {
+        "meetingProvider": {
+          "type": "string",
+          "enum": [
+            "webrtc",
+            "livekit"
+          ],
+          "description": "Which backend was retried."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.connection_retry",
+      "description": "A media connection was retried."
+    },
+    "media.device_error": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "camera",
+            "microphone",
+            "camera_microphone"
+          ],
+          "description": "Which device the user was asked for."
+        },
+        "reason": {
+          "type": "string",
+          "description": "What went wrong with the device."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.device_error",
+      "description": "A camera or microphone failed. Counted as an experience issue."
+    },
+    "media.livekit_switch.requested": {
+      "type": "object",
+      "properties": {
+        "streamCategory": {
+          "type": "string",
+          "enum": [
+            "video",
+            "screenSharing"
+          ],
+          "description": "Which encoders could not keep up."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.livekit_switch.requested",
+      "description": "This client told the space it cannot keep up encoding for several P2P peers, asking for the bubble to be moved to LiveKit, where it encodes once. A request, not an outcome: the back refuses it when it has no LiveKit or when the world turned the switch off, and the next window then falls through to media.codec.degraded. Once per session — the flag is never lowered, or the bubble would bounce."
+    },
+    "media.microphone.dwell": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting this period happened in, absent when it happened outside one. A period heard by several meetings is one row per meeting."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval began."
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval ended."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length of the interval in seconds, reported so nothing has to pair rows."
+        },
+        "endReason": {
+          "type": "string",
+          "enum": [
+            "closed_by_client",
+            "socket_closed",
+            "join_failed",
+            "pusher_shutdown",
+            "pusher_crashed"
+          ],
+          "description": "Why the microphone stopped being open, or what closed it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.microphone.dwell",
+      "description": "Time the user actually held their microphone open, measured by the pusher. Driven by the effective capture state rather than the user's preference: a denied permission, a track that never started, a privacy shutdown or an energy-saving pause all read as closed, so this is time a microphone could be heard rather than time a toggle was left on. media.microphone.toggled counts presses of that toggle and answers a different question."
+    },
+    "media.microphone.toggled": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user turned their microphone on or off.",
+      "title": "media.microphone.toggled"
+    },
+    "media.permission_denied": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "camera",
+            "microphone",
+            "camera_microphone"
+          ],
+          "description": "Which device the user was asked for."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why permission was refused."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.permission_denied",
+      "description": "The browser refused camera or microphone access. Counted as an experience issue."
+    },
+    "media.speech.dwell": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting this period happened in, absent when it happened outside one. A period heard by several meetings is one row per meeting."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval began."
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval ended."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length of the interval in seconds, reported so nothing has to pair rows."
+        },
+        "endReason": {
+          "type": "string",
+          "enum": [
+            "closed_by_client",
+            "socket_closed",
+            "join_failed",
+            "pusher_shutdown",
+            "pusher_crashed"
+          ],
+          "description": "Why the speech period ended, or what ended it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.speech.dwell",
+      "description": "Time the user was detected speaking while their microphone was open, from the local volume analyser with a hold applied so ordinary pauses between words do not cut a sentence into fragments. Reported by the speaker's own client and by nobody else, so the same speech cannot be counted once per listener. It is an estimate from loudness, not recognition: no audio is inspected, transmitted or stored."
+    },
+    "media.turn_test.failed": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The TURN connectivity test failed. Counted as an experience issue.",
+      "title": "media.turn_test.failed"
+    },
+    "media.turn_test.succeeded": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Transport the TURN server accepted."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.turn_test.succeeded",
+      "description": "The TURN connectivity test passed."
+    },
+    "media.turn_test.timeout": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The TURN connectivity test timed out. Counted as an experience issue.",
+      "title": "media.turn_test.timeout"
+    },
+    "media.video_quality.sample": {
+      "type": "object",
+      "properties": {
+        "streamId": {
+          "type": "string",
+          "description": "The WebRTC stream this sample measures."
+        },
+        "connectionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Peer connection the stream rode on."
+        },
+        "sessionId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Media session grouping the streams."
+        },
+        "remoteUserUuid": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The other party. Pseudonymized admin-side for worlds that opted out of user-level activity."
+        },
+        "remoteSpaceUserId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The other party's space-scoped id. Null on an outbound sample: a stream published to a LiveKit server has no single remote user."
+        },
+        "spaceName": {
+          "type": "string",
+          "description": "Space the stream belongs to. The pusher rejects a sample for a space the socket has not joined."
+        },
+        "streamCategory": {
+          "type": "string",
+          "enum": [
+            "video",
+            "screenSharing"
+          ],
+          "description": "Whether the stream is a camera or a screen share."
+        },
+        "transportType": {
+          "type": "string",
+          "enum": [
+            "P2P",
+            "SFU"
+          ],
+          "description": "Direct peer connection, or relayed through an SFU."
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "inbound",
+            "outbound"
+          ],
+          "description": "Whether the sample measures a stream we receive or one we send. An outbound sample describes our own encoder, so it carries no jitter and no remote user."
+        },
+        "relay": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "Whether the connection went through a TURN relay."
+        },
+        "relayProtocol": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "udp",
+                "tcp",
+                "tls"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Transport the relay used."
+        },
+        "livekitServerUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "LiveKit server that carried the stream, when applicable."
+        },
+        "fps": {
+          "type": "number",
+          "description": "Frames per second observed over the sample window."
+        },
+        "fpsStdDev": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Jitter in the frame rate; a high value reads as stutter even when the mean fps looks fine."
+        },
+        "jitter": {
+          "type": "number",
+          "description": "Packet jitter in seconds."
+        },
+        "bandwidthBytesPerSecond": {
+          "type": "number",
+          "description": "Throughput observed over the sample window."
+        },
+        "frameWidth": {
+          "type": "integer",
+          "description": "Rounded frame width in pixels."
+        },
+        "frameHeight": {
+          "type": "integer",
+          "description": "Rounded frame height in pixels."
+        },
+        "mimeType": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Negotiated codec, e.g. video/VP8."
+        },
+        "qualityLimitationReason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "none",
+                "cpu",
+                "bandwidth",
+                "other"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Outbound only: why the browser is degrading what it encodes. `cpu` is a machine that cannot keep up, which otherwise reads to everyone else as a bad network."
+        },
+        "encoderImplementation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Outbound only: encoder the browser picked, e.g. \"libaom\", \"libvpx\", \"ExternalEncoder\"."
+        },
+        "sampleSeq": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Monotonic counter per stream, used to order and de-duplicate samples."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.video_quality.sample",
+      "description": "One periodic WebRTC quality measurement. Synthesized by the pusher from a videoQualityReportMessage rather than reported directly, so a client cannot forge it."
+    },
+    "media.video_stream_missing": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "A video stream was expected but never arrived. Counted as an experience issue.",
+      "title": "media.video_stream_missing"
+    },
+    "meeting.actions.opened": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.actions.opened",
+      "description": "The user opened the meeting actions menu."
+    },
+    "meeting.area_entered": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "string",
+          "description": "Room containing the meeting area."
+        },
+        "meetingProvider": {
+          "type": "string",
+          "enum": [
+            "livekit",
+            "jitsi",
+            "webrtc",
+            "external"
+          ],
+          "description": "Media backend of the area."
+        },
+        "externalMeetingProviderName": {
+          "type": "string",
+          "description": "Name the extension declares itself under, when meetingProvider is `external`. Absent for the providers WorkAdventure carries itself."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.area_entered",
+      "description": "The user walked into a meeting area."
+    },
+    "meeting.camera_layout_resized": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.camera_layout_resized",
+      "description": "The user resized the camera layout."
+    },
+    "meeting.ended": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Identifier of the meeting, when the provider exposes one."
+        },
+        "roomId": {
+          "type": "string",
+          "description": "Room the meeting belongs to."
+        },
+        "meetingProvider": {
+          "type": "string",
+          "enum": [
+            "livekit",
+            "jitsi",
+            "webrtc",
+            "external"
+          ],
+          "description": "Which media backend carried the meeting. It does NOT say what kind of meeting it was — a meeting area of four or fewer never leaves webrtc — which is what meetingKind is for."
+        },
+        "externalMeetingProviderName": {
+          "type": "string",
+          "description": "Name the extension declares itself under, when meetingProvider is `external`. Absent for the providers WorkAdventure carries itself."
+        },
+        "meetingKind": {
+          "type": "string",
+          "enum": [
+            "bubble",
+            "area",
+            "megaphone",
+            "speaker_zone",
+            "external"
+          ],
+          "description": "What the meeting was: a spontaneous proximity bubble, an area people went to in order to meet, the world megaphone, a speaker zone, or `external`. Megaphone and speaker zone are broadcasts — a meeting whose predicate is one speaker on air rather than two people present — so anything reading meeting time as conversation time filters them out. `external` is an area that opens a meeting somewhere else entirely (Teams, Google Meet), where what is measured is time spent in the AREA and not in the call, which happens in another tab or another app. Filled by the back from what the space's client declared; by the client for the ones the back cannot see (Jitsi, Teams, Google Meet)."
+        },
+        "participantCount": {
+          "type": "number",
+          "description": "How many distinct people passed through the meeting."
+        },
+        "peakParticipantCount": {
+          "type": "number",
+          "description": "The most people in it at any one moment."
+        },
+        "speakerCount": {
+          "type": "number",
+          "description": "How many distinct people were on air at any point. In a bubble or an area everyone is, so it equals participantCount there; it only says something under a broadcast kind. Absent on the rows a client opens."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval began."
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval ended."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length of the interval in seconds, reported so nothing has to pair rows."
+        },
+        "endReason": {
+          "type": "string",
+          "enum": [
+            "closed_by_client",
+            "socket_closed",
+            "join_failed",
+            "pusher_shutdown",
+            "pusher_crashed"
+          ],
+          "description": "`socket_closed` and the `pusher_*` values mean the client never got to close it — a tab closed mid-meeting, or the pusher restarted."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.ended",
+      "description": "A meeting, measured. One row per meeting — by the back, which owns the meeting's lifecycle and counts its participants; the row is attributed to nobody, because a meeting belongs to no one participant. Rows without `meetingKind` were opened by a client, once per participant, and carry participant-seconds: Jitsi meetings, and every row older than the back-emitted ones. A broadcast is the same row under a `megaphone` or `speaker_zone` kind: from the first speaker going on air to the last going off, and an empty megaphone space accrues nothing."
+    },
+    "meeting.layout_changed": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "type": "string",
+          "description": "The layout switched to, e.g. `presentation`."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.layout_changed",
+      "description": "The user changed the meeting layout."
+    },
+    "meeting.microphone.muted": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.microphone.muted",
+      "description": "The user muted their microphone in a meeting."
+    },
+    "meeting.microphone.muted_for_everybody": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.microphone.muted_for_everybody",
+      "description": "A moderator muted everyone's microphone."
+    },
+    "meeting.participant.kicked": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.participant.kicked",
+      "description": "A moderator removed a participant."
+    },
+    "meeting.participant.pinned": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.participant.pinned",
+      "description": "The user pinned a participant's video."
+    },
+    "meeting.participation.ended": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting this participation belongs to."
+        },
+        "meetingKind": {
+          "type": "string",
+          "enum": [
+            "bubble",
+            "area",
+            "megaphone",
+            "speaker_zone",
+            "external"
+          ],
+          "description": "What the meeting was: a bubble, an area, the world megaphone, a speaker zone, or `external`. Megaphone and speaker zone are broadcasts, `external` a meeting held elsewhere; see meeting.ended."
+        },
+        "joinRank": {
+          "type": "number",
+          "description": "Where this participant came in the arrival order, counted from when the session opened."
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "speaker",
+            "listener"
+          ],
+          "description": "`speaker` if they were on air at any point; a panelist who also listened to the others is a speaker. In a bubble or an area everyone is on air, so it is always `speaker` there — it only distinguishes anyone under a broadcast kind."
+        },
+        "airtimeSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "This person's own time on air, summed over their stints. Equals durationSeconds in a bubble or an area; zero for a listener. Never to be summed into conversation time: broadcasting is not collaborating, and neither is listening."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval began."
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval ended."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length of the interval in seconds — endedAt minus startedAt, reported so nothing has to pair rows."
+        },
+        "endReason": {
+          "type": "string",
+          "enum": [
+            "closed",
+            "back_shutdown"
+          ],
+          "description": "`back_shutdown` means the server closed it, not the people in it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.participation.ended",
+      "description": "One person's time in one meeting, clipped to it: someone alone in an area before the second person arrived starts when the meeting opens, and a listener present before anyone went on air starts when the broadcast does. Emitted by the back when the meeting ends. Under a broadcast kind this is audience time, reported once per listener: it adds up to reach × duration, not duration. This is the per-user view of a meeting: meeting.ended is deliberately attributed to nobody, because a meeting belongs to no one participant. NOT to be joined to itself: grouping these rows by meetingId yields who was in a meeting with whom, and aggregated over months that is a map of who works with whom — a different product from a record of what happened, and one with a different legal footing. Nothing builds that query today, and the decision to leave it unbuilt is the reason this sentence exists: it is two lines of SQL away, so it will not stay unbuilt by accident."
+    },
+    "meeting.picture_in_picture.toggled": {
+      "type": "object",
+      "properties": {
+        "open": {
+          "type": "boolean",
+          "description": "True when picture-in-picture was opened, false when closed."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.picture_in_picture.toggled",
+      "description": "The user toggled picture-in-picture."
+    },
+    "meeting.private_message.clicked": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.private_message.clicked",
+      "description": "The user started a private message from a meeting."
+    },
+    "meeting.report.clicked": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.report.clicked",
+      "description": "The user reported someone from a meeting."
+    },
+    "meeting.screenshare.ended": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        },
+        "hasAudio": {
+          "type": "boolean",
+          "description": "Whether the shared screen carried audio."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval began."
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval ended."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length of the interval in seconds, reported so nothing has to pair rows."
+        },
+        "endReason": {
+          "type": "string",
+          "enum": [
+            "closed_by_client",
+            "socket_closed",
+            "join_failed",
+            "pusher_shutdown",
+            "pusher_crashed"
+          ],
+          "description": "Why the share stopped, or what stopped it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.screenshare.ended",
+      "description": "A screen share, measured. One row per share, emitted by the pusher when the interval closes and timestamped at its end. There is no matching `.started`: the interval carries its own start. Only one share can be live at a time, so the interval needs no id of its own — the connection it rides identifies it."
+    },
+    "meeting.screenshare.toggled": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.screenshare.toggled",
+      "description": "The user toggled screen sharing."
+    },
+    "meeting.started": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Identifier of the meeting, when the provider exposes one."
+        },
+        "roomId": {
+          "type": "string",
+          "description": "Room the meeting belongs to."
+        },
+        "meetingProvider": {
+          "type": "string",
+          "enum": [
+            "livekit",
+            "jitsi",
+            "webrtc",
+            "external"
+          ],
+          "description": "Which media backend carried the meeting."
+        },
+        "externalMeetingProviderName": {
+          "type": "string",
+          "description": "Name the extension declares itself under, when meetingProvider is `external`. Absent for the providers WorkAdventure carries itself."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.started",
+      "description": "A meeting began. Emitted by the pusher when a client opens the interval, so it pairs one-to-one with the meeting.ended that closes it."
+    },
+    "meeting.video.muted": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.video.muted",
+      "description": "The user turned their camera off in a meeting."
+    },
+    "meeting.video.muted_for_everybody": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.video.muted_for_everybody",
+      "description": "A moderator turned off everyone's camera."
+    },
+    "megaphone.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the megaphone.",
+      "title": "megaphone.opened"
+    },
+    "menu.chat.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the chat from the menu.",
+      "title": "menu.chat.opened"
+    },
+    "menu.contact.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the contact page.",
+      "title": "menu.contact.opened"
+    },
+    "menu.credit.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the credits.",
+      "title": "menu.credit.opened"
+    },
+    "menu.custom.opened": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The custom menu opened."
+        }
+      },
+      "additionalProperties": true,
+      "title": "menu.custom.opened",
+      "description": "The user opened a world-defined custom menu."
+    },
+    "menu.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the main menu.",
+      "title": "menu.opened"
+    },
+    "menu.shortcuts.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the keyboard shortcuts.",
+      "title": "menu.shortcuts.opened"
+    },
+    "onboarding.companion_selected": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user picked a companion during onboarding.",
+      "title": "onboarding.companion_selected"
+    },
+    "onboarding.custom_woka_selected": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user picked a custom Woka during onboarding.",
+      "title": "onboarding.custom_woka_selected"
+    },
+    "onboarding.name_validated": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user confirmed their name during onboarding.",
+      "title": "onboarding.name_validated"
+    },
+    "onboarding.video_validated": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user confirmed their camera setup during onboarding.",
+      "title": "onboarding.video_validated"
+    },
+    "onboarding.woka_selected": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user picked a Woka during onboarding.",
+      "title": "onboarding.woka_selected"
+    },
+    "onboarding.woka_validated": {
+      "type": "object",
+      "properties": {
+        "scene": {
+          "type": "string",
+          "description": "Which onboarding scene the Woka was confirmed in."
+        }
+      },
+      "additionalProperties": true,
+      "title": "onboarding.woka_validated",
+      "description": "The user confirmed their Woka during onboarding."
+    },
+    "personal_desk.entered": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user sat at their personal desk.",
+      "title": "personal_desk.entered"
+    },
+    "personal_desk.unclaimed": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user released their personal desk.",
+      "title": "personal_desk.unclaimed"
+    },
+    "popup.opened": {
+      "type": "object",
+      "properties": {
+        "targetRectangle": {
+          "type": "string",
+          "description": "The map rectangle the popup is anchored to."
+        },
+        "id": {
+          "type": "number",
+          "description": "The popup's id, as assigned by the scripting API (OpenPopupEvent.popupId)."
+        }
+      },
+      "additionalProperties": true,
+      "title": "popup.opened",
+      "description": "A scripted popup was opened."
+    },
+    "profile.camera_edit_opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened camera settings from their profile.",
+      "title": "profile.camera_edit_opened"
+    },
+    "profile.companion_edit_opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened companion settings from their profile.",
+      "title": "profile.companion_edit_opened"
+    },
+    "profile.name_edit_opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened name settings from their profile.",
+      "title": "profile.name_edit_opened"
+    },
+    "profile.opened": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "menu",
+            "profile_button"
+          ],
+          "description": "Which control opened the profile."
+        }
+      },
+      "additionalProperties": true,
+      "title": "profile.opened",
+      "description": "The user opened their profile."
+    },
+    "profile.woka_edit_opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened Woka settings from their profile.",
+      "title": "profile.woka_edit_opened"
+    },
+    "pwa.continue_in_browser_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user chose to stay in the browser rather than install.",
+      "title": "pwa.continue_in_browser_clicked"
+    },
+    "pwa.install_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user clicked install.",
+      "title": "pwa.install_clicked"
+    },
+    "pwa.install_from_profile_menu_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user started an install from the profile menu.",
+      "title": "pwa.install_from_profile_menu_clicked"
+    },
+    "pwa.install_outcome": {
+      "type": "object",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "dismissed"
+          ],
+          "description": "What the user chose."
+        }
+      },
+      "additionalProperties": true,
+      "title": "pwa.install_outcome",
+      "description": "The user accepted or dismissed the install prompt."
+    },
+    "pwa.install_prompt_shown": {
+      "type": "object",
+      "properties": {
+        "isIos": {
+          "type": "boolean",
+          "description": "iOS needs a manual install flow, so the prompt differs."
+        }
+      },
+      "additionalProperties": true,
+      "title": "pwa.install_prompt_shown",
+      "description": "The install-as-an-app prompt was shown."
+    },
+    "recording.list_opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the recordings list.",
+      "title": "recording.list_opened"
+    },
+    "recording.started": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "A recording started.",
+      "title": "recording.started"
+    },
+    "recording.stopped": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "A recording stopped.",
+      "title": "recording.stopped"
+    },
+    "room.changed": {
+      "type": "object",
+      "properties": {
+        "fromRoomId": {
+          "type": "string",
+          "description": "Room left."
+        },
+        "toRoomId": {
+          "type": "string",
+          "description": "Room entered."
+        }
+      },
+      "additionalProperties": true,
+      "title": "room.changed",
+      "description": "The user moved from one room to another without disconnecting."
+    },
+    "room.visited": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "string",
+          "description": "The room entered."
+        },
+        "roomGroup": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Group the room belongs to, when it has one."
+        }
+      },
+      "additionalProperties": true,
+      "title": "room.visited",
+      "description": "The user entered a room."
+    },
+    "room_list.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the room list.",
+      "title": "room_list.opened"
+    },
+    "room_list.room_clicked": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "string",
+          "description": "Room picked from the list."
+        }
+      },
+      "additionalProperties": true,
+      "title": "room_list.room_clicked",
+      "description": "The user picked a room from the room list."
+    },
+    "scripting.website_opened": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Origin only. The query and hash carry auth tokens, and the path is not the app's to report."
+        }
+      },
+      "additionalProperties": true,
+      "title": "scripting.website_opened",
+      "description": "The scripting API put a URL on screen somewhere the app does not own: a browser tab (WA.nav.openTab), a navigation away (WA.nav.goToPage), a UI panel (WA.ui.website) or an in-map embedded website. None of these is a cowebsite, and all five used to report `cowebsite.opened` with no context at all — landing as triggerProperty `other` and diluting every per-area figure computed from that event."
+    },
+    "session.ended": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "string",
+          "description": "Room the session ended in."
+        },
+        "schemaVersion": {
+          "type": "number",
+          "const": 1,
+          "description": "Payload version for the session family."
+        }
+      },
+      "additionalProperties": true,
+      "title": "session.ended",
+      "description": "A front-side session ended. Only reaches the pusher on paths where the front still runs — a tab close does not. Carries no duration; use the pusher's user.disconnected for that."
+    },
+    "session.started": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "string",
+          "description": "Room the session started in."
+        },
+        "schemaVersion": {
+          "type": "number",
+          "const": 1,
+          "description": "Payload version for the session family."
+        }
+      },
+      "additionalProperties": true,
+      "title": "session.started",
+      "description": "A front-side session began. Note the pusher's user.connected is the reliable presence signal; this one is best-effort."
+    },
+    "settings.ask_website.changed": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The setting's new value, as the UI reports it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "settings.ask_website.changed",
+      "description": "The user changed the ask-before-opening-a-website setting."
+    },
+    "settings.audio_volume.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the audio volume settings.",
+      "title": "settings.audio_volume.opened"
+    },
+    "settings.background.changed": {
+      "type": "object",
+      "properties": {
+        "backgroundType": {
+          "type": "string",
+          "description": "The background effect selected, e.g. blur."
+        }
+      },
+      "additionalProperties": true,
+      "title": "settings.background.changed",
+      "description": "The user changed their video background."
+    },
+    "settings.background.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the video background settings.",
+      "title": "settings.background.opened"
+    },
+    "settings.camera.changed": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The setting's new value, as the UI reports it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "settings.camera.changed",
+      "description": "The user changed the camera setting."
+    },
+    "settings.camera.selected": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the camera picker.",
+      "title": "settings.camera.selected"
+    },
+    "settings.decrease_audio_volume.changed": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The setting's new value, as the UI reports it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "settings.decrease_audio_volume.changed",
+      "description": "The user changed the auto-lower-volume setting."
+    },
+    "settings.fullscreen.changed": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The setting's new value, as the UI reports it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "settings.fullscreen.changed",
+      "description": "The user changed the fullscreen setting."
+    },
+    "settings.microphone.changed": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The setting's new value, as the UI reports it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "settings.microphone.changed",
+      "description": "The user changed the microphone setting."
+    },
+    "settings.microphone.selected": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the microphone picker.",
+      "title": "settings.microphone.selected"
+    },
+    "settings.notification.changed": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The setting's new value, as the UI reports it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "settings.notification.changed",
+      "description": "The user changed the notification setting."
+    },
+    "settings.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the settings.",
+      "title": "settings.opened"
+    },
+    "settings.picture_in_picture.changed": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The setting's new value, as the UI reports it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "settings.picture_in_picture.changed",
+      "description": "The user changed the picture-in-picture setting."
+    },
+    "settings.request_follow.changed": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The setting's new value, as the UI reports it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "settings.request_follow.changed",
+      "description": "The user changed the follow-request setting."
+    },
+    "settings.speaker.selected": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the speaker picker.",
+      "title": "settings.speaker.selected"
+    },
+    "status.dwell": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Availability status held during this period (ONLINE, BUSY, DO_NOT_DISTURB, BACK_IN_A_MOMENT, …)."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval began."
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval ended."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length of the interval in seconds, reported so nothing has to pair rows."
+        },
+        "endReason": {
+          "type": "string",
+          "enum": [
+            "closed_by_client",
+            "socket_closed",
+            "join_failed",
+            "pusher_shutdown",
+            "pusher_crashed"
+          ],
+          "description": "Why the status period ended, or what ended it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "status.dwell",
+      "description": "Time the user held one availability status, measured by the pusher between status changes and closed at disconnect. Gated per world by the user_level_activity policy the admin applies at ingestion: without opt-in it is pseudonymized there, so no named per-member timeline is stored."
+    },
+    "user.business_card.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened someone's business card.",
+      "title": "user.business_card.opened"
+    },
+    "user.connected": {
+      "type": "object",
+      "properties": {
+        "connectionId": {
+          "type": "string",
+          "description": "Identifies one socket. The tab id when there is one, otherwise user+room — which collapses two tabs of the same user onto one session."
+        },
+        "connectedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the socket joined."
+        }
+      },
+      "additionalProperties": true,
+      "title": "user.connected",
+      "description": "A user's socket joined a room. Emitted by the pusher, which owns the socket lifecycle — the front cannot report this reliably because a tab close or crash never runs its code."
+    },
+    "user.disconnected": {
+      "type": "object",
+      "properties": {
+        "connectionId": {
+          "type": "string",
+          "description": "Matches the connectionId of the paired user.connected."
+        },
+        "connectedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval began."
+        },
+        "disconnectedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 instant the interval ended."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Length of the interval in seconds, reported so nothing has to pair rows."
+        },
+        "disconnectReason": {
+          "type": "string",
+          "enum": [
+            "closed_by_client",
+            "socket_closed",
+            "join_failed",
+            "pusher_shutdown",
+            "pusher_crashed"
+          ],
+          "description": "`pusher_shutdown` means the pusher closed it during a graceful restart, not the user leaving. `socket_closed` is the ordinary case: the socket went away."
+        }
+      },
+      "additionalProperties": true,
+      "title": "user.disconnected",
+      "description": "A user's socket left a room, carrying the finished session. This is what the admin projects into analytics_connection_sessions, so it is the source of truth for connection time. A disconnect whose connect was never seen is dropped rather than reported with a guessed duration."
+    },
+    "user.follow_requested": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user asked to follow someone.",
+      "title": "user.follow_requested"
+    },
+    "user.go_to_clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user jumped to someone's position.",
+      "title": "user.go_to_clicked"
+    },
+    "user.report.clicked": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user reported someone.",
+      "title": "user.report.clicked"
+    },
+    "user.woka_menu.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the Woka context menu.",
+      "title": "user.woka_menu.opened"
+    },
+    "user_list.opened": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The user opened the user list.",
+      "title": "user_list.opened"
+    },
+    "websocket.connection_lost": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "Why the socket dropped."
+        }
+      },
+      "additionalProperties": true,
+      "title": "websocket.connection_lost",
+      "description": "The websocket connection dropped. Counted as an experience issue."
+    },
+    "websocket.reconnected": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "A websocket retry succeeded and the client is back. PostHog has counted this as wa_socket_reconnected since long before this pipeline; this side had nothing, so a reconnection that worked and one that never did looked the same here.",
+      "title": "websocket.reconnected"
+    },
+    "websocket.reconnecting": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true,
+      "description": "The client is retrying its websocket connection. Counted as an experience issue.",
+      "title": "websocket.reconnecting"
+    },
+    "world.entered": {
+      "type": "object",
+      "properties": {
+        "durationMs": {
+          "type": "number",
+          "description": "How long entering the world took."
+        }
+      },
+      "additionalProperties": true,
+      "title": "world.entered",
+      "description": "The user finished entering a world."
+    }
+  }
+}

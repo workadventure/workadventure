@@ -10,6 +10,7 @@ import type { Subscription } from "rxjs";
 import { Observable, Subject } from "rxjs";
 import { deepmergeInto } from "deepmerge-ts";
 import { Deferred } from "@workadventure/shared-utils";
+import { spaceKindSchema } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import type {
     PublicEvent,
@@ -31,6 +32,7 @@ import type { BlackListManager } from "../WebRtc/BlackListManager";
 import { blackListManager } from "../WebRtc/BlackListManager";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 
 import type {
     PrivateEventsObservables,
@@ -48,6 +50,7 @@ import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
 import { recordingSchema, spaceMetadataValidator } from "./SpaceMetadataValidator";
 import { VideoBox } from "./VideoBox";
+import { idleVideoBoxPriority, VIDEO_STARTING_PRIORITY } from "./VideoBoxPriorities";
 import { LOCAL_SCREEN_SHARING_STREAM_ID } from "./Streamable";
 import type { Streamable } from "./Streamable";
 
@@ -86,6 +89,9 @@ export class Space implements SpaceInterface {
     private _registerRefCount = 0;
     private isDestroyed = false;
     public readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;
+    private _setHasRemoteSpeaker: ((value: boolean) => void) | undefined;
+    private _hasRemoteSpeaker = false;
+    public readonly hasRemoteSpeakerStore: Readable<boolean>;
     public readonly observeUserJoined: Observable<SpaceUserExtended>;
     public readonly observeUserLeft: Observable<SpaceUserExtended>;
     public readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
@@ -111,6 +117,8 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
     private readonly onUnBlockSubscribe: Subscription;
+    // spaceUserIds of the users currently speaking, most active first
+    private activeSpeakerIds: SpaceUser["spaceUserId"][] = [];
 
     public readonly shouldDisplayRecordButton: Readable<boolean>;
 
@@ -143,6 +151,20 @@ export class Space implements SpaceInterface {
             this.registerSpaceFilter();
             this._setUsers = set;
             set(this._users);
+
+            return () => {
+                if (!this.isDestroyed) {
+                    this.unregisterSpaceFilter();
+                }
+            };
+        });
+
+        // Same shape as usersStore, and for the same reason: subscribing is what asks the
+        // pusher for this space's users in the first place.
+        this.hasRemoteSpeakerStore = readable(false, (set) => {
+            this.registerSpaceFilter();
+            this._setHasRemoteSpeaker = set;
+            set(this._hasRemoteSpeaker);
 
             return () => {
                 if (!this.isDestroyed) {
@@ -706,7 +728,30 @@ export class Space implements SpaceInterface {
         }
 
         this._setUsers?.(this._users);
+        this.refreshHasRemoteSpeaker();
         this.initPromise?.resolve();
+    }
+
+    /**
+     * Recomputed rather than counted incrementally: the three call sites below are the only
+     * ways `_users` changes, and a scan of a handful of users is cheaper than a tally that
+     * can drift. Silent when the answer is unchanged, so subscribers see edges only.
+     */
+    private refreshHasRemoteSpeaker(): void {
+        let hasRemoteSpeaker = false;
+        for (const user of this._users.values()) {
+            if (user.megaphoneState && user.spaceUserId !== this._mySpaceUserId) {
+                hasRemoteSpeaker = true;
+                break;
+            }
+        }
+
+        if (hasRemoteSpeaker === this._hasRemoteSpeaker) {
+            return;
+        }
+
+        this._hasRemoteSpeaker = hasRemoteSpeaker;
+        this._setHasRemoteSpeaker?.(hasRemoteSpeaker);
     }
 
     addUser(user: SpaceUser): SpaceUserExtended {
@@ -737,6 +782,7 @@ export class Space implements SpaceInterface {
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
+            this.refreshHasRemoteSpeaker();
 
             if (this._addUserSubject) {
                 this._addUserSubject.next(extendSpaceUser);
@@ -753,6 +799,7 @@ export class Space implements SpaceInterface {
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
+            this.refreshHasRemoteSpeaker();
             if (this._leftUserSubject) {
                 this._leftUserSubject.next(user);
             }
@@ -775,6 +822,12 @@ export class Space implements SpaceInterface {
         const maskedNewData = applyFieldMask(newData, updateMask) as unknown as Partial<SpaceUser>;
 
         deepmergeInto(userToUpdate, maskedNewData);
+
+        // Guarded because this one runs on every position and state update of every user,
+        // unlike the add/remove paths.
+        if (maskedNewData.megaphoneState !== undefined) {
+            this.refreshHasRemoteSpeaker();
+        }
 
         for (const key in maskedNewData) {
             // We allow ourselves a not 100% exact type cast here.
@@ -816,6 +869,10 @@ export class Space implements SpaceInterface {
                     this.applyMuteAudioToStreamable(streamable, userToUpdate);
                 });
             }
+        }
+
+        if (maskedNewData.cameraState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
+            this.updateVideoBoxPriorities();
         }
 
         if (maskedNewData.screenSharingState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
@@ -967,6 +1024,43 @@ export class Space implements SpaceInterface {
         return videoBox;
     }
 
+    public setActiveSpeakers(spaceUserIds: SpaceUser["spaceUserId"][]): void {
+        const now = Date.now();
+        const stillSpeaking = new Set(spaceUserIds);
+        for (const previousSpeakerId of this.activeSpeakerIds) {
+            if (!stillSpeaking.has(previousSpeakerId)) {
+                const videoBox = this.allVideoStreamStore.get(previousSpeakerId);
+                if (videoBox) {
+                    videoBox.lastSpeakTimestamp = now;
+                }
+            }
+        }
+        this.activeSpeakerIds = spaceUserIds;
+        this.updateVideoBoxPriorities();
+    }
+
+    /**
+     * Active speakers come first, in speaking order. The other users are ranked by how recently they spoke
+     * and whether their camera is on (see idleVideoBoxPriority). Screen shares keep their fixed priority.
+     */
+    private updateVideoBoxPriorities(): void {
+        const now = Date.now();
+        for (const videoBox of this.allVideoStreamStore.values()) {
+            videoBox.priority = idleVideoBoxPriority(videoBox.spaceUser.cameraState, videoBox.lastSpeakTimestamp, now);
+        }
+
+        let rank = 0;
+        for (const speakerId of this.activeSpeakerIds) {
+            const videoBox = this.allVideoStreamStore.get(speakerId);
+            if (videoBox) {
+                videoBox.priority = VIDEO_STARTING_PRIORITY + rank++;
+            }
+        }
+
+        // The value is meaningless: changing it makes orderedStreamableCollectionStore sort again.
+        triggerReorderStore.update((value) => value + 1);
+    }
+
     public async dispatchSound(url: URL): Promise<void> {
         await this.spacePeerManager.dispatchSound(url);
     }
@@ -1088,11 +1182,11 @@ export class Space implements SpaceInterface {
         // Use zod to parse the metadata
         const metadata = z
             .object({
-                isMegaphoneSpace: z.boolean().default(false),
+                spaceKind: spaceKindSchema.optional(),
             })
             .parse(Object.fromEntries(this.getMetadata().entries()));
 
-        return VideoBox.fromRemoteSpaceUser(user, isScreenSharing, metadata.isMegaphoneSpace);
+        return VideoBox.fromRemoteSpaceUser(user, isScreenSharing, metadata.spaceKind === "megaphone");
     }
 
     /**

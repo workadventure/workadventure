@@ -22,6 +22,7 @@ import { PwaInstallSceneName } from "../Login/PwaInstallScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
+import { currentRoomStore } from "../../Stores/CurrentRoomStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
@@ -29,7 +30,11 @@ import { pwaInstallProfileMenuEligibleStore, pwaInstallSceneVisibleStore } from 
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
-import { InvalidLoginTokenError, MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
+import {
+    InvalidLoginTokenError,
+    MatrixClientWrapper,
+    MissingMatrixCredentialsError,
+} from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
@@ -89,6 +94,7 @@ export class GameManager {
         }
         let nextScene = result.nextScene;
         this.startRoom = result.room;
+        currentRoomStore.set(result.room);
         this._startRoomPromise.resolve(result.room);
         this.loadMap(this.startRoom);
 
@@ -384,6 +390,11 @@ export class GameManager {
         return this.startRoom;
     }
 
+    /** Returns the current room, or undefined if no room has been started yet. */
+    public get currentStartedRoomOrNull(): Room | undefined {
+        return this.startRoom;
+    }
+
     public get currentStartedRoomPromise(): Promise<Room> {
         return this._startRoomPromise.promise;
     }
@@ -454,7 +465,9 @@ export class GameManager {
         const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
 
         matrixClientPromise.catch((e) => {
-            if (e instanceof InvalidLoginTokenError) {
+            // Both cases end the same way: only a new OpenID login can mint the Matrix login token this
+            // browser is missing, so show the "reconnect" prompt instead of a bare error banner.
+            if (e instanceof InvalidLoginTokenError || e instanceof MissingMatrixCredentialsError) {
                 loginTokenErrorStore.set(true);
             }
         });

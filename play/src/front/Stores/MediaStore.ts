@@ -6,7 +6,9 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import * as Sentry from "@sentry/svelte";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
+import { Room } from "../Connection/Room";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { openTimedEventPerMeeting } from "../Administration/CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { createHeldIntervalTracker } from "../Administration/HeldIntervalTracker";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
@@ -14,11 +16,14 @@ import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import {
+    BackgroundProcessingUnsupportedError,
     type BackgroundConfig,
+    type BackgroundMode,
     type BackgroundTransformer,
     createBackgroundTransformer,
 } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { LL } from "../../i18n/i18n-svelte";
+import { currentRoomStore } from "./CurrentRoomStore";
 import { gameSceneIsLoadedStore } from "./GameSceneStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
@@ -509,6 +514,7 @@ export const mediaStreamConstraintsStore = derived(
         videoConstraintStore,
         audioConstraintStore,
         privacyShutdownStore,
+        currentRoomStore,
         cameraEnergySavingStore,
         availabilityStatusStore,
         batchGetUserMediaStore,
@@ -525,6 +531,7 @@ export const mediaStreamConstraintsStore = derived(
             $videoConstraintStore,
             $audioConstraintStore,
             $privacyShutdownStore,
+            $currentRoomStore,
             $cameraEnergySavingStore,
             $availabilityStatusStore,
             $batchGetUserMediaStore,
@@ -551,9 +558,15 @@ export const mediaStreamConstraintsStore = derived(
             $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
             $availabilityStatusStore === AvailabilityStatus.BUSY;
         const shouldDisableMicrophoneForPrivacy =
-            $privacyShutdownStore === true && !localUserStore.getMicrophonePrivacySettings();
+            $privacyShutdownStore === true &&
+            !localUserStore.getMicrophonePrivacySettings(
+                $currentRoomStore?.defaultMicrophonePrivacySettings ?? Room.DEFAULT_MICROPHONE_PRIVACY_SETTINGS,
+            );
         const shouldDisableCameraForPrivacy =
-            $privacyShutdownStore === true && !localUserStore.getCameraPrivacySettings();
+            $privacyShutdownStore === true &&
+            !localUserStore.getCameraPrivacySettings(
+                $currentRoomStore?.defaultCameraPrivacySettings ?? Room.DEFAULT_CAMERA_PRIVACY_SETTINGS,
+            );
 
         // Audio constraints always apply
         if (
@@ -633,18 +646,15 @@ const noiseSuppressionController = new NoiseSuppressionController();
 export function updateBackgroundProcessor(config: {
     blurAmount?: number;
     backgroundImage?: string;
-    backgroundVideo?: string;
-    mode?: string;
-    segmenterOptions?: unknown;
+    mode?: BackgroundMode;
 }) {
     if (backgroundTransformer && backgroundTransformer.updateConfig) {
         try {
             backgroundTransformer
                 .updateConfig({
-                    mode: config.mode as "none" | "blur" | "image" | "video",
+                    mode: config.mode,
                     blurAmount: config.blurAmount,
                     backgroundImage: config.backgroundImage,
-                    backgroundVideo: config.backgroundVideo,
                 })
                 .catch((error) => {
                     console.warn("[MediaStore] Failed to update background transformer configuration:", error);
@@ -652,16 +662,13 @@ export function updateBackgroundProcessor(config: {
 
             // Update the tracked config
             if (lastBackgroundConfig && config.mode) {
-                lastBackgroundConfig.mode = config.mode as "none" | "blur" | "image" | "video";
+                lastBackgroundConfig.mode = config.mode;
             }
             if (lastBackgroundConfig && config.blurAmount !== undefined) {
                 lastBackgroundConfig.blurAmount = config.blurAmount;
             }
             if (lastBackgroundConfig && config.backgroundImage !== undefined) {
                 lastBackgroundConfig.backgroundImage = config.backgroundImage;
-            }
-            if (lastBackgroundConfig && config.backgroundVideo !== undefined) {
-                lastBackgroundConfig.backgroundVideo = config.backgroundVideo;
             }
         } catch (error) {
             console.warn("[MediaStore] Failed to update background transformer configuration:", error);
@@ -1081,19 +1088,23 @@ async function runLocalVideoTrackUpdate(
 
     if (!backgroundTransformer) {
         const currentConfig = get(backgroundConfigStore);
-        const transformer = createBackgroundTransformer(currentConfig, (error) => {
-            if (backgroundTransformer !== transformer) {
-                return;
-            }
+        const transformer = createBackgroundTransformer(
+            currentConfig,
+            (error) => {
+                if (backgroundTransformer !== transformer) {
+                    return;
+                }
 
-            console.warn("[MediaStore] Background transformer stopped after a terminal failure:", error);
-            Sentry.captureException(error);
-            warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
-            transformer.close();
-            backgroundTransformer = undefined;
-            lastBackgroundConfig = undefined;
-            backgroundConfigStore.reset();
-        });
+                console.warn("[MediaStore] Background transformer stopped after a terminal failure:", error);
+                Sentry.captureException(error);
+                warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
+                transformer.close();
+                backgroundTransformer = undefined;
+                lastBackgroundConfig = undefined;
+                backgroundConfigStore.reset();
+            },
+            (sample) => analyticsClient.trackAdminEvent("media.background_effect.sample", sample),
+        );
         backgroundTransformer = transformer;
     }
 
@@ -1114,9 +1125,14 @@ async function runLocalVideoTrackUpdate(
         if (isAbort) {
             return;
         }
-        console.warn("[MediaStore] Failed to transform stream:", error);
-        Sentry.captureException(error);
-        warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
+        if (error instanceof BackgroundProcessingUnsupportedError) {
+            console.warn("[MediaStore] Background processing is not supported on this browser:", error.message);
+            warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.notSupportedOnThisBrowser());
+        } else {
+            console.warn("[MediaStore] Failed to transform stream:", error);
+            Sentry.captureException(error);
+            warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
+        }
         backgroundConfigStore.reset();
         setIfCurrent({
             type: "error",
@@ -1351,8 +1367,14 @@ let endMicrophoneDwell: EndTimedAnalyticsEvent | undefined;
 let unsubscribeEffectiveMicrophone: Unsubscriber | undefined;
 let unsubscribeVoiceIndicator: Unsubscriber | undefined;
 
+// Both periods are opened once per meeting that hears them and cut at every meeting
+// boundary — half of a period that straddles one happened in the meeting and half did
+// not, and a row can only name one meeting. See CurrentMeeting.
 const speechIntervals = createHeldIntervalTracker(
-    () => analyticsClient.openTimedEvent("media.speech.dwell", {}, { reopenOnReconnect: true }),
+    () =>
+        openTimedEventPerMeeting((context) =>
+            analyticsClient.openTimedEvent("media.speech.dwell", context, { reopenOnReconnect: true }),
+        ),
     SPEECH_HOLD_MS,
 );
 
@@ -1362,6 +1384,24 @@ const closeMicrophoneDwell = (): void => {
     unsubscribeVoiceIndicator = undefined;
     endMicrophoneDwell?.();
     endMicrophoneDwell = undefined;
+};
+
+const openMicrophoneDwell = (): void => {
+    endMicrophoneDwell ??= openTimedEventPerMeeting((context) =>
+        analyticsClient.openTimedEvent(
+            "media.microphone.dwell",
+            context,
+            // The microphone did not close because the socket did: after a reconnect it
+            // is still open, and nothing will say so again.
+            { reopenOnReconnect: true },
+        ),
+    );
+
+    // Same reasoning one level down: subscribing is what starts the SoundMeter, so
+    // it runs only while there is actually something to hear.
+    unsubscribeVoiceIndicator ??= localVoiceIndicatorStore.subscribe((speaking: boolean) =>
+        speechIntervals.set(speaking),
+    );
 };
 
 // Nothing here may be watched from module scope. `effectiveMicrophoneStateStore` is
@@ -1386,19 +1426,7 @@ gameSceneIsLoadedStore.subscribe((inRoom: boolean) => {
             return;
         }
 
-        endMicrophoneDwell ??= analyticsClient.openTimedEvent(
-            "media.microphone.dwell",
-            {},
-            // The microphone did not close because the socket did: after a reconnect it
-            // is still open, and nothing will say so again.
-            { reopenOnReconnect: true },
-        );
-
-        // Same reasoning one level down: subscribing is what starts the SoundMeter, so
-        // it runs only while there is actually something to hear.
-        unsubscribeVoiceIndicator ??= localVoiceIndicatorStore.subscribe((speaking: boolean) =>
-            speechIntervals.set(speaking),
-        );
+        openMicrophoneDwell();
     });
 });
 
@@ -1684,6 +1712,5 @@ backgroundConfigStore.subscribe(($config) => {
         mode: $config.mode,
         blurAmount: $config.blurAmount,
         backgroundImage: $config.backgroundImage,
-        backgroundVideo: $config.backgroundVideo,
     });
 });

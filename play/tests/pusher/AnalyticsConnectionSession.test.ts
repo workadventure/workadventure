@@ -199,6 +199,7 @@ function socketDataFixture(overrides: Partial<SocketData> = {}): SocketData {
         spaces: new Set(["world.space"]),
         tabId: "tab-id",
         analyticsEventsEnabled: true,
+        lastActivityAtMs: Date.now(),
         ...overrides,
     } as SocketData;
 }

@@ -1,3 +1,4 @@
+import { FilterType } from "@workadventure/messages";
 import type { AreaDataProperties, AreaDataPropertiesKeys } from "@workadventure/map-editor";
 import type { ExtensionModule, ExtensionModuleAreaProperty } from "../ExternalModule/ExtensionModule";
 
@@ -27,4 +28,23 @@ export function hasMeetingProperty(properties: AreaDataProperties, areaMapEditor
             ? areaMapEditors.some((areaMapEditor) => areaMapEditor[property.subtype]?.isMeeting)
             : MEETING_PROPERTY_TYPES.includes(property.type),
     );
+}
+
+/**
+ * Whether a space is one a meeting can happen in.
+ *
+ * A broadcast space is not, and that distinction is load-bearing for analytics: every
+ * client of a world with a megaphone configured joins the megaphone space whether or not
+ * anyone is broadcasting (`BroadcastService.joinSpace`), and the back answers that join
+ * with the same `switchMessage` a real conversation gets — it picks its initial state on
+ * media properties alone, with no participant count. Opening a meeting interval on it made
+ * being connected enough to be counted as "in a meeting", for the whole connection.
+ * Actual megaphone usage stays measured, by the `megaphone.*` events.
+ *
+ * `ALL_USERS` is what every conversation space is joined with — proximity bubbles
+ * (`ProximityChatRoomManager`) and meeting areas (`AreasPropertiesListener`) — while the
+ * megaphone and the speaker/listener areas use the `LIVE_STREAMING_*` ones.
+ */
+export function isMeetingSpace(filterType: FilterType): boolean {
+    return filterType === FilterType.ALL_USERS;
 }

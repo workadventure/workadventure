@@ -249,6 +249,16 @@ export const EnvironmentVariables = z.object({
     SKIP_CAMERA_PAGE: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Whether to skip the camera permission request page. Defaults to false."),
+    DEFAULT_CAMERA_PRIVACY_SETTINGS: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "Initial value of the camera privacy setting ('keep camera enabled when the tab is away') for users who have not set their own preference. Defaults to false.",
+        ),
+    DEFAULT_MICROPHONE_PRIVACY_SETTINGS: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe(
+            "Initial value of the microphone privacy setting ('keep microphone enabled when the tab is away') for users who have not set their own preference. Defaults to true.",
+        ),
     BYPASS_PWA: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe(
@@ -338,9 +348,9 @@ export const EnvironmentVariables = z.object({
             "The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn).",
         ),
     TURN_CREDENTIALS_RENEWAL_TIME: PositiveIntAsString.optional()
-        .transform((val) => toNumber(val, 3 * 60 * 60 * 1000))
+        .transform((val) => toNumber(val, 60 * 60 * 1000))
         .describe(
-            "Time interval (in milliseconds) for renewing TURN server credentials. Defaults to 10800000 milliseconds (3 hours)",
+            "Time interval (in milliseconds) for renewing TURN server credentials. Defaults to 3600000 milliseconds (1 hour). Must stay well below the 24 hours validity of the generated credentials.",
         ),
     JITSI_URL: z.string().optional().describe("URL of the Jitsi Meet server for video conferencing"),
     JITSI_PRIVATE_MODE: BoolAsString.optional()
@@ -527,12 +537,6 @@ export const EnvironmentVariables = z.object({
         .optional()
         .transform(emptyStringToUndefined)
         .describe("The S3 CDN endpoint for Livekit recording."),
-    BACKGROUND_TRANSFORMER_ENGINE: z
-        .enum(["tasks-vision", "selfie-segmentation", ""])
-        .optional()
-        .describe(
-            "Virtual background transformer engine: 'tasks-vision' (GPU-accelerated, experimental) or 'selfie-segmentation' (CPU-based, stable). Currently defaults to 'selfie-segmentation'; 'tasks-vision' is intended as the future default once considered stable.",
-        ),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

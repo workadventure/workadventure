@@ -1,0 +1,28 @@
+{
+    "nameToLogin": {
+        "David Négrier": "moufmouf",
+        "Grégoire Parant": "gparant",
+        "Gregoire Parant": "gparant",
+        "Alexandre Artus": "alexarts74",
+        "Matthieu Rocher": "matthintosh",
+        "Jade-Keina POGNON": "jadekeina",
+        "Bénédicte Q": "HimeShaman",
+        "Piotr Hanusiak": "Waclaw-I",
+        "GRL": "GRL78",
+        "NIP": "npeguin"
+    },
+    "emailToLogin": {
+        "d.negrier@thecodingmachine.com": "moufmouf",
+        "gregoire@workadventu.re": "gparant",
+        "g.parant@thecodingmachine.com": "gparant",
+        "artusalexandre@yahoo.fr": "alexarts74",
+        "artusalexandre74@gmail.com": "alexarts74",
+        "faizeau.alexis@gmail.com": "nolway",
+        "rocher.matthieu@gmail.com": "matthintosh",
+        "jade.keina@gmail.com": "jadekeina",
+        "hanusiakp@gmail.com": "Waclaw-I",
+        "wacneg@gmail.com": "Waclaw-I",
+        "g.lesniewski@thecodingmachine.com": "GRL78",
+        "n.peguin@thecodingmachine.com": "npeguin"
+    }
+}

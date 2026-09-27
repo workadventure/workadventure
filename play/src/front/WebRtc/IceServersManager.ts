@@ -9,6 +9,7 @@ export type IceServersConfig = IceServer[];
 
 class IceServersManager {
     private iceServersConfigPromise: Promise<IceServer[]> | undefined;
+    private pendingRenewal: Promise<IceServer[]> | undefined;
     private renewalTimer: ReturnType<typeof setTimeout> | undefined;
     private retryCount = 0;
     private roomConnection: RoomConnection | undefined;
@@ -54,6 +55,7 @@ class IceServersManager {
             this.renewalTimer = undefined;
         }
         this.iceServersConfigPromise = undefined;
+        this.pendingRenewal = undefined;
         this.roomConnection = undefined;
         this.retryCount = 0;
     }
@@ -66,20 +68,28 @@ class IceServersManager {
     }
 
     private async renewNow(): Promise<IceServersConfig> {
-        // If a query is already in progress, wait for it instead of making a new one
-        if (this.iceServersConfigPromise) {
-            return this.iceServersConfigPromise;
+        // If a query is already in progress, wait for it instead of making a new one.
+        // This is tracked apart from the cached config: a renewal must query the server again,
+        // otherwise the cache serves the same credentials until they expire.
+        if (this.pendingRenewal) {
+            return this.pendingRenewal;
         }
 
-        if (!this.roomConnection) {
+        const roomConnection = this.roomConnection;
+        if (!roomConnection) {
             throw new Error("TurnCredentialsManager not initialized with a RoomConnection");
         }
 
-        // Store the promise to prevent simultaneous queries
-        this.iceServersConfigPromise = (async () => {
+        this.pendingRenewal = (async () => {
             try {
-                const answer = await this.roomConnection!.queryIceServers();
+                const answer = await roomConnection.queryIceServers();
                 const config = this.cleanIceServersConfig(answer.iceServers);
+                if (this.roomConnection !== roomConnection) {
+                    // finalize() or a new init() happened meanwhile: don't touch the cache or the timer.
+                    return config;
+                }
+                // Peers created while the query was in flight kept the previous set; from now on, the new one.
+                this.iceServersConfigPromise = Promise.resolve(config);
                 this.retryCount = 0;
                 this.scheduleRenewal(TURN_CREDENTIALS_RENEWAL_TIME);
                 return config;
@@ -90,13 +100,13 @@ class IceServersManager {
                     CREDENTIALS_RETRY_BACKOFF[Math.min(this.retryCount, CREDENTIALS_RETRY_BACKOFF.length - 1)];
                 this.retryCount++;
                 this.scheduleRenewal(delay);
-                // Clear the promise on error so a retry can be attempted
-                this.iceServersConfigPromise = undefined;
                 throw e;
+            } finally {
+                this.pendingRenewal = undefined;
             }
         })();
 
-        return this.iceServersConfigPromise;
+        return this.pendingRenewal;
     }
 
     private scheduleRenewal(delay: number) {

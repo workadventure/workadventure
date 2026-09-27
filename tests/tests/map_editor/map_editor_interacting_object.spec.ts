@@ -82,18 +82,10 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         //eslint-disable-next-line playwright/no-wait-for-timeout
         await newPage.waitForTimeout(1000);
         // Move to the entity
-        await EntityEditor.moveAndRightClick(newPage, 1 * 32, 7.5 * 32 - 30);
+        await EntityEditor.walkToFacingDown(newPage, 1 * 32, 7.5 * 32 - 30);
 
         // Wait for the text to be visible
-        try {
-            await expect(newPage.getByText("SPACE to interact with it 👀")).toBeVisible();
-        } catch (error) {
-            console.error("Error waiting for text to be visible", error);
-            // Try again once
-            await EntityEditor.moveAndRightClick(newPage, 1 * 32, 7.5 * 32 - 30);
-            //eslint-disable-next-line playwright/no-conditional-expect
-            await expect(newPage.getByText("SPACE to interact with it 👀")).toBeVisible();
-        }
+        await expect(newPage.getByText("SPACE to interact with it 👀")).toBeVisible();
     });
 
     test("Success to interact with openFile area and entity @nowebkit", async ({ browser, request, browserName }) => {
@@ -123,7 +115,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         // await Menu.waitForMapLoad(page);
 
         // Move to the entity (slightly above)
-        await EntityEditor.moveAndRightClick(page, 1 * 32, 7.5 * 32 - 30);
+        await EntityEditor.walkToFacingDown(page, 1 * 32, 7.5 * 32 - 30);
 
         // Wait for the text to be visible
         await expect(page.getByText("SPACE to interact with it 👀")).toBeVisible({ timeout: 30000 });

@@ -6,7 +6,8 @@
   "main": "./src/index.ts",
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "export-json-schema": "tsx ./src/exportAnalyticsJsonSchema.ts"
   },
   "author": "WorkAdventure",
   "license": "ISC",
@@ -22,7 +23,9 @@
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
-    "typescript": "^5.9.3"
+    "tsx": "^4.22.3",
+    "typescript": "^5.9.3",
+    "zod-to-json-schema": "^3.25.2"
   },
   "files": [
     "src"

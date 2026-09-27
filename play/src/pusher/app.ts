@@ -136,7 +136,9 @@ class App {
             "assets",
             express.static(path + "/assets", {
                 ...staticOptions,
+                // Vite content-hashes everything under /assets, so the CDN edge may keep it forever.
                 maxAge: "1y",
+                immutable: true,
             }),
         );
 

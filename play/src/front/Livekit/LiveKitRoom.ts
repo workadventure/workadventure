@@ -12,6 +12,7 @@ import {
     DisconnectReason,
     ConnectionState,
     supportsAV1,
+    supportsVP9,
 } from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -24,15 +25,19 @@ import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrai
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
-import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
-import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
+import {
+    preferredVideoCodecs,
+    selectVideoPreset,
+    type VideoCodec,
+    type VideoQualitySetting,
+} from "../WebRtc/VideoPresets";
+import { demotedCodecStore } from "../WebRtc/CodecPerformance";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { createLivekitSenderStats } from "../WebRtc/WebRtcStatsFactory";
 import { registerLocalEncoderStats } from "../WebRtc/LocalEncoderStats";
 import { subscribeToOutboundVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
-import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
 import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
@@ -210,11 +215,35 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         return get(bandwidthConstrainedPreferenceStore);
     }
 
-    private getPresetForTrack(track: MediaStreamTrack, isScreenShare: boolean): { bitrate: number; fps: number } {
+    /**
+     * The best codec we want that the browser can encode. Chosen explicitly because LiveKit silently rewrites an
+     * unsupported codec (Chrome on Android, Chromium without libaom, Firefox, Safari...) to its hardcoded default
+     * of VP8 rather than to `publishDefaults.videoCodec`.
+     */
+    private getVideoCodec(isScreenShare: boolean, track: MediaStreamTrack): VideoCodec {
+        const { width = 1280, height = 720 } = track.getSettings();
+        // H.264 is mandatory in WebRTC and always ends the list; the rare browser without it (Firefox with the
+        // OpenH264 download blocked) is rewritten to VP8 by LiveKit, at the same bitrate budget.
+        const supported: Partial<Record<VideoCodec, () => boolean>> = { av1: supportsAV1, vp9: supportsVP9 };
+        return (
+            preferredVideoCodecs(
+                isScreenShare ? "screenSharing" : "video",
+                this.getQualitySetting(isScreenShare),
+                "encode",
+                width * height,
+            ).find((codec) => supported[codec]?.() ?? true) ?? "h264"
+        );
+    }
+
+    private getPresetForTrack(
+        track: MediaStreamTrack,
+        isScreenShare: boolean,
+        codec: VideoCodec,
+    ): { bitrate: number; fps: number } {
         const settings = track.getSettings();
         const width = settings.width || 1280;
         const height = settings.height || 720;
-        return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare));
+        return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare), codec);
     }
 
     private queueCameraTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
@@ -259,15 +288,16 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 return;
             }
             const cameraTrack = new LocalVideoTrack(videoTrack);
+            const cameraCodec = this.getVideoCodec(false, videoTrack);
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
-                videoCodec: "vp9",
+                videoCodec: cameraCodec,
                 simulcast: true,
                 // Commented out: the default simulcast layers are sufficient for our use case
                 //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
             };
 
-            const preset = this.getPresetForTrack(videoTrack, false);
+            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec);
             publishOptions.videoEncoding = {
                 maxBitrate: preset.bitrate,
                 maxFramerate: preset.fps,
@@ -419,6 +449,24 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             }),
         );
 
+        // A codec demoted by the CPU limitation detector while we publish with it: publish again without it.
+        // The current value is what the publications above were already chosen with.
+        for (const [category, republish] of [
+            ["video", () => this.republishCamera()],
+            ["screenSharing", () => this.republishScreenShare()],
+        ] as const) {
+            let initial = true;
+            this.unsubscribers.push(
+                demotedCodecStore[category].subscribe(() => {
+                    if (initial) {
+                        initial = false;
+                        return;
+                    }
+                    republish();
+                }),
+            );
+        }
+
         this.unsubscribers.push(
             bandwidthConstrainedPreferenceStore.subscribe((preference) => {
                 if (!this.localScreenSharingVideoTrack) {
@@ -430,6 +478,37 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 });
             }),
         );
+    }
+
+    /**
+     * The codec of a publication is fixed at publishTrack(): changing it is an unpublish followed by a publish, the
+     * same two updates a share that stops and starts goes through.
+     */
+    private republishScreenShare(): void {
+        this.queueScreenShareUpdate(undefined);
+        this.queueScreenShareUpdate(this.screenShareStreamStore && get(this.screenShareStreamStore));
+    }
+
+    /**
+     * Same for the camera, except that unpublishCameraTrack() only pauses the publication (see the note there): a
+     * real unpublish, once per session at most, so that the next publication picks the codec anew.
+     */
+    private republishCamera(): void {
+        this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
+            .then(async () => {
+                if (!this.localCameraTrack || !this.localParticipant) {
+                    return;
+                }
+                await this.localParticipant.unpublishTrack(this.localCameraTrack, false);
+                this.cameraAnalyticsUnsubscribe?.();
+                this.cameraAnalyticsUnsubscribe = undefined;
+                this.localCameraTrack = undefined;
+            })
+            .catch((err) => {
+                console.error("An error occurred while unpublishing the camera for a codec change", err);
+                Sentry.captureException(err);
+            });
+        this.queueCameraTrackUpdate(this.cameraStreamStore && get(this.cameraStreamStore));
     }
 
     private queueScreenShareUpdate(stream: LocalStreamStoreValue | undefined): void {
@@ -470,21 +549,18 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 return;
             }
             const screenShareVideoLocalTrack = new LocalVideoTrack(screenShareVideoTrack);
+            const screenShareCodec = this.getVideoCodec(true, screenShareVideoTrack);
 
             const screenSharePublishOptions: TrackPublishOptions = {
                 source: Track.Source.ScreenShare,
-                // When AV1 encoding is unavailable (Chrome on Android, Chromium builds without
-                // libaom, Firefox, Safari...), LiveKit silently rewrites the codec to its hardcoded
-                // default of VP8 rather than to `publishDefaults.videoCodec`. Fall back to VP9
-                // explicitly; LiveKit still degrades VP9 to VP8 on its own if VP9 is missing too.
-                videoCodec: supportsAV1() ? "av1" : "vp9",
+                videoCodec: screenShareCodec,
                 simulcast: true,
                 // Commented out: the default simulcast layers are sufficient for our use case
                 // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
                 degradationPreference: this.getBandwidthConstrainedPreference(),
             };
 
-            const preset = this.getPresetForTrack(screenShareVideoTrack, true);
+            const preset = this.getPresetForTrack(screenShareVideoTrack, true, screenShareCodec);
             screenSharePublishOptions.screenShareEncoding = {
                 maxBitrate: preset.bitrate,
                 maxFramerate: preset.fps,
@@ -866,72 +942,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.pendingParticipants.delete(id);
     }
 
-    /**
-     * A set of previous participant SIDs who were speaking
-     */
-    private previousSpeakers: Set<string> = new Set();
-
     private handleActiveSpeakersChanged(speakers: Participant[]) {
-        let priority = 0;
-        const speakersSet = new Set(speakers.map((s) => s.sid));
-
-        //TODO: review implementation - iterating over all participants each time
-        this.participants.forEach((participant) => {
-            if (!speakersSet.has(participant.participant.sid)) {
-                if (this.previousSpeakers.has(participant.participant.sid)) {
-                    // If the participant was previously speaking but is not speaking anymore, we set it as recently spoken
-                    const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(
-                        participant.participant.identity,
-                    );
-                    if (previousSpeakerVideoBox) {
-                        previousSpeakerVideoBox.lastSpeakTimestamp = Date.now();
-                    }
-                }
-            }
-        });
-
-        // Let's reset the priority of the participant
-        for (const videoStream of this.space.allVideoStreamStore.values()) {
-            const lastSpeakTimestamp = videoStream.lastSpeakTimestamp;
-            let bonusPriority = 0;
-            if (lastSpeakTimestamp) {
-                // If a participant has spoken but is not speaking anymore, we give a bonus priority based on the time since the last speak.
-                const lastTimeSinceLastSpeak = Date.now() - lastSpeakTimestamp;
-                // The bonus priority is calculated based on the time since the last speak and cannot be greater than 100.
-                bonusPriority = 100 * Math.exp(-lastTimeSinceLastSpeak / 100000);
-            }
-            videoStream.priority = VIDEO_STARTING_PRIORITY + 9999 - bonusPriority;
-        }
-
-        for (const speaker of speakers) {
-            // The current user is always displayed first, so we skip it
-            if (this.space.mySpaceUserId === speaker.identity) {
-                continue;
-            }
-            const extendedVideoStream = this.space.getVideoPeerVideoBox(speaker.identity);
-
-            // If this is a video and not a screen share, we add 2000 to the priority
-            if (!extendedVideoStream) {
-                continue;
-            }
-
-            if (get(extendedVideoStream.streamable)?.displayMode === "cover") {
-                extendedVideoStream.priority = priority + VIDEO_STARTING_PRIORITY;
-            } else {
-                extendedVideoStream.priority = priority + SCREEN_SHARE_STARTING_PRIORITY;
-            }
-            priority++;
-        }
-
-        // Let's trigger an update on the space's videoStreamStore to reorder the view
-        // To do so, we just take the first element of the map and put it back in the store at the same key.
-        if (get(triggerReorderStore) === 0) {
-            triggerReorderStore.set(1);
-        } else {
-            triggerReorderStore.set(0);
-        }
-
-        this.previousSpeakers = speakersSet;
+        this.space.setActiveSpeakers(speakers.map((speaker) => speaker.identity));
     }
 
     /**

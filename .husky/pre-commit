@@ -38,6 +38,10 @@ cd libs/map-editor || exit
 npm run precommit
 )
 (
+cd libs/messages || exit
+npm run export-json-schema
+)
+(
 cd libs/shared-utils || exit
 npm run precommit
 )

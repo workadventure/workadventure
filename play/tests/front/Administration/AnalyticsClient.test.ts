@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { analyticsClient } from "../../../src/front/Administration/AnalyticsClient";
+import { meetingEnded, meetingStarted } from "../../../src/front/Administration/CurrentMeeting";
 
 describe("AnalyticsClient admin analytics sink", () => {
     beforeEach(() => {
@@ -234,5 +235,35 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(sendAdmin).toHaveBeenNthCalledWith(2, {
             events: [expect.objectContaining({ eventName: "profile.opened" })],
         });
+    });
+
+    it("places an in-meeting action on every meeting this tab is in, once each", () => {
+        const sendAdmin = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = { "api/analytics/events-batch": "v1" };
+        meetingStarted("bubble-1");
+        meetingStarted("area-2");
+
+        analyticsClient.trackAdminEvent("meeting.microphone.muted");
+        // Not a meeting event: it carries no meeting, whatever this tab is in.
+        analyticsClient.trackAdminEvent("bubble.say.opened");
+
+        const rows = sendAdmin.mock.calls.flatMap(([message]) => message.events);
+        expect(rows.map((row) => row.properties)).toEqual([{ meetingId: "bubble-1" }, { meetingId: "area-2" }, {}]);
+        expect(new Set(rows.map((row) => row.eventId)).size).toBe(3);
+
+        // An action on one participant belongs to that participant's meeting alone.
+        sendAdmin.mockClear();
+        analyticsClient.trackAdminEvent("meeting.participant.kicked", { meetingId: "area-2" });
+        expect(sendAdmin.mock.calls.flatMap(([message]) => message.events).map((row) => row.properties)).toEqual([
+            { meetingId: "area-2" },
+        ]);
+
+        meetingEnded("bubble-1");
+        meetingEnded("area-2");
+        sendAdmin.mockClear();
+        analyticsClient.trackAdminEvent("meeting.microphone.muted");
+
+        expect(sendAdmin.mock.calls[0][0].events[0].properties).toEqual({});
     });
 });

@@ -5,8 +5,12 @@ import {
     type HandleRecordingWebhookRequest,
     type MeetingConnectionRestartMessage,
     type SpaceUser,
+    type SpaceKind,
+    spaceKindSchema,
+    FilterType,
 } from "@workadventure/messages";
-import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
+import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
+import { adminApi, type RecordingEventPayload } from "../Services/AdminApi";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
@@ -15,6 +19,7 @@ import { WebRTCState } from "./States/WebRTCState";
 import { VoidState } from "./States/VoidState";
 import type { IRecordingManager, ManagedRecordingState } from "./RecordingManager";
 import { RecordingManager } from "./RecordingManager";
+import { SessionAnalytics, type SessionEndReason } from "./SessionAnalytics";
 import { UserRegistry } from "./Services/UserRegistry";
 import { TransitionPolicy } from "./Policies/TransitionPolicy";
 import { TransitionOrchestrator } from "./Services/TransitionOrchestrator";
@@ -69,6 +74,9 @@ export interface CommunicationManagerDependencies {
     initialStateFactory?: InitialStateFactory;
     livekitToWebRTCDelayMs?: number;
     recordingManager?: IRecordingManager;
+    sessionAnalytics?: SessionAnalytics;
+    /** Where recording lifecycle events go; the admin API by default. */
+    recordingEventNotifier?: (payload: RecordingEventPayload) => Promise<void>;
 }
 
 /**
@@ -89,6 +97,18 @@ export class CommunicationManager implements ICommunicationManager {
     private readonly lifecycleManager: IStateLifecycleManager;
     private readonly space: ICommunicationSpace;
     private readonly _recordingManager: IRecordingManager;
+    /**
+     * The meetings and broadcasts this space held, measured. Owned here like the
+     * recording, the other session a space keeps: both begin and end inside the space,
+     * and neither is the space's own business to hold.
+     *
+     * It is fed from `Space`, not derived from the registries above. Those carry who
+     * crossed the filter and who is watching — transport facts, true today of everyone
+     * present only because every front happens to subscribe to a store of its space.
+     * `Space.addUser` IS presence, and a participation's start and end have to be.
+     */
+    private readonly _sessionAnalytics: SessionAnalytics;
+    private readonly recordingEventNotifier: (payload: RecordingEventPayload) => Promise<void>;
 
     private static readonly DEFAULT_LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
@@ -128,11 +148,22 @@ export class CommunicationManager implements ICommunicationManager {
         this._recordingManager =
             dependencies.recordingManager ??
             new RecordingManager(this.space, this.orchestrator, this.userRegistry, this.lifecycleManager);
+        this.recordingEventNotifier =
+            dependencies.recordingEventNotifier ?? ((payload) => adminApi.notifyRecordingEvent(payload));
+
+        this._sessionAnalytics =
+            dependencies.sessionAnalytics ??
+            new SessionAnalytics(this.space.getSpaceName(), this.space.world, () => this.sessionKind());
 
         // Initialize transition policy with LiveKit availability checker
         this.policy =
             dependencies.policy ??
-            new TransitionPolicy(MAX_USERS_FOR_WEBRTC, new LivekitAvailabilityService(), this._recordingManager);
+            new TransitionPolicy(
+                MAX_USERS_FOR_WEBRTC,
+                new LivekitAvailabilityService(),
+                this._recordingManager,
+                LIVEKIT_SWITCH_ON_CPU_LIMITATION,
+            );
     }
 
     public getRecordingState(): ManagedRecordingState {
@@ -140,8 +171,10 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserAdded(user: SpaceUser): Promise<void> {
+        const wasPresent = this.isPresent(user.spaceUserId);
         this._recordingManager.handleAddUser(user);
         this.userRegistry.addUser(user);
+        this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
 
         // Decide the strategy before telling the joiner which one to use. If this join tips the
@@ -155,19 +188,29 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserDeleted(user: SpaceUser): Promise<void> {
+        const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.deleteUser(user.spaceUserId);
+        this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
 
         await this.lifecycleManager.getCurrentState().handleUserDeleted(user);
         await this.evaluateAndHandleTransition(user);
     }
 
-    public async handleUserUpdated(user: SpaceUser): Promise<void> {
+    public async handleUserUpdated(user: SpaceUser, updateMask: string[] = []): Promise<void> {
         await this.lifecycleManager.getCurrentState().handleUserUpdated(user);
+
+        // The one field update the policy looks at: a member raising its cpuLimited flag
+        if (updateMask.includes("cpuLimited")) {
+            this.cancelPendingTransitionIfNeeded();
+            await this.evaluateAndHandleTransition(user);
+        }
     }
 
     public async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
+        const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.addUserToNotify(user);
+        this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
 
         // Same ordering as handleUserAdded.
@@ -179,7 +222,9 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
+        const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.deleteUserToNotify(user.spaceUserId);
+        this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
 
         await this.lifecycleManager.getCurrentState().handleUserToNotifyDeleted(user);
@@ -193,15 +238,12 @@ export class CommunicationManager implements ICommunicationManager {
         // Wait for any ongoing transition to complete
         await this.orchestrator.waitForTransitionLock();
 
-        const currentType = this.lifecycleManager.getCurrentState().communicationType as CommunicationType;
-        const userCount = this.space.getAllUsers().length;
-
         // Check if transition is needed
-        if (!this.policy.shouldTransition(currentType, userCount)) {
+        if (!this.shouldTransition()) {
             return;
         }
 
-        const nextStateType = this.policy.getNextStateType(currentType, userCount);
+        const nextStateType = this.nextStateType();
         if (!nextStateType) {
             return;
         }
@@ -267,14 +309,11 @@ export class CommunicationManager implements ICommunicationManager {
             }
 
             // Final validation before setting state
-            const currentType = this.lifecycleManager.getCurrentState().communicationType as CommunicationType;
-            const userCount = this.space.getAllUsers().length;
-
-            if (!this.policy.shouldTransition(currentType, userCount)) {
+            if (!this.shouldTransition()) {
                 return;
             }
 
-            const expectedNextType = this.policy.getNextStateType(currentType, userCount);
+            const expectedNextType = this.nextStateType();
             if (expectedNextType && nextState.communicationType !== expectedNextType) {
                 return;
             }
@@ -297,14 +336,11 @@ export class CommunicationManager implements ICommunicationManager {
             context,
             (nextState) => {
                 // Final validation before setting state
-                const currentType = this.lifecycleManager.getCurrentState().communicationType as CommunicationType;
-                const userCount = this.space.getAllUsers().length;
-
-                if (!this.policy.shouldTransition(currentType, userCount)) {
+                if (!this.shouldTransition()) {
                     return;
                 }
 
-                const expectedNextType = this.policy.getNextStateType(currentType, userCount);
+                const expectedNextType = this.nextStateType();
                 if (!expectedNextType || nextState.communicationType === expectedNextType) {
                     this.lifecycleManager.transitionTo(nextState).catch((error) => {
                         console.error("Error during delayed transition:", error);
@@ -326,12 +362,30 @@ export class CommunicationManager implements ICommunicationManager {
             return;
         }
 
-        const currentType = this.lifecycleManager.getCurrentState().communicationType as CommunicationType;
-        const userCount = this.space.getAllUsers().length;
-
-        if (!this.policy.shouldTransition(currentType, userCount)) {
+        if (!this.shouldTransition()) {
             this.orchestrator.cancelPendingTransition();
         }
+    }
+
+    /**
+     * Whether the policy wants a transition. Always read on the space here and now — a decision taken on anything
+     * else is taken on a space that may have moved on while a transition was awaited.
+     */
+    private shouldTransition(): boolean {
+        const users = this.space.getAllUsers();
+        return this.policy.shouldTransition(
+            this.lifecycleManager.getCurrentState().communicationType as CommunicationType,
+            users.length,
+            users.filter((user) => user.cpuLimited).length,
+        );
+    }
+
+    /** What the policy would transition to, on the state of the space right now. */
+    private nextStateType(): CommunicationType | null {
+        return this.policy.getNextStateType(
+            this.lifecycleManager.getCurrentState().communicationType as CommunicationType,
+            this.space.getAllUsers().length,
+        );
     }
 
     public handleMeetingConnectionRestartMessage(
@@ -408,6 +462,8 @@ export class CommunicationManager implements ICommunicationManager {
                     return;
                 }
 
+                this.notifyRecordingEnded(request, result.recorder);
+
                 if (result.unexpected) {
                     this.space.dispatchPrivateEvent({
                         spaceName: this.space.getSpaceName(),
@@ -433,6 +489,36 @@ export class CommunicationManager implements ICommunicationManager {
         }
     }
 
+    /**
+     * Fire-and-forget: the admin turning this into customer webhooks must
+     * never delay or fail the recording flow itself. Only the end of an
+     * egress is reported; the admin reads the status to tell a usable
+     * recording from a failed one.
+     */
+    private notifyRecordingEnded(request: HandleRecordingWebhookRequest, recorder: SpaceUser): void {
+        const payload: RecordingEventPayload = {
+            phase: "ended",
+            status: request.status,
+            egressId: request.egressId,
+            recordingSessionId: request.recordingSessionId,
+            playUri: recorder.playUri,
+            recorder: { uuid: recorder.uuid, spaceUserId: recorder.spaceUserId },
+            startedAt: request.startedAtMs ? new Date(request.startedAtMs).toISOString() : null,
+            endedAt: request.endedAtMs ? new Date(request.endedAtMs).toISOString() : null,
+            error: request.error || null,
+            files: request.fileResults.map((file) => ({
+                filename: file.filename,
+                sizeBytes: file.sizeBytes,
+                durationSeconds: Math.round(file.durationMs / 1_000),
+            })),
+        };
+
+        this.recordingEventNotifier(payload).catch((error) => {
+            console.error(`Failed to notify the admin of a recording end (egress ${request.egressId}):`, error);
+            Sentry.captureException(error);
+        });
+    }
+
     private scheduleTransitionAfterRecordingStops(user: SpaceUser): void {
         const context: TransitionContext = {
             space: this.space,
@@ -449,7 +535,82 @@ export class CommunicationManager implements ICommunicationManager {
         return "handleStartRecording" in state && "handleStopRecording" in state && "handleLivekitWebhook" in state;
     }
 
+    /**
+     * What this space is a session of, or undefined while its client has not said.
+     *
+     * Read when a session opens rather than once: the kind is the `spaceKind` metadata,
+     * checked against the enum on the way in, and it arrives after the first join. A
+     * space that never declares one never opens a session.
+     */
+    private sessionKind(): SpaceKind | undefined {
+        const kind = spaceKindSchema.safeParse(this.space.getMetadataValue("spaceKind"));
+        return kind.success ? kind.data : undefined;
+    }
+
+    /**
+     * Whether someone takes part in this space, as this manager sees it.
+     *
+     * Neither registry answers that alone: `users` holds who crossed the filter — in a
+     * broadcast, the speakers — and `usersToNotify` holds who is watching. A megaphone
+     * listener is only ever in the second; a speaker is in both.
+     *
+     * Their union is not an approximation of `getAllUsers()`, it is the narrower set we
+     * mean. Watching is how a client receives anything at all: the pusher dispatches the
+     * user list and every add, update and remove to `_localWatchers` alone — see
+     * `SpaceToFrontDispatcher.notifyAll`, "Notification is done only to watchers". A
+     * member of a broadcast space who neither speaks nor watches is shown nobody and
+     * hears nobody, and counting them would inflate the audience with tabs that received
+     * none of it. In an `ALL_USERS` space the question does not arise: the filter admits
+     * everyone, so `users` already holds the room.
+     */
+    private isPresent(spaceUserId: string): boolean {
+        return this.userRegistry.hasUser(spaceUserId) || this.userRegistry.hasUserToNotify(spaceUserId);
+    }
+
+    /**
+     * Turns a change in either registry into the arrival or departure it is — or into
+     * nothing, which is the common case: a speaker going on air enters `users` while
+     * already watching, and that is not an arrival.
+     *
+     * Sampling `isPresent` on both sides of the mutation is what makes this work without
+     * a third roster: the two registries remember for us.
+     */
+    private syncPresence(user: SpaceUser, wasPresent: boolean): void {
+        const isPresent = this.isPresent(user.spaceUserId);
+        if (isPresent === wasPresent) {
+            return;
+        }
+        if (isPresent) {
+            this._sessionAnalytics.join(
+                { uuid: user.uuid, spaceUserId: user.spaceUserId, roomId: user.playUri },
+                // In a broadcast only a speaker is active; in a meeting, being there is.
+                this.space.filterType === FilterType.ALL_USERS ? true : user.megaphoneState,
+            );
+        } else {
+            this._sessionAnalytics.leave(user.spaceUserId);
+        }
+    }
+
+    /** A speaker went on or off air. Meetings never call this: present is active there. */
+    public handleMemberActiveChanged(spaceUserId: string, active: boolean): void {
+        this._sessionAnalytics.setActive(spaceUserId, active);
+    }
+
+    /** The space learnt what it is: a session waiting on that may open now. */
+    public handleSpaceKindChanged(): void {
+        this._sessionAnalytics.kindChanged();
+    }
+
+    /**
+     * Ends an open session early, for a shutdown about to take the process with it —
+     * a session only exists once it has ended. Says whether there was one to end.
+     */
+    public closeSession(endReason: SessionEndReason): boolean {
+        return this._sessionAnalytics.close(endReason);
+    }
+
     public destroy(): void {
+        this._sessionAnalytics.close();
         this._recordingManager.destroy();
     }
 }

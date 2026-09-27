@@ -28,6 +28,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     backgroundProcessing: {
         failedToApply: "背景効果の適用に失敗しました",
+        notSupportedOnThisBrowser: "このブラウザでは背景効果はサポートされていません",
     },
     duplicateUserConnected: {
         title: "すでに接続されています",

@@ -131,6 +131,7 @@ function createSpaceUser(overrides: Partial<SpaceUser> & Pick<SpaceUser, "spaceU
         chatID: overrides.chatID,
         showVoiceIndicator: overrides.showVoiceIndicator ?? false,
         attendeesState: overrides.attendeesState ?? false,
+        cpuLimited: overrides.cpuLimited ?? false,
     };
 }
 
@@ -733,5 +734,43 @@ describe("Space test", () => {
         const result = space.getMetadata();
 
         expect(result).toStrictEqual(newMetadata);
+    });
+
+    it("should report a remote speaker on air, on the edges only", async () => {
+        const space = await Space.create(
+            "space-name",
+            FilterType.LIVE_STREAMING_USERS,
+            {
+                ...defaultRoomConnectionMock,
+                emitJoinSpace: vi.fn().mockResolvedValue("my-id"),
+            } as unknown as RoomConnection,
+            videoPropertiesToSync,
+            signal,
+            {
+                metadata: new Map<string, unknown>(),
+            },
+        );
+
+        const onAir: boolean[] = [];
+        const unsubscribe = space.hasRemoteSpeakerStore.subscribe((value) => onAir.push(value));
+
+        // My own airtime is not audience: it is megaphone.ended, measured elsewhere.
+        space.addUser(createSpaceUser({ spaceUserId: "my-id", megaphoneState: true }));
+        space.addUser(createSpaceUser({ spaceUserId: "alice-id", megaphoneState: false }));
+        expect(onAir).toEqual([false]);
+
+        // Going on air mid-stay is an update, which usersStore never re-emits for.
+        space.updateUserData(createSpaceUser({ spaceUserId: "alice-id", megaphoneState: true }), ["megaphoneState"]);
+        expect(onAir).toEqual([false, true]);
+
+        // A second speaker is not a second edge, and neither is the first one leaving.
+        space.addUser(createSpaceUser({ spaceUserId: "bob-id", megaphoneState: true }));
+        space.removeUser("alice-id");
+        expect(onAir).toEqual([false, true]);
+
+        space.updateUserData(createSpaceUser({ spaceUserId: "bob-id", megaphoneState: false }), ["megaphoneState"]);
+        expect(onAir).toEqual([false, true, false]);
+
+        unsubscribe();
     });
 });

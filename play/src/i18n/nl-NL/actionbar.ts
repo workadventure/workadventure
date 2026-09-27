@@ -91,7 +91,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Middelmatige vervaging",
         blurHigh: "Grote vervaging",
         images: "Afbeeldingen",
-        videos: "Video's",
     },
     help: {
         chat: {

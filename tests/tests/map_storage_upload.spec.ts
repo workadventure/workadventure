@@ -182,6 +182,40 @@ test.describe("Map-storage Upload API @nomobile", () => {
         expect(await accessFile5.text()).toContain("world");
     });
 
+    test("can upload ZIP file to the advertised upload endpoint", async ({ request }) => {
+        // This is what the map uploader (@workadventure/upload-maps) does: it first asks the map-storage where to
+        // POST the ZIP (the endpoint is public), then POSTs there, declaring the world with X-Map-Storage-Host.
+        const endpointUrl = new URL("upload-endpoint", map_storage_url);
+        endpointUrl.username = "";
+        endpointUrl.password = "";
+        const endpointResponse = await request.get(endpointUrl.toString());
+        expect(endpointResponse.ok()).toBeTruthy();
+        const { url } = (await endpointResponse.json()) as { url: string };
+        // Without DIRECT_UPLOAD_URL configured, the map-storage advertises its own /upload
+        expect(url).toMatch(/\/upload$/);
+
+        const credentials = new URL(map_storage_url);
+        const uploadUrl = new URL(url);
+        uploadUrl.username = credentials.username;
+        uploadUrl.password = credentials.password;
+
+        createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
+        const uploadFile = await request.post(uploadUrl.toString(), {
+            headers: {
+                "X-Map-Storage-Host": credentials.host,
+            },
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/direct-upload",
+            },
+        });
+        expect(uploadFile.ok()).toBeTruthy();
+
+        const accessFile = await request.get("direct-upload/file1.txt");
+        expect(accessFile.ok()).toBeTruthy();
+        expect(await accessFile.text()).toContain("hello");
+    });
+
     test("not authenticated requests are rejected", async ({ request }) => {
         createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
         const uploadFile1 = await request.post(

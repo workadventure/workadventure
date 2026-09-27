@@ -65,10 +65,11 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
             return height >= low && height <= high;
         };
 
+        // The sender snaps the scale so that the frame is even-sized (evenScaleFactor), up to 10 px below the tile
         await expect
             .poll(
                 async () => {
-                    return isHeightBetween(124, 126);
+                    return isHeightBetween(116, 126);
                 },
                 {
                     timeout: 60_000,
@@ -85,10 +86,10 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
             .poll(
                 async () => {
                     return (
-                        (await isHeightBetween(269, 271)) || // In CI
-                        (await isHeightBetween(359, 361)) || // In CI
-                        (await isHeightBetween(499, 501)) || // In CI
-                        (await isHeightBetween(719, 721))
+                        (await isHeightBetween(260, 271)) || // In CI
+                        (await isHeightBetween(350, 361)) || // In CI
+                        (await isHeightBetween(490, 501)) || // In CI
+                        (await isHeightBetween(710, 721))
                     ); // In real usage
                 },
                 {
@@ -118,5 +119,15 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
         await expect.poll(aliceEncodedFps, { timeout: 30_000 }).toBeGreaterThan(5);
         await expect(userBob.locator("#cameras-container").getByText("Alice")).toBeVisible();
         await expect(userBob.getByText("No video stream received")).toBeHidden();
+
+        ////////////////////////// Alice turns her camera off and on: Bob sees her again /////////////////////////
+        // Bob's tile unmounts with the track and reports 0x0; the re-added track must not stay paused, or Bob
+        // would never mount a tile again (a remote track only unmutes on its first frame, so a paused sender
+        // keeps it muted). Bob's own tile is in the container too, hence the filter on Alice's.
+        const bobViewOfAlice = userBob.locator("#cameras-container > div").filter({ hasText: "Alice" });
+        await Menu.turnOffCamera(page);
+        await expect(bobViewOfAlice.getByTestId("webrtc-video")).toBeHidden();
+        await Menu.turnOnCamera(page);
+        await expect(bobViewOfAlice.getByTestId("webrtc-video")).toBeVisible({ timeout: 30_000 });
     });
 });

@@ -23,6 +23,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     mapEditorNotEnabled: "L'editor de mapes no està habilitat en aquest món.",
     backgroundProcessing: {
         failedToApply: "Error en aplicar els efectes de fons",
+        notSupportedOnThisBrowser: "Els efectes de fons no són compatibles amb aquest navegador",
     },
     popupBlocked: {
         title: "Bloqueig de finestres emergents",

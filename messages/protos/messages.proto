@@ -975,6 +975,18 @@ message HandleRecordingWebhookRequest {
   string status = 7;
   string error = 8;
   int64 createdAt = 9;
+  // Milliseconds since the epoch, 0 when LiveKit did not report them.
+  int64 startedAtMs = 10;
+  int64 endedAtMs = 11;
+  // The files LiveKit wrote for this egress (empty until the egress ended).
+  repeated RecordingFileResult fileResults = 12;
+}
+
+message RecordingFileResult {
+  // Object key in the recording bucket, as LiveKit reports it.
+  string filename = 1;
+  int64 sizeBytes = 2;
+  int64 durationMs = 3;
 }
 
 message HandleLivekitWebhookRequest {
@@ -1830,6 +1842,9 @@ message SpaceUser{
   google.protobuf.StringValue chatID = 17; // used
   bool showVoiceIndicator = 18;
   bool attendeesState = 19;
+  // Raised by a client whose video encoders could not keep up while it encoded for several P2P peers: the back moves
+  // the space to LiveKit and keeps it there while such a user is present. Never lowered within a session.
+  bool cpuLimited = 20;
 }
 
 /*message PartialSpaceUser{

@@ -61,6 +61,7 @@ export const languageKey = "language";
 const videoQualityKey = "videoQuality";
 const screenShareQualityKey = "screenShareQuality";
 const bandwidthConstrainedScreenSharePreferenceKey = "bandwidthConstrainedScreenSharePreference";
+const codecRetryTimesKey = "codecRetryTimes";
 const legacyVideoBandwidthKey = "videoBandwidth";
 const legacyScreenShareBandwidthKey = "screenShareBandwidth";
 const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
@@ -557,24 +558,26 @@ class LocalUserStore {
         localStorage.setItem(cameraPrivacySettings, option.toString());
     }
 
-    getCameraPrivacySettings() {
-        //if this setting doesn't exist in LocalUserStore, we set a default value
-        if (localStorage.getItem(cameraPrivacySettings) == null) {
-            localStorage.setItem(cameraPrivacySettings, "false");
+    /** Returns the camera privacy setting, or the given default if the user has not stored a preference yet. */
+    getCameraPrivacySettings(defaultCameraPrivacySettings: boolean = false) {
+        const storedValue = localStorage.getItem(cameraPrivacySettings);
+        if (storedValue == null) {
+            return defaultCameraPrivacySettings;
         }
-        return localStorage.getItem(cameraPrivacySettings) === "true";
+        return storedValue === "true";
     }
 
     setMicrophonePrivacySettings(option: boolean) {
         localStorage.setItem(microphonePrivacySettings, option.toString());
     }
 
-    getMicrophonePrivacySettings() {
-        //if this setting doesn't exist in LocalUserStore, we set a default value
-        if (localStorage.getItem(microphonePrivacySettings) == null) {
-            localStorage.setItem(microphonePrivacySettings, "true");
+    /** Returns the microphone privacy setting, or the given default if the user has not stored a preference yet. */
+    getMicrophonePrivacySettings(defaultMicrophonePrivacySettings: boolean = true) {
+        const storedValue = localStorage.getItem(microphonePrivacySettings);
+        if (storedValue == null) {
+            return defaultMicrophonePrivacySettings;
         }
-        return localStorage.getItem(microphonePrivacySettings) === "true";
+        return storedValue === "true";
     }
 
     getAllUserProperties(context: string): Map<string, PlayerVariable> {
@@ -777,6 +780,25 @@ class LocalUserStore {
         return "maintain-resolution";
     }
 
+    // When each video codec the browser called not smooth was last tried again, keyed by direction and codec
+    // ("encode:vp9"), as a timestamp
+    getCodecRetryTimes(): Record<string, number> {
+        try {
+            const raw = localStorage.getItem(codecRetryTimesKey);
+            if (!raw) {
+                return {};
+            }
+            const parsed = z.record(z.number()).safeParse(JSON.parse(raw));
+            return parsed.success ? parsed.data : {};
+        } catch {
+            return {};
+        }
+    }
+
+    setCodecRetryTime(codec: string, time: number): void {
+        localStorage.setItem(codecRetryTimesKey, JSON.stringify({ ...this.getCodecRetryTimes(), [codec]: time }));
+    }
+
     // Background transformation settings
     setBackgroundMode(value: string) {
         localStorage.setItem("backgroundMode", value);
@@ -801,14 +823,6 @@ class LocalUserStore {
 
     getBackgroundImage(): string | null {
         return localStorage.getItem("backgroundImage");
-    }
-
-    setBackgroundVideo(value: string) {
-        localStorage.setItem("backgroundVideo", value);
-    }
-
-    getBackgroundVideo(): string | null {
-        return localStorage.getItem("backgroundVideo");
     }
 
     setNoiseSuppressionEnabled(value: boolean) {

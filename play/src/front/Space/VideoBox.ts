@@ -3,7 +3,7 @@ import { type Writable, type Readable, writable, type Unsubscriber, get } from "
 import type { PeerStatus } from "../WebRtc/RemotePeer";
 import type { SpaceUserExtended } from "./SpaceInterface";
 import { localSpaceUser } from "./localSpaceUser";
-import { LAST_VIDEO_BOX_PRIORITY } from "./VideoBoxPriorities";
+import { idleVideoBoxPriority, SCREEN_SHARE_STARTING_PRIORITY } from "./VideoBoxPriorities";
 import type { Streamable } from "./Streamable";
 
 const CONNECTING_TIMEOUT_MS = 10000;
@@ -37,9 +37,6 @@ interface SetNewStreamableOptions {
 export class VideoBox {
     private readonly _streamable: Writable<Streamable | undefined>;
     private readonly _streamables: Writable<VideoBoxStreamableEntry[]>;
-    // The order in which the video boxes are displayed. Lower means more to the left/top.
-    // The displayOrder is derived from the priority using the StableNSorter.
-    public readonly displayOrder: Writable<number> = writable(0);
     // Timestamp of the last time the streamable was speaking
     public lastSpeakTimestamp?: number;
     public boxStyle?: { [key: string]: unknown };
@@ -62,18 +59,16 @@ export class VideoBox {
         // From 1000 - 2000: other screen sharing streams
         // 2000+: other streams
         public priority: number,
-        displayOrder: number,
         // If true, the video box is a megaphone space
         public readonly isMegaphoneSpace = false,
     ) {
         this._streamable = writable(undefined);
         this._streamables = writable([]);
-        this.displayOrder = writable(displayOrder);
         this.setNewStreamable(streamable);
     }
 
     public static fromLocalStreamable(streamable: Streamable, priority: number): VideoBox {
-        return new VideoBox(streamable.uniqueId, localSpaceUser(get(streamable.name)), streamable, priority, 9999);
+        return new VideoBox(streamable.uniqueId, localSpaceUser(get(streamable.name)), streamable, priority);
     }
 
     public static fromRemoteSpaceUser(
@@ -85,8 +80,10 @@ export class VideoBox {
             isScreenSharing ? "screensharing_" + spaceUser.spaceUserId : spaceUser.spaceUserId,
             spaceUser,
             undefined,
-            LAST_VIDEO_BOX_PRIORITY,
-            9999,
+            // Screen shares keep a fixed priority so they always come before remote cameras.
+            isScreenSharing
+                ? SCREEN_SHARE_STARTING_PRIORITY
+                : idleVideoBoxPriority(spaceUser.cameraState, undefined, Date.now()),
             isMegaphoneSpace,
         );
     }

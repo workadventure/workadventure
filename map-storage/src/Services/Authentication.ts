@@ -7,6 +7,7 @@ import type { RequestHandler } from "express";
 import { setupCache } from "axios-cache-interceptor";
 import axios from "axios";
 import { ENV_VARS } from "../Enum/EnvironmentVariable";
+import { getRequestDomain } from "./PathMapper";
 
 const client = setupCache(axios);
 
@@ -52,7 +53,7 @@ if (ENV_VARS.ENABLE_BEARER_AUTHENTICATION) {
         if (authToken && token === authToken) {
             return done(null, {}, { scope: "all" });
         }
-        const domain = request.headers["x-forwarded-host"]?.toString() ?? request.hostname;
+        const domain = getRequestDomain(request);
         if (ENV_VARS.AUTHENTICATION_VALIDATOR_URL) {
             client
                 .get<unknown>(ENV_VARS.AUTHENTICATION_VALIDATOR_URL, {

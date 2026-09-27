@@ -505,6 +505,7 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
         roomName: "room-name",
         microphoneState: false,
         cameraState: false,
+        lastActivityAtMs: Date.now(),
         tabId: "tab-1",
         connectionId: "conn-1",
         attendeesState: false,

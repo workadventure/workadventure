@@ -5,6 +5,7 @@ import {
     HandleRecordingWebhookRequest,
     RecordingWebhookPhase,
     SpaceUser,
+    FilterType,
 } from "@workadventure/messages";
 import type { InitialStateFactory } from "../src/Model/CommunicationManager";
 import { CommunicationManager } from "../src/Model/CommunicationManager";
@@ -20,6 +21,7 @@ import type { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifec
 import { UserRegistry } from "../src/Model/Services/UserRegistry";
 import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy";
 import type { IRecordingManager } from "../src/Model/RecordingManager";
+import { analyticsEventsQueue } from "../src/Services/AnalyticsEventsQueue";
 
 describe("CommunicationManager", () => {
     // Helper to create real SpaceUser objects
@@ -75,6 +77,9 @@ describe("CommunicationManager", () => {
         publishMetadata: vi.fn(),
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: vi.fn(),
+        world: "world",
+        getMetadataValue: vi.fn(),
+        filterType: FilterType.ALL_USERS,
     });
 
     const createRecordingManager = (): IRecordingManager & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
@@ -291,7 +296,7 @@ describe("CommunicationManager", () => {
             const user = createSpaceUser("user_1");
             await manager.handleUserAdded(user);
 
-            expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.WEBRTC, 0);
+            expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.WEBRTC, 0, 0);
         });
 
         it("should cancel pending transition when conditions change after adding user", async () => {
@@ -367,11 +372,35 @@ describe("CommunicationManager", () => {
             const user = createSpaceUser("user_1");
             await manager.handleUserDeleted(user);
 
-            expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.LIVEKIT, 0);
+            expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.LIVEKIT, 0, 0);
         });
     });
 
     describe("handleUserUpdated", () => {
+        it("evaluates the transition, counting the flagged users, when a user raises its cpuLimited flag", async () => {
+            const flagged = { ...createSpaceUser("user_1"), cpuLimited: true };
+            const space = createSpace([flagged, createSpaceUser("user_2"), createSpaceUser("user_3")]);
+            const policy = createPolicy(true, CommunicationType.LIVEKIT);
+            const state = createState(CommunicationType.WEBRTC);
+            const lifecycleManager = createLifecycleManager(state);
+            const orchestrator = createOrchestrator();
+
+            const manager = new CommunicationManager(space, {
+                policy: policy,
+                lifecycleManager: lifecycleManager,
+                orchestrator: orchestrator,
+            });
+
+            await manager.handleUserUpdated(flagged, ["cpuLimited"]);
+
+            expect(state.mocks.handleUserUpdated).toHaveBeenCalledWith(flagged);
+            expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.WEBRTC, 3, 1);
+            expect(orchestrator.mocks.executeImmediateTransition).toHaveBeenCalledWith(
+                CommunicationType.LIVEKIT,
+                expect.anything(),
+            );
+        });
+
         it("should delegate to current state when user is updated", async () => {
             const space = createSpace();
             const state = createState(CommunicationType.WEBRTC);
@@ -892,6 +921,137 @@ describe("CommunicationManager", () => {
             );
         });
 
+        it("should notify the admin once when an ended webhook is processed", async () => {
+            const state = createState(CommunicationType.LIVEKIT);
+            const recordingManager = createRecordingManager();
+            const recorder = createSpaceUser("recorder_1", "http://play.test/@/team/world/room");
+            const recordingEventNotifier = vi.fn().mockResolvedValue(undefined);
+
+            recordingManager.mocks.finishRecordingByWebhook.mockReturnValue({
+                processed: true,
+                recorder,
+                unexpected: false,
+                hasActiveSessions: true,
+            });
+
+            const manager = new CommunicationManager(createSpace(), {
+                orchestrator: createOrchestrator(),
+                lifecycleManager: createLifecycleManager(state),
+                recordingManager,
+                policy: createPolicy(false),
+                recordingEventNotifier,
+            });
+
+            manager.handleNormalizedRecordingWebhook(
+                HandleRecordingWebhookRequest.fromPartial({
+                    recordingSessionId: "session-1",
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+                    status: "EGRESS_COMPLETE",
+                    startedAtMs: 1_700_000_000_000,
+                    endedAtMs: 1_700_000_610_000,
+                    fileResults: [{ filename: "uuid-recorder_1/recording-1.mp4", sizeBytes: 123, durationMs: 610_400 }],
+                })
+            );
+            await Promise.resolve();
+
+            expect(recordingEventNotifier).toHaveBeenCalledTimes(1);
+            expect(recordingEventNotifier).toHaveBeenCalledWith({
+                phase: "ended",
+                status: "EGRESS_COMPLETE",
+                egressId: "egress-1",
+                recordingSessionId: "session-1",
+                playUri: "http://play.test/@/team/world/room",
+                recorder: { uuid: "uuid-recorder_1", spaceUserId: "recorder_1" },
+                startedAt: "2023-11-14T22:13:20.000Z",
+                endedAt: "2023-11-14T22:23:30.000Z",
+                error: null,
+                files: [{ filename: "uuid-recorder_1/recording-1.mp4", sizeBytes: 123, durationSeconds: 610 }],
+            });
+        });
+
+        it("should not notify the admin when the ended webhook matches no session", () => {
+            const recordingManager = createRecordingManager();
+            const recordingEventNotifier = vi.fn().mockResolvedValue(undefined);
+
+            const manager = new CommunicationManager(createSpace(), {
+                orchestrator: createOrchestrator(),
+                lifecycleManager: createLifecycleManager(createState(CommunicationType.LIVEKIT)),
+                recordingManager,
+                policy: createPolicy(false),
+                recordingEventNotifier,
+            });
+
+            manager.handleNormalizedRecordingWebhook(
+                HandleRecordingWebhookRequest.fromPartial({
+                    recordingSessionId: "unknown",
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+                })
+            );
+
+            expect(recordingEventNotifier).not.toHaveBeenCalled();
+        });
+
+        it("should not notify the admin when a started webhook arrives, and survive a failing admin on end", async () => {
+            const recordingManager = createRecordingManager();
+            const recorder = createSpaceUser("recorder_1");
+            recordingManager.mocks.confirmRecordingStartedByWebhook.mockReturnValue(true);
+            recordingManager.mocks.finishRecordingByWebhook.mockReturnValue({
+                processed: true,
+                recorder,
+                unexpected: false,
+                hasActiveSessions: true,
+            });
+            const recordingEventNotifier = vi.fn().mockRejectedValue(new Error("admin down"));
+
+            const manager = new CommunicationManager(createSpace(), {
+                orchestrator: createOrchestrator(),
+                lifecycleManager: createLifecycleManager(createState(CommunicationType.LIVEKIT)),
+                recordingManager,
+                policy: createPolicy(false),
+                recordingEventNotifier,
+            });
+
+            manager.handleNormalizedRecordingWebhook(
+                HandleRecordingWebhookRequest.fromPartial({
+                    recordingSessionId: "session-1",
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED,
+                    status: "EGRESS_ACTIVE",
+                })
+            );
+            expect(recordingEventNotifier).not.toHaveBeenCalled();
+
+            expect(() =>
+                manager.handleNormalizedRecordingWebhook(
+                    HandleRecordingWebhookRequest.fromPartial({
+                        recordingSessionId: "session-1",
+                        egressId: "egress-1",
+                        roomName: "test-space",
+                        phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
+                        status: "EGRESS_FAILED",
+                        error: "upload failed",
+                    })
+                )
+            ).not.toThrow();
+            await Promise.resolve();
+
+            expect(recordingEventNotifier).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    phase: "ended",
+                    status: "EGRESS_FAILED",
+                    error: "upload failed",
+                    recorder: { uuid: "uuid-recorder_1", spaceUserId: "recorder_1" },
+                    startedAt: null,
+                    files: [],
+                })
+            );
+        });
+
         it("should verify raw LiveKit webhooks in the active recordable state before handling the normalized event", async () => {
             const space = createSpace();
             const orchestrator = createOrchestrator();
@@ -1089,6 +1249,108 @@ describe("CommunicationManager", () => {
             capturedCallback?.(newState);
 
             expect(lifecycleManager.mocks.transitionTo).not.toHaveBeenCalled();
+        });
+    });
+    describe("session analytics", () => {
+        // The manager builds its own tracker, so this covers the wiring the refactor
+        // introduced end to end: the `spaceKind` metadata read off the space, the
+        // predicate that opens a meeting on the second arrival, and the rows that only
+        // exist once the session has ended. Injecting a fake tracker would test the
+        // delegation and skip exactly the part that can break.
+        const rowsFrom = (enqueue: Mock) => enqueue.mock.calls.map(([row]) => row as { eventName: string });
+
+        const withQueue = async (
+            body: (enqueue: Mock, rows: () => { eventName: string }[]) => Promise<void> | void,
+        ) => {
+            const enqueue = vi.spyOn(analyticsEventsQueue, "enqueue").mockImplementation(() => {});
+            try {
+                await body(enqueue, () => rowsFrom(enqueue));
+            } finally {
+                enqueue.mockRestore();
+            }
+        };
+
+        const managerFor = (space: ICommunicationSpace) =>
+            new CommunicationManager(space, {
+                lifecycleManager: createLifecycleManager(createState(CommunicationType.WEBRTC)),
+                recordingManager: createRecordingManager(),
+            });
+
+        it("measures a meeting from the kind the space declares", async () => {
+            await withQueue(async (enqueue, rows) => {
+                const space = createSpace();
+                space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                const manager = managerFor(space);
+
+                await manager.handleUserAdded(createSpaceUser("1"));
+                expect(rows()).toEqual([]);
+
+                // Second arrival opens it; nothing is emitted until it closes.
+                await manager.handleUserAdded(createSpaceUser("2"));
+                expect(rows()).toEqual([]);
+
+                expect(manager.closeSession("back_shutdown")).toBe(true);
+                expect(rows().map((row) => row.eventName)).toEqual([
+                    "meeting.participation.ended",
+                    "meeting.participation.ended",
+                    "meeting.ended",
+                ]);
+            });
+        });
+
+        it("measures nothing for a space whose client declared no kind", async () => {
+            await withQueue(async (enqueue) => {
+                const space = createSpace();
+                space.getMetadataValue = vi.fn().mockReturnValue(undefined);
+                const manager = managerFor(space);
+
+                await manager.handleUserAdded(createSpaceUser("1"));
+                await manager.handleUserAdded(createSpaceUser("2"));
+
+                expect(manager.closeSession("back_shutdown")).toBe(false);
+                expect(enqueue).not.toHaveBeenCalled();
+            });
+        });
+
+        it("counts a member once, whichever registry they arrive through", async () => {
+            // The point of deriving presence from the union: a listener is only ever in
+            // usersToNotify, a speaker is in both, and going on air is not an arrival.
+            await withQueue(async (enqueue, rows) => {
+                const space = createSpace();
+                space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                const manager = managerFor(space);
+
+                const watcher = createSpaceUser("watcher");
+                const both = createSpaceUser("both");
+
+                await manager.handleUserToNotifyAdded(watcher);
+                await manager.handleUserToNotifyAdded(both);
+                // Already present: crossing the filter must not add them a second time.
+                await manager.handleUserAdded(both);
+
+                expect(manager.closeSession("back_shutdown")).toBe(true);
+                expect(rows().filter((row) => row.eventName === "meeting.participation.ended")).toHaveLength(2);
+            });
+        });
+
+        it("keeps a member until they have left both registries", async () => {
+            await withQueue(async (enqueue, rows) => {
+                const space = createSpace();
+                space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                const manager = managerFor(space);
+
+                const staying = createSpaceUser("staying");
+                const leaving = createSpaceUser("leaving");
+                await manager.handleUserToNotifyAdded(staying);
+                await manager.handleUserToNotifyAdded(leaving);
+                await manager.handleUserAdded(leaving);
+
+                // Off air but still watching: not a departure, so the meeting holds.
+                await manager.handleUserDeleted(leaving);
+                expect(manager.closeSession("closed")).toBe(true);
+                expect(rows().filter((row) => row.eventName === "meeting.ended")).toHaveLength(1);
+                expect(rows().filter((row) => row.eventName === "meeting.participation.ended")).toHaveLength(2);
+            });
         });
     });
 });

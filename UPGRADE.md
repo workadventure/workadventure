@@ -4,6 +4,14 @@ This document provides instructions for upgrading WorkAdventure between versions
 
 ## Upgrading from v1.33.x to v1.34.0
 
+### Virtual background: legacy engine and video backgrounds removed
+
+The CPU-based `selfie-segmentation` virtual background engine is gone. MediaPipe Tasks Vision
+(GPU-accelerated) is now the only engine. `BACKGROUND_TRANSFORMER_ENGINE` no longer exists and can be
+removed from your `.env` (a leftover value is ignored).
+
+Video backgrounds were removed. A user who had a video background selected falls back to no effect.
+
 ### Analytics environment variables renamed (BREAKING CHANGE)
 
 Video quality samples used to travel through their own queue and their own

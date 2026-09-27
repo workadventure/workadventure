@@ -21,6 +21,7 @@ const warning: BaseTranslation = {
     mapEditorNotEnabled: "O editor de mapas não está habilitado neste mundo.",
     backgroundProcessing: {
         failedToApply: "Falha ao aplicar efeitos de fundo",
+        notSupportedOnThisBrowser: "Efeitos de fundo não são suportados neste navegador",
     },
     popupBlocked: {
         title: "Bloqueador de pop-up",

@@ -3,11 +3,23 @@ import type { Request } from "express";
 import { PATH_PREFIX, USE_DOMAIN_NAME_IN_PATH } from "../Enum/EnvironmentVariable";
 
 /**
+ * Returns the domain the request is addressed to, i.e. the domain identifying the world.
+ *
+ * The map uploader may send the ZIP to a different host (DIRECT_UPLOAD_URL, bypassing a proxy that
+ * limits request body size) while still targeting the world of the configured MAP_STORAGE_URL.
+ * It declares that world with the "X-Map-Storage-Host" header. It is safe to trust: the
+ * authentication validator checks the API key against this same domain.
+ */
+export function getRequestDomain(req: Request): string {
+    return req.headers["x-map-storage-host"]?.toString() ?? req.headers["x-forwarded-host"]?.toString() ?? req.hostname;
+}
+
+/**
  * Maps a path to the storage path.
  * The returned value never starts with "/".
  */
 export function mapPath(filePath: string, req: Request): string {
-    return mapPathUsingDomain(filePath, req.headers["x-forwarded-host"]?.toString() ?? req.hostname);
+    return mapPathUsingDomain(filePath, getRequestDomain(req));
 }
 
 /**

@@ -19,7 +19,7 @@ function createSpace(
 ): SpaceInterface {
     const metadata = options?.metadata ?? new Map<string, unknown>();
     if (options?.isMegaphone) {
-        metadata.set("isMegaphoneSpace", true);
+        metadata.set("spaceKind", "megaphone");
     }
 
     return {

@@ -25,15 +25,15 @@
     const isMatrixChatEnabled = gameScene.room.isMatrixChatEnabled;
 
     onMount(() => {
-        if ($shownRoomListStore.length === 0) shownRoomListStore.set([$LL.chat.userList.isHere()]);
+        if ($shownRoomListStore.length === 0) shownRoomListStore.set([gameScene.roomUrl]);
     });
 
-    function toggleRoomList(roomName: string) {
+    function toggleRoomList(playUri: string) {
         const expanded = $shownRoomListStore;
-        if (expanded.includes(roomName)) {
-            shownRoomListStore.set(expanded.filter((name) => name !== roomName));
+        if (expanded.includes(playUri)) {
+            shownRoomListStore.set(expanded.filter((uri) => uri !== playUri));
         } else {
-            shownRoomListStore.set([...expanded, roomName]);
+            shownRoomListStore.set([...expanded, playUri]);
         }
     }
 
@@ -67,13 +67,13 @@
                         })
                         .slice(0, USERS_BY_ROOM_LIMITATION);
 
-                    if (users.length > 0) roomsWithUsersAcc.push([roomName, users]);
+                    if (users.length > 0) roomsWithUsersAcc.push([currentPlayUri ?? "", roomName, users]);
 
                     return roomsWithUsersAcc;
                 },
-                [] as [string, ChatUser[]][],
+                [] as [string, string, ChatUser[]][],
             )
-            .sort(([aKey, _aValue]: [string, ChatUser[]], [bKey, _bValue]: [string, ChatUser[]]) => {
+            .sort(([, aKey]: [string, string, ChatUser[]], [, bKey]: [string, string, ChatUser[]]) => {
                 if (aKey === $LL.chat.userList.disconnected()) return 1;
                 if (bKey === $LL.chat.userList.disconnected()) return -1;
 
@@ -116,12 +116,12 @@
 <div class="flex flex-col h-full">
     <ChatHeader />
     <div class="flex-1 min-h-0 overflow-x-hidden overflow-y-auto">
-        {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
+        {#each roomsWithUsers as [playUri, roomName, userInRoom] (playUri)}
             <div class=" users flex flex-col shrink-0 relative first:pt-[12px]">
                 <button
                     class="group relative px-3 gap-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10 text-white outline-none border-y-0 appearance-none m-0"
                     data-testid={roomName === $LL.chat.userList.isHere() ? "user-list-room-here" : undefined}
-                    onclick={() => toggleRoomList(roomName)}
+                    onclick={() => toggleRoomList(playUri)}
                 >
                     {#if roomName !== $LL.chat.userList.disconnected()}
                         <div
@@ -139,11 +139,11 @@
                         class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                     >
                         <IconChevronUp
-                            class={`transform transition ${$shownRoomListStore.includes(roomName) ? "" : "rotate-180"}`}
+                            class={`transform transition ${$shownRoomListStore.includes(playUri) ? "" : "rotate-180"}`}
                         />
                     </div>
                 </button>
-                {#if $shownRoomListStore.includes(roomName)}
+                {#if $shownRoomListStore.includes(playUri)}
                     <div class="flex flex-col flex-1 h-fit">
                         <UserList userList={userInRoom} {isMatrixChatEnabled} />
                     </div>

@@ -26,6 +26,7 @@ import { isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import { subscribeToOutboundVideoQualityAnalytics, subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createPeerWebRtcStats } from "./WebRtcStatsFactory";
+import { demotedCodecStore } from "./CodecPerformance";
 import {
     computeVideoEncoding,
     DEFAULT_VIEWER_DISPLAY,
@@ -34,12 +35,26 @@ import {
     type ViewerDisplay,
 } from "./AdaptiveVideoEncoding";
 import { registerLocalEncoderStats } from "./LocalEncoderStats";
-import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
+import {
+    negotiableVideoCodecs,
+    selectVideoPreset,
+    videoCodecFromMimeType,
+    type VideoCodec,
+    type VideoQualitySetting,
+} from "./VideoPresets";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
 // Firefox needs more time for ICE negotiation
 const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000; // 10s for Firefox, 5s for others
+// A peer that has not connected by then never will (offer lost, remote peer never created, ICE stuck in
+// "checking"). Destroying it is what hands it over to the retry mechanism, which only reacts to destroyed peers.
+const CONNECT_DEADLINE_MS = 20_000;
+// Browsers often recover from ICE "disconnected" on their own within a couple of seconds: give them that
+// chance before restarting ICE, then give the ICE restart its own chance before tearing the peer down.
+// Without this, a peer whose ICE never reaches "failed" (Firefox, dead TURN allocation) stays muted forever.
+const ICE_RESTART_DELAY_MS = 3_000;
+const ICE_RECOVERY_TIMEOUT_MS = 15_000;
 
 const debug = Debug("webrtc:RemotePeer");
 
@@ -80,6 +95,7 @@ export class RemotePeer extends Peer implements Streamable {
     public readonly senderWebrtcStats: Readable<WebRtcSenderStats | undefined>;
     private senderAnalyticsUnsubscribe: Unsubscriber | undefined;
     private unregisterLocalEncoderStats: Unsubscriber | undefined;
+    private demotedCodecUnsubscribe: Unsubscriber | undefined;
     private analyticsStatsUnsubscribe: Unsubscriber | undefined;
     private analyticsRemoteStreamUnsubscribe: (() => void) | undefined;
     private receiverMaxBitrateBps: number | undefined;
@@ -154,13 +170,100 @@ export class RemotePeer extends Peer implements Streamable {
         }
     };
 
-    private readonly iceTimeoutHandler = () => {
-        this._statusStore.set("error");
+    /**
+     * Leaves a trace of the connection lifecycle in Sentry, so that a later error carries the sequence of
+     * events (disconnection, ICE restart, teardown) that led to it.
+     */
+    private breadcrumb(message: string, level: "info" | "warning", data: Record<string, unknown> = {}): void {
+        Sentry.addBreadcrumb({
+            category: "webrtc",
+            level,
+            message,
+            data: {
+                spaceUserId: this._spaceUserId,
+                connectionId: this._connectionId,
+                type: this.type,
+                initiator: this.initiator,
+                ...data,
+            },
+        });
+    }
+
+    private readonly iceStateChangeHandler = (iceConnectionState: RTCIceConnectionState) => {
+        // Before the first "connect", the connect deadline covers a stalled negotiation.
+        if (this.closing || !this._connected) {
+            return;
+        }
+        if (iceConnectionState === "connected" || iceConnectionState === "completed") {
+            if (this.iceRecoveryTimeout) {
+                this.breadcrumb("ICE recovered", "info", { iceConnectionState });
+            }
+            this.clearIceRecoveryTimeouts();
+            this._statusStore.set("connected");
+            return;
+        }
+        if (iceConnectionState !== "disconnected" || this.iceRecoveryTimeout) {
+            return;
+        }
+        this.breadcrumb("ICE disconnected, attempting to recover", "warning", { iceConnectionState });
+        // Displayed as "reconnecting" by the VideoBox
+        this._statusStore.set("connecting");
+        this.iceRestartTimeout = setTimeout(() => {
+            this.iceRestartTimeout = undefined;
+            const pc = this._pc;
+            // The offer must come from the initiator; the fork only sends offers from that side.
+            if (this.initiator && pc && typeof pc.restartIce === "function") {
+                this.breadcrumb("Restarting ICE", "info", { iceConnectionState: pc.iceConnectionState });
+                pc.restartIce();
+                this.negotiate();
+            }
+        }, ICE_RESTART_DELAY_MS);
+        this.iceRecoveryTimeout = setTimeout(() => {
+            this.iceRecoveryTimeout = undefined;
+            this.breadcrumb("ICE did not recover, destroying the peer to trigger a retry", "warning", {
+                iceConnectionState: this._pc?.iceConnectionState,
+                connectionState: this._pc?.connectionState,
+            });
+            this.destroy();
+        }, ICE_RECOVERY_TIMEOUT_MS);
     };
+
+    private readonly negotiatedHandler = () => {
+        if (this._connected) {
+            this.applyVideoEncoding();
+        }
+    };
+
+    // DTLS / SCTP failures surface here while iceConnectionState may still say "connected".
+    private readonly connectionStateChangeHandler = () => {
+        const pc = this._pc;
+        if (pc?.connectionState === "failed" && !this.closing) {
+            this.breadcrumb("Connection failed, destroying the peer to trigger a retry", "warning", {
+                iceConnectionState: pc.iceConnectionState,
+                connectionState: pc.connectionState,
+            });
+            this.destroy();
+        }
+    };
+
+    private clearIceRecoveryTimeouts(): void {
+        if (this.iceRestartTimeout) {
+            clearTimeout(this.iceRestartTimeout);
+            this.iceRestartTimeout = undefined;
+        }
+        if (this.iceRecoveryTimeout) {
+            clearTimeout(this.iceRecoveryTimeout);
+            this.iceRecoveryTimeout = undefined;
+        }
+    }
 
     private readonly connectHandler = () => {
         if (this.connectTimeout) {
             clearTimeout(this.connectTimeout);
+        }
+        if (this.connectDeadline) {
+            clearTimeout(this.connectDeadline);
+            this.connectDeadline = undefined;
         }
         if (this.closing) {
             return;
@@ -218,7 +321,9 @@ export class RemotePeer extends Peer implements Streamable {
                         this.isReceivingStream = false;
                     }
                     if (!this.localStream || this.preparingClose) {
-                        // If the remote stream stopped and we are not sending a local stream, close the connection
+                        // If the remote stream stopped and we are not sending a local stream, close the connection.
+                        // The remote peer decided to stop: not a failure, so no retry.
+                        this.intentionalClose = true;
                         this.closeHandler();
                     }
                     break;
@@ -253,6 +358,9 @@ export class RemotePeer extends Peer implements Streamable {
     };
 
     private connectTimeout: ReturnType<typeof setTimeout> | undefined;
+    private connectDeadline: ReturnType<typeof setTimeout> | undefined;
+    private iceRestartTimeout: ReturnType<typeof setTimeout> | undefined;
+    private iceRecoveryTimeout: ReturnType<typeof setTimeout> | undefined;
     private localStream: MediaStream | undefined;
 
     constructor(
@@ -272,6 +380,13 @@ export class RemotePeer extends Peer implements Streamable {
     ) {
         incrementWebRtcConnectionsCount();
         const firefoxBrowser = isFirefox();
+        const quality = type === "screenSharing" ? get(screenShareQualityStore) : get(videoQualityStore);
+        const receiveCodecs = () => ({
+            video: {
+                prefer: negotiableVideoCodecs(type, quality).map((codec) => "video/" + codec.toUpperCase()),
+                exclusive: true,
+            },
+        });
 
         // Firefox-specific configuration
         const peerConfig: PeerOptions = {
@@ -285,13 +400,26 @@ export class RemotePeer extends Peer implements Streamable {
                     rtcpMuxPolicy: "require",
                 }),
             },
-            preferredCodecs: {
-                video: type === "video" ? ["video/VP9", "video/VP8"] : ["video/AV1", "video/VP9", "video/VP8"],
-            },
+            // What we prefer to receive, among what we can afford to encode: a browser sends the codecs of the
+            // remote description, so this list restricts both directions (see negotiableVideoCodecs)
+            receiveCodecs: receiveCodecs(),
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
         };
         super(peerConfig);
+
+        // A codec the CPU limitation detector demoted leaves the negotiated set: whoever initiates the renegotiation,
+        // both sides end up on the remaining codecs (the fork re-applies the preference on offers and answers)
+        let negotiated = receiveCodecs().video.prefer.join();
+        this.demotedCodecUnsubscribe = demotedCodecStore[type].subscribe(() => {
+            const wanted = receiveCodecs();
+            if (wanted.video.prefer.join() === negotiated) {
+                return;
+            }
+            negotiated = wanted.video.prefer.join();
+            this.receiveCodecs = wanted;
+            this.negotiate();
+        });
 
         this.volume = writable(defaultVolume);
         this.videoType = type;
@@ -410,13 +538,35 @@ export class RemotePeer extends Peer implements Streamable {
 
         this.on("error", this.errorHandler);
 
-        this.on("iceTimeout", this.iceTimeoutHandler);
+        this.on("iceStateChange", this.iceStateChangeHandler);
 
         this.on("connect", this.connectHandler);
+
+        // The codec may have changed: the bitrate budget follows
+        this.on("negotiated", this.negotiatedHandler);
 
         this.on("data", this.dataHandler);
 
         this.once("finish", this.finishHandler);
+
+        this._pc?.addEventListener("connectionstatechange", this.connectionStateChangeHandler);
+
+        this.connectDeadline = setTimeout(() => {
+            this.connectDeadline = undefined;
+            if (!this._connected && !this.closing) {
+                this.breadcrumb(
+                    "Peer did not connect within the deadline, destroying it to trigger a retry",
+                    "warning",
+                    {
+                        deadlineMs: CONNECT_DEADLINE_MS,
+                        iceConnectionState: this._pc?.iceConnectionState,
+                        iceGatheringState: this._pc?.iceGatheringState,
+                        signalingState: this._pc?.signalingState,
+                    },
+                );
+                this.destroy();
+            }
+        }, CONNECT_DEADLINE_MS);
 
         this.localStreamStoreSubscribe = deriveSwitchStore(
             this.localStreamStore,
@@ -466,6 +616,12 @@ export class RemotePeer extends Peer implements Streamable {
                         debug("Adding video track in P2P connection");
                         this.localStream.addTrack(newVideoTrack);
                         this.addTrack(newVideoTrack, this.localStream);
+                        // Removing the track unmounted the viewer's tile, which reported 0x0. A re-added track
+                        // reaches the viewer muted and only unmutes on the first frame: keeping the encoder paused
+                        // would stop the viewer from ever mounting a tile and reporting a size again. Start over
+                        // from the default assumption, as on a fresh connection.
+                        this.viewerDisplay = DEFAULT_VIEWER_DISPLAY;
+                        this.viewerReportedDisplay = false;
                         this.applyVideoEncoding();
                     } else if (oldVideoTrack && !newVideoTrack) {
                         debug("Removing video track in P2P connection");
@@ -690,14 +846,20 @@ export class RemotePeer extends Peer implements Streamable {
             this.off("stream", this.streamHandler);
             this.off("close", this.closeHandler);
             this.off("error", this.errorHandler);
-            this.off("iceTimeout", this.iceTimeoutHandler);
+            this.off("iceStateChange", this.iceStateChangeHandler);
             this.off("connect", this.connectHandler);
+            this.off("negotiated", this.negotiatedHandler);
             this.off("data", this.dataHandler);
             this.off("finish", this.finishHandler);
+            this._pc?.removeEventListener("connectionstatechange", this.connectionStateChangeHandler);
 
             if (this.connectTimeout) {
                 clearTimeout(this.connectTimeout);
             }
+            if (this.connectDeadline) {
+                clearTimeout(this.connectDeadline);
+            }
+            this.clearIceRecoveryTimeouts();
             if (this.closeStreamableTimeout) {
                 clearTimeout(this.closeStreamableTimeout);
             }
@@ -713,6 +875,8 @@ export class RemotePeer extends Peer implements Streamable {
             this.senderAnalyticsUnsubscribe = undefined;
             this.unregisterLocalEncoderStats?.();
             this.unregisterLocalEncoderStats = undefined;
+            this.demotedCodecUnsubscribe?.();
+            this.demotedCodecUnsubscribe = undefined;
             if (this.closing) {
                 return;
             }
@@ -939,7 +1103,11 @@ export class RemotePeer extends Peer implements Streamable {
                         type: "resolution",
                         width: hidden ? 0 : width,
                         height: hidden ? 0 : height,
-                        maxBitrate: hidden ? 0 : this.getPresetForDimensions(width, height).bitrate,
+                        // The sender picks its own codec, which we do not know: budget the most expensive one so the
+                        // hint never starves it. The sender takes the minimum with its own preset anyway.
+                        // ponytail: 1.4x looser than intended on a VP9 sender; send the quality setting instead of a
+                        // bitrate if that matters
+                        maxBitrate: hidden ? 0 : this.getPresetForDimensions(width, height, "vp8").bitrate,
                     } satisfies P2PMessage),
                 ),
             );
@@ -1000,14 +1168,22 @@ export class RemotePeer extends Peer implements Streamable {
         this.cutVideoUnlessViewerReports();
 
         const settings = videoSender.track.getSettings();
+        // The negotiated codecs come in the order the peer prefers to receive them, and the browser sends the first
+        const codec = videoCodecFromMimeType(parameters.codecs?.[0]?.mimeType) ?? "vp8";
         const encoding = computeVideoEncoding(
             this.viewerDisplay,
             { width: settings.width || 1280, height: settings.height || 720 },
-            (width, height) => this.getPresetForDimensions(width, height),
+            (width, height) => this.getPresetForDimensions(width, height, codec),
         );
 
         if (this.type === "screenSharing") {
             parameters.degradationPreference = get(bandwidthConstrainedPreferenceStore);
+        } else if (isFirefox()) {
+            // WORKAROUND for Firefox bug https://bugzilla.mozilla.org/show_bug.cgi?id=2073405, to remove with
+            // evenScaleFactor once the bug is fixed. The scale above is computed for the capture size so that the
+            // frame stays even-sized. Under congestion or CPU overuse, Firefox would otherwise shrink the frame it
+            // feeds the encoder first, and our scale would then land on an odd size: make it drop frames instead.
+            parameters.degradationPreference = "maintain-resolution";
         }
         parameters.encodings[0].active = encoding.active;
         if (encoding.active) {
@@ -1082,8 +1258,8 @@ export class RemotePeer extends Peer implements Streamable {
         return this.type === "screenSharing" ? get(screenShareQualityStore) : get(videoQualityStore);
     }
 
-    private getPresetForDimensions(width: number, height: number): { bitrate: number; fps: number } {
-        return selectVideoPreset(height, width, this.type === "screenSharing", this.getLocalQualitySetting());
+    private getPresetForDimensions(width: number, height: number, codec: VideoCodec): { bitrate: number; fps: number } {
+        return selectVideoPreset(height, width, this.type === "screenSharing", this.getLocalQualitySetting(), codec);
     }
 
     /**

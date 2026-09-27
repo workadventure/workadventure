@@ -42,7 +42,7 @@ describe("TransitionPolicy", () => {
                 const policy = new TransitionPolicy(
                     MAX_USERS_FOR_WEBRTC,
                     createLivekitChecker(true),
-                    createRecordingManager()
+                    createRecordingManager(),
                 );
 
                 expect(policy.shouldTransition(CommunicationType.WEBRTC, 5)).toBe(true);
@@ -54,7 +54,7 @@ describe("TransitionPolicy", () => {
                 const policy = new TransitionPolicy(
                     MAX_USERS_FOR_WEBRTC,
                     createLivekitChecker(true),
-                    createRecordingManager()
+                    createRecordingManager(),
                 );
 
                 expect(policy.shouldTransition(CommunicationType.WEBRTC, 4)).toBe(false);
@@ -67,7 +67,7 @@ describe("TransitionPolicy", () => {
                 const policy = new TransitionPolicy(
                     MAX_USERS_FOR_WEBRTC,
                     createLivekitChecker(false),
-                    createRecordingManager()
+                    createRecordingManager(),
                 );
 
                 expect(policy.shouldTransition(CommunicationType.WEBRTC, 5)).toBe(false);
@@ -78,12 +78,12 @@ describe("TransitionPolicy", () => {
                 const policyWithLivekit = new TransitionPolicy(
                     MAX_USERS_FOR_WEBRTC,
                     createLivekitChecker(true),
-                    createRecordingManager()
+                    createRecordingManager(),
                 );
                 const policyWithoutLivekit = new TransitionPolicy(
                     MAX_USERS_FOR_WEBRTC,
                     createLivekitChecker(false),
-                    createRecordingManager()
+                    createRecordingManager(),
                 );
 
                 expect(policyWithLivekit.shouldTransition(CommunicationType.WEBRTC, 4)).toBe(false);
@@ -96,7 +96,7 @@ describe("TransitionPolicy", () => {
                 const policy = new TransitionPolicy(
                     MAX_USERS_FOR_WEBRTC,
                     createLivekitChecker(true),
-                    createRecordingManager()
+                    createRecordingManager(),
                 );
 
                 expect(policy.shouldTransition(CommunicationType.LIVEKIT, 4)).toBe(true);
@@ -109,7 +109,7 @@ describe("TransitionPolicy", () => {
                 const policy = new TransitionPolicy(
                     MAX_USERS_FOR_WEBRTC,
                     createLivekitChecker(true),
-                    createRecordingManager()
+                    createRecordingManager(),
                 );
 
                 expect(policy.shouldTransition(CommunicationType.LIVEKIT, 5)).toBe(false);
@@ -120,12 +120,12 @@ describe("TransitionPolicy", () => {
                 const policyWithLivekit = new TransitionPolicy(
                     MAX_USERS_FOR_WEBRTC,
                     createLivekitChecker(true),
-                    createRecordingManager()
+                    createRecordingManager(),
                 );
                 const policyWithoutLivekit = new TransitionPolicy(
                     MAX_USERS_FOR_WEBRTC,
                     createLivekitChecker(false),
-                    createRecordingManager()
+                    createRecordingManager(),
                 );
 
                 expect(policyWithLivekit.shouldTransition(CommunicationType.LIVEKIT, 4)).toBe(true);
@@ -138,7 +138,7 @@ describe("TransitionPolicy", () => {
                 const policy = new TransitionPolicy(
                     MAX_USERS_FOR_WEBRTC,
                     createLivekitChecker(true),
-                    createRecordingManager()
+                    createRecordingManager(),
                 );
 
                 expect(policy.shouldTransition(CommunicationType.NONE, 0)).toBe(false);
@@ -183,7 +183,7 @@ describe("TransitionPolicy", () => {
             const policy = new TransitionPolicy(
                 MAX_USERS_FOR_WEBRTC,
                 createLivekitChecker(true),
-                createRecordingManager()
+                createRecordingManager(),
             );
 
             expect(policy.getNextStateType(CommunicationType.WEBRTC, 5)).toBe(CommunicationType.LIVEKIT);
@@ -195,7 +195,7 @@ describe("TransitionPolicy", () => {
             const policy = new TransitionPolicy(
                 MAX_USERS_FOR_WEBRTC,
                 createLivekitChecker(true),
-                createRecordingManager()
+                createRecordingManager(),
             );
 
             expect(policy.getNextStateType(CommunicationType.LIVEKIT, 4)).toBe(CommunicationType.WEBRTC);
@@ -207,7 +207,7 @@ describe("TransitionPolicy", () => {
             const policy = new TransitionPolicy(
                 MAX_USERS_FOR_WEBRTC,
                 createLivekitChecker(true),
-                createRecordingManager()
+                createRecordingManager(),
             );
 
             expect(policy.getNextStateType(CommunicationType.NONE, 0)).toBe(null);
@@ -219,12 +219,12 @@ describe("TransitionPolicy", () => {
             const policyWithLivekit = new TransitionPolicy(
                 MAX_USERS_FOR_WEBRTC,
                 createLivekitChecker(true),
-                createRecordingManager()
+                createRecordingManager(),
             );
             const policyWithoutLivekit = new TransitionPolicy(
                 MAX_USERS_FOR_WEBRTC,
                 createLivekitChecker(false),
-                createRecordingManager()
+                createRecordingManager(),
             );
 
             expect(policyWithLivekit.getNextStateType(CommunicationType.WEBRTC, 5)).toBe(CommunicationType.LIVEKIT);
@@ -237,7 +237,7 @@ describe("TransitionPolicy", () => {
             const policy = new TransitionPolicy(
                 MAX_USERS_FOR_WEBRTC,
                 createLivekitChecker(true),
-                createRecordingManager()
+                createRecordingManager(),
             );
 
             const result1 = policy.shouldTransition(CommunicationType.WEBRTC, 5);
@@ -260,12 +260,56 @@ describe("TransitionPolicy", () => {
         });
     });
 
+    describe("cpuLimited users", () => {
+        const policy = new TransitionPolicy(MAX_USERS_FOR_WEBRTC, createLivekitChecker(true), createRecordingManager());
+
+        it("moves a bubble of more than two to LiveKit below the threshold when a user is CPU-limited", () => {
+            expect(policy.shouldTransition(CommunicationType.WEBRTC, 3, 1)).toBe(true);
+            expect(policy.shouldTransition(CommunicationType.WEBRTC, 4, 2)).toBe(true);
+            // A pair gives one encoder each: LiveKit saves nothing
+            expect(policy.shouldTransition(CommunicationType.WEBRTC, 2, 1)).toBe(false);
+            expect(policy.shouldTransition(CommunicationType.WEBRTC, 3, 0)).toBe(false);
+        });
+
+        it("needs LiveKit to be available", () => {
+            const noLivekit = new TransitionPolicy(
+                MAX_USERS_FOR_WEBRTC,
+                createLivekitChecker(false),
+                createRecordingManager(),
+            );
+
+            expect(noLivekit.shouldTransition(CommunicationType.WEBRTC, 3, 1)).toBe(false);
+        });
+
+        it("stays on LiveKit while a CPU-limited user is present, whatever the count", () => {
+            expect(policy.shouldTransition(CommunicationType.LIVEKIT, 3, 1)).toBe(false);
+            // Even a pair: only the flagged user leaving brings the bubble back, so a third member coming and going
+            // never bounces it
+            expect(policy.shouldTransition(CommunicationType.LIVEKIT, 2, 1)).toBe(false);
+            expect(policy.shouldTransition(CommunicationType.LIVEKIT, 2, 0)).toBe(true);
+        });
+
+        it("ignores the flag when the switch is disabled", () => {
+            const disabled = new TransitionPolicy(
+                MAX_USERS_FOR_WEBRTC,
+                createLivekitChecker(true),
+                createRecordingManager(),
+                false,
+            );
+
+            expect(disabled.shouldTransition(CommunicationType.WEBRTC, 3, 1)).toBe(false);
+            expect(disabled.shouldTransition(CommunicationType.LIVEKIT, 2, 1)).toBe(true);
+            // The user count threshold still applies
+            expect(disabled.shouldTransition(CommunicationType.WEBRTC, 5, 1)).toBe(true);
+        });
+    });
+
     describe("edge cases", () => {
         it("should handle negative user count when in WEBRTC state", () => {
             const policy = new TransitionPolicy(
                 MAX_USERS_FOR_WEBRTC,
                 createLivekitChecker(true),
-                createRecordingManager()
+                createRecordingManager(),
             );
 
             expect(policy.shouldTransition(CommunicationType.WEBRTC, -1)).toBe(false);
@@ -275,7 +319,7 @@ describe("TransitionPolicy", () => {
             const policy = new TransitionPolicy(
                 MAX_USERS_FOR_WEBRTC,
                 createLivekitChecker(true),
-                createRecordingManager()
+                createRecordingManager(),
             );
 
             expect(policy.shouldTransition(CommunicationType.LIVEKIT, -1)).toBe(true);
@@ -285,7 +329,7 @@ describe("TransitionPolicy", () => {
             const policy = new TransitionPolicy(
                 MAX_USERS_FOR_WEBRTC,
                 createLivekitChecker(true),
-                createRecordingManager()
+                createRecordingManager(),
             );
 
             expect(policy.shouldTransition(CommunicationType.WEBRTC, Number.MAX_SAFE_INTEGER)).toBe(true);
@@ -295,7 +339,7 @@ describe("TransitionPolicy", () => {
             const policy = new TransitionPolicy(
                 MAX_USERS_FOR_WEBRTC,
                 createLivekitChecker(true),
-                createRecordingManager()
+                createRecordingManager(),
             );
 
             expect(policy.shouldTransition(CommunicationType.LIVEKIT, Number.MAX_SAFE_INTEGER)).toBe(false);

@@ -6,7 +6,7 @@ import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import type { Subscription } from "rxjs";
 import type { CharacterTextureMessage } from "@workadventure/messages";
-import { AvailabilityStatus, FilterType } from "@workadventure/messages";
+import { AvailabilityStatus, FilterType, type SpaceKind } from "@workadventure/messages";
 import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
@@ -125,6 +125,20 @@ const MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS = 5;
 // cleanly before the room operation lock queue is released. High enough to only fire on a genuine
 // hang, never on ordinary slowness.
 const GET_FIRST_USERS_TIMEOUT_MS = 9_000;
+
+/**
+ * What the space behind a room is, for the back: the proximity room is the bubble, a
+ * meeting room is a meeting area, the speaker and listener rooms share the speaker
+ * zone's space. A plain area chat room has no media and is nobody's session.
+ */
+const SPACE_KIND_OF_ROOM: Record<ProximityChatRoomKind, SpaceKind | undefined> = {
+    default: "bubble",
+    proximity: "bubble",
+    meeting: "area",
+    speaker: "speaker_zone",
+    listener: "speaker_zone",
+    area: undefined,
+};
 
 export class ProximityChatRoom implements ChatRoom {
     id: string;
@@ -964,6 +978,7 @@ export class ProximityChatRoom implements ChatRoom {
         try {
             this._space = await this.spaceRegistry.joinSpace(spaceName, filterType, propertiesToSync, joinSignal, {
                 canRecord: WAMSettingsUtils.canStartRecording(this.wamSettings, this.tags, localUserStore.isLogged()),
+                spaceKind: SPACE_KIND_OF_ROOM[get(this.kind)],
             });
         } catch (e) {
             this.joinSpaceAbortController = undefined;

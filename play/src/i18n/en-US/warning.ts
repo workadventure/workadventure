@@ -26,6 +26,7 @@ const warning: BaseTranslation = {
     },
     backgroundProcessing: {
         failedToApply: "Failed to apply background effects",
+        notSupportedOnThisBrowser: "Background effects are not supported on this browser",
     },
     duplicateUserConnected: {
         title: "Already connected",

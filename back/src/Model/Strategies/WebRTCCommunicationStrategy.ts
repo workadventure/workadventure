@@ -299,7 +299,22 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             this._connections.getConnectionId(receiverId, senderUserId);
 
         if (existingConnectionId === undefined) {
-            console.warn("No existing connection found for meetingConnectionRestartMessage ", senderUserId, receiverId);
+            // The tracking was lost (partial cleanup) but the front still expects a connection between
+            // these two users: silently ignoring would leave them without media until one reloads.
+            const sender = this.users.get(senderUserId) ?? this.usersToNotify.get(senderUserId);
+            const receiver = this.users.get(receiverId) ?? this.usersToNotify.get(receiverId);
+            if (!sender || !receiver) {
+                console.warn(
+                    "No existing connection found for meetingConnectionRestartMessage ",
+                    senderUserId,
+                    receiverId,
+                );
+                Sentry.captureMessage(
+                    `No existing connection found for meetingConnectionRestartMessage from ${senderUserId} to ${receiverId}`,
+                );
+                return;
+            }
+            this.establishConnection(receiver, sender);
             return;
         }
 

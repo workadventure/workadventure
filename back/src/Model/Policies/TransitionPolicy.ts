@@ -14,23 +14,31 @@ export class TransitionPolicy implements ITransitionPolicy {
         private readonly maxUsersForWebRTC: number,
         private readonly livekitChecker: LivekitAvailabilityChecker,
         private readonly recordingManager: IRecordingManager,
+        private readonly switchOnCpuLimitation: boolean = true,
     ) {}
 
     /**
      * Determines if a transition should occur based on current state and user count.
      *
      * Business rules:
-     * - WebRTC -> LiveKit: when user count exceeds maxUsersForWebRTC AND LiveKit is available
-     * - LiveKit -> WebRTC: when user count drops to or below maxUsersForWebRTC
+     * - WebRTC -> LiveKit: when user count exceeds maxUsersForWebRTC AND LiveKit is available, or when a user
+     *   raised its `cpuLimited` flag in a bubble of more than two (in P2P that user runs one encoder per peer;
+     *   LiveKit brings it down to one, which is worth nothing for a pair)
+     * - LiveKit -> WebRTC: when user count drops to or below maxUsersForWebRTC, unless a recording is running or a
+     *   `cpuLimited` user is present. The two legs are asymmetric on purpose: once a bubble moved for a flag, only
+     *   that user leaving brings it back, so a third member coming and going never bounces it
      * - VoidState: no transitions
      *
      * @param currentType - The current communication type
      * @param userCount - The current number of users
+     * @param cpuLimitedUserCount - How many of them raised their `cpuLimited` flag
      * @returns true if a transition should occur
      */
-    shouldTransition(currentType: CommunicationType, userCount: number): boolean {
+    shouldTransition(currentType: CommunicationType, userCount: number, cpuLimitedUserCount = 0): boolean {
+        const cpuLimited = this.switchOnCpuLimitation && cpuLimitedUserCount > 0;
+
         if (currentType === CommunicationType.WEBRTC) {
-            const shouldSwitch = userCount > this.maxUsersForWebRTC;
+            const shouldSwitch = userCount > this.maxUsersForWebRTC || (cpuLimited && userCount > 2);
             if (shouldSwitch && !this.livekitChecker.isAvailable()) {
                 return false;
             }
@@ -40,7 +48,8 @@ export class TransitionPolicy implements ITransitionPolicy {
         if (
             currentType === CommunicationType.LIVEKIT &&
             userCount <= this.maxUsersForWebRTC &&
-            !this.recordingManager.isRecording
+            !this.recordingManager.isRecording &&
+            !cpuLimited
         ) {
             return true;
         }

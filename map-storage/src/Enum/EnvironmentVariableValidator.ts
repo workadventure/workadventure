@@ -181,6 +181,15 @@ export const EnvironmentVariables = z.object({
         )
         .transform(emptyStringToUndefined),
     MAP_STORAGE_API_TOKEN: z.string().describe("API token to access the map-storage REST API"),
+    DIRECT_UPLOAD_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .describe(
+            "Absolute URL of the /upload endpoint reached without going through a proxy that limits request body size (e.g. Cloudflare's 100MB limit). Advertised to the map uploader via GET /upload-endpoint. If empty, the uploader keeps using the URL it was configured with.",
+        )
+        .transform(emptyStringToUndefined),
     PUSHER_URL: AbsoluteOrRelativeUrl.describe("URL of the pusher service"),
     WHITELISTED_RESOURCE_URLS: z
         .string()

@@ -22,6 +22,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     mapEditorNotEnabled: "De kaarteditor is niet ingeschakeld op deze wereld.",
     backgroundProcessing: {
         failedToApply: "Achtergrondeffecten toepassen mislukt",
+        notSupportedOnThisBrowser: "Achtergrondeffecten worden niet ondersteund door deze browser",
     },
     popupBlocked: {
         title: "Popup geblokkeerd",
