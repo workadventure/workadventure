@@ -18,6 +18,7 @@ import type {
     EmbeddableWebsiteAnswer,
     EmoteEventMessage as EmoteEventMessageTsProto,
     EntityMessage as EntityMessageTsProto,
+    BanUserMessage,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
     FollowAbortMessage,
@@ -83,6 +84,7 @@ import type {
     VideoQualityReportMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
     ServerToClientMessage as ServerToClientMessageTsProto,
+    SendUserMessage,
 } from "@workadventure/messages";
 import {
     noUndefined,
@@ -129,7 +131,6 @@ import {
 import { requestedScreenSharingState } from "../Stores/ScreenSharingStore";
 import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
-import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
@@ -226,6 +227,11 @@ export class RoomConnection implements RoomConnection {
     public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
+
+    private readonly _sendUserMessageStream = new Subject<SendUserMessage>();
+    public readonly sendUserMessageStream = this._sendUserMessageStream.asObservable();
+    private readonly _banUserMessageStream = new Subject<BanUserMessage>();
+    public readonly banUserMessageStream = this._banUserMessageStream.asObservable();
 
     private readonly _websocketErrorStream = new Subject<Event>();
     public readonly websocketErrorStream = this._websocketErrorStream.asObservable();
@@ -662,11 +668,11 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "sendUserMessage": {
-                    adminMessagesService.onSendusermessage(message.sendUserMessage);
+                    this._sendUserMessageStream.next(message.sendUserMessage);
                     break;
                 }
                 case "banUserMessage": {
-                    adminMessagesService.onSendusermessage(message.banUserMessage);
+                    this._banUserMessageStream.next(message.banUserMessage);
                     break;
                 }
                 case "worldFullWarningMessage": {
@@ -2259,6 +2265,8 @@ export class RoomConnection implements RoomConnection {
         this._entityMessageStream.complete();
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
+        this._sendUserMessageStream.complete();
+        this._banUserMessageStream.complete();
         this._websocketErrorStream.complete();
         this._moveToPositionMessageStream.complete();
         this._meetingInvitationRequestReceivedStream.complete();
