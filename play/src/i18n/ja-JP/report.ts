@@ -24,18 +24,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "管理",
         reason: {
             label: "理由",
-            placeholder: "任意。このワールドの管理者向けに保存されます。",
+            placeholder: "任意。管理者向けに保存されます。",
         },
         adminOnly: "管理者専用",
         cancel: "キャンセル",
         hint: {
             block: "相手の映像と音声を受け取らない。自分だけに適用され、取り消せます。",
-            report: "このワールドの管理者に通報します。",
+            report: "管理者に通報します。",
             kick: "今すぐ切断します。再参加は可能です。",
             ban: "永久に切断します。",
         },
         kick: {
-            title: "マップから退出させる",
+            title: "退出させる",
             content: "{userName} は直ちに切断され、後で再参加できます。",
             submit: "退出させる",
         },
@@ -50,7 +50,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "退出されました",
         subtitle: "モデレーターによってこのマップから退出させられました",
-        details: "再参加するにはページを再読み込みしてください。",
     },
     banned: {
         title: "追放されました",

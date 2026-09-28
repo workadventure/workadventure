@@ -24,18 +24,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "إدارة",
         reason: {
             label: "السبب",
-            placeholder: "اختياري. يُحفظ لمديري هذا العالم.",
+            placeholder: "اختياري. يُحفظ للمديرين.",
         },
         adminOnly: "مخصص للمديرين",
         cancel: "إلغاء",
         hint: {
             block: "التوقف عن رؤيته وسماعه. لك وحدك، ويمكن التراجع عنه.",
-            report: "تنبيه مديري هذا العالم.",
+            report: "تنبيه المديرين.",
             kick: "فصله الآن. يمكنه العودة.",
             ban: "فصله نهائيًا.",
         },
         kick: {
-            title: "إخراج من الخريطة",
+            title: "إخراج",
             content: "يتم فصل {userName} فورًا، ويمكنه العودة لاحقًا.",
             submit: "إخراج",
         },
@@ -50,7 +50,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "تم إخراجك",
         subtitle: "قام مشرف بإخراجك من هذه الخريطة",
-        details: "أعد تحميل الصفحة للانضمام مجددًا.",
     },
     banned: {
         title: "محظور",

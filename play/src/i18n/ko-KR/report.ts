@@ -24,18 +24,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "중재",
         reason: {
             label: "사유",
-            placeholder: "선택 사항. 이 월드의 관리자를 위해 보관됩니다.",
+            placeholder: "선택 사항. 관리자를 위해 보관됩니다.",
         },
         adminOnly: "관리자 전용",
         cancel: "취소",
         hint: {
             block: "더 이상 보거나 듣지 않습니다. 나에게만 적용되며 되돌릴 수 있습니다.",
-            report: "이 월드의 관리자에게 알립니다.",
+            report: "관리자에게 알립니다.",
             kick: "지금 연결을 끊습니다. 다시 들어올 수 있습니다.",
             ban: "영구적으로 연결을 끊습니다.",
         },
         kick: {
-            title: "맵에서 내보내기",
+            title: "내보내기",
             content: "{userName}님의 연결이 즉시 끊기며, 나중에 다시 들어올 수 있습니다.",
             submit: "내보내기",
         },
@@ -50,7 +50,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "내보내짐",
         subtitle: "중재자가 이 맵에서 회원님을 내보냈습니다",
-        details: "다시 참여하려면 페이지를 새로고침하세요.",
     },
     banned: {
         title: "차단됨",

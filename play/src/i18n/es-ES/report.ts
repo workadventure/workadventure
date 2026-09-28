@@ -25,18 +25,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "Moderar",
         reason: {
             label: "Motivo",
-            placeholder: "Opcional. Se conserva para los administradores de este mundo.",
+            placeholder: "Opcional. Se conserva para los administradores.",
         },
         adminOnly: "Reservado a los administradores",
         cancel: "Cancelar",
         hint: {
             block: "Dejar de verlo y oírlo. Solo para ti, y reversible.",
-            report: "Avisar a los administradores de este mundo.",
+            report: "Avisar a los administradores.",
             kick: "Desconectarlo ahora. Podrá volver.",
             ban: "Desconectarlo definitivamente.",
         },
         kick: {
-            title: "Expulsar del mapa",
+            title: "Expulsar",
             content: "{userName} se desconecta inmediatamente, y podrá volver más tarde.",
             submit: "Expulsar",
         },
@@ -52,7 +52,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "EXPULSADO",
         subtitle: "Un moderador te ha expulsado de este mapa",
-        details: "Recarga la página para volver a entrar.",
     },
     banned: {
         title: "BANEADO",

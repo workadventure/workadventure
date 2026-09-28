@@ -25,18 +25,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "Modera",
         reason: {
             label: "Motivo",
-            placeholder: "Facoltativo. Conservato per gli amministratori di questo mondo.",
+            placeholder: "Facoltativo. Conservato per gli amministratori.",
         },
         adminOnly: "Riservato agli amministratori",
         cancel: "Annulla",
         hint: {
             block: "Smetti di vederlo e sentirlo. Solo per te, e reversibile.",
-            report: "Avvisa gli amministratori di questo mondo.",
+            report: "Avvisa gli amministratori.",
             kick: "Disconnettilo ora. Potrà tornare.",
             ban: "Disconnettilo definitivamente.",
         },
         kick: {
-            title: "Rimuovi dalla mappa",
+            title: "Rimuovi",
             content: "{userName} viene disconnesso subito, e potrà tornare più tardi.",
             submit: "Rimuovi",
         },
@@ -53,7 +53,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "RIMOSSO",
         subtitle: "Un moderatore ti ha rimosso da questa mappa",
-        details: "Ricarica la pagina per rientrare.",
     },
     banned: {
         title: "BANDITO",

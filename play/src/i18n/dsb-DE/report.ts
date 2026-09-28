@@ -24,18 +24,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "Moderěrowaś",
         reason: {
             label: "Pśicyna",
-            placeholder: "Opcionalne. Wobchowa se za administratorow togo swěta.",
+            placeholder: "Opcionalne. Wobchowa se za administratorow.",
         },
         adminOnly: "Jano za administratorow",
         cancel: "Pśetergnuś",
         hint: {
             block: "Wužywarja wěcej njewiźeś a njesłyšaś. Jano za tebje, a wótwołajobne.",
-            report: "Administratorow togo swěta informěrowaś.",
+            report: "Administratorow informěrowaś.",
             kick: "Něnto źěliś. Wužywaŕ móžo se wrośiś.",
             ban: "Na pśecej źěliś.",
         },
         kick: {
-            title: "Z kórty wótwónoźeś",
+            title: "Wótwónoźeś",
             content: "{userName} se ned źěli a móžo se pózdźej wrośiś.",
             submit: "Wótwónoźeś",
         },
@@ -51,7 +51,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "WÓTWÓNOŹONY",
         subtitle: "Moderator jo śi z teje kórty wótwónoźeł",
-        details: "Zacytaj bok znowego, aby zasej pśistupił.",
     },
     banned: {
         title: "WUZAMKNJONY",

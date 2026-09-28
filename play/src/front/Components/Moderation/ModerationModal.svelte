@@ -9,7 +9,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import { modals } from "@wa-modals";
-    import { IconAlertTriangle, IconArrowLeft, IconDoorExit, IconForbid, IconForbid2 } from "@wa-icons";
+    import { IconAlertTriangle, IconChevronLeft, IconDoorExit, IconForbid, IconForbid2 } from "@wa-icons";
 
     interface Props {
         isOpen: boolean;
@@ -72,21 +72,20 @@
     }
 </script>
 
-{#snippet forbidIcon()}<IconForbid />{/snippet}
-{#snippet alertIcon()}<IconAlertTriangle />{/snippet}
-{#snippet doorIcon()}<IconDoorExit />{/snippet}
-{#snippet banIcon()}<IconForbid2 />{/snippet}
-{#snippet backIcon()}<IconArrowLeft />{/snippet}
+{#snippet forbidIcon()}<IconForbid font-size="24" />{/snippet}
+{#snippet alertIcon()}<IconAlertTriangle font-size="24" />{/snippet}
+{#snippet doorIcon()}<IconDoorExit font-size="24" />{/snippet}
+{#snippet banIcon()}<IconForbid2 font-size="24" />{/snippet}
+{#snippet backIcon()}<IconChevronLeft font-size="20" />{/snippet}
 
-{#snippet actionRow(label: string, hint: string, icon: Snippet, onclick: () => void, testId: string, danger = false)}
+{#snippet actionRow(label: string, hint: string, icon: Snippet, onclick: () => void, testId: string)}
     <button
         type="button"
         data-testid={testId}
         {onclick}
         class="flex flex-row items-center gap-3 w-full p-3 rounded-lg text-left bg-white/5 hover:bg-white/15 transition-colors"
-        class:text-danger={danger}
     >
-        <span class="flex items-center opacity-80">{@render icon()}</span>
+        <span class="flex items-center">{@render icon()}</span>
         <span class="flex flex-col">
             <span class="font-semibold">{label}</span>
             <span class="text-xs opacity-60">{hint}</span>
@@ -96,18 +95,17 @@
 
 <Popup {isOpen} withAction={step !== undefined}>
     {#snippet title()}
-        <div class="flex flex-row items-center gap-2">
+        <div class="flex flex-row items-center gap-2 pb-2">
             {#if step !== undefined}
                 <Button
                     appearance="ghost"
                     square={true}
-                    size="sm"
                     icon={backIcon}
                     dataTestId="moderation-back"
                     onclick={() => (step = undefined)}
                 />
             {/if}
-            <h1 class="mb-0">
+            <h2 class="mb-0">
                 {#if step === "report"}
                     {$LL.report.title()}
                 {:else if step === "kick"}
@@ -117,7 +115,7 @@
                 {:else}
                     {$LL.report.moderate.title({ userName })}
                 {/if}
-            </h1>
+            </h2>
         </div>
     {/snippet}
 
@@ -159,7 +157,6 @@
                         banIcon,
                         () => pick("ban"),
                         "moderation-ban-action",
-                        true,
                     )}
                 {/if}
             {:else}
@@ -173,7 +170,10 @@
                     {/if}
                 </p>
                 {#if step === "ban"}
-                    <p class="mb-0 text-pop-red">{$LL.report.moderate.ban.confirmContent()}</p>
+                    <p class="mb-0 flex flex-row items-center gap-2 font-semibold">
+                        <IconAlertTriangle font-size="20" class="shrink-0" />
+                        {$LL.report.moderate.ban.confirmContent()}
+                    </p>
                 {/if}
                 <TextArea
                     label={step === "report" ? $LL.report.message.title() : $LL.report.moderate.reason.label()}
@@ -186,19 +186,22 @@
                     dataTestId="moderation-text"
                 />
                 {#if textIsEmpty}
-                    <p class="mb-0 text-pop-red">{$LL.report.message.empty()}</p>
+                    <p class="mb-0 flex flex-row items-center gap-2 font-semibold" role="alert">
+                        <IconAlertTriangle font-size="20" class="shrink-0" />
+                        {$LL.report.message.empty()}
+                    </p>
                 {/if}
             {/if}
         </div>
     {/snippet}
 
     {#snippet action()}
-        <Button class="flex-1" dataTestId="moderation-cancel" onclick={() => modals.close()}>
+        <Button class="flex-1" appearance="ghost" dataTestId="moderation-cancel" onclick={() => modals.close()}>
             {$LL.report.moderate.cancel()}
         </Button>
         <Button
             class="flex-1"
-            variant={step === "kick" ? "warning" : "danger"}
+            variant={step === "ban" ? "danger" : "secondary"}
             dataTestId="moderation-submit"
             onclick={submit}
         >

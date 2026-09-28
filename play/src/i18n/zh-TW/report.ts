@@ -24,18 +24,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "管理",
         reason: {
             label: "原因",
-            placeholder: "選填。保留給此世界的管理員。",
+            placeholder: "選填。保留給管理員。",
         },
         adminOnly: "僅限管理員",
         cancel: "取消",
         hint: {
             block: "不再看到和聽到對方。僅對你生效，可復原。",
-            report: "通知此世界的管理員。",
+            report: "通知管理員。",
             kick: "立即中斷連線。對方可以再次加入。",
             ban: "永久中斷連線。",
         },
         kick: {
-            title: "移出地圖",
+            title: "移出",
             content: "{userName} 將被立即中斷連線，之後可以再次加入。",
             submit: "移出",
         },
@@ -50,7 +50,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "已被移出",
         subtitle: "管理員已將你移出此地圖",
-        details: "重新整理頁面以重新加入。",
     },
     banned: {
         title: "已被封鎖",

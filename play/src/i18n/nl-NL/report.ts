@@ -25,18 +25,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "Modereren",
         reason: {
             label: "Reden",
-            placeholder: "Optioneel. Bewaard voor de beheerders van deze wereld.",
+            placeholder: "Optioneel. Bewaard voor de beheerders.",
         },
         adminOnly: "Alleen voor beheerders",
         cancel: "Annuleren",
         hint: {
             block: "Deze persoon niet meer zien en horen. Alleen voor jou, en omkeerbaar.",
-            report: "De beheerders van deze wereld waarschuwen.",
+            report: "De beheerders waarschuwen.",
             kick: "Nu verbinding verbreken. De persoon kan terugkomen.",
             ban: "Definitief verbinding verbreken.",
         },
         kick: {
-            title: "Van de kaart verwijderen",
+            title: "Verwijderen",
             content: "{userName} wordt meteen losgekoppeld en kan later terugkomen.",
             submit: "Verwijderen",
         },
@@ -53,7 +53,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "VERWIJDERD",
         subtitle: "Een moderator heeft je van deze kaart verwijderd",
-        details: "Herlaad de pagina om opnieuw deel te nemen.",
     },
     banned: {
         title: "VERBANNEN",

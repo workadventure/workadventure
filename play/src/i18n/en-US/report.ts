@@ -23,20 +23,20 @@ const report: BaseTranslation = {
         noSelect: "ERROR : There is no action selected.",
         reason: {
             label: "Reason",
-            placeholder: "Optional. Kept for the administrators of this world.",
+            placeholder: "Optional. Kept for the administrators.",
         },
         adminOnly: "Reserved to admins",
         cancel: "Cancel",
         hint: {
             block: "Stop seeing and hearing them. Only for you, and reversible.",
-            report: "Alert the administrators of this world.",
+            report: "Alert the administrators.",
             kick: "Disconnect them now. They may come back.",
             ban: "Disconnect them for good.",
         },
         kick: {
-            title: "Remove from the map",
+            title: "Kick",
             content: "{userName} is disconnected right away, and may come back later.",
-            submit: "Remove",
+            submit: "Kick",
         },
         ban: {
             title: "Ban from the world",
@@ -49,9 +49,8 @@ const report: BaseTranslation = {
         },
     },
     kicked: {
-        title: "REMOVED",
-        subtitle: "A moderator removed you from this map",
-        details: "Reload the page to join again.",
+        title: "KICKED",
+        subtitle: "A moderator kicked you from this map",
     },
     banned: {
         title: "BANNED",
