@@ -223,8 +223,8 @@ const roomManager = {
                             );
                             break;
                         }
-                        case "entityMessageFrontToPusher": {
-                            socketManager.handleEntityMessage(room, user, message.message.entityMessageFrontToPusher);
+                        case "entityMessage": {
+                            socketManager.handleEntityMessage(room, message.message.entityMessage);
                             break;
                         }
                         default: {

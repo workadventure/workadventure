@@ -1092,7 +1092,7 @@ export class IoSocketController {
                             case "itemEventMessage":
                             case "variableMessage":
                             case "setAreaPropertyVariableMessage":
-                            case "entityMessageFrontToPusher":
+                            case "entityMessage":
                             case "emotePromptMessage":
                             case "followRequestMessage":
                             case "followConfirmationMessage":
