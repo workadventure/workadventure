@@ -18,6 +18,7 @@ import {
     FilterType,
     type GroupUsersUpdateMessage,
     PositionMessage_Direction,
+    type SendUserMessage,
 } from "@workadventure/messages";
 import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
@@ -35,8 +36,9 @@ import {
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import Debug from "debug";
 import { asError } from "catch-unknown";
-import { showUserMessage } from "../../Administration/UserMessageManager";
 import { banMessageStore } from "../../Stores/TypeMessageStore/BanMessageStore";
+import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
+import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
@@ -58,6 +60,7 @@ import {
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
+    UPLOADER_URL,
     WOKA_SPEED,
 } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connection/Room";
@@ -2010,7 +2013,7 @@ export class GameScene extends DirtyScene {
                 // Subscribed before any await: the admin messages of the login come right after the connection.
                 // These streams are completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.sendUserMessageStream.subscribe(showUserMessage);
+                this.connection.sendUserMessageStream.subscribe((message) => this.showUserMessage(message));
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.banUserMessageStream.subscribe((message) => this.ejectedUser(message));
 
@@ -4495,6 +4498,21 @@ ${escapedMessage}
         );
 
         this.groups.set(groupPositionMessage.groupId, conversationBubble);
+    }
+
+    /**
+     * Displays a message sent by an admin: a text, an audio message or a ban warning.
+     */
+    private showUserMessage({ type, message, id }: SendUserMessage) {
+        const adminMessageId = id !== "" ? id : undefined;
+        if (type === "message") {
+            textMessageStore.addMessage(message, adminMessageId);
+            this.playSound("new-message", 0.2);
+        } else if (type === "audio") {
+            soundPlayingStore.playSound(UPLOADER_URL + message);
+        } else if (type === "ban") {
+            banMessageStore.addMessage(message, adminMessageId);
+        }
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
