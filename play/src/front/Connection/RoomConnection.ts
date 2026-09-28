@@ -1109,8 +1109,8 @@ export class RoomConnection implements RoomConnection {
     emitEntitySoundPlayed(entityId: string, soundUrl: string): void {
         this.send({
             message: {
-                $case: "entityMessageFrontToPusher",
-                entityMessageFrontToPusher: {
+                $case: "entityMessage",
+                entityMessage: {
                     entityId,
                     entityEvent: {
                         event: {

@@ -503,7 +503,7 @@ message ClientToServerMessage {
     VideoQualityReportMessage videoQualityReportMessage = 50;
     UserMessageReadMessage userMessageReadMessage = 51;
     AnalyticsEventReportMessage analyticsEventReportMessage = 52;
-    EntityMessageFrontToPusher entityMessageFrontToPusher = 53;
+    EntityMessage entityMessage = 53;
   }
 }
 
@@ -569,13 +569,7 @@ message EntityEvent {
   }
 }
 
-// An entity event sent by a player
-message EntityMessageFrontToPusher {
-  string entityId = 1;
-  EntityEvent entityEvent = 2;
-}
-
-// An entity event broadcast to the whole room
+// An entity event, sent by a player and broadcast to the whole room
 message EntityMessage {
   string entityId = 1;
   EntityEvent entityEvent = 2;
@@ -1651,7 +1645,7 @@ message PusherToBackMessage {
     MeetingInvitationRequestMessage meetingInvitationRequestMessage = 32;
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 33;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 34;
-    EntityMessageFrontToPusher entityMessageFrontToPusher = 35;
+    EntityMessage entityMessage = 35;
   }
 }
 
