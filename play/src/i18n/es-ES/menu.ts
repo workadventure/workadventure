@@ -162,9 +162,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "Usuarios baneados",
-        description: "Las personas baneadas de este mundo. Levantar un baneo les permite volver, con cualquier cuenta.",
+        description: "Las personas baneadas. Levantar un baneo les permite volver, con cualquier cuenta.",
         loading: "Cargando…",
-        empty: "Nadie está baneado de este mundo.",
+        empty: "Nadie está baneado.",
         error: "No se pudo cargar la lista de baneos. Inténtalo de nuevo.",
         name: "Usuario",
         reason: "Motivo",

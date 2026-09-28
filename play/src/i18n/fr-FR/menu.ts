@@ -162,10 +162,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "Utilisateurs bannis",
-        description:
-            "Les personnes bannies de ce monde. Lever un ban leur permet de revenir, avec n'importe quel compte.",
+        description: "Les personnes bannies. Lever un ban leur permet de revenir, avec n'importe quel compte.",
         loading: "Chargement…",
-        empty: "Personne n'est banni de ce monde.",
+        empty: "Personne n'est banni.",
         error: "La liste des bans n'a pas pu être chargée. Réessayez.",
         name: "Utilisateur",
         reason: "Motif",

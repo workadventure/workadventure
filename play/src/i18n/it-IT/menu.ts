@@ -162,10 +162,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "Utenti banditi",
-        description:
-            "Le persone bandite da questo mondo. Revocare un ban permette loro di tornare, con qualsiasi account.",
+        description: "Le persone bandite. Revocare un ban permette loro di tornare, con qualsiasi account.",
         loading: "Caricamento…",
-        empty: "Nessuno è bandito da questo mondo.",
+        empty: "Nessuno è bandito.",
         error: "Impossibile caricare l'elenco dei ban. Riprova.",
         name: "Utente",
         reason: "Motivo",

@@ -159,9 +159,9 @@ const menu: BaseTranslation = {
     },
     moderation: {
         title: "Banned users",
-        description: "The people banned from this world. Lifting a ban lets them join again, with any account.",
+        description: "The people banned. Lifting a ban lets them join again, with any account.",
         loading: "Loading…",
-        empty: "Nobody is banned from this world.",
+        empty: "Nobody is banned.",
         error: "The list of bans could not be loaded. Try again.",
         name: "User",
         reason: "Reason",

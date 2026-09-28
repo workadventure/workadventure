@@ -158,9 +158,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "차단된 사용자",
-        description: "이 월드에서 차단된 사람들입니다. 차단을 해제하면 어떤 계정으로든 다시 참여할 수 있습니다.",
+        description: "차단된 사람들입니다. 차단을 해제하면 어떤 계정으로든 다시 참여할 수 있습니다.",
         loading: "불러오는 중…",
-        empty: "이 월드에서 차단된 사용자가 없습니다.",
+        empty: "차단된 사용자가 없습니다.",
         error: "차단 목록을 불러오지 못했습니다. 다시 시도하세요.",
         name: "사용자",
         reason: "사유",

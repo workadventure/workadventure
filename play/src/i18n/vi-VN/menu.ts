@@ -161,9 +161,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "Người dùng bị cấm",
-        description: "Những người bị cấm khỏi thế giới này. Gỡ lệnh cấm cho phép họ quay lại với bất kỳ tài khoản nào.",
+        description: "Những người bị cấm. Gỡ lệnh cấm cho phép họ quay lại với bất kỳ tài khoản nào.",
         loading: "Đang tải…",
-        empty: "Không có ai bị cấm khỏi thế giới này.",
+        empty: "Không có ai bị cấm.",
         error: "Không thể tải danh sách cấm. Hãy thử lại.",
         name: "Người dùng",
         reason: "Lý do",
