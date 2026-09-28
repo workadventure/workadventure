@@ -157,9 +157,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "被封鎖的使用者",
-        description: "被此世界封鎖的人。解除封鎖後，他們可以用任何帳號再次加入。",
+        description: "被封鎖的人。解除封鎖後，他們可以用任何帳號再次加入。",
         loading: "載入中…",
-        empty: "此世界沒有被封鎖的使用者。",
+        empty: "沒有被封鎖的使用者。",
         error: "無法載入封鎖清單，請重試。",
         name: "使用者",
         reason: "原因",

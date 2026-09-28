@@ -5,7 +5,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import Button from "../UI/Button.svelte";
-    import { IconRefresh } from "@wa-icons";
+    import { IconAlertTriangle, IconRefresh } from "@wa-icons";
 
     let bannedUsers: BannedUser[] = $state([]);
     let loading = $state(true);
@@ -55,7 +55,7 @@
     <div class="submenu p-4">
         <div class="flex flex-row items-center justify-between gap-4 mb-4">
             <div>
-                <h2 class="text-white text-lg font-semibold mb-1">{$LL.menu.moderation.title()}</h2>
+                <h2 class="text-white text-lg font-semibold mb-0 pb-2">{$LL.menu.moderation.title()}</h2>
                 <p class="mb-0 text-sm opacity-70">{$LL.menu.moderation.description()}</p>
             </div>
             <Button
@@ -71,7 +71,10 @@
         </div>
 
         {#if failed}
-            <p class="text-pop-red">{$LL.menu.moderation.error()}</p>
+            <p class="flex flex-row items-center gap-2 font-semibold" role="alert">
+                <IconAlertTriangle font-size="20" class="shrink-0" />
+                {$LL.menu.moderation.error()}
+            </p>
         {/if}
 
         {#if loading}
@@ -91,7 +94,7 @@
                 </thead>
                 <tbody>
                     {#each bannedUsers as ban (ban.id)}
-                        <tr class="hover:bg-white/5 border-t-4 border-white">
+                        <tr class="hover:bg-white/5 border-t border-white/10">
                             <td class="p-3 text-white">
                                 {ban.name || ban.uuid || $LL.menu.moderation.unknownUser()}
                             </td>

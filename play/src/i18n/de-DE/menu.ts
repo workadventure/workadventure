@@ -162,10 +162,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "Verbannte Nutzer",
-        description:
-            "Die aus dieser Welt verbannten Personen. Wird ein Bann aufgehoben, können sie mit jedem Konto zurückkommen.",
+        description: "Die verbannten Personen. Wird ein Bann aufgehoben, können sie mit jedem Konto zurückkommen.",
         loading: "Wird geladen…",
-        empty: "Niemand ist aus dieser Welt verbannt.",
+        empty: "Niemand ist verbannt.",
         error: "Die Liste der Banne konnte nicht geladen werden. Versuche es erneut.",
         name: "Nutzer",
         reason: "Grund",

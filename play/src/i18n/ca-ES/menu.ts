@@ -162,10 +162,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "Usuaris bandejats",
-        description:
-            "Les persones bandejades d'aquest món. Aixecar un bandeig els permet tornar, amb qualsevol compte.",
+        description: "Les persones bandejades. Aixecar un bandeig els permet tornar, amb qualsevol compte.",
         loading: "Carregant…",
-        empty: "Ningú no està bandejat d'aquest món.",
+        empty: "Ningú no està bandejat.",
         error: "No s'ha pogut carregar la llista de bandeigs. Torna-ho a provar.",
         name: "Usuari",
         reason: "Motiu",

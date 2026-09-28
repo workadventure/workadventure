@@ -160,10 +160,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "wuzamknjeni wužiwarjo",
-        description:
-            "Ludźo, kotřiž su z tutoho swěta wuzamknjeni. Zběhnjenje wuzamknjenja jim dowola, so z kóždym kontom wróćić.",
+        description: "Ludźo, kotřiž su wuzamknjeni. Zběhnjenje wuzamknjenja jim dowola, so z kóždym kontom wróćić.",
         loading: "začituje so…",
-        empty: "nichtó njeje z tutoho swěta wuzamknjeny.",
+        empty: "nichtó njeje wuzamknjeny.",
         error: "lisćina wuzamknjenjow njeda so začitać. Spytaj hišće raz.",
         name: "wužiwar",
         reason: "přičina",

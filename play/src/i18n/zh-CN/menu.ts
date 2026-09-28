@@ -157,9 +157,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "被封禁的用户",
-        description: "被此世界封禁的人。解除封禁后，他们可以用任何账号再次加入。",
+        description: "被封禁的人。解除封禁后，他们可以用任何账号再次加入。",
         loading: "加载中…",
-        empty: "此世界没有被封禁的用户。",
+        empty: "没有被封禁的用户。",
         error: "无法加载封禁列表，请重试。",
         name: "用户",
         reason: "原因",

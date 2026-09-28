@@ -161,10 +161,9 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     moderation: {
         title: "Verbannen gebruikers",
-        description:
-            "De mensen die uit deze wereld verbannen zijn. Een ban opheffen laat ze terugkomen, met elk account.",
+        description: "De mensen die verbannen zijn. Een ban opheffen laat ze terugkomen, met elk account.",
         loading: "Laden…",
-        empty: "Niemand is verbannen uit deze wereld.",
+        empty: "Niemand is verbannen.",
         error: "De lijst met bans kon niet worden geladen. Probeer het opnieuw.",
         name: "Gebruiker",
         reason: "Reden",

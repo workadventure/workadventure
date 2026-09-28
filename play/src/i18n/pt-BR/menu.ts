@@ -161,9 +161,9 @@ const menu: BaseTranslation = {
     },
     moderation: {
         title: "Usuários banidos",
-        description: "As pessoas banidas deste mundo. Remover um banimento permite que voltem, com qualquer conta.",
+        description: "As pessoas banidas. Remover um banimento permite que voltem, com qualquer conta.",
         loading: "Carregando…",
-        empty: "Ninguém está banido deste mundo.",
+        empty: "Ninguém está banido.",
         error: "Não foi possível carregar a lista de banimentos. Tente novamente.",
         name: "Usuário",
         reason: "Motivo",
