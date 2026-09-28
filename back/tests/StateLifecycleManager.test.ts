@@ -63,6 +63,18 @@ describe("StateLifecycleManager", () => {
     });
 
     describe("transitionTo", () => {
+        it("should call onTransition once the new state is current", async () => {
+            const livekitState = createState(CommunicationType.LIVEKIT);
+            let seen: string | undefined;
+            manager.onTransition = () => {
+                seen = manager.getCurrentState().communicationType;
+            };
+
+            await manager.transitionTo(livekitState);
+
+            expect(seen).toBe(CommunicationType.LIVEKIT);
+        });
+
         it("should set new state as current when transitioning", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
 

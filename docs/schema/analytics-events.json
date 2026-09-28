@@ -3420,6 +3420,16 @@
           "type": "number",
           "description": "How many distinct people were on air at any point. In a bubble or an area everyone is, so it equals participantCount there; it only says something under a broadcast kind. Absent on the rows a client opens."
         },
+        "webrtcSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Seconds carried peer-to-peer over WebRTC. With livekitSeconds, adds up to durationSeconds unless the space had no media at all. Filled by the back only."
+        },
+        "livekitSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Seconds carried by the LiveKit SFU, which the space switches to past the WebRTC size limit or to record. Filled by the back only."
+        },
         "startedAt": {
           "type": "string",
           "format": "date-time",
@@ -3545,6 +3555,16 @@
           "type": "number",
           "minimum": 0,
           "description": "This person's own time on air, summed over their stints. Equals durationSeconds in a bubble or an area; zero for a listener. Never to be summed into conversation time: broadcasting is not collaborating, and neither is listening."
+        },
+        "webrtcSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Seconds carried peer-to-peer over WebRTC. With livekitSeconds, adds up to durationSeconds unless the space had no media at all. Filled by the back only."
+        },
+        "livekitSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Seconds carried by the LiveKit SFU, which the space switches to past the WebRTC size limit or to record. Filled by the back only."
         },
         "startedAt": {
           "type": "string",

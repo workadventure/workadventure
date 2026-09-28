@@ -153,7 +153,16 @@ export class CommunicationManager implements ICommunicationManager {
 
         this._sessionAnalytics =
             dependencies.sessionAnalytics ??
-            new SessionAnalytics(this.space.getSpaceName(), this.space.world, () => this.sessionKind());
+            new SessionAnalytics(
+                this.space.getSpaceName(),
+                this.space.world,
+                () => this.sessionKind(),
+                undefined,
+                undefined,
+                () => this.lifecycleManager.getCurrentState().communicationType,
+            );
+        // Every transition goes through the lifecycle manager, the recording's included.
+        this.lifecycleManager.onTransition = () => this._sessionAnalytics.transportChanged();
 
         // Initialize transition policy with LiveKit availability checker
         this.policy =
