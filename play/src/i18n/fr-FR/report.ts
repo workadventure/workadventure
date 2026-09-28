@@ -24,18 +24,18 @@ const report: DeepPartial<Translation["report"]> = {
         noSelect: "ERREUR : Il n'y a pas d'action sélectionnée.",
         reason: {
             label: "Motif",
-            placeholder: "Facultatif. Conservé pour les administrateurs de ce monde.",
+            placeholder: "Facultatif. Conservé pour les administrateurs.",
         },
         adminOnly: "Réservé aux admins",
         cancel: "Annuler",
         hint: {
             block: "Ne plus le voir ni l'entendre. Pour vous seul, et réversible.",
-            report: "Alerter les administrateurs de ce monde.",
+            report: "Alerter les administrateurs.",
             kick: "Le déconnecter maintenant. Il pourra revenir.",
             ban: "Le déconnecter définitivement.",
         },
         kick: {
-            title: "Exclure de la map",
+            title: "Exclure",
             content: "{userName} est déconnecté immédiatement, et pourra revenir plus tard.",
             submit: "Exclure",
         },
@@ -51,7 +51,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "EXCLU",
         subtitle: "Un modérateur vous a exclu de cette map",
-        details: "Rechargez la page pour revenir.",
     },
     banned: {
         title: "BANNI",

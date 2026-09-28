@@ -24,18 +24,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "Kiểm duyệt",
         reason: {
             label: "Lý do",
-            placeholder: "Không bắt buộc. Được lưu cho quản trị viên của thế giới này.",
+            placeholder: "Không bắt buộc. Được lưu cho quản trị viên.",
         },
         adminOnly: "Dành riêng cho quản trị viên",
         cancel: "Hủy",
         hint: {
             block: "Không nhìn và nghe người này nữa. Chỉ áp dụng cho bạn, và có thể hoàn tác.",
-            report: "Báo cho quản trị viên của thế giới này.",
+            report: "Báo cho quản trị viên.",
             kick: "Ngắt kết nối ngay. Họ có thể quay lại.",
             ban: "Ngắt kết nối vĩnh viễn.",
         },
         kick: {
-            title: "Đưa ra khỏi bản đồ",
+            title: "Đưa ra",
             content: "{userName} bị ngắt kết nối ngay lập tức, và có thể quay lại sau.",
             submit: "Đưa ra",
         },
@@ -51,7 +51,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "BỊ ĐƯA RA",
         subtitle: "Một người kiểm duyệt đã đưa bạn ra khỏi bản đồ này",
-        details: "Tải lại trang để tham gia lại.",
     },
     banned: {
         title: "BỊ CẤM",

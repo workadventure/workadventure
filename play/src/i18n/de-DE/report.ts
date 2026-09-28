@@ -24,18 +24,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "Moderieren",
         reason: {
             label: "Grund",
-            placeholder: "Optional. Wird für die Administratoren dieser Welt gespeichert.",
+            placeholder: "Optional. Wird für die Administratoren gespeichert.",
         },
         adminOnly: "Nur für Admins",
         cancel: "Abbrechen",
         hint: {
             block: "Diese Person nicht mehr sehen und hören. Nur für dich, und umkehrbar.",
-            report: "Die Administratoren dieser Welt benachrichtigen.",
+            report: "Die Administratoren benachrichtigen.",
             kick: "Jetzt trennen. Die Person kann zurückkommen.",
             ban: "Endgültig trennen.",
         },
         kick: {
-            title: "Von der Karte entfernen",
+            title: "Entfernen",
             content: "{userName} wird sofort getrennt und kann später zurückkommen.",
             submit: "Entfernen",
         },
@@ -52,7 +52,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "ENTFERNT",
         subtitle: "Ein Moderator hat dich von dieser Karte entfernt",
-        details: "Lade die Seite neu, um wieder beizutreten.",
     },
     banned: {
         title: "VERBANNT",

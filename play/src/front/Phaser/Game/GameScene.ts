@@ -4532,10 +4532,13 @@ ${escapedMessage}
                 code: kind === "banned" ? "USER_BANNED" : "USER_KICKED",
                 title: texts.title(),
                 subtitle: texts.subtitle(),
-                details:
-                    reason.trim() === ""
-                        ? texts.details()
-                        : `${get(LL).report.reasonGiven({ reason })} ${texts.details()}`,
+                // One line each: the reason, then (for a ban only) how to reach the admins.
+                details: [
+                    reason.trim() === "" ? "" : get(LL).report.reasonGiven({ reason }),
+                    kind === "banned" ? get(LL).report.banned.details() : "",
+                ]
+                    .filter((line) => line !== "")
+                    .join("\n"),
             }),
         );
 

@@ -24,18 +24,18 @@ const report: DeepPartial<Translation["report"]> = {
         action: "moderěrować",
         reason: {
             label: "přičina",
-            placeholder: "opcionalne. Wobchowa so za administratorow tutoho swěta.",
+            placeholder: "opcionalne. Wobchowa so za administratorow.",
         },
         adminOnly: "jenož za administratorow",
         cancel: "přetorhnyć",
         hint: {
             block: "wužiwarja wjace njewidźeć a njesłyšeć. Jenož za tebje, a wotwołajomne.",
-            report: "administratorow tutoho swěta informować.",
+            report: "administratorow informować.",
             kick: "nětko dźělić. Wužiwar móže so wróćić.",
             ban: "na přeco dźělić.",
         },
         kick: {
-            title: "z karty wotstronić",
+            title: "wotstronić",
             content: "{userName} so hnydom dźěli a móže so pozdźišo wróćić.",
             submit: "wotstronić",
         },
@@ -50,7 +50,6 @@ const report: DeepPartial<Translation["report"]> = {
     kicked: {
         title: "WOTSTRONJENY",
         subtitle: "Moderator je će z tuteje karty wotstronił",
-        details: "začituj stronu znowa, zo by zaso přistupił.",
     },
     banned: {
         title: "WUZAMKNJENY",

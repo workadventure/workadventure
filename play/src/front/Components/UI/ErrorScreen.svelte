@@ -71,6 +71,7 @@
                     <img
                         src={errorScreen?.imageLogo ?? logoErrorSrc}
                         alt="Logo error"
+                        class="mx-auto"
                         style="max-height:25vh; max-width:80%;"
                         draggable="false"
                     />
@@ -90,7 +91,7 @@
                     Code : {$errorScreenStore.code}
                 </p>{/if}
             <div class="details flex flex-row items-center justify-center content-center gap-2">
-                <span>{detailsStylized}</span>
+                <span class="whitespace-pre-line">{detailsStylized}</span>
                 {#if $errorScreenStore.type === "retry"}
                     <div class="loading"></div>
                 {:else if $errorScreenStore.type === "reconnecting"}
