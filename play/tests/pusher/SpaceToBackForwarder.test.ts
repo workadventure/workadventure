@@ -6,7 +6,7 @@ import type { Space } from "../../src/pusher/models/Space";
 import type { Query } from "../../src/pusher/models/SpaceQuery";
 import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
 import type { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
-import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
+import type { BackSpaceConnection, SocketData } from "../../src/pusher/models/Websocket/SocketData";
 import { eventProcessor } from "../../src/pusher/models/eventProcessorInit";
 import type { PusherWebSocket } from "../../src/pusher/services/PusherWebSocket";
 
@@ -842,6 +842,39 @@ describe("SpaceToBackForwarder", () => {
                 expect.any(Function),
             );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
+        });
+    });
+
+    describe("sendPrivateEvent", () => {
+        const kickOffUser = (tags: string[]) => {
+            const mockSpace = {
+                name: "test",
+                users: new Map([["foo_1", { spaceUserId: "foo_1", tags }]]),
+            } as unknown as Space;
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
+            const forwardSpy = vi.spyOn(spaceForwarder, "forwardMessageToSpaceBack").mockImplementation(() => {});
+            const send = () =>
+                spaceForwarder.sendPrivateEvent(
+                    {
+                        spaceName: "test",
+                        receiverUserId: "foo_2",
+                        spaceEvent: { event: { $case: "kickOffUser", kickOffUser: {} } },
+                    },
+                    { spaceUserId: "foo_1" } as SocketData,
+                );
+            return { send, forwardSpy };
+        };
+
+        it("should drop kickOffUser sent by a non-admin", () => {
+            const { send, forwardSpy } = kickOffUser([]);
+            expect(send).toThrow();
+            expect(forwardSpy).not.toHaveBeenCalled();
+        });
+
+        it("should forward kickOffUser sent by an admin", () => {
+            const { send, forwardSpy } = kickOffUser(["admin"]);
+            send();
+            expect(forwardSpy).toHaveBeenCalledOnce();
         });
     });
 });
