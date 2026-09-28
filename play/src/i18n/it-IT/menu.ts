@@ -66,6 +66,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             voiceIsolation: "Isolamento della voce",
             voiceIsolationDescription:
                 "Usa l'isolamento della voce del browser e del sistema operativo quando disponibile.",
+            noiseSuppressionEngine: "Motore di riduzione del rumore",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (nuovo, voce a banda piena)",
+            noiseSuppressionEngineDtln: "DTLN (motore precedente)",
         },
         language: {
             title: "Lingua",

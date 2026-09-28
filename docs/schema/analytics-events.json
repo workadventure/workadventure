@@ -845,6 +845,28 @@
       }
     },
     {
+      "title": "media.noise_suppression.failed",
+      "properties": {
+        "eventName": {
+          "const": "media.noise_suppression.failed"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.noise_suppression.failed"
+        }
+      }
+    },
+    {
+      "title": "media.noise_suppression.started",
+      "properties": {
+        "eventName": {
+          "const": "media.noise_suppression.started"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.noise_suppression.started"
+        }
+      }
+    },
+    {
       "title": "media.permission_denied",
       "properties": {
         "eventName": {
@@ -1626,6 +1648,17 @@
       }
     },
     {
+      "title": "settings.noise_suppression.changed",
+      "properties": {
+        "eventName": {
+          "const": "settings.noise_suppression.changed"
+        },
+        "properties": {
+          "$ref": "#/$defs/settings.noise_suppression.changed"
+        }
+      }
+    },
+    {
       "title": "settings.notification.changed",
       "properties": {
         "eventName": {
@@ -1905,6 +1938,8 @@
               "media.livekit_switch.requested",
               "media.microphone.dwell",
               "media.microphone.toggled",
+              "media.noise_suppression.failed",
+              "media.noise_suppression.started",
               "media.permission_denied",
               "media.speech.dwell",
               "media.turn_test.failed",
@@ -1976,6 +2011,7 @@
               "settings.fullscreen.changed",
               "settings.microphone.changed",
               "settings.microphone.selected",
+              "settings.noise_suppression.changed",
               "settings.notification.changed",
               "settings.opened",
               "settings.picture_in_picture.changed",
@@ -3063,6 +3099,61 @@
       "additionalProperties": true,
       "description": "The user turned their microphone on or off.",
       "title": "media.microphone.toggled"
+    },
+    "media.noise_suppression.failed": {
+      "type": "object",
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": [
+            "deepfilternet",
+            "dtln"
+          ],
+          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "error",
+            "unsupported"
+          ],
+          "description": "unsupported: the browser lacks AudioWorklet. error: loading, the worklet or the AudioContext failed."
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "The failure message, truncated."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.noise_suppression.failed",
+      "description": "WorkAdventure noise suppression gave up; the microphone falls back to the browser's own processing."
+    },
+    "media.noise_suppression.started": {
+      "type": "object",
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": [
+            "deepfilternet",
+            "dtln"
+          ],
+          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+        },
+        "initMs": {
+          "type": "number",
+          "minimum": 0,
+          "description": "From the start of initialization to the worklet reporting ready, model download and wasm compilation included."
+        },
+        "hardwareConcurrency": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "navigator.hardwareConcurrency, 0 when the browser hides it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.noise_suppression.started",
+      "description": "WorkAdventure noise suppression is processing the microphone. Read against media.noise_suppression.failed for each engine's failure rate, the figure that decides whether DeepFilterNet3 can become the default."
     },
     "media.permission_denied": {
       "type": "object",
@@ -4162,6 +4253,34 @@
       "additionalProperties": true,
       "description": "The user opened the microphone picker.",
       "title": "settings.microphone.selected"
+    },
+    "settings.noise_suppression.changed": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether advanced noise reduction is on after the change."
+        },
+        "provider": {
+          "type": "string",
+          "enum": [
+            "workadventure",
+            "voiceIsolation"
+          ],
+          "description": "workadventure: our own AudioWorklet model. voiceIsolation: the browser and OS voice isolation."
+        },
+        "engine": {
+          "type": "string",
+          "enum": [
+            "deepfilternet",
+            "dtln"
+          ],
+          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+        }
+      },
+      "additionalProperties": true,
+      "title": "settings.noise_suppression.changed",
+      "description": "The user changed advanced noise reduction: the switch, the mode or the engine. Carries the whole resulting setting, so the latest row per user is their current choice."
     },
     "settings.notification.changed": {
       "type": "object",

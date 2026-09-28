@@ -65,6 +65,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             voiceIsolation: "Izolacija głosa",
             voiceIsolationDescription:
                 "Wužywajśo izolaciju głosa wobglědowaka a źěłowego systema, jolic jo k dispoziciji.",
+            noiseSuppressionEngine: "Mašina za pózdatkowanje šuma",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (nowy, głos połnego pasma)",
+            noiseSuppressionEngineDtln: "DTLN (pjerwjejšna mašina)",
         },
         language: {
             title: "Rěc",

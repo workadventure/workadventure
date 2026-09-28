@@ -386,6 +386,18 @@ const mediaDeviceKind = z
   .enum(["camera", "microphone", "camera_microphone"])
   .describe("Which device the user was asked for.");
 
+const noiseSuppressionProviderField = z
+  .enum(["workadventure", "voiceIsolation"])
+  .describe(
+    "workadventure: our own AudioWorklet model. voiceIsolation: the browser and OS voice isolation.",
+  );
+
+const noiseSuppressionEngineField = z
+  .enum(["deepfilternet", "dtln"])
+  .describe(
+    "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz.",
+  );
+
 const feedbackSourceField = z
   .enum(["sentry", "external_report_url"])
   .describe("Which feedback channel was used.");
@@ -1246,6 +1258,53 @@ export const ANALYTICS_EVENTS = {
         .describe("The background effect selected, e.g. blur."),
     }),
     description: "The user changed their video background.",
+  }),
+
+  "settings.noise_suppression.changed": event({
+    properties: z.object({
+      enabled: z
+        .boolean()
+        .describe("Whether advanced noise reduction is on after the change."),
+      provider: noiseSuppressionProviderField,
+      engine: noiseSuppressionEngineField,
+    }),
+    description:
+      "The user changed advanced noise reduction: the switch, the mode or the engine. Carries the whole resulting setting, so the latest row per user is their current choice.",
+  }),
+
+  "media.noise_suppression.started": event({
+    properties: z.object({
+      engine: noiseSuppressionEngineField,
+      initMs: z
+        .number()
+        .nonnegative()
+        .describe(
+          "From the start of initialization to the worklet reporting ready, model download and wasm compilation included.",
+        ),
+      hardwareConcurrency: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "navigator.hardwareConcurrency, 0 when the browser hides it.",
+        ),
+    }),
+    description:
+      "WorkAdventure noise suppression is processing the microphone. Read against media.noise_suppression.failed for each engine's failure rate, the figure that decides whether DeepFilterNet3 can become the default.",
+  }),
+
+  "media.noise_suppression.failed": event({
+    properties: z.object({
+      engine: noiseSuppressionEngineField,
+      status: z
+        .enum(["error", "unsupported"])
+        .describe(
+          "unsupported: the browser lacks AudioWorklet. error: loading, the worklet or the AudioContext failed.",
+        ),
+      reason: z.string().max(200).describe("The failure message, truncated."),
+    }),
+    description:
+      "WorkAdventure noise suppression gave up; the microphone falls back to the browser's own processing.",
   }),
 
   "cowebsite.opened": event({
