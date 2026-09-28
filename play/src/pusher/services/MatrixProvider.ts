@@ -340,6 +340,10 @@ class MatrixProvider {
     }
 
     private async ensureAdminRateLimitOverridden(): Promise<void> {
+        // Matrix is not configured (e.g. Docker-free setup without Synapse): nothing to do.
+        if (!MATRIX_API_URI) {
+            return;
+        }
         if (this.adminRateLimitOverridden) {
             return;
         }

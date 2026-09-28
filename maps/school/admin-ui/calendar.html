@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — التقويم</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-wallcal">
+    <div class="head" id="monthTitle">🗓️ التقويم المدرسي</div>
+    <div class="content">
+      <div class="cal-grid" id="cal"></div>
+    </div>
+  </div>
+  <div class="hint">💡 <b>التقويم المعلّق على جدار المكتب</b> — المسيرات والفعاليات ملوّنة باللون السماوي. Esc للعودة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("التقويم المدرسي");
+const today = new Date();
+const y = today.getFullYear(), m = today.getMonth();
+const monthNames = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+document.getElementById("monthTitle").textContent = `🗓️ ${monthNames[m]} ${y} — NG Academy`;
+const events = {
+  4: ["مسيرة الأنشطة"],
+  8: ["اجتماع أولياء الأمور"],
+  12: ["مجلس التدبير"],
+  15: ["اختبارات الفصل"],
+  21: ["رحلة المعرفة"],
+  27: ["حفل التميز"],
+};
+const first = new Date(y, m, 1).getDay(); // 0=Sunday
+const days = new Date(y, m + 1, 0).getDate();
+const dows = ["أحد","إثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت"];
+let html = dows.map(d => `<div class="dow">${d}</div>`).join("");
+for (let i = 0; i < first; i++) html += `<div class="day dim"></div>`;
+for (let d = 1; d <= days; d++) {
+  const ev = (events[d] || []).map(e => `<span class="ev">${e}</span>`).join("");
+  html += `<div class="day ${d === today.getDate() ? "today" : ""}"><b>${d}</b>${ev}</div>`;
+}
+document.getElementById("cal").innerHTML = html;
+</script>
+</body>
+</html>

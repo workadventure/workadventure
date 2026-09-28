@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — نظرة على المدرسة</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-monitor">
+    <div class="content">
+      <div class="kpis">
+        <div class="kpi"><b>٢٢٠</b><span>طالبًا وطالبة</span></div>
+        <div class="kpi"><b>٨</b><span>صفوف</span></div>
+        <div class="kpi"><b>٢٤</b><span>إطارًا تربويًا</span></div>
+        <div class="kpi"><b>٩٦٪</b><span>الحضور الأسبوعي</span></div>
+      </div>
+      <h3 style="color:var(--navy);margin-bottom:8px">📊 مؤشرات هذا الشهر</h3>
+      <div class="rowlist" id="stats"></div>
+      <h3 style="color:var(--navy);margin:14px 0 8px">🌟 أنشطة ومبادرات</h3>
+      <div class="rowlist">
+        <div class="rowitem"><b>نادي القراءة</b><span class="tag ok">مستمر</span></div>
+        <div class="rowitem"><b>مسيرة الأنشطة الرياضية</b><span class="tag info">الخميس</span></div>
+        <div class="rowitem"><b>مبادرة «شجرة المعرفة»</b><span class="tag ok">مستمرة</span></div>
+        <div class="rowitem"><b>حفل التميز</b><span class="tag late">قيد التحضير</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="hint">💡 هذه <b>شاشة «نظرة على المدرسة»</b> في زاوية المكتب. Esc للعودة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("نظرة على المدرسة");
+const stats = [["نسبة الحضور", 96], ["انتظام الأنشطة", 88], ["إعارة المكتبة", 74], ["رضا أولياء الأمور", 91]];
+document.getElementById("stats").innerHTML = stats.map(s => `
+  <div class="rowitem"><b>${s[0]}</b>
+    <div style="flex:1;margin:0 12px"><div class="bar"><i style="width:${s[1]}%"></i></div></div>
+    <span>${s[1]}٪</span></div>`).join("");
+</script>
+</body>
+</html>

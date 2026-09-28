@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — جداول الحصص</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-monitor">
+    <div class="content">
+      <h3 style="color:var(--navy);margin-bottom:10px">⏱️ جدول الحصص الأسبوعي — الصف الرابع</h3>
+      <div class="tt-grid" id="tt"></div>
+      <p class="muted" style="margin-top:10px">نفس الشكل مطبوع على <b>الجداول المتقاطعة بالجدول الملوّن</b> فوق مكتب المدير.</p>
+    </div>
+  </div>
+  <div class="hint">💡 مفتوح من <b>جداول الحصص الملوّنة</b> على المكتب. Esc للعودة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("جداول الحصص");
+const days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+const slots = ["٨:٠٠", "٩:٠٠", "١٠:٠٠", "١١:٠٠"];
+const plan = [
+  [["رياضيات","أ. خالد"],["لغة عربية","أ. سارة"],["علوم","أ. منى"],["رياضيات","أ. خالد"],["فنون","أ. ليلى"]],
+  [["لغة عربية","أ. سارة"],["رياضيات","أ. خالد"],["تربية إسلامية","أ. كريم"],["حاسوب","أ. يوسف"],["علوم","أ. منى"]],
+  [["علوم","أ. منى"],["حاسوب","أ. يوسف"],["رياضيات","أ. خالد"],["لغة عربية","أ. سارة"],["رياضة","أ. كريم"]],
+  [["نشاط","أ. ليلى"],["لغة عربية","أ. سارة"],["حاسوب","أ. يوسف"],["مكتبة","أ. ليلى"],["اجتماع مجلس","—"]],
+];
+let html = `<div class="h">الحصة</div>` + days.map(d => `<div class="h">${d}</div>`).join("");
+slots.forEach((s, si) => {
+  html += `<div class="t">${s}</div>`;
+  days.forEach((_, di) => {
+    const c = plan[si][di];
+    html += `<div class="slot"><b>${c[0]}</b><span class="muted">${c[1]}</span></div>`;
+  });
+});
+document.getElementById("tt").innerHTML = html;
+</script>
+</body>
+</html>

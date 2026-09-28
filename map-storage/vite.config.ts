@@ -11,11 +11,17 @@ export default defineConfig((/*{ mode }*/) => {
         base: `${process.env.PATH_PREFIX || ""}/ui/`,
         server: {
             host: "0.0.0.0",
-            port: 8080,
-            hmr: {
-                // workaround for development in docker
-                clientPort: 80,
-            },
+            // Overridable for Docker-free setups where several dev servers share one host
+            // (see ../no-docker/). Default keeps the Docker behaviour.
+            port: Number(process.env.MAP_STORAGE_UI_PORT) || 8080,
+            ...(process.env.WA_DEV_ALLOWED_HOSTS === "true" ? { allowedHosts: true } : {}),
+            hmr:
+                process.env.WA_DEV_HMR === "false"
+                    ? false
+                    : {
+                          // workaround for development in docker
+                          clientPort: Number(process.env.WA_DEV_HMR_CLIENT_PORT) || 80,
+                      },
             /*watch: {
                 ignored: ["./src/pusher"],
             },*/

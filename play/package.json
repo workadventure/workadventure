@@ -182,7 +182,7 @@
     "typesafe-i18n": "^5.27.1",
     "unplugin-icons": "^23.0.1",
     "uuid": "^14.0.0",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.67.0",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0",
     "zod": "^3.25.76"
   }
 }

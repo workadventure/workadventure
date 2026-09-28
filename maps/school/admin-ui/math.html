@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="../assets/logo-128.png">
+<title>NG Academy — فصل الحساب الذهني</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="shell">
+  <div class="frame frame-math">
+    <div class="topbar">
+      <span>🧠 تحدي العقل</span>
+      <span class="muted" style="color:#d8ecfb; font-size:12px">فكّر بسرعة • بدقة • بلا أداة</span>
+    </div>
+    <div class="content" id="body"></div>
+  </div>
+  <div class="hint">💡 كل طاولة بسوروبان، والشاشة تعرض التحدي للمجموعة. <b>الرقم في رأسك أسرع من الأداة.</b> Esc للعودة.</div>
+</div>
+<script src="shared.js"></script>
+<script>
+NGA.shell("فصل الحساب الذهني");
+const params = new URLSearchParams(location.search);
+const tool = params.get("tool") || "challenges";
+const body = document.getElementById("body");
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+/* ---------- generators ---------- */
+function gen(type) {
+  if (type === "mul") { const a = R(3, 12), b = R(3, 12);
+    return { q: `${a} × ${b} = ؟`, a: a * b }; }
+  if (type === "add") { const a = R(12, 48), b = R(12, 40);
+    return { q: `${a} + ${b} = ؟`, a: a + b }; }
+  if (type === "sub") { const a = R(60, 120), b = R(12, a - 20);
+    return { q: `${a} − ${b} = ؟`, a: a - b }; }
+  if (type === "seq") { let s = R(2, 9); const v = [s]; let d = R(2, 5);
+    for (let i = 0; i < 4; i++) { s += d; v.push(s); d++; }
+    return { q: `ما التالي؟  ${v.join("،  ")},  ؟`, a: v[4] }; }
+  if (type === "memory") { const start = R(3, 12); let x = start; const steps = [];
+    for (let i = 0; i < 3; i++) { const op = R(0, 1) ? "+" : "−", n = R(2, 6);
+      x = op === "+" ? x + n : Math.max(1, x - n); steps.push(`${op} ${n}`); }
+    return { q: `في رأسك: ${start}، ثم ${steps.join("، ثم ")} = ؟`, a: x }; }
+  // puzzle
+  const pool = [
+    { q: "رقم زوجي، ومجموع خاناته 9، وهو أكبر من 30. ما هو؟", a: "مثال: 36 (أي رقم زوجي مجموع خاناته 9)" },
+    { q: "ضاعف الرقم ثم أضف 5، فحصلت على 21. ما الرقم؟", a: "8 (لأن (21−5)÷2 = 8)" },
+    { q: "اكتب 30 بأربع مرات: ٣ ٣ ٣ ٣ … كيف؟", a: "33 − 3 = 30" },
+    { q: "أي رقم إذا ضربته في نفسه ثم أضفت 16 يصبح 65؟", a: "7 (لأن 49 + 16 = 65)" },
+  ];
+  return pool[R(0, pool.length - 1)];
+}
+const TYPES = [["mul", "🔢 جدول الضرب"], ["add", "➕ جمع سريع"], ["sub", "➖ طرح سريع"],
+               ["seq", "🌀 تسلسل أرقام"], ["memory", "🧠 ذاكرة"], ["puzzle", "🧩 لغز رقمي"]];
+
+/* ---------- challenges wall ---------- */
+function challenges() {
+  let type = "mul", cur = null, shown = false, score = 0, sprint = false;
+  body.innerHTML = `
+    <h3>⚡ جدار التحديات — يتغير باستمرار</h3>
+    <div class="mode-row" id="mtypes"></div>
+    <div class="big-display" id="disp">اضغط «تحدٍّ جديد» ⬇</div>
+    <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:10px">
+      <button class="btn" id="new">🎲 تحدٍّ جديد</button>
+      <button class="btn ghost" id="ans">💡 الإجابة</button>
+      <button class="btn" id="sprint" style="background:#E4A54A; color:#14324c; border-color:#E4A54A">🏃 سباق 30 ثانية (8 مسائل)</button>
+    </div>
+    <div class="muted" id="hint" style="text-align:center">المجموعة تجيب في رأسها… ثم يرفع المدرب الإجابة على الشاشة الكبيرة.</div>`;
+  function drawTypes() {
+    document.getElementById("mtypes").innerHTML = TYPES.map(([k, l]) =>
+      `<button class="btn ghost ${k === type ? "on" : ""}" data-k="${k}">${l}</button>`).join("");
+    document.querySelectorAll("#mtypes .btn").forEach(b => b.onclick = () => { type = b.dataset.k; drawTypes(); });
+  }
+  function newOne() { cur = gen(type); shown = false;
+    document.getElementById("disp").textContent = cur.q; }
+  document.getElementById("new").onclick = newOne;
+  document.getElementById("ans").onclick = () => { if (!cur) return;
+    shown = true; document.getElementById("disp").textContent = "💡 " + cur.a; };
+  drawTypes(); newOne();
+  document.getElementById("sprint").onclick = () => {
+    sprint = true; let i = 0, ok = 0; const t0 = Date.now();
+    const iv = setInterval(() => {
+      i++; cur = gen(TYPES[R(0, 4)][0]);
+      document.getElementById("disp").textContent =
+        `⏱️ ${Math.round((Date.now() - t0) / 1000)}ث  |  ${i}/8  |  ${cur.q}`;
+      if (i >= 8) { clearInterval(iv); sprint = false;
+        document.getElementById("disp").textContent =
+          `🏁 انتهى السباق! 8 مسائل خلال ${Math.round((Date.now() - t0) / 1000)} ثانية — صفّقوا! 👏`; }
+    }, 3750);
+  };
+}
+
+/* ---------- big screen ---------- */
+function screen() {
+  body.innerHTML = `
+    <h3>🖥️ الشاشة الكبيرة — عرض للمجموعة</h3>
+    <div class="big-display" id="disp">اختر نشاطًا ⬇</div>
+    <div class="mode-row">
+      <button class="btn" id="m1">⏱️ عدّ تنازلي 10 (إحماء)</button>
+      <button class="btn" id="m2">🃏 بطاقة رقم (ذاكرة)</button>
+      <button class="btn" id="m3">🔵 عدّ النقاط</button>
+    </div>
+    <p class="muted" id="tip" style="text-align:center">العد التنازلي يركز المجموعة قبل التحدي.</p>`;
+  const disp = document.getElementById("disp");
+  const tip = document.getElementById("tip");
+  document.getElementById("m1").onclick = () => {
+    let n = 10; tip.textContent = "كل الأرقام في الرأس!";
+    const iv = setInterval(() => { disp.textContent = n;
+      if (n-- <= 0) { clearInterval(iv); disp.textContent = "🚀 هيا!"; } }, 1000);
+  };
+  document.getElementById("m2").onclick = () => {
+    const n = R(11, 99); disp.textContent = n;
+    tip.textContent = "احتفظ بالرقم في ذهنك…";
+    setTimeout(() => { disp.textContent = "؟"; tip.textContent = "ما الرقم الذي رأيته؟"; }, 900);
+    setTimeout(() => { disp.textContent = "💡 " + n; tip.textContent = "أحسنت! بطاقة جديدة؟"; }, 6000);
+  };
+  document.getElementById("m3").onclick = () => {
+    const n = R(7, 24); let dots = "";
+    for (let i = 0; i < n; i++) dots += "●";
+    disp.innerHTML = `<span style="font-size:26px; letter-spacing:6px">${dots}</span>`;
+    tip.textContent = "كم نقطة على الشاشة؟ في رأسك!";
+    setTimeout(() => { disp.textContent = "💡 " + n; }, 5000);
+  };
+}
+
+/* ---------- strategies ---------- */
+function strategy() {
+  const S = [
+    ["🧱 فكّك الأرقام", "12 + 38 → (10 + 30) + (2 + 8) = 40 + 10 = 50. العشرات مع العشرات، والأحاد مع الأحاد."],
+    ["🔟 دائرة العشرة", "8 + 5 → اجعل 8 عشرًا: 8 + 2 + 3 = 10 + 3 = 13. العشرة هي صديقك!"],
+    ["👑 ابدأ بالأكبر", "17 + 9 → احمل 9 في رأسك واطرح عليها 17: 9+10=19، 19+7=26."],
+    ["✖️ ضعف ونصف", "6 × 7 → ضعف 7 = 14… ×6 = 42 (نصف 12 × 7). الربط بالضعف يبني السرعة."],
+    ["🎯 قرّب ثم صحّح", "98 + 37 → 100 + 37 = 137، ثم اطرح 2 = 135. القرب من العدد المستدير يخدع بسرعة!"],
+  ];
+  body.innerHTML = `
+    <h3>🗺️ الاستراتيجيات — لوحة الشرح</h3>
+    <div class="rowlist">${S.map(([n, d]) =>
+      `<div class="rowitem"><b>${n}</b><div class="muted" style="margin-top:2px">${d}</div></div>`).join("")}</div>
+    <p class="muted" style="margin-top:8px">المدرب يكتب الاستراتيجية على السبورة القابلة، ويشرحها على الرقعة الكبيرة خلفه. ✏️</p>`;
+}
+
+/* ---------- levels ---------- */
+function levels() {
+  const L = [
+    ["⭐ مستكشف", "جمع وطرح حتى 20 في رأسه", "#5FB4E8"],
+    ["⭐⭐ محترف", "حتى 100 + جدول الضرب الصغير", "#3FA39C"],
+    ["⭐⭐⭐ خبير", "حتى 1000 + تسلسلات وذاكرة", "#E4A54A"],
+    ["🌟 أسطورة", "تحدٍّ مفتوح: أي مسألة أمام المجموعة", "#8E7CC3"],
+  ];
+  body.innerHTML = `
+    <h3>🎖️ مستويات الأطفال — محفّزة، بلا ضغط</h3>
+    <div class="rowlist">${L.map(([n, d, c]) =>
+      `<div class="rowitem"><b style="color:${c}">${n}</b><span class="muted" style="margin-inline-start:auto">${d}</span></div>`).join("")}</div>
+    <div class="rowitem" style="display:flex; gap:8px; margin-top:8px">
+      <select id="lv" style="flex:1">${L.map((l, i) => `<option value="${i}">${l[0]}</option>`).join("")}</select>
+      <button class="btn" id="go">🎲 تحدِّى هذا المستوى</button>
+    </div>
+    <div class="big-display" id="disp" style="font-size:22px; margin-top:10px">…</div>
+    <p class="muted" style="margin-top:6px">القاعدة الذهبية: <b>مقارنتك الوحيدة هي مع نفسك أمس</b> — لا سباق بين الأطفال، بل كل طفل يتقدم على مستواه. 🤝</p>`;
+  const T = ["add", "mul", "seq", "puzzle"];
+  document.getElementById("go").onclick = () => {
+    const c = gen(T[+document.getElementById("lv").value]);
+    document.getElementById("disp").textContent = c.q;
+  };
+}
+
+/* ---------- identity ---------- */
+function title() {
+  body.innerHTML = `
+    <h3>🧠 هوية الفصل — تحدي العقل</h3>
+    <p>مساحة <b>تدريب ذهني وتحديات</b> — ليست حصة رياضيات تقليدية: مجموعات صغيرة أمام
+    السوروبان، شاشة كبيرة تعرض التحدي، مؤقت رقمي ضخم، وجدار «تحدي العقل» يتغير باستمرار
+    (مسائل سريعة، ألغاز، ذاكرة، تسلسلات، «احسب في ذهنك»).</p>
+    <h3>قوانين التحدي</h3>
+    <div class="rowlist">
+      <div class="rowitem"><b>1</b> سرعة… ثم دقة. لا يوجد أجراس ولا عقوبات: من أخطأ يتعلم التحدي الثاني.</div>
+      <div class="rowitem"><b>2</b> الرقم في رأسك — الأداة (السوروبان) للتمرين، لا للإجابة.</div>
+      <div class="rowitem"><b>3</b> التكرار الذكي يبني السرعة: 10 دقائق تحديات كل يوم.</div>
+      <div class="rowitem"><b>4</b> استرح ثم عُد أقوى: كل مستوى يفتح تحديًا أمتع.</div>
+      <div class="rowitem"><b>5</b> تصفيق لكل محاولة شجاعة — حتى الخاطئة منها. 👏</div>
+    </div>
+    <p class="muted" style="margin-top:8px">الطابع: مشرق وحيوي — أزرق NG + أبيض + لمسات كهرمانية، وأشكال هندسية خفيفة… بلا جدران ممتلئة أرقامًا. ✨</p>`;
+}
+({ challenges, screen, strategy, levels, title })[tool]();
+</script>
+</body>
+</html>

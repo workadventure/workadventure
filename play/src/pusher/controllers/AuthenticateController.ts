@@ -328,7 +328,12 @@ export class AuthenticateController extends BaseHttpController {
             if (matrixPublicUri) {
                 // TODO: check Matrix server login parameters to be sure we can connect
 
-                const matrixCallbackUrl = new URL("/matrix-callback", PUSHER_URL).toString();
+                // PUSHER_URL may be relative (e.g. "/") when running behind a single gateway
+                // without Docker (see no-docker/). Fall back to the request host in that case.
+                const matrixCallbackUrl = new URL(
+                    "/matrix-callback",
+                    PUSHER_URL.startsWith("http") ? PUSHER_URL : `${req.protocol}://${req.get("host")}`,
+                ).toString();
                 let redirectPath = "/_matrix/client/v3/login/sso/redirect";
                 if (userInfo.matrix_identity_provider) {
                     redirectPath += "/" + userInfo.matrix_identity_provider;

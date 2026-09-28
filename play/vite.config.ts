@@ -17,15 +17,21 @@ export default defineConfig(({ mode }) => {
     const config = {
         server: {
             host: "0.0.0.0",
-            port: 8080,
+            // Overridable so several Vite dev servers can run side by side on one host
+            // when Docker is not used (see ../no-docker/). Defaults keep the Docker behaviour.
+            port: Number(env.FRONT_VITE_PORT) || 8080,
+            // Vite (>=5.4) rejects unknown Host headers. Set WA_DEV_ALLOWED_HOSTS=true when
+            // serving through custom hostnames (local gateway / tunnels / previews).
+            ...(env.WA_DEV_ALLOWED_HOSTS === "true" ? { allowedHosts: true as const } : {}),
+            ...(env.WA_DEV_HMR === "false" ? { hmr: false } : {}),
             ws: {
                 // workaround for development in docker
-                clientPort: 80,
+                clientPort: Number(env.WA_DEV_HMR_CLIENT_PORT) || 80,
                 // The dev module graph is served same-origin under the play host (see the
                 // `play-vite` Traefik router in docker-compose.yaml), so pin the HMR websocket to
                 // the Vite host explicitly. Otherwise the client opens the HMR socket against the
                 // play host, which routes to the pusher instead of Vite and HMR fails to connect.
-                host: "front.workadventure.localhost",
+                host: env.WA_DEV_HMR_HOST || "front.workadventure.localhost",
             },
             watch: {
                 ignored: ["./src/pusher"],

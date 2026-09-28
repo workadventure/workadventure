@@ -16,6 +16,7 @@ import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import { visibilityStore } from "../../Stores/VisibilityStore";
 import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctions";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { SitManager } from "./Life/SitManager";
 
 export const hasMovedEventName = "hasMoved";
 export const startMovingEventName = "startMoving";
@@ -24,6 +25,7 @@ export const requestEmoteEventName = "requestEmote";
 export class Player extends Character {
     private readonly unsubscribeVisibilityStore: Unsubscriber;
     private isMoving = false;
+    private sitManager?: SitManager;
 
     constructor(
         Scene: GameScene,
@@ -45,9 +47,18 @@ export class Player extends Character {
                 this.finishFollowingPath(true);
             }
         });
+
+        // NG Academy: sitting system (real SIT state on marked seat tiles)
+        this.sitManager = new SitManager(this);
     }
 
     public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
+        // NG Academy: sitting takes precedence (sit / hold / stand-up transition)
+        if (this.sitManager && this.sitManager.tick(activeUserInputEvents)) {
+            this.stop();
+            return;
+        }
+
         const state = get(followStateStore);
         const role = get(followRoleStore);
 
@@ -293,6 +304,7 @@ export class Player extends Character {
     }
 
     destroy(): void {
+        this.sitManager?.destroy();
         this.unsubscribeVisibilityStore();
         super.destroy();
     }

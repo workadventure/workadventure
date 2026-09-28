@@ -73,12 +73,13 @@ const server = new grpc.Server({
 //@ts-ignore
 server.addService(MapStorageService, mapStorageServer);
 
-server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+const GRPC_PORT = Number(process.env.MAP_STORAGE_GRPC_PORT) || 50053;
+server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
     if (err) {
         throw err;
     }
     console.info(`[${new Date().toISOString()}] Application is running`);
-    console.info(`[${new Date().toISOString()}] gRPC port is 50053`);
+    console.info(`[${new Date().toISOString()}] gRPC port is ${GRPC_PORT}`);
     server.start();
 });
 
@@ -218,6 +219,7 @@ app.use((err: unknown, req: express.Request, res: express.Response, next: expres
     next(err);
 });
 
-app.listen(3000, () => {
-    console.info(`[${new Date().toISOString()}] Application is running on port 3000`);
+const HTTP_PORT = Number(process.env.MAP_STORAGE_HTTP_PORT) || 3000;
+app.listen(HTTP_PORT, () => {
+    console.info(`[${new Date().toISOString()}] Application is running on port ${HTTP_PORT}`);
 });
