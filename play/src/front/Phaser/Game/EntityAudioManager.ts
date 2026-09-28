@@ -1,10 +1,16 @@
 import type { Subscription } from "rxjs";
+import { get } from "svelte/store";
 import { MathUtils } from "@workadventure/math-utils";
 import type { PlayAudioPropertyData } from "@workadventure/map-editor";
 import { findBroadcastablePlayAudioProperty } from "@workadventure/map-editor";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+    audioManagerVolumeStore,
+} from "../../Stores/AudioManagerStore";
+import type { Entity } from "../ECS/Entity";
 import type { GameScene } from "./GameScene";
 
 /**
@@ -25,6 +31,8 @@ export const ENTITY_SOUND_MIN_INTERVAL_IN_MS = 1000;
 export class EntityAudioManager {
     private readonly subscription: Subscription;
     private lastBroadcastAt: number | undefined;
+    /** The broadcast sound being played, whose volume follows the player until another sound replaces it. */
+    private playing: { entity: Entity; property: PlayAudioPropertyData; file: string } | undefined;
 
     constructor(
         private scene: GameScene,
@@ -57,6 +65,22 @@ export class EntityAudioManager {
         this.connection.emitEntitySoundPlayed(entityId, property.audioLink);
     }
 
+    /**
+     * The volume of a broadcast sound fades as the player walks away from its entity and comes back
+     * as they return.
+     */
+    public onPlayerMoved(): void {
+        if (!this.playing) {
+            return;
+        }
+        // Another sound took over the audio player, or this one has ended.
+        if (get(audioManagerFileStore) !== this.playing.file || get(audioManagerVisibilityStore) !== "visible") {
+            this.playing = undefined;
+            return;
+        }
+        audioManagerVolumeStore.setSoundVolume(this.volumeFor(this.playing.property, this.playing.entity));
+    }
+
     public destroy(): void {
         this.subscription.unsubscribe();
     }
@@ -67,45 +91,47 @@ export class EntityAudioManager {
             return;
         }
 
-        // The sound URL is checked against the entity here too: what is played comes from this
-        // client's own map, never from the message.
+        // The server relays the URL unchecked, so it is matched against the entity here: what is
+        // played comes from this client's own map, never from the message.
         const property = findBroadcastablePlayAudioProperty(entity.getProperties(), soundUrl);
         if (!property) {
             return;
         }
 
-        const volume = this.volumeFor(property, entity.getActivationRectangle());
+        // ponytail: a player outside the radius when the sound starts never hears it, even walking in.
+        // Starting it muted instead would pop the audio player open for every player on the map.
+        const volume = this.volumeFor(property, entity);
         if (volume <= 0) {
             return;
         }
-        this.playLocally(property.audioLink, volume);
+        this.playing = this.playLocally(property.audioLink, volume)
+            ? { entity, property, file: get(audioManagerFileStore) }
+            : undefined;
     }
 
     /**
      * Outside the radius the sound is not heard at all, and inside it fades linearly with the
      * distance. Without a radius the sound carries across the whole map.
      */
-    private volumeFor(
-        property: PlayAudioPropertyData,
-        entityRectangle: { x: number; y: number; width: number; height: number },
-    ): number {
+    private volumeFor(property: PlayAudioPropertyData, entity: Entity): number {
         const volume = property.volume ?? 1;
         if (property.audibleRadius === undefined) {
             return volume;
         }
 
         const player = { x: this.scene.CurrentPlayer.x, y: this.scene.CurrentPlayer.y };
-        const distance = MathUtils.distanceBetweenPointAndRectangle(player, entityRectangle);
+        const distance = MathUtils.distanceBetweenPointAndRectangle(player, entity.getActivationRectangle());
         return volume * Math.max(0, 1 - distance / property.audibleRadius);
     }
 
-    private playLocally(audioLink: string, volume: number): void {
+    private playLocally(audioLink: string, volume: number): boolean {
         if (localUserStore.getBlockAudio()) {
             audioManagerVisibilityStore.set("disabledBySettings");
-            return;
+            return false;
         }
 
         audioManagerFileStore.playAudio(audioLink, this.scene.getMapUrl(), volume, false);
         audioManagerVisibilityStore.set("visible");
+        return true;
     }
 }
