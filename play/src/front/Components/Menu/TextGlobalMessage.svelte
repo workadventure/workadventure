@@ -3,7 +3,6 @@
     import { onDestroy, onMount } from "svelte";
     import { menuInputFocusStore } from "../../Stores/MenuInputFocusStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { AdminMessageEventTypes } from "../../Connection/AdminMessagesService";
     import type { PlayGlobalMessageInterface } from "../../Connection/ConnexionModels";
     import { LL } from "../../../i18n/i18n-svelte";
 
@@ -31,7 +30,7 @@
     ];
 
     const gameScene = gameManager.getCurrentGameScene();
-    const MESSAGE_TYPE = AdminMessageEventTypes.admin;
+    const MESSAGE_TYPE = "message";
     let quill: Quill;
     let QUILL_EDITOR: HTMLDivElement | undefined = $state();
 

@@ -13,6 +13,7 @@ import { ChatMessageTypes, Deferred, SpatialMap } from "@workadventure/shared-ut
 import {
     AvailabilityStatus,
     availabilityStatusToJSON,
+    type BanUserMessage,
     ErrorScreenMessage,
     FilterType,
     type GroupUsersUpdateMessage,
@@ -34,7 +35,8 @@ import {
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import Debug from "debug";
 import { asError } from "catch-unknown";
-import { userMessageManager } from "../../Administration/UserMessageManager";
+import { showUserMessage } from "../../Administration/UserMessageManager";
+import { banMessageStore } from "../../Stores/TypeMessageStore/BanMessageStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
@@ -2005,6 +2007,13 @@ export class GameScene extends DirtyScene {
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
 
+                // Subscribed before any await: the admin messages of the login come right after the connection.
+                // These streams are completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.sendUserMessageStream.subscribe(showUserMessage);
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.banUserMessageStream.subscribe((message) => this.ejectedUser(message));
+
                 // The serverDisconnected stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.serverDisconnected.subscribe(() => {
@@ -2217,9 +2226,6 @@ export class GameScene extends DirtyScene {
                 this.scriptingVideoManager = new ScriptingVideoManager();
 
                 this._sayManager = new SayManager(this.connection, this.CurrentPlayer);
-
-                userMessageManager.setReceiveBanListener((reason) => this.ejectedUser("banned", reason));
-                userMessageManager.setReceiveKickListener((reason) => this.ejectedUser("kicked", reason));
 
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedInterface) => {
                     this.handleCurrentPlayerHasMovedEvent(event);
@@ -4495,7 +4501,12 @@ ${escapedMessage}
     /**
      * A ban is persisted by the admin; a kick only ejects the user from the room, a reload brings them back.
      */
-    private ejectedUser(kind: "banned" | "kicked", reason = "") {
+    private ejectedUser({ type, message: reason }: BanUserMessage) {
+        const kind = type === "kicked" ? "kicked" : "banned";
+        if (kind === "banned") {
+            // A ban issued from the game may come without a reason.
+            banMessageStore.addMessage(reason || get(LL).report.banned.subtitle());
+        }
         const texts = get(LL).report[kind];
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({

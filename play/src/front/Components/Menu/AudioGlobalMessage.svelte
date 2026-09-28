@@ -1,7 +1,6 @@
 <script lang="ts">
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { AdminMessageEventTypes } from "../../Connection/AdminMessagesService";
     import uploadFile from "../images/drag-and-drop.svg";
     import uploadFileActive from "../images/drag-and-drop-active.svg";
     import type { PlayGlobalMessageInterface } from "../../Connection/ConnexionModels";
@@ -19,7 +18,7 @@
     let errorUpload: boolean = $state(false);
     let dropHover = $state(false);
 
-    const AUDIO_TYPE = AdminMessageEventTypes.audio;
+    const AUDIO_TYPE = "audio";
 
     export type AudioGlobalMessageHandle = {
         sendAudioMessage(broadcast: boolean): Promise<void>;
