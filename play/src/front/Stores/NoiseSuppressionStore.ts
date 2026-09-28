@@ -1,7 +1,8 @@
 import { derived, writable } from "svelte/store";
 
-import type { NoiseSuppressionProvider } from "../Connection/LocalUserStore";
+import type { NoiseSuppressionEngine, NoiseSuppressionProvider } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { getEffectiveNoiseSuppressionProvider } from "./MicrophoneSettings";
 
 export type NoiseSuppressionStatus =
@@ -17,6 +18,14 @@ export interface NoiseSuppressionState {
     message?: string;
 }
 
+function trackNoiseSuppressionSetting(): void {
+    analyticsClient.trackAdminEvent("settings.noise_suppression.changed", {
+        enabled: localUserStore.getNoiseSuppressionEnabled(),
+        provider: localUserStore.getNoiseSuppressionProvider(),
+        engine: localUserStore.getNoiseSuppressionEngine(),
+    });
+}
+
 function createNoiseSuppressionEnabledStore() {
     const initialValue = localUserStore.getNoiseSuppressionEnabled();
     const { subscribe, set } = writable(initialValue);
@@ -26,6 +35,7 @@ function createNoiseSuppressionEnabledStore() {
         setEnabled(value: boolean) {
             localUserStore.setNoiseSuppressionEnabled(value);
             set(value);
+            trackNoiseSuppressionSetting();
             if (!value) {
                 noiseSuppressionStateStore.set({ status: "disabled" });
             } else if (localUserStore.getNoiseSuppressionProvider() === "workadventure") {
@@ -85,10 +95,32 @@ function createNoiseSuppressionProviderStore() {
         setProvider(value: NoiseSuppressionProvider) {
             localUserStore.setNoiseSuppressionProvider(value);
             set(value);
+            trackNoiseSuppressionSetting();
             if (value === "workadventure" && localUserStore.getNoiseSuppressionEnabled()) {
                 noiseSuppressionStateStore.set({ status: "pendingInitialization" });
             } else {
                 noiseSuppressionStateStore.set({ status: "disabled" });
+            }
+        },
+    };
+}
+
+function createNoiseSuppressionEngineStore() {
+    const initialValue = localUserStore.getNoiseSuppressionEngine();
+    const { subscribe, set } = writable<NoiseSuppressionEngine>(initialValue);
+
+    return {
+        subscribe,
+        setEngine(value: NoiseSuppressionEngine) {
+            localUserStore.setNoiseSuppressionEngine(value);
+            set(value);
+            trackNoiseSuppressionSetting();
+            // A new engine gets a fresh chance, even if the previous one failed.
+            if (
+                localUserStore.getNoiseSuppressionEnabled() &&
+                localUserStore.getNoiseSuppressionProvider() === "workadventure"
+            ) {
+                noiseSuppressionStateStore.set({ status: "pendingInitialization" });
             }
         },
     };
@@ -117,6 +149,7 @@ export const noiseSuppressionStateStore = writable<NoiseSuppressionState>(
 
 export const noiseSuppressionEnabledStore = createNoiseSuppressionEnabledStore();
 export const noiseSuppressionProviderStore = createNoiseSuppressionProviderStore();
+export const noiseSuppressionEngineStore = createNoiseSuppressionEngineStore();
 
 export const browserNoiseSuppressionSupportedStore = writable(
     typeof navigator !== "undefined" && navigator.mediaDevices?.getSupportedConstraints().noiseSuppression === true,

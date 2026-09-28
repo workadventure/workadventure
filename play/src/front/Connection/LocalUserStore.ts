@@ -66,6 +66,7 @@ const legacyVideoBandwidthKey = "videoBandwidth";
 const legacyScreenShareBandwidthKey = "screenShareBandwidth";
 const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
 const noiseSuppressionProviderKey = "noiseSuppressionProvider";
+const noiseSuppressionEngineKey = "noiseSuppressionEngine";
 const microphoneAutoGainControlKey = "microphoneAutoGainControl";
 const microphoneEchoCancellationKey = "microphoneEchoCancellation";
 const microphoneBrowserNoiseSuppressionKey = "microphoneBrowserNoiseSuppression";
@@ -74,6 +75,8 @@ const INITIAL_MAP_EDITOR_SIDEBAR_WIDTH = 448;
 export type VideoQualitySetting = "low" | "recommended" | "high";
 export type BandwidthConstrainedPreference = "maintain-framerate" | "maintain-resolution" | "balanced";
 export type NoiseSuppressionProvider = "workadventure" | "voiceIsolation";
+/** The model behind the "workadventure" provider: DeepFilterNet3 (48 kHz, default) or the legacy DTLN (16 kHz). */
+export type NoiseSuppressionEngine = "deepfilternet" | "dtln";
 
 const JwtAuthToken = z
     .object({
@@ -848,6 +851,14 @@ class LocalUserStore {
             return value;
         }
         return "workadventure";
+    }
+
+    setNoiseSuppressionEngine(value: NoiseSuppressionEngine) {
+        localStorage.setItem(noiseSuppressionEngineKey, value);
+    }
+
+    getNoiseSuppressionEngine(): NoiseSuppressionEngine {
+        return localStorage.getItem(noiseSuppressionEngineKey) === "dtln" ? "dtln" : "deepfilternet";
     }
 
     setMicrophoneAutoGainControl(value: boolean) {

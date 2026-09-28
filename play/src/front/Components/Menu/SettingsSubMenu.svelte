@@ -1,7 +1,7 @@
 <script lang="ts">
     import { tick } from "svelte";
     import { fly } from "svelte/transition";
-    import type { NoiseSuppressionProvider } from "../../Connection/LocalUserStore";
+    import type { NoiseSuppressionEngine, NoiseSuppressionProvider } from "../../Connection/LocalUserStore";
     import {
         audioManagerFileStore,
         audioManagerVisibilityStore,
@@ -30,6 +30,7 @@
         microphoneEchoCancellationStore,
         noiseSuppressionEnabledStore,
         noiseSuppressionProviderStore,
+        noiseSuppressionEngineStore,
         noiseSuppressionStateStore,
         voiceIsolationSupportedStore,
     } from "../../Stores/NoiseSuppressionStore";
@@ -38,6 +39,7 @@
     import SoundSelect from "../Input/SoundSelect.svelte";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import InputRadioBox from "../Input/InputRadioBox.svelte";
+    import Select from "../Input/Select.svelte";
     import Chip from "../UI/Chip.svelte";
     import {
         IconAntennaBarsLow,
@@ -170,6 +172,16 @@
     function updateNoiseSuppressionProvider() {
         noiseSuppressionProviderStore.setProvider(selectedNoiseSuppressionProvider);
     }
+
+    function updateNoiseSuppressionEngine(event: Event) {
+        const value = (event.target as HTMLSelectElement).value;
+        noiseSuppressionEngineStore.setEngine(value === "dtln" ? "dtln" : "deepfilternet");
+    }
+
+    const noiseSuppressionEngineOptions: { value: NoiseSuppressionEngine; label: string }[] = $derived([
+        { value: "deepfilternet", label: $LL.menu.settings.microphone.noiseSuppressionEngineDeepFilterNet() },
+        { value: "dtln", label: $LL.menu.settings.microphone.noiseSuppressionEngineDtln() },
+    ]);
 
     function changeFullscreen() {
         // Analytics Client
@@ -533,6 +545,18 @@
                     </InputRadioBox>
                 {/if}
             </div>
+            {#if selectedNoiseSuppressionProvider === "workadventure"}
+                <div class="px-4">
+                    <Select
+                        id="noise-suppression-engine"
+                        dataTestId="noise-suppression-engine"
+                        label={$LL.menu.settings.microphone.noiseSuppressionEngine()}
+                        options={noiseSuppressionEngineOptions}
+                        value={$noiseSuppressionEngineStore}
+                        onchange={updateNoiseSuppressionEngine}
+                    />
+                </div>
+            {/if}
         {/if}
 
         <div class="flex flex-col cursor-pointer relative m-4 gap-2">

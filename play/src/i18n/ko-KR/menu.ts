@@ -64,6 +64,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "브라우저에 내장된 소음 억제를 사용합니다.",
             voiceIsolation: "음성 분리",
             voiceIsolationDescription: "사용 가능한 경우 브라우저와 운영 체제의 음성 분리를 사용합니다.",
+            noiseSuppressionEngine: "소음 억제 엔진",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (신규, 전대역 음성)",
+            noiseSuppressionEngineDtln: "DTLN (이전 엔진)",
         },
         language: {
             title: "언어",

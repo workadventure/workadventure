@@ -64,6 +64,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "ブラウザー内蔵のノイズ抑制を使用します。",
             voiceIsolation: "声の分離",
             voiceIsolationDescription: "利用できる場合、ブラウザーと OS の声の分離を使用します。",
+            noiseSuppressionEngine: "ノイズ抑制エンジン",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet（新規、全帯域の音声）",
+            noiseSuppressionEngineDtln: "DTLN（以前のエンジン）",
         },
         language: {
             title: "言語",

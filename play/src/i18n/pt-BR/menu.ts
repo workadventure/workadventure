@@ -65,6 +65,9 @@ const menu: BaseTranslation = {
             voiceIsolation: "Isolamento de voz",
             voiceIsolationDescription:
                 "Usa o isolamento de voz do navegador e do sistema operacional quando disponível.",
+            noiseSuppressionEngine: "Mecanismo de supressão de ruído",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (novo, voz em banda completa)",
+            noiseSuppressionEngineDtln: "DTLN (mecanismo anterior)",
         },
         language: {
             title: "Linguagem",
