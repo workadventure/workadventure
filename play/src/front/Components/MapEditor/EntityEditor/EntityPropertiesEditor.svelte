@@ -239,6 +239,7 @@
                     buttonLabel: $LL.mapEditor.properties.playAudio.label(),
                     audioLink: "",
                     volume: 1,
+                    playForAllUsers: true,
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
