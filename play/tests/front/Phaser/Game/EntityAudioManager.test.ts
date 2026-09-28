@@ -6,16 +6,35 @@ import type { GameScene } from "../../../../src/front/Phaser/Game/GameScene";
 import type { RoomConnection } from "../../../../src/front/Connection/RoomConnection";
 import type { Entity } from "../../../../src/front/Phaser/ECS/Entity";
 
-const { playAudio, setVisibility, getBlockAudio } = vi.hoisted(() => ({
-    playAudio: vi.fn(),
-    setVisibility: vi.fn(),
-    getBlockAudio: vi.fn(() => false),
-}));
+const { audio, playAudio, setSoundVolume, setVisibility, getBlockAudio } = vi.hoisted(() => {
+    const audio = { file: "", visibility: "hidden" };
+    return {
+        audio,
+        playAudio: vi.fn((url: string, mapUrl: string) => {
+            audio.file = new URL(url, mapUrl).toString();
+        }),
+        setSoundVolume: vi.fn(),
+        setVisibility: vi.fn((visibility: string) => {
+            audio.visibility = visibility;
+        }),
+        getBlockAudio: vi.fn(() => false),
+    };
+});
 
-vi.mock("../../../../src/front/Stores/AudioManagerStore", () => ({
-    audioManagerFileStore: { playAudio },
-    audioManagerVisibilityStore: { set: setVisibility },
-}));
+vi.mock("../../../../src/front/Stores/AudioManagerStore", () => {
+    // Just enough of a store for svelte's get() to read it.
+    const readable = (read: () => string) => ({
+        subscribe: (run: (value: string) => void) => {
+            run(read());
+            return () => {};
+        },
+    });
+    return {
+        audioManagerFileStore: { ...readable(() => audio.file), playAudio },
+        audioManagerVisibilityStore: { ...readable(() => audio.visibility), set: setVisibility },
+        audioManagerVolumeStore: { setSoundVolume },
+    };
+});
 vi.mock("../../../../src/front/Connection/LocalUserStore", () => ({
     localUserStore: { getBlockAudio },
 }));
@@ -72,6 +91,8 @@ describe("EntityAudioManager", () => {
     beforeEach(() => {
         vi.useFakeTimers();
         getBlockAudio.mockReturnValue(false);
+        audio.file = "";
+        audio.visibility = "hidden";
     });
 
     afterEach(() => {
@@ -169,6 +190,43 @@ describe("EntityAudioManager", () => {
 
             expect(playAudio).not.toHaveBeenCalled();
             expect(setVisibility).toHaveBeenCalledWith("disabledBySettings");
+        });
+    });
+
+    describe("when the player moves", () => {
+        it("should follow the player with the volume of the sound being played", () => {
+            const { manager, entityMessages, player } = givenAnEntityAudioManager([
+                aBroadcastProperty({ audibleRadius: 200 }),
+            ]);
+            entityMessages.next(soundPlayedMessage());
+
+            player.x = 250;
+            manager.onPlayerMoved();
+            player.x = 400;
+            manager.onPlayerMoved();
+
+            expect(setSoundVolume).toHaveBeenNthCalledWith(1, 0.25);
+            expect(setSoundVolume).toHaveBeenNthCalledWith(2, 0);
+        });
+
+        it("should leave the volume alone once another sound took over", () => {
+            const { manager, entityMessages } = givenAnEntityAudioManager([aBroadcastProperty({ audibleRadius: 200 })]);
+            entityMessages.next(soundPlayedMessage());
+
+            audio.file = "https://example.com/music.mp3";
+            manager.onPlayerMoved();
+
+            expect(setSoundVolume).not.toHaveBeenCalled();
+        });
+
+        it("should leave the volume alone once the sound has ended", () => {
+            const { manager, entityMessages } = givenAnEntityAudioManager([aBroadcastProperty({ audibleRadius: 200 })]);
+            entityMessages.next(soundPlayedMessage());
+
+            audio.visibility = "hidden";
+            manager.onPlayerMoved();
+
+            expect(setSoundVolume).not.toHaveBeenCalled();
         });
     });
 

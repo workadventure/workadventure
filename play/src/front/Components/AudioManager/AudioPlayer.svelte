@@ -46,7 +46,7 @@
             HTMLAudioPlayer.src = src;
             HTMLAudioPlayer.load();
             HTMLAudioPlayer.loop = get(audioManagerVolumeStore).loop;
-            HTMLAudioPlayer.volume = get(audioManagerVolumeStore).volume;
+            HTMLAudioPlayer.volume = get(audioManagerVolumeStore).volume * get(audioManagerVolumeStore).soundVolume;
             HTMLAudioPlayer.muted = get(audioManagerVolumeStore).muted;
             tryPlay();
         });
@@ -59,7 +59,7 @@
             }
             audioManager.volumeReduced = reduceVolume;
             if (HTMLAudioPlayer) {
-                HTMLAudioPlayer.volume = audioManager.volume;
+                HTMLAudioPlayer.volume = audioManager.volume * audioManager.soundVolume;
                 HTMLAudioPlayer.muted = audioManager.muted;
                 HTMLAudioPlayer.loop = audioManager.loop;
                 // Use paused attribute to manage audio
@@ -101,6 +101,9 @@
             actionsMenuStore.clear();
             // Audiovisilibily is set to false when audio is ended
             audioManagerVisibilityStore.set("hidden");
+            // Otherwise the next change to the volume store (entering a bubble lowers the volume)
+            // would play the ended sound again. playAudio() clears it.
+            audioManagerVolumeStore.stopSound(true);
             if ($activeSecondaryZoneActionBarStore === "audio-manager") {
                 activeSecondaryZoneActionBarStore.set(undefined);
             }

@@ -2259,6 +2259,7 @@ export class GameScene extends DirtyScene {
 
                 this.emoteManager = new EmoteManager(this, this.connection);
                 this.entityAudioManager = new EntityAudioManager(this, this.connection);
+                this.CurrentPlayer.on(hasMovedEventName, () => this.entityAudioManager.onPlayerMoved());
 
                 const context = audioContextManager.getContext();
 
