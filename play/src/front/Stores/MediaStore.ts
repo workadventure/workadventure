@@ -1033,15 +1033,24 @@ export const audioProcessedLocalAudioTrackStore = derived<
                     return;
                 }
 
-                setIfCurrent({
-                    type: "success",
-                    track: await noiseSuppressionController.transform(
-                        $rawLocalAudioTrackStore.track,
-                        $customNoiseSuppressionActiveStore,
-                        $noiseSuppressionEngineStore,
-                        controller.signal,
-                    ),
-                });
+                const processedTrack = noiseSuppressionController.transform(
+                    $rawLocalAudioTrackStore.track,
+                    $customNoiseSuppressionActiveStore,
+                    $noiseSuppressionEngineStore,
+                    controller.signal,
+                );
+                // Loading a noise suppression model takes up to a second or two: send the raw microphone meanwhile
+                // rather than nothing. An already running pipeline answers at once and skips this.
+                const settled = await Promise.race([
+                    processedTrack.then(() => true),
+                    new Promise<false>((resolve) => {
+                        setTimeout(() => resolve(false), 50);
+                    }),
+                ]);
+                if (!settled) {
+                    setIfCurrent($rawLocalAudioTrackStore);
+                }
+                setIfCurrent({ type: "success", track: await processedTrack });
             })
             .catch((e) => {
                 const isAbort = e instanceof AbortError || (e instanceof DOMException && e.name === "AbortError");

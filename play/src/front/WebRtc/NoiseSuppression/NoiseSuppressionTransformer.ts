@@ -95,6 +95,10 @@ export class NoiseSuppressionTransformer {
         if (!this.workletHandle) {
             throw new Error("Noise suppression worklet node failed to initialize.");
         }
+        // Loading the model blocks the audio thread (~0.3 s for DeepFilterNet3): wire the microphone only once it is
+        // done, or the voice we send drops out right when noise suppression starts. A failure rejects here.
+        await this.workletHandle.ready;
+        this.throwIfAborted(signal);
 
         const inputStream = new MediaStream([inputTrack]);
         this.sourceNode = this.audioContext.createMediaStreamSource(inputStream);
