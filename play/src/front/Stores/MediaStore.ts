@@ -49,6 +49,7 @@ import {
     noiseSuppressionEnabledStore,
     noiseSuppressionEngineStore,
     noiseSuppressionStateStore,
+    noiseSuppressionTuningStore,
     voiceIsolationSupportedStore,
 } from "./NoiseSuppressionStore";
 import {
@@ -324,6 +325,7 @@ export const audioConstraintStore = derived(
         noiseSuppressionEnabledStore,
         effectiveNoiseSuppressionProviderStore,
         noiseSuppressionEngineStore,
+        noiseSuppressionTuningStore,
         browserNoiseSuppressionSupportedStore,
         customNoiseSuppressionActiveStore,
         noiseSuppressionStateStore,
@@ -336,6 +338,7 @@ export const audioConstraintStore = derived(
         $noiseSuppressionEnabledStore,
         $effectiveNoiseSuppressionProviderStore,
         $noiseSuppressionEngineStore,
+        $noiseSuppressionTuningStore,
         $browserNoiseSuppressionSupportedStore,
         $customNoiseSuppressionActiveStore,
         $noiseSuppressionStateStore,
@@ -349,6 +352,7 @@ export const audioConstraintStore = derived(
             browserNoiseSuppressionEnabled: $microphoneBrowserNoiseSuppressionStore,
             effectiveNoiseSuppressionProvider: $effectiveNoiseSuppressionProviderStore,
             noiseSuppressionEngine: $noiseSuppressionEngineStore,
+            postGainActive: $noiseSuppressionEngineStore === "deepfilternet" && $noiseSuppressionTuningStore.postGain,
             browserNoiseSuppressionSupported: $browserNoiseSuppressionSupportedStore,
             workAdventureNoiseSuppressionFailed:
                 $noiseSuppressionStateStore.status === "error" || $noiseSuppressionStateStore.status === "unsupported",
@@ -1007,11 +1011,29 @@ let audioProcessedStreamUpdateQueue: Promise<void> = Promise.resolve();
 type SetAudioProcessedTrackIfCurrent = (value: LocalTrackStoreValue) => void;
 
 export const audioProcessedLocalAudioTrackStore = derived<
-    [typeof rawLocalAudioTrackStore, typeof customNoiseSuppressionActiveStore, typeof noiseSuppressionEngineStore],
+    [
+        typeof rawLocalAudioTrackStore,
+        typeof customNoiseSuppressionActiveStore,
+        typeof noiseSuppressionEngineStore,
+        typeof noiseSuppressionTuningStore,
+    ],
     LocalTrackStoreValue
 >(
-    [rawLocalAudioTrackStore, customNoiseSuppressionActiveStore, noiseSuppressionEngineStore],
-    ([$rawLocalAudioTrackStore, $customNoiseSuppressionActiveStore, $noiseSuppressionEngineStore], set) => {
+    [
+        rawLocalAudioTrackStore,
+        customNoiseSuppressionActiveStore,
+        noiseSuppressionEngineStore,
+        noiseSuppressionTuningStore,
+    ],
+    (
+        [
+            $rawLocalAudioTrackStore,
+            $customNoiseSuppressionActiveStore,
+            $noiseSuppressionEngineStore,
+            $noiseSuppressionTuningStore,
+        ],
+        set,
+    ) => {
         const myGen = ++audioProcessedStreamGeneration;
         const setIfCurrent: SetAudioProcessedTrackIfCurrent = (value) => {
             if (myGen === audioProcessedStreamGeneration) {
@@ -1037,6 +1059,7 @@ export const audioProcessedLocalAudioTrackStore = derived<
                     $rawLocalAudioTrackStore.track,
                     $customNoiseSuppressionActiveStore,
                     $noiseSuppressionEngineStore,
+                    $noiseSuppressionTuningStore,
                     controller.signal,
                 );
                 // Loading a noise suppression model takes up to a second or two: send the raw microphone meanwhile

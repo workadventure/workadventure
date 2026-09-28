@@ -1,6 +1,10 @@
 import { derived, writable } from "svelte/store";
 
-import type { NoiseSuppressionEngine, NoiseSuppressionProvider } from "../Connection/LocalUserStore";
+import type {
+    NoiseSuppressionEngine,
+    NoiseSuppressionProvider,
+    NoiseSuppressionTuning,
+} from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { getEffectiveNoiseSuppressionProvider } from "./MicrophoneSettings";
@@ -126,6 +130,18 @@ function createNoiseSuppressionEngineStore() {
     };
 }
 
+function createNoiseSuppressionTuningStore() {
+    const { subscribe, set } = writable<NoiseSuppressionTuning>(localUserStore.getNoiseSuppressionTuning());
+
+    return {
+        subscribe,
+        setTuning(value: NoiseSuppressionTuning) {
+            localUserStore.setNoiseSuppressionTuning(value);
+            set(value);
+        },
+    };
+}
+
 function createVoiceIsolationSupportedStore() {
     const { subscribe, set } = writable(false);
 
@@ -150,6 +166,7 @@ export const noiseSuppressionStateStore = writable<NoiseSuppressionState>(
 export const noiseSuppressionEnabledStore = createNoiseSuppressionEnabledStore();
 export const noiseSuppressionProviderStore = createNoiseSuppressionProviderStore();
 export const noiseSuppressionEngineStore = createNoiseSuppressionEngineStore();
+export const noiseSuppressionTuningStore = createNoiseSuppressionTuningStore();
 
 export const browserNoiseSuppressionSupportedStore = writable(
     typeof navigator !== "undefined" && navigator.mediaDevices?.getSupportedConstraints().noiseSuppression === true,

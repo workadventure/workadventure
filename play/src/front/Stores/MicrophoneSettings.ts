@@ -13,6 +13,8 @@ export interface BuildMicrophoneAudioConstraintsOptions {
     browserNoiseSuppressionEnabled: boolean;
     effectiveNoiseSuppressionProvider: NoiseSuppressionProvider;
     noiseSuppressionEngine: NoiseSuppressionEngine;
+    /** DeepFilterNet3 levels the voice itself (debug switch): the browser's AGC must not raise the noise before it. */
+    postGainActive: boolean;
     browserNoiseSuppressionSupported: boolean;
     workAdventureNoiseSuppressionFailed: boolean;
     customNoiseSuppressionActive: boolean;
@@ -39,6 +41,7 @@ export function buildMicrophoneAudioConstraints({
     browserNoiseSuppressionEnabled,
     effectiveNoiseSuppressionProvider,
     noiseSuppressionEngine,
+    postGainActive,
     browserNoiseSuppressionSupported,
     workAdventureNoiseSuppressionFailed,
     customNoiseSuppressionActive,
@@ -52,7 +55,7 @@ export function buildMicrophoneAudioConstraints({
         (!customNoiseSuppressionActive || workAdventureNoiseSuppressionFailed);
 
     const constraints: MediaTrackConstraints = {
-        autoGainControl,
+        autoGainControl: autoGainControl && !(postGainActive && customNoiseSuppressionActive),
         echoCancellation,
         noiseSuppression: shouldUseBrowserNoiseSuppression,
     };

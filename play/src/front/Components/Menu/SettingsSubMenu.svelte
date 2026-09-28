@@ -31,6 +31,7 @@
         noiseSuppressionEnabledStore,
         noiseSuppressionProviderStore,
         noiseSuppressionEngineStore,
+        noiseSuppressionTuningStore,
         noiseSuppressionStateStore,
         voiceIsolationSupportedStore,
     } from "../../Stores/NoiseSuppressionStore";
@@ -556,6 +557,31 @@
                         onchange={updateNoiseSuppressionEngine}
                     />
                 </div>
+                <!-- Temporary debug switches, English only on purpose: removed once listening tests pick the defaults -->
+                {#if $noiseSuppressionEngineStore === "deepfilternet"}
+                    <div class="px-4 mt-2 flex flex-col gap-2" data-testid="noise-suppression-debug">
+                        <InputSwitch
+                            id="noise-suppression-debug-keystroke-filter"
+                            value={$noiseSuppressionTuningStore.keystrokeFilter}
+                            onchange={() =>
+                                noiseSuppressionTuningStore.setTuning({
+                                    ...$noiseSuppressionTuningStore,
+                                    keystrokeFilter: !$noiseSuppressionTuningStore.keystrokeFilter,
+                                })}
+                            label="Debug: keystroke filter (gate needs 2 speech frames)"
+                        />
+                        <InputSwitch
+                            id="noise-suppression-debug-post-gain"
+                            value={$noiseSuppressionTuningStore.postGain}
+                            onchange={() =>
+                                noiseSuppressionTuningStore.setTuning({
+                                    ...$noiseSuppressionTuningStore,
+                                    postGain: !$noiseSuppressionTuningStore.postGain,
+                                })}
+                            label="Debug: level after noise reduction (browser AGC off)"
+                        />
+                    </div>
+                {/if}
             {/if}
         {/if}
 

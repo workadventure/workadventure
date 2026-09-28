@@ -67,6 +67,7 @@ const legacyScreenShareBandwidthKey = "screenShareBandwidth";
 const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
 const noiseSuppressionProviderKey = "noiseSuppressionProvider";
 const noiseSuppressionEngineKey = "noiseSuppressionEngine";
+const noiseSuppressionTuningKey = "noiseSuppressionTuning";
 const microphoneAutoGainControlKey = "microphoneAutoGainControl";
 const microphoneEchoCancellationKey = "microphoneEchoCancellation";
 const microphoneBrowserNoiseSuppressionKey = "microphoneBrowserNoiseSuppression";
@@ -77,6 +78,15 @@ export type BandwidthConstrainedPreference = "maintain-framerate" | "maintain-re
 export type NoiseSuppressionProvider = "workadventure" | "voiceIsolation";
 /** The model behind the "workadventure" provider: DeepFilterNet3 (48 kHz, default) or the legacy DTLN (16 kHz). */
 export type NoiseSuppressionEngine = "deepfilternet" | "dtln";
+/**
+ * DeepFilterNet3 options under evaluation, behind debug switches until listening tests pick defaults.
+ * keystrokeFilter: the pause gate needs 2 speech frames to open, so one-frame clicks stay out.
+ * postGain: level the voice after the denoiser instead of the browser's automatic gain control.
+ */
+export interface NoiseSuppressionTuning {
+    keystrokeFilter: boolean;
+    postGain: boolean;
+}
 
 const JwtAuthToken = z
     .object({
@@ -859,6 +869,24 @@ class LocalUserStore {
 
     getNoiseSuppressionEngine(): NoiseSuppressionEngine {
         return localStorage.getItem(noiseSuppressionEngineKey) === "dtln" ? "dtln" : "deepfilternet";
+    }
+
+    setNoiseSuppressionTuning(value: NoiseSuppressionTuning) {
+        localStorage.setItem(noiseSuppressionTuningKey, JSON.stringify(value));
+    }
+
+    getNoiseSuppressionTuning(): NoiseSuppressionTuning {
+        const tuning = { keystrokeFilter: false, postGain: false };
+        try {
+            const stored: unknown = JSON.parse(localStorage.getItem(noiseSuppressionTuningKey) ?? "{}");
+            if (typeof stored === "object" && stored !== null) {
+                tuning.keystrokeFilter = "keystrokeFilter" in stored && stored.keystrokeFilter === true;
+                tuning.postGain = "postGain" in stored && stored.postGain === true;
+            }
+        } catch {
+            // Unreadable value: defaults
+        }
+        return tuning;
     }
 
     setMicrophoneAutoGainControl(value: boolean) {
