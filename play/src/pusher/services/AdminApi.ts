@@ -733,6 +733,57 @@ class AdminApi implements AdminInterface {
         message: string,
         byUserUuid: string,
     ): Promise<boolean> {
+        /**
+         * @openapi
+         * /api/ban:
+         *   post:
+         *     tags: ["AdminAPI"]
+         *     description: |
+         *       Bans a user from the world of the room, when an admin of the world bans them from inside the game.
+         *       The ban must be persisted: /api/ban (GET) and /api/room/access must then deny the user.
+         *       On an error, the pusher still ejects the user from the room, but as a simple kick.
+         *     security:
+         *      - Bearer: []
+         *     requestBody:
+         *       required: true
+         *       content:
+         *         application/json:
+         *           schema:
+         *             type: "object"
+         *             properties:
+         *               uuidToBan:
+         *                 type: string
+         *                 required: true
+         *                 description: "The identifier of the user to ban. It can be an uuid or an email"
+         *                 example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *               playUri:
+         *                 type: string
+         *                 required: true
+         *                 description: The full URL of the room the user is banned from
+         *                 example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
+         *               name:
+         *                 type: string
+         *                 required: true
+         *                 description: The name of the banned user
+         *                 example: "Alice"
+         *               message:
+         *                 type: string
+         *                 required: true
+         *                 description: "The reason given by the admin, or a default text if they gave none"
+         *                 example: "Spamming the chat"
+         *               byUserUuid:
+         *                 type: string
+         *                 required: true
+         *                 description: "The identifier of the admin who bans the user. It can be an uuid or an email"
+         *                 example: "998ce839-3dea-4698-8b41-ebbdf7688ad8"
+         *     responses:
+         *       200:
+         *         description: The ban has been saved. The response body is ignored.
+         *       404:
+         *         description: The room or the admin was not found
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         */
         return axios.post(
             ADMIN_API_URL + "/api/ban",
             { uuidToBan, playUri, name, message, byUserUuid },
