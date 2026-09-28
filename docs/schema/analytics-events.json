@@ -757,6 +757,17 @@
       }
     },
     {
+      "title": "media.audio_quality.sample",
+      "properties": {
+        "eventName": {
+          "const": "media.audio_quality.sample"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.audio_quality.sample"
+        }
+      }
+    },
+    {
       "title": "media.background_effect.sample",
       "properties": {
         "eventName": {
@@ -1930,6 +1941,7 @@
               "map_loading.failed",
               "map_loading.started",
               "map_loading.succeeded",
+              "media.audio_quality.sample",
               "media.background_effect.sample",
               "media.camera.toggled",
               "media.codec.degraded",
@@ -2899,6 +2911,66 @@
       "additionalProperties": true,
       "title": "map_loading.succeeded",
       "description": "A map finished loading."
+    },
+    "media.audio_quality.sample": {
+      "type": "object",
+      "properties": {
+        "transportType": {
+          "type": "string",
+          "enum": [
+            "P2P",
+            "SFU"
+          ],
+          "description": "Direct peer connections, or LiveKit."
+        },
+        "windowSeconds": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Length of the window the counters were taken over."
+        },
+        "streams": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Remote audio streams received at the end of the window."
+        },
+        "concealedRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Share of the received audio the browser had to invent because packets were late or missing — what a listener hears as robotic or choppy. Excludes the silence Opus DTX fills during pauses."
+        },
+        "concealmentEvents": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "How many separate concealment episodes the window had."
+        },
+        "packetLossRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Packets lost over packets expected."
+        },
+        "maxJitterMs": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Highest jitter estimate among the streams, at the end of the window."
+        },
+        "jitterBufferDelayMs": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Mean time audio waited in the jitter buffer: the latency the network's irregularity costs."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.audio_quality.sample",
+      "description": "How the voices this client received survived the network over the last minute, aggregated over every remote microphone of one transport. No event for a window in which no audio was received. The counterpart of media.noise_suppression.*: those tell whether the sender's audio was clean, this tells whether it arrived intact."
     },
     "media.background_effect.sample": {
       "type": "object",
