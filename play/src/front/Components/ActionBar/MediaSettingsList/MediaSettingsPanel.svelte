@@ -231,6 +231,10 @@
                     <div data-testid="noise-suppression-error" class="ms-14 px-3 text-sm text-pop-red">
                         {$noiseSuppressionStateStore.message ?? $LL.actionbar.microphone.noiseSuppressionError()}
                     </div>
+                {:else if $noiseSuppressionStateStore.status === "ready" && $noiseSuppressionEnabledStore}
+                    <div data-testid="noise-suppression-active" class="ms-14 px-3 text-sm text-success">
+                        {$LL.actionbar.microphone.noiseSuppressionActive()}
+                    </div>
                 {/if}
             </div>
         {:else}
