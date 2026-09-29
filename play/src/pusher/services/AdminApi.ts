@@ -654,7 +654,7 @@ class AdminApi implements AdminInterface {
         name: string,
         message: string,
         byUserUuid: string,
-    ): Promise<boolean> {
+    ): Promise<void> {
         /**
          * @openapi
          * /api/ban:
@@ -722,7 +722,6 @@ class AdminApi implements AdminInterface {
         if (z.object({ status: z.literal("error") }).safeParse(response.data).success) {
             throw new Error(`The admin refused to ban the user: ${JSON.stringify(response.data)}`);
         }
-        return true;
     }
 
     public getCapabilities(): Promise<Capabilities> {

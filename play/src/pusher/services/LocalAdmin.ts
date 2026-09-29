@@ -411,7 +411,7 @@ class LocalAdmin implements AdminInterface {
         name: string,
         message: string,
         byUserUuid: string,
-    ): Promise<boolean> {
+    ): Promise<void> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 

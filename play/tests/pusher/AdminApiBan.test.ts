@@ -15,7 +15,7 @@ describe("AdminApi.banUserByUuid", () => {
 
     it("resolves when the admin recorded the ban", async () => {
         vi.spyOn(axios, "post").mockResolvedValue({ status: 200, data: { uuid_user: "target-uuid", is_banned: true } });
-        await expect(ban()).resolves.toBe(true);
+        await expect(ban()).resolves.toBeUndefined();
     });
 
     it("rejects when the admin answers a refused ban with a 200 and an error body", async () => {
