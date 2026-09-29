@@ -210,8 +210,8 @@ export class IoSocketController {
                                 Sentry.captureException(e);
                             });
                         }
-                    } else if (message.event === "user-message") {
-                        const messageToEmit = message.message;
+                    } else if (message.event === "banned") {
+                        const bannedUser = message.message;
                         // Get roomIds of the world where we want broadcast the message
                         const roomIds = authorizedRoomIds.filter(
                             (authorizeRoomId) => authorizeRoomId.split("/")[5] === message.world,
@@ -219,7 +219,7 @@ export class IoSocketController {
 
                         for (const roomId of roomIds) {
                             socketManager
-                                .emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type, roomId)
+                                .emitBan(bannedUser.userUuid, bannedUser.message, "banned", roomId)
                                 .catch((error) => {
                                     Sentry.captureException(error);
                                     console.error(error);
