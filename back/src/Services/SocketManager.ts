@@ -1279,10 +1279,10 @@ export class SocketManager {
         );
     }
 
-    getWorldUsers(roomPathPrefix: string): WorldUsersAnswer {
+    getWorldUsers(world: string): WorldUsersAnswer {
         const users: WorldUser[] = [];
         for (const room of this.resolvedRooms.values()) {
-            if (!new URL(room.roomUrl).pathname.startsWith(roomPathPrefix)) {
+            if (!room.roomUrl.startsWith(world)) {
                 continue;
             }
             for (const user of room.getUsers().values()) {

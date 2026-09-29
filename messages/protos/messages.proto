@@ -1749,9 +1749,7 @@ message RoomsList {
 }
 
 message WorldUsersQuery {
-  // Path prefix of the rooms of the world, e.g. "/@/org/world/". It is matched against the path of each room URL,
-  // whatever the domain the room was reached from.
-  string roomPathPrefix = 1;
+  string world = 1;
 }
 
 // A user connected to a room of the world. Carries their IP address: never forward it to a game client.

@@ -248,7 +248,7 @@ class LocalAdmin implements AdminInterface {
             userRoomToken: undefined,
             activatedInviteUser: true,
             canEdit,
-            world: "localWorld",
+            world: roomUrl.origin,
             applications,
             canRecord,
             // LocalAdmin is the no-admin-backoffice path, so there is nothing to

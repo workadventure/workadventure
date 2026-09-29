@@ -69,7 +69,6 @@ import { ClientNotPartOfSpaceError, SpaceDestroyedError } from "../models/SpaceV
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
 import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
-import { getWorldPathPrefix } from "./WorldPathPrefix";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
@@ -779,7 +778,7 @@ export class SocketManager implements ZoneEventListener {
             // (they left, a back did not answer), only their account is banned.
             let ipAddress: string | undefined;
             try {
-                const bannedUser = (await this.getWorldUsers(socketData.roomId)).find(
+                const bannedUser = (await this.getWorldUsers(socketData.world)).find(
                     (user) => user.uuid === banPlayerMessage.banUserUuid,
                 );
                 if (bannedUser?.ipAddress && bannedUser.ipAddress !== socketData.ipAddress) {
@@ -949,18 +948,14 @@ export class SocketManager implements ZoneEventListener {
      * Every user connected to a room of the world of roomUrl, whatever the back serving the room. Rejects when the
      * room is outside any world, or when a back does not answer: a partial list would hide users.
      */
-    public async getWorldUsers(roomUrl: string): Promise<WorldUser[]> {
-        const roomPathPrefix = getWorldPathPrefix(roomUrl);
-        if (roomPathPrefix === undefined) {
-            throw new Error(`The room ${roomUrl} belongs to no world`);
-        }
+    public async getWorldUsers(world: string): Promise<WorldUser[]> {
         const backs = await apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);
         const answers = await Promise.all(
             backs.map(
                 (back) =>
                     new Promise<WorldUsersAnswer>((resolve, reject) => {
                         back.getWorldUsers(
-                            { roomPathPrefix },
+                            { world },
                             new Metadata(),
                             { deadline: Date.now() + 1000 },
                             (error, answer) => (error ? reject(error) : resolve(answer)),
