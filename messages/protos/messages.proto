@@ -643,7 +643,7 @@ message QueryMessage {
     StartRecordingQuery startRecordingQuery = 21;
     StopRecordingQuery stopRecordingQuery = 22;
     GetRecordingThumbnailsQuery getRecordingThumbnailsQuery = 23;
-    BanIpPreviewQuery banIpPreviewQuery = 26;
+    BanIpPreviewQuery banIpPreviewQuery = 24;
   }
 }
 
@@ -772,7 +772,7 @@ message AnswerMessage {
     StartRecordingAnswer startRecordingAnswer = 22;
     StopRecordingAnswer stopRecordingAnswer = 23;
     GetRecordingThumbnailsAnswer getRecordingThumbnailsAnswer = 24;
-    BanIpPreviewAnswer banIpPreviewAnswer = 27;
+    BanIpPreviewAnswer banIpPreviewAnswer = 25;
   }
 }
 
