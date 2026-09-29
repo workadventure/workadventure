@@ -43,12 +43,23 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "Verbannen uit de wereld",
-            content:
-                "{userName} wordt losgekoppeld en kan deze wereld niet meer betreden, ook niet met een ander account.",
+            content: "{userName} wordt losgekoppeld en kan deze wereld niet meer betreden met dit account.",
             submit: "Verbannen",
             confirmTitle: "{userName} definitief verbannen?",
             confirmContent:
                 "Dit kan niet ongedaan worden gemaakt vanuit het spel. Alleen een beheerder kan de ban opheffen via de backoffice.",
+            scope: {
+                account: "Dit account",
+                ip: "Dit account en het IP-adres",
+                ipHint: "Blokkeert ook nieuwe accounts via dezelfde verbinding, en iedereen die die deelt (een kantoor, een school…).",
+                ipUnknown: "Niet beschikbaar: deze gebruiker is niet meer verbonden.",
+                ipShared: "Niet beschikbaar: je deelt dit IP-adres en zou jezelf buitensluiten.",
+                loading: "Controleren wie dit IP-adres deelt…",
+                error: "Niet beschikbaar: kon niet controleren wie dit IP-adres deelt.",
+                nobody: "Niemand anders is op dit moment vanaf dit IP-adres met deze wereld verbonden. Wie later vanaf dit adres terugkomt, wordt ook buitengesloten.",
+                others: "Ook buitengesloten, op dit moment vanaf dit IP-adres met deze wereld verbonden ({count}):",
+                submitWithOthers: "Deze {count} personen bannen",
+            },
         },
     },
     kicked: {

@@ -42,11 +42,23 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "Ze swěta wuzamknuś",
-            content: "{userName} se źěli a njamóžo wěcej do togo swěta stupiś, teke nic z drugim kontom.",
+            content: "{userName} se źěli a njamóžo wěcej z toś tym kontom do togo swěta stupiś.",
             submit: "Wuzamknuś",
             confirmTitle: "{userName} na pśecej wuzamknuś?",
             confirmContent:
                 "To njedajo se w graśu wótwołaś. Jano administrator móžo wuzamknjenje w backoffice zběgnuś.",
+            scope: {
+                account: "Toś to konto",
+                ip: "Toś to konto a jogo IP-adresa",
+                ipHint: "Blokěrujo teke nowe konta z teje sameje zwiski a wšych, kótarež ju źěle (běrow, šula…).",
+                ipUnknown: "Njestoj k dispoziciji: toś ten wužywaŕ wěcej zwězany njejo.",
+                ipShared: "Njestoj k dispoziciji: źěliš toś tu IP-adresu a by se sam wuzamknuł.",
+                loading: "Pśeglědujo se, chto toś tu IP-adresu źěli…",
+                error: "Njestoj k dispoziciji: njejo było móžno pśeglědaś, chto toś tu IP-adresu źěli.",
+                nobody: "Tuchylu nichten drugi njejo z toś teje IP-adrese z toś tym swětom zwězany. Chtož se pózdźej z njeje wrośijo, se teke wuzamknjo.",
+                others: "Teke wuzamknjone, tuchylu z toś teje IP-adrese z toś tym swětom zwězane ({count}):",
+                submitWithOthers: "Toś tych {count} wósobow wuzamknuś",
+            },
         },
     },
     kicked: {

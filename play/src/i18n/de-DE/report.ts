@@ -42,12 +42,23 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "Aus der Welt verbannen",
-            content:
-                "{userName} wird getrennt und kann dieser Welt nicht mehr beitreten, auch nicht mit einem anderen Konto.",
+            content: "{userName} wird getrennt und kann dieser Welt mit diesem Konto nicht mehr beitreten.",
             submit: "Verbannen",
             confirmTitle: "{userName} endgültig verbannen?",
             confirmContent:
                 "Das lässt sich im Spiel nicht rückgängig machen. Nur ein Administrator kann den Bann im Backoffice aufheben.",
+            scope: {
+                account: "Dieses Konto",
+                ip: "Dieses Konto und seine IP-Adresse",
+                ipHint: "Sperrt auch neue Konten über dieselbe Verbindung und alle, die sie teilen (ein Büro, eine Schule…).",
+                ipUnknown: "Nicht verfügbar: Dieser Benutzer ist nicht mehr verbunden.",
+                ipShared: "Nicht verfügbar: Du teilst diese IP-Adresse und würdest dich selbst aussperren.",
+                loading: "Prüfe, wer diese IP-Adresse teilt…",
+                error: "Nicht verfügbar: Es konnte nicht geprüft werden, wer diese IP-Adresse teilt.",
+                nobody: "Gerade ist niemand sonst von dieser IP-Adresse aus mit dieser Welt verbunden. Wer später von dort zurückkommt, wird ebenfalls gesperrt.",
+                others: "Ebenfalls gesperrt, gerade von dieser IP-Adresse aus mit dieser Welt verbunden ({count}):",
+                submitWithOthers: "Diese {count} Personen sperren",
+            },
         },
     },
     kicked: {

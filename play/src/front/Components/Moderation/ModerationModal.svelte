@@ -1,8 +1,10 @@
 <script lang="ts">
     import { onMount, type Snippet } from "svelte";
+    import type { BanIpPreviewAnswer } from "@workadventure/messages";
     import Popup from "../Modal/Popup.svelte";
     import Button from "../UI/Button.svelte";
     import TextArea from "../Input/TextArea.svelte";
+    import InputRadio from "../Input/InputRadio.svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
@@ -30,6 +32,13 @@
 
     const canReport = connectionManager.currentRoom?.canReport ?? false;
 
+    /** A ban locks out the account only, unless the moderator also bans the IP it connected from. */
+    let banScope: "account" | "ip" = $state("account");
+    /** Who else a ban by IP would lock out. Undefined while loading. */
+    let ipPreview = $state<BanIpPreviewAnswer | undefined>(undefined);
+    let ipPreviewFailed = $state(false);
+    const canBanIp = $derived(ipPreview !== undefined && ipPreview.ipKnown && !ipPreview.includesModerator);
+
     onMount(() => {
         userIsBlocked = blackListManager.isBlackListed(userUuid);
     });
@@ -38,6 +47,29 @@
         step = next;
         text = "";
         textIsEmpty = false;
+        if (next === "ban") {
+            banScope = "account";
+            loadIpPreview();
+        }
+    }
+
+    function loadIpPreview() {
+        ipPreview = undefined;
+        ipPreviewFailed = false;
+        const connection = gameManager.getCurrentGameScene().connection;
+        if (!connection) {
+            ipPreviewFailed = true;
+            return;
+        }
+        connection
+            .queryBanIpPreview(userUuid)
+            .then((preview) => {
+                ipPreview = preview;
+            })
+            .catch((e) => {
+                console.error("Could not check who shares the IP address of the user to ban", e);
+                ipPreviewFailed = true;
+            });
     }
 
     function toggleBlock() {
@@ -66,7 +98,13 @@
             `,
             );
         } else {
-            connection?.emitBanPlayerMessage(userUuid, userName, step === "kick", text.trim());
+            connection?.emitBanPlayerMessage(
+                userUuid,
+                userName,
+                step === "kick",
+                text.trim(),
+                step === "ban" && banScope === "ip" && canBanIp,
+            );
         }
         modals.close();
     }
@@ -170,6 +208,54 @@
                     {/if}
                 </p>
                 {#if step === "ban"}
+                    <fieldset class="flex flex-col" data-testid="moderation-ban-scope">
+                        <InputRadio
+                            label={$LL.report.moderate.ban.scope.account()}
+                            value="account"
+                            bind:group={banScope}
+                            id="moderation-ban-scope-account"
+                        />
+                        <InputRadio
+                            label={$LL.report.moderate.ban.scope.ip()}
+                            value="ip"
+                            bind:group={banScope}
+                            disabled={!canBanIp}
+                            id="moderation-ban-scope-ip"
+                        >
+                            <span class="block text-xs opacity-60">
+                                {#if ipPreviewFailed}
+                                    {$LL.report.moderate.ban.scope.error()}
+                                {:else if ipPreview === undefined}
+                                    {$LL.report.moderate.ban.scope.loading()}
+                                {:else if !ipPreview.ipKnown}
+                                    {$LL.report.moderate.ban.scope.ipUnknown()}
+                                {:else if ipPreview.includesModerator}
+                                    {$LL.report.moderate.ban.scope.ipShared()}
+                                {:else}
+                                    {$LL.report.moderate.ban.scope.ipHint()}
+                                {/if}
+                            </span>
+                        </InputRadio>
+                    </fieldset>
+                    {#if banScope === "ip" && ipPreview !== undefined && canBanIp}
+                        <div
+                            class="flex flex-col gap-2 p-3 rounded-lg bg-white/5"
+                            data-testid="moderation-ban-ip-preview"
+                        >
+                            {#if ipPreview.users.length === 0}
+                                <p class="mb-0 text-sm">{$LL.report.moderate.ban.scope.nobody()}</p>
+                            {:else}
+                                <p class="mb-0 text-sm font-semibold">
+                                    {$LL.report.moderate.ban.scope.others({ count: ipPreview.users.length })}
+                                </p>
+                                <ul class="mb-0 flex flex-col gap-1 max-h-40 overflow-y-auto list-none p-0">
+                                    {#each ipPreview.users as user, index (index)}
+                                        <li class="text-sm">{user.name}</li>
+                                    {/each}
+                                </ul>
+                            {/if}
+                        </div>
+                    {/if}
                     <p class="mb-0 flex flex-row items-center gap-2 font-semibold">
                         <IconAlertTriangle font-size="20" class="shrink-0" />
                         {$LL.report.moderate.ban.confirmContent()}
@@ -209,6 +295,8 @@
                 {$LL.report.submit()}
             {:else if step === "kick"}
                 {$LL.report.moderate.kick.submit()}
+            {:else if banScope === "ip" && canBanIp && (ipPreview?.users.length ?? 0) > 0}
+                {$LL.report.moderate.ban.scope.submitWithOthers({ count: (ipPreview?.users.length ?? 0) + 1 })}
             {:else}
                 {$LL.report.moderate.ban.submit()}
             {/if}

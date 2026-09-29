@@ -235,6 +235,8 @@ message BanPlayerMessage {
   bool kick = 3;
   // reason given by the moderator, displayed to the kicked/banned user and stored with the ban
   string reason = 4;
+  // ban: also ban the IP the user connected from, which locks out everyone behind it (see BanIpPreviewQuery)
+  bool byIp = 5;
 }
 
 message UpdateChatIdMessage {
@@ -641,6 +643,7 @@ message QueryMessage {
     StartRecordingQuery startRecordingQuery = 21;
     StopRecordingQuery stopRecordingQuery = 22;
     GetRecordingThumbnailsQuery getRecordingThumbnailsQuery = 23;
+    BanIpPreviewQuery banIpPreviewQuery = 26;
   }
 }
 
@@ -769,6 +772,7 @@ message AnswerMessage {
     StartRecordingAnswer startRecordingAnswer = 22;
     StopRecordingAnswer stopRecordingAnswer = 23;
     GetRecordingThumbnailsAnswer getRecordingThumbnailsAnswer = 24;
+    BanIpPreviewAnswer banIpPreviewAnswer = 27;
   }
 }
 
@@ -870,6 +874,25 @@ message DeleteRecordingAnswer {
 
 message GetSignedUrlAnswer {
   string signedUrl = 1;
+}
+
+// Who else a ban by IP of banUserUuid would lock out. Reserved to the admins of the world (enforced by the pusher).
+message BanIpPreviewQuery {
+  string banUserUuid = 1;
+}
+
+// Someone connected to the world from the same IP address as the user to ban. No IP address, no email.
+message BanIpPreviewUser {
+  string name = 1;
+}
+
+message BanIpPreviewAnswer {
+  // false when the user to ban is not connected any more: their IP is unknown, they cannot be banned by IP
+  bool ipKnown = 1;
+  // the moderator shares that IP: they cannot ban it without locking themselves out
+  bool includesModerator = 2;
+  // everyone else connected to the world from that IP right now
+  repeated BanIpPreviewUser users = 3;
 }
 
 message Member {

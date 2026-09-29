@@ -56,6 +56,9 @@ test.describe("In-game moderation @oidc @nomobile @nowebkit", () => {
 
         await openModerationModal(admin, "Alice", true);
         await admin.getByTestId("moderation-ban-action").click();
+        // Banning the IP locks out everyone behind it: the account alone is the default.
+        await expect(admin.locator("#moderation-ban-scope-account")).toBeChecked();
+        await expect(admin.locator("#moderation-ban-scope-ip")).not.toBeChecked();
         await admin.getByTestId("moderation-submit").click();
 
         // Without an admin back office the ban cannot be recorded, and the user is kicked instead.

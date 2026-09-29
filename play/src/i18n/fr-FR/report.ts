@@ -42,11 +42,23 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "Bannir du monde",
-            content: "{userName} est déconnecté et ne pourra plus rejoindre ce monde, même avec un autre compte.",
+            content: "{userName} est déconnecté et ne pourra plus rejoindre ce monde avec ce compte.",
             submit: "Bannir",
             confirmTitle: "Bannir {userName} définitivement ?",
             confirmContent:
                 "C'est irréversible depuis le jeu. Seul un administrateur peut lever le bannissement depuis le back-office.",
+            scope: {
+                account: "Ce compte",
+                ip: "Ce compte et son adresse IP",
+                ipHint: "Bloque aussi les nouveaux comptes venant de la même connexion, et tous ceux qui la partagent (un bureau, une école…).",
+                ipUnknown: "Indisponible : cet utilisateur n'est plus connecté.",
+                ipShared: "Indisponible : vous partagez cette adresse IP et vous vous bloqueriez vous-même.",
+                loading: "Recherche des personnes qui partagent cette adresse IP…",
+                error: "Indisponible : impossible de vérifier qui partage cette adresse IP.",
+                nobody: "Personne d'autre n'est connecté à ce monde depuis cette adresse IP en ce moment. Quelqu'un qui revient plus tard depuis celle-ci sera bloqué aussi.",
+                others: "Bloqués aussi, connectés à ce monde depuis cette adresse IP en ce moment ({count}) :",
+                submitWithOthers: "Bannir ces {count} personnes",
+            },
         },
     },
     kicked: {

@@ -43,12 +43,23 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "Bandejar del món",
-            content:
-                "{userName} es desconnecta i no podrà tornar a entrar en aquest món, ni tan sols amb un altre compte.",
+            content: "{userName} es desconnecta i no podrà tornar a entrar en aquest món amb aquest compte.",
             submit: "Bandejar",
             confirmTitle: "Bandejar {userName} definitivament?",
             confirmContent:
                 "No es pot desfer des del joc. Només un administrador pot aixecar el bandeig des del back-office.",
+            scope: {
+                account: "Aquest compte",
+                ip: "Aquest compte i la seva adreça IP",
+                ipHint: "També bloqueja els comptes nous des de la mateixa connexió, i tothom qui la comparteix (una oficina, una escola…).",
+                ipUnknown: "No disponible: aquest usuari ja no està connectat.",
+                ipShared: "No disponible: comparteixes aquesta adreça IP i et bloquejaries a tu mateix.",
+                loading: "Comprovant qui comparteix aquesta adreça IP…",
+                error: "No disponible: no s'ha pogut comprovar qui comparteix aquesta adreça IP.",
+                nobody: "Ningú més està connectat a aquest món des d'aquesta adreça IP ara mateix. Qui torni més tard des d'aquesta adreça també quedarà bloquejat.",
+                others: "També bloquejats, connectats a aquest món des d'aquesta adreça IP ara mateix ({count}):",
+                submitWithOthers: "Bandejar aquestes {count} persones",
+            },
         },
     },
     kicked: {
