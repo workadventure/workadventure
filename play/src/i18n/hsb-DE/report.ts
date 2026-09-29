@@ -42,10 +42,22 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "ze swěta wuzamknyć",
-            content: "{userName} so dźěli a njemóže wjace do tutoho swěta zastupić, tež nic z druhim kontom.",
+            content: "{userName} so dźěli a njemóže wjace z tutym kontom do tutoho swěta zastupić.",
             submit: "wuzamknyć",
             confirmTitle: "{userName} na přeco wuzamknyć?",
             confirmContent: "To njeda so w hrě wotwołać. Jenož administrator móže wuzamknjenje w backoffice zběhnyć.",
+            scope: {
+                account: "Tute konto",
+                ip: "Tute konto a jeho IP-adresa",
+                ipHint: "Blokuje tež nowe konta z teje sameje zwiski a wšěch, kotřiž ju dźěla (běrow, šula…).",
+                ipUnknown: "Njesteji k dispoziciji: tutón wužiwar hižo zwjazany njeje.",
+                ipShared: "Njesteji k dispoziciji: dźěliš tutu IP-adresu a by so sam wuzamknył.",
+                loading: "Přepruwuje so, štó tutu IP-adresu dźěli…",
+                error: "Njesteji k dispoziciji: njebě móžno přepruwować, štó tutu IP-adresu dźěli.",
+                nobody: "Tuchwilu nichtó druhi njeje z tuteje IP-adresy z tutym swětom zwjazany. Štóž so pozdźišo z njeje wróći, so tež wuzamknje.",
+                others: "Tež wuzamknjeni, tuchwilu z tuteje IP-adresy z tutym swětom zwjazani ({count}):",
+                submitWithOthers: "Tutych {count} wosobow wuzamknyć",
+            },
         },
     },
     kicked: {

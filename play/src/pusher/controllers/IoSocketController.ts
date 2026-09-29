@@ -743,6 +743,18 @@ export class IoSocketController {
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
+                                        case "banIpPreviewQuery": {
+                                            const banIpPreviewAnswer = await socketManager.handleBanIpPreviewQuery(
+                                                socket,
+                                                message.message.queryMessage.query.banIpPreviewQuery,
+                                            );
+                                            answerMessage.answer = {
+                                                $case: "banIpPreviewAnswer",
+                                                banIpPreviewAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
                                         case "chatMembersQuery": {
                                             const chatMembersAnswer = await socketManager.handleChatMembersQuery(
                                                 socket,

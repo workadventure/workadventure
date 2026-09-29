@@ -46,6 +46,8 @@ import type {
     ConnectToRoomMessage,
     JoinRoomFrontMessage,
     ServerToClientMessage,
+    BanIpPreviewAnswer,
+    BanIpPreviewQuery,
     WorldUser,
     WorldUsersAnswer,
 } from "@workadventure/messages";
@@ -773,19 +775,21 @@ export class SocketManager implements ZoneEventListener {
                 await this.emitBan(banPlayerMessage.banUserUuid, reason, "kicked", socketData.roomId);
                 return;
             }
-            // The back knows the IP of every user it serves: ban it too, so the user cannot come back with another
-            // account. Unless the moderator shares it, they would lock themselves out. If the user cannot be found
-            // (they left, a back did not answer), only their account is banned.
+            // On request, ban the IP the back sees for the user too, so they cannot come back with another account.
+            // Unless the moderator shares it, they would lock themselves out. If the user cannot be found (they left,
+            // a back did not answer), only their account is banned.
             let ipAddress: string | undefined;
-            try {
-                const bannedUser = (await this.getWorldUsers(socketData.world)).find(
-                    (user) => user.uuid === banPlayerMessage.banUserUuid,
-                );
-                if (bannedUser?.ipAddress && bannedUser.ipAddress !== socketData.ipAddress) {
-                    ipAddress = bannedUser.ipAddress;
+            if (banPlayerMessage.byIp) {
+                try {
+                    const bannedUser = (await this.getWorldUsers(socketData.world)).find(
+                        (user) => user.uuid === banPlayerMessage.banUserUuid,
+                    );
+                    if (bannedUser?.ipAddress && bannedUser.ipAddress !== socketData.ipAddress) {
+                        ipAddress = bannedUser.ipAddress;
+                    }
+                } catch (e) {
+                    console.warn(`Could not find the IP of the banned user, banning their account only: ${e}`);
                 }
-            } catch (e) {
-                console.warn(`Could not find the IP of the banned user, banning their account only: ${e}`);
             }
             try {
                 await adminService.banUserByUuid(
@@ -965,6 +969,37 @@ export class SocketManager implements ZoneEventListener {
             ),
         );
         return answers.flatMap((answer) => answer.users);
+    }
+
+    /**
+     * Who else a ban by IP of a user would lock out: the other users connected to the world from the same IP.
+     * Only names go back to the game, never an IP address.
+     */
+    async handleBanIpPreviewQuery(
+        client: PusherWebSocket,
+        banIpPreviewQuery: BanIpPreviewQuery,
+    ): Promise<BanIpPreviewAnswer> {
+        const { world, userUuid, tags, ipAddress } = client.getUserData();
+        if (!tags.includes("admin")) {
+            throw new Error("Only an admin of the world can preview a ban");
+        }
+        const worldUsers = await this.getWorldUsers(world);
+        const bannedIp = worldUsers.find((user) => user.uuid === banIpPreviewQuery.banUserUuid)?.ipAddress;
+        if (!bannedIp) {
+            return { ipKnown: false, includesModerator: false, users: [] };
+        }
+        return {
+            ipKnown: true,
+            includesModerator: bannedIp === ipAddress,
+            users: worldUsers
+                .filter(
+                    (user) =>
+                        user.ipAddress === bannedIp &&
+                        user.uuid !== banIpPreviewQuery.banUserUuid &&
+                        user.uuid !== userUuid,
+                )
+                .map((user) => ({ name: user.name })),
+        };
     }
 
     public async emitBan(userUuid: string, message: string, type: string, roomId: string): Promise<void> {

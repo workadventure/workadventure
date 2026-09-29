@@ -43,11 +43,23 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "Banear del mundo",
-            content: "{userName} se desconecta y no podrá volver a entrar en este mundo, ni siquiera con otra cuenta.",
+            content: "{userName} se desconecta y no podrá volver a entrar en este mundo con esta cuenta.",
             submit: "Banear",
             confirmTitle: "¿Banear a {userName} definitivamente?",
             confirmContent:
                 "No se puede deshacer desde el juego. Solo un administrador puede levantar el baneo desde el back-office.",
+            scope: {
+                account: "Esta cuenta",
+                ip: "Esta cuenta y su dirección IP",
+                ipHint: "También bloquea las cuentas nuevas desde la misma conexión, y a todos los que la comparten (una oficina, una escuela…).",
+                ipUnknown: "No disponible: este usuario ya no está conectado.",
+                ipShared: "No disponible: compartes esta dirección IP y te bloquearías a ti mismo.",
+                loading: "Comprobando quién comparte esta dirección IP…",
+                error: "No disponible: no se pudo comprobar quién comparte esta dirección IP.",
+                nobody: "Nadie más está conectado a este mundo desde esta dirección IP ahora mismo. Quien vuelva más tarde desde ella también quedará bloqueado.",
+                others: "También bloqueados, conectados a este mundo desde esta dirección IP ahora mismo ({count}):",
+                submitWithOthers: "Banear a estas {count} personas",
+            },
         },
     },
     kicked: {

@@ -42,10 +42,22 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "從世界封鎖",
-            content: "{userName} 將被中斷連線，且無法再加入此世界，即使使用其他帳號也不行。",
+            content: "{userName} 將被中斷連線，且無法再用此帳號加入此世界。",
             submit: "封鎖",
             confirmTitle: "永久封鎖 {userName}？",
             confirmContent: "無法在遊戲中復原。只有管理員才能在後台解除封鎖。",
+            scope: {
+                account: "此帳號",
+                ip: "此帳號及其 IP 位址",
+                ipHint: "同時封鎖來自同一網路連線的新帳號，以及共用該連線的所有人（辦公室、學校等）。",
+                ipUnknown: "無法使用：此使用者已不在線上。",
+                ipShared: "無法使用：你與其共用此 IP 位址，會把自己也封鎖。",
+                loading: "正在檢查誰在共用此 IP 位址…",
+                error: "無法使用：無法檢查誰在共用此 IP 位址。",
+                nobody: "目前沒有其他人透過此 IP 位址連線到此世界。之後從該位址回來的人也會被封鎖。",
+                others: "同樣會被封鎖，目前透過此 IP 位址連線到此世界的人（{count}）：",
+                submitWithOthers: "封鎖這 {count} 人",
+            },
         },
     },
     kicked: {

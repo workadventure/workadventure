@@ -42,11 +42,23 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "Cấm khỏi thế giới",
-            content: "{userName} bị ngắt kết nối và không thể tham gia lại thế giới này, kể cả với tài khoản khác.",
+            content: "{userName} bị ngắt kết nối và không thể tham gia lại thế giới này bằng tài khoản này.",
             submit: "Cấm",
             confirmTitle: "Cấm {userName} vĩnh viễn?",
             confirmContent:
                 "Không thể hoàn tác từ trong trò chơi. Chỉ quản trị viên mới có thể gỡ lệnh cấm từ back-office.",
+            scope: {
+                account: "Tài khoản này",
+                ip: "Tài khoản này và địa chỉ IP của nó",
+                ipHint: "Cũng chặn các tài khoản mới từ cùng kết nối, và mọi người dùng chung kết nối đó (văn phòng, trường học…).",
+                ipUnknown: "Không khả dụng: người dùng này không còn kết nối.",
+                ipShared: "Không khả dụng: bạn dùng chung địa chỉ IP này và sẽ tự chặn chính mình.",
+                loading: "Đang kiểm tra ai dùng chung địa chỉ IP này…",
+                error: "Không khả dụng: không thể kiểm tra ai dùng chung địa chỉ IP này.",
+                nobody: "Hiện không có ai khác kết nối vào thế giới này từ địa chỉ IP này. Ai quay lại sau từ địa chỉ này cũng sẽ bị chặn.",
+                others: "Cũng bị chặn, những người đang kết nối vào thế giới này từ địa chỉ IP này ({count}):",
+                submitWithOthers: "Cấm {count} người này",
+            },
         },
     },
     kicked: {

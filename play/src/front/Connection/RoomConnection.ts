@@ -28,6 +28,7 @@ import type {
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
+    BanIpPreviewAnswer,
     Member,
     ModifiyWAMMetadataMessage,
     ModifyCustomEntityMessage,
@@ -1185,7 +1186,13 @@ export class RoomConnection implements RoomConnection {
      * Ejects a user from the room. Reserved to the admins of the world (enforced by the pusher).
      * @param kick true to only eject the user, false to also ban them from the world (permanent)
      */
-    public emitBanPlayerMessage(banUserUuid: string, banUserName: string, kick = false, reason = ""): void {
+    public emitBanPlayerMessage(
+        banUserUuid: string,
+        banUserName: string,
+        kick = false,
+        reason = "",
+        byIp = false,
+    ): void {
         this.send({
             message: {
                 $case: "banPlayerMessage",
@@ -1194,9 +1201,24 @@ export class RoomConnection implements RoomConnection {
                     banUserName,
                     kick,
                     reason,
+                    byIp,
                 },
             },
         });
+    }
+
+    /**
+     * Who else a ban by IP of this user would lock out. The pusher refuses it to anyone but the admins of the world.
+     */
+    public async queryBanIpPreview(banUserUuid: string): Promise<BanIpPreviewAnswer> {
+        const answer = await this.query({
+            $case: "banIpPreviewQuery",
+            banIpPreviewQuery: { banUserUuid },
+        });
+        if (answer.$case !== "banIpPreviewAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.banIpPreviewAnswer;
     }
 
     public hasTag(tag: string): boolean {

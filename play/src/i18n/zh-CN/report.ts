@@ -42,10 +42,22 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "从世界封禁",
-            content: "{userName} 将被断开连接，且无法再加入此世界，即使使用其他账号也不行。",
+            content: "{userName} 将被断开连接，且无法再用此账号加入此世界。",
             submit: "封禁",
             confirmTitle: "永久封禁 {userName}？",
             confirmContent: "无法在游戏中撤销。只有管理员才能在后台解除封禁。",
+            scope: {
+                account: "此账号",
+                ip: "此账号及其 IP 地址",
+                ipHint: "同时封禁来自同一网络连接的新账号，以及共享该连接的所有人（办公室、学校等）。",
+                ipUnknown: "不可用：该用户已不在线。",
+                ipShared: "不可用：你与其共享此 IP 地址，会把自己也封禁。",
+                loading: "正在检查谁在共享此 IP 地址…",
+                error: "不可用：无法检查谁在共享此 IP 地址。",
+                nobody: "目前没有其他人通过此 IP 地址连接到此世界。之后从该地址回来的人也会被封禁。",
+                others: "同样会被封禁，目前通过此 IP 地址连接到此世界的人（{count}）：",
+                submitWithOthers: "封禁这 {count} 人",
+            },
         },
     },
     kicked: {

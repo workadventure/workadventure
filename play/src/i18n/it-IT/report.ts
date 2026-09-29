@@ -43,12 +43,23 @@ const report: DeepPartial<Translation["report"]> = {
         },
         ban: {
             title: "Bandisci dal mondo",
-            content:
-                "{userName} viene disconnesso e non potrà più entrare in questo mondo, nemmeno con un altro account.",
+            content: "{userName} viene disconnesso e non potrà più entrare in questo mondo con questo account.",
             submit: "Bandisci",
             confirmTitle: "Bandire {userName} definitivamente?",
             confirmContent:
                 "Non può essere annullato dal gioco. Solo un amministratore può revocare il ban dal back-office.",
+            scope: {
+                account: "Questo account",
+                ip: "Questo account e il suo indirizzo IP",
+                ipHint: "Blocca anche i nuovi account dalla stessa connessione, e tutti quelli che la condividono (un ufficio, una scuola…).",
+                ipUnknown: "Non disponibile: questo utente non è più connesso.",
+                ipShared: "Non disponibile: condividi questo indirizzo IP e bloccheresti te stesso.",
+                loading: "Verifica di chi condivide questo indirizzo IP…",
+                error: "Non disponibile: impossibile verificare chi condivide questo indirizzo IP.",
+                nobody: "Nessun altro è connesso a questo mondo da questo indirizzo IP in questo momento. Chi tornerà più tardi da questo indirizzo sarà bloccato anche lui.",
+                others: "Bloccati anche loro, connessi a questo mondo da questo indirizzo IP in questo momento ({count}):",
+                submitWithOthers: "Banna queste {count} persone",
+            },
         },
     },
     kicked: {
