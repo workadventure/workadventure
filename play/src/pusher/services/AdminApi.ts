@@ -778,19 +778,27 @@ class AdminApi implements AdminInterface {
          *                 example: "998ce839-3dea-4698-8b41-ebbdf7688ad8"
          *     responses:
          *       200:
-         *         description: The ban has been saved. The response body is ignored.
-         *       404:
-         *         description: The room or the admin was not found
+         *         description: |
+         *           The ban has been saved, or it was refused (room or admin not found, the banning user is not an
+         *           admin of the world). A refused ban is answered with an error body, whose `status` is `error`.
          *         schema:
-         *             $ref: '#/definitions/ErrorApiErrorData'
+         *           oneOf:
+         *            - type: object
+         *            - $ref: '#/definitions/ErrorApiErrorData'
          */
-        return axios.post(
+        const response = await axios.post<unknown>(
             ADMIN_API_URL + "/api/ban",
             { uuidToBan, playUri, name, message, byUserUuid },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
             },
         );
+        // The admin answers a refused ban with a 200 and an error body. Only its status is checked: a full
+        // ErrorApiData parse failing on an unexpected field would take the refused ban as recorded.
+        if (z.object({ status: z.literal("error") }).safeParse(response.data).success) {
+            throw new Error(`The admin refused to ban the user: ${JSON.stringify(response.data)}`);
+        }
+        return true;
     }
 
     public getCapabilities(): Promise<Capabilities> {
