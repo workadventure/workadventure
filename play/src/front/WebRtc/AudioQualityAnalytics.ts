@@ -77,8 +77,10 @@ async function sampleAll(): Promise<void> {
                 return;
             }
             const current = readAudioReceiveTotals(report);
-            // The first minute of a source only sets its baseline: its counters started before we looked
-            if (source.previous) {
+            // The first minute of a source only sets its baseline: its counters started before we looked. So does a
+            // minute in which a stream went away or restarted its counters (a replaced LiveKit track, a new P2P
+            // SSRC): subtracting across that would give negative, meaningless deltas.
+            if (source.previous && !countersRestarted(current, source.previous)) {
                 const delta = subtractTotals(current, source.previous);
                 const sum = deltas.get(source.transport);
                 deltas.set(source.transport, sum ? addTotals(sum, delta) : delta);
@@ -144,6 +146,20 @@ export function toAudioQualitySample(
                 ? Math.round((delta.jitterBufferDelay / delta.jitterBufferEmittedCount) * 1000)
                 : null,
     };
+}
+
+function countersRestarted(current: AudioReceiveTotals, previous: AudioReceiveTotals): boolean {
+    return (
+        current.streams < previous.streams ||
+        current.totalSamplesReceived < previous.totalSamplesReceived ||
+        current.concealedSamples < previous.concealedSamples ||
+        current.silentConcealedSamples < previous.silentConcealedSamples ||
+        current.concealmentEvents < previous.concealmentEvents ||
+        current.packetsReceived < previous.packetsReceived ||
+        current.packetsLost < previous.packetsLost ||
+        current.jitterBufferDelay < previous.jitterBufferDelay ||
+        current.jitterBufferEmittedCount < previous.jitterBufferEmittedCount
+    );
 }
 
 function subtractTotals(current: AudioReceiveTotals, previous: AudioReceiveTotals): AudioReceiveTotals {
