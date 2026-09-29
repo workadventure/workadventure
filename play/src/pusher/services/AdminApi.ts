@@ -33,13 +33,6 @@ import { ShortMapDescriptionList } from "./ShortMapDescription";
 import { WorldChatMembersData } from "./WorldChatMembersData";
 import { iceServersService } from "./IceServersService";
 
-export const AdminBannedData = z.object({
-    is_banned: z.boolean(),
-    message: z.string(),
-});
-
-export type AdminBannedData = z.infer<typeof AdminBannedData>;
-
 export const AdminLoginMessage = z.object({
     type: z.string(),
     message: z.string(),
@@ -575,77 +568,6 @@ class AdminApi implements AdminInterface {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
             },
         );
-    }
-
-    async verifyBanUser(
-        userUuid: string,
-        ipAddress: string,
-        roomUrl: string,
-        locale?: string,
-    ): Promise<AdminBannedData> {
-        /**
-         * @openapi
-         * /api/ban:
-         *   get:
-         *     tags: ["AdminAPI"]
-         *     description: Check if user is banned or not
-         *     security:
-         *      - Bearer: []
-         *     produces:
-         *      - "application/json"
-         *     parameters:
-         *      - name: "ipAddress"
-         *        in: "query"
-         *        type: "string"
-         *        required: true
-         *        example: "127.0.0.1"
-         *      - name: "token"
-         *        in: "query"
-         *        description: "The uuid of the user \n It can be an uuid or an email"
-         *        type: "string"
-         *        required: true
-         *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad8"
-         *      - name: "roomUrl"
-         *        in: "query"
-         *        description: "The slug of the world where to check if the user is banned"
-         *        type: "string"
-         *        required: true
-         *        example: "/@/teamSlug/worldSlug/roomSlug"
-         *     responses:
-         *       200:
-         *         description: The user is banned or not
-         *         content:
-         *             application/json:
-         *                 schema:
-         *                     type: array
-         *                     required:
-         *                         - is_banned
-         *                 properties:
-         *                     is_banned:
-         *                         type: boolean
-         *                         description: Whether the user is banned or not
-         *                         example: true
-         *       404:
-         *         description: Error while retrieving the data
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiErrorData'
-         */
-        //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-        return axios
-            .get(
-                ADMIN_API_URL +
-                    "/api/ban" +
-                    "?ipAddress=" +
-                    encodeURIComponent(ipAddress) +
-                    "&token=" +
-                    encodeURIComponent(userUuid) +
-                    "&roomUrl=" +
-                    encodeURIComponent(roomUrl),
-                { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } },
-            )
-            .then((data) => {
-                return AdminBannedData.parse(data.data);
-            });
     }
 
     async getUrlRoomsFromSameWorld(

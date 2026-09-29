@@ -57,7 +57,7 @@ import {
     MATRIX_ADMIN_PASSWORD,
     MATRIX_DOMAIN,
 } from "../enums/EnvironmentVariable";
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { AdminInterface } from "./AdminInterface";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
@@ -366,15 +366,6 @@ class LocalAdmin implements AdminInterface {
     markUserMessageAsRead(messageId: string, userIdentifier: string): Promise<void> {
         // Without an admin backoffice there is no message to flag as read.
         return Promise.resolve();
-    }
-
-    async verifyBanUser(
-        userUuid: string,
-        ipAddress: string,
-        roomUrl: string,
-        locale?: string,
-    ): Promise<AdminBannedData> {
-        return Promise.reject(new Error("No admin backoffice set!"));
     }
 
     async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<ShortMapDescriptionList> {
