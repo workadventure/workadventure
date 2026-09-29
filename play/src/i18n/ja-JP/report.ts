@@ -24,7 +24,7 @@ const report: DeepPartial<Translation["report"]> = {
         action: "管理",
         reason: {
             label: "理由",
-            placeholder: "任意。管理者向けに保存されます。",
+            placeholder: "任意。{userName} さんにこのメッセージが表示されます。",
         },
         adminOnly: "管理者専用",
         cancel: "キャンセル",

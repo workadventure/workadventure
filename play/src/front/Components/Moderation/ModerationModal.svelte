@@ -177,7 +177,7 @@
                 {/if}
                 <TextArea
                     label={step === "report" ? $LL.report.message.title() : $LL.report.moderate.reason.label()}
-                    placeHolder={step === "report" ? "" : $LL.report.moderate.reason.placeholder()}
+                    placeHolder={step === "report" ? "" : $LL.report.moderate.reason.placeholder({ userName })}
                     bind:value={text}
                     optional={step !== "report"}
                     height="h-[80px]"

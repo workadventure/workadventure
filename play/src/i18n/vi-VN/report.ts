@@ -24,7 +24,7 @@ const report: DeepPartial<Translation["report"]> = {
         action: "Kiểm duyệt",
         reason: {
             label: "Lý do",
-            placeholder: "Không bắt buộc. Được lưu cho quản trị viên.",
+            placeholder: "Không bắt buộc. {userName} sẽ thấy tin nhắn này.",
         },
         adminOnly: "Dành riêng cho quản trị viên",
         cancel: "Hủy",

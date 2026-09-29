@@ -24,7 +24,7 @@ const report: DeepPartial<Translation["report"]> = {
         action: "จัดการ",
         reason: {
             label: "เหตุผล",
-            placeholder: "ไม่บังคับ เก็บไว้ให้ผู้ดูแล",
+            placeholder: "ไม่บังคับ {userName} จะเห็นข้อความนี้",
         },
         adminOnly: "สำหรับผู้ดูแลเท่านั้น",
         cancel: "ยกเลิก",

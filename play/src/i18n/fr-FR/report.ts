@@ -24,7 +24,7 @@ const report: DeepPartial<Translation["report"]> = {
         noSelect: "ERREUR : Il n'y a pas d'action sélectionnée.",
         reason: {
             label: "Motif",
-            placeholder: "Facultatif. Conservé pour les administrateurs.",
+            placeholder: "Facultatif. {userName} verra ce message.",
         },
         adminOnly: "Réservé aux admins",
         cancel: "Annuler",
