@@ -508,7 +508,6 @@ message ClientToServerMessage {
     AnalyticsEventReportMessage analyticsEventReportMessage = 52;
     EntityMessage entityMessage = 53;
   }
-  reserved 51; // was UserMessageReadMessage
 }
 
 // An event delivered to a client, either broadcast by another player's script (WA.event) or by the
@@ -1188,7 +1187,6 @@ message TeleportMessageMessage{
 message SendUserMessage{
   string type = 1;
   string message = 2;
-  reserved 3; // was the admin-side id of the message, for read receipts
 }
 
 message WorldFullWarningMessage{
@@ -1226,7 +1224,6 @@ message WorldConnectionMessage{
 message BanUserMessage{
   string type = 1;
   string message = 2;
-  reserved 3; // was the admin-side id of the message, for read receipts
 }
 
 message AskPositionMessage{
@@ -1639,7 +1636,6 @@ message PusherToBackMessage {
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 34;
     EntityMessage entityMessage = 35;
   }
-  reserved 12, 13; // were SendUserMessage and BanUserMessage, never sent by the pusher
 }
 
 
