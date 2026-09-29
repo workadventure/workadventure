@@ -367,9 +367,9 @@ export class Space implements SpaceForSpaceConnectionInterface {
             CLIENT_UPDATABLE_SPACE_USER_FIELDS.has(field),
         );
         if (changedFields.length !== updateSpaceUserMessage.updateMask.length) {
-            console.warn(
-                `[Space.extractUpdatedFieldsFromUpdateSpaceUserMessage] User ${spaceUser.spaceUserId} tried to update read-only fields in space ${this.name}: ${updateSpaceUserMessage.updateMask.join(", ")}`,
-            );
+            const message = `[Space.extractUpdatedFieldsFromUpdateSpaceUserMessage] User ${spaceUser.spaceUserId} tried to update read-only fields in space ${this.name}: ${updateSpaceUserMessage.updateMask.join(", ")}`;
+            console.warn(message);
+            Sentry.captureException(new Error(message));
         }
         if (changedFields.length === 0) {
             return null;
