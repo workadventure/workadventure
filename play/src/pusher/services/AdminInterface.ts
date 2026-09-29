@@ -7,7 +7,7 @@ import type {
     RoomRedirect,
     Capabilities,
 } from "@workadventure/messages";
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { ShortMapDescriptionList } from "./ShortMapDescription";
 import type { WorldChatMembersData } from "./WorldChatMembersData";
 
@@ -71,15 +71,6 @@ export interface AdminInterface {
      * @param userIdentifier the user who read the message
      */
     markUserMessageAsRead(messageId: string, userIdentifier: string): Promise<void>;
-
-    /**
-     * @param locale
-     * @param userUuid
-     * @param ipAddress
-     * @param roomUrl
-     * @return AdminBannedData
-     */
-    verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string, locale?: string): Promise<AdminBannedData>;
 
     /**
      * @param locale
