@@ -38,6 +38,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "退出させる",
             content: "{userName} は直ちに切断され、後で再参加できます。",
             submit: "退出させる",
+            confirmTitle: "{userName} を退出させる",
         },
         ban: {
             title: "ワールドから追放する",

@@ -109,7 +109,7 @@
                 {#if step === "report"}
                     {$LL.report.title()}
                 {:else if step === "kick"}
-                    {$LL.report.moderate.kick.title()}
+                    {$LL.report.moderate.kick.confirmTitle({ userName })}
                 {:else if step === "ban"}
                     {$LL.report.moderate.ban.confirmTitle({ userName })}
                 {:else}

@@ -38,6 +38,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "내보내기",
             content: "{userName}님의 연결이 즉시 끊기며, 나중에 다시 들어올 수 있습니다.",
             submit: "내보내기",
+            confirmTitle: "{userName} 내보내기",
         },
         ban: {
             title: "월드에서 차단",

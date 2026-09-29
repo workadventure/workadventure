@@ -38,6 +38,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "إخراج",
             content: "يتم فصل {userName} فورًا، ويمكنه العودة لاحقًا.",
             submit: "إخراج",
+            confirmTitle: "إخراج {userName}",
         },
         ban: {
             title: "حظر من العالم",

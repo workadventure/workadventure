@@ -37,6 +37,7 @@ const report: BaseTranslation = {
             title: "Kick",
             content: "{userName} is disconnected right away, and may come back later.",
             submit: "Kick",
+            confirmTitle: "Kick {userName}",
         },
         ban: {
             title: "Ban from the world",
