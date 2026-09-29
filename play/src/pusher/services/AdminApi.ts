@@ -662,7 +662,7 @@ class AdminApi implements AdminInterface {
          *     tags: ["AdminAPI"]
          *     description: |
          *       Bans a user from the world of the room, when an admin of the world bans them from inside the game.
-         *       The ban must be persisted: /api/ban (GET) and /api/room/access must then deny the user.
+         *       The ban must be persisted: /api/room/access must then deny the user.
          *       On an error, the pusher still ejects the user from the room, but as a simple kick.
          *     security:
          *      - Bearer: []
@@ -696,17 +696,19 @@ class AdminApi implements AdminInterface {
          *               byUserUuid:
          *                 type: string
          *                 required: true
-         *                 description: "The identifier of the admin who bans the user. It can be an uuid or an email"
+         *                 description: "The uuid of the admin who bans the user"
          *                 example: "998ce839-3dea-4698-8b41-ebbdf7688ad8"
          *     responses:
          *       200:
          *         description: |
-         *           The ban has been saved, or it was refused (room or admin not found, the banning user is not an
-         *           admin of the world). A refused ban is answered with an error body, whose `status` is `error`.
+         *           The ban has been saved, or it was refused. A refused ban is answered with an error body, whose
+         *           `status` is `error`: ErrorApiErrorData when the room or the admin is not found,
+         *           ErrorApiUnauthorizedData when the admin is not an admin of the world of the room.
          *         schema:
          *           oneOf:
          *            - type: object
          *            - $ref: '#/definitions/ErrorApiErrorData'
+         *            - $ref: '#/definitions/ErrorApiUnauthorizedData'
          */
         const response = await axios.post<unknown>(
             ADMIN_API_URL + "/api/ban",
