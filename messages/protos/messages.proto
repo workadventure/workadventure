@@ -1748,6 +1748,24 @@ message RoomsList {
   repeated RoomDescription roomDescription = 1;
 }
 
+message WorldUsersQuery {
+  // Path prefix of the rooms of the world, e.g. "/@/org/world/". It is matched against the path of each room URL,
+  // whatever the domain the room was reached from.
+  string roomPathPrefix = 1;
+}
+
+// A user connected to a room of the world. Carries their IP address: never forward it to a game client.
+message WorldUser {
+  string uuid = 1;
+  string name = 2;
+  string ipAddress = 3;
+  string roomUrl = 4;
+}
+
+message WorldUsersAnswer {
+  repeated WorldUser users = 1;
+}
+
 message DispatchGlobalEventRequest {
   string name = 1;
   // Defined by whoever posts the global event; delivered to the map scripts untouched.

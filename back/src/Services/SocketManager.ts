@@ -25,6 +25,8 @@ import type {
     QueryMessage,
     RoomDescription,
     RoomsList,
+    WorldUser,
+    WorldUsersAnswer,
     SendEventQuery,
     SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
@@ -1275,6 +1277,19 @@ export class SocketManager {
                 }
             },
         );
+    }
+
+    getWorldUsers(roomPathPrefix: string): WorldUsersAnswer {
+        const users: WorldUser[] = [];
+        for (const room of this.resolvedRooms.values()) {
+            if (!new URL(room.roomUrl).pathname.startsWith(roomPathPrefix)) {
+                continue;
+            }
+            for (const user of room.getUsers().values()) {
+                users.push({ uuid: user.uuid, name: user.name, ipAddress: user.IPAddress, roomUrl: room.roomUrl });
+            }
+        }
+        return { users };
     }
 
     getAllRooms(): RoomsList {
