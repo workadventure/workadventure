@@ -124,11 +124,14 @@ export class NoiseSuppressionController {
             return;
         }
 
-        if (currentState.status !== "error" || currentState.message !== message.message) {
-            const errorMessage =
-                message.message ?? "Custom noise suppression failed. Browser microphone processing is active.";
+        const errorMessage =
+            message.message ?? "Custom noise suppression failed. Browser microphone processing is active.";
+        if (currentState.status !== "error") {
             noiseSuppressionStateStore.set({ status: "error", message: errorMessage });
+            // One failure often arrives twice (processorerror, then the rejected ready): count the transition only
             this.trackFailure("error", errorMessage);
+        } else if (currentState.message !== errorMessage) {
+            noiseSuppressionStateStore.set({ status: "error", message: errorMessage });
         }
     }
 
