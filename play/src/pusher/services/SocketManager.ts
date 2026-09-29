@@ -2,7 +2,6 @@ import Debug from "debug";
 import { SignJWT } from "jose";
 import type {
     AddSpaceFilterMessage,
-    AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
@@ -40,7 +39,6 @@ import type {
     SetPlayerDetailsMessage,
     IceServersAnswer,
     UpdateSpaceUserMessage,
-    UserMessageReadMessage,
     UserMovesMessage,
     ViewportMessage,
     GetSignedUrlAnswer,
@@ -761,28 +759,6 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    /**
-     * The user acknowledged a message sent by a moderator (typically by clicking "Ok" in the
-     * warning popup): tell the admin so the message is never displayed again.
-     */
-    async handleUserMessageRead(
-        client: PusherWebSocket,
-        userMessageReadMessage: UserMessageReadMessage,
-    ): Promise<void> {
-        const messageId = userMessageReadMessage.id;
-        if (!messageId) {
-            // Messages pushed live by a moderator to an already connected user carry no id.
-            return;
-        }
-        const socketData = client.getUserData();
-        try {
-            await adminService.markUserMessageAsRead(messageId, socketData.userUuid);
-        } catch (e) {
-            Sentry.captureException(`An error occurred on "handleUserMessageRead" ${e}`);
-            console.error(`An error occurred on "handleUserMessageRead" ${e}`);
-        }
-    }
-
     async handleBanPlayerMessage(client: PusherWebSocket, banPlayerMessage: BanPlayerMessage): Promise<void> {
         const socketData = client.getUserData();
         // Kick and ban are reserved to the admins of the world
@@ -948,40 +924,6 @@ export class SocketManager implements ZoneEventListener {
 
     public getRooms(): Map<string, PusherRoom> {
         return this.rooms;
-    }
-
-    public async emitSendUserMessage(
-        userUuid: string,
-        message: string,
-        type: string,
-        roomId: string,
-        id = "",
-    ): Promise<void> {
-        /*const client = this.searchClientByUuid(userUuid);
-        if(client) {
-            const adminMessage = new SendUserMessage();
-            adminMessage.setMessage(message);
-            adminMessage.setType(type);
-            const pusherToBackMessage = new PusherToBackMessage();
-            pusherToBackMessage.setSendusermessage(adminMessage);
-            client.backConnection.write(pusherToBackMessage);
-            return;
-        }*/
-
-        const backConnection = await apiClientRepository.getClient(roomId, GRPC_MAX_MESSAGE_SIZE);
-        const backAdminMessage: AdminMessage = {
-            message,
-            roomId,
-            recipientUuid: userUuid,
-            type,
-            id,
-        };
-        backConnection.sendAdminMessage(backAdminMessage, (error: unknown) => {
-            if (error !== null) {
-                Sentry.captureException(error);
-                console.error("Error while sending admin message", error);
-            }
-        });
     }
 
     public async emitBan(userUuid: string, message: string, type: string, roomId: string): Promise<void> {

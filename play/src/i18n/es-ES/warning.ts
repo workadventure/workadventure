@@ -11,7 +11,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         room: "Acceso a la habitación denegado. No tiene permitido entrar en esta habitación.",
         teleport: "No tiene derecho a teletransportarse a este usuario.",
     },
-    importantMessage: "Mensaje importante",
     connectionLost: "Conexión perdida. Reconectando...",
     connectionLostTitle: "Conexión perdida",
     connectionLostSubtitle: "Reconectando",

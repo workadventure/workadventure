@@ -11,7 +11,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         room: "Pśistup zakazany. Njamaš pšawa, aby stupił do teje śpy.",
         teleport: "Wy njesmějośo se teleportěrowaś k tomu wužywarjeju.",
     },
-    importantMessage: "Wažna powěsć",
     connectionLost: "Zwězanje jo pśetergnjone. Zwězanje naspjet startowaś...",
     connectionLostTitle: "Zwězanja su pśetergnjone",
     connectionLostSubtitle: "Zwězanje naspjet startowaś...",

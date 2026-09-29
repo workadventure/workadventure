@@ -218,27 +218,12 @@ export class IoSocketController {
                         );
 
                         for (const roomId of roomIds) {
-                            if (messageToEmit.type === "banned") {
-                                socketManager
-                                    .emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type, roomId)
-                                    .catch((error) => {
-                                        Sentry.captureException(error);
-                                        console.error(error);
-                                    });
-                            } else if (messageToEmit.type === "ban") {
-                                socketManager
-                                    .emitSendUserMessage(
-                                        messageToEmit.userUuid,
-                                        messageToEmit.message,
-                                        messageToEmit.type,
-                                        roomId,
-                                        messageToEmit.id !== undefined ? String(messageToEmit.id) : "",
-                                    )
-                                    .catch((error) => {
-                                        Sentry.captureException(error);
-                                        console.error(error);
-                                    });
-                            }
+                            socketManager
+                                .emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type, roomId)
+                                .catch((error) => {
+                                    Sentry.captureException(error);
+                                    console.error(error);
+                                });
                         }
                     }
                 } catch (err) {
@@ -355,7 +340,6 @@ export class IoSocketController {
                         characterTextures: [],
                         isCompanionTextureValid: true,
                         companionTexture: undefined,
-                        messages: [],
                         userRoomToken: undefined,
                         activatedInviteUser: true,
                         canEdit: false,
@@ -460,7 +444,6 @@ export class IoSocketController {
                         tags: memberTags,
                         visitCardUrl: memberVisitCardUrl,
                         userRoomToken: memberUserRoomToken,
-                        loginMessages: userData.messages,
                         activatedInviteUser: userData.activatedInviteUser ?? undefined,
                         applications: userData.applications,
                         canEdit: userData.canEdit ?? false,
@@ -523,25 +506,9 @@ export class IoSocketController {
                 }
             },
             open: async (socket) => {
-                const socketData = socket.getUserData();
                 debug("WebSocket connection established");
 
                 await socketManager.handleConnectToRoom(socket);
-
-                for (const loginMessage of socketData.loginMessages) {
-                    socket.send({
-                        message: {
-                            $case: "sendUserMessage",
-                            sendUserMessage: {
-                                type: loginMessage.type,
-                                message: loginMessage.message,
-                                // The admin identifies its messages with an integer: normalize it,
-                                // the client sends it back as-is to acknowledge the message.
-                                id: loginMessage.id !== undefined ? String(loginMessage.id) : "",
-                            },
-                        },
-                    });
-                }
 
                 // Performance test
                 /*
@@ -1134,13 +1101,6 @@ export class IoSocketController {
                                 }`;
 
                                 await socketManager.handleBackEvent(socket, message.message.backEvent);
-                                break;
-                            }
-                            case "userMessageReadMessage": {
-                                await socketManager.handleUserMessageRead(
-                                    socket,
-                                    message.message.userMessageReadMessage,
-                                );
                                 break;
                             }
                             case "videoQualityReportMessage": {

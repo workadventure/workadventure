@@ -11,7 +11,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         teleport: "이 사용자에게 순간이동할 권한이 없습니다.",
         room: "방 접근이 거부되었습니다. 이 방에 들어갈 수 없습니다.",
     },
-    importantMessage: "중요한 메시지",
     connectionLost: "연결이 끊어졌습니다. 다시 연결 중...",
     connectionLostTitle: "연결이 끊어짐",
     connectionLostSubtitle: "다시 연결 중",

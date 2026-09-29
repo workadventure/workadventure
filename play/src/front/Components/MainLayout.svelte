@@ -6,7 +6,6 @@
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
-    import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import { modalVisibilityStore, roomListVisibilityStore, showLimitRoomModalStore } from "../Stores/ModalStore";
@@ -52,7 +51,6 @@
     import Menu from "./Menu/Menu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningBanner from "./WarningContainer/WarningBanner.svelte";
-    import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
     import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
@@ -346,9 +344,7 @@
                 <Menu />
             {/if}
 
-            {#if $banMessageStore.length > 0}
-                <BanMessageContainer />
-            {:else if $textMessageStore.length > 0}
+            {#if $textMessageStore.length > 0}
                 <TextMessageContainer />
             {/if}
             <ProximityNotificationContainer />

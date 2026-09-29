@@ -1,7 +1,6 @@
 import { clearInterval } from "timers";
 import type {
     AdminGlobalMessage,
-    AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
@@ -173,14 +172,6 @@ const roomManager = {
                         }
                         case "editMapCommandMessage": {
                             room.forwardEditMapCommandMessage(user, message.message.editMapCommandMessage);
-                            break;
-                        }
-                        case "sendUserMessage": {
-                            socketManager.handleSendUserMessage(user, message.message.sendUserMessage);
-                            break;
-                        }
-                        case "banUserMessage": {
-                            socketManager.handleBanUserMessage(room, user, message.message.banUserMessage);
                             break;
                         }
                         case "setPlayerDetailsMessage": {
@@ -545,23 +536,6 @@ const roomManager = {
             console.error("An error occurred in joinAdminRoom stream:", err);
             Sentry.captureException(err);
         });
-    },
-    sendAdminMessage(call: ServerUnaryCall<AdminMessage, Empty>, callback: sendUnaryData<Empty>): void {
-        const adminMessage = call.request;
-        socketManager
-            .sendAdminMessage(
-                adminMessage.roomId,
-                adminMessage.recipientUuid,
-                adminMessage.message,
-                adminMessage.type,
-                adminMessage.id,
-            )
-            .catch((e) => {
-                console.error(e);
-                Sentry.captureException(e);
-            });
-
-        callback(null, {});
     },
     sendGlobalAdminMessage(call: ServerUnaryCall<AdminGlobalMessage, Empty>, callback: sendUnaryData<Empty>): void {
         throw new Error("Not implemented yet");

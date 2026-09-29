@@ -10,7 +10,6 @@ const warning: BaseTranslation = {
         teleport: "Você não tem direito de teleportar este usuário.",
         room: "Acesso a sala negado. Você não tem permissão para entrar nesta sala.",
     },
-    importantMessage: "Mensagem importante",
     connectionLost: "Conexão perdida. Reconectando...",
     connectionLostTitle: "Conexão perdida",
     connectionLostSubtitle: "Reconectando",

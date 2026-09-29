@@ -11,7 +11,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         teleport: "تفتقر إلى الأذن للانتقال إلى هذا المستخدم.", // "You lack permission to teleport to this user."
         room: "غير مسموح بالدخول. تفتقر إلى الأذن لدخول هذه الغرفة.", // "Access not permitted. You lack permission to enter this room."
     },
-    importantMessage: "رسالة هامة", // "Important message"
     connectionLost: "تم فقدان الاتصال. جاري استعادة الاتصال...", // "Connection lost. Reconnecting..."
     connectionLostTitle: "تم فقدان الاتصال", // "Connection lost"
     connectionLostSubtitle: "إعادة الاتصال", // "Reconnecting"

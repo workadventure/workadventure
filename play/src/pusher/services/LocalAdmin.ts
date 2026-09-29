@@ -240,7 +240,6 @@ class LocalAdmin implements AdminInterface {
             email: userIdentifier,
             userUuid: userIdentifier,
             tags: tags ?? [],
-            messages: [],
             visitCardUrl: null,
             isCharacterTexturesValid,
             characterTextures: characterTextures ?? [],
@@ -361,11 +360,6 @@ class LocalAdmin implements AdminInterface {
         locale?: string,
     ): Promise<unknown> {
         return Promise.reject(new Error("No admin backoffice set!"));
-    }
-
-    markUserMessageAsRead(messageId: string, userIdentifier: string): Promise<void> {
-        // Without an admin backoffice there is no message to flag as read.
-        return Promise.resolve();
     }
 
     async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<ShortMapDescriptionList> {
