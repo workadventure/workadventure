@@ -352,7 +352,7 @@ export const audioConstraintStore = derived(
             browserNoiseSuppressionEnabled: $microphoneBrowserNoiseSuppressionStore,
             effectiveNoiseSuppressionProvider: $effectiveNoiseSuppressionProviderStore,
             noiseSuppressionEngine: $noiseSuppressionEngineStore,
-            postGainActive: $noiseSuppressionEngineStore === "deepfilternet" && $noiseSuppressionTuningStore.postGain,
+            postGainActive: $noiseSuppressionEngineStore !== "dtln" && $noiseSuppressionTuningStore.postGain,
             browserNoiseSuppressionSupported: $browserNoiseSuppressionSupportedStore,
             workAdventureNoiseSuppressionFailed:
                 $noiseSuppressionStateStore.status === "error" || $noiseSuppressionStateStore.status === "unsupported",

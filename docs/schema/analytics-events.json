@@ -3119,9 +3119,10 @@
           "type": "string",
           "enum": [
             "deepfilternet",
+            "deepfilternet-ll",
             "dtln"
           ],
-          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, its low-latency variant DeepFilterNet3_ll (experimental), or the legacy DTLN at 16 kHz."
         },
         "status": {
           "type": "string",
@@ -3148,9 +3149,10 @@
           "type": "string",
           "enum": [
             "deepfilternet",
+            "deepfilternet-ll",
             "dtln"
           ],
-          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, its low-latency variant DeepFilterNet3_ll (experimental), or the legacy DTLN at 16 kHz."
         },
         "windows": {
           "type": "integer",
@@ -3215,9 +3217,10 @@
           "type": "string",
           "enum": [
             "deepfilternet",
+            "deepfilternet-ll",
             "dtln"
           ],
-          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, its low-latency variant DeepFilterNet3_ll (experimental), or the legacy DTLN at 16 kHz."
         },
         "initMs": {
           "type": "number",
@@ -4352,9 +4355,10 @@
           "type": "string",
           "enum": [
             "deepfilternet",
+            "deepfilternet-ll",
             "dtln"
           ],
-          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, its low-latency variant DeepFilterNet3_ll (experimental), or the legacy DTLN at 16 kHz."
         }
       },
       "additionalProperties": true,

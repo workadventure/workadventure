@@ -393,9 +393,9 @@ const noiseSuppressionProviderField = z
   );
 
 const noiseSuppressionEngineField = z
-  .enum(["deepfilternet", "dtln"])
+  .enum(["deepfilternet", "deepfilternet-ll", "dtln"])
   .describe(
-    "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz.",
+    "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, its low-latency variant DeepFilterNet3_ll (experimental), or the legacy DTLN at 16 kHz.",
   );
 
 const feedbackSourceField = z

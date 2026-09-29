@@ -176,11 +176,15 @@
 
     function updateNoiseSuppressionEngine(event: Event) {
         const value = (event.target as HTMLSelectElement).value;
-        noiseSuppressionEngineStore.setEngine(value === "dtln" ? "dtln" : "deepfilternet");
+        noiseSuppressionEngineStore.setEngine(
+            value === "dtln" || value === "deepfilternet-ll" ? value : "deepfilternet",
+        );
     }
 
     const noiseSuppressionEngineOptions: { value: NoiseSuppressionEngine; label: string }[] = $derived([
         { value: "deepfilternet", label: $LL.menu.settings.microphone.noiseSuppressionEngineDeepFilterNet() },
+        // Experimental, English only on purpose like the debug switches: removed or translated once tested
+        { value: "deepfilternet-ll", label: "DeepFilterNet low latency (experimental, 36 MB)" },
         { value: "dtln", label: $LL.menu.settings.microphone.noiseSuppressionEngineDtln() },
     ]);
 
@@ -558,7 +562,7 @@
                     />
                 </div>
                 <!-- Temporary debug switches, English only on purpose: removed once listening tests pick the defaults -->
-                {#if $noiseSuppressionEngineStore === "deepfilternet"}
+                {#if $noiseSuppressionEngineStore !== "dtln"}
                     <div class="px-4 mt-2 flex flex-col gap-2" data-testid="noise-suppression-debug">
                         <InputSwitch
                             id="noise-suppression-debug-keystroke-filter"

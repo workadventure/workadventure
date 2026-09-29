@@ -217,6 +217,8 @@ export class NoiseSuppressionTransformer {
         // Package defaults: 25 dB of attenuation while speaking (a faint, steady background), 45 dB in pauses.
         return createDeepFilterNetAudioWorklet(this.audioContext, {
             bypassUntilReady: true,
+            // DeepFilterNet3_ll: 10 ms of model delay instead of 30, ~3x the compute, 36 MB fetched on first use
+            model: this.engine === "deepfilternet-ll" ? "low-latency" : "standard",
             minSpeechFrames: this.tuning.keystrokeFilter ? 2 : undefined,
             // The gate delays the voice by its lookahead (30 ms by default) so it is open when a word starts. The
             // keystroke filter needs 2 frames to decide, so it keeps a 2-frame lookahead.

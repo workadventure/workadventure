@@ -77,7 +77,7 @@ export type VideoQualitySetting = "low" | "recommended" | "high";
 export type BandwidthConstrainedPreference = "maintain-framerate" | "maintain-resolution" | "balanced";
 export type NoiseSuppressionProvider = "workadventure" | "voiceIsolation";
 /** The model behind the "workadventure" provider: DeepFilterNet3 (48 kHz, default) or the legacy DTLN (16 kHz). */
-export type NoiseSuppressionEngine = "deepfilternet" | "dtln";
+export type NoiseSuppressionEngine = "deepfilternet" | "deepfilternet-ll" | "dtln";
 /**
  * DeepFilterNet3 options under evaluation, behind debug switches until listening tests pick defaults.
  * keystrokeFilter: the pause gate needs 2 speech frames to open, so one-frame clicks stay out.
@@ -872,7 +872,8 @@ class LocalUserStore {
     }
 
     getNoiseSuppressionEngine(): NoiseSuppressionEngine {
-        return localStorage.getItem(noiseSuppressionEngineKey) === "dtln" ? "dtln" : "deepfilternet";
+        const value = localStorage.getItem(noiseSuppressionEngineKey);
+        return value === "dtln" || value === "deepfilternet-ll" ? value : "deepfilternet";
     }
 
     setNoiseSuppressionTuning(value: NoiseSuppressionTuning) {
