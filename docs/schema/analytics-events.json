@@ -856,6 +856,17 @@
       }
     },
     {
+      "title": "media.noise_suppression.load",
+      "properties": {
+        "eventName": {
+          "const": "media.noise_suppression.load"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.noise_suppression.load"
+        }
+      }
+    },
+    {
       "title": "media.noise_suppression.started",
       "properties": {
         "eventName": {
@@ -1939,6 +1950,7 @@
               "media.microphone.dwell",
               "media.microphone.toggled",
               "media.noise_suppression.failed",
+              "media.noise_suppression.load",
               "media.noise_suppression.started",
               "media.permission_denied",
               "media.speech.dwell",
@@ -3128,6 +3140,73 @@
       "additionalProperties": true,
       "title": "media.noise_suppression.failed",
       "description": "WorkAdventure noise suppression gave up; the microphone falls back to the browser's own processing."
+    },
+    "media.noise_suppression.load": {
+      "type": "object",
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": [
+            "deepfilternet",
+            "dtln"
+          ],
+          "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+        },
+        "windows": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "2 s windows measured (30 for the default minute)."
+        },
+        "medianLoad": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Median share of real time the worklet spent denoising, per 2 s window. 0.05 = 5 %."
+        },
+        "p95Load": {
+          "type": "number",
+          "minimum": 0,
+          "description": "95th percentile of the per-window load."
+        },
+        "maxLoad": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Worst window. Above 0.7 twice in a row, the overload fallback kicks in."
+        },
+        "slowFrames": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Frames measured at 3 ms or more, i.e. that took 2 ms or more, close to the 2.67 ms render quantum: the ones that can crackle. Worklets only have Date.now() (1 ms steps), so shorter frames cannot be timed one by one."
+        },
+        "frames": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "10 ms frames processed during the measurement."
+        },
+        "keystrokeFilter": {
+          "type": "boolean",
+          "description": "Debug switch in use."
+        },
+        "postGain": {
+          "type": "boolean",
+          "description": "Debug switch in use."
+        },
+        "shortGateLookahead": {
+          "type": "boolean",
+          "description": "Debug switch in use."
+        },
+        "gateOff": {
+          "type": "boolean",
+          "description": "Debug switch in use."
+        },
+        "hardwareConcurrency": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "navigator.hardwareConcurrency, 0 when the browser hides it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.noise_suppression.load",
+      "description": "How heavy WorkAdventure noise suppression really is on this device: sent once per pipeline, after a minute of processing (DeepFilterNet3 only). The data that decides whether noise suppression, or a heavier low-latency model, can be on by default — the overload fallback only says when it is too heavy."
     },
     "media.noise_suppression.started": {
       "type": "object",

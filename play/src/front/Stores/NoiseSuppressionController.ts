@@ -65,6 +65,14 @@ export class NoiseSuppressionController {
                     engine,
                     tuning,
                     onStatusChange: this.updateState.bind(this),
+                    onLoadReport: (report) => {
+                        analyticsClient.trackAdminEvent("media.noise_suppression.load", {
+                            engine,
+                            ...report,
+                            ...tuning,
+                            hardwareConcurrency: navigator.hardwareConcurrency ?? 0,
+                        });
+                    },
                 });
             }
 
