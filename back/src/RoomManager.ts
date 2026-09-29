@@ -595,7 +595,7 @@ const roomManager = {
         callback(null, socketManager.getAllRooms());
     },
     getWorldUsers(call: ServerUnaryCall<WorldUsersQuery, Empty>, callback: sendUnaryData<WorldUsersAnswer>): void {
-        callback(null, socketManager.getWorldUsers(call.request.roomPathPrefix));
+        callback(null, socketManager.getWorldUsers(call.request.world));
     },
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
