@@ -254,6 +254,37 @@ describe("Space.extractUpdatedFieldsFromUpdateSpaceUserMessage", () => {
         }
     });
 
+    it("drops the fields a client is not allowed to change", () => {
+        const space = createSpace();
+        const socket = createSocket("room_207");
+        space._localConnectedUserWithSpaceUser.set(socket, {
+            ...SpaceUser.fromPartial({ spaceUserId: "room_207", uuid: "uuid", tags: ["member"] }),
+            lowercaseName: "fabio",
+        });
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        try {
+            const user = SpaceUser.fromPartial({ spaceUserId: "room_207", tags: ["admin"], cameraState: true });
+
+            expect(
+                space.extractUpdatedFieldsFromUpdateSpaceUserMessage(socket, {
+                    spaceName: "test",
+                    user,
+                    updateMask: ["tags", "cameraState"],
+                })?.changedFields,
+            ).toEqual(["cameraState"]);
+            expect(
+                space.extractUpdatedFieldsFromUpdateSpaceUserMessage(socket, {
+                    spaceName: "test",
+                    user,
+                    updateMask: ["tags"],
+                }),
+            ).toBeNull();
+        } finally {
+            warnSpy.mockRestore();
+        }
+    });
+
     it("rejects an update from a socket that is not in the space", () => {
         const space = createSpace();
         const stranger = createSocket("room_1");
