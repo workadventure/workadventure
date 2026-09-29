@@ -427,9 +427,6 @@ export const EnvironmentVariables = z.object({
     WOKA_SPEED: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 9))
         .describe("Avatar (WOKA) movement speed. Defaults to 9"),
-    FEATURE_FLAG_BROADCAST_AREAS: BoolAsString.optional()
-        .transform((val) => toBool(val, false))
-        .describe("Enable broadcast areas feature. Defaults to false"),
 
     KLAXOON_ENABLED: BoolAsString.optional()
         .transform((val) => toBool(val, false))

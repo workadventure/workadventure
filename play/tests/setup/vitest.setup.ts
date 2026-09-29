@@ -67,7 +67,6 @@ if (typeof window !== "undefined" && window.env === undefined) {
         SENTRY_RELEASE: undefined,
         SENTRY_TRACES_SAMPLE_RATE: undefined,
         WOKA_SPEED: 8,
-        FEATURE_FLAG_BROADCAST_AREAS: false,
         KLAXOON_ENABLED: false,
         KLAXOON_CLIENT_ID: undefined,
         YOUTUBE_ENABLED: false,

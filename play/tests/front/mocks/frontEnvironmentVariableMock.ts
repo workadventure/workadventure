@@ -37,7 +37,6 @@ export const SENTRY_ENVIRONMENT: string | undefined = undefined;
 export const SENTRY_RELEASE: string | undefined = undefined;
 export const SENTRY_TRACES_SAMPLE_RATE: number | undefined = undefined;
 export const WOKA_SPEED = 9;
-export const FEATURE_FLAG_BROADCAST_AREAS = false;
 export const KLAXOON_ENABLED = false;
 export const KLAXOON_CLIENT_ID = "";
 export const YOUTUBE_ENABLED = false;
