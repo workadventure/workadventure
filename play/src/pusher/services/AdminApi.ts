@@ -600,6 +600,7 @@ class AdminApi implements AdminInterface {
         name: string,
         message: string,
         byUserUuid: string,
+        ipAddress: string | undefined,
     ): Promise<void> {
         /**
          * @openapi
@@ -644,6 +645,13 @@ class AdminApi implements AdminInterface {
          *                 required: true
          *                 description: "The uuid of the admin who bans the user"
          *                 example: "998ce839-3dea-4698-8b41-ebbdf7688ad8"
+         *               ipAddress:
+         *                 type: string
+         *                 required: false
+         *                 description: |
+         *                   The IP address the user connects from, as the back sees it. Ban it too, so the user cannot
+         *                   come back with another account. Absent when only the account must be banned.
+         *                 example: "203.0.113.42"
          *     responses:
          *       200:
          *         description: |
@@ -658,7 +666,7 @@ class AdminApi implements AdminInterface {
          */
         const response = await axios.post<unknown>(
             ADMIN_API_URL + "/api/ban",
-            { uuidToBan, playUri, name, message, byUserUuid },
+            { uuidToBan, playUri, name, message, byUserUuid, ipAddress },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
             },

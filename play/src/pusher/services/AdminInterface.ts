@@ -89,7 +89,17 @@ export interface AdminInterface {
      */
     logoutOauth(token: string): Promise<void>;
 
-    banUserByUuid(uuidToBan: string, playUri: string, name: string, message: string, byUserUuid: string): Promise<void>;
+    /**
+     * @param ipAddress the IP the user connects from, to ban it too; undefined to ban their account only
+     */
+    banUserByUuid(
+        uuidToBan: string,
+        playUri: string,
+        name: string,
+        message: string,
+        byUserUuid: string,
+        ipAddress: string | undefined,
+    ): Promise<void>;
 
     getTagsList(roomUrl: string): Promise<string[]>;
 

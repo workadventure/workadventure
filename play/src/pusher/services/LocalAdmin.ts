@@ -405,6 +405,7 @@ class LocalAdmin implements AdminInterface {
         name: string,
         message: string,
         byUserUuid: string,
+        ipAddress: string | undefined,
     ): Promise<void> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }

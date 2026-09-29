@@ -15,6 +15,8 @@ import type {
     PusherToBackRoomMessage,
     RefreshRoomPromptMessage,
     RoomsList,
+    WorldUsersAnswer,
+    WorldUsersQuery,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     VariableRequest,
@@ -591,6 +593,9 @@ const roomManager = {
     },
     getRooms(call: ServerUnaryCall<Empty, Empty>, callback: sendUnaryData<RoomsList>): void {
         callback(null, socketManager.getAllRooms());
+    },
+    getWorldUsers(call: ServerUnaryCall<WorldUsersQuery, Empty>, callback: sendUnaryData<WorldUsersAnswer>): void {
+        callback(null, socketManager.getWorldUsers(call.request.roomPathPrefix));
     },
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);

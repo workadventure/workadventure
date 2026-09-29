@@ -46,8 +46,11 @@ import type {
     ConnectToRoomMessage,
     JoinRoomFrontMessage,
     ServerToClientMessage,
+    WorldUser,
+    WorldUsersAnswer,
 } from "@workadventure/messages";
 import { noUndefined } from "@workadventure/messages";
+import { Metadata } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
@@ -66,6 +69,7 @@ import { ClientNotPartOfSpaceError, SpaceDestroyedError } from "../models/SpaceV
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
 import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
+import { getWorldPathPrefix } from "./WorldPathPrefix";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
@@ -770,6 +774,20 @@ export class SocketManager implements ZoneEventListener {
                 await this.emitBan(banPlayerMessage.banUserUuid, reason, "kicked", socketData.roomId);
                 return;
             }
+            // The back knows the IP of every user it serves: ban it too, so the user cannot come back with another
+            // account. Unless the moderator shares it, they would lock themselves out. If the user cannot be found
+            // (they left, a back did not answer), only their account is banned.
+            let ipAddress: string | undefined;
+            try {
+                const bannedUser = (await this.getWorldUsers(socketData.roomId)).find(
+                    (user) => user.uuid === banPlayerMessage.banUserUuid,
+                );
+                if (bannedUser?.ipAddress && bannedUser.ipAddress !== socketData.ipAddress) {
+                    ipAddress = bannedUser.ipAddress;
+                }
+            } catch (e) {
+                console.warn(`Could not find the IP of the banned user, banning their account only: ${e}`);
+            }
             try {
                 await adminService.banUserByUuid(
                     banPlayerMessage.banUserUuid,
@@ -777,6 +795,7 @@ export class SocketManager implements ZoneEventListener {
                     banPlayerMessage.banUserName,
                     reason !== "" ? reason : `User banned by admin ${socketData.userUuid}`,
                     socketData.userUuid,
+                    ipAddress,
                 );
             } catch (e) {
                 // The ban could not be recorded (no admin back office, admin down...): still get the user out
@@ -924,6 +943,32 @@ export class SocketManager implements ZoneEventListener {
 
     public getRooms(): Map<string, PusherRoom> {
         return this.rooms;
+    }
+
+    /**
+     * Every user connected to a room of the world of roomUrl, whatever the back serving the room. Rejects when the
+     * room is outside any world, or when a back does not answer: a partial list would hide users.
+     */
+    public async getWorldUsers(roomUrl: string): Promise<WorldUser[]> {
+        const roomPathPrefix = getWorldPathPrefix(roomUrl);
+        if (roomPathPrefix === undefined) {
+            throw new Error(`The room ${roomUrl} belongs to no world`);
+        }
+        const backs = await apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);
+        const answers = await Promise.all(
+            backs.map(
+                (back) =>
+                    new Promise<WorldUsersAnswer>((resolve, reject) => {
+                        back.getWorldUsers(
+                            { roomPathPrefix },
+                            new Metadata(),
+                            { deadline: Date.now() + 1000 },
+                            (error, answer) => (error ? reject(error) : resolve(answer)),
+                        );
+                    }),
+            ),
+        );
+        return answers.flatMap((answer) => answer.users);
     }
 
     public async emitBan(userUuid: string, message: string, type: string, roomId: string): Promise<void> {

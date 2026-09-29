@@ -23,6 +23,7 @@ service RoomManager {
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (google.protobuf.Empty); // Warn the users of a room that the world is nearly full
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (google.protobuf.Empty); // Ask the users of a room to reload it, e.g. after the map changed
   rpc getRooms(google.protobuf.Empty) returns (RoomsList); // List the rooms live on this back, with their users
+  rpc getWorldUsers(WorldUsersQuery) returns (WorldUsersAnswer); // List the users connected to the rooms of one world that live on this back, with their IP. The caller reaches the whole world by calling every back.
   rpc ping(PingMessage) returns (PingMessage); // Echoes the request back unchanged, to check the back answers
   rpc readVariable(VariableRequest) returns (google.protobuf.Value); // Get the current value of the given variable. Answers nothing if it was never set and the map declares no default. Tag permissions do not apply here: every variable of the room is readable.
   rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value); // Listen to value updates for a given variable. The current value is not replayed on subscribe.
