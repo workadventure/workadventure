@@ -15,7 +15,7 @@
     import { v4 as uuid } from "uuid";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
-    import { FEATURE_FLAG_BROADCAST_AREAS, MATRIX_PUBLIC_URI, PUSHER_URL } from "../../../Enum/EnvironmentVariable";
+    import { MATRIX_PUBLIC_URI, PUSHER_URL } from "../../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
@@ -591,25 +591,23 @@
                     disabled={hasMeeting}
                 />
             {/if}
-            {#if FEATURE_FLAG_BROADCAST_AREAS}
-                {#if !hasSpeakerMegaphoneProperty}
-                    <AddPropertyButtonWrapper
-                        property="speakerMegaphone"
-                        onclick={() => {
-                            onAddProperty("speakerMegaphone");
-                        }}
-                        disabled={hasMeeting}
-                    />
-                {/if}
-                {#if !hasListenerMegaphoneProperty}
-                    <AddPropertyButtonWrapper
-                        property="listenerMegaphone"
-                        onclick={() => {
-                            onAddProperty("listenerMegaphone");
-                        }}
-                        disabled={hasMeeting}
-                    />
-                {/if}
+            {#if !hasSpeakerMegaphoneProperty}
+                <AddPropertyButtonWrapper
+                    property="speakerMegaphone"
+                    onclick={() => {
+                        onAddProperty("speakerMegaphone");
+                    }}
+                    disabled={hasMeeting}
+                />
+            {/if}
+            {#if !hasListenerMegaphoneProperty}
+                <AddPropertyButtonWrapper
+                    property="listenerMegaphone"
+                    onclick={() => {
+                        onAddProperty("listenerMegaphone");
+                    }}
+                    disabled={hasMeeting}
+                />
             {/if}
             {#if !hasStartProperty}
                 <AddPropertyButtonWrapper
