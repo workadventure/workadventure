@@ -1182,20 +1182,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     /**
-     * Acknowledges a message sent by a moderator, so the admin never displays it again.
-     */
-    public emitUserMessageRead(adminMessageId: string): void {
-        this.send({
-            message: {
-                $case: "userMessageReadMessage",
-                userMessageReadMessage: {
-                    id: adminMessageId,
-                },
-            },
-        });
-    }
-
-    /**
      * Ejects a user from the room. Reserved to the admins of the world (enforced by the pusher).
      * @param kick true to only eject the user, false to also ban them from the world (permanent)
      */

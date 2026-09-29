@@ -11,7 +11,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         teleport: "Bạn không có quyền dịch chuyển tới người dùng này.",
         room: "Truy cập phòng bị từ chối. Bạn không được phép vào phòng này.",
     },
-    importantMessage: "Thông báo quan trọng",
     connectionLost: "Mất kết nối. Đang kết nối lại...",
     connectionLostTitle: "Mất kết nối",
     connectionLostSubtitle: "Đang kết nối lại",

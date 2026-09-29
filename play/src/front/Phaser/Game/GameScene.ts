@@ -36,7 +36,6 @@ import {
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import Debug from "debug";
 import { asError } from "catch-unknown";
-import { banMessageStore } from "../../Stores/TypeMessageStore/BanMessageStore";
 import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
 import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
@@ -511,7 +510,6 @@ export class GameScene extends DirtyScene {
             `audio-webrtc-out-${selectedBubbleSound}`,
             `/resources/objects/webrtc-out-${selectedBubbleSound}.mp3`,
         );
-        this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
         this.load.audio("meeting-in", "/resources/objects/meeting-in.wav");
@@ -4501,17 +4499,14 @@ ${escapedMessage}
     }
 
     /**
-     * Displays a message sent by an admin: a text, an audio message or a ban warning.
+     * Displays a message sent by an admin: a text or an audio message.
      */
-    private showUserMessage({ type, message, id }: SendUserMessage) {
-        const adminMessageId = id !== "" ? id : undefined;
+    private showUserMessage({ type, message }: SendUserMessage) {
         if (type === "message") {
-            textMessageStore.addMessage(message, adminMessageId);
+            textMessageStore.addMessage(message);
             this.playSound("new-message", 0.2);
         } else if (type === "audio") {
             soundPlayingStore.playSound(UPLOADER_URL + message);
-        } else if (type === "ban") {
-            banMessageStore.addMessage(message, adminMessageId);
         }
     }
 
@@ -4521,10 +4516,6 @@ ${escapedMessage}
      */
     private ejectedUser({ type, message: reason }: BanUserMessage) {
         const kind = type === "kicked" ? "kicked" : "banned";
-        if (kind === "banned") {
-            // A ban issued from the game may come without a reason.
-            banMessageStore.addMessage(reason || get(LL).report.banned.subtitle());
-        }
         const texts = get(LL).report[kind];
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({

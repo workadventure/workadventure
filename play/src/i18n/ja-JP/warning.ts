@@ -12,7 +12,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         teleport: "このユーザーにテレポートする権限がありません。",
         room: "入室拒否。この部屋への入室が許可されていません。",
     },
-    importantMessage: "重要なメッセージ",
     connectionLost: "通信切断。再接続しています…",
     connectionLostTitle: "通信切断",
     connectionLostSubtitle: "再接続",

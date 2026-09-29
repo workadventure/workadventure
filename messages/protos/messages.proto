@@ -505,10 +505,10 @@ message ClientToServerMessage {
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 49;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 46;
     VideoQualityReportMessage videoQualityReportMessage = 50;
-    UserMessageReadMessage userMessageReadMessage = 51;
     AnalyticsEventReportMessage analyticsEventReportMessage = 52;
     EntityMessage entityMessage = 53;
   }
+  reserved 51; // was UserMessageReadMessage
 }
 
 // An event delivered to a client, either broadcast by another player's script (WA.event) or by the
@@ -1188,16 +1188,7 @@ message TeleportMessageMessage{
 message SendUserMessage{
   string type = 1;
   string message = 2;
-  // Identifier of the message on the admin side. Sent back by the client in a
-  // UserMessageReadMessage once the message has been read, so the admin can stop sending it.
-  // Empty when the admin did not provide one.
-  string id = 3;
-}
-
-// Sent by the client when the user acknowledged a message received in a SendUserMessage
-// (typically by clicking the "Ok" button of the moderation warning popup).
-message UserMessageReadMessage{
-  string id = 1;
+  reserved 3; // was the admin-side id of the message, for read receipts
 }
 
 message WorldFullWarningMessage{
@@ -1235,8 +1226,7 @@ message WorldConnectionMessage{
 message BanUserMessage{
   string type = 1;
   string message = 2;
-  // See SendUserMessage.id
-  string id = 3;
+  reserved 3; // was the admin-side id of the message, for read receipts
 }
 
 message AskPositionMessage{
@@ -1631,8 +1621,6 @@ message PusherToBackMessage {
     UserMovesMessage userMovesMessage = 3;
     ItemEventMessage itemEventMessage = 4;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
-    SendUserMessage sendUserMessage = 12;
-    BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
     VariableMessage variableMessage = 15;
     FollowRequestMessage followRequestMessage = 16;
@@ -1651,6 +1639,7 @@ message PusherToBackMessage {
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 34;
     EntityMessage entityMessage = 35;
   }
+  reserved 12, 13; // were SendUserMessage and BanUserMessage, never sent by the pusher
 }
 
 
@@ -1733,16 +1722,6 @@ message MapStorageClearAfterUploadMessage {
 
 message MapStorageDeleteMessage {
   string wamUrl = 1;
-}
-
-// A message sent by an administrator to a recipient
-message AdminMessage {
-  string message = 1;
-  string recipientUuid = 2;
-  string roomId = 3;
-  string type = 4;
-  // See SendUserMessage.id
-  string id = 5;
 }
 
 // A message sent by an administrator to everyone in a specific room

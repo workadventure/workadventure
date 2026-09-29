@@ -11,7 +11,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         teleport: "Dir fehlt die Berechtigung, um zu diesem Benutzer zu teleportieren.",
         room: "Zutritt nicht gestattet. Dir fehlt die Berechtigung, um diesen Raum zu betreten.",
     },
-    importantMessage: "Wichtige Nachricht",
     connectionLost: "Verbindung verloren. Verbindung wird wiederhergestellt...",
     connectionLostTitle: "Verbindung verloren",
     connectionLostSubtitle: "Verbindung wiederherstellen",

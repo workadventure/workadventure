@@ -489,7 +489,6 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
         tags: [],
         visitCardUrl: null,
         userRoomToken: undefined,
-        loginMessages: [],
         activatedInviteUser: undefined,
         applications: null,
         canEdit: false,
