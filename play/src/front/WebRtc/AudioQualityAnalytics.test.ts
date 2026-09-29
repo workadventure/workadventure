@@ -93,4 +93,36 @@ describe("registerAudioQualitySource", () => {
         await vi.advanceTimersByTimeAsync(120_000);
         expect(trackAdminEvent).toHaveBeenCalledTimes(1);
     });
+
+    it("starts a new baseline for a source whose track restarted, without spoiling the others", async () => {
+        let steadyMinute = 0;
+        const steady = registerAudioQualitySource("SFU", () =>
+            Promise.resolve(
+                report([inboundAudio({ totalSamplesReceived: ++steadyMinute * 48_000, concealedSamples: 0 })]),
+            ),
+        );
+        // Replaced between the 2nd and 3rd minute: its counters start again from zero
+        const restartingTotals = [100_000, 148_000, 10_000, 58_000];
+        let restartingMinute = 0;
+        const restarting = registerAudioQualitySource("SFU", () =>
+            Promise.resolve(
+                report([
+                    inboundAudio({
+                        totalSamplesReceived: restartingTotals[restartingMinute++] ?? 0,
+                        concealedSamples: 0,
+                    }),
+                ]),
+            ),
+        );
+
+        await vi.advanceTimersByTimeAsync(4 * 60_000);
+
+        // Minute 1: baselines. Minute 2: both. Minute 3: the steady source alone (the other one takes a new
+        // baseline instead of a -138,000-sample delta that would cancel it). Minute 4: both again.
+        expect(trackAdminEvent.mock.calls.map(([, sample]) => (sample as { streams: number }).streams)).toEqual([
+            2, 1, 2,
+        ]);
+        steady();
+        restarting();
+    });
 });
