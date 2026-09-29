@@ -23,6 +23,19 @@ export type PartialSpaceUser = Partial<Omit<SpaceUser, "spaceUserId">> & Pick<Sp
 const debug = Debug("space");
 
 /**
+ * The only fields a client may change about itself in a space. Every other field (tags, uuid, name...) is set by
+ * the server and is used for permission checks, so a client must never be able to overwrite it.
+ */
+const CLIENT_UPDATABLE_SPACE_USER_FIELDS: ReadonlySet<string> = new Set<keyof SpaceUser>([
+    "microphoneState",
+    "cameraState",
+    "screenSharingState",
+    "megaphoneState",
+    "attendeesState",
+    "cpuLimited",
+]);
+
+/**
  * The Space class from the Pusher acts as a proxy and a cache for the users available in the space.
  * When a new user connects from the front, it is forwarded to the back. At the same ytime, we keep a reference to the user "socket".
  * The back is in charge of sending the complete list of users to the pusher and this list will be stored in the _users property.
@@ -350,8 +363,20 @@ export class Space implements SpaceForSpaceConnectionInterface {
             );
         }
 
+        const changedFields = updateSpaceUserMessage.updateMask.filter((field) =>
+            CLIENT_UPDATABLE_SPACE_USER_FIELDS.has(field),
+        );
+        if (changedFields.length !== updateSpaceUserMessage.updateMask.length) {
+            console.warn(
+                `[Space.extractUpdatedFieldsFromUpdateSpaceUserMessage] User ${spaceUser.spaceUserId} tried to update read-only fields in space ${this.name}: ${updateSpaceUserMessage.updateMask.join(", ")}`,
+            );
+        }
+        if (changedFields.length === 0) {
+            return null;
+        }
+
         return {
-            changedFields: updateSpaceUserMessage.updateMask,
+            changedFields,
             partialSpaceUser: { ...updateSpaceUserMessage.user, spaceUserId: spaceUser.spaceUserId },
         };
     }
