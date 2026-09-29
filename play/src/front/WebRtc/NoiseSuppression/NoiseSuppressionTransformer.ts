@@ -35,6 +35,7 @@ interface WorkletHandle {
 }
 
 const DTLN_SAMPLE_RATE = 16000;
+const SPEECH_ATTENUATION_DB = 25;
 export class NoiseSuppressionTransformer {
     public readonly engine: NoiseSuppressionEngine;
     public readonly tuning: NoiseSuppressionTuning;
@@ -212,6 +213,16 @@ export class NoiseSuppressionTransformer {
         return createDeepFilterNetAudioWorklet(this.audioContext, {
             bypassUntilReady: true,
             minSpeechFrames: this.tuning.keystrokeFilter ? 2 : undefined,
+            // The gate delays the voice by its lookahead (30 ms by default) so it is open when a word starts. The
+            // keystroke filter needs 2 frames to decide, so it keeps a 2-frame lookahead.
+            pauseGateLookaheadFrames: this.tuning.shortGateLookahead
+                ? this.tuning.keystrokeFilter
+                    ? 2
+                    : 1
+                : undefined,
+            // Same attenuation in pauses as during speech: no gate, and none of its delay
+            pauseAttenuationDb: this.tuning.gateOff ? SPEECH_ATTENUATION_DB : undefined,
+            speechAttenuationDb: SPEECH_ATTENUATION_DB,
             postGain: this.tuning.postGain,
             // The machine cannot keep up (two 2 s windows over 70 % of real time): the audio would crackle, so hand
             // over to the browser's processing like any other failure.

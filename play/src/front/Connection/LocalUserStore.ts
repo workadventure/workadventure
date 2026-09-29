@@ -82,10 +82,14 @@ export type NoiseSuppressionEngine = "deepfilternet" | "dtln";
  * DeepFilterNet3 options under evaluation, behind debug switches until listening tests pick defaults.
  * keystrokeFilter: the pause gate needs 2 speech frames to open, so one-frame clicks stay out.
  * postGain: level the voice after the denoiser instead of the browser's automatic gain control.
+ * shortGateLookahead: the pause gate delays the voice by 1 frame instead of 3 (-20 ms; 2 with keystrokeFilter).
+ * gateOff: no pause gate at all (-30 ms of voice delay, pauses only 25 dB quieter instead of 45).
  */
 export interface NoiseSuppressionTuning {
     keystrokeFilter: boolean;
     postGain: boolean;
+    shortGateLookahead: boolean;
+    gateOff: boolean;
 }
 
 const JwtAuthToken = z
@@ -876,12 +880,19 @@ class LocalUserStore {
     }
 
     getNoiseSuppressionTuning(): NoiseSuppressionTuning {
-        const tuning = { keystrokeFilter: false, postGain: false };
+        const tuning: NoiseSuppressionTuning = {
+            keystrokeFilter: false,
+            postGain: false,
+            shortGateLookahead: false,
+            gateOff: false,
+        };
         try {
             const stored: unknown = JSON.parse(localStorage.getItem(noiseSuppressionTuningKey) ?? "{}");
             if (typeof stored === "object" && stored !== null) {
                 tuning.keystrokeFilter = "keystrokeFilter" in stored && stored.keystrokeFilter === true;
                 tuning.postGain = "postGain" in stored && stored.postGain === true;
+                tuning.shortGateLookahead = "shortGateLookahead" in stored && stored.shortGateLookahead === true;
+                tuning.gateOff = "gateOff" in stored && stored.gateOff === true;
             }
         } catch {
             // Unreadable value: defaults

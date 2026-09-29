@@ -580,6 +580,26 @@
                                 })}
                             label="Debug: level after noise reduction (browser AGC off)"
                         />
+                        <InputSwitch
+                            id="noise-suppression-debug-short-gate-lookahead"
+                            value={$noiseSuppressionTuningStore.shortGateLookahead}
+                            onchange={() =>
+                                noiseSuppressionTuningStore.setTuning({
+                                    ...$noiseSuppressionTuningStore,
+                                    shortGateLookahead: !$noiseSuppressionTuningStore.shortGateLookahead,
+                                })}
+                            label="Debug: short gate lookahead (-20 ms voice delay, sharper word attacks)"
+                        />
+                        <InputSwitch
+                            id="noise-suppression-debug-gate-off"
+                            value={$noiseSuppressionTuningStore.gateOff}
+                            onchange={() =>
+                                noiseSuppressionTuningStore.setTuning({
+                                    ...$noiseSuppressionTuningStore,
+                                    gateOff: !$noiseSuppressionTuningStore.gateOff,
+                                })}
+                            label="Debug: pause gate off (-30 ms voice delay, pauses only 25 dB quieter)"
+                        />
                     </div>
                 {/if}
             {/if}

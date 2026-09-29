@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { trackAdminEvent, FakeTransformer } = vi.hoisted(() => {
     type StatusMessage = { status: "initializing" | "ready" | "error"; message?: string };
-    type Tuning = { keystrokeFilter: boolean; postGain: boolean };
+    type Tuning = { keystrokeFilter: boolean; postGain: boolean; shortGateLookahead: boolean; gateOff: boolean };
     type Options = { engine: string; tuning: Tuning; onStatusChange?: (message: StatusMessage) => void };
 
     class FakeTransformer {
@@ -57,7 +57,7 @@ const { NoiseSuppressionController } = await import("./NoiseSuppressionControlle
 const { noiseSuppressionStateStore } = await import("./NoiseSuppressionStore");
 
 const microphone = { id: "mic" } as MediaStreamTrack;
-const tuning = { keystrokeFilter: false, postGain: false };
+const tuning = { keystrokeFilter: false, postGain: false, shortGateLookahead: false, gateOff: false };
 
 function eventsNamed(name: string): unknown[] {
     return trackAdminEvent.mock.calls.filter(([eventName]) => eventName === name).map(([, properties]) => properties);

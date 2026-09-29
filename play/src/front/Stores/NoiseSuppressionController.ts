@@ -160,5 +160,10 @@ export class NoiseSuppressionController {
 }
 
 function sameTuning(a: NoiseSuppressionTuning, b: NoiseSuppressionTuning): boolean {
-    return a.keystrokeFilter === b.keystrokeFilter && a.postGain === b.postGain;
+    return (
+        a.keystrokeFilter === b.keystrokeFilter &&
+        a.postGain === b.postGain &&
+        a.shortGateLookahead === b.shortGateLookahead &&
+        a.gateOff === b.gateOff
+    );
 }
