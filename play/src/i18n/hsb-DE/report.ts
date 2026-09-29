@@ -38,6 +38,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "wotstronić",
             content: "{userName} so hnydom dźěli a móže so pozdźišo wróćić.",
             submit: "wotstronić",
+            confirmTitle: "{userName} wotstronić",
         },
         ban: {
             title: "ze swěta wuzamknyć",

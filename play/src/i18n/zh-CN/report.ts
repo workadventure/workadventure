@@ -38,6 +38,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "移出",
             content: "{userName} 将被立即断开连接，之后可以再次加入。",
             submit: "移出",
+            confirmTitle: "移出 {userName}",
         },
         ban: {
             title: "从世界封禁",

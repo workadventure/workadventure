@@ -39,6 +39,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "Verwijderen",
             content: "{userName} wordt meteen losgekoppeld en kan later terugkomen.",
             submit: "Verwijderen",
+            confirmTitle: "{userName} verwijderen",
         },
         ban: {
             title: "Verbannen uit de wereld",
