@@ -25,7 +25,7 @@ const report: DeepPartial<Translation["report"]> = {
         action: "Moderar",
         reason: {
             label: "Motiu",
-            placeholder: "Opcional. Es conserva per als administradors.",
+            placeholder: "Opcional. {userName} veurà aquest missatge.",
         },
         adminOnly: "Reservat als administradors",
         cancel: "Cancel·lar",

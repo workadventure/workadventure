@@ -24,7 +24,7 @@ const report: DeepPartial<Translation["report"]> = {
         action: "Moderěrowaś",
         reason: {
             label: "Pśicyna",
-            placeholder: "Opcionalne. Wobchowa se za administratorow.",
+            placeholder: "Opcionalne. {userName} buźo toś tu powěsć wiźeś.",
         },
         adminOnly: "Jano za administratorow",
         cancel: "Pśetergnuś",

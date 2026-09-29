@@ -25,7 +25,7 @@ const report: DeepPartial<Translation["report"]> = {
         action: "Modereren",
         reason: {
             label: "Reden",
-            placeholder: "Optioneel. Bewaard voor de beheerders.",
+            placeholder: "Optioneel. {userName} ziet dit bericht.",
         },
         adminOnly: "Alleen voor beheerders",
         cancel: "Annuleren",

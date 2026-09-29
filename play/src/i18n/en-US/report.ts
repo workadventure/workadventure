@@ -23,7 +23,7 @@ const report: BaseTranslation = {
         noSelect: "ERROR : There is no action selected.",
         reason: {
             label: "Reason",
-            placeholder: "Optional. Kept for the administrators.",
+            placeholder: "Optional. {userName} will see this message.",
         },
         adminOnly: "Reserved to admins",
         cancel: "Cancel",
