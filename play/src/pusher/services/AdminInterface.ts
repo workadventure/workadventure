@@ -98,13 +98,7 @@ export interface AdminInterface {
      */
     logoutOauth(token: string): Promise<void>;
 
-    banUserByUuid(
-        uuidToBan: string,
-        playUri: string,
-        name: string,
-        message: string,
-        byUserUuid: string,
-    ): Promise<boolean>;
+    banUserByUuid(uuidToBan: string, playUri: string, name: string, message: string, byUserUuid: string): Promise<void>;
 
     getTagsList(roomUrl: string): Promise<string[]>;
 
