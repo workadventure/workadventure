@@ -24,9 +24,11 @@ async function setVariable(page: Page, value: string) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             await WA.onInit();
+            // Await the write: "WA.state.textField = value" returns before the front has even received it, and
+            // the test often navigates away right after, which silently drops the variable.
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            WA.state.textField = value;
+            await WA.state.saveVariable("textField", value);
         },
         value,
     );
