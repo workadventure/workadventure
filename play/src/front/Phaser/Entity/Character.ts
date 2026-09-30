@@ -661,8 +661,9 @@ export abstract class Character extends Container implements OutlineableInterfac
      * Plays the scene of a moderator removing this Woka — kicked off the map or locked up — then
      * calls `onDone`, which is expected to destroy it. The user has already left the room, so for
      * the length of the scene the Woka is a ghost: no name, no bubble, nothing to click.
+     * `fromLeft` is the moderator's side: the Woka is thrown away from it.
      */
-    playEjection(ejection: WokaEjection, onDone: () => void): void {
+    playEjection(ejection: WokaEjection, fromLeft: boolean, onDone: () => void): void {
         this.stopWokaEmote();
         this.setClickable(false);
         this.usernameDisplay?.destroy();
@@ -674,7 +675,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
         }
         const definition = getWokaEjection(ejection);
-        this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, this, definition, onDone);
+        this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, this, definition, onDone, !fromLeft);
         this.wokaEmote.start();
         if (definition.sound) {
             this.playWokaEmoteSound(definition.sound);
