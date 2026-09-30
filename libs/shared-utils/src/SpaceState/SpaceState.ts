@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { spaceKindSchema } from "@workadventure/messages";
 
 /**
  * The typed, server-owned state of a space.
@@ -91,6 +92,9 @@ export const proximityQuestionSchema = z.object({
 });
 
 export const spaceStateSchema = z.object({
+    // What the space is (bubble, meeting area, megaphone...), declared by the clients that join it. Absent until
+    // the first one does: a space that never declares a kind is nobody's meeting, so the back measures nothing in it.
+    kind: spaceKindSchema.optional(),
     raisedHands: z.array(raisedHandEntrySchema),
     floorHolders: z.array(floorHolderEntrySchema),
     recording: recordingStateSchema,

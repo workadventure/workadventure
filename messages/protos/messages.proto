@@ -968,9 +968,14 @@ message SpaceStateQuery {
     UpvoteQuestionQuery upvoteQuestion = 12;
     AnswerQuestionQuery answerQuestion = 13;
     DeleteQuestionQuery deleteQuestion = 14;
+    SetSpaceKindQuery setKind = 15;
   }
 }
 
+// Declares what the space is (see spaceKindSchema). Sent by every client joining a space it knows the kind of.
+message SetSpaceKindQuery {
+  string kind = 1;
+}
 // Raises or lowers the sender's own hand.
 message RaiseHandQuery {
   bool raised = 1;

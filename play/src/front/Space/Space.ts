@@ -10,7 +10,6 @@ import type { Subscription } from "rxjs";
 import { Observable, Subject } from "rxjs";
 import { deepmergeInto } from "deepmerge-ts";
 import { Deferred } from "@workadventure/shared-utils";
-import { spaceKindSchema } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import type {
     PublicEvent,
@@ -25,7 +24,6 @@ import type {
 } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
-import z from "zod";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 
 import type { BlackListManager } from "../WebRtc/BlackListManager";
@@ -1155,14 +1153,7 @@ export class Space implements SpaceInterface {
     }
 
     private getEmptyVideoBox(user: SpaceUserExtended, isScreenSharing: boolean = false): VideoBox {
-        // Use zod to parse the metadata
-        const metadata = z
-            .object({
-                spaceKind: spaceKindSchema.optional(),
-            })
-            .parse(Object.fromEntries(this.getMetadata().entries()));
-
-        return VideoBox.fromRemoteSpaceUser(user, isScreenSharing, metadata.spaceKind === "megaphone");
+        return VideoBox.fromRemoteSpaceUser(user, isScreenSharing, get(this.state.store).kind === "megaphone");
     }
 
     /**

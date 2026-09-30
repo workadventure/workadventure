@@ -1143,11 +1143,11 @@ describe("Space with filter", () => {
                 communicationManager;
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", user]])
+                new Map<string, SpaceUser>([["foo_1", user]]),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher,
-                usersToNotify
+                usersToNotify,
             );
 
             return { space, communicationManager, watcher, user };
@@ -1163,7 +1163,7 @@ describe("Space with filter", () => {
 
             expect(communicationManager.handleUserToNotifyDeleted).toHaveBeenCalledTimes(1);
             expect(communicationManager.handleUserToNotifyDeleted).toHaveBeenCalledWith(
-                expect.objectContaining({ spaceUserId: "foo_1" })
+                expect.objectContaining({ spaceUserId: "foo_1" }),
             );
         });
 
@@ -1292,6 +1292,29 @@ describe("Space state", () => {
         });
 
         expect(answer.answer?.$case).toBe("error");
+    });
+
+    it("records the kind a client declares, and refuses one outside the enum", async () => {
+        const { space, watcher, write } = spaceWithUsers(FilterType.ALL_USERS, { spaceUserId: "foo_1", name: "Alice" });
+        const setKind = (kind: string) =>
+            space.handleQuery(watcher, {
+                id: 1,
+                spaceName: "test",
+                query: {
+                    $case: "spaceStateQuery",
+                    spaceStateQuery: {
+                        spaceUserId: "foo_1",
+                        query: { query: { $case: "setKind", setKind: { kind } } },
+                    },
+                },
+            });
+
+        expect((await setKind("megaphone")).answer?.$case).toBe("spaceStateAnswer");
+        expect((await setKind("megaphone")).answer?.$case).toBe("spaceStateAnswer");
+        expect((await setKind("lobby")).answer?.$case).toBe("error");
+
+        expect(space.getState().kind).toBe("megaphone");
+        expect(sentPatches(write)).toEqual([[{ op: "add", path: "/kind", value: "megaphone" }]]);
     });
 
     it("takes the floor back from a holder whose stream stops", async () => {

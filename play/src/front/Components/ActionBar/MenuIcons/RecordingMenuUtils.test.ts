@@ -19,17 +19,13 @@ function createSpace(
         recorderNamesById?: Record<string, string>;
     },
 ): SpaceInterface {
-    const metadata = new Map<string, unknown>();
     const recording = options?.recording ?? { recording: false, recorder: null, status: "idle" };
-    if (options?.isMegaphone) {
-        metadata.set("spaceKind", "megaphone");
-    }
+    const kind = options?.isMegaphone ? "megaphone" : undefined;
 
     return {
         mySpaceUserId: options?.mySpaceUserId ?? "me",
         getName: () => name,
-        getMetadata: () => metadata,
-        state: { observe: () => readable(recording) },
+        state: { observe: (key: string) => readable(key === "kind" ? kind : recording) },
         getSpaceUserBySpaceUserId: (spaceUserId: string) => {
             const nameById = options?.recorderNamesById?.[spaceUserId];
             return nameById

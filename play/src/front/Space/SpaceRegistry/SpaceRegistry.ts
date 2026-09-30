@@ -369,17 +369,17 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         // Reserve the space name synchronously (before the first await) so concurrent joins coalesce.
         const creationPromise = (async () => {
-            const metadata = options?.metadata ?? new Map<string, unknown>();
-            if (options?.spaceKind) {
-                metadata.set("spaceKind", options.spaceKind);
-            }
-            const newSpace = await Space.create(spaceName, filterType, this.roomConnection, propertiesToSync, signal, {
-                ...options,
-                metadata,
-            });
+            const newSpace = await Space.create(
+                spaceName,
+                filterType,
+                this.roomConnection,
+                propertiesToSync,
+                signal,
+                options,
+            );
             this.spaces.set(newSpace.getName(), newSpace);
             if (options?.spaceKind) {
-                newSpace.emitUpdateSpaceMetadata(new Map([["spaceKind", options.spaceKind]]));
+                newSpace.state.setKind(options.spaceKind);
             }
             return newSpace;
         })();
