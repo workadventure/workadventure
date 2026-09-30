@@ -10,6 +10,7 @@
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { userIsAdminStore } from "../../Stores/GameStore";
+    import { hasCapability } from "../../Connection/Capabilities";
     import { modals } from "@wa-modals";
     import { IconAlertTriangle, IconChevronLeft, IconDoorExit, IconForbid, IconForbid2 } from "@wa-icons";
 
@@ -189,13 +190,15 @@
                         () => pick("kick"),
                         "moderation-kick-action",
                     )}
-                    {@render actionRow(
-                        $LL.report.moderate.ban.title(),
-                        $LL.report.moderate.hint.ban(),
-                        banIcon,
-                        () => pick("ban"),
-                        "moderation-ban-action",
-                    )}
+                    {#if hasCapability("api/ban")}
+                        {@render actionRow(
+                            $LL.report.moderate.ban.title(),
+                            $LL.report.moderate.hint.ban(),
+                            banIcon,
+                            () => pick("ban"),
+                            "moderation-ban-action",
+                        )}
+                    {/if}
                 {/if}
             {:else}
                 <p class="mb-0 opacity-70">
