@@ -39,6 +39,11 @@ export const isCapabilities = z.object({
     description: "Means the api accepts generic analytics event batches.",
     example: "v1",
   }),
+  "api/ban": extendApi(z.optional(z.string()), {
+    description:
+      "Means the api can ban users (POST /api/ban). Without it, admins can kick users but not ban them.",
+    example: "v1",
+  }),
   "api/recordings/events": extendApi(z.optional(z.string()), {
     description:
       "Means the api accepts recording lifecycle events (the end of an egress) from the back.",
