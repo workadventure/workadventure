@@ -5,6 +5,7 @@ import type {
     InitSpaceUsersMessage,
     PrivateSpaceEvent,
     SpaceEvent,
+    SpaceKind,
     SpaceUser,
     UpdateSpaceMetadataMessage,
     VideoQualityReportMessage,
@@ -79,6 +80,8 @@ export interface SpaceInterface {
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     /** The server-owned state of the space (hands, floor, polls, questions, recording) and the changes to it. */
     readonly state: SpaceStateManager;
+    /** What this client joined the space as (known locally from the start; the back learns it through the state). */
+    readonly kind: SpaceKind | undefined;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
     watchInitSpaceUsersMessage(): Observable<InitSpaceUsersMessage>;
     videoStreamStore: Readable<Map<string, VideoBox>>;

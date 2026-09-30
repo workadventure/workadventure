@@ -25,7 +25,7 @@ export interface RecordingSpaceRow {
 }
 
 function isMegaphoneSpace(space: SpaceInterface): boolean {
-    return get(space.state.observe("kind")) === ("megaphone" satisfies SpaceKind);
+    return space.kind === ("megaphone" satisfies SpaceKind);
 }
 
 function getRecorderDisplayName(

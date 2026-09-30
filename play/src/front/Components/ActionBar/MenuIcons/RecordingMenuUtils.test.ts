@@ -25,7 +25,8 @@ function createSpace(
     return {
         mySpaceUserId: options?.mySpaceUserId ?? "me",
         getName: () => name,
-        state: { observe: (key: string) => readable(key === "kind" ? kind : recording) },
+        kind,
+        state: { observe: () => readable(recording) },
         getSpaceUserBySpaceUserId: (spaceUserId: string) => {
             const nameById = options?.recorderNamesById?.[spaceUserId];
             return nameById
