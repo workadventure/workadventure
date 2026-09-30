@@ -221,21 +221,21 @@
                             bind:group={banScope}
                             disabled={!canBanIp}
                             id="moderation-ban-scope-ip"
-                        >
-                            <span class="block text-xs opacity-60">
-                                {#if ipPreviewFailed}
-                                    {$LL.report.moderate.ban.scope.error()}
-                                {:else if ipPreview === undefined}
-                                    {$LL.report.moderate.ban.scope.loading()}
-                                {:else if !ipPreview.ipKnown}
-                                    {$LL.report.moderate.ban.scope.ipUnknown()}
-                                {:else if ipPreview.includesModerator}
-                                    {$LL.report.moderate.ban.scope.ipShared()}
-                                {:else}
-                                    {$LL.report.moderate.ban.scope.ipHint()}
-                                {/if}
-                            </span>
-                        </InputRadio>
+                        />
+                        <!-- On its own line under the label, aligned with it (past the radio button). -->
+                        <p class="mb-0 -mt-2 pl-9 text-xs opacity-60" data-testid="moderation-ban-scope-ip-hint">
+                            {#if ipPreviewFailed}
+                                {$LL.report.moderate.ban.scope.error()}
+                            {:else if ipPreview === undefined}
+                                {$LL.report.moderate.ban.scope.loading()}
+                            {:else if !ipPreview.ipKnown}
+                                {$LL.report.moderate.ban.scope.ipUnknown()}
+                            {:else if ipPreview.includesModerator}
+                                {$LL.report.moderate.ban.scope.ipShared()}
+                            {:else}
+                                {$LL.report.moderate.ban.scope.ipHint()}
+                            {/if}
+                        </p>
                     </fieldset>
                     {#if banScope === "ip" && ipPreview !== undefined && canBanIp}
                         <div
@@ -245,10 +245,11 @@
                             {#if ipPreview.users.length === 0}
                                 <p class="mb-0 text-sm">{$LL.report.moderate.ban.scope.nobody()}</p>
                             {:else}
-                                <p class="mb-0 text-sm font-semibold">
+                                <p class="mb-0 flex flex-row items-center gap-2 text-sm font-semibold">
+                                    <IconAlertTriangle font-size="20" class="shrink-0" />
                                     {$LL.report.moderate.ban.scope.others({ count: ipPreview.users.length })}
                                 </p>
-                                <ul class="mb-0 flex flex-col gap-1 max-h-40 overflow-y-auto list-none p-0">
+                                <ul class="mb-0 flex flex-col gap-1 max-h-40 overflow-y-auto list-none p-0 pl-7">
                                     {#each ipPreview.users as user, index (index)}
                                         <li class="text-sm">{user.name}</li>
                                     {/each}
