@@ -20,6 +20,7 @@ import type {
     PrivateEventPusherToFront,
     BackEventFrontToPusherMessage,
     InitSpaceUsersMessage,
+    SpaceKind,
     VideoQualityReportMessage,
 } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
@@ -137,6 +138,7 @@ export class Space implements SpaceInterface {
         private _mySpaceUserId: SpaceUser["spaceUserId"],
         // True if the user has the right to start recording in this space
         canRecord: boolean,
+        public readonly kind: SpaceKind | undefined,
         private _blackListManager: BlackListManager = blackListManager,
         private _highlightedEmbedScreenStore = highlightedEmbedScreen,
     ) {
@@ -374,6 +376,7 @@ export class Space implements SpaceInterface {
             metadata?: Map<string, unknown>;
             // True if the user is allowed to start/stop recording in the space
             canRecord?: boolean;
+            spaceKind?: SpaceKind;
         },
     ): Promise<Space> {
         const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync, {
@@ -387,6 +390,7 @@ export class Space implements SpaceInterface {
             propertiesToSync,
             spaceUserId,
             options?.canRecord ?? false,
+            options?.spaceKind,
         );
     }
 
@@ -1153,7 +1157,7 @@ export class Space implements SpaceInterface {
     }
 
     private getEmptyVideoBox(user: SpaceUserExtended, isScreenSharing: boolean = false): VideoBox {
-        return VideoBox.fromRemoteSpaceUser(user, isScreenSharing, get(this.state.store).kind === "megaphone");
+        return VideoBox.fromRemoteSpaceUser(user, isScreenSharing, this.kind === "megaphone");
     }
 
     /**

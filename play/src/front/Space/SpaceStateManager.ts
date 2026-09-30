@@ -123,16 +123,9 @@ export class SpaceStateManager {
         await this.alter({ $case: "stopRecording", stopRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
     }
 
-    /** Tells the back what the space is. Shown locally right away: the kind decides how the space is displayed. */
+    /** Tells the back what the space is (for its analytics). The front itself reads Space.kind. */
     public setKind(kind: SpaceKind): void {
-        this.alter(
-            { $case: "setKind", setKind: { kind } },
-            {
-                optimisticChange: (state) => {
-                    state.kind = kind;
-                },
-            },
-        ).catch((error) => {
+        this.alter({ $case: "setKind", setKind: { kind } }, {}).catch((error) => {
             console.error(`Could not set the kind of space ${this.spaceName}`, error);
             Sentry.captureException(error);
         });
