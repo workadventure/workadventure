@@ -68,7 +68,7 @@ function createDependencies(state: IRecordableState<IRecordableStrategy>) {
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: vi.fn(),
         world: "world",
-        getMetadataValue: vi.fn(),
+        getState: () => emptySpaceState(),
         filterType: FilterType.ALL_USERS,
     };
     const orchestrator: ITransitionOrchestrator = {

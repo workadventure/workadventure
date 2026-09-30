@@ -7,6 +7,7 @@ import {
     SpaceUser,
     FilterType,
 } from "@workadventure/messages";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import type { InitialStateFactory } from "../src/Model/CommunicationManager";
 import { CommunicationManager } from "../src/Model/CommunicationManager";
 import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
@@ -78,7 +79,7 @@ describe("CommunicationManager", () => {
         stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
         getUser: vi.fn(),
         world: "world",
-        getMetadataValue: vi.fn(),
+        getState: () => emptySpaceState(),
         filterType: FilterType.ALL_USERS,
     });
 
@@ -952,7 +953,7 @@ describe("CommunicationManager", () => {
                     startedAtMs: 1_700_000_000_000,
                     endedAtMs: 1_700_000_610_000,
                     fileResults: [{ filename: "uuid-recorder_1/recording-1.mp4", sizeBytes: 123, durationMs: 610_400 }],
-                })
+                }),
             );
             await Promise.resolve();
 
@@ -989,7 +990,7 @@ describe("CommunicationManager", () => {
                     egressId: "egress-1",
                     roomName: "test-space",
                     phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
-                })
+                }),
             );
 
             expect(recordingEventNotifier).not.toHaveBeenCalled();
@@ -1022,7 +1023,7 @@ describe("CommunicationManager", () => {
                     roomName: "test-space",
                     phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED,
                     status: "EGRESS_ACTIVE",
-                })
+                }),
             );
             expect(recordingEventNotifier).not.toHaveBeenCalled();
 
@@ -1035,8 +1036,8 @@ describe("CommunicationManager", () => {
                         phase: RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED,
                         status: "EGRESS_FAILED",
                         error: "upload failed",
-                    })
-                )
+                    }),
+                ),
             ).not.toThrow();
             await Promise.resolve();
 
@@ -1048,7 +1049,7 @@ describe("CommunicationManager", () => {
                     recorder: { uuid: "uuid-recorder_1", spaceUserId: "recorder_1" },
                     startedAt: null,
                     files: [],
-                })
+                }),
             );
         });
 
@@ -1253,7 +1254,7 @@ describe("CommunicationManager", () => {
     });
     describe("session analytics", () => {
         // The manager builds its own tracker, so this covers the wiring the refactor
-        // introduced end to end: the `spaceKind` metadata read off the space, the
+        // introduced end to end: the kind read off the space state, the
         // predicate that opens a meeting on the second arrival, and the rows that only
         // exist once the session has ended. Injecting a fake tracker would test the
         // delegation and skip exactly the part that can break.
@@ -1279,7 +1280,7 @@ describe("CommunicationManager", () => {
         it("measures a meeting from the kind the space declares", async () => {
             await withQueue(async (enqueue, rows) => {
                 const space = createSpace();
-                space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                space.getState = () => ({ ...emptySpaceState(), kind: "bubble" });
                 const manager = managerFor(space);
 
                 await manager.handleUserAdded(createSpaceUser("1"));
@@ -1301,7 +1302,7 @@ describe("CommunicationManager", () => {
         it("measures nothing for a space whose client declared no kind", async () => {
             await withQueue(async (enqueue) => {
                 const space = createSpace();
-                space.getMetadataValue = vi.fn().mockReturnValue(undefined);
+                space.getState = () => emptySpaceState();
                 const manager = managerFor(space);
 
                 await manager.handleUserAdded(createSpaceUser("1"));
@@ -1317,7 +1318,7 @@ describe("CommunicationManager", () => {
             // usersToNotify, a speaker is in both, and going on air is not an arrival.
             await withQueue(async (enqueue, rows) => {
                 const space = createSpace();
-                space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                space.getState = () => ({ ...emptySpaceState(), kind: "bubble" });
                 const manager = managerFor(space);
 
                 const watcher = createSpaceUser("watcher");
@@ -1336,7 +1337,7 @@ describe("CommunicationManager", () => {
         it("keeps a member until they have left both registries", async () => {
             await withQueue(async (enqueue, rows) => {
                 const space = createSpace();
-                space.getMetadataValue = vi.fn().mockReturnValue("bubble");
+                space.getState = () => ({ ...emptySpaceState(), kind: "bubble" });
                 const manager = managerFor(space);
 
                 const staying = createSpaceUser("staying");

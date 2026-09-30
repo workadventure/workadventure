@@ -6,7 +6,6 @@ import {
     type MeetingConnectionRestartMessage,
     type SpaceUser,
     type SpaceKind,
-    spaceKindSchema,
     FilterType,
 } from "@workadventure/messages";
 import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
@@ -545,15 +544,13 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     /**
-     * What this space is a session of, or undefined while its client has not said.
+     * What this space is a session of, or undefined while its clients have not said.
      *
-     * Read when a session opens rather than once: the kind is the `spaceKind` metadata,
-     * checked against the enum on the way in, and it arrives after the first join. A
+     * Read when a session opens rather than once: the kind is in the space state, set after the first join. A
      * space that never declares one never opens a session.
      */
     private sessionKind(): SpaceKind | undefined {
-        const kind = spaceKindSchema.safeParse(this.space.getMetadataValue("spaceKind"));
-        return kind.success ? kind.data : undefined;
+        return this.space.getState().kind;
     }
 
     /**

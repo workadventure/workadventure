@@ -91,8 +91,8 @@ export class SessionAnalytics {
         private readonly id: string,
         private readonly world: string,
         /**
-         * Read when a session opens rather than once: the kind is the `spaceKind`
-         * metadata, and it arrives after the first join. Undefined keeps the session
+         * Read when a session opens rather than once: the kind is in the space
+         * state, and it arrives after the first join. Undefined keeps the session
          * closed, so a space that never declares one never opens.
          */
         private readonly kind: () => SpaceKind | undefined,

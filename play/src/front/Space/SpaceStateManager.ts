@@ -5,7 +5,7 @@ import { applyPatch } from "fast-json-patch";
 import type { Readable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import type { SpaceStateQuery, SpaceUser } from "@workadventure/messages";
+import type { SpaceKind, SpaceStateQuery, SpaceUser } from "@workadventure/messages";
 import { notificationPlayingStore } from "../Stores/NotificationStore";
 import { LL } from "../../i18n/i18n-svelte";
 import type { FloorSpeaker, RaisedHand } from "./SpaceInterface";
@@ -121,6 +121,21 @@ export class SpaceStateManager {
 
     public async stopRecording(): Promise<void> {
         await this.alter({ $case: "stopRecording", stopRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
+    }
+
+    /** Tells the back what the space is. Shown locally right away: the kind decides how the space is displayed. */
+    public setKind(kind: SpaceKind): void {
+        this.alter(
+            { $case: "setKind", setKind: { kind } },
+            {
+                optimisticChange: (state) => {
+                    state.kind = kind;
+                },
+            },
+        ).catch((error) => {
+            console.error(`Could not set the kind of space ${this.spaceName}`, error);
+            Sentry.captureException(error);
+        });
     }
 
     // The methods below report a refused change to the user; they never reject.

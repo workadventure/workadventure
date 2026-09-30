@@ -16,6 +16,7 @@ import {
     AddSpaceUserMessage,
     FilterType,
     RemoveSpaceUserMessage,
+    spaceKindSchema,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
 import type { SpaceState } from "@workadventure/shared-utils";
@@ -722,11 +723,28 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return this.proximityQAManager.markAnswered(sender, query.answerQuestion.questionId);
             case "deleteQuestion":
                 return this.proximityQAManager.delete(sender, query.deleteQuestion.questionId);
+            case "setKind":
+                return this.setKind(query.setKind.kind);
             default: {
                 const _exhaustiveCheck: never = query;
                 throw new Error("Unknown space state query");
             }
         }
+    }
+
+    /**
+     * The kind is the client's own claim about its space, read by the analytics and by labels the front shows
+     * itself, so a client that lies about it only spoils its own rows. A value outside the enum is refused.
+     */
+    private setKind(kind: string): void {
+        const parsedKind = spaceKindSchema.parse(kind);
+        if (this.state.kind === parsedKind) {
+            return;
+        }
+        this.updateState((state) => {
+            state.kind = parsedKind;
+        });
+        this.communicationManager.handleSpaceKindChanged();
     }
 
     public getState(): Readonly<SpaceState> {
@@ -871,9 +889,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         for (const [key, value] of Object.entries(metadata)) {
             this.metadata.set(key, value);
-        }
-        if ("spaceKind" in metadata) {
-            this.communicationManager.handleSpaceKindChanged();
         }
 
         this.notifyWatchers({

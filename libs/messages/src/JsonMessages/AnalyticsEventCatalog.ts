@@ -14,8 +14,8 @@ export const isClientAnalyticsEventSource = isAnalyticsEventSource.extract([
 ]);
 
 /**
- * What a space is, declared by the client that joins it under the `spaceKind` metadata
- * key: a proximity bubble, a meeting area, the world megaphone, a speaker zone. A space
+ * What a space is, declared by the client that joins it as the `kind` of the space
+ * state: a proximity bubble, a meeting area, the world megaphone, a speaker zone. A space
  * that declares nothing — the world space, a chat space, a space a script opened — is
  * nobody's meeting and nobody's broadcast.
  *
