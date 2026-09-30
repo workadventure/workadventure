@@ -31,7 +31,7 @@ export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInter
     public emitUpdateSpaceFilter = vi.fn();
     public emitLeaveSpace = vi.fn();
     public emitJoinSpace = vi.fn();
-    public querySpaceState = vi.fn().mockResolvedValue(undefined);
+    public alterSpaceState = vi.fn().mockResolvedValue(undefined);
     public spaceStatePatchMessageStream = new Subject<SpaceStatePatchMessage>();
     public emitUpdateSpaceMetadata = vi.fn();
     public emitUpdateSpaceUserMessage = vi.fn();

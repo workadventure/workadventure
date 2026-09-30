@@ -277,8 +277,8 @@ describe("SpaceProviderInterface implementation", () => {
 
                 await spaceRegistry.lowerHand("user-1");
 
-                expect(roomConnectionMock.querySpaceState).toHaveBeenCalledOnce();
-                expect(roomConnectionMock.querySpaceState).toHaveBeenCalledWith(
+                expect(roomConnectionMock.alterSpaceState).toHaveBeenCalledOnce();
+                expect(roomConnectionMock.alterSpaceState).toHaveBeenCalledWith(
                     spaceWithHands.getName(),
                     { $case: "lowerHand", lowerHand: { targetSpaceUserId: "user-1" } },
                     { timeout: undefined },
@@ -292,7 +292,7 @@ describe("SpaceProviderInterface implementation", () => {
 
                 await spaceRegistry.lowerHand("nobody");
 
-                expect(roomConnectionMock.querySpaceState).not.toHaveBeenCalled();
+                expect(roomConnectionMock.alterSpaceState).not.toHaveBeenCalled();
             });
         });
         describe("SpaceRegistry race condition handling", () => {

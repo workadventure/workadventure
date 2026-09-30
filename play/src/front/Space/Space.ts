@@ -479,11 +479,11 @@ export class Space implements SpaceInterface {
 
     // Unlike the other state changes, a refused recording is reported by the caller (the recording menu).
     public async startRecording(): Promise<void> {
-        await this.queryState({ $case: "startRecording", startRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
+        await this.alterState({ $case: "startRecording", startRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
     }
 
     public async stopRecording(): Promise<void> {
-        await this.queryState({ $case: "stopRecording", stopRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
+        await this.alterState({ $case: "stopRecording", stopRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
     }
 
     /** False until the whole state has arrived (right after joining): until then, stateStore is empty. */
@@ -596,13 +596,13 @@ export class Space implements SpaceInterface {
      * once the back answered: by then its patch (if accepted) is already in the server state.
      */
     private changeState(query: NonNullable<SpaceStateQuery["query"]>, optimisticChange?: StateChange): Promise<void> {
-        return this.queryState(query, { optimisticChange }).catch((error) => {
+        return this.alterState(query, { optimisticChange }).catch((error) => {
             console.error(`Space state change "${query.$case}" failed in space ${this.name}`, error);
             notificationPlayingStore.playNotification(get(LL).notification.actionFailed());
         });
     }
 
-    private async queryState(
+    private async alterState(
         query: NonNullable<SpaceStateQuery["query"]>,
         options: { optimisticChange?: StateChange; timeout?: number },
     ): Promise<void> {
@@ -614,7 +614,7 @@ export class Space implements SpaceInterface {
             this._pendingStateChangesStore.update((changes) => [...changes, optimisticChange]);
         }
         try {
-            await this._connection.querySpaceState(this.name, query, { timeout });
+            await this._connection.alterSpaceState(this.name, query, { timeout });
         } finally {
             if (optimisticChange) {
                 this._pendingStateChangesStore.update((changes) =>

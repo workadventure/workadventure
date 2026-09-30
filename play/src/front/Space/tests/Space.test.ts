@@ -97,14 +97,14 @@ vi.mock(
     () => import("../../../../tests/front/mocks/frontEnvironmentVariableMock"),
 );
 
-const querySpaceStateSpy = vi.fn().mockResolvedValue(undefined);
+const alterSpaceStateSpy = vi.fn().mockResolvedValue(undefined);
 
 const defaultRoomConnectionMock = {
     emitJoinSpace: vi.fn(),
     emitLeaveSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
     emitRemoveSpaceFilter: vi.fn(),
-    querySpaceState: querySpaceStateSpy,
+    alterSpaceState: alterSpaceStateSpy,
 } as unknown as RoomConnection;
 
 // What the pusher sends when the space is joined: the whole state, as a patch replacing the root.
@@ -628,12 +628,12 @@ describe("Space test", () => {
         await space.startRecording();
         await space.stopRecording();
 
-        expect(querySpaceStateSpy).toHaveBeenCalledWith(
+        expect(alterSpaceStateSpy).toHaveBeenCalledWith(
             "space-name",
             { $case: "startRecording", startRecording: {} },
             { timeout: 60_000 },
         );
-        expect(querySpaceStateSpy).toHaveBeenCalledWith(
+        expect(alterSpaceStateSpy).toHaveBeenCalledWith(
             "space-name",
             { $case: "stopRecording", stopRecording: {} },
             { timeout: 60_000 },
@@ -673,7 +673,7 @@ describe("Space test", () => {
 
     it("shows a personal change right away and drops it once the back answered", async () => {
         let answer: () => void = () => {};
-        const querySpaceState = vi.fn(
+        const alterSpaceState = vi.fn(
             () =>
                 new Promise<void>((resolve) => {
                     answer = resolve;
@@ -682,7 +682,7 @@ describe("Space test", () => {
         const space = await Space.create(
             "space-name",
             FilterType.ALL_USERS,
-            { ...defaultRoomConnectionMock, querySpaceState } as unknown as RoomConnection,
+            { ...defaultRoomConnectionMock, alterSpaceState } as unknown as RoomConnection,
             [],
             signal,
         );
@@ -698,13 +698,13 @@ describe("Space test", () => {
     });
 
     it("reports a refused change without rejecting", async () => {
-        const querySpaceState = vi.fn().mockRejectedValue(new Error("refused"));
+        const alterSpaceState = vi.fn().mockRejectedValue(new Error("refused"));
         const playNotification = vi.spyOn(notificationPlayingStore, "playNotification");
         vi.spyOn(console, "error").mockImplementation(() => {});
         const space = await Space.create(
             "space-name",
             FilterType.ALL_USERS,
-            { ...defaultRoomConnectionMock, querySpaceState } as unknown as RoomConnection,
+            { ...defaultRoomConnectionMock, alterSpaceState } as unknown as RoomConnection,
             [],
             signal,
         );

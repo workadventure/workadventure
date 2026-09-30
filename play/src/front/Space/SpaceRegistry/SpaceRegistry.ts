@@ -32,7 +32,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitAddSpaceFilter"
     | "emitLeaveSpace"
     | "emitJoinSpace"
-    | "querySpaceState"
+    | "alterSpaceState"
     | "spaceStatePatchMessageStream"
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"

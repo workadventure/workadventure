@@ -41,7 +41,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public emitRemoveSpaceFilter = vi.fn();
     public emitJoinSpace = vi.fn();
     public emitLeaveSpace = vi.fn();
-    public querySpaceState = vi.fn().mockResolvedValue(undefined);
+    public alterSpaceState = vi.fn().mockResolvedValue(undefined);
     public spaceStatePatchMessageStream = new Subject<SpaceStatePatchMessage>();
     public spacePublicMessageEvent = new Subject<PublicEvent>();
     public spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
