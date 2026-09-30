@@ -326,6 +326,52 @@ play:
 
 
 # #########################################################
+# front service (optional)
+# #########################################################
+# When enabled, the JS/CSS assets are served by a dedicated nginx container on their own domain
+# (assets.<domainName> by default) instead of the play container. The front can then be upgraded
+# alone (by changing front.image.tag), without restarting play and dropping everybody's connection.
+# Not supported in singleDomain mode.
+front:
+  enabled: false
+  replicaCount: 1
+
+  image:
+    # Built from play/Dockerfile with "--target front"
+    repository: thecodingmachine/workadventure-front
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources: {}
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  ingress:
+    tls: false
+    secretName: ""
+    # Domain name to be used for the assets.
+    # If not set, the domain name is built from the root "domainName" value (assets.<domainName>).
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+
+# #########################################################
 # back service
 # #########################################################
 back:

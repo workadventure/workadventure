@@ -2,6 +2,7 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 // Use an emitted URL so the worker type stays explicit in both dev and production.
 import tasksVisionWorkerUrl from "./MediaPipeTasksVisionWorker?worker&url";
+import { TASKS_VISION_ASSET_URLS } from "./tasksVisionAssetUrls";
 import type {
     SerializedWorkerError,
     TasksVisionWorkerDelegate,
@@ -57,6 +58,7 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
     public readonly transport: BackgroundTransport;
     private config: BackgroundConfig;
     private worker: Worker | null = null;
+    private workerBlobUrl: string | undefined;
     private readonly initPromise: Promise<void>;
     private workerInitialization: PendingRequest | null = null;
     private readonly pendingConfigRequests = new Map<number, PendingRequest>();
@@ -106,7 +108,13 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
             throw new BackgroundProcessingUnsupportedError(unsupportedReason);
         }
 
-        const worker = new Worker(tasksVisionWorkerUrl, { type: "module" });
+        // Browsers refuse `new Worker()` on a cross-origin URL, and the worker script lives on the assets domain
+        // when ASSETS_URL is set. A same-origin blob that imports it works from any origin. Inside the worker,
+        // relative fetch() URLs would resolve against the blob: URL and fail, so it must only use absolute URLs.
+        const workerSource = `import ${JSON.stringify(new URL(tasksVisionWorkerUrl, import.meta.url).href)};`;
+        // Not revoked right after `new Worker()`: some Safari versions still read the blob after the constructor.
+        this.workerBlobUrl = URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
+        const worker = new Worker(this.workerBlobUrl, { type: "module" });
         this.worker = worker;
         worker.onmessage = (event: MessageEvent<TasksVisionWorkerResponse>) => this.handleWorkerMessage(event.data);
         worker.onerror = (event: ErrorEvent) => {
@@ -129,6 +137,7 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
         this.postToWorker({
             type: "initialize",
             config: { ...this.config, backgroundImage: this.resolveDocumentUrl(this.config.backgroundImage) },
+            assets: TASKS_VISION_ASSET_URLS,
         });
         await initializationPromise;
     }
@@ -307,6 +316,10 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
         this.settleInitialization(new Error("Tasks Vision worker was terminated during initialization"));
         this.worker?.terminate();
         this.worker = null;
+        if (this.workerBlobUrl) {
+            URL.revokeObjectURL(this.workerBlobUrl);
+            this.workerBlobUrl = undefined;
+        }
         this.workerDelegate = "none";
         const error = new Error("Tasks Vision worker was terminated");
         for (const request of this.pendingConfigRequests.values()) {
