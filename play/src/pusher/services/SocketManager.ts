@@ -945,8 +945,9 @@ export class SocketManager implements ZoneEventListener {
     }
 
     /**
-     * Every user connected to a room of the world of roomUrl, whatever the back serving the room. Rejects when the
-     * room is outside any world, or when a back does not answer: a partial list would hide users.
+     * Every user connected to a room of the world, whatever the back serving the room. The world is the URL the
+     * admin returns for the user: a room belongs to it when its URL starts with it. Rejects when a back does not
+     * answer: a partial list would hide users.
      */
     public async getWorldUsers(world: string): Promise<WorldUser[]> {
         const backs = await apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);

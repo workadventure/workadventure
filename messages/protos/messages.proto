@@ -1749,6 +1749,7 @@ message RoomsList {
 }
 
 message WorldUsersQuery {
+  // The world URL the admin returns for the user. A room belongs to the world when its URL starts with it.
   string world = 1;
 }
 
