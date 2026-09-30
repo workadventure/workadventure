@@ -8,7 +8,7 @@ import {
     wheelSlicePosition,
 } from "./WokaEmoteGeometry";
 
-const RESTING: WokaEmoteState = { frame: 1, x: 0, y: 0, angle: 0, scaleX: 1, scaleY: 1 };
+const RESTING: WokaEmoteState = { frame: 1, x: 0, y: 0, angle: 0, scaleX: 1, scaleY: 1, alpha: 1 };
 
 describe("feetAnchoredOffset", () => {
     it("leaves a resting Woka where it is", () => {

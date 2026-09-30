@@ -34,6 +34,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
     private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
     public disconnected = false;
+    /** Set just before a moderator removes the user, so the other players can see why it left. */
+    public ejection: "kicked" | "banned" | undefined;
     private isRoomJoinedMessage = false;
     private pendingMessages: NonNullable<ServerToClientMessage["message"]>[] = [];
     /**
