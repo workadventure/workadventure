@@ -222,8 +222,8 @@
                             disabled={!canBanIp}
                             id="moderation-ban-scope-ip"
                         />
-                        <!-- On its own line under the label, aligned with it (past the radio button). -->
-                        <p class="mb-0 -mt-2 pl-9 text-xs opacity-60" data-testid="moderation-ban-scope-ip-hint">
+                        <!-- On its own line, aligned with the text of the label: 8px padding + 20px radio + 8px gap + 12px label padding. -->
+                        <p class="mb-0 -mt-2 pl-12 text-xs opacity-60" data-testid="moderation-ban-scope-ip-hint">
                             {#if ipPreviewFailed}
                                 {$LL.report.moderate.ban.scope.error()}
                             {:else if ipPreview === undefined}
