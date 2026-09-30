@@ -1293,6 +1293,55 @@ export const ANALYTICS_EVENTS = {
       "WorkAdventure noise suppression is processing the microphone. Read against media.noise_suppression.failed for each engine's failure rate, the figure that decides whether DeepFilterNet3 can become the default.",
   }),
 
+  "media.audio_quality.sample": event({
+    properties: z.object({
+      transportType: z
+        .enum(["P2P", "SFU"])
+        .describe("Direct peer connections, or LiveKit."),
+      windowSeconds: z
+        .number()
+        .positive()
+        .describe("Length of the window the counters were taken over."),
+      streams: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe("Remote audio streams received at the end of the window."),
+      concealedRatio: z
+        .number()
+        .min(0)
+        .max(1)
+        .describe(
+          "Share of the received audio the browser had to invent because packets were late or missing — what a listener hears as robotic or choppy. Excludes the silence Opus DTX fills during pauses.",
+        ),
+      concealmentEvents: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe("How many separate concealment episodes the window had."),
+      packetLossRatio: z
+        .number()
+        .min(0)
+        .max(1)
+        .describe("Packets lost over packets expected."),
+      maxJitterMs: z
+        .number()
+        .nonnegative()
+        .describe(
+          "Highest jitter estimate among the streams, at the end of the window.",
+        ),
+      jitterBufferDelayMs: z
+        .number()
+        .nonnegative()
+        .nullable()
+        .describe(
+          "Mean time audio waited in the jitter buffer: the latency the network's irregularity costs.",
+        ),
+    }),
+    description:
+      "How the voices this client received survived the network over the last minute, aggregated over every remote microphone of one transport. No event for a window in which no audio was received. The counterpart of media.noise_suppression.*: those tell whether the sender's audio was clean, this tells whether it arrived intact.",
+  }),
+
   "media.noise_suppression.failed": event({
     properties: z.object({
       engine: noiseSuppressionEngineField,

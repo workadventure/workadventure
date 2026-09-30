@@ -19,6 +19,7 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 
 import { subscribeToVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
+import { registerAudioQualitySource } from "../WebRtc/AudioQualityAnalytics";
 import type { Streamable } from "../Space/Streamable";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 
@@ -131,6 +132,10 @@ export class LiveKitParticipant {
         this.analyticsStatsUnsubscribers.push(this.subscribeToAnalyticsStats("video", this.videoWebrtcStats));
         this.analyticsStatsUnsubscribers.push(
             this.subscribeToAnalyticsStats("screenShare", this.screenShareWebrtcStats),
+        );
+        // The microphone only: a scripting audio track is not a voice
+        this.analyticsStatsUnsubscribers.push(
+            registerAudioQualitySource("SFU", async () => this._microphonePublication?.track?.getRTCStatsReport()),
         );
     }
 

@@ -133,7 +133,7 @@ class App {
         };
 
         this.app.use(
-            "assets",
+            "/assets",
             express.static(path + "/assets", {
                 ...staticOptions,
                 // Vite content-hashes everything under /assets, so the CDN edge may keep it forever.
@@ -143,7 +143,7 @@ class App {
         );
 
         this.app.use(
-            "resources",
+            "/resources",
             express.static(path + "/resources", {
                 ...staticOptions,
                 maxAge: "1d",
@@ -151,7 +151,7 @@ class App {
         );
 
         this.app.use(
-            "static",
+            "/static",
             express.static(path + "/static", {
                 ...staticOptions,
                 maxAge: "1d",
@@ -159,7 +159,7 @@ class App {
         );
 
         this.app.use(
-            "collections",
+            "/collections",
             express.static(path + "/collections", {
                 ...staticOptions,
                 maxAge: "1d",
