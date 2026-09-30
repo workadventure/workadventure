@@ -1,6 +1,6 @@
 import { expect, request, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
-import { publicTestMapUrl } from "./utils/urls";
+import { local_world, publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 import Menu from "./utils/menu";
 
@@ -463,7 +463,7 @@ test.describe("Scripting space-related functions @nowebkit", () => {
         // Delete space connection in the backend
         // This simulates a backend restart, as the space connection will be closed
         await apiContext.post(
-            "http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.some-test-space-backend-restart&token=123",
+            `http://api.workadventure.localhost/debug/close-space-connection?spaceName=${encodeURIComponent(`${local_world}.some-test-space-backend-restart`)}&token=123`,
         );
 
         //eslint-disable-next-line playwright/no-wait-for-timeout

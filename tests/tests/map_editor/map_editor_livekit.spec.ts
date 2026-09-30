@@ -5,7 +5,7 @@ import { resetWamMaps } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import { evaluateScript } from "../utils/scripting";
-import { map_storage_url } from "../utils/urls";
+import { local_world, map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
 
@@ -87,7 +87,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Delete space connection in the backend
         // This simulates a backend restart, as the space connection will be closed
         const result = await request.post(
-            "http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.5w0szy-foobar&token=123",
+            `http://api.workadventure.localhost/debug/close-space-connection?spaceName=${encodeURIComponent(`${local_world}.5w0szy-foobar`)}&token=123`,
         );
         expect(result.status()).toBe(200);
 

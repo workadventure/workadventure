@@ -2,6 +2,8 @@ import { RENDERER_MODE } from "./environment";
 
 export const play_url =
     process.env.PLAY_URL ?? (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://play.workadventure.localhost";
+// Without an admin, the world of a room is the origin of its URL. Space names are prefixed with it.
+export const local_world = new URL(play_url).origin;
 export const map_storage_url =
     (process.env.MAP_STORAGE_PROTOCOL ?? "http") +
     "://john.doe:password@" +

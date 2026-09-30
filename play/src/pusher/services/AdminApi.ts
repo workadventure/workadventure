@@ -90,7 +90,8 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
         description: "True if the user can edit the map",
     }),
     world: extendApi(z.string(), {
-        description: "name of the world",
+        description:
+            "URL of the world. Every room of the world has a URL starting with it, e.g. https://play.example.com/@/org/world/",
     }),
     chatID: extendApi(z.string().optional(), {
         description: "ChatId of user",
