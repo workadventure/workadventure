@@ -14,7 +14,7 @@
   "dependencies": {
     "@anatine/zod-openapi": "^2.2.8",
     "@bufbuild/protobuf": "^2.12.0",
-    "@grpc/grpc-js": "^1.14.4",
+    "@grpc/grpc-js": "^1.14.5",
     "google-protobuf": "^4.0.2",
     "long": "^5.3.2",
     "openapi3-ts": "^4.5.0",
