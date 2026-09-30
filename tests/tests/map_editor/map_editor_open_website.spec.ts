@@ -74,8 +74,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     // Test to set Klaxoon application in the area with the map editor
     test("Successfully set Klaxoon's application in the area in the map editor", async ({ browser, request }) => {
         test.skip(
-            process.env.IS_FORK === "true",
-            "Skip Klaxoon test on forked PR because the secret env variable is not set",
+            process.env.NO_KLAXOON_SECRET === "true",
+            "Skip Klaxoon test when the KLAXOON_CLIENT_ID secret is not available (forks, Dependabot)",
         );
 
         await resetWamMaps(request);

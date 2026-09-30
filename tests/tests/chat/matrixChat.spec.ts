@@ -139,8 +139,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
 
     test("Send application messages and klaxoon link in public chat room", async ({ browser }) => {
         test.skip(
-            process.env.IS_FORK === "true",
-            "Skip Klaxoon test on forked PR because the secret env variable is not set",
+            process.env.NO_KLAXOON_SECRET === "true",
+            "Skip Klaxoon test when the KLAXOON_CLIENT_ID secret is not available (forks, Dependabot)",
         );
 
         await using page = await getPage(browser, "Alice", Map.url("empty"));
