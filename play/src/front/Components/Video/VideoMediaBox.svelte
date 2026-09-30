@@ -19,6 +19,8 @@
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { blocker } from "../../Utils/screenBlocker";
+    import { raisedHandsOrderStore } from "../../Stores/RaisedHandsStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import RaisedHandBadge from "./RaisedHandBadge.svelte";
     import UserName from "./UserName.svelte";
@@ -89,6 +91,11 @@
 
     // Check if this is the local user's video box
     let isLocalUser = $derived(videoBox.uniqueId === "-1" || extendedSpaceUser?.spaceUserId === "local");
+    // The local tile's space user is a placeholder ("local"): its raised hand is queued under our real spaceUserId.
+    let raisedHandSpaceUserId = $derived(
+        isLocalUser ? (gameManager.getCurrentGameScene().connection?.getSpaceUserId() ?? "") : videoBox.uniqueId,
+    );
+    let isHandRaised = $derived($raisedHandsOrderStore.has(raisedHandSpaceUserId));
     // Debugging aid for the rare case where the space says the remote microphone is enabled but this receiver has no audio.
     let audioStateMismatch = $derived(
         effectiveStatus === "connected" &&
@@ -300,7 +307,6 @@
     {@attach blocker}
     class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox z-20 select-none"
 >
-    <RaisedHandBadge {videoBox} />
     <div
         class={"w-full transition-all bg-center bg-no-repeat " +
             (fullScreen || effectiveStatus !== "connected"
@@ -394,6 +400,7 @@
                                 name={name ?? "unknown"}
                                 picture={pictureStore}
                                 isPlayingAudio={showVoiceIndicator ?? false}
+                                {isHandRaised}
                                 isCameraDisabled={(!(videoEnabled ?? false) && !miniMode) ||
                                     effectiveStatus !== "connected"}
                                 isBlocked={$isBlockedStore ?? false}
@@ -402,6 +409,7 @@
                                     : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                                 grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
                             >
+                                <RaisedHandBadge spaceUserId={raisedHandSpaceUserId} />
                                 {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
                                     <div
                                         class="flex items-center justify-center picture-in-picture:hidden"
