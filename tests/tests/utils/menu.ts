@@ -161,7 +161,7 @@ class Menu {
         if (!microphoneButtonClass.includes("bg-danger")) return;
 
         await page.getByTestId("microphone-button").click();
-        await expect(page.getByTestId("microphone-button").locator(".bg-danger")).toBeVisible();
+        await this.expectButtonState(page, "microphone-button", "normal");
     }
     async turnOffMicrophone(page: Page) {
         // If the microphone is already off, do nothing
@@ -171,7 +171,7 @@ class Menu {
         if (microphoneButtonClass.includes("bg-danger")) return;
 
         await page.getByTestId("microphone-button").click();
-        await expect(page.getByTestId("microphone-button").locator(".bg-danger")).toBeHidden();
+        await this.expectButtonState(page, "microphone-button", "forbidden");
     }
 
     async expectCameraOn(page: Page) {
