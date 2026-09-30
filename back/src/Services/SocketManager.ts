@@ -506,7 +506,7 @@ export class SocketManager {
 
     private onClientLeave(thing: Movable, currentZone: ZonePosition, newZone: Zone | null, listener: RoomSocket) {
         if (thing instanceof User) {
-            this.emitUserLeftEvent(listener, currentZone, thing.id, newZone);
+            this.emitUserLeftEvent(listener, currentZone, thing.id, newZone, thing.ejection);
         } else if (thing instanceof Group) {
             this.emitDeleteGroupEvent(listener, currentZone, thing.getId(), newZone);
         } else {
@@ -619,6 +619,7 @@ export class SocketManager {
         currentZone: ZonePosition,
         userId: number,
         newZone: Zone | null,
+        ejection: "kicked" | "banned" | undefined,
     ): void {
         emitZoneMessage(
             SocketManager.toZoneMessage(currentZone, {
@@ -626,6 +627,7 @@ export class SocketManager {
                 userLeftZoneMessage: {
                     userId,
                     toZone: SocketManager.toProtoZone(newZone),
+                    ejection,
                 },
             }),
             client,
@@ -1109,6 +1111,8 @@ export class SocketManager {
         }
 
         for (const recipient of recipients) {
+            // The players around see the Woka being thrown out rather than vanishing.
+            recipient.ejection = type;
             // Let's leave the room now.
             room.leave(recipient);
 
