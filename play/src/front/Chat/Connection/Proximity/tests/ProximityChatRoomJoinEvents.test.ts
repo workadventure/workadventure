@@ -4,7 +4,7 @@ globalThis.Phaser = Phaser;
 
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { Subject } from "rxjs";
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { loadLocaleAsync } from "../../../../../i18n/i18n-util.async";
 import { setLocale } from "../../../../../i18n/i18n-svelte";
@@ -13,6 +13,8 @@ import type { SpaceRegistryInterface } from "../../../../Space/SpaceRegistry/Spa
 import type { MessageUserJoined } from "../../../../Connection/ConnexionModels";
 import { RemotePlayersRepository } from "../../../../Phaser/Game/RemotePlayersRepository";
 import { iframeListener } from "../../../../Api/IframeListener";
+import { analyticsClient } from "../../../../Administration/AnalyticsClient";
+import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 import { ProximityChatRoom } from "../ProximityChatRoom";
 import { DEFAULT_PROXIMITY_SPACE_NAME } from "../ProximityChatRoomManager";
 
@@ -225,5 +227,18 @@ describe("ProximityChatRoom join events", () => {
             expect.objectContaining({ userId: 3 }),
         );
         expect(iframeListener.sendJoinProximityMeetingEvent).toHaveBeenCalledTimes(1);
+    });
+
+    it("selects the bubble's chat without reporting that the player opened the message list", async () => {
+        const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
+        const { space } = createFakeSpace(new Map([1, 2].map((id) => [`room_${id}`, spaceUser(id)])));
+        const repository = new RemotePlayersRepository();
+        repository.addPlayer(player(2));
+        const room = createRoom(space, repository);
+
+        await room.joinSpace("bubble", [], false, FilterType.ALL_USERS, false);
+
+        expect(get(selectedRoomStore)).toBe(room);
+        expect(trackAdminEvent).not.toHaveBeenCalledWith("chat.message_list_opened");
     });
 });

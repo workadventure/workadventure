@@ -28,9 +28,18 @@ function createNavChatStore() {
 
     return {
         subscribe,
+        /** The player switching to the message list: reported as opening it. */
         switchToChat() {
             set({ key: "chat" });
             analyticsClient.trackAdminEvent("chat.message_list_opened");
+        },
+        /**
+         * The same switch made by the code — a bubble or meeting area joined, a chat area
+         * entered, a message received — so not reported. Reporting these made nearly
+         * every wa_open_message_list an area entry or a bubble, not a player action.
+         */
+        autoSwitchToChat() {
+            set({ key: "chat" });
         },
         switchToUserList() {
             const room = gameManager.getCurrentGameScene().room;
