@@ -96,9 +96,13 @@ test.describe("Raise hand @oidc @nomobile @nowebkit", () => {
         // Bob raises his hand.
         await bob.getByTestId("raise-hand-button").click();
 
-        // Alice sees Bob's raised-hand badge, numbered 1 (first in the queue).
+        // Alice sees Bob's raised-hand badge, without a number (he is the only one in the queue).
         await expect(bobBoxOnAlice.getByTestId("raised-hand-badge")).toBeVisible({ timeout: 20_000 });
-        await expect(bobBoxOnAlice.getByTestId("raised-hand-badge")).toContainText("1");
+        await expect(bobBoxOnAlice.getByTestId("raised-hand-badge")).toHaveText("");
+
+        // Bob also sees the badge on his own tile.
+        const bobOwnBox = bob.locator("#cameras-container .camera-box").filter({ hasText: "You" });
+        await expect(bobOwnBox.getByTestId("raised-hand-badge")).toBeVisible({ timeout: 20_000 });
 
         // Everybody already speaks in a meeting room, so Bob's tile menu offers Alice (an admin) no "give the
         // floor" action, even though his hand is up; the queue panel has none either.
@@ -110,6 +114,7 @@ test.describe("Raise hand @oidc @nomobile @nowebkit", () => {
         // Bob lowers his own hand: the badge disappears for Alice.
         await bob.getByTestId("raise-hand-button").click();
         await expect(bobBoxOnAlice.getByTestId("raised-hand-badge")).toBeHidden({ timeout: 20_000 });
+        await expect(bobOwnBox.getByTestId("raised-hand-badge")).toBeHidden({ timeout: 20_000 });
     });
 
     test("raised hands are numbered in the order they were raised, and re-numbered when one is lowered @nofirefox", async ({
@@ -136,18 +141,19 @@ test.describe("Raise hand @oidc @nomobile @nowebkit", () => {
         const bobBox = alice.locator("#cameras-container .camera-box").filter({ hasText: "Bob" });
         const eveBox = alice.locator("#cameras-container .camera-box").filter({ hasText: "Eve" });
 
-        // Bob raises first -> position 1.
+        // Bob raises first -> alone in the queue, no number.
         await bob.getByTestId("raise-hand-button").click();
-        await expect(bobBox.getByTestId("raised-hand-badge")).toContainText("1", { timeout: 20_000 });
+        await expect(bobBox.getByTestId("raised-hand-badge")).toHaveText("", { timeout: 20_000 });
 
-        // Eve raises second -> position 2.
+        // Eve raises second -> Bob is 1, Eve is 2.
         await eve.getByTestId("raise-hand-button").click();
         await expect(eveBox.getByTestId("raised-hand-badge")).toContainText("2", { timeout: 20_000 });
+        await expect(bobBox.getByTestId("raised-hand-badge")).toContainText("1", { timeout: 20_000 });
 
-        // Bob lowers his hand -> Eve moves up to position 1.
+        // Bob lowers his hand -> Eve is alone again, the number disappears.
         await bob.getByTestId("raise-hand-button").click();
         await expect(bobBox.getByTestId("raised-hand-badge")).toBeHidden({ timeout: 20_000 });
-        await expect(eveBox.getByTestId("raised-hand-badge")).toContainText("1", { timeout: 20_000 });
+        await expect(eveBox.getByTestId("raised-hand-badge")).toHaveText("", { timeout: 20_000 });
     });
 
     test("a meeting area with the raise-hand option turned off offers no control @nofirefox", async ({

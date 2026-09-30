@@ -60,7 +60,13 @@
         <div class="flex items-center gap-2 px-1 pb-0.5">
             <span class="text-white/70 text-xs font-bold uppercase grow">{$LL.actionbar.raisedHands.title()}</span>
             {#if $canModerateRaisedHandsStore}
-                <Button variant="light" size="xs" dataTestId="panel-lower-all-hands" onclick={lowerAllHands}>
+                <Button
+                    variant="light"
+                    class="min-w-20"
+                    size="xs"
+                    dataTestId="panel-lower-all-hands"
+                    onclick={lowerAllHands}
+                >
                     {$LL.actionbar.raisedHands.lowerAllHands()}
                 </Button>
             {/if}
@@ -72,6 +78,7 @@
                 {#if $floorControlsVisibleStore}
                     <Button
                         variant="secondary"
+                        class="min-w-20"
                         size="xs"
                         dataTestId="panel-give-floor"
                         onclick={() => giveFloor(entry.spaceUserId)}
@@ -81,6 +88,7 @@
                 {/if}
                 {#if $canModerateRaisedHandsStore}
                     <Button
+                        class="min-w-20"
                         variant="light"
                         size="xs"
                         dataTestId="panel-lower-hand"
@@ -104,6 +112,7 @@
                 {#if $floorControlsVisibleStore}
                     <Button
                         variant="danger"
+                        class="min-w-20"
                         size="xs"
                         dataTestId="panel-revoke-floor"
                         onclick={() => revokeFloor(entry.spaceUserId)}
