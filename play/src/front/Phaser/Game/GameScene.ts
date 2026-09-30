@@ -224,6 +224,8 @@ import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
 import { getWokaEmote, WOKA_EMOTES, WOKA_EMOTE_SOUND_PATH, wokaEmoteSoundKey } from "./Emote/WokaEmoteCatalog";
+import { isWokaEjection, WOKA_EJECTIONS } from "./Emote/WokaEjectionCatalog";
+import type { WokaEjection } from "./Emote/WokaEjectionCatalog";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -369,6 +371,8 @@ export class GameScene extends DirtyScene {
     private playerName!: string;
     private popUpElements: Map<number, DOMElement> = new Map<number, DOMElement>();
     private remotePlayersSpatialIndex = new SpatialMap<number, RemotePlayer>(CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE);
+    /** Players a moderator just removed, waiting for doRemovePlayer() to play their ejection. */
+    private readonly pendingEjections = new Map<number, WokaEjection>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
     private outlineManager!: OutlineManager;
@@ -527,7 +531,7 @@ export class GameScene extends DirtyScene {
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
         this.load.audio("meeting-in", "/resources/objects/meeting-in.wav");
         this.load.audio("meeting-out", "/resources/objects/meeting-out.wav");
-        for (const emote of WOKA_EMOTES) {
+        for (const emote of [...WOKA_EMOTES, ...WOKA_EJECTIONS]) {
             if (emote.sound) {
                 this.load.audio(wokaEmoteSoundKey(emote.sound), WOKA_EMOTE_SOUND_PATH + emote.sound.file);
             }
@@ -2155,6 +2159,9 @@ export class GameScene extends DirtyScene {
                 // The userLeftMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.userLeftMessageStream.subscribe((message) => {
+                    if (isWokaEjection(message.ejection)) {
+                        this.pendingEjections.set(message.userId, message.ejection);
+                    }
                     this.remotePlayersRepository.removePlayer(message.userId);
                     this.playersEventDispatcher.postMessage({
                         type: "removeRemotePlayer",
@@ -4505,13 +4512,18 @@ ${escapedMessage}
 
     private doRemovePlayer(userId: number) {
         const player = this.MapPlayersByKey.get(userId);
+        const ejection = this.pendingEjections.get(userId);
+        this.pendingEjections.delete(userId);
         if (player === undefined) {
             console.error("Cannot find user with id ", userId);
         } else {
-            player.destroy();
-
-            if (player.companion) {
-                player.companion.destroy();
+            player.companion?.destroy();
+            if (ejection && this._room.isEjectionAnimationEnabled) {
+                // The player is gone from every index below right away; only its Woka lingers,
+                // for the length of the scene.
+                player.playEjection(ejection, () => player.destroy());
+            } else {
+                player.destroy();
             }
         }
         this.MapPlayersByKey.delete(userId);

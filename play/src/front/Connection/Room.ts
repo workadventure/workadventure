@@ -59,6 +59,7 @@ export class Room {
     private _defaultWokaName: string | undefined;
     private _defaultWokaTexture: string | undefined;
     private _enableSay: boolean | undefined;
+    private _enableEjectionAnimations: boolean | undefined;
     private _enableIssueReport: boolean | undefined;
     private _legals: LegalsData | undefined;
     private _backgroundColor: string | undefined;
@@ -207,6 +208,7 @@ export class Room {
                 this._enableChatDisconnectedList =
                     (data.enableChatDisconnectedList ?? true) && ENABLE_CHAT_DISCONNECTED_LIST;
                 this._enableSay = (data.enableSay ?? true) && ENABLE_SAY;
+                this._enableEjectionAnimations = data.enableEjectionAnimations ?? true;
                 this._enableIssueReport = (data.enableIssueReport ?? true) && ENABLE_ISSUE_REPORT;
                 this._defaultWokaName = data.defaultWokaName ?? undefined;
                 this._defaultWokaTexture = data.defaultWokaTexture ?? undefined;
@@ -412,6 +414,10 @@ export class Room {
             return true;
         }
         return this._enableSay;
+    }
+
+    get isEjectionAnimationEnabled(): boolean {
+        return this._enableEjectionAnimations ?? true;
     }
 
     get isIssueReportEnabled(): boolean {

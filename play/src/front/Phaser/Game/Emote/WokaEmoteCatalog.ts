@@ -33,6 +33,8 @@ export interface WokaEmoteState {
     angle: number;
     scaleX: number;
     scaleY: number;
+    /** Opacity of the Woka, for the ejections that end with the Woka gone. */
+    alpha: number;
 }
 
 /**
@@ -119,8 +121,29 @@ export function wokaEmoteSoundVolume(distance: number, near: number, far = WOKA_
     return WOKA_EMOTE_SOUND_VOLUME * (1 - (distance - near) / (far - near));
 }
 
-export interface WokaEmoteDefinition {
-    id: WokaEmoteId;
+/**
+ * A drawn object that is part of the scene rather than a trickle of glyphs: the boot of a kick, the
+ * cell of a ban. Its recipe places it at every instant, relative to the Woka's feet, the same way
+ * `sample` places the Woka. Like the glyphs, it is a DOM element and renders above the Woka.
+ */
+export interface WokaEmotePropSpec {
+    glyph: WokaEmoteGlyphName;
+    /** Where the prop stands at `elapsed`, anchored by its bottom centre, or null while it is hidden. */
+    sample: (elapsed: number) => WokaEmotePropState | null;
+}
+
+export interface WokaEmotePropState {
+    /** Offset from the Woka's feet, in sprite pixels. Negative y is up. */
+    x: number;
+    y: number;
+    angle?: number;
+    scaleX?: number;
+    scaleY?: number;
+    alpha?: number;
+}
+
+export interface WokaEmoteDefinition<Id extends string = WokaEmoteId> {
+    id: Id;
     /** How long the animation runs, in milliseconds. */
     duration: number;
     /** Glyph shown in the emote wheel. */
@@ -137,6 +160,8 @@ export interface WokaEmoteDefinition {
     ground?: WokaEmoteGroundSpec;
     /** A sound heard by the players standing near the Woka. */
     sound?: WokaEmoteSoundSpec;
+    /** Objects drawn around the Woka for the whole scene. */
+    props?: WokaEmotePropSpec[];
     sample: (elapsed: number) => Partial<WokaEmoteState>;
 }
 
@@ -144,12 +169,14 @@ export interface WokaEmoteDefinition {
 /* Easing and timing helpers. Kept pure so they can be unit-tested without Phaser. */
 /* -------------------------------------------------------------------------- */
 
-export type EaseName = "linear" | "quadIn" | "quadOut" | "bounceOut";
+export type EaseName = "linear" | "quadIn" | "quadOut" | "cubicOut" | "backOut" | "bounceOut";
 
 const EASES: Record<EaseName, (t: number) => number> = {
     linear: (t) => t,
     quadIn: (t) => t * t,
     quadOut: (t) => 1 - (1 - t) * (1 - t),
+    cubicOut: (t) => 1 - Math.pow(1 - t, 3),
+    backOut: (t) => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2),
     bounceOut: (t) => {
         const n = 7.5625;
         const d = 2.75;
@@ -479,7 +506,7 @@ export function getWokaEmote(id: WokaEmoteId): WokaEmoteDefinition {
 }
 
 /** Fills in the properties a recipe left untouched, so callers always get a complete state. */
-export function sampleWokaEmote(definition: WokaEmoteDefinition, elapsed: number): WokaEmoteState {
+export function sampleWokaEmote(definition: WokaEmoteDefinition<string>, elapsed: number): WokaEmoteState {
     const clamped = Math.max(0, Math.min(elapsed, definition.duration));
     const partial = definition.sample(clamped);
     return {
@@ -489,5 +516,6 @@ export function sampleWokaEmote(definition: WokaEmoteDefinition, elapsed: number
         angle: partial.angle ?? 0,
         scaleX: partial.scaleX ?? 1,
         scaleY: partial.scaleY ?? 1,
+        alpha: partial.alpha ?? 1,
     };
 }

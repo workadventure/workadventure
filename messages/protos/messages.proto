@@ -1200,6 +1200,11 @@ message UserJoinedMessage {
 
 message UserLeftMessage {
   int32 userId = 1;
+  /*
+   * Set when a moderator removed the user: "kicked" or "banned". The other players then play an
+   * ejection animation instead of making the Woka vanish.
+   */
+  optional string ejection = 2;
 }
 
 /*
@@ -1656,6 +1661,11 @@ message UserJoinedZoneMessage {
 message UserLeftZoneMessage {
   int32 userId = 1;
   Zone toZone = 2;
+  /*
+   * Set when a moderator removed the user: "kicked" or "banned". Relayed to the players as
+   * UserLeftMessage.ejection.
+   */
+  optional string ejection = 3;
 }
 
 message GroupUpdateZoneMessage {

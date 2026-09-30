@@ -1041,12 +1041,13 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public onUserLeaves(userId: number, listener: PusherWebSocket): void {
+    public onUserLeaves(userId: number, listener: PusherWebSocket, ejection?: string): void {
         listener.emitInBatch({
             message: {
                 $case: "userLeftMessage",
                 userLeftMessage: {
                     userId,
+                    ejection,
                 },
             },
         });
