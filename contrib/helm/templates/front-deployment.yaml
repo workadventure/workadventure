@@ -1,0 +1,73 @@
+{{- if .Values.front.enabled }}
+{{- if .Values.singleDomain }}
+{{- fail "front.enabled is not supported in singleDomain mode" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-front
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: front
+spec:
+  replicas: {{ .Values.front.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: front
+  template:
+    metadata:
+      {{- with .Values.front.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: front
+    spec:
+      {{- if or .Values.imageCredentials.enabled .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- if .Values.imageCredentials.enabled }}
+        - name: {{ include "workadventure.fullname" . }}-pull-secret
+        {{- end }}
+      {{- with .Values.imagePullSecrets }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.front.podSecurityContext | nindent 8 }}
+      containers:
+        # The container name is used by "kubectl set image" to deploy the front alone: keep it stable.
+        - name: {{ .Chart.Name }}-front
+          securityContext:
+            {{- toYaml .Values.front.securityContext | nindent 12 }}
+          image: "{{ .Values.front.image.repository }}:{{ .Values.front.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.front.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /index.html
+              port: http
+          resources:
+            {{- toYaml .Values.front.resources | nindent 12 }}
+      {{- with .Values.front.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.front.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.front.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

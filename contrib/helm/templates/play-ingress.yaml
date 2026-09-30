@@ -36,6 +36,28 @@ spec:
     - host: {{ (include "workadventure.playDomainName" .) | quote }}
       http:
         paths:
+          {{- if .Values.front.enabled }}
+          # Files of the front container that must stay same-origin with the page. The pusher proxies them
+          # too, but routing them here spares it the traffic.
+          {{- range list "/assets" "/static" "/resources" "/collections" }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" $ }}-front
+                port:
+                  number: {{ $.Values.front.service.port }}
+          {{- end }}
+          {{- range list "/iframe_api.js" "/iframe_api.js.map" "/service-worker-prod.js" "/notification-service-worker.js" }}
+          - path: {{ . }}
+            pathType: Exact
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" $ }}-front
+                port:
+                  number: {{ $.Values.front.service.port }}
+          {{- end }}
+          {{- end }}
           - path: /
             pathType: Prefix
             backend:

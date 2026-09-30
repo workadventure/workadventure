@@ -8,6 +8,7 @@ import tailwindcss from "@tailwindcss/vite";
 import Icons from "unplugin-icons/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import { apiVersionHash } from "../libs/messages/src/JsonMessages/ApiVersion";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -15,9 +16,14 @@ export default defineConfig(({ mode }) => {
     // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
     const env = loadEnv(mode, process.cwd(), "");
     const config = {
+        // Relative base: every URL Vite emits resolves against the file that references it, so the build can be
+        // served from any origin (the pusher itself, or an assets domain set at runtime with ASSETS_URL).
+        base: "./",
         server: {
             host: "0.0.0.0",
             port: 8080,
+            // When the page loads its modules from another origin (ASSETS_URL), asset URLs must be absolute.
+            origin: env.ASSETS_URL || undefined,
             ws: {
                 // workaround for development in docker
                 clientPort: 80,
@@ -44,6 +50,13 @@ export default defineConfig(({ mode }) => {
             assetsInclude: ["**/*.tflite", "**/*.wasm"],
         },
         plugins: [
+            {
+                // The pusher only uses an index.html built for the same protocol as its own (see FrontAssets.ts).
+                name: "workadventure-api-version",
+                transformIndexHtml: () => [
+                    { tag: "meta", attrs: { name: "wa-api-version", content: apiVersionHash }, injectTo: "head" },
+                ],
+            },
             tailwindcss(),
             noiseSuppressionAudioWorkletVitePlugin(),
             nodePolyfills({

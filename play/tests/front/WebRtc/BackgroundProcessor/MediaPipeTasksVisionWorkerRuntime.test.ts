@@ -9,8 +9,6 @@ vi.mock("@mediapipe/tasks-vision", () => ({
 }));
 
 vi.mock("../../../../src/front/WebRtc/BackgroundProcessor/tasksVisionAssets", () => ({
-    TASKS_VISION_WORKER_FILESET: { wasmLoaderPath: "/assets/loader.js", wasmBinaryPath: "/assets/vision.wasm" },
-    SEGMENTER_MODEL_URLS: { general: "/assets/general.tflite", landscape: "/assets/landscape.tflite" },
     selectSegmenterModel: (width: number, height: number) => (width / height >= 4 / 3 ? "landscape" : "general"),
     installTasksVisionModuleFactory: () => Promise.resolve(),
 }));
@@ -70,6 +68,12 @@ function createBitmap(width = 3, height = 4): ImageBitmap {
 function createVideoFrame(timestamp: number): VideoFrame {
     return { displayWidth: 3, displayHeight: 4, timestamp, close: vi.fn() } as unknown as VideoFrame;
 }
+
+const assets = {
+    wasmLoaderPath: "/assets/loader.js",
+    wasmBinaryPath: "/assets/vision.wasm",
+    models: { general: "/assets/general.tflite", landscape: "/assets/landscape.tflite" },
+};
 
 describe("MediaPipeTasksVisionWorkerRuntime", () => {
     let posted: TasksVisionWorkerResponse[];
@@ -133,7 +137,7 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
     });
 
     it("reports the GPU delegate, then falls back to CPU when GPU initialization fails", async () => {
-        send({ type: "initialize", config: { mode: "blur" } });
+        send({ type: "initialize", assets, config: { mode: "blur" } });
         await waitForPosted(1);
         expect(lastPosted()).toEqual({ type: "ready", delegate: "GPU" });
 
@@ -142,20 +146,20 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
             .mockRejectedValueOnce(new Error("no GPU"))
             .mockImplementation(() => Promise.resolve(createSegmenter()));
         runtime = new MediaPipeTasksVisionWorkerRuntime((message) => posted.push(message));
-        send({ type: "initialize", config: { mode: "blur" } });
+        send({ type: "initialize", assets, config: { mode: "blur" } });
         await waitForPosted(2);
         expect(lastPosted()).toEqual({ type: "ready", delegate: "CPU" });
     });
 
     it("reports the browser as unsupported when WebGL2 is unavailable in the worker", async () => {
         webgl2Available = false;
-        send({ type: "initialize", config: { mode: "blur" } });
+        send({ type: "initialize", assets, config: { mode: "blur" } });
         await waitForPosted(1);
         expect(lastPosted()).toMatchObject({ type: "unsupported", reason: expect.stringContaining("WebGL2") });
     });
 
     it("rebuilds the segmenter after a frame failure and passes that frame through untouched", async () => {
-        send({ type: "initialize", config: { mode: "blur" } });
+        send({ type: "initialize", assets, config: { mode: "blur" } });
         await waitForPosted(1);
         const brokenSegmenter = await mediaPipeMocks.createFromOptions.mock.results[0].value;
         brokenSegmenter.segmentForVideo.mockImplementation(() => {
@@ -181,7 +185,7 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
     });
 
     it("reports a fatal error once recovery attempts are exhausted", async () => {
-        send({ type: "initialize", config: { mode: "blur" } });
+        send({ type: "initialize", assets, config: { mode: "blur" } });
         await waitForPosted(1);
         const brokenSegmenter = await mediaPipeMocks.createFromOptions.mock.results[0].value;
         brokenSegmenter.segmentForVideo.mockImplementation(() => {
@@ -200,7 +204,7 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
     });
 
     it("segments every 2nd frame and reuses the previous mask in between", async () => {
-        send({ type: "initialize", config: { mode: "blur" } });
+        send({ type: "initialize", assets, config: { mode: "blur" } });
         await waitForPosted(1);
         const segmenter = await mediaPipeMocks.createFromOptions.mock.results[0].value;
 
@@ -216,7 +220,7 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
     });
 
     it("tells the compositor whether the mask is fresh or reused", async () => {
-        send({ type: "initialize", config: { mode: "blur", blurAmount: 25 } });
+        send({ type: "initialize", assets, config: { mode: "blur", blurAmount: 25 } });
         await waitForPosted(1);
 
         send({ type: "process-frame", frameId: 1, frame: createBitmap(), timestampMs: 10 });
@@ -239,7 +243,7 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
             "createImageBitmap",
             vi.fn(() => Promise.resolve(backgroundBitmap)),
         );
-        send({ type: "initialize", config: { mode: "image", backgroundImage: "https://example.com/bg.jpg" } });
+        send({ type: "initialize", assets, config: { mode: "image", backgroundImage: "https://example.com/bg.jpg" } });
         await waitForPosted(1);
 
         send({ type: "process-frame", frameId: 1, frame: createBitmap(), timestampMs: 10 });
@@ -252,7 +256,7 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
     });
 
     it("switches to the landscape model once a landscape frame arrives, without skipping frames", async () => {
-        send({ type: "initialize", config: { mode: "blur" } });
+        send({ type: "initialize", assets, config: { mode: "blur" } });
         await waitForPosted(1);
         const generalSegmenter = await mediaPipeMocks.createFromOptions.mock.results[0].value;
         expect(mediaPipeMocks.createFromOptions.mock.calls[0][1]).toMatchObject({
@@ -279,7 +283,7 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
     it("posts pipeline stats once a 15 s window of rendering has elapsed", async () => {
         let nowMs = 0;
         vi.spyOn(performance, "now").mockImplementation(() => nowMs);
-        send({ type: "initialize", config: { mode: "blur" } });
+        send({ type: "initialize", assets, config: { mode: "blur" } });
         await waitForPosted(1);
 
         // 4 frames over 16 s: two segmentations (every 2nd frame) that each take 6 ms.
@@ -314,7 +318,7 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
     });
 
     it("pipes insertable-stream frames through the segmenter and stops on request", async () => {
-        send({ type: "initialize", config: { mode: "blur" } });
+        send({ type: "initialize", assets, config: { mode: "blur" } });
         await waitForPosted(1);
         const segmenter = await mediaPipeMocks.createFromOptions.mock.results[0].value;
 

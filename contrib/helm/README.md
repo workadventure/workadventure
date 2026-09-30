@@ -269,3 +269,21 @@ commonSecretEnv:
   LIVEKIT_RECORDING_S3_BUCKET: "workadventure-recordings"
   LIVEKIT_RECORDING_S3_REGION: "eu-west-1"
 ```
+
+### Serving the assets from a separate "front" container
+
+By default, the `play` container serves the web page, the WebSocket API and all the JS/CSS assets. With `front.enabled=true`,
+the assets are served by a dedicated nginx container on `assets.<domainName>` (or `front.ingress.domainName`). You can then
+upgrade the front alone by changing `front.image.tag`: the `play` pods are not restarted, so nobody is disconnected.
+
+See [Separate assets container](../../docs/others/self-hosting/assets-container.md) for how it works and its limits.
+
+```yaml
+front:
+  enabled: true
+  # Optional: defaults to assets.<domainName>
+  ingress:
+    domainName: "assets.example.com"
+```
+
+`front.enabled` is not supported in `singleDomain` mode.
