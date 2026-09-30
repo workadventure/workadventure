@@ -1,6 +1,6 @@
 import { writable, type Readable, type Writable } from "svelte/store";
 import type { ProximityPoll } from "@workadventure/shared-utils";
-import type { SpaceInterface } from "../../../Space/SpaceInterface";
+import type { SpaceStateManager } from "../../../Space/SpaceStateManager";
 import type { AnyKindOfUser, ChatPollContext, ChatPollItem, ChatPollState } from "../ChatConnection";
 import { computeProximityPollState } from "./ProximityPollState";
 
@@ -22,7 +22,7 @@ export type ProximityChatPollOptions = {
     poll: ProximityPoll;
     currentVoterId: string;
     sender: AnyKindOfUser | undefined;
-    space: Pick<SpaceInterface, "votePoll" | "closePoll" | "deletePoll">;
+    spaceState: Pick<SpaceStateManager, "votePoll" | "closePoll" | "deletePoll">;
 };
 
 export type ProximityChatPollUpdate = {
@@ -43,7 +43,7 @@ export class ProximityChatPoll implements ChatPollItem {
 
     private poll: ProximityPoll;
     private currentVoterId: string;
-    private readonly space: ProximityChatPollOptions["space"];
+    private readonly spaceState: ProximityChatPollOptions["spaceState"];
     private readonly stateStore: Writable<ChatPollState>;
     private readonly canVoteStore: Writable<boolean>;
     private readonly canEndStore: Writable<boolean>;
@@ -55,7 +55,7 @@ export class ProximityChatPoll implements ChatPollItem {
         this.date = new Date(options.poll.createdAt);
         this.poll = options.poll;
         this.currentVoterId = options.currentVoterId;
-        this.space = options.space;
+        this.spaceState = options.spaceState;
 
         this.stateStore = writable(this.computeState());
         this.canVoteStore = writable(this.computeCanVote());
@@ -86,7 +86,7 @@ export class ProximityChatPoll implements ChatPollItem {
             return Promise.reject(new ProximityPollClosedError("Cannot vote on a closed poll"));
         }
 
-        return this.space.votePoll(this.id, answerIds, this.currentVoterId);
+        return this.spaceState.votePoll(this.id, answerIds, this.currentVoterId);
     }
 
     end(): Promise<void> {
@@ -99,7 +99,7 @@ export class ProximityChatPoll implements ChatPollItem {
             return Promise.resolve();
         }
 
-        return this.space.closePoll(this.id);
+        return this.spaceState.closePoll(this.id);
     }
 
     remove(): Promise<void> {
@@ -108,7 +108,7 @@ export class ProximityChatPoll implements ChatPollItem {
             return Promise.reject(permissionError);
         }
 
-        return this.space.deletePoll(this.id);
+        return this.spaceState.deletePoll(this.id);
     }
 
     private getCreatorPermissionError(message: string): ProximityPollPermissionError | undefined {

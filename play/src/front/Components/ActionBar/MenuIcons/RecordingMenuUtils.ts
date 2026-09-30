@@ -51,7 +51,7 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
         };
     }
 
-    const recording = get(space.observeState("recording"));
+    const recording = get(space.state.observe("recording"));
     if (recording.status === "idle") {
         return {
             status: "idle" as const,

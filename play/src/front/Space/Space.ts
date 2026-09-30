@@ -1,7 +1,3 @@
-import type { SpaceState } from "@workadventure/shared-utils";
-import { emptySpaceState, spaceStateSchema } from "@workadventure/shared-utils";
-import type { Operation } from "fast-json-patch";
-import { applyPatch } from "fast-json-patch";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
@@ -21,7 +17,6 @@ import type {
     SpaceEvent,
     UpdateSpaceMetadataMessage,
     SpaceUser,
-    SpaceStateQuery,
     PrivateSpaceEvent,
     PrivateEventPusherToFront,
     BackEventFrontToPusherMessage,
@@ -38,14 +33,10 @@ import { blackListManager } from "../WebRtc/BlackListManager";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
-import { notificationPlayingStore } from "../Stores/NotificationStore";
-import { LL } from "../../i18n/i18n-svelte";
 
 import type {
-    FloorSpeaker,
     PrivateEventsObservables,
     PublicEventsObservables,
-    RaisedHand,
     SpaceInterface,
     SpaceUserUpdate,
     UpdateSpaceUserEvent,
@@ -53,11 +44,7 @@ import type {
     SpaceUserExtended,
 } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
-import { shareUnchanged } from "./SpaceStateSharing";
-
-const RECORDING_QUERY_TIMEOUT_MS = 60_000;
-
-type StateChange = (state: SpaceState) => void;
+import { SpaceStateManager } from "./SpaceStateManager";
 import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
@@ -82,13 +69,7 @@ export class Space implements SpaceInterface {
     public allScreenShareStreamStore: MapStore<string, VideoBox> = new MapStore<string, VideoBox>();
     public readonly videoStreamStore: Readable<Map<string, VideoBox>>;
     public readonly screenShareStreamStore: Readable<Map<string, VideoBox>>;
-    // The state as the back last sent it, and the local changes it has not confirmed yet (optimistic updates).
-    private readonly _serverStateStore = writable<SpaceState>(emptySpaceState());
-    private _isStateInitialized = false;
-    private readonly _pendingStateChangesStore = writable<StateChange[]>([]);
-    public readonly stateStore: Readable<SpaceState>;
-    public readonly raisedHandsStore: Readable<RaisedHand[]>;
-    public readonly speakingUsersStore: Readable<FloorSpeaker[]>;
+    public readonly state: SpaceStateManager;
     // private readonly blockedUsersVideoBox: Map<string, VideoBox> = new Map<string, VideoBox>();
     // private readonly blockedUsersScreenShareVideoBox: Map<string, VideoBox> = new Map<string, VideoBox>();
     private readonly _blockedUsersStore: Writable<Set<string>> = writable(new Set<string>());
@@ -166,6 +147,7 @@ export class Space implements SpaceInterface {
         }
         this.name = name;
         this._canRecordStore = writable(canRecord);
+        this.state = new SpaceStateManager(name, _connection, _mySpaceUserId);
 
         this.usersStore = readable(new Map<string, SpaceUserExtended>(), (set) => {
             this.registerSpaceFilter();
@@ -266,34 +248,7 @@ export class Space implements SpaceInterface {
             },
         );
 
-        // Unlike the users, the state reaches every member of the space, watching it or not: no filter to register.
-        const localStateStore = derived(
-            [this._serverStateStore, this._pendingStateChangesStore],
-            ([$serverState, $pendingChanges]) => {
-                if ($pendingChanges.length === 0) {
-                    return $serverState;
-                }
-                const state = structuredClone($serverState);
-                for (const change of $pendingChanges) {
-                    change(state);
-                }
-                return shareUnchanged($serverState, state);
-            },
-        );
-        this.stateStore = localStateStore;
-
-        // The raised-hands queue lives in the space state (broadcast to all members, unlike SpaceUser),
-        // so it reaches every participant including a megaphone speaker without seeAttendees.
-        this.raisedHandsStore = this.observeState("raisedHands");
-
-        // The OTHER users who currently hold a GRANTED floor (given after a raised hand). Only granted guests appear
-        // here — never the hosts/original speakers — so a promoted guest can never take the floor back from the
-        // presenter.
-        this.speakingUsersStore = derived(this.observeState("floorHolders"), ($floorHolders) =>
-            $floorHolders.filter((entry) => entry.spaceUserId !== this._mySpaceUserId),
-        );
-
-        this._isRecordingStore = derived(this.observeState("recording"), ($recording) => $recording.status !== "idle");
+        this._isRecordingStore = derived(this.state.observe("recording"), ($recording) => $recording.status !== "idle");
 
         this.onBlockSubscribe = this._blackListManager.onBlockStream.subscribe((userUuid) => {
             const spaceUser = this.getSpaceUserByUuid(userUuid);
@@ -477,179 +432,6 @@ export class Space implements SpaceInterface {
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
-    // Unlike the other state changes, a refused recording is reported by the caller (the recording menu).
-    public async startRecording(): Promise<void> {
-        await this.alterState({ $case: "startRecording", startRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
-    }
-
-    public async stopRecording(): Promise<void> {
-        await this.alterState({ $case: "stopRecording", stopRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
-    }
-
-    /** False until the whole state has arrived (right after joining): until then, stateStore is empty. */
-    public isStateInitialized(): boolean {
-        return this._isStateInitialized;
-    }
-
-    /**
-     * Notifies only when this slice changed. The state store notifies on any patch, and Svelte counts any object as
-     * changed, so a plain derived() would wake every slice's readers; slices are shared by reference when unchanged
-     * (see shareUnchanged), which makes the check a cheap `!==`.
-     */
-    public observeState<K extends keyof SpaceState>(key: K): Readable<SpaceState[K]> {
-        // What the returned store holds: it keeps its value between subscriptions, so compare with that.
-        let current = get(this.stateStore)[key];
-        return readable(current, (set) => {
-            return this.stateStore.subscribe(($state) => {
-                if ($state[key] !== current) {
-                    current = $state[key];
-                    set(current);
-                }
-            });
-        });
-    }
-
-    public raiseHand(raised: boolean): Promise<void> {
-        const mySpaceUserId = this._mySpaceUserId;
-        return this.changeState({ $case: "raiseHand", raiseHand: { raised } }, (state) => {
-            const index = state.raisedHands.findIndex((entry) => entry.spaceUserId === mySpaceUserId);
-            if (!raised && index !== -1) {
-                state.raisedHands.splice(index, 1);
-            } else if (raised && index === -1) {
-                // The back stamps the real name and time; the local user never shows its own name in the queue.
-                state.raisedHands.push({ spaceUserId: mySpaceUserId, name: "", at: Date.now() });
-            }
-        });
-    }
-
-    public lowerHand(targetSpaceUserId: SpaceUser["spaceUserId"]): Promise<void> {
-        return this.changeState({ $case: "lowerHand", lowerHand: { targetSpaceUserId } });
-    }
-
-    public giveFloor(targetSpaceUserId: SpaceUser["spaceUserId"]): Promise<void> {
-        return this.changeState({ $case: "giveFloor", giveFloor: { targetSpaceUserId } });
-    }
-
-    public revokeFloor(targetSpaceUserId: SpaceUser["spaceUserId"]): Promise<void> {
-        return this.changeState({ $case: "revokeFloor", revokeFloor: { targetSpaceUserId } });
-    }
-
-    public createPoll(poll: {
-        question: string;
-        kind: "open" | "closed";
-        answers: string[];
-        maxSelections: number;
-    }): Promise<void> {
-        return this.changeState({ $case: "createPoll", createPoll: poll });
-    }
-
-    public votePoll(pollId: string, answerIds: string[], voterId: string): Promise<void> {
-        return this.changeState({ $case: "votePoll", votePoll: { pollId, answerIds } }, (state) => {
-            const poll = state.polls[pollId];
-            if (!poll) {
-                return;
-            }
-            if (answerIds.length === 0) {
-                delete poll.votes[voterId];
-            } else {
-                poll.votes[voterId] = { answerIds, updatedAt: Date.now() };
-            }
-        });
-    }
-
-    public closePoll(pollId: string, closingMessage?: string): Promise<void> {
-        return this.changeState({ $case: "closePoll", closePoll: { pollId, closingMessage } });
-    }
-
-    public deletePoll(pollId: string): Promise<void> {
-        return this.changeState({ $case: "deletePoll", deletePoll: { pollId } });
-    }
-
-    public askQuestion(body: string): Promise<void> {
-        return this.changeState({ $case: "askQuestion", askQuestion: { body } });
-    }
-
-    public upvoteQuestion(questionId: string, upvoted: boolean, voterId: string): Promise<void> {
-        return this.changeState({ $case: "upvoteQuestion", upvoteQuestion: { questionId, upvoted } }, (state) => {
-            const question = state.questions[questionId];
-            if (!question) {
-                return;
-            }
-            if (upvoted) {
-                question.upvotes[voterId] ??= Date.now();
-            } else {
-                delete question.upvotes[voterId];
-            }
-        });
-    }
-
-    public answerQuestion(questionId: string): Promise<void> {
-        return this.changeState({ $case: "answerQuestion", answerQuestion: { questionId } });
-    }
-
-    public deleteQuestion(questionId: string): Promise<void> {
-        return this.changeState({ $case: "deleteQuestion", deleteQuestion: { questionId } });
-    }
-
-    /**
-     * Sends a state change and reports a refusal to the user. `optimisticChange` is shown right away, and dropped
-     * once the back answered: by then its patch (if accepted) is already in the server state.
-     */
-    private changeState(query: NonNullable<SpaceStateQuery["query"]>, optimisticChange?: StateChange): Promise<void> {
-        return this.alterState(query, { optimisticChange }).catch((error) => {
-            console.error(`Space state change "${query.$case}" failed in space ${this.name}`, error);
-            notificationPlayingStore.playNotification(get(LL).notification.actionFailed());
-        });
-    }
-
-    private async alterState(
-        query: NonNullable<SpaceStateQuery["query"]>,
-        options: { optimisticChange?: StateChange; timeout?: number },
-    ): Promise<void> {
-        if (this._isDestroyed) {
-            throw new Error(`Space ${this.name} is destroyed`);
-        }
-        const { optimisticChange, timeout } = options;
-        if (optimisticChange) {
-            this._pendingStateChangesStore.update((changes) => [...changes, optimisticChange]);
-        }
-        try {
-            await this._connection.alterSpaceState(this.name, query, { timeout });
-        } finally {
-            if (optimisticChange) {
-                this._pendingStateChangesStore.update((changes) =>
-                    changes.filter((change) => change !== optimisticChange),
-                );
-            }
-        }
-    }
-
-    /**
-     * Applies a JSON Patch sent by the back. Right after joining, the pusher sends the whole state as a patch that
-     * replaces the root: anything received before it is already included in it.
-     */
-    applyStatePatch(patchJson: string): void {
-        try {
-            const patch = JSON.parse(patchJson) as Operation[];
-            const replacesRoot = patch[0]?.op === "replace" && patch[0].path === "";
-            if (!this._isStateInitialized && !replacesRoot) {
-                return;
-            }
-            const previous = get(this._serverStateStore);
-            const state = shareUnchanged(
-                previous,
-                spaceStateSchema.parse(applyPatch(structuredClone(previous), patch).newDocument),
-            );
-            // Before the set: subscribers run during it and may ask whether the state is complete.
-            this._isStateInitialized = true;
-            this._serverStateStore.set(state);
-        } catch (error) {
-            // Our copy no longer matches the back's: it stays as it was until the next full state (next join).
-            console.error(`Could not apply a state patch in space ${this.name}`, error);
-            Sentry.captureException(error);
-        }
-    }
-
     public observePublicEvent<K extends keyof PublicEventsObservables>(
         key: K,
     ): NonNullable<PublicEventsObservables[K]> {
@@ -773,6 +555,7 @@ export class Space implements SpaceInterface {
      */
     async destroy() {
         this._isDestroyed = true;
+        this.state.destroy();
 
         this.retryAbortController?.abort();
         if (this.retryTimeout) {

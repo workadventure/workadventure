@@ -1,6 +1,6 @@
 import { get, writable, type Readable, type Writable } from "svelte/store";
 import type { ProximityQuestion } from "@workadventure/shared-utils";
-import type { SpaceInterface } from "../../../Space/SpaceInterface";
+import type { SpaceStateManager } from "../../../Space/SpaceStateManager";
 import type { AnyKindOfUser, ChatQuestionItem, ChatQuestionState } from "../ChatConnection";
 import { computeProximityQAState } from "./ProximityQAState";
 
@@ -17,7 +17,7 @@ export type ProximityChatQuestionOptions = {
     sender: AnyKindOfUser | undefined;
     canMarkAnswered: boolean;
     canDeleteAny: boolean;
-    space: Pick<SpaceInterface, "upvoteQuestion" | "answerQuestion" | "deleteQuestion">;
+    spaceState: Pick<SpaceStateManager, "upvoteQuestion" | "answerQuestion" | "deleteQuestion">;
 };
 
 export type ProximityChatQuestionUpdate = {
@@ -40,7 +40,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
     private currentVoterId: string;
     // What the state was last computed from, to skip recomputing (and re-rendering) when none of it changed.
     private lastUpdate: Omit<ProximityChatQuestionUpdate, "sender">;
-    private readonly space: ProximityChatQuestionOptions["space"];
+    private readonly spaceState: ProximityChatQuestionOptions["spaceState"];
     private readonly stateStore: Writable<ChatQuestionState>;
     private readonly canUpvoteStore: Writable<boolean>;
     private readonly canDeleteStore: Writable<boolean>;
@@ -51,7 +51,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
         this.sender = options.sender;
         this.date = new Date(options.question.createdAt);
         this.currentVoterId = options.currentVoterId;
-        this.space = options.space;
+        this.spaceState = options.spaceState;
         this.lastUpdate = options;
 
         const state = computeProximityQAState(
@@ -100,7 +100,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
             return Promise.reject(new ProximityQuestionPermissionError("Cannot upvote this question"));
         }
 
-        return this.space.upvoteQuestion(this.id, !get(this.state).hasUpvoted, this.currentVoterId);
+        return this.spaceState.upvoteQuestion(this.id, !get(this.state).hasUpvoted, this.currentVoterId);
     }
 
     remove(): Promise<void> {
@@ -110,7 +110,7 @@ export class ProximityChatQuestion implements ChatQuestionItem {
             );
         }
 
-        return this.space.deleteQuestion(this.id);
+        return this.spaceState.deleteQuestion(this.id);
     }
 
     markAnswered(): Promise<void> {
@@ -120,6 +120,6 @@ export class ProximityChatQuestion implements ChatQuestionItem {
             );
         }
 
-        return this.space.answerQuestion(this.id);
+        return this.spaceState.answerQuestion(this.id);
     }
 }

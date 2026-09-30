@@ -301,7 +301,7 @@ export class SpacePeerManager {
         // The state store re-emits on every change of the space state: only react when the recording changed.
         // Starting from "idle" also skips the initial idle state, which is not an event worth reacting to.
         let lastRecording: { status: string; recorder: string | null } = { status: "idle", recorder: null };
-        this.recordingStateUnsubscriber = this.space.observeState("recording").subscribe((value) => {
+        this.recordingStateUnsubscriber = this.space.state.observe("recording").subscribe((value) => {
             if (value.status === lastRecording.status && value.recorder === lastRecording.recorder) {
                 return;
             }
@@ -538,11 +538,11 @@ export class SpacePeerManager {
         // requestedHandRaiseState is the local user's intent; only a difference with the space is sent.
         this.unsubscribes.push(
             requestedHandRaiseState.subscribe((state) => {
-                const isRaisedHere = get(this.space.raisedHandsStore).some(
+                const isRaisedHere = get(this.space.state.raisedHandsStore).some(
                     (entry) => entry.spaceUserId === this.space.mySpaceUserId,
                 );
                 if (state.raised !== isRaisedHere) {
-                    this.space.raiseHand(state.raised).catch((error) => console.error(error));
+                    this.space.state.raiseHand(state.raised).catch((error) => console.error(error));
                 }
             }),
         );
@@ -554,11 +554,11 @@ export class SpacePeerManager {
             givenFloorSpaceStore.subscribe((grantedSpace) => {
                 const wasGrantedHere = grantedHere;
                 grantedHere = grantedSpace === this.space;
-                const isFloorHolder = get(this.space.observeState("floorHolders")).some(
+                const isFloorHolder = get(this.space.state.observe("floorHolders")).some(
                     (entry) => entry.spaceUserId === this.space.mySpaceUserId,
                 );
                 if (wasGrantedHere && !grantedHere && isFloorHolder) {
-                    this.space.revokeFloor(this.space.mySpaceUserId).catch((error) => console.error(error));
+                    this.space.state.revokeFloor(this.space.mySpaceUserId).catch((error) => console.error(error));
                 }
             }),
         );

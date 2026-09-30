@@ -97,7 +97,7 @@ function createQuestion(options: {
         sender: undefined,
         canMarkAnswered: options.canMarkAnswered ?? options.canModerate ?? false,
         canDeleteAny: options.canDeleteAny ?? options.canModerate ?? false,
-        space,
+        spaceState: space,
     });
     return { question, space };
 }
