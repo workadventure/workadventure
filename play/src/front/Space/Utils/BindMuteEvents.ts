@@ -152,7 +152,7 @@ export function watchRaiseHandState(space: SpaceInterface): Unsubscriber {
     let wasRaised = false;
     let wasFloorHolder = false;
 
-    return space.stateStore.subscribe((state) => {
+    return space.state.store.subscribe((state) => {
         const isRaised = state.raisedHands.some((entry) => entry.spaceUserId === me);
         const isFloorHolder = state.floorHolders.some((entry) => entry.spaceUserId === me);
         const gotTheFloor = !wasFloorHolder && isFloorHolder;

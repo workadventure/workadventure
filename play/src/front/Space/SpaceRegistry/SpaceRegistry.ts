@@ -9,6 +9,7 @@ import type { FloorSpeaker, RaisedHand, SpaceInterface } from "../SpaceInterface
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import type { VideoBox } from "../VideoBox";
 import { Space } from "../Space";
+import type { SpaceStateManager } from "../SpaceStateManager";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import type { SpaceRegistryInterface } from "./SpaceRegistryInterface";
@@ -131,7 +132,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             return () => {};
         }
 
-        const stores = Array.from($spaces.values(), (space) => space.raisedHandsStore);
+        const stores = Array.from($spaces.values(), (space) => space.state.raisedHandsStore);
         return derived(stores, (lists) => lists.flat()).subscribe(set);
     });
 
@@ -142,7 +143,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             return () => {};
         }
 
-        const stores = Array.from($spaces.values(), (space) => space.speakingUsersStore);
+        const stores = Array.from($spaces.values(), (space) => space.state.speakingUsersStore);
         return derived(stores, (lists) => lists.flat()).subscribe(set);
     });
 
@@ -152,7 +153,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
      * particular for a megaphone speaker who does not receive listeners' SpaceUser.
      */
     public async giveFloor(spaceUserId: string): Promise<void> {
-        await this.findSpaceWithEntry(spaceUserId, (space) => space.raisedHandsStore)?.giveFloor(spaceUserId);
+        await this.findStateWithEntry(spaceUserId, (state) => state.raisedHandsStore)?.giveFloor(spaceUserId);
     }
 
     /**
@@ -160,20 +161,20 @@ export class SpaceRegistry implements SpaceRegistryInterface {
      * current speakers. Counterpart of giveFloor for the host "raised hands" panel.
      */
     public async revokeFloor(spaceUserId: string): Promise<void> {
-        await this.findSpaceWithEntry(spaceUserId, (space) => space.speakingUsersStore)?.revokeFloor(spaceUserId);
+        await this.findStateWithEntry(spaceUserId, (state) => state.speakingUsersStore)?.revokeFloor(spaceUserId);
     }
 
     /** Lowers the hand of a user who raised it (moderation), resolving the space from the raised-hands queue. */
     public async lowerHand(spaceUserId: string): Promise<void> {
-        await this.findSpaceWithEntry(spaceUserId, (space) => space.raisedHandsStore)?.lowerHand(spaceUserId);
+        await this.findStateWithEntry(spaceUserId, (state) => state.raisedHandsStore)?.lowerHand(spaceUserId);
     }
 
-    private findSpaceWithEntry(
+    private findStateWithEntry(
         spaceUserId: string,
-        list: (space: Space) => Readable<{ spaceUserId: string }[]>,
-    ): Space | undefined {
-        return Array.from(this.spaces.values()).find((space) =>
-            get(list(space)).some((entry) => entry.spaceUserId === spaceUserId),
+        list: (state: SpaceStateManager) => Readable<{ spaceUserId: string }[]>,
+    ): SpaceStateManager | undefined {
+        return Array.from(this.spaces.values(), (space) => space.state).find((state) =>
+            get(list(state)).some((entry) => entry.spaceUserId === spaceUserId),
         );
     }
 
@@ -291,7 +292,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         this.spaceStatePatchMessageStreamSubscription = roomConnection.spaceStatePatchMessageStream.subscribe(
             (message) => {
-                this.spaces.get(message.spaceName)?.applyStatePatch(message.patch);
+                this.spaces.get(message.spaceName)?.state.applyPatch(message.patch);
             },
         );
 

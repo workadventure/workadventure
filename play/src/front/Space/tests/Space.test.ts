@@ -109,7 +109,7 @@ const defaultRoomConnectionMock = {
 
 // What the pusher sends when the space is joined: the whole state, as a patch replacing the root.
 function receiveState(space: Space, changes: Partial<SpaceState>): void {
-    space.applyStatePatch(JSON.stringify([{ op: "replace", path: "", value: { ...emptySpaceState(), ...changes } }]));
+    space.state.applyPatch(JSON.stringify([{ op: "replace", path: "", value: { ...emptySpaceState(), ...changes } }]));
 }
 
 const defaultPropertiesToSync = ["x", "y", "z"];
@@ -625,8 +625,8 @@ describe("Space test", () => {
             },
         );
 
-        await space.startRecording();
-        await space.stopRecording();
+        await space.state.startRecording();
+        await space.state.stopRecording();
 
         expect(alterSpaceStateSpy).toHaveBeenCalledWith(
             "space-name",
@@ -645,10 +645,10 @@ describe("Space test", () => {
         receiveState(space, {});
         const pollsListener = vi.fn();
         const raisedHandsListener = vi.fn();
-        const unsubscribePolls = space.observeState("polls").subscribe(pollsListener);
-        const unsubscribeHands = space.observeState("raisedHands").subscribe(raisedHandsListener);
+        const unsubscribePolls = space.state.observe("polls").subscribe(pollsListener);
+        const unsubscribeHands = space.state.observe("raisedHands").subscribe(raisedHandsListener);
 
-        space.applyStatePatch(
+        space.state.applyPatch(
             JSON.stringify([{ op: "add", path: "/raisedHands/-", value: { spaceUserId: "bob", name: "Bob", at: 1 } }]),
         );
 
@@ -663,12 +663,12 @@ describe("Space test", () => {
         const alice = { spaceUserId: "alice-id", name: "Alice", at: 1 };
         const addAlice = JSON.stringify([{ op: "add", path: "/raisedHands/-", value: alice }]);
 
-        space.applyStatePatch(addAlice);
-        expect(get(space.raisedHandsStore)).toEqual([]);
+        space.state.applyPatch(addAlice);
+        expect(get(space.state.raisedHandsStore)).toEqual([]);
 
         receiveState(space, {});
-        space.applyStatePatch(addAlice);
-        expect(get(space.raisedHandsStore)).toEqual([alice]);
+        space.state.applyPatch(addAlice);
+        expect(get(space.state.raisedHandsStore)).toEqual([alice]);
     });
 
     it("shows a personal change right away and drops it once the back answered", async () => {
@@ -688,13 +688,13 @@ describe("Space test", () => {
         );
         receiveState(space, {});
 
-        const raising = space.raiseHand(true);
-        expect(get(space.raisedHandsStore).map((entry) => entry.spaceUserId)).toEqual([space.mySpaceUserId]);
+        const raising = space.state.raiseHand(true);
+        expect(get(space.state.raisedHandsStore).map((entry) => entry.spaceUserId)).toEqual([space.mySpaceUserId]);
 
         answer();
         await raising;
         // The back did not send the patch: nothing is left of the optimistic change.
-        expect(get(space.raisedHandsStore)).toEqual([]);
+        expect(get(space.state.raisedHandsStore)).toEqual([]);
     });
 
     it("reports a refused change without rejecting", async () => {
@@ -710,10 +710,10 @@ describe("Space test", () => {
         );
         receiveState(space, {});
 
-        await space.raiseHand(true);
+        await space.state.raiseHand(true);
 
         expect(playNotification).toHaveBeenCalled();
-        expect(get(space.raisedHandsStore)).toEqual([]);
+        expect(get(space.state.raisedHandsStore)).toEqual([]);
     });
 
     it("should add metadata when key is not in metadata map", async () => {

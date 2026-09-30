@@ -29,7 +29,7 @@ function createSpace(
         mySpaceUserId: options?.mySpaceUserId ?? "me",
         getName: () => name,
         getMetadata: () => metadata,
-        observeState: () => readable(recording),
+        state: { observe: () => readable(recording) },
         getSpaceUserBySpaceUserId: (spaceUserId: string) => {
             const nameById = options?.recorderNamesById?.[spaceUserId];
             return nameById

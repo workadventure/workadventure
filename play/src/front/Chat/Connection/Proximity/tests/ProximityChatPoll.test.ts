@@ -18,7 +18,7 @@ describe("ProximityChatPoll", () => {
             poll: createPoll(),
             currentVoterId: "alice-uuid",
             sender: undefined,
-            space,
+            spaceState: space,
         });
 
         await poll.vote(["banana"]);
@@ -31,7 +31,7 @@ describe("ProximityChatPoll", () => {
             poll: createPoll(),
             currentVoterId: "alice-uuid",
             sender: undefined,
-            space: createSpace(),
+            spaceState: createSpace(),
         });
         const observedAnswerIds: string[][] = [];
         const unsubscribe = poll.state.subscribe((state) => {
@@ -55,13 +55,13 @@ describe("ProximityChatPoll", () => {
             poll: createPoll(),
             currentVoterId: "alice-uuid",
             sender: undefined,
-            space,
+            spaceState: space,
         });
         const creatorPoll = new ProximityChatPoll({
             poll: createPoll(),
             currentVoterId: "creator-uuid",
             sender: undefined,
-            space,
+            spaceState: space,
         });
 
         await expect(participantPoll.end()).rejects.toThrow("Only the poll creator can close this poll");
@@ -81,7 +81,7 @@ describe("ProximityChatPoll", () => {
             poll: { ...createPoll(), end: { closedAt: 12 } },
             currentVoterId: "alice-uuid",
             sender: undefined,
-            space,
+            spaceState: space,
         });
 
         await expect(poll.vote(["banana"])).rejects.toThrow();
@@ -93,7 +93,7 @@ describe("ProximityChatPoll", () => {
             poll: pollState,
             currentVoterId: "alice-uuid",
             sender: undefined,
-            space: createSpace(),
+            spaceState: createSpace(),
         });
         const listener = vi.fn();
         const unsubscribe = poll.state.subscribe(listener);

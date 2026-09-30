@@ -458,7 +458,7 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private createPoll(options: ChatPollCreateOptions): Promise<void> {
-        return this._space?.createPoll({ ...options, maxSelections: 1 }) ?? Promise.resolve();
+        return this._space?.state.createPoll({ ...options, maxSelections: 1 }) ?? Promise.resolve();
     }
 
     private createQuestion(options: ChatQuestionCreateOptions): Promise<void> {
@@ -467,7 +467,7 @@ export class ProximityChatRoom implements ChatRoom {
             return Promise.resolve();
         }
 
-        return this._space?.askQuestion(body) ?? Promise.resolve();
+        return this._space?.state.askQuestion(body) ?? Promise.resolve();
     }
 
     private notifyNewPolls(previousPolls: SpaceState["polls"], nextPolls: SpaceState["polls"]): void {
@@ -565,7 +565,7 @@ export class ProximityChatRoom implements ChatRoom {
                 return existingPoll;
             }
 
-            const proximityPoll = new ProximityChatPoll({ poll, currentVoterId, sender, space });
+            const proximityPoll = new ProximityChatPoll({ poll, currentVoterId, sender, spaceState: space.state });
             this.proximityPolls.set(poll.id, proximityPoll);
             return proximityPoll;
         });
@@ -603,7 +603,7 @@ export class ProximityChatRoom implements ChatRoom {
                     sender,
                     canMarkAnswered,
                     canDeleteAny,
-                    space,
+                    spaceState: space.state,
                 });
 
                 this.proximityQuestions.set(question.id, proximityQuestion);
@@ -937,12 +937,12 @@ export class ProximityChatRoom implements ChatRoom {
         // The polls and questions already there when we joined are not news. They are only known once the whole
         // state has arrived, which can be after we subscribe (the store is empty until then).
         let hasBaseline = false;
-        this.spaceStateUnsubscriber = joinedSpace.stateStore.subscribe((state) => {
+        this.spaceStateUnsubscriber = joinedSpace.state.store.subscribe((state) => {
             if (hasBaseline) {
                 this.notifyNewPolls(get(this.pollsStore), state.polls);
                 this.notifyNewQuestions(get(this.questionsStore), state.questions);
             }
-            hasBaseline ||= joinedSpace.isStateInitialized();
+            hasBaseline ||= joinedSpace.state.isInitialized();
             // writable.set() notifies for any object, even the same one: compare first.
             if (state.polls !== get(this.pollsStore)) {
                 this.pollsStore.set(state.polls);
