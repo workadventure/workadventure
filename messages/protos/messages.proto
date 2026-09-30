@@ -1205,6 +1205,11 @@ message UserLeftMessage {
    * ejection animation instead of making the Woka vanish.
    */
   optional string ejection = 2;
+  /*
+   * With `ejection`: true when the moderator stood on the left of the user, so the ejection comes
+   * from the left (the Woka is thrown to the right).
+   */
+  optional bool ejectedFromLeft = 3;
 }
 
 /*
@@ -1666,6 +1671,8 @@ message UserLeftZoneMessage {
    * UserLeftMessage.ejection.
    */
   optional string ejection = 3;
+  /* See UserLeftMessage.ejectedFromLeft. */
+  optional bool ejectedFromLeft = 4;
 }
 
 message GroupUpdateZoneMessage {
@@ -1844,6 +1851,8 @@ message BanMessage {
   string roomId = 2;
   string type = 3;
   string message = 4;
+  /* The moderator who issued it from the game, so the ejection can come from their side. */
+  optional string moderatorUuid = 5;
 }
 
 message RoomDescription {

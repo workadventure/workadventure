@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { WOKA_EMOTE_IDS, isWokaEmoteId } from "@workadventure/shared-utils";
-import { sampleWokaEmote, WOKA_EMOTE_SOUND_PATH } from "./WokaEmoteCatalog";
+import { mirrorWokaEmoteState, sampleWokaEmote, WOKA_EMOTE_SOUND_PATH } from "./WokaEmoteCatalog";
 import { WOKA_EJECTIONS, isWokaEjection } from "./WokaEjectionCatalog";
 import { buildGlyphSvg } from "./WokaEmoteGlyphs";
 
@@ -46,6 +46,26 @@ describe("the ejections", () => {
         for (const ejection of WOKA_EJECTIONS) {
             expect(ejection.sound).toBeDefined();
             expect(shipped).toContain(`/public${WOKA_EMOTE_SOUND_PATH}${ejection.sound?.file}`);
+        }
+    });
+});
+
+describe("the mirrored ejection", () => {
+    it("throws the Woka away from a moderator standing on its right", () => {
+        const kicked = WOKA_EJECTIONS.find((ejection) => ejection.id === "kicked");
+        if (!kicked) throw new Error("kicked is missing");
+        // Before the blow it turns towards the boot: left in the recipe, right in the mirror.
+        expect(sampleWokaEmote(kicked, 300).frame).toBe(4);
+        expect(mirrorWokaEmoteState(sampleWokaEmote(kicked, 300)).frame).toBe(7);
+        // In flight it goes right in the recipe, left in the mirror.
+        expect(sampleWokaEmote(kicked, 1200).x).toBeGreaterThan(0);
+        expect(mirrorWokaEmoteState(sampleWokaEmote(kicked, 1200)).x).toBeLessThan(0);
+    });
+
+    it("leaves the frames facing the player or away from them alone", () => {
+        for (const frame of [0, 1, 2, 9, 10, 11]) {
+            const state = { frame, x: 0, y: 0, angle: 0, scaleX: 1, scaleY: 1, alpha: 1 };
+            expect(mirrorWokaEmoteState(state).frame).toBe(frame);
         }
     });
 });

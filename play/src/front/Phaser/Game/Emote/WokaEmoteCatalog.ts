@@ -505,6 +505,17 @@ export function getWokaEmote(id: WokaEmoteId): WokaEmoteDefinition {
     return DEFINITIONS[id];
 }
 
+/**
+ * The same state seen in a mirror: offsets and angles flip, and the frames facing left and right
+ * swap rows (row 1 of the spritesheet faces left, row 2 faces right). Recipes that have a side — an
+ * ejection comes from the moderator's — are written from the left and mirrored for the right.
+ */
+export function mirrorWokaEmoteState(state: WokaEmoteState): WokaEmoteState {
+    const row = Math.floor(state.frame / 3);
+    const frame = row === 1 ? state.frame + 3 : row === 2 ? state.frame - 3 : state.frame;
+    return { ...state, frame, x: -state.x, angle: -state.angle };
+}
+
 /** Fills in the properties a recipe left untouched, so callers always get a complete state. */
 export function sampleWokaEmote(definition: WokaEmoteDefinition<string>, elapsed: number): WokaEmoteState {
     const clamped = Math.max(0, Math.min(elapsed, definition.duration));

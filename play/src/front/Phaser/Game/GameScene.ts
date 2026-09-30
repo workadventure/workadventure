@@ -372,7 +372,7 @@ export class GameScene extends DirtyScene {
     private popUpElements: Map<number, DOMElement> = new Map<number, DOMElement>();
     private remotePlayersSpatialIndex = new SpatialMap<number, RemotePlayer>(CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE);
     /** Players a moderator just removed, waiting for doRemovePlayer() to play their ejection. */
-    private readonly pendingEjections = new Map<number, WokaEjection>();
+    private readonly pendingEjections = new Map<number, { ejection: WokaEjection; fromLeft: boolean }>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
     private outlineManager!: OutlineManager;
@@ -2160,7 +2160,10 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.userLeftMessageStream.subscribe((message) => {
                     if (isWokaEjection(message.ejection)) {
-                        this.pendingEjections.set(message.userId, message.ejection);
+                        this.pendingEjections.set(message.userId, {
+                            ejection: message.ejection,
+                            fromLeft: message.ejectedFromLeft ?? true,
+                        });
                     }
                     this.remotePlayersRepository.removePlayer(message.userId);
                     this.playersEventDispatcher.postMessage({
@@ -4521,7 +4524,7 @@ ${escapedMessage}
             if (ejection && this._room.isEjectionAnimationEnabled) {
                 // The player is gone from every index below right away; only its Woka lingers,
                 // for the length of the scene.
-                player.playEjection(ejection, () => player.destroy());
+                player.playEjection(ejection.ejection, ejection.fromLeft, () => player.destroy());
             } else {
                 player.destroy();
             }

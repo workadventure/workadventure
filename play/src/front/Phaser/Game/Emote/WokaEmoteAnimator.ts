@@ -1,6 +1,6 @@
 import * as Phaser from "phaser";
 import type { WokaEmoteDefinition, WokaEmoteParticleSpec, WokaEmotePropSpec } from "./WokaEmoteCatalog";
-import { sampleWokaEmote } from "./WokaEmoteCatalog";
+import { mirrorWokaEmoteState, sampleWokaEmote } from "./WokaEmoteCatalog";
 import { FEET_OFFSET, feetAnchoredOffset } from "./WokaEmoteGeometry";
 import { buildGlyphSvg } from "./WokaEmoteGlyphs";
 
@@ -45,6 +45,8 @@ export class WokaEmoteAnimator {
         private readonly container: Container,
         public readonly definition: WokaEmoteDefinition<string>,
         private readonly onComplete: () => void,
+        /** Plays the recipe the other way round: what came from the left comes from the right. */
+        private readonly mirrored = false,
     ) {
         this.onSceneUpdate = (_time: number, delta: number) => this.step(delta);
     }
@@ -70,7 +72,8 @@ export class WokaEmoteAnimator {
         this.moveParticles(delta);
         this.stepGround();
         this.stepProps();
-        const state = sampleWokaEmote(this.definition, this.elapsed);
+        const sampled = sampleWokaEmote(this.definition, this.elapsed);
+        const state = this.mirrored ? mirrorWokaEmoteState(sampled) : sampled;
         const offset = feetAnchoredOffset(state);
 
         for (const sprite of this.sprites.values()) {
@@ -148,9 +151,11 @@ export class WokaEmoteAnimator {
             const state = spec.sample(elapsed);
             element.setVisible(state !== null);
             if (!state) continue;
-            element.setPosition(state.x, FEET_OFFSET + state.y);
-            element.setAngle(state.angle ?? 0);
-            element.setScale(state.scaleX ?? 1, state.scaleY ?? state.scaleX ?? 1);
+            const side = this.mirrored ? -1 : 1;
+            element.setPosition(side * state.x, FEET_OFFSET + state.y);
+            element.setAngle(side * (state.angle ?? 0));
+            // A negative scale flips the drawing too: the boot faces the Woka from either side.
+            element.setScale(side * (state.scaleX ?? 1), state.scaleY ?? state.scaleX ?? 1);
             element.setAlpha(state.alpha ?? 1);
         }
     }
