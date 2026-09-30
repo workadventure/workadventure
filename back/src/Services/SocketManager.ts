@@ -620,7 +620,7 @@ export class SocketManager {
         currentZone: ZonePosition,
         userId: number,
         newZone: Zone | null,
-        ejection: "kicked" | "banned" | undefined,
+        ejection: User["ejection"],
     ): void {
         emitZoneMessage(
             SocketManager.toZoneMessage(currentZone, {
@@ -628,7 +628,8 @@ export class SocketManager {
                 userLeftZoneMessage: {
                     userId,
                     toZone: SocketManager.toProtoZone(newZone),
-                    ejection,
+                    ejection: ejection?.type,
+                    ejectedFromLeft: ejection?.fromLeft,
                 },
             }),
             client,
@@ -1080,6 +1081,7 @@ export class SocketManager {
         recipientUuid: string,
         message: string,
         type: "banned" | "kicked" = "banned",
+        moderatorUuid?: string,
     ): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
@@ -1111,9 +1113,15 @@ export class SocketManager {
             return;
         }
 
+        // The ejection comes from the moderator's side; from either side, at random, when the order did
+        // not come from someone in the room (the back office).
+        const [moderator] = moderatorUuid ? room.getUsersByUuid(moderatorUuid) : [];
         for (const recipient of recipients) {
             // The players around see the Woka being thrown out rather than vanishing.
-            recipient.ejection = type;
+            recipient.ejection = {
+                type,
+                fromLeft: moderator ? moderator.getPosition().x < recipient.getPosition().x : Math.random() < 0.5,
+            };
             // Let's leave the room now.
             room.leave(recipient);
 
