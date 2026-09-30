@@ -58,6 +58,8 @@ export class GameManager {
     private startRoom: Room | undefined;
     private _startRoomPromise: Deferred<Room> = new Deferred();
     private currentGameSceneName: string | null = null;
+    /** Whether a setup screen (login, Woka, companion, camera, app install) came before the first game scene. */
+    public setupScreenShown = true;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: ScenePlugin;
     private visitCardUrl: string | null = null;
@@ -212,6 +214,7 @@ export class GameManager {
                 requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
             }
             this.activeMenuSceneAndHelpCameraSettings();
+            this.setupScreenShown = false;
             //TODO fix to return href with # saved in localstorage
             return this.startRoom.key;
         }

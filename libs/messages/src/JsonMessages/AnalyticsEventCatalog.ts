@@ -1347,14 +1347,60 @@ export const ANALYTICS_EVENTS = {
     description: "A scripted popup was opened.",
   }),
 
+  // Every property is optional: a tab loaded before they existed still sends the old payload.
   "world.entered": event({
     properties: z.object({
       durationMs: z
         .number()
         .optional()
-        .describe("How long entering the world took."),
+        .describe(
+          "Milliseconds from this scene starting to load to the game being playable: map, tilesets, scripts, websocket, room join. Excludes setup screens and, on a room change, the time spent on the previous map. Older rows, emitted before the event moved to the playable moment, carry the same span as map_loading.succeeded instead.",
+        ),
+      firstLoad: z
+        .boolean()
+        .optional()
+        .describe(
+          "True for the first scene of the page; false for a room change or a rebuild after a lost connection.",
+        ),
+      reconnection: z
+        .boolean()
+        .optional()
+        .describe(
+          "True when the scene was rebuilt because the connection to the server was lost.",
+        ),
+      sinceNavigationStartMs: z
+        .number()
+        .optional()
+        .describe(
+          "First load only: milliseconds from navigation start (performance.timeOrigin) to the game being playable, app download and boot included. Includes human time when setupScreenShown or openedInBackground is true — filter them out to read it as a load time.",
+        ),
+      setupScreenShown: z
+        .boolean()
+        .optional()
+        .describe(
+          "First load only: a login, Woka, companion, camera or app-install screen came before the game.",
+        ),
+      openedInBackground: z
+        .boolean()
+        .optional()
+        .describe(
+          "First load only: the page started in a hidden tab, where the game does not boot until the tab is shown.",
+        ),
+      mapDownloadMs: z
+        .number()
+        .optional()
+        .describe(
+          "Resource Timing duration of the map file (.tmj) request this scene made. Absent when the map came from the cache of an earlier scene in the same page.",
+        ),
+      mapBytes: z
+        .number()
+        .optional()
+        .describe(
+          "Encoded (compressed) size of the map file. Absent when the map is on another origin that does not send Timing-Allow-Origin, which hides it.",
+        ),
     }),
-    description: "The user finished entering a world.",
+    description:
+      "The game became playable: the scene is shown and the player can move. One per scene: the first load of a page, each room change, each rebuild after a lost connection.",
   }),
 
   "asset.error": event({
