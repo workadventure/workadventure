@@ -20,6 +20,8 @@ import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { WokaEmoteAnimator } from "../Game/Emote/WokaEmoteAnimator";
 import { getWokaEmote, wokaEmoteSoundKey, wokaEmoteSoundVolume } from "../Game/Emote/WokaEmoteCatalog";
 import type { WokaEmoteSoundSpec } from "../Game/Emote/WokaEmoteCatalog";
+import { getWokaEjection } from "../Game/Emote/WokaEjectionCatalog";
+import type { WokaEjection } from "../Game/Emote/WokaEjectionCatalog";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { MINIMUM_DISTANCE, WOKA_SPEED } from "../../Enum/EnvironmentVariable";
@@ -649,6 +651,30 @@ export abstract class Character extends Container implements OutlineableInterfac
             this.playEmote(definition.bubble);
         }
         this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, this, definition, () => this.stopWokaEmote());
+        this.wokaEmote.start();
+        if (definition.sound) {
+            this.playWokaEmoteSound(definition.sound);
+        }
+    }
+
+    /**
+     * Plays the scene of a moderator removing this Woka — kicked off the map or locked up — then
+     * calls `onDone`, which is expected to destroy it. The user has already left the room, so for
+     * the length of the scene the Woka is a ghost: no name, no bubble, nothing to click.
+     */
+    playEjection(ejection: WokaEjection, onDone: () => void): void {
+        this.stopWokaEmote();
+        this.setClickable(false);
+        this.usernameDisplay?.destroy();
+        this.usernameDisplay = undefined;
+        const layers = new Set<Phaser.GameObjects.GameObject>(this.sprites.values());
+        for (const child of this.list) {
+            if (!layers.has(child) && "setVisible" in child) {
+                (child as Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Visible).setVisible(false);
+            }
+        }
+        const definition = getWokaEjection(ejection);
+        this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, this, definition, onDone);
         this.wokaEmote.start();
         if (definition.sound) {
             this.playWokaEmoteSound(definition.sound);
