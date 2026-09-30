@@ -966,6 +966,61 @@
       }
     },
     {
+      "title": "meeting.floor.given",
+      "properties": {
+        "eventName": {
+          "const": "meeting.floor.given"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.floor.given"
+        }
+      }
+    },
+    {
+      "title": "meeting.floor.given_back",
+      "properties": {
+        "eventName": {
+          "const": "meeting.floor.given_back"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.floor.given_back"
+        }
+      }
+    },
+    {
+      "title": "meeting.floor.revoked",
+      "properties": {
+        "eventName": {
+          "const": "meeting.floor.revoked"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.floor.revoked"
+        }
+      }
+    },
+    {
+      "title": "meeting.hand.lowered_for_participant",
+      "properties": {
+        "eventName": {
+          "const": "meeting.hand.lowered_for_participant"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.hand.lowered_for_participant"
+        }
+      }
+    },
+    {
+      "title": "meeting.hand.toggled",
+      "properties": {
+        "eventName": {
+          "const": "meeting.hand.toggled"
+        },
+        "properties": {
+          "$ref": "#/$defs/meeting.hand.toggled"
+        }
+      }
+    },
+    {
       "title": "meeting.layout_changed",
       "properties": {
         "eventName": {
@@ -1916,6 +1971,11 @@
               "meeting.area_entered",
               "meeting.camera_layout_resized",
               "meeting.ended",
+              "meeting.floor.given",
+              "meeting.floor.given_back",
+              "meeting.floor.revoked",
+              "meeting.hand.lowered_for_participant",
+              "meeting.hand.toggled",
               "meeting.layout_changed",
               "meeting.microphone.muted",
               "meeting.microphone.muted_for_everybody",
@@ -3460,6 +3520,70 @@
       "additionalProperties": true,
       "title": "meeting.ended",
       "description": "A meeting, measured. One row per meeting — by the back, which owns the meeting's lifecycle and counts its participants; the row is attributed to nobody, because a meeting belongs to no one participant. Rows without `meetingKind` were opened by a client, once per participant, and carry participant-seconds: Jitsi meetings, and every row older than the back-emitted ones. A broadcast is the same row under a `megaphone` or `speaker_zone` kind: from the first speaker going on air to the last going off, and an empty megaphone space accrues nothing."
+    },
+    "meeting.floor.given": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.floor.given",
+      "description": "A moderator gave the floor to a participant who had raised their hand."
+    },
+    "meeting.floor.given_back": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.floor.given_back",
+      "description": "A participant handed the floor back themselves."
+    },
+    "meeting.floor.revoked": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.floor.revoked",
+      "description": "A moderator took the floor back from a participant."
+    },
+    "meeting.hand.lowered_for_participant": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.hand.lowered_for_participant",
+      "description": "A moderator lowered a participant's raised hand to clear the queue."
+    },
+    "meeting.hand.toggled": {
+      "type": "object",
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "description": "Meeting the action happened in. Absent when the action somehow fired outside one; one row per meeting when the tab was in several."
+        },
+        "raised": {
+          "type": "boolean",
+          "description": "True when the hand was raised, false when lowered."
+        }
+      },
+      "additionalProperties": true,
+      "title": "meeting.hand.toggled",
+      "description": "The user raised or lowered their hand in a meeting."
     },
     "meeting.layout_changed": {
       "type": "object",
