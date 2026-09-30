@@ -205,6 +205,11 @@ export const POSTHOG_EVENT_KEYS: Partial<
   "onboarding.companion_selected": "wa_companionscene_select",
   "onboarding.custom_woka_selected": "wa_wokascene_custom",
   "onboarding.name_validated": "wa-name-validation",
+  // New to PostHog on purpose, unlike the rest of this pipeline's additions: the
+  // arrival funnels live there, and without these they cannot tell a skipped
+  // screen from an abandoned one.
+  "onboarding.screen_shown": "wa_onboarding_screen_shown",
+  "onboarding.started": "wa_onboarding_started",
   "onboarding.video_validated": "wa-video-validation",
   "onboarding.woka_selected": "wa_wokascene_select",
   "onboarding.woka_validated": "wa-woka-validation",

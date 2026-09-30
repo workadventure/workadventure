@@ -44,7 +44,10 @@ import type { WokaData } from "../../Components/Woka/WokaTypes";
 import { generateRandomName } from "../../Utils/RandomNameGenerator";
 import { shouldShowPwaInstallSceneAsync } from "../../Utils/PwaInstallEligibility";
 import { raceTimeout } from "../../Utils/PromiseUtils";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { GameScene } from "./GameScene";
+import type { OnboardingStart } from "./OnboardingSkipReasons";
+import { onboardingSkipReasons, settledBy } from "./OnboardingSkipReasons";
 
 import ScenePlugin = Phaser.Scenes.ScenePlugin;
 
@@ -101,6 +104,9 @@ export class GameManager {
         const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
         const preferredVideoInputDeviceId = localUserStore.getPreferredVideoInputDevice();
 
+        const nameWasKnown = !!this.playerName;
+        const wokaWasKnown = !!this.characterTextureIds?.length;
+
         if (!this.playerName) {
             // Handle woka name based on provideDefaultWokaName setting
             const provideDefaultWokaName = this.startRoom.provideDefaultWokaName;
@@ -143,6 +149,21 @@ export class GameManager {
                 nextScene = "gameScene";
             }
         }
+
+        const settled = {
+            name: settledBy(nameWasKnown, !!this.playerName, this.startRoom.provideDefaultWokaName),
+            woka: settledBy(wokaWasKnown, !!this.characterTextureIds?.length, this.startRoom.provideDefaultWokaTexture),
+        };
+        const skipCameraPage = this.startRoom.skipCameraPage;
+        const startOnboarding = (start: OnboardingStart): void => {
+            analyticsClient.trackAdminEvent(
+                "onboarding.started",
+                onboardingSkipReasons(start, settled, skipCameraPage),
+            );
+            if (start !== "pwa_install" && start !== "room") {
+                analyticsClient.trackAdminEvent("onboarding.screen_shown", { screen: start });
+            }
+        };
 
         // Skip camera page if configured
         if (this.startRoom.skipCameraPage) {
@@ -191,19 +212,25 @@ export class GameManager {
         }
 
         if (this.playerName && localUserStore.getAuthToken() && shouldShowPwaInstall) {
+            startOnboarding("pwa_install");
             return PwaInstallSceneName;
         } else if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
+            startOnboarding("name");
             return LoginSceneName;
         } else if (nextScene === "selectCharacterScene") {
+            startOnboarding("woka");
             return SelectCharacterSceneName;
         } else if (nextScene === "selectCompanionScene") {
+            startOnboarding("companion");
             return SelectCompanionSceneName;
         } else if (
             (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) &&
             !this.startRoom.skipCameraPage
         ) {
+            startOnboarding("camera");
             return EnableCameraSceneName;
         } else {
+            startOnboarding("room");
             if (preferredVideoInputDeviceId !== "") {
                 requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
             }
@@ -349,6 +376,7 @@ export class GameManager {
                 currentSceneName === LoginSceneName &&
                 (!this.characterTextureIds || this.characterTextureIds.length === 0)
             ) {
+                analyticsClient.trackAdminEvent("onboarding.screen_shown", { screen: "woka" });
                 this.scenePlugin.run(SelectCharacterSceneName);
                 return;
             }
@@ -358,6 +386,7 @@ export class GameManager {
                     currentSceneName === SelectCharacterSceneName) &&
                 !this.currentStartedRoom.skipCameraPage
             ) {
+                analyticsClient.trackAdminEvent("onboarding.screen_shown", { screen: "camera" });
                 this.scenePlugin.run(EnableCameraSceneName);
                 return;
             }
