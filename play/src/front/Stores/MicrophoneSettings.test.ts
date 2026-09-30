@@ -37,6 +37,7 @@ describe("buildMicrophoneAudioConstraints", () => {
         browserNoiseSuppressionEnabled: true,
         effectiveNoiseSuppressionProvider: "workadventure" as const,
         noiseSuppressionEngine: "deepfilternet" as const,
+        postGainActive: false,
         browserNoiseSuppressionSupported: true,
         workAdventureNoiseSuppressionFailed: false,
         customNoiseSuppressionActive: false,
@@ -119,6 +120,17 @@ describe("buildMicrophoneAudioConstraints", () => {
             voiceIsolation: false,
         });
         expect(constraints).not.toHaveProperty("sampleRate");
+    });
+
+    it("turns the browser's gain control off when DeepFilterNet3 levels the voice itself", () => {
+        const active = { ...defaultOptions, noiseSuppressionEnabled: true, postGainActive: true };
+        expect(buildMicrophoneAudioConstraints({ ...active, customNoiseSuppressionActive: true })).toMatchObject({
+            autoGainControl: false,
+        });
+        // When our noise suppression failed, the browser's processing takes over, gain control included.
+        expect(buildMicrophoneAudioConstraints({ ...active, customNoiseSuppressionActive: false })).toMatchObject({
+            autoGainControl: true,
+        });
     });
 
     it("disables native processing and requests 16 kHz for active DTLN noise suppression", () => {

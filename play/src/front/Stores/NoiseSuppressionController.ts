@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
-import type { NoiseSuppressionEngine } from "../Connection/LocalUserStore";
+import type { NoiseSuppressionEngine, NoiseSuppressionTuning } from "../Connection/LocalUserStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import {
     type NoiseSuppressionStatusMessage,
@@ -18,6 +18,7 @@ export class NoiseSuppressionController {
         audioTrack: MediaStreamTrack | undefined,
         noiseSuppressionEnabled: boolean,
         engine: NoiseSuppressionEngine,
+        tuning: NoiseSuppressionTuning,
         signal?: AbortSignal,
     ): Promise<MediaStreamTrack | undefined> {
         this.throwIfAborted(signal);
@@ -33,7 +34,7 @@ export class NoiseSuppressionController {
         }
 
         // Each engine owns its AudioContext (16 kHz for DTLN, 48 kHz for DeepFilterNet3): switching rebuilds it.
-        if (this.transformer && this.transformer.engine !== engine) {
+        if (this.transformer && (this.transformer.engine !== engine || !sameTuning(this.transformer.tuning, tuning))) {
             await this.destroy();
         }
 
@@ -62,7 +63,16 @@ export class NoiseSuppressionController {
             if (!this.transformer) {
                 this.transformer = new NoiseSuppressionTransformer({
                     engine,
+                    tuning,
                     onStatusChange: this.updateState.bind(this),
+                    onLoadReport: (report) => {
+                        analyticsClient.trackAdminEvent("media.noise_suppression.load", {
+                            engine,
+                            ...report,
+                            ...tuning,
+                            hardwareConcurrency: navigator.hardwareConcurrency ?? 0,
+                        });
+                    },
                 });
             }
 
@@ -155,4 +165,13 @@ export class NoiseSuppressionController {
     private isAbortError(error: unknown): boolean {
         return error instanceof AbortError || (error instanceof DOMException && error.name === "AbortError");
     }
+}
+
+function sameTuning(a: NoiseSuppressionTuning, b: NoiseSuppressionTuning): boolean {
+    return (
+        a.keystrokeFilter === b.keystrokeFilter &&
+        a.postGain === b.postGain &&
+        a.shortGateLookahead === b.shortGateLookahead &&
+        a.gateOff === b.gateOff
+    );
 }

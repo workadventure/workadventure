@@ -67,6 +67,7 @@ const legacyScreenShareBandwidthKey = "screenShareBandwidth";
 const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
 const noiseSuppressionProviderKey = "noiseSuppressionProvider";
 const noiseSuppressionEngineKey = "noiseSuppressionEngine";
+const noiseSuppressionTuningKey = "noiseSuppressionTuning";
 const microphoneAutoGainControlKey = "microphoneAutoGainControl";
 const microphoneEchoCancellationKey = "microphoneEchoCancellation";
 const microphoneBrowserNoiseSuppressionKey = "microphoneBrowserNoiseSuppression";
@@ -76,7 +77,20 @@ export type VideoQualitySetting = "low" | "recommended" | "high";
 export type BandwidthConstrainedPreference = "maintain-framerate" | "maintain-resolution" | "balanced";
 export type NoiseSuppressionProvider = "workadventure" | "voiceIsolation";
 /** The model behind the "workadventure" provider: DeepFilterNet3 (48 kHz, default) or the legacy DTLN (16 kHz). */
-export type NoiseSuppressionEngine = "deepfilternet" | "dtln";
+export type NoiseSuppressionEngine = "deepfilternet" | "deepfilternet-ll" | "dtln";
+/**
+ * DeepFilterNet3 options under evaluation, behind debug switches until listening tests pick defaults.
+ * keystrokeFilter: the pause gate needs 2 speech frames to open, so one-frame clicks stay out.
+ * postGain: level the voice after the denoiser instead of the browser's automatic gain control.
+ * shortGateLookahead: the pause gate delays the voice by 1 frame instead of 3 (-20 ms; 2 with keystrokeFilter).
+ * gateOff: no pause gate at all (-30 ms of voice delay, pauses only 25 dB quieter instead of 45).
+ */
+export interface NoiseSuppressionTuning {
+    keystrokeFilter: boolean;
+    postGain: boolean;
+    shortGateLookahead: boolean;
+    gateOff: boolean;
+}
 
 const JwtAuthToken = z
     .object({
@@ -858,7 +872,33 @@ class LocalUserStore {
     }
 
     getNoiseSuppressionEngine(): NoiseSuppressionEngine {
-        return localStorage.getItem(noiseSuppressionEngineKey) === "dtln" ? "dtln" : "deepfilternet";
+        const value = localStorage.getItem(noiseSuppressionEngineKey);
+        return value === "dtln" || value === "deepfilternet-ll" ? value : "deepfilternet";
+    }
+
+    setNoiseSuppressionTuning(value: NoiseSuppressionTuning) {
+        localStorage.setItem(noiseSuppressionTuningKey, JSON.stringify(value));
+    }
+
+    getNoiseSuppressionTuning(): NoiseSuppressionTuning {
+        const tuning: NoiseSuppressionTuning = {
+            keystrokeFilter: false,
+            postGain: false,
+            shortGateLookahead: false,
+            gateOff: false,
+        };
+        try {
+            const stored: unknown = JSON.parse(localStorage.getItem(noiseSuppressionTuningKey) ?? "{}");
+            if (typeof stored === "object" && stored !== null) {
+                tuning.keystrokeFilter = "keystrokeFilter" in stored && stored.keystrokeFilter === true;
+                tuning.postGain = "postGain" in stored && stored.postGain === true;
+                tuning.shortGateLookahead = "shortGateLookahead" in stored && stored.shortGateLookahead === true;
+                tuning.gateOff = "gateOff" in stored && stored.gateOff === true;
+            }
+        } catch {
+            // Unreadable value: defaults
+        }
+        return tuning;
     }
 
     setMicrophoneAutoGainControl(value: boolean) {

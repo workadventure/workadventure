@@ -117,7 +117,7 @@
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/math-utils": "1.0.0",
     "@workadventure/messages": "1.0.0",
-    "@workadventure/noise-suppression": "https://github.com/ydiarra/noise-suppression/releases/download/v0.2.0-beta.0/workadventure-noise-suppression-0.2.0-beta.0.tgz",
+    "@workadventure/noise-suppression": "https://github.com/ydiarra/noise-suppression/releases/download/v0.2.0-beta.6/workadventure-noise-suppression-0.2.0-beta.6.tgz",
     "@workadventure/shared-utils": "1.0.0",
     "@workadventure/simple-peer": "^12.3.0",
     "@workadventure/store-utils": "1.0.0",

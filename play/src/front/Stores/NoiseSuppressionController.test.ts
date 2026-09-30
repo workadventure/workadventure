@@ -3,7 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { trackAdminEvent, FakeTransformer } = vi.hoisted(() => {
     type StatusMessage = { status: "initializing" | "ready" | "error"; message?: string };
-    type Options = { engine: string; onStatusChange?: (message: StatusMessage) => void };
+    type Tuning = { keystrokeFilter: boolean; postGain: boolean; shortGateLookahead: boolean; gateOff: boolean };
+    type Options = {
+        engine: string;
+        tuning: Tuning;
+        onStatusChange?: (message: StatusMessage) => void;
+        onLoadReport?: (report: Record<string, number>) => void;
+    };
 
     class FakeTransformer {
         static instances: FakeTransformer[] = [];
@@ -12,16 +18,22 @@ const { trackAdminEvent, FakeTransformer } = vi.hoisted(() => {
         static onTransform: (transformer: FakeTransformer) => void = (transformer) => transformer.emit("ready");
 
         readonly engine: string;
+        readonly tuning: Tuning;
         readonly closeAndDestroy = vi.fn(() => Promise.resolve());
         readonly stop = vi.fn();
 
         constructor(private readonly options: Options) {
             this.engine = options.engine;
+            this.tuning = options.tuning;
             FakeTransformer.instances.push(this);
         }
 
         static getSupport() {
             return FakeTransformer.supported ? { supported: true } : { supported: false, message: "no worklet" };
+        }
+
+        reportLoad(report: Record<string, number>): void {
+            this.options.onLoadReport?.(report);
         }
 
         emit(status: StatusMessage["status"], message?: string): void {
@@ -54,6 +66,7 @@ const { NoiseSuppressionController } = await import("./NoiseSuppressionControlle
 const { noiseSuppressionStateStore } = await import("./NoiseSuppressionStore");
 
 const microphone = { id: "mic" } as MediaStreamTrack;
+const tuning = { keystrokeFilter: false, postGain: false, shortGateLookahead: false, gateOff: false };
 
 function eventsNamed(name: string): unknown[] {
     return trackAdminEvent.mock.calls.filter(([eventName]) => eventName === name).map(([, properties]) => properties);
@@ -71,8 +84,8 @@ describe("NoiseSuppressionController", () => {
     it("returns the processed track and counts one start per initialization", async () => {
         const controller = new NoiseSuppressionController();
 
-        const track = await controller.transform(microphone, true, "deepfilternet");
-        await controller.transform({ id: "other-mic" } as MediaStreamTrack, true, "deepfilternet");
+        const track = await controller.transform(microphone, true, "deepfilternet", tuning);
+        await controller.transform({ id: "other-mic" } as MediaStreamTrack, true, "deepfilternet", tuning);
 
         expect(track?.id).toBe("processed-mic");
         expect(get(noiseSuppressionStateStore).status).toBe("ready");
@@ -82,11 +95,21 @@ describe("NoiseSuppressionController", () => {
         ]);
     });
 
+    it("rebuilds the pipeline when a debug switch changes", async () => {
+        const controller = new NoiseSuppressionController();
+        await controller.transform(microphone, true, "deepfilternet", tuning);
+
+        await controller.transform(microphone, true, "deepfilternet", { ...tuning, postGain: true });
+
+        expect(FakeTransformer.instances).toHaveLength(2);
+        expect(FakeTransformer.instances[0].closeAndDestroy).toHaveBeenCalledOnce();
+    });
+
     it("rebuilds the pipeline when the engine changes", async () => {
         const controller = new NoiseSuppressionController();
-        await controller.transform(microphone, true, "deepfilternet");
+        await controller.transform(microphone, true, "deepfilternet", tuning);
 
-        await controller.transform(microphone, true, "dtln");
+        await controller.transform(microphone, true, "dtln", tuning);
 
         expect(FakeTransformer.instances.map((transformer) => transformer.engine)).toEqual(["deepfilternet", "dtln"]);
         expect(FakeTransformer.instances[0].closeAndDestroy).toHaveBeenCalledOnce();
@@ -99,7 +122,7 @@ describe("NoiseSuppressionController", () => {
         };
         const controller = new NoiseSuppressionController();
 
-        await controller.transform(microphone, true, "deepfilternet");
+        await controller.transform(microphone, true, "deepfilternet", tuning);
 
         // The latest message is shown; only the transition to error is an analytics event
         expect(get(noiseSuppressionStateStore)).toEqual({
@@ -122,7 +145,7 @@ describe("NoiseSuppressionController", () => {
         };
         const controller = new NoiseSuppressionController();
 
-        const track = await controller.transform(microphone, true, "deepfilternet");
+        const track = await controller.transform(microphone, true, "deepfilternet", tuning);
 
         expect(track).toBe(microphone);
         expect(get(noiseSuppressionStateStore).status).toBe("error");
@@ -134,8 +157,8 @@ describe("NoiseSuppressionController", () => {
         FakeTransformer.supported = false;
         const controller = new NoiseSuppressionController();
 
-        const first = await controller.transform(microphone, true, "dtln");
-        await controller.transform(microphone, true, "dtln");
+        const first = await controller.transform(microphone, true, "dtln", tuning);
+        await controller.transform(microphone, true, "dtln", tuning);
 
         expect(first).toBe(microphone);
         expect(get(noiseSuppressionStateStore)).toEqual({ status: "unsupported", message: "no worklet" });
@@ -145,10 +168,28 @@ describe("NoiseSuppressionController", () => {
         expect(FakeTransformer.instances).toHaveLength(0);
     });
 
+    it("turns the worklet's load report into one analytics event, with the debug switches in use", async () => {
+        const controller = new NoiseSuppressionController();
+        await controller.transform(microphone, true, "deepfilternet", { ...tuning, gateOff: true });
+        const report = { windows: 30, medianLoad: 0.04, p95Load: 0.06, maxLoad: 0.1, slowFrames: 2, frames: 6000 };
+
+        FakeTransformer.instances[0].reportLoad(report);
+
+        expect(eventsNamed("media.noise_suppression.load")).toEqual([
+            {
+                engine: "deepfilternet",
+                ...report,
+                ...tuning,
+                gateOff: true,
+                hardwareConcurrency: expect.any(Number),
+            },
+        ]);
+    });
+
     it("passes the microphone through untouched when noise suppression is off", async () => {
         const controller = new NoiseSuppressionController();
 
-        expect(await controller.transform(microphone, false, "deepfilternet")).toBe(microphone);
+        expect(await controller.transform(microphone, false, "deepfilternet", tuning)).toBe(microphone);
         expect(FakeTransformer.instances).toHaveLength(0);
         expect(trackAdminEvent).not.toHaveBeenCalled();
     });
