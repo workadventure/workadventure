@@ -169,7 +169,9 @@ export const POSTHOG_EVENT_KEYS: Partial<
   },
   "media.microphone.toggled": "wa_microphone",
   "media.turn_test.failed": "wa_turn_test_failure",
-  "media.turn_test.succeeded": "wa_turn_test_success",
+  // media.turn_test.succeeded is left out on purpose: it fires once per connection,
+  // so in PostHog it only counted visits. The admin sink still receives it: it is
+  // the only denominator a TURN failure or timeout rate can have.
   "media.turn_test.timeout": "wa_turn_test_timeout",
   "media.video_stream_missing": "wa_no_video_stream_received",
 
