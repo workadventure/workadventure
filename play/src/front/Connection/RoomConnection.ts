@@ -1977,10 +1977,10 @@ export class RoomConnection implements RoomConnection {
     }
 
     /**
-     * Sends a query that changes the state of a space. The back answers once the change is applied; by then the
+     * Changes the state of a space. The back answers once the change is applied; by then the
      * patch it caused has already been received (the pusher flushes it before answering).
      */
-    public async querySpaceState(
+    public async alterSpaceState(
         spaceName: string,
         query: SpaceStateQuery["query"],
         options?: { timeout?: number },
