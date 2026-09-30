@@ -58,7 +58,12 @@
 <ActionBarButton
     onclick={() => {
         toggleChat();
-        navChat.switchToChat();
+        // Same reason as chat.opened below: the click that closes the panel opens nothing.
+        if ($chatVisibilityStore) {
+            navChat.switchToChat();
+        } else {
+            navChat.autoSwitchToChat();
+        }
         if (!chatEnabledInAdmin) {
             const proximityChatRoom = proximityChatRoomManager.resolveTargetRoom();
             if (proximityChatRoom) {

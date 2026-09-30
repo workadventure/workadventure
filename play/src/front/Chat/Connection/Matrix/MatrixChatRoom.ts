@@ -1546,7 +1546,7 @@ export class MatrixChatRoom
 
             if (isFreshLiveEvent && !isAChatRoomIsVisible() && !(get(selectedRoomStore) instanceof ProximityChatRoom)) {
                 selectedRoomStore.set(this);
-                navChat.switchToChat();
+                navChat.autoSwitchToChat();
             }
         }
 
