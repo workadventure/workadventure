@@ -9,7 +9,9 @@ export type DesktopAuthPayload = {
     targetUrl: string;
 };
 
-type RedisLike = Pick<RedisClient, "get" | "set" | "del">;
+const MAX_MEMORY_ENTRIES = 10_000;
+
+type RedisLike = Pick<RedisClient, "getDel" | "set">;
 
 type DesktopAuthServiceOptions = {
     getRedisClient?: () => Promise<RedisLike | null>;
@@ -51,6 +53,7 @@ export class DesktopAuthService {
             return code;
         }
 
+        this.purgeExpired();
         this.memoryCodes.set(code, {
             payload,
             expiresAt: this.now() + this.ttlSeconds * 1000,
@@ -65,13 +68,12 @@ export class DesktopAuthService {
 
         const redis = await this.getRedisClient();
         if (redis) {
-            const key = this.getRedisKey(code);
-            const serializedPayload = await redis.get(key);
+            // GETDEL, not GET then DEL: two concurrent exchanges must not both read the entry.
+            const serializedPayload = await redis.getDel(this.getRedisKey(code));
             if (!serializedPayload) {
                 return undefined;
             }
 
-            await redis.del(key);
             return this.parsePayload(serializedPayload);
         }
 
@@ -86,6 +88,25 @@ export class DesktopAuthService {
         }
 
         return entry.payload;
+    }
+
+    /** Without Redis, entries nobody exchanges would otherwise stay in memory forever. */
+    private purgeExpired(): void {
+        const now = this.now();
+        for (const [key, entry] of this.memoryCodes) {
+            if (entry.expiresAt <= now) {
+                this.memoryCodes.delete(key);
+            }
+        }
+        // Unauthenticated requests create entries: cap the map, dropping the oldest (insertion order).
+        // ponytail: a flood still evicts real logins in progress; Redis is the answer at that scale.
+        while (this.memoryCodes.size >= MAX_MEMORY_ENTRIES) {
+            const oldest = this.memoryCodes.keys().next().value;
+            if (oldest === undefined) {
+                break;
+            }
+            this.memoryCodes.delete(oldest);
+        }
     }
 
     private getRedisKey(code: string): string {
