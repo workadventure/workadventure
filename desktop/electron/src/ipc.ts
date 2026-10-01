@@ -9,14 +9,15 @@ import { setRendererPresence } from "./presence";
 import { closeCompanionPip, dismissCompanion, openCompanionForPip } from "./companion-controller";
 import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
 import {
-    getActiveWorldContents,
+    getControllingWorldContents,
     getDesktopWindowState,
     getWindow,
     isActiveWorldContents,
+    isControllingWorldContents,
     loadDesktopTarget,
     openWorldTab,
 } from "./window";
-import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle } from "./tab-manager";
+import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle, setTabInMeeting } from "./tab-manager";
 import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import { isPipWindowOpen, sendToPip } from "./pip-window";
@@ -29,6 +30,7 @@ import {
     markOverlayReady,
     sendToOverlay,
     setOverlayDrawMode,
+    setOverlayKeyboardFocus,
 } from "./overlay-window";
 import {
     broadcastHudState,
@@ -39,8 +41,11 @@ import {
     markHudReady,
     openHudWindow,
     sendHudState,
+    setHudStrings,
     setMeetingBarExpanded,
 } from "./hud-windows";
+import { nativeStrings, t } from "./i18n";
+import { sanitizeStringTable } from "./native-locale-policy";
 import { getPinnedWorlds, getRecentWorlds, isWorldPinned, toggleWorldPin } from "./world-history";
 import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens } from "./screen-identify";
 
@@ -156,16 +161,16 @@ async function resolveDisplayIdFromScreenSource(sourceId: string): Promise<numbe
 
 export function emitMuteToggle() {
     // Toggle mic in the on-screen world (only it captures media).
-    getActiveWorldContents()?.send("app:on-mute-toggle");
+    getControllingWorldContents()?.send("app:on-mute-toggle");
 }
 
 export function emitCameraToggle() {
-    getActiveWorldContents()?.send("app:on-camera-toggle");
+    getControllingWorldContents()?.send("app:on-camera-toggle");
 }
 
 /** Ask the active world to change the user's availability status (from the tray Status submenu). */
 export function emitSetStatus(status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb") {
-    getActiveWorldContents()?.send("app:on-set-status", status);
+    getControllingWorldContents()?.send("app:on-set-status", status);
 }
 
 function normalizeNotifyPayload(payload: unknown): ShowNotificationOptions | undefined {
@@ -245,10 +250,21 @@ export default () => {
     });
 
     ipcMain.on("app:setPresence", (event, presence: unknown) => {
-        if (!isFromMainRenderer(event) || !presence || typeof presence !== "object") {
+        if (!isWorldContents(event.sender) || !presence || typeof presence !== "object") {
             return;
         }
         const raw = presence as Record<string, unknown>;
+        // Every tab reports whether it is in a meeting: that decides which tab drives media. One
+        // meeting at a time: the tab that was in one drops its mic, camera and screen share (they are
+        // not turned back on by themselves), and the one entering tells the user.
+        const preempted = setTabInMeeting(event.sender, Boolean(raw.inMeeting));
+        if (preempted && !preempted.view.webContents.isDestroyed()) {
+            preempted.view.webContents.send("app:on-media-preempted");
+            event.sender.send("app:on-other-meeting-muted", preempted.appTitle || preempted.urlLabel);
+        }
+        if (!isFromMainRenderer(event)) {
+            return;
+        }
         setRendererPresence({
             inMeeting: Boolean(raw.inMeeting),
             micEnabled: Boolean(raw.micEnabled),
@@ -262,7 +278,7 @@ export default () => {
     });
 
     ipcMain.on("app:setTabTitle", (event, title: unknown) => {
-        if (!isFromMainRenderer(event) || typeof title !== "string") {
+        if (!isFromActiveRenderer(event) || typeof title !== "string") {
             return;
         }
         setActiveWorldTitle(title);
@@ -298,7 +314,7 @@ export default () => {
             startPresenterCursor(displayId, (x, y, point) => {
                 // → the world renderer, which broadcasts to viewers over the space. Viewers map this
                 // onto the full shared-display video, so the display-normalized (x, y) is right for them.
-                getActiveWorldContents()?.send("app:on-presenter-cursor", { x, y });
+                getControllingWorldContents()?.send("app:on-presenter-cursor", { x, y });
                 // → the content-protected overlay, so the PRESENTER sees the effect locally over the
                 // shared app (not captured, so viewers don't get a doubled render). The overlay window
                 // does NOT always cover the whole display (on macOS the menu-bar strip is excluded), so
@@ -368,7 +384,7 @@ export default () => {
     // screen-share picker) may start it; the overlay windows themselves raise :pick / :cancel over
     // their own preload (window.WAScreenPick), so those two are not gated on the main renderer.
     ipcMain.handle("app:screen-identify:start", (event) => {
-        if (!isFromMainRenderer(event)) {
+        if (!isFromActiveRenderer(event)) {
             ElectronLog.warn("Rejected screen-identify request from non-main renderer");
             return null;
         }
@@ -386,9 +402,9 @@ export default () => {
     // Validate a user-supplied world URL before handing it to the main window. This gives both
     // UIs a useful error instead of silently falling back to the portal.
     ipcMain.handle("app:navigation:joinWorld", async (event, rawUrl: unknown) => {
-        if (!isFromMainRenderer(event)) {
+        if (!isFromActiveRenderer(event)) {
             ElectronLog.warn("Rejected world navigation from non-main renderer");
-            return { ok: false, error: "This action is only available in the desktop app." };
+            return { ok: false, error: t("landing.desktopOnly") };
         }
         const config = createDesktopConfig({
             ...process.env,
@@ -401,12 +417,10 @@ export default () => {
         const safeUrl = validation.url;
         try {
             const loaded = await loadDesktopTarget(safeUrl);
-            return loaded
-                ? { ok: true }
-                : { ok: false, error: "This world could not be loaded. Please check the URL and try again." };
+            return loaded ? { ok: true } : { ok: false, error: t("landing.worldNotLoaded") };
         } catch (error) {
             ElectronLog.error(`app:navigation:joinWorld failed for ${safeUrl}`, error);
-            return { ok: false, error: error instanceof Error ? error.message : "Failed to open world." };
+            return { ok: false, error: error instanceof Error ? error.message : t("landing.joinFailed") };
         }
     });
 
@@ -421,7 +435,7 @@ export default () => {
     ipcMain.handle("app:navigation:getPinnedWorlds", (event) => {
         // Pinned worlds are shown on the native Landing and in the in-game switcher, both of which
         // run in the main renderer.
-        if (!isFromMainRenderer(event)) {
+        if (!isFromActiveRenderer(event)) {
             ElectronLog.warn("Rejected pinned worlds request from non-main renderer");
             return [];
         }
@@ -429,9 +443,9 @@ export default () => {
     });
 
     ipcMain.handle("app:navigation:togglePin", (event, rawUrl: unknown) => {
-        if (!isFromMainRenderer(event)) {
+        if (!isFromActiveRenderer(event)) {
             ElectronLog.warn("Rejected pin toggle from non-main renderer");
-            return { ok: false, error: "This action is only available in the desktop app." };
+            return { ok: false, error: t("landing.desktopOnly") };
         }
         if (typeof rawUrl !== "string" || !rawUrl.trim()) {
             return { ok: false, error: "A world URL is required." };
@@ -441,7 +455,7 @@ export default () => {
     });
 
     ipcMain.handle("app:navigation:isPinned", (event, rawUrl: unknown) => {
-        if (!isFromMainRenderer(event) || typeof rawUrl !== "string") {
+        if (!isFromActiveRenderer(event) || typeof rawUrl !== "string") {
             return false;
         }
         return isWorldPinned(rawUrl);
@@ -452,6 +466,14 @@ export default () => {
     // preload-tabs script), so no world page can spawn/close tabs on its own.
     ipcMain.on("app:tabs:ready", (event) => {
         markTabStripReady(event.sender);
+    });
+    // Native pages' strings, in the OS language. Synchronous IPC: returnValue must ALWAYS be set,
+    // otherwise the calling page stays blocked.
+    ipcMain.on("app:i18n:tabs", (event) => {
+        event.returnValue = isTabStripSender(event.sender) ? nativeStrings("tabs.") : null;
+    });
+    ipcMain.on("app:i18n:landing", (event) => {
+        event.returnValue = isFromNativeLanding(event) ? nativeStrings("landing.") : null;
     });
     ipcMain.on("app:tabs:new", (event) => {
         if (!isTabStripSender(event.sender)) {
@@ -473,9 +495,9 @@ export default () => {
     });
 
     ipcMain.handle("app:navigation:openAdminSignup", async (event) => {
-        if (!isFromMainRenderer(event)) {
+        if (!isFromActiveRenderer(event)) {
             ElectronLog.warn("Rejected admin signup navigation from non-main renderer");
-            return { ok: false, error: "This action is only available in the desktop app." };
+            return { ok: false, error: t("landing.desktopOnly") };
         }
         const url = getAdminSignupUrl();
         try {
@@ -483,7 +505,7 @@ export default () => {
             return { ok: true };
         } catch (error) {
             ElectronLog.error(`Failed to open admin signup URL ${url}`, error);
-            return { ok: false, error: "The signup page could not be opened." };
+            return { ok: false, error: t("landing.signupFailed") };
         }
     });
 
@@ -494,12 +516,18 @@ export default () => {
     // "The main renderer" is now the ACTIVE world view (the on-screen tab). Media / PiP / presence
     // / presenter / navigation IPC is only honoured from the foreground world; a backgrounded tab
     // must not drive the tray, PiP or capture. Window operations still use getWindow() (the shell).
+    // Media / PiP / presence / presenter IPC follows the tab that drives media (the one in a meeting,
+    // else the active one: see tab-manager); navigation IPC is the on-screen tab's.
     function isFromMainRenderer(event: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent): boolean {
+        return isControllingWorldContents(event.sender);
+    }
+
+    function isFromActiveRenderer(event: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent): boolean {
         return isActiveWorldContents(event.sender);
     }
 
-    function isFromNativeLanding(event: Electron.IpcMainInvokeEvent): boolean {
-        if (!isFromMainRenderer(event) || event.senderFrame?.parent !== null) {
+    function isFromNativeLanding(event: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent): boolean {
+        if (!isFromActiveRenderer(event) || event.senderFrame?.parent !== null) {
             return false;
         }
         try {
@@ -568,11 +596,11 @@ export default () => {
     // holder of the WAHud meeting bridge), never from arbitrary web content.
     ipcMain.on("app:pip:answer", (event, sdp: unknown) => {
         if (hudKindOfSender(event.sender) !== "companion") return;
-        getActiveWorldContents()?.send("app:pip:answer-to-main", sdp);
+        getControllingWorldContents()?.send("app:pip:answer-to-main", sdp);
     });
     ipcMain.on("app:pip:ice-from-pip", (event, candidate: unknown) => {
         if (hudKindOfSender(event.sender) !== "companion") return;
-        getActiveWorldContents()?.send("app:pip:ice-to-main", candidate);
+        getControllingWorldContents()?.send("app:pip:ice-to-main", candidate);
     });
 
     // Main renderer pushes tile metadata + device state (mic/cam/screenshare) to the companion
@@ -647,11 +675,15 @@ export default () => {
     // Overlay renderer → main renderer (active world view)
     ipcMain.on("app:overlay:draw-from-overlay", (event, op: unknown) => {
         if (!isFromOverlayRenderer(event)) return;
-        getActiveWorldContents()?.send("app:overlay:draw-to-main", op);
+        getControllingWorldContents()?.send("app:overlay:draw-to-main", op);
     });
     ipcMain.on("app:overlay:request-exit", (event) => {
         if (!isFromOverlayRenderer(event)) return;
-        getActiveWorldContents()?.send("app:overlay:exit-to-main");
+        getControllingWorldContents()?.send("app:overlay:exit-to-main");
+    });
+    ipcMain.on("app:overlay:set-keyboard-focus", (event, enabled: unknown) => {
+        if (!isFromOverlayRenderer(event)) return;
+        setOverlayKeyboardFocus(enabled === true);
     });
     ipcMain.on("app:overlay:ready", (event) => {
         if (!isFromOverlayRenderer(event)) return;
@@ -702,6 +734,18 @@ export default () => {
         sendHudState("companion", state);
     });
 
+    // Main renderer → companion + meeting bar strings, translated by the world in the language the
+    // user chose in WorkAdventure. Kept and replayed to each HUD window when it becomes ready.
+    ipcMain.on("app:hud:strings-from-main", (event, strings: unknown) => {
+        if (!isFromMainRenderer(event)) return;
+        const table = sanitizeStringTable(strings);
+        if (!table) {
+            ElectronLog.warn("Rejected a malformed HUD string table");
+            return;
+        }
+        setHudStrings(table);
+    });
+
     // HUD windows → main renderer
     ipcMain.on("app:hud:command-from-hud", (event, command: unknown) => {
         if (!isHudSender(event.sender)) return;
@@ -739,16 +783,16 @@ export default () => {
                 // If a meeting video is running in the companion, tell the WA renderer to tear its
                 // PiP side down too before we dismiss (mirrors the old PiP window's close). stop() is
                 // idempotent, so this is a no-op when no call is active.
-                getActiveWorldContents()?.send("app:pip:closed");
+                getControllingWorldContents()?.send("app:pip:closed");
                 // Go through the controller so the dismissal sticks (force-closed), instead of a bare
                 // close that would re-open on the next presence change.
                 dismissCompanion();
             } else {
-                getActiveWorldContents()?.send("app:companion:command-to-main", command);
+                getControllingWorldContents()?.send("app:companion:command-to-main", command);
             }
             return;
         }
-        getActiveWorldContents()?.send("app:hud:command-to-main", command);
+        getControllingWorldContents()?.send("app:hud:command-to-main", command);
     });
 
     // Source enumeration for the meeting bar's direct screen switcher. Sender-validated: only the

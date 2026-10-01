@@ -21,6 +21,7 @@ const api: WorkAdventureOverlayApi = {
         subscribe("app:overlay:presenter-effect", (effect) => callback(effect as OverlayPresenterEffect)),
     emitDraw: (op: OverlayDrawOp) => ipcRenderer.send("app:overlay:draw-from-overlay", op),
     requestExit: () => ipcRenderer.send("app:overlay:request-exit"),
+    setKeyboardFocus: (enabled: boolean) => ipcRenderer.send("app:overlay:set-keyboard-focus", enabled),
     ready: () => ipcRenderer.send("app:overlay:ready"),
 };
 

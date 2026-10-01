@@ -1,0 +1,87 @@
+import type { NativeStrings } from "./en";
+
+const hsb: NativeStrings = {
+    "landing.heading": "Waše dźěłowe městno přez jedyn URL.",
+    "landing.intro":
+        "Wočińće swět, ke kotremuž hižo słušeće, abo wutworće nowy rum za swój team. Waš posledni swět so přichodny raz awtomatisce zaso wočini.",
+    "landing.recentWorlds": "Poslednje swěty",
+    "landing.joinTitle": "K swětej přistupić",
+    "landing.joinHint": "Zasadźće dospołny URL z wašeho přeprošenja abo z wašeho wobhladowaka.",
+    "landing.urlLabel": "Zapodajće URL swojeho swěta",
+    "landing.openWorld": "Swět wočinić",
+    "landing.or": "abo",
+    "landing.createTitle": "Swět wutworić",
+    "landing.createHint": "Wutworće nowy wirtualny běrow w administraciskej konsoli WorkAdventure.",
+    "landing.createWorld": "Swět wutworić",
+    "landing.explore": "Wuslědźić",
+    "landing.opening": "Wočinja so…",
+    "landing.pinWorld": "Swět připjeć",
+    "landing.unpinWorld": "Swět wotpjeć",
+    "landing.urlRequired": "Prošu zapodajće URL swěta.",
+    "landing.joinFailed": "Přistup k swětej njeje so poradźił.",
+    "landing.signupFailed": "Strona registracije njeda so wočinić.",
+    "landing.desktopOnly": "Tuta akcija je jenož w desktopowym nałoženju k dispoziciji.",
+    "landing.worldNotLoaded": "Tutón swět njeda so začitać. Prošu přepruwujće URL a spytajće hišće raz.",
+    "landing.loadFailure": "Tutón swět njeda so začitać. Snano je offline abo URL je wopak.",
+    "landing.loadTimeout": "Začitanje tutoho swěta traje předołho. Snano je offline abo waš zwisk je přetorhnjeny.",
+
+    "tabs.newWorld": "Nowy swět",
+    "tabs.world": "Swět",
+    "tabs.closeTab": "Rajtark začinić",
+    "tabs.newWorldTab": "Nowy rajtark swěta",
+
+    "menu.world": "Swět",
+    "menu.newTab": "Nowy rajtark",
+    "menu.closeTab": "Rajtark začinić",
+    "menu.nextTab": "Přichodny rajtark",
+    "menu.previousTab": "Předchadny rajtark",
+    "menu.showTabBar": "Lajstu rajtarkow pokazać",
+    "menu.changeWorld": "Swět změnić…",
+    "menu.pinnedWorlds": "Připjate swěty",
+    "menu.recentWorlds": "Poslednje swěty",
+    "menu.noPinnedWorlds": "Žane připjate swěty",
+    "menu.noRecentWorlds": "Žane poslednje swěty",
+    "menu.hideTabBarTitle": "Lajstu rajtarkow schować?",
+    "menu.cancel": "Přetorhnyć",
+    "menu.closeOneOtherTab": "1 druhi rajtark začinić a lajstu schować",
+    "menu.closeOtherTabs": "{count} druhich rajtarkow začinić a lajstu schować",
+    "menu.hideTabBarDetailOne":
+        "Maće {total} swětow w rajtarkach wočinjenych. Hdyž lajstu rajtarkow schowaće, wostanje aktualny swět wočinjeny a druhi so začini.",
+    "menu.hideTabBarDetail":
+        "Maće {total} swětow w rajtarkach wočinjenych. Hdyž lajstu rajtarkow schowaće, wostanje aktualny swět wočinjeny a {count} druhich so začini.",
+
+    "tray.status.meeting": "W zasedanju",
+    "tray.status.do_not_disturb": "Njewobćežować",
+    "tray.status.busy": "Zabuzowany",
+    "tray.status.back_in_a_moment": "Wróću so bórze",
+    "tray.status.idle": "Njeaktiwny",
+    "tray.status.online": "K dispoziciji",
+    "tray.status.offline": "Offline",
+    "tray.statusLocked": "Zablokowany za čas zasedanja",
+    "tray.microphone": "Mikrofon",
+    "tray.camera": "Kamera",
+    "tray.companionPanel": "Přewodny panel",
+    "tray.showHide": "Pokazać / Schować",
+    "tray.worlds": "Swěty",
+    "tray.help": "Pomoc",
+    "tray.checkForUpdates": "Za aktualizacijemi pytać",
+    "tray.openLogs": "Protokole wočinić",
+    "tray.about": "Wo",
+    "tray.quit": "Skónčić",
+
+    "auth.pageTitle": "Přizjewjenje WorkAdventure",
+    "auth.signingInTitle": "Přizjewja so…",
+    "auth.signingInMessage":
+        "Dokónčće přizjewjenje w swojim wobhladowaku. WorkAdventure so awtomatisce k tutomu woknu wróći.",
+    "auth.signingOutTitle": "Wotzjewja so…",
+    "auth.signingOutMessage":
+        "Dokónčće wotzjewjenje w swojim wobhladowaku. WorkAdventure so awtomatisce k tutomu woknu wróći.",
+    "auth.reopenBrowser": "Wobhladowak znowa wočinić",
+    "auth.signedIn": "Přizjewjeny. Móžeće so k WorkAdventure wróćić.",
+    "auth.signedOut": "Wotzjewjeny. Móžeće so k WorkAdventure wróćić.",
+    "auth.closeWindow": "Móžeće tute wokno začinić.",
+
+    "screenIdentify.clickToShare": "Klikńće, zo byšće tutu wobrazowku dźělili · {size}",
+};
+
+export default hsb;

@@ -193,6 +193,22 @@ export function setOverlayDrawMode(enabled: boolean): void {
     }
 }
 
+/**
+ * The overlay is created non-focusable so it never steals focus from the app being presented. The
+ * text tool needs the keyboard for the time of one input: grant it, then hand focus back.
+ */
+export function setOverlayKeyboardFocus(enabled: boolean): void {
+    if (!overlayWindow || overlayWindow.isDestroyed()) {
+        return;
+    }
+    overlayWindow.setFocusable(enabled);
+    if (enabled) {
+        overlayWindow.focus();
+    } else {
+        overlayWindow.blur();
+    }
+}
+
 export function sendToOverlay(channel: string, payload?: unknown): void {
     if (overlayWindow && !overlayWindow.isDestroyed()) {
         overlayWindow.webContents.send(channel, payload);

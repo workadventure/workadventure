@@ -64,6 +64,15 @@ function stopScreenSharing(): void {
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
 let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
 
+/**
+ * Bumped to capture another source while a share is running (desktop: picking another screen from
+ * the meeting bar or the PiP). The constraints do not change, so without it nothing would re-acquire;
+ * going through "stop sharing" instead would tear down every side effect of the share (annotations
+ * cleared for everyone, meeting bar and overlay closed and reopened).
+ */
+const screenShareSourceSwitchStore = writable(0);
+let lastHandledSourceSwitch = 0;
+
 function createScreenShareQualityStore() {
     const { subscribe, set } = writable<VideoQualitySetting>(localUserStore.getScreenShareQuality());
 
@@ -98,6 +107,7 @@ export const screenSharingConstraintsStore = derived(
         screenSharingAvailableStore,
         screenShareStreamElementsStore,
         isSpeakerStore,
+        screenShareSourceSwitchStore,
     ],
     (
         [
@@ -108,6 +118,7 @@ export const screenSharingConstraintsStore = derived(
             $screenSharingAvailableStore,
             $screenShareStreamElementsStore,
             $isSpeakerStore,
+            $screenShareSourceSwitch,
         ],
         set,
     ) => {
@@ -133,10 +144,15 @@ export const screenSharingConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Let's make the changes only if the new value is different from the old one.
+        const sourceSwitched = $screenShareSourceSwitch !== lastHandledSourceSwitch;
+        lastHandledSourceSwitch = $screenShareSourceSwitch;
+
+        // Let's make the changes only if the new value is different from the old one (or a running
+        // share asked for another source).
         if (
             previousComputedVideoConstraint != currentVideoConstraint ||
-            previousComputedAudioConstraint != currentAudioConstraint
+            previousComputedAudioConstraint != currentAudioConstraint ||
+            (sourceSwitched && currentVideoConstraint !== false)
         ) {
             previousComputedVideoConstraint = currentVideoConstraint;
             previousComputedAudioConstraint = currentAudioConstraint;
@@ -211,15 +227,15 @@ export const pipPreselectedScreenSource = writable<DesktopCapturerSource | undef
 
 /**
  * Programmatically start screen sharing with a specific desktopCapturer source. Used by the
- * desktop PiP utility window to bypass the in-app source picker. Stops any in-flight share first
- * so a fresh stream is published with the new source.
+ * desktop PiP utility window and the meeting bar to bypass the in-app source picker. A running share
+ * switches to the new source without stopping.
  */
 export function startScreenShareWithSource(source: DesktopCapturerSource): void {
     pipPreselectedScreenSource.set(source);
     if (get(requestedScreenSharingState)) {
-        // Re-trigger by toggling off then on so the constraints store recomputes with the new
-        // preselected source.
-        requestedScreenSharingState.disableScreenSharing();
+        // Already sharing: capture the new source in place, the share itself goes on.
+        screenShareSourceSwitchStore.update((count) => count + 1);
+        return;
     }
     requestedScreenSharingState.enableScreenSharing();
 }

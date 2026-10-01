@@ -55,6 +55,8 @@ class PresenterHudBridge {
     private subscriptions: Unsubscriber[] = [];
     private onCommandUnsub: (() => void) | undefined;
     private meetingBarOpen = false;
+    // Whether the bar should be open: a close during a pending open closes the late window.
+    private meetingBarWanted = false;
     private lastSourceId: string | undefined;
 
     public start(): void {
@@ -172,9 +174,16 @@ class PresenterHudBridge {
         if (!api) {
             return;
         }
+        this.meetingBarWanted = true;
         const source = get(activeScreenShareSourceStore);
         api.openMeetingBar({ displayId: source?.display_id, sourceId: source?.id })
             .then((opened) => {
+                if (!this.meetingBarWanted) {
+                    if (opened) {
+                        api.closeMeetingBar().catch(() => {});
+                    }
+                    return;
+                }
                 this.meetingBarOpen = opened;
                 if (opened) {
                     this.pushState();
@@ -184,6 +193,7 @@ class PresenterHudBridge {
     }
 
     private closeMeetingBar(): void {
+        this.meetingBarWanted = false;
         const api = getPresenterHudApi();
         if (this.meetingBarOpen && api) {
             api.closeMeetingBar().catch(() => {});

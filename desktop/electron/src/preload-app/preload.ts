@@ -4,6 +4,7 @@ import type {
     DesktopOverlayDrawOp,
     DesktopPipCommand,
     DesktopPipSdp,
+    DesktopNativeStrings,
     DesktopWindowState,
     WorkAdventureDesktopApi,
     WorkAdventureDesktopCompanionApi,
@@ -77,7 +78,11 @@ const api: WorkAdventureDesktopApi = {
             }
         }),
     setTabTitle: (title) => ipcRenderer.send("app:setTabTitle", String(title ?? "")),
+    setHudStrings: (strings) => ipcRenderer.send("app:hud:strings-from-main", strings),
     onSystemIdle: (callback) => subscribe("app:on-system-idle", (idle) => callback(Boolean(idle))),
+    onMediaPreempted: (callback) => subscribe("app:on-media-preempted", () => callback()),
+    onOtherMeetingMuted: (callback) =>
+        subscribe("app:on-other-meeting-muted", (worldName) => callback(String(worldName ?? ""))),
     presenter: {
         setTool: (tool, displayId, sourceId) =>
             ipcRenderer.send("app:presenter:setTool", { tool, displayId, sourceId }),
@@ -115,6 +120,7 @@ const api: WorkAdventureDesktopApi = {
         togglePin: (url: string) => ipcRenderer.invoke("app:navigation:togglePin", url),
         isPinned: (url: string) => ipcRenderer.invoke("app:navigation:isPinned", url),
         openAdminSignup: () => ipcRenderer.invoke("app:navigation:openAdminSignup"),
+        getStrings: () => ipcRenderer.sendSync("app:i18n:landing") as DesktopNativeStrings | null,
     },
     screenOverlay: screenOverlayApi,
     presenterHud: presenterHudApi,

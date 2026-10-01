@@ -228,21 +228,10 @@
             return;
         }
         if (tool.tool === "text") {
-            var value = window.prompt("Text");
-            if (value && value.trim() !== "") {
-                api.emitDraw({
-                    type: "upsert",
-                    element: {
-                        id: "overlay-" + ++localCounter,
-                        authorUserId: "",
-                        tool: "text",
-                        color: tool.color,
-                        width: tool.width,
-                        points: [p],
-                        text: value,
-                    },
-                    commit: true,
-                });
+            // A click while a text is being typed validates it (via blur) instead of opening another.
+            if (!textInput) {
+                event.preventDefault();
+                openTextInput(event, p);
             }
             return;
         }
@@ -261,6 +250,72 @@
             points: tool.tool === "pen" ? [p] : [p, p],
         };
     });
+
+    // ─────────── Text tool ───────────
+    // Electron has no window.prompt(): the text is typed in place, in an input laid over the click
+    // point with the size and colour the text will be drawn with. The window is not focusable (it
+    // must never steal focus from the presenter's apps), so it is made focusable for the typing only.
+    var textInput = null;
+
+    function openTextInput(event, p) {
+        var dpr = window.devicePixelRatio || 1;
+        var minSide = Math.min(canvas.width, canvas.height);
+        var fontSize = Math.max(tool.width * minSide * 4, minSide * 0.025) / dpr;
+        var input = document.createElement("input");
+        input.type = "text";
+        input.className = "text-input";
+        input.maxLength = 500;
+        input.style.left = event.clientX + "px";
+        // The canvas draws text on its alphabetic baseline at the click point: lift the box so the
+        // typed text sits where it will be drawn.
+        input.style.top = event.clientY - fontSize + "px";
+        input.style.fontSize = fontSize + "px";
+        input.style.color = tool.color;
+        input.style.caretColor = tool.color;
+        var anchor = p;
+        var done = false;
+
+        function finish(commit) {
+            if (done) return;
+            done = true;
+            var value = input.value.trim();
+            input.remove();
+            textInput = null;
+            api.setKeyboardFocus(false);
+            if (commit && value !== "") {
+                api.emitDraw({
+                    type: "upsert",
+                    element: {
+                        id: "overlay-" + ++localCounter,
+                        authorUserId: "",
+                        tool: "text",
+                        color: tool.color,
+                        width: tool.width,
+                        points: [anchor],
+                        text: value,
+                    },
+                    commit: true,
+                });
+            }
+        }
+
+        input.addEventListener("keydown", function (e) {
+            // Escape here cancels the text; it must not also leave draw mode (document listener).
+            e.stopPropagation();
+            if (e.key === "Enter") {
+                finish(true);
+            } else if (e.key === "Escape") {
+                finish(false);
+            }
+        });
+        input.addEventListener("blur", function () {
+            finish(true);
+        });
+        textInput = input;
+        document.body.appendChild(input);
+        api.setKeyboardFocus(true);
+        input.focus();
+    }
 
     canvas.addEventListener("pointermove", function (event) {
         if (!drawing || !draft) return;
@@ -307,6 +362,9 @@
     });
     api.onDrawMode(function (enabled) {
         drawMode = enabled === true;
+        if (!drawMode && textInput) {
+            textInput.blur();
+        }
         canvas.classList.toggle("draw", drawMode);
     });
     api.onPresenterEffect(function (effect) {

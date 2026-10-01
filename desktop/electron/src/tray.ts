@@ -19,6 +19,7 @@ import {
     type TrayStatus,
 } from "./presence";
 import { isCompanionVisible, toggleCompanion } from "./companion-controller";
+import { t } from "./i18n";
 
 let tray: Tray | undefined;
 
@@ -38,36 +39,35 @@ const TRAY_STATUS_COLOR: Record<TrayStatus, string> = {
     offline: "#6b7280",
 };
 
-const TRAY_STATUS_LABEL: Record<TrayStatus, string> = {
-    meeting: "🔴 In a meeting",
-    do_not_disturb: "⛔ Do not disturb",
-    busy: "🟡 Busy",
-    back_in_a_moment: "🔵 Be right back",
-    idle: "🟡 Idle",
-    online: "🟢 Available",
-    offline: "⚪ Offline",
+const TRAY_STATUS_EMOJI: Record<TrayStatus, string> = {
+    meeting: "🔴",
+    do_not_disturb: "⛔",
+    busy: "🟡",
+    back_in_a_moment: "🔵",
+    idle: "🟡",
+    online: "🟢",
+    offline: "⚪",
 };
 
+function trayStatusLabel(status: TrayStatus): string {
+    return `${TRAY_STATUS_EMOJI[status]} ${t(`tray.status.${status}`)}`;
+}
+
 // The four user-selectable availability statuses, in display order. Colors mirror WA's status dots.
-const AVAILABILITY_ITEMS: ReadonlyArray<{ status: TrayAvailability; label: string }> = [
-    { status: "online", label: "🟢 Available" },
-    { status: "busy", label: "🟡 Busy" },
-    { status: "back_in_a_moment", label: "🔵 Be right back" },
-    { status: "do_not_disturb", label: "⛔ Do not disturb" },
-];
+const AVAILABILITY_ITEMS: ReadonlyArray<TrayAvailability> = ["online", "busy", "back_in_a_moment", "do_not_disturb"];
 
 function buildStatusSubmenuItems(): Electron.MenuItemConstructorOptions[] {
     const { status, locked } = getAvailabilityInfo();
     if (locked) {
         // WA locks the status bar in a meeting / silent zone; mirror that so we don't fight it.
-        return [{ label: "Locked while in a meeting", enabled: false }];
+        return [{ label: t("tray.statusLocked"), enabled: false }];
     }
     return AVAILABILITY_ITEMS.map((item) => ({
-        label: item.label,
+        label: trayStatusLabel(item),
         type: "radio" as const,
-        checked: status === item.status,
+        checked: status === item,
         click() {
-            emitSetStatus(item.status);
+            emitSetStatus(item);
         },
     }));
 }
@@ -205,14 +205,14 @@ function updateTrayContextMenu() {
         {
             // The live status IS the label, so this one row both reports and changes it (it used to
             // be a disabled header plus a separate "Set status" row saying the same thing twice).
-            label: TRAY_STATUS_LABEL[status],
+            label: trayStatusLabel(status),
             enabled: inWorld,
             submenu: buildStatusSubmenuItems(),
         },
         { type: "separator" },
         {
             id: "microphone",
-            label: "Microphone",
+            label: t("tray.microphone"),
             type: "checkbox",
             enabled: inWorld,
             checked: media.micEnabled,
@@ -224,7 +224,7 @@ function updateTrayContextMenu() {
         },
         {
             id: "camera",
-            label: "Camera",
+            label: t("tray.camera"),
             type: "checkbox",
             enabled: inWorld,
             checked: media.cameraEnabled,
@@ -234,7 +234,7 @@ function updateTrayContextMenu() {
             },
         },
         {
-            label: "Companion panel",
+            label: t("tray.companionPanel"),
             type: "checkbox",
             enabled: inWorld,
             checked: isCompanionVisible(),
@@ -245,7 +245,7 @@ function updateTrayContextMenu() {
         { type: "separator" },
         {
             id: "open",
-            label: "Show / Hide",
+            label: t("tray.showHide"),
             click() {
                 const mainWindow = getWindow();
                 // On macOS, closing the window keeps the app running (window destroyed, no window).
@@ -263,29 +263,29 @@ function updateTrayContextMenu() {
             },
         },
         {
-            label: "Worlds",
+            label: t("tray.worlds"),
             submenu: [
                 {
-                    label: "Change world…",
+                    label: t("menu.changeWorld"),
                     click: openNativeWorldSwitcher,
                 },
                 { type: "separator" },
                 {
-                    label: "Pinned worlds",
+                    label: t("menu.pinnedWorlds"),
                     submenu: createPinnedWorldMenuItems(),
                 },
                 {
-                    label: "Recent worlds",
+                    label: t("menu.recentWorlds"),
                     submenu: createRecentWorldMenuItems(),
                 },
             ],
         },
         { type: "separator" },
         {
-            label: "Help",
+            label: t("tray.help"),
             submenu: [
                 {
-                    label: "Check for updates",
+                    label: t("tray.checkForUpdates"),
                     click() {
                         void autoUpdater.manualRequestUpdateCheck();
                     },
@@ -293,14 +293,14 @@ function updateTrayContextMenu() {
                 {
                     // Support-only, but this is the ONLY entry point to the log file in the app, so
                     // it gets demoted rather than dropped.
-                    label: "Open Logs",
+                    label: t("tray.openLogs"),
                     click() {
                         void log.openLog();
                     },
                 },
                 {
                     // Duplicated in the macOS app menu, but absent everywhere on Windows/Linux.
-                    label: "About",
+                    label: t("tray.about"),
                     click() {
                         showAboutWindow({
                             icon: path.join(assetsDirectory, "icons", "logo.png"),
@@ -311,7 +311,7 @@ function updateTrayContextMenu() {
             ],
         },
         {
-            label: "Quit",
+            label: t("tray.quit"),
             click() {
                 // app.confirmedExitPrompt = true;
                 app.quit();
@@ -328,7 +328,7 @@ function updateTrayIcon() {
     }
     const status = getTrayStatus();
     tray.setImage(drawTrayStatusImage(status));
-    tray.setToolTip(`WorkAdventure — ${TRAY_STATUS_LABEL[status].replace(/^\S+\s/, "")}`);
+    tray.setToolTip(`WorkAdventure — ${t(`tray.status.${status}`)}`);
 }
 
 export function getTray() {

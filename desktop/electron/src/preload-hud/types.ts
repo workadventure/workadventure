@@ -68,6 +68,11 @@ export type WorkAdventureHudApi = {
      * value so the window doesn't blanket the shared screen with a click-catching transparent area.
      */
     setExpanded: (expanded: boolean, height?: number) => void;
+    /**
+     * UI strings in the language chosen in WorkAdventure (flat key → text, e.g. "companion.chat",
+     * plus "lang"), pushed by the world renderer and replayed on ready. Absent until a world pushes.
+     */
+    onStrings: (callback: (strings: Record<string, string>) => void) => () => void;
     /** Signal the renderer has wired all its subscriptions and is ready to receive pushes. */
     ready: () => void;
 

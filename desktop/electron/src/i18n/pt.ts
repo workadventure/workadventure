@@ -1,0 +1,87 @@
+import type { NativeStrings } from "./en";
+
+const pt: NativeStrings = {
+    "landing.heading": "Seu local de trabalho, a uma URL de distância.",
+    "landing.intro":
+        "Abra um mundo do qual você já faz parte ou crie um novo espaço para sua equipe. Seu último mundo será reaberto automaticamente na próxima vez.",
+    "landing.recentWorlds": "Mundos recentes",
+    "landing.joinTitle": "Entrar em um mundo",
+    "landing.joinHint": "Cole a URL completa do seu convite ou do navegador.",
+    "landing.urlLabel": "Digite a URL do seu mundo",
+    "landing.openWorld": "Abrir mundo",
+    "landing.or": "ou",
+    "landing.createTitle": "Criar um mundo",
+    "landing.createHint": "Configure um novo escritório virtual no console de administração do WorkAdventure.",
+    "landing.createWorld": "Criar mundo",
+    "landing.explore": "Explorar",
+    "landing.opening": "Abrindo…",
+    "landing.pinWorld": "Fixar mundo",
+    "landing.unpinWorld": "Desafixar mundo",
+    "landing.urlRequired": "Digite a URL de um mundo.",
+    "landing.joinFailed": "Não foi possível entrar no mundo.",
+    "landing.signupFailed": "Não foi possível abrir a página de cadastro.",
+    "landing.desktopOnly": "Esta ação só está disponível no aplicativo para desktop.",
+    "landing.worldNotLoaded": "Não foi possível carregar este mundo. Verifique a URL e tente novamente.",
+    "landing.loadFailure": "Não foi possível carregar este mundo. Ele pode estar offline ou a URL pode estar errada.",
+    "landing.loadTimeout":
+        "Este mundo está demorando demais para carregar. Ele pode estar offline ou sua conexão pode estar fora do ar.",
+
+    "tabs.newWorld": "Novo mundo",
+    "tabs.world": "Mundo",
+    "tabs.closeTab": "Fechar aba",
+    "tabs.newWorldTab": "Nova aba de mundo",
+
+    "menu.world": "Mundo",
+    "menu.newTab": "Nova aba",
+    "menu.closeTab": "Fechar aba",
+    "menu.nextTab": "Próxima aba",
+    "menu.previousTab": "Aba anterior",
+    "menu.showTabBar": "Mostrar a barra de abas",
+    "menu.changeWorld": "Trocar de mundo…",
+    "menu.pinnedWorlds": "Mundos fixados",
+    "menu.recentWorlds": "Mundos recentes",
+    "menu.noPinnedWorlds": "Nenhum mundo fixado",
+    "menu.noRecentWorlds": "Nenhum mundo recente",
+    "menu.hideTabBarTitle": "Ocultar a barra de abas?",
+    "menu.cancel": "Cancelar",
+    "menu.closeOneOtherTab": "Fechar 1 outra aba e ocultar a barra",
+    "menu.closeOtherTabs": "Fechar as outras {count} abas e ocultar a barra",
+    "menu.hideTabBarDetailOne":
+        "Você tem {total} mundos abertos em abas. Ocultar a barra de abas mantém o mundo atual e fecha o outro.",
+    "menu.hideTabBarDetail":
+        "Você tem {total} mundos abertos em abas. Ocultar a barra de abas mantém o mundo atual e fecha os outros {count}.",
+
+    "tray.status.meeting": "Em uma reunião",
+    "tray.status.do_not_disturb": "Não perturbe",
+    "tray.status.busy": "Ocupado",
+    "tray.status.back_in_a_moment": "Volto em instantes",
+    "tray.status.idle": "Inativo",
+    "tray.status.online": "Disponível",
+    "tray.status.offline": "Offline",
+    "tray.statusLocked": "Bloqueado durante uma reunião",
+    "tray.microphone": "Microfone",
+    "tray.camera": "Câmera",
+    "tray.companionPanel": "Painel complementar",
+    "tray.showHide": "Mostrar / Ocultar",
+    "tray.worlds": "Mundos",
+    "tray.help": "Ajuda",
+    "tray.checkForUpdates": "Verificar atualizações",
+    "tray.openLogs": "Abrir os logs",
+    "tray.about": "Sobre",
+    "tray.quit": "Sair",
+
+    "auth.pageTitle": "Login no WorkAdventure",
+    "auth.signingInTitle": "Entrando…",
+    "auth.signingInMessage": "Conclua o login no seu navegador. O WorkAdventure voltará a esta janela automaticamente.",
+    "auth.signingOutTitle": "Saindo…",
+    "auth.signingOutMessage":
+        "Conclua a saída no seu navegador. O WorkAdventure voltará a esta janela automaticamente.",
+    "auth.reopenBrowser": "Reabrir o navegador",
+    "auth.signedIn": "Login concluído. Você já pode voltar ao WorkAdventure.",
+    "auth.signedOut": "Você saiu. Já pode voltar ao WorkAdventure.",
+    "auth.closeWindow": "Você já pode fechar esta janela.",
+
+    "screenIdentify.clickToShare": "Clique para compartilhar esta tela · {size}",
+};
+
+export default pt;
