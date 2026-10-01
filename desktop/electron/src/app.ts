@@ -1,5 +1,6 @@
 import path from "path";
 import { app, globalShortcut } from "electron";
+import ElectronLog from "electron-log";
 
 import { createWindow, getWindow, openDeepLinkTarget } from "./window";
 import { createTray } from "./tray";
@@ -14,13 +15,9 @@ import { setLogLevel } from "./log";
 import { loadShortcuts } from "./shortcuts";
 import { DESKTOP_APP_NAME } from "./app-name-policy";
 import { createDefaultProtocolClientArgs } from "./protocol-client-policy";
-import {
-    extractDesktopAuthCallback,
-    extractDesktopTargetFromDeepLink,
-    type DesktopAuthCallback,
-} from "./desktop-url-policy";
+import { extractDesktopAuthCallback, extractDesktopTargetFromDeepLink } from "./desktop-url-policy";
 
-let pendingProtocolTarget: string | DesktopAuthCallback | undefined;
+let pendingProtocolTarget: string | undefined;
 
 app.setName(DESKTOP_APP_NAME);
 
@@ -33,8 +30,15 @@ function queueProtocolUrl(rawUrl?: string) {
         return;
     }
 
-    pendingProtocolTarget =
-        extractDesktopAuthCallback(rawUrl) || extractDesktopTargetFromDeepLink(rawUrl) || pendingProtocolTarget;
+    // Login only completes through the loopback server, which ties the callback to a flow this app
+    // started (secret + state). A `workadventure://auth/callback?code=…` link carries no such proof:
+    // anyone can craft one with a code for their own account, so it is dropped, never exchanged.
+    if (extractDesktopAuthCallback(rawUrl)) {
+        ElectronLog.warn("Ignored a workadventure://auth/callback deep link: login only completes via the loopback.");
+        return;
+    }
+
+    pendingProtocolTarget = extractDesktopTargetFromDeepLink(rawUrl) || pendingProtocolTarget;
 }
 
 function registerProtocolHandler() {
@@ -126,14 +130,7 @@ async function init() {
 
         const initialProtocolTarget = pendingProtocolTarget;
         pendingProtocolTarget = undefined;
-        if (typeof initialProtocolTarget === "string") {
-            await createWindow(initialProtocolTarget);
-        } else {
-            await createWindow();
-            if (initialProtocolTarget) {
-                await openDeepLinkTarget(initialProtocolTarget);
-            }
-        }
+        await createWindow(initialProtocolTarget);
 
         // Auto-away + notification hush: forward system idle transitions to the renderer, which
         // flips the WA availability to "away" and back. presence.setIdle (called inside) also
