@@ -43,10 +43,10 @@ describe("DesktopOidcTransactionService", () => {
                         expirations.set(key, options.EX);
                         return Promise.resolve();
                     },
-                    get: (key: string) => Promise.resolve(values.get(key) ?? null),
-                    del: (key: string) => {
+                    getDel: (key: string) => {
+                        const value = values.get(key) ?? null;
                         values.delete(key);
-                        return Promise.resolve();
+                        return Promise.resolve(value);
                     },
                 }) as never,
         });
