@@ -3,7 +3,7 @@ import ElectronLog from "electron-log";
 import electronIsDev from "electron-is-dev";
 import path from "path";
 import { pathToFileURL } from "url";
-import { ensureWorldOriginTrusted, getDesktopConfig } from "./origin-verification";
+import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustServer } from "./origin-verification";
 import settings from "./settings";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { setRendererPresence } from "./presence";
@@ -413,7 +413,13 @@ export default () => {
             }
         }
         if (!validation.ok) {
-            return { ok: false, error: t(`landing.${validation.code}`) };
+            // Unknown to the admin too (a self-hosted server): the native Landing may offer to add it.
+            // Never a world page (the in-game switcher): a world must not be able to add servers.
+            const trustOrigin =
+                validation.code === "urlNotAllowed" && typeof rawUrl === "string" && isFromNativeLanding(event)
+                    ? originUserMayTrust(rawUrl)
+                    : undefined;
+            return { ok: false, error: t(`landing.${validation.code}`), trustOrigin };
         }
         const safeUrl = validation.url;
         try {
@@ -422,6 +428,28 @@ export default () => {
         } catch (error) {
             ElectronLog.error(`app:navigation:joinWorld failed for ${safeUrl}`, error);
             return { ok: false, error: error instanceof Error ? error.message : t("landing.joinFailed") };
+        }
+    });
+
+    // The user confirmed, on the native Landing, to add a server the admin does not know (self-hosted).
+    ipcMain.handle("app:navigation:trustServerAndJoin", async (event, rawUrl: unknown) => {
+        if (!isFromNativeLanding(event) || typeof rawUrl !== "string") {
+            ElectronLog.warn("Rejected a server trust request from outside the native landing page");
+            return { ok: false, error: t("landing.desktopOnly") };
+        }
+        if (!trustServer(rawUrl.trim())) {
+            return { ok: false, error: t("landing.urlNotAllowed") };
+        }
+        const validation = validateDesktopNavigationUrl(rawUrl, getDesktopConfig());
+        if (!validation.ok) {
+            return { ok: false, error: t(`landing.${validation.code}`) };
+        }
+        try {
+            const loaded = await loadDesktopTarget(validation.url);
+            return loaded ? { ok: true } : { ok: false, error: t("landing.worldNotLoaded") };
+        } catch (error) {
+            ElectronLog.error(`app:navigation:trustServerAndJoin failed for ${validation.url}`, error);
+            return { ok: false, error: t("landing.joinFailed") };
         }
     });
 

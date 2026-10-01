@@ -25,6 +25,11 @@ const nl: NativeStrings = {
         "Deze link is onvolledig of bevat een gebruikersnaam of wachtwoord. Kopieer de link naar de wereld uit je uitnodiging.",
     "landing.urlNotAllowed":
         "Dit adres is geen WorkAdventure-wereld die de app kent. Controleer de link of vraag het je beheerder.",
+    "landing.trustTitle": "Deze server toevoegen?",
+    "landing.trustBody":
+        "{origin} is geen WorkAdventure-wereld die de app kent. Voeg alleen een server toe die je vertrouwt, zoals die van je bedrijf.",
+    "landing.trustConfirm": "Toevoegen en openen",
+    "landing.trustCancel": "Annuleren",
     "landing.joinFailed": "Deelnemen aan deze wereld is niet gelukt. Probeer het opnieuw.",
     "landing.signupFailed": "De registratiepagina kon niet worden geopend.",
     "landing.desktopOnly": "Deze actie is alleen beschikbaar in de desktop-app.",
