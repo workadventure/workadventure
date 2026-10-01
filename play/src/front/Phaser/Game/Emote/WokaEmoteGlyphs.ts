@@ -22,7 +22,11 @@ export type WokaEmoteGlyphName =
     | "grawlix"
     | "dust"
     | "wave"
-    | "flash";
+    | "flash"
+    | "beam"
+    | "saucer"
+    | "sparkle"
+    | "surprise";
 
 interface PixelGlyph {
     /** Fixed colour, or undefined to draw each instance in a different palette colour. */
@@ -146,6 +150,32 @@ const PIXEL_GLYPHS: Record<WokaEmoteGlyphName, PixelGlyph> = {
     flash: {
         palette: { w: "#ffffff", y: "#fff6a8" },
         rows: ["   y   ", "  www  ", " wwwww ", "ywwwwwy", " wwwww ", "  www  ", "   y   "],
+    },
+    // The ban props (see WokaEjectionCatalog). A column of light, pale at the edges, see-through inside.
+    beam: {
+        palette: { a: "rgba(190,250,255,.9)", b: "rgba(150,235,255,.55)", c: "rgba(120,225,255,.28)" },
+        rows: Array.from({ length: 90 }, () => "abcccccccccccccccccba"),
+    },
+    saucer: {
+        palette: { d: "#4d4b67", m: "#928ebb", l: "#c9c6e0", g: "#56eaff", y: "#f9e81e" },
+        rows: [
+            "       gggggg       ",
+            "      gllllllg      ",
+            "     glllllllg      ",
+            "  dmmmmmmmmmmmmmmd  ",
+            " dmmymmmymmmmymmmmd ",
+            "dmmmmmmmmmmmmmmmmmmd",
+            " ddddddddddddddddd  ",
+            "     dddddddddd     ",
+        ],
+    },
+    sparkle: {
+        palette: { w: "#ffffff", c: "#bfeaff" },
+        rows: [" c ", "cwc", " c "],
+    },
+    surprise: {
+        palette: { y: "#f9e81e", k: "#1b1b29" },
+        rows: [" kyk ", " kyk ", " kyk ", " kyk ", "     ", " kyk "],
     },
 };
 
