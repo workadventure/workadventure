@@ -19,7 +19,7 @@
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { blocker } from "../../Utils/screenBlocker";
-    import { raisedHandsOrderStore } from "../../Stores/RaisedHandsStore";
+    import { findHandPosition, raisedHandsOrderStore } from "../../Stores/RaisedHandsStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import RaisedHandBadge from "./RaisedHandBadge.svelte";
@@ -95,7 +95,11 @@
     let raisedHandSpaceUserId = $derived(
         isLocalUser ? (gameManager.getCurrentGameScene().connection?.getSpaceUserId() ?? "") : videoBox.uniqueId,
     );
-    let isHandRaised = $derived($raisedHandsOrderStore.has(raisedHandSpaceUserId));
+    // The local tile's space user is a placeholder: its hand is looked up in every queue (see findHandPosition).
+    let raisedHandSpaceName = $derived(isLocalUser ? undefined : extendedSpaceUser?.space.getName());
+    let isHandRaised = $derived(
+        findHandPosition($raisedHandsOrderStore, raisedHandSpaceName, raisedHandSpaceUserId) !== undefined,
+    );
     // Debugging aid for the rare case where the space says the remote microphone is enabled but this receiver has no audio.
     let audioStateMismatch = $derived(
         effectiveStatus === "connected" &&
@@ -414,7 +418,7 @@
                                     : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                                 grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
                             >
-                                <RaisedHandBadge spaceUserId={raisedHandSpaceUserId} />
+                                <RaisedHandBadge spaceUserId={raisedHandSpaceUserId} spaceName={raisedHandSpaceName} />
                                 {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
                                     <div
                                         class="flex items-center justify-center picture-in-picture:hidden"

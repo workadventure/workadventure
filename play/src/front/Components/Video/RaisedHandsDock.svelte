@@ -1,19 +1,21 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { raisedHandsStore } from "../../Stores/PeerStore";
-    import { raisedHandsAdminVisibleStore } from "../../Stores/RaisedHandsAdminVisibleStore";
+    import { visibleRaisedHandSectionsStore } from "../../Stores/RaisedHandsAdminVisibleStore";
     import Badge from "../UI/Badge.svelte";
     import RaiseHandIcon from "../Icons/RaiseHandIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import RaisedHandsPanel from "./RaisedHandsPanel.svelte";
 
     // Collapse state is component-local and defaults to expanded: the dock only mounts its content when there
-    // is something to act on (see raisedHandsAdminVisibleStore), so showing it open makes the host notice it.
+    // is something to show (see visibleRaisedHandSectionsStore), so showing it open makes the host notice it.
     let open = $state(true);
+    let handCount = $derived(
+        $visibleRaisedHandSectionsStore.reduce((count, section) => count + section.hands.length, 0),
+    );
 </script>
 
-{#if $raisedHandsAdminVisibleStore}
+{#if $visibleRaisedHandSectionsStore.length > 0}
     <!-- Rendered at the bottom of the top-right toast stack (see MainLayout), so toasts never cover it.
          #main-layout is pointer-events-none, so the dock re-enables pointer events for itself only. -->
     <div
@@ -34,8 +36,8 @@
             >
                 <RaiseHandIcon height="h-5" width="w-5" hover="" />
                 <span class="grow truncate text-start text-sm font-bold">{$LL.actionbar.raisedHands.title()}</span>
-                {#if $raisedHandsStore.length > 0}
-                    <Badge variant="secondary" size="sm">{$raisedHandsStore.length}</Badge>
+                {#if handCount > 0}
+                    <Badge variant="secondary" size="sm">{handCount}</Badge>
                 {/if}
                 <span
                     class="inline-flex transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"

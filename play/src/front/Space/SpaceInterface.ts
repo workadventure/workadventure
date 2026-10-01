@@ -29,6 +29,22 @@ export type RaisedHand = RaisedHandEntry;
  */
 export type FloorSpeaker = FloorHolderEntry;
 
+/**
+ * The raised hands and floor holders of one space, as the "raised hands" panel shows them: one section per space,
+ * so a bubble's queue never mixes with the queue of a megaphone the same user listens to.
+ */
+export interface RaisedHandSection {
+    space: SpaceInterface;
+    hands: RaisedHand[];
+    /** The users holding the floor, the local user excepted. */
+    speakers: FloorSpeaker[];
+    /**
+     * Whether the local user is on air in this space as its host, not as a guest given the floor: the front-side
+     * counterpart of the back's `megaphoneState && !isPromotedGuest` (RaiseHandManager.assertCanModerate).
+     */
+    onAirHere: boolean;
+}
+
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
 export type PublicEventsObservables = {
