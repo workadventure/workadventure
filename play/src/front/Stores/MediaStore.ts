@@ -35,7 +35,7 @@ import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
-import { isLiveStreamingStore } from "./IsStreamingStore";
+import { isLiveStreamingAudioStore, isLiveStreamingStore } from "./IsStreamingStore";
 import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
@@ -507,6 +507,9 @@ export interface MediaStreamConstraintsValue {
     /**
      * True when the microphone is off only because the user muted it during a conversation: the audio track
      * is then kept open (disabled) so that unmuting does not have to reopen the device.
+     * Reopening it takes 0.3 to 1 s, and 1 to 3 s with Bluetooth headsets that switch from their music profile
+     * (A2DP) to their call profile (HFP). People start talking as soon as they click unmute, so their first words
+     * were lost.
      */
     keepAudioWarm: boolean;
 }
@@ -530,9 +533,7 @@ export const mediaStreamConstraintsStore = derived(
         availabilityStatusStore,
         batchGetUserMediaStore,
         inBackgroundSettingsStore,
-        currentPlayerGroupIdStore,
-        inLivekitStore,
-        isLiveStreamingStore,
+        isLiveStreamingAudioStore,
     ],
     (
         [
@@ -550,9 +551,7 @@ export const mediaStreamConstraintsStore = derived(
             $availabilityStatusStore,
             $batchGetUserMediaStore,
             $inBackgroundSettingsStore,
-            $currentPlayerGroupIdStore,
-            $inLivekitStore,
-            $isLiveStreamingStore,
+            $isLiveStreamingAudioStore,
         ],
         set,
     ) => {
@@ -600,9 +599,10 @@ export const mediaStreamConstraintsStore = derived(
         // Unmuting must be instant during a conversation: reopening the microphone with getUserMedia takes
         // 1 to 3 seconds (much more with Bluetooth headsets switching to their call profile).
         // Only a mute by the user keeps the track open; every other reason really releases the device.
-        const isInConversation = $currentPlayerGroupIdStore !== undefined || $inLivekitStore || $isLiveStreamingStore;
+        // A space streams our audio in a bubble, a meeting area, or a speaker zone where we are a speaker
+        // (not a mere listener, who cannot be heard anyway).
         const keepAudioWarm =
-            isInConversation &&
+            $isLiveStreamingAudioStore &&
             $requestedMicrophoneState === false &&
             $myMicrophoneStore !== false &&
             !isInExternalService &&
