@@ -10,7 +10,9 @@ export type DesktopOidcTransactionPayload = {
     desktop: true;
 };
 
-type RedisLike = Pick<RedisClient, "get" | "set" | "del">;
+const MAX_MEMORY_ENTRIES = 10_000;
+
+type RedisLike = Pick<RedisClient, "getDel" | "set">;
 
 type DesktopOidcTransactionServiceOptions = {
     getRedisClient?: () => Promise<RedisLike | null>;
@@ -55,6 +57,7 @@ export class DesktopOidcTransactionService {
             return;
         }
 
+        this.purgeExpired();
         this.memoryTransactions.set(state, {
             payload: transactionPayload,
             expiresAt: this.now() + this.ttlSeconds * 1000,
@@ -70,13 +73,12 @@ export class DesktopOidcTransactionService {
 
         const redis = await this.getRedisClient();
         if (redis) {
-            const key = this.getRedisKey(state);
-            const serializedPayload = await redis.get(key);
+            // GETDEL, not GET then DEL: two concurrent exchanges must not both read the entry.
+            const serializedPayload = await redis.getDel(this.getRedisKey(state));
             if (!serializedPayload) {
                 return undefined;
             }
 
-            await redis.del(key);
             return this.parsePayload(serializedPayload);
         }
 
@@ -91,6 +93,25 @@ export class DesktopOidcTransactionService {
         }
 
         return entry.payload;
+    }
+
+    /** Without Redis, entries nobody exchanges would otherwise stay in memory forever. */
+    private purgeExpired(): void {
+        const now = this.now();
+        for (const [key, entry] of this.memoryTransactions) {
+            if (entry.expiresAt <= now) {
+                this.memoryTransactions.delete(key);
+            }
+        }
+        // Unauthenticated requests create entries: cap the map, dropping the oldest (insertion order).
+        // ponytail: a flood still evicts real logins in progress; Redis is the answer at that scale.
+        while (this.memoryTransactions.size >= MAX_MEMORY_ENTRIES) {
+            const oldest = this.memoryTransactions.keys().next().value;
+            if (oldest === undefined) {
+                break;
+            }
+            this.memoryTransactions.delete(oldest);
+        }
     }
 
     private getRedisKey(state: string): string {
