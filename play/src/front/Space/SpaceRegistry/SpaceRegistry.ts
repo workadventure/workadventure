@@ -4,12 +4,11 @@ import type { Subscription } from "rxjs";
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
-import { derived, get } from "svelte/store";
-import type { FloorSpeaker, RaisedHand, SpaceInterface } from "../SpaceInterface";
+import { derived } from "svelte/store";
+import type { RaisedHandSection, SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import type { VideoBox } from "../VideoBox";
 import { Space } from "../Space";
-import type { SpaceStateManager } from "../SpaceStateManager";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import type { SpaceRegistryInterface } from "./SpaceRegistryInterface";
@@ -41,18 +40,6 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitBackEvent"
     | "emitVideoQualityReport"
 >;
-
-/** Flattens per-space lists keyed by spaceUserId, keeping the first entry of a user present in several spaces. */
-export function uniqueBySpaceUserId<T extends { spaceUserId: string }>(lists: T[][]): T[] {
-    const seen = new Set<string>();
-    return lists.flat().filter((entry) => {
-        if (seen.has(entry.spaceUserId)) {
-            return false;
-        }
-        seen.add(entry.spaceUserId);
-        return true;
-    });
-}
 
 /**
  * This class is in charge of creating, joining, leaving and deleting Spaces.
@@ -139,50 +126,35 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return derived(stores, (list) => list.some(Boolean)).subscribe(set);
     });
 
-    // Aggregated raised-hands queue across all spaces. A user can raise their hand in several spaces at once (e.g. a
-    // bubble and the listener zone it stands in), so the same spaceUserId can appear in several lists: keep the first.
-    public readonly raisedHandsStore: Readable<RaisedHand[]> = derived(this.spaces, ($spaces, set) => {
-        if ($spaces.size === 0) {
+    // The raised hands and floor holders of each space that has any, one section per space. They are never merged:
+    // a bubble member who also listens to the room megaphone must not see the megaphone's queue as the bubble's.
+    public readonly raisedHandSectionsStore: Readable<RaisedHandSection[]> = derived(this.spaces, ($spaces, set) => {
+        const spaces = Array.from($spaces.values());
+        if (spaces.length === 0) {
             set([]);
             return () => {};
         }
 
-        const stores = Array.from($spaces.values(), (space) => space.state.raisedHandsStore);
-        return derived(stores, uniqueBySpaceUserId).subscribe(set);
+        const sectionStores = spaces.map((space) =>
+            derived(
+                [
+                    space.state.raisedHandsStore,
+                    space.state.speakingUsersStore,
+                    space.state.observe("floorHolders"),
+                    space.isStreamingAudioStore,
+                ],
+                ([hands, speakers, floorHolders, isStreaming]): RaisedHandSection => ({
+                    space,
+                    hands,
+                    speakers,
+                    onAirHere: isStreaming && !floorHolders.some((entry) => entry.spaceUserId === space.mySpaceUserId),
+                }),
+            ),
+        );
+        return derived(sectionStores, (sections) =>
+            sections.filter((section) => section.hands.length > 0 || section.speakers.length > 0),
+        ).subscribe(set);
     });
-
-    // Aggregated list of users currently holding the floor across all spaces (in practice only the meeting space).
-    public readonly speakingUsersStore: Readable<FloorSpeaker[]> = derived(this.spaces, ($spaces, set) => {
-        if ($spaces.size === 0) {
-            set([]);
-            return () => {};
-        }
-
-        const stores = Array.from($spaces.values(), (space) => space.state.speakingUsersStore);
-        return derived(stores, uniqueBySpaceUserId).subscribe(set);
-    });
-
-    /**
-     * Gives the floor to a user identified by their spaceUserId, resolving the space from the raised-hands queue.
-     * Used by the host "raised hands" panel, which only has the spaceUserId (not the SpaceUserExtended) — in
-     * particular for a megaphone speaker who does not receive listeners' SpaceUser.
-     */
-    public async giveFloor(spaceUserId: string): Promise<void> {
-        await this.findStateWithEntry(spaceUserId, (state) => state.raisedHandsStore)?.giveFloor(spaceUserId);
-    }
-
-    /**
-     * Takes the floor back from a user identified by their spaceUserId, resolving the space from the list of
-     * current speakers. Counterpart of giveFloor for the host "raised hands" panel.
-     */
-    public async revokeFloor(spaceUserId: string): Promise<void> {
-        await this.findStateWithEntry(spaceUserId, (state) => state.speakingUsersStore)?.revokeFloor(spaceUserId);
-    }
-
-    /** Lowers the hand of a user who raised it (moderation), resolving the space from the raised-hands queue. */
-    public async lowerHand(spaceUserId: string): Promise<void> {
-        await this.findStateWithEntry(spaceUserId, (state) => state.raisedHandsStore)?.lowerHand(spaceUserId);
-    }
 
     /** The joined spaces for which `select` currently holds, kept up to date as spaces come and go. */
     private spacesWhere(select: (space: Space) => Readable<boolean>): Readable<Space[]> {
@@ -196,15 +168,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
             return derived(spaces.map(select), (holds) => spaces.filter((_, index) => holds[index])).subscribe(set);
         });
-    }
-
-    private findStateWithEntry(
-        spaceUserId: string,
-        list: (state: SpaceStateManager) => Readable<{ spaceUserId: string }[]>,
-    ): SpaceStateManager | undefined {
-        return Array.from(this.spaces.values(), (space) => space.state).find((state) =>
-            get(list(state)).some((entry) => entry.spaceUserId === spaceUserId),
-        );
     }
 
     public readonly isLiveStreamingAudioStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {

@@ -401,4 +401,64 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await expect(alice.getByTestId("raised-hands-panel")).toContainText("Bob", { timeout: 20_000 });
         await expect(speaker.getByTestId("raised-hands-dock")).toBeHidden();
     });
+
+    // The raised-hands panel shows one section per space. A megaphone speaker standing in a bubble keeps the
+    // give-the-floor controls of the megaphone, and a bubble member who only listens to the megaphone does not
+    // get its hands in their bubble panel.
+    test("the raised-hands panel keeps the megaphone and a bubble apart @nofirefox", async ({ browser, request }) => {
+        test.skip(browser.browserType().name() === "firefox", "WebRTC connection is sometimes flaky on Firefox");
+
+        await resetWamMaps(request);
+
+        await using speaker = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(speaker, 5 * 32, 5 * 32);
+
+        await Menu.openMapEditor(speaker);
+        await MapEditor.openConfigureMyRoom(speaker);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(speaker);
+        await Megaphone.toggleMegaphone(speaker);
+        await Megaphone.megaphoneInputNameSpace(speaker, `${browser.browserType().name()}RaisedHandsPanel`);
+        await Megaphone.megaphoneSelectScope(speaker);
+        await Megaphone.megaphoneAddNewRights(speaker, "example");
+        await Megaphone.megaphoneSave(speaker);
+        await Megaphone.isCorrectlySaved(speaker);
+        await expect(speaker.getByRole("button", { name: "Megaphone settings saved" })).toBeHidden();
+        await Megaphone.megaphoneRemoveRights(speaker, "example");
+        await Megaphone.megaphoneSave(speaker);
+        await Megaphone.isCorrectlySaved(speaker);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(speaker);
+        await Menu.closeMapEditor(speaker);
+
+        await Menu.isThereMegaphoneButton(speaker);
+        await Menu.clickSendGlobalMessage(speaker);
+        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await speaker.locator(".close-btn").first().click();
+
+        // Alice joins the speaker: they form a bubble, while she keeps listening to the megaphone.
+        await using alice = await getPage(browser, "Alice", Map.url("empty"));
+        await Map.teleportToPosition(alice, 5 * 32, 5 * 32);
+        await expect(speaker.locator("#cameras-container").getByText("Alice")).toBeVisible({ timeout: 30_000 });
+
+        // Bob, alone away from them, raises his hand for the megaphone speaker.
+        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(bob, 14 * 32, 14 * 32);
+        await expect(bob.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
+        await bob.getByTestId("raise-hand-button").click();
+
+        // The speaker can still give him the floor, bubble or not; Alice gets no panel for a hand not meant for her.
+        const megaphoneSection = speaker.getByTestId("raised-hands-section-megaphone");
+        await expect(megaphoneSection).toContainText("Bob", { timeout: 20_000 });
+        await expect(megaphoneSection.getByTestId("panel-give-floor")).toBeVisible();
+        await expect(alice.getByTestId("raised-hands-dock")).toBeHidden();
+
+        // Alice raises her hand in the bubble: the speaker sees both queues apart, Alice only her bubble's.
+        await alice.getByTestId("raise-hand-button").click();
+        const bubbleSection = speaker.getByTestId("raised-hands-section-bubble");
+        await expect(bubbleSection).toContainText("Alice", { timeout: 20_000 });
+        await expect(bubbleSection.getByTestId("panel-give-floor")).toHaveCount(0);
+        await expect(megaphoneSection).not.toContainText("Alice");
+        await expect(alice.getByTestId("raised-hands-panel")).toContainText("Alice", { timeout: 20_000 });
+        await expect(alice.getByTestId("raised-hands-panel")).not.toContainText("Bob");
+    });
 });

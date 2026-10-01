@@ -1,134 +1,83 @@
 import { type Writable, get } from "svelte/store";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { FloorSpeaker, RaisedHand } from "../Space/SpaceInterface";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { FilterType } from "@workadventure/messages";
+import type { RaisedHandSection, SpaceInterface } from "../Space/SpaceInterface";
 
-// Mock every store raisedHandsAdminVisibleStore derives from with a plain writable, so the module loads
-// without pulling the real (Phaser-heavy) stores.
 vi.mock("./PeerStore", async () => {
     const { writable: w } = await import("svelte/store");
-    return { raisedHandsStore: w<RaisedHand[]>([]), speakingUsersStore: w<FloorSpeaker[]>([]) };
+    return { raisedHandSectionsStore: w<RaisedHandSection[]>([]) };
 });
 vi.mock("./GameStore", async () => {
     const { writable: w } = await import("svelte/store");
     return { userIsAdminStore: w(false) };
 });
-vi.mock("./MediaStore", async () => {
-    const { writable: w } = await import("svelte/store");
-    return { isSpeakerStore: w(false), inLivekitStore: w(false) };
-});
-vi.mock("./MegaphoneStore", async () => {
-    const { writable: w } = await import("svelte/store");
-    return { givenFloorSpaceStore: w<unknown>(undefined) };
-});
 
-import { raisedHandsStore, speakingUsersStore } from "./PeerStore";
+import { raisedHandSectionsStore } from "./PeerStore";
 import { userIsAdminStore } from "./GameStore";
-import { inLivekitStore, isSpeakerStore } from "./MediaStore";
-import { givenFloorSpaceStore } from "./MegaphoneStore";
-import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
-import { floorControlsVisibleStore, raisedHandsAdminVisibleStore } from "./RaisedHandsAdminVisibleStore";
+import { visibleRaisedHandSectionsStore } from "./RaisedHandsAdminVisibleStore";
 
-const queue = raisedHandsStore as unknown as Writable<RaisedHand[]>;
-const speakers = speakingUsersStore as unknown as Writable<FloorSpeaker[]>;
-const admin = userIsAdminStore;
-const speaker = isSpeakerStore;
-const grantedFloor = givenFloorSpaceStore as unknown as Writable<unknown>;
+const sections = raisedHandSectionsStore as unknown as Writable<RaisedHandSection[]>;
+const isAdmin = userIsAdminStore;
 
-describe("raisedHandsAdminVisibleStore", () => {
-    const oneRaisedHand = () => queue.set([{ spaceUserId: "room_1", name: "Alice", at: 1 }]);
+const bob = { spaceUserId: "room_2", name: "Bob", at: 1 };
 
-    const reset = () => {
-        queue.set([]);
-        speakers.set([]);
-        admin.set(false);
-        speaker.set(false);
-        grantedFloor.set(undefined);
-        currentPlayerGroupIdStore.set(undefined);
-        inLivekitStore.set(false);
-    };
-    beforeEach(reset);
-    afterEach(reset);
+function section(kind: SpaceInterface["kind"], filterType: FilterType, onAirHere = false): RaisedHandSection {
+    const space = { kind, filterType, getName: () => kind ?? "world" } as unknown as SpaceInterface;
+    return { space, hands: [bob], speakers: [], onAirHere };
+}
 
-    it("is hidden when there is nothing to act on, even for an admin", () => {
-        admin.set(true);
-        expect(get(raisedHandsAdminVisibleStore)).toBe(false);
+const bubble = section("bubble", FilterType.ALL_USERS);
+const meeting = section("area", FilterType.ALL_USERS);
+const megaphoneHeard = section("megaphone", FilterType.LIVE_STREAMING_USERS);
+const megaphoneHosted = section("megaphone", FilterType.LIVE_STREAMING_USERS, true);
+
+const visible = () =>
+    get(visibleRaisedHandSectionsStore).map(({ space, canModerate, floorControls }) => ({
+        kind: space.kind,
+        canModerate,
+        floorControls,
+    }));
+
+describe("visibleRaisedHandSectionsStore", () => {
+    afterEach(() => {
+        sections.set([]);
+        isAdmin.set(false);
     });
 
-    it("shows for an admin when a hand is raised", () => {
-        admin.set(true);
-        oneRaisedHand();
-        expect(get(raisedHandsAdminVisibleStore)).toBe(true);
+    it("is empty, hiding the dock, when no space has a raised hand", () => {
+        isAdmin.set(true);
+        expect(visible()).toEqual([]);
     });
 
-    it("shows while there is an active speaker to take back, even with no raised hands", () => {
-        admin.set(true);
-        speakers.set([{ spaceUserId: "room_2", name: "Bob" }]);
-        expect(get(raisedHandsAdminVisibleStore)).toBe(true);
+    it("shows a bubble's queue to every member, without floor controls", () => {
+        sections.set([bubble]);
+        expect(visible()).toEqual([{ kind: "bubble", canModerate: false, floorControls: false }]);
     });
 
-    it("shows for a genuine zone speaker (speaker without a granted floor)", () => {
-        speaker.set(true);
-        oneRaisedHand();
-        expect(get(raisedHandsAdminVisibleStore)).toBe(true);
+    it("shows a meeting room's queue to every member, without floor controls", () => {
+        sections.set([meeting]);
+        expect(visible()).toEqual([{ kind: "area", canModerate: false, floorControls: false }]);
     });
 
-    it("is hidden for a promoted guest (a speaker who holds a granted floor)", () => {
-        speaker.set(true);
-        grantedFloor.set({}); // holding a granted floor => promoted guest, must not moderate
-        oneRaisedHand();
-        expect(get(raisedHandsAdminVisibleStore)).toBe(false);
+    it("hides the megaphone's queue from a bubble member who only listens to it", () => {
+        sections.set([bubble, megaphoneHeard]);
+        expect(visible()).toEqual([{ kind: "bubble", canModerate: false, floorControls: false }]);
     });
 
-    it("still shows for an admin who also holds a granted floor", () => {
-        admin.set(true);
-        speaker.set(true);
-        grantedFloor.set({});
-        oneRaisedHand();
-        expect(get(raisedHandsAdminVisibleStore)).toBe(true);
+    it("keeps the floor controls of a megaphone host who stands in a bubble", () => {
+        sections.set([bubble, megaphoneHosted]);
+        expect(visible()).toEqual([
+            { kind: "bubble", canModerate: false, floorControls: false },
+            { kind: "megaphone", canModerate: true, floorControls: true },
+        ]);
     });
 
-    it("is hidden for a plain megaphone listener", () => {
-        oneRaisedHand();
-        expect(get(raisedHandsAdminVisibleStore)).toBe(false);
-    });
-
-    it("shows to everyone in a proximity bubble, which has no host", () => {
-        currentPlayerGroupIdStore.set(42);
-        oneRaisedHand();
-        expect(get(raisedHandsAdminVisibleStore)).toBe(true);
-    });
-
-    it("shows to everyone in a meeting room, where everybody already speaks", () => {
-        inLivekitStore.set(true);
-        oneRaisedHand();
-        expect(get(raisedHandsAdminVisibleStore)).toBe(true);
-    });
-
-    it("stays hidden in a bubble while nobody has raised a hand", () => {
-        currentPlayerGroupIdStore.set(42);
-        expect(get(raisedHandsAdminVisibleStore)).toBe(false);
-    });
-});
-
-describe("floorControlsVisibleStore", () => {
-    const reset = () => {
-        currentPlayerGroupIdStore.set(undefined);
-        inLivekitStore.set(false);
-    };
-    beforeEach(reset);
-    afterEach(reset);
-
-    it("offers the floor controls in a megaphone broadcast", () => {
-        expect(get(floorControlsVisibleStore)).toBe(true);
-    });
-
-    it("hides them in a proximity bubble, where everybody already speaks", () => {
-        currentPlayerGroupIdStore.set(42);
-        expect(get(floorControlsVisibleStore)).toBe(false);
-    });
-
-    it("hides them in a meeting room, where everybody already speaks", () => {
-        inLivekitStore.set(true);
-        expect(get(floorControlsVisibleStore)).toBe(false);
+    it("lets an admin moderate every space, but promote only in a broadcast", () => {
+        isAdmin.set(true);
+        sections.set([bubble, megaphoneHeard]);
+        expect(visible()).toEqual([
+            { kind: "bubble", canModerate: true, floorControls: false },
+            { kind: "megaphone", canModerate: true, floorControls: true },
+        ]);
     });
 });
