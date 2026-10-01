@@ -225,7 +225,7 @@ import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
 import { getWokaEmote, WOKA_EMOTES, WOKA_EMOTE_SOUND_PATH, wokaEmoteSoundKey } from "./Emote/WokaEmoteCatalog";
-import { BANNED, isWokaEjection } from "./Emote/WokaEjectionCatalog";
+import { BAN_SCENES, buildBan, isWokaEjection } from "./Emote/WokaEjectionCatalog";
 import { buildKick, KICK_SOUNDS } from "./Emote/WokaKickCatalog";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -532,7 +532,9 @@ export class GameScene extends DirtyScene {
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
         this.load.audio("meeting-in", "/resources/objects/meeting-in.wav");
         this.load.audio("meeting-out", "/resources/objects/meeting-out.wav");
-        for (const sound of [...WOKA_EMOTES, BANNED].flatMap((emote) => emote.sounds ?? []).concat(KICK_SOUNDS)) {
+        for (const sound of [...WOKA_EMOTES, ...BAN_SCENES]
+            .flatMap((emote) => emote.sounds ?? [])
+            .concat(KICK_SOUNDS)) {
             this.load.audio(wokaEmoteSoundKey(sound), WOKA_EMOTE_SOUND_PATH + sound.file);
         }
 
@@ -4532,16 +4534,17 @@ ${escapedMessage}
     }
 
     /**
-     * Plays how a moderator removed `player`, then destroys it. A kick is drawn from the back's roll
-     * (see WokaKickCatalog); when it is given by the moderator's own Woka, that Woka plays its part
-     * in the same frame, so the two meet at the impact.
+     * Plays how a moderator removed `player`, then destroys it. The scene is drawn from the back's
+     * roll, for a ban (see WokaEjectionCatalog) as for a kick (see WokaKickCatalog); when a kick is
+     * given by the moderator's own Woka, that Woka plays its part in the same frame, so the two meet
+     * at the impact.
      */
     private playEjection(player: RemotePlayer, ejection: UserEjection): void {
         // The recipes are written with the moderator on the left.
         const mirrored = !ejection.fromLeft;
         const done = () => player.destroy();
         if (ejection.type === "banned") {
-            player.playEjection(BANNED, mirrored, done);
+            player.playEjection(buildBan(ejection.roll), mirrored, done);
             return;
         }
         const moderatorId = ejection.moderatorUserId;
