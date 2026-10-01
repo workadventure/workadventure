@@ -1,5 +1,12 @@
 appId: re.workadventu.desktop
 
+# Top level, not under linux: macOS only gets CFBundleURLTypes (and so `open-url` deep links) from
+# here or mac.protocols, and the Windows installer registers the scheme from here too.
+protocols:
+    - name: WorkAdventure
+      schemes:
+          - workadventure
+
 files:
     - "dist/**/*"
     - "assets/**/*"
@@ -47,10 +54,6 @@ linux:
     target:
         - AppImage
         - deb
-    protocols:
-        - name: WorkAdventure
-          schemes:
-              - workadventure
 
 publish:
     provider: generic
