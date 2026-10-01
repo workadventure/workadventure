@@ -3,7 +3,7 @@ import type { NativeStrings } from "./en";
 const es: NativeStrings = {
     "landing.heading": "Tu lugar de trabajo, a una URL de distancia.",
     "landing.intro":
-        "Abre un mundo al que ya perteneces o crea un nuevo espacio para tu equipo. Tu último mundo se volverá a abrir automáticamente la próxima vez.",
+        "Abre un mundo al que ya perteneces o crea un nuevo mundo para tu equipo. Tu último mundo se volverá a abrir automáticamente la próxima vez.",
     "landing.recentWorlds": "Mundos recientes",
     "landing.joinTitle": "Unirse a un mundo",
     "landing.joinHint": "Pega la URL completa de tu invitación o de tu navegador.",
@@ -18,12 +18,14 @@ const es: NativeStrings = {
     "landing.pinWorld": "Fijar mundo",
     "landing.unpinWorld": "Desfijar mundo",
     "landing.urlRequired": "Introduce la URL de un mundo.",
-    "landing.urlInvalid": "URL no válida. Introduce la URL completa http(s):// de un mundo.",
-    "landing.urlProtocol": "Solo se admiten URL http(s)://.",
-    "landing.urlHost": "URL no válida: falta el host o contiene credenciales.",
+    "landing.urlInvalid":
+        "Este enlace no es válido. Copia el enlace completo del mundo desde tu invitación o tu navegador.",
+    "landing.urlProtocol": "El enlace de tu mundo debe empezar por https:// o http://.",
+    "landing.urlHost":
+        "Este enlace está incompleto o contiene un nombre de usuario o una contraseña. Copia el enlace del mundo desde tu invitación.",
     "landing.urlNotAllowed":
-        "Esta URL no está entre los orígenes permitidos. Define WA_DESKTOP_ALLOWED_ORIGINS o usa la URL de un mundo de workadventu.re.",
-    "landing.joinFailed": "No se ha podido unir al mundo.",
+        "Esta dirección no es un mundo de WorkAdventure que la aplicación conozca. Comprueba el enlace o pregunta a tu administrador.",
+    "landing.joinFailed": "No se ha podido entrar en este mundo. Inténtalo de nuevo.",
     "landing.signupFailed": "No se ha podido abrir la página de registro.",
     "landing.desktopOnly": "Esta acción solo está disponible en la aplicación de escritorio.",
     "landing.worldNotLoaded": "No se ha podido cargar este mundo. Comprueba la URL e inténtalo de nuevo.",
@@ -50,7 +52,7 @@ const es: NativeStrings = {
     "menu.noRecentWorlds": "No hay mundos recientes",
     "menu.hideTabBarTitle": "¿Ocultar la barra de pestañas?",
     "menu.cancel": "Cancelar",
-    "menu.closeOneOtherTab": "Cerrar 1 pestaña más y ocultar la barra",
+    "menu.closeOneOtherTab": "Cerrar la otra pestaña y ocultar la barra",
     "menu.closeOtherTabs": "Cerrar las otras {count} pestañas y ocultar la barra",
     "menu.hideTabBarDetailOne":
         "Tienes {total} mundos abiertos en pestañas. Al ocultar la barra de pestañas se mantiene el mundo actual y se cierra el otro.",
@@ -64,11 +66,11 @@ const es: NativeStrings = {
     "tray.status.idle": "Inactivo",
     "tray.status.online": "Disponible",
     "tray.status.offline": "Desconectado",
-    "tray.statusLocked": "Bloqueado durante una reunión",
+    "tray.statusLocked": "No se puede cambiar el estado durante una reunión",
     "tray.microphone": "Micrófono",
     "tray.camera": "Cámara",
     "tray.companionPanel": "Panel complementario",
-    "tray.showHide": "Mostrar / Ocultar",
+    "tray.showHide": "Mostrar / ocultar",
     "tray.worlds": "Mundos",
     "tray.help": "Ayuda",
     "tray.checkForUpdates": "Buscar actualizaciones",
@@ -78,17 +80,23 @@ const es: NativeStrings = {
 
     "auth.pageTitle": "Inicio de sesión en WorkAdventure",
     "auth.signingInTitle": "Iniciando sesión…",
-    "auth.signingInMessage":
-        "Termina de iniciar sesión en tu navegador. WorkAdventure volverá a esta ventana automáticamente.",
+    "auth.signingInMessage": "Termina de iniciar sesión en tu navegador. Volverás a la aplicación automáticamente.",
     "auth.signingOutTitle": "Cerrando sesión…",
-    "auth.signingOutMessage":
-        "Termina de cerrar sesión en tu navegador. WorkAdventure volverá a esta ventana automáticamente.",
+    "auth.signingOutMessage": "Termina de cerrar sesión en tu navegador. Volverás a la aplicación automáticamente.",
     "auth.reopenBrowser": "Volver a abrir el navegador",
     "auth.signedIn": "Sesión iniciada. Ya puedes volver a WorkAdventure.",
     "auth.signedOut": "Sesión cerrada. Ya puedes volver a WorkAdventure.",
     "auth.closeWindow": "Ya puedes cerrar esta ventana.",
 
     "screenIdentify.clickToShare": "Haz clic para compartir esta pantalla · {size}",
+    "update.checking": "Buscando actualizaciones…",
+    "update.title": "Actualización de WorkAdventure",
+    "update.ready": "La actualización está lista. Reinicia WorkAdventure para instalarla.",
+    "update.installAndRestart": "Instalar y reiniciar",
+    "update.installLater": "Instalar más tarde",
+    "update.availableTitle": "Hay una actualización de WorkAdventure disponible",
+    "update.availableBody": "Descarga e instala la última versión desde el sitio web de WorkAdventure.",
+    "update.none": "No hay actualizaciones disponibles.",
 };
 
 export default es;

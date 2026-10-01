@@ -70,7 +70,8 @@ const warning: DeepPartial<Translation["warning"]> = {
         continue: "W wobhladowaku pokročować",
         neverShowPage: "Hižo njeprašować",
     },
-    otherMeetingMuted: "Mikrofon, kamera a dźělenje wobrazowki su so w {world} wotšaltowali: sće nětko tu na zetkanju.",
+    otherMeetingMuted:
+        "Sće nětko tu na zetkanju. Waš mikrofon, kamera a dźělenje wobrazowki su so w {world} wotšaltowali.",
 };
 
 export default warning;

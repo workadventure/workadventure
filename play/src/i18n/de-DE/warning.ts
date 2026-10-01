@@ -71,7 +71,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         neverShowPage: "Nicht erneut fragen",
     },
     otherMeetingMuted:
-        "Mikrofon, Kamera und Bildschirmfreigabe wurden in {world} ausgeschaltet: Sie sind jetzt hier in einem Meeting.",
+        "Sie sind jetzt hier in einem Meeting. Ihr Mikrofon, Ihre Kamera und Ihre Bildschirmfreigabe wurden in {world} ausgeschaltet.",
 };
 
 export default warning;

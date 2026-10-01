@@ -68,7 +68,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         continue: "ブラウザで続ける",
         neverShowPage: "次回から表示しない",
     },
-    otherMeetingMuted: "{world} のマイク、カメラ、画面共有をオフにしました。現在はこちらでミーティング中です。",
+    otherMeetingMuted: "現在こちらでミーティング中です。{world} のマイク、カメラ、画面共有はオフになりました。",
 };
 
 export default warning;

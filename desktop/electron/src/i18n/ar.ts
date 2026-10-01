@@ -3,7 +3,7 @@ import type { NativeStrings } from "./en";
 const ar: NativeStrings = {
     "landing.heading": "مكان عملك على بُعد رابط واحد.",
     "landing.intro":
-        "افتح عالمًا تنتمي إليه بالفعل، أو أنشئ مساحة جديدة لفريقك. سيُعاد فتح آخر عالم زرته تلقائيًا في المرة القادمة.",
+        "افتح عالمًا تنتمي إليه بالفعل، أو أنشئ عالمًا جديدًا لفريقك. سيُعاد فتح آخر عالم زرته تلقائيًا في المرة القادمة.",
     "landing.recentWorlds": "العوالم الأخيرة",
     "landing.joinTitle": "الانضمام إلى عالم",
     "landing.joinHint": "الصق الرابط الكامل من دعوتك أو من متصفحك.",
@@ -18,12 +18,11 @@ const ar: NativeStrings = {
     "landing.pinWorld": "تثبيت العالم",
     "landing.unpinWorld": "إلغاء تثبيت العالم",
     "landing.urlRequired": "يرجى إدخال رابط العالم.",
-    "landing.urlInvalid": "عنوان URL غير صالح. أدخل عنوان URL الكامل للعالم يبدأ بـ http(s)://.",
-    "landing.urlProtocol": "لا يُقبل إلا عناوين http(s)://.",
-    "landing.urlHost": "عنوان URL غير صالح: المضيف مفقود أو يتضمن بيانات اعتماد.",
-    "landing.urlNotAllowed":
-        "هذا العنوان ليس ضمن المصادر المسموح بها. اضبط WA_DESKTOP_ALLOWED_ORIGINS أو استخدم عنوان عالم على workadventu.re.",
-    "landing.joinFailed": "تعذّر الانضمام إلى العالم.",
+    "landing.urlInvalid": "هذا الرابط غير صالح. انسخ رابط العالم كاملًا من دعوتك أو من متصفحك.",
+    "landing.urlProtocol": "يجب أن يبدأ رابط عالمك بـ https:// أو http://.",
+    "landing.urlHost": "هذا الرابط غير مكتمل أو يحتوي على اسم مستخدم أو كلمة مرور. انسخ رابط العالم من دعوتك.",
+    "landing.urlNotAllowed": "هذا العنوان ليس عالم WorkAdventure يعرفه التطبيق. تحقّق من الرابط أو اسأل المسؤول لديك.",
+    "landing.joinFailed": "تعذّر الانضمام إلى هذا العالم. يُرجى المحاولة مرة أخرى.",
     "landing.signupFailed": "تعذّر فتح صفحة التسجيل.",
     "landing.desktopOnly": "هذا الإجراء متاح فقط في تطبيق سطح المكتب.",
     "landing.worldNotLoaded": "تعذّر تحميل هذا العالم. يرجى التحقق من الرابط والمحاولة مرة أخرى.",
@@ -48,7 +47,7 @@ const ar: NativeStrings = {
     "menu.noRecentWorlds": "لا توجد عوالم حديثة",
     "menu.hideTabBarTitle": "إخفاء شريط علامات التبويب؟",
     "menu.cancel": "إلغاء",
-    "menu.closeOneOtherTab": "إغلاق علامة تبويب أخرى وإخفاء الشريط",
+    "menu.closeOneOtherTab": "إغلاق علامة التبويب الأخرى وإخفاء الشريط",
     "menu.closeOtherTabs": "إغلاق {count} علامات تبويب أخرى وإخفاء الشريط",
     "menu.hideTabBarDetailOne":
         "لديك {total} عوالم مفتوحة في علامات التبويب. يؤدي إخفاء شريط علامات التبويب إلى الإبقاء على العالم الحالي وإغلاق العالم الآخر.",
@@ -62,7 +61,7 @@ const ar: NativeStrings = {
     "tray.status.idle": "خامل",
     "tray.status.online": "متاح",
     "tray.status.offline": "غير متصل",
-    "tray.statusLocked": "مقفل أثناء الاجتماع",
+    "tray.statusLocked": "لا يمكن تغيير الحالة أثناء الاجتماع",
     "tray.microphone": "الميكروفون",
     "tray.camera": "الكاميرا",
     "tray.companionPanel": "اللوحة المرافقة",
@@ -76,15 +75,23 @@ const ar: NativeStrings = {
 
     "auth.pageTitle": "تسجيل الدخول إلى WorkAdventure",
     "auth.signingInTitle": "جارٍ تسجيل الدخول…",
-    "auth.signingInMessage": "أكمل تسجيل الدخول في متصفحك. سيعود WorkAdventure إلى هذه النافذة تلقائيًا.",
+    "auth.signingInMessage": "أكمل تسجيل الدخول في متصفحك. ستعود إلى التطبيق تلقائيًا.",
     "auth.signingOutTitle": "جارٍ تسجيل الخروج…",
-    "auth.signingOutMessage": "أكمل تسجيل الخروج في متصفحك. سيعود WorkAdventure إلى هذه النافذة تلقائيًا.",
+    "auth.signingOutMessage": "أكمل تسجيل الخروج في متصفحك. ستعود إلى التطبيق تلقائيًا.",
     "auth.reopenBrowser": "إعادة فتح المتصفح",
     "auth.signedIn": "تم تسجيل الدخول. يمكنك العودة إلى WorkAdventure.",
     "auth.signedOut": "تم تسجيل الخروج. يمكنك العودة إلى WorkAdventure.",
     "auth.closeWindow": "يمكنك إغلاق هذه النافذة.",
 
     "screenIdentify.clickToShare": "انقر لمشاركة هذه الشاشة · {size}",
+    "update.checking": "جارٍ التحقق من وجود تحديثات…",
+    "update.title": "تحديث WorkAdventure",
+    "update.ready": "التحديث جاهز. أعد تشغيل WorkAdventure لتثبيته.",
+    "update.installAndRestart": "التثبيت وإعادة التشغيل",
+    "update.installLater": "التثبيت لاحقًا",
+    "update.availableTitle": "يتوفر تحديث لـ WorkAdventure",
+    "update.availableBody": "نزّل أحدث إصدار وثبّته من موقع WorkAdventure.",
+    "update.none": "لا يوجد تحديث متاح.",
 };
 
 export default ar;

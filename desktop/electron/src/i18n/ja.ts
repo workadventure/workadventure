@@ -3,7 +3,7 @@ import type { NativeStrings } from "./en";
 const ja: NativeStrings = {
     "landing.heading": "あなたの職場へ、URL ひとつで。",
     "landing.intro":
-        "参加済みのワールドを開くか、チーム用の新しいスペースを作成しましょう。次回は前回のワールドが自動的に開きます。",
+        "参加済みのワールドを開くか、チーム用の新しいワールドを作成しましょう。次回は前回のワールドが自動的に開きます。",
     "landing.recentWorlds": "最近のワールド",
     "landing.joinTitle": "ワールドに参加",
     "landing.joinHint": "招待状またはブラウザの完全な URL を貼り付けてください。",
@@ -18,12 +18,13 @@ const ja: NativeStrings = {
     "landing.pinWorld": "ワールドをピン留め",
     "landing.unpinWorld": "ピン留めを解除",
     "landing.urlRequired": "ワールドの URL を入力してください。",
-    "landing.urlInvalid": "無効な URL です。ワールドの完全な http(s):// URL を入力してください。",
-    "landing.urlProtocol": "http(s):// の URL のみ対応しています。",
-    "landing.urlHost": "無効な URL です：ホストがないか、認証情報が含まれています。",
+    "landing.urlInvalid": "このリンクは無効です。招待状またはブラウザからワールドのリンクをすべてコピーしてください。",
+    "landing.urlProtocol": "ワールドのリンクは https:// または http:// で始まる必要があります。",
+    "landing.urlHost":
+        "このリンクは不完全か、ユーザー名またはパスワードが含まれています。招待状からワールドのリンクをコピーしてください。",
     "landing.urlNotAllowed":
-        "この URL は許可されたオリジンに含まれていません。WA_DESKTOP_ALLOWED_ORIGINS を設定するか、workadventu.re のワールド URL を使用してください。",
-    "landing.joinFailed": "ワールドに参加できませんでした。",
+        "このアドレスは、アプリが認識している WorkAdventure のワールドではありません。リンクを確認するか、管理者にお問い合わせください。",
+    "landing.joinFailed": "このワールドに参加できませんでした。もう一度お試しください。",
     "landing.signupFailed": "登録ページを開けませんでした。",
     "landing.desktopOnly": "この操作はデスクトップアプリでのみ利用できます。",
     "landing.worldNotLoaded": "このワールドを読み込めませんでした。URL を確認して、もう一度お試しください。",
@@ -49,7 +50,7 @@ const ja: NativeStrings = {
     "menu.noRecentWorlds": "最近のワールドはありません",
     "menu.hideTabBarTitle": "タブバーを非表示にしますか？",
     "menu.cancel": "キャンセル",
-    "menu.closeOneOtherTab": "他のタブ 1 個を閉じてバーを非表示",
+    "menu.closeOneOtherTab": "他のタブを閉じてバーを非表示",
     "menu.closeOtherTabs": "他のタブ {count} 個を閉じてバーを非表示",
     "menu.hideTabBarDetailOne":
         "{total} 個のワールドをタブで開いています。タブバーを非表示にすると、現在のワールドを残してもう 1 つを閉じます。",
@@ -63,7 +64,7 @@ const ja: NativeStrings = {
     "tray.status.idle": "アイドル",
     "tray.status.online": "オンライン",
     "tray.status.offline": "オフライン",
-    "tray.statusLocked": "ミーティング中は変更できません",
+    "tray.statusLocked": "ミーティング中はステータスを変更できません",
     "tray.microphone": "マイク",
     "tray.camera": "カメラ",
     "tray.companionPanel": "コンパニオンパネル",
@@ -77,17 +78,24 @@ const ja: NativeStrings = {
 
     "auth.pageTitle": "WorkAdventure サインイン",
     "auth.signingInTitle": "サインインしています…",
-    "auth.signingInMessage":
-        "ブラウザでサインインを完了してください。WorkAdventure はこのウィンドウに自動的に戻ります。",
+    "auth.signingInMessage": "ブラウザでサインインを完了してください。自動的にアプリに戻ります。",
     "auth.signingOutTitle": "サインアウトしています…",
-    "auth.signingOutMessage":
-        "ブラウザでサインアウトを完了してください。WorkAdventure はこのウィンドウに自動的に戻ります。",
+    "auth.signingOutMessage": "ブラウザでサインアウトを完了してください。自動的にアプリに戻ります。",
     "auth.reopenBrowser": "ブラウザを再度開く",
     "auth.signedIn": "サインインしました。WorkAdventure に戻れます。",
     "auth.signedOut": "サインアウトしました。WorkAdventure に戻れます。",
     "auth.closeWindow": "このウィンドウは閉じてかまいません。",
 
     "screenIdentify.clickToShare": "クリックしてこの画面を共有 · {size}",
+    "update.checking": "アップデートを確認中…",
+    "update.title": "WorkAdventure のアップデート",
+    "update.ready": "アップデートの準備ができました。WorkAdventure を再起動するとインストールされます。",
+    "update.installAndRestart": "インストールして再起動",
+    "update.installLater": "後でインストール",
+    "update.availableTitle": "WorkAdventure のアップデートがあります",
+    "update.availableBody":
+        "WorkAdventure のウェブサイトから最新バージョンをダウンロードしてインストールしてください。",
+    "update.none": "利用可能なアップデートはありません。",
 };
 
 export default ja;

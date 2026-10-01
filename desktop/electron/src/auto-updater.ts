@@ -6,6 +6,7 @@ import * as util from "util";
 
 import { createAndShowNotification } from "./notification";
 import { createDesktopConfig } from "./desktop-url-policy";
+import { t } from "./i18n";
 
 const sleep = util.promisify(setTimeout);
 
@@ -39,7 +40,7 @@ export async function manualRequestUpdateCheck() {
     isManualRequestedUpdate = true;
 
     createAndShowNotification({
-        body: "Checking for updates ...",
+        body: t("update.checking"),
     });
 
     await checkForUpdates();
@@ -67,11 +68,11 @@ async function init() {
             void (async () => {
                 const dialogOpts: MessageBoxOptions = {
                     type: "question",
-                    buttons: ["Install and Restart", "Install Later"],
+                    buttons: [t("update.installAndRestart"), t("update.installLater")],
                     defaultId: 0,
-                    title: "WorkAdventure - Update",
+                    title: t("update.title"),
                     message: process.platform === "win32" ? releaseNotes : releaseName,
-                    detail: "A new version has been downloaded. Restart the application to apply the updates.",
+                    detail: t("update.ready"),
                 };
 
                 const { response } = await dialog.showMessageBox(dialogOpts);
@@ -94,8 +95,8 @@ async function init() {
 
         autoUpdater.on("update-available", () => {
             createAndShowNotification({
-                title: "WorkAdventure - Update available",
-                body: "Please go to our website and install the newest version",
+                title: t("update.availableTitle"),
+                body: t("update.availableBody"),
             });
         });
     }
@@ -103,7 +104,7 @@ async function init() {
     autoUpdater.on("update-not-available", () => {
         if (isManualRequestedUpdate) {
             createAndShowNotification({
-                body: "No update available.",
+                body: t("update.none"),
             });
         }
     });

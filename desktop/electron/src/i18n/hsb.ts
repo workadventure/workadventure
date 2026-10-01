@@ -3,7 +3,7 @@ import type { NativeStrings } from "./en";
 const hsb: NativeStrings = {
     "landing.heading": "Waše dźěłowe městno přez jedyn URL.",
     "landing.intro":
-        "Wočińće swět, ke kotremuž hižo słušeće, abo wutworće nowy rum za swój team. Waš posledni swět so přichodny raz awtomatisce zaso wočini.",
+        "Wočińće swět, ke kotremuž hižo słušeće, abo wutworće nowy swět za swój team. Waš posledni swět so přichodny raz awtomatisce zaso wočini.",
     "landing.recentWorlds": "Poslednje swěty",
     "landing.joinTitle": "K swětej přistupić",
     "landing.joinHint": "Zasadźće dospołny URL z wašeho přeprošenja abo z wašeho wobhladowaka.",
@@ -18,12 +18,14 @@ const hsb: NativeStrings = {
     "landing.pinWorld": "Swět připjeć",
     "landing.unpinWorld": "Swět wotpjeć",
     "landing.urlRequired": "Prošu zapodajće URL swěta.",
-    "landing.urlInvalid": "Njepłaćiwy URL. Prošu zapodajće dospołny http(s):// URL swěta.",
-    "landing.urlProtocol": "Jenož URL z http(s):// so podpěruja.",
-    "landing.urlHost": "Njepłaćiwy URL: host faluje abo wobsahuje přizjewjenske daty.",
+    "landing.urlInvalid":
+        "Tutón wotkaz płaćiwy njeje. Kopěrujće dospołny wotkaz swěta z wašeho přeprošenja abo z wašeho wobhladowaka.",
+    "landing.urlProtocol": "Wotkaz wašeho swěta dyrbi so z https:// abo http:// započeć.",
+    "landing.urlHost":
+        "Tutón wotkaz je njedospołny abo wobsahuje wužiwarske mjeno abo hesło. Kopěrujće wotkaz swěta z wašeho přeprošenja.",
     "landing.urlNotAllowed":
-        "Tutón URL k dowolenym pochadam njesłuša. Nastajće WA_DESKTOP_ALLOWED_ORIGINS abo wužiwajće URL swěta na workadventu.re.",
-    "landing.joinFailed": "Přistup k swětej njeje so poradźił.",
+        "Tuta adresa njeje swět WorkAdventure, kotryž aplikacija znaje. Přepruwujće wotkaz abo so swojeho administratora prašejće.",
+    "landing.joinFailed": "Přistup k tutomu swětej njebě móžny. Prošu spytajće hišće raz.",
     "landing.signupFailed": "Strona registracije njeda so wočinić.",
     "landing.desktopOnly": "Tuta akcija je jenož w desktopowym nałoženju k dispoziciji.",
     "landing.worldNotLoaded": "Tutón swět njeda so začitać. Prošu přepruwujće URL a spytajće hišće raz.",
@@ -48,7 +50,7 @@ const hsb: NativeStrings = {
     "menu.noRecentWorlds": "Žane poslednje swěty",
     "menu.hideTabBarTitle": "Lajstu rajtarkow schować?",
     "menu.cancel": "Přetorhnyć",
-    "menu.closeOneOtherTab": "1 druhi rajtark začinić a lajstu schować",
+    "menu.closeOneOtherTab": "Druhi rajtark začinić a lajstu schować",
     "menu.closeOtherTabs": "{count} druhich rajtarkow začinić a lajstu schować",
     "menu.hideTabBarDetailOne":
         "Maće {total} swětow w rajtarkach wočinjenych. Hdyž lajstu rajtarkow schowaće, wostanje aktualny swět wočinjeny a druhi so začini.",
@@ -62,11 +64,11 @@ const hsb: NativeStrings = {
     "tray.status.idle": "Njeaktiwny",
     "tray.status.online": "K dispoziciji",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Zablokowany za čas zasedanja",
+    "tray.statusLocked": "Status njeda so za čas zasedanja změnić",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamera",
     "tray.companionPanel": "Přewodny panel",
-    "tray.showHide": "Pokazać / Schować",
+    "tray.showHide": "Pokazać / schować",
     "tray.worlds": "Swěty",
     "tray.help": "Pomoc",
     "tray.checkForUpdates": "Za aktualizacijemi pytać",
@@ -76,17 +78,24 @@ const hsb: NativeStrings = {
 
     "auth.pageTitle": "Přizjewjenje WorkAdventure",
     "auth.signingInTitle": "Přizjewja so…",
-    "auth.signingInMessage":
-        "Dokónčće přizjewjenje w swojim wobhladowaku. WorkAdventure so awtomatisce k tutomu woknu wróći.",
+    "auth.signingInMessage": "Dokónčće přizjewjenje w swojim wobhladowaku. Potom so awtomatisce do aplikacije wróćiće.",
     "auth.signingOutTitle": "Wotzjewja so…",
     "auth.signingOutMessage":
-        "Dokónčće wotzjewjenje w swojim wobhladowaku. WorkAdventure so awtomatisce k tutomu woknu wróći.",
+        "Dokónčće wotzjewjenje w swojim wobhladowaku. Potom so awtomatisce do aplikacije wróćiće.",
     "auth.reopenBrowser": "Wobhladowak znowa wočinić",
     "auth.signedIn": "Přizjewjeny. Móžeće so k WorkAdventure wróćić.",
     "auth.signedOut": "Wotzjewjeny. Móžeće so k WorkAdventure wróćić.",
     "auth.closeWindow": "Móžeće tute wokno začinić.",
 
     "screenIdentify.clickToShare": "Klikńće, zo byšće tutu wobrazowku dźělili · {size}",
+    "update.checking": "Pyta so za aktualizacijemi…",
+    "update.title": "Aktualizacija WorkAdventure",
+    "update.ready": "Aktualizacija je hotowa. Startujće WorkAdventure znowa, zo by so instalowała.",
+    "update.installAndRestart": "Instalować a znowa startować",
+    "update.installLater": "Pozdźišo instalować",
+    "update.availableTitle": "Aktualizacija WorkAdventure je k dispoziciji",
+    "update.availableBody": "Sćehńće a instalujće najnowšu wersiju z websydła WorkAdventure.",
+    "update.none": "Žana aktualizacija k dispoziciji.",
 };
 
 export default hsb;
