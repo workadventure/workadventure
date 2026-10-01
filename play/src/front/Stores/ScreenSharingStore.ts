@@ -322,6 +322,9 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 for (const track of currentStream.getTracks()) {
                     track.onended = () => {
                         stopScreenSharing();
+                        // Reset below means the constraints store sees no change and never re-runs the
+                        // branch that clears the source: drop it here, or the HUD stays on its display.
+                        activeScreenShareSourceStore.set(undefined);
                         requestedScreenSharingState.disableScreenSharing();
                         previousComputedVideoConstraint = false;
                         previousComputedAudioConstraint = false;

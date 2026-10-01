@@ -595,7 +595,9 @@
         });
     });
     api.onMeetingIce(function (candidate) {
-        ensurePeerConnection()
+        // A candidate can trail the close: never let it create an orphan connection.
+        if (!peerConnection) return;
+        peerConnection
             .addIceCandidate(candidate)
             .catch(function (err) {
                 // eslint-disable-next-line no-console
@@ -623,6 +625,10 @@
     var inMeeting = false;
     var chatSub = "list"; // "list" | "conversation"
     var currentConvId = null;
+    // The conversation the user asked for and the state has not confirmed yet. A push already in
+    // flight still carries the previous selection: adopting it would send the next message there.
+    // { id } after a row click; { dmFrom } after "Message", whose room id is only known once created.
+    var pendingConv = null;
 
     function baseView() {
         return inMeeting ? "video" : "people";
@@ -721,6 +727,7 @@
         }
         send({ type: "select-conversation", conversationId: row.dataset.conversationId });
         currentConvId = row.dataset.conversationId;
+        pendingConv = { id: currentConvId };
         showConversationView(true);
     });
     els.convBack.addEventListener("click", function () {
@@ -757,6 +764,9 @@
             send({ type: "invite", userId: userId });
         } else if (action === "dm") {
             send({ type: "dm", userId: userId });
+            // No conversation to send to until the DM room exists (creating it can take seconds, or fail).
+            pendingConv = { dmFrom: currentConvId };
+            currentConvId = null;
             setView("chat");
             showConversationView(true);
         } else if (action === "locate") {
@@ -935,7 +945,14 @@
         return d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
     }
 
-    function renderMessages(messages) {
+    var renderedConvId = null;
+    function renderMessages(messages, convId) {
+        var sameConversation = convId === renderedConvId;
+        renderedConvId = convId;
+        var previousScrollTop = els.messages.scrollTop;
+        var wasAtBottom =
+            !sameConversation ||
+            els.messages.scrollHeight - els.messages.scrollTop - els.messages.clientHeight < 24;
         els.messages.textContent = "";
         setEmpty(els.messagesEmpty, messages.length === 0);
         var lastDayKey = null;
@@ -983,7 +1000,13 @@
             }
             els.messages.appendChild(wrap);
         }
-        els.messages.scrollTop = els.messages.scrollHeight;
+        // Every push rebuilds the list: only follow new messages if the user was already at the bottom,
+        // otherwise someone joining would yank them out of the history they are reading.
+        if (wasAtBottom) {
+            els.messages.scrollTop = els.messages.scrollHeight;
+        } else {
+            els.messages.scrollTop = previousScrollTop;
+        }
     }
 
     function renderChat(conversations, selected, chatStatus) {
@@ -999,7 +1022,16 @@
         }
 
         renderConversationList(conversations);
-        currentConvId = selected ? selected.id : currentConvId;
+        if (selected) {
+            var confirmsPending =
+                pendingConv === null ||
+                (pendingConv.id !== undefined ? selected.id === pendingConv.id : selected.id !== pendingConv.dmFrom);
+            if (confirmsPending) {
+                currentConvId = selected.id;
+                pendingConv = null;
+            }
+        }
+        var shown = selected && selected.id === currentConvId ? selected : null;
 
         var inConversation = chatSub === "conversation";
         els.conversation.hidden = !inConversation;
@@ -1016,10 +1048,10 @@
         setEmpty(els.conversationsEmpty, showEmpty);
 
         if (inConversation) {
-            var name = selected ? selected.name : "Conversation";
+            var name = shown ? shown.name : "Conversation";
             els.convTitle.textContent = name || "Conversation";
-            els.convOpenMain.hidden = currentConvId === NEARBY_ID;
-            renderMessages(selected && Array.isArray(selected.messages) ? selected.messages : []);
+            els.convOpenMain.hidden = !currentConvId || currentConvId === NEARBY_ID;
+            renderMessages(shown && Array.isArray(shown.messages) ? shown.messages : [], currentConvId);
         }
     }
 

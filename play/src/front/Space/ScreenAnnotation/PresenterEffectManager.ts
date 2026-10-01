@@ -39,15 +39,26 @@ class PresenterEffectManager {
                 return;
             }
             const effect = event.presenterEffect;
+            // Space events are relayed as sent: only the presenter may drive the effect on their screen.
+            if (event.sender !== effect.targetUserId) {
+                return;
+            }
             if (!effect.active || !isActivePresenterTool(effect.tool)) {
                 clearPresenterEffect(effect.targetUserId);
                 return;
             }
             setPresenterEffect(effect.targetUserId, {
                 tool: effect.tool,
-                x: effect.x,
-                y: effect.y,
-                scale: effect.scale,
+                x: clamp(effect.x, 0, 1),
+                y: clamp(effect.y, 0, 1),
+                // 0 = viewer default. Otherwise a loupe zoom factor or a spotlight radius fraction: bound
+                // both, a huge value lays out a gigantic element on every viewer.
+                scale:
+                    effect.scale > 0
+                        ? effect.tool === "loupe"
+                            ? clamp(effect.scale, 1, 6)
+                            : clamp(effect.scale, 0.05, 0.5)
+                        : 0,
             });
         });
         this.unsubscribers.push(() => publicEventSubscription.unsubscribe());
@@ -107,3 +118,7 @@ class PresenterEffectManager {
 }
 
 export const presenterEffectManager = new PresenterEffectManager();
+
+function clamp(value: number, min: number, max: number): number {
+    return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : min;
+}
