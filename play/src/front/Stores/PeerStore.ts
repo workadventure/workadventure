@@ -2,7 +2,7 @@ import { derived, writable } from "svelte/store";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoBox } from "../Space/VideoBox";
-import type { FloorSpeaker, RaisedHand } from "../Space/SpaceInterface";
+import type { FloorSpeaker, RaisedHand, SpaceInterface } from "../Space/SpaceInterface";
 
 export const videoStreamStore = new ForwardableStore<Map<string, VideoBox>>(new Map<string, VideoBox>());
 export const screenShareStreamStore = new ForwardableStore<Map<string, VideoBox>>(new Map<string, VideoBox>());
@@ -13,6 +13,9 @@ export const raisedHandsStore = new ForwardableStore<RaisedHand[]>([]);
 
 // Users (other than the local user) who currently hold the floor in the meeting, so a host can take it back.
 export const speakingUsersStore = new ForwardableStore<FloorSpeaker[]>([]);
+
+// Spaces the local user syncs their media with (SpaceRegistry.spacesSynchronizingMedia): where a hand can be raised.
+export const mediaSynchronizedSpacesStore = new ForwardableStore<SpaceInterface[]>([]);
 
 export const videoStreamElementsStore = derived(videoStreamStore, ($videoStreamStore) => {
     return Array.from($videoStreamStore.values());

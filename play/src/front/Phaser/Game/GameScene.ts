@@ -4,7 +4,7 @@ import type { Subscription } from "rxjs";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { Queue } from "queue-typescript";
 import type { Readable, Unsubscriber } from "svelte/store";
-import { derived, get } from "svelte/store";
+import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
@@ -92,12 +92,7 @@ import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore } from "../../Stores/EmoteStore";
-import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
-import {
-    inMegaphoneZoneStore,
-    meetingRaiseHandStore,
-    megaphoneRaiseHandStore,
-} from "../../Stores/RaiseHandZoneSettingsStore";
+import { isHandRaisedStore, requestedHandRaiseState } from "../../Stores/RaiseHandStore";
 import { raisedHandPlayerIdsStore } from "../../Stores/RaisedHandsStore";
 import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
 import {
@@ -121,7 +116,6 @@ import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import {
     availabilityStatusStore,
     batchGetUserMediaStore,
-    inLivekitStore,
     lastNewMediaDeviceDetectedStore,
     localVoiceIndicatorStore,
     requestedCameraDeviceIdStore,
@@ -209,7 +203,13 @@ import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEn
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
-import { raisedHandsStore, screenShareStreamStore, speakingUsersStore, videoStreamStore } from "../../Stores/PeerStore";
+import {
+    mediaSynchronizedSpacesStore,
+    raisedHandsStore,
+    screenShareStreamStore,
+    speakingUsersStore,
+    videoStreamStore,
+} from "../../Stores/PeerStore";
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
@@ -2099,6 +2099,7 @@ export class GameScene extends DirtyScene {
                 screenShareStreamStore.forward(this._spaceRegistry.screenShareStreamStore);
                 raisedHandsStore.forward(this._spaceRegistry.raisedHandsStore);
                 speakingUsersStore.forward(this._spaceRegistry.speakingUsersStore);
+                mediaSynchronizedSpacesStore.forward(this._spaceRegistry.spacesSynchronizingMedia);
 
                 this.initExtensionModule();
 
@@ -2690,11 +2691,11 @@ export class GameScene extends DirtyScene {
         );
 
         this.unsubscribers.push(
-            requestedHandRaiseState.subscribe((state) => {
+            isHandRaisedStore.subscribe((raised) => {
                 // Reflect the local user's raised hand on their own woka immediately. The state reaches the
                 // other participants through the space state (see SpacePeerManager.synchronizeMediaState), which
                 // drives both their video tile badge and the indicator above their woka on the map.
-                this.CurrentPlayer?.setRaisedHand(state.raised);
+                this.CurrentPlayer?.setRaisedHand(raised);
             }),
         );
 
@@ -2720,26 +2721,14 @@ export class GameScene extends DirtyScene {
         // meeting, so a hand left raised on leave could otherwise no longer be lowered by the user.
         this.unsubscribers.push(
             isInRemoteConversation.subscribe((inConversation) => {
-                if (!inConversation && get(requestedHandRaiseState).raised) {
-                    requestedHandRaiseState.lowerHand();
+                if (!inConversation) {
+                    requestedHandRaiseState.lowerAll();
                 }
             }),
         );
-
-        // Same safety net for a zone whose option says no (the map builder turned it off, or the user walked
-        // into such a zone): it takes the button away, so a hand still up must not stay up. Outside any zone
-        // the button follows the conversation itself (bubble, global megaphone), handled just above.
-        this.unsubscribers.push(
-            derived(
-                [meetingRaiseHandStore, megaphoneRaiseHandStore, inLivekitStore, inMegaphoneZoneStore],
-                ([$meeting, $megaphone, $inLivekit, $inMegaphoneZone]) =>
-                    ($inLivekit || $inMegaphoneZone) && !$meeting && !$megaphone,
-            ).subscribe((zoneForbidsRaiseHand) => {
-                if (zoneForbidsRaiseHand && get(requestedHandRaiseState).raised) {
-                    requestedHandRaiseState.lowerHand();
-                }
-            }),
-        );
+        // A zone whose option says no needs no safety net: the hand is raised per space, so walking into such a
+        // zone leaves the hand raised elsewhere (e.g. in the bubble) alone, and a space the hand is up in stays
+        // offered by the button so it can still be lowered (see raiseHandSpacesStore).
 
         this.unsubscribers.push(
             followUsersColorStore.subscribe((color) => {

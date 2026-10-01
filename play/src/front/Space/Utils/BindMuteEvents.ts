@@ -157,7 +157,8 @@ export function watchRaiseHandState(space: SpaceInterface): Unsubscriber {
         const isFloorHolder = state.floorHolders.some((entry) => entry.spaceUserId === me);
         const gotTheFloor = !wasFloorHolder && isFloorHolder;
         const lostTheFloor = wasFloorHolder && !isFloorHolder;
-        const handLoweredByOthers = wasRaised && !isRaised && !gotTheFloor && get(requestedHandRaiseState).raised;
+        const handLoweredByOthers =
+            wasRaised && !isRaised && !gotTheFloor && get(requestedHandRaiseState).has(space.getName());
         wasRaised = isRaised;
         wasFloorHolder = isFloorHolder;
 
@@ -168,7 +169,7 @@ export function watchRaiseHandState(space: SpaceInterface): Unsubscriber {
             // button can switch to its "on stage" state and hand the floor back (see RaiseHandMenuItem).
             isSpeakerStore.set(true);
             givenFloorSpaceStore.set(space);
-            requestedHandRaiseState.lowerHand();
+            requestedHandRaiseState.lower(space.getName());
             // We never force the microphone on; if it is muted we invite the user to enable it.
             if (get(requestedMicrophoneState)) {
                 notificationPlayingStore.playNotification(get(LL).notification.givenTheFloor());
@@ -186,7 +187,7 @@ export function watchRaiseHandState(space: SpaceInterface): Unsubscriber {
         }
 
         if (handLoweredByOthers) {
-            requestedHandRaiseState.lowerHand();
+            requestedHandRaiseState.lower(space.getName());
             notificationPlayingStore.playNotification(get(LL).notification.handLowered());
         }
     });

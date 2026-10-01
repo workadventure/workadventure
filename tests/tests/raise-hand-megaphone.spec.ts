@@ -281,4 +281,61 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         });
         await expect(bob.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 20_000 });
     });
+
+    // A player in a bubble who also listens to the room-level megaphone used to raise their hand in both spaces at
+    // once: the megaphone speaker saw a hand meant for the bubble. The hand now goes to one space, and the room
+    // megaphone is only targeted when no other space can take it.
+    test("a hand raised in a bubble during a global megaphone live stays in the bubble @nofirefox", async ({
+        browser,
+        request,
+    }) => {
+        test.skip(browser.browserType().name() === "firefox", "WebRTC connection is sometimes flaky on Firefox");
+
+        await resetWamMaps(request);
+
+        await using speaker = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(speaker, 5 * 32, 5 * 32);
+
+        // Configure the room-level (global) megaphone and let everyone use it (see the stranded-speaker test).
+        await Menu.openMapEditor(speaker);
+        await MapEditor.openConfigureMyRoom(speaker);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(speaker);
+        await Megaphone.toggleMegaphone(speaker);
+        await Megaphone.megaphoneInputNameSpace(speaker, `${browser.browserType().name()}RaiseHandBubble`);
+        await Megaphone.megaphoneSelectScope(speaker);
+        await Megaphone.megaphoneAddNewRights(speaker, "example");
+        await Megaphone.megaphoneSave(speaker);
+        await Megaphone.isCorrectlySaved(speaker);
+        await expect(speaker.getByRole("button", { name: "Megaphone settings saved" })).toBeHidden();
+        await Megaphone.megaphoneRemoveRights(speaker, "example");
+        await Megaphone.megaphoneSave(speaker);
+        await Megaphone.isCorrectlySaved(speaker);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(speaker);
+        await Menu.closeMapEditor(speaker);
+
+        // Admin1 goes live with the global megaphone.
+        await Menu.isThereMegaphoneButton(speaker);
+        await Menu.clickSendGlobalMessage(speaker);
+        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await speaker.locator(".close-btn").first().click();
+
+        // Alice and Bob meet away from the speaker: they receive the megaphone and form a bubble.
+        await using alice = await getPage(browser, "Alice", Map.url("empty"));
+        await Map.teleportToPosition(alice, 12 * 32, 12 * 32);
+        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(bob, 12 * 32, 12 * 32);
+        await expect(bob.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
+        await expect(alice.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 30_000 });
+
+        // Bob raises his hand: only the bubble can take it, so there is no picker and the hand goes straight there.
+        await bob.getByTestId("raise-hand-button").click();
+        await expect(bob.getByTestId("raise-hand-space-picker")).toBeHidden();
+        await expect(alice.getByTestId("raised-hands-dock").getByTestId("raised-hands-panel")).toContainText("Bob", {
+            timeout: 20_000,
+        });
+
+        // The megaphone speaker never sees the hand meant for the bubble.
+        await expect(speaker.getByTestId("raised-hands-dock")).toBeHidden({ timeout: 10_000 });
+    });
 });

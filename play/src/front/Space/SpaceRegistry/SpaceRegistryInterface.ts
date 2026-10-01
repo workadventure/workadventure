@@ -33,4 +33,5 @@ export interface SpaceRegistryInterface {
     lowerHand(spaceUserId: string): Promise<void>;
     readonly shouldPublishScreenShareStore: Readable<boolean>;
     spacesEligibleForRecording: Readable<SpaceInterface[]>;
+    readonly spacesSynchronizingMedia: Readable<SpaceInterface[]>;
 }

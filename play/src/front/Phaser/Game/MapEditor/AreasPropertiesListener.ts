@@ -59,11 +59,7 @@ import {
 import { externalMeetingEnded, externalMeetingStarted } from "../../../ExternalModule/ExternalMeetingAnalytics";
 import { jitsiMeetingEnded, jitsiMeetingStarted } from "../../../WebRtc/JitsiMeetingAnalytics";
 import { currentLiveStreamingSpaceStore, givenFloorSpaceStore } from "../../../Stores/MegaphoneStore";
-import {
-    inMegaphoneZoneStore,
-    meetingRaiseHandStore,
-    megaphoneRaiseHandStore,
-} from "../../../Stores/RaiseHandZoneSettingsStore";
+import { meetingRaiseHandStore, megaphoneRaiseHandSpacesStore } from "../../../Stores/RaiseHandZoneSettingsStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../../WebRtc/CoWebsite/ImageCoWebsite";
@@ -1805,10 +1801,15 @@ export class AreasPropertiesListener {
         );
         // Listeners may ask the speaker for the floor, as long as one of the listener zones they stand in
         // allows it. A speaker of the same space is the host, so they never raise a hand.
-        megaphoneRaiseHandStore.set(
-            speakerZone === undefined && zones.some((zone) => zone.role === "listener" && zone.raiseHandEnabled),
+        megaphoneRaiseHandSpacesStore.set(
+            new Set(
+                speakerZone === undefined
+                    ? zones
+                          .filter((zone) => zone.role === "listener" && zone.raiseHandEnabled)
+                          .map((zone) => zone.spaceName)
+                    : [],
+            ),
         );
-        inMegaphoneZoneStore.set(zones.length > 0);
 
         const activeZone = speakerZone ?? listenerZone;
         if (!activeZone) {
