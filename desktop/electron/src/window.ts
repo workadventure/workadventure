@@ -43,7 +43,7 @@ import { createTabStrip, resetTabStrip } from "./tab-strip";
 // Re-exported so ipc.ts (and others) target the active world view without importing tab-manager
 // directly — window.ts remains the single entry point for "the renderer to talk to".
 export { getActiveWorldContents, isActiveWorldContents } from "./tab-manager";
-import { closeAllHudWindows } from "./hud-windows";
+import { closeAllHudWindows, forgetHudState } from "./hud-windows";
 
 // The shell window stays hidden until the first world page finishes loading. `did-fail-load` covers
 // errors, but not a server that accepts the connection and then goes quiet (captive portal, DNS
@@ -578,7 +578,9 @@ function configureNavigationSecurity(webContents: Electron.WebContents, config: 
             return { action: "deny" };
         }
 
-        void loadDesktopTarget(url);
+        // A new tab, not loadDesktopTarget: that loads into the ACTIVE tab, so a window.open from a
+        // background world would replace the world (and meeting) the user is looking at.
+        void openWorldTab(url);
         return { action: "deny" };
     });
 
@@ -639,7 +641,12 @@ function configureNavigationSecurity(webContents: Electron.WebContents, config: 
         }
         const safeUrl = stripSensitiveQueryParams(validatedURL) || validatedURL || "";
         ElectronLog.warn(`did-fail-load (${errorCode}: ${errorDescription}) for "${safeUrl}".`);
-        void recoverToLandingWithError(LOAD_FAILURE_LANDING_MESSAGE);
+        // The recovery loads the Landing into the active tab: a background tab failing a reload must
+        // not throw the user out of the world they are in.
+        // ponytail: the background tab keeps Chromium's error page until it is opened again.
+        if (isActiveWorldContents(webContents)) {
+            void recoverToLandingWithError(LOAD_FAILURE_LANDING_MESSAGE);
+        }
     });
 
     window.webContents.on("did-finish-load", () => {
@@ -686,7 +693,8 @@ export async function createWindow(initialUrl?: string) {
         // packaged builds get the icon from the executable via electron-builder.
         icon: path.join(__dirname, "..", "assets", "icons", "logo.png"),
     });
-    mainWindow.setMenu(null);
+    // No setMenu(null): on Windows/Linux it would drop the application menu, and with it the World
+    // menu's accelerators (new/close/switch tab). autoHideMenuBar keeps the bar out of sight.
     setShell(mainWindow);
     // Switching tabs must tear down the companion (which hosts the meeting video) / overlay / HUD
     // windows + presenter cursor that belonged to the previously-active world — those relays are
@@ -701,6 +709,7 @@ export async function createWindow(initialUrl?: string) {
             closeAllHudWindows();
             stopPresenterCursor();
             stopCompanion();
+            forgetHudState();
             // Presence is a single global describing the ACTIVE tab, and only the active renderer is
             // allowed to push it. Left alone it would still describe the tab we just left, so a
             // later blur would re-arm the companion for a meeting the visible tab isn't in — and the
