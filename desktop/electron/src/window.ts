@@ -7,6 +7,7 @@ import path from "path";
 import settings from "./settings";
 import { createDesktopCallbackPage } from "./desktop-callback-page";
 import { nativeLocale, t } from "./i18n";
+import { textDirection } from "./native-locale-policy";
 import { createDesktopWindowTitle } from "./app-name-policy";
 import { createDesktopWindowState, type DesktopWindowState } from "./desktop-window-state-policy";
 import {
@@ -330,7 +331,7 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
     const safeTitle = escapeHtml(title);
     const safeMessage = escapeHtml(message);
     const html = `<!doctype html>
-<html lang="${nativeLocale()}">
+<html lang="${nativeLocale()}" dir="${textDirection(nativeLocale())}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />

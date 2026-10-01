@@ -18,6 +18,11 @@ const de: NativeStrings = {
     "landing.pinWorld": "Welt anheften",
     "landing.unpinWorld": "Welt lösen",
     "landing.urlRequired": "Bitte geben Sie eine Welt-URL ein.",
+    "landing.urlInvalid": "Ungültige URL. Bitte geben Sie die vollständige http(s)://-URL einer Welt ein.",
+    "landing.urlProtocol": "Nur http(s)://-URLs werden unterstützt.",
+    "landing.urlHost": "Ungültige URL: Host fehlt oder enthält Zugangsdaten.",
+    "landing.urlNotAllowed":
+        "Diese URL gehört nicht zu den erlaubten Ursprüngen. Setzen Sie WA_DESKTOP_ALLOWED_ORIGINS oder verwenden Sie eine workadventu.re-Welt-URL.",
     "landing.joinFailed": "Beitritt zur Welt fehlgeschlagen.",
     "landing.signupFailed": "Die Registrierungsseite konnte nicht geöffnet werden.",
     "landing.desktopOnly": "Diese Aktion ist nur in der Desktop-App verfügbar.",
