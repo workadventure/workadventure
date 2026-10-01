@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
-    import { onDestroy } from "svelte";
     import { derived, get } from "svelte/store";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -10,10 +9,10 @@
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import RecordingSpacePicker from "../../PopUp/Recording/RecordingSpacePicker.svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import type { RecordingMenuState, RecordingSpaceRow } from "./RecordingMenuUtils";
+    import { TargetPickerController } from "./TargetPickerController";
     import { IconAlertTriangle } from "@wa-icons";
 
     interface Props {
@@ -23,20 +22,15 @@
     let { recordingMenuState }: Props = $props();
 
     const recording = gameManager.currentStartedRoom.recording;
-    let closeFloatingUi: (() => void) | undefined = undefined;
     let triggerElement: HTMLElement | undefined = $state(undefined);
-
-    function closeSpacePicker(): void {
-        closeFloatingUi?.();
-        closeFloatingUi = undefined;
-    }
+    const picker = new TargetPickerController(() => triggerElement);
 
     async function applyRecordingAction(row: RecordingSpaceRow): Promise<void> {
         if (!row.action) {
             return;
         }
 
-        closeSpacePicker();
+        picker.close();
 
         const requestState = row.action === "start" ? "starting" : "stopping";
         recordingStore.setRequestState(row.spaceName, requestState);
@@ -61,40 +55,21 @@
     }
 
     function openSpacePicker(): void {
-        if (closeFloatingUi) {
-            closeSpacePicker();
-            return;
-        }
-
-        if (!triggerElement) {
-            return;
-        }
-
-        closeFloatingUi = showFloatingUi(
-            triggerElement,
-            RecordingSpacePicker,
-            {
-                rowsStore: derived(recordingMenuState, ($state) => $state.currentRows),
-                onselect: (row: RecordingSpaceRow) => {
-                    applyRecordingAction(row).catch((error) => {
-                        console.error(`Failed to apply recording action`, error);
-                    });
-                },
-                onclose: closeSpacePicker,
+        picker.toggle(RecordingSpacePicker, {
+            rowsStore: derived(recordingMenuState, ($state) => $state.currentRows),
+            onselect: (row: RecordingSpaceRow) => {
+                applyRecordingAction(row).catch((error) => {
+                    console.error(`Failed to apply recording action`, error);
+                });
             },
-            {
-                placement: "bottom",
-            },
-            8,
-            true,
-        );
+        });
     }
 
     async function requestRecording(): Promise<void> {
         const state = get(recordingMenuState);
 
         if (state.actionableRows.length === 0) {
-            closeSpacePicker();
+            picker.close();
             return;
         }
 
@@ -105,10 +80,6 @@
 
         openSpacePicker();
     }
-
-    onDestroy(() => {
-        closeSpacePicker();
-    });
 </script>
 
 <ActionBarButton

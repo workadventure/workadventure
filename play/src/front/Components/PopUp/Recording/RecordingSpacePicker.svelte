@@ -3,6 +3,7 @@
     import { clickOutside } from "svelte-outside";
     import { LL } from "../../../../i18n/i18n-svelte";
     import type { RecordingSpaceRow } from "../../ActionBar/MenuIcons/RecordingMenuUtils";
+    import { spaceLabel } from "../../../Space/spaceLabel";
 
     interface Props {
         rowsStore: Readable<RecordingSpaceRow[]>;
@@ -53,9 +54,7 @@
         >
             <div class="min-w-0 flex-1 flex flex-col gap-1">
                 <span class="text-sm font-semibold text-white" data-testid={getKindTestId(row)}>
-                    {row.kind === "megaphone"
-                        ? $LL.recording.actionbar.spacePicker.megaphone()
-                        : $LL.recording.actionbar.spacePicker.discussion()}
+                    {spaceLabel(row.space)}
                 </span>
                 <span class="text-xs text-white/70">
                     {#if row.status === "starting"}
