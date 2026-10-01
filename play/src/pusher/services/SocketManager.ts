@@ -404,7 +404,6 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("Client has no back connection");
         }
 
-        let joinRoomEventEmitted = false;
         try {
             const joinRoomMessage: JoinRoomMessage = {
                 userUuid: socketData.userUuid,
@@ -427,8 +426,10 @@ export class SocketManager implements ZoneEventListener {
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
-            clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
-            joinRoomEventEmitted = true;
+            if (!socketData.joinedRoom) {
+                socketData.joinedRoom = true;
+                clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
+            }
 
             const pusherToBackMessage: PusherToBackMessage = {
                 message: {
@@ -455,15 +456,14 @@ export class SocketManager implements ZoneEventListener {
                 }
             }
 
-            // If we had emitted a client join event earlier, emit a leave to keep gauges correct
+            // The client leave event is emitted by leaveRoom, when the websocket is closed below.
             try {
-                if (joinRoomEventEmitted) {
-                    clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                if (socketData.joinedRoom) {
                     // Closes the session along with everything else, sessions last.
                     analyticsTimedEventTracker.closeConnection(socketData, "join_failed");
                 }
             } catch (emitErr) {
-                console.warn("Error while emitting client leave after failed join:", emitErr);
+                console.warn("Error while closing analytics after failed join:", emitErr);
                 Sentry.captureException(emitErr);
             }
 
@@ -843,7 +843,10 @@ export class SocketManager implements ZoneEventListener {
                     //Client.leave(Client.roomId);
                 } finally {
                     //delete Client.roomId;
-                    clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    if (socketData.joinedRoom) {
+                        socketData.joinedRoom = false;
+                        clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    }
                     // One call closes every interval this socket holds, session
                     // included and emitted last — see sessionsLast(). The admin
                     // attributes a conversation to the session containing it and drops

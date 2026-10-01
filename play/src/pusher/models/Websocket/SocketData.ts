@@ -44,6 +44,8 @@ export type ConnectingSocketData = {
     canEdit: boolean;
     spaceUserId: string;
     backConnection?: BackConnection;
+    // True between the client join and leave events, so a socket that never joined (or already left) is not counted.
+    joinedRoom: boolean;
     listenedZones: Set<string>;
     pusherRoom: PusherRoom | undefined;
     spaces: Set<SpaceName>;

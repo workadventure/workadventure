@@ -449,6 +449,7 @@ export class IoSocketController {
                         canEdit: userData.canEdit ?? false,
                         spaceUserId: "",
                         backConnection: undefined,
+                        joinedRoom: false,
                         listenedZones: new Set<string>(),
                         pusherRoom: undefined,
                         spaces: new Set<SpaceName>(),
