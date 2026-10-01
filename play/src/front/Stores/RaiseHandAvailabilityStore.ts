@@ -15,7 +15,7 @@ import { meetingRaiseHandStore, megaphoneRaiseHandSpacesStore } from "./RaiseHan
  *    everyone can see, so whoever leads the discussion can give the floor orally;
  *  - a LiveKit meeting area and a megaphone listener area do unless their map-editor option is off (see
  *    RaiseHandZoneSettingsStore); a podium speaker is the host and never gets their own zone;
- *  - the room-level megaphone only while someone is on air, unless the local user is the one broadcasting,
+ *  - the room-level megaphone only while someone else is on air, and not while the local user broadcasts,
  *    and only when no other space qualifies: a hand raised in a bubble is meant for the bubble, not for
  *    the whole room listening to the megaphone;
  *  - the world space (no kind) never does.
@@ -52,7 +52,7 @@ export const raiseHandSpacesStore: Readable<SpaceInterface[]> = derived(
             return () => {};
         }
         return derived(
-            megaphones.map((space) => space.isStreamingAudioStore),
+            megaphones.map((space) => space.hasRemoteSpeakerStore),
             (onAir) => select(megaphones.filter((_, index) => onAir[index])),
         ).subscribe(set);
     },

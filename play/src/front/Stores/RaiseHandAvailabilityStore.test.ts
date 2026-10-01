@@ -29,10 +29,10 @@ const silent = silentStore as unknown as Writable<boolean>;
 const grantedFloor = givenFloorSpaceStore as unknown as Writable<unknown>;
 const syncedSpaces = mediaSynchronizedSpacesStore as unknown as Writable<SpaceInterface[]>;
 
-function fakeSpace(kind: SpaceInterface["kind"], name: string, onAir = false) {
-    const isStreamingAudioStore = writable(onAir);
-    const space = { kind, getName: () => name, isStreamingAudioStore } as unknown as SpaceInterface;
-    return { space, isStreamingAudioStore };
+function fakeSpace(kind: SpaceInterface["kind"], name: string, someoneElseOnAir = false) {
+    const hasRemoteSpeakerStore = writable(someoneElseOnAir);
+    const space = { kind, getName: () => name, hasRemoteSpeakerStore } as unknown as SpaceInterface;
+    return { space, hasRemoteSpeakerStore };
 }
 
 const bubble = fakeSpace("bubble", "room#group#1").space;
@@ -93,12 +93,12 @@ describe("raiseHandSpacesStore", () => {
         expect(names()).toEqual(["room#group#1", "podium"]);
     });
 
-    it("offers the room-level megaphone only while someone is on air", () => {
+    it("offers the room-level megaphone only while someone else is on air", () => {
         const megaphone = fakeSpace("megaphone", "megaphone-room");
         syncedSpaces.set([megaphone.space]);
         expect(names()).toEqual([]);
 
-        megaphone.isStreamingAudioStore.set(true);
+        megaphone.hasRemoteSpeakerStore.set(true);
         expect(names()).toEqual(["megaphone-room"]);
     });
 
