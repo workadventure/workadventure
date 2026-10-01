@@ -18,6 +18,28 @@
     var worldRow = document.getElementById("world-row");
     var recentErrorEl = document.getElementById("recent-error");
 
+    // Strings in the OS language (native catalog in the main process), fetched synchronously so the
+    // page never flashes English. The English in the markup / below is the fallback.
+    var strings = {};
+    try {
+        var native = typeof api.getStrings === "function" ? api.getStrings() : null;
+        if (native && native.strings) {
+            strings = native.strings;
+            document.documentElement.lang = native.lang || "en";
+        }
+    } catch (err) {
+        console.warn("Landing renderer: strings unavailable", err);
+    }
+    function t(key, fallback) {
+        return typeof strings[key] === "string" ? strings[key] : fallback;
+    }
+    Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"), function (element) {
+        var key = element.getAttribute("data-i18n");
+        if (typeof strings[key] === "string") {
+            element.textContent = strings[key];
+        }
+    });
+
     function showError(element, message) {
         element.textContent = message || "";
         element.classList.toggle("visible", Boolean(message));
@@ -97,7 +119,7 @@
         var hoverRow = document.createElement("span");
         hoverRow.className = "world-hover-row";
         var hoverLabel = document.createElement("span");
-        hoverLabel.textContent = "Explore";
+        hoverLabel.textContent = t("landing.explore", "Explore");
         hoverRow.appendChild(hoverLabel);
         // 6x12 chevron with a 2px stroke, per the design. The path spans x=1..5 so the stroke's
         // 1px half-width lands exactly on the viewBox edges instead of being clipped.
@@ -114,18 +136,18 @@
             showError(recentErrorEl, "");
             setWorldsBusy(true);
             // Only the label changes — writing to `hover` itself would wipe the chevron.
-            hoverLabel.textContent = "Opening…";
+            hoverLabel.textContent = t("landing.opening", "Opening…");
             api.joinWorld(world.url)
                 .then(function (result) {
                     if (!result || !result.ok) {
-                        throw new Error((result && result.error) || "Failed to join world.");
+                        throw new Error((result && result.error) || t("landing.joinFailed", "Failed to join world."));
                     }
                 })
                 .catch(function (err) {
                     console.warn("landing.joinWorld rejected", err);
-                    showError(recentErrorEl, (err && err.message) || "Failed to join world.");
+                    showError(recentErrorEl, (err && err.message) || t("landing.joinFailed", "Failed to join world."));
                     setWorldsBusy(false);
-                    hoverLabel.textContent = "Explore";
+                    hoverLabel.textContent = t("landing.explore", "Explore");
                 });
         });
 
@@ -144,8 +166,8 @@
         var pin = document.createElement("button");
         pin.type = "button";
         pin.className = "world-pin" + (world.pinned ? " is-pinned" : "");
-        pin.setAttribute("aria-label", world.pinned ? "Unpin world" : "Pin world");
-        pin.title = world.pinned ? "Unpin" : "Pin";
+        pin.title = world.pinned ? t("landing.unpinWorld", "Unpin world") : t("landing.pinWorld", "Pin world");
+        pin.setAttribute("aria-label", pin.title);
         pin.innerHTML = pinIconSvg(Boolean(world.pinned));
         pin.addEventListener("click", function (event) {
             event.stopPropagation();
@@ -222,26 +244,26 @@
         event.preventDefault();
         var url = (input.value || "").trim();
         if (!url) {
-            showError(errorEl, "Please enter a world URL.");
+            showError(errorEl, t("landing.urlRequired", "Please enter a world URL."));
             input.focus();
             return;
         }
         showError(errorEl, "");
         joinBtn.setAttribute("disabled", "disabled");
-        joinBtn.textContent = "Opening…";
+        joinBtn.textContent = t("landing.opening", "Opening…");
         api.joinWorld(url)
             .then(function (result) {
                 if (!result || !result.ok) {
-                    showError(errorEl, (result && result.error) || "Failed to join world.");
+                    showError(errorEl, (result && result.error) || t("landing.joinFailed", "Failed to join world."));
                     joinBtn.removeAttribute("disabled");
-                    joinBtn.textContent = "Open world";
+                    joinBtn.textContent = t("landing.openWorld", "Open world");
                 }
             })
             .catch(function (err) {
                 console.warn("landing.joinWorld rejected", err);
-                showError(errorEl, (err && err.message) || "Failed to join world.");
+                showError(errorEl, (err && err.message) || t("landing.joinFailed", "Failed to join world."));
                 joinBtn.removeAttribute("disabled");
-                joinBtn.textContent = "Open world";
+                joinBtn.textContent = t("landing.openWorld", "Open world");
             });
     });
 
@@ -251,12 +273,18 @@
         api.openAdminSignup()
             .then(function (result) {
                 if (!result || !result.ok) {
-                    showError(createErrorEl, (result && result.error) || "The signup page could not be opened.");
+                    showError(
+                        createErrorEl,
+                        (result && result.error) || t("landing.signupFailed", "The signup page could not be opened.")
+                    );
                 }
             })
             .catch(function (err) {
                 console.warn("landing.openAdminSignup rejected", err);
-                showError(createErrorEl, (err && err.message) || "The signup page could not be opened.");
+                showError(
+                    createErrorEl,
+                    (err && err.message) || t("landing.signupFailed", "The signup page could not be opened.")
+                );
             })
             .finally(function () {
                 setTimeout(function () {

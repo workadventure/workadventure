@@ -18,6 +18,8 @@ export type WorkAdventureTabsApi = {
     close: (id: string) => void;
     /** Signal the strip is ready; the main process replies with the current tab list. */
     ready: () => void;
+    /** The strip's strings in the OS language (synchronous, so the strip never flashes English). */
+    getStrings: () => { lang: string; strings: Record<string, string> } | null;
 };
 
 declare global {

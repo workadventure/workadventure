@@ -10,6 +10,8 @@ import {
 import { resetAllStatusStoreExcept } from "../../Rules/StatusRules/statusChangerFunctions";
 import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
+import { warningMessageStore } from "../../Stores/ErrorStore";
+import { LL } from "../../../i18n/i18n-svelte";
 import { requestedScreenSharingState, screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
 import { activePictureInPictureStore, askPictureInPictureActivatingStore } from "../../Stores/PeerStore";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
@@ -40,6 +42,7 @@ import type {
     CompanionUser,
     WorkAdventureDesktopApi,
 } from "../../Interfaces/DesktopAppInterfaces";
+import { startDesktopStringsBridge } from "./DesktopStringsBridge";
 
 type TrayAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
 
@@ -292,6 +295,17 @@ class DesktopApi {
             }
         });
 
+        // One meeting at a time across the desktop tabs: another tab entered one, so this world stops
+        // sending. Nothing is turned back on by itself when that meeting ends.
+        window.WAD.onMediaPreempted?.(() => {
+            requestedMicrophoneState.disableMicrophone();
+            requestedCameraState.disableWebcam();
+            requestedScreenSharingState.disableScreenSharing();
+        });
+        window.WAD.onOtherMeetingMuted?.((worldName) => {
+            warningMessageStore.addWarningMessage(get(LL).warning.otherMeetingMuted({ world: worldName }));
+        });
+
         // Not unsubscribing is ok, this is a singleton.
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
         silentStore.subscribe((silent) => {
@@ -417,6 +431,7 @@ class DesktopApi {
         if (window.WAD.companion) {
             this.initCompanion(window.WAD.companion);
         }
+        startDesktopStringsBridge(window.WAD);
 
         // Give the desktop tab a meaningful label: the admin-configured world name, pushed once
         // the scene has loaded (and re-pushed on every scene load, e.g. walking through a portal to

@@ -25,6 +25,18 @@
             #overlay-canvas.draw {
                 cursor: crosshair;
             }
+            .text-input {
+                position: fixed;
+                min-width: 8em;
+                margin: 0;
+                padding: 0 2px;
+                border: 1px dashed currentColor;
+                border-radius: 2px;
+                outline: none;
+                background: transparent;
+                font-family: sans-serif;
+                line-height: 1.2;
+            }
             /* The annotation toolbar lives in the content-protected meeting-bar window: this overlay
                window is captured into the shared stream, so any UI drawn here would leak to every
                viewer. Only the strokes belong here. */
