@@ -18,6 +18,11 @@ const dsb: NativeStrings = {
     "landing.pinWorld": "Swět pśipěś",
     "landing.unpinWorld": "Swět wótpěś",
     "landing.urlRequired": "Pšosym zapódajśo URL swěta.",
+    "landing.urlInvalid": "Njepłaśiwy URL. Pšosym zapódajśo dopołny http(s):// URL swěta.",
+    "landing.urlProtocol": "Jano URL z http(s):// se pódpěraju.",
+    "landing.urlHost": "Njepłaśiwy URL: host felujo abo wopśimujo pśizjawjeńske daty.",
+    "landing.urlNotAllowed":
+        "Toś ten URL njesluša k dowólonym póchadam. Nastajśo WA_DESKTOP_ALLOWED_ORIGINS abo wužywajśo URL swěta na workadventu.re.",
     "landing.joinFailed": "Pśistup k swětoju njejo se raźił.",
     "landing.signupFailed": "Bok registracije njedajo se wócyniś.",
     "landing.desktopOnly": "Toś ta akcija jo jano w desktopowem nałoženju k dispoziciji.",

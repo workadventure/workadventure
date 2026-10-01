@@ -18,6 +18,11 @@ const hsb: NativeStrings = {
     "landing.pinWorld": "Swět připjeć",
     "landing.unpinWorld": "Swět wotpjeć",
     "landing.urlRequired": "Prošu zapodajće URL swěta.",
+    "landing.urlInvalid": "Njepłaćiwy URL. Prošu zapodajće dospołny http(s):// URL swěta.",
+    "landing.urlProtocol": "Jenož URL z http(s):// so podpěruja.",
+    "landing.urlHost": "Njepłaćiwy URL: host faluje abo wobsahuje přizjewjenske daty.",
+    "landing.urlNotAllowed":
+        "Tutón URL k dowolenym pochadam njesłuša. Nastajće WA_DESKTOP_ALLOWED_ORIGINS abo wužiwajće URL swěta na workadventu.re.",
     "landing.joinFailed": "Přistup k swětej njeje so poradźił.",
     "landing.signupFailed": "Strona registracije njeda so wočinić.",
     "landing.desktopOnly": "Tuta akcija je jenož w desktopowym nałoženju k dispoziciji.",

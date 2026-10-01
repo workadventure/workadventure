@@ -17,6 +17,11 @@ const zhCN: NativeStrings = {
     "landing.pinWorld": "固定世界",
     "landing.unpinWorld": "取消固定世界",
     "landing.urlRequired": "请输入世界网址。",
+    "landing.urlInvalid": "URL 无效。请输入完整的 http(s):// 世界 URL。",
+    "landing.urlProtocol": "仅支持 http(s):// URL。",
+    "landing.urlHost": "URL 无效：缺少主机或包含凭据。",
+    "landing.urlNotAllowed":
+        "此 URL 不在允许的来源中。请设置 WA_DESKTOP_ALLOWED_ORIGINS 或使用 workadventu.re 的世界 URL。",
     "landing.joinFailed": "加入世界失败。",
     "landing.signupFailed": "无法打开注册页面。",
     "landing.desktopOnly": "此操作仅在桌面应用中可用。",
