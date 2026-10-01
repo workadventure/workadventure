@@ -1,5 +1,5 @@
-// Generates the sounds of the kick and ban scenes (play/public/resources/objects/emotes/kick-*.mp3 and
-// banned.mp3) from code: oscillators, filtered noise and envelopes, nothing recorded or downloaded, so
+// Generates the sounds of the kick and ban scenes (play/public/resources/objects/emotes/kick-*.mp3,
+// banned.mp3 and ban-*.mp3) from code: oscillators, filtered noise and envelopes, nothing recorded or downloaded, so
 // there is no licence to track. Run it from play/ with `node scripts/synth-ejection-sounds.mjs`; it
 // needs ffmpeg on the PATH to encode the mp3 files.
 import { spawnSync } from "node:child_process";
@@ -121,6 +121,61 @@ function banned() {
     return out;
 }
 
+/** The trapdoor: the clack that opens it, the slide whistle of the fall, the clack that shuts it. */
+function trapdoor() {
+    const out = buffer(1.5);
+    noise(out, { duration: 0.05, peak: 0.45, filter: "bandpass", from: 1800, to: 900, delay: 0.15 });
+    tone(out, { type: "square", from: 220, to: 120, duration: 0.08, peak: 0.12, delay: 0.15 });
+    tone(out, {
+        type: "sine",
+        from: 1300,
+        to: 260,
+        duration: 0.55,
+        peak: 0.2,
+        delay: 0.62,
+        vibrato: { rate: 9, depth: 18 },
+    });
+    noise(out, { duration: 0.06, peak: 0.5, filter: "bandpass", from: 1500, to: 700, delay: 1.3 });
+    tone(out, { type: "sine", from: 160, to: 70, duration: 0.14, peak: 0.35, delay: 1.3 });
+    return out;
+}
+
+/** The whirlpool: a whoosh rising for as long as it turns, then a "bloop" when it swallows the Woka. */
+function whirlpool() {
+    const out = buffer(2.2);
+    noise(out, { duration: 1.4, peak: 0.16, filter: "bandpass", from: 300, to: 3200, delay: 0.1 });
+    tone(out, {
+        type: "sine",
+        from: 220,
+        to: 660,
+        duration: 1.4,
+        peak: 0.08,
+        delay: 0.1,
+        vibrato: { rate: 14, depth: 25 },
+    });
+    tone(out, { type: "sine", from: 900, to: 180, duration: 0.22, peak: 0.3, delay: 1.92 });
+    return out;
+}
+
+/** The beam: a hum while it shines, the rising sound of being sucked up, and a "pop". */
+function beam() {
+    const out = buffer(1.9);
+    tone(out, {
+        type: "sine",
+        from: 110,
+        to: 112,
+        duration: 1.6,
+        peak: 0.12,
+        delay: 0.2,
+        vibrato: { rate: 7, depth: 6 },
+    });
+    tone(out, { type: "triangle", from: 220, to: 224, duration: 1.6, peak: 0.05, delay: 0.2 });
+    tone(out, { type: "sine", from: 300, to: 1700, duration: 0.75, peak: 0.18, delay: 1.15 });
+    noise(out, { duration: 0.7, peak: 0.06, filter: "highpass", from: 1500, to: 5000, delay: 1.15 });
+    tone(out, { type: "sine", from: 1200, to: 700, duration: 0.08, peak: 0.25, delay: 1.53 });
+    return out;
+}
+
 const peakOf = (samples) => samples.reduce((max, v) => Math.max(max, Math.abs(v)), 0);
 
 function encode(name, samples, gain) {
@@ -172,8 +227,15 @@ try {
     const cues = { "kick-hit": hit(), "kick-whistle": whistle(), "kick-ding": ding(), "kick-land": land() };
     const gain = 0.89 / Math.max(...Object.values(cues).map(peakOf));
     for (const [name, samples] of Object.entries(cues)) encode(name, samples, gain);
-    const ban = banned();
-    encode("banned", ban, 0.89 / peakOf(ban));
+    // Each ban scene plays one file, timed for that scene, normalised on its own.
+    for (const [name, samples] of Object.entries({
+        banned: banned(),
+        "ban-trapdoor": trapdoor(),
+        "ban-whirlpool": whirlpool(),
+        "ban-beam": beam(),
+    })) {
+        encode(name, samples, 0.89 / peakOf(samples));
+    }
 } finally {
     rmSync(workdir, { recursive: true, force: true });
 }
