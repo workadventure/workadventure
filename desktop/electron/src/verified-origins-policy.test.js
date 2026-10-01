@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const {
     MAX_TRUSTED_SERVERS,
     addTrustedServer,
+    removeTrustedServer,
     trustableOrigin,
     VERIFIED_ORIGIN_TTL_MS,
     activeVerifiedOrigins,
@@ -60,4 +61,11 @@ test("trusted servers are deduplicated, most recent first, and capped", () => {
     const next = addTrustedServer(many, "https://new.example");
     assert.equal(next.length, MAX_TRUSTED_SERVERS);
     assert.equal(next[0], "https://new.example");
+});
+
+test("a trusted server can be removed", () => {
+    assert.deepEqual(removeTrustedServer(["https://a.example", "https://b.example"], "https://a.example"), [
+        "https://b.example",
+    ]);
+    assert.deepEqual(removeTrustedServer(undefined, "https://a.example"), []);
 });

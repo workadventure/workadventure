@@ -7,6 +7,7 @@ import { closeActiveTab, closeInactiveTabs, cycleTab, getTabs } from "./tab-mana
 import { setTabStripVisible } from "./tab-strip";
 import settings from "./settings";
 import { t } from "./i18n";
+import { getTrustedServers, onTrustedServersChange, removeTrustedServerOrigin } from "./origin-verification";
 
 /**
  * Toggle the tab bar from the menu. Electron flips `menuItem.checked` to the requested state BEFORE
@@ -109,6 +110,37 @@ export function openNativeWorldSwitcher(): void {
     });
 }
 
+async function confirmRemoveServer(origin: string): Promise<void> {
+    const window = getWindow();
+    const options: MessageBoxOptions = {
+        type: "question",
+        buttons: [t("menu.cancel"), t("menu.removeServerConfirm")],
+        defaultId: 1,
+        cancelId: 0,
+        title: t("menu.removeServerTitle"),
+        message: t("menu.removeServerTitle"),
+        detail: t("menu.removeServerDetail", { origin }),
+    };
+    const { response } = window ? await dialog.showMessageBox(window, options) : await dialog.showMessageBox(options);
+    if (response === 1) {
+        removeTrustedServerOrigin(origin);
+    }
+}
+
+/** Self-hosted servers the user added from the Landing: one "Remove …" entry each. */
+function createAddedServerMenuItems(): MenuItemConstructorOptions[] {
+    const servers = getTrustedServers();
+    if (servers.length === 0) {
+        return [{ label: t("menu.noAddedServers"), enabled: false }];
+    }
+    return servers.map((origin) => ({
+        label: t("menu.removeServer", { origin }),
+        click: () => {
+            confirmRemoveServer(origin).catch((error) => ElectronLog.error("Failed to remove a server.", error));
+        },
+    }));
+}
+
 export function createNativeApplicationMenu(): void {
     const template: MenuItemConstructorOptions[] = [
         ...(process.platform === "darwin"
@@ -172,6 +204,10 @@ export function createNativeApplicationMenu(): void {
                     label: t("menu.recentWorlds"),
                     submenu: createRecentWorldMenuItems(),
                 },
+                {
+                    label: t("menu.addedServers"),
+                    submenu: createAddedServerMenuItems(),
+                },
                 ...(process.platform === "darwin"
                     ? []
                     : ([{ type: "separator" }, { role: "quit" }] as MenuItemConstructorOptions[])),
@@ -185,5 +221,6 @@ export function createNativeApplicationMenu(): void {
     if (!isListeningForHistoryChanges) {
         isListeningForHistoryChanges = true;
         onWorldHistoryChange(createNativeApplicationMenu);
+        onTrustedServersChange(createNativeApplicationMenu);
     }
 }
