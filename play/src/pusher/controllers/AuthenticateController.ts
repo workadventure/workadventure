@@ -137,6 +137,15 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
+            // The desktop code only ever goes back through the app's loopback server, which checks
+            // its own secret + state: without a valid loopback URL there is nowhere safe to send it.
+            const desktopCallbackUrl =
+                query.desktop === "true" ? normalizeDesktopCallbackUrl(query.desktopCallbackUrl) : undefined;
+            if (query.desktop === "true" && !desktopCallbackUrl) {
+                res.status(400).send("Invalid desktopCallbackUrl");
+                return;
+            }
+
             const authorization = await openIDClient.authorizationUrl(
                 res,
                 query.playUri,
@@ -150,8 +159,7 @@ export class AuthenticateController extends BaseHttpController {
                 ...OIDC_COOKIE_OPTIONS,
                 secure: req.secure,
             });
-            if (query.desktop === "true") {
-                const desktopCallbackUrl = normalizeDesktopCallbackUrl(query.desktopCallbackUrl);
+            if (desktopCallbackUrl) {
                 res.cookie("desktopAuth", "true", {
                     ...OIDC_COOKIE_OPTIONS,
                     secure: req.secure,
@@ -164,7 +172,7 @@ export class AuthenticateController extends BaseHttpController {
                 debug(
                     `Desktop OIDC transaction created for state ${authorization.state.substring(0, 8)}... and playUri ${
                         query.playUri
-                    } with callback ${desktopCallbackUrl ?? "workadventure://auth/callback"}`,
+                    } with callback ${desktopCallbackUrl}`,
                 );
             } else {
                 res.clearCookie("desktopAuth", { path: "/" });
@@ -366,6 +374,16 @@ export class AuthenticateController extends BaseHttpController {
                 }`,
             );
 
+            // The transaction is looked up by the `state` of the URL, which anyone can replay: it must
+            // also match the `oidc_state` cookie set on /login-screen, so the callback completes only in
+            // the browser that started this login (otherwise an attacker's IdP callback URL, opened by
+            // a victim, would log the victim's desktop app into the attacker's account).
+            if (desktopTransaction && req.cookies.oidc_state !== callbackState) {
+                debug("Desktop OIDC callback rejected: state does not match the oidc_state cookie");
+                res.status(400).type("html").send(this.getOpenIdCallbackErrorHtml());
+                return;
+            }
+
             const playUri = desktopTransaction?.playUri ?? req.cookies.playUri;
             if (!playUri) {
                 res.status(400).type("html").send(this.getOpenIdCallbackErrorHtml());
@@ -407,18 +425,25 @@ export class AuthenticateController extends BaseHttpController {
 
             const matrixPublicUri = userInfo.matrix_url ?? MATRIX_PUBLIC_URI;
             if (desktopTransaction || req.cookies.desktopAuth === "true") {
+                const desktopCallbackUrl = normalizeDesktopCallbackUrl(desktopTransaction?.callbackUrl);
+                if (!desktopCallbackUrl) {
+                    // No transaction (expired, other pusher) or no loopback: never hand the code to a
+                    // `workadventure://` deep link, which the app cannot tie to a login it started.
+                    res.clearCookie("desktopAuth", { path: "/" });
+                    res.status(400).type("html").send(this.getOpenIdCallbackErrorHtml());
+                    return;
+                }
                 const code = await desktopAuthService.createDesktopAuthCode({
                     token: authToken,
                     targetUrl: playUri,
                 });
-                const desktopCallbackUrl = normalizeDesktopCallbackUrl(desktopTransaction?.callbackUrl);
 
                 // If Matrix is configured, run the same Synapse SSO round-trip the browser does, but
                 // carry the desktop loopback context (callback URL + WA auth code) across it via
                 // cookies so /matrix-callback can hand the resulting matrixLoginToken back to the app
                 // through the loopback. Without this the desktop flow returns with only the WA token
                 // and Matrix chat has no login token to initialise with.
-                if (matrixPublicUri && desktopCallbackUrl) {
+                if (matrixPublicUri) {
                     res.cookie("desktopAuth", "true", { ...OIDC_COOKIE_OPTIONS, secure: req.secure });
                     res.cookie("desktopCallbackUrl", desktopCallbackUrl, {
                         ...OIDC_COOKIE_OPTIONS,
@@ -442,17 +467,14 @@ export class AuthenticateController extends BaseHttpController {
                     return;
                 }
 
-                // No Matrix (or no loopback callback): finish the desktop login straight away.
+                // No Matrix: finish the desktop login straight away.
                 res.clearCookie("playUri", { path: "/" });
                 res.clearCookie("desktopAuth", { path: "/" });
-                const callbackUrl = new URL("workadventure://auth/callback");
-                if (desktopCallbackUrl) {
-                    callbackUrl.href = desktopCallbackUrl;
-                }
+                const callbackUrl = new URL(desktopCallbackUrl);
                 callbackUrl.searchParams.set("origin", new URL(PUSHER_URL).origin);
                 callbackUrl.searchParams.set("code", code);
                 debug(
-                    `Desktop OIDC callback generated deep link for state ${
+                    `Desktop OIDC callback redirecting to the loopback for state ${
                         callbackState?.substring(0, 8) ?? "missing"
                     }...`,
                 );
