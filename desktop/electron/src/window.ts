@@ -5,7 +5,6 @@ import crypto from "crypto";
 import windowStateKeeper from "electron-window-state";
 import path from "path";
 import settings from "./settings";
-import { createDesktopAuthWindowOptions, isExpectedDesktopAuthWindowLoadError } from "./desktop-auth-window-policy";
 import { createDesktopCallbackPage } from "./desktop-callback-page";
 import { createDesktopWindowTitle } from "./app-name-policy";
 import { createDesktopWindowState, type DesktopWindowState } from "./desktop-window-state-policy";
@@ -73,7 +72,6 @@ let mainWindow: BrowserWindow | undefined;
 let pendingDeepLinkUrl: string | undefined;
 let desktopAuthCallbackServer: http.Server | undefined;
 let desktopCallbackServerOrigin: string | undefined;
-let desktopAuthWindow: BrowserWindow | undefined;
 let landingRecoveryInProgress = false;
 let activeTabTeardownWired = false;
 let initialRevealTimer: ReturnType<typeof setTimeout> | undefined;
@@ -373,11 +371,7 @@ async function openDesktopLogin(url: string) {
     const callbackOrigin = await ensureDesktopCallbackServer();
     const flow = registerDesktopCallbackFlow("auth");
     const desktopLoginUrl = createDesktopLoginUrl(url, buildLoopbackCallbackUrl(callbackOrigin, flow));
-    await openDesktopAuthWindow(desktopLoginUrl);
-    if (!hasDesktopAuthWindow()) {
-        return;
-    }
-
+    await openExternal(desktopLoginUrl);
     await showDesktopBrowserFlowPendingScreen(
         "Connexion en cours...",
         "Terminez l'identification dans votre navigateur. WorkAdventure reviendra automatiquement dans cette fenêtre.",
@@ -389,11 +383,7 @@ async function openDesktopLogout(url: string) {
     const callbackOrigin = await ensureDesktopCallbackServer();
     const flow = registerDesktopCallbackFlow("logout");
     const desktopLogoutUrl = createDesktopLogoutUrl(url, buildLoopbackCallbackUrl(callbackOrigin, flow));
-    await openDesktopAuthWindow(desktopLogoutUrl);
-    if (!hasDesktopAuthWindow()) {
-        return;
-    }
-
+    await openExternal(desktopLogoutUrl);
     await showDesktopBrowserFlowPendingScreen(
         "Déconnexion en cours...",
         "Terminez la déconnexion dans votre navigateur. WorkAdventure reviendra automatiquement dans cette fenêtre.",
@@ -414,53 +404,14 @@ async function openDesktopBrowserFlow(url: string) {
     await openDesktopLogout(url);
 }
 
-async function openDesktopAuthWindow(url: string) {
-    if (desktopAuthWindow && !desktopAuthWindow.isDestroyed()) {
-        await loadDesktopAuthWindowUrl(url);
-        desktopAuthWindow.show();
-        desktopAuthWindow.focus();
-        return;
+// Login and logout run in the system browser (RFC 8252: IdPs such as Google refuse embedded web
+// views, and the user keeps their browser session and password manager). Once the browser hits the
+// loopback, pull the app back in front of it.
+function bringAppToFront() {
+    if (process.platform === "darwin") {
+        app.focus({ steal: true });
     }
-
-    desktopAuthWindow = new BrowserWindow({
-        ...createDesktopAuthWindowOptions(),
-        parent: mainWindow,
-    });
-    desktopAuthWindow.setMenu(null);
-    desktopAuthWindow.on("closed", () => {
-        desktopAuthWindow = undefined;
-    });
-    desktopAuthWindow.webContents.setWindowOpenHandler(({ url: popupUrl }) => {
-        void loadDesktopAuthWindowUrl(popupUrl);
-        return { action: "deny" };
-    });
-    await loadDesktopAuthWindowUrl(url);
-}
-
-function hasDesktopAuthWindow() {
-    return Boolean(desktopAuthWindow && !desktopAuthWindow.isDestroyed());
-}
-
-async function loadDesktopAuthWindowUrl(url: string) {
-    try {
-        await desktopAuthWindow?.loadURL(url);
-    } catch (error) {
-        if (isExpectedDesktopAuthWindowLoadError(error) && !hasDesktopAuthWindow()) {
-            ElectronLog.debug(`Ignored desktop auth window load cancellation for "${url}".`, error);
-            return;
-        }
-
-        throw error;
-    }
-}
-
-function closeDesktopAuthWindow() {
-    if (!desktopAuthWindow || desktopAuthWindow.isDestroyed()) {
-        return;
-    }
-
-    desktopAuthWindow.close();
-    desktopAuthWindow = undefined;
+    showWindow();
 }
 
 function isLoopbackHostHeader(host: string | undefined, port: number) {
@@ -553,7 +504,7 @@ function ensureDesktopCallbackServer(): Promise<string> {
             response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
             response.end(createDesktopCallbackPage("Déconnexion terminée. Vous pouvez revenir dans WorkAdventure."));
 
-            closeDesktopAuthWindow();
+            bringAppToFront();
             const config = getDesktopConfig();
             const safeTarget = targetUrl && isAllowedNavigationUrl(targetUrl, config) ? targetUrl : config.portalUrl;
             void loadDesktopTarget(safeTarget);
@@ -576,7 +527,7 @@ function ensureDesktopCallbackServer(): Promise<string> {
         response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
         response.end(createDesktopCallbackPage("Connexion terminée. Vous pouvez revenir dans WorkAdventure."));
 
-        closeDesktopAuthWindow();
+        bringAppToFront();
         void openDesktopAuthCallback({ origin: callbackOrigin, code, matrixLoginToken }).finally(
             maybeStopDesktopCallbackServer
         );

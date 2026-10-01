@@ -42,10 +42,10 @@ describe("DesktopAuthService", () => {
                         expirations.set(key, options.EX);
                         return Promise.resolve();
                     },
-                    get: (key: string) => Promise.resolve(values.get(key) ?? null),
-                    del: (key: string) => {
+                    getDel: (key: string) => {
+                        const value = values.get(key) ?? null;
                         values.delete(key);
-                        return Promise.resolve();
+                        return Promise.resolve(value);
                     },
                 }) as never,
             randomCode: () => "redis-code",
@@ -63,5 +63,20 @@ describe("DesktopAuthService", () => {
             targetUrl: "https://play.workadventu.re/@/team/world/room",
         });
         expect(values.has("desktop-auth:redis-code")).toBe(false);
+    });
+
+    it("bounds the memory fallback by evicting the oldest codes", async () => {
+        let counter = 0;
+        const service = new DesktopAuthService({
+            getRedisClient: () => Promise.resolve(null),
+            randomCode: () => `code-${counter++}`,
+        });
+        const payload = { token: "t", targetUrl: "https://play.workadventu.re/@/team/world/room" };
+
+        const first = await service.createDesktopAuthCode(payload);
+        await Promise.all(Array.from({ length: 10_000 }, () => service.createDesktopAuthCode(payload)));
+
+        await expect(service.exchangeDesktopAuthCode(first)).resolves.toBeUndefined();
+        await expect(service.exchangeDesktopAuthCode(`code-${counter - 1}`)).resolves.toEqual(payload);
     });
 });

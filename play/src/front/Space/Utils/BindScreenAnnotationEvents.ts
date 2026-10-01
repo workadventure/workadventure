@@ -12,6 +12,12 @@ export function bindScreenAnnotationEventsToSpace(
     space: SpaceInterface,
     screenSharingPeerRemoved: Observable<Streamable>,
 ): void {
+    // Every space gets a SpacePeerManager, and both managers follow a single space: binding a chat or
+    // world-wide space here would steal them from the bubble and broadcast its annotations there.
+    // ponytail: one bound video space at a time; per-space state if a user ever shares in two at once.
+    if (!space.isVideoSpace()) {
+        return;
+    }
     screenAnnotationManager.bindToSpace(space, screenSharingPeerRemoved);
     presenterEffectManager.bindToSpace(space, screenSharingPeerRemoved);
 }

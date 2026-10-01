@@ -112,11 +112,14 @@ test("validates and normalizes world URLs entered in the desktop navigation UI",
     });
 });
 
-test("uses the local admin world picker as the default portal (prod defaults exclude .workadventure.localhost)", () => {
+test("uses the hosted admin portal by default in production, the local one in development", () => {
+    withNodeEnv("development", () => {
+        assert.equal(createDesktopConfig({}).portalUrl, "http://admin.workadventure.localhost/");
+    });
     withNodeEnv("production", () => {
         const config = createDesktopConfig({});
 
-        assert.equal(config.portalUrl, "http://admin.workadventure.localhost/");
+        assert.equal(config.portalUrl, "https://admin.workadventu.re/");
         // .workadventure.localhost is intentionally dropped in prod: an attacker on the same
         // LAN can poison DNS for *.workadventure.localhost and serve a fake /desktop-auth/exchange.
         assert.deepEqual(config.allowedHostSuffixes, [".workadventu.re", ".workadventure.fr"]);
@@ -186,7 +189,7 @@ test("migrates the previous broken local hosted map URL from persisted portal_ur
 
     // Portal URL migration: this URL was mistakenly seeded as portal_url in an old build,
     // so we swap it for the admin portal when the user still has it in settings.
-    assert.equal(normalizePersistedPortalUrl(brokenLocalMapUrl), "http://admin.workadventure.localhost/");
+    assert.equal(normalizePersistedPortalUrl(brokenLocalMapUrl), "https://admin.workadventu.re/");
     // But as a room URL it's a perfectly valid target — the user must be able to visit it and
     // have it appear in Recent worlds. If the site is unreachable, did-fail-load bounces to Landing.
     assert.equal(normalizePersistedLastRoomUrl(brokenLocalMapUrl), brokenLocalMapUrl);
@@ -197,7 +200,7 @@ test("migrates the previous https local global map URL to the admin portal", () 
         normalizePersistedPortalUrl(
             "https://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Areas/StartAreas/start_areas.json"
         ),
-        "http://admin.workadventure.localhost/"
+        "https://admin.workadventu.re/"
     );
 });
 
@@ -207,7 +210,7 @@ test("migrates the previous https local global map URL from environment config t
             "https://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Areas/StartAreas/start_areas.json",
     });
 
-    assert.equal(config.portalUrl, "http://admin.workadventure.localhost/");
+    assert.equal(config.portalUrl, "https://admin.workadventu.re/");
 });
 
 test("detects WorkAdventure room URLs that are safe to remember", () => {

@@ -1,6 +1,7 @@
 "use strict";
 
-const DEFAULT_PORTAL_URL = "http://admin.workadventure.localhost/";
+const DEV_PORTAL_URL = "http://admin.workadventure.localhost/";
+const PROD_PORTAL_URL = "https://admin.workadventu.re/";
 const DEFAULT_ALLOWED_HOST_SUFFIXES_PROD = [".workadventu.re", ".workadventure.fr"];
 const DEFAULT_ALLOWED_HOST_SUFFIXES_DEV = [".workadventu.re", ".workadventure.fr", ".workadventure.localhost"];
 const SENSITIVE_QUERY_PARAMS = [
@@ -48,6 +49,12 @@ function isDevEnvironment() {
     return process.env.NODE_ENV === "development";
 }
 
+// A packaged build must never fall back to the local dev stack: `http:` on a non-localhost host is
+// refused outside development, so every "back to the portal" path would land on a dead page.
+function getDefaultPortalUrl() {
+    return isDevEnvironment() ? DEV_PORTAL_URL : PROD_PORTAL_URL;
+}
+
 function getDefaultAllowedHostSuffixes() {
     return isDevEnvironment() ? DEFAULT_ALLOWED_HOST_SUFFIXES_DEV : DEFAULT_ALLOWED_HOST_SUFFIXES_PROD;
 }
@@ -77,7 +84,7 @@ function normalizeOrigin(value) {
 }
 
 function createDesktopConfig(env = process.env) {
-    const portalUrl = normalizePersistedPortalUrl(env.portalUrl || env.WA_DESKTOP_PORTAL_URL, DEFAULT_PORTAL_URL);
+    const portalUrl = normalizePersistedPortalUrl(env.portalUrl || env.WA_DESKTOP_PORTAL_URL, getDefaultPortalUrl());
     const portalOrigin = new URL(portalUrl).origin;
     const allowedOrigins = new Set([portalOrigin]);
 
@@ -138,7 +145,7 @@ function isBrokenPersistedUrl(value) {
     return Boolean(url && BROKEN_PERSISTED_URLS.has(url.toString().replace(/\/$/, "")));
 }
 
-function normalizePersistedPortalUrl(value, fallback = DEFAULT_PORTAL_URL) {
+function normalizePersistedPortalUrl(value, fallback = getDefaultPortalUrl()) {
     if (isBrokenPersistedUrl(value)) {
         return fallback;
     }
@@ -456,6 +463,7 @@ module.exports = {
     createDesktopLoginUrl,
     createDesktopLogoutUrl,
     createRoomUrlWithAuthToken,
+    getDefaultPortalUrl,
     extractDesktopAuthCallback,
     extractDesktopTargetFromDeepLink,
     isAllowedNavigationUrl,
