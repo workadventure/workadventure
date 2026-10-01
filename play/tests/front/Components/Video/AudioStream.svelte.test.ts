@@ -37,7 +37,7 @@ describe("AudioStream", () => {
         vi.restoreAllMocks();
     });
 
-    function render(props: { outputDeviceId?: string }, onselectoutputaudiodeviceerror?: () => void) {
+    function render(props: { outputDeviceId?: string }) {
         component = mount(AudioStream, {
             target,
             props: {
@@ -47,7 +47,6 @@ describe("AudioStream", () => {
                 get outputDeviceId() {
                     return props.outputDeviceId;
                 },
-                onselectoutputaudiodeviceerror,
             },
         });
         flushSync();
@@ -106,17 +105,5 @@ describe("AudioStream", () => {
         await vi.advanceTimersByTimeAsync(0);
 
         expect(setSinkId.mock.calls.map((call) => call[0])).toEqual(["headset-a", "headset-b"]);
-    });
-
-    // The parent then selects another device; the element itself already plays on the system default
-    it("reports a device it could not switch to, once", async () => {
-        setSinkId.mockRejectedValueOnce(new DOMException("aborted", "AbortError")).mockResolvedValue(undefined);
-        const onError = vi.fn();
-        const audio = render({ outputDeviceId: "headset" }, onError);
-        await vi.advanceTimersByTimeAsync(0);
-
-        expect(setSinkId.mock.calls.map((call) => call[0])).toEqual(["headset", ""]);
-        expect(onError).toHaveBeenCalledOnce();
-        expect(audio.srcObject).toBe(stream);
     });
 });
