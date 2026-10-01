@@ -3,7 +3,6 @@ import type { Unsubscriber, Readable } from "svelte/store";
 import { get, readable } from "svelte/store";
 import type { CancelablePromise } from "cancelable-promise";
 import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
-import type { WokaEmoteId } from "@workadventure/shared-utils";
 import { SayMessageType, AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { defaultWoka, Deferred, type Movable, type PositionInterface } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
@@ -18,10 +17,8 @@ import { Companion } from "../Companion/Companion";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { WokaEmoteAnimator } from "../Game/Emote/WokaEmoteAnimator";
-import { getWokaEmote, wokaEmoteSoundKey, wokaEmoteSoundVolume } from "../Game/Emote/WokaEmoteCatalog";
-import type { WokaEmoteSoundSpec } from "../Game/Emote/WokaEmoteCatalog";
-import { getWokaEjection } from "../Game/Emote/WokaEjectionCatalog";
-import type { WokaEjection } from "../Game/Emote/WokaEjectionCatalog";
+import { wokaEmoteSoundKey, wokaEmoteSoundVolume } from "../Game/Emote/WokaEmoteCatalog";
+import type { WokaEmoteDefinition, WokaEmoteSoundSpec } from "../Game/Emote/WokaEmoteCatalog";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { MINIMUM_DISTANCE, WOKA_SPEED } from "../../Enum/EnvironmentVariable";
@@ -79,7 +76,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     private emote: DOMElement | null = null;
     private emoteTween: Tween | null = null;
     private wokaEmote: WokaEmoteAnimator | null = null;
-    private wokaEmoteSound: Phaser.Sound.BaseSound | null = null;
+    private wokaEmoteSounds: Phaser.Sound.BaseSound[] = [];
     private texts: Map<string, DOMElement> = new Map();
     private textsToBuild = new Map();
     scene: GameScene;
@@ -608,8 +605,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     destroy(): void {
-        this.wokaEmoteSound?.destroy();
-        this.wokaEmoteSound = null;
+        this.destroyWokaEmoteSounds();
         this.wokaEmote?.destroy();
         this.wokaEmote = null;
         this.usernameDisplay?.destroy();
@@ -640,20 +636,24 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     /**
      * Plays an animated emote: the Woka itself performs it, as opposed to playEmote() which only
-     * shows an emoji above its head. Some emotes use both.
+     * shows an emoji above its head. Some emotes use both. `mirrored` plays a recipe written from the
+     * left the other way round; `onDone` defaults to handing the frames back to the idle animation.
      */
-    playWokaEmote(emoteId: WokaEmoteId): void {
+    playWokaEmote(
+        definition: WokaEmoteDefinition<string>,
+        mirrored = false,
+        onDone: () => void = () => this.stopWokaEmote(),
+    ): void {
         this.stopWokaEmote();
-        const definition = getWokaEmote(emoteId);
         // The bubble is the fallback for emotes with nothing floating off them; showing both would
         // put a big emoji on top of the little ones saying the same thing.
         if (definition.bubble && !definition.particles) {
             this.playEmote(definition.bubble);
         }
-        this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, this, definition, () => this.stopWokaEmote());
+        this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, this, definition, onDone, mirrored);
         this.wokaEmote.start();
-        if (definition.sound) {
-            this.playWokaEmoteSound(definition.sound);
+        for (const sound of definition.sounds ?? []) {
+            this.playWokaEmoteSound(sound);
         }
     }
 
@@ -661,10 +661,8 @@ export abstract class Character extends Container implements OutlineableInterfac
      * Plays the scene of a moderator removing this Woka — kicked off the map or locked up — then
      * calls `onDone`, which is expected to destroy it. The user has already left the room, so for
      * the length of the scene the Woka is a ghost: no name, no bubble, nothing to click.
-     * `fromLeft` is the moderator's side: the Woka is thrown away from it.
      */
-    playEjection(ejection: WokaEjection, fromLeft: boolean, onDone: () => void): void {
-        this.stopWokaEmote();
+    playEjection(definition: WokaEmoteDefinition<string>, mirrored: boolean, onDone: () => void): void {
         this.setClickable(false);
         this.usernameDisplay?.destroy();
         this.usernameDisplay = undefined;
@@ -674,12 +672,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                 (child as Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Visible).setVisible(false);
             }
         }
-        const definition = getWokaEjection(ejection);
-        this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, this, definition, onDone, !fromLeft);
-        this.wokaEmote.start();
-        if (definition.sound) {
-            this.playWokaEmoteSound(definition.sound);
-        }
+        this.playWokaEmote(definition, mirrored, onDone);
     }
 
     /**
@@ -692,17 +685,24 @@ export abstract class Character extends Container implements OutlineableInterfac
         const distance = MathUtils.distanceBetween(this, this.scene.CurrentPlayer);
         const volume = wokaEmoteSoundVolume(distance, MINIMUM_DISTANCE);
         if (volume <= 0) return;
-        this.wokaEmoteSound = this.scene.sound.add(wokaEmoteSoundKey(sound), {
+        const played = this.scene.sound.add(wokaEmoteSoundKey(sound), {
             volume,
             delay: (sound.at ?? 0) / 1000,
         });
-        this.wokaEmoteSound.play();
+        played.play();
+        this.wokaEmoteSounds.push(played);
+    }
+
+    private destroyWokaEmoteSounds(): void {
+        for (const sound of this.wokaEmoteSounds) {
+            sound.destroy();
+        }
+        this.wokaEmoteSounds = [];
     }
 
     stopWokaEmote(): void {
-        // An interrupted emote takes its sound with it, the same way it takes its glyphs.
-        this.wokaEmoteSound?.destroy();
-        this.wokaEmoteSound = null;
+        // An interrupted emote takes its sounds with it, the same way it takes its glyphs.
+        this.destroyWokaEmoteSounds();
         if (!this.wokaEmote) return;
         this.wokaEmote.destroy();
         this.wokaEmote = null;

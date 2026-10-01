@@ -20,7 +20,9 @@ export type WokaEmoteGlyphName =
     | "star"
     | "cell"
     | "grawlix"
-    | "dust";
+    | "dust"
+    | "wave"
+    | "flash";
 
 interface PixelGlyph {
     /** Fixed colour, or undefined to draw each instance in a different palette colour. */
@@ -135,6 +137,15 @@ const PIXEL_GLYPHS: Record<WokaEmoteGlyphName, PixelGlyph> = {
     dust: {
         color: "#b9b5cf",
         rows: [" xx ", "xxxx", " xx "],
+    },
+    // The crescent of a kick given from afar, with its trail: it travels from the moderator to the target.
+    wave: {
+        palette: { w: "#ffffff", c: "#bfeaff" },
+        rows: ["c c  ww  ", "     c w ", "c c     w", "        w", "c c     w", "     c w ", "c c  ww  "],
+    },
+    flash: {
+        palette: { w: "#ffffff", y: "#fff6a8" },
+        rows: ["   y   ", "  www  ", " wwwww ", "ywwwwwy", " wwwww ", "  www  ", "   y   "],
     },
 };
 

@@ -224,15 +224,17 @@ describe("the sounds", () => {
         // The Phaser loader only warns on a 404, so a typo here would be a silent emote in production.
         const shipped = Object.keys(import.meta.glob("/public/resources/objects/emotes/*"));
         for (const definition of WOKA_EMOTES) {
-            if (!definition.sound) continue;
-            expect(shipped, definition.id).toContain("/public" + WOKA_EMOTE_SOUND_PATH + definition.sound.file);
+            for (const sound of definition.sounds ?? []) {
+                expect(shipped, definition.id).toContain("/public" + WOKA_EMOTE_SOUND_PATH + sound.file);
+            }
         }
     });
 
     it("starts before the emote is over", () => {
         for (const definition of WOKA_EMOTES) {
-            if (!definition.sound) continue;
-            expect(definition.sound.at ?? 0).toBeLessThan(definition.duration);
+            for (const sound of definition.sounds ?? []) {
+                expect(sound.at ?? 0).toBeLessThan(definition.duration);
+            }
         }
     });
 });

@@ -51,6 +51,7 @@ import type {
     BanIpPreviewQuery,
     WorldUser,
     WorldUsersAnswer,
+    UserEjection,
 } from "@workadventure/messages";
 import { noUndefined } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
@@ -62,7 +63,7 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { PusherRoom } from "../models/PusherRoom";
 import type { BackConnection } from "../models/Websocket/SocketData";
 
-import type { GroupDescriptor, UserDescriptor, UserEjection, ZoneEventListener } from "../models/Zone";
+import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
 import { EMBEDDED_DOMAINS_WHITELIST, FRONT_URL, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from "../enums/EnvironmentVariable";
 import type { SpaceInterface } from "../models/Space";
@@ -1066,8 +1067,7 @@ export class SocketManager implements ZoneEventListener {
                 $case: "userLeftMessage",
                 userLeftMessage: {
                     userId,
-                    ejection: ejection?.ejection,
-                    ejectedFromLeft: ejection?.ejectedFromLeft,
+                    ejection,
                 },
             },
         });

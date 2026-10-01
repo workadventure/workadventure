@@ -1198,18 +1198,27 @@ message UserJoinedMessage {
   SayMessage sayMessage = 14;
 }
 
+/*
+ * How a moderator removed a user. Set by the back only, on the UserLeft messages, so that the other
+ * players see the Woka thrown out instead of vanishing.
+ */
+message UserEjection {
+  /* "kicked" or "banned". */
+  string type = 1;
+  /* The moderator stood on the user's left (a coin toss for back-office orders): the scene comes from the left. */
+  bool fromLeft = 2;
+  /* The moderator's userId, when the order came from a moderator in the room. */
+  optional int32 moderatorUserId = 3;
+  /* The moderator stood within MINIMUM_DISTANCE: their own Woka gives the kick. */
+  bool melee = 4;
+  /* Drawn once by the back; every player derives the same variant of the scene from it. */
+  uint32 roll = 5;
+}
+
 message UserLeftMessage {
   int32 userId = 1;
-  /*
-   * Set when a moderator removed the user: "kicked" or "banned". The other players then play an
-   * ejection animation instead of making the Woka vanish.
-   */
-  optional string ejection = 2;
-  /*
-   * With `ejection`: true when the moderator stood on the left of the user, so the ejection comes
-   * from the left (the Woka is thrown to the right).
-   */
-  optional bool ejectedFromLeft = 3;
+  /* Set when a moderator removed the user. */
+  UserEjection ejection = 2;
 }
 
 /*
@@ -1666,13 +1675,8 @@ message UserJoinedZoneMessage {
 message UserLeftZoneMessage {
   int32 userId = 1;
   Zone toZone = 2;
-  /*
-   * Set when a moderator removed the user: "kicked" or "banned". Relayed to the players as
-   * UserLeftMessage.ejection.
-   */
-  optional string ejection = 3;
-  /* See UserLeftMessage.ejectedFromLeft. */
-  optional bool ejectedFromLeft = 4;
+  /* Set when a moderator removed the user. Relayed as is on UserLeftMessage. */
+  UserEjection ejection = 3;
 }
 
 message GroupUpdateZoneMessage {

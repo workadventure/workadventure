@@ -65,13 +65,15 @@ export interface WokaEmoteParticleSpec {
 }
 
 /**
- * A ring drawn on the floor, under the Woka. The floating glyphs are DOM elements and therefore
- * always render above the canvas, so anything meant to be *under* the character has to be drawn by
- * Phaser instead — which is what this describes.
+ * A mark drawn on the floor, under the Woka: a ring, or a filled shadow. The floating glyphs are DOM
+ * elements and therefore always render above the canvas, so anything meant to be *under* the
+ * character has to be drawn by Phaser instead — which is what this describes.
  */
 export interface WokaEmoteGroundSpec {
-    /** Stroke colour, as a Phaser hex number. */
+    /** Colour, as a Phaser hex number. */
     color: number;
+    /** A filled disc (a shadow) instead of the arcs of a ring. */
+    fill?: boolean;
     /** Radius at scale 1, in sprite pixels. */
     radius: number;
     /** Stroke width, in sprite pixels. */
@@ -82,7 +84,8 @@ export interface WokaEmoteGroundSpec {
     arcs: [number, number][];
     /** Height of the floor above the sprite origin. Defaults to the feet. */
     offsetY?: number;
-    sample: (elapsed: number) => { scale?: number; alpha?: number; angle?: number };
+    /** `x` slides the mark along the floor, for a shadow that follows a Woka in flight. */
+    sample: (elapsed: number) => { x?: number; scale?: number; alpha?: number; angle?: number };
 }
 
 /**
@@ -158,8 +161,8 @@ export interface WokaEmoteDefinition<Id extends string = WokaEmoteId> {
     particles?: WokaEmoteParticleSpec[];
     /** A mark left on the floor under the Woka, for emotes whose energy goes downwards. */
     ground?: WokaEmoteGroundSpec;
-    /** A sound heard by the players standing near the Woka. */
-    sound?: WokaEmoteSoundSpec;
+    /** Sounds heard by the players standing near the Woka, each at its own instant. */
+    sounds?: WokaEmoteSoundSpec[];
     /** Objects drawn around the Woka for the whole scene. */
     props?: WokaEmotePropSpec[];
     sample: (elapsed: number) => Partial<WokaEmoteState>;
@@ -255,7 +258,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         id: "question",
         duration: 1400,
         icon: "❓",
-        sound: { file: "question.mp3" },
+        sounds: [{ file: "question.mp3" }],
         // Here the tilt is the message rather than a stand-in for a missing arm: a head leans when
         // it does not understand.
         particles: [
@@ -281,7 +284,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         id: "laugh",
         duration: 1100,
         icon: "😂",
-        sound: { file: "laugh.mp3" },
+        sounds: [{ file: "laugh.mp3" }],
         // A body that bounces on the spot is not, on its own, readable as laughter: `celebrate` and
         // `jump` bounce too. The three "HA" puffs are what names the emote, and they leave the head
         // in the rhythm of the shake.
@@ -411,7 +414,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         id: "celebrate",
         duration: 1400, // two 700ms hops
         icon: "🎉",
-        sound: { file: "celebrate.mp3" },
+        sounds: [{ file: "celebrate.mp3" }],
         // The confetti of the mock-up would need a pixel-art sheet that does not exist yet; until it
         // does, the bubble carries the celebration and the body carries the energy.
         bubble: "🎉",
@@ -450,7 +453,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         id: "nope",
         duration: 700,
         icon: "🙅",
-        sound: { file: "nope.mp3" },
+        sounds: [{ file: "nope.mp3" }],
         sample: (t) => ({
             frame: stepThrough(t, 160, [LEFT, RIGHT]),
             x: oscillate(t, 160) * 3 * Math.max(0, 1 - t / 700),

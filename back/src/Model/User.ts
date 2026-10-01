@@ -2,6 +2,7 @@ import type { ServerDuplexStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import type {
     ApplicationMessage,
+    UserEjection,
     CharacterTextureMessage,
     CompanionTextureMessage,
     PusherToBackMessage,
@@ -35,7 +36,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
     private followedBy: Set<User> = new Set<User>();
     public disconnected = false;
     /** Set just before a moderator removes the user, so the other players can see why it left. */
-    public ejection: { type: "kicked" | "banned"; fromLeft: boolean } | undefined;
+    public ejection: UserEjection | undefined;
     private isRoomJoinedMessage = false;
     private pendingMessages: NonNullable<ServerToClientMessage["message"]>[] = [];
     /**
