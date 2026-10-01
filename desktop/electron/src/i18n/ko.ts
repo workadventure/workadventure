@@ -18,6 +18,11 @@ const ko: NativeStrings = {
     "landing.pinWorld": "월드 고정",
     "landing.unpinWorld": "월드 고정 해제",
     "landing.urlRequired": "월드 URL을 입력하세요.",
+    "landing.urlInvalid": "잘못된 URL입니다. 월드의 전체 http(s):// URL을 입력하세요.",
+    "landing.urlProtocol": "http(s):// URL만 지원됩니다.",
+    "landing.urlHost": "잘못된 URL입니다: 호스트가 없거나 자격 증명이 포함되어 있습니다.",
+    "landing.urlNotAllowed":
+        "이 URL은 허용된 출처에 없습니다. WA_DESKTOP_ALLOWED_ORIGINS를 설정하거나 workadventu.re 월드 URL을 사용하세요.",
     "landing.joinFailed": "월드에 참여하지 못했습니다.",
     "landing.signupFailed": "가입 페이지를 열 수 없습니다.",
     "landing.desktopOnly": "이 작업은 데스크톱 앱에서만 사용할 수 있습니다.",

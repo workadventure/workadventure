@@ -1,5 +1,7 @@
 "use strict";
 
+const { textDirection } = require("./native-locale-policy");
+
 function escapeHtml(value) {
     return value
         .replaceAll("&", "&amp;")
@@ -12,7 +14,7 @@ function escapeHtml(value) {
 function createDesktopCallbackPage(message, closeHint = "You can close this window.", lang = "en") {
     const safeMessage = escapeHtml(message);
     return `<!doctype html>
-<html lang="${escapeHtml(lang)}">
+<html lang="${escapeHtml(lang)}" dir="${textDirection(lang)}">
 <head>
   <meta charset="utf-8" />
   <title>WorkAdventure</title>
