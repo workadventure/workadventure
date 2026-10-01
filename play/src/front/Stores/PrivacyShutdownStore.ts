@@ -15,6 +15,9 @@ import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
  *  - peers are publishing video (covers active LiveKit room when tracks have subscribed)
  *  - a live stream is running
  *
+ * Only focus and the desktop PiP can turn privacy OFF once it is on; the last three only keep it
+ * off while the user leaves.
+ *
  * NOTE: we deliberately import LEAF stores (currentPlayerGroupIdStore) rather than
  * `isInActiveConversationStore` from StreamableCollectionStore. The latter would close a
  * circular import chain (PrivacyShutdownStore → StreamableCollectionStore → ScreenSharingStore →
@@ -30,7 +33,14 @@ function createPrivacyShutdownStore() {
         if (get(focusStore)) {
             return apply(false);
         }
-        if (get(activePictureInPictureStore)) {
+        const nativePipOpen = Boolean(window.WAD?.desktop && window.WAD.pip) && get(activePictureInPictureStore);
+        // Once the camera is off for privacy, only coming back (or the desktop PiP, which the user is
+        // looking at) turns it on again. The other signals only keep it on while the user is still
+        // engaged; otherwise someone walking up to an AWAY user would switch their camera back on.
+        if (current && !nativePipOpen) {
+            return;
+        }
+        if (nativePipOpen) {
             return apply(false);
         }
         if (get(currentPlayerGroupIdStore) !== undefined) {

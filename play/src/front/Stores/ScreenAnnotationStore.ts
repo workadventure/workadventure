@@ -17,6 +17,10 @@ import type { ScreenAnnotationElement } from "@workadventure/messages";
 export const ANNOTATION_TOOLS = ["pen", "line", "arrow", "rect", "text", "eraser"] as const;
 export type AnnotationTool = (typeof ANNOTATION_TOOLS)[number];
 
+export function isAnnotationTool(tool: string): tool is AnnotationTool {
+    return (ANNOTATION_TOOLS as readonly string[]).includes(tool);
+}
+
 // Per target screen share: the ordered list of drawable elements.
 export const screenAnnotationElementsStore = writable<Map<string, ScreenAnnotationElement[]>>(new Map());
 
