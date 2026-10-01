@@ -3,7 +3,7 @@ import type { NativeStrings } from "./en";
 const ca: NativeStrings = {
     "landing.heading": "El teu lloc de treball, a una URL de distància.",
     "landing.intro":
-        "Obre un món al qual ja pertanys o crea un espai nou per al teu equip. El teu darrer món es tornarà a obrir automàticament la propera vegada.",
+        "Obre un món al qual ja pertanys o crea un món nou per al teu equip. El teu darrer món es tornarà a obrir automàticament la propera vegada.",
     "landing.recentWorlds": "Mons recents",
     "landing.joinTitle": "Uneix-te a un món",
     "landing.joinHint": "Enganxa la URL completa de la teva invitació o del navegador.",
@@ -18,12 +18,14 @@ const ca: NativeStrings = {
     "landing.pinWorld": "Fixa el món",
     "landing.unpinWorld": "Deixa de fixar el món",
     "landing.urlRequired": "Introdueix la URL d'un món.",
-    "landing.urlInvalid": "URL no vàlida. Introdueix la URL completa http(s):// d'un món.",
-    "landing.urlProtocol": "Només s'admeten URL http(s)://.",
-    "landing.urlHost": "URL no vàlida: falta l'amfitrió o conté credencials.",
+    "landing.urlInvalid":
+        "Aquest enllaç no és vàlid. Copia l'enllaç complet del món des de la teva invitació o del navegador.",
+    "landing.urlProtocol": "L'enllaç del teu món ha de començar per https:// o http://.",
+    "landing.urlHost":
+        "Aquest enllaç està incomplet o conté un nom d'usuari o una contrasenya. Copia l'enllaç del món des de la teva invitació.",
     "landing.urlNotAllowed":
-        "Aquesta URL no és entre els orígens permesos. Defineix WA_DESKTOP_ALLOWED_ORIGINS o fes servir la URL d'un món de workadventu.re.",
-    "landing.joinFailed": "No s'ha pogut accedir al món.",
+        "Aquesta adreça no és un món de WorkAdventure que l'aplicació conegui. Comprova l'enllaç o pregunta-ho al teu administrador.",
+    "landing.joinFailed": "No t'has pogut unir a aquest món. Torna-ho a provar.",
     "landing.signupFailed": "No s'ha pogut obrir la pàgina de registre.",
     "landing.desktopOnly": "Aquesta acció només està disponible a l'aplicació d'escriptori.",
     "landing.worldNotLoaded": "No s'ha pogut carregar aquest món. Comprova la URL i torna-ho a provar.",
@@ -50,7 +52,7 @@ const ca: NativeStrings = {
     "menu.noRecentWorlds": "No hi ha mons recents",
     "menu.hideTabBarTitle": "Vols amagar la barra de pestanyes?",
     "menu.cancel": "Cancel·la",
-    "menu.closeOneOtherTab": "Tanca 1 pestanya més i amaga la barra",
+    "menu.closeOneOtherTab": "Tanca l'altra pestanya i amaga la barra",
     "menu.closeOtherTabs": "Tanca les altres {count} pestanyes i amaga la barra",
     "menu.hideTabBarDetailOne":
         "Tens {total} mons oberts en pestanyes. Si amagues la barra de pestanyes, es mantindrà el món actual i es tancarà l'altre.",
@@ -64,11 +66,11 @@ const ca: NativeStrings = {
     "tray.status.idle": "Inactiu",
     "tray.status.online": "Disponible",
     "tray.status.offline": "Desconnectat",
-    "tray.statusLocked": "Bloquejat durant una reunió",
+    "tray.statusLocked": "No es pot canviar l'estat durant una reunió",
     "tray.microphone": "Micròfon",
     "tray.camera": "Càmera",
     "tray.companionPanel": "Tauler complementari",
-    "tray.showHide": "Mostra / Amaga",
+    "tray.showHide": "Mostra / amaga",
     "tray.worlds": "Mons",
     "tray.help": "Ajuda",
     "tray.checkForUpdates": "Cerca actualitzacions",
@@ -78,17 +80,23 @@ const ca: NativeStrings = {
 
     "auth.pageTitle": "Inici de sessió a WorkAdventure",
     "auth.signingInTitle": "S'està iniciant la sessió…",
-    "auth.signingInMessage":
-        "Acaba d'iniciar la sessió al navegador. WorkAdventure tornarà a aquesta finestra automàticament.",
+    "auth.signingInMessage": "Acaba d'iniciar la sessió al navegador. Tornaràs a l'aplicació automàticament.",
     "auth.signingOutTitle": "S'està tancant la sessió…",
-    "auth.signingOutMessage":
-        "Acaba de tancar la sessió al navegador. WorkAdventure tornarà a aquesta finestra automàticament.",
+    "auth.signingOutMessage": "Acaba de tancar la sessió al navegador. Tornaràs a l'aplicació automàticament.",
     "auth.reopenBrowser": "Torna a obrir el navegador",
     "auth.signedIn": "Sessió iniciada. Ja pots tornar a WorkAdventure.",
     "auth.signedOut": "Sessió tancada. Ja pots tornar a WorkAdventure.",
     "auth.closeWindow": "Ja pots tancar aquesta finestra.",
 
     "screenIdentify.clickToShare": "Fes clic per compartir aquesta pantalla · {size}",
+    "update.checking": "S'estan cercant actualitzacions…",
+    "update.title": "Actualització de WorkAdventure",
+    "update.ready": "L'actualització és a punt. Reinicia WorkAdventure per instal·lar-la.",
+    "update.installAndRestart": "Instal·la i reinicia",
+    "update.installLater": "Instal·la més tard",
+    "update.availableTitle": "Hi ha una actualització de WorkAdventure disponible",
+    "update.availableBody": "Baixa i instal·la la darrera versió des del lloc web de WorkAdventure.",
+    "update.none": "No hi ha cap actualització disponible.",
 };
 
 export default ca;
