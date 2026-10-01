@@ -3,6 +3,7 @@ import ElectronLog from "electron-log";
 import electronIsDev from "electron-is-dev";
 import path from "path";
 import { pathToFileURL } from "url";
+import { ensureWorldOriginTrusted, getDesktopConfig } from "./origin-verification";
 import settings from "./settings";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { setRendererPresence } from "./presence";
@@ -19,7 +20,7 @@ import {
 } from "./window";
 import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle, setTabInMeeting } from "./tab-manager";
 import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
-import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
+import { isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import { isPipWindowOpen, sendToPip } from "./pip-window";
 import {
     awaitOverlayReady,
@@ -333,10 +334,7 @@ export default () => {
     });
 
     ipcMain.handle("app:getDesktopCapturerSources", async (event, options: unknown) => {
-        const config = createDesktopConfig({
-            ...process.env,
-            portalUrl: settings.get("portal_url"),
-        });
+        const config = getDesktopConfig();
         const senderFrame = event.senderFrame;
         const senderUrl = senderFrame?.url ?? "";
         // Refuse: missing frame, sub-frame (iframe), or frame not on an allow-listed origin.
@@ -406,11 +404,14 @@ export default () => {
             ElectronLog.warn("Rejected world navigation from non-main renderer");
             return { ok: false, error: t("landing.desktopOnly") };
         }
-        const config = createDesktopConfig({
-            ...process.env,
-            portalUrl: settings.get("portal_url"),
-        });
-        const validation = validateDesktopNavigationUrl(rawUrl, config);
+        const config = getDesktopConfig();
+        let validation = validateDesktopNavigationUrl(rawUrl, config);
+        // A white-label world: the URL is fine but its origin is not built in, ask the portal's admin.
+        if (!validation.ok && validation.code === "urlNotAllowed" && typeof rawUrl === "string") {
+            if (await ensureWorldOriginTrusted(rawUrl.trim())) {
+                validation = validateDesktopNavigationUrl(rawUrl, getDesktopConfig());
+            }
+        }
         if (!validation.ok) {
             return { ok: false, error: t(`landing.${validation.code}`) };
         }
