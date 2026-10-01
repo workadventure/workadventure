@@ -3,6 +3,7 @@ import { app, globalShortcut } from "electron";
 import ElectronLog from "electron-log";
 
 import { createWindow, getWindow, openDeepLinkTarget } from "./window";
+import { getTabs } from "./tab-manager";
 import { createTray } from "./tray";
 import { startIdleMonitor } from "./idle-monitor";
 import { startCompanionController } from "./companion-controller";
@@ -135,10 +136,12 @@ async function init() {
         // Auto-away + notification hush: forward system idle transitions to the renderer, which
         // flips the WA availability to "away" and back. presence.setIdle (called inside) also
         // drives the tray status dot.
+        // The shell window has no preload: the worlds live in the tab views, so every tab gets it.
         startIdleMonitor((idle) => {
-            const mainWindow = getWindow();
-            if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-                mainWindow.webContents.send("app:on-system-idle", idle);
+            for (const tab of getTabs()) {
+                if (!tab.view.webContents.isDestroyed()) {
+                    tab.view.webContents.send("app:on-system-idle", idle);
+                }
             }
         });
 

@@ -4,7 +4,6 @@ import electronIsDev from "electron-is-dev";
 import path from "path";
 import { pathToFileURL } from "url";
 import settings from "./settings";
-import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { setRendererPresence } from "./presence";
 import { closeCompanionPip, dismissCompanion, openCompanionForPip } from "./companion-controller";
@@ -17,7 +16,7 @@ import {
     loadDesktopTarget,
     openWorldTab,
 } from "./window";
-import { activateTab, closeTab, setActiveWorldTitle } from "./tab-manager";
+import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle } from "./tab-manager";
 import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
 import { createDesktopConfig, isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import { isPipWindowOpen, sendToPip } from "./pip-window";
@@ -65,6 +64,44 @@ type CapturerCacheEntry = {
     result: Array<{ id: string; name: string; thumbnailURL: string; display_id?: number }>;
 };
 const desktopCapturerCacheByFrame = new Map<string, CapturerCacheEntry>();
+let presenterToolGeneration = 0;
+let pipOwner: Electron.WebContents | undefined;
+
+const keepAwakeByTab = new Map<number, number>();
+const unreadByTab = new Map<number, number>();
+
+function sumOf(values: Map<number, number>): number {
+    let total = 0;
+    for (const value of values.values()) {
+        total += value;
+    }
+    return total;
+}
+
+function applyKeepAwake(): void {
+    setKeepAwake(sumOf(keepAwakeByTab) > 0);
+}
+
+function applyUnreadCount(): void {
+    setUnreadCount(sumOf(unreadByTab), getWindow() ?? undefined);
+}
+
+function trackPerTab(
+    values: Map<number, number>,
+    contents: Electron.WebContents,
+    value: number,
+    apply: () => void
+): void {
+    if (!values.has(contents.id)) {
+        const id = contents.id;
+        contents.once("destroyed", () => {
+            values.delete(id);
+            apply();
+        });
+    }
+    values.set(contents.id, value);
+    apply();
+}
 
 // Companion windows we've already wired the "closed → tell the WA renderer to stop the PiP" hook to.
 // The companion outlives a single meeting (it stays open on People after a call ends), so app:pip:open
@@ -170,6 +207,8 @@ export default () => {
         if (!options) {
             return;
         }
+        // The click belongs to the world that raised the notification, which may be a background tab.
+        const sender = event.sender;
         showNotification(options, (tag) => {
             const mainWindow = getWindow();
             if (mainWindow && !mainWindow.isDestroyed()) {
@@ -177,23 +216,32 @@ export default () => {
                 mainWindow.show();
                 mainWindow.focus();
             }
-            getActiveWorldContents()?.send("app:on-notification-click", tag ?? "");
+            const tab = getTabs().find((candidate) => candidate.view.webContents === sender);
+            if (!tab || sender.isDestroyed()) {
+                return;
+            }
+            activateTab(tab.id);
+            sender.send("app:on-notification-click", tag ?? "");
         });
     });
 
+    // Keep-awake and the unread badge aggregate every tab: a meeting in a background tab still needs
+    // the display on, and each tab must be able to release what it asked for even once it is no
+    // longer the active one (otherwise the blocker outlives the meeting). A closed tab's renderer
+    // drops its entry.
     ipcMain.on("app:setKeepAwake", (event, enabled: unknown) => {
-        if (!isFromMainRenderer(event)) {
+        if (!isWorldContents(event.sender)) {
             return;
         }
-        setKeepAwake(Boolean(enabled));
+        trackPerTab(keepAwakeByTab, event.sender, enabled ? 1 : 0, applyKeepAwake);
     });
 
     ipcMain.on("app:setUnreadCount", (event, count: unknown) => {
-        if (!isFromMainRenderer(event)) {
+        if (!isWorldContents(event.sender)) {
             return;
         }
-        const parsed = typeof count === "number" && Number.isFinite(count) ? count : 0;
-        setUnreadCount(parsed, getWindow() ?? undefined);
+        const parsed = typeof count === "number" && Number.isFinite(count) ? Math.max(0, count) : 0;
+        trackPerTab(unreadByTab, event.sender, parsed, applyUnreadCount);
     });
 
     ipcMain.on("app:setPresence", (event, presence: unknown) => {
@@ -227,6 +275,7 @@ export default () => {
         if (!isFromMainRenderer(event)) {
             return;
         }
+        const generation = ++presenterToolGeneration;
         const raw = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
         const tool = typeof raw.tool === "string" ? raw.tool : "none";
         const sourceId = typeof raw.sourceId === "string" ? raw.sourceId : undefined;
@@ -241,6 +290,10 @@ export default () => {
             // so the cursor is normalized against the SHARED screen, not the primary one.
             if (displayId === undefined && sourceId && sourceId.startsWith("screen:")) {
                 displayId = await resolveDisplayIdFromScreenSource(sourceId);
+                // A newer tool choice, or a tab switch (which stops the cursor), happened meanwhile.
+                if (generation !== presenterToolGeneration || !isFromMainRenderer(event)) {
+                    return;
+                }
             }
             startPresenterCursor(displayId, (x, y, point) => {
                 // → the world renderer, which broadcasts to viewers over the space. Viewers map this
@@ -298,6 +351,13 @@ export default () => {
             // annotation overlay on the correct display.
             display_id: source.display_id ? Number(source.display_id) : undefined,
         }));
+        // Entries only serve the throttle window: drop the stale ones (frames of closed tabs and
+        // reloads would otherwise keep their thumbnail data URLs forever).
+        for (const [key, entry] of desktopCapturerCacheByFrame) {
+            if (now - entry.at >= DESKTOP_CAPTURER_MIN_INTERVAL_MS) {
+                desktopCapturerCacheByFrame.delete(key);
+            }
+        }
         desktopCapturerCacheByFrame.set(frameKey, { at: Date.now(), result });
         return result;
     });
@@ -460,6 +520,9 @@ export default () => {
         // the WA renderer starts sending its SDP offer — otherwise the first offer lands in a deaf
         // renderer and tracks only start mirroring on the next store change (someone joining/leaving).
         await openCompanionForPip();
+        // The window closes asynchronously, possibly after a tab switch: tell the world that opened the
+        // PiP, not whichever tab is active by then.
+        pipOwner = event.sender;
         const companion = getHudWindow("companion");
         if (companion && !pipClosedHookWired.has(companion)) {
             pipClosedHookWired.add(companion);
@@ -467,14 +530,23 @@ export default () => {
             // the call is live, tell the WA renderer to tear its side down too. stop() is idempotent,
             // so a late fire after the meeting already ended is harmless.
             companion.once("closed", () => {
-                getActiveWorldContents()?.send("app:pip:closed");
-                closeCompanionPip();
+                if (pipOwner && !pipOwner.isDestroyed()) {
+                    pipOwner.send("app:pip:closed");
+                }
+                // A companion reopened in the meantime hosts a new PiP: this late close is not about it.
+                const current = getHudWindow("companion");
+                if (!current || current === companion || current.isDestroyed()) {
+                    closeCompanionPip();
+                }
             });
         }
         return isPipWindowOpen();
     });
 
-    ipcMain.handle("app:pip:close", () => {
+    // Close requests are honoured from the foreground world only, like the opens: a background tab
+    // whose own meeting ends must not tear down the windows the active tab is using.
+    ipcMain.handle("app:pip:close", (event) => {
+        if (!isFromMainRenderer(event)) return;
         // Tear down the companion's meeting peer connection + tiles, then drop the keep-open and
         // re-evaluate the panel's visibility (it stays open on People if WA is still backgrounded).
         sendToPip("app:pip:close");
@@ -511,24 +583,6 @@ export default () => {
         sendToPip("app:pip:state-to-pip", state);
     });
 
-    ipcMain.on("app:pip:command-from-pip", (_event, command: unknown) => {
-        // Intercept `focus-main` directly in the main process — it does not need to round-trip
-        // through the renderer. The defensive close on mainWindow.on('focus') then naturally
-        // tears down the PiP utility window.
-        if (command !== null && typeof command === "object" && (command as { type?: unknown }).type === "focus-main") {
-            const mainWindow = getWindow();
-            if (mainWindow && !mainWindow.isDestroyed()) {
-                if (mainWindow.isMinimized()) {
-                    mainWindow.restore();
-                }
-                mainWindow.show();
-                mainWindow.focus();
-            }
-            return;
-        }
-        getActiveWorldContents()?.send("app:pip:command-to-main", command);
-    });
-
     // ---- Screen-annotation overlay (transparent, always-on-top, click-through) ----
     // A real desktop window that covers the shared screen; captured by getDisplayMedia so strokes
     // are baked into the shared pixels. Draw ops from the presenter are relayed to the main renderer,
@@ -555,10 +609,14 @@ export default () => {
             )} resolvedDisplayId=${String(displayId)}`
         );
         if (!isOverlayWindowOpen()) {
+            const owner = event.sender;
             createOverlayWindow({
                 displayId,
                 onClosed: () => {
-                    getActiveWorldContents()?.send("app:overlay:exit-to-main");
+                    // To the world that opened it: by the time it closes, another tab may be active.
+                    if (!owner.isDestroyed()) {
+                        owner.send("app:overlay:exit-to-main");
+                    }
                 },
             });
         }
@@ -566,7 +624,8 @@ export default () => {
         return true;
     });
 
-    ipcMain.handle("app:overlay:close", () => {
+    ipcMain.handle("app:overlay:close", (event) => {
+        if (!isFromMainRenderer(event)) return;
         closeOverlayWindow();
     });
 
@@ -619,7 +678,8 @@ export default () => {
         }
         return openHudWindow("meeting-bar", await resolveHudDisplayId(opts));
     });
-    ipcMain.handle("app:hud:close-meeting-bar", () => {
+    ipcMain.handle("app:hud:close-meeting-bar", (event) => {
+        if (!isFromMainRenderer(event)) return;
         closeHudWindow("meeting-bar");
     });
 
@@ -723,10 +783,4 @@ export default () => {
     ipcMain.on("app:hud:ready", (event) => {
         markHudReady(event.sender);
     });
-
-    ipcMain.handle("local-app:reloadShortcuts", (event) => loadShortcuts());
-
-    ipcMain.handle("local-app:getSettings", (event) => settings.get() || {});
-
-    ipcMain.handle("local-app:setShortcutsEnabled", (event, enabled: boolean) => setShortcutsEnabled(enabled));
 };

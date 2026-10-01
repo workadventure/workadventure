@@ -4,14 +4,6 @@ import settings, { SettingsData } from "./settings";
 import { emitCameraToggle, emitMuteToggle } from "./ipc";
 import { toggleCompanion } from "./companion-controller";
 
-export function setShortcutsEnabled(enabled: boolean) {
-    if (enabled) {
-        loadShortcuts();
-    } else {
-        globalShortcut.unregisterAll();
-    }
-}
-
 /**
  * Register one global accelerator, tolerating both failure modes Electron has here: `register`
  * returns false when the OS or another app already owns the combo, and it throws outright on a

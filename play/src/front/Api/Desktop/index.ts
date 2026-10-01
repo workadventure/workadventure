@@ -17,7 +17,9 @@ import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationSto
 import { playersStore } from "../../Stores/PlayersStore";
 import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { requestVisitCardsStore } from "../../Stores/GameStore";
+import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { meetingOf } from "../../Administration/CurrentMeeting";
 import { openModerationModal } from "../../Components/Moderation/openModerationModal";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../../Phaser/Game/GameManager";
@@ -208,8 +210,10 @@ function createConversationsStore(connection: ChatConnectionInterface): Readable
  */
 function createTotalUnreadStore(connection: ChatConnectionInterface): Readable<number> {
     return derived(
-        connection.rooms,
-        ($rooms, set) => {
+        [connection.rooms, connection.directRooms],
+        ([$groupRooms, $directRooms], set) => {
+            // `rooms` only holds group rooms: DMs live in `directRooms` and must count on the badge too.
+            const $rooms = [...$groupRooms, ...$directRooms];
             const perRoom = new Map<string, { unsub: Unsubscriber; count: number }>();
             const nextIds = new Set($rooms.map((r) => r.id));
 
@@ -553,6 +557,9 @@ class DesktopApi {
                 pushNow();
             }, 200);
         };
+        // After a tab switch the shell drops the previous world's companion state and asks the newly
+        // active world for its own; without this push the panel would stay empty until a store moved.
+        window.WAD?.onRequestPresence?.(() => schedulePush());
 
         // Local Woka (proximity chat avatar) — re-push when it resolves / changes.
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
@@ -941,27 +948,42 @@ class DesktopApi {
                     // streamable collection (tileKey = VideoBox id) to the participant's space user.
                     const spaceUser = get(streamableCollectionStore).get(command.tileKey)?.spaceUser;
                     if (!spaceUser) break;
+                    // The panel hides what the user may not do, but the rights are checked here, as in
+                    // ActionMediaBox: the panel only renders state it was sent.
+                    const isAdmin = get(userIsAdminStore);
+                    const canAskToMute = isAdmin || get(spaceUser.space.canAskToMuteAudioOrTurnOffVideo);
+                    const meeting = meetingOf(spaceUser.space);
                     try {
                         switch (command.action) {
                             case "mute-audio":
+                                if (!canAskToMute) break;
+                                analyticsClient.trackAdminEvent("meeting.microphone.muted", meeting);
                                 spaceUser.emitPrivateEvent({ $case: "muteAudio", muteAudio: { force: false } });
                                 break;
                             case "mute-video":
+                                if (!canAskToMute) break;
+                                analyticsClient.trackAdminEvent("meeting.video.muted", meeting);
                                 spaceUser.emitPrivateEvent({ $case: "muteVideo", muteVideo: { force: false } });
                                 break;
                             case "mute-audio-all":
+                                if (!isAdmin) break;
+                                analyticsClient.trackAdminEvent("meeting.microphone.muted_for_everybody", meeting);
                                 spaceUser.space.emitPublicMessage({
                                     $case: "muteAudioForEverybody",
                                     muteAudioForEverybody: {},
                                 });
                                 break;
                             case "mute-video-all":
+                                if (!isAdmin) break;
+                                analyticsClient.trackAdminEvent("meeting.video.muted_for_everybody", meeting);
                                 spaceUser.space.emitPublicMessage({
                                     $case: "muteVideoForEverybody",
                                     muteVideoForEverybody: {},
                                 });
                                 break;
                             case "kick":
+                                if (!isAdmin) break;
+                                analyticsClient.trackAdminEvent("meeting.participant.kicked", meeting);
                                 spaceUser.emitPrivateEvent({ $case: "kickOffUser", kickOffUser: {} });
                                 break;
                             case "report":

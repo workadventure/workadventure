@@ -62,14 +62,6 @@ jobs:
       - name: "Revert to Yarn 1"
         run: yarn set version classic
 
-      - name: "local-app: Install dependencies"
-        run: yarn install  --immutable
-        working-directory: "desktop/local-app"
-
-      - name: "local-app: Build"
-        run: yarn build
-        working-directory: "desktop/local-app"
-
       - name: "Set desktop app version"
         run: node helpers/set-version.js
         working-directory: "desktop/electron"

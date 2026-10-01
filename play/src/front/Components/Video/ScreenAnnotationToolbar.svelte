@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { get } from "svelte/store";
     import { LL } from "../../../i18n/i18n-svelte";
     import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
     import {
@@ -7,7 +6,6 @@
         currentAnnotationColorStore,
         currentAnnotationToolStore,
         localAnnotationActiveStore,
-        screenAnnotationElementsStore,
         screenAnnotationEnabledStore,
         type AnnotationTool,
     } from "../../Stores/ScreenAnnotationStore";
@@ -60,14 +58,9 @@
     }
 
     function undo(): void {
-        const elements = get(screenAnnotationElementsStore).get(targetUserId) ?? [];
-        const myId = screenAnnotationManager.localUserId;
-        for (let i = elements.length - 1; i >= 0; i--) {
-            if (elements[i].authorUserId === myId) {
-                screenAnnotationManager.removeElement(targetUserId, elements[i].id);
-                return;
-            }
-        }
+        // Same history as the meeting bar and the PiP: removing the element directly would record the
+        // undo itself as an action, and the next undo from there would bring the stroke back.
+        screenAnnotationManager.undoLastLocalElement(targetUserId);
     }
 
     function clearAll(): void {

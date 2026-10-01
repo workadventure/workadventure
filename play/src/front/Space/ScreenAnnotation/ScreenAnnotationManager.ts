@@ -116,7 +116,11 @@ class ScreenAnnotationManager {
         const operation = event.operation;
         switch (operation?.$case) {
             case "upsertElement":
-                if (operation.upsertElement.authorUserId === sender && this.canAnnotate(sender, target)) {
+                if (
+                    operation.upsertElement.authorUserId === sender &&
+                    this.canAnnotate(sender, target) &&
+                    isReasonableElement(target, operation.upsertElement)
+                ) {
                     upsertAnnotationElement(target, operation.upsertElement);
                 }
                 break;
@@ -282,3 +286,24 @@ class ScreenAnnotationManager {
 }
 
 export const screenAnnotationManager = new ScreenAnnotationManager();
+
+// Bounds on what another member can make every viewer render (and the presenter's overlay draw).
+const DRAWABLE_TOOLS = new Set(["pen", "line", "arrow", "rect", "text"]);
+const MAX_WIDTH = 0.05;
+const MAX_POINTS = 5000;
+const MAX_TEXT_LENGTH = 500;
+const MAX_ELEMENTS_PER_SCREEN = 500;
+
+function isReasonableElement(target: string, element: ScreenAnnotationElement): boolean {
+    if (!DRAWABLE_TOOLS.has(element.tool) || !(element.width > 0 && element.width <= MAX_WIDTH)) {
+        return false;
+    }
+    if (element.points.length > MAX_POINTS || (element.text?.length ?? 0) > MAX_TEXT_LENGTH) {
+        return false;
+    }
+    if (!element.points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y))) {
+        return false;
+    }
+    const elements = get(screenAnnotationElementsStore).get(target) ?? [];
+    return elements.length < MAX_ELEMENTS_PER_SCREEN || elements.some((existing) => existing.id === element.id);
+}
