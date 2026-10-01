@@ -3,7 +3,7 @@ import type { NativeStrings } from "./en";
 const dsb: NativeStrings = {
     "landing.heading": "Wašo źěłowe městno pśez jaden URL.",
     "landing.intro":
-        "Wócyńśo swět, ku kótaremuž južo słušaśo, abo napórajśo nowy rum za swój team. Waš slědny swět se pśiducy raz awtomatiski zasej wócynijo.",
+        "Wócyńśo swět, ku kótaremuž južo słušaśo, abo napórajśo nowy swět za swój team. Waš slědny swět se pśiducy raz awtomatiski zasej wócynijo.",
     "landing.recentWorlds": "Slědne swěty",
     "landing.joinTitle": "K swětoju pśistupiś",
     "landing.joinHint": "Zasajźćo dopołny URL z Wašeje pśepšosynki abo z Wašogo wobglědowaka.",
@@ -18,12 +18,14 @@ const dsb: NativeStrings = {
     "landing.pinWorld": "Swět pśipěś",
     "landing.unpinWorld": "Swět wótpěś",
     "landing.urlRequired": "Pšosym zapódajśo URL swěta.",
-    "landing.urlInvalid": "Njepłaśiwy URL. Pšosym zapódajśo dopołny http(s):// URL swěta.",
-    "landing.urlProtocol": "Jano URL z http(s):// se pódpěraju.",
-    "landing.urlHost": "Njepłaśiwy URL: host felujo abo wopśimujo pśizjawjeńske daty.",
+    "landing.urlInvalid":
+        "Toś ten wótkaz njejo płaśiwy. Kopěrujśo dopołny wótkaz swěta z Wašeje pśepšosynki abo z Wašogo wobglědowaka.",
+    "landing.urlProtocol": "Wótkaz Wašogo swěta musy se z https:// abo http:// zachopiś.",
+    "landing.urlHost":
+        "Toś ten wótkaz njejo dopołny abo wopśimujo wužywaŕske mě abo gronidło. Kopěrujśo wótkaz swěta z Wašeje pśepšosynki.",
     "landing.urlNotAllowed":
-        "Toś ten URL njesluša k dowólonym póchadam. Nastajśo WA_DESKTOP_ALLOWED_ORIGINS abo wužywajśo URL swěta na workadventu.re.",
-    "landing.joinFailed": "Pśistup k swětoju njejo se raźił.",
+        "Toś ta adresa njejo swět WorkAdventure, kótaryž aplikacija znajo. Pśeglědajśo wótkaz abo se pšašajśo swójogo administratora.",
+    "landing.joinFailed": "K toś tomu swětoju njejo było móžno pśistupiś. Pšosym wopytajśo hyšći raz.",
     "landing.signupFailed": "Bok registracije njedajo se wócyniś.",
     "landing.desktopOnly": "Toś ta akcija jo jano w desktopowem nałoženju k dispoziciji.",
     "landing.worldNotLoaded": "Toś ten swět njedajo se zacytaś. Pšosym pśeglědajśo URL a wopytajśo hyšći raz.",
@@ -48,7 +50,7 @@ const dsb: NativeStrings = {
     "menu.noRecentWorlds": "Žedne slědne swěty",
     "menu.hideTabBarTitle": "Rejtarikowu lajstu schowaś?",
     "menu.cancel": "Pśetergnuś",
-    "menu.closeOneOtherTab": "1 drugi rejtarik zacyniś a lajstu schowaś",
+    "menu.closeOneOtherTab": "Drugi rejtarik zacyniś a lajstu schowaś",
     "menu.closeOtherTabs": "{count} drugich rejtarikow zacyniś a lajstu schowaś",
     "menu.hideTabBarDetailOne":
         "Maśo {total} swětow w rejtarikach wócynjonych. Gaž rejtarikowu lajstu schowajośo, wóstanjo aktualny swět wócynjony a drugi se zacynijo.",
@@ -62,11 +64,11 @@ const dsb: NativeStrings = {
     "tray.status.idle": "Njeaktiwny",
     "tray.status.online": "K dispoziciji",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Zablokěrowany pśi zasedanju",
+    "tray.statusLocked": "Status njedajo se za cas zasedanja změniś",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamara",
     "tray.companionPanel": "Pśewóźowański panel",
-    "tray.showHide": "Pokazaś / Schowaś",
+    "tray.showHide": "Pokazaś / schowaś",
     "tray.worlds": "Swěty",
     "tray.help": "Pomoc",
     "tray.checkForUpdates": "Za aktualizacijami pytaś",
@@ -76,17 +78,24 @@ const dsb: NativeStrings = {
 
     "auth.pageTitle": "Pśizjawjenje WorkAdventure",
     "auth.signingInTitle": "Pśizjawjanje…",
-    "auth.signingInMessage":
-        "Dokóńcćo pśizjawjenje w swójom wobglědowaku. WorkAdventure se awtomatiski k toś tomu woknu wrośijo.",
+    "auth.signingInMessage": "Dokóńcćo pśizjawjenje w swójom wobglědowaku. Pótom se awtomatiski do aplikacije wrośiśo.",
     "auth.signingOutTitle": "Wótzjawjanje…",
     "auth.signingOutMessage":
-        "Dokóńcćo wótzjawjenje w swójom wobglědowaku. WorkAdventure se awtomatiski k toś tomu woknu wrośijo.",
+        "Dokóńcćo wótzjawjenje w swójom wobglědowaku. Pótom se awtomatiski do aplikacije wrośiśo.",
     "auth.reopenBrowser": "Wobglědowak znowego wócyniś",
     "auth.signedIn": "Pśizjawjony. Móžośo se k WorkAdventure wrośiś.",
     "auth.signedOut": "Wótzjawjony. Móžośo se k WorkAdventure wrośiś.",
     "auth.closeWindow": "Móžośo toś to wokno zacyniś.",
 
     "screenIdentify.clickToShare": "Klikniśo, aby toś tu wobrazowku źělili · {size}",
+    "update.checking": "Pyta se za aktualizacijami…",
+    "update.title": "Aktualizacija WorkAdventure",
+    "update.ready": "Aktualizacija jo gótowa. Startujśo WorkAdventure znowego, aby se instalěrowała.",
+    "update.installAndRestart": "Instalěrowaś a znowego startowaś",
+    "update.installLater": "Pózdźej instalěrowaś",
+    "update.availableTitle": "Aktualizacija WorkAdventure jo k dispoziciji",
+    "update.availableBody": "Ześěgniśo a instalěrujśo nejnowšu wersiju z websedła WorkAdventure.",
+    "update.none": "Žedna aktualizacija k dispoziciji.",
 };
 
 export default dsb;
