@@ -1,6 +1,7 @@
 import ElectronLog from "electron-log";
 import Settings from "electron-settings";
 import {
+    getDefaultPortalUrl,
     normalizePersistedLastRoomUrl,
     normalizePersistedPortalUrl,
     normalizePersistedWorldHistory,
@@ -30,7 +31,7 @@ const defaultSettings: SettingsData = {
     // opt in via the preferences UI.
     auto_launch_enabled: false,
     tab_bar_enabled: true,
-    portal_url: process.env.WA_DESKTOP_PORTAL_URL || "http://admin.workadventure.localhost/",
+    portal_url: process.env.WA_DESKTOP_PORTAL_URL || getDefaultPortalUrl(),
     world_history: [],
     pinned_worlds: [],
     shortcuts: {

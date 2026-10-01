@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { shouldOpenNativePictureInPicture } from "./NativePictureInPictureClient";
+import { describe, expect, it, vi } from "vitest";
+import { readable } from "svelte/store";
+import { NativePictureInPictureClient, shouldOpenNativePictureInPicture } from "./NativePictureInPictureClient";
 
 describe("shouldOpenNativePictureInPicture", () => {
     const base = {
@@ -61,5 +62,53 @@ describe("shouldOpenNativePictureInPicture", () => {
 
     it("stays closed when user is focused and did not request PiP", () => {
         expect(shouldOpenNativePictureInPicture(base)).toBe(false);
+    });
+});
+
+describe("NativePictureInPictureClient", () => {
+    it("does not wire a session when stop() ran while the PiP window was opening", async () => {
+        let resolveOpen: (opened: boolean) => void = () => {};
+        const pip = {
+            open: vi.fn(
+                () =>
+                    new Promise<boolean>((resolve) => {
+                        resolveOpen = resolve;
+                    }),
+            ),
+            close: vi.fn(() => Promise.resolve()),
+        };
+        const desktopWindow = window as unknown as { WAD?: unknown };
+        desktopWindow.WAD = { desktop: true, pip };
+        const RTCPeerConnectionSpy = vi.fn();
+        vi.stubGlobal("RTCPeerConnection", RTCPeerConnectionSpy);
+
+        const client = new NativePictureInPictureClient({
+            streamables: readable(new Map()),
+            selfBox: readable(undefined),
+            deviceState: readable({
+                micEnabled: false,
+                cameraEnabled: false,
+                screenSharing: false,
+                canScreenShare: false,
+                recording: false,
+            }),
+            commandHandlers: {
+                toggleMic: () => {},
+                toggleCamera: () => {},
+                toggleScreenshare: () => {},
+                pickScreenSource: () => {},
+            },
+        });
+
+        const started = client.start();
+        client.stop();
+        resolveOpen(true);
+
+        expect(await started).toBe(false);
+        expect(client.isActive()).toBe(false);
+        expect(RTCPeerConnectionSpy).not.toHaveBeenCalled();
+        expect(pip.close).toHaveBeenCalled();
+        delete desktopWindow.WAD;
+        vi.unstubAllGlobals();
     });
 });

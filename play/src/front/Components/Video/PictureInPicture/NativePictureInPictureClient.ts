@@ -179,6 +179,13 @@ export class NativePictureInPictureClient {
             this.active = false;
             return false;
         }
+        if (!this.active) {
+            // stop() ran while open() was pending (the user came back to the main window): it found
+            // nothing to tear down yet, so wiring the session now would leave it running with
+            // active=false, out of reach of every later stop().
+            pip.close().catch((error) => debug("pip.close() failed", error));
+            return false;
+        }
 
         this.peerConnection = new RTCPeerConnection({ iceServers: [] });
         // eslint-disable-next-line listeners/no-inline-function-event-listener, listeners/no-missing-remove-event-listener -- listeners live with the peer connection and are dropped when it is closed in stop()
