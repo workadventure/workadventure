@@ -2,7 +2,13 @@ import { net } from "electron";
 import ElectronLog from "electron-log";
 import settings from "./settings";
 import { createDesktopConfig, isAllowedNavigationUrl, type DesktopConfig } from "./desktop-url-policy";
-import { activeVerifiedOrigins, rememberVerifiedOrigin, verifyOriginRequestUrl } from "./verified-origins-policy";
+import {
+    activeVerifiedOrigins,
+    addTrustedServer,
+    rememberVerifiedOrigin,
+    trustableOrigin,
+    verifyOriginRequestUrl,
+} from "./verified-origins-policy";
 
 const VERIFY_TIMEOUT_MS = 5000;
 
@@ -11,8 +17,34 @@ export function getDesktopConfig(): DesktopConfig {
     return createDesktopConfig({
         ...process.env,
         portalUrl: settings.get("portal_url"),
-        verifiedOrigins: activeVerifiedOrigins(settings.get("verified_origins")),
+        verifiedOrigins: [
+            ...activeVerifiedOrigins(settings.get("verified_origins")),
+            ...(settings.get("trusted_origins") ?? []),
+        ],
     });
+}
+
+function isDevelopment(): boolean {
+    return process.env.NODE_ENV === "development";
+}
+
+/**
+ * The origin the user could add by hand for `url` (a self-hosted server: no admin to vouch for it),
+ * or undefined. Only offered from the native Landing, for an address the user typed.
+ */
+export function originUserMayTrust(url: string): string | undefined {
+    return trustableOrigin(url, isDevelopment());
+}
+
+/** Remember a self-hosted server the user chose to add. Returns false if it cannot be added. */
+export function trustServer(url: string): boolean {
+    const origin = originUserMayTrust(url);
+    if (!origin) {
+        return false;
+    }
+    settings.set("trusted_origins", addTrustedServer(settings.get("trusted_origins"), origin));
+    ElectronLog.info(`Trusting the server ${origin}, added by the user.`);
+    return isAllowedNavigationUrl(url, getDesktopConfig());
 }
 
 /**
@@ -23,15 +55,14 @@ export function getDesktopConfig(): DesktopConfig {
  * HTTPS) confirms as worlds of its install. A confirmation is remembered for a limited time. Only called
  * for addresses the user chose to open (Landing, world switcher, deep link, a world navigating itself):
  * never for every outgoing link, which would send the admin each site the user visits.
- * ponytail: a self-hosted portal without the endpoint answers 404, so its white-label worlds still
- * need WA_DESKTOP_ALLOWED_ORIGINS.
+ * A self-hosted server is unknown to that admin: the Landing then offers to add it by hand (trustServer).
  */
 export async function ensureWorldOriginTrusted(url: string): Promise<boolean> {
     const config = getDesktopConfig();
     if (isAllowedNavigationUrl(url, config)) {
         return true;
     }
-    const requestUrl = verifyOriginRequestUrl(config.portalUrl, url, process.env.NODE_ENV === "development");
+    const requestUrl = verifyOriginRequestUrl(config.portalUrl, url, isDevelopment());
     if (!requestUrl) {
         return false;
     }

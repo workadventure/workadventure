@@ -25,6 +25,11 @@ const hsb: NativeStrings = {
         "Tutón wotkaz je njedospołny abo wobsahuje wužiwarske mjeno abo hesło. Kopěrujće wotkaz swěta z wašeho přeprošenja.",
     "landing.urlNotAllowed":
         "Tuta adresa njeje swět WorkAdventure, kotryž aplikacija znaje. Přepruwujće wotkaz abo so swojeho administratora prašejće.",
+    "landing.trustTitle": "Tutón serwer přidać?",
+    "landing.trustBody":
+        "{origin} njeje swět WorkAdventure, kotryž aplikacija znaje. Přidajće jenož serwer, kotremuž dowěrjeće, na přikład serwer wašeho předewzaća.",
+    "landing.trustConfirm": "Přidać a wočinić",
+    "landing.trustCancel": "Přetorhnyć",
     "landing.joinFailed": "Přistup k tutomu swětej njebě móžny. Prošu spytajće hišće raz.",
     "landing.signupFailed": "Strona registracije njeda so wočinić.",
     "landing.desktopOnly": "Tuta akcija je jenož w desktopowym nałoženju k dispoziciji.",

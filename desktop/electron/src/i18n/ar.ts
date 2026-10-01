@@ -22,6 +22,11 @@ const ar: NativeStrings = {
     "landing.urlProtocol": "يجب أن يبدأ رابط عالمك بـ https:// أو http://.",
     "landing.urlHost": "هذا الرابط غير مكتمل أو يحتوي على اسم مستخدم أو كلمة مرور. انسخ رابط العالم من دعوتك.",
     "landing.urlNotAllowed": "هذا العنوان ليس عالم WorkAdventure يعرفه التطبيق. تحقّق من الرابط أو اسأل المسؤول لديك.",
+    "landing.trustTitle": "هل تريد إضافة هذا الخادم؟",
+    "landing.trustBody":
+        "{origin} ليس عالمًا من عوالم WorkAdventure يعرفه التطبيق. لا تُضف إلا خادمًا تثق به، مثل خادم شركتك.",
+    "landing.trustConfirm": "إضافة وفتح",
+    "landing.trustCancel": "إلغاء",
     "landing.joinFailed": "تعذّر الانضمام إلى هذا العالم. يُرجى المحاولة مرة أخرى.",
     "landing.signupFailed": "تعذّر فتح صفحة التسجيل.",
     "landing.desktopOnly": "هذا الإجراء متاح فقط في تطبيق سطح المكتب.",

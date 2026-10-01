@@ -25,6 +25,11 @@ const dsb: NativeStrings = {
         "Toś ten wótkaz njejo dopołny abo wopśimujo wužywaŕske mě abo gronidło. Kopěrujśo wótkaz swěta z Wašeje pśepšosynki.",
     "landing.urlNotAllowed":
         "Toś ta adresa njejo swět WorkAdventure, kótaryž aplikacija znajo. Pśeglědajśo wótkaz abo se pšašajśo swójogo administratora.",
+    "landing.trustTitle": "Toś ten serwer pśidaś?",
+    "landing.trustBody":
+        "{origin} njejo swět WorkAdventure, kótaryž aplikacija znajo. Pśidajśo jano serwer, kótaremuž dowěrjaśo, na pśikład serwer wašogo pśedewześa.",
+    "landing.trustConfirm": "Pśidaś a wócyniś",
+    "landing.trustCancel": "Pśetergnuś",
     "landing.joinFailed": "K toś tomu swětoju njejo było móžno pśistupiś. Pšosym wopytajśo hyšći raz.",
     "landing.signupFailed": "Bok registracije njedajo se wócyniś.",
     "landing.desktopOnly": "Toś ta akcija jo jano w desktopowem nałoženju k dispoziciji.",
