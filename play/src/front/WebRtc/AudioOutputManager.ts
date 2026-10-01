@@ -16,6 +16,12 @@ const debug = Debug("AudioOutput");
 const TEST_SOUND_VOLUME = 0.5;
 
 /**
+ * setSinkId() can take seconds (a Bluetooth headset switching profile) or never settle. A notification
+ * waits at most this long before playing on the current output.
+ */
+const NOTIFICATION_SINK_TIMEOUT_MS = 2_000;
+
+/**
  * URL of the sound played when entering a bubble. The file must exist under `public/`:
  * only the `-ding` and `-wobble` variants do.
  */
@@ -66,16 +72,24 @@ export function applySinkId(el: HTMLMediaElement, deviceId: string | undefined):
     // Bound up front: the narrowing above does not survive into the async closure below.
     const setSinkId = el.setSinkId.bind(el);
 
+    // Only report on the device that is still selected: a sound started before the user picked another one
+    // would otherwise make the settings panel claim the browser refused the new device.
+    const reportUsed = (usedDeviceId: string) => {
+        if (get(speakerSelectedStore) === deviceId) {
+            usedSpeakerDeviceIdStore.set(usedDeviceId);
+        }
+    };
+
     return enqueue(el, async (): Promise<SinkOutcome> => {
         if (el.sinkId === deviceId) {
-            usedSpeakerDeviceIdStore.set(deviceId);
+            reportUsed(deviceId);
             return "applied";
         }
 
         try {
             await setSinkId(deviceId);
             debug("Audio output set to %s", deviceId);
-            usedSpeakerDeviceIdStore.set(deviceId);
+            reportUsed(deviceId);
             return "applied";
         } catch (e) {
             Sentry.captureException(e);
@@ -85,7 +99,7 @@ export function applySinkId(el: HTMLMediaElement, deviceId: string | undefined):
                 console.warn("Error setting the audio output device. We fallback to default.", e);
                 try {
                     await setSinkId("");
-                    usedSpeakerDeviceIdStore.set("");
+                    reportUsed("");
                 } catch (fallbackError) {
                     console.error("Error resetting the audio output device: ", fallbackError);
                 }
@@ -160,7 +174,14 @@ export async function playNotificationSound(url: string, volume = 1): Promise<vo
     const el = new Audio(url);
     el.volume = volume;
 
-    await applySinkId(el, get(speakerSelectedStore));
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([
+        applySinkId(el, get(speakerSelectedStore)),
+        new Promise<void>((resolve) => {
+            timeout = setTimeout(resolve, NOTIFICATION_SINK_TIMEOUT_MS);
+        }),
+    ]);
+    clearTimeout(timeout);
 
     try {
         await el.play();

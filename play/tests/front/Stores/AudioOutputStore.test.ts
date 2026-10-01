@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
 
 /**
@@ -19,6 +19,12 @@ async function loadStore(storedDeviceId?: string) {
     return import("../../../src/front/Stores/AudioOutputStore");
 }
 
+// The first import transforms the whole module graph, which can exceed a single test's timeout on a cold
+// cache. Paying it here keeps that cost out of the tests, which reload the (by then cached) module.
+beforeAll(async () => {
+    await import("../../../src/front/Stores/AudioOutputStore");
+}, 60_000);
+
 beforeEach(() => {
     localStorage.clear();
 });
@@ -28,15 +34,15 @@ afterEach(() => {
 });
 
 describe("applyDefaultSpeaker", () => {
-    it("picks the first device and persists it", async () => {
-        const stores = await loadStore();
+    it("picks the first device without overwriting the stored preference", async () => {
+        const stores = await loadStore("headset");
 
         stores.applyDefaultSpeaker([audioOutput("speaker-a"), audioOutput("speaker-b")]);
 
         expect(get(stores.speakerSelectedStore)).toBe("speaker-a");
-        // Persisted, otherwise the device list subscriber restores the previous preference on the
-        // next devicechange and the fallback is undone straight away.
-        expect(localStorage.getItem("speakerDeviceId")).toBe("speaker-a");
+        // The device list subscriber restores the stored preference once its device is back: persisting
+        // the fallback would lose the headset for good after an unplug or a Bluetooth drop.
+        expect(localStorage.getItem("speakerDeviceId")).toBe("headset");
     });
 
     it("falls back to the system default when there is no device", async () => {
@@ -63,7 +69,7 @@ describe("reconcileSpeakerSelection", () => {
         stores.reconcileSpeakerSelection([audioOutput("speaker-a")]);
 
         expect(get(stores.speakerSelectedStore)).toBe("speaker-a");
-        expect(localStorage.getItem("speakerDeviceId")).toBe("speaker-a");
+        expect(localStorage.getItem("speakerDeviceId")).toBe("speaker-b");
     });
 
     it("keeps the stored preference when no output is reported at all", async () => {
@@ -74,6 +80,15 @@ describe("reconcileSpeakerSelection", () => {
         // An empty list means the browser will not tell us about outputs yet, typically because no
         // permission was granted. Enumeration now happens before any getUserMedia, so treating this
         // as "the device disappeared" would destroy a valid preference before it was ever used.
+        expect(get(stores.speakerSelectedStore)).toBe("speaker-b");
+        expect(localStorage.getItem("speakerDeviceId")).toBe("speaker-b");
+    });
+
+    it("keeps the stored preference when Chrome only reports its pre-permission placeholder", async () => {
+        const stores = await loadStore("speaker-b");
+
+        stores.reconcileSpeakerSelection(stores.selectableSpeakers([audioOutput("", "")]));
+
         expect(get(stores.speakerSelectedStore)).toBe("speaker-b");
         expect(localStorage.getItem("speakerDeviceId")).toBe("speaker-b");
     });

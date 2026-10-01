@@ -40,7 +40,7 @@ describe("applySinkId", () => {
     });
 
     it("reports the device that was actually applied", async () => {
-        usedSpeakerDeviceIdStore.set(undefined);
+        speakerSelectedStore.set("device-1");
         const { el } = createMediaElement();
 
         await applySinkId(el, "device-1");
@@ -58,8 +58,18 @@ describe("applySinkId", () => {
         expect(get(usedSpeakerDeviceIdStore)).toBeUndefined();
     });
 
+    it("does not report a device that is no longer selected", async () => {
+        speakerSelectedStore.set("device-2");
+        const { el } = createMediaElement();
+
+        await applySinkId(el, "device-1");
+
+        // A sound started on the previous device must not make the panel claim the new one was refused.
+        expect(get(usedSpeakerDeviceIdStore)).toBeUndefined();
+    });
+
     it("reports the system default when it had to fall back", async () => {
-        usedSpeakerDeviceIdStore.set(undefined);
+        speakerSelectedStore.set("device-1");
         const failing = vi
             .fn<(id: string) => Promise<void>>()
             .mockRejectedValueOnce(new DOMException("device is gone", "AbortError"))
@@ -288,5 +298,34 @@ describe("playTestSound", () => {
         play.mockRejectedValueOnce(new DOMException("blocked", "NotAllowedError"));
 
         await expect(playTestSound("device-1")).resolves.toBeUndefined();
+    });
+});
+
+describe("playNotificationSound", () => {
+    it("plays on the current output when setSinkId() does not settle", async () => {
+        vi.useFakeTimers();
+        try {
+            const play = vi.spyOn(window.HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+            play.mockClear();
+            Object.defineProperty(window.HTMLMediaElement.prototype, "setSinkId", {
+                configurable: true,
+                writable: true,
+                value: () => new Promise<void>(() => {}),
+            });
+            // Imported together, after a module reset: the manager must read this very store.
+            vi.resetModules();
+            const { playNotificationSound } = await import("../../../src/front/WebRtc/AudioOutputManager");
+            const { speakerSelectedStore: selected } = await import("../../../src/front/Stores/AudioOutputStore");
+            selected.set("bluetooth-headset");
+
+            const done = playNotificationSound("/resources/objects/webrtc-in-ding.mp3");
+            await vi.advanceTimersByTimeAsync(2_000);
+            await done;
+
+            expect(play).toHaveBeenCalledTimes(1);
+        } finally {
+            vi.useRealTimers();
+            vi.restoreAllMocks();
+        }
     });
 });

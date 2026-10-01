@@ -61,6 +61,7 @@ import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 import {
     applyDefaultSpeaker,
     reconcileSpeakerSelection,
+    selectableSpeakers,
     speakerSelectedStore,
     speakerSelectionSupported,
 } from "./AudioOutputStore";
@@ -1686,7 +1687,7 @@ export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
         return [];
     }
 
-    return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audiooutput"));
+    return removeDuplicateDevices(selectableSpeakers($deviceListStore));
 });
 
 export const selectDefaultSpeaker = () => {

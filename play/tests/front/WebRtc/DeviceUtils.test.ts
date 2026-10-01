@@ -30,14 +30,19 @@ describe("isSafari", () => {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
         ],
         ["Firefox", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:124.0) Gecko/20100101 Firefox/124.0"],
-        [
-            "Chrome on iOS",
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/122.0.0.0 Mobile/15E148 Safari/604.1",
-        ],
     ])("does not mistake %s for Safari", (_name, userAgent) => {
         setUserAgent(userAgent);
 
         expect(isSafari()).toBe(false);
+    });
+
+    it("treats Chrome on iOS as Safari, since it runs on WebKit", () => {
+        // The WebRTC quirk handling (TURN detection) relies on it, as it did with getNavigatorType.
+        setUserAgent(
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/122.0.0.0 Mobile/15E148 Safari/604.1",
+        );
+
+        expect(isSafari()).toBe(true);
     });
 
     it("never throws on an unrecognised user agent", () => {

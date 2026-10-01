@@ -44,16 +44,26 @@ speakerSelectedStore.subscribe(() => {
 });
 
 /**
+ * The audio outputs a user can pick.
+ *
+ * Without microphone permission, Chrome reports a single placeholder output with an empty deviceId. It is not
+ * a device that can be picked, and reconciling the selection against it would erase the user's stored speaker
+ * on every page load.
+ */
+export function selectableSpeakers(devices: MediaDeviceInfo[]): MediaDeviceInfo[] {
+    return devices.filter((device) => device.kind === "audiooutput" && device.deviceId !== "");
+}
+
+/**
  * Selects the first available output, or the system default when there is none.
  *
- * The choice is persisted: the device list subscriber restores the stored preference on every
- * enumeration, so a fallback that only touched the store would be undone on the next
- * `devicechange` and re-applied endlessly against a device that keeps failing.
+ * The choice is deliberately *not* persisted: the stored preference is what the device list subscriber
+ * restores once the device is back (a headset plugged in again, a Bluetooth link that dropped for a second).
+ * Persisting the fallback would lose that preference for good. A device that keeps failing is retried at
+ * most once per `devicechange`, which is when that subscriber runs.
  */
 export function applyDefaultSpeaker(devices: MediaDeviceInfo[] | undefined): void {
-    const deviceId = devices !== undefined && devices.length > 0 ? devices[0].deviceId : "";
-    localUserStore.setSpeakerDeviceId(deviceId);
-    speakerSelectedStore.set(deviceId);
+    speakerSelectedStore.set(devices !== undefined && devices.length > 0 ? devices[0].deviceId : "");
 }
 
 /**
