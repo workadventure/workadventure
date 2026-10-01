@@ -57,6 +57,39 @@
         return document.getElementById(id);
     }
 
+    // ── Strings ─────────────────────────────────────────────────────────────
+    // Pushed by the WorkAdventure world, translated in the language the user chose there (keys
+    // "companion.*", plus "lang"). The English in the markup and below is the fallback until they
+    // arrive. Static markup is tagged data-i18n (text), data-i18n-label (aria-label + title) and
+    // data-i18n-placeholder; dynamic text goes through t(), with `{placeholders}` filled here.
+    var strings = {};
+    function t(key, fallback, params) {
+        var text = typeof strings[key] === "string" ? strings[key] : fallback;
+        if (!params) return text;
+        return text.replace(/\{(\w+)\}/g, function (match, name) {
+            return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match;
+        });
+    }
+    function locales() {
+        return typeof strings.lang === "string" ? [strings.lang] : [];
+    }
+    function applyStaticStrings() {
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+            if (el.i18nFallback === undefined) el.i18nFallback = el.textContent;
+            el.textContent = t(el.getAttribute("data-i18n"), el.i18nFallback);
+        });
+        document.querySelectorAll("[data-i18n-label]").forEach(function (el) {
+            if (el.i18nFallback === undefined) el.i18nFallback = el.getAttribute("aria-label") || "";
+            var text = t(el.getAttribute("data-i18n-label"), el.i18nFallback);
+            el.setAttribute("aria-label", text);
+            if (el.hasAttribute("title")) el.title = text;
+        });
+        document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+            if (el.i18nFallback === undefined) el.i18nFallback = el.getAttribute("placeholder") || "";
+            el.setAttribute("placeholder", t(el.getAttribute("data-i18n-placeholder"), el.i18nFallback));
+        });
+    }
+
     var els = {
         openChat: byId("c-open-chat"),
         openPeople: byId("c-open-people"),
@@ -74,7 +107,7 @@
         statusMenu: byId("c-status-menu"),
         statusLocked: byId("c-status-locked"),
         invitation: byId("c-invitation"),
-        invitationName: byId("c-invitation-name"),
+        invitationText: byId("c-invitation-text"),
         inviteAccept: byId("c-invite-accept"),
         inviteDecline: byId("c-invite-decline"),
         body: byId("c-body"),
@@ -236,7 +269,7 @@
     }
     TileElement.prototype.update = function (meta) {
         this.meta = meta;
-        var name = meta.name || (meta.isSelf ? "You" : "");
+        var name = meta.name || (meta.isSelf ? t("companion.you", "You") : "");
         var color = getColorByString(name);
         var textColor = getTextColorByBackgroundColor(color);
         this.nameText.textContent = name;
@@ -507,40 +540,66 @@
         var canMute = meetingCanModerate || meetingCanAskToMute;
         if (canMute) {
             menu.appendChild(
-                tileMenuItem(meetingCanModerate ? "Mute microphone" : "Ask to mute microphone", ICON_MIC_OFF, {
-                    disabled: meta.hasAudio === false,
-                    onClick: tileAction(key, "mute-audio"),
-                })
+                tileMenuItem(
+                    meetingCanModerate
+                        ? t("companion.muteMic", "Mute microphone")
+                        : t("companion.askMuteMic", "Ask to mute microphone"),
+                    ICON_MIC_OFF,
+                    {
+                        disabled: meta.hasAudio === false,
+                        onClick: tileAction(key, "mute-audio"),
+                    }
+                )
             );
         }
         if (meetingCanModerate) {
             menu.appendChild(
-                tileMenuItem("Mute everyone's microphone", ICON_MIC_OFF, { onClick: tileAction(key, "mute-audio-all") })
+                tileMenuItem(t("companion.muteEveryoneMic", "Mute everyone's microphone"), ICON_MIC_OFF, {
+                    onClick: tileAction(key, "mute-audio-all"),
+                })
             );
         }
         if (canMute) {
             menu.appendChild(
-                tileMenuItem(meetingCanModerate ? "Turn off camera" : "Ask to turn off camera", ICON_CAM_OFF, {
-                    disabled: meta.hasVideo === false,
-                    onClick: tileAction(key, "mute-video"),
+                tileMenuItem(
+                    meetingCanModerate
+                        ? t("companion.turnOffCamera", "Turn off camera")
+                        : t("companion.askTurnOffCamera", "Ask to turn off camera"),
+                    ICON_CAM_OFF,
+                    {
+                        disabled: meta.hasVideo === false,
+                        onClick: tileAction(key, "mute-video"),
+                    }
+                )
+            );
+        }
+        if (meetingCanModerate) {
+            menu.appendChild(
+                tileMenuItem(t("companion.turnOffEveryoneCamera", "Turn off everyone's camera"), ICON_CAM_OFF, {
+                    onClick: tileAction(key, "mute-video-all"),
                 })
             );
         }
         if (meetingCanModerate) {
             menu.appendChild(
-                tileMenuItem("Turn off everyone's camera", ICON_CAM_OFF, { onClick: tileAction(key, "mute-video-all") })
-            );
-        }
-        if (meetingCanModerate) {
-            menu.appendChild(
-                tileMenuItem("Kick out of the meeting", ICON_BAN, { danger: true, onClick: tileAction(key, "kick") })
+                tileMenuItem(t("companion.kick", "Kick out of the meeting"), ICON_BAN, {
+                    danger: true,
+                    onClick: tileAction(key, "kick"),
+                })
             );
         }
         if (meta.hasVisitCard) {
-            menu.appendChild(tileMenuItem("Visit card", ICON_CARD, { onClick: tileAction(key, "visit-card", true) }));
+            menu.appendChild(
+                tileMenuItem(t("companion.visitCard", "Visit card"), ICON_CARD, {
+                    onClick: tileAction(key, "visit-card", true),
+                })
+            );
         }
         menu.appendChild(
-            tileMenuItem("Block or report", ICON_ALERT, { danger: true, onClick: tileAction(key, "report", true) })
+            tileMenuItem(t("companion.blockOrReport", "Block or report"), ICON_ALERT, {
+                danger: true,
+                onClick: tileAction(key, "report", true),
+            })
         );
 
         document.body.appendChild(menu);
@@ -818,20 +877,22 @@
         name.className = "person-name";
         // In the people list you are just "You" (with the "you" chip); the real name lives in the
         // status button up top.
-        name.textContent = u.isSelf ? "You" : u.name || "Someone";
+        name.textContent = u.isSelf ? t("companion.you", "You") : u.name || t("companion.someone", "Someone");
         row.appendChild(name);
 
         if (u.isSelf) {
             var you = document.createElement("span");
             you.className = "person-you";
-            you.textContent = "you";
+            you.textContent = t("companion.youChip", "you");
             row.appendChild(you);
         } else {
             var actions = document.createElement("div");
             actions.className = "person-actions";
-            actions.appendChild(miniButton("invite", u.id, "Invite to meeting", ICON_INVITE));
-            actions.appendChild(miniButton("dm", u.id, "Message", ICON_DM));
-            actions.appendChild(miniButton("locate", u.id, "Locate", ICON_LOCATE));
+            actions.appendChild(
+                miniButton("invite", u.id, t("companion.inviteToMeeting", "Invite to meeting"), ICON_INVITE)
+            );
+            actions.appendChild(miniButton("dm", u.id, t("companion.message", "Message"), ICON_DM));
+            actions.appendChild(miniButton("locate", u.id, t("companion.locate", "Locate"), ICON_LOCATE));
             row.appendChild(actions);
         }
 
@@ -847,7 +908,7 @@
     function renderPeople(users) {
         els.people.textContent = "";
         setEmpty(els.peopleEmpty, users.length === 0);
-        var selfName = "You";
+        var selfName = t("companion.you", "You");
         for (var i = 0; i < users.length; i++) {
             var u = users[i];
             if (u.isSelf && u.name) {
@@ -895,7 +956,7 @@
             top.className = "conv-top";
             var name = document.createElement("span");
             name.className = "conv-name";
-            name.textContent = c.name || "Conversation";
+            name.textContent = c.name || t("companion.conversation", "Conversation");
             top.appendChild(name);
             main.appendChild(top);
 
@@ -919,7 +980,10 @@
             } else if (unread > 0) {
                 var d = document.createElement("span");
                 d.className = "conv-unread-dot";
-                d.title = unread + (unread > 1 ? " unread messages" : " unread message");
+                d.title =
+                    unread > 1
+                        ? t("companion.unreadMessages", "{count} unread messages", { count: unread })
+                        : t("companion.unreadMessage", "1 unread message");
                 row.appendChild(d);
             }
             els.conversations.appendChild(row);
@@ -928,7 +992,7 @@
 
     function formatTime(ts) {
         try {
-            return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            return new Date(ts).toLocaleTimeString(locales(), { hour: "2-digit", minute: "2-digit" });
         } catch (e) {
             return "";
         }
@@ -940,9 +1004,9 @@
             return new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
         };
         var diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
-        if (diffDays === 0) return "Today";
-        if (diffDays === 1) return "Yesterday";
-        return d.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+        if (diffDays === 0) return t("companion.today", "Today");
+        if (diffDays === 1) return t("companion.yesterday", "Yesterday");
+        return d.toLocaleDateString(locales(), { weekday: "short", day: "numeric", month: "short" });
     }
 
     var renderedConvId = null;
@@ -1040,16 +1104,16 @@
         if (showEmpty) {
             els.conversationsEmpty.textContent =
                 chatStatus === "connecting"
-                    ? "Connecting to chat…"
+                    ? t("companion.connectingChat", "Connecting to chat…")
                     : chatStatus === "unavailable"
-                    ? "Chat unavailable."
-                    : "No conversations yet.";
+                    ? t("companion.chatUnavailable", "Chat unavailable.")
+                    : t("companion.noConversations", "No conversations yet.");
         }
         setEmpty(els.conversationsEmpty, showEmpty);
 
         if (inConversation) {
-            var name = shown ? shown.name : "Conversation";
-            els.convTitle.textContent = name || "Conversation";
+            var name = shown ? shown.name : "";
+            els.convTitle.textContent = name || t("companion.conversation", "Conversation");
             els.convOpenMain.hidden = !currentConvId || currentConvId === NEARBY_ID;
             renderMessages(shown && Array.isArray(shown.messages) ? shown.messages : [], currentConvId);
         }
@@ -1067,19 +1131,19 @@
         els.hdrShare.classList.toggle("is-active", media.screenSharing === true);
         els.hdrShare.disabled = !media.canScreenShare && !media.screenSharing;
         els.hdrShare.title = media.screenSharing
-            ? "Stop sharing your screen"
+            ? t("companion.stopShareScreen", "Stop sharing your screen")
             : els.hdrShare.disabled
-              ? "Join a meeting to share your screen"
-              : "Share your screen";
+              ? t("companion.shareScreenNeedsMeeting", "Join a meeting to share your screen")
+              : t("companion.shareScreen", "Share your screen");
         els.hdrShare.setAttribute("aria-label", els.hdrShare.title);
         // Picture-in-picture: single icon; active turns it secondary-blue. Only meaningful in a meeting.
         els.hdrPip.classList.toggle("is-active", media.pipOpen === true);
         els.hdrPip.disabled = !media.inMeeting;
         els.hdrPip.title = media.pipOpen
-            ? "Close picture-in-picture"
+            ? t("companion.closePip", "Close picture-in-picture")
             : els.hdrPip.disabled
-              ? "Join a meeting to open picture-in-picture"
-              : "Picture-in-picture";
+              ? t("companion.pipNeedsMeeting", "Join a meeting to open picture-in-picture")
+              : t("companion.pip", "Picture-in-picture");
         els.hdrPip.setAttribute("aria-label", els.hdrPip.title);
 
         // Self status dot + status dropdown current/locked.
@@ -1109,14 +1173,22 @@
 
     function renderInvitation(invitation) {
         if (invitation && typeof invitation === "object") {
-            els.invitationName.textContent = invitation.name || "Someone";
+            // "{name} invites you to a meeting", with the name in bold wherever the language puts it.
+            var parts = t("companion.invitation", "{name} invites you to a meeting").split("{name}");
+            var strong = document.createElement("strong");
+            strong.textContent = invitation.name || t("companion.someone", "Someone");
+            els.invitationText.textContent = parts[0];
+            els.invitationText.appendChild(strong);
+            els.invitationText.appendChild(document.createTextNode(parts.slice(1).join("")));
             els.invitation.hidden = false;
         } else {
             els.invitation.hidden = true;
         }
     }
 
+    var lastState = null;
     function render(state) {
+        lastState = state;
         renderInvitation(state.invitation);
         renderPeople(Array.isArray(state.users) ? state.users : []);
         renderChat(
@@ -1146,6 +1218,25 @@
         } catch (e) {
             // eslint-disable-next-line no-console
             console.error("Companion panel: render failed", e);
+        }
+    });
+
+    api.onStrings(function (next) {
+        if (!next || typeof next !== "object") return;
+        strings = next;
+        if (typeof strings.lang === "string") document.documentElement.lang = strings.lang;
+        applyStaticStrings();
+        // Re-render everything built from state so dynamic text follows the new language.
+        tiles.forEach(function (tile) {
+            tile.update(tile.meta);
+        });
+        if (lastState) {
+            try {
+                render(lastState);
+            } catch (e) {
+                // eslint-disable-next-line no-console
+                console.error("Companion panel: render failed", e);
+            }
         }
     });
 

@@ -408,73 +408,73 @@
     </style>
 </head>
 <body>
-    <div id="picker" role="dialog" aria-label="Switch the shared screen">
+    <div id="picker" role="dialog" aria-label="Switch the shared screen" data-i18n-label="meetingBar.switchSharedScreenDialog">
         <div class="pk-header">
-            <span class="pk-title">Switch what you share</span>
+            <span class="pk-title" data-i18n="meetingBar.switchWhatYouShare">Switch what you share</span>
             <div class="pk-tabs">
-                <button class="pk-tab active" type="button" data-kind="screen">Screens</button>
-                <button class="pk-tab" type="button" data-kind="window">Windows</button>
+                <button class="pk-tab active" type="button" data-kind="screen" data-i18n="meetingBar.screens">Screens</button>
+                <button class="pk-tab" type="button" data-kind="window" data-i18n="meetingBar.windows">Windows</button>
             </div>
-            <button class="pk-close" id="pk-cancel" type="button" aria-label="Cancel">×</button>
+            <button class="pk-close" id="pk-cancel" type="button" aria-label="Cancel" data-i18n-label="meetingBar.cancel">×</button>
         </div>
         <div class="pk-body loading" id="pk-body">Loading sources…</div>
     </div>
     <!-- Device picker (grows the window like the source picker). Populated from the pushed state. -->
-    <div id="devices" role="dialog" aria-label="Change camera or microphone">
+    <div id="devices" role="dialog" aria-label="Change camera or microphone" data-i18n-label="meetingBar.changeDevicesDialog">
         <div class="pk-header">
-            <span class="pk-title">Camera &amp; microphone</span>
-            <button class="pk-close" id="dv-cancel" type="button" aria-label="Close">×</button>
+            <span class="pk-title" data-i18n="meetingBar.cameraAndMicrophone">Camera &amp; microphone</span>
+            <button class="pk-close" id="dv-cancel" type="button" aria-label="Close" data-i18n-label="meetingBar.close">×</button>
         </div>
         <div class="dv-body" id="dv-body"></div>
     </div>
     <!-- Overflow menu (grows the HUD window like the picker; anchored above the bar). -->
-    <div id="menu" role="menu" aria-label="More options">
+    <div id="menu" role="menu" aria-label="More options" data-i18n-label="meetingBar.moreOptions">
         <button class="mn-item" id="mn-laser" type="button" role="menuitemcheckbox" aria-checked="false">
             <span class="mn-toggle" aria-hidden="true"></span>
-            <span class="mn-label">Cursor highlight</span>
+            <span class="mn-label" data-i18n="meetingBar.cursorHighlight">Cursor highlight</span>
         </button>
         <button class="mn-item" id="mn-tabs" type="button" role="menuitemcheckbox" aria-checked="false">
             <span class="mn-toggle" aria-hidden="true"></span>
-            <span class="mn-label">Display tabs</span>
+            <span class="mn-label" data-i18n="meetingBar.displayTabs">Display tabs</span>
         </button>
         <div class="mn-sep"></div>
         <button class="mn-item" id="mn-switch" type="button">
             <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 5m0 1a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1z"/><path d="M7 20h10"/><path d="M9 16v4"/><path d="M15 16v4"/><path d="M9 11l3 -3l3 3"/></svg></span>
-            <span class="mn-label">Switch shared screen</span>
+            <span class="mn-label" data-i18n="meetingBar.switchSharedScreen">Switch shared screen</span>
         </button>
         <button class="mn-item" id="mn-devices" type="button">
             <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"/><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M5 19h14a2 2 0 0 0 -2 -2h-10a2 2 0 0 0 -2 2"/></svg></span>
-            <span class="mn-label">Change cam / mic</span>
+            <span class="mn-label" data-i18n="meetingBar.changeDevices">Change cam / mic</span>
         </button>
         <div class="mn-sep"></div>
         <button class="mn-item" id="mn-settings" type="button">
             <span class="mn-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg></span>
-            <span class="mn-label">Other settings</span>
+            <span class="mn-label" data-i18n="meetingBar.otherSettings">Other settings</span>
         </button>
         <span class="mn-caret" id="mn-caret" aria-hidden="true"></span>
     </div>
     <!-- Annotation toolbar (panel of this window; shown while drawing mode is on). -->
-    <div id="annotation" role="toolbar" aria-label="Annotation tools">
-        <button class="an-btn" id="an-undo" type="button" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg></button>
-        <button class="an-btn" id="an-redo" type="button" title="Redo" aria-label="Redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 14l4 -4l-4 -4"/><path d="M19 10h-11a4 4 0 1 0 0 8h1"/></svg></button>
-        <button class="an-btn" id="an-eye" type="button" data-state="on" title="Hide annotations for me only" aria-label="Hide annotations locally">
+    <div id="annotation" role="toolbar" aria-label="Annotation tools" data-i18n-label="meetingBar.annotationTools">
+        <button class="an-btn" id="an-undo" type="button" title="Undo" aria-label="Undo" data-i18n-label="meetingBar.undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg></button>
+        <button class="an-btn" id="an-redo" type="button" title="Redo" aria-label="Redo" data-i18n-label="meetingBar.redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 14l4 -4l-4 -4"/><path d="M19 10h-11a4 4 0 1 0 0 8h1"/></svg></button>
+        <button class="an-btn" id="an-eye" type="button" data-state="on" title="Hide annotations for me only" aria-label="Hide annotations for me only" data-i18n-label="meetingBar.hideAnnotations">
             <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6"/></svg>
             <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.585 10.587a2 2 0 0 0 2.829 2.828"/><path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87"/><path d="M3 3l18 18"/></svg>
         </button>
         <div class="an-sep"></div>
-        <button class="an-btn" data-tool="pen" type="button" title="Free drawing" aria-label="Free drawing"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg></button>
-        <button class="an-btn" data-tool="text" type="button" title="Text" aria-label="Text"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 7v-2h13v2"/><path d="M10 5v14"/><path d="M12 19h-4"/><path d="M15 13v-1h6v1"/><path d="M18 12v7"/><path d="M17 19h2"/></svg></button>
-        <button class="an-btn" data-tool="line" type="button" title="Line" aria-label="Line"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M18 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M7.5 16.5l9 -9"/></svg></button>
-        <button class="an-btn" data-tool="rect" type="button" title="Rectangle" aria-label="Rectangle"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M19 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M5 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M19 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M6 5h12"/><path d="M6 19h12"/><path d="M5 6v12"/><path d="M19 6v12"/></svg></button>
-        <button class="an-btn" data-tool="eraser" type="button" title="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 20h-10l-5 -5a1 1 0 0 1 0 -1.5l9 -9a1 1 0 0 1 1.5 0l5 5a1 1 0 0 1 0 1.5l-9 9"/></svg></button>
+        <button class="an-btn" data-tool="pen" type="button" title="Free drawing" aria-label="Free drawing" data-i18n-label="meetingBar.pen"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg></button>
+        <button class="an-btn" data-tool="text" type="button" title="Text" aria-label="Text" data-i18n-label="meetingBar.text"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 7v-2h13v2"/><path d="M10 5v14"/><path d="M12 19h-4"/><path d="M15 13v-1h6v1"/><path d="M18 12v7"/><path d="M17 19h2"/></svg></button>
+        <button class="an-btn" data-tool="line" type="button" title="Line" aria-label="Line" data-i18n-label="meetingBar.line"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M18 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M7.5 16.5l9 -9"/></svg></button>
+        <button class="an-btn" data-tool="rect" type="button" title="Rectangle" aria-label="Rectangle" data-i18n-label="meetingBar.rect"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M19 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M5 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M19 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M6 5h12"/><path d="M6 19h12"/><path d="M5 6v12"/><path d="M19 6v12"/></svg></button>
+        <button class="an-btn" data-tool="eraser" type="button" title="Eraser" aria-label="Eraser" data-i18n-label="meetingBar.eraser"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19 20h-10l-5 -5a1 1 0 0 1 0 -1.5l9 -9a1 1 0 0 1 1.5 0l5 5a1 1 0 0 1 0 1.5l-9 9"/></svg></button>
         <div class="an-sep"></div>
-        <button class="an-color" data-color="#ff3b30" type="button" style="background:#ff3b30" title="Red" aria-label="Red"></button>
-        <button class="an-color" data-color="#34c759" type="button" style="background:#34c759" title="Green" aria-label="Green"></button>
-        <button class="an-color" data-color="#0a84ff" type="button" style="background:#0a84ff" title="Blue" aria-label="Blue"></button>
-        <button class="an-color" data-color="#ffffff" type="button" style="background:#ffffff" title="White" aria-label="White"></button>
-        <button class="an-color" data-color="#000000" type="button" style="background:#000000" title="Black" aria-label="Black"></button>
+        <button class="an-color" data-color="#ff3b30" type="button" style="background:#ff3b30" title="Red" aria-label="Red" data-i18n-label="meetingBar.red"></button>
+        <button class="an-color" data-color="#34c759" type="button" style="background:#34c759" title="Green" aria-label="Green" data-i18n-label="meetingBar.green"></button>
+        <button class="an-color" data-color="#0a84ff" type="button" style="background:#0a84ff" title="Blue" aria-label="Blue" data-i18n-label="meetingBar.blue"></button>
+        <button class="an-color" data-color="#ffffff" type="button" style="background:#ffffff" title="White" aria-label="White" data-i18n-label="meetingBar.white"></button>
+        <button class="an-color" data-color="#000000" type="button" style="background:#000000" title="Black" aria-label="Black" data-i18n-label="meetingBar.black"></button>
         <div class="an-sep"></div>
-        <button class="an-btn" id="an-others" type="button" title="Allow others to annotate" aria-label="Allow others to annotate">
+        <button class="an-btn" id="an-others" type="button" title="Allow others to annotate" aria-label="Allow others to annotate" data-i18n-label="meetingBar.allowOthers">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 7m0 2a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M3 21v-2a4 4 0 0 1 4 -4h2"/><path d="M15 7m0 2a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M13 21v-2a4 4 0 0 1 4 -4h2a4 4 0 0 1 2 .5"/></svg>
         </button>
         <span class="an-caret" id="an-caret" aria-hidden="true"></span>
@@ -484,7 +484,7 @@
             <span class="bar-handle" id="bar-handle" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><circle cx="8" cy="5" r="1.5"/><circle cx="16" cy="5" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="19" r="1.5"/><circle cx="16" cy="19" r="1.5"/></svg>
             </span>
-            <button class="bar-btn" id="bar-mic" type="button" data-state="on" title="Toggle microphone" aria-label="Toggle microphone">
+            <button class="bar-btn" id="bar-mic" type="button" data-state="on" title="Toggle microphone" aria-label="Toggle microphone" data-i18n-label="meetingBar.toggleMic">
                 <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"/>
@@ -501,7 +501,7 @@
                     <path d="M12 17l0 4"/>
                 </svg>
             </button>
-            <button class="bar-btn" id="bar-cam" type="button" data-state="on" title="Toggle camera" aria-label="Toggle camera">
+            <button class="bar-btn" id="bar-cam" type="button" data-state="on" title="Toggle camera" aria-label="Toggle camera" data-i18n-label="meetingBar.toggleCamera">
                 <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z"/>
@@ -514,7 +514,7 @@
                     <path d="M10 6h3a2 2 0 0 1 2 2v3m0 4v1a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-8a2 2 0 0 1 2 -2h1"/>
                 </svg>
             </button>
-            <button class="bar-btn is-active" id="bar-stop" type="button" title="Stop sharing your screen" aria-label="Stop sharing your screen">
+            <button class="bar-btn is-active" id="bar-stop" type="button" title="Stop sharing your screen" aria-label="Stop sharing your screen" data-i18n-label="meetingBar.stopSharing">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <path d="M21 12v3a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h9"/>
@@ -525,14 +525,14 @@
                     <path d="M16 9l5 -5"/>
                 </svg>
             </button>
-            <button class="bar-btn" id="bar-annotate" type="button" data-state="off" title="Annotate the shared screen" aria-label="Annotate the shared screen">
+            <button class="bar-btn" id="bar-annotate" type="button" data-state="off" title="Annotate the shared screen" aria-label="Annotate the shared screen" data-i18n-label="meetingBar.annotate">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/>
                     <path d="M13.5 6.5l4 4"/>
                 </svg>
             </button>
-            <button class="bar-btn" id="bar-more" type="button" title="More options" aria-label="More options" aria-haspopup="true" aria-expanded="false">
+            <button class="bar-btn" id="bar-more" type="button" title="More options" aria-label="More options" data-i18n-label="meetingBar.moreOptions" aria-haspopup="true" aria-expanded="false">
                 <svg viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none">
                     <circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>
                 </svg>

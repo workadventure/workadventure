@@ -353,8 +353,14 @@ export type WorkAdventureDesktopApi = {
     onSetStatus?: (callback: (status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb") => void) => () => void;
     /** Set the current world's display name on the active tab. */
     setTabTitle?: (title: string) => void;
+    /** Push the companion / meeting bar strings in the WorkAdventure language (flat key → text). */
+    setHudStrings?: (strings: Record<string, string>) => void;
     /** Subscribe to system idle/active transitions (main powerMonitor). Returns unsubscriber. */
     onSystemIdle?: (callback: (idle: boolean) => void) => () => void;
+    /** Another tab entered a meeting: turn off microphone, camera and screen share here. */
+    onMediaPreempted?: (callback: () => void) => () => void;
+    /** This world entered a meeting and media was turned off in another tab, named here. */
+    onOtherMeetingMuted?: (callback: (worldName: string) => void) => () => void;
     /** Presenter tools: main tracks the global cursor over the shared display and streams it here. */
     presenter?: {
         setTool: (tool: "none" | "laser" | "spotlight" | "loupe", displayId?: number, sourceId?: string) => void;

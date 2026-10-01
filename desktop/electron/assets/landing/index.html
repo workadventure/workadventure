@@ -578,8 +578,8 @@
         <div class="page" id="page" data-state="empty">
             <main>
                 <div class="intro">
-                    <h1>Your workplace, one URL away.</h1>
-                    <p>
+                    <h1 data-i18n="landing.heading">Your workplace, one URL away.</h1>
+                    <p data-i18n="landing.intro">
                         Open a world you already belong to, or create a new space for your team. Your last world will
                         reopen automatically next time.
                     </p>
@@ -588,17 +588,17 @@
                 <!-- Pinned and recent worlds share one row (the star marks the pinned ones), so the
                      page keeps a single scanning line instead of two near-identical sections. -->
                 <section class="recent" id="recent" aria-labelledby="recent-title" hidden>
-                    <h2 class="section-label" id="recent-title">Recent worlds</h2>
+                    <h2 class="section-label" id="recent-title" data-i18n="landing.recentWorlds">Recent worlds</h2>
                     <div class="world-row" id="world-row"></div>
                     <div class="error recent-error" id="recent-error" role="alert" aria-live="polite"></div>
                 </section>
 
                 <div class="choices">
                     <form class="choice" id="join-form" novalidate>
-                        <h2>Join a world</h2>
-                        <p>Paste the complete URL from your invitation or browser.</p>
+                        <h2 data-i18n="landing.joinTitle">Join a world</h2>
+                        <p data-i18n="landing.joinHint">Paste the complete URL from your invitation or browser.</p>
                         <div class="field">
-                            <label for="world-url">Enter your world URL</label>
+                            <label for="world-url" data-i18n="landing.urlLabel">Enter your world URL</label>
                             <input
                                 type="url"
                                 id="world-url"
@@ -612,18 +612,18 @@
                         </div>
                         <div class="error" id="join-error" role="alert" aria-live="polite"></div>
                         <div class="choice-actions">
-                            <button class="btn" type="submit" id="join-btn">Open world</button>
+                            <button class="btn" type="submit" id="join-btn" data-i18n="landing.openWorld">Open world</button>
                         </div>
                     </form>
 
-                    <div class="or" aria-hidden="true">or</div>
+                    <div class="or" aria-hidden="true" data-i18n="landing.or">or</div>
 
                     <section class="choice" aria-labelledby="create-world-title">
-                        <h2 id="create-world-title">Create a world</h2>
-                        <p>Set up a new virtual office from the WorkAdventure administration console.</p>
+                        <h2 id="create-world-title" data-i18n="landing.createTitle">Create a world</h2>
+                        <p data-i18n="landing.createHint">Set up a new virtual office from the WorkAdventure administration console.</p>
                         <div class="error" id="create-error" role="alert" aria-live="polite"></div>
                         <div class="choice-actions">
-                            <button class="btn" type="button" id="create-btn">Create world</button>
+                            <button class="btn" type="button" id="create-btn" data-i18n="landing.createWorld">Create world</button>
                         </div>
                     </section>
                 </div>

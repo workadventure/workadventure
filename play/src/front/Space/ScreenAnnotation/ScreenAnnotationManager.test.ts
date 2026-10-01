@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { get, writable } from "svelte/store";
+import { get } from "svelte/store";
+import type { Writable } from "svelte/store";
 import { Subject } from "rxjs";
 import type { ScreenAnnotationElement, ScreenAnnotationEvent } from "@workadventure/messages";
 import type { SpaceInterface } from "../SpaceInterface";
@@ -10,7 +11,16 @@ import {
     setAnnotationEnabled,
 } from "../../Stores/ScreenAnnotationStore";
 
-vi.mock("../../Stores/ScreenSharingStore", () => ({ requestedScreenSharingState: writable(false) }));
+const sharing = vi.hoisted(() => ({
+    state: undefined as unknown as Writable<boolean>,
+    source: undefined as unknown as Writable<{ id: string } | undefined>,
+}));
+vi.mock("../../Stores/ScreenSharingStore", async () => {
+    const { writable } = await import("svelte/store");
+    sharing.state = writable(false);
+    sharing.source = writable(undefined);
+    return { requestedScreenSharingState: sharing.state, activeScreenShareSourceStore: sharing.source };
+});
 
 import { screenAnnotationManager } from "./ScreenAnnotationManager";
 
@@ -18,11 +28,14 @@ const PRESENTER = "presenter";
 const ME = "me";
 
 const events = new Subject<{ sender: string; screenAnnotation: ScreenAnnotationEvent }>();
+const userJoined = new Subject<void>();
+const emitPublicMessage = vi.fn();
 const space = {
     mySpaceUserId: ME,
     observePublicEvent: () => events,
+    observeUserJoined: userJoined,
     onLeaveSpace: new Subject<void>(),
-    emitPublicMessage: vi.fn(),
+    emitPublicMessage,
 } as unknown as SpaceInterface;
 
 function element(id: string, authorUserId: string): ScreenAnnotationElement {
@@ -39,6 +52,9 @@ function elementIds(target: string) {
 
 describe("ScreenAnnotationManager remote events", () => {
     beforeEach(() => {
+        sharing.source.set(undefined);
+        sharing.state.set(false);
+        emitPublicMessage.mockClear();
         screenAnnotationManager.bindToSpace(space, new Subject<Streamable>());
     });
 
@@ -59,6 +75,24 @@ describe("ScreenAnnotationManager remote events", () => {
     it("drops an element whose author is not its sender", () => {
         send("viewer", PRESENTER, { $case: "upsertElement", upsertElement: element("forged", PRESENTER) });
         expect(elementIds(PRESENTER)).toEqual([]);
+    });
+
+    it("drops strokes from viewers while the presenter has not allowed annotation", () => {
+        send("viewer", PRESENTER, { $case: "upsertElement", upsertElement: element("v0", "viewer") });
+        expect(elementIds(PRESENTER)).toEqual([]);
+    });
+
+    it("re-announces the setting to newcomers while sharing with annotation allowed", () => {
+        userJoined.next();
+        expect(emitPublicMessage).not.toHaveBeenCalled();
+
+        sharing.state.set(true);
+        setAnnotationEnabled(ME, true);
+        userJoined.next();
+        expect(emitPublicMessage).toHaveBeenCalledWith({
+            $case: "screenAnnotation",
+            screenAnnotation: { targetUserId: ME, operation: { $case: "annotationEnabled", annotationEnabled: true } },
+        });
     });
 
     it("drops strokes from viewers once the presenter turned annotation off", () => {
@@ -82,5 +116,22 @@ describe("ScreenAnnotationManager remote events", () => {
         const long = { ...element("p", PRESENTER), points: Array.from({ length: 6000 }, () => ({ x: 0, y: 0 })) };
         send(PRESENTER, PRESENTER, { $case: "upsertElement", upsertElement: long });
         expect(elementIds(PRESENTER)).toEqual([]);
+    });
+
+    it("clears my annotations for everyone when I switch to another screen", () => {
+        sharing.state.set(true);
+        sharing.source.set({ id: "screen:1" });
+        screenAnnotationManager.upsertElement(ME, element("mine", ME));
+        emitPublicMessage.mockClear();
+
+        sharing.source.set({ id: "screen:1" });
+        expect(elementIds(ME)).toEqual(["mine"]);
+
+        sharing.source.set({ id: "screen:2" });
+        expect(elementIds(ME)).toEqual([]);
+        expect(emitPublicMessage).toHaveBeenCalledWith({
+            $case: "screenAnnotation",
+            screenAnnotation: { targetUserId: ME, operation: { $case: "clearAll", clearAll: true } },
+        });
     });
 });

@@ -6,6 +6,7 @@ import { getPinnedWorlds, getRecentWorlds, onWorldHistoryChange } from "./world-
 import { closeActiveTab, closeInactiveTabs, cycleTab, getTabs } from "./tab-manager";
 import { setTabStripVisible } from "./tab-strip";
 import settings from "./settings";
+import { t } from "./i18n";
 
 /**
  * Toggle the tab bar from the menu. Electron flips `menuItem.checked` to the requested state BEFORE
@@ -26,14 +27,18 @@ async function toggleTabBar(menuItem: MenuItem): Promise<void> {
         const window = getWindow();
         const options: MessageBoxOptions = {
             type: "question",
-            buttons: ["Cancel", `Close ${others} other tab${others > 1 ? "s" : ""} & hide bar`],
+            buttons: [
+                t("menu.cancel"),
+                others > 1 ? t("menu.closeOtherTabs", { count: others }) : t("menu.closeOneOtherTab"),
+            ],
             defaultId: 1,
             cancelId: 0,
-            title: "Hide the tab bar?",
-            message: "Hide the tab bar?",
-            detail: `You have ${openTabs} worlds open in tabs. Hiding the tab bar keeps the current world and closes the ${others} other${
-                others > 1 ? "s" : ""
-            }.`,
+            title: t("menu.hideTabBarTitle"),
+            message: t("menu.hideTabBarTitle"),
+            detail:
+                others > 1
+                    ? t("menu.hideTabBarDetail", { total: openTabs, count: others })
+                    : t("menu.hideTabBarDetailOne", { total: openTabs }),
         };
         const { response } = window
             ? await dialog.showMessageBox(window, options)
@@ -68,7 +73,7 @@ function openNativeWorld(url: string): void {
 export function createRecentWorldMenuItems(): MenuItemConstructorOptions[] {
     const recentWorlds = getRecentWorlds();
     if (recentWorlds.length === 0) {
-        return [{ label: "No recent worlds", enabled: false }];
+        return [{ label: t("menu.noRecentWorlds"), enabled: false }];
     }
 
     return recentWorlds.map((world) => ({
@@ -81,7 +86,7 @@ export function createRecentWorldMenuItems(): MenuItemConstructorOptions[] {
 export function createPinnedWorldMenuItems(): MenuItemConstructorOptions[] {
     const pinnedWorlds = getPinnedWorlds();
     if (pinnedWorlds.length === 0) {
-        return [{ label: "No pinned worlds", enabled: false }];
+        return [{ label: t("menu.noPinnedWorlds"), enabled: false }];
     }
 
     return pinnedWorlds.map((world) => ({
@@ -125,46 +130,46 @@ export function createNativeApplicationMenu(): void {
               ]
             : []),
         {
-            label: "World",
+            label: t("menu.world"),
             submenu: [
                 {
-                    label: "New tab",
+                    label: t("menu.newTab"),
                     accelerator: "CmdOrCtrl+T",
                     click: () => void openWorldTab(),
                 },
                 {
-                    label: "Close tab",
+                    label: t("menu.closeTab"),
                     accelerator: "CmdOrCtrl+W",
                     click: closeActiveTab,
                 },
                 {
-                    label: "Next tab",
+                    label: t("menu.nextTab"),
                     accelerator: "CmdOrCtrl+Shift+]",
                     click: () => cycleTab(1),
                 },
                 {
-                    label: "Previous tab",
+                    label: t("menu.previousTab"),
                     accelerator: "CmdOrCtrl+Shift+[",
                     click: () => cycleTab(-1),
                 },
                 {
-                    label: "Show tab bar",
+                    label: t("menu.showTabBar"),
                     type: "checkbox",
                     checked: settings.get("tab_bar_enabled") !== false,
                     click: (menuItem) => void toggleTabBar(menuItem),
                 },
                 { type: "separator" },
                 {
-                    label: "Change world…",
+                    label: t("menu.changeWorld"),
                     accelerator: "CmdOrCtrl+Shift+O",
                     click: openNativeWorldSwitcher,
                 },
                 {
-                    label: "Pinned worlds",
+                    label: t("menu.pinnedWorlds"),
                     submenu: createPinnedWorldMenuItems(),
                 },
                 {
-                    label: "Recent worlds",
+                    label: t("menu.recentWorlds"),
                     submenu: createRecentWorldMenuItems(),
                 },
                 ...(process.platform === "darwin"

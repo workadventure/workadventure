@@ -68,6 +68,8 @@ const warning: DeepPartial<Translation["warning"]> = {
         continue: "Doorgaan in browser",
         neverShowPage: "Niet opnieuw vragen",
     },
+    otherMeetingMuted:
+        "Microfoon, camera en schermdeling zijn uitgeschakeld in {world}: je zit nu hier in een vergadering.",
 };
 
 export default warning;

@@ -9,10 +9,10 @@ function escapeHtml(value) {
         .replaceAll("'", "&#39;");
 }
 
-function createDesktopCallbackPage(message) {
+function createDesktopCallbackPage(message, closeHint = "You can close this window.", lang = "en") {
     const safeMessage = escapeHtml(message);
     return `<!doctype html>
-<html lang="fr">
+<html lang="${escapeHtml(lang)}">
 <head>
   <meta charset="utf-8" />
   <title>WorkAdventure</title>
@@ -24,7 +24,7 @@ function createDesktopCallbackPage(message) {
 </head>
 <body>
   <p>${safeMessage}</p>
-  <p>Vous pouvez fermer cette fenêtre.</p>
+  <p>${escapeHtml(closeHint)}</p>
 </body>
 </html>`;
 }

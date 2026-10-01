@@ -17,6 +17,36 @@
     var byId = function (id) {
         return document.getElementById(id);
     };
+
+    // ─────────── Strings ───────────
+    // Pushed by the WorkAdventure world, translated in the language the user chose there (keys
+    // "meetingBar.*", plus "lang"). The English in the markup and below is the fallback until they
+    // arrive. Static markup is tagged data-i18n (text) / data-i18n-label (aria-label + title).
+    var strings = {};
+    function t(key, fallback) {
+        return typeof strings[key] === "string" ? strings[key] : fallback;
+    }
+    function applyStaticStrings() {
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+            if (el.i18nFallback === undefined) el.i18nFallback = el.textContent;
+            el.textContent = t(el.getAttribute("data-i18n"), el.i18nFallback);
+        });
+        document.querySelectorAll("[data-i18n-label]").forEach(function (el) {
+            if (el.i18nFallback === undefined) el.i18nFallback = el.getAttribute("aria-label") || "";
+            var text = t(el.getAttribute("data-i18n-label"), el.i18nFallback);
+            el.setAttribute("aria-label", text);
+            if (el.hasAttribute("title")) el.title = text;
+        });
+    }
+    api.onStrings(function (next) {
+        if (!next || typeof next !== "object") return;
+        strings = next;
+        if (typeof strings.lang === "string") document.documentElement.lang = strings.lang;
+        applyStaticStrings();
+        // Re-render the open dynamic panels in the new language.
+        if (pickerOpen && lastSources.length > 0) renderPicker();
+        if (devicesOpen) renderDevices();
+    });
     var ICON_CHECK =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>';
     var ICON_CAMERA =
@@ -248,7 +278,7 @@
         syncAnnotationPanel();
         picker.classList.add("visible");
         pickerBody.className = "pk-body loading";
-        pickerBody.textContent = "Loading sources…";
+        pickerBody.textContent = t("meetingBar.loadingSources", "Loading sources…");
         api.requestSources()
             .then(function (sources) {
                 lastSources = Array.isArray(sources) ? sources : [];
@@ -257,7 +287,7 @@
             .catch(function (err) {
                 console.warn("requestSources failed", err);
                 pickerBody.className = "pk-body empty";
-                pickerBody.textContent = "Unable to list sources.";
+                pickerBody.textContent = t("meetingBar.unableToListSources", "Unable to list sources.");
             });
     }
 
@@ -279,8 +309,8 @@
             note.className = "pk-note";
             note.textContent =
                 pickerKind === "screen"
-                    ? "No screen available. Check the Screen Recording permission."
-                    : "No window available.";
+                    ? t("meetingBar.noScreen", "No screen available. Check the Screen Recording permission.")
+                    : t("meetingBar.noWindow", "No window available.");
             pickerBody.appendChild(note);
             return;
         }
@@ -297,8 +327,8 @@
             nameEl.className = "pk-tile-name";
             nameEl.textContent =
                 pickerKind === "screen"
-                    ? index + 1 + " · " + (source.name || "Screen")
-                    : source.name || "Untitled";
+                    ? index + 1 + " · " + (source.name || t("meetingBar.screen", "Screen"))
+                    : source.name || t("meetingBar.untitled", "Untitled");
             tile.appendChild(nameEl);
             tile.addEventListener("click", function () {
                 api.sendCommand({
@@ -349,14 +379,22 @@
         glabel.textContent = label;
         head.appendChild(glabel);
         dvBody.appendChild(head);
-        var noun = kind === "camera" ? "camera" : "microphone";
+        var isCamera = kind === "camera";
         // Distinguish "no selection because it's off" from "there really is no device".
         if (!enabled) {
-            addDeviceNote("Your " + noun + " is off — turn it on to choose one.");
+            addDeviceNote(
+                isCamera
+                    ? t("meetingBar.cameraOff", "Your camera is off — turn it on to choose one.")
+                    : t("meetingBar.microphoneOff", "Your microphone is off — turn it on to choose one.")
+            );
             return;
         }
         if (!list || list.length === 0) {
-            addDeviceNote("No " + noun + " found.");
+            addDeviceNote(
+                isCamera
+                    ? t("meetingBar.noCamera", "No camera found.")
+                    : t("meetingBar.noMicrophone", "No microphone found.")
+            );
             return;
         }
         list.forEach(function (device) {
@@ -382,8 +420,14 @@
         if (!devicesOpen) return;
         var d = lastDevices || { cameras: [], microphones: [] };
         dvBody.innerHTML = "";
-        addDeviceGroup("Camera", d.cameras || [], d.currentCameraId, "camera", lastCamEnabled);
-        addDeviceGroup("Microphone", d.microphones || [], d.currentMicrophoneId, "microphone", lastMicEnabled);
+        addDeviceGroup(t("meetingBar.camera", "Camera"), d.cameras || [], d.currentCameraId, "camera", lastCamEnabled);
+        addDeviceGroup(
+            t("meetingBar.microphone", "Microphone"),
+            d.microphones || [],
+            d.currentMicrophoneId,
+            "microphone",
+            lastMicEnabled
+        );
     }
     dvCancel.addEventListener("click", closeDevices);
 

@@ -42,6 +42,22 @@ const hudWindows = new Map<HudKind, HudEntry>();
  */
 const lastStateByKind = new Map<HudKind, unknown>();
 
+/**
+ * The companion / meeting bar strings, translated by the world renderer in the language chosen in
+ * WorkAdventure. Unlike the state, kept across tab switches (the next world re-pushes its own on
+ * the presence request) and replayed to every HUD window when it becomes ready.
+ */
+let hudStrings: Record<string, string> | undefined;
+
+export function setHudStrings(strings: Record<string, string>): void {
+    hudStrings = strings;
+    for (const entry of hudWindows.values()) {
+        if (!entry.window.isDestroyed() && entry.ready) {
+            entry.window.webContents.send("app:hud:strings", strings);
+        }
+    }
+}
+
 export function isHudWindowOpen(kind: HudKind): boolean {
     const entry = hudWindows.get(kind);
     return Boolean(entry && !entry.window.isDestroyed());
@@ -305,6 +321,10 @@ export function markHudReady(sender: Electron.WebContents): void {
     }
     entry.ready = true;
     entry.readyResolve();
+    // Strings before state, so the first render is already in the right language.
+    if (hudStrings) {
+        entry.window.webContents.send("app:hud:strings", hudStrings);
+    }
     const replay = lastStateByKind.get(kind);
     if (replay !== undefined) {
         entry.window.webContents.send("app:hud:state", replay);
