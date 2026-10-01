@@ -59,6 +59,8 @@ export type WorkAdventureOverlayApi = {
     emitDraw: (op: OverlayDrawOp) => void;
     /** Ask the user to leave drawing mode (e.g. the overlay caught Escape). */
     requestExit: () => void;
+    /** Let the overlay take keyboard focus while a text annotation is typed, then give it back. */
+    setKeyboardFocus: (enabled: boolean) => void;
     /** Signal the renderer has wired all its subscriptions and is ready to receive pushes. */
     ready: () => void;
 };

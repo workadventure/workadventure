@@ -5,6 +5,7 @@
         showDesktopCapturerSourcePicker,
     } from "../../Stores/ScreenSharingStore";
     import type { DesktopCapturerSource } from "../../Interfaces/DesktopAppInterfaces";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { getDesktopCapturerSourceKind, type DesktopCapturerSourceKind } from "./DesktopCapturerSourcePickerPolicy";
 
     let desktopCapturerSources: DesktopCapturerSource[] = $state([]);
@@ -43,7 +44,7 @@
                 desktopCapturerSources = fresh;
             }
         } catch (error) {
-            errorMessage = error instanceof Error ? error.message : "Impossible de charger les sources.";
+            errorMessage = error instanceof Error ? error.message : $LL.desktop.sourcePicker.loadError();
         } finally {
             loading = false;
         }
@@ -100,7 +101,7 @@
                 close();
             }
         } catch (error) {
-            errorMessage = error instanceof Error ? error.message : "Impossible d'identifier les ecrans.";
+            errorMessage = error instanceof Error ? error.message : $LL.desktop.sourcePicker.identifyError();
         } finally {
             identifying = false;
         }
@@ -131,13 +132,15 @@
     >
         <header class="source-picker-header">
             <div>
-                <h2 id="desktop-source-picker-title">Partager votre ecran</h2>
-                <p>Choisissez ce que les autres participants verront.</p>
+                <h2 id="desktop-source-picker-title">{$LL.desktop.sourcePicker.title()}</h2>
+                <p>{$LL.desktop.sourcePicker.subtitle()}</p>
             </div>
-            <button type="button" class="close-button" aria-label="Fermer" onclick={cancel}>×</button>
+            <button type="button" class="close-button" aria-label={$LL.desktop.sourcePicker.close()} onclick={cancel}
+                >×</button
+            >
         </header>
 
-        <div class="source-picker-tabs" role="tablist" aria-label="Type de source">
+        <div class="source-picker-tabs" role="tablist" aria-label={$LL.desktop.sourcePicker.sourceType()}>
             <button
                 type="button"
                 role="tab"
@@ -145,7 +148,7 @@
                 class:active={selectedKind === "screen"}
                 onclick={() => selectKind("screen")}
             >
-                Ecrans
+                {$LL.desktop.sourcePicker.screens()}
             </button>
             <button
                 type="button"
@@ -154,17 +157,17 @@
                 class:active={selectedKind === "window"}
                 onclick={() => selectKind("window")}
             >
-                Fenetres
+                {$LL.desktop.sourcePicker.windows()}
             </button>
         </div>
 
         <div class="source-picker-body">
             {#if loading}
-                <div class="source-picker-state">Chargement des sources...</div>
+                <div class="source-picker-state">{$LL.desktop.sourcePicker.loading()}</div>
             {:else if errorMessage}
                 <div class="source-picker-state error">{errorMessage}</div>
             {:else if visibleSources.length === 0}
-                <div class="source-picker-state">Aucune source disponible.</div>
+                <div class="source-picker-state">{$LL.desktop.sourcePicker.empty()}</div>
             {:else}
                 <div class="source-grid">
                     {#each visibleSources as source (source.id)}
@@ -187,12 +190,12 @@
                     onclick={identifyScreensByClick}
                     disabled={identifying}
                 >
-                    {identifying ? "Cliquez sur un ecran a partager..." : "Identifier les ecrans"}
+                    {identifying ? $LL.desktop.sourcePicker.identifying() : $LL.desktop.sourcePicker.identify()}
                 </button>
             {:else}
                 <span></span>
             {/if}
-            <button type="button" class="secondary-button" onclick={cancel}>Annuler</button>
+            <button type="button" class="secondary-button" onclick={cancel}>{$LL.desktop.sourcePicker.cancel()}</button>
         </footer>
     </div>
 </div>

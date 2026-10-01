@@ -30,6 +30,7 @@ import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
 import screenAnnotation from "./screenAnnotation";
+import desktop from "./desktop";
 
 const vi_VN = deepmerge(en_US, {
     audio,
@@ -62,6 +63,7 @@ const vi_VN = deepmerge(en_US, {
     onboarding,
     recording,
     screenAnnotation,
+    desktop,
 });
 
 export default vi_VN;

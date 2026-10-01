@@ -1,0 +1,87 @@
+import type { NativeStrings } from "./en";
+
+const dsb: NativeStrings = {
+    "landing.heading": "Wašo źěłowe městno pśez jaden URL.",
+    "landing.intro":
+        "Wócyńśo swět, ku kótaremuž južo słušaśo, abo napórajśo nowy rum za swój team. Waš slědny swět se pśiducy raz awtomatiski zasej wócynijo.",
+    "landing.recentWorlds": "Slědne swěty",
+    "landing.joinTitle": "K swětoju pśistupiś",
+    "landing.joinHint": "Zasajźćo dopołny URL z Wašeje pśepšosynki abo z Wašogo wobglědowaka.",
+    "landing.urlLabel": "Zapódajśo URL swójogo swěta",
+    "landing.openWorld": "Swět wócyniś",
+    "landing.or": "abo",
+    "landing.createTitle": "Swět napóraś",
+    "landing.createHint": "Pśigótujśo nowy wirtualny běrow w administraciskej konzoli WorkAdventure.",
+    "landing.createWorld": "Swět napóraś",
+    "landing.explore": "Wuslěźiś",
+    "landing.opening": "Wócynja se…",
+    "landing.pinWorld": "Swět pśipěś",
+    "landing.unpinWorld": "Swět wótpěś",
+    "landing.urlRequired": "Pšosym zapódajśo URL swěta.",
+    "landing.joinFailed": "Pśistup k swětoju njejo se raźił.",
+    "landing.signupFailed": "Bok registracije njedajo se wócyniś.",
+    "landing.desktopOnly": "Toś ta akcija jo jano w desktopowem nałoženju k dispoziciji.",
+    "landing.worldNotLoaded": "Toś ten swět njedajo se zacytaś. Pšosym pśeglědajśo URL a wopytajśo hyšći raz.",
+    "landing.loadFailure": "Toś ten swět njedajo se zacytaś. Snaź jo offline abo URL jo wopak.",
+    "landing.loadTimeout": "Zacytowanje toś togo swěta trajo pśedłujko. Snaź jo offline abo Waš zwisk jo pśetergnjony.",
+
+    "tabs.newWorld": "Nowy swět",
+    "tabs.world": "Swět",
+    "tabs.closeTab": "Rejtarik zacyniś",
+    "tabs.newWorldTab": "Nowy rejtarik swěta",
+
+    "menu.world": "Swět",
+    "menu.newTab": "Nowy rejtarik",
+    "menu.closeTab": "Rejtarik zacyniś",
+    "menu.nextTab": "Pśiducy rejtarik",
+    "menu.previousTab": "Pśedchadny rejtarik",
+    "menu.showTabBar": "Rejtarikowu lajstu pokazaś",
+    "menu.changeWorld": "Swět změniś…",
+    "menu.pinnedWorlds": "Pśipěte swěty",
+    "menu.recentWorlds": "Slědne swěty",
+    "menu.noPinnedWorlds": "Žedne pśipěte swěty",
+    "menu.noRecentWorlds": "Žedne slědne swěty",
+    "menu.hideTabBarTitle": "Rejtarikowu lajstu schowaś?",
+    "menu.cancel": "Pśetergnuś",
+    "menu.closeOneOtherTab": "1 drugi rejtarik zacyniś a lajstu schowaś",
+    "menu.closeOtherTabs": "{count} drugich rejtarikow zacyniś a lajstu schowaś",
+    "menu.hideTabBarDetailOne":
+        "Maśo {total} swětow w rejtarikach wócynjonych. Gaž rejtarikowu lajstu schowajośo, wóstanjo aktualny swět wócynjony a drugi se zacynijo.",
+    "menu.hideTabBarDetail":
+        "Maśo {total} swětow w rejtarikach wócynjonych. Gaž rejtarikowu lajstu schowajośo, wóstanjo aktualny swět wócynjony a {count} drugich se zacynijo.",
+
+    "tray.status.meeting": "W zasedanju",
+    "tray.status.do_not_disturb": "Njewobśěžowaś",
+    "tray.status.busy": "Zabuzowany",
+    "tray.status.back_in_a_moment": "Wrośu se skóro",
+    "tray.status.idle": "Njeaktiwny",
+    "tray.status.online": "K dispoziciji",
+    "tray.status.offline": "Offline",
+    "tray.statusLocked": "Zablokěrowany pśi zasedanju",
+    "tray.microphone": "Mikrofon",
+    "tray.camera": "Kamara",
+    "tray.companionPanel": "Pśewóźowański panel",
+    "tray.showHide": "Pokazaś / Schowaś",
+    "tray.worlds": "Swěty",
+    "tray.help": "Pomoc",
+    "tray.checkForUpdates": "Za aktualizacijami pytaś",
+    "tray.openLogs": "Protokole wócyniś",
+    "tray.about": "Wó",
+    "tray.quit": "Skóńcyś",
+
+    "auth.pageTitle": "Pśizjawjenje WorkAdventure",
+    "auth.signingInTitle": "Pśizjawjanje…",
+    "auth.signingInMessage":
+        "Dokóńcćo pśizjawjenje w swójom wobglědowaku. WorkAdventure se awtomatiski k toś tomu woknu wrośijo.",
+    "auth.signingOutTitle": "Wótzjawjanje…",
+    "auth.signingOutMessage":
+        "Dokóńcćo wótzjawjenje w swójom wobglědowaku. WorkAdventure se awtomatiski k toś tomu woknu wrośijo.",
+    "auth.reopenBrowser": "Wobglědowak znowego wócyniś",
+    "auth.signedIn": "Pśizjawjony. Móžośo se k WorkAdventure wrośiś.",
+    "auth.signedOut": "Wótzjawjony. Móžośo se k WorkAdventure wrośiś.",
+    "auth.closeWindow": "Móžośo toś to wokno zacyniś.",
+
+    "screenIdentify.clickToShare": "Klikniśo, aby toś tu wobrazowku źělili · {size}",
+};
+
+export default dsb;

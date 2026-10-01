@@ -1,0 +1,87 @@
+import type { NativeStrings } from "./en";
+
+const it: NativeStrings = {
+    "landing.heading": "Il tuo posto di lavoro, a un URL di distanza.",
+    "landing.intro":
+        "Apri un mondo di cui fai già parte o crea un nuovo spazio per il tuo team. Il tuo ultimo mondo si riaprirà automaticamente la prossima volta.",
+    "landing.recentWorlds": "Mondi recenti",
+    "landing.joinTitle": "Entra in un mondo",
+    "landing.joinHint": "Incolla l'URL completo dal tuo invito o dal browser.",
+    "landing.urlLabel": "Inserisci l'URL del tuo mondo",
+    "landing.openWorld": "Apri il mondo",
+    "landing.or": "oppure",
+    "landing.createTitle": "Crea un mondo",
+    "landing.createHint": "Configura un nuovo ufficio virtuale dalla console di amministrazione di WorkAdventure.",
+    "landing.createWorld": "Crea un mondo",
+    "landing.explore": "Esplora",
+    "landing.opening": "Apertura in corso…",
+    "landing.pinWorld": "Fissa il mondo",
+    "landing.unpinWorld": "Sblocca il mondo",
+    "landing.urlRequired": "Inserisci l'URL di un mondo.",
+    "landing.joinFailed": "Impossibile entrare nel mondo.",
+    "landing.signupFailed": "Impossibile aprire la pagina di registrazione.",
+    "landing.desktopOnly": "Questa azione è disponibile solo nell'app desktop.",
+    "landing.worldNotLoaded": "Impossibile caricare questo mondo. Controlla l'URL e riprova.",
+    "landing.loadFailure": "Impossibile caricare questo mondo. Potrebbe essere offline o l'URL potrebbe essere errato.",
+    "landing.loadTimeout":
+        "Il caricamento di questo mondo sta impiegando troppo tempo. Potrebbe essere offline o la tua connessione potrebbe non funzionare.",
+
+    "tabs.newWorld": "Nuovo mondo",
+    "tabs.world": "Mondo",
+    "tabs.closeTab": "Chiudi scheda",
+    "tabs.newWorldTab": "Nuova scheda mondo",
+
+    "menu.world": "Mondo",
+    "menu.newTab": "Nuova scheda",
+    "menu.closeTab": "Chiudi scheda",
+    "menu.nextTab": "Scheda successiva",
+    "menu.previousTab": "Scheda precedente",
+    "menu.showTabBar": "Mostra la barra delle schede",
+    "menu.changeWorld": "Cambia mondo…",
+    "menu.pinnedWorlds": "Mondi fissati",
+    "menu.recentWorlds": "Mondi recenti",
+    "menu.noPinnedWorlds": "Nessun mondo fissato",
+    "menu.noRecentWorlds": "Nessun mondo recente",
+    "menu.hideTabBarTitle": "Nascondere la barra delle schede?",
+    "menu.cancel": "Annulla",
+    "menu.closeOneOtherTab": "Chiudi 1 altra scheda e nascondi la barra",
+    "menu.closeOtherTabs": "Chiudi le altre {count} schede e nascondi la barra",
+    "menu.hideTabBarDetailOne":
+        "Hai {total} mondi aperti in schede. Nascondendo la barra delle schede, il mondo attuale resta aperto e l'altro viene chiuso.",
+    "menu.hideTabBarDetail":
+        "Hai {total} mondi aperti in schede. Nascondendo la barra delle schede, il mondo attuale resta aperto e gli altri {count} vengono chiusi.",
+
+    "tray.status.meeting": "In una riunione",
+    "tray.status.do_not_disturb": "Non disturbare",
+    "tray.status.busy": "Occupato",
+    "tray.status.back_in_a_moment": "Torno subito",
+    "tray.status.idle": "Inattivo",
+    "tray.status.online": "Disponibile",
+    "tray.status.offline": "Offline",
+    "tray.statusLocked": "Bloccato durante una riunione",
+    "tray.microphone": "Microfono",
+    "tray.camera": "Fotocamera",
+    "tray.companionPanel": "Pannello complementare",
+    "tray.showHide": "Mostra / Nascondi",
+    "tray.worlds": "Mondi",
+    "tray.help": "Aiuto",
+    "tray.checkForUpdates": "Verifica aggiornamenti",
+    "tray.openLogs": "Apri i log",
+    "tray.about": "Informazioni",
+    "tray.quit": "Esci",
+
+    "auth.pageTitle": "Accesso a WorkAdventure",
+    "auth.signingInTitle": "Accesso in corso…",
+    "auth.signingInMessage": "Completa l'accesso nel browser. WorkAdventure tornerà automaticamente a questa finestra.",
+    "auth.signingOutTitle": "Disconnessione in corso…",
+    "auth.signingOutMessage":
+        "Completa la disconnessione nel browser. WorkAdventure tornerà automaticamente a questa finestra.",
+    "auth.reopenBrowser": "Riapri il browser",
+    "auth.signedIn": "Accesso effettuato. Puoi tornare a WorkAdventure.",
+    "auth.signedOut": "Disconnessione effettuata. Puoi tornare a WorkAdventure.",
+    "auth.closeWindow": "Puoi chiudere questa finestra.",
+
+    "screenIdentify.clickToShare": "Fai clic per condividere questo schermo · {size}",
+};
+
+export default it;

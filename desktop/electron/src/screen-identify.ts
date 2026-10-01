@@ -1,5 +1,6 @@
 import { BrowserWindow, desktopCapturer, screen } from "electron";
 import ElectronLog from "electron-log";
+import { nativeLocale, t } from "./i18n";
 import path from "path";
 
 /**
@@ -135,7 +136,9 @@ export function identifyScreens(): Promise<IdentifiedScreenSource | null> {
 
             const label = `${display.bounds.width}×${display.bounds.height}`;
             const html =
-                '<!doctype html><html><head><meta charset="utf-8">' +
+                '<!doctype html><html lang="' +
+                nativeLocale() +
+                '"><head><meta charset="utf-8">' +
                 "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';\">" +
                 "<style>html,body{margin:0;height:100vh;width:100vw;overflow:hidden;" +
                 'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}' +
@@ -147,8 +150,8 @@ export function identifyScreens(): Promise<IdentifiedScreenSource | null> {
                 '<body><div id="r"><div style="text-align:center">' +
                 '<div id="n">' +
                 number +
-                '</div><div id="h">Click to share this screen · ' +
-                label +
+                '</div><div id="h">' +
+                t("screenIdentify.clickToShare", { size: label }) +
                 "</div></div></div>" +
                 '<script>document.getElementById("r").addEventListener("click",function(){' +
                 "window.WAScreenPick&&window.WAScreenPick.pick()});" +

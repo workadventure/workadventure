@@ -29,6 +29,7 @@ import megaphone from "./megaphone";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import screenAnnotation from "./screenAnnotation";
+import desktop from "./desktop";
 import recording from "./recording";
 
 const ca_ES = deepmerge(en_US, {
@@ -62,6 +63,7 @@ const ca_ES = deepmerge(en_US, {
     onboarding,
     recording,
     screenAnnotation,
+    desktop,
 });
 
 export default ca_ES;
