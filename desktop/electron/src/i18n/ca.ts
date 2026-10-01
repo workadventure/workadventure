@@ -25,6 +25,11 @@ const ca: NativeStrings = {
         "Aquest enllaç està incomplet o conté un nom d'usuari o una contrasenya. Copia l'enllaç del món des de la teva invitació.",
     "landing.urlNotAllowed":
         "Aquesta adreça no és un món de WorkAdventure que l'aplicació conegui. Comprova l'enllaç o pregunta-ho al teu administrador.",
+    "landing.trustTitle": "Vols afegir aquest servidor?",
+    "landing.trustBody":
+        "{origin} no és un món de WorkAdventure que l'aplicació conegui. Afegeix només un servidor de confiança, com el de la teva empresa.",
+    "landing.trustConfirm": "Afegeix i obre",
+    "landing.trustCancel": "Cancel·la",
     "landing.joinFailed": "No t'has pogut unir a aquest món. Torna-ho a provar.",
     "landing.signupFailed": "No s'ha pogut obrir la pàgina de registre.",
     "landing.desktopOnly": "Aquesta acció només està disponible a l'aplicació d'escriptori.",

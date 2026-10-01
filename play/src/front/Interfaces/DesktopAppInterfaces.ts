@@ -118,7 +118,11 @@ export type WorkAdventureDesktopPipApi = {
     onCommand: (callback: (command: DesktopPipCommand) => void) => () => void;
 };
 
-export type DesktopNavigationResult = { ok: true } | { ok: false; error: string };
+/**
+ * `trustOrigin`: the address is unknown to the portal's admin (a self-hosted server); only returned to
+ * the native Landing, which may then offer to add that server (trustServerAndJoin).
+ */
+export type DesktopNavigationResult = { ok: true } | { ok: false; error: string; trustOrigin?: string };
 
 export type DesktopRecentWorld = {
     url: string;
@@ -128,6 +132,8 @@ export type DesktopRecentWorld = {
 
 export type WorkAdventureDesktopNavigationApi = {
     joinWorld: (url: string) => Promise<DesktopNavigationResult>;
+    /** Add a self-hosted server the user confirmed on the native Landing, then open the world. */
+    trustServerAndJoin?: (url: string) => Promise<DesktopNavigationResult>;
     getRecentWorlds: () => Promise<DesktopRecentWorld[]>;
     getPinnedWorlds?: () => Promise<DesktopRecentWorld[]>;
     togglePin?: (url: string) => Promise<{ ok: boolean; pinned?: boolean; error?: string }>;
