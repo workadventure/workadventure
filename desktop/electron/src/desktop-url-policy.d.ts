@@ -12,7 +12,11 @@ export type DesktopAuthCallback = {
     matrixLoginToken?: string;
 };
 
-export type DesktopNavigationValidationResult = { ok: true; url: string } | { ok: false; error: string };
+export type DesktopNavigationErrorCode = "urlRequired" | "urlInvalid" | "urlProtocol" | "urlHost" | "urlNotAllowed";
+
+export type DesktopNavigationValidationResult =
+    | { ok: true; url: string }
+    | { ok: false; code: DesktopNavigationErrorCode; error: string };
 
 export function createDesktopConfig(env?: Record<string, unknown>): DesktopConfig;
 export function createDesktopLoginUrl(value: string, desktopCallbackUrl?: string): string;

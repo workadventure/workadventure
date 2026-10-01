@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-const { interpolate, resolveNativeLocale, sanitizeStringTable } = require("./native-locale-policy");
+const { interpolate, resolveNativeLocale, sanitizeStringTable, textDirection } = require("./native-locale-policy");
 
 test("native locale matches on the language prefix and falls back to English", () => {
     assert.equal(resolveNativeLocale("fr-CA"), "fr");
@@ -40,4 +40,12 @@ test("string tables must be flat, string-valued and bounded", () => {
         tooMany["k" + i] = "v";
     }
     assert.equal(sanitizeStringTable(tooMany), undefined);
+});
+
+test("Arabic reads right to left, the other shipped languages left to right", () => {
+    assert.equal(textDirection("ar"), "rtl");
+    assert.equal(textDirection("ar-SA"), "rtl");
+    assert.equal(textDirection("fr"), "ltr");
+    assert.equal(textDirection("zh-TW"), "ltr");
+    assert.equal(textDirection(""), "ltr");
 });

@@ -18,6 +18,11 @@ const nl: NativeStrings = {
     "landing.pinWorld": "Wereld vastzetten",
     "landing.unpinWorld": "Wereld losmaken",
     "landing.urlRequired": "Voer een wereld-URL in.",
+    "landing.urlInvalid": "Ongeldige URL. Voer de volledige http(s)://-URL van een wereld in.",
+    "landing.urlProtocol": "Alleen http(s)://-URL's worden ondersteund.",
+    "landing.urlHost": "Ongeldige URL: host ontbreekt of bevat inloggegevens.",
+    "landing.urlNotAllowed":
+        "Deze URL staat niet bij de toegestane origins. Stel WA_DESKTOP_ALLOWED_ORIGINS in of gebruik een workadventu.re-wereld-URL.",
     "landing.joinFailed": "Deelnemen aan de wereld is mislukt.",
     "landing.signupFailed": "De registratiepagina kon niet worden geopend.",
     "landing.desktopOnly": "Deze actie is alleen beschikbaar in de desktop-app.",

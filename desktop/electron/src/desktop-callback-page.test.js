@@ -9,14 +9,14 @@ test("desktop callback page tries to close the browser tab automatically", () =>
     assert.match(html, /window\.close\(\)/);
     assert.match(html, /Signed out\./);
     assert.match(html, /You can close this window/);
-    assert.match(html, /<html lang="en">/);
+    assert.match(html, /<html lang="en" dir="ltr">/);
 });
 
 test("desktop callback page takes a translated close hint and language", () => {
     const html = createDesktopCallbackPage("Déconnexion terminée.", "Vous pouvez fermer cette fenêtre.", "fr");
 
     assert.match(html, /Vous pouvez fermer cette fenêtre/);
-    assert.match(html, /<html lang="fr">/);
+    assert.match(html, /<html lang="fr" dir="ltr">/);
 });
 
 test("desktop callback page escapes its message", () => {
@@ -24,4 +24,9 @@ test("desktop callback page escapes its message", () => {
 
     assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
     assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+});
+
+test("desktop callback page reads right to left in Arabic", () => {
+    const html = createDesktopCallbackPage("تم تسجيل الخروج.", "يمكنك إغلاق هذه النافذة.", "ar");
+    assert.match(html, /<html lang="ar" dir="rtl">/);
 });

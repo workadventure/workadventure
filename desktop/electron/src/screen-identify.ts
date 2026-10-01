@@ -1,6 +1,7 @@
 import { BrowserWindow, desktopCapturer, screen } from "electron";
 import ElectronLog from "electron-log";
 import { nativeLocale, t } from "./i18n";
+import { textDirection } from "./native-locale-policy";
 import path from "path";
 
 /**
@@ -138,6 +139,8 @@ export function identifyScreens(): Promise<IdentifiedScreenSource | null> {
             const html =
                 '<!doctype html><html lang="' +
                 nativeLocale() +
+                '" dir="' +
+                textDirection(nativeLocale()) +
                 '"><head><meta charset="utf-8">' +
                 "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';\">" +
                 "<style>html,body{margin:0;height:100vh;width:100vw;overflow:hidden;" +

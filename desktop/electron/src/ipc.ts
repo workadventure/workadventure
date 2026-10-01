@@ -412,7 +412,7 @@ export default () => {
         });
         const validation = validateDesktopNavigationUrl(rawUrl, config);
         if (!validation.ok) {
-            return validation;
+            return { ok: false, error: t(`landing.${validation.code}`) };
         }
         const safeUrl = validation.url;
         try {

@@ -18,6 +18,11 @@ const ca: NativeStrings = {
     "landing.pinWorld": "Fixa el món",
     "landing.unpinWorld": "Deixa de fixar el món",
     "landing.urlRequired": "Introdueix la URL d'un món.",
+    "landing.urlInvalid": "URL no vàlida. Introdueix la URL completa http(s):// d'un món.",
+    "landing.urlProtocol": "Només s'admeten URL http(s)://.",
+    "landing.urlHost": "URL no vàlida: falta l'amfitrió o conté credencials.",
+    "landing.urlNotAllowed":
+        "Aquesta URL no és entre els orígens permesos. Defineix WA_DESKTOP_ALLOWED_ORIGINS o fes servir la URL d'un món de workadventu.re.",
     "landing.joinFailed": "No s'ha pogut accedir al món.",
     "landing.signupFailed": "No s'ha pogut obrir la pàgina de registre.",
     "landing.desktopOnly": "Aquesta acció només està disponible a l'aplicació d'escriptori.",

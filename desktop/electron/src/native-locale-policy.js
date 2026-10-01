@@ -70,8 +70,20 @@ function sanitizeStringTable(payload) {
     return table;
 }
 
+// Right-to-left scripts. Of the shipped languages only Arabic, but a pushed `lang` can be anything.
+const RTL_LANGUAGES = ["ar", "fa", "he", "ur"];
+
+/** "rtl" or "ltr" for an HTML `dir` attribute, from a language tag such as "ar-SA" or "fr". */
+function textDirection(lang) {
+    const language = String(lang || "")
+        .toLowerCase()
+        .split(/[-_]/)[0];
+    return RTL_LANGUAGES.includes(language) ? "rtl" : "ltr";
+}
+
 module.exports = {
     NATIVE_LOCALES,
+    textDirection,
     resolveNativeLocale,
     interpolate,
     sanitizeStringTable,

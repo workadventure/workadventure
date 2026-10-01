@@ -41,7 +41,11 @@
     api.onStrings(function (next) {
         if (!next || typeof next !== "object") return;
         strings = next;
-        if (typeof strings.lang === "string") document.documentElement.lang = strings.lang;
+        if (typeof strings.lang === "string") {
+            document.documentElement.lang = strings.lang;
+            // Arabic: lay the bar out right to left.
+            document.documentElement.dir = /^(ar|fa|he|ur)([-_]|$)/i.test(strings.lang) ? "rtl" : "ltr";
+        }
         applyStaticStrings();
         // Re-render the open dynamic panels in the new language.
         if (pickerOpen && lastSources.length > 0) renderPicker();

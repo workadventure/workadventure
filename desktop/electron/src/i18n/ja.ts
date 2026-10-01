@@ -18,6 +18,11 @@ const ja: NativeStrings = {
     "landing.pinWorld": "ワールドをピン留め",
     "landing.unpinWorld": "ピン留めを解除",
     "landing.urlRequired": "ワールドの URL を入力してください。",
+    "landing.urlInvalid": "無効な URL です。ワールドの完全な http(s):// URL を入力してください。",
+    "landing.urlProtocol": "http(s):// の URL のみ対応しています。",
+    "landing.urlHost": "無効な URL です：ホストがないか、認証情報が含まれています。",
+    "landing.urlNotAllowed":
+        "この URL は許可されたオリジンに含まれていません。WA_DESKTOP_ALLOWED_ORIGINS を設定するか、workadventu.re のワールド URL を使用してください。",
     "landing.joinFailed": "ワールドに参加できませんでした。",
     "landing.signupFailed": "登録ページを開けませんでした。",
     "landing.desktopOnly": "この操作はデスクトップアプリでのみ利用できます。",

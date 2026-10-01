@@ -18,6 +18,11 @@ const ar: NativeStrings = {
     "landing.pinWorld": "تثبيت العالم",
     "landing.unpinWorld": "إلغاء تثبيت العالم",
     "landing.urlRequired": "يرجى إدخال رابط العالم.",
+    "landing.urlInvalid": "عنوان URL غير صالح. أدخل عنوان URL الكامل للعالم يبدأ بـ http(s)://.",
+    "landing.urlProtocol": "لا يُقبل إلا عناوين http(s)://.",
+    "landing.urlHost": "عنوان URL غير صالح: المضيف مفقود أو يتضمن بيانات اعتماد.",
+    "landing.urlNotAllowed":
+        "هذا العنوان ليس ضمن المصادر المسموح بها. اضبط WA_DESKTOP_ALLOWED_ORIGINS أو استخدم عنوان عالم على workadventu.re.",
     "landing.joinFailed": "تعذّر الانضمام إلى العالم.",
     "landing.signupFailed": "تعذّر فتح صفحة التسجيل.",
     "landing.desktopOnly": "هذا الإجراء متاح فقط في تطبيق سطح المكتب.",
