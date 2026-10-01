@@ -389,29 +389,32 @@ function isRoomUrl(value) {
     );
 }
 
+// `error` is the English text; `code` lets the caller show it in the user's language
+// (landing.<code> in the native catalog).
 function validateDesktopNavigationUrl(value, config) {
     if (typeof value !== "string" || !value.trim()) {
-        return { ok: false, error: "Please enter a world URL." };
+        return { ok: false, code: "urlRequired", error: "Please enter a world URL." };
     }
 
     let url;
     try {
         url = new URL(value.trim());
     } catch {
-        return { ok: false, error: "Invalid URL. Please enter a full http(s):// world URL." };
+        return { ok: false, code: "urlInvalid", error: "Invalid URL. Please enter a full http(s):// world URL." };
     }
 
     if (url.protocol !== "http:" && url.protocol !== "https:") {
-        return { ok: false, error: "Only http(s):// URLs are supported." };
+        return { ok: false, code: "urlProtocol", error: "Only http(s):// URLs are supported." };
     }
     if (!url.hostname || url.username || url.password) {
-        return { ok: false, error: "Invalid URL — missing host or contains credentials." };
+        return { ok: false, code: "urlHost", error: "Invalid URL — missing host or contains credentials." };
     }
 
     const normalizedUrl = url.toString();
     if (!isAllowedNavigationUrl(normalizedUrl, config)) {
         return {
             ok: false,
+            code: "urlNotAllowed",
             error: "This URL isn't in the allowed origins. Set WA_DESKTOP_ALLOWED_ORIGINS or use a workadventu.re world URL.",
         };
     }

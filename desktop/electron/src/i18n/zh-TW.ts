@@ -17,6 +17,11 @@ const zhTW: NativeStrings = {
     "landing.pinWorld": "釘選世界",
     "landing.unpinWorld": "取消釘選世界",
     "landing.urlRequired": "請輸入世界網址。",
+    "landing.urlInvalid": "URL 無效。請輸入完整的 http(s):// 世界 URL。",
+    "landing.urlProtocol": "僅支援 http(s):// URL。",
+    "landing.urlHost": "URL 無效：缺少主機或包含憑證。",
+    "landing.urlNotAllowed":
+        "此 URL 不在允許的來源中。請設定 WA_DESKTOP_ALLOWED_ORIGINS 或使用 workadventu.re 的世界 URL。",
     "landing.joinFailed": "無法加入世界。",
     "landing.signupFailed": "無法開啟註冊頁面。",
     "landing.desktopOnly": "此操作僅能在桌面應用程式中使用。",

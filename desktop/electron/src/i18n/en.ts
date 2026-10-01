@@ -19,6 +19,11 @@ const en = {
     "landing.pinWorld": "Pin world",
     "landing.unpinWorld": "Unpin world",
     "landing.urlRequired": "Please enter a world URL.",
+    "landing.urlInvalid": "Invalid URL. Please enter a full http(s):// world URL.",
+    "landing.urlProtocol": "Only http(s):// URLs are supported.",
+    "landing.urlHost": "Invalid URL: missing host or contains credentials.",
+    "landing.urlNotAllowed":
+        "This URL isn't in the allowed origins. Set WA_DESKTOP_ALLOWED_ORIGINS or use a workadventu.re world URL.",
     "landing.joinFailed": "Failed to join world.",
     "landing.signupFailed": "The signup page could not be opened.",
     "landing.desktopOnly": "This action is only available in the desktop app.",

@@ -18,6 +18,11 @@ const vi: NativeStrings = {
     "landing.pinWorld": "Ghim thế giới",
     "landing.unpinWorld": "Bỏ ghim thế giới",
     "landing.urlRequired": "Vui lòng nhập URL thế giới.",
+    "landing.urlInvalid": "URL không hợp lệ. Hãy nhập URL đầy đủ http(s):// của một thế giới.",
+    "landing.urlProtocol": "Chỉ hỗ trợ URL http(s)://.",
+    "landing.urlHost": "URL không hợp lệ: thiếu máy chủ hoặc chứa thông tin đăng nhập.",
+    "landing.urlNotAllowed":
+        "URL này không thuộc các nguồn được phép. Hãy đặt WA_DESKTOP_ALLOWED_ORIGINS hoặc dùng URL của một thế giới workadventu.re.",
     "landing.joinFailed": "Không thể tham gia thế giới.",
     "landing.signupFailed": "Không thể mở trang đăng ký.",
     "landing.desktopOnly": "Thao tác này chỉ khả dụng trong ứng dụng máy tính.",

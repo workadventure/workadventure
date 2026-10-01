@@ -18,6 +18,11 @@ const th: NativeStrings = {
     "landing.pinWorld": "ปักหมุดโลก",
     "landing.unpinWorld": "เลิกปักหมุดโลก",
     "landing.urlRequired": "โปรดป้อน URL ของโลก",
+    "landing.urlInvalid": "URL ไม่ถูกต้อง โปรดป้อน URL แบบเต็ม http(s):// ของโลก",
+    "landing.urlProtocol": "รองรับเฉพาะ URL แบบ http(s):// เท่านั้น",
+    "landing.urlHost": "URL ไม่ถูกต้อง: ไม่มีโฮสต์หรือมีข้อมูลรับรองอยู่",
+    "landing.urlNotAllowed":
+        "URL นี้ไม่อยู่ในต้นทางที่อนุญาต โปรดตั้งค่า WA_DESKTOP_ALLOWED_ORIGINS หรือใช้ URL ของโลกบน workadventu.re",
     "landing.joinFailed": "เข้าร่วมโลกไม่สำเร็จ",
     "landing.signupFailed": "ไม่สามารถเปิดหน้าลงทะเบียนได้",
     "landing.desktopOnly": "การดำเนินการนี้ใช้ได้เฉพาะในแอปเดสก์ท็อปเท่านั้น",
