@@ -86,8 +86,8 @@
                 Sentry.captureException(e);
             });
         }
-        // The speaker changed while the fallback plays: follow it there too
-        if (outputDeviceId && webAudioSource) {
+        // The speaker changed while the fallback plays: follow it there too ("" is the system default, a real choice)
+        if (outputDeviceId !== undefined && webAudioSource) {
             routeWebAudioToSelectedSpeaker(audioContextManager.getContext()).catch((e) => {
                 Sentry.captureException(e);
             });
@@ -113,13 +113,23 @@
      */
     async function routeWebAudioToSelectedSpeaker(context: AudioContext): Promise<void> {
         const sinkContext = context as AudioContext & { setSinkId?: (sinkId: string) => Promise<void> };
-        if (!outputDeviceId || !sinkContext.setSinkId) {
+        // Only undefined means "nothing selected": "" is the system default, which must reset a context routed
+        // to a headset.
+        if (outputDeviceId === undefined || !sinkContext.setSinkId) {
             return;
         }
+        const deviceId = outputDeviceId;
         try {
-            await sinkContext.setSinkId(outputDeviceId);
+            await sinkContext.setSinkId(deviceId);
         } catch (e) {
-            debug("Could not route the WebAudio playback fallback to the selected speaker", e);
+            console.warn("Could not route the WebAudio playback fallback to the selected speaker", e);
+            Sentry.captureException(e);
+            return;
+        }
+        // The selection changed while setSinkId() was pending, possibly before the fallback had any node for the
+        // effect above to notice: follow it now.
+        if (!destroyed && outputDeviceId !== deviceId) {
+            await routeWebAudioToSelectedSpeaker(context);
         }
     }
 
@@ -146,6 +156,11 @@
         await routeWebAudioToSelectedSpeaker(context);
         if (destroyed) {
             return false;
+        }
+        // The element may have started (autoplay, activation retry) during the awaits. Its `playing` event then
+        // found no fallback to stop, so starting one now would play the stream twice. It plays: nothing is blocked.
+        if (audioElement && !audioElement.paused) {
+            return true;
         }
         // Checked after the awaits: playAudio() may have started a concurrent fallback for the same stream
         if (webAudioStream === stream && webAudioSource && webAudioGain) {

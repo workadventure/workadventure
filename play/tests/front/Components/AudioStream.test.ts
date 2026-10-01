@@ -43,6 +43,7 @@ describe("AudioStream WebAudio fallback", () => {
     });
 
     afterEach(() => {
+        fakeContext.setSinkId.mockImplementation(() => Promise.resolve());
         vi.restoreAllMocks();
         vi.unstubAllGlobals();
     });
@@ -87,6 +88,57 @@ describe("AudioStream WebAudio fallback", () => {
         flushSync();
 
         expect(fakeContext.setSinkId).toHaveBeenLastCalledWith("laptop-speakers");
+
+        await unmount(component);
+    });
+
+    it("does not start the fallback when the element began playing while it waited", async () => {
+        // Every attempt waits: play() is tried twice on mount, and each one starts the fallback
+        let releaseSink: () => void = () => {};
+        const sinkApplied = new Promise<void>((resolve) => {
+            releaseSink = resolve;
+        });
+        fakeContext.setSinkId.mockImplementation(() => sinkApplied);
+        const { target, component } = mountAudioStream();
+        await vi.waitFor(() => expect(fakeContext.setSinkId).toHaveBeenCalled());
+
+        // setSinkId() is slow (a Bluetooth headset switching profile) and the element starts meanwhile
+        const audio = target.querySelector("audio") as HTMLAudioElement;
+        Object.defineProperty(audio, "paused", { configurable: true, value: false });
+        audio.dispatchEvent(new Event("playing"));
+        releaseSink();
+        await flush();
+
+        expect(fakeContext.createMediaStreamSource).not.toHaveBeenCalled();
+
+        await unmount(component);
+    });
+
+    it("follows a speaker change made while the fallback was starting", async () => {
+        // Every attempt waits, so no fallback node exists yet when the speaker changes
+        let releaseSink: () => void = () => {};
+        const sinkApplied = new Promise<void>((resolve) => {
+            releaseSink = resolve;
+        });
+        fakeContext.setSinkId.mockImplementationOnce(() => sinkApplied).mockImplementationOnce(() => sinkApplied);
+        const { component, speaker } = mountAudioStream();
+        await vi.waitFor(() => expect(fakeContext.setSinkId).toHaveBeenCalledWith("bluetooth-earbuds"));
+
+        speaker.set("laptop-speakers");
+        flushSync();
+        releaseSink();
+        await flush();
+
+        expect(fakeContext.setSinkId).toHaveBeenLastCalledWith("laptop-speakers");
+
+        await unmount(component);
+    });
+
+    it("routes the fallback back to the system default", async () => {
+        const { component } = mountAudioStream(writable(""));
+        await vi.waitFor(() => expect(fakeContext.createMediaStreamSource).toHaveBeenCalled());
+
+        expect(fakeContext.setSinkId).toHaveBeenCalledWith("");
 
         await unmount(component);
     });
