@@ -1,9 +1,10 @@
-import type { WokaEmoteDefinition, WokaEmotePropState, WokaEmoteState } from "./WokaEmoteCatalog";
-import { oscillate, stepThrough, track } from "./WokaEmoteCatalog";
+import type { WokaEmoteDefinition, WokaEmotePropState } from "./WokaEmoteCatalog";
+import { oscillate, track } from "./WokaEmoteCatalog";
 
 /**
- * What the other players see when a moderator removes someone: the Woka is kicked off the map, or
- * locked up and dragged under it, instead of vanishing like a closed tab.
+ * What the other players see when a moderator removes someone: the Woka is kicked off the map (see
+ * WokaKickCatalog, which draws the kick at random), or locked up and dragged under it, instead of
+ * vanishing like a closed tab.
  *
  * These are emotes as far as the animation engine is concerned, but they are not in WOKA_EMOTE_IDS:
  * that list is what the back lets a player broadcast, and nobody should be able to make it look as
@@ -17,122 +18,15 @@ export function isWokaEjection(value: string | undefined): value is WokaEjection
 }
 
 const DOWN = 1;
-const LEFT = 4;
-const RIGHT = 7;
 const UP = 10;
 
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
-const cubicOut = (t: number) => 1 - Math.pow(1 - t, 3);
 const quadIn = (t: number) => t * t;
-const quadOut = (t: number) => 1 - (1 - t) * (1 - t);
-
-/** When the boot connects. */
-const KICK_IMPACT = 420;
-/** When the Woka leaves the ground, once the squash of the impact has registered. */
-const KICK_LIFTOFF = 480;
-const KICK_FLIGHT = 1050;
-/** Where the Woka ends up, relative to where it stood: up and away, like a cartoon villain. */
-const KICK_LANDING = { x: 40, y: -52 };
-const KICK_STAR_AT = 1500;
 
 /** When the cell hits the floor. */
 const BAN_LANDING = 420;
 const BAN_SINK_START = 1650;
 const BAN_SINK_DURATION = 800;
-
-/** The Team Rocket exit: spinning through the four directions while shrinking into the distance. */
-function flight(elapsed: number): Partial<WokaEmoteState> {
-    const progress = clamp01((elapsed - KICK_LIFTOFF) / KICK_FLIGHT);
-    const eased = cubicOut(progress);
-    const scale = 1 - 0.86 * eased;
-    return {
-        frame: stepThrough(elapsed, 80, [DOWN, LEFT, UP, RIGHT]),
-        x: KICK_LANDING.x * eased,
-        y: KICK_LANDING.y * eased - 6 * Math.sin(progress * Math.PI),
-        angle: 1080 * quadOut(progress),
-        scaleX: scale,
-        scaleY: scale,
-        alpha: progress < 0.82 ? 1 : 1 - (progress - 0.82) / 0.18,
-    };
-}
-
-/** The twinkle left where the Woka disappeared. */
-function star(elapsed: number): WokaEmotePropState | null {
-    const since = elapsed - KICK_STAR_AT;
-    if (since < 0) return null;
-    const scale = track(since, 0, [
-        { at: 160, to: 1.5, ease: "backOut" },
-        { at: 300, to: 1 },
-    ]);
-    return {
-        ...KICK_LANDING,
-        angle: track(since, 0, [{ at: 600, to: 90, ease: "quadOut" }]),
-        scaleX: scale,
-        scaleY: scale,
-        alpha: since < 450 ? 1 : clamp01(1 - (since - 450) / 250),
-    };
-}
-
-/** The flash of the blow, at the Woka's side. */
-function impact(elapsed: number): WokaEmotePropState | null {
-    const since = elapsed - KICK_IMPACT;
-    if (since < 0 || since > 240) return null;
-    const scale = 0.6 + (since / 240) * 0.9;
-    return { x: -8, y: -8, scaleX: scale, scaleY: scale, alpha: 1 - since / 240 };
-}
-
-const kicked: WokaEmoteDefinition<WokaEjection> = {
-    id: "kicked",
-    duration: 2200,
-    icon: "🥾",
-    // One file for the whole scene — the bonk, the slide whistle of the flight and the "ding" of
-    // the star are timed inside it — so it starts with the blow.
-    sound: { file: "kicked.mp3", at: KICK_IMPACT },
-    props: [
-        {
-            glyph: "boot",
-            // It comes in from the left, winds up, swings through the Woka, then withdraws.
-            sample: (t) =>
-                t >= 860
-                    ? null
-                    : {
-                          x: track(t, -40, [
-                              { at: 120, to: -34, ease: "quadOut" },
-                              { at: 280, to: -38, ease: "quadOut" },
-                              { at: KICK_IMPACT, to: -13, ease: "quadIn" },
-                              { at: 620, to: -16, ease: "quadOut" },
-                              { at: 860, to: -44, ease: "quadIn" },
-                          ]),
-                          y: -1,
-                          angle: track(t, -10, [
-                              { at: 280, to: -28, ease: "quadOut" },
-                              { at: KICK_IMPACT, to: 8, ease: "quadIn" },
-                              { at: 700, to: 0 },
-                          ]),
-                          alpha: t < 60 ? t / 60 : t > 760 ? 1 - (t - 760) / 100 : 1,
-                      },
-        },
-        { glyph: "impact", sample: impact },
-        { glyph: "star", sample: star },
-    ],
-    sample: (t) => {
-        if (t >= KICK_LIFTOFF) return flight(t);
-        const hit = t > KICK_IMPACT;
-        return {
-            // It turns towards the boot just before it lands.
-            frame: t > 150 ? LEFT : DOWN,
-            x: hit ? 2 : 0,
-            scaleX: track(t, 1, [
-                { at: KICK_IMPACT, to: 1 },
-                { at: KICK_IMPACT + 40, to: 1.18, ease: "quadOut" },
-            ]),
-            scaleY: track(t, 1, [
-                { at: KICK_IMPACT, to: 1 },
-                { at: KICK_IMPACT + 40, to: 0.86, ease: "quadOut" },
-            ]),
-        };
-    },
-};
 
 /** The last part of the ban: the cell and the Woka are squashed into the floor together. */
 function sink(elapsed: number): { y: number; scaleY: number; alpha: number } {
@@ -154,12 +48,12 @@ function dust(side: -1 | 1): (elapsed: number) => WokaEmotePropState | null {
     };
 }
 
-const banned: WokaEmoteDefinition<WokaEjection> = {
+export const BANNED: WokaEmoteDefinition<WokaEjection> = {
     id: "banned",
     duration: 2600,
     icon: "⛓️",
     // The clang of the landing, the rattle of the bars and the fall, timed inside one file.
-    sound: { file: "banned.mp3", at: BAN_LANDING },
+    sounds: [{ file: "banned.mp3", at: BAN_LANDING }],
     props: [
         {
             glyph: "cell",
@@ -206,11 +100,3 @@ const banned: WokaEmoteDefinition<WokaEjection> = {
         };
     },
 };
-
-const EJECTIONS: Record<WokaEjection, WokaEmoteDefinition<WokaEjection>> = { kicked, banned };
-
-export const WOKA_EJECTIONS = Object.values(EJECTIONS);
-
-export function getWokaEjection(ejection: WokaEjection): WokaEmoteDefinition<WokaEjection> {
-    return EJECTIONS[ejection];
-}

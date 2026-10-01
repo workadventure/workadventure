@@ -120,11 +120,17 @@ export class WokaEmoteAnimator {
         // rotates, so setAngle() would tilt the flattened ellipse instead of spinning it flat —
         // the turn is baked into the path and the transform is left to do the squashing alone.
         this.ground.clear();
-        this.ground.lineStyle(spec.thickness ?? 1, spec.color, 1);
-        for (const [from, to] of spec.arcs) {
-            this.ground.beginPath();
-            this.ground.arc(0, 0, spec.radius, Phaser.Math.DegToRad(from + turn), Phaser.Math.DegToRad(to + turn));
-            this.ground.strokePath();
+        this.ground.setX((this.mirrored ? -1 : 1) * (state.x ?? 0));
+        if (spec.fill) {
+            this.ground.fillStyle(spec.color, 1);
+            this.ground.fillCircle(0, 0, spec.radius);
+        } else {
+            this.ground.lineStyle(spec.thickness ?? 1, spec.color, 1);
+            for (const [from, to] of spec.arcs) {
+                this.ground.beginPath();
+                this.ground.arc(0, 0, spec.radius, Phaser.Math.DegToRad(from + turn), Phaser.Math.DegToRad(to + turn));
+                this.ground.strokePath();
+            }
         }
         const size = state.scale ?? 1;
         this.ground.setScale(size, size * (spec.flatten ?? 0.42));
