@@ -24,6 +24,11 @@ const pt: NativeStrings = {
         "Este link está incompleto ou contém um nome de usuário ou uma senha. Copie o link do mundo do seu convite.",
     "landing.urlNotAllowed":
         "Este endereço não é um mundo do WorkAdventure conhecido pelo aplicativo. Verifique o link ou fale com seu administrador.",
+    "landing.trustTitle": "Adicionar este servidor?",
+    "landing.trustBody":
+        "{origin} não é um mundo do WorkAdventure que o aplicativo conhece. Adicione apenas um servidor de confiança, como o da sua empresa.",
+    "landing.trustConfirm": "Adicionar e abrir",
+    "landing.trustCancel": "Cancelar",
     "landing.joinFailed": "Não foi possível entrar neste mundo. Tente novamente.",
     "landing.signupFailed": "Não foi possível abrir a página de cadastro.",
     "landing.desktopOnly": "Esta ação só está disponível no aplicativo para desktop.",

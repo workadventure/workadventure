@@ -520,6 +520,57 @@
                 cursor: wait;
             }
 
+            /* Self-hosted server unknown to the portal: the user confirms before the app trusts it. */
+            .trust {
+                margin-top: 8px;
+                padding: 12px 14px;
+                border: 1px solid rgb(255 140 120 / 45%);
+                border-radius: 8px;
+                background: rgb(255 140 120 / 8%);
+            }
+
+            .trust[hidden] {
+                display: none;
+            }
+
+            /* The panel does not fit the card's fixed ratio: let both cards grow while it is shown,
+               and hide "Open world" meanwhile (the panel has its own buttons). */
+            .choices:has(.trust:not([hidden])) .choice {
+                aspect-ratio: auto;
+            }
+
+            .choice:has(.trust:not([hidden])) .choice-actions {
+                display: none;
+            }
+
+            .trust-title {
+                margin: 0 0 4px;
+                font-weight: 600;
+            }
+
+            .trust-body {
+                margin: 0 0 12px;
+                color: var(--text-muted);
+                font-size: var(--text-xs);
+                line-height: var(--text-xs-line);
+                overflow-wrap: anywhere;
+            }
+
+            .trust-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .btn-secondary {
+                background: transparent;
+                box-shadow: inset 0 0 0 1px rgb(255 255 255 / 30%);
+            }
+
+            .btn-secondary:hover:not(:disabled) {
+                background: rgb(255 255 255 / 8%);
+            }
+
             .error {
                 min-height: 15px;
                 margin-top: 4px;
@@ -612,6 +663,16 @@
                             />
                         </div>
                         <div class="error" id="join-error" role="alert" aria-live="polite"></div>
+                        <div class="trust" id="trust-panel" role="alertdialog" aria-labelledby="trust-title" hidden>
+                            <p class="trust-title" id="trust-title" data-i18n="landing.trustTitle">Add this server?</p>
+                            <p class="trust-body" id="trust-body"></p>
+                            <div class="trust-actions">
+                                <button class="btn" type="button" id="trust-confirm" data-i18n="landing.trustConfirm">Add and open</button>
+                                <button class="btn btn-secondary" type="button" id="trust-cancel" data-i18n="landing.trustCancel">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
                         <div class="choice-actions">
                             <button class="btn" type="submit" id="join-btn" data-i18n="landing.openWorld">Open world</button>
                         </div>

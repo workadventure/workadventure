@@ -24,6 +24,11 @@ const ja: NativeStrings = {
         "このリンクは不完全か、ユーザー名またはパスワードが含まれています。招待状からワールドのリンクをコピーしてください。",
     "landing.urlNotAllowed":
         "このアドレスは、アプリが認識している WorkAdventure のワールドではありません。リンクを確認するか、管理者にお問い合わせください。",
+    "landing.trustTitle": "このサーバーを追加しますか？",
+    "landing.trustBody":
+        "{origin} はアプリが認識している WorkAdventure のワールドではありません。会社のサーバーなど、信頼できるサーバーだけを追加してください。",
+    "landing.trustConfirm": "追加して開く",
+    "landing.trustCancel": "キャンセル",
     "landing.joinFailed": "このワールドに参加できませんでした。もう一度お試しください。",
     "landing.signupFailed": "登録ページを開けませんでした。",
     "landing.desktopOnly": "この操作はデスクトップアプリでのみ利用できます。",

@@ -24,6 +24,11 @@ const ko: NativeStrings = {
         "링크가 불완전하거나 사용자 이름 또는 비밀번호가 포함되어 있습니다. 초대장에서 월드 링크를 복사하세요.",
     "landing.urlNotAllowed":
         "이 주소는 앱에서 인식하는 WorkAdventure 월드가 아닙니다. 링크를 확인하거나 관리자에게 문의하세요.",
+    "landing.trustTitle": "이 서버를 추가할까요?",
+    "landing.trustBody":
+        "{origin}은(는) 앱이 알고 있는 WorkAdventure 월드가 아닙니다. 회사 서버처럼 신뢰할 수 있는 서버만 추가하세요.",
+    "landing.trustConfirm": "추가하고 열기",
+    "landing.trustCancel": "취소",
     "landing.joinFailed": "이 월드에 참여할 수 없습니다. 다시 시도하세요.",
     "landing.signupFailed": "가입 페이지를 열 수 없습니다.",
     "landing.desktopOnly": "이 작업은 데스크톱 앱에서만 사용할 수 있습니다.",

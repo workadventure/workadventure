@@ -48,7 +48,40 @@ function verifyOriginRequestUrl(portalUrl, url, allowInsecurePortal = false) {
     return request.toString();
 }
 
+// Self-hosted worlds: servers the user added by hand from the Landing (no admin to ask). Kept until
+// removed; capped so a settings file cannot grow without bound.
+const MAX_TRUSTED_SERVERS = 50;
+
+/**
+ * The origin a user may add by hand, or undefined: a web URL without username/password, over https
+ * (http only in development, since the page gets the native API and would be open to tampering).
+ */
+function trustableOrigin(url, allowHttp = false) {
+    let target;
+    try {
+        target = new URL(String(url || "").trim());
+    } catch {
+        return undefined;
+    }
+    if (!target.hostname || target.username || target.password) {
+        return undefined;
+    }
+    if (target.protocol !== "https:" && !(allowHttp && target.protocol === "http:")) {
+        return undefined;
+    }
+    return target.origin;
+}
+
+/** The trusted servers with `origin` added (most recent first, deduplicated, capped). */
+function addTrustedServer(stored, origin) {
+    const current = Array.isArray(stored) ? stored.filter((entry) => typeof entry === "string") : [];
+    return [origin, ...current.filter((entry) => entry !== origin)].slice(0, MAX_TRUSTED_SERVERS);
+}
+
 module.exports = {
+    MAX_TRUSTED_SERVERS,
+    addTrustedServer,
+    trustableOrigin,
     VERIFIED_ORIGIN_TTL_MS,
     activeVerifiedOrigins,
     rememberVerifiedOrigin,
