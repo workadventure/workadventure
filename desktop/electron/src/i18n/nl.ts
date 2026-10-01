@@ -3,7 +3,7 @@ import type { NativeStrings } from "./en";
 const nl: NativeStrings = {
     "landing.heading": "Je werkplek, slechts één URL verwijderd.",
     "landing.intro":
-        "Open een wereld waar je al lid van bent, of maak een nieuwe ruimte voor je team. Je laatste wereld wordt de volgende keer automatisch opnieuw geopend.",
+        "Open een wereld waar je al lid van bent, of maak een nieuwe wereld voor je team. Je laatste wereld wordt de volgende keer automatisch opnieuw geopend.",
     "landing.recentWorlds": "Recente werelden",
     "landing.joinTitle": "Deelnemen aan een wereld",
     "landing.joinHint": "Plak de volledige URL uit je uitnodiging of browser.",
@@ -18,12 +18,14 @@ const nl: NativeStrings = {
     "landing.pinWorld": "Wereld vastzetten",
     "landing.unpinWorld": "Wereld losmaken",
     "landing.urlRequired": "Voer een wereld-URL in.",
-    "landing.urlInvalid": "Ongeldige URL. Voer de volledige http(s)://-URL van een wereld in.",
-    "landing.urlProtocol": "Alleen http(s)://-URL's worden ondersteund.",
-    "landing.urlHost": "Ongeldige URL: host ontbreekt of bevat inloggegevens.",
+    "landing.urlInvalid":
+        "Deze link is ongeldig. Kopieer de volledige link naar de wereld uit je uitnodiging of browser.",
+    "landing.urlProtocol": "De link naar je wereld moet beginnen met https:// of http://.",
+    "landing.urlHost":
+        "Deze link is onvolledig of bevat een gebruikersnaam of wachtwoord. Kopieer de link naar de wereld uit je uitnodiging.",
     "landing.urlNotAllowed":
-        "Deze URL staat niet bij de toegestane origins. Stel WA_DESKTOP_ALLOWED_ORIGINS in of gebruik een workadventu.re-wereld-URL.",
-    "landing.joinFailed": "Deelnemen aan de wereld is mislukt.",
+        "Dit adres is geen WorkAdventure-wereld die de app kent. Controleer de link of vraag het je beheerder.",
+    "landing.joinFailed": "Deelnemen aan deze wereld is niet gelukt. Probeer het opnieuw.",
     "landing.signupFailed": "De registratiepagina kon niet worden geopend.",
     "landing.desktopOnly": "Deze actie is alleen beschikbaar in de desktop-app.",
     "landing.worldNotLoaded": "Deze wereld kon niet worden geladen. Controleer de URL en probeer het opnieuw.",
@@ -49,8 +51,8 @@ const nl: NativeStrings = {
     "menu.noRecentWorlds": "Geen recente werelden",
     "menu.hideTabBarTitle": "De tabbladbalk verbergen?",
     "menu.cancel": "Annuleren",
-    "menu.closeOneOtherTab": "1 ander tabblad sluiten & balk verbergen",
-    "menu.closeOtherTabs": "{count} andere tabbladen sluiten & balk verbergen",
+    "menu.closeOneOtherTab": "Het andere tabblad sluiten en de balk verbergen",
+    "menu.closeOtherTabs": "{count} andere tabbladen sluiten en de balk verbergen",
     "menu.hideTabBarDetailOne":
         "Je hebt {total} werelden open in tabbladen. Als je de tabbladbalk verbergt, blijft de huidige wereld open en wordt de andere gesloten.",
     "menu.hideTabBarDetail":
@@ -63,11 +65,11 @@ const nl: NativeStrings = {
     "tray.status.idle": "Inactief",
     "tray.status.online": "Beschikbaar",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Vergrendeld tijdens een vergadering",
+    "tray.statusLocked": "Je status kan niet worden gewijzigd tijdens een vergadering",
     "tray.microphone": "Microfoon",
     "tray.camera": "Camera",
     "tray.companionPanel": "Begeleidend paneel",
-    "tray.showHide": "Tonen / Verbergen",
+    "tray.showHide": "Tonen / verbergen",
     "tray.worlds": "Werelden",
     "tray.help": "Help",
     "tray.checkForUpdates": "Controleren op updates",
@@ -77,17 +79,23 @@ const nl: NativeStrings = {
 
     "auth.pageTitle": "Aanmelden bij WorkAdventure",
     "auth.signingInTitle": "Aanmelden…",
-    "auth.signingInMessage":
-        "Rond het aanmelden af in je browser. WorkAdventure keert automatisch terug naar dit venster.",
+    "auth.signingInMessage": "Rond het aanmelden af in je browser. Je keert daarna automatisch terug naar de app.",
     "auth.signingOutTitle": "Afmelden…",
-    "auth.signingOutMessage":
-        "Rond het afmelden af in je browser. WorkAdventure keert automatisch terug naar dit venster.",
+    "auth.signingOutMessage": "Rond het afmelden af in je browser. Je keert daarna automatisch terug naar de app.",
     "auth.reopenBrowser": "Browser opnieuw openen",
     "auth.signedIn": "Aangemeld. Je kunt teruggaan naar WorkAdventure.",
     "auth.signedOut": "Afgemeld. Je kunt teruggaan naar WorkAdventure.",
     "auth.closeWindow": "Je kunt dit venster sluiten.",
 
     "screenIdentify.clickToShare": "Klik om dit scherm te delen · {size}",
+    "update.checking": "Controleren op updates…",
+    "update.title": "WorkAdventure-update",
+    "update.ready": "Je update is klaar. Start WorkAdventure opnieuw om hem te installeren.",
+    "update.installAndRestart": "Installeren en opnieuw starten",
+    "update.installLater": "Later installeren",
+    "update.availableTitle": "WorkAdventure-update beschikbaar",
+    "update.availableBody": "Download en installeer de nieuwste versie via de website van WorkAdventure.",
+    "update.none": "Geen update beschikbaar.",
 };
 
 export default nl;

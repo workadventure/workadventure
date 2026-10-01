@@ -4,7 +4,7 @@
 const en = {
     "landing.heading": "Your workplace, one URL away.",
     "landing.intro":
-        "Open a world you already belong to, or create a new space for your team. Your last world will reopen automatically next time.",
+        "Open a world you already belong to, or create a new world for your team. Your last world will reopen automatically next time.",
     "landing.recentWorlds": "Recent worlds",
     "landing.joinTitle": "Join a world",
     "landing.joinHint": "Paste the complete URL from your invitation or browser.",
@@ -19,12 +19,13 @@ const en = {
     "landing.pinWorld": "Pin world",
     "landing.unpinWorld": "Unpin world",
     "landing.urlRequired": "Please enter a world URL.",
-    "landing.urlInvalid": "Invalid URL. Please enter a full http(s):// world URL.",
-    "landing.urlProtocol": "Only http(s):// URLs are supported.",
-    "landing.urlHost": "Invalid URL: missing host or contains credentials.",
+    "landing.urlInvalid": "This link isn't valid. Copy the full world link from your invitation or browser.",
+    "landing.urlProtocol": "Your world link must start with https:// or http://.",
+    "landing.urlHost":
+        "This link is incomplete or contains a username or password. Copy the world link from your invitation.",
     "landing.urlNotAllowed":
-        "This URL isn't in the allowed origins. Set WA_DESKTOP_ALLOWED_ORIGINS or use a workadventu.re world URL.",
-    "landing.joinFailed": "Failed to join world.",
+        "This address isn't a WorkAdventure world the app knows. Check the link, or ask your administrator.",
+    "landing.joinFailed": "Couldn't join this world. Please try again.",
     "landing.signupFailed": "The signup page could not be opened.",
     "landing.desktopOnly": "This action is only available in the desktop app.",
     "landing.worldNotLoaded": "This world could not be loaded. Please check the URL and try again.",
@@ -49,8 +50,8 @@ const en = {
     "menu.noRecentWorlds": "No recent worlds",
     "menu.hideTabBarTitle": "Hide the tab bar?",
     "menu.cancel": "Cancel",
-    "menu.closeOneOtherTab": "Close 1 other tab & hide bar",
-    "menu.closeOtherTabs": "Close {count} other tabs & hide bar",
+    "menu.closeOneOtherTab": "Close the other tab and hide the bar",
+    "menu.closeOtherTabs": "Close {count} other tabs and hide the bar",
     "menu.hideTabBarDetailOne":
         "You have {total} worlds open in tabs. Hiding the tab bar keeps the current world and closes the other one.",
     "menu.hideTabBarDetail":
@@ -63,11 +64,11 @@ const en = {
     "tray.status.idle": "Idle",
     "tray.status.online": "Available",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Locked while in a meeting",
+    "tray.statusLocked": "Status can't be changed during a meeting",
     "tray.microphone": "Microphone",
     "tray.camera": "Camera",
     "tray.companionPanel": "Companion panel",
-    "tray.showHide": "Show / Hide",
+    "tray.showHide": "Show / hide",
     "tray.worlds": "Worlds",
     "tray.help": "Help",
     "tray.checkForUpdates": "Check for updates",
@@ -77,17 +78,23 @@ const en = {
 
     "auth.pageTitle": "WorkAdventure sign-in",
     "auth.signingInTitle": "Signing in…",
-    "auth.signingInMessage":
-        "Finish signing in in your browser. WorkAdventure will come back to this window automatically.",
+    "auth.signingInMessage": "Finish signing in in your browser. You'll return to the app automatically.",
     "auth.signingOutTitle": "Signing out…",
-    "auth.signingOutMessage":
-        "Finish signing out in your browser. WorkAdventure will come back to this window automatically.",
+    "auth.signingOutMessage": "Finish signing out in your browser. You'll return to the app automatically.",
     "auth.reopenBrowser": "Reopen the browser",
     "auth.signedIn": "Signed in. You can go back to WorkAdventure.",
     "auth.signedOut": "Signed out. You can go back to WorkAdventure.",
     "auth.closeWindow": "You can close this window.",
 
     "screenIdentify.clickToShare": "Click to share this screen · {size}",
+    "update.checking": "Checking for updates…",
+    "update.title": "WorkAdventure update",
+    "update.ready": "Your update is ready. Restart WorkAdventure to install it.",
+    "update.installAndRestart": "Install and restart",
+    "update.installLater": "Install later",
+    "update.availableTitle": "WorkAdventure update available",
+    "update.availableBody": "Download and install the latest version from the WorkAdventure website.",
+    "update.none": "No update available.",
 };
 
 export type NativeStringKey = keyof typeof en;

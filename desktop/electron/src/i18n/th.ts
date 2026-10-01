@@ -3,7 +3,7 @@ import type { NativeStrings } from "./en";
 const th: NativeStrings = {
     "landing.heading": "ที่ทำงานของคุณ ห่างแค่หนึ่ง URL",
     "landing.intro":
-        "เปิดโลกที่คุณเป็นสมาชิกอยู่แล้ว หรือสร้างพื้นที่ใหม่สำหรับทีมของคุณ โลกล่าสุดของคุณจะเปิดขึ้นอีกครั้งโดยอัตโนมัติในครั้งถัดไป",
+        "เปิดโลกที่คุณเป็นสมาชิกอยู่แล้ว หรือสร้างโลกใหม่สำหรับทีมของคุณ โลกล่าสุดของคุณจะเปิดขึ้นอีกครั้งโดยอัตโนมัติในครั้งถัดไป",
     "landing.recentWorlds": "โลกล่าสุด",
     "landing.joinTitle": "เข้าร่วมโลก",
     "landing.joinHint": "วาง URL แบบเต็มจากคำเชิญหรือเบราว์เซอร์ของคุณ",
@@ -18,12 +18,12 @@ const th: NativeStrings = {
     "landing.pinWorld": "ปักหมุดโลก",
     "landing.unpinWorld": "เลิกปักหมุดโลก",
     "landing.urlRequired": "โปรดป้อน URL ของโลก",
-    "landing.urlInvalid": "URL ไม่ถูกต้อง โปรดป้อน URL แบบเต็ม http(s):// ของโลก",
-    "landing.urlProtocol": "รองรับเฉพาะ URL แบบ http(s):// เท่านั้น",
-    "landing.urlHost": "URL ไม่ถูกต้อง: ไม่มีโฮสต์หรือมีข้อมูลรับรองอยู่",
+    "landing.urlInvalid": "ลิงก์นี้ไม่ถูกต้อง โปรดคัดลอกลิงก์ของโลกแบบเต็มจากคำเชิญหรือเบราว์เซอร์ของคุณ",
+    "landing.urlProtocol": "ลิงก์ของโลกต้องขึ้นต้นด้วย https:// หรือ http://",
+    "landing.urlHost": "ลิงก์นี้ไม่สมบูรณ์หรือมีชื่อผู้ใช้หรือรหัสผ่านอยู่ โปรดคัดลอกลิงก์ของโลกจากคำเชิญของคุณ",
     "landing.urlNotAllowed":
-        "URL นี้ไม่อยู่ในต้นทางที่อนุญาต โปรดตั้งค่า WA_DESKTOP_ALLOWED_ORIGINS หรือใช้ URL ของโลกบน workadventu.re",
-    "landing.joinFailed": "เข้าร่วมโลกไม่สำเร็จ",
+        "ที่อยู่นี้ไม่ใช่โลก WorkAdventure ที่แอปรู้จัก โปรดตรวจสอบลิงก์ หรือสอบถามผู้ดูแลระบบของคุณ",
+    "landing.joinFailed": "ไม่สามารถเข้าร่วมโลกนี้ได้ โปรดลองอีกครั้ง",
     "landing.signupFailed": "ไม่สามารถเปิดหน้าลงทะเบียนได้",
     "landing.desktopOnly": "การดำเนินการนี้ใช้ได้เฉพาะในแอปเดสก์ท็อปเท่านั้น",
     "landing.worldNotLoaded": "ไม่สามารถโหลดโลกนี้ได้ โปรดตรวจสอบ URL แล้วลองอีกครั้ง",
@@ -48,7 +48,7 @@ const th: NativeStrings = {
     "menu.noRecentWorlds": "ไม่มีโลกล่าสุด",
     "menu.hideTabBarTitle": "ซ่อนแถบแท็บหรือไม่?",
     "menu.cancel": "ยกเลิก",
-    "menu.closeOneOtherTab": "ปิดแท็บอื่น 1 แท็บและซ่อนแถบ",
+    "menu.closeOneOtherTab": "ปิดแท็บอื่นและซ่อนแถบ",
     "menu.closeOtherTabs": "ปิดแท็บอื่น {count} แท็บและซ่อนแถบ",
     "menu.hideTabBarDetailOne":
         "คุณเปิดโลกไว้ {total} โลกในแท็บ การซ่อนแถบแท็บจะเก็บโลกปัจจุบันไว้และปิดโลกอีกโลกหนึ่ง",
@@ -62,7 +62,7 @@ const th: NativeStrings = {
     "tray.status.idle": "ไม่ได้ใช้งาน",
     "tray.status.online": "ว่าง",
     "tray.status.offline": "ออฟไลน์",
-    "tray.statusLocked": "ถูกล็อกระหว่างการประชุม",
+    "tray.statusLocked": "ไม่สามารถเปลี่ยนสถานะระหว่างการประชุมได้",
     "tray.microphone": "ไมโครโฟน",
     "tray.camera": "กล้อง",
     "tray.companionPanel": "แผงคู่หู",
@@ -76,16 +76,23 @@ const th: NativeStrings = {
 
     "auth.pageTitle": "ลงชื่อเข้าใช้ WorkAdventure",
     "auth.signingInTitle": "กำลังลงชื่อเข้าใช้…",
-    "auth.signingInMessage":
-        "ลงชื่อเข้าใช้ให้เสร็จในเบราว์เซอร์ของคุณ WorkAdventure จะกลับมาที่หน้าต่างนี้โดยอัตโนมัติ",
+    "auth.signingInMessage": "ลงชื่อเข้าใช้ให้เสร็จในเบราว์เซอร์ของคุณ แล้วคุณจะกลับมาที่แอปโดยอัตโนมัติ",
     "auth.signingOutTitle": "กำลังออกจากระบบ…",
-    "auth.signingOutMessage": "ออกจากระบบให้เสร็จในเบราว์เซอร์ของคุณ WorkAdventure จะกลับมาที่หน้าต่างนี้โดยอัตโนมัติ",
+    "auth.signingOutMessage": "ออกจากระบบให้เสร็จในเบราว์เซอร์ของคุณ แล้วคุณจะกลับมาที่แอปโดยอัตโนมัติ",
     "auth.reopenBrowser": "เปิดเบราว์เซอร์อีกครั้ง",
     "auth.signedIn": "ลงชื่อเข้าใช้แล้ว คุณกลับไปที่ WorkAdventure ได้เลย",
     "auth.signedOut": "ออกจากระบบแล้ว คุณกลับไปที่ WorkAdventure ได้เลย",
     "auth.closeWindow": "คุณปิดหน้าต่างนี้ได้",
 
     "screenIdentify.clickToShare": "คลิกเพื่อแชร์หน้าจอนี้ · {size}",
+    "update.checking": "กำลังตรวจหาอัปเดต…",
+    "update.title": "อัปเดต WorkAdventure",
+    "update.ready": "อัปเดตพร้อมแล้ว รีสตาร์ท WorkAdventure เพื่อติดตั้ง",
+    "update.installAndRestart": "ติดตั้งและรีสตาร์ท",
+    "update.installLater": "ติดตั้งภายหลัง",
+    "update.availableTitle": "มีอัปเดต WorkAdventure ใหม่",
+    "update.availableBody": "ดาวน์โหลดและติดตั้งเวอร์ชันล่าสุดจากเว็บไซต์ WorkAdventure",
+    "update.none": "ไม่มีอัปเดต",
 };
 
 export default th;

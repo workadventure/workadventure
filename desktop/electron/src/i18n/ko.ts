@@ -3,7 +3,7 @@ import type { NativeStrings } from "./en";
 const ko: NativeStrings = {
     "landing.heading": "URL 하나로 만나는 나의 업무 공간.",
     "landing.intro":
-        "이미 속한 월드를 열거나 팀을 위한 새 공간을 만드세요. 다음에는 마지막으로 사용한 월드가 자동으로 다시 열립니다.",
+        "이미 속한 월드를 열거나 팀을 위한 새 월드를 만드세요. 다음에는 마지막으로 사용한 월드가 자동으로 다시 열립니다.",
     "landing.recentWorlds": "최근 월드",
     "landing.joinTitle": "월드 참여",
     "landing.joinHint": "초대장이나 브라우저의 전체 URL을 붙여 넣으세요.",
@@ -18,12 +18,13 @@ const ko: NativeStrings = {
     "landing.pinWorld": "월드 고정",
     "landing.unpinWorld": "월드 고정 해제",
     "landing.urlRequired": "월드 URL을 입력하세요.",
-    "landing.urlInvalid": "잘못된 URL입니다. 월드의 전체 http(s):// URL을 입력하세요.",
-    "landing.urlProtocol": "http(s):// URL만 지원됩니다.",
-    "landing.urlHost": "잘못된 URL입니다: 호스트가 없거나 자격 증명이 포함되어 있습니다.",
+    "landing.urlInvalid": "유효하지 않은 링크입니다. 초대장이나 브라우저에서 월드 링크 전체를 복사하세요.",
+    "landing.urlProtocol": "월드 링크는 https:// 또는 http://로 시작해야 합니다.",
+    "landing.urlHost":
+        "링크가 불완전하거나 사용자 이름 또는 비밀번호가 포함되어 있습니다. 초대장에서 월드 링크를 복사하세요.",
     "landing.urlNotAllowed":
-        "이 URL은 허용된 출처에 없습니다. WA_DESKTOP_ALLOWED_ORIGINS를 설정하거나 workadventu.re 월드 URL을 사용하세요.",
-    "landing.joinFailed": "월드에 참여하지 못했습니다.",
+        "이 주소는 앱에서 인식하는 WorkAdventure 월드가 아닙니다. 링크를 확인하거나 관리자에게 문의하세요.",
+    "landing.joinFailed": "이 월드에 참여할 수 없습니다. 다시 시도하세요.",
     "landing.signupFailed": "가입 페이지를 열 수 없습니다.",
     "landing.desktopOnly": "이 작업은 데스크톱 앱에서만 사용할 수 있습니다.",
     "landing.worldNotLoaded": "이 월드를 불러올 수 없습니다. URL을 확인하고 다시 시도하세요.",
@@ -48,7 +49,7 @@ const ko: NativeStrings = {
     "menu.noRecentWorlds": "최근 월드 없음",
     "menu.hideTabBarTitle": "탭 표시줄을 숨길까요?",
     "menu.cancel": "취소",
-    "menu.closeOneOtherTab": "다른 탭 1개 닫고 표시줄 숨기기",
+    "menu.closeOneOtherTab": "다른 탭을 닫고 표시줄 숨기기",
     "menu.closeOtherTabs": "다른 탭 {count}개 닫고 표시줄 숨기기",
     "menu.hideTabBarDetailOne":
         "탭에 월드 {total}개가 열려 있습니다. 탭 표시줄을 숨기면 현재 월드는 유지되고 다른 하나는 닫힙니다.",
@@ -62,7 +63,7 @@ const ko: NativeStrings = {
     "tray.status.idle": "자리 비움",
     "tray.status.online": "온라인",
     "tray.status.offline": "오프라인",
-    "tray.statusLocked": "회의 중에는 변경할 수 없음",
+    "tray.statusLocked": "회의 중에는 상태를 변경할 수 없습니다",
     "tray.microphone": "마이크",
     "tray.camera": "카메라",
     "tray.companionPanel": "컴패니언 패널",
@@ -76,15 +77,23 @@ const ko: NativeStrings = {
 
     "auth.pageTitle": "WorkAdventure 로그인",
     "auth.signingInTitle": "로그인하는 중…",
-    "auth.signingInMessage": "브라우저에서 로그인을 완료하세요. WorkAdventure가 자동으로 이 창으로 돌아옵니다.",
+    "auth.signingInMessage": "브라우저에서 로그인을 완료하세요. 완료되면 자동으로 앱으로 돌아옵니다.",
     "auth.signingOutTitle": "로그아웃하는 중…",
-    "auth.signingOutMessage": "브라우저에서 로그아웃을 완료하세요. WorkAdventure가 자동으로 이 창으로 돌아옵니다.",
+    "auth.signingOutMessage": "브라우저에서 로그아웃을 완료하세요. 완료되면 자동으로 앱으로 돌아옵니다.",
     "auth.reopenBrowser": "브라우저 다시 열기",
     "auth.signedIn": "로그인되었습니다. WorkAdventure로 돌아가셔도 됩니다.",
     "auth.signedOut": "로그아웃되었습니다. WorkAdventure로 돌아가셔도 됩니다.",
     "auth.closeWindow": "이 창을 닫아도 됩니다.",
 
     "screenIdentify.clickToShare": "클릭하여 이 화면 공유 · {size}",
+    "update.checking": "업데이트 확인 중…",
+    "update.title": "WorkAdventure 업데이트",
+    "update.ready": "업데이트가 준비되었습니다. 설치하려면 WorkAdventure를 다시 시작하세요.",
+    "update.installAndRestart": "설치 후 다시 시작",
+    "update.installLater": "나중에 설치",
+    "update.availableTitle": "WorkAdventure 업데이트 가능",
+    "update.availableBody": "WorkAdventure 웹사이트에서 최신 버전을 다운로드하여 설치하세요.",
+    "update.none": "사용 가능한 업데이트가 없습니다.",
 };
 
 export default ko;
