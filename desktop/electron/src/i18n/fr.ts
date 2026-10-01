@@ -54,6 +54,13 @@ const fr: NativeStrings = {
     "menu.recentWorlds": "Mondes récents",
     "menu.noPinnedWorlds": "Aucun monde épinglé",
     "menu.noRecentWorlds": "Aucun monde récent",
+    "menu.addedServers": "Serveurs ajoutés",
+    "menu.noAddedServers": "Aucun serveur ajouté",
+    "menu.removeServer": "Retirer {origin}…",
+    "menu.removeServerTitle": "Retirer ce serveur ?",
+    "menu.removeServerDetail":
+        "{origin} ne s'ouvrira plus dans l'application tant que vous ne l'aurez pas ajouté à nouveau.",
+    "menu.removeServerConfirm": "Retirer",
     "menu.hideTabBarTitle": "Masquer la barre d'onglets ?",
     "menu.cancel": "Annuler",
     "menu.closeOneOtherTab": "Fermer l'autre onglet et masquer la barre",

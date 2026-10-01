@@ -78,9 +78,15 @@ function addTrustedServer(stored, origin) {
     return [origin, ...current.filter((entry) => entry !== origin)].slice(0, MAX_TRUSTED_SERVERS);
 }
 
+/** The trusted servers without `origin`. */
+function removeTrustedServer(stored, origin) {
+    return Array.isArray(stored) ? stored.filter((entry) => typeof entry === "string" && entry !== origin) : [];
+}
+
 module.exports = {
     MAX_TRUSTED_SERVERS,
     addTrustedServer,
+    removeTrustedServer,
     trustableOrigin,
     VERIFIED_ORIGIN_TTL_MS,
     activeVerifiedOrigins,
