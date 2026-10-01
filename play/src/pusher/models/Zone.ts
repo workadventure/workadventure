@@ -17,12 +17,10 @@ import type {
     UserMovedMessage,
     UserLeftZoneMessage,
     GroupLeftZoneMessage,
+    UserEjection,
 } from "@workadventure/messages";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
-
-/** Why a user left, when a moderator removed it. Relayed as is to the players. */
-export type UserEjection = Pick<UserLeftZoneMessage, "ejection" | "ejectedFromLeft">;
 
 export interface ZoneEventListener {
     onUserEnters(user: UserDescriptor, listener: PusherWebSocket): void;
@@ -244,7 +242,7 @@ export class Zone {
 
     public handleUserLeftZone(message: UserLeftZoneMessage): void {
         this.users.delete(message.userId);
-        this.notifyUserLeft(message.userId, message.toZone, message);
+        this.notifyUserLeft(message.userId, message.toZone, message.ejection);
     }
 
     public handleGroupLeftZone(message: GroupLeftZoneMessage): void {
