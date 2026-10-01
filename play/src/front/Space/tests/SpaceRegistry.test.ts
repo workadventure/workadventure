@@ -7,7 +7,7 @@ import { writable } from "svelte/store";
 import { FilterType } from "@workadventure/messages";
 import { emptySpaceState } from "@workadventure/shared-utils";
 import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
-import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
+import { SpaceRegistry, uniqueBySpaceUserId } from "../SpaceRegistry/SpaceRegistry";
 import type { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
@@ -384,5 +384,14 @@ describe("SpaceProviderInterface implementation", () => {
                 expect(roomConnectionMock.emitJoinSpace).toHaveBeenCalledOnce();
             });
         });
+    });
+});
+
+describe("uniqueBySpaceUserId", () => {
+    it("should keep a user raising their hand in two spaces once, in first-seen order", () => {
+        // A hand raised in a bubble also reaches the room megaphone: the same spaceUserId is in both queues.
+        const alice = { spaceUserId: "room_alice", name: "Alice" };
+        const bob = { spaceUserId: "room_bob", name: "Bob" };
+        expect(uniqueBySpaceUserId([[alice, bob], [bob], [alice]])).toEqual([alice, bob]);
     });
 });
