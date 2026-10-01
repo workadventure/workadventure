@@ -185,6 +185,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openUserList: "เปิดรายชื่อผู้ใช้",
         toggleMapEditor: "แสดง/ซ่อนตัวแก้ไขแผนที่",
         rotatePlayer: "หมุนตัวละคร",
+        wokaEmoteWheel: "วงล้ออีโมต",
         emote1: "อีโมต 1",
         emote2: "อีโมต 2",
         emote3: "อีโมต 3",
