@@ -1020,14 +1020,9 @@ async function openDesktopAuthCallback(callback: DesktopAuthCallback) {
     }
 }
 
-export async function openDeepLinkTarget(target?: string | DesktopAuthCallback) {
+export async function openDeepLinkTarget(target?: string) {
     if (!target) {
         await createWindow();
-        return;
-    }
-
-    if (typeof target !== "string") {
-        await openDesktopAuthCallback(target);
         return;
     }
 
