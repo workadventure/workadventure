@@ -26,6 +26,7 @@
         if (native && native.strings) {
             strings = native.strings;
             document.documentElement.lang = native.lang || "en";
+            document.documentElement.dir = /^(ar|fa|he|ur)([-_]|$)/i.test(native.lang || "") ? "rtl" : "ltr";
         }
     } catch (err) {
         console.warn("Landing renderer: strings unavailable", err);

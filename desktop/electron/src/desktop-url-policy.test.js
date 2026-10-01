@@ -88,24 +88,28 @@ test("validates and normalizes world URLs entered in the desktop navigation UI",
 
     assert.deepEqual(validateDesktopNavigationUrl("", config), {
         ok: false,
+        code: "urlRequired",
         error: "Please enter a world URL.",
     });
     assert.deepEqual(validateDesktopNavigationUrl("play.workadventu.re/@/team/world/room", config), {
         ok: false,
+        code: "urlInvalid",
         error: "Invalid URL. Please enter a full http(s):// world URL.",
     });
     assert.deepEqual(validateDesktopNavigationUrl("workadventure://join", config), {
         ok: false,
+        code: "urlProtocol",
         error: "Only http(s):// URLs are supported.",
     });
     assert.deepEqual(
         validateDesktopNavigationUrl("https://user:secret@play.workadventu.re/@/team/world/room", config),
         {
             ok: false,
+            code: "urlHost",
             error: "Invalid URL — missing host or contains credentials.",
         }
     );
-    assert.equal(validateDesktopNavigationUrl("https://evil.test/@/team/world/room", config).ok, false);
+    assert.equal(validateDesktopNavigationUrl("https://evil.test/@/team/world/room", config).code, "urlNotAllowed");
     assert.deepEqual(validateDesktopNavigationUrl(" https://play.workadventu.re/@/team/world/room ", config), {
         ok: true,
         url: "https://play.workadventu.re/@/team/world/room",

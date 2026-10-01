@@ -18,6 +18,11 @@ const fr: NativeStrings = {
     "landing.pinWorld": "Épingler le world",
     "landing.unpinWorld": "Désépingler le world",
     "landing.urlRequired": "Veuillez saisir l'URL d'un world.",
+    "landing.urlInvalid": "URL invalide. Saisissez l'URL complète d'un monde, en http(s)://.",
+    "landing.urlProtocol": "Seules les URL http(s):// sont acceptées.",
+    "landing.urlHost": "URL invalide : hôte manquant ou identifiants inclus.",
+    "landing.urlNotAllowed":
+        "Cette URL ne fait pas partie des origines autorisées. Définissez WA_DESKTOP_ALLOWED_ORIGINS ou utilisez l'URL d'un monde workadventu.re.",
     "landing.joinFailed": "Impossible de rejoindre le world.",
     "landing.signupFailed": "Impossible d'ouvrir la page d'inscription.",
     "landing.desktopOnly": "Cette action n'est disponible que dans l'application desktop.",

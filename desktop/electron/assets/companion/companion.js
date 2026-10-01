@@ -1224,7 +1224,11 @@
     api.onStrings(function (next) {
         if (!next || typeof next !== "object") return;
         strings = next;
-        if (typeof strings.lang === "string") document.documentElement.lang = strings.lang;
+        if (typeof strings.lang === "string") {
+            document.documentElement.lang = strings.lang;
+            // Arabic: lay the panel out right to left.
+            document.documentElement.dir = /^(ar|fa|he|ur)([-_]|$)/i.test(strings.lang) ? "rtl" : "ltr";
+        }
         applyStaticStrings();
         // Re-render everything built from state so dynamic text follows the new language.
         tiles.forEach(function (tile) {

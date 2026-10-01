@@ -25,6 +25,7 @@
     }
     if (native && native.lang) {
         document.documentElement.lang = native.lang;
+        document.documentElement.dir = /^(ar|fa|he|ur)([-_]|$)/i.test(native.lang) ? "rtl" : "ltr";
     }
     newTabBtn.title = t("tabs.newWorldTab", "New world tab");
     newTabBtn.setAttribute("aria-label", newTabBtn.title);
