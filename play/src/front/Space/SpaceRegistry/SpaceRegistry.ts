@@ -42,6 +42,18 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitVideoQualityReport"
 >;
 
+/** Flattens per-space lists keyed by spaceUserId, keeping the first entry of a user present in several spaces. */
+export function uniqueBySpaceUserId<T extends { spaceUserId: string }>(lists: T[][]): T[] {
+    const seen = new Set<string>();
+    return lists.flat().filter((entry) => {
+        if (seen.has(entry.spaceUserId)) {
+            return false;
+        }
+        seen.add(entry.spaceUserId);
+        return true;
+    });
+}
+
 /**
  * This class is in charge of creating, joining, leaving and deleting Spaces.
  * It acts both as a factory and a registry.
@@ -125,7 +137,8 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return derived(stores, (list) => list.some(Boolean)).subscribe(set);
     });
 
-    // Aggregated raised-hands queue across all spaces (in practice only the meeting space has a non-empty one).
+    // Aggregated raised-hands queue across all spaces. A user raises their hand in every space they sync media with
+    // (e.g. a bubble and the room megaphone), so the same spaceUserId can appear in several lists: keep the first one.
     public readonly raisedHandsStore: Readable<RaisedHand[]> = derived(this.spaces, ($spaces, set) => {
         if ($spaces.size === 0) {
             set([]);
@@ -133,7 +146,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
 
         const stores = Array.from($spaces.values(), (space) => space.state.raisedHandsStore);
-        return derived(stores, (lists) => lists.flat()).subscribe(set);
+        return derived(stores, uniqueBySpaceUserId).subscribe(set);
     });
 
     // Aggregated list of users currently holding the floor across all spaces (in practice only the meeting space).
@@ -144,7 +157,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
 
         const stores = Array.from($spaces.values(), (space) => space.state.speakingUsersStore);
-        return derived(stores, (lists) => lists.flat()).subscribe(set);
+        return derived(stores, uniqueBySpaceUserId).subscribe(set);
     });
 
     /**
