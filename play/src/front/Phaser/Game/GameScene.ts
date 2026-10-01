@@ -833,8 +833,6 @@ export class GameScene extends DirtyScene {
 
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
-        this.tryMovePlayerWithMoveToParameter();
-
         this.cameraManager = new CameraManager(
             this,
             { width: this.Map.widthInPixels, height: this.Map.heightInPixels },
@@ -2087,6 +2085,9 @@ export class GameScene extends DirtyScene {
 
                 this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
                 this.cameraManager.startFollowPlayer(this.CurrentPlayer, 0);
+
+                // #moveTo walks the player: it must exist, so this cannot run before the pusher answers.
+                this.tryMovePlayerWithMoveToParameter();
 
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
 
