@@ -25,6 +25,11 @@ const en = {
         "This link is incomplete or contains a username or password. Copy the world link from your invitation.",
     "landing.urlNotAllowed":
         "This address isn't a WorkAdventure world the app knows. Check the link, or ask your administrator.",
+    "landing.trustTitle": "Add this server?",
+    "landing.trustBody":
+        "{origin} isn't a WorkAdventure world the app knows. Only add a server you trust, such as your company's.",
+    "landing.trustConfirm": "Add and open",
+    "landing.trustCancel": "Cancel",
     "landing.joinFailed": "Couldn't join this world. Please try again.",
     "landing.signupFailed": "The signup page could not be opened.",
     "landing.desktopOnly": "This action is only available in the desktop app.",

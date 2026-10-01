@@ -11,3 +11,6 @@ export function verifyOriginRequestUrl(
     url: string,
     allowInsecurePortal?: boolean
 ): string | undefined;
+export const MAX_TRUSTED_SERVERS: number;
+export function trustableOrigin(url: unknown, allowHttp?: boolean): string | undefined;
+export function addTrustedServer(stored: unknown, origin: string): string[];

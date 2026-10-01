@@ -25,6 +25,11 @@ const vi: NativeStrings = {
         "Liên kết này chưa đầy đủ hoặc chứa tên người dùng hay mật khẩu. Hãy sao chép liên kết thế giới từ lời mời của bạn.",
     "landing.urlNotAllowed":
         "Địa chỉ này không phải là thế giới WorkAdventure mà ứng dụng nhận biết. Hãy kiểm tra liên kết hoặc hỏi quản trị viên của bạn.",
+    "landing.trustTitle": "Thêm máy chủ này?",
+    "landing.trustBody":
+        "{origin} không phải là một thế giới WorkAdventure mà ứng dụng biết. Chỉ thêm máy chủ bạn tin cậy, chẳng hạn máy chủ của công ty bạn.",
+    "landing.trustConfirm": "Thêm và mở",
+    "landing.trustCancel": "Hủy",
     "landing.joinFailed": "Không thể tham gia thế giới này. Vui lòng thử lại.",
     "landing.signupFailed": "Không thể mở trang đăng ký.",
     "landing.desktopOnly": "Thao tác này chỉ khả dụng trong ứng dụng máy tính.",

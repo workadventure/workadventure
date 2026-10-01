@@ -25,6 +25,11 @@ const de: NativeStrings = {
         "Dieser Link ist unvollständig oder enthält einen Benutzernamen oder ein Passwort. Kopieren Sie den Link zur Welt aus Ihrer Einladung.",
     "landing.urlNotAllowed":
         "Diese Adresse ist keine WorkAdventure-Welt, die die App kennt. Prüfen Sie den Link oder fragen Sie Ihren Administrator.",
+    "landing.trustTitle": "Diesen Server hinzufügen?",
+    "landing.trustBody":
+        "{origin} ist keine WorkAdventure-Welt, die die App kennt. Fügen Sie nur einen Server hinzu, dem Sie vertrauen, zum Beispiel den Ihres Unternehmens.",
+    "landing.trustConfirm": "Hinzufügen und öffnen",
+    "landing.trustCancel": "Abbrechen",
     "landing.joinFailed": "Der Beitritt zu dieser Welt ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "landing.signupFailed": "Die Registrierungsseite konnte nicht geöffnet werden.",
     "landing.desktopOnly": "Diese Aktion ist nur in der Desktop-App verfügbar.",

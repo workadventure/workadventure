@@ -17,6 +17,11 @@
     var recentSection = document.getElementById("recent");
     var worldRow = document.getElementById("world-row");
     var recentErrorEl = document.getElementById("recent-error");
+    var trustPanel = document.getElementById("trust-panel");
+    var trustBody = document.getElementById("trust-body");
+    var trustConfirm = document.getElementById("trust-confirm");
+    var trustCancel = document.getElementById("trust-cancel");
+    var pendingTrustUrl = null;
 
     // Strings in the OS language (native catalog in the main process), fetched synchronously so the
     // page never flashes English. The English in the markup / below is the fallback.
@@ -252,12 +257,18 @@
         showError(errorEl, "");
         joinBtn.setAttribute("disabled", "disabled");
         joinBtn.textContent = t("landing.opening", "Opening…");
+        hideTrustPanel();
         api.joinWorld(url)
             .then(function (result) {
                 if (!result || !result.ok) {
-                    showError(errorEl, (result && result.error) || t("landing.joinFailed", "Failed to join world."));
                     joinBtn.removeAttribute("disabled");
                     joinBtn.textContent = t("landing.openWorld", "Open world");
+                    // A self-hosted server: no admin knows it, so the user decides whether to trust it.
+                    if (result && result.trustOrigin && typeof api.trustServerAndJoin === "function") {
+                        showTrustPanel(url, result.trustOrigin);
+                        return;
+                    }
+                    showError(errorEl, (result && result.error) || t("landing.joinFailed", "Failed to join world."));
                 }
             })
             .catch(function (err) {
@@ -267,6 +278,51 @@
                 joinBtn.textContent = t("landing.openWorld", "Open world");
             });
     });
+
+    function showTrustPanel(url, origin) {
+        pendingTrustUrl = url;
+        trustBody.textContent = t(
+            "landing.trustBody",
+            "{origin} isn't a WorkAdventure world the app knows. Only add a server you trust, such as your company's."
+        ).replace("{origin}", origin);
+        trustPanel.hidden = false;
+        trustCancel.focus();
+    }
+
+    function hideTrustPanel() {
+        pendingTrustUrl = null;
+        trustPanel.hidden = true;
+    }
+
+    trustCancel.addEventListener("click", function () {
+        hideTrustPanel();
+        input.focus();
+    });
+
+    trustConfirm.addEventListener("click", function () {
+        var url = pendingTrustUrl;
+        if (!url) {
+            return;
+        }
+        trustConfirm.setAttribute("disabled", "disabled");
+        api.trustServerAndJoin(url)
+            .then(function (result) {
+                trustConfirm.removeAttribute("disabled");
+                if (!result || !result.ok) {
+                    hideTrustPanel();
+                    showError(errorEl, (result && result.error) || t("landing.joinFailed", "Failed to join world."));
+                }
+            })
+            .catch(function (err) {
+                console.warn("landing.trustServerAndJoin rejected", err);
+                trustConfirm.removeAttribute("disabled");
+                hideTrustPanel();
+                showError(errorEl, t("landing.joinFailed", "Failed to join world."));
+            });
+    });
+
+    // Editing the address withdraws the offer: it was about the address typed before.
+    input.addEventListener("input", hideTrustPanel);
 
     createBtn.addEventListener("click", function () {
         showError(createErrorEl, "");
