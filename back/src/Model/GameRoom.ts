@@ -431,9 +431,13 @@ export class GameRoom implements BrothersFinder {
     }
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
+        const wasSilent = user.silent;
         user.updateDetails(playerDetailsMessage);
         if (user.group !== undefined && user.silent) {
             this.leaveGroup(user);
+        } else if (wasSilent && !user.silent) {
+            // Back from a silent status (DND, sound blocked...): join whoever is next to us, without waiting for a move.
+            this.updateUserGroup(user);
         }
     }
 

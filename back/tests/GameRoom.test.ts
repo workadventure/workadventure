@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it, vi } from "vitest";
-import { JoinRoomMessage, PositionMessage_Direction, RoomJoinedMessage } from "@workadventure/messages";
+import {
+    AvailabilityStatus,
+    JoinRoomMessage,
+    PositionMessage_Direction,
+    RoomJoinedMessage,
+    SetPlayerDetailsMessage,
+} from "@workadventure/messages";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import type { ConnectCallback, DisconnectCallback } from "../src/Model/GameRoom";
@@ -98,7 +104,7 @@ function createWorld(): Promise<GameRoom> {
         emote,
         () => {},
         () => {},
-        () => {}
+        () => {},
     );
 }
 
@@ -122,7 +128,7 @@ describe("GameRoom", () => {
             emote,
             () => {},
             () => {},
-            () => {}
+            () => {},
         );
 
         const user1Socket = createMockUserSocket();
@@ -140,6 +146,42 @@ describe("GameRoom", () => {
         expect(connectCalledNumber).toBe(2);
 
         world.updatePosition(user2, new Point(102, 100));
+        expect(connectCalledNumber).toBe(2);
+    });
+
+    it("should connect users when one of them leaves a silent status without moving", async () => {
+        let connectCalledNumber = 0;
+        const connect: ConnectCallback = (): void => {
+            connectCalledNumber++;
+        };
+        const world = await GameRoom.create(
+            ROOM_URL,
+            connect,
+            () => {},
+            160,
+            160,
+            () => {},
+            () => {},
+            () => {},
+            emote,
+            () => {},
+            () => {},
+            () => {},
+        );
+
+        const user1 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("1", 100, 100));
+        world.updatePlayerDetails(
+            user1,
+            SetPlayerDetailsMessage.fromPartial({ availabilityStatus: AvailabilityStatus.SOUND_BLOCKED }),
+        );
+
+        await world.join(createMockUserSocket().socket, createJoinRoomMessage("2", 101, 100));
+        expect(connectCalledNumber).toBe(0);
+
+        world.updatePlayerDetails(
+            user1,
+            SetPlayerDetailsMessage.fromPartial({ availabilityStatus: AvailabilityStatus.ONLINE }),
+        );
         expect(connectCalledNumber).toBe(2);
     });
 
@@ -162,7 +204,7 @@ describe("GameRoom", () => {
             emote,
             () => {},
             () => {},
-            () => {}
+            () => {},
         );
 
         const user1Socket = createMockUserSocket();
@@ -207,7 +249,7 @@ describe("GameRoom", () => {
             emote,
             () => {},
             () => {},
-            () => {}
+            () => {},
         );
 
         const user1Socket = createMockUserSocket();
@@ -240,7 +282,7 @@ describe("GameRoom", () => {
             emote,
             () => {},
             () => {},
-            () => {}
+            () => {},
         );
 
         const firstSocket = createMockUserSocket();
@@ -249,7 +291,7 @@ describe("GameRoom", () => {
         const secondSocket = createMockUserSocket();
         const reconnectedUser = await world.join(
             secondSocket.socket,
-            createJoinRoomMessage("duplicate-user", 100, 100, "tab-1")
+            createJoinRoomMessage("duplicate-user", 100, 100, "tab-1"),
         );
 
         expect(firstSocket.end).toHaveBeenCalledTimes(1);
@@ -272,7 +314,7 @@ describe("GameRoom", () => {
             emote,
             () => {},
             () => {},
-            () => {}
+            () => {},
         );
 
         const firstSocket = createMockUserSocket();
@@ -281,7 +323,7 @@ describe("GameRoom", () => {
         const secondSocket = createMockUserSocket();
         const secondUser = await world.join(
             secondSocket.socket,
-            createJoinRoomMessage("duplicate-user", 100, 100, "tab-2")
+            createJoinRoomMessage("duplicate-user", 100, 100, "tab-2"),
         );
 
         expect(firstSocket.end).not.toHaveBeenCalled();
@@ -304,7 +346,7 @@ describe("GameRoom", () => {
             emote,
             () => {},
             () => {},
-            () => {}
+            () => {},
         );
 
         const firstSocket = createMockUserSocket();
