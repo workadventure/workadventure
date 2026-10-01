@@ -338,4 +338,67 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         // The megaphone speaker never sees the hand meant for the bubble.
         await expect(speaker.getByTestId("raised-hands-dock")).toBeHidden({ timeout: 10_000 });
     });
+
+    // The picker's real-life path: a listener raises their hand in the live room megaphone, then a bubble forms
+    // around them. The megaphone is no longer offered on its own, but the hand already up in it stays reachable.
+    test("a hand raised in the global megaphone stays reachable once a bubble forms @nofirefox", async ({
+        browser,
+        request,
+    }) => {
+        test.skip(browser.browserType().name() === "firefox", "WebRTC connection is sometimes flaky on Firefox");
+
+        await resetWamMaps(request);
+
+        await using speaker = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(speaker, 5 * 32, 5 * 32);
+
+        await Menu.openMapEditor(speaker);
+        await MapEditor.openConfigureMyRoom(speaker);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(speaker);
+        await Megaphone.toggleMegaphone(speaker);
+        await Megaphone.megaphoneInputNameSpace(speaker, `${browser.browserType().name()}RaiseHandPicker`);
+        await Megaphone.megaphoneSelectScope(speaker);
+        await Megaphone.megaphoneAddNewRights(speaker, "example");
+        await Megaphone.megaphoneSave(speaker);
+        await Megaphone.isCorrectlySaved(speaker);
+        await expect(speaker.getByRole("button", { name: "Megaphone settings saved" })).toBeHidden();
+        await Megaphone.megaphoneRemoveRights(speaker, "example");
+        await Megaphone.megaphoneSave(speaker);
+        await Megaphone.isCorrectlySaved(speaker);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(speaker);
+        await Menu.closeMapEditor(speaker);
+
+        await Menu.isThereMegaphoneButton(speaker);
+        await Menu.clickSendGlobalMessage(speaker);
+        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await speaker.locator(".close-btn").first().click();
+
+        // Bob, alone, receives the megaphone and raises his hand: the only space to take it is the megaphone.
+        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(bob, 12 * 32, 12 * 32);
+        await expect(bob.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
+        await bob.getByTestId("raise-hand-button").click();
+        await expect(speaker.getByTestId("raised-hands-panel")).toContainText("Bob", { timeout: 20_000 });
+
+        // Alice joins him and a bubble forms: the button now opens a picker offering both spaces.
+        await using alice = await getPage(browser, "Alice", Map.url("empty"));
+        await Map.teleportToPosition(alice, 12 * 32, 12 * 32);
+        await expect(alice.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 30_000 });
+        await bob.getByTestId("raise-hand-button").click();
+        const picker = bob.getByTestId("raise-hand-space-picker");
+        await expect(picker.getByTestId("raise-hand-space-option-megaphone")).toBeVisible();
+        await expect(picker.getByTestId("raise-hand-space-option-bubble")).toBeVisible();
+
+        // Lowering the hand in the megaphone only empties the speaker's queue.
+        await picker.getByTestId("raise-hand-space-option-megaphone").click();
+        await expect(picker).toBeHidden();
+        await expect(speaker.getByTestId("raised-hands-dock")).toBeHidden({ timeout: 20_000 });
+
+        // With no hand left in it, the megaphone drops out: the button toggles the bubble directly again.
+        await bob.getByTestId("raise-hand-button").click();
+        await expect(picker).toBeHidden();
+        await expect(alice.getByTestId("raised-hands-panel")).toContainText("Bob", { timeout: 20_000 });
+        await expect(speaker.getByTestId("raised-hands-dock")).toBeHidden();
+    });
 });
