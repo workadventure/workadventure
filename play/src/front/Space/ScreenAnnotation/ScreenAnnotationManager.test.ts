@@ -75,4 +75,12 @@ describe("ScreenAnnotationManager remote events", () => {
         send("viewer", ME, { $case: "upsertElement", upsertElement: element("v2", "viewer") });
         expect(elementIds(ME)).toEqual(["v2"]);
     });
+
+    it("drops elements too large to render safely", () => {
+        const huge = { ...element("w", PRESENTER), width: 10 };
+        send(PRESENTER, PRESENTER, { $case: "upsertElement", upsertElement: huge });
+        const long = { ...element("p", PRESENTER), points: Array.from({ length: 6000 }, () => ({ x: 0, y: 0 })) };
+        send(PRESENTER, PRESENTER, { $case: "upsertElement", upsertElement: long });
+        expect(elementIds(PRESENTER)).toEqual([]);
+    });
 });

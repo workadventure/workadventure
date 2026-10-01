@@ -21,14 +21,13 @@ import {
     startScreenShareWithSource,
 } from "../../Stores/ScreenSharingStore";
 import {
-    ANNOTATION_TOOLS,
     currentAnnotationColorStore,
     currentAnnotationToolStore,
     localAnnotationActiveStore,
     screenAnnotationElementsStore,
     screenAnnotationEnabledStore,
     screenAnnotationLocallyHiddenStore,
-    type AnnotationTool,
+    isAnnotationTool,
 } from "../../Stores/ScreenAnnotationStore";
 import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
 import { isActivePresenterTool, presenterToolStore } from "../../Stores/PresenterEffectStore";
@@ -42,10 +41,6 @@ function getPresenterHudApi(): NonNullable<WorkAdventureDesktopApi["presenterHud
         return undefined;
     }
     return wad.presenterHud;
-}
-
-function isAnnotationTool(tool: string): tool is AnnotationTool {
-    return (ANNOTATION_TOOLS as readonly string[]).includes(tool);
 }
 
 /**
@@ -132,6 +127,9 @@ class PresenterHudBridge {
         this.onCommandUnsub?.();
         this.onCommandUnsub = undefined;
         this.closeMeetingBar();
+        // Otherwise a restart during the same share (the component remounts when a video goes full
+        // screen) sees an unchanged source and never reopens the meeting bar.
+        this.lastSourceId = undefined;
     }
 
     private buildState(): DesktopPresenterHudState {

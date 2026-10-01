@@ -31,7 +31,7 @@
         currentAnnotationColorStore,
         currentAnnotationToolStore,
         localAnnotationActiveStore,
-        type AnnotationTool,
+        isAnnotationTool,
     } from "../../Stores/ScreenAnnotationStore";
     import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
     import { screenOverlayBridge } from "../../Api/Desktop/ScreenOverlayBridge";
@@ -329,7 +329,9 @@
                         localAnnotationActiveStore.set(!get(localAnnotationActiveStore));
                     },
                     annotationSetTool: (tool) => {
-                        currentAnnotationToolStore.set(tool as AnnotationTool);
+                        if (isAnnotationTool(tool)) {
+                            currentAnnotationToolStore.set(tool);
+                        }
                     },
                     annotationSetColor: (color) => {
                         currentAnnotationColorStore.set(color);

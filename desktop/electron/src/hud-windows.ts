@@ -268,6 +268,11 @@ export function closeHudWindow(kind: HudKind): void {
     }
 }
 
+/** Forget the replayed state: after a tab switch it describes the world we just left. */
+export function forgetHudState(): void {
+    lastStateByKind.clear();
+}
+
 export function closeAllHudWindows(): void {
     closeHudWindow("meeting-bar");
 }
