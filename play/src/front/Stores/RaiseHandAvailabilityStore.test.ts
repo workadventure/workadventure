@@ -1,122 +1,144 @@
-import { type Writable, get } from "svelte/store";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { type Writable, get, writable } from "svelte/store";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { SpaceInterface } from "../Space/SpaceInterface";
 
-// Mock every store raiseHandAvailableStore derives from (except the zone-settings ones, which are already
-// plain writables) so the module loads without pulling the real Phaser-heavy stores.
+// Mock every store raiseHandSpacesStore derives from (except the zone-settings and raise-hand ones, which are
+// already plain writables) so the module loads without pulling the real Phaser-heavy stores.
 vi.mock("./MediaStore", async () => {
     const { writable: w } = await import("svelte/store");
-    return { isSpeakerStore: w(false), silentStore: w(false), inLivekitStore: w(false) };
+    return { isSpeakerStore: w(false), silentStore: w(false) };
 });
 vi.mock("./MegaphoneStore", async () => {
     const { writable: w } = await import("svelte/store");
-    return { givenFloorSpaceStore: w<unknown>(undefined) };
+    return { givenFloorSpaceStore: w<unknown>(undefined), requestedMegaphoneStore: w(false) };
 });
-vi.mock("./StreamableCollectionStore", async () => {
+vi.mock("./PeerStore", async () => {
     const { writable: w } = await import("svelte/store");
-    return { isInRemoteConversation: w(false) };
+    return { mediaSynchronizedSpacesStore: w<unknown[]>([]) };
 });
 
-import { inLivekitStore, isSpeakerStore, silentStore } from "./MediaStore";
-import { givenFloorSpaceStore } from "./MegaphoneStore";
-import { isInRemoteConversation } from "./StreamableCollectionStore";
-import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
-import { inMegaphoneZoneStore, meetingRaiseHandStore, megaphoneRaiseHandStore } from "./RaiseHandZoneSettingsStore";
-import { raiseHandAvailableStore } from "./RaiseHandAvailabilityStore";
+import { isSpeakerStore, silentStore } from "./MediaStore";
+import { givenFloorSpaceStore, requestedMegaphoneStore } from "./MegaphoneStore";
+import { mediaSynchronizedSpacesStore } from "./PeerStore";
+import { requestedHandRaiseState } from "./RaiseHandStore";
+import { meetingRaiseHandStore, megaphoneRaiseHandSpacesStore } from "./RaiseHandZoneSettingsStore";
+import { raiseHandAvailableStore, raiseHandSpacesStore } from "./RaiseHandAvailabilityStore";
 
-const speaker = isSpeakerStore;
-const inLivekit = inLivekitStore;
 // The real silentStore is a custom store with no set(); the mock above replaces it with a plain writable.
 const silent = silentStore as unknown as Writable<boolean>;
 const grantedFloor = givenFloorSpaceStore as unknown as Writable<unknown>;
-const inConversation = isInRemoteConversation as unknown as Writable<boolean>;
+const syncedSpaces = mediaSynchronizedSpacesStore as unknown as Writable<SpaceInterface[]>;
 
-/** The local user talks to nearby players: peers, a server-side group, no zone. */
-function enterProximityBubble() {
-    inConversation.set(true);
-    currentPlayerGroupIdStore.set(42);
+function fakeSpace(kind: SpaceInterface["kind"], name: string, someoneElseOnAir = false) {
+    const hasRemoteSpeakerStore = writable(someoneElseOnAir);
+    const space = { kind, getName: () => name, hasRemoteSpeakerStore } as unknown as SpaceInterface;
+    return { space, hasRemoteSpeakerStore };
 }
 
-/** The local user receives the room-level megaphone: a remote stream, but no zone and no group. */
-function receiveGlobalMegaphone() {
-    inConversation.set(true);
-    currentPlayerGroupIdStore.set(undefined);
-}
+const bubble = fakeSpace("bubble", "room#group#1").space;
+const meeting = fakeSpace("area", "meeting-room").space;
+const listenerZone = fakeSpace("speaker_zone", "podium").space;
+const world = fakeSpace(undefined, "world").space;
 
-describe("raiseHandAvailableStore", () => {
-    const reset = () => {
-        speaker.set(false);
+const names = () => get(raiseHandSpacesStore).map((space) => space.getName());
+
+describe("raiseHandSpacesStore", () => {
+    afterEach(() => {
+        isSpeakerStore.set(false);
         silent.set(false);
-        inLivekit.set(false);
         grantedFloor.set(undefined);
-        inConversation.set(false);
-        currentPlayerGroupIdStore.set(undefined);
+        requestedMegaphoneStore.set(false);
+        syncedSpaces.set([]);
         meetingRaiseHandStore.set(false);
-        megaphoneRaiseHandStore.set(false);
-        inMegaphoneZoneStore.set(false);
-    };
+        megaphoneRaiseHandSpacesStore.set(new Set());
+        requestedHandRaiseState.lowerAll();
+    });
 
-    beforeEach(reset);
-    afterEach(reset);
-
-    it("is hidden when alone, outside any conversation", () => {
+    it("is empty and hides the button when alone, outside any conversation", () => {
+        syncedSpaces.set([world]);
+        expect(names()).toEqual([]);
         expect(get(raiseHandAvailableStore)).toBe(false);
     });
 
-    it("shows in a proximity bubble, where the queue lets whoever leads give the floor orally", () => {
-        enterProximityBubble();
+    it("offers a proximity bubble, where the queue lets whoever leads give the floor orally", () => {
+        syncedSpaces.set([bubble]);
+        expect(names()).toEqual(["room#group#1"]);
         expect(get(raiseHandAvailableStore)).toBe(true);
     });
 
-    it("shows in a meeting room that allows raising hands", () => {
-        inLivekit.set(true);
+    it("offers a meeting room only while its raise-hand option is on", () => {
+        syncedSpaces.set([meeting]);
+        expect(get(raiseHandAvailableStore)).toBe(false);
+
         meetingRaiseHandStore.set(true);
-        expect(get(raiseHandAvailableStore)).toBe(true);
+        expect(names()).toEqual(["meeting-room"]);
     });
 
-    it("stays hidden in a meeting room whose raise-hand option is off", () => {
-        inLivekit.set(true);
-        meetingRaiseHandStore.set(false);
-        inConversation.set(true); // the meeting itself is a remote conversation
+    it("offers a listener zone only while its raise-hand option is on", () => {
+        syncedSpaces.set([listenerZone]);
+        expect(get(raiseHandAvailableStore)).toBe(false);
+
+        megaphoneRaiseHandSpacesStore.set(new Set(["podium"]));
+        expect(names()).toEqual(["podium"]);
+    });
+
+    it("still offers the bubble inside a listener zone whose option is off", () => {
+        syncedSpaces.set([bubble, listenerZone]);
+        expect(names()).toEqual(["room#group#1"]);
+    });
+
+    it("offers both a bubble and the listener zone it stands in, so the user picks", () => {
+        syncedSpaces.set([bubble, listenerZone]);
+        megaphoneRaiseHandSpacesStore.set(new Set(["podium"]));
+        expect(names()).toEqual(["room#group#1", "podium"]);
+    });
+
+    it("offers the room-level megaphone only while someone else is on air", () => {
+        const megaphone = fakeSpace("megaphone", "megaphone-room");
+        syncedSpaces.set([megaphone.space]);
+        expect(names()).toEqual([]);
+
+        megaphone.hasRemoteSpeakerStore.set(true);
+        expect(names()).toEqual(["megaphone-room"]);
+    });
+
+    it("does not offer the room-level megaphone to the one broadcasting in it", () => {
+        syncedSpaces.set([fakeSpace("megaphone", "megaphone-room", true).space]);
+        requestedMegaphoneStore.set(true);
+        expect(names()).toEqual([]);
+    });
+
+    it("leaves the room-level megaphone out as soon as another space qualifies", () => {
+        syncedSpaces.set([bubble, fakeSpace("megaphone", "megaphone-room", true).space]);
+        expect(names()).toEqual(["room#group#1"]);
+    });
+
+    it("keeps a space the hand is up in, so it can still be lowered", () => {
+        // Bob raised his hand during a megaphone live, then a bubble formed around him.
+        const megaphone = fakeSpace("megaphone", "megaphone-room", true).space;
+        syncedSpaces.set([megaphone]);
+        requestedHandRaiseState.raise("megaphone-room");
+        syncedSpaces.set([bubble, megaphone]);
+        expect(names()).toEqual(["room#group#1", "megaphone-room"]);
+    });
+
+    it("hides the button from a genuine zone speaker, who is the host", () => {
+        syncedSpaces.set([bubble]);
+        isSpeakerStore.set(true);
         expect(get(raiseHandAvailableStore)).toBe(false);
     });
 
-    it("shows for a megaphone listener whose zone allows raising hands", () => {
-        inMegaphoneZoneStore.set(true);
-        megaphoneRaiseHandStore.set(true);
-        expect(get(raiseHandAvailableStore)).toBe(true);
-    });
-
-    it("stays hidden in a listener zone whose raise-hand option is off", () => {
-        inMegaphoneZoneStore.set(true);
-        megaphoneRaiseHandStore.set(false);
-        inConversation.set(true);
-        expect(get(raiseHandAvailableStore)).toBe(false);
-    });
-
-    it("shows for the room-level megaphone audience, which has no zone to configure", () => {
-        receiveGlobalMegaphone();
-        expect(get(raiseHandAvailableStore)).toBe(true);
-    });
-
-    it("is hidden for a genuine zone speaker, who is the host", () => {
-        inMegaphoneZoneStore.set(true);
-        megaphoneRaiseHandStore.set(true);
-        speaker.set(true);
-        expect(get(raiseHandAvailableStore)).toBe(false);
-    });
-
-    it("is hidden in a silent zone", () => {
-        inLivekit.set(true);
-        meetingRaiseHandStore.set(true);
+    it("hides the button in a silent zone", () => {
+        syncedSpaces.set([bubble]);
         silent.set(true);
         expect(get(raiseHandAvailableStore)).toBe(false);
     });
 
-    it("stays visible while holding a granted floor, so the floor can be handed back", () => {
+    it("keeps the button while holding a granted floor, so the floor can be handed back", () => {
         // The floor holder has left the zone that offered the button (or is a promoted speaker): the
         // same control is now "give the floor back" and must remain reachable.
         grantedFloor.set({});
-        speaker.set(true);
+        isSpeakerStore.set(true);
         expect(get(raiseHandAvailableStore)).toBe(true);
     });
 });

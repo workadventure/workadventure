@@ -6,7 +6,7 @@ import type { Subscription } from "rxjs";
 import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { cpuLimitedStore } from "../../WebRtc/CpuLimitationDetector";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
@@ -135,6 +135,7 @@ export interface PeerFactoryInterface {
 }
 export class SpacePeerManager {
     private unsubscribes: Unsubscriber[] = [];
+    private readonly _mediaSynchronizedStore = writable(false);
 
     private _communicationState: ICommunicationState;
     private _toFinalizeState: ICommunicationState | undefined;
@@ -535,14 +536,15 @@ export class SpacePeerManager {
 
         // Raise-hand state lives in the space state, not in SpaceUser, so it reaches every meeting participant —
         // including a megaphone speaker without seeAttendees, who does not receive the listeners' SpaceUser.
-        // requestedHandRaiseState is the local user's intent; only a difference with the space is sent.
+        // requestedHandRaiseState is the local user's intent, per space; only a difference with this space is sent.
         this.unsubscribes.push(
-            requestedHandRaiseState.subscribe((state) => {
+            requestedHandRaiseState.subscribe((raisedIn) => {
+                const wantsRaised = raisedIn.has(this.space.getName());
                 const isRaisedHere = get(this.space.state.raisedHandsStore).some(
                     (entry) => entry.spaceUserId === this.space.mySpaceUserId,
                 );
-                if (state.raised !== isRaisedHere) {
-                    this.space.state.raiseHand(state.raised).catch((error) => console.error(error));
+                if (wantsRaised !== isRaisedHere) {
+                    this.space.state.raiseHand(wantsRaised).catch((error) => console.error(error));
                 }
             }),
         );
@@ -562,6 +564,7 @@ export class SpacePeerManager {
                 }
             }),
         );
+        this._mediaSynchronizedStore.set(true);
     }
 
     private desynchronizeMediaState(): void {
@@ -571,6 +574,12 @@ export class SpacePeerManager {
             unsubscribe();
         });
         this.unsubscribes = [];
+        this._mediaSynchronizedStore.set(false);
+    }
+
+    /** Whether the local user's media state (and raised hand) is currently synchronized with this space. */
+    get mediaSynchronizedStore(): Readable<boolean> {
+        return this._mediaSynchronizedStore;
     }
 
     private isMediaStateSynchronized(): boolean {
@@ -588,6 +597,10 @@ export class SpacePeerManager {
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }
+        this._mediaSynchronizedStore.set(false);
+        // Leaving the space drops the hand raised in it, so coming back to a space of the same name (a meeting
+        // room) does not raise it again on its own.
+        requestedHandRaiseState.lower(this.space.getName());
         for (const subscription of this.rxJsUnsubscribers) {
             subscription.unsubscribe();
         }

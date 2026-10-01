@@ -1,44 +1,48 @@
 import { get } from "svelte/store";
 import { afterEach, describe, expect, it } from "vitest";
-import { requestedHandRaiseState } from "./RaiseHandStore";
+import { isHandRaisedStore, requestedHandRaiseState } from "./RaiseHandStore";
 
 describe("RaiseHandStore", () => {
     afterEach(() => {
         // The store is a module-level singleton; reset it between tests.
-        requestedHandRaiseState.lowerHand();
+        requestedHandRaiseState.lowerAll();
     });
 
-    it("starts lowered", () => {
-        expect(get(requestedHandRaiseState).raised).toBe(false);
-        expect(get(requestedHandRaiseState).raisedAt).toBe(0);
+    it("starts lowered everywhere", () => {
+        expect(get(requestedHandRaiseState).size).toBe(0);
+        expect(get(isHandRaisedStore)).toBe(false);
     });
 
-    it("raises the hand with a timestamp", () => {
-        requestedHandRaiseState.raiseHand();
+    it("raises the hand in one space only", () => {
+        requestedHandRaiseState.raise("bubble");
 
-        const state = get(requestedHandRaiseState);
-        expect(state.raised).toBe(true);
-        expect(state.raisedAt).toBeGreaterThan(0);
+        expect([...get(requestedHandRaiseState)]).toEqual(["bubble"]);
+        expect(get(isHandRaisedStore)).toBe(true);
     });
 
-    it("lowers the hand and clears the timestamp", () => {
-        requestedHandRaiseState.raiseHand();
-        requestedHandRaiseState.lowerHand();
+    it("lowers the hand in one space and keeps it in the others", () => {
+        requestedHandRaiseState.raise("bubble");
+        requestedHandRaiseState.raise("zone");
+        requestedHandRaiseState.lower("bubble");
 
-        const state = get(requestedHandRaiseState);
-        expect(state.raised).toBe(false);
-        expect(state.raisedAt).toBe(0);
+        expect([...get(requestedHandRaiseState)]).toEqual(["zone"]);
+        expect(get(isHandRaisedStore)).toBe(true);
     });
 
-    it("toggles between raised and lowered", () => {
-        expect(get(requestedHandRaiseState).raised).toBe(false);
+    it("toggles the hand of a single space", () => {
+        requestedHandRaiseState.toggle("bubble");
+        expect(get(requestedHandRaiseState).has("bubble")).toBe(true);
 
-        requestedHandRaiseState.toggle();
-        expect(get(requestedHandRaiseState).raised).toBe(true);
-        expect(get(requestedHandRaiseState).raisedAt).toBeGreaterThan(0);
+        requestedHandRaiseState.toggle("bubble");
+        expect(get(requestedHandRaiseState).has("bubble")).toBe(false);
+        expect(get(isHandRaisedStore)).toBe(false);
+    });
 
-        requestedHandRaiseState.toggle();
-        expect(get(requestedHandRaiseState).raised).toBe(false);
-        expect(get(requestedHandRaiseState).raisedAt).toBe(0);
+    it("lowers every hand at once", () => {
+        requestedHandRaiseState.raise("bubble");
+        requestedHandRaiseState.raise("zone");
+        requestedHandRaiseState.lowerAll();
+
+        expect(get(isHandRaisedStore)).toBe(false);
     });
 });

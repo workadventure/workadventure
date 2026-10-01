@@ -61,6 +61,8 @@ export function uniqueBySpaceUserId<T extends { spaceUserId: string }>(lists: T[
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: MapStore<string, Space> = new MapStore<string, Space>();
     public readonly spacesEligibleForRecording: Readable<Space[]>;
+    // Spaces the local user currently syncs their media (and raised hand) with: the candidates for raising a hand.
+    public readonly spacesSynchronizingMedia: Readable<Space[]>;
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private joiningSpacesPromises: Map<string, Promise<Space>> = new Map<string, Promise<Space>>();
     private initSpaceUsersMessageStreamSubscription: Subscription;
@@ -137,8 +139,8 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return derived(stores, (list) => list.some(Boolean)).subscribe(set);
     });
 
-    // Aggregated raised-hands queue across all spaces. A user raises their hand in every space they sync media with
-    // (e.g. a bubble and the room megaphone), so the same spaceUserId can appear in several lists: keep the first one.
+    // Aggregated raised-hands queue across all spaces. A user can raise their hand in several spaces at once (e.g. a
+    // bubble and the listener zone it stands in), so the same spaceUserId can appear in several lists: keep the first.
     public readonly raisedHandsStore: Readable<RaisedHand[]> = derived(this.spaces, ($spaces, set) => {
         if ($spaces.size === 0) {
             set([]);
@@ -180,6 +182,20 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     /** Lowers the hand of a user who raised it (moderation), resolving the space from the raised-hands queue. */
     public async lowerHand(spaceUserId: string): Promise<void> {
         await this.findStateWithEntry(spaceUserId, (state) => state.raisedHandsStore)?.lowerHand(spaceUserId);
+    }
+
+    /** The joined spaces for which `select` currently holds, kept up to date as spaces come and go. */
+    private spacesWhere(select: (space: Space) => Readable<boolean>): Readable<Space[]> {
+        return derived(this.spaces, ($spaces, set) => {
+            const spaces = Array.from($spaces.values());
+
+            if (spaces.length === 0) {
+                set([]);
+                return () => {};
+            }
+
+            return derived(spaces.map(select), (holds) => spaces.filter((_, index) => holds[index])).subscribe(set);
+        });
     }
 
     private findStateWithEntry(
@@ -234,19 +250,8 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             },
         );
 
-        this.spacesEligibleForRecording = derived(this.spaces, ($spaces, set) => {
-            const spaces = Array.from($spaces.values());
-
-            if (spaces.length === 0) {
-                set([]);
-                return () => {};
-            }
-
-            return derived(
-                spaces.map((space) => space.shouldDisplayRecordButton),
-                (eligibilityBySpace) => spaces.filter((_, index) => eligibilityBySpace[index]),
-            ).subscribe(set);
-        });
+        this.spacesEligibleForRecording = this.spacesWhere((space) => space.shouldDisplayRecordButton);
+        this.spacesSynchronizingMedia = this.spacesWhere((space) => space.spacePeerManager.mediaSynchronizedStore);
 
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user) {
