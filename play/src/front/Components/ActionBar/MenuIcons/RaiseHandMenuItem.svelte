@@ -10,8 +10,7 @@
     import { givenFloorSpaceStore } from "../../../Stores/MegaphoneStore";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
-    import type { SpaceInterface } from "../../../Space/SpaceInterface";
+    import { spaceLabel } from "../../../Space/spaceLabel";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import { LL } from "../../../../i18n/i18n-svelte";
     import RaiseHandIcon from "../../Icons/RaiseHandIcon.svelte";
@@ -65,20 +64,6 @@
         requestedHandRaiseState.toggle(spaceName);
     }
 
-    function label(space: SpaceInterface): string {
-        if (space.kind === "bubble") {
-            return $LL.actionbar.help.lock.bubbleLabel();
-        }
-        if (space.kind === "megaphone") {
-            return $LL.megaphone.modal.liveMessage.title();
-        }
-        // Meeting rooms and listener zones carry their display name on their proximity chat room.
-        const room = get(gameManager.getCurrentGameScene().proximityChatRoomManager.roomsStore).find(
-            (candidate) => candidate.getCurrentSpaceName() === space.getName(),
-        );
-        return room ? get(room.name) : space.getName();
-    }
-
     function onClick(): void {
         if (get(givenFloorSpaceStore) !== undefined) {
             giveBackFloor();
@@ -103,7 +88,7 @@
         const entries: RaiseHandSpaceEntry[] = spaces.map((space) => ({
             spaceName: space.getName(),
             kind: space.kind ?? "",
-            label: label(space),
+            label: spaceLabel(space),
             raised: raisedIn.has(space.getName()),
         }));
         closeFloatingUi = showFloatingUi(

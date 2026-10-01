@@ -32,7 +32,9 @@
     let canAskToMuteAudioOrTurnOffVideo = $derived(spaceUser.space.canAskToMuteAudioOrTurnOffVideo);
     // Raise-hand state comes from the space state queue (not SpaceUser), so it is known even for a
     // listener whose SpaceUser the local user does not receive.
-    let isHandRaised = $derived($raisedHandsOrderStore.has(spaceUser.spaceUserId));
+    let isHandRaised = $derived(
+        $raisedHandsOrderStore.get(spaceUser.space.getName())?.has(spaceUser.spaceUserId) ?? false,
+    );
     let hasFloor = $derived(spaceUser.reactiveUser.megaphoneState);
     // The floor is only a real thing in a megaphone broadcast. In a bubble or a meeting room (ALL_USERS space)
     // everybody already speaks, so we offer no give / take back control there: the raised-hand badge is enough.

@@ -1,55 +1,48 @@
 import { type Readable, derived } from "svelte/store";
-import { raisedHandsStore, speakingUsersStore } from "./PeerStore";
+import { FilterType } from "@workadventure/messages";
+import type { RaisedHandSection } from "../Space/SpaceInterface";
+import { raisedHandSectionsStore } from "./PeerStore";
 import { userIsAdminStore } from "./GameStore";
-import { inLivekitStore, isSpeakerStore } from "./MediaStore";
-import { givenFloorSpaceStore } from "./MegaphoneStore";
-import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
+
+export interface RaisedHandSectionRights {
+    /** Whether the section is shown to the local user at all. */
+    visible: boolean;
+    /** Lowering someone else's hand ("Lower hand", "Lower all"). */
+    canModerate: boolean;
+    /** "Give the floor" / "Take back the floor": a real promotion to speaker, so a broadcast-only thing. */
+    floorControls: boolean;
+}
 
 /**
- * Whether the raised-hands panel should be shown, and only while there is something to act on (at least
- * one raised hand or one user currently holding the floor). Single source of truth for the panel's auto
- * show/hide; it used to live inline in ActionBar.svelte.
+ * What the local user may see and do in one section of the "raised hands" panel. Decided per space, never
+ * globally: the same user can be a plain member of a bubble and the host of the room megaphone at once.
  *
- * In a megaphone broadcast the panel is a moderation tool, so it is reserved to a user allowed to promote
- * (an admin, or a genuine megaphone-zone speaker). In a proximity bubble or a LiveKit meeting room everyone
- * already speaks and there is no host: the panel is then a plain ordered queue shown to every participant,
- * without floor controls (see floorControlsVisibleStore), so whoever leads the discussion can hand the
- * floor over orally.
- *
- * A listener who was GIVEN the floor is also a "speaker" (isSpeakerStore), but must NOT inherit the host's
- * moderation rights (otherwise a promoted guest could in turn hand the floor to others). Such a promoted
- * guest is the one with givenFloorSpaceStore set; a genuine zone speaker clears it (see
- * AreasPropertiesListener.supersedeGrantedFloor), and admins moderate regardless. So the speaker branch is
- * gated on givenFloorSpaceStore being undefined.
- *
- * `canModerateRaisedHandsStore` is that "may promote" test on its own: the panel also offers it as the gate
- * for lowering someone else's hand.
- *
- * It lives apart from RaisedHandsStore on purpose: that module is imported by GameScene, and MediaStore is
- * (transitively) part of GameScene's own import cycle, so deriving from isSpeakerStore there evaluated
- * against a half-initialised MediaStore ("derived() expects stores as input, got a falsy value"). Only the
- * dock component needs this store, and it is imported well after the stores are initialised.
+ *  - A proximity bubble or a LiveKit meeting room (an ALL_USERS space): everyone already speaks and there is
+ *    no host, so the queue is shown to every member, without floor controls; whoever leads the discussion hands
+ *    the floor over orally. Lowering someone else's hand stays an admin thing there.
+ *  - A megaphone broadcast (room megaphone or podium zone): the queue is a moderation tool, reserved to whoever
+ *    is on air as the host (not a guest given the floor, see RaisedHandSection.onAirHere) and to admins, the
+ *    same people the back lets moderate (RaiseHandManager.assertCanModerate).
  */
-export const canModerateRaisedHandsStore: Readable<boolean> = derived(
-    [userIsAdminStore, isSpeakerStore, givenFloorSpaceStore],
-    ([$userIsAdmin, $isSpeaker, $givenFloorSpace]) => $userIsAdmin || ($isSpeaker && $givenFloorSpace === undefined),
-);
-
-export const raisedHandsAdminVisibleStore: Readable<boolean> = derived(
-    [canModerateRaisedHandsStore, raisedHandsStore, speakingUsersStore, currentPlayerGroupIdStore, inLivekitStore],
-    ([$canModerate, $raisedHands, $speakers, $playerGroupId, $inLivekit]) => {
-        const everyoneIsEqual = $playerGroupId !== undefined || $inLivekit;
-        return ($canModerate || everyoneIsEqual) && ($raisedHands.length > 0 || $speakers.length > 0);
-    },
-);
+export function sectionRights(section: RaisedHandSection, isAdmin: boolean): RaisedHandSectionRights {
+    if (section.space.filterType === FilterType.ALL_USERS) {
+        return { visible: true, canModerate: isAdmin, floorControls: false };
+    }
+    const isHost = isAdmin || section.onAirHere;
+    return { visible: isHost, canModerate: isHost, floorControls: isHost };
+}
 
 /**
- * Whether "give the floor" / "take back the floor" controls are offered at all. They only do something in a
- * megaphone broadcast, where the floor is a real promotion to speaker. In a proximity bubble or a LiveKit
- * meeting room everybody already speaks: the raised hands are just an ordered queue (badge on the tile +
- * panel), whoever leads hands the floor over orally and each user lowers their own hand.
+ * The sections of the "raised hands" panel the local user can see, with what they may do in each. The dock only
+ * shows while this is not empty: a section only exists while its space has a raised hand or a floor holder.
+ *
+ * It lives apart from RaisedHandsStore on purpose: that module is imported by GameScene, and this one is only
+ * needed by the dock component, which is imported well after the stores are initialised.
  */
-export const floorControlsVisibleStore: Readable<boolean> = derived(
-    [currentPlayerGroupIdStore, inLivekitStore],
-    ([$playerGroupId, $inLivekit]) => $playerGroupId === undefined && !$inLivekit,
+export const visibleRaisedHandSectionsStore: Readable<(RaisedHandSection & RaisedHandSectionRights)[]> = derived(
+    [raisedHandSectionsStore, userIsAdminStore],
+    ([$sections, $isAdmin]) =>
+        $sections
+            .map((section) => ({ ...section, ...sectionRights(section, $isAdmin) }))
+            .filter((section) => section.visible),
 );

@@ -205,9 +205,8 @@ import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
 import {
     mediaSynchronizedSpacesStore,
-    raisedHandsStore,
+    raisedHandSectionsStore,
     screenShareStreamStore,
-    speakingUsersStore,
     videoStreamStore,
 } from "../../Stores/PeerStore";
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
@@ -2097,8 +2096,7 @@ export class GameScene extends DirtyScene {
 
                 videoStreamStore.forward(this._spaceRegistry.videoStreamStore);
                 screenShareStreamStore.forward(this._spaceRegistry.screenShareStreamStore);
-                raisedHandsStore.forward(this._spaceRegistry.raisedHandsStore);
-                speakingUsersStore.forward(this._spaceRegistry.speakingUsersStore);
+                raisedHandSectionsStore.forward(this._spaceRegistry.raisedHandSectionsStore);
                 mediaSynchronizedSpacesStore.forward(this._spaceRegistry.spacesSynchronizingMedia);
 
                 this.initExtensionModule();
