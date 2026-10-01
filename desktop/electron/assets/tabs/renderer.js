@@ -12,6 +12,23 @@
     var tabsEl = document.getElementById("tabs");
     var newTabBtn = document.getElementById("new-tab");
 
+    // Strings in the OS language (native catalog in the main process); English fallback.
+    var native = null;
+    try {
+        native = typeof api.getStrings === "function" ? api.getStrings() : null;
+    } catch (err) {
+        console.warn("Tab strip: strings unavailable", err);
+    }
+    var strings = (native && native.strings) || {};
+    function t(key, fallback) {
+        return typeof strings[key] === "string" ? strings[key] : fallback;
+    }
+    if (native && native.lang) {
+        document.documentElement.lang = native.lang;
+    }
+    newTabBtn.title = t("tabs.newWorldTab", "New world tab");
+    newTabBtn.setAttribute("aria-label", newTabBtn.title);
+
     function render(tabs) {
         tabsEl.innerHTML = "";
         if (!Array.isArray(tabs)) {
@@ -25,18 +42,18 @@
             }
             var el = document.createElement("div");
             el.className = "tab" + (tab.active ? " active" : "");
-            el.title = tab.title || "World";
+            el.title = tab.title || t("tabs.world", "World");
 
             var title = document.createElement("span");
             title.className = "tab-title";
-            title.textContent = tab.title || "World";
+            title.textContent = tab.title || t("tabs.world", "World");
             el.appendChild(title);
 
             if (showClose) {
                 var close = document.createElement("button");
                 close.type = "button";
                 close.className = "tab-close";
-                close.setAttribute("aria-label", "Close tab");
+                close.setAttribute("aria-label", t("tabs.closeTab", "Close tab"));
                 close.textContent = "×";
                 close.addEventListener("click", function (event) {
                     event.stopPropagation();

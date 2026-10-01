@@ -134,7 +134,15 @@ export type WorkAdventureDesktopNavigationApi = {
     isPinned: (url: string) => Promise<boolean>;
     /** Open the admin signup URL in the OS default browser. */
     openAdminSignup: () => Promise<DesktopNavigationResult>;
+    /**
+     * The Landing's strings in the OS language (synchronous so the page never flashes English).
+     * Null when called from anything but the native Landing page.
+     */
+    getStrings: () => DesktopNativeStrings | null;
 };
+
+/** A slice of the desktop's native catalog, in the OS language. */
+export type DesktopNativeStrings = { lang: string; strings: Record<string, string> };
 
 export type DesktopOverlayPoint = { x: number; y: number };
 
@@ -399,11 +407,23 @@ export type WorkAdventureDesktopApi = {
     /** Set the current world's display name on the active tab (admin-configured room name). */
     setTabTitle: (title: string) => void;
     /**
+     * Push the companion / meeting bar strings, translated in the language chosen in WorkAdventure
+     * (flat key → text table). Main keeps the last table and replays it to those windows on open.
+     */
+    setHudStrings: (strings: Record<string, string>) => void;
+    /**
      * Subscribe to system idle/active transitions (main polls powerMonitor + screen-lock events).
      * The renderer uses this to auto-set the WA availability to "away" and back. Returns an
      * unsubscriber.
      */
     onSystemIdle: (callback: (idle: boolean) => void) => () => void;
+    /**
+     * Another tab entered a meeting: this world must turn off its microphone, camera and screen
+     * share (one meeting at a time). Returns an unsubscriber.
+     */
+    onMediaPreempted?: (callback: () => void) => () => void;
+    /** This world entered a meeting and media was turned off in another tab, named here. */
+    onOtherMeetingMuted?: (callback: (worldName: string) => void) => () => void;
     /**
      * Presenter tools: main tracks the global cursor over the shared display and streams it here
      * so the renderer can mirror the effect (laser / spotlight / loupe) to viewers.

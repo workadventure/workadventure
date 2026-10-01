@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
 import type { Observable } from "rxjs";
 import type { ScreenAnnotationElement, ScreenAnnotationEvent } from "@workadventure/messages";
-import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { activeScreenShareSourceStore, requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import type { Streamable } from "../Streamable";
 import {
     clearAnnotations,
@@ -81,6 +81,27 @@ class ScreenAnnotationManager {
         });
         this.unsubscribers.push(screenSharingStateUnsubscriber);
 
+        // The "allow others to annotate" setting is an event, not state: whoever joins after it was
+        // sent would never learn it. While sharing with annotation allowed, re-announce it on each join.
+        // Another screen picked during the share: strokes were placed on the previous screen's
+        // content, so they are cleared for everyone (the share and its tools stay up).
+        let sharedSourceId = get(activeScreenShareSourceStore)?.id;
+        const sourceUnsubscriber = activeScreenShareSourceStore.subscribe((source) => {
+            if (source && sharedSourceId && source.id !== sharedSourceId && this.space) {
+                this.clearAll(space.mySpaceUserId);
+            }
+            sharedSourceId = source?.id;
+        });
+        this.unsubscribers.push(sourceUnsubscriber);
+
+        const userJoinedSubscription = space.observeUserJoined.subscribe(() => {
+            const me = space.mySpaceUserId;
+            if (get(requestedScreenSharingState) && get(screenAnnotationEnabledStore).get(me) === true) {
+                this.emit(me, { $case: "annotationEnabled", annotationEnabled: true });
+            }
+        });
+        this.unsubscribers.push(() => userJoinedSubscription.unsubscribe());
+
         const leaveSpaceSubscription = space.onLeaveSpace.subscribe(() => {
             this.unbind();
         });
@@ -149,12 +170,9 @@ class ScreenAnnotationManager {
         if (sender === target) {
             return true;
         }
-        const enabled = get(screenAnnotationEnabledStore).get(target);
-        // On our own share we know the setting for sure. Elsewhere the presenter's "enabled" event may
-        // predate our arrival in the space (it is not replayed), so only an explicit "off" blocks.
-        // ponytail: a late joiner still renders strokes from a viewer the presenter never allowed;
-        // replaying the setting to newcomers would close that.
-        return target === this.localUserId ? enabled === true : enabled !== false;
+        // The presenter re-announces the setting to everyone who joins (see bindToSpace), so a missing
+        // value means "not allowed" everywhere.
+        return get(screenAnnotationEnabledStore).get(target) === true;
     }
 
     private emit(targetUserId: string, operation: AnnotationOperation): void {

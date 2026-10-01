@@ -30,6 +30,7 @@ import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
 import screenAnnotation from "./screenAnnotation";
+import desktop from "./desktop";
 
 const th_TH = deepmerge(en_US, {
     area,
@@ -62,6 +63,7 @@ const th_TH = deepmerge(en_US, {
     onboarding,
     recording,
     screenAnnotation,
+    desktop,
 });
 
 export default th_TH;

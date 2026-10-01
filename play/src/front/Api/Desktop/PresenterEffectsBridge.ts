@@ -90,6 +90,18 @@ class PresenterEffectsBridge {
             }),
         );
 
+        // Another screen picked during the share: track the cursor over that display instead.
+        let trackedSourceId = get(activeScreenShareSourceStore)?.id;
+        this.subscriptions.push(
+            activeScreenShareSourceStore.subscribe((source) => {
+                const tool = get(presenterToolStore);
+                if (source && source.id !== trackedSourceId && tool !== "none") {
+                    api.setTool(tool, source.display_id, source.id);
+                }
+                trackedSourceId = source?.id;
+            }),
+        );
+
         // A tool has no meaning once the share ends — turn it off (the store subscription then
         // stops cursor tracking and clears the effect for viewers).
         let wasSharing = get(requestedScreenSharingState);
