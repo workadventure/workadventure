@@ -518,14 +518,14 @@ export class AuthenticateController extends BaseHttpController {
 
     private getOpenIdCallbackErrorHtml(): string {
         return `<!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>Connexion WorkAdventure</title>
+    <title>WorkAdventure sign-in</title>
 </head>
 <body>
-    <h1>Connexion impossible</h1>
-    <p>La session de connexion a expiré ou n'a pas pu être retrouvée. Relancez la connexion depuis WorkAdventure.</p>
+    <h1>Sign-in failed</h1>
+    <p>The sign-in session has expired or could not be found. Start signing in again from WorkAdventure.</p>
 </body>
 </html>`;
     }

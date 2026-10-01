@@ -4,11 +4,19 @@ const assert = require("node:assert/strict");
 const { createDesktopCallbackPage } = require("./desktop-callback-page");
 
 test("desktop callback page tries to close the browser tab automatically", () => {
-    const html = createDesktopCallbackPage("Déconnexion terminée.");
+    const html = createDesktopCallbackPage("Signed out.");
 
     assert.match(html, /window\.close\(\)/);
-    assert.match(html, /Déconnexion terminée\./);
+    assert.match(html, /Signed out\./);
+    assert.match(html, /You can close this window/);
+    assert.match(html, /<html lang="en">/);
+});
+
+test("desktop callback page takes a translated close hint and language", () => {
+    const html = createDesktopCallbackPage("Déconnexion terminée.", "Vous pouvez fermer cette fenêtre.", "fr");
+
     assert.match(html, /Vous pouvez fermer cette fenêtre/);
+    assert.match(html, /<html lang="fr">/);
 });
 
 test("desktop callback page escapes its message", () => {

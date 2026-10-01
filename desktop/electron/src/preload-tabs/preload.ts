@@ -13,6 +13,7 @@ const api: WorkAdventureTabsApi = {
     activate: (id) => ipcRenderer.send("app:tabs:activate", id),
     close: (id) => ipcRenderer.send("app:tabs:close", id),
     ready: () => ipcRenderer.send("app:tabs:ready"),
+    getStrings: () => ipcRenderer.sendSync("app:i18n:tabs") as ReturnType<WorkAdventureTabsApi["getStrings"]>,
 };
 
 contextBridge.exposeInMainWorld("WATabs", api);

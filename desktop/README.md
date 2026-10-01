@@ -1,46 +1,33 @@
 # Desktop app
 
-The desktop component is an electron app inside `./electron/`. It uses a hybrid setup based of two main components:
-- A `local-app` bundled into the electron app with two main parts:
-  - A sidebar to show the server list, with the currently selected server
-  - A main page which is used to manage servers and to show other "local" pages like the desktop-app settings
-- A BrowserView (often called `appView` or `app`) showing the actual frontend of an external WorkAdventure deployment.
-  If a server is selected the BrowserView / `appView` is overlaying the whole main part right to the sidebar.
+The desktop app is an Electron shell in `./electron/`. It does not bundle a frontend: each tab is a
+`WebContentsView` loading a remote WorkAdventure world (Play/Admin), restricted to an allow-list of
+origins. The shell adds what a browser tab cannot do: login in the system browser through a loopback
+callback, `workadventure://join` deep links, native Picture-in-Picture / companion panel, the
+screen-annotation overlay, the presenter meeting bar, global mute/camera shortcuts and a tray.
 
 ## Development
 
 ```bash
-# start local-app in watch mode
-cd local-app && yarn dev
+cd electron
+yarn install
+# start the app in watch mode (WA_DESKTOP_PORTAL_URL defaults to the local admin in development)
+NODE_ENV=development yarn dev
 
-# start electron app in watch mode
-cd electron && LOCAL_APP_URL=http://localhost:3000 yarn dev
+# checks
+yarn typecheck && yarn lint && yarn test && yarn pretty-check
 
-# or create an executable by running:
-cd electron && yarn bundle
+# or create an executable
+yarn bundle
 ```
 
-## API for front
+## API for the front
 
-TODO:
+The world renderer gets `window.WAD` (see `electron/src/preload-app/types.ts`, mirrored in
+`play/src/front/Interfaces/DesktopAppInterfaces.ts`):
 
 ```ts
-if (window?.WorkAdventureDesktopApi?.desktop) {
-  alert('Yeah you are using the desktop app ;)');
+if (window.WAD?.desktop) {
+    window.WAD.notify({ title: "WorkAdventure", body: "Hello from the front" });
 }
-
-let muted = false;
-
-window?.WorkAdventureDesktopApi?.onMutedKeyPress((event) => {
-  if (muted) {
-    document.getElementById("info-box").innerHTML =
-      "Ready to speak! Press ctrl-alt-m to mute.";
-  } else {
-    document.getElementById("info-box").innerHTML =
-      "Muted! Press ctrl-alt-m to unmute again.";
-  }
-  muted = !muted;
-});
-
-window.WorkAdventureDesktopApi.notify("Hello from front");
 ```

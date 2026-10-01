@@ -60,7 +60,11 @@ class ScreenOverlayBridge {
     private onDrawUnsub: (() => void) | undefined;
     private onExitUnsub: (() => void) | undefined;
     private overlayOpen = false;
-    private opening = false;
+    // Whether the overlay should be open. A close() during a pending open() flips it, so the window
+    // that opens late is closed instead of being left up with nothing driving it.
+    private wanted = false;
+    private openPromise: Promise<void> | undefined;
+    private openedForSourceId: string | undefined;
     private readonly overlayIdToReal = new Map<string, string>();
 
     public start(): void {
@@ -94,6 +98,25 @@ class ScreenOverlayBridge {
             }),
         );
 
+        // Another screen picked during the share: move the overlay to it (it covers one display).
+        this.subscriptions.push(
+            activeScreenShareSourceStore.subscribe((source) => {
+                if (!source || !this.overlayOpen || source.id === this.openedForSourceId) {
+                    return;
+                }
+                this.close();
+                if (get(localAnnotationActiveStore) || get(presenterToolStore) !== "none") {
+                    this.ensureOpen()
+                        .then(() => {
+                            if (get(localAnnotationActiveStore)) {
+                                getScreenOverlayApi()?.setDrawMode(true);
+                            }
+                        })
+                        .catch(() => {});
+                }
+            }),
+        );
+
         // Close the overlay when the presenter stops sharing.
         let wasSharing = get(requestedScreenSharingState);
         this.subscriptions.push(
@@ -121,20 +144,36 @@ class ScreenOverlayBridge {
         this.close();
     }
 
-    private async ensureOpen(): Promise<void> {
+    /** Resolves once the overlay is open (or failed to): callers chain draw mode on it. */
+    private ensureOpen(): Promise<void> {
+        this.wanted = true;
+        if (this.overlayOpen) {
+            return Promise.resolve();
+        }
+        this.openPromise ??= this.open().finally(() => {
+            this.openPromise = undefined;
+        });
+        return this.openPromise;
+    }
+
+    private async open(): Promise<void> {
         const api = getScreenOverlayApi();
-        if (!api || this.overlayOpen || this.opening) {
+        if (!api) {
             return;
         }
-        this.opening = true;
-        try {
-            // Pass the shared source so the main process places the overlay on the RIGHT screen
-            // (resolves the display from the source's display_id / `screen:<id>` id).
-            const source = get(activeScreenShareSourceStore);
-            this.overlayOpen = await api.open({ displayId: source?.display_id, sourceId: source?.id });
-        } finally {
-            this.opening = false;
+        // Pass the shared source so the main process places the overlay on the RIGHT screen
+        // (resolves the display from the source's display_id / `screen:<id>` id).
+        const source = get(activeScreenShareSourceStore);
+        const opened = await api.open({ displayId: source?.display_id, sourceId: source?.id });
+        if (!this.wanted) {
+            // Closed (share stopped, bridge stopped) while the window was opening.
+            if (opened) {
+                api.close().catch(() => {});
+            }
+            return;
         }
+        this.overlayOpen = opened;
+        this.openedForSourceId = source?.id;
         if (!this.overlayOpen) {
             return;
         }
@@ -145,6 +184,8 @@ class ScreenOverlayBridge {
     }
 
     private close(): void {
+        this.wanted = false;
+        this.openedForSourceId = undefined;
         const api = getScreenOverlayApi();
         this.onDrawUnsub?.();
         this.onDrawUnsub = undefined;

@@ -3,6 +3,8 @@ import ElectronLog from "electron-log";
 import path from "path";
 import { formatWorldHistoryLabel } from "./desktop-url-policy";
 import { createWorldViewWebPreferences } from "./world-view-policy";
+import { createMeetingTabs } from "./meeting-tab-policy";
+import { t } from "./i18n";
 
 /**
  * Owns the world tabs. Each open world is a WebContentsView (Electron 42 — BrowserView is
@@ -26,7 +28,7 @@ export type WorldTab = {
 };
 
 function tabTitle(tab: WorldTab): string {
-    return tab.appTitle || tab.urlLabel || "New world";
+    return tab.appTitle || tab.urlLabel || t("tabs.newWorld");
 }
 
 /** Lightweight tab descriptor for the tab-strip renderer. */
@@ -83,6 +85,71 @@ export function onActiveTabChange(listener: () => void): () => void {
     return () => activeChangeListeners.delete(listener);
 }
 
+// ---- The tab that drives media ----
+// Global controls (mute/camera shortcuts, tray, companion, PiP, meeting bar, overlay, presenter
+// cursor) follow the world that is in a meeting, even while another tab is on screen; with no meeting
+// they follow the active tab. One meeting at a time: when a second tab enters a meeting, the first one
+// is told to drop its microphone, camera and screen share (see setTabInMeeting).
+const meetingTabs = createMeetingTabs();
+let lastControllingId: string | undefined;
+const controllingChangeListeners = new Set<() => void>();
+
+function getControllingTabId(): string | undefined {
+    return meetingTabs.controllingTab(activeTabId);
+}
+
+function emitControllingChangeIfNeeded(): void {
+    const id = getControllingTabId();
+    if (id === lastControllingId) {
+        return;
+    }
+    lastControllingId = id;
+    for (const listener of controllingChangeListeners) {
+        try {
+            listener();
+        } catch {
+            /* a broken listener must not stop the others */
+        }
+    }
+}
+
+/**
+ * Subscribe to changes of the tab that drives media (see above). window.ts tears down the PiP /
+ * overlay / HUD windows of the previous one: their relays are keyed to it.
+ */
+export function onControllingTabChange(listener: () => void): () => void {
+    controllingChangeListeners.add(listener);
+    return () => controllingChangeListeners.delete(listener);
+}
+
+export function getControllingWorldContents(): Electron.WebContents | undefined {
+    const view = tabs.find((tab) => tab.id === getControllingTabId())?.view;
+    return view && !view.webContents.isDestroyed() ? view.webContents : undefined;
+}
+
+export function isControllingWorldContents(contents: Electron.WebContents): boolean {
+    return getControllingWorldContents() === contents;
+}
+
+export function getTabByContents(contents: Electron.WebContents): WorldTab | undefined {
+    return tabs.find((tab) => !tab.view.webContents.isDestroyed() && tab.view.webContents === contents);
+}
+
+/**
+ * Record whether a tab's world is in a meeting. Only a transition into a meeting moves the controls;
+ * a tab already in one re-reporting it (after its media changed) changes nothing. Returns the tab
+ * that was driving a meeting before this one entered its own, which must drop its media.
+ */
+export function setTabInMeeting(contents: Electron.WebContents, inMeeting: boolean): WorldTab | undefined {
+    const tab = getTabByContents(contents);
+    if (!tab) {
+        return undefined;
+    }
+    const preemptedId = meetingTabs.setInMeeting(tab.id, inMeeting);
+    emitControllingChangeIfNeeded();
+    return preemptedId ? tabs.find((entry) => entry.id === preemptedId) : undefined;
+}
+
 export function setShell(window: BrowserWindow): void {
     shell = window;
     shell.on("resize", layoutActiveView);
@@ -130,7 +197,7 @@ export function createWorldView(configure: (view: WebContentsView) => void): Wor
         ),
     });
     const id = `tab-${++tabIdCounter}`;
-    const tab: WorldTab = { id, view, urlLabel: "New world", url: "" };
+    const tab: WorldTab = { id, view, urlLabel: t("tabs.newWorld"), url: "" };
     tabs.push(tab);
     shell.contentView.addChildView(view);
 
@@ -165,6 +232,7 @@ export function createWorldView(configure: (view: WebContentsView) => void): Wor
         activeTabId = id;
     }
     layoutActiveView();
+    emitControllingChangeIfNeeded();
     emitChange();
     return tab;
 }
@@ -180,6 +248,7 @@ export function activateTab(id: string): void {
         view.webContents.focus();
     }
     emitActiveChange();
+    emitControllingChangeIfNeeded();
     emitChange();
 }
 
@@ -212,9 +281,11 @@ export function closeTab(id: string): void {
         ElectronLog.debug("closeTab teardown failed", error);
     }
     layoutActiveView();
+    meetingTabs.forget(tab.id);
     if (wasActive) {
         emitActiveChange();
     }
+    emitControllingChangeIfNeeded();
     emitChange();
 }
 
@@ -312,6 +383,8 @@ export function resetTabs(): void {
     }
     tabs.length = 0;
     activeTabId = undefined;
+    meetingTabs.clear();
+    lastControllingId = undefined;
     // Drop the destroyed shell reference (its listeners die with the window); the next
     // createWindow → setShell installs a fresh one. Mirrors resetTabStrip's own cleanup.
     shell = undefined;

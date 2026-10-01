@@ -6,6 +6,7 @@ import windowStateKeeper from "electron-window-state";
 import path from "path";
 import settings from "./settings";
 import { createDesktopCallbackPage } from "./desktop-callback-page";
+import { nativeLocale, t } from "./i18n";
 import { createDesktopWindowTitle } from "./app-name-policy";
 import { createDesktopWindowState, type DesktopWindowState } from "./desktop-window-state-policy";
 import {
@@ -32,9 +33,11 @@ import {
     activateTab,
     createWorldView,
     getActiveWorldContents,
+    getControllingWorldContents,
     isActiveWorldContents,
+    isControllingWorldContents,
     layoutActiveView,
-    onActiveTabChange,
+    onControllingTabChange,
     resetTabs,
     setShell,
 } from "./tab-manager";
@@ -42,7 +45,12 @@ import { createTabStrip, resetTabStrip } from "./tab-strip";
 
 // Re-exported so ipc.ts (and others) target the active world view without importing tab-manager
 // directly — window.ts remains the single entry point for "the renderer to talk to".
-export { getActiveWorldContents, isActiveWorldContents } from "./tab-manager";
+export {
+    getActiveWorldContents,
+    getControllingWorldContents,
+    isActiveWorldContents,
+    isControllingWorldContents,
+} from "./tab-manager";
 import { closeAllHudWindows, forgetHudState } from "./hud-windows";
 
 // The shell window stays hidden until the first world page finishes loading. `did-fail-load` covers
@@ -78,10 +86,6 @@ let initialRevealTimer: ReturnType<typeof setTimeout> | undefined;
 let reachWorldTimer: ReturnType<typeof setTimeout> | undefined;
 let stopWatchingPresence: (() => void) | undefined;
 const desktopCallbackFlows = new Map<string, DesktopCallbackFlow>();
-
-const LOAD_FAILURE_LANDING_MESSAGE = "This world could not be loaded. It may be offline, or the URL may be wrong.";
-const WORLD_TIMEOUT_LANDING_MESSAGE =
-    "This world is taking too long to load. It may be offline, or your connection may be down.";
 
 function randomToken(bytes: number) {
     return crypto.randomBytes(bytes).toString("hex");
@@ -216,7 +220,7 @@ function scheduleReachWorldDeadline(startedAt: number) {
                 Date.now() - startedAt
             }ms since navigation).`
         );
-        void recoverToLandingWithError(WORLD_TIMEOUT_LANDING_MESSAGE);
+        void recoverToLandingWithError(t("landing.loadTimeout"));
     }, REACH_WORLD_TIMEOUT_MS);
 }
 
@@ -326,11 +330,11 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
     const safeTitle = escapeHtml(title);
     const safeMessage = escapeHtml(message);
     const html = `<!doctype html>
-<html lang="fr">
+<html lang="${nativeLocale()}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Connexion WorkAdventure</title>
+  <title>${escapeHtml(t("auth.pageTitle"))}</title>
   <style>
     html, body { height: 100%; margin: 0; }
     body {
@@ -358,7 +362,7 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
   <main>
     <h1>${safeTitle}</h1>
     <p>${safeMessage}</p>
-    <a href="${safeActionUrl}">Rouvrir le navigateur</a>
+    <a href="${safeActionUrl}">${escapeHtml(t("auth.reopenBrowser"))}</a>
   </main>
 </body>
 </html>`;
@@ -372,11 +376,7 @@ async function openDesktopLogin(url: string) {
     const flow = registerDesktopCallbackFlow("auth");
     const desktopLoginUrl = createDesktopLoginUrl(url, buildLoopbackCallbackUrl(callbackOrigin, flow));
     await openExternal(desktopLoginUrl);
-    await showDesktopBrowserFlowPendingScreen(
-        "Connexion en cours...",
-        "Terminez l'identification dans votre navigateur. WorkAdventure reviendra automatiquement dans cette fenêtre.",
-        desktopLoginUrl
-    );
+    await showDesktopBrowserFlowPendingScreen(t("auth.signingInTitle"), t("auth.signingInMessage"), desktopLoginUrl);
 }
 
 async function openDesktopLogout(url: string) {
@@ -384,11 +384,7 @@ async function openDesktopLogout(url: string) {
     const flow = registerDesktopCallbackFlow("logout");
     const desktopLogoutUrl = createDesktopLogoutUrl(url, buildLoopbackCallbackUrl(callbackOrigin, flow));
     await openExternal(desktopLogoutUrl);
-    await showDesktopBrowserFlowPendingScreen(
-        "Déconnexion en cours...",
-        "Terminez la déconnexion dans votre navigateur. WorkAdventure reviendra automatiquement dans cette fenêtre.",
-        desktopLogoutUrl
-    );
+    await showDesktopBrowserFlowPendingScreen(t("auth.signingOutTitle"), t("auth.signingOutMessage"), desktopLogoutUrl);
 }
 
 function isAllowedDesktopBrowserFlowUrl(url: string, config: DesktopConfig) {
@@ -502,7 +498,7 @@ function ensureDesktopCallbackServer(): Promise<string> {
         if (kind === "logout") {
             const targetUrl = requestUrl.searchParams.get("url");
             response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-            response.end(createDesktopCallbackPage("Déconnexion terminée. Vous pouvez revenir dans WorkAdventure."));
+            response.end(createDesktopCallbackPage(t("auth.signedOut"), t("auth.closeWindow"), nativeLocale()));
 
             bringAppToFront();
             const config = getDesktopConfig();
@@ -525,7 +521,7 @@ function ensureDesktopCallbackServer(): Promise<string> {
         const matrixLoginToken = requestUrl.searchParams.get("matrixLoginToken") || undefined;
 
         response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-        response.end(createDesktopCallbackPage("Connexion terminée. Vous pouvez revenir dans WorkAdventure."));
+        response.end(createDesktopCallbackPage(t("auth.signedIn"), t("auth.closeWindow"), nativeLocale()));
 
         bringAppToFront();
         void openDesktopAuthCallback({ origin: callbackOrigin, code, matrixLoginToken }).finally(
@@ -615,9 +611,9 @@ function configureNavigationSecurity(webContents: Electron.WebContents, config: 
         // A full navigation replaces the document, so the presence this world pushed (in a meeting,
         // People list, mic/cam) describes a world that is gone. Nothing else clears it until the
         // main window closes, which used to leave the tray and the companion showing the previous
-        // world's state until the new renderer connected. Only the visible tab drives them, so a
-        // background tab reloading must not wipe the active world's state.
-        if (isActiveWorldContents(webContents)) {
+        // world's state until the new renderer connected. Only the controlling tab drives them, so
+        // another tab reloading must not wipe its state.
+        if (isControllingWorldContents(webContents)) {
             resetPresence();
             stopCompanion();
         }
@@ -645,7 +641,7 @@ function configureNavigationSecurity(webContents: Electron.WebContents, config: 
         // not throw the user out of the world they are in.
         // ponytail: the background tab keeps Chromium's error page until it is opened again.
         if (isActiveWorldContents(webContents)) {
-            void recoverToLandingWithError(LOAD_FAILURE_LANDING_MESSAGE);
+            void recoverToLandingWithError(t("landing.loadFailure"));
         }
     });
 
@@ -696,28 +692,29 @@ export async function createWindow(initialUrl?: string) {
     // No setMenu(null): on Windows/Linux it would drop the application menu, and with it the World
     // menu's accelerators (new/close/switch tab). autoHideMenuBar keeps the bar out of sight.
     setShell(mainWindow);
-    // Switching tabs must tear down the companion (which hosts the meeting video) / overlay / HUD
-    // windows + presenter cursor that belonged to the previously-active world — those relays are
-    // keyed to "the active renderer", so leaving them open would misroute SDP/state to the newly-
-    // active tab. The new tab re-opens its meeting video itself if it's in a call. Wired once for the
-    // app's lifetime (the closure only calls module singletons), so a window re-creation doesn't
-    // stack duplicate teardowns.
+    // The companion (which hosts the meeting video), overlay, HUD windows and presenter cursor belong
+    // to the tab that drives media: the one in a meeting, or the active one when there is none (see
+    // tab-manager). Switching to another tab during a meeting leaves them alone. When that tab
+    // changes, tear them down: their relays are keyed to it, so leaving them open would misroute
+    // SDP/state to the new one, which re-opens its meeting video itself if it's in a call. Wired once
+    // for the app's lifetime (the closure only calls module singletons), so a window re-creation
+    // doesn't stack duplicate teardowns.
     if (!activeTabTeardownWired) {
         activeTabTeardownWired = true;
-        onActiveTabChange(() => {
+        onControllingTabChange(() => {
             closeOverlayWindow();
             closeAllHudWindows();
             stopPresenterCursor();
             stopCompanion();
             forgetHudState();
-            // Presence is a single global describing the ACTIVE tab, and only the active renderer is
+            // Presence is a single global describing the controlling tab, and only that renderer is
             // allowed to push it. Left alone it would still describe the tab we just left, so a
-            // later blur would re-arm the companion for a meeting the visible tab isn't in — and the
+            // later blur would re-arm the companion for a meeting the new tab isn't in — and the
             // panel would come back showing the previous world's People list. Clear it, then ask the
-            // newly-active world for its own state: it pushes only on change, so without the request
-            // it would stay blank until something there happened to move.
+            // new tab for its own state: it pushes only on change, so without the request it would
+            // stay blank until something there happened to move.
             resetPresence();
-            getActiveWorldContents()?.send("app:request-presence");
+            getControllingWorldContents()?.send("app:request-presence");
         });
     }
     // The tab strip is pinned to the top and reserves space; world views sit below it.
@@ -886,7 +883,7 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
         return true;
     } catch (error) {
         ElectronLog.warn(`Failed to load desktop target "${target}".`, error);
-        await recoverToLandingWithError(LOAD_FAILURE_LANDING_MESSAGE);
+        await recoverToLandingWithError(t("landing.loadFailure"));
         return false;
     }
 }
