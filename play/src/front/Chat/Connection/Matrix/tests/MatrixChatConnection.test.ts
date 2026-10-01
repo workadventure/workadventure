@@ -2,9 +2,7 @@ import type { MatrixClient, Room } from "matrix-js-sdk";
 import { ClientEvent, EventType, MatrixError, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
-import type { Readable } from "svelte/store";
 import { get, readable, writable } from "svelte/store";
-import type { AvailabilityStatus } from "@workadventure/messages";
 import { MatrixChatConnection } from "../MatrixChatConnection";
 import { MatrixRoomFolder } from "../MatrixRoomFolder";
 import type { CreateRoomOptions } from "../../ChatConnection";
@@ -12,7 +10,6 @@ import type { MatrixChatRoom } from "../MatrixChatRoom";
 import { MatrixChatRoom as MatrixChatRoomClass } from "../MatrixChatRoom";
 import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 import type { MatrixSecurity } from "../MatrixSecurity";
-import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
 
 vi.mock("../../../../Phaser/Game/GameManager", () => {
     return {
@@ -50,20 +47,6 @@ describe("MatrixChatConnection", () => {
         vi.restoreAllMocks();
     });
 
-    const basicStatusStore: Readable<
-        | AvailabilityStatus.ONLINE
-        | AvailabilityStatus.SILENT
-        | AvailabilityStatus.AWAY
-        | AvailabilityStatus.JITSI
-        | AvailabilityStatus.BBB
-        | AvailabilityStatus.DENY_PROXIMITY_MEETING
-        | AvailabilityStatus.SPEAKER
-        | AvailabilityStatus.LIVEKIT
-        | RequestedStatus
-    > = {
-        subscribe: vi.fn(),
-    };
-
     const basicMockMatrixSecurity = {
         isEncryptionRequiredAndNotSet: false,
         updateMatrixClientStore: vi.fn(),
@@ -73,7 +56,7 @@ describe("MatrixChatConnection", () => {
         clientPromise: Promise<MatrixClient>,
         matrixSecurity = basicMockMatrixSecurity,
     ) => {
-        const matrixChatConnection = new MatrixChatConnection(clientPromise, basicStatusStore, matrixSecurity);
+        const matrixChatConnection = new MatrixChatConnection(clientPromise, matrixSecurity);
         await matrixChatConnection.init();
         return matrixChatConnection;
     };
@@ -352,6 +335,9 @@ describe("MatrixChatConnection", () => {
                 threadSupport: true,
                 pendingEventOrdering: PendingEventOrdering.Detached,
                 lazyLoadMembers: true,
+                // Guards the regression described on the option itself: without it the SDK omits
+                // `set_presence`, which the spec and Synapse default to "online".
+                disablePresence: true,
             });
         });
     });
@@ -1393,7 +1379,6 @@ describe("MatrixChatConnection", () => {
             };
             const matrixChatConnection = new MatrixChatConnection(
                 Promise.resolve(matrixClient as unknown as MatrixClient),
-                basicStatusStore,
                 basicMockMatrixSecurity,
             );
 
@@ -1438,7 +1423,6 @@ describe("MatrixChatConnection", () => {
             };
             const matrixChatConnection = new MatrixChatConnection(
                 Promise.resolve(matrixClient as unknown as MatrixClient),
-                basicStatusStore,
                 basicMockMatrixSecurity,
             );
 
@@ -1485,7 +1469,6 @@ describe("MatrixChatConnection", () => {
             }) as MatrixRoomFolder;
             const matrixChatConnection = new MatrixChatConnection(
                 Promise.resolve({} as MatrixClient),
-                basicStatusStore,
                 basicMockMatrixSecurity,
             );
             matrixChatConnection["roomFolders"].set(folderId, folder);
@@ -1574,7 +1557,6 @@ describe("MatrixChatConnection", () => {
             });
             const matrixChatConnection = new MatrixChatConnection(
                 Promise.resolve(matrixClient as unknown as MatrixClient),
-                basicStatusStore,
                 basicMockMatrixSecurity,
             );
             matrixChatConnection["client"] = matrixClient as never;
@@ -1627,7 +1609,6 @@ describe("MatrixChatConnection", () => {
             };
             const matrixChatConnection = new MatrixChatConnection(
                 Promise.resolve(matrixClient as unknown as MatrixClient),
-                basicStatusStore,
                 basicMockMatrixSecurity,
             );
             matrixChatConnection["client"] = matrixClient as never;
