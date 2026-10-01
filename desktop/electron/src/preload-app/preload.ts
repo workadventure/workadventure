@@ -115,6 +115,7 @@ const api: WorkAdventureDesktopApi = {
     pip: pipApi,
     navigation: {
         joinWorld: (url: string) => ipcRenderer.invoke("app:navigation:joinWorld", url),
+        trustServerAndJoin: (url: string) => ipcRenderer.invoke("app:navigation:trustServerAndJoin", url),
         getRecentWorlds: () => ipcRenderer.invoke("app:navigation:getRecentWorlds"),
         getPinnedWorlds: () => ipcRenderer.invoke("app:navigation:getPinnedWorlds"),
         togglePin: (url: string) => ipcRenderer.invoke("app:navigation:togglePin", url),
