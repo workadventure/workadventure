@@ -18,7 +18,7 @@ import { playersStore } from "../../Stores/PlayersStore";
 import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { requestVisitCardsStore } from "../../Stores/GameStore";
-import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
+import { openModerationModal } from "../../Components/Moderation/openModerationModal";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
@@ -965,7 +965,7 @@ class DesktopApi {
                                 spaceUser.emitPrivateEvent({ $case: "kickOffUser", kickOffUser: {} });
                                 break;
                             case "report":
-                                showReportScreenStore.set({ userUuid: spaceUser.uuid, userName: spaceUser.name });
+                                openModerationModal(spaceUser.uuid, spaceUser.name);
                                 break;
                             case "visit-card":
                                 requestVisitCardsStore.set(spaceUser.visitCardUrl ?? null);
