@@ -82,12 +82,7 @@ const permissionStateIsReliable = ((): boolean => {
     if (typeof navigator === "undefined" || !navigator.permissions?.query) {
         return false;
     }
-    try {
-        return getNavigatorType() === NavigatorType.chrome;
-    } catch {
-        // getNavigatorType() throws on some embedded or uncommon browsers
-        return false;
-    }
+    return getNavigatorType() === NavigatorType.chrome;
 })();
 
 /**
@@ -135,3 +130,25 @@ export const mediaPermissionDeniedStore = derived(
         microphone: false,
     },
 );
+
+/**
+ * What the camera/microphone action-bar tooltip should explain when the device is off.
+ *
+ * A denial follows mediaPermissionDeniedStore, so the tooltip and the settings panel always agree. An access issue
+ * is only cleared when the device is requested again, so a "no_device" failure is ignored once the browser lists a
+ * device of that kind: one was plugged in since.
+ */
+export function deviceHelpContext(
+    denied: boolean,
+    accessIssue: MediaAccessIssue | null,
+    devices: readonly unknown[] | undefined,
+    devicesNotLoaded: boolean,
+): "permission" | "no_device" | null {
+    if (denied) {
+        return "permission";
+    }
+    if (devicesNotLoaded || devices === undefined) {
+        return accessIssue === "no_device" ? "no_device" : null;
+    }
+    return devices.length === 0 ? "no_device" : null;
+}

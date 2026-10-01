@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isPermissionDenied } from "./MediaStatusStore";
+import { deviceHelpContext, isPermissionDenied } from "./MediaStatusStore";
 
 // Chromium answers "denied" when the user blocks a device, so its permission state can be trusted.
 const CHROMIUM = true;
@@ -41,5 +41,31 @@ describe("isPermissionDenied", () => {
 
     it("does not report a denial without a media access failure", () => {
         expect(isPermissionDenied("prompt", null, SAFARI_OR_FIREFOX)).toBe(false);
+    });
+});
+
+describe("deviceHelpContext", () => {
+    const ONE_DEVICE = [{}];
+
+    it("explains a denial first", () => {
+        expect(deviceHelpContext(true, "no_device", [], false)).toBe("permission");
+    });
+
+    it("ignores a permission failure the denial rules do not confirm", () => {
+        // On Chromium, a dismissed prompt leaves a permission_denied failure without being a denial.
+        expect(deviceHelpContext(false, "permission_denied", ONE_DEVICE, false)).toBe(null);
+    });
+
+    it("reports a missing device from the device list", () => {
+        expect(deviceHelpContext(false, null, [], false)).toBe("no_device");
+    });
+
+    it("drops a missing-device failure once a device is listed", () => {
+        expect(deviceHelpContext(false, "no_device", ONE_DEVICE, false)).toBe(null);
+    });
+
+    it("relies on the failure while the device list is not known yet", () => {
+        expect(deviceHelpContext(false, "no_device", undefined, true)).toBe("no_device");
+        expect(deviceHelpContext(false, null, undefined, true)).toBe(null);
     });
 });

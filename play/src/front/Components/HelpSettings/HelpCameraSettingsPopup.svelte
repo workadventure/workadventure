@@ -8,14 +8,7 @@
     import { IconInfoCircle } from "@wa-icons";
 
     let isAndroid = isAndroidFct();
-    let navigatorType = (() => {
-        try {
-            return getNavigatorType();
-        } catch {
-            // getNavigatorType() throws on some embedded or uncommon browsers
-            return undefined;
-        }
-    })();
+    let navigatorType = getNavigatorType();
     let isFirefox = navigatorType === NavigatorType.firefox;
     let isChrome = navigatorType === NavigatorType.chrome;
     let isSafari = navigatorType === NavigatorType.safari;
