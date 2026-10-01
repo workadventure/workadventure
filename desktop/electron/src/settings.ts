@@ -17,6 +17,8 @@ export type SettingsData = {
     last_room_url?: string;
     world_history: string[];
     pinned_worlds: string[];
+    /** White-label origins confirmed by the portal's admin → expiry (ms epoch). See origin-verification. */
+    verified_origins?: Record<string, number>;
     shortcuts: Record<"mute_toggle" | "camera_toggle" | "companion_toggle", string>;
     /** Last size + position of the resizable companion panel, restored (and clamped) on reopen. */
     companion_bounds?: { x: number; y: number; width: number; height: number };

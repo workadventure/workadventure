@@ -402,3 +402,12 @@ test("redacts sensitive query params in arbitrary strings (for logs)", () => {
     assert.equal(redactSensitiveString(""), "");
     assert.equal(redactSensitiveString(undefined), undefined);
 });
+
+test("white-label origins confirmed by the portal become navigable, over https only in production", () => {
+    withNodeEnv("production", () => {
+        const config = createDesktopConfig({ verifiedOrigins: ["https://acme.example", "http://plain.example"] });
+        assert.equal(isAllowedNavigationUrl("https://acme.example/@/team/world/room", config), true);
+        assert.equal(isAllowedNavigationUrl("https://other.example/@/team/world/room", config), false);
+        assert.equal(isAllowedNavigationUrl("http://plain.example/@/team/world/room", config), false);
+    });
+});

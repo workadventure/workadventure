@@ -6,6 +6,7 @@ import windowStateKeeper from "electron-window-state";
 import path from "path";
 import settings from "./settings";
 import { createDesktopCallbackPage } from "./desktop-callback-page";
+import { ensureWorldOriginTrusted, getDesktopConfig } from "./origin-verification";
 import { nativeLocale, t } from "./i18n";
 import { textDirection } from "./native-locale-policy";
 import { createDesktopWindowTitle } from "./app-name-policy";
@@ -155,13 +156,6 @@ export function getDesktopWindowState(): DesktopWindowState {
 function emitDesktopWindowStateChange() {
     // Window-state changes are relevant to the on-screen (active) world renderer.
     getActiveWorldContents()?.send("app:on-window-state-change", getDesktopWindowState());
-}
-
-function getDesktopConfig(): DesktopConfig {
-    return createDesktopConfig({
-        ...process.env,
-        portalUrl: settings.get("portal_url"),
-    });
 }
 
 function cancelReachWorldWatchdog() {
@@ -554,23 +548,24 @@ function ensureDesktopCallbackServer(): Promise<string> {
     });
 }
 
-function configureSession(config: DesktopConfig) {
+// Both read the settings on every event: white-label origins the portal confirms are added at runtime.
+function configureSession() {
     session.defaultSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
         const requestingUrl = details.requestingUrl || webContents.getURL();
         const allowedPermissions = new Set(["media", "display-capture", "notifications", "fullscreen"]);
-        callback(allowedPermissions.has(permission) && isAllowedNavigationUrl(requestingUrl, config));
+        callback(allowedPermissions.has(permission) && isAllowedNavigationUrl(requestingUrl, getDesktopConfig()));
     });
 }
 
-function configureNavigationSecurity(webContents: Electron.WebContents, config: DesktopConfig) {
+function configureNavigationSecurity(webContents: Electron.WebContents) {
     const window = { webContents };
     window.webContents.setWindowOpenHandler(({ url }) => {
-        if (isAllowedDesktopBrowserFlowUrl(url, config)) {
+        if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
             void openDesktopBrowserFlow(url);
             return { action: "deny" };
         }
 
-        if (shouldOpenExternally(url, config)) {
+        if (shouldOpenExternally(url, getDesktopConfig())) {
             void openExternal(url);
             return { action: "deny" };
         }
@@ -582,26 +577,30 @@ function configureNavigationSecurity(webContents: Electron.WebContents, config: 
     });
 
     window.webContents.on("will-navigate", (event, url) => {
-        if (isAllowedDesktopBrowserFlowUrl(url, config)) {
+        if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
             event.preventDefault();
             void openDesktopBrowserFlow(url);
             return;
         }
 
-        if (shouldOpenExternally(url, config)) {
+        if (shouldOpenExternally(url, getDesktopConfig())) {
             event.preventDefault();
-            void openExternal(url);
+            // The world itself navigating elsewhere (a map exit to a white-label world): ask the portal
+            // before giving up and handing the URL to the browser.
+            void ensureWorldOriginTrusted(url)
+                .then((trusted) => (trusted ? webContents.loadURL(url) : openExternal(url)))
+                .catch((error) => ElectronLog.warn(`Navigation to "${url}" failed.`, error));
         }
     });
 
     window.webContents.on("will-redirect", (event, url) => {
-        if (isAllowedDesktopBrowserFlowUrl(url, config)) {
+        if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
             event.preventDefault();
             void openDesktopBrowserFlow(url);
             return;
         }
 
-        if (shouldOpenExternally(url, config)) {
+        if (shouldOpenExternally(url, getDesktopConfig())) {
             event.preventDefault();
             void openExternal(url);
         }
@@ -666,7 +665,7 @@ export async function createWindow(initialUrl?: string) {
     }
 
     const config = getDesktopConfig();
-    configureSession(config);
+    configureSession();
 
     // Load the previous state with fallback to defaults
     const windowState = windowStateKeeper({
@@ -722,7 +721,7 @@ export async function createWindow(initialUrl?: string) {
     createTabStrip(mainWindow);
     // Create the first world view (the initial tab). window.ts wires navigation security onto it;
     // it becomes the active view and everything below (load/PiP/presence) targets it.
-    createWorldView((view) => configureNavigationSecurity(view.webContents, config));
+    createWorldView((view) => configureNavigationSecurity(view.webContents));
 
     // Let us register listeners on the window, so we can update the state
     // automatically (the listeners will be removed when the window is closed)
@@ -861,7 +860,6 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
         throw new Error("No active world view");
     }
 
-    const config = getDesktopConfig();
     const explicitTarget = requestedUrl || pendingDeepLinkUrl;
     const lastRoomUrl = settings.get("last_room_url");
     // First cold launch (nothing pending, no persisted room) → show the Landing instead of
@@ -872,6 +870,14 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
         await loadLandingPage();
         return true;
     }
+    // A white-label world (deep link, or the last room once its confirmation expired) is only loaded
+    // if the portal's admin vouches for it; otherwise resolveInitialTarget falls back below.
+    for (const candidate of [explicitTarget, lastRoomUrl]) {
+        if (candidate) {
+            await ensureWorldOriginTrusted(candidate);
+        }
+    }
+    const config = getDesktopConfig();
     const target = resolveInitialTarget(config, {
         pendingDeepLinkUrl: explicitTarget,
         lastRoomUrl,
@@ -900,7 +906,7 @@ export async function openWorldTab(url?: string): Promise<void> {
         return;
     }
     const config = getDesktopConfig();
-    const tab = createWorldView((view) => configureNavigationSecurity(view.webContents, config));
+    const tab = createWorldView((view) => configureNavigationSecurity(view.webContents));
     activateTab(tab.id);
     if (url) {
         await loadDesktopTarget(url);
