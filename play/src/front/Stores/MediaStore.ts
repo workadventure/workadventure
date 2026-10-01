@@ -584,15 +584,16 @@ export const mediaStreamConstraintsStore = derived(
                 $currentRoomStore?.defaultCameraPrivacySettings ?? Room.DEFAULT_CAMERA_PRIVACY_SETTINGS,
             );
 
-        // Audio constraints always apply
-        if (
-            $requestedMicrophoneState === false ||
+        // Every reason, other than the user muting it, to cut the microphone
+        const isMicrophoneForcedOff =
             $myMicrophoneStore === false ||
             isInExternalService ||
             shouldDisableMicrophoneForPrivacy ||
             isEnergySaving ||
-            isUnavailableStatus
-        ) {
+            isUnavailableStatus;
+
+        // Audio constraints always apply
+        if ($requestedMicrophoneState === false || isMicrophoneForcedOff) {
             currentAudioConstraint = false;
         }
 
@@ -602,13 +603,7 @@ export const mediaStreamConstraintsStore = derived(
         // A space streams our audio in a bubble, a meeting area, or a speaker zone where we are a speaker
         // (not a mere listener, who cannot be heard anyway).
         const keepAudioWarm =
-            $isLiveStreamingAudioStore &&
-            $requestedMicrophoneState === false &&
-            $myMicrophoneStore !== false &&
-            !isInExternalService &&
-            !shouldDisableMicrophoneForPrivacy &&
-            !isEnergySaving &&
-            !isUnavailableStatus;
+            $isLiveStreamingAudioStore && $requestedMicrophoneState === false && !isMicrophoneForcedOff;
 
         // Video constraints only apply when NOT in background settings (to allow camera preview)
         if (!$inBackgroundSettingsStore) {
