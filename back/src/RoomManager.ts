@@ -553,6 +553,7 @@ const roomManager = {
                 call.request.message,
                 // The type ends up in the ejected user's client: only let through the two it knows.
                 call.request.type === "kicked" ? "kicked" : "banned",
+                call.request.moderatorUuid,
             )
             .catch((e) => {
                 console.error(e);

@@ -51,6 +51,7 @@ import type {
     BanIpPreviewQuery,
     WorldUser,
     WorldUsersAnswer,
+    UserEjection,
 } from "@workadventure/messages";
 import { noUndefined } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
@@ -777,7 +778,13 @@ export class SocketManager implements ZoneEventListener {
         try {
             if (banPlayerMessage.kick) {
                 // A kick only ejects the user from the room: nothing is persisted in the admin.
-                await this.emitBan(banPlayerMessage.banUserUuid, reason, "kicked", socketData.roomId);
+                await this.emitBan(
+                    banPlayerMessage.banUserUuid,
+                    reason,
+                    "kicked",
+                    socketData.roomId,
+                    socketData.userUuid,
+                );
                 return;
             }
             // On request, ban the IP the back sees for the user too, so they cannot come back with another account.
@@ -810,10 +817,16 @@ export class SocketManager implements ZoneEventListener {
                 // of the room, as a kick, since nothing will stop them from coming back.
                 Sentry.captureException(`Could not record the ban in "handleBanPlayerMessage" ${e}`);
                 console.error(`Could not record the ban in "handleBanPlayerMessage" ${e}`);
-                await this.emitBan(banPlayerMessage.banUserUuid, reason, "kicked", socketData.roomId);
+                await this.emitBan(
+                    banPlayerMessage.banUserUuid,
+                    reason,
+                    "kicked",
+                    socketData.roomId,
+                    socketData.userUuid,
+                );
                 return;
             }
-            await this.emitBan(banPlayerMessage.banUserUuid, reason, "banned", socketData.roomId);
+            await this.emitBan(banPlayerMessage.banUserUuid, reason, "banned", socketData.roomId, socketData.userUuid);
         } catch (e) {
             Sentry.captureException(`An error occurred on "handleBanPlayerMessage" ${e}`);
             console.error(`An error occurred on "handleBanPlayerMessage" ${e}`);
@@ -1007,13 +1020,20 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
-    public async emitBan(userUuid: string, message: string, type: string, roomId: string): Promise<void> {
+    public async emitBan(
+        userUuid: string,
+        message: string,
+        type: string,
+        roomId: string,
+        moderatorUuid?: string,
+    ): Promise<void> {
         const backConnection = await apiClientRepository.getClient(roomId, GRPC_MAX_MESSAGE_SIZE);
         const banMessage: BanMessage = {
             message,
             roomId,
             recipientUuid: userUuid,
             type,
+            moderatorUuid,
         };
         backConnection.ban(banMessage, (error: unknown) => {
             if (error !== null) {
@@ -1041,12 +1061,13 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public onUserLeaves(userId: number, listener: PusherWebSocket): void {
+    public onUserLeaves(userId: number, listener: PusherWebSocket, ejection?: UserEjection): void {
         listener.emitInBatch({
             message: {
                 $case: "userLeftMessage",
                 userLeftMessage: {
                     userId,
+                    ejection,
                 },
             },
         });

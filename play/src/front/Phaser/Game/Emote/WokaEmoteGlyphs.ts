@@ -7,13 +7,51 @@
  * with crisp edges so they never blur when the camera zooms.
  */
 
-export type WokaEmoteGlyphName = "heart" | "note" | "spark" | "zzz" | "question" | "confetti" | "laugh";
+export type WokaEmoteGlyphName =
+    | "heart"
+    | "note"
+    | "spark"
+    | "zzz"
+    | "question"
+    | "confetti"
+    | "laugh"
+    | "boot"
+    | "impact"
+    | "star"
+    | "cell"
+    | "grawlix"
+    | "dust"
+    | "wave"
+    | "flash"
+    | "beam"
+    | "saucer"
+    | "sparkle"
+    | "surprise";
 
 interface PixelGlyph {
     /** Fixed colour, or undefined to draw each instance in a different palette colour. */
     color?: string;
-    /** One string per row, "x" where a pixel is lit. */
+    /** One string per row, "x" where a pixel is lit — or a letter of `palette` for multicolour art. */
     rows: string[];
+    /** Colour of each letter, for glyphs drawn with more than one colour. */
+    palette?: Record<string, string>;
+}
+
+/** The jail cell of a ban: a plate on top and at the bottom, two-pixel bars in between. */
+function cellRows(): string[] {
+    const width = 24;
+    const height = 30;
+    const rows: string[] = [];
+    for (let y = 0; y < height; y++) {
+        let row = "";
+        for (let x = 0; x < width; x++) {
+            if (y === 0 || y === height - 1) row += "k";
+            else if (y <= 2 || y >= height - 2) row += [2, 11, 20].includes(x) ? "l" : "m";
+            else row += x % 4 === 0 ? "k" : x % 4 === 1 ? "l" : " ";
+        }
+        rows.push(row);
+    }
+    return rows;
 }
 
 /** Palette taken from the product's own tokens (libs/tailwind). */
@@ -49,6 +87,96 @@ const PIXEL_GLYPHS: Record<WokaEmoteGlyphName, PixelGlyph> = {
         color: "#f9e81e",
         rows: ["x x  x ", "x x x x", "xxx xxx", "x x x x", "x x x x"],
     },
+    // The ejection props (see WokaEjectionCatalog). A boot with a trouser cuff, facing right.
+    boot: {
+        palette: { p: "#365dff", q: "#2440b8", b: "#8a5a2b", d: "#5e3b1a", w: "#d9a066", s: "#2a1c10" },
+        rows: [
+            "  qppq       ",
+            "  qppq       ",
+            "  dbbd       ",
+            "  dbbd       ",
+            "  dbbbbbbd   ",
+            " dbwbbbbbbbd ",
+            " dbbbbbbbbbbd",
+            " sssssssssss ",
+        ],
+    },
+    impact: {
+        palette: { y: "#f9e81e", w: "#ffffff", o: "#ff9a1e" },
+        rows: [
+            "o   y   o",
+            " o  y  o ",
+            "  o w o  ",
+            "   www   ",
+            "yywwwwwyy",
+            "   www   ",
+            "  o w o  ",
+            " o  y  o ",
+            "o   y   o",
+        ],
+    },
+    star: {
+        palette: { y: "#f9e81e", w: "#ffffff", o: "#ffb81e" },
+        rows: [
+            "    y    ",
+            "    y    ",
+            "   oyo   ",
+            "  oywyo  ",
+            "yyywwwyyy",
+            "  oywyo  ",
+            "   oyo   ",
+            "    y    ",
+            "    y    ",
+        ],
+    },
+    cell: {
+        palette: { k: "#2b2a3d", m: "#6f6c8d", l: "#c9c6e0" },
+        rows: cellRows(),
+    },
+    // Cartoon swearing: a hash and a spiral, the comic-strip way of saying it without saying it.
+    grawlix: {
+        palette: { r: "#ff475a", k: "#1b1b29" },
+        rows: ["r r  kkk  r", "rrr k   k r", "r r  kkk   ", "rrr k   k r", "r r  kkk  r"],
+    },
+    dust: {
+        color: "#b9b5cf",
+        rows: [" xx ", "xxxx", " xx "],
+    },
+    // The crescent of a kick given from afar, with its trail: it travels from the moderator to the target.
+    wave: {
+        palette: { w: "#ffffff", c: "#bfeaff" },
+        rows: ["c c  ww  ", "     c w ", "c c     w", "        w", "c c     w", "     c w ", "c c  ww  "],
+    },
+    flash: {
+        palette: { w: "#ffffff", y: "#fff6a8" },
+        rows: ["   y   ", "  www  ", " wwwww ", "ywwwwwy", " wwwww ", "  www  ", "   y   "],
+    },
+    // The ban props (see WokaEjectionCatalog). A column of light, pale at the edges, see-through inside.
+    beam: {
+        palette: { a: "rgba(190,250,255,.9)", b: "rgba(150,235,255,.55)", c: "rgba(120,225,255,.28)" },
+        rows: Array.from({ length: 90 }, () => "abcccccccccccccccccba"),
+    },
+    saucer: {
+        palette: { d: "#4d4b67", m: "#928ebb", l: "#c9c6e0", g: "#56eaff", y: "#f9e81e" },
+        rows: [
+            "       gggggg       ",
+            "      gllllllg      ",
+            "     glllllllg      ",
+            "  dmmmmmmmmmmmmmmd  ",
+            " dmmymmmymmmmymmmmd ",
+            "dmmmmmmmmmmmmmmmmmmd",
+            " ddddddddddddddddd  ",
+            "     dddddddddd     ",
+        ],
+    },
+    sparkle: {
+        palette: { w: "#ffffff", c: "#bfeaff" },
+        rows: [" c ", "cwc", " c "],
+    },
+    surprise: {
+        palette: { y: "#f9e81e", k: "#1b1b29" },
+        rows: [" kyk ", " kyk ", " kyk ", " kyk ", "     ", " kyk "],
+    },
 };
 
 /**
@@ -64,7 +192,11 @@ export function buildGlyphSvg(name: WokaEmoteGlyphName, variant = 0): string {
     let rectangles = "";
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
-            if (glyph.rows[y][x] === "x") {
+            const pixel = glyph.rows[y][x];
+            const fill = glyph.palette?.[pixel];
+            if (fill) {
+                rectangles += `<rect x="${x}" y="${y}" width="1" height="1" fill="${fill}"/>`;
+            } else if (pixel === "x") {
                 rectangles += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
             }
         }

@@ -19,6 +19,7 @@ import {
     type GroupUsersUpdateMessage,
     PositionMessage_Direction,
     type SendUserMessage,
+    type UserEjection,
 } from "@workadventure/messages";
 import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
@@ -224,6 +225,8 @@ import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
 import { getWokaEmote, WOKA_EMOTES, WOKA_EMOTE_SOUND_PATH, wokaEmoteSoundKey } from "./Emote/WokaEmoteCatalog";
+import { BAN_SCENES, buildBan, isWokaEjection } from "./Emote/WokaEjectionCatalog";
+import { buildKick, KICK_SOUNDS } from "./Emote/WokaKickCatalog";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -369,6 +372,8 @@ export class GameScene extends DirtyScene {
     private playerName!: string;
     private popUpElements: Map<number, DOMElement> = new Map<number, DOMElement>();
     private remotePlayersSpatialIndex = new SpatialMap<number, RemotePlayer>(CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE);
+    /** Players a moderator just removed, waiting for doRemovePlayer() to play their ejection. */
+    private readonly pendingEjections = new Map<number, UserEjection>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
     private outlineManager!: OutlineManager;
@@ -527,10 +532,10 @@ export class GameScene extends DirtyScene {
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
         this.load.audio("meeting-in", "/resources/objects/meeting-in.wav");
         this.load.audio("meeting-out", "/resources/objects/meeting-out.wav");
-        for (const emote of WOKA_EMOTES) {
-            if (emote.sound) {
-                this.load.audio(wokaEmoteSoundKey(emote.sound), WOKA_EMOTE_SOUND_PATH + emote.sound.file);
-            }
+        for (const sound of [...WOKA_EMOTES, ...BAN_SCENES]
+            .flatMap((emote) => emote.sounds ?? [])
+            .concat(KICK_SOUNDS)) {
+            this.load.audio(wokaEmoteSoundKey(sound), WOKA_EMOTE_SOUND_PATH + sound.file);
         }
 
         this.sound.pauseOnBlur = false;
@@ -2155,6 +2160,9 @@ export class GameScene extends DirtyScene {
                 // The userLeftMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.userLeftMessageStream.subscribe((message) => {
+                    if (message.ejection && isWokaEjection(message.ejection.type)) {
+                        this.pendingEjections.set(message.userId, message.ejection);
+                    }
                     this.remotePlayersRepository.removePlayer(message.userId);
                     this.playersEventDispatcher.postMessage({
                         type: "removeRemotePlayer",
@@ -2752,7 +2760,7 @@ export class GameScene extends DirtyScene {
             wokaEmoteStore.subscribe((wokaEmoteId) => {
                 if (wokaEmoteId && get(enableUserInputsStore)) {
                     const definition = getWokaEmote(wokaEmoteId);
-                    this.CurrentPlayer?.playWokaEmote(wokaEmoteId);
+                    this.CurrentPlayer?.playWokaEmote(definition);
                     // The wheel icon rides along as the emoji fallback. Clients that know the animation
                     // ignore it; a back that does not know the identifier relays it as a plain bubble
                     // instead of dropping the emote for everyone but us.
@@ -4505,19 +4513,56 @@ ${escapedMessage}
 
     private doRemovePlayer(userId: number) {
         const player = this.MapPlayersByKey.get(userId);
+        const ejection = this.pendingEjections.get(userId);
+        this.pendingEjections.delete(userId);
         if (player === undefined) {
             console.error("Cannot find user with id ", userId);
         } else {
-            player.destroy();
-
-            if (player.companion) {
-                player.companion.destroy();
+            player.companion?.destroy();
+            if (ejection && this._room.isEjectionAnimationEnabled) {
+                // The player is gone from every index below right away; only its Woka lingers,
+                // for the length of the scene.
+                this.playEjection(player, ejection);
+            } else {
+                player.destroy();
             }
         }
         this.MapPlayersByKey.delete(userId);
         this.remotePlayersSpatialIndex.delete(userId);
         // console.debug("User removed in MapPlayersByKey in GameScene", userId);
         this.playersPositionInterpolator.removePlayer(userId);
+    }
+
+    /**
+     * Plays how a moderator removed `player`, then destroys it. The scene is drawn from the back's
+     * roll, for a ban (see WokaEjectionCatalog) as for a kick (see WokaKickCatalog); when a kick is
+     * given by the moderator's own Woka, that Woka plays its part in the same frame, so the two meet
+     * at the impact.
+     */
+    private playEjection(player: RemotePlayer, ejection: UserEjection): void {
+        // The recipes are written with the moderator on the left.
+        const mirrored = !ejection.fromLeft;
+        const done = () => player.destroy();
+        if (ejection.type === "banned") {
+            player.playEjection(buildBan(ejection.roll), mirrored, done);
+            return;
+        }
+        const moderatorId = ejection.moderatorUserId;
+        const kicker =
+            moderatorId === undefined
+                ? undefined
+                : moderatorId === this.connection?.getUserId()
+                  ? this.CurrentPlayer
+                  : this.MapPlayersByKey.get(moderatorId);
+        // Where the moderator's Woka is drawn on this screen, in the recipe's frame. The side itself is
+        // the back's, so that every player sees the kick come from the same side.
+        const side = ejection.fromLeft ? 1 : -1;
+        const gap = kicker ? { x: side * (kicker.x - player.x), y: kicker.y - player.y } : undefined;
+        const kick = buildKick(ejection.roll, ejection.melee, gap);
+        if (kicker && kick.kicker) {
+            kicker.playWokaEmote(kick.kicker, mirrored);
+        }
+        player.playEjection(kick.target, mirrored, done);
     }
 
     private updatePlayerPosition(message: MessageUserMovedInterface): void {
