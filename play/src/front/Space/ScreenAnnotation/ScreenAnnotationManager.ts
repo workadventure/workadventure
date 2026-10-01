@@ -8,6 +8,7 @@ import {
     removeAnnotationElement,
     resetAllAnnotations,
     screenAnnotationElementsStore,
+    screenAnnotationEnabledStore,
     setAnnotationEnabled,
     upsertAnnotationElement,
 } from "../../Stores/ScreenAnnotationStore";
@@ -54,7 +55,7 @@ class ScreenAnnotationManager {
             if (event.sender === space.mySpaceUserId) {
                 return;
             }
-            this.applyRemote(event.screenAnnotation);
+            this.applyRemote(event.sender, event.screenAnnotation);
         });
         this.unsubscribers.push(() => publicEventSubscription.unsubscribe());
 
@@ -105,26 +106,51 @@ class ScreenAnnotationManager {
         return `${this.space?.mySpaceUserId ?? "local"}-${Date.now()}-${this.elementCounter}`;
     }
 
-    private applyRemote(event: ScreenAnnotationEvent): void {
+    /**
+     * Apply an event from another member of the space. Space events are relayed as sent, so the
+     * sender's rights are checked here: only the presenter (the target) can enable annotation or
+     * clear their screen, and others may draw or erase only while the presenter allows it.
+     */
+    private applyRemote(sender: string, event: ScreenAnnotationEvent): void {
         const target = event.targetUserId;
         const operation = event.operation;
         switch (operation?.$case) {
             case "upsertElement":
-                upsertAnnotationElement(target, operation.upsertElement);
+                if (operation.upsertElement.authorUserId === sender && this.canAnnotate(sender, target)) {
+                    upsertAnnotationElement(target, operation.upsertElement);
+                }
                 break;
             case "removeElementId":
-                removeAnnotationElement(target, operation.removeElementId);
+                if (this.canAnnotate(sender, target)) {
+                    removeAnnotationElement(target, operation.removeElementId);
+                }
                 break;
             case "clearAll":
-                clearAnnotations(target);
-                this.clearHistory(target);
+                if (sender === target) {
+                    clearAnnotations(target);
+                    this.clearHistory(target);
+                }
                 break;
             case "annotationEnabled":
-                setAnnotationEnabled(target, operation.annotationEnabled);
+                if (sender === target) {
+                    setAnnotationEnabled(target, operation.annotationEnabled);
+                }
                 break;
             default:
                 break;
         }
+    }
+
+    private canAnnotate(sender: string, target: string): boolean {
+        if (sender === target) {
+            return true;
+        }
+        const enabled = get(screenAnnotationEnabledStore).get(target);
+        // On our own share we know the setting for sure. Elsewhere the presenter's "enabled" event may
+        // predate our arrival in the space (it is not replayed), so only an explicit "off" blocks.
+        // ponytail: a late joiner still renders strokes from a viewer the presenter never allowed;
+        // replaying the setting to newcomers would close that.
+        return target === this.localUserId ? enabled === true : enabled !== false;
     }
 
     private emit(targetUserId: string, operation: AnnotationOperation): void {
