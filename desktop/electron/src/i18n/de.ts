@@ -3,7 +3,7 @@ import type { NativeStrings } from "./en";
 const de: NativeStrings = {
     "landing.heading": "Ihr Arbeitsplatz, nur eine URL entfernt.",
     "landing.intro":
-        "Öffnen Sie eine Welt, der Sie bereits angehören, oder erstellen Sie einen neuen Bereich für Ihr Team. Ihre letzte Welt wird beim nächsten Mal automatisch wieder geöffnet.",
+        "Öffnen Sie eine Welt, der Sie bereits angehören, oder erstellen Sie eine neue Welt für Ihr Team. Ihre letzte Welt wird beim nächsten Mal automatisch wieder geöffnet.",
     "landing.recentWorlds": "Zuletzt besuchte Welten",
     "landing.joinTitle": "Einer Welt beitreten",
     "landing.joinHint": "Fügen Sie die vollständige URL aus Ihrer Einladung oder Ihrem Browser ein.",
@@ -18,12 +18,14 @@ const de: NativeStrings = {
     "landing.pinWorld": "Welt anheften",
     "landing.unpinWorld": "Welt lösen",
     "landing.urlRequired": "Bitte geben Sie eine Welt-URL ein.",
-    "landing.urlInvalid": "Ungültige URL. Bitte geben Sie die vollständige http(s)://-URL einer Welt ein.",
-    "landing.urlProtocol": "Nur http(s)://-URLs werden unterstützt.",
-    "landing.urlHost": "Ungültige URL: Host fehlt oder enthält Zugangsdaten.",
+    "landing.urlInvalid":
+        "Dieser Link ist ungültig. Kopieren Sie den vollständigen Link zur Welt aus Ihrer Einladung oder Ihrem Browser.",
+    "landing.urlProtocol": "Der Link zu Ihrer Welt muss mit https:// oder http:// beginnen.",
+    "landing.urlHost":
+        "Dieser Link ist unvollständig oder enthält einen Benutzernamen oder ein Passwort. Kopieren Sie den Link zur Welt aus Ihrer Einladung.",
     "landing.urlNotAllowed":
-        "Diese URL gehört nicht zu den erlaubten Ursprüngen. Setzen Sie WA_DESKTOP_ALLOWED_ORIGINS oder verwenden Sie eine workadventu.re-Welt-URL.",
-    "landing.joinFailed": "Beitritt zur Welt fehlgeschlagen.",
+        "Diese Adresse ist keine WorkAdventure-Welt, die die App kennt. Prüfen Sie den Link oder fragen Sie Ihren Administrator.",
+    "landing.joinFailed": "Der Beitritt zu dieser Welt ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "landing.signupFailed": "Die Registrierungsseite konnte nicht geöffnet werden.",
     "landing.desktopOnly": "Diese Aktion ist nur in der Desktop-App verfügbar.",
     "landing.worldNotLoaded":
@@ -51,8 +53,8 @@ const de: NativeStrings = {
     "menu.noRecentWorlds": "Keine zuletzt besuchten Welten",
     "menu.hideTabBarTitle": "Tableiste ausblenden?",
     "menu.cancel": "Abbrechen",
-    "menu.closeOneOtherTab": "1 anderen Tab schließen & Leiste ausblenden",
-    "menu.closeOtherTabs": "{count} andere Tabs schließen & Leiste ausblenden",
+    "menu.closeOneOtherTab": "Anderen Tab schließen und Leiste ausblenden",
+    "menu.closeOtherTabs": "{count} andere Tabs schließen und Leiste ausblenden",
     "menu.hideTabBarDetailOne":
         "Sie haben {total} Welten in Tabs geöffnet. Beim Ausblenden der Tableiste bleibt die aktuelle Welt geöffnet und die andere wird geschlossen.",
     "menu.hideTabBarDetail":
@@ -65,7 +67,7 @@ const de: NativeStrings = {
     "tray.status.idle": "Inaktiv",
     "tray.status.online": "Verfügbar",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Während eines Meetings gesperrt",
+    "tray.statusLocked": "Der Status kann während eines Meetings nicht geändert werden",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamera",
     "tray.companionPanel": "Begleitfenster",
@@ -80,16 +82,25 @@ const de: NativeStrings = {
     "auth.pageTitle": "WorkAdventure-Anmeldung",
     "auth.signingInTitle": "Anmeldung läuft…",
     "auth.signingInMessage":
-        "Schließen Sie die Anmeldung in Ihrem Browser ab. WorkAdventure kehrt automatisch zu diesem Fenster zurück.",
+        "Schließen Sie die Anmeldung in Ihrem Browser ab. Sie kehren danach automatisch zur App zurück.",
     "auth.signingOutTitle": "Abmeldung läuft…",
     "auth.signingOutMessage":
-        "Schließen Sie die Abmeldung in Ihrem Browser ab. WorkAdventure kehrt automatisch zu diesem Fenster zurück.",
+        "Schließen Sie die Abmeldung in Ihrem Browser ab. Sie kehren danach automatisch zur App zurück.",
     "auth.reopenBrowser": "Browser erneut öffnen",
     "auth.signedIn": "Angemeldet. Sie können zu WorkAdventure zurückkehren.",
     "auth.signedOut": "Abgemeldet. Sie können zu WorkAdventure zurückkehren.",
     "auth.closeWindow": "Sie können dieses Fenster schließen.",
 
     "screenIdentify.clickToShare": "Klicken, um diesen Bildschirm zu teilen · {size}",
+    "update.checking": "Suche nach Updates…",
+    "update.title": "WorkAdventure-Update",
+    "update.ready": "Ihr Update ist bereit. Starten Sie WorkAdventure neu, um es zu installieren.",
+    "update.installAndRestart": "Installieren und neu starten",
+    "update.installLater": "Später installieren",
+    "update.availableTitle": "WorkAdventure-Update verfügbar",
+    "update.availableBody":
+        "Laden Sie die neueste Version von der WorkAdventure-Website herunter und installieren Sie sie.",
+    "update.none": "Kein Update verfügbar.",
 };
 
 export default de;

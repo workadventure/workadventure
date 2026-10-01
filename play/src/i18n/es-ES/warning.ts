@@ -70,7 +70,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         neverShowPage: "No volver a preguntar",
     },
     otherMeetingMuted:
-        "Se han desactivado el micrófono, la cámara y la pantalla compartida en {world}: ahora estás en una reunión aquí.",
+        "Ahora estás en una reunión aquí. Se han desactivado tu micrófono, tu cámara y tu pantalla compartida en {world}.",
 };
 
 export default warning;

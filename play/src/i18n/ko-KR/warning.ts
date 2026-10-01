@@ -67,7 +67,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         continue: "브라우저에서 계속",
         neverShowPage: "다시 묻지 않기",
     },
-    otherMeetingMuted: "{world}에서 마이크, 카메라, 화면 공유가 꺼졌습니다. 이제 여기에서 회의 중입니다.",
+    otherMeetingMuted: "이제 여기에서 회의 중입니다. {world}에서 마이크, 카메라, 화면 공유가 꺼졌습니다.",
 };
 
 export default warning;

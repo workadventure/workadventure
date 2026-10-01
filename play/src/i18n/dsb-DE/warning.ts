@@ -68,7 +68,8 @@ const warning: DeepPartial<Translation["warning"]> = {
         continue: "W wobglědowaku pókšacowaś",
         neverShowPage: "Wěcej se njepšašaś",
     },
-    otherMeetingMuted: "Mikrofon, kamera a źělenje wobrazowki su se w {world} wótšaltowali: sćo něnto how na zmakanju.",
+    otherMeetingMuted:
+        "Sćo něnto how na zmakanju. Waš mikrofon, kamera a źělenje wobrazowki su se w {world} wótšaltowali.",
 };
 
 export default warning;
