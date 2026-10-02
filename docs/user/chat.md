@@ -86,17 +86,8 @@ Invited users will receive a notification in the chat room list and they can acc
 
 ## User list
 
-The user list shows the list of users in relation with your world. In this list, you will see:
-
-- **Online users**: Users that are currently connected to your world, whether they are members, visitors or anonymous users.
-- **Disconnected users**: Users that are not currently connected to your world. The **Disconnected users** section will
-  contain the list of members that are not currently connected to your world plus the list of users you have a direct
-  connection with in Matrix.
-
-So for instance, if one of your members is not connected to your world but is reachable through Matrix, you will see
-them with a "green" or "orange" dot in the **Disconnected users** section.
-
-![](images/disconnected-users.png)
+The user list shows everyone in your world, grouped by map, and lets you walk up to them, locate them or send them a
+message. See [Finding people: the user list](user-list.md).
 
 ## Meeting invitations
 WorkAdventure allows users to invite other users to join their meeting directly from the chat interface.
@@ -105,8 +96,10 @@ WorkAdventure allows users to invite other users to join their meeting directly 
 
 You can invite other users to join your current meeting in two ways:
 
-- Click the invite button (user-plus icon) next to a user's name in the user list
-- Select the "Invite" action from the user action menu (accessible by clicking the three-dot menu next to a user)
+- In the user list, click **…** next to the user, then **Invite**
+- Click the user's Woka on the map (or their name in the user list, if they are on your map) to open their card, then **Invite**
+
+You can also invite someone who is on another map of your world.
 
 When you send an invitation, a sound notification will play to confirm the invitation was sent.
 
@@ -116,7 +109,7 @@ When another user invites you to their meeting, you will see a popup notificatio
 The name of the user inviting you
 An "Accept" button to join the meeting
 A "Decline" button to reject the invitation
-If you accept the invitation, you will automatically move to join the meeting with the inviting user.
+If you accept the invitation, you will automatically move to join the meeting with the inviting user. If they are on another map, you are first taken to their map.
 
 ### Rate limits and restrictions
 To prevent spam, meeting invitations have the following limits:
