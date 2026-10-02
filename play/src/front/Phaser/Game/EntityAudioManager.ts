@@ -115,7 +115,7 @@ export class EntityAudioManager {
      */
     private volumeFor(property: PlayAudioPropertyData, entity: Entity): number {
         const volume = property.volume ?? 1;
-        if (property.audibleRadius === undefined) {
+        if (property.audibleRadius == undefined) {
             return volume;
         }
 

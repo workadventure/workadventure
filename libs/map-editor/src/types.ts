@@ -92,9 +92,10 @@ export const PlayAudioPropertyData = PropertyBase.extend({
     playForAllUsers: z.boolean().optional(),
     /**
      * Distance in pixels beyond which a broadcast sound is not heard, the volume decreasing as it
-     * is approached. Undefined means the sound is heard at full volume anywhere on the map.
+     * is approached. Null or undefined means the sound is heard at full volume anywhere on the map
+     * (an emptied number input is bound to null).
      */
-    audibleRadius: z.number().min(0).optional(),
+    audibleRadius: z.number().min(0).nullable().optional(),
 });
 
 export const OpenWebsitePropertyData = PropertyBase.extend({
