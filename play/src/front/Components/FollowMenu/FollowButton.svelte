@@ -1,7 +1,11 @@
 <script lang="ts">
     import followImg from "../images/follow.svg";
 
-    export let hidden: boolean;
+    interface Props {
+        hidden: boolean;
+    }
+
+    let { hidden }: Props = $props();
 
     let cancelButton = false;
 </script>
@@ -10,7 +14,7 @@
     <img draggable="false" src={followImg} alt="" />
 </div>
 
-<style lang="scss">
+<style>
     .btn-follow {
         cursor: pointer;
         display: flex;

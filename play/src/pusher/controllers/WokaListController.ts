@@ -9,7 +9,10 @@ import { AuthenticatedProviderController } from "./AuthenticatedProviderControll
  */
 export class WokaListController extends AuthenticatedProviderController<WokaList> {
     private wokaService: WokaServiceInterface | undefined;
-    constructor(protected app: Application, protected jwtTokenManager: JWTTokenManager) {
+    constructor(
+        protected app: Application,
+        protected jwtTokenManager: JWTTokenManager,
+    ) {
         super(app, jwtTokenManager);
     }
 

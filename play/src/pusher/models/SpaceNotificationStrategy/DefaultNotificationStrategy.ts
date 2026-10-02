@@ -17,7 +17,7 @@ export class DefaultNotificationStrategy implements SpaceNotificationStrategy {
         context: SpaceNotificationContext,
         user: SpaceUserExtended,
         _partialUser: PartialSpaceUser,
-        updateMask: string[]
+        updateMask: string[],
     ): void {
         const subMessage = context.createUpdateUserMessage(user, updateMask);
         context.notifyAll(subMessage);
@@ -31,7 +31,7 @@ export class DefaultNotificationStrategy implements SpaceNotificationStrategy {
     filterUsersForObserver(
         _context: SpaceNotificationContext,
         _observer: SpaceUserExtended,
-        users: SpaceUserExtended[]
+        users: SpaceUserExtended[],
     ): SpaceUserExtended[] {
         // Default: observer sees all users
         return users;

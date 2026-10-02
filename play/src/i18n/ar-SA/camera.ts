@@ -14,11 +14,22 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     help: {
         title: "مطلوب الوصول إلى الكاميرا / الميكروفون", // Access to camera/microphone required
+        cameraTitle: "مطلوب الوصول إلى الكاميرا",
+        microphoneTitle: "مطلوب الوصول إلى الميكروفون",
         permissionDenied: "تم الرفض", // Access denied
+        cameraPermissionDenied: "تم رفض إذن الكاميرا",
+        microphonePermissionDenied: "تم رفض إذن الميكروفون",
+        cameraMicrophonePermissionDenied: "تم رفض أذني الكاميرا والميكروفون",
         content: "يجب السماح بالوصول إلى الكاميرا والميكروفون في المتصفح.", // Access to camera and microphone must be allowed in the browser.
+        cameraContent: "يجب السماح بالوصول إلى الكاميرا في المتصفح.",
+        microphoneContent: "يجب السماح بالوصول إلى الميكروفون في المتصفح.",
         firefoxContent: 'يرجى النقر على زر "حفظ هذا القرار" لمنع طلبات الإذن المتكررة في Firefox.', // Please click the "Save this decision" button to prevent repeated permission requests in Firefox.
         continue: "المتابعة بدون كاميرا", // Continue without camera
+        continueWithoutMicrophone: "المتابعة بدون ميكروفون",
+        continueCameraMicrophone: "المتابعة بدون كاميرا وميكروفون",
         allow: "السماح بالكاميرا", // Allow camera
+        allowMicrophone: "السماح بالميكروفون",
+        allowCameraMicrophone: "السماح بالكاميرا والميكروفون",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
@@ -81,7 +92,9 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "خيارات إضافية", // More actions
         closeMenu: "إغلاق القائمة", // Close menu
         senPrivateMessage: "إرسال رسالة خاصة (قريبًا)", // Send private message (coming soon)
-        kickoffUser: "طرد المستخدم", // Kick off user
+        kickoffUser: "طرد المستخدم",
+        giveFloor: "إعطاء الكلمة",
+        revokeFloor: "سحب الكلمة", // Kick off user
         muteAudioUser: "كتم صوت المستخدم", // Mute user's audio
         askToMuteAudioUser: "طلب كتم الصوت", // Ask to mute audio
         muteAudioEveryBody: "كتم الصوت للجميع", // Mute audio for everybody
@@ -92,7 +105,6 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     backgroundEffects: {
         imageTitle: "صور الخلفية", // Background Images
-        videoTitle: "فيديوهات الخلفية", // Background Videos
         blurTitle: "ضبابية الخلفية", // Background Blur
         resetTitle: "تعطيل تأثيرات الخلفية", // Disable background effects
         title: "تأثيرات الخلفية", // Background Effects

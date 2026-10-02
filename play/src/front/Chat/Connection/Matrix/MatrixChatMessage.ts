@@ -1,14 +1,23 @@
 import type { MatrixEvent, Room } from "matrix-js-sdk";
 import { Direction, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
-import type { Writable } from "svelte/store";
-import { writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { MapStore } from "@workadventure/store-utils";
-import type { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
-import { chatUserFactory } from "./MatrixChatUser";
+import type {
+    ChatMessage,
+    ChatMessageContent,
+    ChatMessageType,
+    ChatThread,
+    ChatThreadSummary,
+    ChatUser,
+} from "../ChatConnection";
+import { canRenderImageOrVideoInline } from "../../../Utils/InlineMimeType";
+import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
 import { resolveAttachmentMediaFromEvent, resolveImageMediaFromEvent } from "./MatrixMediaResolver";
+import { shouldRenderQuotedReply } from "./MatrixThreadUtils";
 
 export class MatrixChatMessage implements ChatMessage {
     id: string;
@@ -23,14 +32,34 @@ export class MatrixChatMessage implements ChatMessage {
     isModified: Writable<boolean>;
     reactions: MapStore<string, MatrixChatMessageReaction>;
     relations: MatrixChatRelation | undefined;
+    readonly canReact: Readable<boolean>;
+    readonly canEdit: Readable<boolean>;
     readonly canDelete: Writable<boolean>;
+    threadSummary = writable<ChatThreadSummary | null>(null);
+    openThread: (() => Promise<ChatThread | undefined>) | undefined;
     private imageMediaCleanup: () => void = () => undefined;
     private imageMediaAbortController: AbortController | undefined;
     private attachmentMediaCleanup: () => void = () => undefined;
     private attachmentMediaAbortController: AbortController | undefined;
     private readonly decryptedListener = () => this.updateMessageContentOnDecryptedEvent();
+    // Fired when an m.replace edit is applied to this event; re-render so the edit shows.
+    private readonly replacedListener = () => this.modifyContent();
+    // Fired when the first relation container is created for this event. initReactions() returns early
+    // when the message had no reactions at construction (so it never subscribed to reaction updates); this
+    // re-runs it so reactions that arrive later via aggregation/pagination still appear.
+    private readonly relationsCreatedListener = (relationType: string) => {
+        if (relationType === RelationType.Annotation) {
+            this.initReactions();
+        }
+    };
 
-    constructor(private event: MatrixEvent, private room: Room, isQuotedMessage?: boolean) {
+    constructor(
+        private event: MatrixEvent,
+        private room: Room,
+        isQuotedMessage?: boolean,
+        canReactStore?: Readable<boolean>,
+        canSendMessagesStore?: Readable<boolean>,
+    ) {
         this.id = event.getId() ?? uuidv4();
         this.type = this.mapMatrixMessageTypeToChatMessage();
         this.date = event.getDate();
@@ -42,29 +71,29 @@ export class MatrixChatMessage implements ChatMessage {
         this.isModified = writable(this.getIsModified());
         this.reactions = new MapStore<string, MatrixChatMessageReaction>();
 
-        const myRoomMember = room.getMember(room.client.getSafeUserId());
-        const senderRoomMember = room.getMember(this.sender?.chatId || "");
-
-        let myPowerLevel = 0;
-        let senderPowerLevel = 0;
-
-        if (myRoomMember) {
-            myPowerLevel = myRoomMember.powerLevelNorm;
-        }
-
-        if (senderRoomMember) {
-            senderPowerLevel = senderRoomMember.powerLevelNorm;
-        }
-
-        const hasSufficientPowerLevel =
-            this.room
-                .getLiveTimeline()
-                .getState(Direction.Backward)
-                ?.hasSufficientPowerLevelFor("redact", myPowerLevel) ?? false;
-
-        this.canDelete = writable(this.isMyMessage || (hasSufficientPowerLevel && myPowerLevel > senderPowerLevel));
+        this.canDelete = writable(this.computeCanDelete());
+        this.canReact =
+            canReactStore ??
+            readable(
+                this.room
+                    .getLiveTimeline()
+                    .getState(Direction.Backward)
+                    ?.maySendEvent(EventType.Reaction, room.client.getSafeUserId()) ?? false,
+            );
+        this.canEdit = derived(
+            canSendMessagesStore ??
+                readable(
+                    this.room
+                        .getLiveTimeline()
+                        .getState(Direction.Backward)
+                        ?.maySendEvent(EventType.RoomMessage, room.client.getSafeUserId()) ?? false,
+                ),
+            (canSendMessages) => this.isMyMessage && this.type === "text" && canSendMessages,
+        );
 
         event.on(MatrixEventEvent.Decrypted, this.decryptedListener);
+        event.on(MatrixEventEvent.Replaced, this.replacedListener);
+        event.on(MatrixEventEvent.RelationsCreated, this.relationsCreatedListener);
         this.loadImageMediaIfNeeded();
         this.loadAttachmentMediaIfNeeded();
 
@@ -72,13 +101,7 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     private getSender() {
-        let messageUser;
-        const senderUserId = this.event.getSender();
-        if (senderUserId) {
-            const matrixUser = this.room.client.getUser(senderUserId);
-            messageUser = matrixUser ? chatUserFactory(matrixUser, this.room.client) : undefined;
-        }
-        return messageUser;
+        return chatUserFactoryFromEvent(this.room, this.event);
     }
 
     private initMessageContent(): Writable<ChatMessageContent> {
@@ -92,18 +115,16 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     private getMessageContent(): ChatMessageContent {
-        const unsigned = this.event.getUnsigned();
-        const relation = unsigned["m.relations"];
         if (this.event.isDecryptionFailure()) {
             return { body: "🔐 Failed to decrypt", url: undefined };
         }
-        if (relation) {
-            if (relation["m.replace"]) {
-                return { body: relation["m.replace"].content?.["m.new_content"]?.body, url: undefined };
-            }
-        }
 
-        const content = this.event.getOriginalContent();
+        // getContent() returns the effective content: the latest edit's `m.new_content` when the event has
+        // been replaced, and the decrypted content in E2EE rooms. The previous code read the raw
+        // `m.replace` bundle from unsigned, which in E2EE rooms is the *wire* (encrypted) content, so edited
+        // messages rendered with an empty body and lost msgtype/formatting/media. Live edits now re-render
+        // via the MatrixEventEvent.Replaced listener.
+        const content = this.event.getContent();
         const quotedMessage = this.getQuotedMessage();
 
         if (quotedMessage !== undefined && content.formatted_body) {
@@ -235,12 +256,16 @@ export class MatrixChatMessage implements ChatMessage {
         const sortedReactionByKey = reactionByKey.getSortedAnnotationsByKey() ?? [];
         sortedReactionByKey.forEach(([reactionKey, events]) => {
             events.forEach((event) => {
-                this.reactions.set(reactionKey, new MatrixChatMessageReaction(this.room, event));
+                this.reactions.set(reactionKey, new MatrixChatMessageReaction(this.room, event, this.canReact));
             });
         });
     }
 
     private getQuotedMessage() {
+        if (!shouldRenderQuotedReply(this.event)) {
+            return;
+        }
+
         const replyEventId = this.event.replyEventId;
         if (replyEventId) {
             const replyToEvent = this.room.findEventById(replyEventId);
@@ -259,6 +284,36 @@ export class MatrixChatMessage implements ChatMessage {
         return this.event.replacingEventId() !== undefined;
     }
 
+    private computeCanDelete(): boolean {
+        const currentUserId = this.room.client.getSafeUserId();
+        const senderUserId = this.event.getSender();
+        if (!currentUserId || !senderUserId || this.event.status || this.event.isRedacted()) {
+            return false;
+        }
+
+        const roomState = this.room.getLiveTimeline().getState(Direction.Backward);
+        const canSendRedactionEvent = roomState?.maySendEvent(EventType.RoomRedaction, currentUserId) ?? false;
+        if (!canSendRedactionEvent) {
+            return false;
+        }
+
+        if (currentUserId === senderUserId) {
+            return true;
+        }
+
+        const myRoomMember = this.room.getMember(currentUserId);
+        const senderRoomMember = this.room.getMember(senderUserId);
+        const myPowerLevel = myRoomMember?.powerLevel ?? 0;
+        const senderPowerLevel = senderRoomMember?.powerLevel ?? 0;
+        const hasSufficientPowerLevel = roomState?.hasSufficientPowerLevelFor("redact", myPowerLevel) ?? false;
+
+        return hasSufficientPowerLevel && myPowerLevel > senderPowerLevel;
+    }
+
+    public refreshCanDelete() {
+        this.canDelete.set(this.computeCanDelete());
+    }
+
     public getFormattedBody(): string {
         const content = this.event.getOriginalContent();
         return content.formatted_body;
@@ -268,18 +323,20 @@ export class MatrixChatMessage implements ChatMessage {
         return this.room.client.mxcUrlToHttp(url);
     }
     private mapMatrixMessageTypeToChatMessage() {
-        const matrixMessageType = this.event.getOriginalContent().msgtype;
-        switch (matrixMessageType) {
+        const content = this.event.getOriginalContent();
+        switch (content.msgtype) {
             case "m.text":
                 return "text";
+            // An attachment whose filename and mimetype disagree is shown as a plain file instead
+            // of being rendered, the way Element does it.
             case "m.image":
-                return "image";
+                return canRenderImageOrVideoInline(content) ? "image" : "file";
+            case "m.video":
+                return canRenderImageOrVideoInline(content) ? "video" : "file";
             case "m.file":
                 return "file";
             case "m.audio":
                 return "audio";
-            case "m.video":
-                return "video";
         }
         return "text";
     }
@@ -289,6 +346,9 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     async edit(newContent: string): Promise<void> {
+        if (!get(this.canEdit)) {
+            throw new Error("Missing permission to edit this message");
+        }
         try {
             await this.room.client.sendEvent(this.room.roomId, EventType.RoomMessage, {
                 msgtype: MsgType.Text,
@@ -302,9 +362,14 @@ export class MatrixChatMessage implements ChatMessage {
         }
     }
 
-    public modifyContent(newContent: string) {
-        this.content.set({ body: newContent, url: undefined });
+    // Re-render from the (now SDK-replaced) event rather than a caller-supplied body string: getContent()
+    // resolves the edit's m.new_content and preserves msgtype/formatting/media instead of the old
+    // body-only update that dropped the URL of edited image/file messages.
+    public modifyContent() {
+        this.content.set(this.getMessageContent());
         this.isModified.set(true);
+        this.loadImageMediaIfNeeded();
+        this.loadAttachmentMediaIfNeeded();
     }
 
     public markAsRemoved() {
@@ -312,6 +377,9 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     async addReaction(reaction: string) {
+        if (!get(this.canReact)) {
+            throw new Error("Missing permission to send reactions in this room");
+        }
         try {
             await this.room.client.sendEvent(this.room.roomId, EventType.Reaction, {
                 "m.relates_to": { key: reaction, rel_type: RelationType.Annotation, event_id: this.id },
@@ -323,9 +391,15 @@ export class MatrixChatMessage implements ChatMessage {
 
     destroy() {
         this.event.off(MatrixEventEvent.Decrypted, this.decryptedListener);
+        this.event.off(MatrixEventEvent.Replaced, this.replacedListener);
+        this.event.off(MatrixEventEvent.RelationsCreated, this.relationsCreatedListener);
         this.imageMediaAbortController?.abort();
         this.imageMediaCleanup();
         this.attachmentMediaAbortController?.abort();
         this.attachmentMediaCleanup();
+    }
+
+    public getMatrixEvent(): MatrixEvent {
+        return this.event;
     }
 }

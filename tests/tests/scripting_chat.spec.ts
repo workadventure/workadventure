@@ -18,6 +18,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
             //await chatUtils.resetMatrixDatabase();
         },
     );
+
     test("can open / close chat + start / stop typing @chat", async ({ browser }) => {
         await using page = await getPage(browser, "Bob", Map.url("empty"));
         //await oidcMatrixUserLogin(page, false);
@@ -67,8 +68,6 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
             return WA.chat.close();
         });
         await expect(page.locator("#chat")).toBeHidden();
-
-        await page.context().close();
     });
 
     test("can send message to bubble users @chat", async ({ browser }) => {
@@ -76,11 +75,11 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
         //await oidcMatrixUserLogin(bob, false);
         // test to send bubble message when entering proximity meeting
         await evaluateScript(bob, async () => {
-            WA.player.proximityMeeting.onJoin().subscribe((user) => {
-                console.log("Entering proximity meeting with", user);
+            WA.player.meetings.onJoin().subscribe((meeting) => {
+                console.log("Entering proximity meeting with", meeting.participants);
                 // Let's wait a bit to be sure the "bob entered the meeting" message is sent first
                 setTimeout(() => {
-                    WA.chat.sendChatMessage("Test message sent", {
+                    WA.chat.sendChatMessage("Test message sent to " + meeting.participants.length + " participant(s)", {
                         scope: "bubble",
                     });
                 }, 200);
@@ -121,7 +120,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
         await expect(bob.getByText("New discussion with Alice")).toBeVisible();
 
         // Check that bob received the message
-        await expect(bob.locator("#chat")).toContainText("Test message sent", {
+        await expect(bob.locator("#chat")).toContainText("Test message sent to 1 participant(s)", {
             timeout: 30000,
         });
 
@@ -129,12 +128,12 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
         await expect(alice.getByText("New discussion with Bob")).toBeVisible();
 
         // Check that alice also received the message
-        await expect(alice.locator("#chat")).toContainText("Test message sent", {
+        await expect(alice.locator("#chat")).toContainText("Test message sent to 1 participant(s)", {
             timeout: 30000,
         });
 
         const chatMessageReceived = await chatMessageReceivedPromise;
-        expect(chatMessageReceived.message).toBe("Test message sent");
+        expect(chatMessageReceived.message).toBe("Test message sent to 1 participant(s)");
         expect(chatMessageReceived.event.authorId).toBeDefined();
         expect(chatMessageReceived.event.author).toBeDefined();
 
@@ -144,8 +143,5 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
 
         await expect(alice.getByText("Charlie joined the discussion")).toBeVisible();
         await expect(bob.getByText("Charlie joined the discussion")).toBeVisible();
-
-        await alice.context().close();
-        await bob.context().close();
     });
 });

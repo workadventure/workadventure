@@ -15,5 +15,5 @@ export const oneLineStreamableCollectionStore = derived(
             }
             return true;
         });
-    }
+    },
 );

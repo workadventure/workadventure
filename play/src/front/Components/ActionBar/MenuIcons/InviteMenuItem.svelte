@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { inviteUserActivated } from "../../../Stores/MenuStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -7,33 +8,53 @@
     import GuestSubMenu from "../../Menu/GuestSubMenu.svelte";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
 
-    export let first: boolean | undefined = undefined;
-    export let last: boolean | undefined = undefined;
-    export let classList: string | undefined = undefined;
+    interface Props {
+        first?: boolean;
+        last?: boolean;
+        classList?: string;
+    }
 
-    let displayTooltip = true;
+    let { first = undefined, last = undefined, classList = undefined }: Props = $props();
+
     let closeFloatingUi: (() => void) | undefined = undefined;
-    let triggerElement: HTMLElement | undefined = undefined;
+    let triggerElement: HTMLElement | undefined = $state(undefined);
+
+    function closeInviteMenu(): void {
+        // Reset the handle before closing: close() calls back into onClose synchronously.
+        const close = closeFloatingUi;
+        closeFloatingUi = undefined;
+        close?.();
+    }
 
     function showInviteScreen() {
-        if (!displayTooltip) {
-            closeFloatingUi?.();
-            closeFloatingUi = undefined;
-        } else if (triggerElement) {
-            analyticsClient.openInvite();
-            closeFloatingUi = showFloatingUi(
-                triggerElement,
-                GuestSubMenu,
-                {},
-                {
-                    placement: "bottom",
-                },
-                12,
-                true
-            );
+        if (closeFloatingUi !== undefined) {
+            closeInviteMenu();
+            return;
         }
-        displayTooltip = !displayTooltip;
+        if (triggerElement === undefined) {
+            return;
+        }
+        analyticsClient.trackAdminEvent("invite.opened");
+        closeFloatingUi = showFloatingUi(
+            triggerElement,
+            GuestSubMenu,
+            {},
+            {
+                placement: "bottom",
+            },
+            12,
+            true,
+            true,
+            () => {
+                closeFloatingUi = undefined;
+            },
+        );
     }
+
+    // The popup is rendered by FloatingUiPopupList at the root of the app, so it outlives this
+    // component. The action bar is unmounted whenever the chat or the map editor leaves less than
+    // 285px of room, which would otherwise strand the popup with no way to close it.
+    onDestroy(closeInviteMenu);
 </script>
 
 {#if $inviteUserActivated}
@@ -41,7 +62,7 @@
         label={$LL.menu.invite.share()}
         boldLabel={true}
         hideIconInActionBar={false}
-        on:click={showInviteScreen}
+        onclick={showInviteScreen}
         bind:wrapperDiv={triggerElement}
         bgColor="rgba(255, 255, 255, 0.1)"
         {first}

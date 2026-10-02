@@ -49,3 +49,10 @@ eventProcessor.registerPrivateEventProcessor("muteVideo", (event, sender) => {
 
     return event;
 });
+
+eventProcessor.registerPrivateEventProcessor("kickOffUser", (event, sender) => {
+    if (!sender || !sender.tags.includes("admin")) {
+        throw new Error("Only admins can kick off a user");
+    }
+    return event;
+});

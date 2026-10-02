@@ -191,7 +191,7 @@ const SCOPES = "https://www.googleapis.com/auth/drive";
 export const initGooglePicker = (
     clientId: string,
     appId: string,
-    viewId = window.google.picker.ViewId.DOCS
+    viewId = window.google.picker.ViewId.DOCS,
 ): Promise<string> => {
     if (window.accessToken) return showGooglePicker(appId, window.accessToken, viewId);
     if (!window.pickerInited || !window.gisInited) return Promise.reject(new Error("Google Picker not inited"));

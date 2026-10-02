@@ -1,5 +1,4 @@
 import type {
-    AdminApiData,
     ErrorApiData,
     IceServer,
     MapDetailsData,
@@ -8,7 +7,7 @@ import type {
     RoomRedirect,
     Capabilities,
 } from "@workadventure/messages";
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { ShortMapDescriptionList } from "./ShortMapDescription";
 import type { WorldChatMembersData } from "./WorldChatMembersData";
 
@@ -29,7 +28,7 @@ export interface AdminInterface {
         companionTextureId?: string,
         locale?: string,
         tags?: string[],
-        chatID?: string
+        chatID?: string,
     ): Promise<FetchMemberDataByUuidResponse>;
 
     /**
@@ -40,20 +39,8 @@ export interface AdminInterface {
     fetchMapDetails(
         playUri: string,
         authToken?: string,
-        locale?: string
+        locale?: string,
     ): Promise<MapDetailsData | RoomRedirect | ErrorApiData>;
-
-    /**
-     * @param locale
-     * @param organizationMemberToken
-     * @param playUri
-     * @return AdminApiData
-     */
-    fetchMemberDataByToken(
-        organizationMemberToken: string,
-        playUri: string | null,
-        locale?: string
-    ): Promise<AdminApiData>;
 
     /**
      * @var host Request hostname
@@ -73,17 +60,8 @@ export interface AdminInterface {
         reportedUserComment: string,
         reporterUserUuid: string,
         roomUrl: string,
-        locale?: string
+        locale?: string,
     ): Promise<unknown>;
-
-    /**
-     * @param locale
-     * @param userUuid
-     * @param ipAddress
-     * @param roomUrl
-     * @return AdminBannedData
-     */
-    verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string, locale?: string): Promise<AdminBannedData>;
 
     /**
      * @param locale
@@ -96,7 +74,7 @@ export interface AdminInterface {
         roomUrl: string,
         locale?: string,
         tags?: string[],
-        bypassTagFilter?: boolean
+        bypassTagFilter?: boolean,
     ): Promise<ShortMapDescriptionList>;
 
     /**
@@ -111,13 +89,17 @@ export interface AdminInterface {
      */
     logoutOauth(token: string): Promise<void>;
 
+    /**
+     * @param ipAddress the IP the user connects from, to ban it too; undefined to ban their account only
+     */
     banUserByUuid(
         uuidToBan: string,
         playUri: string,
         name: string,
         message: string,
-        byUserUuid: string
-    ): Promise<boolean>;
+        byUserUuid: string,
+        ipAddress: string | undefined,
+    ): Promise<void>;
 
     getTagsList(roomUrl: string): Promise<string[]>;
 

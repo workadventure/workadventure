@@ -12,32 +12,32 @@ export class VoidState implements ICommunicationState<ICommunicationStrategy> {
     }
     handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
-        senderUserId: string
+        senderUserId: string,
     ): void {
         return;
     }
     handleUserAdded(
-        user: SpaceUser
+        user: SpaceUser,
     ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }
     handleUserDeleted(
-        user: SpaceUser
+        user: SpaceUser,
     ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }
     handleUserUpdated(
-        user: SpaceUser
+        user: SpaceUser,
     ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }
     handleUserToNotifyAdded(
-        user: SpaceUser
+        user: SpaceUser,
     ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }
     handleUserToNotifyDeleted(
-        user: SpaceUser
+        user: SpaceUser,
     ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }

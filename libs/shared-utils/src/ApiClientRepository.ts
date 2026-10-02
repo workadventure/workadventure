@@ -26,7 +26,7 @@ export class ApiClientRepository {
                 {
                     "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE,
                     "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE,
-                }
+                },
             );
         }
         debug("Mapping room %s to API server %s", roomId, this.apiUrls[index]);
@@ -57,7 +57,7 @@ export class ApiClientRepository {
                 {
                     "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE,
                     "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE,
-                }
+                },
             );
         }
         debug("Mapping room %s to API server %s", spaceName, this.apiUrls[index]);

@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import type { EntityPrefab } from "@workadventure/map-editor";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -21,6 +22,8 @@ import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import type { Entity } from "../../../ECS/Entity";
 import { MapEditorTool } from "./MapEditorTool";
 
+import Image = Phaser.GameObjects.Image;
+
 export abstract class EntityRelatedEditorTool extends MapEditorTool {
     private handleDeleteEntity: (entity: Entity) => void;
     protected scene: GameScene;
@@ -29,8 +32,8 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     protected entitiesManager: EntitiesManager;
 
     protected entityPrefab: EntityPrefab | undefined;
-    protected entityPrefabPreview: Phaser.GameObjects.Image | undefined;
-    protected entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
+    protected entityPrefabPreview: Image | undefined;
+    protected entityOldPositionPreview: Image | undefined;
 
     protected mapEditorSelectedEntityPrefabStoreUnsubscriber: Unsubscriber | undefined;
     protected mapEntityEditorModeStoreUnsubscriber: Unsubscriber | undefined;
@@ -133,7 +136,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                                 this.entityPrefabPreview = this.scene.add.image(
                                     Math.floor(pointer.worldX),
                                     Math.floor(pointer.worldY),
-                                    entityPrefab.imagePath
+                                    entityPrefab.imagePath,
                                 );
                             }
                             this.scene.markDirty();
@@ -143,7 +146,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                         });
                 }
                 this.scene.markDirty();
-            }
+            },
         );
 
         this.mapEditorSelectedEntityDraggedStoreUnsubscriber = mapEditorSelectedEntityDraggedStore.subscribe(
@@ -151,7 +154,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                 if (!dragged) {
                     this.entityOldPositionPreview?.destroy();
                 }
-            }
+            },
         );
 
         this.mapEditorSelectedEntityStoreUnsubscriber = mapEditorSelectedEntityStore.subscribe((entity) => {
@@ -217,8 +220,8 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                     this.scene.getGameMap().getWamFile()!,
                     entity.entityId,
                     undefined,
-                    this.entitiesManager
-                )
+                    this.entitiesManager,
+                ),
             )
             .catch((e) => console.error(e));
     }

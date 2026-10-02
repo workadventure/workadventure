@@ -10,7 +10,7 @@ const jsonSchema = zodToJsonSchema(WAMFileFormat, {
 
 const latestVersion = wamFileMigration.getLatestVersion();
 
-const schemaDir = new URL(`../../../docs/schema/${latestVersion}`, import.meta.url);
+const schemaDir = new URL(`../../../docs/schema/${latestVersion}/`, import.meta.url);
 
 const schemaDirPath = fileURLToPath(schemaDir);
 if (!fs.existsSync(schemaDirPath)) {

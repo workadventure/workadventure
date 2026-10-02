@@ -12,7 +12,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         room: "Přistup njedowoleny. Tebi faluje woprawnje, zo do tuteho ruma zastupiš. ",
         teleport: "Woni njesmědźa so k tutemu wužiwarjej přisamjenić.",
     },
-    importantMessage: "wažna powěsć",
     connectionLost: "Zwiski přetorhnjene. Zaso zwjazować.. ",
     connectionLostTitle: "zwiski přetorhnjene",
     connectionLostSubtitle: "zaso zwjazować",
@@ -24,6 +23,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     mapEditorNotEnabled: "Editor kartow njeje na tutym swěće zmóžnjeny.",
     backgroundProcessing: {
         failedToApply: "Nałoženje pozadkowych efektow je so njeporadźiło",
+        notSupportedOnThisBrowser: "Pozadkowe efekty njejsu w tutym wobhladowaku podpěrane",
     },
     popupBlocked: {
         title: "Blokěrowanje wuskakowaceho wokna",

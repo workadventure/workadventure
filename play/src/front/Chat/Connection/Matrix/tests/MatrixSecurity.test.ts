@@ -1,7 +1,12 @@
+import { EventEmitter } from "events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MatrixClient } from "matrix-js-sdk";
-import { writable } from "svelte/store";
+import { VerificationPhase, VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
+import { VerificationMethod } from "matrix-js-sdk/lib/types";
+import { get, writable } from "svelte/store";
+import type { Readable } from "svelte/store";
 import { MatrixSecurity } from "../MatrixSecurity";
+import type { DeviceVerificationState } from "../MatrixSecurity";
 
 vi.mock("../../../../Phaser/Entity/CharacterLayerManager", () => {
     return {
@@ -29,7 +34,255 @@ vi.mock("../../../Stores/ChatStore.ts", () => {
         alreadyAskForInitCryptoConfiguration: writable(false),
     };
 });
+
+const createClientWithVerifiedOtherDevice = () => {
+    const otherDevice = {
+        deviceId: "OTHER",
+        getIdentityKey: vi.fn(() => "identity-key"),
+    };
+    const crypto = {
+        getUserDeviceInfo: vi
+            .fn()
+            .mockResolvedValue(new Map([["@me:example.test", new Map([["OTHER", otherDevice]])]])),
+        getDeviceVerificationStatus: vi.fn((_userId: string, deviceId: string) => {
+            return Promise.resolve({ signedByOwner: deviceId === "OTHER" });
+        }),
+    };
+    const mockMatrixClient = {
+        getCrypto: vi.fn(() => crypto),
+        getUserId: vi.fn(() => "@me:example.test"),
+        getDeviceId: vi.fn(() => "CURRENT"),
+        getKeyBackupVersion: vi.fn().mockResolvedValue(null),
+        isGuest: vi.fn(() => false),
+    } as unknown as MatrixClient;
+
+    return { mockMatrixClient, crypto };
+};
+
 describe("MatrixSecurity", () => {
+    describe("openAutomaticChooseDeviceVerificationMethodModal", () => {
+        it("opens the device verification chooser once for concurrent automatic requests", async () => {
+            const openModal = vi.fn();
+            const { mockMatrixClient } = createClientWithVerifiedOtherDevice();
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, openModal);
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await Promise.all([
+                matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal(),
+                matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal(),
+            ]);
+
+            expect(openModal).toHaveBeenCalledOnce();
+        });
+
+        it("does not reopen the device verification chooser automatically after the first attempt", async () => {
+            const openModal = vi.fn();
+            const { mockMatrixClient } = createClientWithVerifiedOtherDevice();
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, openModal);
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal();
+            await matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal();
+
+            expect(openModal).toHaveBeenCalledOnce();
+        });
+    });
+
+    describe("openChooseDeviceVerificationMethodModal", () => {
+        it("can reopen the device verification chooser explicitly after an automatic attempt", async () => {
+            const openModal = vi.fn();
+            const { mockMatrixClient } = createClientWithVerifiedOtherDevice();
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, openModal);
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal();
+            await matrixSecurity.openChooseDeviceVerificationMethodModal();
+
+            expect(openModal).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe("verifyOwnDevice", () => {
+        // The start sequence (getUserDeviceInfo -> startVerification) runs asynchronously, so let its
+        // microtasks settle before asserting (one macrotask tick drains the pending microtask queue).
+        const flush = () =>
+            new Promise((resolve) => {
+                setTimeout(resolve, 0);
+            });
+
+        // Minimal stand-in for a matrix-js-sdk VerificationRequest: an event emitter with a mutable phase
+        // and a startVerification() spy, so we can drive the phase transitions the SDK would emit.
+        const createFakeVerificationRequest = (otherPartySupportsSas = true) => {
+            const request = Object.assign(new EventEmitter(), {
+                phase: VerificationPhase.Requested,
+                initiatedByMe: true,
+                chosenMethod: null as string | null,
+                verifier: undefined,
+                otherPartySupportsMethod: vi.fn((method: string) =>
+                    method === VerificationMethod.Sas ? otherPartySupportsSas : false,
+                ),
+                startVerification: vi.fn().mockResolvedValue({
+                    getShowSasCallbacks: vi.fn(() => null),
+                    on: vi.fn(),
+                    off: vi.fn(),
+                    verify: vi.fn(() => new Promise(() => {})),
+                }),
+            });
+            return request;
+        };
+
+        const createInitiatingClient = (request: EventEmitter) => {
+            const crypto = {
+                requestOwnUserVerification: vi.fn().mockResolvedValue(request),
+                getUserDeviceInfo: vi.fn().mockResolvedValue(new Map()),
+            };
+            const mockMatrixClient = {
+                getCrypto: vi.fn(() => crypto),
+                getUserId: vi.fn(() => "@me:example.test"),
+            } as unknown as MatrixClient;
+            return { mockMatrixClient, crypto };
+        };
+
+        it("downloads the other device's keys, then sends the start once the peer is Ready", async () => {
+            const request = createFakeVerificationRequest();
+            const { mockMatrixClient, crypto } = createInitiatingClient(request);
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, vi.fn());
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await matrixSecurity.verifyOwnDevice();
+
+            // Still only Requested: nothing to start yet.
+            expect(request.startVerification).not.toHaveBeenCalled();
+
+            // The other device accepts -> Ready. As the initiator we must drive the start ourselves,
+            // otherwise the flow stalls here forever (the bug this guards against).
+            request.phase = VerificationPhase.Ready;
+            request.emit(VerificationRequestEvent.Change);
+            await flush();
+
+            // Force-download our own devices first so startVerification() cannot reject with
+            // "other device is unknown" on a fresh session.
+            expect(crypto.getUserDeviceInfo).toHaveBeenCalledWith(["@me:example.test"], true);
+            expect(request.startVerification).toHaveBeenCalledTimes(1);
+            expect(request.startVerification).toHaveBeenCalledWith(VerificationMethod.Sas);
+        });
+
+        it("starts SAS only once even if the Ready phase is observed repeatedly", async () => {
+            const request = createFakeVerificationRequest();
+            const { mockMatrixClient } = createInitiatingClient(request);
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, vi.fn());
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await matrixSecurity.verifyOwnDevice();
+
+            request.phase = VerificationPhase.Ready;
+            request.emit(VerificationRequestEvent.Change);
+            request.emit(VerificationRequestEvent.Change);
+            await flush();
+
+            expect(request.startVerification).toHaveBeenCalledTimes(1);
+        });
+
+        it("does not start SAS when the other party does not support it", async () => {
+            const request = createFakeVerificationRequest(false);
+            const { mockMatrixClient } = createInitiatingClient(request);
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, vi.fn());
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            await matrixSecurity.verifyOwnDevice();
+
+            request.phase = VerificationPhase.Ready;
+            request.emit(VerificationRequestEvent.Change);
+            await flush();
+
+            expect(request.startVerification).not.toHaveBeenCalled();
+        });
+
+        it("opens the emoji dialog even when isVerifyingDevice is already true (stuck flag / concurrent opener)", async () => {
+            const openModal = vi.fn();
+
+            const verifier = Object.assign(new EventEmitter(), {
+                getShowSasCallbacks: vi.fn(() => null),
+                verify: vi.fn(() => new Promise(() => {})),
+            });
+
+            const request = Object.assign(new EventEmitter(), {
+                phase: VerificationPhase.Requested,
+                initiatedByMe: true,
+                chosenMethod: null,
+                verifier: undefined,
+                otherPartySupportsMethod: vi.fn(() => true),
+                startVerification: vi.fn((): Promise<unknown> => Promise.resolve(verifier)),
+            }) as unknown as EventEmitter & {
+                phase: number;
+                chosenMethod: string | null;
+                verifier: unknown;
+                startVerification: ReturnType<typeof vi.fn>;
+            };
+
+            const crypto = {
+                requestOwnUserVerification: vi.fn().mockResolvedValue(request),
+                getUserDeviceInfo: vi.fn().mockResolvedValue(new Map()),
+            };
+            const mockMatrixClient = {
+                getCrypto: vi.fn(() => crypto),
+                getUserId: vi.fn(() => "@me:example.test"),
+            } as unknown as MatrixClient;
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, openModal);
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+            // Simulate the shared re-entrancy flag being stuck true — left set by an aborted prior attempt, or
+            // flipped by a concurrent openChooseDeviceVerificationMethodModal during the Ready->ShowSas window.
+            matrixSecurity["isVerifyingDevice"] = true;
+
+            await matrixSecurity.verifyOwnDevice();
+
+            // A single store-driven DeviceVerificationModal is opened (no Deferred handoff). The emoji grid
+            // shows once the store's status reaches "emoji".
+            const modalProps = openModal.mock.calls[0][1] as { verificationState: Readable<DeviceVerificationState> };
+            const state = modalProps.verificationState;
+
+            // Peer accepts -> Ready -> the fix downloads keys and calls startVerification.
+            request.phase = VerificationPhase.Ready;
+            request.emit(VerificationRequestEvent.Change);
+            await flush();
+            expect(request.startVerification).toHaveBeenCalledWith(VerificationMethod.Sas);
+            expect(get(state).status).toBe("waiting");
+
+            // startSas() advances to Started with a verifier (as the SDK would); drive the Started branch.
+            request.verifier = verifier;
+            request.chosenMethod = VerificationMethod.Sas;
+            request.phase = VerificationPhase.Started;
+            request.emit(VerificationRequestEvent.Change);
+
+            // SAS computed -> ShowSas. Before the refactor, showSasHandler read this.isVerifyingDevice (true
+            // here) and silently returned, so the store never left "waiting" and the spinner hung forever.
+            verifier.emit(VerifierEvent.ShowSas, {
+                sas: {
+                    emoji: [
+                        ["🐶", "Dog"],
+                        ["🐱", "Cat"],
+                    ],
+                },
+                confirm: vi.fn(),
+                mismatch: vi.fn(),
+            });
+
+            const finalState = get(state);
+            expect(finalState.status).toBe("emoji");
+            expect(finalState.emojis).toEqual([
+                ["🐶", "Dog"],
+                ["🐱", "Cat"],
+            ]);
+        });
+    });
+
     describe("initClientCryptoConfiguration", () => {
         const basicMockClient = {
             isGuest: vi.fn().mockReturnValue(null),
@@ -62,7 +315,7 @@ describe("MatrixSecurity", () => {
             matrixSecurity.updateMatrixClientStore(mockMatrixClient);
 
             await expect(matrixSecurity.initClientCryptoConfiguration()).rejects.toThrow(
-                "Guest user, no encryption key"
+                "Guest user, no encryption key",
             );
             //eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockMatrixClient.isGuest).toHaveBeenCalledOnce();
@@ -79,7 +332,7 @@ describe("MatrixSecurity", () => {
             matrixSecurity.updateMatrixClientStore(mockMatrixClient);
 
             await expect(matrixSecurity.initClientCryptoConfiguration()).rejects.toThrow(
-                "E2EE is not available for this client"
+                "E2EE is not available for this client",
             );
             //eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockMatrixClient.getCrypto).toHaveBeenCalledOnce();
@@ -103,12 +356,12 @@ describe("MatrixSecurity", () => {
                 isCrossSigningReady: vi.fn().mockReturnValue(false),
                 bootstrapCrossSigning: vi.fn().mockResolvedValue({}),
                 bootstrapSecretStorage: vi.fn().mockResolvedValue({}),
+                getKeyBackupInfo: vi.fn().mockResolvedValue("keyBackUpInfo"),
             };
 
             const mockMatrixClient = {
                 isGuest: vi.fn().mockReturnValue(false),
                 getCrypto: () => mockCrypto,
-                getKeyBackupVersion: vi.fn().mockResolvedValue("keyBackUpInfo"),
             } as unknown as MatrixClient;
 
             const matrixSecurity = new MatrixSecurity(undefined);
@@ -130,12 +383,12 @@ describe("MatrixSecurity", () => {
                 isCrossSigningReady: vi.fn().mockReturnValue(true),
                 bootstrapCrossSigning: vi.fn().mockResolvedValue({}),
                 bootstrapSecretStorage: vi.fn().mockResolvedValue({}),
+                getKeyBackupInfo: vi.fn().mockResolvedValue(null),
             };
 
             const mockMatrixClient = {
                 isGuest: vi.fn().mockReturnValue(false),
                 getCrypto: () => mockCrypto,
-                getKeyBackupVersion: vi.fn().mockResolvedValue(null),
             } as unknown as MatrixClient;
 
             const matrixSecurity = new MatrixSecurity(undefined);
@@ -157,12 +410,12 @@ describe("MatrixSecurity", () => {
                 isCrossSigningReady: vi.fn().mockReturnValue(true),
                 bootstrapCrossSigning: vi.fn().mockResolvedValue({}),
                 bootstrapSecretStorage: vi.fn().mockResolvedValue({}),
+                getKeyBackupInfo: vi.fn().mockResolvedValue("keyBackUpInfo"),
             };
 
             const mockMatrixClient = {
                 isGuest: vi.fn().mockReturnValue(false),
                 getCrypto: () => mockCrypto,
-                getKeyBackupVersion: vi.fn().mockResolvedValue("keyBackUpInfo"),
             } as unknown as MatrixClient;
 
             const matrixSecurity = new MatrixSecurity(undefined);
@@ -183,12 +436,12 @@ describe("MatrixSecurity", () => {
             const mockCrypto = {
                 isCrossSigningReady: vi.fn().mockReturnValue(false),
                 bootstrapCrossSigning: vi.fn().mockRejectedValue(""),
+                getKeyBackupInfo: vi.fn().mockResolvedValue("keyBackUpInfo"),
             };
 
             const mockMatrixClient = {
                 isGuest: vi.fn().mockReturnValue(false),
                 getCrypto: () => mockCrypto,
-                getKeyBackupVersion: vi.fn().mockResolvedValue("keyBackUpInfo"),
             } as unknown as MatrixClient;
 
             const matrixSecurity = new MatrixSecurity(undefined);
@@ -199,7 +452,7 @@ describe("MatrixSecurity", () => {
             await matrixSecurity.initClientCryptoConfiguration();
 
             await matrixSecurity["initializingEncryptionPromise"]?.catch(() =>
-                expect(matrixSecurity["initializingEncryptionPromise"]).toBeUndefined()
+                expect(matrixSecurity["initializingEncryptionPromise"]).toBeUndefined(),
             );
         });
     });

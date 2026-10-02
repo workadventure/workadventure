@@ -19,7 +19,7 @@
 </script>
 
 <ActionBarButton
-    on:click={() => {
+    onclick={() => {
         audioManagerVolumeStore.togglePause();
     }}
     classList="group/btn-music-paused"
@@ -31,10 +31,10 @@
             ? "active"
             : "forbidden"
         : $audioManagerVisibilityStore === "error"
-        ? "forbidden"
-        : $audioManagerVisibilityStore === "disabledBySettings"
-        ? "disabled"
-        : undefined}
+          ? "forbidden"
+          : $audioManagerVisibilityStore === "disabledBySettings"
+            ? "disabled"
+            : undefined}
     dataTestId="music-pause-button"
 >
     {#if $audioManagerPlayerState === "loading"}
@@ -47,7 +47,7 @@
 </ActionBarButton>
 <ActionBarButton
     classList="group/btn-music-stop"
-    on:click={() => {
+    onclick={() => {
         // Stop audio
         audioManagerVolumeStore.stopSound(true);
         audioManagerFileStore.unloadAudio();
@@ -64,16 +64,16 @@
             ? "active"
             : "forbidden"
         : $audioManagerVisibilityStore === "error"
-        ? "forbidden"
-        : $audioManagerVisibilityStore === "disabledBySettings"
-        ? "disabled"
-        : undefined}
+          ? "forbidden"
+          : $audioManagerVisibilityStore === "disabledBySettings"
+            ? "disabled"
+            : undefined}
     dataTestId="music-stop-button"
 >
     <PlayerStopIcon />
 </ActionBarButton>
 <ActionBarButton
-    on:click={() => {
+    onclick={() => {
         if (
             $audioManagerVisibilityStore === "visible" &&
             $audioManagerPlayerState !== "not_allowed" &&
@@ -100,10 +100,10 @@
                 : "active"
             : "forbidden"
         : $audioManagerVisibilityStore === "error"
-        ? "forbidden"
-        : $audioManagerVisibilityStore === "disabledBySettings"
-        ? "disabled"
-        : undefined}
+          ? "forbidden"
+          : $audioManagerVisibilityStore === "disabledBySettings"
+            ? "disabled"
+            : undefined}
     dataTestId="music-button"
 >
     <PlayerMusicIcon />

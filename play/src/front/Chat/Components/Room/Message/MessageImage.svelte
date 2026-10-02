@@ -1,17 +1,22 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
-    import { openModal } from "svelte-modals";
+    import LL from "../../../../../i18n/i18n-svelte";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
     import ChatImagePreviewModal from "../../ChatImagePreviewModal.svelte";
+    import { modals } from "@wa-modals";
 
-    export let content: Readable<ChatMessageContent>;
+    interface Props {
+        content: Readable<ChatMessageContent>;
+    }
 
-    $: previewUrl = $content.url;
-    $: displayUrl = $content.thumbnailUrl ?? $content.url;
-    $: canDisplayImage = displayUrl !== undefined;
+    let { content }: Props = $props();
+
+    let previewUrl = $derived($content.url ?? $content.thumbnailUrl);
+    let displayUrl = $derived($content.thumbnailUrl ?? $content.url);
+    let canDisplayImage = $derived(displayUrl !== undefined);
 
     function openImagePreview(url: string, alt: string | undefined) {
-        openModal(ChatImagePreviewModal, { url, alt });
+        modals.open(ChatImagePreviewModal, { url, alt });
     }
 </script>
 
@@ -19,7 +24,7 @@
     <div
         class="bg-contrast/50 p-1 rounded absolute top-2 right-2 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all h-fit w-fit z-10"
         role="group"
-        aria-label="Image actions"
+        aria-label={$LL.chat.imagePreview.imageActions()}
     >
         {#if previewUrl}
             <a
@@ -27,8 +32,10 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="hover:bg-white/10 rounded-sm p-1"
-                on:click|stopPropagation
-                title="Open in new tab"
+                onclick={(event) => {
+                    event.stopPropagation();
+                }}
+                title={$LL.chat.imagePreview.openInNewTab()}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -51,14 +58,14 @@
         {/if}
     </div>
     {#if canDisplayImage}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="block"
             role="button"
             tabindex="0"
-            on:click={() => openImagePreview(previewUrl ?? "", $content.body)}
-            on:keydown={(e) => {
+            onclick={() => openImagePreview(previewUrl ?? "", $content.body)}
+            onkeydown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     openImagePreview(previewUrl ?? "", $content.body);
@@ -68,10 +75,12 @@
             <img class="w-full object-cover max-h-52 rounded" src={displayUrl} alt={$content.body} draggable="false" />
         </div>
     {:else if $content.mediaState === "loading"}
-        <div class="text-xs text-white/80 px-2 py-1">Loading image...</div>
+        <div class="text-xs text-white/80 px-2 py-1">{$LL.chat.imagePreview.loading()}</div>
     {:else}
         <div class="text-xs text-white/80 px-2 py-1">
-            {$content.mediaErrorKind === "decrypt" ? "Unable to decrypt image." : "Unable to load image."}
+            {$content.mediaErrorKind === "decrypt"
+                ? $LL.chat.file.attachmentDecryptError()
+                : $LL.chat.imagePreview.loadError()}
         </div>
     {/if}
 </div>

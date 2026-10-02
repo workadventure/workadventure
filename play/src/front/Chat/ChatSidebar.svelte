@@ -1,28 +1,22 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH, INITIAL_SIDEBAR_WIDTH_MOBILE } from "../Stores/ChatStore";
-    import { gameManager } from "../Phaser/Game/GameManager";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+    import { blocker } from "../Utils/screenBlocker";
     import { selectedRoomStore } from "./Stores/SelectRoomStore";
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
     import { IconX } from "@wa-icons";
 
-    let container: HTMLElement;
-
-    const gameScene = gameManager.getCurrentGameScene();
-
-    function reposition() {
-        gameScene.reposition();
-    }
+    let container: HTMLElement | undefined = $state();
 
     function closeChat() {
         chatVisibilityStore.set(false);
     }
 
-    $: isInSpecificDiscussion = $selectedRoomStore !== undefined;
+    let isInSpecificDiscussion = $derived($selectedRoomStore !== undefined);
 
-    let sideBarWidth: number = $chatSidebarWidthStore;
+    let sideBarWidth: number = $state($chatSidebarWidthStore);
 
     const isRTL: boolean = document.documentElement.dir === "rtl";
 
@@ -44,7 +38,6 @@
         document.onmouseup = () => {
             document.onmousemove = null;
             chatSidebarWidthStore.set(sideBarWidth);
-            reposition();
         };
     };
     const handleTouchStart = (e: TouchEvent) => {
@@ -67,7 +60,6 @@
             document.removeEventListener("touchmove", onTouchMove);
             document.removeEventListener("touchend", onTouchEnd);
             chatSidebarWidthStore.set(sideBarWidth);
-            reposition();
         }
 
         document.addEventListener("touchmove", onTouchMove);
@@ -83,10 +75,11 @@
             sideBarWidth = fullWidth;
         }
         chatSidebarWidthStore.set(sideBarWidth);
-        reposition();
     };
 
-    $: chatSidebarWidthStore.set(sideBarWidth);
+    $effect(() => {
+        chatSidebarWidthStore.set(sideBarWidth);
+    });
 
     const onresize = () => {
         if (isChatSidebarLargerThanWindow() && container) {
@@ -104,24 +97,23 @@
     };
 </script>
 
-<svelte:window on:resize={onresize} />
+<svelte:window {onresize} />
 {#if $chatVisibilityStore}
     <section
         bind:this={container}
         id="chat"
         data-testid="chat"
         transition:fly={{ duration: 200, x: isRTL ? sideBarWidth : -sideBarWidth }}
-        on:introend={reposition}
-        on:outroend={reposition}
         style="width: {sideBarWidth}px; max-width: {sideBarWidth}px;"
-        class=" chatWindow !min-w-[150px] max-sm:!min-w-[150px] bg-contrast/50 backdrop-blur-md p-0 screen-blocker"
+        {@attach blocker}
+        class=" chatWindow !min-w-[150px] max-sm:!min-w-[150px] bg-contrast/50 backdrop-blur-md p-0"
     >
         {#if $hideActionBarStoreBecauseOfChatBar && isInSpecificDiscussion}
             <div class="close-window absolute end-2 top-3 rounded-sm p-1 bg-contrast/80 z-50">
                 <button
                     class="hover:bg-white/10 rounded aspect-square w-8 h-8 m-0 flex items-center justify-center !text-white"
                     data-testid="closeChatButton"
-                    on:click={closeChat}
+                    onclick={closeChat}
                 >
                     <IconX font-size="20" />
                 </button>
@@ -129,21 +121,19 @@
         {/if}
 
         <Chat {sideBarWidth} />
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="!absolute !end-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize select-none"
             id="resize-bar"
-            on:mousedown={handleMousedown}
-            on:dblclick={handleDbClick}
-            on:touchstart={handleTouchStart}
-        />
+            onmousedown={handleMousedown}
+            ondblclick={handleDbClick}
+            ontouchstart={handleTouchStart}
+        ></div>
     </section>
 {/if}
 
-<style lang="scss">
-    @use "../style/breakpoints.scss" as *;
-
-    @include media-breakpoint-up(sm) {
+<style>
+    @media only screen and (max-width: 767px) {
         .chatWindow {
             width: 100% !important;
         }

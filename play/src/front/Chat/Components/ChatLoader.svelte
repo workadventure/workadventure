@@ -1,7 +1,11 @@
 <script lang="ts">
     import { IconLoader } from "@wa-icons";
 
-    export let label: string;
+    interface Props {
+        label: string;
+    }
+
+    let { label }: Props = $props();
 </script>
 
 <div class="text-gray-400 text-xl flex flex-col items-center my-10 gap-2">

@@ -1,7 +1,9 @@
+import * as Phaser from "phaser";
 import { get } from "svelte/store";
 import { TextField } from "../Components/TextField";
 import { LL } from "../../../i18n/i18n-svelte";
 import { gameManager } from "../Game/GameManager";
+
 import Image = Phaser.GameObjects.Image;
 
 export const ReconnectingSceneName = "ReconnectingScene";
@@ -32,7 +34,7 @@ export class ReconnectingScene extends Phaser.Scene {
             this,
             this.game.renderer.width - 30,
             this.game.renderer.height - 30,
-            ReconnectingTextures.icon
+            ReconnectingTextures.icon,
         );
         this.logo.setDisplaySize(32, 32);
         this.add.existing(this.logo);
@@ -41,7 +43,7 @@ export class ReconnectingScene extends Phaser.Scene {
             this,
             this.game.renderer.width / 2,
             this.game.renderer.height / 2,
-            get(LL).warning.connectionLost()
+            get(LL).warning.connectionLost(),
         );
 
         const cat = this.add.sprite(this.game.renderer.width / 2, this.game.renderer.height / 2 - 32, "cat");

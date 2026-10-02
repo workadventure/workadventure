@@ -12,9 +12,12 @@ import debug from "debug";
 import { deepmergeInto } from "deepmerge-ts";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { z } from "zod";
-import { Deferred } from "@workadventure/shared-utils";
+import { Deferred, spaceStateSchema } from "@workadventure/shared-utils";
+import type { Operation } from "fast-json-patch";
+// Default import: under Node ESM this CommonJS package exposes no named exports.
+import jsonpatch from "fast-json-patch";
 import { asError } from "catch-unknown";
-import type { Socket } from "../services/SocketManager";
+import type { PusherWebSocket } from "../services/PusherWebSocket";
 import type { EventProcessor } from "./EventProcessor";
 import type { SpaceUserExtended, Space, PartialSpaceUser } from "./Space";
 import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy";
@@ -22,9 +25,10 @@ import { SpaceNotificationStrategyFactory } from "./SpaceNotificationStrategy";
 
 export interface SpaceToFrontDispatcherInterface {
     handleMessage(message: BackToPusherSpaceMessage): void;
-    notifyMe(watcher: Socket, subMessage: SubMessage): void;
-    notifyMeAddUser(watcher: Socket, user: SpaceUserExtended): void;
-    notifyMeInit(watcher: Socket): Promise<void>;
+    notifyMe(watcher: PusherWebSocket, subMessage: SubMessage): void;
+    notifyMeAddUser(watcher: PusherWebSocket, user: SpaceUserExtended): void;
+    notifyMeInit(watcher: PusherWebSocket): Promise<void>;
+    notifyMeState(socket: PusherWebSocket): Promise<void>;
     /**
      * Notify all watchers in this space. Notification is done only to watchers.
      */
@@ -39,7 +43,10 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
     private initDeferred = new Deferred<void>();
     private readonly strategy: SpaceNotificationStrategy;
 
-    constructor(private readonly _space: Space, private readonly eventProcessor: EventProcessor) {
+    constructor(
+        private readonly _space: Space,
+        private readonly eventProcessor: EventProcessor,
+    ) {
         this.strategy = SpaceNotificationStrategyFactory.getStrategy(_space.filterType);
     }
 
@@ -61,11 +68,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         return this._space._localWatchers;
     }
 
-    get localConnectedUser(): Map<string, Socket> {
+    get localConnectedUser(): Map<string, PusherWebSocket> {
         return this._space._localConnectedUser;
     }
 
-    get localConnectedUserWithSpaceUser(): Map<Socket, SpaceUserExtended> {
+    get localConnectedUserWithSpaceUser(): Map<PusherWebSocket, SpaceUserExtended> {
         return this._space._localConnectedUserWithSpaceUser;
     }
     handleMessage(message: BackToPusherSpaceMessage): void {
@@ -114,6 +121,10 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     this.updateMetadata(isMetadata.data);
                     break;
                 }
+                case "spaceStatePatchMessage": {
+                    this.applyStatePatch(message.message.spaceStatePatchMessage.patch);
+                    break;
+                }
                 case "pingMessage": {
                     throw new Error(`${message.message.$case} should not be received by the dispatcher`);
                 }
@@ -146,7 +157,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     }
                     this._space.query.receiveAnswer(
                         message.message.spaceAnswerMessage.id,
-                        message.message.spaceAnswerMessage.answer
+                        message.message.spaceAnswerMessage.answer,
                     );
                     break;
                 }
@@ -162,12 +173,12 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
 
     // This function is called when we received a message from the back (initialization of the user list)
     private initSpaceUsersMessage(initMessage: InitSpaceUsersMessage) {
-        const { users: spaceUsers, metadata: metadataJson } = initMessage;
+        const { users: spaceUsers, metadata: metadataJson, state: stateJson } = initMessage;
 
         for (const spaceUser of spaceUsers) {
             if (this._space.users.has(spaceUser.spaceUserId)) {
                 throw new Error(
-                    `During init... user ${spaceUser.spaceUserId} already exists in space ${this._space.name}`
+                    `During init... user ${spaceUser.spaceUserId} already exists in space ${this._space.name}`,
                 );
             }
 
@@ -186,11 +197,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     // This indicates an unexpected state - socket exists but user object doesn't
                     console.warn(
                         `[SpaceToFrontDispatcher.initSpaceUsersMessage] Local socket found but no user in ` +
-                            `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`
+                            `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`,
                     );
                     Sentry.captureMessage(
                         `Local socket found but no user in _localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}`,
-                        "warning"
+                        "warning",
                     );
                     user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
                 }
@@ -206,6 +217,9 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         debug(`${this._space.name} : init done. User count ${this._space.users.size}`);
 
         try {
+            if (stateJson) {
+                this._space.state = spaceStateSchema.parse(JSON.parse(stateJson));
+            }
             if (metadataJson) {
                 const parsedMetadata = JSON.parse(metadataJson);
                 const isMetadata = z.record(z.string(), z.unknown()).safeParse(parsedMetadata);
@@ -248,11 +262,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                 // This indicates an unexpected state - socket exists but user object doesn't
                 console.warn(
                     `[SpaceToFrontDispatcher.addUser] Local socket found but no user in ` +
-                        `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`
+                        `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`,
                 );
                 Sentry.captureMessage(
                     `Local socket found but no user in _localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}`,
-                    "warning"
+                    "warning",
                 );
                 user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
             }
@@ -366,6 +380,24 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         this.notifyAllMetadata(subMessage);
     }
 
+    private applyStatePatch(patchJson: string) {
+        const patch = JSON.parse(patchJson) as Operation[];
+        this._space.state = jsonpatch.applyPatch(this._space.state, patch).newDocument;
+
+        // Like metadata, the state goes to every user connected to the space, watching or not.
+        this._space._localConnectedUser.forEach((socket) => {
+            socket.emitInBatch({
+                message: {
+                    $case: "spaceStatePatchMessage",
+                    spaceStatePatchMessage: {
+                        spaceName: this._space.localName,
+                        patch: patchJson,
+                    },
+                },
+            });
+        });
+    }
+
     private notifyAllMetadata(subMessage: SubMessage) {
         this._space._localConnectedUser.forEach((watcher) => {
             const socketData = watcher.getUserData();
@@ -373,7 +405,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                 debug(`${this._space.name} : metadata update sent to ${socketData.name}`);
                 subMessage.message.updateSpaceMetadataMessage.spaceName = this._space.localName;
 
-                socketData.emitInBatch(subMessage);
+                watcher.emitInBatch(subMessage);
             }
         });
     }
@@ -406,11 +438,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         });
     }
 
-    public notifyMe(watcher: Socket, subMessage: SubMessage) {
-        watcher.getUserData().emitInBatch(subMessage);
+    public notifyMe(watcher: PusherWebSocket, subMessage: SubMessage) {
+        watcher.emitInBatch(subMessage);
     }
 
-    public notifyMeAddUser(watcher: Socket, user: SpaceUserExtended) {
+    public notifyMeAddUser(watcher: PusherWebSocket, user: SpaceUserExtended) {
         const subMessage: SubMessage = {
             message: {
                 $case: "addSpaceUserMessage",
@@ -423,7 +455,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         this.notifyMe(watcher, subMessage);
     }
 
-    public async notifyMeInit(watcher: Socket) {
+    public async notifyMeInit(watcher: PusherWebSocket) {
         await this.waitForInit();
 
         let users = Array.from(this._space.users.values());
@@ -441,11 +473,30 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     spaceName: this._space.localName,
                     users,
                     metadata: JSON.stringify(Object.fromEntries(this._space.metadata)),
+                    // The front gets the state when it joins the space (notifyMeState), not when it watches it.
+                    state: "",
                 },
             },
         };
 
         this.notifyMe(watcher, subMessage);
+    }
+
+    /**
+     * Sends the whole state to a user who just joined the space, as a patch replacing the root. The patches that
+     * follow reach every user of the space, watching it or not, so from then on their copy stays up to date.
+     */
+    public async notifyMeState(socket: PusherWebSocket) {
+        await this.waitForInit();
+        socket.emitInBatch({
+            message: {
+                $case: "spaceStatePatchMessage",
+                spaceStatePatchMessage: {
+                    spaceName: this._space.localName,
+                    patch: JSON.stringify([{ op: "replace", path: "", value: this._space.state }]),
+                },
+            },
+        });
     }
 
     private sendPublicEvent(message: NonUndefinedFields<PublicEvent>) {
@@ -471,7 +522,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     },
                 },
             },
-            message.senderUserId
+            message.senderUserId,
         );
     }
 
@@ -488,7 +539,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
 
         if (!receiver) {
             console.warn(
-                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`
+                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`,
             );
             return;
         }
@@ -496,7 +547,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         const receiverSpaceUser = this._space._localConnectedUserWithSpaceUser.get(receiver);
         if (!receiverSpaceUser) {
             console.warn(
-                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`
+                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`,
             );
             return;
         }
@@ -513,7 +564,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
             lowercaseName: message.sender.name.toLowerCase(),
         };
 
-        receiverSocket.getUserData().emitInBatch({
+        receiverSocket.emitInBatch({
             message: {
                 $case: "privateEvent",
                 privateEvent: {
@@ -535,7 +586,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
     private notifyAllUsers(subMessage: SubMessage, senderId: string) {
         for (const [socket, spaceUser] of this._space._localConnectedUserWithSpaceUser.entries()) {
             if (spaceUser.spaceUserId !== senderId) {
-                socket.getUserData().emitInBatch(subMessage);
+                socket.emitInBatch(subMessage);
             }
         }
     }

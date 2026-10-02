@@ -1,35 +1,41 @@
-<svelte:options immutable={true} />
-
 <script lang="ts">
-    import { createEventDispatcher, onDestroy } from "svelte";
+    import { onDestroy } from "svelte";
     import type { LivekitStreamable } from "../../../Space/Streamable";
     import InnerLivekitVideo from "./InnerLivekitVideo.svelte";
 
-    const dispatch = createEventDispatcher<{
-        video: undefined;
-        noVideo: undefined;
-    }>();
+    interface Props {
+        style: string;
+        className: string;
+        videoWidth: number;
+        videoHeight: number;
+        onloadvideoelement?: (event: Event) => void;
+        onvideo?: () => void;
+        onnovideo?: () => void;
+        media: LivekitStreamable;
+    }
 
-    export let style: string;
-    export let className: string;
-    export let videoWidth: number;
-    export let videoHeight: number;
-    export let onLoadVideoElement: (event: Event) => void;
-    export let media: LivekitStreamable;
+    let {
+        style,
+        className,
+        videoWidth = $bindable(),
+        videoHeight = $bindable(),
+        onloadvideoelement,
+        onvideo,
+        onnovideo,
+        media,
+    }: Props = $props();
 
-    let remoteVideoTrack: LivekitStreamable["remoteVideoTrack"];
+    let remoteVideoTrack: LivekitStreamable["remoteVideoTrack"] = $derived(media.remoteVideoTrack);
     let activeMedia: LivekitStreamable | undefined;
     let releaseVideoSubscription: (() => void) | undefined;
 
-    $: remoteVideoTrack = media.remoteVideoTrack;
-
-    $: {
+    $effect(() => {
         if (activeMedia !== media) {
             releaseVideoSubscription?.();
             activeMedia = media;
             releaseVideoSubscription = media.acquireVideoSubscription();
         }
-    }
+    });
 
     onDestroy(() => {
         releaseVideoSubscription?.();
@@ -43,10 +49,10 @@
             {className}
             bind:videoWidth
             bind:videoHeight
-            {onLoadVideoElement}
+            {onloadvideoelement}
             remoteVideoTrack={$remoteVideoTrack}
-            on:video={() => dispatch("video")}
-            on:noVideo={() => dispatch("noVideo")}
+            {onvideo}
+            {onnovideo}
         />
     {/key}
 {/if}

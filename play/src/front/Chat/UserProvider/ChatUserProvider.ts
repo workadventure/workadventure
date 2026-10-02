@@ -17,7 +17,7 @@ export class ChatUserProvider implements UserProviderInterface {
                     }) || []
                 );
             },
-            []
+            [],
         );
     }
 

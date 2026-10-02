@@ -34,10 +34,10 @@ export class SwaggerController extends BaseHttpController {
                     swagger: "2.0",
                     //openapi: "3.0.0",
                     info: {
-                        title: "WorkAdventure Pusher",
+                        title: "WorkAdventure Admin API",
                         version: "1.0.0",
                         description:
-                            "This is a documentation about the endpoints called by the pusher. \n You can find out more about WorkAdventure on [github](https://github.com/thecodingmachine/workadventure).",
+                            "This is a documentation about the endpoints of the admin API called by WorkAdventure. Most are called by the pusher, a few by the back. \n You can find out more about WorkAdventure on [github](https://github.com/thecodingmachine/workadventure).",
                         contact: {
                             email: "hello@workadventu.re",
                         },
@@ -45,7 +45,7 @@ export class SwaggerController extends BaseHttpController {
                     tags: [
                         {
                             name: "AdminAPI",
-                            description: "Access to end points of the admin from the pusher",
+                            description: "Access to end points of the admin from WorkAdventure (pusher and back)",
                         },
                     ],
                     securityDefinitions: {
@@ -70,7 +70,7 @@ export class SwaggerController extends BaseHttpController {
             debug(
                 `SwaggerController => [${request.method}] ${request.originalUrl} — IP: ${
                     request.ip
-                } — Time: ${Date.now()}`
+                } — Time: ${Date.now()}`,
             );
             fs.readFile(process.cwd() + "/../node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
                 if (err) {
@@ -112,7 +112,7 @@ export class SwaggerController extends BaseHttpController {
             debug(
                 `SwaggerController => [${request.method}] ${request.originalUrl} — IP: ${
                     request.ip
-                } — Time: ${Date.now()}`
+                } — Time: ${Date.now()}`,
             );
             const fileParsed = path.parse(request.path);
             // Filter files

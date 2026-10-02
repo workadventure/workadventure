@@ -7,6 +7,7 @@ import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 
 test.setTimeout(240_000);
+
 test.describe("Personal area claim @oidc @nomobile @nowebkit", () => {
     test.beforeEach(({ page }) => {
         test.skip(isMobile(page), "Map editor is not available on mobile");
@@ -43,7 +44,7 @@ test.describe("Personal area claim @oidc @nomobile @nowebkit", () => {
 
         await Map.teleportToPosition(memberPage, outsideX, outsideY);
 
-        await memberPage.context().close();
+        await memberPage.close();
 
         await Map.teleportToPosition(adminPage, areaCenterX, areaCenterY);
 
@@ -51,7 +52,5 @@ test.describe("Personal area claim @oidc @nomobile @nowebkit", () => {
         // eslint-disable-next-line playwright/no-wait-for-timeout
         await adminPage.waitForTimeout(2_000);
         await expect(adminPage.getByTestId("claimPersonalAreaButton")).toHaveCount(0);
-
-        await adminPage.context().close();
     });
 });

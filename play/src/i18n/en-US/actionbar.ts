@@ -45,6 +45,10 @@ const actionbar: BaseTranslation = {
         noSoundWarning:
             "No sound detected from your microphone. There may be a problem; try changing your microphone in settings.",
         noSoundWarningPressEnter: "No sound detected from your microphone. Press Enter to open settings.",
+        advancedNoiseReduction: "Advanced noise reduction",
+        noiseSuppressionInitializing: "Initializing custom noise suppression...",
+        noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
+        noiseSuppressionError: "Custom noise suppression failed. Falling back to browser native noise suppression.",
         openSettings: "Open settings",
         ignore: "Ignore",
     },
@@ -69,6 +73,7 @@ const actionbar: BaseTranslation = {
         SPEAKER: "In a meeting",
         LIVEKIT: "In a meeting",
         LISTENER: "In a meeting",
+        SOUND_BLOCKED: "Sound blocked",
     },
     subtitle: {
         camera: "Camera",
@@ -84,7 +89,6 @@ const actionbar: BaseTranslation = {
         blurMiddle: "Middle blur",
         blurHigh: "High blur",
         images: "Images",
-        videos: "Videos",
     },
     help: {
         chat: {
@@ -98,6 +102,10 @@ const actionbar: BaseTranslation = {
         emoji: {
             title: "Display an emoji",
             desc: "Express how you feel with just one click using emoji reactions. Just tap and go!",
+        },
+        raiseHand: {
+            title: "Raise your hand",
+            desc: "Signal that you want to speak. Your raised hand is shown on the map and on your video, so everyone knows whose turn is next.",
         },
         audioManager: {
             title: "Ambient sounds volume",
@@ -124,6 +132,10 @@ const actionbar: BaseTranslation = {
             areaPickerTitle: "Choose area to lock/unlock",
             bubbleLabel: "Discussion bubble",
             unnamedArea: "Unnamed Area",
+        },
+        giveBackFloor: {
+            title: "Give back the floor",
+            desc: "You were given the floor. Click to stop speaking and hand it back.",
         },
         megaphone: {
             title: "Stop megaphone",
@@ -172,6 +184,14 @@ const actionbar: BaseTranslation = {
             desc: "You can use the picture in picture feature to watch a video or a presentation while you are in a conversation. Just click on the picture in picture icon and enjoy your content.",
         },
         videoNotSupported: "Your browser does not support the video tag.",
+    },
+    raisedHands: {
+        speaking: "Speaking",
+        title: "Raised hands",
+        empty: "No one has raised their hand",
+        help: "See who raised their hand, in order, and give them the floor.",
+        lowerHand: "Lower hand",
+        lowerAllHands: "Lower all",
     },
     listStatusTitle: {
         enable: "Change your status",

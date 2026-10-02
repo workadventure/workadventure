@@ -1,4 +1,3 @@
-import type { AxiosResponse } from "axios";
 import axios from "axios";
 import { YoutubeException } from "./Exception/YoutubeException";
 
@@ -24,31 +23,36 @@ const generateUrlOembed = (url: URL) => {
     return urlToFetch.toString();
 };
 
-export const getYoutubeEmbedUrl = async (url: URL): Promise<string> => {
-    const link = url.toString();
-    if (isEmbeddableYoutubeLink(url)) return link;
+/**
+ * Resolves the /embed/ form of a YouTube link, or undefined when YouTube has none to give:
+ * oembed answers 401 for a private video and 404 for an unknown one.
+ */
+export const getYoutubeEmbedUrl = async (url: URL): Promise<string | undefined> => {
+    if (isEmbeddableYoutubeLink(url)) return url.toString();
     const urlToFetch = generateUrlOembed(url);
-    const cachedYoutubeEmbedData = cacheManagement.get(urlToFetch);
-    if (cachedYoutubeEmbedData) {
-        return getUrlFromHtml(cachedYoutubeEmbedData.html);
+    let embedData = cacheManagement.get(urlToFetch);
+    if (embedData === undefined) {
+        try {
+            embedData = (await axios.get<YoutubeEmbedData>(urlToFetch)).data;
+        } catch {
+            return undefined;
+        }
+        cacheManagement.set(urlToFetch, embedData);
     }
-    return await axios.get(urlToFetch).then((res: AxiosResponse<YoutubeEmbedData>) => {
-        cacheManagement.set(urlToFetch, res.data);
-        const html = res.data.html;
-        if (html == undefined) throw new Error("No html found");
-        return getUrlFromHtml(html);
-    });
+    return embedData.html === undefined ? undefined : getUrlFromHtml(embedData.html);
 };
 
-// Create function to check if the link is a Youtube link
+const YOUTUBE_HOSTS = ["youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtube-nocookie.com"];
+
+// Matching on the host: a substring test on the whole URL missed youtu.be short links and
+// let https://example.com/?q=youtube through to the oembed endpoint.
 export const isYoutubeLink = (url: URL): boolean => {
-    return url.toString().indexOf("youtube") > -1;
+    return YOUTUBE_HOSTS.includes(url.hostname);
 };
 
 // Create function to check if the Youtbe link in parameter is embedable or not
 export const isEmbeddableYoutubeLink = (url: URL): boolean => {
-    const link = url.toString();
-    return link.indexOf("embed") > -1;
+    return url.pathname.startsWith("/embed/");
 };
 
 // Get title from youtube link save in cache

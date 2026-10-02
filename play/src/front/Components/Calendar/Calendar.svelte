@@ -10,6 +10,7 @@
     import outlookSvg from "../images/applications/outlook.svg";
     import calendarPng from "../images/applications/calendar.png";
     import ButtonClose from "../Input/ButtonClose.svelte";
+    import Button from "../UI/Button.svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
@@ -20,7 +21,8 @@
     }
 
     function formatHour(date: Date) {
-        return date.toLocaleString("en-GB", {
+        // undefined locale: follow the browser's own date/time settings
+        return date.toLocaleString(undefined, {
             hour: "2-digit",
             minute: "2-digit",
         });
@@ -40,7 +42,7 @@
                     event.id,
                     event.start,
                     event.end,
-                    event.resource?.onlineMeeting?.passcode
+                    event.resource?.onlineMeeting?.passcode,
                 );
                 returnValue = true;
             }
@@ -49,7 +51,7 @@
     }
 
     function goToLoginPage() {
-        analyticsClient.login();
+        analyticsClient.trackAdminEvent("auth.login_clicked");
         window.location.href = "/login";
     }
 </script>
@@ -72,7 +74,7 @@
                             <img draggable="false" src={calendarPng} class="w-8" alt={$LL.menu.icon.open.calendar()} />
                         {/if}
                         <h3 class="text-xl text-left leading-none">
-                            {new Date().toLocaleString("en-EN", {
+                            {new Date().toLocaleString(undefined, {
                                 month: "long",
                                 day: "2-digit",
                                 year: "numeric",
@@ -81,10 +83,10 @@
                         <span class="ml-1 px-1 py-0.5 rounded-sm bg-white text-secondary text-xxs font-bold">Beta</span>
                     </div>
 
-                    <ButtonClose on:click={closeCalendar} />
+                    <ButtonClose onclick={closeCalendar} />
                 </div>
                 {#if $userIsConnected}
-                    <div class="bg-white/20 h-[1px] w-full my-2" />
+                    <div class="bg-white/20 h-[1px] w-full my-2"></div>
                     <h4 class=" text-base font-bold text-left">
                         {$LL.externalModule.calendar.title()} ({$calendarEventsStore.size})
                     </h4>
@@ -98,11 +100,12 @@
                         <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
                         -->
                         {#if get(externalSvelteComponentService.getComponentsByZone("calendarButton")).size == 0}
-                            <button
-                                class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
-                                on:click={goToLoginPage}
-                                >{$LL.menu.profile.login()}
-                            </button>
+                            <Button
+                                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
+                                onclick={goToLoginPage}
+                            >
+                                {$LL.menu.profile.login()}
+                            </Button>
                         {/if}
                     </div>
                 {/if}
@@ -130,14 +133,14 @@
                                     {#if event.resource && event.resource.onlineMeeting?.joinUrl != undefined}
                                         <a
                                             href={event.resource.onlineMeeting.joinUrl}
-                                            on:click={(event_) => {
+                                            onclick={(event_) => {
                                                 if (openMeeting(event)) {
                                                     event_.preventDefault();
                                                     event_.stopPropagation();
                                                 }
                                             }}
                                             class="text-xs text-right text-secondary-500"
-                                            target="_blank">${$LL.externalModule.calendar.joinMeeting()}</a
+                                            target="_blank">{$LL.externalModule.calendar.joinMeeting()}</a
                                         >
                                     {/if}
                                 </div>
@@ -154,7 +157,7 @@
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .calendar {
         position: absolute !important;
         top: 0;
@@ -164,10 +167,6 @@
 
         pointer-events: auto;
         color: whitesmoke;
-
-        button.close-window {
-            right: 0.5rem;
-        }
 
         .sidebar {
             position: relative !important;

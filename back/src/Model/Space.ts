@@ -4,22 +4,30 @@ import * as Sentry from "@sentry/node";
 import type {
     BackEventMessage,
     BackToPusherSpaceMessage,
-    HandleRecordingWebhookRequest,
+    HandleLivekitWebhookRequest,
     PrivateEvent,
     PublicEvent,
     SpaceAnswerMessage,
     SpaceQueryMessage,
+    SpaceStateQuery,
     SpaceUser,
 } from "@workadventure/messages";
 import {
     AddSpaceUserMessage,
     FilterType,
     RemoveSpaceUserMessage,
+    spaceKindSchema,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
+import type { SpaceState } from "@workadventure/shared-utils";
+import { emptySpaceState } from "@workadventure/shared-utils";
+// Default import: under Node ESM this CommonJS package exposes no named exports.
+import jsonpatch from "fast-json-patch";
+import { Subject } from "rxjs";
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
+import type { SessionEndReason } from "./SessionAnalytics";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { SpacesWatcher } from "./SpacesWatcher";
 import type { EventProcessor } from "./EventProcessor";
@@ -27,7 +35,9 @@ import { CommunicationManager } from "./CommunicationManager";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ManagedRecordingState } from "./RecordingManager";
-import { metadataProcessor } from "./MetadataProcessorInit";
+import { RaiseHandManager } from "./RaiseHandManager";
+import { ProximityPollManager } from "./ProximityPollManager";
+import { ProximityQAManager } from "./ProximityQAManager";
 
 const debug = Debug("space");
 
@@ -37,6 +47,15 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
+    // Server-owned, typed state. Only changed through updateState(), which broadcasts the change as a JSON Patch.
+    private state: SpaceState = emptySpaceState();
+    // Emitted whatever the filter says, so managers also see users the filter hides (a megaphone audience).
+    public readonly userRemoved$ = new Subject<SpaceUser>();
+    // `previous` is a shallow copy of the user before the update, to tell what changed.
+    public readonly userUpdated$ = new Subject<{ user: SpaceUser; previous: SpaceUser }>();
+    private readonly raiseHandManager: RaiseHandManager;
+    private readonly proximityPollManager: ProximityPollManager;
+    private readonly proximityQAManager: ProximityQAManager;
     private communicationManager: ICommunicationManager;
     private usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>>;
     // Number of users publishing at least one stream (camera, screen or microphone)
@@ -52,7 +71,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         private eventProcessor: EventProcessor,
         private _propertiesToSync: string[],
         public readonly world: string,
-        private _spaceUpdatedSubject = clientEventsEmitter.spaceUpdatedSubject
+        private _spaceUpdatedSubject = clientEventsEmitter.spaceUpdatedSubject,
     ) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<SpaceUser["spaceUserId"], SpaceUser>>();
@@ -60,6 +79,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.usersToNotify = new Map<SpacesWatcher, Map<SpaceUser["spaceUserId"], SpaceUser>>();
         this.metadata = new Map<string, unknown>();
         this.communicationManager = new CommunicationManager(this);
+        this.raiseHandManager = new RaiseHandManager(this);
+        this.proximityPollManager = new ProximityPollManager(this);
+        this.proximityQAManager = new ProximityQAManager(this);
         debug(`${name} => created`);
     }
 
@@ -121,8 +143,16 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
             const oldFilter = this.filterOneUser(user);
 
+            const previous = { ...user };
             const updateValues = applyFieldMask(spaceUser, updateMask);
             deepmergeInto(user, updateValues);
+            this.userUpdated$.next({ user, previous });
+
+            // Only the megaphone: `attendeesState` is the audience choosing to be seen,
+            // not a speaker going on air. In a meeting, present is active.
+            if (this.isBroadcast) {
+                this.communicationManager.handleMemberActiveChanged(user.spaceUserId, user.megaphoneState);
+            }
 
             const newFilter = this.filterOneUser(user);
 
@@ -156,7 +186,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 });
             } else if (oldFilter && !newFilter) {
                 debug(
-                    `${this.name} : user updated => removed ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
+                    `${this.name} : user updated => removed ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`,
                 );
 
                 this.communicationManager.handleUserDeleted(user).catch((error) => {
@@ -176,8 +206,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             } else if (oldFilter !== false && newFilter !== false) {
                 debug(
                     `${this.name} : user updated => updated ${user.spaceUserId} updateMask : ${updateMask.join(
-                        ", "
-                    )} in space ${this.name}`
+                        ", ",
+                    )} in space ${this.name}`,
                 );
                 this.notifyWatchers({
                     message: {
@@ -190,7 +220,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     },
                 });
 
-                this.communicationManager.handleUserUpdated(user).catch((e) => {
+                this.communicationManager.handleUserUpdated(user, updateMask).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
                 });
@@ -207,6 +237,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string): void {
         let user: SpaceUser | undefined;
+        let wasToNotify = false;
         try {
             const usersList = this.usersList(sourceWatcher);
             user = usersList.get(spaceUserId);
@@ -217,9 +248,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             }
 
             const usersToNotifyList = this.usersListToNotify(sourceWatcher);
-            usersToNotifyList.delete(spaceUserId);
+            wasToNotify = usersToNotifyList.delete(spaceUserId);
 
             usersList.delete(spaceUserId);
+            this.userRemoved$.next(user);
 
             if (this.isPublishing(user)) {
                 this._nbPublishers--;
@@ -237,6 +269,17 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             Sentry.captureException(e);
             debug("Error while removing user", e);
         } finally {
+            // Before handleUserDeleted, and unconditionally: the manager reads presence
+            // as the union of its two registries, so a user dropped from one while still
+            // in the other has not left. Without this the watching half never empties on
+            // a leave and the user stays "present" until their pusher dies.
+            if (user && wasToNotify) {
+                this.communicationManager.handleUserToNotifyDeleted(user).catch((error) => {
+                    console.error("Error while deleting user to notify", error);
+                    Sentry.captureException(error);
+                });
+            }
+
             if (user && this.filterOneUser(user)) {
                 this.communicationManager.handleUserDeleted(user).catch((error) => {
                     console.error("Error while deleting user", error);
@@ -261,25 +304,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 });
             }
         }
-    }
-
-    public async updateMetadata(metadata: { [key: string]: unknown }, senderId: string) {
-        const processedMetadata: { [key: string]: unknown } = {};
-        const promises: Promise<void>[] = [];
-
-        for (const key in metadata) {
-            promises.push(
-                metadataProcessor.processMetadata(key, metadata[key], senderId, this).then((processedValue) => {
-                    if (processedValue !== undefined) {
-                        processedMetadata[key] = processedValue;
-                    }
-                })
-            );
-        }
-
-        await Promise.allSettled(promises);
-
-        this.publishMetadata(processedMetadata);
     }
 
     private filterOneUser(user: SpaceUser): boolean {
@@ -324,6 +348,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     spaceName: this.name,
                     users: allSpaceUsers,
                     metadata: JSON.stringify(metadata),
+                    state: JSON.stringify(this.state),
                 },
             },
         });
@@ -343,6 +368,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         if (spaceUsers) {
             for (const spaceUser of spaceUsers.values()) {
+                // A pusher going away takes its users with it; without this they would
+                // stay "present" until the back itself shut down.
+                this.userRemoved$.next(spaceUser);
                 this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
@@ -370,7 +398,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         for (const spaceUser of spaceUsers?.values() || []) {
             if (this.filterOneUser(spaceUser)) {
                 debug(
-                    `${this.name} => removing space user ${spaceUser.spaceUserId} from watcher ${watcher.id} before removing watcher`
+                    `${this.name} => removing space user ${spaceUser.spaceUserId} from watcher ${watcher.id} before removing watcher`,
                 );
                 this.notifyWatchers({
                     message: {
@@ -471,7 +499,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         const processedEvent = await this.eventProcessor.processPublicEvent(
             publicEvent.spaceEvent.event,
             publicEvent.senderUserId,
-            this
+            this,
         );
 
         // Create new public event with processed event
@@ -525,7 +553,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         const processedEvent = this.eventProcessor.processPrivateEvent(
             privateEvent.spaceEvent.event,
             privateEvent.senderUserId,
-            privateEvent.receiverUserId
+            privateEvent.receiverUserId,
         );
 
         // Create new private event with processed event
@@ -562,7 +590,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             case "meetingConnectionRestartMessage": {
                 this.communicationManager.handleMeetingConnectionRestartMessage(
                     event.meetingConnectionRestartMessage,
-                    backEvent.senderUserId
+                    backEvent.senderUserId,
                 );
                 break;
             }
@@ -578,7 +606,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
     public async handleQuery(
         watcher: SpacesWatcher,
-        spaceQueryMessage: SpaceQueryMessage
+        spaceQueryMessage: SpaceQueryMessage,
     ): Promise<Pick<SpaceAnswerMessage, "answer">> {
         try {
             if (!spaceQueryMessage.query) {
@@ -621,35 +649,22 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                         },
                     };
                 }
-                case "startSpaceRecordingQuery": {
-                    const { spaceUserId } = spaceQueryMessage.query.startSpaceRecordingQuery;
-                    const user = this.getUser(spaceUserId);
-
-                    if (!user) {
+                case "spaceStateQuery": {
+                    const { spaceUserId, query } = spaceQueryMessage.query.spaceStateQuery;
+                    const sender = this.getUser(spaceUserId);
+                    if (!sender) {
                         throw new Error(`Could not find user ${spaceUserId} in space ${this.name}`);
                     }
-
-                    await this.startRecording(user);
-                    return {
-                        answer: {
-                            $case: "startSpaceRecordingAnswer",
-                            startSpaceRecordingAnswer: {},
-                        },
-                    };
-                }
-                case "stopSpaceRecordingQuery": {
-                    const { spaceUserId } = spaceQueryMessage.query.stopSpaceRecordingQuery;
-                    const user = this.getUser(spaceUserId);
-
-                    if (!user) {
-                        throw new Error(`Could not find user ${spaceUserId} in space ${this.name}`);
+                    if (!query?.query) {
+                        throw new Error("SpaceStateQuery has no query");
                     }
-
-                    await this.stopRecording(user);
+                    // The patch is written to the watcher before the answer, on the same stream: when the sender
+                    // gets the answer, its copy of the state already reflects the change.
+                    await this.handleStateQuery(sender, query.query);
                     return {
                         answer: {
-                            $case: "stopSpaceRecordingAnswer",
-                            stopSpaceRecordingAnswer: {},
+                            $case: "spaceStateAnswer",
+                            spaceStateAnswer: {},
                         },
                     };
                 }
@@ -672,6 +687,92 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 },
             };
         }
+    }
+
+    private async handleStateQuery(sender: SpaceUser, query: NonNullable<SpaceStateQuery["query"]>): Promise<void> {
+        switch (query.$case) {
+            case "raiseHand":
+                return this.raiseHandManager.raiseHand(sender, query.raiseHand.raised);
+            case "lowerHand":
+                return this.raiseHandManager.lowerHand(sender, query.lowerHand.targetSpaceUserId);
+            case "giveFloor":
+                return this.raiseHandManager.giveFloor(sender, query.giveFloor.targetSpaceUserId);
+            case "revokeFloor":
+                return this.raiseHandManager.revokeFloor(sender, query.revokeFloor.targetSpaceUserId);
+            case "startRecording":
+                return this.startRecording(sender);
+            case "stopRecording":
+                return this.stopRecording(sender);
+            case "createPoll":
+                return this.proximityPollManager.create(sender, query.createPoll);
+            case "votePoll":
+                return this.proximityPollManager.vote(sender, query.votePoll.pollId, query.votePoll.answerIds);
+            case "closePoll":
+                return this.proximityPollManager.close(sender, query.closePoll.pollId, query.closePoll.closingMessage);
+            case "deletePoll":
+                return this.proximityPollManager.delete(sender, query.deletePoll.pollId);
+            case "askQuestion":
+                return this.proximityQAManager.ask(sender, query.askQuestion.body);
+            case "upvoteQuestion":
+                return this.proximityQAManager.upvote(
+                    sender,
+                    query.upvoteQuestion.questionId,
+                    query.upvoteQuestion.upvoted,
+                );
+            case "answerQuestion":
+                return this.proximityQAManager.markAnswered(sender, query.answerQuestion.questionId);
+            case "deleteQuestion":
+                return this.proximityQAManager.delete(sender, query.deleteQuestion.questionId);
+            case "setKind":
+                return this.setKind(query.setKind.kind);
+            default: {
+                const _exhaustiveCheck: never = query;
+                throw new Error("Unknown space state query");
+            }
+        }
+    }
+
+    /**
+     * The kind is the client's own claim about its space, read by the analytics and by labels the front shows
+     * itself, so a client that lies about it only spoils its own rows. A value outside the enum is refused.
+     */
+    private setKind(kind: string): void {
+        const parsedKind = spaceKindSchema.parse(kind);
+        if (this.state.kind === parsedKind) {
+            return;
+        }
+        this.updateState((state) => {
+            state.kind = parsedKind;
+        });
+        this.communicationManager.handleSpaceKindChanged();
+    }
+
+    public getState(): Readonly<SpaceState> {
+        return this.state;
+    }
+
+    /**
+     * The only way to change the state: `mutate` works on a copy, and the difference is broadcast to every watcher
+     * as a JSON Patch. If `mutate` throws, the state is left untouched and nothing is sent.
+     */
+    public updateState(mutate: (state: SpaceState) => void): void {
+        const next = structuredClone(this.state);
+        mutate(next);
+        const patch = jsonpatch.compare(this.state, next);
+        this.state = next;
+        if (patch.length === 0) {
+            return;
+        }
+        this.notifyWatchers({
+            message: {
+                $case: "spaceStatePatchMessage",
+                spaceStatePatchMessage: {
+                    spaceName: this.name,
+                    patch: JSON.stringify(patch),
+                },
+            },
+        });
+        debug(`${this.name} : state => patched`);
     }
 
     public get filterType(): Filter {
@@ -710,6 +811,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
     public getPropertiesToSync(): string[] {
         return this._propertiesToSync;
+    }
+
+    private get isBroadcast(): boolean {
+        return this._filterType !== FilterType.ALL_USERS;
     }
 
     private isPublishing(spaceUser: SpaceUser): boolean {
@@ -753,14 +858,27 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     public async stopRecordingByServer(): Promise<void> {
         await this.communicationManager.handleServerStopRecording();
     }
-    public handleRecordingWebhook(request: HandleRecordingWebhookRequest): void {
-        this.communicationManager.handleRecordingWebhook(request);
+    public async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
+        await this.communicationManager.handleLivekitWebhook(request);
     }
     public getRecordingState(): ManagedRecordingState {
         return this.communicationManager.getRecordingState();
     }
+    /**
+     * Closes an open session early, for a shutdown that is about to take the process —
+     * and with it every session, which only exists once it has ended. Says whether there
+     * was one, which is what the caller counts.
+     */
+    public closeSession(endReason: SessionEndReason): boolean {
+        return this.communicationManager.closeSession(endReason);
+    }
+
     public destroy() {
+        // The manager closes the session it owns.
         this.communicationManager.destroy();
+        this.raiseHandManager.destroy();
+        this.userRemoved$.complete();
+        this.userUpdated$.complete();
         debug(`${this.name} => destroyed`);
     }
 

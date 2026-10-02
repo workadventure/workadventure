@@ -12,7 +12,8 @@ import type {
     SubMessage,
 } from "@workadventure/messages";
 import { AvailabilityStatus, SetPlayerVariableMessage_Scope } from "@workadventure/messages";
-import type { Movable } from "../Model/Movable";
+import type { Movable } from "@workadventure/shared-utils";
+import { Subject } from "rxjs";
 import type { PositionNotifier } from "../Model/PositionNotifier";
 import type { Zone } from "../Model/Zone";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
@@ -25,6 +26,9 @@ import type { PointInterface } from "./Websocket/PointInterface";
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
 export class User implements Movable, CustomJsonReplacerInterface {
+    private readonly movedSubject = new Subject<PointInterface>();
+    public readonly moved$ = this.movedSubject.asObservable();
+
     public listenedZones: Set<Zone>;
     public group?: Group;
     private _following: User | undefined;
@@ -62,7 +66,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         public chatID?: string,
         private sayMessage?: SayMessage,
         // Unique identifier for the browser tab, used to detect reconnections from the same tab
-        public readonly tabId?: string
+        public readonly tabId?: string,
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -93,7 +97,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         applications?: ApplicationMessage[],
         chatID?: string,
         sayMessage?: SayMessage,
-        tabId?: string
+        tabId?: string,
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -122,7 +126,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
             applications,
             chatID,
             sayMessage,
-            tabId
+            tabId,
         );
     }
 
@@ -134,19 +138,18 @@ export class User implements Movable, CustomJsonReplacerInterface {
         const oldPosition = this.position;
         this.position = position;
         this.positionNotifier.updatePosition(this, position, oldPosition);
+        this.movedSubject.next(position);
     }
 
     public addFollower(follower: User): void {
         this.followedBy.add(follower);
         follower._following = this;
 
-        this.socket.write({
-            message: {
-                $case: "followConfirmationMessage",
-                followConfirmationMessage: {
-                    follower: follower.id,
-                    leader: this.id,
-                },
+        this.write({
+            $case: "followConfirmationMessage",
+            followConfirmationMessage: {
+                follower: follower.id,
+                leader: this.id,
             },
         });
     }
@@ -156,16 +159,14 @@ export class User implements Movable, CustomJsonReplacerInterface {
         follower._following = undefined;
 
         const clientMessage = {
-            message: {
-                $case: "followAbortMessage",
-                followAbortMessage: {
-                    follower: follower.id,
-                    leader: this.id,
-                },
+            $case: "followAbortMessage",
+            followAbortMessage: {
+                follower: follower.id,
+                leader: this.id,
             },
         } as const;
-        this.socket.write(clientMessage);
-        follower.socket.write(clientMessage);
+        this.write(clientMessage);
+        follower.write(clientMessage);
     }
 
     public hasFollowers(): boolean {
@@ -194,7 +195,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             this.availabilityStatus === AvailabilityStatus.DO_NOT_DISTURB ||
             this.availabilityStatus === AvailabilityStatus.BACK_IN_A_MOMENT ||
             this.availabilityStatus === AvailabilityStatus.LIVEKIT ||
-            this.availabilityStatus === AvailabilityStatus.LISTENER
+            this.availabilityStatus === AvailabilityStatus.LISTENER ||
+            this.availabilityStatus === AvailabilityStatus.SOUND_BLOCKED
         );
     }
 
@@ -220,13 +222,11 @@ export class User implements Movable, CustomJsonReplacerInterface {
                     return;
                 }*/
 
-                this.socket.write({
-                    message: {
-                        $case: "batchMessage",
-                        batchMessage: {
-                            event: "", // FIXME: remove event
-                            payload: this.batchedMessages,
-                        },
+                this.write({
+                    $case: "batchMessage",
+                    batchMessage: {
+                        event: "", // FIXME: remove event
+                        payload: this.batchedMessages,
                     },
                 });
                 this.batchedMessages = [];
@@ -262,7 +262,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         setVariable.value,
                         setVariable.public,
                         setVariable.ttl,
-                        setVariable.persist
+                        setVariable.persist,
                     )
                     .catch((e) => {
                         console.error("An error occurred while saving world variable: ", e);
@@ -277,7 +277,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         setVariable.value,
                         setVariable.public,
                         setVariable.ttl,
-                        setVariable.persist
+                        setVariable.persist,
                     )
                     .catch((e) => {
                         console.error("An error occurred while saving room variable: ", e);
@@ -310,7 +310,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
 
     private updateDataUserSameUUID(
         setVariable: SetPlayerVariableMessage,
-        details: SetPlayerDetailsMessage | undefined
+        details: SetPlayerDetailsMessage | undefined,
     ) {
         // Very special case: if we are updating a player variable AND if if the variable is persisted, we must also
         // update the variable of all other users with the same UUID!
@@ -326,7 +326,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         setVariable.public,
                         setVariable.ttl,
                         // We don't need to persist this for every player as this will write in the same place in DB.
-                        false
+                        false,
                     )
                     .catch((e) => {
                         console.error("An error occurred while saving room variable for a user with same UUID: ", e);
@@ -364,14 +364,13 @@ export class User implements Movable, CustomJsonReplacerInterface {
      * in the correct order. If the first message is not a "roomJoinedMessage", it is buffered until the
      * "roomJoinedMessage" message is received.
      */
-    public write(chunk: NonNullable<ServerToClientMessage["message"]>, cb?: (...args: unknown[]) => unknown): boolean {
-        //TODO : handle socket.write return false
+    public write(chunk: NonNullable<ServerToClientMessage["message"]>, cb?: (...args: unknown[]) => void): boolean {
         if (this.isRoomJoinedMessage) {
             return this.socket.write(
                 {
                     message: chunk,
                 },
-                cb
+                cb,
             );
         }
 
@@ -382,7 +381,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
                 {
                     message: chunk,
                 },
-                cb
+                cb,
             );
 
             this.pendingMessages.forEach((message) => {
@@ -390,7 +389,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
                     {
                         message,
                     },
-                    cb
+                    cb,
                 );
             });
 

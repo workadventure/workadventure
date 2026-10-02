@@ -1,29 +1,49 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from "svelte";
+    import { onMount } from "svelte";
+    import { get } from "svelte/store";
     import * as Sentry from "@sentry/svelte";
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { chatSearchBarValue } from "../Stores/ChatStore";
     import type { SelectItem } from "./Room/searchChatMembersRule";
     import { searchChatMembersRule } from "./Room/searchChatMembersRule";
     import { IconUsers } from "@wa-icons";
-    export let value: SelectItem[] = [];
-    export let placeholder = "";
-    export let filterText = "";
 
-    let items: SelectItem[] = [];
+    const SEARCH_DEBOUNCE_DELAY = 300;
+
+    interface Props {
+        value?: SelectItem[];
+        placeholder?: string;
+        filterText?: string;
+        onerror?: (error: string) => void;
+    }
+
+    let { value = $bindable<SelectItem[]>(), placeholder = "", filterText = "", onerror }: Props = $props();
+
+    if (value === undefined) {
+        value = [];
+    }
+
+    let members: SelectItem[] = $state([]);
+    let createdItem: SelectItem | undefined = $state(undefined);
+    let items: SelectItem[] = $derived(createdItem === undefined ? members : [...members, createdItem]);
     const chat = gameManager.chatConnection;
 
-    const dispatch = createEventDispatcher<{
-        error: { error: string };
-    }>();
-    const { searchWorldMembers } = searchChatMembersRule();
+    const { subscribeToWorldMembers, searchWorldMembers } = searchChatMembersRule();
+
+    function handleSearchError(error: unknown) {
+        onerror?.(get(LL).chat.matrixUserSelect.failedToLoadUsers());
+        console.error(error);
+        Sentry.captureException(error);
+    }
 
     function handleFilter(e: CustomEvent) {
-        if (value?.find((i) => i.label === filterText)) return;
+        if (value.find((i) => i.label === filterText)) return;
         if (e.detail.length === 0 && filterText.length > 0) {
-            const prev = items.filter((i) => !i.created);
-            items = [...prev, { value: filterText, label: filterText, created: true }];
+            createdItem = { value: filterText, label: filterText, created: true };
+        } else if (filterText.length === 0) {
+            createdItem = undefined;
         }
     }
 
@@ -40,7 +60,7 @@
                     console.error(error);
                     return { item, isValid: false };
                 }
-            })
+            }),
         );
 
         const validItems = verificationResults
@@ -49,22 +69,51 @@
 
         const hasInvalidItems = verificationResults.some(({ isValid }) => !isValid);
         if (hasInvalidItems) {
-            dispatch("error", { error: "User not found" });
+            onerror?.(get(LL).chat.matrixUserSelect.userNotFound());
         }
 
         return validItems;
     }
 
     onMount(() => {
-        searchWorldMembers(filterText)
-            .then((newItems) => {
-                items = newItems;
+        let unsubscribeFromMembers: (() => void) | undefined;
+        let destroyed = false;
+
+        subscribeToWorldMembers((newMembers) => {
+            members = newMembers;
+        })
+            .then((unsubscribe) => {
+                if (destroyed) {
+                    unsubscribe();
+                    return;
+                }
+                unsubscribeFromMembers = unsubscribe;
             })
-            .catch((error) => {
-                dispatch("error", { error: "Failed to load users" });
-                console.error(error);
-                Sentry.captureException(error);
-            });
+            .catch(handleSearchError);
+
+        return () => {
+            destroyed = true;
+            unsubscribeFromMembers?.();
+            // The user providers are shared with the chat sidebar: give it back the filter of its own search bar.
+            searchWorldMembers(get(chatSearchBarValue)).catch((error) => console.error(error));
+        };
+    });
+
+    // Only a limited number of members is kept in memory, so we ask the user providers to search the
+    // whole world (the search is performed by the Admin API) whenever the user types in the selector.
+    let searchedText = "";
+    $effect(() => {
+        const text = filterText;
+        if (text === searchedText) {
+            return;
+        }
+        searchedText = text;
+
+        const timeout = setTimeout(() => {
+            searchWorldMembers(text).catch(handleSearchError);
+        }, SEARCH_DEBOUNCE_DELAY);
+
+        return () => clearTimeout(timeout);
     });
 </script>
 

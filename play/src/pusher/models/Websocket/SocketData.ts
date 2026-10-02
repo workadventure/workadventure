@@ -8,8 +8,6 @@ import type {
     AvailabilityStatus,
     CharacterTextureMessage,
     CompanionTextureMessage,
-    BatchMessage,
-    SubMessage,
 } from "@workadventure/messages";
 import type { PusherRoom } from "../PusherRoom";
 import type { ViewportInterface } from "./ViewportMessage";
@@ -29,7 +27,6 @@ export type SpaceName = string;
  */
 export type ConnectingSocketData = {
     rejected: false;
-    disconnecting: boolean;
     token: string;
     roomId: string;
     userId?: number; // User Id served by the back
@@ -39,7 +36,6 @@ export type ConnectingSocketData = {
     characterTextures: CharacterTextureMessage[];
     companionTexture?: CompanionTextureMessage;
     lastCommandId?: string;
-    messages: unknown[];
     tags: string[];
     visitCardUrl: string | null;
     userRoomToken: string | undefined;
@@ -47,9 +43,6 @@ export type ConnectingSocketData = {
     applications?: Array<ApplicationDefinitionInterface> | null;
     canEdit: boolean;
     spaceUserId: string;
-    emitInBatch: (payload: SubMessage) => void;
-    batchedMessages: BatchMessage;
-    batchTimeout: NodeJS.Timeout | null;
     backConnection?: BackConnection;
     listenedZones: Set<string>;
     pusherRoom: PusherRoom | undefined;
@@ -61,17 +54,29 @@ export type ConnectingSocketData = {
     roomName: string;
     microphoneState: boolean;
     cameraState: boolean;
+    // When this socket was last heard from, as a pusher clock instant. Every inbound
+    // message stamps it, so it is the last moment the client is PROVEN to have been
+    // there — unlike the close, which a frozen tab reaches 150 s late (the idle timeout
+    // plus the disconnection retention). Analytics ends an interval here rather than at
+    // the close when nobody closed it.
+    lastActivityAtMs: number;
+    // Unique identifier for the browser tab, captured as early as websocket upgrade.
+    tabId: string;
+    // Unique identifier of the front WorkAdventureWebSocket instance. A transport resume is only accepted onto the
+    // logical connection carrying the same id. Undefined for fronts predating this parameter.
+    connectionId?: string;
+    // Set on a transport opened by a client that is resuming: the last nonce it received. Consumed once in the
+    // open handler and never shared with other transports of the same tab.
+    clientLastReceivedNonce?: number;
     attendeesState: boolean;
+    analyticsEventsEnabled?: boolean;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
-    keepAliveInterval: NodeJS.Timeout | undefined;
 };
 
 export type SocketData = ConnectingSocketData & {
     name: string;
     viewport: ViewportInterface;
     availabilityStatus: AvailabilityStatus;
-    // Unique identifier for the browser tab, used to detect reconnections from the same tab
-    tabId: string | undefined;
 };

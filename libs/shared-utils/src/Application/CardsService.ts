@@ -27,7 +27,7 @@ export const isCardsPublicLink = (url: URL) => {
 export const isCardsConnectedLink = (url: URL) => {
     return (
         ["member.workadventu.re", "member.staging.workadventu.re", "member.workadventure.localhost"].includes(
-            url.hostname
+            url.hostname,
         ) &&
         url.pathname.indexOf("cards") !== -1 &&
         url.searchParams.has("tenant") &&

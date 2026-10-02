@@ -7,7 +7,12 @@ export interface IWebRTCCredentials {
 }
 
 export class WebRTCCredentialsService {
-    private static readonly CREDENTIAL_VALIDITY_HOURS = 4;
+    // Coturn (use-auth-secret) checks the timestamp on every request, including the allocation Refresh a
+    // browser sends every few minutes: once the credentials expire, a relayed connection that is still
+    // in use loses its allocation and drops. The validity must therefore outlive the longest session,
+    // not just the time to establish a connection. The front renews its copy well before expiry
+    // (TURN_CREDENTIALS_RENEWAL_TIME), so a peer never starts with a nearly-expired set.
+    private static readonly CREDENTIAL_VALIDITY_HOURS = 24;
 
     public generateCredentials(userId: string): IWebRTCCredentials {
         if (!TURN_STATIC_AUTH_SECRET) {

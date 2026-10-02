@@ -1,6 +1,7 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
     import { defaultColor } from "@workadventure/shared-utils";
+    import { onDestroy, onMount } from "svelte";
     import type {
         ChatRoom,
         ChatRoomMembershipManagement,
@@ -9,38 +10,57 @@
     } from "../../Connection/ChatConnection";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+    import LL from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
     import { IconBellOff } from "@wa-icons";
 
-    export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
+    interface Props {
+        room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
+    }
 
-    const roomType = room.type;
-    let hasUnreadMessage = room.hasUnreadMessages;
-    const roomUnreadCount = room.unreadNotificationCount;
-    let roomName = room.name;
-    let isEncrypted = room.isEncrypted;
-    const areNotificationsMuted = room.areNotificationsMuted;
+    let { room }: Props = $props();
 
-    $: chunks = highlightWords({
-        text: $roomName.match(/\[\d*]/) ? $roomName.substring(0, $roomName.search(/\[\d*]/)) : $roomName,
-        query: $chatSearchBarValue,
+    let roomType = $derived(room.type);
+    let hasUnreadMessage = $derived(room.hasUnreadMessages);
+    let roomUnreadCount = $derived(room.unreadNotificationCount);
+    let roomName = $derived(room.name);
+    let isEncrypted = $derived(room.isEncrypted);
+    let areNotificationsMuted = $derived(room.areNotificationsMuted);
+
+    let chunks = $derived(
+        highlightWords({
+            text: $roomName.match(/\[\d*]/) ? $roomName.substring(0, $roomName.search(/\[\d*]/)) : $roomName,
+            query: $chatSearchBarValue,
+        }),
+    );
+
+    let isSelected = $derived($selectedRoomStore?.id === room.id);
+    let peerAvatarColorStore = $derived(room.avatarFallbackColor);
+    let peerWaParensStore = $derived(room.peerWaDisplayNameIfDifferent);
+    let peerWaDisplayNameParens = $derived(peerWaParensStore ? $peerWaParensStore : undefined);
+
+    let deactivateVisibleProfileSync: (() => void) | undefined;
+
+    onMount(() => {
+        deactivateVisibleProfileSync = room.activateVisibleProfileSync?.();
     });
 
-    $: isSelected = $selectedRoomStore?.id === room.id;
-    $: peerAvatarColorStore = room.avatarFallbackColor;
-    $: peerWaParensStore = room.peerWaDisplayNameIfDifferent;
-    $: peerWaDisplayNameParens = peerWaParensStore ? $peerWaParensStore : undefined;
+    onDestroy(() => {
+        deactivateVisibleProfileSync?.();
+    });
 </script>
 
 <div
-    class="wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer w-full"
-    class:bg-white={isSelected}
-    class:bg-opacity-10={isSelected}
-    class:rounded={isSelected}
-    on:click={() => selectedRoomStore.set(room)}
-    on:keyup={() => selectedRoomStore.set(room)}
+    class={[
+        "wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer w-full",
+        {
+            "bg-white/10 rounded": isSelected,
+        },
+    ]}
+    onclick={() => selectedRoomStore.set(room)}
+    onkeyup={() => selectedRoomStore.set(room)}
     role="button"
     tabindex="0"
     data-testid={$roomName}
@@ -50,7 +70,7 @@
             compact
             pictureStore={room.pictureStore}
             fallbackName={$roomName}
-            color={$roomType === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+            color={$roomType === "direct" ? ($peerAvatarColorStore ?? defaultColor) : null}
         />
 
         {#if $isEncrypted}
@@ -74,11 +94,11 @@
     <RoomMenu {room} />
     {#if $hasUnreadMessage}
         <div class="relative flex h-7 w-7 items-center justify-center">
-            <span class="absolute top-2 start-2 block h-4 w-4 rounded-full bg-white animate-ping" />
-            <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white" />
+            <span class="absolute top-2 start-2 block h-4 w-4 rounded-full bg-white animate-ping"></span>
+            <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white"></span>
             <div
                 class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
-                aria-label="{$roomUnreadCount} unread"
+                aria-label={$LL.chat.a11y.unreadCount({ count: $roomUnreadCount })}
             >
                 <span>{$roomUnreadCount > 9 ? "9" : $roomUnreadCount}</span>
                 {#if $roomUnreadCount > 9}

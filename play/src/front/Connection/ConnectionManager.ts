@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
 import type { ErrorApiErrorData, ErrorApiRetryData, ErrorApiUnauthorizedData } from "@workadventure/messages";
-import { isRegisterData, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
+import { MeResponse, ErrorScreenMessage } from "@workadventure/messages";
 import axios, { AxiosError, isAxiosError } from "axios";
 import { Subject } from "rxjs";
 import { asError } from "catch-unknown";
@@ -23,7 +23,9 @@ import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { openChatRoom } from "../Chat/Utils";
 import LL from "../../i18n/i18n-svelte";
 import waLogo from "../Components/images/logo.svg";
+import WebsocketReconnectingToast from "../Components/Toasts/WebsocketReconnectingToast.svelte";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { toastStore } from "../Stores/ToastStoreSingleton";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -32,6 +34,11 @@ import type { OnConnectInterface } from "./ConnexionModels";
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
+
+const connectionRetryBaseDelayMs = 1_000;
+const connectionRetryMaxDelayMs = 10_000;
+const connectionRetryJitterMs = 500;
+const websocketReconnectingToastId = "websocket-reconnecting-toast";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -47,8 +54,10 @@ class ConnectionManager {
     private readonly _roomConnectionStream = new Subject<RoomConnection>();
     public readonly roomConnectionStream = this._roomConnectionStream.asObservable();
 
-    // Unique identifier for this browser tab, used to detect reconnections from the same tab
-    // and kill stale connections on the server side immediately instead of waiting for ping timeout
+    // Unique identifier for this page load, used by the back to kill the stale connection of a previous
+    // RoomConnection from the same tab. Deliberately NOT persisted in sessionStorage: "Duplicate tab" and
+    // "Reopen closed tab" copy sessionStorage, which would give two live pages the same id and make them
+    // kill each other's connection in a loop.
     private readonly _tabId: string = uuidv4();
 
     get unloading() {
@@ -76,11 +85,11 @@ class ConnectionManager {
     public loadOpenIDScreen(manuallyTriggered: boolean, providerId?: string, providerScopes?: string[]): URL | null {
         localUserStore.setAuthToken(null);
         if (!ENABLE_OPENID || !this._currentRoom) {
-            analyticsClient.loggedWithToken();
+            analyticsClient.trackAdminEvent("auth.logged_token");
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
-        analyticsClient.loggedWithSso();
+        analyticsClient.trackAdminEvent("auth.logged_sso");
         const redirectUrl = new URL("login-screen", ABSOLUTE_PUSHER_URL);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         if (manuallyTriggered) {
@@ -190,42 +199,6 @@ class ConnectionManager {
         } else if (this.connexionType === GameConnexionTypes.jwt) {
             /** @deprecated */
             throw new Error("This endpoint is deprecated");
-        }
-
-        //@deprecated
-        else if (this.connexionType === GameConnexionTypes.register) {
-            const organizationMemberToken = urlManager.getOrganizationToken();
-            const result = await axiosToPusher.post("register", { organizationMemberToken }).then((res) => res.data);
-
-            const registerDataChecking = isRegisterData.safeParse(result);
-
-            if (!registerDataChecking.success) {
-                console.error("Invalid data received from /register route. Data: ", result);
-                throw new Error("Invalid data received from /register route.");
-            }
-
-            const data = registerDataChecking.data;
-
-            this.localUser = new LocalUser(data.userUuid, data.email);
-            this.authToken = data.authToken;
-            localUserStore.saveUser(this.localUser);
-            localUserStore.setAuthToken(this.authToken);
-            analyticsClient.loggedWithToken();
-
-            const roomUrl = data.roomUrl;
-
-            const query = urlParams.toString();
-            this._currentRoom = await Room.createRoom(
-                new URL(
-                    window.location.protocol +
-                        "//" +
-                        window.location.host +
-                        roomUrl +
-                        (query ? "?" + query : "") + //use urlParams because the token param must be deleted
-                        window.location.hash
-                )
-            );
-            urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (this.connexionType === GameConnexionTypes.room || this.connexionType === GameConnexionTypes.empty) {
             this.authToken = localUserStore.getAuthToken();
 
@@ -409,16 +382,21 @@ class ConnectionManager {
         name: string,
         characterTextureIds: string[],
         companionTextureId: string | null,
-        lastCommandId?: string
+        lastCommandId?: string,
+        retryAttempt = 0,
     ): Promise<OnConnectInterface> {
+        Sentry.setTag("roomId", roomUrl);
+        let pendingConnection: RoomConnection | undefined;
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
                 this.authToken,
                 roomUrl,
                 characterTextureIds,
                 companionTextureId,
-                lastCommandId
+                lastCommandId,
             );
+
+            pendingConnection = connection;
 
             // The websocketErrorStream stream is completed in the RoomConnection. No need to unsubscribe.
             //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
@@ -431,6 +409,13 @@ class ConnectionManager {
                 .then((connect) => {
                     // Set the default application integration for the room
 
+                    this.bindWebsocketReconnectingToast(connection);
+                    analyticsClient.setAdminAnalyticsSender((message) => connection.emitAnalyticsEventReport(message));
+                    analyticsClient.trackAdminEvent("session.started", { roomId: roomUrl, schemaVersion: 1 });
+                    connection.onCleanup(() =>
+                        analyticsClient.trackAdminEvent("session.ended", { roomId: roomUrl, schemaVersion: 1 }),
+                    );
+                    connection.onCleanup(() => analyticsClient.setAdminAnalyticsSender(undefined));
                     this._roomConnectionStream.next(connection);
                     errorScreenStore.delete();
                     resolve(connect);
@@ -442,8 +427,8 @@ class ConnectionManager {
 
                         reject(
                             new Error(
-                                "An error occurred while connecting to socket server. Retrying." + asError(err).message
-                            )
+                                "An error occurred while connecting to socket server. Retrying." + asError(err).message,
+                            ),
                         );
 
                         return;
@@ -455,7 +440,7 @@ class ConnectionManager {
                         "An error occurred while connecting to socket server. Retrying => Event: ",
                         event.reason,
                         event.code,
-                        event
+                        event,
                     );
 
                     //However, Chrome will rarely report any close code 1006 reasons to the Javascript side.
@@ -482,12 +467,17 @@ class ConnectionManager {
                             "An error occurred while connecting to socket server. Retrying. Code: " +
                                 event.code +
                                 ", Reason: " +
-                                event.reason
-                        )
+                                event.reason,
+                        ),
                     );
                 });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
+
+            // The failed connection must not outlive this attempt: its WorkAdventureWebSocket would otherwise keep
+            // trying to resume its transport (with the same tab id) next to the fresh connection created by the retry.
+            pendingConnection?.closeConnection();
+
             errorScreenStore.setError(
                 ErrorScreenMessage.fromPartial({
                     type: "reconnecting",
@@ -495,35 +485,58 @@ class ConnectionManager {
                     title: get(LL).messageScreen.connecting(),
                     subtitle: get(LL).messageScreen.pleaseWait(),
                     image: gameManager?.currentStartedRoom?.loadingLogo ?? waLogo,
-                })
+                }),
             );
-            // Let's retry in 4-6 seconds
-            return new Promise<OnConnectInterface>((resolve) => {
+            const retryDelay = this.getConnectionRetryDelay(retryAttempt);
+            return new Promise<OnConnectInterface>((resolve, reject) => {
                 console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => reconnectingTimeout");
 
                 this.reconnectingTimeout = setTimeout(() => {
-                    //todo: allow a way to break recursion?
-                    //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
                     console.info(
-                        "[ConnectionManager] connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
+                        "[ConnectionManager] connectToRoomSocket => catch => new Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
                         roomUrl,
                         name,
                         characterTextureIds,
                         companionTextureId,
-                        lastCommandId
+                        lastCommandId,
                     );
 
-                    this.connectToRoomSocket(roomUrl, name, characterTextureIds, companionTextureId, lastCommandId)
+                    this.connectToRoomSocket(
+                        roomUrl,
+                        name,
+                        characterTextureIds,
+                        companionTextureId,
+                        lastCommandId,
+                        retryAttempt + 1,
+                    )
                         .then((connection) => {
                             this._roomConnectionStream.next(connection.connection);
                             resolve(connection);
                         })
-                        .catch(() => {
-                            /* Do nothing, the error is already handled in the connectToRoomSocket call */
-                        });
-                }, 4000 + Math.floor(Math.random() * 2000));
+                        .catch(reject);
+                }, retryDelay);
             });
         });
+    }
+
+    private bindWebsocketReconnectingToast(connection: RoomConnection): void {
+        // The websocketReconnectingStream stream is completed with the RoomConnection lifecycle.
+        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+        connection.websocketReconnectingStream.subscribe((reconnecting) => {
+            if (reconnecting) {
+                toastStore.addToast(WebsocketReconnectingToast, {}, websocketReconnectingToastId);
+                return;
+            }
+
+            toastStore.removeToast(websocketReconnectingToastId);
+        });
+    }
+
+    private getConnectionRetryDelay(retryAttempt: number): number {
+        const exponentialDelay = connectionRetryBaseDelayMs * 2 ** retryAttempt;
+        const jitter = Math.floor(Math.random() * connectionRetryJitterMs);
+
+        return Math.max(0, Math.min(connectionRetryMaxDelayMs, exponentialDelay + jitter));
     }
 
     get getConnexionType() {
@@ -633,7 +646,7 @@ class ConnectionManager {
                     headers: {
                         Authorization: this.authToken,
                     },
-                }
+                },
             );
             return true;
         } else {
@@ -657,7 +670,7 @@ class ConnectionManager {
                     headers: {
                         Authorization: this.authToken,
                     },
-                }
+                },
             );
             return true;
         } else {
@@ -681,7 +694,7 @@ class ConnectionManager {
                     headers: {
                         Authorization: this.authToken,
                     },
-                }
+                },
             );
             return true;
         } else {
@@ -744,7 +757,7 @@ class ConnectionManager {
                 "EPING",
                 response.config,
                 response.request,
-                response
+                response,
             );
         });
     }

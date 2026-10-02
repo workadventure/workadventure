@@ -2,12 +2,21 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
 
-    export let id: string | undefined;
-    export let placeHolder: string = $LL.chat.userList.search();
-    export let disabled = false;
-    export let onChangeSearchHandler = (value: string) => {
-        searchValue.set(value);
-    };
+    interface Props {
+        id?: string;
+        placeHolder: string;
+        disabled: boolean;
+        onChangeSearchHandler: (value: string) => void;
+    }
+
+    let {
+        id,
+        placeHolder = $LL.chat.userList.search(),
+        disabled = false,
+        onChangeSearchHandler = (value: string) => {
+            searchValue.set(value);
+        },
+    }: Props = $props();
 </script>
 
 <form>
@@ -17,7 +26,7 @@
         name="search-input"
         class="h-full rounded-none"
         placeholder={placeHolder}
-        on:input={(event) => onChangeSearchHandler(event.currentTarget.value)}
+        oninput={(event) => onChangeSearchHandler(event.currentTarget.value)}
         {disabled}
     />
     <button type="submit" class="h-full m-0 rounded-l-none">
@@ -25,7 +34,7 @@
     </button>
 </form>
 
-<style lang="scss">
+<style>
     form {
         display: flex;
         padding-left: 4px;
@@ -35,8 +44,6 @@
             flex: auto;
             background-color: #254560;
             color: white;
-            //border-bottom-left-radius: 4px;
-            //border-top-left-radius: 4px;
             border-bottom-right-radius: 0;
             border-top-right-radius: 0;
             padding-top: 2px;
@@ -46,7 +53,7 @@
             font-size: 16px;
             font-family: Lato;
             padding-left: 6px;
-            min-width: 0; //Needed so that the input doesn't overflow the container in firefox
+            min-width: 0; /*Needed so that the input doesn't overflow the container in firefox */
             outline: none;
         }
 

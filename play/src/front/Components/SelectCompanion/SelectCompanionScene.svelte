@@ -1,5 +1,6 @@
 <script lang="ts">
     import { LL } from "../../../i18n/i18n-svelte";
+    import Button from "../UI/Button.svelte";
     import type { Game } from "../../Phaser/Game/Game";
     import type { SelectCompanionScene } from "../../Phaser/Login/SelectCompanionScene";
     import { SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
@@ -7,9 +8,13 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { IconChevronLeft, IconChevronRight } from "@wa-icons";
 
-    export let game: Game;
+    interface Props {
+        game: Game;
+    }
 
-    const selectCompanionScene = game.scene.getScene(SelectCompanionSceneName) as SelectCompanionScene;
+    let { game }: Props = $props();
+
+    let selectCompanionScene = $derived(game.scene.getScene(SelectCompanionSceneName) as SelectCompanionScene);
 
     /*function selectLeft() {
         selectCompanionScene.moveToLeft();
@@ -43,11 +48,23 @@
 </section>
 <section class="category flex flex-row justify-center">
     {#if $collectionsSizeStore > 1 && $selectedCollection}
-        <button class="light mr-2 selectCharacterButton" on:click|preventDefault={selectLeftCollection}>
+        <button
+            class="light mr-2 selectCharacterButton"
+            onclick={(event) => {
+                event.preventDefault();
+                selectLeftCollection();
+            }}
+        >
             <IconChevronLeft />
         </button>
         <strong class="category-text">{$selectedCollection}</strong>
-        <button class="outline ml-2 selectCharacterButton" on:click|preventDefault={selectRightCollection}>
+        <button
+            class="outline ml-2 selectCharacterButton"
+            onclick={(event) => {
+                event.preventDefault();
+                selectRightCollection();
+            }}
+        >
             <IconChevronRight />
         </button>
     {/if}
@@ -58,16 +75,31 @@
     <section
         class="action container m-auto p-4 flex flex-col-reverse md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 justify-between"
     >
-        <button
-            class="btn btn-light btn-lg btn-ghost w-full md:w-1/2 block selectCompanionSceneFormBack"
-            on:click|preventDefault={noCompanion}>{$LL.companion.select.any()}</button
+        <Button
+            variant="light"
+            appearance="ghost"
+            size="lg"
+            class="w-full md:w-1/2 block selectCompanionSceneFormBack pointer-events-auto"
+            onclick={(event) => {
+                event.preventDefault();
+                noCompanion();
+            }}
         >
-        <button
+            {$LL.companion.select.any()}
+        </Button>
+        <Button
             type="submit"
-            class="btn btn-secondary btn-lg w-full md:w-1/2 block selectCompanionSceneFormSubmit"
-            on:click|preventDefault={() => analyticsClient.selectCompanion()}
-            on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
+            variant="secondary"
+            size="lg"
+            class="w-full md:w-1/2 block selectCompanionSceneFormSubmit pointer-events-auto"
+            onclick={(event) => {
+                event.preventDefault();
+                analyticsClient.trackAdminEvent("onboarding.companion_selected");
+                selectCompanion();
+            }}
         >
+            {$LL.companion.select.continue()}
+        </Button>
     </section>
 </div>
 
@@ -77,39 +109,39 @@
 <!--        {#if $collectionsSizeStore > 1 && $selectedCollection}-->
 <!--            <button-->
 <!--                class="outline mr-2 selectCompanionCollectionButton selectCharacterButtonLeft"-->
-<!--                on:click|preventDefault={selectLeftCollection}-->
+<!--                onclick|preventDefault={selectLeftCollection}-->
 <!--            >-->
 <!--                &lt;-->
 <!--            </button>-->
 <!--            <strong class="category-text">{$selectedCollection}</strong>-->
 <!--            <button-->
 <!--                class="outline ml-2 selectCompanionCollectionButton selectCompanionButtonRight"-->
-<!--                on:click|preventDefault={selectRightCollection}-->
+<!--                onclick|preventDefault={selectRightCollection}-->
 <!--            >-->
 <!--                &gt;-->
 <!--            </button>-->
 <!--        {/if}-->
-<!--        <button class="outline selectCharacterButton selectCharacterButtonLeft" on:click|preventDefault={selectLeft}>-->
+<!--        <button class="outline selectCharacterButton selectCharacterButtonLeft" onclick|preventDefault={selectLeft}>-->
 <!--            &lt;-->
 <!--        </button>-->
-<!--        <button class="outline selectCharacterButton selectCharacterButtonRight" on:click|preventDefault={selectRight}>-->
+<!--        <button class="outline selectCharacterButton selectCharacterButtonRight" onclick|preventDefault={selectRight}>-->
 <!--            &gt;-->
 <!--        </button>-->
 <!--    </section>-->
 <!--    <section class="action flex flex-row justify-center">-->
-<!--        <button class="outline mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}-->
+<!--        <button class="outline mr-2 selectCompanionSceneFormBack" onclick|preventDefault={noCompanion}-->
 <!--            >{$LL.companion.select.any()}</button-->
 <!--        >-->
 <!--        <button-->
 <!--            type="submit"-->
 <!--            class="light ml-2 selectCompanionSceneFormSubmit"-->
-<!--            on:click|preventDefault={() => analyticsClient.selectWoka()}-->
-<!--            on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button-->
+<!--            onclick|preventDefault={() => analyticsClient.trackAdminEvent("onboarding.woka_selected")}-->
+<!--            onclick|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button-->
 <!--        >-->
 <!--    </section>-->
 
 <!--</form>-->
-<style lang="scss">
+<style>
     button {
         pointer-events: auto;
     }

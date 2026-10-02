@@ -25,7 +25,10 @@ export class MapListService {
 
     private static maxReadLimit = pLimit(MAX_SIMULTANEOUS_FS_READS);
 
-    constructor(private fileSystem: FileSystemInterface, private webHookService: WebHookService) {
+    constructor(
+        private fileSystem: FileSystemInterface,
+        private webHookService: WebHookService,
+    ) {
         this.limiters = new Map<string, LimitFunction>();
     }
     public generateCacheFile(domain: string): Promise<void> {
@@ -47,7 +50,7 @@ export class MapListService {
             promises.push(
                 MapListService.maxReadLimit(async () => {
                     return this.readWamFile(wamFilePath, domain);
-                })
+                }),
             );
         }
 
@@ -78,7 +81,7 @@ export class MapListService {
 
     private async readWamFile(
         wamFilePath: string,
-        domain: string
+        domain: string,
     ): Promise<{ wamFilePath: string; wam: WAMFileFormat }> {
         try {
             const virtualPath = mapPathUsingDomain(wamFilePath, domain);
@@ -90,9 +93,9 @@ export class MapListService {
         } catch (e) {
             throw new Error(
                 `Error while trying to read WAM file "${wamFilePath}" to generate cache: ${JSON.stringify(
-                    e
+                    e,
                 )}. Skipping this file for cache generation.`,
-                { cause: e }
+                { cause: e },
             );
         }
     }
@@ -192,7 +195,7 @@ export class MapListService {
                 throw new Error(
                     "The cache file for domain " +
                         domain +
-                        " might not be up to the latest version. We need to regenerate it."
+                        " might not be up to the latest version. We need to regenerate it.",
                 );
             }
             return cacheFile;
@@ -205,10 +208,10 @@ export class MapListService {
             }
             console.error(
                 `[${new Date().toISOString()}] Error while trying to read a cache file for domain ${domain}:`,
-                e
+                e,
             );
             Sentry.captureException(
-                `Error while trying to read a cache file for domain ${domain}: ${JSON.stringify(e)}`
+                `Error while trying to read a cache file for domain ${domain}: ${JSON.stringify(e)}`,
             );
             throw e;
         }

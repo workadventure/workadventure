@@ -15,17 +15,22 @@
     const inProfileMenu = getContext("profileMenu");
 
     // Useless properties. They are here only to avoid a warning because we set the "first" or "classList" prop on all the right menu items
-    // svelte-ignore unused-export-let
-    export let first: boolean | undefined = undefined;
-    // svelte-ignore unused-export-let
-    export let classList: string | undefined = undefined;
+    interface Props {
+        // svelte-ignore unused-export-let
+        first?: boolean;
+        // svelte-ignore unused-export-let
+        classList?: string;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let { first = undefined, classList = undefined }: Props = $props();
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
             placement: "bottom-end",
             //strategy: 'fixed',
         },
-        8
+        8,
     );
 
     function closeMapMenu() {
@@ -35,13 +40,14 @@
 
 {#if $mapMenuVisibleStore}
     {#if !inProfileMenu}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             data-testid="map-menu"
             class="items-center relative cursor-pointer pointer-events-auto ps-2 pe-2"
             use:floatingUiRef
-            on:click|preventDefault={() => {
+            onclick={(event) => {
+                event.preventDefault();
                 openedMenuStore.toggle("mapMenu");
             }}
         >
@@ -59,7 +65,7 @@
                     </div>
 
                     <IconChevronDown
-                        stroke={2}
+                        stroke="2"
                         class="h-4 w-4 aspect-square transition-all opacity-50 {$openedMenuStore === 'mapMenu'
                             ? 'rotate-180'
                             : ''}"
@@ -76,7 +82,7 @@
                 use:floatingUiContent
                 use:clickOutside={closeMapMenu}
             >
-                <div use:arrowAction />
+                <div use:arrowAction></div>
                 <div class="p-1 m-0">
                     <MapSubMenuContent />
                 </div>

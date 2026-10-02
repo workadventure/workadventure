@@ -1,4 +1,3 @@
-version: "3.6"
 services:
   reverse-proxy:
     image: traefik:v3.6.1
@@ -70,6 +69,7 @@ services:
       - ENABLE_CHAT_UPLOAD
       - ENABLE_CHAT_ONLINE_LIST
       - ENABLE_CHAT_DISCONNECTED_LIST
+      - CLIENT_DISCONNECTION_RETENTION_MS
       - REDIS_HOST=redis
       - ENABLE_TUTORIAL=${ENABLE_TUTORIAL:-true}
       - UPLOADER_URL=/uploader
@@ -92,7 +92,6 @@ services:
       - SENTRY_RELEASE=${SENTRY_RELEASE}
       - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
       - WOKA_SPEED
-      - FEATURE_FLAG_BROADCAST_AREAS=${FEATURE_FLAG_BROADCAST_AREAS}
       # Tools integration
       - KLAXOON_ENABLED=${KLAXOON_ENABLED}
       - KLAXOON_CLIENT_ID=${KLAXOON_CLIENT_ID}
@@ -145,6 +144,10 @@ services:
       traefik.http.routers.play-ws.entryPoints: "web"
       traefik.http.routers.play-ws.service: play-ws
       traefik.http.services.play-ws.loadbalancer.server.port: "3001"
+      traefik.http.services.play-ws.loadbalancer.sticky.cookie: "true"
+      traefik.http.services.play-ws.loadbalancer.sticky.cookie.name: "wa_ws_affinity"
+      traefik.http.services.play-ws.loadbalancer.sticky.cookie.httpOnly: "true"
+      traefik.http.services.play-ws.loadbalancer.sticky.cookie.sameSite: "lax"
 
       traefik.http.routers.play-ws-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws/`)"
       traefik.http.routers.play-ws-ssl.entryPoints: "websecure"
@@ -288,7 +291,7 @@ services:
     environment:
       API_URL: back:50051
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
-      AUTHENTICATION_STRATEGY: "$MAP_STORAGE_AUTHENTICATION_STRATEGY"
+      AUTHENTICATION_STRATEGY: "${MAP_STORAGE_AUTHENTICATION_STRATEGY:-}"
       ENABLE_BEARER_AUTHENTICATION: "$MAP_STORAGE_ENABLE_BEARER_AUTHENTICATION"
       ENABLE_BASIC_AUTHENTICATION: "$MAP_STORAGE_ENABLE_BASIC_AUTHENTICATION"
       ENABLE_DIGEST_AUTHENTICATION: "$MAP_STORAGE_ENABLE_DIGEST_AUTHENTICATION"

@@ -9,14 +9,19 @@ import type {
     ConnectionStatus,
     ChatUser,
     ChatRoomMembershipManagement,
+    ChatRoomModeration,
+    ChatRoomNotificationControl,
 } from "./ChatConnection";
 
 export class VoidChatConnection implements ChatConnectionInterface {
     directRoomsUsers: Readable<ChatUser[]> = readable([]);
     connectionStatus: Readable<ConnectionStatus> = writable("OFFLINE");
-    directRooms: Readable<ChatRoom[]> = writable([]);
-    rooms: Readable<(ChatRoom & ChatRoomMembershipManagement)[]> = writable([]);
-    invitations: Readable<ChatRoom[]> = writable([]);
+    directRooms: Readable<
+        (ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]
+    > = writable([]);
+    rooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]> =
+        writable([]);
+    invitations: Readable<(ChatRoom & ChatRoomMembershipManagement)[]> = writable([]);
     roomFolders: MapStore<RoomFolder["id"], RoomFolder> = new MapStore();
     roomCreationInProgress: Readable<boolean> = writable(false);
     isEncryptionRequiredAndNotSet: Readable<boolean> = writable(false);
@@ -41,8 +46,8 @@ export class VoidChatConnection implements ChatConnectionInterface {
         throw new Error("VoidChatConnection: createDirectRoom is not implemented.");
     }
 
-    getDirectRoomFor(userChatId: string): (ChatRoom & ChatRoomMembershipManagement) | undefined {
-        return undefined;
+    getDirectRoomFor(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
+        return Promise.resolve(undefined);
     }
 
     searchAccessibleRooms(searchText: string): Promise<{ id: string; name: string | undefined }[]> {

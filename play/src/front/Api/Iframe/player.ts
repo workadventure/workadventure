@@ -4,7 +4,7 @@ import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { playerState } from "./playerState";
-import { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";
+import { WorkadventureMeetingsCommands, WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
@@ -53,6 +53,7 @@ export const setIsLogged = (_isLogged: boolean | undefined) => {
 export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
     readonly state = playerState;
     private _proximityMeeting: WorkadventureProximityMeetingCommands = new WorkadventureProximityMeetingCommands();
+    private _meetings: WorkadventureMeetingsCommands = new WorkadventureMeetingsCommands();
 
     callbacks = [
         apiCallback({
@@ -73,7 +74,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get name(): string {
         if (playerName === undefined) {
             throw new Error(
-                "Player name not initialized yet. You should call WA.player.name within a WA.onInit callback."
+                "Player name not initialized yet. You should call WA.player.name within a WA.onInit callback.",
             );
         }
         return playerName;
@@ -104,7 +105,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get playerId(): number {
         if (playerId === undefined) {
             throw new Error(
-                "Player id not initialized yet. You should call WA.player.playerId within a WA.onInit callback."
+                "Player id not initialized yet. You should call WA.player.playerId within a WA.onInit callback.",
             );
         }
         return playerId;
@@ -120,7 +121,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get uuid(): string | undefined {
         if (uuid === undefined) {
             throw new Error(
-                "Player id not initialized yet. You should call WA.player.uuid within a WA.onInit callback."
+                "Player id not initialized yet. You should call WA.player.uuid within a WA.onInit callback.",
             );
         }
         return uuid;
@@ -136,7 +137,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get language(): string {
         if (playerLanguage === undefined) {
             throw new Error(
-                "Player language not initialized yet. You should call WA.player.language within a WA.onInit callback."
+                "Player language not initialized yet. You should call WA.player.language within a WA.onInit callback.",
             );
         }
         return playerLanguage;
@@ -205,7 +206,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             },
             {
                 timeout: null, // Disable timeout, as moving can take a long time
-            }
+            },
         );
     }
 
@@ -231,7 +232,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     get userRoomToken(): string | undefined {
         if (userRoomToken === undefined) {
             throw new Error(
-                "User-room token not initialized yet. You should call WA.player.userRoomToken within a WA.onInit callback."
+                "User-room token not initialized yet. You should call WA.player.userRoomToken within a WA.onInit callback.",
             );
         }
         return userRoomToken;
@@ -274,17 +275,27 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         return this._proximityMeeting;
     }
 
+    get meetings(): WorkadventureMeetingsCommands {
+        return this._meetings;
+    }
+
     /**
-     * Get a value to provide connected status for the current player.
-     * Important: You need to wait for the end of the initialization before accessing.
-     * {@link https://docs.workadventu.re/map-building/api-player.md#get-the-tags-of-the-player | Website documentation}
+     * Whether the current player is signed in, as opposed to playing anonymously.
      *
-     * @returns {boolean} Player tags
+     * Being signed in says nothing about what the player is allowed to do - that is what
+     * {@link tags} is for. It is the right check for anything belonging to a person rather than to
+     * a visit: their own settings, their own data, anything they can be asked about and later
+     * change their mind on.
+     *
+     * Important: You need to wait for the end of the scripting API initialization before accessing
+     * this property.
+     *
+     * @returns {boolean} True when the player is signed in, false when they are anonymous
      */
     get isLogged(): boolean {
         if (isLogged === undefined) {
             throw new Error(
-                "IsLogged not initialized yet. You should call WA.player.isLogged within a WA.onInit callback."
+                "IsLogged not initialized yet. You should call WA.player.isLogged within a WA.onInit callback.",
             );
         }
         return isLogged;

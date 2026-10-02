@@ -60,7 +60,7 @@ export class MapController extends BaseHttpController {
                 z.object({
                     playUri: z.string(),
                     authToken: z.string().optional(),
-                })
+                }),
             );
             if (query === undefined) {
                 return;
@@ -70,7 +70,7 @@ export class MapController extends BaseHttpController {
                 let mapDetails = await adminService.fetchMapDetails(
                     query.playUri,
                     query.authToken,
-                    req.header("accept-language")
+                    req.header("accept-language"),
                 );
 
                 const mapDetailsParsed = isMapDetailsData.safeParse(mapDetails);

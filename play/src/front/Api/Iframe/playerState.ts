@@ -28,7 +28,7 @@ export class WorkadventurePlayerStateCommands extends AbstractWorkadventureState
             persist?: boolean;
             ttl?: number;
             scope?: "world" | "room";
-        }
+        },
     ): Promise<void> {
         if (options && options.ttl !== undefined && !options.persist) {
             throw new Error("A variable that has a ttl set must be persisted with 'persist = true'");

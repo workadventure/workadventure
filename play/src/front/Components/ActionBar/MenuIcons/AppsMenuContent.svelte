@@ -45,7 +45,7 @@
     }
 
     function showRoomList() {
-        analyticsClient.openedRoomList();
+        analyticsClient.trackAdminEvent("room_list.opened");
         resetChatVisibility();
         resetModalVisibility();
 
@@ -53,18 +53,25 @@
         openedMenuStore.closeAll();
     }
 
+    // Both of these are toggles, so the analytics call has to come AFTER the flip and
+    // read the new state. Reporting first counted the click that closes the panel as
+    // an opening too.
     function openExternalModuleCalendar() {
-        analyticsClient.openExternalModuleCalendar();
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
         isTodoListVisibleStore.set(false);
+        if ($isCalendarVisibleStore) {
+            analyticsClient.trackAdminEvent("external_module.calendar_opened");
+        }
         mapEditorModeStore.switchMode(false);
         openedMenuStore.closeAll();
     }
 
     function openExternalModuleTodoList() {
-        analyticsClient.openExternalModuleTodoList();
         isTodoListVisibleStore.set(!$isTodoListVisibleStore);
         isCalendarVisibleStore.set(false);
+        if ($isTodoListVisibleStore) {
+            analyticsClient.trackAdminEvent("external_module.todo_list_opened");
+        }
         mapEditorModeStore.switchMode(false);
         openedMenuStore.closeAll();
     }
@@ -73,8 +80,8 @@
 <!-- Room list part -->
 {#if $roomListActivated || $userIsAdminStore}
     <ActionBarButton
-        on:click={showRoomList}
-        on:keydown={showRoomList}
+        onclick={showRoomList}
+        onkeydown={showRoomList}
         label={$LL.actionbar.help.roomList.title()}
         state={$roomListActivated ? "normal" : "disabled"}
     >
@@ -85,8 +92,8 @@
 {#if recording?.buttonState !== "hidden" && $userIsConnected}
     <ActionBarButton
         classList="group/btn-recording-list"
-        on:click={() => {
-            analyticsClient.openedRecordingList();
+        onclick={() => {
+            analyticsClient.trackAdminEvent("recording.list_opened");
             $showRecordingList = true;
             openedMenuStore.closeAll();
         }}
@@ -101,7 +108,7 @@
 <!-- Calendar integration -->
 {#if $isCalendarActivatedStore || $userIsAdminStore}
     <ActionBarButton
-        on:click={openExternalModuleCalendar}
+        onclick={openExternalModuleCalendar}
         label={$LL.actionbar.calendar()}
         state={$isCalendarActivatedStore ? "normal" : "disabled"}
     >
@@ -111,7 +118,7 @@
 
 {#if $isTodoListActivatedStore || $userIsAdminStore}
     <ActionBarButton
-        on:click={openExternalModuleTodoList}
+        onclick={openExternalModuleTodoList}
         label={$LL.actionbar.todoList()}
         state={$isTodoListActivatedStore ? "normal" : "disabled"}
     >

@@ -1,13 +1,13 @@
 <script lang="ts">
     import { onMount, tick } from "svelte";
-    import Phaser from "phaser";
+    import * as Phaser from "phaser";
     import { PositionMessage_Direction } from "@workadventure/messages";
-    import CancelablePromise from "cancelable-promise";
+    import { CancelablePromise } from "cancelable-promise";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { MINIMUM_DISTANCE, WOKA_SPEED } from "../../Enum/EnvironmentVariable";
     import { onboardingStore } from "../../Stores/OnboardingStore";
     import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
-    import { ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
+    import { type Avatar, ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
     import { RemotePlayer } from "../../Phaser/Entity/RemotePlayer";
     import { lazyLoadPlayerCharacterTextures } from "../../Phaser/Entity/PlayerTexturesLoadingManager";
     import { scriptingVideoStore } from "../../Stores/ScriptingVideoStore";
@@ -15,23 +15,23 @@
     import { hasMovedEventName } from "../../Phaser/Player/Player";
     import type { GameScene } from "../../Phaser/Game/GameScene";
 
-    let highlightElement: HTMLElement | null = null;
+    let highlightElement: HTMLElement | null = $state(null);
     let previousElement: HTMLElement | null = null;
-    let highlightStyle = "";
-    let highlightVisible = false;
-    let highlightGraphics: Phaser.GameObjects.Graphics | null = null;
+    let highlightStyle = $state("");
+    let highlightVisible = $state(false);
+    let highlightGraphics: Phaser.GameObjects.Graphics | null = $state(null);
     let pulseAnimationTime = 0;
     let phaserUpdateCallback: (() => void) | null = null;
 
     // Shared bubble instance across components (module-level variable)
-    let sharedBubble: ConversationBubble | null = null;
+    let sharedBubble: ConversationBubble | null = $state(null);
     let sharedUpdateInterval: ReturnType<typeof setInterval> | null = null;
     let playingEmojiTimeout: ReturnType<typeof setTimeout> | null = null;
     let startWalkingTimeout: ReturnType<typeof setTimeout> | null = null;
 
     // Simulated remote player for onboarding
-    let simulatedRemotePlayer: RemotePlayer | null = null;
-    let tryingToCreateSimulatedRemotePlayer = false;
+    let simulatedRemotePlayer: RemotePlayer | null = $state(null);
+    let tryingToCreateSimulatedRemotePlayer = $state(false);
     let simulatedPlayerVideo: Streamable | null = null;
     let currentGameScene: GameScene | undefined = undefined;
 
@@ -68,7 +68,7 @@
         };
     });
 
-    $: {
+    $effect(() => {
         const step = $onboardingStore;
 
         // Handle player highlight for movement step
@@ -134,15 +134,15 @@
         updateHighlight().catch((error) => {
             console.error("Error updating highlight", error);
         });
-    }
+    });
 
-    $: {
+    $effect(() => {
         if (tryingToCreateSimulatedRemotePlayer) {
             createSimulatedRemotePlayer().catch((error) => {
                 console.error("Error creating simulated remote player", error);
             });
         }
-    }
+    });
 
     function createPhaserHighlight() {
         const scene = gameManager.getCurrentGameScene();
@@ -207,14 +207,15 @@
                 if (!currentPlayer || !scene) return;
 
                 if (sharedBubble && simulatedRemotePlayer) {
-                    const centerX = (currentPlayer.x + simulatedRemotePlayer.x) / 2;
-                    const centerY = (currentPlayer.y - 30 + (simulatedRemotePlayer.y - 30)) / 2;
-                    sharedBubble.setCenter(centerX, centerY);
-                    sharedBubble.step(); // Animate the bubble
+                    const avatars: Avatar[] = [
+                        { x: currentPlayer.x, y: currentPlayer.y, inside: true },
+                        { x: simulatedRemotePlayer.x, y: simulatedRemotePlayer.y, inside: true },
+                    ];
+                    sharedBubble.step(avatars); // Animate the bubble
 
                     // Hide bubble when user moves out of range, show when they come back close
                     const dx = currentPlayer.x - simulatedRemotePlayer.x;
-                    const dy = currentPlayer.y - 30 - (simulatedRemotePlayer.y - 30);
+                    const dy = currentPlayer.y - 30 - simulatedRemotePlayer.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     sharedBubble.setVisible(distance <= BUBBLE_VISIBILITY_DISTANCE);
 
@@ -247,7 +248,7 @@
             currentPlayer.x,
             currentPlayer.y - 30, // Offset to center on player body
             isLocked, // Always start unlocked (white)
-            bubbleUserIds // Current player and simulated player in the bubble
+            bubbleUserIds, // Current player and simulated player in the bubble
         );
 
         // Ensure update interval exists for bubble animation
@@ -338,7 +339,7 @@
                 PositionMessage_Direction.LEFT, // Start facing left (towards the player)
                 false, // Not moving initially
                 null, // No visit card
-                companionTexturePromise
+                companionTexturePromise,
             );
 
             newSimulatedPlayer.setVisible(false);
@@ -470,13 +471,13 @@
 
         switch (step) {
             case "lockBubble":
-                element = document.querySelector('[data-testid="lock-button"]') as HTMLElement;
+                element = document.querySelector('[data-testid="lock-button"]');
                 break;
             case "screenSharing":
-                element = document.querySelector('[data-testid="screenShareButton"]') as HTMLElement;
+                element = document.querySelector('[data-testid="screenShareButton"]');
                 break;
             case "pictureInPicture":
-                element = document.querySelector('[data-testid="pictureInPictureButton"]') as HTMLElement;
+                element = document.querySelector('[data-testid="pictureInPictureButton"]');
                 break;
             default:
                 element = null;
@@ -549,11 +550,11 @@
 
 {#if highlightVisible && highlightElement}
     <!-- UI Button highlight -->
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
         class="fixed z-[2999] pointer-events-none rounded-lg border-4 border-solid border-red-500 animate-pulse"
         style={highlightStyle}
         data-testid={`onboarding-highlight-${$onboardingStore}`}
-    />
+    ></div>
 {/if}

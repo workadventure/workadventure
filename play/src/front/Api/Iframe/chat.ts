@@ -129,9 +129,9 @@ export class WorkadventureChatCommands<PublicState extends { [key: string]: unkn
     onChatMessage(
         callback: (
             message: string,
-            event: { authorId: number | undefined; author: RemotePlayerInterface | undefined }
+            event: { authorId: number | undefined; author: RemotePlayerInterface | undefined },
         ) => void,
-        options?: OnChatMessageOptions
+        options?: OnChatMessageOptions,
     ): Subscription {
         const finalOptions = options ?? { scope: "local" };
 

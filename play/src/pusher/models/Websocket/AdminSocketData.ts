@@ -6,4 +6,5 @@ export type AdminConnection = ClientDuplexStream<AdminPusherToBackMessage, Serve
 export type AdminSocketData = {
     adminConnections: Map<string, AdminConnection> | undefined;
     disconnecting: boolean;
+    sendMessage: (message: string) => void;
 };

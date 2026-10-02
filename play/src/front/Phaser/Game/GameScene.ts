@@ -1,24 +1,24 @@
 import * as Sentry from "@sentry/svelte";
+import * as Phaser from "phaser";
 import type { Subscription } from "rxjs";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
-import Phaser from "phaser";
-import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import type { ComponentType } from "svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
-import CancelablePromise from "cancelable-promise";
-import { Deferred } from "@workadventure/shared-utils";
+import { CancelablePromise } from "cancelable-promise";
+import { ChatMessageTypes, Deferred, SpatialMap } from "@workadventure/shared-utils";
 import {
     AvailabilityStatus,
     availabilityStatusToJSON,
+    type BanUserMessage,
     ErrorScreenMessage,
     FilterType,
     type GroupUsersUpdateMessage,
     PositionMessage_Direction,
+    type SendUserMessage,
 } from "@workadventure/messages";
 import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
@@ -36,7 +36,8 @@ import {
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import Debug from "debug";
 import { asError } from "catch-unknown";
-import { userMessageManager } from "../../Administration/UserMessageManager";
+import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
+import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
@@ -58,6 +59,7 @@ import {
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
+    UPLOADER_URL,
     WOKA_SPEED,
 } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connection/Room";
@@ -74,7 +76,8 @@ import { TextUtils } from "../Components/TextUtils";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { PropertyUtils } from "../Map/PropertyUtils";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { PathfindingManager } from "../../Utils/PathfindingManager";
+import { stripUrlSensitiveParts } from "../../Administration/CowebsiteAnalyticsProperties";
+import { PathfindingManager, PathTileType } from "../../Utils/PathfindingManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserMovedInterface,
@@ -89,6 +92,9 @@ import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore } from "../../Stores/EmoteStore";
+import { isHandRaisedStore, requestedHandRaiseState } from "../../Stores/RaiseHandStore";
+import { raisedHandPlayerIdsStore } from "../../Stores/RaisedHandsStore";
+import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
 import {
     jitsiParticipantsCountStore,
     userIsAdminStore,
@@ -116,17 +122,17 @@ import {
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
-    requestedStatusStore,
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
-import BrowserNoSoundInfoToast from "../../Components/Toasts/BrowserNoSoundInfoToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
-import { toastStore } from "../../Stores/ToastStore";
+import { toastStore } from "../../Stores/ToastStoreSingleton";
+import { audioInterruptedStore } from "../../Stores/AudioInterruptedStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
+import { PHASER_COLOR_DESIGN_SYSTEM_SECONDARY } from "../../Utils/DesignSystemPhaserColors";
 
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
@@ -141,7 +147,6 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
     mapEditorModeStore,
-    mapEditorRestrictedPropertiesStore,
     mapEditorSelectedToolStore,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapExplorationModeStore,
@@ -154,7 +159,13 @@ import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBri
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { megaphoneCanBeUsedStore, megaphoneSpaceSettingsStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
+import {
+    megaphoneCanBeUsedStore,
+    megaphoneSpaceSettingsStore,
+    megaphoneSpaceStore,
+    requestedMegaphoneStore,
+} from "../../Stores/MegaphoneStore";
+import { stopMegaphoneLive } from "../../Components/ActionBar/MenuIcons/megaphoneActions";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -163,9 +174,13 @@ import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
+import {
+    DEFAULT_PROXIMITY_SPACE_NAME,
+    ProximityChatRoomManager,
+    type ProximityChatRoomKind,
+} from "../../Chat/Connection/Proximity/ProximityChatRoomManager";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
-import { AUDIO_CONTEXT_TOAST_UUID, audioContextManager } from "../../WebRtc/AudioContextManager";
-import { notificationManager } from "../../Notification/NotificationManager";
+import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
@@ -188,21 +203,28 @@ import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEn
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
-import { screenShareStreamStore, videoStreamStore } from "../../Stores/PeerStore";
+import {
+    mediaSynchronizedSpacesStore,
+    raisedHandSectionsStore,
+    screenShareStreamStore,
+    videoStreamStore,
+} from "../../Stores/PeerStore";
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
-import { ConversationBubble } from "../Entity/ConversationBubble";
+import { type Avatar, ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
 import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
-import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
+import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
+import { EntityAudioManager } from "./EntityAudioManager";
 import { OutlineManager } from "./UI/OutlineManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
@@ -212,7 +234,7 @@ import { DynamicAreaManager } from "./DynamicAreaManager";
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
-import { StartPositionCalculator } from "./StartPositionCalculator";
+import { computeStartPosition } from "./StartPositionCalculator";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { ActivatablesManager } from "./ActivatablesManager";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
@@ -232,14 +254,25 @@ import { InviteManager } from "./InviteManager";
 import { LocateManager } from "./LocateManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { ScriptingVideoManager } from "./ScriptingVideoManager";
-import EVENT_TYPE = Phaser.Scenes.Events;
-import Sprite = Phaser.GameObjects.Sprite;
+import { UsernameDomLayer } from "./UsernameDomLayer";
+
+import Tileset = Phaser.Tilemaps.Tileset;
+import Tilemap = Phaser.Tilemaps.Tilemap;
+import PhysicsSprite = Phaser.Physics.Arcade.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import Tileset = Phaser.Tilemaps.Tileset;
-import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
-import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import Graphics = Phaser.GameObjects.Graphics;
+import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import Sprite = Phaser.GameObjects.Sprite;
+import Body = Phaser.Physics.Arcade.Body;
+import StaticBody = Phaser.Physics.Arcade.StaticBody;
+import Tile = Phaser.Tilemaps.Tile;
+import Color = Phaser.Display.Color;
+import Pointer = Phaser.Input.Pointer;
 import Clamp = Phaser.Math.Clamp;
+
+const MOUSE_WHEEL_ZOOM_RATE = 0.5;
+const CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE = 64;
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -261,20 +294,27 @@ interface GroupUsersUpdatedEventInterface {
     event: GroupUsersUpdateMessage;
 }
 
+interface PositionCoordinates {
+    x: number;
+    y: number;
+}
+
 const WORLD_SPACE_NAME = "allWorldUser";
 const debug = Debug("GameScene");
 
+// Safety cap for moveTo() reroutes when the collision grid keeps changing while the path is followed.
+const MAX_PATH_REROUTES = 5;
+
 export class GameScene extends DirtyScene {
-    Terrains: Array<Phaser.Tilemaps.Tileset>;
+    Terrains: Array<Tileset>;
     CurrentPlayer!: Player;
     MapPlayersByKey: MapStore<number, RemotePlayer> = new MapStore<number, RemotePlayer>();
     CurrentRemotePlayerLocated: RemotePlayer | undefined = undefined;
     CurrentChatUserLocated: ChatUser | undefined = undefined;
-    Map!: Phaser.Tilemaps.Tilemap;
-    Objects!: Array<Phaser.Physics.Arcade.Sprite>;
+    Map!: Tilemap;
+    Objects!: Array<PhysicsSprite>;
     mapFile!: ITiledMap;
     wamFile!: WAMFileFormat;
-    animatedTiles!: AnimatedTiles;
     groups: Map<number, ConversationBubble>;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
@@ -310,41 +350,34 @@ export class GameScene extends DirtyScene {
     private sceneReadyToStartDeferred: Deferred<void> = new Deferred<void>();
     private iframeSubscriptionList: Array<Subscription> = [];
     private gameMapChangedSubscription!: Subscription;
+    private tileAnimationRefreshEvent: Phaser.Time.TimerEvent | undefined;
     private messageSubscription: Subscription | null = null;
     private rxJsSubscriptions: Array<Subscription> = [];
-    private emoteUnsubscriber!: Unsubscriber;
+    // Player ids of remote players whose raised hand is currently shown above their woka (to diff on store updates).
+    private previousRaisedHandPlayerIds = new Set<number>();
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
-    private followUsersColorStoreUnsubscriber!: Unsubscriber;
-    private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
-    private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
-    private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
-    private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
-    private availabilityStatusStoreUnsubscriber!: Unsubscriber;
-    private mapEditorModeStoreUnsubscriber!: Unsubscriber;
-    private mapExplorationStoreUnsubscriber!: Unsubscriber;
-    private modalVisibilityStoreUnsubscriber!: Unsubscriber;
-    private lastNewMediaDeviceDetectedStoreUnsubscriber!: Unsubscriber;
-    private peerStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
+    private storesSubscribed = false;
     private entityPermissions: EntityPermissions | undefined;
     private entityPermissionsDeferred: Deferred<EntityPermissions> = new Deferred();
     private gameMapFrontWrapper!: GameMapFrontWrapper;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
-    private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    private popUpElements: Map<number, DOMElement> = new Map<number, DOMElement>();
+    private remotePlayersSpatialIndex = new SpatialMap<number, RemotePlayer>(CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE);
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
     private outlineManager!: OutlineManager;
     private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
+    private entityAudioManager!: EntityAudioManager;
     private cameraManager!: CameraManager;
-    private mapEditorModeManager!: MapEditorModeManager;
+    private mapEditorModeManager: MapEditorModeManager | undefined;
     private entitiesCollectionsManager!: EntitiesCollectionsManager;
     private pathfindingManager!: PathfindingManager;
     private activatablesManager!: ActivatablesManager;
     private preloading = true;
-    private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
     private areaPropertyVariablesManager!: AreaPropertyVariablesManager;
     private playerVariablesManager!: PlayerVariablesManager;
@@ -368,13 +401,17 @@ export class GameScene extends DirtyScene {
     private showVoiceIndicatorChangeMessageSent = false;
     private jitsiDominantSpeaker = false;
     private jitsiParticipantsCount = 0;
+    private readonly worldLoadStartedAt = performance.now();
+    private mapLoadSucceededAnalyticsSent = false;
+    private mapLoadFailedAnalyticsSent = false;
     private cleanupDone = false;
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
+    public usernameDomLayer!: UsernameDomLayer;
     private throttledSendViewportToServer_!: throttle<() => void>;
     private lastSentViewport: ViewportInterface | undefined;
-    private serverViewportDebugGraphics: Phaser.GameObjects.Graphics | undefined;
+    private serverViewportDebugGraphics: Graphics | undefined;
     private playersDebugLogAlreadyDisplayed = false;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
     // The promise that will resolve to the current player textures. This will be available only after connection is established.
@@ -396,7 +433,9 @@ export class GameScene extends DirtyScene {
     private allUserSpace: SpaceInterface | undefined;
     private isLiveStreamingUnsubscriber: Unsubscriber | undefined;
     private shouldPublishScreenShareUnsubscriber: Unsubscriber | undefined;
+    private unregisterAudioContextPlaybackRetry: Unsubscriber | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
+    private _proximityChatRoomManager: ProximityChatRoomManager | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private _worldUserCounter: ForwardableStore<number> = new ForwardableStore(0);
     public extensionModule: ExtensionModule | undefined = undefined;
@@ -404,8 +443,11 @@ export class GameScene extends DirtyScene {
     // Listeners for when the player finishes moving
     private onPlayerMovementEndedCallbacks: Array<(event: HasPlayerMovedInterface) => void> = [];
 
+    private enterLeaveScriptingService: EnterLeaveScriptingService | undefined;
+
     public _chatConnection: ChatConnectionInterface | undefined;
     private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
+    private _proximityChatRoomManagerDeferred: Deferred<ProximityChatRoomManager> = new Deferred();
     private _focusFx: DarkenOutsideAreaEffect | undefined;
     private abortController: AbortController = new AbortController();
 
@@ -414,7 +456,7 @@ export class GameScene extends DirtyScene {
     constructor(
         private _room: Room,
         customKey?: string,
-        private _isInsidePersonalAreaStore = isInsidePersonalAreaStore
+        private _isInsidePersonalAreaStore = isInsidePersonalAreaStore,
     ) {
         super({
             key: customKey ?? _room.key,
@@ -430,6 +472,9 @@ export class GameScene extends DirtyScene {
             this.wamUrlFile = _room.wamUrl;
         }
         this.roomUrl = _room.key;
+        analyticsClient.trackAdminEvent("map_loading.started", {
+            mapUrl: stripUrlSensitiveParts(this.mapUrlFile || this.wamUrlFile || this.roomUrl),
+        });
 
         this.entitiesCollectionsManager = new EntitiesCollectionsManager();
 
@@ -454,12 +499,6 @@ export class GameScene extends DirtyScene {
         //initialize frame event of scripting API
         this.listenToIframeEvents();
 
-        this.load.image("iconTalk", "/resources/icons/icon_talking.png");
-        this.load.image("iconSpeaker", "/resources/icons/icon_speaking.png");
-        this.load.image("iconMegaphone", "/resources/icons/icon_megaphone.png");
-        this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
-        this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
-
         this.load.image("iconFocus", "/resources/icons/icon_focus.png");
         this.load.image("iconLink", "/resources/icons/icon_link.png");
         this.load.image("iconListenerMegaphone", "/resources/icons/icon_listener.png");
@@ -475,13 +514,12 @@ export class GameScene extends DirtyScene {
         const selectedBubbleSound = get(bubbleSoundStore);
         this.load.audio(
             `audio-webrtc-in-${selectedBubbleSound}`,
-            `/resources/objects/webrtc-in-${selectedBubbleSound}.mp3`
+            `/resources/objects/webrtc-in-${selectedBubbleSound}.mp3`,
         );
         this.load.audio(
             `audio-webrtc-out-${selectedBubbleSound}`,
-            `/resources/objects/webrtc-out-${selectedBubbleSound}.mp3`
+            `/resources/objects/webrtc-out-${selectedBubbleSound}.mp3`,
         );
-        this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
         this.load.audio("meeting-in", "/resources/objects/meeting-in.wav");
@@ -489,7 +527,7 @@ export class GameScene extends DirtyScene {
 
         this.sound.pauseOnBlur = false;
 
-        this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
+        this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: { src: string }) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (
                 window.location.protocol === "http:" &&
@@ -504,7 +542,7 @@ export class GameScene extends DirtyScene {
                     "filecomplete-tilemapJSON-" + this.mapUrlFile,
                     (key: string, type: string, data: unknown) => {
                         this.onMapLoad(data).catch((e) => console.error(e));
-                    }
+                    },
                 );
                 return;
             }
@@ -528,7 +566,7 @@ export class GameScene extends DirtyScene {
                     "filecomplete-tilemapJSON-" + this.mapUrlFile,
                     (key: string, type: string, data: unknown) => {
                         this.onMapLoad(data).catch((e) => console.error(e));
-                    }
+                    },
                 );
                 // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
                 // In this case, we check in the cache to see if the map is here and trigger the event manually.
@@ -541,18 +579,21 @@ export class GameScene extends DirtyScene {
 
             //once preloading is over, we don't want loading errors to crash the game, so we need to disable this behavior after preloading.
             //if SpriteSheetFile (WOKA file) don't display error and give an access for user
-            if (this.preloading && !(file instanceof SpriteSheetFile)) {
+            if (this.preloading && !(file instanceof Phaser.Loader.FileTypes.SpriteSheetFile)) {
+                analyticsClient.trackAdminEvent("asset.error", {
+                    kind: "asset",
+                    reason: stripUrlSensitiveParts(file?.src ?? this.originalMapUrl),
+                });
                 //remove loader in progress
                 this.handleErrorAndCleanup(
                     new Error('Cannot load "' + (file?.src ?? this.originalMapUrl) + '"'),
                     "NETWORK_ERROR",
                     "Network error",
-                    "An error occurred while loading a resource"
+                    "An error occurred while loading a resource",
                 );
             }
         });
 
-        this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
         if (this.wamUrlFile) {
             const absoluteWamFileUrl = new URL(this.wamUrlFile, window.location.href).toString();
 
@@ -568,26 +609,14 @@ export class GameScene extends DirtyScene {
                             error,
                             "WAM_FILE_LOAD_ISSUE",
                             "Error when loading WAM file",
-                            "Unknown error while loading WAM file"
+                            "Unknown error while loading WAM file",
                         );
                         return;
                     }
-                })
+                }),
             );
         } else {
             this.doLoadTMJFile(this.mapUrlFile);
-        }
-
-        // The condition is here for Webkit in headless mode (CI / automated tests). It doesn't have a proper font support.
-        //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (typeof (this.load as any).rexWebFont === "function") {
-            //eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (this.load as any).rexWebFont({
-                custom: {
-                    families: ["Press Start 2P"],
-                    testString: "abcdefg",
-                },
-            });
         }
 
         //this function must stay at the end of preload function
@@ -598,7 +627,7 @@ export class GameScene extends DirtyScene {
         error: Error | unknown,
         errorCode: string,
         errorTitle: string,
-        errorSubtitle: string
+        errorSubtitle: string,
     ) {
         console.error(error);
 
@@ -607,6 +636,7 @@ export class GameScene extends DirtyScene {
             return;
         }
 
+        this.trackMapLoadingFailure(errorCode);
         this.loader.removeLoader();
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({
@@ -615,7 +645,7 @@ export class GameScene extends DirtyScene {
                 title: errorTitle,
                 subtitle: errorSubtitle,
                 details: error instanceof Error ? error.message : "Unknown error",
-            })
+            }),
         );
 
         this.cleanupClosingScene();
@@ -652,6 +682,7 @@ export class GameScene extends DirtyScene {
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this._room);
         analyticsClient.enteredRoom(this._room.id, this._room.group);
+        this.trackMapLoadingSuccess();
         contactPageStore.set(this._room.contactPage);
 
         if (touchScreenManager.supportTouchScreen) {
@@ -671,7 +702,7 @@ export class GameScene extends DirtyScene {
                 e,
                 "MAP_FILE_LOAD_ISSUE",
                 "Error when loading map file",
-                `An error occurred while loading the map file "${this.mapUrlFile}". Please check the URL or contact the map administrator.`
+                `An error occurred while loading the map file "${this.mapUrlFile}". Please check the URL or contact the map administrator.`,
             );
             return;
         }
@@ -679,12 +710,12 @@ export class GameScene extends DirtyScene {
         this.mapFile.tilesets.forEach((tileset: ITiledMapTileset) => {
             if ("source" in tileset) {
                 throw new Error(
-                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
+                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`,
                 );
             }
             if (!("image" in tileset)) {
                 throw new Error(
-                    `Tilesets made of a collection of images are not supported in WorkAdventure in the Tiled map "${this.mapUrlFile}".`
+                    `Tilesets made of a collection of images are not supported in WorkAdventure in the Tiled map "${this.mapUrlFile}".`,
                 );
             }
             const tilesetImage = this.Map.addTilesetImage(
@@ -693,7 +724,7 @@ export class GameScene extends DirtyScene {
                 tileset.tilewidth,
                 tileset.tileheight,
                 tileset.margin,
-                tileset.spacing /*, tileset.firstgid*/
+                tileset.spacing /*, tileset.firstgid*/,
             );
             if (tilesetImage) {
                 this.Terrains.push(tilesetImage);
@@ -709,6 +740,8 @@ export class GameScene extends DirtyScene {
         //permit to set bound collision
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
+        this.usernameDomLayer = new UsernameDomLayer(this);
+
         this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 
         //add layer on map
@@ -716,7 +749,7 @@ export class GameScene extends DirtyScene {
             this,
             new GameMap(this.mapFile, this.wamFile),
             this.Map,
-            this.Terrains
+            this.Terrains,
         );
         this.gameMapFrontWrapper.initialize().catch((e) => console.error(e));
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
@@ -724,7 +757,7 @@ export class GameScene extends DirtyScene {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
                     this.loadNextGame(
-                        Room.getRoomPathFromExitSceneUrl(exitSceneUrl, window.location.toString(), this.mapUrlFile)
+                        Room.getRoomPathFromExitSceneUrl(exitSceneUrl, window.location.toString(), this.mapUrlFile),
                     ).catch((e) => console.error(e));
                 }
                 const exitUrl = this.getExitUrl(layer);
@@ -742,11 +775,11 @@ export class GameScene extends DirtyScene {
                         const url = PropertyUtils.mustFindStringProperty(
                             GameMapProperties.URL,
                             object.properties,
-                            'in the "' + object.name + '" object of type "website"'
+                            'in the "' + object.name + '" object of type "website"',
                         );
                         const allowApi = PropertyUtils.findBooleanProperty(
                             GameMapProperties.ALLOW_API,
-                            object.properties
+                            object.properties,
                         );
                         const policy = PropertyUtils.findStringProperty(GameMapProperties.POLICY, object.properties);
 
@@ -761,7 +794,7 @@ export class GameScene extends DirtyScene {
                             allowApi ?? false,
                             policy ?? "",
                             "map",
-                            1
+                            1,
                         );
                     }
                 }
@@ -775,19 +808,12 @@ export class GameScene extends DirtyScene {
         // TODO: Dynamic areas should be exclusively managed on the front side
         this.areaManager = new DynamicAreaManager(this.gameMapFrontWrapper);
 
-        this.startPositionCalculator = new StartPositionCalculator(
-            this.gameMapFrontWrapper,
-            this.mapFile,
-            this.initPosition,
-            urlManager.getStartPositionNameFromUrl()
-        );
-
         //create input to move
         this.userInputManager = new UserInputManager(this, new GameSceneUserInputHandler(this));
         mediaManager.setUserInputManager(this.userInputManager);
 
         //add entities
-        this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
+        this.Objects = new Array<PhysicsSprite>();
 
         if (localUserStore.getFullscreen()) {
             document
@@ -798,7 +824,7 @@ export class GameScene extends DirtyScene {
 
         this.pathfindingManager = new PathfindingManager(
             this.gameMapFrontWrapper.getCollisionGrid(),
-            this.gameMapFrontWrapper.getTileDimensions()
+            this.gameMapFrontWrapper.getTileDimensions(),
         );
 
         this.subscribeToGameMapChanged();
@@ -806,12 +832,10 @@ export class GameScene extends DirtyScene {
 
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
-        this.tryMovePlayerWithMoveToParameter();
-
         this.cameraManager = new CameraManager(
             this,
             { width: this.Map.widthInPixels, height: this.Map.heightInPixels },
-            waScaleManager
+            waScaleManager,
         );
 
         biggestAvailableAreaStore.recompute();
@@ -819,14 +843,7 @@ export class GameScene extends DirtyScene {
             this.mapEditorModeManager = new MapEditorModeManager(this);
         }
 
-        this.animatedTiles.init(this.Map);
-
-        // Phaser unsubscribes from the events when the scene is destroyed, so we don't need to unsubscribe here
-        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
-        this.events.on("tileanimationupdate", () => (this.dirty = true));
-        if (localUserStore.getDisableAnimations()) {
-            this.animatedTiles.pause();
-        }
+        this.configureTileAnimations();
 
         // Let's pause the scene if the connection is not established yet
         if (!this._room.isDisconnected()) {
@@ -842,7 +859,7 @@ export class GameScene extends DirtyScene {
                             // If an error message is already displayed, don't display the "connection lost" message.
                             console.error(
                                 "Error message store already displayed for CONNECTION_LOST",
-                                get(errorScreenStore)
+                                get(errorScreenStore),
                             );
                             return;
                         }
@@ -853,7 +870,7 @@ export class GameScene extends DirtyScene {
                                 title: get(LL).warning.connectionLostTitle(),
                                 details: get(LL).warning.connectionLostSubtitle(),
                                 image: this._room.errorSceneLogo,
-                            })
+                            }),
                         );
                     }
                 }, 0);
@@ -871,7 +888,7 @@ export class GameScene extends DirtyScene {
                             // If an error message is already displayed, don't display the "connection lost" message.
                             console.error(
                                 "Error message store already displayed for CONNECTION_PENDING: ",
-                                get(errorScreenStore)
+                                get(errorScreenStore),
                             );
                             return;
                         }
@@ -899,13 +916,13 @@ export class GameScene extends DirtyScene {
         const scripts = this.getScriptUrls(this.mapFile);
         const disableModuleMode = PropertyUtils.findBooleanProperty(
             GameMapProperties.SCRIPT_DISABLE_MODULE_SUPPORT,
-            this.mapFile.properties
+            this.mapFile.properties,
         );
         const scriptPromises = [];
         for (const script of scripts) {
             scriptPromises.push(
                 // Note: registerScript fails after 7 seconds if the script cannot be loaded
-                iframeListener.registerScript(script, !disableModuleMode)
+                iframeListener.registerScript(script, !disableModuleMode),
             );
         }
 
@@ -938,14 +955,14 @@ export class GameScene extends DirtyScene {
 
         Promise.all([
             this.connectionAnswerPromiseDeferred.promise.then(() =>
-                debug("Loading process: Websocket connection ready")
+                debug("Loading process: Websocket connection ready"),
             ),
             Promise.allSettled(scriptPromises).then((results) => {
                 debug("Loading process: Scripts loaded");
                 return results;
             }),
             this.gameMapFrontWrapper.initializedPromise.promise.then(() =>
-                debug("Loading process: Game map initialized")
+                debug("Loading process: Game map initialized"),
             ),
             // Wait at most 5 seconds for the chat connection to be established
             // If not, we can still proceed starting the scene without chat fully loaded
@@ -977,13 +994,20 @@ export class GameScene extends DirtyScene {
                             }
                         }
                         return Promise.resolve();
-                    })
+                    }),
                 )
                     .then((scriptReload) => {
                         for (const r of scriptReload) {
                             if (r.status === "rejected") {
                                 console.error("Error while reloading script after connection established", r.reason);
                             }
+                        }
+
+                        if (this.cleanupDone) {
+                            // The GameScene was closed before completing.
+                            // For instance, the websocket is closed while the map was loading.
+                            // Let's not join the room.
+                            return;
                         }
 
                         this.joinRoom()
@@ -1028,13 +1052,37 @@ export class GameScene extends DirtyScene {
                 Sentry.captureException(e);
             });
 
-        if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+        if (this.game.renderer instanceof WebGLRenderer) {
             this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
                 feather: 10,
                 darkness: 0.65,
                 tweenDurationMs: 250,
             });
         }
+    }
+
+    private getWorldLoadDurationMs(): number {
+        return Math.round(performance.now() - this.worldLoadStartedAt);
+    }
+
+    private trackMapLoadingSuccess(): void {
+        if (this.mapLoadSucceededAnalyticsSent || this.mapLoadFailedAnalyticsSent) {
+            return;
+        }
+
+        this.mapLoadSucceededAnalyticsSent = true;
+        const durationMs = this.getWorldLoadDurationMs();
+        analyticsClient.trackAdminEvent("map_loading.succeeded", { durationMs });
+        analyticsClient.trackAdminEvent("world.entered", { durationMs });
+    }
+
+    private trackMapLoadingFailure(reason: string): void {
+        if (this.mapLoadFailedAnalyticsSent || this.mapLoadSucceededAnalyticsSent) {
+            return;
+        }
+
+        this.mapLoadFailedAnalyticsSent = true;
+        analyticsClient.trackAdminEvent("map_loading.failed", { reason, durationMs: this.getWorldLoadDurationMs() });
     }
 
     public getMapUrl(): string {
@@ -1072,12 +1120,12 @@ export class GameScene extends DirtyScene {
                 PopUpRoomAccessDenied,
                 {
                     message: get(LL).warning.accessDenied.room(),
-                    click: () => {
+                    onclick: () => {
                         popupStore.removePopup("roomAccessDenied");
                     },
                     userInputManager: this.userInputManager,
                 },
-                "roomAccessDenied"
+                "roomAccessDenied",
             );
 
             this.mapTransitioning = false;
@@ -1101,8 +1149,11 @@ export class GameScene extends DirtyScene {
             forceRefreshChatStore.forceRefresh();
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            const startPosition = this.startPositionCalculator.computeStartPosition(
-                urlManager.getStartPositionNameFromUrl()
+            const startPosition = computeStartPosition(
+                this.gameMapFrontWrapper,
+                this.mapFile,
+                undefined,
+                urlManager.getStartPositionNameFromUrl(),
             );
             this.CurrentPlayer.setPosition(startPosition.x, startPosition.y);
             this.CurrentPlayer.finishFollowingPath(true);
@@ -1149,6 +1200,10 @@ export class GameScene extends DirtyScene {
     }
 
     public cleanupClosingScene(): void {
+        this.abortController?.abort();
+        this.unregisterAudioContextPlaybackRetry?.();
+        this.unregisterAudioContextPlaybackRetry = undefined;
+
         // make sure we restart own medias
         mediaManager.disableMyCamera();
         mediaManager.disableMyMicrophone();
@@ -1163,35 +1218,38 @@ export class GameScene extends DirtyScene {
 
         this.connection?.closeConnection();
         this.outlineManager?.clear();
+        this.tileAnimationRefreshEvent?.remove(false);
+        this.tileAnimationRefreshEvent = undefined;
         this.userInputManager?.destroy();
         this.isLiveStreamingUnsubscriber?.();
         this.shouldPublishScreenShareUnsubscriber?.();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
+        this.entityAudioManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.gameMapPropertiesListener?.destroy();
         this.pathfindingManager?.cleanup();
 
+        // A broadcast does not follow the user into the next room, but nothing said
+        // so: the action bar kept offering to stop it, and its analytics interval —
+        // opened with reopenOnReconnect — was resumed on the next room's socket as if
+        // the megaphone were still on. Guarded so an idle room change does not count
+        // as a stop.
+        if (get(requestedMegaphoneStore)) {
+            stopMegaphoneLive();
+        }
         this._broadcastService?.destroy().catch((e) => {
             console.error("Error while destroying broadcast service", e);
             Sentry.captureException(e);
         });
         megaphoneSpaceStore.set(undefined);
         this.proximitySpaceManager?.destroy();
-        this._proximityChatRoom?.destroy();
-        this.mapEditorModeStoreUnsubscriber?.();
-        this.emoteUnsubscriber?.();
-        this.followUsersColorStoreUnsubscriber?.();
-        this.modalVisibilityStoreUnsubscriber?.();
-        this.highlightedEmbedScreenUnsubscriber?.();
-        this.embedScreenLayoutStoreUnsubscriber?.();
-        this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
-        this.jitsiParticipantsCountStoreUnsubscriber?.();
-        this.availabilityStatusStoreUnsubscriber?.();
-        this.mapExplorationStoreUnsubscriber?.();
-        this.lastNewMediaDeviceDetectedStoreUnsubscriber?.();
-        this.peerStoreUnsubscriber?.();
+        if (this._proximityChatRoomManager) {
+            this._proximityChatRoomManager.destroy();
+        } else {
+            this._proximityChatRoom?.destroy();
+        }
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }
@@ -1222,6 +1280,15 @@ export class GameScene extends DirtyScene {
         iframeListener.unregisterAnswerer("getWoka");
         iframeListener.unregisterAnswerer("goToLogin");
         iframeListener.unregisterAnswerer("playSoundInBubble");
+        iframeListener.unregisterAnswerer("playSoundInMeeting");
+        iframeListener.unregisterAnswerer("startStreamInBubble");
+        iframeListener.unregisterAnswerer("startStreamInMeeting");
+        iframeListener.unregisterAnswerer("appendPCMData");
+        iframeListener.unregisterAnswerer("appendPCMDataToMeeting");
+        iframeListener.unregisterAnswerer("resetAudioBuffer");
+        iframeListener.unregisterAnswerer("resetMeetingAudioBuffer");
+        iframeListener.unregisterAnswerer("stopStreamInBubble");
+        iframeListener.unregisterAnswerer("stopStreamInMeeting");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
         this.areaPropertyVariablesManager?.destroy();
@@ -1233,10 +1300,12 @@ export class GameScene extends DirtyScene {
         this._sayManager?.close();
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
+        this.usernameDomLayer?.destroy();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
         this.inviteManager?.close();
         this.spaceScriptingBridgeService?.destroy();
+        this.enterLeaveScriptingService?.destroy();
         iceServersManager.finalize();
         if (this.localVolumeStoreUnsubscriber) {
             this.localVolumeStoreUnsubscriber();
@@ -1295,6 +1364,14 @@ export class GameScene extends DirtyScene {
         this.dirty = false;
         this.currentTick = time;
 
+        if (biggestAvailableAreaStore.consumePendingRecompute()) {
+            this.updateCameraOffsetFromBiggestAvailableArea();
+        }
+
+        const currentPlayerPreviousPosition = this.hasJoinedRoom
+            ? { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y }
+            : undefined;
+
         if (this.hasJoinedRoom) {
             this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
         }
@@ -1336,7 +1413,7 @@ export class GameScene extends DirtyScene {
                 "Updated players:",
                 this.remotePlayersRepository.getUpdatedPlayers(),
                 "Removed players:",
-                this.remotePlayersRepository.getRemovedPlayers()
+                this.remotePlayersRepository.getRemovedPlayers(),
             );
             this.playersDebugLogAlreadyDisplayed = true;
         }
@@ -1389,22 +1466,40 @@ export class GameScene extends DirtyScene {
         }
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
+        const conversationBubblesToUpdate = new Set<ConversationBubble>();
         updatedPlayersPositions.forEach((moveEvent: HasPlayerMovedInterface, userId: number) => {
             this.dirty = true;
             const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
                 throw new Error('Cannot find player with ID "' + userId + '"');
             }
+            const previousPosition = { x: player.x, y: player.y };
             player.updatePosition(moveEvent);
+            this.addConversationBubblesAffectedByPlayerMove(
+                userId,
+                previousPosition,
+                player,
+                conversationBubblesToUpdate,
+            );
             // If the camera is following the player, we need to update the viewport
             if (this.cameraManager?.playerFollowing === player) {
                 this._sendViewportToServer();
             }
         });
-        // If any of the users (including me) has moved, we need to recompute the shape of all bubbles
+
+        if (this.hasMovedThisFrame && currentPlayerPreviousPosition !== undefined) {
+            this.addConversationBubblesAffectedByPlayerMove(
+                this.connection?.getUserId(),
+                currentPlayerPreviousPosition,
+                this.CurrentPlayer,
+                conversationBubblesToUpdate,
+            );
+        }
+
+        // If a user close to a bubble has moved, we need to recompute that bubble shape.
         for (const group of this.groups.values()) {
-            if (updatedPlayersPositions.size > 0 || this.hasMovedThisFrame || group.isAnimating) {
-                group.step();
+            if (group.needsStep || group.isAnimating || conversationBubblesToUpdate.has(group)) {
+                group.step(this.getConversationBubbleAvatars(group));
             }
         }
         this.hasMovedThisFrame = false;
@@ -1412,6 +1507,69 @@ export class GameScene extends DirtyScene {
         if (DEBUG_MODE) {
             this.updateServerViewportDebugOverlay();
         }
+    }
+
+    private addConversationBubblesAffectedByPlayerMove(
+        userId: number | undefined,
+        previousPosition: PositionCoordinates,
+        currentPosition: PositionCoordinates,
+        conversationBubblesToUpdate: Set<ConversationBubble>,
+    ): void {
+        for (const group of this.groups.values()) {
+            if (
+                (userId !== undefined && group.containsUserId(userId)) ||
+                this.isPointInConversationBubbleInfluence(group, previousPosition) ||
+                this.isPointInConversationBubbleInfluence(group, currentPosition)
+            ) {
+                conversationBubblesToUpdate.add(group);
+            }
+        }
+    }
+
+    private getConversationBubbleAvatars(group: ConversationBubble): Avatar[] {
+        const remotePlayers = new Map<number, RemotePlayer>();
+        for (const remotePlayer of this.remotePlayersSpatialIndex.queryCircle(
+            group.x,
+            group.y,
+            group.getInfluenceRadius(),
+        )) {
+            remotePlayers.set(remotePlayer.userId, remotePlayer);
+        }
+        for (const userId of group.getUserIds()) {
+            const remotePlayer = this.MapPlayersByKey.get(userId);
+            if (remotePlayer !== undefined) {
+                remotePlayers.set(userId, remotePlayer);
+            }
+        }
+
+        const avatars: Avatar[] = [];
+        for (const remotePlayer of remotePlayers.values()) {
+            const avatar = group.turnInAvatar(remotePlayer);
+            if (avatar !== undefined) {
+                avatars.push(avatar);
+            }
+        }
+
+        const currentUserId = this.connection?.getUserId();
+        if (
+            currentUserId !== undefined &&
+            (group.containsUserId(currentUserId) ||
+                this.isPointInConversationBubbleInfluence(group, this.CurrentPlayer))
+        ) {
+            const avatar = group.turnInAvatar(this.CurrentPlayer);
+            if (avatar !== undefined) {
+                avatars.push(avatar);
+            }
+        }
+
+        return avatars;
+    }
+
+    private isPointInConversationBubbleInfluence(group: ConversationBubble, position: PositionCoordinates): boolean {
+        const influenceRadius = group.getInfluenceRadius();
+        const dx = position.x - group.x;
+        const dy = position.y - group.y;
+        return dx * dx + dy * dy <= influenceRadius * influenceRadius;
     }
 
     private updateServerViewportDebugOverlay(): void {
@@ -1461,7 +1619,7 @@ export class GameScene extends DirtyScene {
             console.info(
                 "Could not set new details to character with ID ",
                 update.player.userId,
-                ". Did he/she left before te message was received?"
+                ". Did he/she left before te message was received?",
             );
             return;
         }
@@ -1485,6 +1643,16 @@ export class GameScene extends DirtyScene {
         if (update.updated.sayMessage) {
             character.say(update.player.sayMessage?.message ?? "", update.player.sayMessage?.type ?? 0);
         }
+    }
+
+    /**
+     * Shows/hides the raised-hand indicator above a remote player's woka, resolving the woka from the
+     * numeric player id (derived from the SpaceUser's spaceUserId). The raise-hand state lives on the
+     * SpaceUser (see SpacePeerManager), so this also covers participants who joined the meeting after the
+     * hand was raised.
+     */
+    private setRemotePlayerRaisedHand(playerId: number, raised: boolean): void {
+        this.MapPlayersByKey.get(playerId)?.setRaisedHand(raised);
     }
 
     /**
@@ -1525,7 +1693,7 @@ export class GameScene extends DirtyScene {
         const viewport = this.intersectViewportWithMapBounds(
             { left: baseLeft, top: baseTop, right: baseRight, bottom: baseBottom },
             this.Map.widthInPixels,
-            this.Map.heightInPixels
+            this.Map.heightInPixels,
         );
 
         return viewport;
@@ -1537,7 +1705,7 @@ export class GameScene extends DirtyScene {
     private intersectViewportWithMapBounds(
         viewport: ViewportInterface,
         mapWidth: number,
-        mapHeight: number
+        mapHeight: number,
     ): ViewportInterface | null {
         if (mapWidth <= 0 || mapHeight <= 0) {
             return null;
@@ -1586,13 +1754,17 @@ export class GameScene extends DirtyScene {
         return this.throttledSendViewportToServer_;
     }
 
+    private updateCameraOffsetFromBiggestAvailableArea(instant = false): void {
+        biggestAvailableAreaStore.recompute();
+        if (this.cameraManager != undefined) {
+            this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
+        }
+    }
+
     public reposition(instant = false): void {
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
-            biggestAvailableAreaStore.recompute();
-            if (this.cameraManager != undefined) {
-                this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
-            }
+            this.updateCameraOffsetFromBiggestAvailableArea(instant);
         });
     }
 
@@ -1600,12 +1772,14 @@ export class GameScene extends DirtyScene {
         const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
         const game = new GameScene(this._room, gameSceneKey);
         this.scene.add(gameSceneKey, game, autostart, {
-            initPosition: {
-                x: this.CurrentPlayer.x,
-                y: this.CurrentPlayer.y,
-            },
+            initPosition: this.CurrentPlayer
+                ? {
+                      x: this.CurrentPlayer.x,
+                      y: this.CurrentPlayer.y,
+                  }
+                : undefined,
             reconnecting: reconnecting,
-        });
+        } satisfies GameSceneInitInterface);
 
         // Register the new scene as current when not autostarting (so GameManager can start it) or when
         // reconnecting (so getCurrentGameScene() returns the new scene during teardown and store subscriptions work).
@@ -1633,7 +1807,7 @@ export class GameScene extends DirtyScene {
         return this.remotePlayersRepository;
     }
 
-    public getMapEditorModeManager(): MapEditorModeManager {
+    public getMapEditorModeManager(): MapEditorModeManager | undefined {
         return this.mapEditorModeManager;
     }
 
@@ -1646,7 +1820,7 @@ export class GameScene extends DirtyScene {
     }
 
     public getPlayerVariablesManager(): PlayerVariablesManager | undefined {
-        return this.playerVariablesManager as PlayerVariablesManager | undefined;
+        return this.playerVariablesManager;
     }
 
     public getActivatablesManager(): ActivatablesManager {
@@ -1655,6 +1829,10 @@ export class GameScene extends DirtyScene {
 
     public getOutlineManager(): OutlineManager {
         return this.outlineManager;
+    }
+
+    public getEntityAudioManager(): EntityAudioManager {
+        return this.entityAudioManager;
     }
 
     /**
@@ -1675,7 +1853,7 @@ export class GameScene extends DirtyScene {
             (collectionUrl) => ({
                 url: collectionUrl.url,
                 type: "Default",
-            })
+            }),
         );
         collectionDescriptors.push({ url: customEntityCollectionUrl, type: "Custom" });
 
@@ -1714,7 +1892,7 @@ export class GameScene extends DirtyScene {
         this.mapFile.tilesets.forEach((tileset) => {
             if ("source" in tileset) {
                 throw new Error(
-                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
+                    `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`,
                 );
             }
             if (typeof tileset.name === "undefined" || !("image" in tileset)) {
@@ -1813,7 +1991,7 @@ export class GameScene extends DirtyScene {
                 gameMapAreas,
                 this.connection.getAllTags() ?? [],
                 userCanEdit,
-                localUserStore.getLocalUser()?.uuid
+                localUserStore.getLocalUser()?.uuid,
             );
             this.entityPermissionsDeferred.resolve(this.entityPermissions);
         }
@@ -1843,10 +2021,47 @@ export class GameScene extends DirtyScene {
                 this.playerName,
                 gameManager.getCharacterTextureIds() ?? [],
                 gameManager.getCompanionTextureId(),
-                this.getGameMap().getWamFile()?.getLastCommandId()
+                this.getGameMap().getWamFile()?.getLastCommandId(),
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+
+                // Subscribed before any await: the admin messages of the login come right after the connection.
+                // These streams are completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.sendUserMessageStream.subscribe((message) => this.showUserMessage(message));
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.banUserMessageStream.subscribe((message) => this.ejectedUser(message));
+
+                // The serverDisconnected stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.serverDisconnected.subscribe(() => {
+                    showConnectionIssueMessage();
+                    console.info("Player disconnected from server. Waiting for pusher ping.");
+                    connectionManager
+                        .waitForPusherPing()
+                        .then(() => {
+                            console.info("Pusher reachable again. Reloading scene.");
+                            this.cleanupClosingScene();
+                            this.createSuccessorGameScene(true, true);
+                        })
+                        .catch((e) => {
+                            console.error(
+                                `Error while waiting for Pusher to come back online: ${asError(e).message}`,
+                                e,
+                            );
+                            Sentry.captureException(e);
+                            this.handleErrorAndCleanup(
+                                e,
+                                "CONNECTION_BROKEN",
+                                "Unable to reconnect",
+                                "Error when trying to reconnect after the connection was lost",
+                            );
+                            hideConnectionIssueMessage();
+                            return;
+                        });
+                });
+                hideConnectionIssueMessage();
 
                 const commandsToApply = onConnect.roomConnectedMessage.editMapCommandsArrayMessage?.editMapCommands;
                 if (commandsToApply) {
@@ -1858,8 +2073,11 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                const startPosition = this.startPositionCalculator.computeStartPosition(
-                    urlManager.getStartPositionNameFromUrl()
+                const startPosition = computeStartPosition(
+                    this.gameMapFrontWrapper,
+                    this.mapFile,
+                    this.initPosition,
+                    urlManager.getStartPositionNameFromUrl(),
                 );
 
                 this.createCurrentPlayer(startPosition);
@@ -1867,13 +2085,20 @@ export class GameScene extends DirtyScene {
                 this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
                 this.cameraManager.startFollowPlayer(this.CurrentPlayer, 0);
 
+                // #moveTo walks the player: it must exist, so this cannot run before the pusher answers.
+                this.tryMovePlayerWithMoveToParameter();
+
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
+
+                this.enterLeaveScriptingService = new EnterLeaveScriptingService(this.gameMapFrontWrapper, this);
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
                 this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
 
                 videoStreamStore.forward(this._spaceRegistry.videoStreamStore);
                 screenShareStreamStore.forward(this._spaceRegistry.screenShareStreamStore);
+                raisedHandSectionsStore.forward(this._spaceRegistry.raisedHandSectionsStore);
+                mediaSynchronizedSpacesStore.forward(this._spaceRegistry.spacesSynchronizingMedia);
 
                 this.initExtensionModule();
 
@@ -1962,7 +2187,7 @@ export class GameScene extends DirtyScene {
                 this.connection.groupUpdateMessageStream.subscribe(
                     (groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
                         this.shareGroupPosition(groupPositionMessage);
-                    }
+                    },
                 );
 
                 // The groupDeleteMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
@@ -1975,36 +2200,6 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
-                // The serverDisconnected stream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.serverDisconnected.subscribe(() => {
-                    showConnectionIssueMessage();
-                    console.info("Player disconnected from server. Waiting for pusher ping.");
-                    connectionManager
-                        .waitForPusherPing()
-                        .then(() => {
-                            console.info("Pusher reachable again. Reloading scene.");
-                            this.cleanupClosingScene();
-                            this.createSuccessorGameScene(true, true);
-                        })
-                        .catch((e) => {
-                            console.error(
-                                `Error while waiting for Pusher to come back online: ${asError(e).message}`,
-                                e
-                            );
-                            Sentry.captureException(e);
-                            this.handleErrorAndCleanup(
-                                e,
-                                "CONNECTION_BROKEN",
-                                "Unable to reconnect",
-                                "Error when trying to reconnect after the connection was lost"
-                            );
-                            hideConnectionIssueMessage();
-                            return;
-                        });
-                });
-                hideConnectionIssueMessage();
-
                 // The itemEventMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.itemEventMessageStream.subscribe((message) => {
@@ -2013,7 +2208,7 @@ export class GameScene extends DirtyScene {
                         console.warn(
                             'Received an event about object "' +
                                 message.itemId +
-                                '" but cannot find this item on the map.'
+                                '" but cannot find this item on the map.',
                         );
                         return;
                     }
@@ -2056,8 +2251,6 @@ export class GameScene extends DirtyScene {
 
                 this._sayManager = new SayManager(this.connection, this.CurrentPlayer);
 
-                userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
-
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedInterface) => {
                     this.handleCurrentPlayerHasMovedEvent(event);
                 });
@@ -2094,86 +2287,52 @@ export class GameScene extends DirtyScene {
                     }) || [];
 
                 this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
-                // Init layer change listener
-                this.gameMapFrontWrapper.onEnterLayer((layers) => {
-                    layers.forEach((layer) => {
-                        iframeListener.sendEnterLayerEvent(layer.name);
-                    });
-                });
-
-                this.gameMapFrontWrapper.onLeaveLayer((layers) => {
-                    layers.forEach((layer) => {
-                        iframeListener.sendLeaveLayerEvent(layer.name);
-                    });
-                });
-
-                // NOTE: Leaving events names as "enterArea" and "leaveArea" to not introduce any breaking changes.
-                //       We are only looking through dynamic areas when handling those events.
-                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
-                    areas.forEach((area) => {
-                        iframeListener.sendEnterAreaEvent(area.name);
-                    });
-                });
-
-                this.gameMapFrontWrapper.onLeaveDynamicArea((areas) => {
-                    areas.forEach((area) => {
-                        iframeListener.sendLeaveAreaEvent(area.name);
-                    });
-                });
-
-                this.gameMapFrontWrapper.onEnterDynamicArea((areas) => {
-                    areas.forEach((area) => {
-                        iframeListener.sendEnterMapEditorAreaEvent(area.name);
-                    });
-                });
-
-                this.gameMapFrontWrapper.onLeaveDynamicArea((areas) => {
-                    areas.forEach((area) => {
-                        iframeListener.sendLeaveMapEditorAreaEvent(area.name);
-                    });
-                });
 
                 this.emoteManager = new EmoteManager(this, this.connection);
+                this.entityAudioManager = new EntityAudioManager(this, this.connection);
+                this.CurrentPlayer.on(hasMovedEventName, () => this.entityAudioManager.onPlayerMoved());
 
-                // Check the audio context of the current page
-                if (!audioContextManager.verifyContextIsNotSuspended()) {
-                    // Check if there has notification permission
-                    const hasNotification = notificationManager.hasNotification();
+                const context = audioContextManager.getContext();
 
-                    // Test if the user is in a PWA
-                    const isPWAInstalled = (navigator as Navigator & { standalone?: boolean }).standalone ?? false;
+                const onStateChange = () => {
+                    const state = context.state;
 
-                    // If the user has not allowed play sound, no notification permission and is not in a PWA, we need to show a message to the user to allow the page to play audio.
-                    if (!hasNotification && !isPWAInstalled) {
-                        console.warn("Audio context is suspended. Please allow the page to play audio.");
-                        // Show a toast to the user to allow the page to play audio.
-                        toastStore.addToast(BrowserNoSoundInfoToast, {}, AUDIO_CONTEXT_TOAST_UUID);
-                        let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
-                        let isNotSuspendedAudioContextStoreSubscription: Unsubscriber | undefined = undefined;
-                        // Verify that the audio context is not suspended before the timeout expires
-                        isNotSuspendedAudioContextStoreSubscription = isNotSuspendedAudioContextStore.subscribe(
-                            (isNotSuspended) => {
-                                if (!isNotSuspended) return;
-                                if (timeoutId) clearTimeout(timeoutId);
-                                isNotSuspendedAudioContextStoreSubscription?.();
-                            }
-                        );
-
-                        // Update the user status. This is a specific status to indicate that the user has not allow to receive audio.
-                        // Set the proximity meeting to false and have the DENY_PROXIMITY_MEETING status.
-                        // Use timeout to not set the status directly when the user spawn
-                        timeoutId = setTimeout(() => {
-                            requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
-                        }, 2000);
+                    // Note: some browsers (Vivaldi / Brave) will start in "running" state directly despite
+                    // no user activation and this will not stop them from blocking WebRTC sound afterwards.
+                    if (state === "suspended") {
+                        audioInterruptedStore.setInterrupted(false);
+                        this.unregisterAudioContextPlaybackRetry = audioPlaybackStore.register(() => {
+                            context.resume().catch((e) => console.error(e));
+                        });
+                    } else if (state === "running") {
+                        this.unregisterAudioContextPlaybackRetry?.();
+                        this.unregisterAudioContextPlaybackRetry = undefined;
+                        audioInterruptedStore.setInterrupted(false);
+                        // Calling resume in case we are coming from interrupted (for iOS Safari)
+                        context.resume().catch((e) => console.error(e));
+                    } else if (state === "interrupted") {
+                        this.unregisterAudioContextPlaybackRetry?.();
+                        this.unregisterAudioContextPlaybackRetry = undefined;
+                        audioInterruptedStore.setInterrupted(true);
+                    } else if (state === "closed") {
+                        audioInterruptedStore.setInterrupted(false);
+                        console.log("AudioContext is closing");
                     }
-                }
+                };
+                // No need to unregister, we have a signal
+                // eslint-disable-next-line listeners/no-missing-remove-event-listener
+                context.addEventListener("statechange", onStateChange, {
+                    signal: this.abortController.signal,
+                });
+                onStateChange();
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
-
-                gameSceneStore.set(this);
             })
-            .catch((e) => console.error(e));
+            .catch((e) => {
+                Sentry.captureException(e);
+                console.error("Error while connecting to pusher", e);
+            });
     }
 
     /**
@@ -2199,7 +2358,6 @@ export class GameScene extends DirtyScene {
             },
             this.getViewport(true),
             get(availabilityStatusStore),
-            connectionManager.tabId
         );
 
         // TODO: what happens if we never receive the room joined message?
@@ -2224,7 +2382,7 @@ export class GameScene extends DirtyScene {
                 })
                 .catch((e) => {
                     this.currentPlayerTexturesReject(e);
-                })
+                }),
         );
 
         if (room.companionTexture) {
@@ -2235,7 +2393,7 @@ export class GameScene extends DirtyScene {
                     })
                     .catch((e) => {
                         this.currentCompanionTextureReject(e);
-                    })
+                    }),
             );
         }
 
@@ -2243,13 +2401,13 @@ export class GameScene extends DirtyScene {
         this.sharedVariablesManager = new SharedVariablesManager(
             this.connection,
             this.gameMapFrontWrapper,
-            room.variables
+            room.variables,
         );
 
         // Set up area property variables manager
         this.areaPropertyVariablesManager = new AreaPropertyVariablesManager(
             this.connection,
-            room.areaPropertyVariables
+            room.areaPropertyVariables,
         );
         areaPropertyVariablesManagerStore.set(this.areaPropertyVariablesManager);
 
@@ -2292,7 +2450,7 @@ export class GameScene extends DirtyScene {
             this.playersEventDispatcher,
             playerVariables,
             this._room.id,
-            this._room.group ?? undefined
+            this._room.group ?? undefined,
         );
 
         if (this._spaceRegistry === undefined) {
@@ -2305,7 +2463,7 @@ export class GameScene extends DirtyScene {
                 WORLD_SPACE_NAME,
                 FilterType.ALL_USERS,
                 ["availabilityStatus", "chatID"],
-                this.abortController.signal
+                this.abortController.signal,
             )
             .then((space) => {
                 this.allUserSpace = space;
@@ -2335,21 +2493,40 @@ export class GameScene extends DirtyScene {
             })
             .catch((e) => {
                 const errorMessage = "Failed to get chatConnection from gameManager : " + e;
-                console.error(errorMessage);
+                console.error(errorMessage, e);
+                Sentry.captureException(e);
             });
 
-        this._proximityChatRoom = new ProximityChatRoom(
-            this.connection.getSpaceUserId(),
-            this._spaceRegistry,
-            iframeListener,
-            this.remotePlayersRepository,
-            this,
-            this.wamFile?.settings,
-            this.connection.getAllTags()
+        const connection = this.connection;
+        const spaceRegistry = this._spaceRegistry;
+        if (!spaceRegistry) {
+            throw new Error("_spaceRegistry not yet initialized");
+        }
+
+        const createProximityChatRoom = (spaceName: string, displayName: string, kind: ProximityChatRoomKind) =>
+            new ProximityChatRoom(
+                spaceName,
+                displayName,
+                kind,
+                connection.getSpaceUserId(),
+                spaceRegistry,
+                iframeListener,
+                this.remotePlayersRepository,
+                this,
+                this.wamFile?.settings,
+                connection.getAllTags(),
+            );
+
+        this._proximityChatRoomManager = new ProximityChatRoomManager(createProximityChatRoom);
+        this._proximityChatRoom = this._proximityChatRoomManager.getOrCreateRoom(
+            DEFAULT_PROXIMITY_SPACE_NAME,
+            get(LL).chat.proximity(),
+            "default",
         );
+        this._proximityChatRoomManagerDeferred.resolve(this._proximityChatRoomManager);
 
         this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
-        this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
+        this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoomManager);
 
         // Check WebRtc connection
         try {
@@ -2364,14 +2541,14 @@ export class GameScene extends DirtyScene {
             this._spaceRegistry,
             this.wamFile?.settings,
             this.connection.getAllTags(),
-            this.abortController.signal
+            this.abortController.signal,
         );
         this._broadcastService = broadcastService;
 
         const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
             this.getGameMap().getWamFile()?.getWam()?.settings,
             new URL(this.roomUrl).host,
-            this.roomUrl
+            this.roomUrl,
         );
         if (!megaphoneSpaceName) {
             megaphoneSpaceSettingsStore.set(undefined);
@@ -2384,15 +2561,15 @@ export class GameScene extends DirtyScene {
                 canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
                     this.getGameMap().getWamFile()?.getWam()?.settings,
                     this.connection.getAllTags(),
-                    localUserStore.isLogged()
+                    localUserStore.isLogged(),
                 ),
             });
         }
         megaphoneCanBeUsedStore.set(
             WAMSettingsUtils.canUseMegaphone(
                 this.getGameMap().getWamFile()?.getWam()?.settings,
-                this.connection.getAllTags()
-            )
+                this.connection.getAllTags(),
+            ),
         );
 
         this.subscribeToStores();
@@ -2400,6 +2577,7 @@ export class GameScene extends DirtyScene {
         await Promise.all(allPromises);
 
         this.roomJoinedPromiseDeferred.resolve(room);
+        gameSceneStore.set(this);
     }
 
     private initExtensionModule() {
@@ -2448,8 +2626,7 @@ export class GameScene extends DirtyScene {
                         logoutCallback: () => {
                             connectionManager.logout();
                         },
-                        externalRestrictedMapEditorProperties: mapEditorRestrictedPropertiesStore,
-                        showComponentInChat(component: ComponentType, props: Record<string, unknown>) {
+                        showComponentInChat(component, props?) {
                             navChat.switchToCustomComponent(component, props);
                             chatVisibilityStore.set(true);
                         },
@@ -2470,167 +2647,205 @@ export class GameScene extends DirtyScene {
     }
 
     private subscribeToStores(): void {
-        if (
-            this.userIsJitsiDominantSpeakerStoreUnsubscriber != undefined ||
-            this.jitsiParticipantsCountStoreUnsubscriber != undefined ||
-            this.availabilityStatusStoreUnsubscriber != undefined ||
-            this.emoteUnsubscriber != undefined ||
-            this.followUsersColorStoreUnsubscriber != undefined ||
-            this.mapEditorModeStoreUnsubscriber != undefined ||
-            this.mapExplorationStoreUnsubscriber != undefined ||
-            this.lastNewMediaDeviceDetectedStoreUnsubscriber != undefined
-        ) {
-            console.error(
-                "subscribeToStores => Check all subscriber undefined ",
-                this.userIsJitsiDominantSpeakerStoreUnsubscriber,
-                this.jitsiParticipantsCountStoreUnsubscriber,
-                this.availabilityStatusStoreUnsubscriber,
-                this.emoteUnsubscriber,
-                this.followUsersColorStoreUnsubscriber,
-                this.mapEditorModeStoreUnsubscriber,
-                this.mapExplorationStoreUnsubscriber,
-                this.lastNewMediaDeviceDetectedStoreUnsubscriber
-            );
-
-            throw new Error("One store is already subscribed.");
+        if (this.storesSubscribed) {
+            throw new Error("subscribeToStores: the stores are already subscribed.");
         }
+        this.storesSubscribed = true;
 
-        this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
-            (dominantSpeaker) => {
+        this.unsubscribers.push(
+            userIsJitsiDominantSpeakerStore.subscribe((dominantSpeaker) => {
                 this.jitsiDominantSpeaker = dominantSpeaker;
                 this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
-            }
+            }),
         );
 
-        this.jitsiParticipantsCountStoreUnsubscriber = jitsiParticipantsCountStore.subscribe((participantsCount) => {
-            this.jitsiParticipantsCount = participantsCount;
-            this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
-        });
+        this.unsubscribers.push(
+            jitsiParticipantsCountStore.subscribe((participantsCount) => {
+                this.jitsiParticipantsCount = participantsCount;
+                this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
+            }),
+        );
 
-        this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
-            if (!this.connection) {
-                throw new Error("Connection is undefined");
-            }
-            this.connection.emitPlayerStatusChange(availabilityStatus);
-            this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
-            if (availabilityStatus === AvailabilityStatus.SILENT) {
-                this.CurrentPlayer.toggleTalk(false, true);
-            }
-        });
-
-        this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
-            if (emote && get(enableUserInputsStore)) {
-                this.CurrentPlayer?.playEmote(emote.emoji);
-                this.connection?.emitEmoteEvent(emote.emoji);
-                emoteStore.set(null);
-            }
-        });
-
-        this.followUsersColorStoreUnsubscriber = followUsersColorStore.subscribe((color) => {
-            if (color !== undefined) {
-                this.CurrentPlayer.setFollowOutlineColor(color);
-                this.connection?.emitPlayerOutlineColor(color);
-            } else {
-                this.CurrentPlayer.removeFollowOutlineColor();
-                this.connection?.emitPlayerOutlineColor(null);
-            }
-        });
-
-        this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
-            //this.reposition();
-        });
-
-        this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
-            //this.reposition();
-        });
-
-        this.mapEditorModeStoreUnsubscriber = mapEditorModeStore.subscribe((isOn) => {
-            if (isOn) {
-                this.activatablesManager.deactivateSelectedObject();
-                this.activatablesManager.handlePointerOutActivatableObject();
-                this.activatablesManager.disableSelectingByDistance();
-            } else {
-                this.activatablesManager.handlePointerOutActivatableObject();
-                this.activatablesManager.enableSelectingByDistance();
-                // make sure all entities are non-interactive
-                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
-                // add interactions back only for activatables
-                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
-            }
-            this.markDirty();
-        });
-
-        this.mapExplorationStoreUnsubscriber = mapExplorationModeStore.subscribe((exploration) => {
-            if (exploration) {
-                this.cameraManager.setExplorationMode();
-            } else {
-                this.input.keyboard?.enableGlobalCapture();
-            }
-        });
-
-        this.lastNewMediaDeviceDetectedStoreUnsubscriber = lastNewMediaDeviceDetectedStore.subscribe((devices) => {
-            if (devices.length === 0) return;
-            const ignoredNewMediaDeviceIds = localUserStore.getIgnoredNewMediaDeviceIds();
-            // filter device by name tu avoid multiple notification for the same device
-            const devicesToNotify = devices.reduce((devices: MediaDeviceInfo[], currentDevice: MediaDeviceInfo) => {
-                if (ignoredNewMediaDeviceIds.has(currentDevice.deviceId)) {
-                    return devices;
+        this.unsubscribers.push(
+            availabilityStatusStore.subscribe((availabilityStatus) => {
+                if (!this.connection) {
+                    throw new Error("Connection is undefined");
                 }
-                if (
-                    devices.find((device_) => device_.label == currentDevice.label) != undefined ||
-                    get(requestedCameraDeviceIdStore) == currentDevice.deviceId ||
-                    get(requestedMicrophoneDeviceIdStore) == currentDevice.deviceId ||
-                    get(speakerSelectedStore) == currentDevice.deviceId
-                )
-                    return devices;
+                this.connection.emitPlayerStatusChange(availabilityStatus);
+                this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
+                if (availabilityStatus === AvailabilityStatus.SILENT) {
+                    this.CurrentPlayer.toggleTalk(false);
+                }
+            }),
+        );
 
-                devices.push(currentDevice);
-                return devices;
-            }, []);
+        this.unsubscribers.push(
+            emoteStore.subscribe((emote) => {
+                if (emote && get(enableUserInputsStore)) {
+                    this.CurrentPlayer?.playEmote(emote.emoji);
+                    this.connection?.emitEmoteEvent(emote.emoji);
+                    emoteStore.set(null);
+                }
+            }),
+        );
 
-            for (const device of devicesToNotify) {
-                const id = `${PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX}${device.deviceId}`;
-                this.CurrentPlayer.destroyText(id);
-                this.CurrentPlayer.playText(
-                    id,
-                    get(LL).camera.webrtc.newDeviceDetected({ device: device.label }),
-                    5000,
-                    () => {
-                        this.CurrentPlayer.destroyText(id);
+        this.unsubscribers.push(
+            isHandRaisedStore.subscribe((raised) => {
+                // Reflect the local user's raised hand on their own woka immediately. The state reaches the
+                // other participants through the space state (see SpacePeerManager.synchronizeMediaState), which
+                // drives both their video tile badge and the indicator above their woka on the map.
+                this.CurrentPlayer?.setRaisedHand(raised);
+            }),
+        );
 
-                        // get all devices with the same label
-                        const devicesToUse = devices.filter((device_) => device_.label === device.label);
-
-                        for (const deviceToUse of devicesToUse) {
-                            switch (deviceToUse.kind) {
-                                case "videoinput":
-                                    requestedCameraDeviceIdStore.set(deviceToUse.deviceId);
-                                    localUserStore.setPreferredVideoInputDevice(deviceToUse.deviceId);
-                                    break;
-                                // use the new device
-                                case "audioinput":
-                                    requestedMicrophoneDeviceIdStore.set(deviceToUse.deviceId);
-                                    localUserStore.setPreferredAudioInputDevice(deviceToUse.deviceId);
-                                    break;
-
-                                case "audiooutput":
-                                    localUserStore.setSpeakerDeviceId(deviceToUse.deviceId);
-                                    speakerSelectedStore.set(deviceToUse.deviceId);
-                                    break;
-                                default:
-                                    console.warn("Unknown device kind: ", deviceToUse.kind);
-                            }
-                        }
-                    },
-                    true,
-                    "message",
-                    () => {
-                        localUserStore.addIgnoredNewMediaDeviceId(device.deviceId);
-                        this.CurrentPlayer.destroyText(id);
+        // Drive the raised-hand indicator above REMOTE players' wokas from the raised-hands queue of the space state.
+        // The store is keyed by numeric player id (derived from each participant's spaceUserId).
+        this.unsubscribers.push(
+            raisedHandPlayerIdsStore.subscribe((raisedPlayerIds) => {
+                for (const playerId of raisedPlayerIds) {
+                    if (!this.previousRaisedHandPlayerIds.has(playerId)) {
+                        this.setRemotePlayerRaisedHand(playerId, true);
                     }
-                );
-            }
-        });
+                }
+                for (const playerId of this.previousRaisedHandPlayerIds) {
+                    if (!raisedPlayerIds.has(playerId)) {
+                        this.setRemotePlayerRaisedHand(playerId, false);
+                    }
+                }
+                this.previousRaisedHandPlayerIds = new Set(raisedPlayerIds);
+            }),
+        );
+
+        // Automatically lower the hand when leaving the conversation: the raise-hand button is only shown during a
+        // meeting, so a hand left raised on leave could otherwise no longer be lowered by the user.
+        this.unsubscribers.push(
+            isInRemoteConversation.subscribe((inConversation) => {
+                if (!inConversation) {
+                    requestedHandRaiseState.lowerAll();
+                }
+            }),
+        );
+        // A zone whose option says no needs no safety net: the hand is raised per space, so walking into such a
+        // zone leaves the hand raised elsewhere (e.g. in the bubble) alone, and a space the hand is up in stays
+        // offered by the button so it can still be lowered (see raiseHandSpacesStore).
+
+        this.unsubscribers.push(
+            followUsersColorStore.subscribe((color) => {
+                if (color !== undefined) {
+                    this.CurrentPlayer.setFollowOutlineColor(color);
+                    this.connection?.emitPlayerOutlineColor(color);
+                } else {
+                    this.CurrentPlayer.removeFollowOutlineColor();
+                    this.connection?.emitPlayerOutlineColor(null);
+                }
+            }),
+        );
+
+        this.unsubscribers.push(
+            highlightedEmbedScreen.subscribe((value) => {
+                //this.reposition();
+            }),
+        );
+
+        this.unsubscribers.push(
+            embedScreenLayoutStore.subscribe((layout) => {
+                //this.reposition();
+            }),
+        );
+
+        this.unsubscribers.push(
+            mapEditorModeStore.subscribe((isOn) => {
+                if (isOn) {
+                    this.activatablesManager.deactivateSelectedObject();
+                    this.activatablesManager.handlePointerOutActivatableObject();
+                    this.activatablesManager.disableSelectingByDistance();
+                } else {
+                    this.activatablesManager.handlePointerOutActivatableObject();
+                    this.activatablesManager.enableSelectingByDistance();
+                    // make sure all entities are non-interactive
+                    this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
+                    // add interactions back only for activatables
+                    this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
+                }
+                this.markDirty();
+            }),
+        );
+
+        this.unsubscribers.push(
+            mapExplorationModeStore.subscribe((exploration) => {
+                if (exploration) {
+                    this.cameraManager.setExplorationMode();
+                } else {
+                    this.input.keyboard?.enableGlobalCapture();
+                }
+            }),
+        );
+
+        this.unsubscribers.push(
+            lastNewMediaDeviceDetectedStore.subscribe((devices) => {
+                if (devices.length === 0) return;
+                const ignoredNewMediaDeviceIds = localUserStore.getIgnoredNewMediaDeviceIds();
+                // filter device by name tu avoid multiple notification for the same device
+                const devicesToNotify = devices.reduce((devices: MediaDeviceInfo[], currentDevice: MediaDeviceInfo) => {
+                    if (ignoredNewMediaDeviceIds.has(currentDevice.deviceId)) {
+                        return devices;
+                    }
+                    if (
+                        devices.find((device_) => device_.label == currentDevice.label) != undefined ||
+                        get(requestedCameraDeviceIdStore) == currentDevice.deviceId ||
+                        get(requestedMicrophoneDeviceIdStore) == currentDevice.deviceId ||
+                        get(speakerSelectedStore) == currentDevice.deviceId
+                    )
+                        return devices;
+
+                    devices.push(currentDevice);
+                    return devices;
+                }, []);
+
+                for (const device of devicesToNotify) {
+                    const id = `${PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX}${device.deviceId}`;
+                    this.CurrentPlayer.destroyText(id);
+                    this.CurrentPlayer.playText(
+                        id,
+                        get(LL).camera.webrtc.newDeviceDetected({ device: device.label }),
+                        5000,
+                        () => {
+                            this.CurrentPlayer.destroyText(id);
+
+                            // get all devices with the same label
+                            const devicesToUse = devices.filter((device_) => device_.label === device.label);
+
+                            for (const deviceToUse of devicesToUse) {
+                                switch (deviceToUse.kind) {
+                                    case "videoinput":
+                                        requestedCameraDeviceIdStore.set(deviceToUse.deviceId);
+                                        localUserStore.setPreferredVideoInputDevice(deviceToUse.deviceId);
+                                        break;
+                                    // use the new device
+                                    case "audioinput":
+                                        requestedMicrophoneDeviceIdStore.set(deviceToUse.deviceId);
+                                        localUserStore.setPreferredAudioInputDevice(deviceToUse.deviceId);
+                                        break;
+
+                                    case "audiooutput":
+                                        localUserStore.setSpeakerDeviceId(deviceToUse.deviceId);
+                                        speakerSelectedStore.set(deviceToUse.deviceId);
+                                        break;
+                                    default:
+                                        console.warn("Unknown device kind: ", deviceToUse.kind);
+                                }
+                            }
+                        },
+                        true,
+                        "message",
+                        () => {
+                            localUserStore.addIgnoredNewMediaDeviceId(device.deviceId);
+                            this.CurrentPlayer.destroyText(id);
+                        },
+                    );
+                }
+            }),
+        );
 
         const NO_MICROPHONE_SOUND_TOAST_ID = "no-microphone-sound-toast";
         this.unsubscribers.push(
@@ -2640,7 +2855,7 @@ export class GameScene extends DirtyScene {
                 } else {
                     toastStore.removeToast(NO_MICROPHONE_SOUND_TOAST_ID);
                 }
-            })
+            }),
         );
 
         this.isLiveStreamingUnsubscriber = this.spaceRegistry.isLiveStreamingStore.subscribe((isStreaming) => {
@@ -2656,7 +2871,7 @@ export class GameScene extends DirtyScene {
                 if (!shouldPublish && get(requestedScreenSharingState)) {
                     requestedScreenSharingState.disableScreenSharing();
                 }
-            }
+            },
         );
 
         // Subscribe to bubble sound changes
@@ -2665,7 +2880,7 @@ export class GameScene extends DirtyScene {
                 this.load.audio(`audio-webrtc-in-${soundType}`, `/resources/objects/webrtc-in-${soundType}.mp3`);
                 this.load.audio(`audio-webrtc-out-${soundType}`, `/resources/objects/webrtc-out-${soundType}.mp3`);
                 this.load.start();
-            })
+            }),
         );
     }
 
@@ -2680,7 +2895,7 @@ export class GameScene extends DirtyScene {
                     console.error(
                         "Error while opening a popup. Cannot find an object on the map with name '" +
                             openPopupEvent.targetObject +
-                            "'. The first parameter of WA.openPopup() must be the name of a rectangle object in your map."
+                            "'. The first parameter of WA.openPopup() must be the name of a rectangle object in your map.",
                     );
                     return;
                 }
@@ -2699,7 +2914,7 @@ ${escapedMessage}
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {
                     html += `<div class="flex w-full"><button type="button" class="btn btn-xs hover:bg-contrast-600/50 justify-center w-full pb-4 ${HtmlUtils.escapeHtml(
-                        button.className ?? ""
+                        button.className ?? "",
                     )}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                     id++;
                 }
@@ -2719,7 +2934,7 @@ ${escapedMessage}
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 for (const button of openPopupEvent.buttons) {
                     const button = HtmlUtils.getElementByIdOrFail<HTMLButtonElement>(
-                        `popup-${openPopupEvent.popupId}-${id}`
+                        `popup-${openPopupEvent.popupId}-${id}`,
                     );
                     const btnId = id;
                     button.onclick = () => {
@@ -2742,8 +2957,11 @@ ${escapedMessage}
                 this.popUpElements.set(openPopupEvent.popupId, domElement);
 
                 // Analytics tracking for popups
-                analyticsClient.openedPopup(openPopupEvent.targetObject, openPopupEvent.popupId);
-            })
+                analyticsClient.trackAdminEvent("popup.opened", {
+                    targetRectangle: openPopupEvent.targetObject,
+                    id: openPopupEvent.popupId,
+                });
+            }),
         );
 
         this.iframeSubscriptionList.push(
@@ -2753,7 +2971,7 @@ ${escapedMessage}
                     console.error(
                         "Could not close popup with ID ",
                         closePopupEvent.popupId,
-                        ". Maybe it has already been closed?"
+                        ". Maybe it has already been closed?",
                     );
                 }
 
@@ -2767,59 +2985,59 @@ ${escapedMessage}
                         this.popUpElements.delete(closePopupEvent.popupId);
                     },
                 });
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.openChatStream.subscribe(() => {
                 chatVisibilityStore.set(true);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.closeChatStream.subscribe(() => {
                 chatVisibilityStore.set(false);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.turnOffMicrophoneStream.subscribe(() => {
                 requestedMicrophoneState.disableMicrophone();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.turnOffWebcamStream.subscribe(() => {
                 requestedCameraState.disableWebcam();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.disableMicrophoneStream.subscribe(() => {
                 myMicrophoneBlockedStore.set(true);
                 mediaManager.disableMyMicrophone();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.restoreMicrophoneStream.subscribe(() => {
                 myMicrophoneBlockedStore.set(false);
                 mediaManager.enableMyMicrophone();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.disableWebcamStream.subscribe(() => {
                 myCameraBlockedStore.set(true);
                 mediaManager.disableMyCamera();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.restoreWebcamStream.subscribe(() => {
                 myCameraBlockedStore.set(false);
                 mediaManager.enableMyCamera();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
@@ -2843,14 +3061,14 @@ ${escapedMessage}
                         console.error(`Unhandled status value: ${_exhaustiveCheck}`);
                     }
                 }
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             // FIXME: aren't we making a weird loop here?
             iframeListener.addPersonnalMessageStream.subscribe((text) => {
                 iframeListener.sendUserInputChat(text, undefined);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
@@ -2876,7 +3094,7 @@ ${escapedMessage}
                         console.error("Error while sending proximity chat message", error);
                         Sentry.captureException(error);
                     });
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
@@ -2886,14 +3104,14 @@ ${escapedMessage}
                         room.addExternalTypingUser(
                             btoa(sartWriting.author ?? "unknow"),
                             sartWriting.author ?? "unknow",
-                            null
+                            null,
                         );
                     })
                     .catch((error) => {
                         console.error("Error while starting typing proximity message", error);
                         Sentry.captureException(error);
                     });
-            })
+            }),
         );
         this.iframeSubscriptionList.push(
             iframeListener.stopTypingProximityMessageStream.subscribe((stopWriting) => {
@@ -2905,64 +3123,74 @@ ${escapedMessage}
                         console.error("Error while stopping typing proximity message", error);
                         Sentry.captureException(error);
                     });
-            })
+            }),
         );
 
-        /*this.iframeSubscriptionList.push(
+        this.iframeSubscriptionList.push(
             iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
-                // TODO: Implement
-                console.debug("Not implemented yet with new chat integration", status);
-            })
-        );*/
+                const room = this.getDefaultProximityChatRoom();
+                if (status === ChatMessageTypes.userWriting) {
+                    room.startTyping().catch((e) => {
+                        console.error("Error while sending typing status", e);
+                    });
+                } else if (status === ChatMessageTypes.userStopWriting) {
+                    room.stopTyping().catch((e) => {
+                        console.error("Error while sending typing status", e);
+                    });
+                }
+            }),
+        );
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerControlStream.subscribe((messageEventSource) => {
                 if (messageEventSource) {
                     this.userInputManager.disableControls(messageEventSource);
-
+                    this.userInputManager.disableRightClick();
                     iframeListener.onIframeCloseEvent(messageEventSource, () => {
                         this.userInputManager.restoreControls(messageEventSource);
+                        this.userInputManager.restoreRightClick();
                     });
                 }
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.enablePlayerControlStream.subscribe((messageEventSource) => {
                 if (messageEventSource) {
                     this.userInputManager.restoreControls(messageEventSource);
+                    this.userInputManager.restoreRightClick();
                 }
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerProximityMeetingStream.subscribe(() => {
                 mediaManager.disableProximityMeeting();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.enablePlayerProximityMeetingStream.subscribe(() => {
                 mediaManager.enableProximityMeeting();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.cameraSetStream.subscribe((cameraSetEvent) => {
-                const duration = cameraSetEvent.smooth ? cameraSetEvent.duration ?? 1000 : 0;
+                const duration = cameraSetEvent.smooth ? (cameraSetEvent.duration ?? 1000) : 0;
                 if (cameraSetEvent.lock) {
                     this.cameraManager.enterFocusMode({ ...cameraSetEvent }, undefined, duration);
                 } else {
                     this.cameraManager.setPosition({ ...cameraSetEvent }, duration);
                 }
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.cameraFollowPlayerStream.subscribe((cameraFollowPlayerEvent) => {
-                const duration = cameraFollowPlayerEvent.smooth ? cameraFollowPlayerEvent.duration ?? 1000 : 0;
+                const duration = cameraFollowPlayerEvent.smooth ? (cameraFollowPlayerEvent.duration ?? 1000) : 0;
                 this.cameraManager.leaveFocusMode(this.CurrentPlayer, duration);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
@@ -2971,14 +3199,14 @@ ${escapedMessage}
                 soundManager
                     .playSound(this.load, this.sound, url.toString(), playSoundEvent.config)
                     .catch((e) => console.error(e));
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
                 const url = new URL(stopSoundEvent.url, this.mapUrlFile);
                 soundManager.stopSound(this.sound, url.toString());
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
@@ -2989,13 +3217,13 @@ ${escapedMessage}
                         iframeListener.sendActionsMenuActionClickedEvent({ actionName: data.actionKey, id: data.id });
                     },
                 });
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.removeActionsMenuKeyFromRemotePlayerEvent.subscribe((data) => {
                 this.MapPlayersByKey.get(data.id)?.unregisterWokaMenuAction(data.actionKey);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
@@ -3024,31 +3252,31 @@ ${escapedMessage}
                             this.lastCameraEvent = cameraEvent;
                             iframeListener.sendCameraUpdated(cameraEvent);
                             this.firstCameraUpdateSent = true;
-                        }
+                        },
                     );
                 }
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.loadSoundStream.subscribe((loadSoundEvent) => {
                 const url = new URL(loadSoundEvent.url, this.mapUrlFile);
                 soundManager.loadSound(this.load, this.sound, url.toString()).catch((e) => console.error(e));
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.loadPageStream.subscribe((url: string) => {
                 this.loadNextGameFromExitUrl(url)
                     .then(() => {
-                        this.events.once(EVENT_TYPE.POST_UPDATE, () => {
+                        this.events.once(Phaser.Scenes.Events.POST_UPDATE, () => {
                             this.onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString())).catch((e) =>
-                                console.error(e)
+                                console.error(e),
                             );
                         });
                     })
                     .catch((e) => console.error(e));
-            })
+            }),
         );
         let scriptedBubbleSprite: Sprite;
         this.iframeSubscriptionList.push(
@@ -3057,99 +3285,99 @@ ${escapedMessage}
                     this,
                     this.CurrentPlayer.x + 25,
                     this.CurrentPlayer.y,
-                    "circleSprite-white"
+                    "circleSprite-white",
                 );
                 scriptedBubbleSprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
                 this.add.existing(scriptedBubbleSprite);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.removeBubbleStream.subscribe(() => {
                 scriptedBubbleSprite.destroy();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.showLayerStream.subscribe((layerEvent) => {
                 this.gameMapFrontWrapper.setLayerVisibility(layerEvent.name, true);
                 this.markDirty();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.hideLayerStream.subscribe((layerEvent) => {
                 this.gameMapFrontWrapper.setLayerVisibility(layerEvent.name, false);
                 this.markDirty();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.setPropertyStream.subscribe((setProperty) => {
                 this.setPropertyLayer(setProperty.layerName, setProperty.propertyName, setProperty.propertyValue);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.setAreaPropertyStream.subscribe((setProperty) => {
                 this.setAreaProperty(setProperty.areaName, setProperty.propertyName, setProperty.propertyValue);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.banPlayerIframeEvent.subscribe((banPlayerEvent) => {
                 this.connection?.emitBanPlayerMessage(banPlayerEvent.uuid, banPlayerEvent.name);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.mapEditorStream.subscribe((isActivated: boolean) => {
                 mapManagerActivated.set(isActivated);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.screenSharingStream.subscribe((isActivated: boolean) => {
                 screenSharingActivatedStore.set(isActivated);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.rightClickStream.subscribe((isRestore: boolean) => {
                 if (isRestore) this.userInputManager.restoreRightClick();
                 else this.userInputManager.disableRightClick();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.wheelZoomStream.subscribe((isRestore: boolean) => {
                 if (isRestore) this.cameraManager.unlockZoom();
                 else this.cameraManager.lockZoom();
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.inviteUserButtonStream.subscribe((isActivated: boolean) => {
                 inviteUserActivated.set(isActivated);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.roomListButtonStream.subscribe((isActivated: boolean) => {
                 roomListActivated.set(isActivated);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.addButtonActionBarStream.subscribe((event) => {
                 registerAdditionalMenuItem(event);
-            })
+            }),
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.removeButtonActionBarStream.subscribe((event) => {
                 unregisterAdditionalMenuItem(event);
-            })
+            }),
         );
 
         iframeListener.registerAnswerer("openCoWebsite", (openCoWebsite, source) => {
@@ -3208,7 +3436,7 @@ ${escapedMessage}
                 playerId: this.connection?.getUserId(),
                 mapUrl: this.mapUrlFile,
                 hashParameters: urlManager.getHashParameters(),
-                startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
+                startLayerName: urlManager.getStartPositionNameFromUrl(),
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
                 language: get(locale),
@@ -3227,9 +3455,8 @@ ${escapedMessage}
             iframeListener.setTilesStream.subscribe((eventTiles) => {
                 for (const eventTile of eventTiles) {
                     this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
-                    this.animatedTiles.updateAnimatedTiles(eventTile.x, eventTile.y);
                 }
-            })
+            }),
         );
         iframeListener.registerAnswerer("enablePlayersTracking", (enablePlayersTrackingEvent, source) => {
             if (source === null) {
@@ -3305,8 +3532,8 @@ ${escapedMessage}
                                     jsonTileset.tileHeight,
                                     jsonTileset.margin,
                                     jsonTileset.spacing,
-                                    jsonTileset.tiles
-                                )
+                                    jsonTileset.tiles,
+                                ),
                             );
                             const tilesetImage = this.Map.addTilesetImage(
                                 jsonTileset.name,
@@ -3314,7 +3541,7 @@ ${escapedMessage}
                                 jsonTileset.tilewidth,
                                 jsonTileset.tileheight,
                                 jsonTileset.margin,
-                                jsonTileset.spacing
+                                jsonTileset.spacing,
                             );
                             if (tilesetImage) {
                                 this.Terrains.push(tilesetImage);
@@ -3331,7 +3558,7 @@ ${escapedMessage}
                                 this,
                                 new GameMap(this.mapFile, this.wamFile),
                                 this.Map,
-                                this.Terrains
+                                this.Terrains,
                             );
                             // Unsubscribe if needed and subscribe to GameMapChanged event again
                             this.subscribeToGameMapChanged();
@@ -3344,9 +3571,10 @@ ${escapedMessage}
                             this.gameMapPropertiesListener?.destroy();
                             this.gameMapPropertiesListener = new GameMapPropertiesListener(
                                 this,
-                                this.gameMapFrontWrapper
+                                this.gameMapFrontWrapper,
                             );
                             this.gameMapPropertiesListener.register();
+                            this.configureTileAnimations();
                             resolve(newFirstgid);
                         });
                         this.load.off("loaderror", errorHandler);
@@ -3364,21 +3592,21 @@ ${escapedMessage}
                 PopUpTriggerActionMessage,
                 {
                     message: message.message,
-                    click: () => {
+                    onclick: () => {
                         popupStore.removePopup(message.uuid);
                         iframeListener.sendActionMessageTriggered(message.uuid);
                     },
                     userInputManager: this.userInputManager,
                 },
-                message.uuid
-            )
+                message.uuid,
+            ),
         );
 
         iframeListener.registerAnswerer("triggerPlayerMessage", (message) =>
             this.CurrentPlayer.playText(message.uuid, message.message, undefined, () => {
                 this.CurrentPlayer.destroyText(message.uuid);
                 iframeListener.sendActionMessageTriggered(message.uuid);
-            })
+            }),
         );
 
         iframeListener.registerAnswerer("setVariable", (event, source) => {
@@ -3481,18 +3709,99 @@ ${escapedMessage}
         iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
             const soundUrl = new URL(message.url, this.mapUrlFile);
             try {
-                const proximityChatRoom = await this._proximityChatRoomDeferred.promise;
-                await proximityChatRoom.dispatchSound(soundUrl);
+                await this.getDefaultProximityChatRoom().dispatchSound(soundUrl);
             } catch (error) {
                 console.error("Error playing sound in bubble:", error);
             }
         });
+
+        iframeListener.registerAnswerer("playSoundInMeeting", async (message) => {
+            const soundUrl = new URL(message.url, this.mapUrlFile);
+            await this.getMeetingProximityChatRoom(message.meetingId).dispatchSound(soundUrl);
+        });
+
+        iframeListener.registerAnswerer("startStreamInBubble", async (message) => {
+            await this.getDefaultProximityChatRoom().startScriptingAudioStream(message.sampleRate);
+        });
+
+        iframeListener.registerAnswerer("startStreamInMeeting", async (message) => {
+            await this.getMeetingProximityChatRoom(message.meetingId).startScriptingAudioStream(message.sampleRate);
+        });
+
+        iframeListener.registerAnswerer("appendPCMData", async (message) => {
+            await this.getDefaultProximityChatRoom().appendScriptingAudioData(message.data);
+        });
+
+        iframeListener.registerAnswerer("appendPCMDataToMeeting", async (message) => {
+            await this.getMeetingProximityChatRoom(message.meetingId).appendScriptingAudioData(message.data);
+        });
+
+        iframeListener.registerAnswerer("resetAudioBuffer", async () => {
+            await this.getDefaultProximityChatRoom().resetScriptingAudioBuffer();
+        });
+
+        iframeListener.registerAnswerer("resetMeetingAudioBuffer", async (message) => {
+            await this.getMeetingProximityChatRoom(message.meetingId).resetScriptingAudioBuffer();
+        });
+
+        iframeListener.registerAnswerer("stopStreamInBubble", () => {
+            this.getDefaultProximityChatRoom().stopScriptingAudioStream();
+        });
+
+        iframeListener.registerAnswerer("stopStreamInMeeting", (message) => {
+            this.getMeetingProximityChatRoom(message.meetingId).stopScriptingAudioStream();
+        });
+
+        const startListeningToStreamInBubbleSubscription =
+            iframeListener.startListeningToStreamInBubbleStream.subscribe((message) => {
+                this.getDefaultProximityChatRoom()
+                    .startListeningToScriptingAudioStream(message.sampleRate)
+                    .catch((error) => {
+                        console.error("Error while starting listening to streams", error);
+                        Sentry.captureException(error);
+                    });
+            });
+        this.unsubscribers.push(() => startListeningToStreamInBubbleSubscription.unsubscribe());
+
+        const stopListeningToStreamInBubbleSubscription = iframeListener.stopListeningToStreamInBubbleStream.subscribe(
+            () => {
+                this.getDefaultProximityChatRoom().stopListeningToScriptingAudioStream();
+            },
+        );
+        this.unsubscribers.push(() => stopListeningToStreamInBubbleSubscription.unsubscribe());
+
+        const startListeningToStreamInMeetingSubscription =
+            iframeListener.startListeningToStreamInMeetingStream.subscribe((message) => {
+                try {
+                    this.getMeetingProximityChatRoom(message.meetingId)
+                        .startListeningToScriptingAudioStream(message.sampleRate, message.meetingId)
+                        .catch((error) => {
+                            console.error("Error while starting listening to meeting streams", error);
+                            Sentry.captureException(error);
+                        });
+                } catch (error) {
+                    console.error("Error while starting listening to meeting streams", error);
+                    Sentry.captureException(error);
+                }
+            });
+        this.unsubscribers.push(() => startListeningToStreamInMeetingSubscription.unsubscribe());
+
+        const stopListeningToStreamInMeetingSubscription =
+            iframeListener.stopListeningToStreamInMeetingStream.subscribe((message) => {
+                try {
+                    this.getMeetingProximityChatRoom(message.meetingId).stopListeningToScriptingAudioStream();
+                } catch (error) {
+                    console.error("Error while stopping listening to meeting streams", error);
+                    Sentry.captureException(error);
+                }
+            });
+        this.unsubscribers.push(() => stopListeningToStreamInMeetingSubscription.unsubscribe());
     }
 
     private setPropertyLayer(
         layerName: string,
         propertyName: string,
-        propertyValue: string | number | boolean | undefined
+        propertyValue: string | number | boolean | undefined,
     ): void {
         if (propertyName === GameMapProperties.EXIT_URL && typeof propertyValue === "string") {
             this.loadNextGameFromExitUrl(propertyValue).catch((e) => console.error(e));
@@ -3504,6 +3813,35 @@ ${escapedMessage}
         this.gameMapFrontWrapper.setDynamicAreaProperty(areaName, propertyName, propertyValue);
     }
 
+    public setTileAnimationsPaused(paused: boolean): void {
+        this.gameMapFrontWrapper?.setTileAnimationsPaused(paused);
+        if (!paused) {
+            this.markDirty();
+        }
+    }
+
+    private configureTileAnimations(): void {
+        this.tileAnimationRefreshEvent?.remove(false);
+        this.tileAnimationRefreshEvent = undefined;
+
+        this.setTileAnimationsPaused(localUserStore.getDisableAnimations());
+
+        const refreshDelay = this.gameMapFrontWrapper.getTileAnimationRefreshDelay();
+        if (refreshDelay === undefined) {
+            return;
+        }
+
+        this.tileAnimationRefreshEvent = this.time.addEvent({
+            delay: refreshDelay,
+            loop: true,
+            callback: () => {
+                if (!localUserStore.getDisableAnimations()) {
+                    this.markDirty();
+                }
+            },
+        });
+    }
+
     private removeAllRemotePlayers(): void {
         this.MapPlayersByKey.forEach((player: RemotePlayer) => {
             player.destroy();
@@ -3513,6 +3851,7 @@ ${escapedMessage}
             }
         });
         this.MapPlayersByKey.clear();
+        this.remotePlayersSpatialIndex.clear();
     }
 
     private tryOpenMapEditorWithToolEditorParameter(): void {
@@ -3523,12 +3862,12 @@ ${escapedMessage}
                     PopUpMapEditorNotEnabled,
                     {
                         message: get(LL).warning.mapEditorNotEnabled(),
-                        click: () => {
+                        onclick: () => {
                             popupStore.removePopup("mapEditorNotEnabled");
                         },
                         userInputManager: this.userInputManager,
                     },
-                    "mapEditorNotEnabled"
+                    "mapEditorNotEnabled",
                 );
 
                 setTimeout(() => popupStore.removePopup("mapEditorNotEnabled"), 6_000);
@@ -3542,7 +3881,7 @@ ${escapedMessage}
                             switch (menuItem) {
                                 case "megaphone": {
                                     mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
-                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
+                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone,
                                     );
                                     break;
                                 }
@@ -3574,12 +3913,12 @@ ${escapedMessage}
                             PopUpMapEditorShortcut,
                             {
                                 message: get(LL).warning.mapEditorShortCut(),
-                                click: () => {
+                                onclick: () => {
                                     popupStore.removePopup("mapEditorShortCut");
                                 },
                                 userInputManager: this.userInputManager,
                             },
-                            "mapEditorShortCut"
+                            "mapEditorShortCut",
                         );
 
                         setTimeout(() => popupStore.removePopup("mapEditorShortCut"), 6_000);
@@ -3622,7 +3961,7 @@ ${escapedMessage}
                             endPos = destinationObject;
                         } else {
                             endPos = this.pathfindingManager.mapTileUnitToPixels(
-                                this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam)
+                                this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam),
                             );
                         }
                     }
@@ -3651,21 +3990,123 @@ ${escapedMessage}
     public async moveTo(
         position: { x: number; y: number },
         tryFindingNearestAvailable = false,
-        speed: number | undefined = undefined
+        speed: number | undefined = undefined,
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         const pathfindingManager = this.getPathfindingManager();
-        pathfindingManager.setCollisionGrid(this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }));
 
-        const path = await pathfindingManager.findPathFromGameCoordinates(
-            {
-                x: this.CurrentPlayer.x,
-                y: this.CurrentPlayer.y,
-            },
-            position,
-            tryFindingNearestAvailable
-        );
-        if (path.length === 0) throw new Error("No path found");
-        return this.CurrentPlayer.setPathToFollow(path, speed ?? this.CurrentPlayer.walkingSpeed);
+        // The collision grid can change while the path is followed (an area gets locked or full...): the
+        // player then aborts right before walking onto a blocking tile (see Player.onPathWaypointReached)
+        // and we compute a new route to the destination.
+        for (let attempt = 0; attempt <= MAX_PATH_REROUTES; attempt += 1) {
+            pathfindingManager.setCollisionGrid(
+                this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }),
+            );
+            // Each attempt must fully complete (walk, then maybe reroute) before the next one starts.
+            // eslint-disable-next-line no-await-in-loop
+            const path = await pathfindingManager.findPathFromGameCoordinates(
+                {
+                    x: this.CurrentPlayer.x,
+                    y: this.CurrentPlayer.y,
+                },
+                position,
+                tryFindingNearestAvailable,
+            );
+            if (path.length === 0) {
+                if (attempt === 0) {
+                    // The destination is unreachable from the start (typically an already locked area):
+                    // still walk towards it instead of silently doing nothing.
+                    return this.walkTowardsBlockedDestination(position, tryFindingNearestAvailable, speed);
+                }
+                break;
+            }
+            // eslint-disable-next-line no-await-in-loop
+            const result = await this.CurrentPlayer.setPathToFollow(path, speed ?? this.CurrentPlayer.walkingSpeed);
+            if (!result.blocked) {
+                // Normal arrival, or cancellation by the user taking over: never reroute in that case.
+                return { x: result.x, y: result.y, cancelled: result.cancelled };
+            }
+        }
+
+        // The path got blocked mid-walk and the destination is not reachable anymore. The woka already
+        // stands right before the blocking tile: warn about the area blocking the destination.
+        this.displayPathBlockedWarning(position);
+        return { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y, cancelled: true };
+    }
+
+    /**
+     * The destination is not reachable right now (typically inside an already locked area). Rather than
+     * doing nothing, walks towards it on a path computed as if the blocking areas were walkable: the live
+     * next-waypoint check (see Player.onPathWaypointReached) stops the woka right before the first tile
+     * that really collides, where the blocked-area warning is displayed. If the area gets unlocked while
+     * the woka is walking, it simply reaches the destination.
+     */
+    private async walkTowardsBlockedDestination(
+        position: { x: number; y: number },
+        tryFindingNearestAvailable: boolean,
+        speed: number | undefined,
+    ): Promise<{ x: number; y: number; cancelled: boolean }> {
+        const areasManager = this.gameMapFrontWrapper.areasManager;
+        if (!areasManager) {
+            throw new Error("No path found");
+        }
+
+        // Suggestion grid only: real walls stay, and reality is enforced tile by tile while walking.
+        const pathfindingManager = this.getPathfindingManager();
+        const liveGrid = this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false });
+        const tileDimensions = this.gameMapFrontWrapper.getTileDimensions();
+        const suggestionGrid = liveGrid.map((row) => [...row]);
+        for (const area of areasManager.getCollidingAreas()) {
+            const xStart = Math.max(0, Math.floor(area.x / tileDimensions.width));
+            const xEnd = Math.ceil((area.x + area.width) / tileDimensions.width);
+            const yStart = Math.max(0, Math.floor(area.y / tileDimensions.height));
+            const yEnd = Math.ceil((area.y + area.height) / tileDimensions.height);
+            for (let y = yStart; y < Math.min(yEnd, suggestionGrid.length); y += 1) {
+                suggestionGrid[y].fill(PathTileType.Walkable, xStart, xEnd);
+            }
+        }
+
+        pathfindingManager.setCollisionGrid(suggestionGrid);
+        const path = await pathfindingManager
+            .findPathFromGameCoordinates(
+                {
+                    x: this.CurrentPlayer.x,
+                    y: this.CurrentPlayer.y,
+                },
+                position,
+                tryFindingNearestAvailable,
+            )
+            .finally(() => pathfindingManager.setCollisionGrid(liveGrid));
+        if (path.length === 0) {
+            throw new Error("No path found");
+        }
+
+        const result = await this.CurrentPlayer.setPathToFollow(path, speed ?? this.CurrentPlayer.walkingSpeed);
+        if (!result.blocked) {
+            // The area got unlocked while walking and the woka arrived, or the user took over.
+            return { x: result.x, y: result.y, cancelled: result.cancelled };
+        }
+        this.displayPathBlockedWarning(position);
+        return { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y, cancelled: true };
+    }
+
+    /**
+     * Displays the blocked-area warning above the woka when a pathfinding move had to stop short of its
+     * unreachable destination, reusing the same message (and admin unlock affordance) as a physical
+     * collision with the area.
+     */
+    private displayPathBlockedWarning(destination: { x: number; y: number }): void {
+        const areasManager = this.gameMapFrontWrapper.areasManager;
+        if (!areasManager) {
+            return;
+        }
+        const blockingArea = areasManager
+            .getCollidingAreas()
+            .find((area) => MathUtils.isOverlappingWithRectangle(destination, area));
+        if (!blockingArea) {
+            // Blocked by something else than an area (an entity, a layer change...): stay silent.
+            return;
+        }
+        areasManager.getAreaById(blockingArea.id)?.displayBlockedWarningMessage();
     }
 
     /**
@@ -3707,7 +4148,7 @@ ${escapedMessage}
 
         try {
             await this.moveTo({ x: centerX, y: centerY }, true, WOKA_SPEED * 2.5);
-            analyticsClient.goToPersonalDesk();
+            analyticsClient.trackAdminEvent("personal_desk.entered");
         } catch (error) {
             console.warn("Error while moving to personal desk", error);
             warningMessageStore.addWarningMessage(get(LL).actionbar.personalDesk.errorMoving(), { closable: true });
@@ -3782,25 +4223,17 @@ ${escapedMessage}
                 this.CurrentPlayer,
                 phaserLayer,
                 (
-                    object1:
-                        | Phaser.Physics.Arcade.Body
-                        | Phaser.Physics.Arcade.StaticBody
-                        | Phaser.Tilemaps.Tile
-                        | Phaser.Types.Physics.Arcade.GameObjectWithBody,
-                    object2:
-                        | Phaser.Physics.Arcade.Body
-                        | Phaser.Physics.Arcade.StaticBody
-                        | Phaser.Tilemaps.Tile
-                        | Phaser.Types.Physics.Arcade.GameObjectWithBody
-                ) => {}
+                    object1: Body | StaticBody | Tile | Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                    object2: Body | StaticBody | Tile | Phaser.Types.Physics.Arcade.GameObjectWithBody,
+                ) => {},
             );
             phaserLayer.setCollisionByProperty({ collides: true });
             if (DEBUG_MODE) {
                 //debug code to see the collision hitbox of the object in the top layer
                 phaserLayer.renderDebug(this.add.graphics(), {
                     tileColor: null, //non-colliding tiles
-                    collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
-                    faceColor: new Phaser.Display.Color(40, 39, 37, 255), // Colliding face edges
+                    collidingTileColor: new Color(243, 134, 48, 200), // Colliding tiles,
+                    faceColor: new Color(40, 39, 37, 255), // Colliding face edges
                 });
             }
             //});
@@ -3819,12 +4252,12 @@ ${escapedMessage}
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
                 false,
-                gameManager.getCompanionTextureId() != undefined ? this.currentCompanionTexturePromise : undefined
+                gameManager.getCompanionTextureId() != undefined ? this.currentCompanionTexturePromise : undefined,
             );
-            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
-                this.CurrentPlayer.pointerOverOutline(0x365dff);
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Pointer) => {
+                this.CurrentPlayer.pointerOverOutline(PHASER_COLOR_DESIGN_SYSTEM_SECONDARY);
             });
-            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Pointer) => {
                 this.CurrentPlayer.pointerOutOutline();
             });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
@@ -3900,7 +4333,6 @@ ${escapedMessage}
         if (forceRecomputeCamera) {
             // When calling this before the first render, camera.preRender() must be called before accessing worldView to ensure it's up to date.
             // See: https://docs.phaser.io/phaser/concepts/cameras#world-view
-            // @ts-ignore preRender is protected, but the Phaser docs advertises this, so we ignore the warning.
             camera.preRender();
         }
 
@@ -3929,7 +4361,7 @@ ${escapedMessage}
                 "Updated players:",
                 this.remotePlayersRepository.getUpdatedPlayers(),
                 "Removed players:",
-                this.remotePlayersRepository.getRemovedPlayers()
+                this.remotePlayersRepository.getRemovedPlayers(),
             );
             return;
         }
@@ -3953,7 +4385,7 @@ ${escapedMessage}
                     : undefined,
                 undefined,
                 addPlayerData.chatID,
-                addPlayerData.sayMessage
+                addPlayerData.sayMessage,
             );
         } catch (error) {
             if (error instanceof CharacterTextureError) {
@@ -3970,8 +4402,14 @@ ${escapedMessage}
         if (addPlayerData.availabilityStatus !== 0) {
             player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
+        // If this player already had their hand raised before their woka was created (e.g. we just joined the
+        // meeting, or the SpaceUser arrived before the woka), reflect it immediately.
+        if (get(raisedHandPlayerIdsStore).has(player.userId)) {
+            player.setRaisedHand(true);
+        }
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
+        this.remotePlayersSpatialIndex.set(player.userId, player);
 
         player.on(Phaser.Input.Events.POINTER_OVER, () => {
             this.activatablesManager.handlePointerOverActivatableObject(player);
@@ -4016,7 +4454,7 @@ ${escapedMessage}
                     }
                     this.activatablesManager.handlePointerOverActivatableObject(entity);
                     this.markDirty();
-                })
+                }),
         );
         this.rxJsSubscriptions.push(
             this.gameMapFrontWrapper
@@ -4028,7 +4466,7 @@ ${escapedMessage}
                     }
                     this.activatablesManager.handlePointerOutActivatableObject();
                     this.markDirty();
-                })
+                }),
         );
     }
 
@@ -4044,6 +4482,7 @@ ${escapedMessage}
             }
         }
         this.MapPlayersByKey.delete(userId);
+        this.remotePlayersSpatialIndex.delete(userId);
         // console.debug("User removed in MapPlayersByKey in GameScene", userId);
         this.playersPositionInterpolator.removePlayer(userId);
     }
@@ -4078,7 +4517,7 @@ ${escapedMessage}
             {
                 ...message.position,
             },
-            this.currentTick + POSITION_DELAY
+            this.currentTick + POSITION_DELAY,
         );
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);
     }
@@ -4091,6 +4530,11 @@ ${escapedMessage}
     }
 
     private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
+        // NOTE: interestingly, the exact group position (x / y) is no longer used to draw the bubble.
+        // The center of the bubble is recomputed inside the ConversationBubble which allows having the center
+        // based on interpolated players position (so updated every frame and not every 200ms).
+        // The message is still useful for the bubble status (whether it's locked or not)
+
         const userId = this.connection?.getUserId();
         if (userId && groupPositionMessage.userIds.includes(userId)) {
             this.currentPlayerGroupId = groupPositionMessage.groupId;
@@ -4104,12 +4548,8 @@ ${escapedMessage}
         // TODO: keep a reference to the group sprite in the conversationBubble
         const existingGroup = this.groups.get(groupPositionMessage.groupId);
         if (existingGroup) {
-            existingGroup.setCenter(
-                Math.round(groupPositionMessage.position.x),
-                Math.round(groupPositionMessage.position.y)
-            );
             existingGroup.setLocked(
-                groupPositionMessage.groupSize === MAX_PER_GROUP || (groupPositionMessage.locked ?? false)
+                groupPositionMessage.groupSize === MAX_PER_GROUP || (groupPositionMessage.locked ?? false),
             );
             return;
         }
@@ -4120,27 +4560,51 @@ ${escapedMessage}
             Math.round(groupPositionMessage.position.x),
             Math.round(groupPositionMessage.position.y),
             groupPositionMessage.groupSize === MAX_PER_GROUP || (groupPositionMessage.locked ?? false),
-            groupPositionMessage.userIds
+            groupPositionMessage.userIds,
         );
 
         this.groups.set(groupPositionMessage.groupId, conversationBubble);
     }
 
+    /**
+     * Displays a message sent by an admin: a text or an audio message.
+     */
+    private showUserMessage({ type, message }: SendUserMessage) {
+        if (type === "message") {
+            textMessageStore.addMessage(message);
+            this.playSound("new-message", 0.2);
+        } else if (type === "audio") {
+            soundPlayingStore.playSound(UPLOADER_URL + message);
+        }
+    }
+
     //todo: put this into an 'orchestrator' scene (EntryScene?)
-    private bannedUser() {
+    /**
+     * A ban is persisted by the admin; a kick only ejects the user from the room, a reload brings them back.
+     */
+    private ejectedUser({ type, message: reason }: BanUserMessage) {
+        const kind = type === "kicked" ? "kicked" : "banned";
+        const texts = get(LL).report[kind];
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({
                 type: "error",
-                code: "USER_BANNED",
-                title: "BANNED",
-                subtitle: "You were banned from WorkAdventure",
-                details: "If you want more information, you may contact us at: hello@workadventu.re",
-            })
+                code: kind === "banned" ? "USER_BANNED" : "USER_KICKED",
+                title: texts.title(),
+                subtitle: texts.subtitle(),
+                // One line each: the reason, then (for a ban only) how to reach the admins.
+                details: [
+                    reason.trim() === "" ? "" : get(LL).report.reasonGiven({ reason }),
+                    kind === "banned" ? get(LL).report.banned.details() : "",
+                ]
+                    .filter((line) => line !== "")
+                    .join("\n"),
+            }),
         );
 
         this.cleanupClosingScene();
 
         this.userInputManager.disableControls("errorScreen");
+        this.userInputManager.disableRightClick();
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
@@ -4150,6 +4614,7 @@ ${escapedMessage}
         this.scene.stop(ReconnectingSceneName);
         this.scene.remove(ReconnectingSceneName);
         this.userInputManager.disableControls("errorScreen");
+        this.userInputManager.disableRightClick();
         //FIX ME to use status code
         if (message == undefined) {
             this.scene.start(ErrorSceneName, {
@@ -4184,11 +4649,11 @@ ${escapedMessage}
 
         // Explanation of the formula: to Zoom x 2, we need a delta of 200
         // Question: Why 200 ? For mac usage, it's too slow
-        let zoomFactor = Math.exp((-deltaY * Math.log(2)) /* / 200 */ / 100);
+        let zoomFactor = Math.exp(((-deltaY * Math.log(2)) / 100) * MOUSE_WHEEL_ZOOM_RATE);
 
         // Sometimes, deltaY can be really high (this happens when the browser is lagging for 1 second or so)
         // Let's clamp the value to avoid zooming too much
-        zoomFactor = Clamp(zoomFactor, 0.5, 2);
+        zoomFactor = Clamp(zoomFactor, 0.1, 10);
 
         debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
 
@@ -4201,7 +4666,7 @@ ${escapedMessage}
             return;
         }
 
-        const time = zoomFactor > 1 ? (zoomFactor - 1) * 250 : (1 / zoomFactor - 1) * 250;
+        const time = zoomFactor > 1 ? zoomFactor * 250 : (1 / zoomFactor) * 250;
         this.cameraManager.zoomByFactor(zoomFactor, smooth ? time : 0);
     }
 
@@ -4214,11 +4679,27 @@ ${escapedMessage}
     }
 
     private proximityChatRoomPromise(): Promise<ProximityChatRoom> {
-        if (this._proximityChatRoom) {
-            return Promise.resolve(this._proximityChatRoom);
+        if (this._proximityChatRoomManager) {
+            return Promise.resolve(this.getDefaultProximityChatRoom());
         }
 
         return this._proximityChatRoomDeferred.promise;
+    }
+
+    private getDefaultProximityChatRoom(): ProximityChatRoom {
+        const defaultRoom = this._proximityChatRoomManager?.getDefaultRoom() ?? this._proximityChatRoom;
+        if (!defaultRoom) {
+            throw new Error("_proximityChatRoom not yet initialized");
+        }
+        return defaultRoom;
+    }
+
+    private getMeetingProximityChatRoom(meetingId: string): ProximityChatRoom {
+        const room = this._proximityChatRoomManager?.getRoomByMeetingId(meetingId);
+        if (!room) {
+            throw new Error(`Proximity meeting "${meetingId}" is not joined`);
+        }
+        return room;
     }
 
     get applicationManager(): ApplicationManager {
@@ -4235,11 +4716,11 @@ ${escapedMessage}
         return this._spaceRegistry;
     }
 
-    get proximityChatRoom(): ProximityChatRoom {
-        if (!this._proximityChatRoom) {
-            throw new Error("_proximityChatRoom not yet initialized");
+    get proximityChatRoomManager(): ProximityChatRoomManager {
+        if (!this._proximityChatRoomManager) {
+            throw new Error("_proximityChatRoomManager not yet initialized");
         }
-        return this._proximityChatRoom;
+        return this._proximityChatRoomManager;
     }
 
     get userProviderMerger(): Promise<UserProviderMerger> {
@@ -4251,7 +4732,7 @@ ${escapedMessage}
     }
 
     getStartPositionNames(): string[] {
-        return this.startPositionCalculator.getStartPositionNames();
+        return this.gameMapFrontWrapper.getStartPositionNames();
     }
 
     get sayManager(): SayManager {
@@ -4279,7 +4760,7 @@ ${escapedMessage}
     }
 
     private disableVoiceIndicator(): void {
-        this.CurrentPlayer.toggleTalk(false, true);
+        this.CurrentPlayer.toggleTalk(false);
         if (!this.connection?.closed) {
             this.connection?.emitPlayerShowVoiceIndicator(false);
         }
@@ -4293,9 +4774,5 @@ ${escapedMessage}
 
     public get focusFx() {
         return this._focusFx;
-    }
-
-    public get throttledSendViewportToServer(): throttle<() => void> {
-        return this.throttledSendViewportToServer_;
     }
 }

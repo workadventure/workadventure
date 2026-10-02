@@ -1,11 +1,11 @@
-import {commandOptions, createClient} from "redis";
+import {createClient} from "redis";
 import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT} from "../Enum/EnvironmentVariable";
-import {StorageProvider} from "./StorageProvider";
-import {TempStorageProvider} from "./TempStorageProvider";
-import {TargetDevice} from "./TargetDevice";
+import type {StorageProvider} from "./StorageProvider";
+import type {TempStorageProvider} from "./TempStorageProvider";
+import type {TargetDevice} from "./TargetDevice";
 
 export class RedisStorageProvider implements StorageProvider, TempStorageProvider {
-    private redisClient;
+    private readonly redisClient;
 
     constructor() {
         const password = REDIS_PASSWORD ? `:${REDIS_PASSWORD}@` : ""
@@ -13,7 +13,7 @@ export class RedisStorageProvider implements StorageProvider, TempStorageProvide
             url: `redis://${password}${REDIS_HOST}:${REDIS_PORT}/${REDIS_DB_NUMBER || 0}`,
         });
         this.redisClient.on('error', (err: unknown) => console.error('Redis Client Error', err));
-        this.redisClient.connect();
+        this.redisClient.connect().catch((err: unknown) => console.error('Redis Client Error', err));
     }
 
     static isEnabled(): boolean {
@@ -22,9 +22,7 @@ export class RedisStorageProvider implements StorageProvider, TempStorageProvide
 
     async upload(fileUuid: string, chunks: Buffer, mimeType: string | undefined): Promise<string> {
         await this.redisClient.set(fileUuid, chunks);
-        return new Promise((solve, rej) => {
-            solve(fileUuid);
-        });
+        return fileUuid;
     }
 
     uploadTempFile(audioMessageId: string, buffer: Buffer, expireSecond: number):Promise<unknown> {
@@ -38,14 +36,14 @@ export class RedisStorageProvider implements StorageProvider, TempStorageProvide
         await this.redisClient.del(fileId)
     }
 
-    get(fileId: string):Promise<Buffer|undefined|null> {
-        return this.redisClient.get(commandOptions({ returnBuffers: true }), fileId)
+    get(fileId: string):Promise<string | null> {
+        return this.redisClient.get(fileId)
     }
 
     copyFile(fileId: string, target: TargetDevice): void {
-        this.get(fileId).then((buffer: Buffer | undefined | null)=> {
-            target.copyFromBuffer(buffer)
-        })
+        this.get(fileId).then((buffer: string | null)=> {
+            target.copyFromBuffer(Buffer.from(buffer ?? ""))
+        }).catch((err: unknown) => console.error("Could not copy file from Redis", err))
     }
 }
 

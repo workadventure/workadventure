@@ -43,10 +43,11 @@ export const PUSHER_HTTP_PORT = env.PUSHER_HTTP_PORT;
 
 export const PUSHER_WS_PORT = env.PUSHER_WS_PORT;
 export const SOCKET_IDLE_TIMER = env.SOCKET_IDLE_TIMER; // maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
+export const CLIENT_DISCONNECTION_RETENTION_MS = env.CLIENT_DISCONNECTION_RETENTION_MS;
+export const PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES = env.PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES;
 export const ALLOWED_CORS_ORIGIN = env.ALLOWED_CORS_ORIGIN; // Use "*" to allow any domain
 export const PUSHER_URL = env.PUSHER_URL || "";
 export const FRONT_URL = env.FRONT_URL || "";
-export const VITE_URL = env.VITE_URL || FRONT_URL; // Used only in development
 export const PUBLIC_MAP_STORAGE_URL = env.PUBLIC_MAP_STORAGE_URL || "";
 export const INTERNAL_MAP_STORAGE_URL = env.INTERNAL_MAP_STORAGE_URL;
 export const REDIS_HOST = env.REDIS_HOST;
@@ -58,8 +59,9 @@ export const OPID_CLIENT_ISSUER = env.OPENID_CLIENT_ISSUER || env.OPID_CLIENT_IS
 if (OPID_CLIENT_ID && !PUSHER_URL) {
     throw new Error("Missing PUSHER_URL environment variable.");
 }
-export const OPID_CLIENT_REDIRECT_URL = PUSHER_URL + "/openid-callback";
-export const OPID_CLIENT_REDIRECT_LOGOUT_URL = PUSHER_URL + "/logout-callback";
+const PUSHER_URL_WITHOUT_TRAILING_SLASH = PUSHER_URL.replace(/\/+$/, "");
+export const OPID_CLIENT_REDIRECT_URL = PUSHER_URL_WITHOUT_TRAILING_SLASH + "/openid-callback";
+export const OPID_CLIENT_REDIRECT_LOGOUT_URL = PUSHER_URL_WITHOUT_TRAILING_SLASH + "/logout-callback";
 export const OPID_PROFILE_SCREEN_PROVIDER =
     env.OPENID_PROFILE_SCREEN_PROVIDER ||
     env.OPID_PROFILE_SCREEN_PROVIDER ||
@@ -96,6 +98,10 @@ export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = env.ENABLE_CHAT_DISCONNECT
 export const DEFAULT_WOKA_NAME: string = env.DEFAULT_WOKA_NAME || "";
 export const DEFAULT_WOKA_TEXTURE: string = env.DEFAULT_WOKA_TEXTURE || "";
 export const SKIP_CAMERA_PAGE: boolean = env.SKIP_CAMERA_PAGE ?? false;
+/** Initial value of the camera privacy setting for users who have not set their own preference. */
+export const DEFAULT_CAMERA_PRIVACY_SETTINGS: boolean = env.DEFAULT_CAMERA_PRIVACY_SETTINGS ?? false;
+/** Initial value of the microphone privacy setting for users who have not set their own preference. */
+export const DEFAULT_MICROPHONE_PRIVACY_SETTINGS: boolean = env.DEFAULT_MICROPHONE_PRIVACY_SETTINGS ?? true;
 /** When true, map details include bypassPwa so the play client never shows the Web App install screen. */
 export const BYPASS_PWA: boolean = env.BYPASS_PWA ?? false;
 export const PROVIDE_DEFAULT_WOKA_NAME: "no" | "random" | "fix" | "fix-plus-random-numbers" | undefined =
@@ -128,6 +134,7 @@ export const TURN_STATIC_AUTH_SECRET: string | undefined = env.TURN_STATIC_AUTH_
 export const TURN_CREDENTIALS_RENEWAL_TIME: number = env.TURN_CREDENTIALS_RENEWAL_TIME;
 
 // RoomAPI
+export const ROOM_API_BIND_HOST = env.ROOM_API_BIND_HOST ?? "[::]";
 export const ROOM_API_PORT = env.ROOM_API_PORT;
 export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
 
@@ -157,7 +164,9 @@ export const GOOGLE_DRIVE_PICKER_API_KEY = env.GOOGLE_DRIVE_PICKER_API_KEY;
 export const GOOGLE_DRIVE_PICKER_APP_ID = env.GOOGLE_DRIVE_PICKER_APP_ID;
 // Matrix
 export const MATRIX_PUBLIC_URI: string | undefined = env.MATRIX_PUBLIC_URI;
-export const MATRIX_API_URI: string | undefined = env.MATRIX_API_URI;
+export const MATRIX_API_URI: string | undefined = env.MATRIX_API_URI
+    ? env.MATRIX_API_URI.replace(/\/+$/, "") + "/"
+    : env.MATRIX_API_URI;
 export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_ADMIN_USER;
 export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWORD;
 export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
@@ -174,6 +183,11 @@ export const LIVEKIT_PIXEL_DENSITY: number = env.LIVEKIT_PIXEL_DENSITY;
 export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT || true;
 // Tutorial settings
 export const ENABLE_TUTORIAL: boolean = env.ENABLE_TUTORIAL ?? true;
+export const ANALYTICS_FLUSH_INTERVAL_MS: number = env.ANALYTICS_FLUSH_INTERVAL_MS;
+export const ANALYTICS_TIMEOUT_MS: number = env.ANALYTICS_TIMEOUT_MS;
+export const ANALYTICS_MAX_QUEUE_SIZE: number = env.ANALYTICS_MAX_QUEUE_SIZE;
+export const ANALYTICS_MAX_BATCH_SIZE: number = env.ANALYTICS_MAX_BATCH_SIZE;
+export const DRAIN_TIMEOUT_MS: number = env.DRAIN_TIMEOUT_MS;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
@@ -205,13 +219,13 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     FALLBACK_LOCALE,
     ENABLE_REPORT_ISSUES_MENU: env.ENABLE_REPORT_ISSUES_MENU,
     REPORT_ISSUES_URL: env.REPORT_ISSUES_URL,
+    CLIENT_DISCONNECTION_RETENTION_MS,
     SENTRY_DSN_FRONT: env.SENTRY_DSN_FRONT,
     SENTRY_DSN_PUSHER: env.SENTRY_DSN_PUSHER,
     SENTRY_ENVIRONMENT: env.SENTRY_ENVIRONMENT,
     SENTRY_RELEASE: env.SENTRY_RELEASE,
     SENTRY_TRACES_SAMPLE_RATE: env.SENTRY_TRACES_SAMPLE_RATE,
     WOKA_SPEED: env.WOKA_SPEED,
-    FEATURE_FLAG_BROADCAST_AREAS: env.FEATURE_FLAG_BROADCAST_AREAS,
     KLAXOON_ENABLED: env.KLAXOON_ENABLED,
     KLAXOON_CLIENT_ID: env.KLAXOON_CLIENT_ID,
     YOUTUBE_ENABLED: env.YOUTUBE_ENABLED,
@@ -238,7 +252,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_ISSUE_REPORT: env.ENABLE_ISSUE_REPORT || true,
     GRPC_MAX_MESSAGE_SIZE: env.GRPC_MAX_MESSAGE_SIZE,
     TURN_CREDENTIALS_RENEWAL_TIME: env.TURN_CREDENTIALS_RENEWAL_TIME,
-    BACKGROUND_TRANSFORMER_ENGINE: env.BACKGROUND_TRANSFORMER_ENGINE || "selfie-segmentation",
     // Woka settings
     DEFAULT_WOKA_NAME,
     DEFAULT_WOKA_TEXTURE,
@@ -249,5 +262,3 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_TUTORIAL,
 };
 export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;
-export const LIVEKIT_API_KEY = env.LIVEKIT_API_KEY;
-export const LIVEKIT_API_SECRET = env.LIVEKIT_API_SECRET;

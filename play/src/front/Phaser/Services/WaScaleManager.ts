@@ -1,8 +1,11 @@
+import * as Phaser from "phaser";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import type { Game } from "../Game/Game";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HdpiManager } from "./HdpiManager";
+
 import ScaleManager = Phaser.Scale.ScaleManager;
+import Camera = Phaser.Cameras.Scene2D.Camera;
 
 export enum WaScaleManagerEvent {
     RefreshFocusOnTarget = "wa-scale-manager:refresh-focus-on-target",
@@ -18,20 +21,29 @@ export class WaScaleManager {
     private actualZoom = 1;
     private _saveZoom = 1;
     private lastEmittedZoomModifier: number | undefined;
+    private lastEmittedActualZoom: number | undefined;
 
     private focusTarget?: WaScaleManagerFocusTarget;
 
-    public constructor(private minGamePixelsNumber: number, private absoluteMinPixelNumber: number) {
+    public constructor(
+        private minGamePixelsNumber: number,
+        private absoluteMinPixelNumber: number,
+    ) {
         this.hdpiManager = new HdpiManager(minGamePixelsNumber, absoluteMinPixelNumber);
     }
 
     private emitZoomChangedIfNeeded(): void {
         const zoomModifier = this.hdpiManager.zoomModifier;
-        if (this.lastEmittedZoomModifier === zoomModifier) {
+        // We emit on actualZoom changes too, not only zoomModifier: DOM overlays whose CSS scale
+        // compensates for the parent's on-screen zoom (e.g. the Woka username) depend on actualZoom,
+        // which changes on resize or when the window moves to a screen with a different device pixel
+        // ratio while zoomModifier stays constant.
+        if (this.lastEmittedZoomModifier === zoomModifier && this.lastEmittedActualZoom === this.actualZoom) {
             return;
         }
 
         this.lastEmittedZoomModifier = zoomModifier;
+        this.lastEmittedActualZoom = this.actualZoom;
         this.game.events.emit(WaScaleManagerEvent.ZoomChanged, zoomModifier);
     }
 
@@ -41,7 +53,7 @@ export class WaScaleManager {
         this.lastEmittedZoomModifier = this.hdpiManager.zoomModifier;
     }
 
-    public applyNewSize(camera?: Phaser.Cameras.Scene2D.Camera, animating = false): void {
+    public applyNewSize(camera?: Camera, animating = false): void {
         if (this.scaleManager === undefined) {
             return;
         }
@@ -96,14 +108,14 @@ export class WaScaleManager {
     /**
      * Use this in case of resizing while focusing on something
      */
-    public refreshFocusOnTarget(camera?: Phaser.Cameras.Scene2D.Camera): void {
+    public refreshFocusOnTarget(camera?: Camera): void {
         if (!this.focusTarget) {
             return;
         }
         if (this.focusTarget.width && this.focusTarget.height) {
             this.setZoomModifier(
                 this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height),
-                camera
+                camera,
             );
         }
 
@@ -143,7 +155,7 @@ export class WaScaleManager {
         this.setZoomModifier(zoomModifier, camera);
     }
 
-    public setZoomModifier(zoomModifier: number, camera?: Phaser.Cameras.Scene2D.Camera, animating = false): void {
+    public setZoomModifier(zoomModifier: number, camera?: Camera, animating = false): void {
         this.hdpiManager.zoomModifier = zoomModifier;
         this.applyNewSize(camera, animating);
     }

@@ -1,4 +1,8 @@
-import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type {
+    HandleRecordingWebhookRequest,
+    MeetingConnectionRestartMessage,
+    SpaceUser,
+} from "@workadventure/messages";
 import type { RecordingStartInfo } from "../Services/LivekitService";
 
 export interface ICommunicationStrategy {
@@ -13,11 +17,17 @@ export interface ICommunicationStrategy {
     cleanup(): void;
     handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
-        senderUserId?: string
+        senderUserId?: string,
     ): void;
 }
 
 export interface IRecordableStrategy extends ICommunicationStrategy {
     startRecording(user: SpaceUser, recordingSessionId: string): Promise<RecordingStartInfo>;
     stopRecording(egressId?: string): Promise<void>;
+    handleLivekitWebhook(
+        rawBody: Buffer | Uint8Array,
+        authorizationHeader: string | undefined,
+        spaceName: string,
+        recordingSessionId: string,
+    ): Promise<HandleRecordingWebhookRequest | "ignored">;
 }

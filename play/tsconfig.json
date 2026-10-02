@@ -27,11 +27,13 @@
     // relative to your source root folder.
     "sourceRoot": "/",
     "paths": {
-      "@wa-icons": ["./src/front/Components/Icons.ts"]
+      "@wa-icons": ["./src/front/Components/Icons.ts"],
+      "@wa-modals": ["./src/front/Components/Modal/modalManager.ts"]
     },
   },
   "exclude": [
     "dist",
+    "node_modules",
     "public/iframe_api.js",
     "packages/iframe-api-typings",
     "eslint.config.js",

@@ -8,7 +8,7 @@
         keys: string[];
     };
 
-    let groupedShortcuts: GroupedShortcut[] = [];
+    let groupedShortcuts: GroupedShortcut[] = $state([]);
 
     onMount(() => {
         const userInputManager = gameManager.getCurrentGameScene().userInputManager;

@@ -8,9 +8,6 @@ test.describe("Swagger documentation", () => {
 
         await page.goto(`/swagger-ui/?urls.primaryName=Pusher%20->%20Admin`);
 
-        // Test if the component "model-AdminApiData" is visible
-        await expect(page.locator("#model-AdminApiData")).toBeVisible();
-
         // Test if the component "model-Capabilities" is visible
         await expect(page.locator("#model-Capabilities")).toBeVisible();
 

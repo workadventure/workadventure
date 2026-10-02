@@ -9,8 +9,8 @@ import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import { Color } from "@workadventure/shared-utils";
 
-import type { Socket } from "../services/SocketManager";
 import { clientEventsEmitter } from "../services/ClientEventsEmitter";
+import type { PusherWebSocket } from "../services/PusherWebSocket";
 import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
 import type { EventProcessor } from "./EventProcessor";
 import type { SocketData } from "./Websocket/SocketData";
@@ -24,9 +24,9 @@ import {
 const debug = Debug("space-to-back-forwarder");
 
 export interface SpaceToBackForwarderInterface {
-    registerUser(client: Socket, filterType: FilterType): Promise<void>;
+    registerUser(client: PusherWebSocket, filterType: FilterType): Promise<void>;
     updateUser(spaceUser: PartialSpaceUser, updateMask: string[]): void;
-    unregisterUser(socket: Socket): Promise<void>;
+    unregisterUser(socket: PusherWebSocket): Promise<void>;
     updateMetadata(metadata: { [key: string]: unknown }, senderId: string): void;
     forwardMessageToSpaceBack(pusherToBackSpaceMessage: PusherToBackSpaceMessage["message"]): void;
     syncLocalUsersWithServer(localUsers: SpaceUser[]): void;
@@ -41,9 +41,9 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
     constructor(
         private readonly _space: Space,
         private readonly eventProcessor: EventProcessor,
-        private readonly _clientEventsEmitter = clientEventsEmitter
+        private readonly _clientEventsEmitter = clientEventsEmitter,
     ) {}
-    async registerUser(client: Socket, filterType: FilterType): Promise<void> {
+    async registerUser(client: PusherWebSocket, filterType: FilterType): Promise<void> {
         const socketData = client.getUserData();
         const spaceUserId = socketData.spaceUserId;
 
@@ -55,25 +55,25 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             throw new UserAlreadyAddedInSpaceError(
                 `User ${spaceUserId} already added in space ${this._space.name}`,
                 this._space.name,
-                spaceUserId
+                spaceUserId,
             );
         }
         if (this._space._localConnectedUserWithSpaceUser.has(client)) {
             throw new SocketAlreadyRegisteredInSpaceError(
-                `Socket already registered in space ${this._space.name}`,
-                this._space.name
+                `PusherWebSocket already registered in space ${this._space.name}`,
+                this._space.name,
             );
         }
         if (socketData.spaces.has(this._space.name)) {
             throw new UserAlreadyInSpaceError(
                 `User ${socketData.name} is trying to join a space they are already in.`,
                 this._space.name,
-                socketData.name
+                socketData.name,
             );
         }
 
         debug(
-            `${this._space.name} : user added ${socketData.name}. User count ${this._space._localConnectedUser.size}`
+            `${this._space.name} : user added ${socketData.name}. User count ${this._space._localConnectedUser.size}`,
         );
 
         const spaceUser: SpaceUserExtended = {
@@ -149,7 +149,24 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         });
     }
 
-    async unregisterUser(socket: Socket): Promise<void> {
+    // Unregistering awaits a round trip to the back. A second call for the same socket during that
+    // await (e.g. an explicit leave overlapping with the socket-close sweep) must not resend the
+    // delete-to-notify / remove messages: the back would receive them after the user is gone.
+    private readonly unregisteringSockets = new Map<PusherWebSocket, Promise<void>>();
+
+    unregisterUser(socket: PusherWebSocket): Promise<void> {
+        const inFlight = this.unregisteringSockets.get(socket);
+        if (inFlight) {
+            return inFlight;
+        }
+        const promise = this.doUnregisterUser(socket).finally(() => {
+            this.unregisteringSockets.delete(socket);
+        });
+        this.unregisteringSockets.set(socket, promise);
+        return promise;
+    }
+
+    private async doUnregisterUser(socket: PusherWebSocket): Promise<void> {
         const userData = socket.getUserData();
 
         const spaceUserId = userData.spaceUserId;
@@ -160,7 +177,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         if (!this._space._localConnectedUser.has(spaceUserId)) {
             console.error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`);
             Sentry.captureException(
-                new Error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`)
+                new Error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`),
             );
         }
 
@@ -190,7 +207,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
 
         debug(
-            `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`
+            `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`,
         );
 
         debug(`${this._space.name} : user remove sent ${spaceUserId}`);
@@ -223,13 +240,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                         spaceName: this._space.name,
                         messageCase: pusherToBackSpaceMessage?.$case,
                     });
-                    Sentry.captureMessage("Trying to forward message to space back but the connection is closed", {
-                        level: "warning",
-                        extra: {
-                            spaceName: this._space.name,
-                            messageCase: pusherToBackSpaceMessage?.$case,
-                        },
-                    });
                     return;
                 }
                 spaceStreamToBack.write(
@@ -241,7 +251,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                             console.error("Error while forwarding message to space back", error);
                             Sentry.captureException(error);
                         }
-                    }
+                    },
                 );
 
                 if (pusherToBackSpaceMessage && pusherToBackSpaceMessage.$case) {
@@ -302,7 +312,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         const processedEvent = this.eventProcessor.processPublicEvent(
             event.spaceEvent.event,
             senderSpaceUser,
-            senderSocket
+            senderSocket,
         );
 
         this.forwardMessageToSpaceBack({

@@ -69,15 +69,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
             .click();
 
         await expect(page.getByText("Hello world!")).toBeVisible();
-
-        await page.context().close();
     });
 
     // Test to set Klaxoon application in the area with the map editor
     test("Successfully set Klaxoon's application in the area in the map editor", async ({ browser, request }) => {
         test.skip(
-            process.env.IS_FORK === "true",
-            "Skip Klaxoon test on forked PR because the secret env variable is not set",
+            process.env.NO_KLAXOON_SECRET === "true",
+            "Skip Klaxoon test when the KLAXOON_CLIENT_ID secret is not available (forks, Dependabot)",
         );
 
         await resetWamMaps(request);
@@ -104,8 +102,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await popupPromise;
 
         // TODO make same test with object editor
-
-        await page.context().close();
     });
 
     test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({
@@ -204,8 +200,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByText("Drive", { exact: true }).click();
         await page.locator("div:nth-child(3) > .w-10").click();
         await page.getByText("Drive", { exact: true }).click();
-
-        await page.context().close();
     });
 
     test("Successfully set GoogleWorkspace's application entity in the map editor", async ({ browser, request }) => {
@@ -274,8 +268,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Check that the button close the popup is visible
         await expect(page.getByTestId("closeActionsMenuButton")).toBeVisible();
-
-        await page.context().close();
     });
 
     test("Successfully set Klaxoon's application entity in the map editor @local", async ({ browser, request }) => {
@@ -313,8 +305,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.locator("#cowebsites-container")).toBeVisible();
         await expect(page.locator("#cowebsites-container")).toContainText("https://app.klaxoon.com/join/KXEWMSE3NF2M");
         expect(page.locator('iframe[src="https://app.klaxoon.com/join/KXEWMSE3NF2M"]').contentFrame()).toBeTruthy();
-
-        await page.context().close();
     });
 
     // Create test for Google picker docs

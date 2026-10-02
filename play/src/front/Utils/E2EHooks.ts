@@ -1,4 +1,10 @@
+import * as Phaser from "phaser";
+import { get } from "svelte/store";
+import type { ForceFirstPeerUnilateralDestroyResult } from "../Space/SpacePeerManager/SpacePeerManager";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { backgroundProcessedLocalVideoTrackStore, rawLocalVideoTrackStore } from "../Stores/MediaStore";
+
+import Camera = Phaser.Cameras.Scene2D.Camera;
 
 let webRtcConnectionsCount = 0;
 let livekitConnectionsCount = 0;
@@ -17,10 +23,6 @@ interface E2ECoordinateOptions {
 
 interface CameraEffectWithIsRunning {
     isRunning?: boolean;
-}
-
-interface CameraWithTransform extends Phaser.Cameras.Scene2D.Camera {
-    matrix: Phaser.GameObjects.Components.TransformMatrix;
 }
 
 const DEFAULT_COORDINATE_STABILITY_TIMEOUT_MS = 10_000;
@@ -45,7 +47,7 @@ function isEffectRunning(effect: CameraEffectWithIsRunning | undefined): boolean
     return effect?.isRunning === true;
 }
 
-function hasRunningCameraEffect(camera: Phaser.Cameras.Scene2D.Camera): boolean {
+function hasRunningCameraEffect(camera: Camera): boolean {
     return (
         isEffectRunning(camera.fadeEffect) ||
         isEffectRunning(camera.flashEffect) ||
@@ -73,11 +75,9 @@ function getGameCanvas(): HTMLCanvasElement {
 function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): Coordinates {
     const scene = gameManager.getCurrentGameScene();
     const camera = scene.getCameraManager().getCamera();
-    const cameraWithTransform = camera as CameraWithTransform;
 
-    // camera.preRender() must be called before accessing worldView or the camera matrix to ensure it is up to date.
+    // camera.preRender() must be called before accessing worldView or camera matrices to ensure they are up to date.
     // See the same pattern in GameScene.connect().
-    // @ts-ignore preRender is protected, but Phaser documents it as the way to refresh worldView.
     camera.preRender();
 
     const canvas = getGameCanvas();
@@ -86,11 +86,7 @@ function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): Coor
     const canvasInternalHeight = canvas.height || camera.height;
     const scaleX = canvasRect.width / canvasInternalWidth;
     const scaleY = canvasRect.height / canvasInternalHeight;
-    const canvasPoint = cameraWithTransform.matrix.transformPoint(
-        gameCoordinates.x - camera.scrollX,
-        gameCoordinates.y - camera.scrollY,
-        { x: 0, y: 0 }
-    );
+    const canvasPoint = camera.matrixCombined.transformPoint(gameCoordinates.x, gameCoordinates.y, { x: 0, y: 0 });
     const x = canvasRect.left + canvasPoint.x * scaleX;
     const y = canvasRect.top + canvasPoint.y * scaleY;
     const roundTrip = camera.getWorldPoint(canvasPoint.x, canvasPoint.y);
@@ -106,7 +102,7 @@ function getGameToBrowserCoordinatesSnapshot(gameCoordinates: Coordinates): Coor
                         y: roundTrip.y,
                     },
                     tolerance: DEFAULT_COORDINATE_STABILITY_TOLERANCE,
-                })
+                }),
         );
     }
 
@@ -122,7 +118,7 @@ function areCoordinatesClose(first: Coordinates, second: Coordinates, tolerance:
 
 async function gameToBrowserCoordinates(
     gameCoordinates: Coordinates,
-    options: E2ECoordinateOptions = {}
+    options: E2ECoordinateOptions = {},
 ): Promise<Coordinates> {
     const timeoutMs = options.timeoutMs ?? DEFAULT_COORDINATE_STABILITY_TIMEOUT_MS;
     const retryIntervalMs = options.retryIntervalMs ?? DEFAULT_COORDINATE_STABILITY_RETRY_INTERVAL_MS;
@@ -156,7 +152,7 @@ async function gameToBrowserCoordinates(
                         cameraWasAnimating,
                         cameraIsAnimating,
                         tolerance,
-                    })
+                    }),
             );
         }
 
@@ -183,7 +179,7 @@ function testWebRtcRetry(): { spaceName: string; userId: string; triggered: bool
                 const result = simplePeer.forceFirstPeerFailure();
                 if (result) {
                     console.info(
-                        `[DEBUG] Retry test triggered for space "${space.getName()}", userId: ${result.userId}`
+                        `[DEBUG] Retry test triggered for space "${space.getName()}", userId: ${result.userId}`,
                     );
                     return { spaceName: space.getName(), ...result };
                 }
@@ -194,6 +190,49 @@ function testWebRtcRetry(): { spaceName: string; userId: string; triggered: bool
         return null;
     } catch (error) {
         console.error("[DEBUG] Error while triggering WebRTC retry test:", error);
+        return null;
+    }
+}
+
+/**
+ * [DEBUG] Unilaterally destroys a WebRTC peer to test the retry mechanism.
+ * This simulates an unexpected local peer destruction without asking the remote peer to close.
+ * @returns Information about the triggered failure, or null if no peers found
+ */
+async function testWebRtcUnilateralDestroyRetry(): Promise<
+    (ForceFirstPeerUnilateralDestroyResult & { spaceName: string }) | null
+> {
+    try {
+        const spaceRegistry = gameManager.getCurrentGameScene().spaceRegistry;
+        const spaces = spaceRegistry.getAll();
+
+        const triggerForSpace = async (
+            spaceIndex: number,
+        ): Promise<(ForceFirstPeerUnilateralDestroyResult & { spaceName: string }) | null> => {
+            const space = spaces[spaceIndex];
+            if (!space) {
+                console.warn("[DEBUG] No active video peers found in any space to test unilateral destroy retry");
+                return null;
+            }
+
+            const simplePeer = space.simplePeer;
+            if (simplePeer) {
+                const result = await simplePeer.forceFirstPeerUnilateralDestroy();
+                if (result) {
+                    console.info("[DEBUG] WebRTC unilateral destroy retry test triggered", {
+                        spaceName: space.getName(),
+                        ...result,
+                    });
+                    return { spaceName: space.getName(), ...result };
+                }
+            }
+
+            return triggerForSpace(spaceIndex + 1);
+        };
+
+        return await triggerForSpace(0);
+    } catch (error) {
+        console.error("[DEBUG] Error while triggering WebRTC unilateral destroy retry test:", error);
         return null;
     }
 }
@@ -273,6 +312,58 @@ export function decrementLivekitRoomCount() {
     livekitRoomCount--;
 }
 
+const FRAME_SAMPLE_SIDE = 16;
+
+/** One frame of a video track reduced to a 16x16 grid of gray levels. */
+async function sampleTrackFrame(track: MediaStreamTrack): Promise<number[]> {
+    const video = document.createElement("video");
+    video.muted = true;
+    video.playsInline = true;
+    video.srcObject = new MediaStream([track]);
+    await video.play();
+    await new Promise<void>((resolve) => {
+        video.requestVideoFrameCallback(() => resolve());
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = FRAME_SAMPLE_SIDE;
+    canvas.height = FRAME_SAMPLE_SIDE;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) {
+        throw new Error("Unable to create a 2D context");
+    }
+    context.drawImage(video, 0, 0, FRAME_SAMPLE_SIDE, FRAME_SAMPLE_SIDE);
+    video.pause();
+    video.srcObject = null;
+    const { data } = context.getImageData(0, 0, FRAME_SAMPLE_SIDE, FRAME_SAMPLE_SIDE);
+    const gray: number[] = [];
+    for (let i = 0; i < data.length; i += 4) {
+        gray.push((data[i] + data[i + 1] + data[i + 2]) / 3);
+    }
+    return gray;
+}
+
+/**
+ * Compares one frame of the raw camera track with one frame of the track that goes out after background
+ * processing: mean gray level of the processed frame and mean absolute difference between the two.
+ * Null while either track is missing.
+ */
+async function compareLocalVideoFrames(): Promise<{ processedMeanGray: number; meanAbsDiff: number } | null> {
+    const raw = get(rawLocalVideoTrackStore);
+    const processed = get(backgroundProcessedLocalVideoTrackStore);
+    if (raw.type !== "success" || !raw.track || processed.type !== "success" || !processed.track) {
+        return null;
+    }
+    const [rawGray, processedGray] = await Promise.all([
+        sampleTrackFrame(raw.track),
+        sampleTrackFrame(processed.track),
+    ]);
+    const mean = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
+    return {
+        processedMeanGray: mean(processedGray),
+        meanAbsDiff: mean(processedGray.map((value, index) => Math.abs(value - rawGray[index]))),
+    };
+}
+
 /**
  * The e2eHooks object contains methods used for E2E tests.
  * We should refrain from growing this object too much but it can be useful in very specific circumstances (usually linked to Phaser testing)
@@ -294,6 +385,10 @@ export const e2eHooks = {
      */
     testWebRtcRetry,
     /**
+     * [DEBUG] Unilaterally destroys a WebRTC peer to test the retry mechanism.
+     */
+    testWebRtcUnilateralDestroyRetry,
+    /**
      * [DEBUG] Forces a LiveKit WebSocket close to test the reconnection mechanism.
      */
     testLivekitRetry,
@@ -301,4 +396,8 @@ export const e2eHooks = {
      * [DEBUG] Forces a server disconnected event to test the reconnection flow.
      */
     triggerServerDisconnected,
+    /**
+     * Used by the virtual background smoke test.
+     */
+    compareLocalVideoFrames,
 };

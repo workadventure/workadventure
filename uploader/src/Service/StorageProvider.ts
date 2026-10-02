@@ -1,4 +1,4 @@
-import {TargetDevice} from "./TargetDevice";
+import type {TargetDevice} from "./TargetDevice";
 
 export interface StorageProvider {
 

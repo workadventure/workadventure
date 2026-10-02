@@ -11,7 +11,10 @@ import { BaseHttpController } from "./BaseHttpController";
 const debug = Debug("pusher:requests");
 
 export class AdminController extends BaseHttpController {
-    constructor(app: Application, private readonly GRPC_MAX_MESSAGE_SIZE: number) {
+    constructor(
+        app: Application,
+        private readonly GRPC_MAX_MESSAGE_SIZE: number,
+    ) {
         super(app);
     }
 
@@ -68,7 +71,7 @@ export class AdminController extends BaseHttpController {
                                 return;
                             }
                             res();
-                        }
+                        },
                     );
                 });
             });
@@ -150,7 +153,7 @@ export class AdminController extends BaseHttpController {
                                             return;
                                         }
                                         res();
-                                    }
+                                    },
                                 );
                             } else if (type === "capacity") {
                                 roomClient.sendWorldFullWarningToRoom(
@@ -163,12 +166,12 @@ export class AdminController extends BaseHttpController {
                                             return;
                                         }
                                         res();
-                                    }
+                                    },
                                 );
                             }
                         });
                     });
-                })
+                }),
             );
 
             res.send("ok");
@@ -220,9 +223,9 @@ export class AdminController extends BaseHttpController {
                                 } else {
                                     resolve(result);
                                 }
-                            }
+                            },
                         );
-                    })
+                    }),
                 );
             }
 
@@ -239,7 +242,7 @@ export class AdminController extends BaseHttpController {
                 } else {
                     console.warn(
                         "One back server did not respond within one second to the call to 'getRooms': ",
-                        roomsListResult.reason
+                        roomsListResult.reason,
                     );
                 }
             }
@@ -294,7 +297,7 @@ export class AdminController extends BaseHttpController {
                 z.object({
                     name: z.string(),
                     data: z.unknown().optional(),
-                })
+                }),
             );
 
             if (body === undefined) {
@@ -323,9 +326,9 @@ export class AdminController extends BaseHttpController {
                                 } else {
                                     resolve();
                                 }
-                            }
+                            },
                         );
-                    })
+                    }),
                 );
             }
 
@@ -336,7 +339,7 @@ export class AdminController extends BaseHttpController {
                 if (roomsListResult.status === "rejected") {
                     console.warn(
                         "One back server did not respond within one second to the call to 'dispatchGlobalEvent': ",
-                        roomsListResult.reason
+                        roomsListResult.reason,
                     );
                 }
             }
@@ -384,7 +387,7 @@ export class AdminController extends BaseHttpController {
                                     return;
                                 }
                                 res();
-                            }
+                            },
                         );
                     });
                 });

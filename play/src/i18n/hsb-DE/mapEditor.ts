@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "Tuta karta bu zhašana",
         deletePromptSubtitle: "Zwisk z tutym rumnosću je so přetorhnył.",
         deletePromptDetails: "Wobnowjenje tutu kartu njewobnowi, dokelž hižo njeeksistuje.",
+        editionFailed: "Twoja změna njeda so składować a bu cofnjena.",
     },
     sideBar: {
         areaEditor: "Płoninu wobdźěłać",
@@ -75,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "přetorhnyć",
                 validate: "waliděrować",
             },
-            disabled: "Jitsi-integracia je za tutu rumnosć znjemóžnjena ❌",
             actionButtonLabel: "Jitsi-meeting startować",
         },
         playAudio: {
@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "sylnosć zwuka",
             error: "Zwuk njemóže so začitać",
             actionButtonLabel: "Hudźbu wothrać",
+            playForAllUsersLabel: "Za wšitkich wužiwarjow na karće wothrać",
+            audibleRadiusLabel: "Radius słyšenja (w pikselach)",
+            audibleRadiusPlaceholder: "Wšudźe słyšomny, jeli prózdny",
         },
         openWebsite: {
             label: "Link wočinić",
@@ -122,7 +125,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: 'Wužiwarjo na podiumje (podij) móža wšěm wobdźělnikam w přisłušnej "Publikum"-wobłuku rěčeć.',
             nameLabel: "Mjeno",
             namePlaceholder: "HłownyPodij",
-            disabled: "Podium je za tutu rumnosć znjemóžnjeny ❌",
             actionButtonLabel: "K podiumej připojować",
         },
         listenerMegaphone: {
@@ -136,10 +138,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Zda so, zo je problem ze wotkazom, kotryž sy zapósłał. Prošu přepruwuj jón hišće raz. 🙏",
             waitingMedialLinkHelp: "Prawy wotkaz měł być 'https://monlienmedia.com/…'.",
             waitingSpeaker: "Čaka so na rěčnika 🎤✨",
-            disabled: "Publikum je za tutu rumnosć znjemóžnjeny ❌",
             actionButtonLabel: "K publikumjej připojować",
         },
         chatEnabled: "Chat aktiwizowany",
+        allowTalking: "Rěčenje a tworjenje pucherjow dowolić",
+        raiseHandEnabled: "Zběhnjenje ruki dowolić",
         seeAttendees: "Wobdźělnikow pokazać",
         start: {
             label: "startowy wobłuk",
@@ -309,6 +312,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "Z deaktiwěrowanym mikrofonom startować",
                 startWithVideoMuted: "Z deaktiwěrowanej kameru startować",
                 disableChat: "Chat deaktiwěrować",
+                raiseHandEnabled: "Zběhnjenje ruki dowolić",
                 livekitRoomAdminTag: "Moderatorowa toflicka za meetingowy rum",
                 cancel: "přetorhnyć",
                 validate: "waliděrować",

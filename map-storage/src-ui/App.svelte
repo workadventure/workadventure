@@ -1,25 +1,28 @@
 <script lang="ts">
-    //import svelteLogo from './assets/svelte.svg'
-    //import viteLogo from '/vite.svg'
-
-    import { MapsCacheFileFormat, WAMFileFormat } from "@workadventure/map-editor";
+    import { MapsCacheFileFormat, type WAMFileFormat } from "@workadventure/map-editor";
     import { onMount } from "svelte";
 
-    // TODO: not perfect. We should instead get data from an env var.
-    const playUrl =
-        window.location.protocol +
-        "//" +
-        window.location.host.replace("map-storage.", "play.").replace("map-storage-", "play-");
-    const mapStorageUrl = window.location.protocol + "//" + window.location.host;
+    let playUrl = $state("");
+    let mapStorageUrl = $state("");
 
-    const responsePromise = fetch<MapsCacheFileFormat>("../maps", {
-        redirect: "follow",
-    }).then(async (response) => {
-        if (response.ok) {
-            return MapsCacheFileFormat.parse(await response.json());
-        } else {
+    let responsePromise = $state<Promise<MapsCacheFileFormat> | null>(null);
+
+    onMount(() => {
+        // TODO: not perfect. We should instead get data from an env var.
+        playUrl =
+            window.location.protocol +
+            "//" +
+            window.location.host.replace("map-storage.", "play.").replace("map-storage-", "play-");
+        mapStorageUrl = window.location.protocol + "//" + window.location.host;
+
+        responsePromise = fetch("../maps", {
+            redirect: "follow",
+        }).then(async (response) => {
+            if (response.ok) {
+                return MapsCacheFileFormat.parse(await response.json());
+            }
             throw new Error("Error while fetching the maps list: " + response.statusText);
-        }
+        });
     });
 
     function addTmj() {
@@ -64,10 +67,7 @@
             });
     }
 
-    let dialog: HTMLDialogElement | null; // Reference to the dialog tag
-    onMount(() => {
-        dialog = document.getElementById("add-tmj-dialog") as HTMLDialogElement | null;
-    });
+    let dialog = $state<HTMLDialogElement | null>(null);
 
     function showDialogClick() {
         dialog?.showModal();
@@ -77,38 +77,40 @@
         dialog?.close();
     }
 
-    let newTmjUrl: string = "";
-    let wamPath: string = "";
+    let newTmjUrl = $state("");
+    let wamPath = $state("");
 </script>
 
 <main>
     <h1>WorkAdventure MapStorage</h1>
 
     <div style="background-color: #ff7700; color: black; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
-        Warning! This UI is deprecated. Use it for tests only. To upload a map to the map-storage, use the <a
-            target="_blank"
-            href="https://docs.workadventu.re/map-building/tiled-editor/publish/wa-hosted">map starter kit</a
-        >.
+        Warning! This UI is deprecated. Use it for tests only. To upload a map to the map-storage, use the
+        <a target="_blank" href="https://docs.workadventu.re/map-building/tiled-editor/publish/wa-hosted">
+            map starter kit
+        </a>.
     </div>
 
-    {#await responsePromise}
-        <p>Loading maps list...</p>
-    {:then json}
-        <h2>Maps list</h2>
-        <ul>
-            {#each Object.entries(json.maps) as [name, map] (name)}
-                <li>
-                    <a href={mapStorageUrl + "/" + name} target="_blank">{name}</a>
-                    &rarr;
-                    <a href={map.mapUrl} target="_blank">{map.mapUrl}</a>
-                </li>
-            {/each}
-        </ul>
-    {:catch error}
-        <p style="color: red">{error.message}</p>
-    {/await}
+    {#if responsePromise}
+        {#await responsePromise}
+            <p>Loading maps list...</p>
+        {:then json}
+            <h2>Maps list</h2>
+            <ul>
+                {#each Object.entries(json.maps) as [name, map] (name)}
+                    <li>
+                        <a href={mapStorageUrl + "/" + name} target="_blank">{name}</a>
+                        &rarr;
+                        <a href={map.mapUrl} target="_blank">{map.mapUrl}</a>
+                    </li>
+                {/each}
+            </ul>
+        {:catch error}
+            <p style="color: red">{error.message}</p>
+        {/await}
+    {/if}
 
-    <button on:click={showDialogClick}>Add a map (hosted on a remote server)</button>
+    <button onclick={showDialogClick}>Add a map (hosted on a remote server)</button>
 
     <div style="display: flex;">
         <div style="padding: 10px; margin: 20px;">
@@ -132,11 +134,17 @@
         </div>
     </div>
 
-    <dialog id="add-tmj-dialog">
+    <dialog bind:this={dialog} id="add-tmj-dialog">
         <h1>Add a new map</h1>
         <p>This will create a new room (WAM file) in the map-storage referencing your Tiled map.</p>
         <p>Please provide the full URL to a Tiled map file (<code>.tmj</code> or <code>.json</code> extension)</p>
-        <form on:submit|preventDefault={addTmj}>
+
+        <form
+            onsubmit={(event) => {
+                event.preventDefault();
+                addTmj();
+            }}
+        >
             <div>
                 <label for="wam-map-field">WAM path:</label>
                 <input id="wam-map-field" type="text" bind:value={wamPath} placeholder="my-map.wam" />
@@ -146,7 +154,7 @@
                 <input id="tiled-map-url-field" type="url" bind:value={newTmjUrl} />
             </div>
             <button type="submit">Add</button>
-            <button type="button" on:click={closeTmjDialog}>Close</button>
+            <button type="button" onclick={closeTmjDialog}>Close</button>
         </form>
     </dialog>
 </main>

@@ -7,7 +7,7 @@ export class PlayerMovement {
         private startPosition: PositionInterface,
         private startTick: number,
         private endPosition: HasPlayerMovedInterface,
-        private endTick: number
+        private endTick: number,
     ) {}
 
     public isOutdated(tick: number): boolean {

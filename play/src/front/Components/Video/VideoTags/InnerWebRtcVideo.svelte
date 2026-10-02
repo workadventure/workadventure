@@ -1,24 +1,33 @@
-<svelte:options immutable={true} />
-
 <script lang="ts">
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
     import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
 
-    export let style: string;
-    export let className: string;
-    export let videoWidth: number;
-    export let videoHeight: number;
-    export let onLoadVideoElement: (event: Event) => void;
-    export let loop = false;
+    interface Props {
+        style: string;
+        className: string;
+        videoWidth: number;
+        videoHeight: number;
+        onloadvideoelement?: (event: Event) => void;
+        onvideo?: () => void;
+        onnovideo?: () => void;
+        loop: boolean;
+        stream: MediaStream;
+        setDimensions: (width: number, height: number) => void;
+    }
 
-    export let stream: MediaStream;
-    export let setDimensions: (width: number, height: number) => void;
-
-    const dispatch = createEventDispatcher<{
-        video: undefined;
-        noVideo: undefined;
-    }>();
+    let {
+        style,
+        className,
+        videoWidth = $bindable(),
+        videoHeight = $bindable(),
+        onloadvideoelement,
+        onvideo,
+        onnovideo,
+        loop = false,
+        stream,
+        setDimensions,
+    }: Props = $props();
 
     let videoElement: HTMLVideoElement;
     let resizeObserver: ResizeObserver | undefined;
@@ -59,10 +68,12 @@
                 lastHeight = height;
                 setDimensions(width, height);
             } else {
-                console.warn("WebRtcVideo: Invalid video element dimensions", {
+                // On startup, there is a small moment where width and height of the video element are 0
+                // (because the container is collapsed)
+                /*console.warn("WebRtcVideo: Invalid video element dimensions", {
                     width,
                     height,
-                });
+                });*/
             }
         };
 
@@ -80,11 +91,11 @@
         noVideoOutputDetector = new NoVideoOutputDetector(
             videoElement,
             () => {
-                dispatch("noVideo");
+                onnovideo?.();
             },
             () => {
-                dispatch("video");
-            }
+                onvideo?.();
+            },
         );
         noVideoOutputDetector.expectVideoWithin5Seconds();
 
@@ -106,6 +117,9 @@
     });
 
     onDestroy(() => {
+        // The tile is gone: scrolled out of view (VideoBoxOptimizer), tab hidden without Picture-in-Picture
+        // (CenteredVideo), layout change... Tell the sender to stop encoding for us.
+        setDimensions(0, 0);
         if (noVideoOutputDetector) {
             noVideoOutputDetector.destroy();
             noVideoOutputDetector = undefined;
@@ -124,11 +138,11 @@
     bind:videoWidth
     bind:videoHeight
     bind:this={videoElement}
-    on:loadedmetadata={onLoadVideoElement}
+    onloadedmetadata={onloadvideoelement}
     class={`bg-contrast/80 backdrop-blur ${className}`}
     autoplay
     playsinline
     muted={true}
     {loop}
     data-testid="webrtc-video"
-/>
+></video>

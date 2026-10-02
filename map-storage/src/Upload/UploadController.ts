@@ -5,10 +5,10 @@ import type { Express, Request } from "express";
 import multer from "multer";
 import type { LimitFunction } from "p-limit";
 import pLimit from "p-limit";
-import archiver from "archiver";
+import ZipStream from "zip-stream";
 import { type File, type CentralDirectory, Open as UnzipperOpen } from "unzipper";
-import type { Operation } from "rfc6902";
-import { applyPatch } from "rfc6902";
+import jsonpatch from "fast-json-patch";
+import type { Operation } from "fast-json-patch";
 import type { OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { WAMFileFormat } from "@workadventure/map-editor";
@@ -20,8 +20,13 @@ import * as Sentry from "@sentry/node";
 import bodyParser from "body-parser";
 import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import axios from "axios";
-import { mapPath } from "../Services/PathMapper";
-import { ENTITY_COLLECTION_URLS, MAX_UNCOMPRESSED_SIZE, WAM_TEMPLATE_URL } from "../Enum/EnvironmentVariable";
+import { decodeStoragePath, getRequestDomain, mapPath } from "../Services/PathMapper";
+import {
+    DIRECT_UPLOAD_URL,
+    ENTITY_COLLECTION_URLS,
+    MAX_UNCOMPRESSED_SIZE,
+    WAM_TEMPLATE_URL,
+} from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
 import { uploadDetector } from "../Services/UploadDetector";
 import type { MapListService } from "../Services/MapListService";
@@ -47,9 +52,14 @@ export class UploadController {
      */
     private uploadLimiter: Map<string, LimitFunction>;
 
-    constructor(private app: Express, private fileSystem: FileSystemInterface, private mapListService: MapListService) {
+    constructor(
+        private app: Express,
+        private fileSystem: FileSystemInterface,
+        private mapListService: MapListService,
+    ) {
         this.uploadLimiter = new Map<string, LimitFunction>();
         this.index();
+        this.getUploadEndpoint();
         this.postUpload();
         this.putUpload();
         this.getDownload();
@@ -63,6 +73,24 @@ export class UploadController {
     private index() {
         this.app.get("/", passportAuthenticator, (req, res) => {
             res.redirect(`${process.env.PATH_PREFIX || ""}/ui/`);
+        });
+    }
+
+    /**
+     * Tells the map uploader where to POST the ZIP file.
+     * Production sits behind a proxy that rejects request bodies over 100MB (Cloudflare), so DIRECT_UPLOAD_URL can
+     * point to a host that bypasses it. The uploader keeps identifying the world by the hostname of its configured
+     * MAP_STORAGE_URL, sent in the "X-Map-Storage-Host" header (see getRequestDomain).
+     * Old map-storage versions answer 404 here and the uploader falls back to its configured URL.
+     */
+    private getUploadEndpoint() {
+        // Not authenticated: the URL is public (DNS, Helm values), there is nothing to protect.
+        this.app.get("/upload-endpoint", (req, res) => {
+            res.json({
+                url:
+                    DIRECT_UPLOAD_URL ??
+                    `${req.protocol}://${req.hostname}${req.header("x-forwarded-prefix") || ""}/upload`,
+            });
         });
     }
 
@@ -103,7 +131,7 @@ export class UploadController {
                     // Read the contents of the ZIP archive
                     const zipDirectory = await UnzipperOpen.file(zipFile.path);
                     const zipEntries = zipDirectory.files.filter(
-                        (zipEntry) => zipEntry.type !== "Directory" && this.filterFile(zipEntry.path)
+                        (zipEntry) => zipEntry.type !== "Directory" && this.filterFile(zipEntry.path),
                     );
 
                     let totalSize = 0;
@@ -115,7 +143,7 @@ export class UploadController {
 
                     if (totalSize > MAX_UNCOMPRESSED_SIZE) {
                         res.status(413).send(
-                            `File too large. Unzipped files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`
+                            `File too large. Unzipped files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`,
                         );
                         return;
                     }
@@ -218,7 +246,7 @@ export class UploadController {
                                 promises.push(this.createWAMFileIfMissing(key, zipEntry, zipDirectory));
                             }
                         } else if (path.extname(key) === ".wam") {
-                            const wamUrl = `${req.protocol}://${req.hostname}${directory}/${zipEntry.path}`;
+                            const wamUrl = `${req.protocol}://${getRequestDomain(req)}${directory}/${zipEntry.path}`;
                             wamToPurge.push(wamUrl);
                         }
                     }
@@ -239,7 +267,7 @@ export class UploadController {
                             Sentry.captureException(err);
                         });
                     }
-                    await this.mapListService.generateCacheFile(req.hostname);
+                    await this.mapListService.generateCacheFile(getRequestDomain(req));
 
                     res.send("File successfully uploaded.");
                 });
@@ -284,10 +312,18 @@ export class UploadController {
                     // Get the uploaded file
                     const file = req.file;
 
-                    const filePath = req.path;
-
-                    if (filePath.includes("..")) {
+                    if (req.path.includes("..")) {
                         // Attempt to override filesystem. That' a hack!
+                        res.status(400).send("Invalid path");
+                        return;
+                    }
+
+                    // `req.path` is percent-encoded while storage keys are literal (the ZIP upload
+                    // writes the entry names as-is), so decode to write under the same key.
+                    let filePath: string;
+                    try {
+                        filePath = decodeStoragePath(req.path);
+                    } catch {
                         res.status(400).send("Invalid path");
                         return;
                     }
@@ -304,7 +340,7 @@ export class UploadController {
                     await limiter(async () => {
                         if (file && file.size > MAX_UNCOMPRESSED_SIZE) {
                             res.status(413).send(
-                                `File too large. Files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`
+                                `File too large. Files should be less than ${MAX_UNCOMPRESSED_SIZE} bytes.`,
                             );
                             return;
                         }
@@ -322,7 +358,7 @@ export class UploadController {
                                 content = JSON.stringify(req.body);
                             } else {
                                 throw new Error(
-                                    "Unsupported mime-type. Allowed types are application/json and multipart/form-data."
+                                    "Unsupported mime-type. Allowed types are application/json and multipart/form-data.",
                                 );
                             }
                         }
@@ -399,7 +435,7 @@ export class UploadController {
                     Sentry.captureException(e);
                     next(e);
                 });
-            }
+            },
         );
     }
 
@@ -409,10 +445,18 @@ export class UploadController {
          */
         this.app.patch(/.*\.wam$/, passportAuthenticator, (req, res, next) => {
             (async () => {
-                const filePath = req.path;
-
-                if (filePath.includes("..")) {
+                if (req.path.includes("..")) {
                     // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid path");
+                    return;
+                }
+
+                // `req.path` is percent-encoded while storage keys are literal, so decode to patch
+                // the file that was actually written at upload time.
+                let filePath: string;
+                try {
+                    filePath = decodeStoragePath(req.path);
+                } catch {
                     res.status(400).send("Invalid path");
                     return;
                 }
@@ -432,7 +476,7 @@ export class UploadController {
                     let errors: Partial<OrganizedErrors> = {};
 
                     const content = WAMFileFormat.parse(
-                        wamFileMigration.migrate(JSON.parse(await this.fileSystem.readFileAsString(virtualPath)))
+                        wamFileMigration.migrate(JSON.parse(await this.fileSystem.readFileAsString(virtualPath))),
                     );
 
                     // Let's make things easy: if "vendor" or "metadata" is not defined, let's add an empty object.
@@ -443,16 +487,34 @@ export class UploadController {
                         content.metadata = {};
                     }
 
-                    const patchedContent = structuredClone(content);
-                    const patchErrors = applyPatch(patchedContent, req.body as Operation[]);
-                    if (patchErrors.some(Boolean)) {
-                        console.error(
-                            `[${new Date().toISOString()}] Failed to apply patch on WAM file:`,
-                            patchErrors,
-                            typeof patchErrors
-                        );
+                    const operations = req.body as unknown;
+                    if (!Array.isArray(operations)) {
                         res.status(400).json({
-                            patch: patchErrors,
+                            patch: "Invalid patch: expected a JSON-Patch document (an array of operations)",
+                        });
+                        return;
+                    }
+
+                    // `validateOperation = true` makes fast-json-patch validate every operation
+                    // and refuse to resolve a JSON Pointer through an inherited (prototype)
+                    // property, so a patch cannot reach shared, process-wide state instead of the
+                    // map document. `mutateDocument = false` returns a fresh document and leaves
+                    // `content` untouched; prototype modifications are banned by default.
+                    // The operations are entirely client-supplied, so any failure applying them
+                    // (a JsonPatchError, or the prototype-ban TypeError) is a bad request, not a
+                    // server error.
+                    let patchedContent: typeof content;
+                    try {
+                        patchedContent = jsonpatch.applyPatch(
+                            content,
+                            operations as Operation[],
+                            true,
+                            false,
+                        ).newDocument;
+                    } catch (e) {
+                        console.error(`[${new Date().toISOString()}] Failed to apply patch on WAM file:`, e);
+                        res.status(400).json({
+                            patch: e instanceof Error ? e.message : "Invalid patch",
                         });
                         return;
                     }
@@ -507,7 +569,7 @@ export class UploadController {
             const tmjContent = JSON.parse(tmjString) as ITiledMap;
             await this.fileSystem.writeStringAsFile(
                 wamPath,
-                JSON.stringify(await this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4)
+                JSON.stringify(await this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4),
             );
         }
     }
@@ -614,34 +676,37 @@ export class UploadController {
 
                 res.attachment(archiveName);
 
-                const archive = archiver("zip", {
+                const archive = new ZipStream({
                     zlib: { level: 9 }, // Sets the compression level.
-                });
-
-                // good practice to catch warnings (ie stat failures and other non-blocking errors)
-                archive.on("warning", function (err) {
-                    if (err.code === "ENOENT") {
-                        // log warning
-                        console.warn(`[${new Date().toISOString()}] File not found: `, err);
-                    } else {
-                        console.error(`[${new Date().toISOString()}] A warning occurred while Zipping file: `, err);
-                        Sentry.captureException(`A warning occurred while Zipping file: ${JSON.stringify(err)}`);
-                    }
                 });
 
                 // good practice to catch this error explicitly
                 archive.on("error", function (err) {
                     console.error(`[${new Date().toISOString()}] An error occurred while Zipping file: `, err);
-                    Sentry.captureException(`An error occurred while Zipping file: ${JSON.stringify(err)}`);
+                    Sentry.captureException(err);
                     res.status(500).send("An error occurred");
                 });
 
                 // pipe archive data to the file
                 archive.pipe(res);
 
+                // If the client disconnects before the archive is fully sent, destroy the
+                // archive so archiveDirectory() stops fetching S3 objects and releases any
+                // in-flight S3 response streams. Otherwise their sockets leak from the S3
+                // connection pool and eventually exhaust it (maxSockets).
+                res.on("close", () => {
+                    if (!res.writableFinished) {
+                        archive.destroy();
+                    }
+                });
+
                 await this.fileSystem.archiveDirectory(archive, virtualDirectory);
 
-                await archive.finalize();
+                // If the client disconnected, the archive was already destroyed above; calling
+                // finalize() on it would write to a destroyed stream and emit a spurious error.
+                if (!archive.destroyed) {
+                    archive.finalize();
+                }
             })().catch((e) => {
                 console.error(`[${new Date().toISOString()}]`, e);
                 Sentry.captureException(e);
@@ -653,10 +718,16 @@ export class UploadController {
     private deleteFile() {
         this.app.delete("/{*splat}", passportAuthenticator, (req, res, next) => {
             (async () => {
-                const filePath = req.path;
-
-                if (filePath.includes("..")) {
+                if (req.path.includes("..")) {
                     // Attempt to override filesystem. That' a hack!
+                    res.status(400).send("Invalid path");
+                    return;
+                }
+
+                let filePath: string;
+                try {
+                    filePath = decodeStoragePath(req.path);
+                } catch {
                     res.status(400).send("Invalid path");
                     return;
                 }
@@ -685,7 +756,7 @@ export class UploadController {
                         } catch (error) {
                             console.error(
                                 `[${new Date().toISOString()}] Failed to execute all request on resourceUrl`,
-                                error
+                                error,
                             );
                         }
                     }

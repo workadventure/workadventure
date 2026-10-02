@@ -90,76 +90,6 @@ jobs:
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./
 
-  push-to-sentry:
-    runs-on: ubuntu-latest
-    #if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-    if: ${{ github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/master') }}
-    needs:
-#      - build-play
-      - build-back
-      - build-map-storage
-    steps:
-#      - name: Sentry push play source maps
-#        continue-on-error: true
-#        env:
-#          SENTRY_URL: ${{ secrets.SENTRY_URL }}
-#          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-#          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-#          SENTRY_PROJECT: pusher
-#          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || null }}
-#          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
-#        run: |
-#          docker run --rm \
-#            --user 0       \
-#            -e SENTRY_URL \
-#            -e SENTRY_AUTH_TOKEN \
-#            -e SENTRY_ORG \
-#            -e SENTRY_PROJECT \
-#            -e SENTRY_RELEASE \
-#            -e SENTRY_ENVIRONMENT \
-#            ghcr.io/workadventure/play-dev-build:amd64-${{ github.sha }} \
-#            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
-
-      - name: Sentry push back source maps
-        env:
-          SENTRY_URL: ${{ secrets.SENTRY_URL }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: back
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || null }}
-          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
-        run: |
-          docker run --rm \
-            --user 0       \
-            -e SENTRY_URL \
-            -e SENTRY_AUTH_TOKEN \
-            -e SENTRY_ORG \
-            -e SENTRY_PROJECT \
-            -e SENTRY_RELEASE \
-            -e SENTRY_ENVIRONMENT \
-            ghcr.io/workadventure/back-dev-build:amd64-${{ github.sha }} \
-            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
-
-      - name: Sentry push map-storage source maps
-        env:
-          SENTRY_URL: ${{ secrets.SENTRY_URL }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: map-storage
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || null }}
-          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
-        run: |
-          docker run --rm \
-            --user 0       \
-            -e SENTRY_URL \
-            -e SENTRY_AUTH_TOKEN \
-            -e SENTRY_ORG \
-            -e SENTRY_PROJECT \
-            -e SENTRY_RELEASE \
-            -e SENTRY_ENVIRONMENT \
-            ghcr.io/workadventure/map-storage-dev-build:amd64-${{ github.sha }} \
-            /bin/sh -c 'cd /usr/src && npm ci -w map-storage && cd /usr/src/map-storage && npm run push-sentry-sourcemaps'
-
   end-to-end-tests:
     name: "End to end tests with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}"
     strategy:
@@ -170,30 +100,42 @@ jobs:
             parameters: --project=chromium
             project: chromium
             shard: 1
-            nbShards: 4
+            nbShards: 5
             renderer: auto
             ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 2
-            nbShards: 4
+            nbShards: 5
             renderer: auto
             ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 3
-            nbShards: 4
+            nbShards: 5
             renderer: auto
             ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 4
-            nbShards: 4
+            nbShards: 5
             renderer: auto
             ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
+          - browser: chromium
+            parameters: --project=chromium
+            project: chromium
+            shard: 5
+            nbShards: 5
+            renderer: auto
+            ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
@@ -201,6 +143,7 @@ jobs:
             nbShards: 4
             renderer: auto
             ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
@@ -208,6 +151,7 @@ jobs:
             nbShards: 4
             renderer: auto
             ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
@@ -215,6 +159,7 @@ jobs:
             nbShards: 4
             renderer: auto
             ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
@@ -222,34 +167,30 @@ jobs:
             nbShards: 4
             renderer: auto
             ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 1
-            nbShards: 3
-            renderer: headless
-            ignoreTags: "@nowebkit|@nodesktop"
-          - browser: webkit
-            parameters: --project=webkit
-            project: webkit
-            shard: 2
-            nbShards: 3
-            renderer: headless
-            ignoreTags: "@nowebkit|@nodesktop"
-          - browser: webkit
-            parameters: --project=webkit
-            project: webkit
-            shard: 3
-            nbShards: 3
+            nbShards: 1
             renderer: headless
             ignoreTags: "@nowebkit|@nodesktop"
           - browser: ""
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 1
-            nbShards: 1
+            nbShards: 2
             renderer: auto
             ignoreTags: "@nomobile"
+            shardWeights: "33:48"
+          - browser: ""
+            parameters: --project=mobilechromium
+            project: mobilechromium
+            shard: 2
+            nbShards: 2
+            renderer: auto
+            ignoreTags: "@nomobile"
+            shardWeights: "33:48"
           - browser: ""
             parameters: --project=mobilefirefox
             project: mobilefirefox
@@ -276,13 +217,21 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
-          node-version: 22
+          node-version: 24
       - name: Install dependencies
         run: npm ci
         working-directory: tests
       - name: Install Playwright
         run: npx playwright install --with-deps ${{ matrix.browser }}
         working-directory: tests
+      - name: Set up virtual audio output for Firefox
+        if: ${{ contains(matrix.project, 'firefox') }}
+        run: |
+          sudo apt-get install --yes pulseaudio pulseaudio-utils
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=ci_null_sink
+          pactl set-default-sink ci_null_sink
+          pactl info
       - name: 'Setup .env file'
         run: cp .env.template .env
       - uses: rlespinasse/github-slug-action@4.2.3
@@ -362,7 +311,7 @@ jobs:
       - name: Upload test-map
         run: sleep 5 && npm run upload-test-map
         working-directory: map-storage
-      - name: Check for no-flaky label
+      - name: Check PR labels
         id: check-no-flaky
         if: github.event_name == 'pull_request'
         run: |
@@ -371,13 +320,28 @@ jobs:
           else
             echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
           fi
+          # Traces always record DOM snapshots off by default, because they cost ~23% of test time while
+          # the rest of a trace costs ~1%. Add the "full-trace" label when hunting a specific flake and the
+          # time-travel DOM viewer is worth that price.
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'full-trace') }}" == "true" ]]; then
+            echo "has_full_trace_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run Playwright tests
         run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow${{ matrix.ignoreTags && matrix.ignoreTags != '' && format('|{0}', matrix.ignoreTags) || '' }}"
         working-directory: tests
         env:
           RENDERER_MODE: ${{ matrix.renderer }}
+          # Playwright's --shard balances by TEST COUNT, which left shards 3.5x apart in wall time
+          # (1249s vs 362s on chromium 4-way). PWTEST_SHARD_WEIGHTS sets each shard's test count
+          # explicitly, so the boundaries can be placed to balance DURATION instead. Regenerate with
+          # tests/scripts/shard-weights.mjs after adding or substantially changing tests.
+          PWTEST_SHARD_WEIGHTS: ${{ matrix.shardWeights }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
-          IS_FORK: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+          FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
+          # Secrets are withheld from forks AND from Dependabot PRs, so test for the secret itself.
+          NO_KLAXOON_SECRET: ${{ secrets.KLAXOON_CLIENT_ID == '' }}
       - name: Display docker compose logs on failure
         run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs
         if: failure()
@@ -561,7 +525,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
-          node-version: 22
+          node-version: 24
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -590,7 +554,6 @@ jobs:
           sed -i "s/MAP_STORAGE_AUTHENTICATION_PASSWORD=/MAP_STORAGE_AUTHENTICATION_PASSWORD=password/g" .env
           sed -i "s/ADMIN_API_TOKEN=/ADMIN_API_TOKEN=123/g" .env
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
-          sed -i "s/FEATURE_FLAG_BROADCAST_AREAS=/FEATURE_FLAG_BROADCAST_AREAS=true/g" .env
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
@@ -623,7 +586,7 @@ jobs:
           sleep 10
           npm run upload-test-map-single-domain
         working-directory: map-storage
-      - name: Check for no-flaky label
+      - name: Check PR labels
         id: check-no-flaky
         if: github.event_name == 'pull_request'
         run: |
@@ -632,6 +595,14 @@ jobs:
           else
             echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
           fi
+          # Traces always record DOM snapshots off by default, because they cost ~23% of test time while
+          # the rest of a trace costs ~1%. Add the "full-trace" label when hunting a specific flake and the
+          # time-travel DOM viewer is worth that price.
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'full-trace') }}" == "true" ]]; then
+            echo "has_full_trace_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
         run: npm run test-single-domain-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
@@ -639,6 +610,7 @@ jobs:
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+          FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
       - name: Display docker compose logs on failure
         run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml logs
         if: failure()
@@ -752,8 +724,28 @@ jobs:
           forceRedeploy: true
           play:
             replicaCount: 2
+            env:
+              PROMETHEUS_PORT: "9090"
             secretEnv:
               ROOM_API_SECRET_KEY: "password"
+            podAnnotations:
+              prometheus.io/scrape: 'true'
+              prometheus.io/path: '/metrics'
+              prometheus.io/port: '9090'
+            ingress:
+              sticky:
+                cookie:
+                  # The affinity cookie needs to be set to "None" for cross-domain cookies to work (pusher vs play/custom domains)
+                  sameSite: "None"
+          back:
+            env:
+              PROMETHEUS_PORT: "9090"
+        
+            podAnnotations:
+              prometheus.io/scrape: 'true'
+              prometheus.io/path: '/metrics'
+              prometheus.io/port: '9090'
+          
           mapstorage:
             env:
               AUTHENTICATION_USER: "john.doe"
@@ -764,7 +756,6 @@ jobs:
           commonEnv:
             ENABLE_MAP_EDITOR: true
             KLAXOON_ENABLED: true
-            FEATURE_FLAG_BROADCAST_AREAS: true
             YOUTUBE_ENABLED: true
             GOOGLE_DRIVE_ENABLED: true
             GOOGLE_DOCS_ENABLED: true
@@ -876,6 +867,11 @@ jobs:
         env:
           NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
 
+      - name: 'Stamp namespace with deploy timestamp (used by stale-environment cleanup)'
+        run: kubectl annotate namespace "${NAMESPACE}" "workadventure.re/last-deployed=$(date -u +%Y-%m-%dT%H:%M:%SZ)" --overwrite
+        env:
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
+
       - name: "Fix path to assets in WAM test files"
         run: find "." -type f -name "*.wam" -exec sed -i "s|http://play.workadventure.localhost|${PLAY_URL}|g" {} \;
         working-directory: map-storage/tests
@@ -920,7 +916,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 22
+          node-version: 24
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -946,7 +942,7 @@ jobs:
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip *
         working-directory: map-storage
 
-      - name: Check for no-flaky label
+      - name: Check PR labels
         id: check-no-flaky
         if: github.event_name == 'pull_request'
         run: |
@@ -954,6 +950,14 @@ jobs:
             echo "has_no_flaky_label=true" >> $GITHUB_OUTPUT
           else
             echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
+          fi
+          # Traces always record DOM snapshots off by default, because they cost ~23% of test time while
+          # the rest of a trace costs ~1%. Add the "full-trace" label when hunting a specific flake and the
+          # time-travel DOM viewer is worth that price.
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'full-trace') }}" == "true" ]]; then
+            echo "has_full_trace_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
           fi
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
@@ -968,6 +972,7 @@ jobs:
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+          FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

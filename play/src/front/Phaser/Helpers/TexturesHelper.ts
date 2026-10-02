@@ -1,9 +1,12 @@
+import * as Phaser from "phaser";
 import { asError } from "catch-unknown";
+
+import Sprite = Phaser.GameObjects.Sprite;
 
 export class TexturesHelper {
     public static async getSnapshot(
         scene: Phaser.Scene,
-        ...sprites: { sprite: Phaser.GameObjects.Sprite; frame?: string | number }[]
+        ...sprites: { sprite: Sprite; frame?: string | number }[]
     ): Promise<string> {
         if (!scene.game.renderer) {
             // In headless mode, we cannot take snapshots.
@@ -23,6 +26,7 @@ export class TexturesHelper {
                 }
                 rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight * 0.5);
             }
+            rt.render();
             return new Promise<string>((resolve, reject) => {
                 try {
                     rt.snapshot(
@@ -36,7 +40,7 @@ export class TexturesHelper {
                             rt.destroy();
                         },
                         "image/png",
-                        1
+                        1,
                     );
                 } catch (error) {
                     rt.destroy();
@@ -49,36 +53,12 @@ export class TexturesHelper {
         }
     }
 
-    public static createFloorRectangleTexture(
-        scene: Phaser.Scene,
-        newTextureKey: string,
-        width: number,
-        height: number,
-        sourceTextureKey: string,
-        sourceTextureFrame?: number | string,
-        sourceTextureWidth = 32,
-        sourceTextureHeight = 32
-    ): void {
-        const rt = scene.make.renderTexture({ x: 0, y: 0, width, height }, false);
-        const widthTiles = Math.ceil(width / sourceTextureWidth);
-        const heightTiles = Math.ceil(height / sourceTextureHeight);
-
-        for (let x = 0; x < widthTiles; x += 1) {
-            for (let y = 0; y < heightTiles; y += 1) {
-                rt.drawFrame(sourceTextureKey, sourceTextureFrame, x * 32, y * 32);
-            }
-        }
-
-        rt.saveTexture(newTextureKey);
-        rt.destroy();
-    }
-
     public static createRectangleTexture(
         scene: Phaser.Scene,
         textureKey: string,
         width: number,
         height: number,
-        color: number
+        color: number,
     ): void {
         const rectangleTexture = scene.add.graphics().fillStyle(color, 1).fillRect(0, 0, width, height);
         rectangleTexture.generateTexture(textureKey, width, height);
@@ -91,7 +71,7 @@ export class TexturesHelper {
         radius: number,
         color: number,
         outlineColor?: number,
-        outlineThickness?: number
+        outlineThickness?: number,
     ): void {
         const circleTexture = scene.add.graphics().fillStyle(color, 1).fillCircle(radius, radius, radius);
         if (outlineColor) {

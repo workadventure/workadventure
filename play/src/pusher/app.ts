@@ -32,6 +32,7 @@ import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
 import { LocalScriptController } from "./controllers/LocalScriptController";
 import { LivekitWebhookController } from "./controllers/LivekitWebhookController";
+import { analyticsEventsQueue } from "./services/AnalyticsEventsQueue";
 
 class App {
     private readonly app: Application;
@@ -42,7 +43,7 @@ class App {
         this.websocketApp = uWebsockets.App();
         this.app = express();
 
-        // LiveKit webhooks must receive the raw body for signature verification; register before express.json().
+        // LiveKit webhooks must keep the raw body for signature verification in the back; register before express.json().
         new LivekitWebhookController(this.app);
 
         this.app.use(express.json());
@@ -69,7 +70,7 @@ class App {
                     "sentry-trace",
                 ],
                 credentials: true,
-            })
+            }),
         );
 
         //this.app.set_error_handler(globalErrorHandler);
@@ -135,8 +136,10 @@ class App {
             "assets",
             express.static(path + "/assets", {
                 ...staticOptions,
+                // Vite content-hashes everything under /assets, so the CDN edge may keep it forever.
                 maxAge: "1y",
-            })
+                immutable: true,
+            }),
         );
 
         this.app.use(
@@ -144,7 +147,7 @@ class App {
             express.static(path + "/resources", {
                 ...staticOptions,
                 maxAge: "1d",
-            })
+            }),
         );
 
         this.app.use(
@@ -152,7 +155,7 @@ class App {
             express.static(path + "/static", {
                 ...staticOptions,
                 maxAge: "1d",
-            })
+            }),
         );
 
         this.app.use(
@@ -160,14 +163,14 @@ class App {
             express.static(path + "/collections", {
                 ...staticOptions,
                 maxAge: "1d",
-            })
+            }),
         );
 
         this.app.use(
             express.static(path, {
                 ...staticOptions,
                 maxAge: "1h",
-            })
+            }),
         );
     }
 
@@ -190,6 +193,7 @@ class App {
             const capabilities = await adminApi.initialise();
             companionListController.setCompanionService(CompanionService.get(capabilities));
             wokaListController.setWokaService(WokaService.get(capabilities));
+            analyticsEventsQueue.setEnabled(capabilities["api/analytics/events-batch"] === "v1");
         } catch (error) {
             console.error("Failed to initialize: problem getting AdminAPI capabilities", error);
             Sentry.captureException(`Failed to initialized companion and woka services : ${error}`);

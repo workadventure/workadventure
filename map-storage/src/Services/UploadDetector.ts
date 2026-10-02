@@ -34,10 +34,10 @@ class UploadDetector {
                                     return;
                                 }
                                 resolve();
-                            }
+                            },
                         );
-                    })
-            )
+                    }),
+            ),
         );
         this.throwIfOneClientFailed(results, "handleMapStorageUploadMapDetected");
     }
@@ -62,10 +62,10 @@ class UploadDetector {
                                     return;
                                 }
                                 resolve();
-                            }
+                            },
                         );
-                    })
-            )
+                    }),
+            ),
         );
         this.throwIfOneClientFailed(results, "handleMapStorageDeleteMapDetected");
     }

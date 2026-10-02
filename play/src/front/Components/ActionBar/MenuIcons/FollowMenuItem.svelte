@@ -25,8 +25,8 @@
 </script>
 
 <ActionBarButton
-    on:click={() => {
-        analyticsClient.follow();
+    onclick={() => {
+        analyticsClient.trackAdminEvent("user.follow_requested");
         followClick();
     }}
     classList="group/btn-follow"

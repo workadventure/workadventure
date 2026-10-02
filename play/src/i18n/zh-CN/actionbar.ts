@@ -44,6 +44,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noDevices: "未找到麦克风设备",
         noSoundWarning: "未检测到麦克风声音。可能存在问题 — 请尝试在设置中更换麦克风。",
         noSoundWarningPressEnter: "未检测到麦克风声音。按 Enter 打开设置。",
+        advancedNoiseReduction: "高级降噪",
+        noiseSuppressionInitializing: "正在初始化自定义噪声抑制...",
+        noiseSuppressionUnsupported: "此浏览器无法运行自定义噪声抑制。",
+        noiseSuppressionError: "自定义噪声抑制失败。正在回退到浏览器原生噪声抑制。",
         openSettings: "打开设置",
         ignore: "忽略",
     },
@@ -68,6 +72,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         SPEAKER: "会议中",
         LIVEKIT: "会议中",
         LISTENER: "会议中",
+        SOUND_BLOCKED: "声音被阻止",
     },
     subtitle: {
         camera: "摄像头",
@@ -83,7 +88,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "中等模糊",
         blurHigh: "高度模糊",
         images: "图片",
-        videos: "视频",
     },
     help: {
         chat: {
@@ -97,6 +101,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "显示表情符号",
             desc: "只需点击一下即可使用表情符号反应表达您的感受。只需点击即可！",
+        },
+        raiseHand: {
+            title: "举手",
+            desc: "示意你想发言。你举起的手会显示在地图和你的视频上，让大家知道接下来轮到谁。",
         },
         audioManager: {
             title: "环境声音音量",
@@ -123,6 +131,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "选择要锁定/解锁的区域",
             bubbleLabel: "讨论气泡",
             unnamedArea: "未命名区域",
+        },
+        giveBackFloor: {
+            title: "交回发言权",
+            desc: "你已获得发言权。点击停止发言并交回。",
         },
         megaphone: {
             title: "停止扩音器",
@@ -171,6 +183,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "您可以使用画中画功能在对话时观看视频或演示。只需点击画中画图标即可享受您的内容。",
         },
         videoNotSupported: "您的浏览器不支持视频标签。",
+    },
+    raisedHands: {
+        speaking: "发言中",
+        title: "举手",
+        empty: "没有人举手",
+        help: "按顺序查看谁举了手，并把发言权交给他。",
+        lowerHand: "放下手",
+        lowerAllHands: "全部放下",
     },
     listStatusTitle: {
         enable: "更改您的状态",

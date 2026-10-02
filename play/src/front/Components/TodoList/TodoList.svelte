@@ -11,10 +11,11 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
     import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
+    import Button from "../UI/Button.svelte";
     import TodoTask from "./TodoTask.svelte";
     import { IconChevronRight } from "@wa-icons";
 
-    let todoTaskCompletedOpened = false;
+    let todoTaskCompletedOpened = $state(false);
     let totoListOpenedId = writable<Set<string>>(new Set());
 
     function closeTodoList() {
@@ -32,7 +33,7 @@
     }
 
     function goToLoginPage() {
-        analyticsClient.login();
+        analyticsClient.trackAdminEvent("auth.login_clicked");
         window.location.href = "/login";
     }
 
@@ -64,7 +65,7 @@
                         <span class="ml-1 px-1 py-0.5 rounded-sm bg-white text-secondary text-xxs font-bold">Beta</span>
                     </div>
 
-                    <ButtonClose on:click={closeTodoList} />
+                    <ButtonClose onclick={closeTodoList} />
                 </div>
             </div>
             <div class="flex flex-col justify-center gap-4">
@@ -75,11 +76,11 @@
                         <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
                         -->
                         {#if get(externalSvelteComponentService.getComponentsByZone("todoListButton")).size === 0}
-                            <button
-                                class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
-                                on:click={goToLoginPage}
+                            <Button
+                                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
+                                onclick={goToLoginPage}
                                 >{$LL.menu.profile.login()}
-                            </button>
+                            </Button>
                         {/if}
                     </div>
                 {/if}
@@ -90,11 +91,11 @@
                 {/if}
                 {#each [...$todoListsStore.entries()] as [key, todoList] (key)}
                     <div class="flex flex-col gap-2">
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <div
                             class="flex justify-between items-center bg-white/10 hover:bg-white/20 p-2 rounded-md cursor-pointer"
-                            on:click={() => openTodoList(todoList.id)}
+                            onclick={() => openTodoList(todoList.id)}
                         >
                             <div class="text-base text-left flex flex-row gap-3 items-center w-full">
                                 <h4 class="text-base overflow-hidden text-ellipsis">{todoList.title}</h4>
@@ -103,7 +104,7 @@
                                 >
                                     <div class="text-center">
                                         {todoList.tasks.filter(
-                                            (task) => task.status === "notStarted" || task.status === "inProgress"
+                                            (task) => task.status === "notStarted" || task.status === "inProgress",
                                         ).length}
                                     </div>
                                 </div>
@@ -126,21 +127,21 @@
                             {/if}
                             {#if todoList.tasks.filter((task) => task.status === "completed").length > 0}
                                 {#if todoTaskCompletedOpened === false}
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                    <!-- svelte-ignore a11y_no_static_element_interactions -->
                                     <span
                                         class="text-sm text-gray-400 italic hover:underline cursor-pointer"
-                                        on:click={() => (todoTaskCompletedOpened = true)}
+                                        onclick={() => (todoTaskCompletedOpened = true)}
                                     >
                                         See completed task ☕️
                                     </span>
                                 {/if}
                                 {#if todoTaskCompletedOpened === true}
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                    <!-- svelte-ignore a11y_no_static_element_interactions -->
                                     <span
                                         class="text-sm text-gray-400 italic hover:underline cursor-pointer"
-                                        on:click={() => (todoTaskCompletedOpened = false)}
+                                        onclick={() => (todoTaskCompletedOpened = false)}
                                     >
                                         Hide completed task ☕️
                                     </span>
@@ -150,21 +151,21 @@
                     </div>
                 {/each}
             </div>
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
             {#if $userIsConnected}
                 <p
                     class="text-center text-xs text-gray-400 italic hover:underline cursor-pointer mt-5"
-                    on:click={closeTodoList}
+                    onclick={closeTodoList}
                 >
-                    ${$LL.externalModule.todoList.sentence()}
+                    {$LL.externalModule.todoList.sentence()}
                 </p>
             {/if}
         </div>
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .totolist {
         position: absolute !important;
         top: 0;
@@ -174,10 +175,6 @@
 
         pointer-events: auto;
         color: whitesmoke;
-
-        button.close-window {
-            right: 0.5rem;
-        }
 
         .sidebar {
             position: relative !important;

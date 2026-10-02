@@ -19,10 +19,11 @@ export const CPU_OVERHEAT_THRESHOLD = 80;
 export const PUSHER_HTTP_PORT = 3000;
 export const PUSHER_WS_PORT = 3001;
 export const SOCKET_IDLE_TIMER = 120;
+export const CLIENT_DISCONNECTION_RETENTION_MS = 30_000;
+export const PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES = 1024 * 1024;
 export const ALLOWED_CORS_ORIGIN: string | undefined = undefined;
 export const PUSHER_URL = "http://pusher.test";
 export const FRONT_URL = "http://front.test";
-export const VITE_URL = "http://front.test";
 export const PUBLIC_MAP_STORAGE_URL = "";
 export const INTERNAL_MAP_STORAGE_URL: string | undefined = undefined;
 export const REDIS_HOST: string | undefined = undefined;
@@ -104,8 +105,11 @@ export const LIVEKIT_PIXEL_DENSITY = 2 / 3;
 export const ENABLE_ISSUE_REPORT = true;
 export const ENABLE_TUTORIAL = true;
 export const GRPC_MAX_MESSAGE_SIZE = 20 * 1024 * 1024;
-export const LIVEKIT_API_KEY: string | undefined = undefined;
-export const LIVEKIT_API_SECRET: string | undefined = undefined;
+export const ANALYTICS_FLUSH_INTERVAL_MS = 10_000;
+export const ANALYTICS_TIMEOUT_MS = 2_000;
+export const ANALYTICS_MAX_QUEUE_SIZE = 10_000;
+export const ANALYTICS_MAX_BATCH_SIZE = 1_000;
+export const DRAIN_TIMEOUT_MS = 20_000;
 
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: false,
@@ -136,13 +140,13 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     FALLBACK_LOCALE,
     ENABLE_REPORT_ISSUES_MENU: false,
     REPORT_ISSUES_URL: undefined,
+    CLIENT_DISCONNECTION_RETENTION_MS,
     SENTRY_DSN_FRONT: undefined,
     SENTRY_DSN_PUSHER: undefined,
     SENTRY_ENVIRONMENT: undefined,
     SENTRY_RELEASE: undefined,
     SENTRY_TRACES_SAMPLE_RATE: undefined,
     WOKA_SPEED: 9,
-    FEATURE_FLAG_BROADCAST_AREAS: false,
     KLAXOON_ENABLED,
     KLAXOON_CLIENT_ID,
     YOUTUBE_ENABLED,
@@ -169,7 +173,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_ISSUE_REPORT,
     GRPC_MAX_MESSAGE_SIZE,
     TURN_CREDENTIALS_RENEWAL_TIME,
-    BACKGROUND_TRANSFORMER_ENGINE: "selfie-segmentation",
     DEFAULT_WOKA_NAME,
     DEFAULT_WOKA_TEXTURE,
     SKIP_CAMERA_PAGE,

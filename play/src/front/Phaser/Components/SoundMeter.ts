@@ -6,7 +6,7 @@ export class SoundMeter {
     private instant: number;
     private clip: number;
     private analyser: AnalyserNode | undefined;
-    private dataArray: Uint8Array | undefined;
+    private dataArray: Uint8Array<ArrayBuffer> | undefined;
     private context: AudioContext | undefined;
     private source: MediaStreamAudioSourceNode | undefined;
     private readonly NB_OF_BAR = 7;

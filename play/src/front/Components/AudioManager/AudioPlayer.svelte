@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
-    import { onDestroy, onMount, tick } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { Subscription } from "rxjs";
     import type { AudioManagerVolume } from "../../Stores/AudioManagerStore";
     import {
@@ -18,7 +18,7 @@
     import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
-    let HTMLAudioPlayer: HTMLAudioElement;
+    let HTMLAudioPlayer: HTMLAudioElement | undefined;
     let unsubscriberFileStore: Unsubscriber | null = null;
     let unsubscriberVolumeStore: Unsubscriber | null = null;
     let retryPlayStoreSubscription: Subscription | null = null;
@@ -29,24 +29,26 @@
         audioManagerVolumeStore.setMuted(localUserStore.getAudioPlayerMuted());
 
         unsubscriberFileStore = audioManagerFileStore.subscribe((src: string) => {
-            (async () => {
-                if (src == "") {
-                    try {
-                        HTMLAudioPlayer.pause();
-                    } catch (error) {
-                        console.warn("The audio player is not paused, so we create a new one", error);
-                    }
-                    if (HTMLAudioPlayer) HTMLAudioPlayer.onprogress = null;
-                    return;
+            if (src == "") {
+                try {
+                    HTMLAudioPlayer?.pause();
+                } catch (error) {
+                    console.warn("The audio player could not be paused", error);
                 }
-                await tick();
-                HTMLAudioPlayer.src = src;
-                HTMLAudioPlayer.load();
-                HTMLAudioPlayer.loop = get(audioManagerVolumeStore).loop;
-                HTMLAudioPlayer.volume = get(audioManagerVolumeStore).volume;
-                HTMLAudioPlayer.muted = get(audioManagerVolumeStore).muted;
-                tryPlay();
-            })().catch(console.error);
+                if (HTMLAudioPlayer) {
+                    HTMLAudioPlayer.onprogress = null;
+                    HTMLAudioPlayer.removeAttribute("src");
+                    HTMLAudioPlayer.load();
+                }
+                return;
+            }
+            if (!HTMLAudioPlayer) return;
+            HTMLAudioPlayer.src = src;
+            HTMLAudioPlayer.load();
+            HTMLAudioPlayer.loop = get(audioManagerVolumeStore).loop;
+            HTMLAudioPlayer.volume = get(audioManagerVolumeStore).volume * get(audioManagerVolumeStore).soundVolume;
+            HTMLAudioPlayer.muted = get(audioManagerVolumeStore).muted;
+            tryPlay();
         });
         unsubscriberVolumeStore = audioManagerVolumeStore.subscribe((audioManager: AudioManagerVolume) => {
             const reduceVolume = audioManager.talking && audioManager.decreaseWhileTalking;
@@ -57,7 +59,7 @@
             }
             audioManager.volumeReduced = reduceVolume;
             if (HTMLAudioPlayer) {
-                HTMLAudioPlayer.volume = audioManager.volume;
+                HTMLAudioPlayer.volume = audioManager.volume * audioManager.soundVolume;
                 HTMLAudioPlayer.muted = audioManager.muted;
                 HTMLAudioPlayer.loop = audioManager.loop;
                 // Use paused attribute to manage audio
@@ -65,22 +67,19 @@
                     try {
                         HTMLAudioPlayer.pause();
                     } catch (error) {
-                        console.warn("The audio player is not paused, so we create a new one", error);
+                        console.warn("The audio player could not be paused", error);
                     }
                     if (audioManager.stopped) {
-                        if (HTMLAudioPlayer) HTMLAudioPlayer.onprogress = null;
+                        HTMLAudioPlayer.onprogress = null;
                     }
-                } else {
+                } else if (get(audioManagerFileStore) !== "") {
                     HTMLAudioPlayer.muted = false;
                     HTMLAudioPlayer.play().catch(console.error);
                 }
             }
         });
         retryPlayStoreSubscription = audioManagerRetryPlaySubject.subscribe(() => {
-            (async () => {
-                await tick();
-                tryPlay();
-            })().catch(console.error);
+            tryPlay();
         });
     });
 
@@ -102,6 +101,9 @@
             actionsMenuStore.clear();
             // Audiovisilibily is set to false when audio is ended
             audioManagerVisibilityStore.set("hidden");
+            // Otherwise the next change to the volume store (entering a bubble lowers the volume)
+            // would play the ended sound again. playAudio() clears it.
+            audioManagerVolumeStore.stopSound(true);
             if ($activeSecondaryZoneActionBarStore === "audio-manager") {
                 activeSecondaryZoneActionBarStore.set(undefined);
             }
@@ -155,7 +157,7 @@
                                 gameScene.CurrentPlayer.destroyText("audio-not-allowed");
                                 // When the user clicks on the message, we try to play the audio again
                                 tryPlay();
-                            }
+                            },
                         );
                     }
                 } else {
@@ -168,6 +170,4 @@
     }
 </script>
 
-{#if $audioManagerFileStore !== "" && $audioManagerVolumeStore.stopped === false}
-    <audio preload="auto" class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
-{/if}
+<audio preload="auto" class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer}></audio>

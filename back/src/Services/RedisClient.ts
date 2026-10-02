@@ -41,12 +41,15 @@ export async function getRedisClient(): Promise<RedisClient | null> {
 
     if (!redisClient.isOpen) {
         await redisClient.connect().then(() => {
-            pingInterval = setInterval(() => {
-                redisClient.ping().catch((err) => {
-                    console.error("Redis Ping Interval Error", err);
-                    Sentry.captureException(`Redis Ping Interval Error: ${JSON.stringify(err)}`);
-                });
-            }, 1000 * 60 * 4);
+            pingInterval = setInterval(
+                () => {
+                    redisClient.ping().catch((err) => {
+                        console.error("Redis Ping Interval Error", err);
+                        Sentry.captureException(`Redis Ping Interval Error: ${JSON.stringify(err)}`);
+                    });
+                },
+                1000 * 60 * 4,
+            );
         });
     }
 

@@ -1,6 +1,13 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import { fade } from "svelte/transition";
     import { onboardingStore } from "../../Stores/OnboardingStore";
+
+    interface Props {
+        children?: Snippet;
+    }
+
+    let { children }: Props = $props();
 </script>
 
 <div
@@ -10,11 +17,11 @@
 >
     <!-- Overlay with gray background and blur - only for welcome step -->
     {#if $onboardingStore === "welcome"}
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" />
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"></div>
     {/if}
 
     <!-- Content slot -->
     <div class="relative z-10 pointer-events-none">
-        <slot />
+        {@render children?.()}
     </div>
 </div>

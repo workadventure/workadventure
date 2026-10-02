@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 globalThis.Phaser = Phaser;
 
 import type {
@@ -17,6 +17,7 @@ import type {
     SpaceIsTyping,
     SpaceMessage,
     InitSpaceUsersMessage,
+    SpaceStatePatchMessage,
 } from "@workadventure/messages";
 import { SpaceUser, FilterType } from "@workadventure/messages";
 import { Subject } from "rxjs";
@@ -40,8 +41,8 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public emitRemoveSpaceFilter = vi.fn();
     public emitJoinSpace = vi.fn();
     public emitLeaveSpace = vi.fn();
-    public startRecording = vi.fn();
-    public stopRecording = vi.fn();
+    public alterSpaceState = vi.fn().mockResolvedValue(undefined);
+    public spaceStatePatchMessageStream = new Subject<SpaceStatePatchMessage>();
     public spacePublicMessageEvent = new Subject<PublicEvent>();
     public spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
     public spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
@@ -53,7 +54,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
             | { $case: "kickOffUser"; kickOffUser: KickOffUserPrivateMessage }
             | undefined
         >,
-        receiverUserId: string
+        receiverUserId: string,
     ): void {
         throw new Error("Method not implemented.");
     }
@@ -65,7 +66,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
             | { $case: "muteAudioForEverybody"; muteAudioForEverybody: MuteAudioForEverybodyPublicMessage }
             | { $case: "muteVideoForEverybody"; muteVideoForEverybody: MuteVideoForEverybodyPublicMessage }
             | undefined
-        >
+        >,
     ): void {
         throw new Error("Method not implemented.");
     }
@@ -77,6 +78,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
         throw new Error("Method not implemented.");
     }
     public emitBackEvent = vi.fn();
+    public emitVideoQualityReport = vi.fn();
 
     // Add any other methods or properties that need to be mocked
 }
@@ -213,34 +215,10 @@ vi.mock("../../Connection/ConnectionManager", () => {
     };
 });
 
-vi.mock("../../Enum/EnvironmentVariable.ts", () => {
-    return {
-        MATRIX_ADMIN_USER: "admin",
-        MATRIX_DOMAIN: "domain",
-        STUN_SERVER: "stun:test.com:19302",
-        TURN_SERVER: "turn:test.com:19302",
-        TURN_USER: "user",
-        TURN_PASSWORD: "password",
-        POSTHOG_API_KEY: "test-api-key",
-        POSTHOG_URL: "https://test.com",
-        MAX_USERNAME_LENGTH: 10,
-        PUSHER_URL: "http://localhost",
-        FALLBACK_LOCALE: "en-US",
-        ENABLE_CHAT: true,
-        KLAXOON_ENABLED: false,
-        KLAXOON_CLIENT_ID: "",
-        YOUTUBE_ENABLED: false,
-        GOOGLE_DRIVE_ENABLED: false,
-        GOOGLE_DOCS_ENABLED: false,
-        GOOGLE_SHEETS_ENABLED: false,
-        GOOGLE_SLIDES_ENABLED: false,
-        ERASER_ENABLED: false,
-        EXCALIDRAW_ENABLED: false,
-        EXCALIDRAW_DOMAINS: [],
-        CARDS_ENABLED: false,
-        TLDRAW_ENABLED: false,
-    };
-});
+vi.mock(
+    "../../Enum/EnvironmentVariable.ts",
+    () => import("../../../../tests/front/mocks/frontEnvironmentVariableMock"),
+);
 
 const flushPromises = () => new Promise(setImmediate);
 
@@ -255,7 +233,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         expect(roomConnection.emitJoinSpace).toHaveBeenCalledOnce();
@@ -285,7 +263,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         const userFromMessage = {
@@ -308,6 +286,7 @@ describe("", () => {
             chatID: undefined,
             showVoiceIndicator: false,
             attendeesState: false,
+            cpuLimited: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -341,7 +320,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         const userFromMessage = {
@@ -364,6 +343,7 @@ describe("", () => {
             chatID: "chat@id.fr",
             showVoiceIndicator: false,
             attendeesState: false,
+            cpuLimited: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -392,7 +372,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         const userFromMessage = {
@@ -415,6 +395,7 @@ describe("", () => {
             chatID: "chat@id.fr",
             showVoiceIndicator: false,
             attendeesState: false,
+            cpuLimited: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -464,7 +445,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         const subscriber = vi.fn();
@@ -511,7 +492,7 @@ describe("", () => {
             spaceName,
             FilterType.ALL_USERS,
             ["availabilityStatus", "chatID"],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         const subscriber = vi.fn();
@@ -560,6 +541,7 @@ describe("", () => {
                 tags: [],
                 jitsiParticipantId: undefined,
                 attendeesState: false,
+                cpuLimited: false,
             },
             $case: "muteVideo",
             muteVideo: {

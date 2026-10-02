@@ -1,13 +1,13 @@
 import * as Sentry from "@sentry/svelte";
+import * as Phaser from "phaser";
 import { get } from "svelte/store";
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import {
     AskPositionMessage_AskType,
     type PositionMessage,
     type PositionMessage_Direction,
     type SayMessage,
 } from "@workadventure/messages";
-import { openModal } from "svelte-modals";
 import type { WokaMenuAction } from "../../Stores/WokaMenuStore";
 import { wokaMenuStore } from "../../Stores/WokaMenuStore";
 import { Character } from "../Entity/Character";
@@ -16,7 +16,7 @@ import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import { LL } from "../../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
-import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
+import { openModerationModal } from "../../Components/Moderation/openModerationModal";
 import { iframeListener } from "../../Api/IframeListener";
 import banIcon from "../../Components/images/ban-icon.svg";
 import { openDirectChatRoom } from "../../Chat/Utils";
@@ -25,6 +25,7 @@ import { userIsConnected } from "../../Stores/MenuStore";
 import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { IconCamera, IconUserPlus } from "@wa-icons";
+import { modals } from "@wa-modals";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -55,7 +56,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         companionTexturePromise: CancelablePromise<string> | undefined,
         activationRadius?: number,
         private chatID: string | undefined = undefined,
-        sayMessage?: SayMessage
+        sayMessage?: SayMessage,
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise);
 
@@ -96,7 +97,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     public async moveToPosition(
         position: { x: number; y: number },
         tryFindingNearestAvailable = false,
-        speed: number | undefined = undefined
+        speed: number | undefined = undefined,
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         this.stopMoveTo();
 
@@ -123,8 +124,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         }
     }
 
-    public finishFollowingPath(cancelled = false): void {
-        super.finishFollowingPath(cancelled);
+    public finishFollowingPath(cancelled = false, blocked = false): void {
+        super.finishFollowingPath(cancelled, blocked);
         this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.pathFollowingUpdateCallback);
         this.scene.markDirty();
     }
@@ -173,7 +174,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
     private toggleActionsMenu(): void {
         // Track the open woka menu action
-        analyticsClient.openWokaMenu();
+        analyticsClient.trackAdminEvent("user.woka_menu.opened");
 
         // Close the woka menu if it is already open by the same remote player
         const wokaMenuStoreValue = get(wokaMenuStore);
@@ -208,18 +209,16 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     private getDefaultWokaMenuActions(): WokaMenuAction[] {
         const actions: WokaMenuAction[] = [];
         actions.push({
-            actionName: blackListManager.isBlackListed(this.userUuid)
-                ? get(LL).report.block.unblock()
-                : get(LL).report.block.block(),
+            actionName: get(LL).report.moderate.action(),
             protected: true,
             priority: -1,
             style: "is-error bg-white/10 hover:bg-white/30 text-red-500",
             testId: "wokamenu-block-user-button",
             callback: () => {
                 // Track the report user action
-                analyticsClient.reportUser();
+                analyticsClient.trackAdminEvent("user.report.clicked");
 
-                showReportScreenStore.set({ userUuid: this.userUuid, userName: this.playerName });
+                openModerationModal(this.userUuid, this.playerName);
             },
             actionIcon: banIcon,
         });
@@ -231,14 +230,14 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 style: "bg-white/10 hover:bg-white/30",
                 callback: () => {
                     // Track the talk to user action
-                    analyticsClient.goToUser();
+                    analyticsClient.trackAdminEvent("user.go_to_clicked");
 
                     if (this.scene.connection != undefined)
                         this.scene.connection.emitAskPosition(
                             this.userUuid,
                             this.scene.roomUrl,
                             AskPositionMessage_AskType.MOVE,
-                            this.userId
+                            this.userId,
                         );
                 },
                 actionIcon: IconCamera,
@@ -252,10 +251,10 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 style: "bg-white/10 hover:bg-white/30",
                 callback: () => {
                     // Track the opened chat action
-                    analyticsClient.openedChat();
+                    analyticsClient.trackAdminEvent("chat.opened");
 
                     if (!get(userIsConnected)) {
-                        openModal(RequiresLoginForChatModal);
+                        modals.open(RequiresLoginForChatModal);
                         return;
                     }
 

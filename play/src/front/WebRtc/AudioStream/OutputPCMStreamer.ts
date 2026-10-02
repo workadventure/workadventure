@@ -60,7 +60,7 @@ export class OutputPCMStreamer {
         // Send the PCM data to the AudioWorkletProcessor via its port
         this.workletNode.port.postMessage(
             { pcmData: float32Array, id: this.currentPcmDataId },
-            { transfer: [float32Array.buffer] }
+            { transfer: [float32Array.buffer] },
         );
         const deferred = new Deferred<void>();
         this.audioSentPromises.set(this.currentPcmDataId, deferred);

@@ -24,7 +24,13 @@ export function getImageCoWebsiteTitle(url: URL): string {
 }
 
 export class ImageCoWebsite extends SimpleCoWebsite {
-    constructor(url: URL, public readonly title: string, widthPercent?: number, closable?: boolean, hideUrl?: boolean) {
+    constructor(
+        url: URL,
+        public readonly title: string,
+        widthPercent?: number,
+        closable?: boolean,
+        hideUrl?: boolean,
+    ) {
         super(url, false, undefined, widthPercent, closable, hideUrl);
         this.id = "image-" + this.id;
     }

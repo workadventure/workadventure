@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "Toś ta kórta jo se wulašowała",
         deletePromptSubtitle: "Sy se wót togo rumoja źělił.",
         deletePromptDetails: "Aktualizěrowanje toś tu kórtu njewótnowi, dokulaž wěcej njeeksistěrujo.",
+        editionFailed: "Twója změna njejo se dała składowaś a jo se anulěrowała.",
     },
     sideBar: {
         areaEditor: "Areal wobźěłaś",
@@ -75,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Pśetergnuś",
                 validate: "Waliděrowaś",
             },
-            disabled: "Jitsi-integracia jo za toś ten rum znjemóžnjona ❌",
             actionButtonLabel: "Jitsi-konferencu startowaś",
         },
         playAudio: {
@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "Głosnosć",
             error: "Zuk njedajo se zacytaś",
             actionButtonLabel: "Muziku wótegraś",
+            playForAllUsersLabel: "Za wšykne wužywarje na kórśe wótegraś",
+            audibleRadiusLabel: "Radius słyšanja (w pikselach)",
+            audibleRadiusPlaceholder: "Wšuźi słyšobny, jolic prozny",
         },
         openWebsite: {
             label: "Link wótcyniś",
@@ -123,14 +126,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Wužywarje na podiumje (pódij) mógu wšym wobźělnikam w pśisłušnej "Publikum"-wobceŕku powědaś.',
             nameLabel: "Mě",
             namePlaceholder: "HłownePódij",
-            disabled: "Podium jo za toś ten rum znjemóžnjony ❌",
             actionButtonLabel: "K podiumoju pśipowjazaś",
         },
         listenerMegaphone: {
             label: "Publikum",
             description: "Wužywarje w publikumowem wobceŕku mógu powědarja na zwězanem podiumje słyšaś.",
             nameLabel: "Mě podiuma",
-            disabled: "Publikum jo za toś ten rum znjemóžnjony ❌",
             namePlaceholder: "Mója pśisłuchaŕska cona",
             waitingMediaLinkLabel: "Media, kótara se pokazujo, nježli žywy pśenos se zachopje",
             waitingMediaLinkPlaceholder: "https://www....",
@@ -141,6 +142,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "K publikumoju pśipowjazaś",
         },
         chatEnabled: "Chat jo aktiwěrowany",
+        allowTalking: "Powědanje a twórjenje pucherow dowóliś",
+        raiseHandEnabled: "Zwignjenje ruki dowóliś",
         seeAttendees: "Wobźělnikow pokazaś",
         start: {
             label: "Startowy wobceŕk",
@@ -310,6 +313,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "Startowaś z deaktiwěrowanym mikrofonom",
                 startWithVideoMuted: "Startowaś z deaktiwěrowaneju kameru",
                 disableChat: "Chat deaktiwěrowaś",
+                raiseHandEnabled: "Zwignjenje ruki dowóliś",
                 livekitRoomAdminTag: "Moderatorowa toflicka za konferencnu śpu",
                 cancel: "Pśetergnuś",
                 validate: "Waliděrowaś",

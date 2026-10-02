@@ -2,7 +2,7 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const video: DeepPartial<Translation["video"]> = {
-    connection_issue: "Problème de connexion!",
+    connection_issue: "Problème de connexion !",
     no_video_stream_received: "Absence de flux vidéo.",
     user_is_muted: "{name} est en sourdine.",
     reduce: "Réduire",

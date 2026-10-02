@@ -1,6 +1,6 @@
 
 # protobuf build
-FROM --platform=$BUILDPLATFORM node:20.18-bullseye-slim AS proto-builder
+FROM --platform=$BUILDPLATFORM node:24-trixie-slim AS proto-builder
 WORKDIR /usr/src
 COPY messages/package-lock.json messages/package.json ./
 RUN npm ci
@@ -9,11 +9,15 @@ COPY libs ./../libs
 RUN npm run tag-version && npm run ts-proto
 
 # typescript build
-FROM --platform=$BUILDPLATFORM node:20.18-bullseye-slim AS builder
+FROM --platform=$BUILDPLATFORM node:24-trixie-slim AS builder
 ARG NODE_OPTIONS="--max-old-space-size=16384"
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git
 COPY package.json package-lock.json ./
+# The root postinstall runs patch-package during the npm ci below; it needs the
+# patch files present in the build context, otherwise the play build bundles an
+# unpatched phaser (patches/phaser+4.2.0.patch fixes TilemapGPULayer rendering).
+COPY patches ./patches
 COPY play/package.json play/package.json
 COPY play/packages/iframe-api-typings/package.json play/packages/iframe-api-typings/package.json
 COPY libs/messages/package.json libs/messages/package.json
@@ -47,7 +51,7 @@ RUN --mount=type=secret,id=SENTRY_RELEASE \
     SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_URL=$SENTRY_URL SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT npm run build
 
 # final production image
-FROM node:20.18-bullseye-slim
+FROM node:24-trixie-slim
 EXPOSE 3000
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git curl
@@ -65,6 +69,8 @@ ENV UWS_HTTP_MAX_HEADERS_SIZE=16384
 RUN npm ci --omit=dev --workspace workadventure-play
 COPY --from=builder /usr/src/libs /usr/src/libs
 COPY --from=builder --chown=node:node /usr/src/play /usr/src/play
+# useful for profiling (with --prof) because it write a file in current directory
+RUN chown -R node:node /usr/src/play
 WORKDIR /usr/src/play
 
 HEALTHCHECK --interval=10s --timeout=7s --start-period=10s --retries=15 CMD curl -f http://localhost:3000/ping || exit 1

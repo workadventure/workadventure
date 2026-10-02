@@ -1,26 +1,33 @@
-<svelte:options immutable={true} />
-
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import type { WebRtcStreamable } from "../../../Space/Streamable";
     import InnerWebRtcVideo from "./InnerWebRtcVideo.svelte";
 
-    export let style: string;
-    export let className: string;
-    export let videoWidth: number;
-    export let videoHeight: number;
-    export let onLoadVideoElement: (event: Event) => void;
-    export let loop = false;
+    interface Props {
+        style: string;
+        className: string;
+        videoWidth: number;
+        videoHeight: number;
+        onloadvideoelement?: (event: Event) => void;
+        onvideo?: () => void;
+        onnovideo?: () => void;
+        loop?: boolean;
+        media: WebRtcStreamable;
+    }
 
-    export let media: WebRtcStreamable;
+    let {
+        style,
+        className,
+        videoWidth = $bindable(),
+        videoHeight = $bindable(),
+        onloadvideoelement,
+        onvideo,
+        onnovideo,
+        loop = false,
+        media,
+    }: Props = $props();
 
-    const dispatch = createEventDispatcher<{
-        video: undefined;
-        noVideo: undefined;
-    }>();
-
-    let streamStore = media.streamStore;
-    let setDimensions = media.setDimensions;
+    let streamStore = $derived(media.streamStore);
+    let setDimensions = $derived(media.setDimensions);
 </script>
 
 {#if $streamStore}
@@ -30,12 +37,12 @@
             {className}
             bind:videoWidth
             bind:videoHeight
-            {onLoadVideoElement}
+            {onloadvideoelement}
             {loop}
             stream={$streamStore}
             {setDimensions}
-            on:video={() => dispatch("video")}
-            on:noVideo={() => dispatch("noVideo")}
+            {onvideo}
+            {onnovideo}
         />
     {/key}
 {/if}

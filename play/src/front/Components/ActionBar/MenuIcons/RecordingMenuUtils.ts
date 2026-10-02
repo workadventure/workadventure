@@ -1,10 +1,9 @@
-import type { RecordingButtonState } from "@workadventure/messages";
+import type { RecordingButtonState, SpaceKind } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
-import { derived } from "svelte/store";
+import { derived, get } from "svelte/store";
 
 import type { SpaceInterface } from "../../../Space/SpaceInterface";
 import type { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
-import { recordingSchema } from "../../../Space/SpaceMetadataValidator";
 import type { RecordingState } from "../../../Stores/RecordingStore";
 import { recordingStore } from "../../../Stores/RecordingStore";
 
@@ -26,13 +25,13 @@ export interface RecordingSpaceRow {
 }
 
 function isMegaphoneSpace(space: SpaceInterface): boolean {
-    return space.getMetadata().get("isMegaphoneSpace") === true;
+    return space.kind === ("megaphone" satisfies SpaceKind);
 }
 
 function getRecorderDisplayName(
     space: SpaceInterface,
     recorderSpaceUserId: string | null,
-    fallbackRecorderName: string | null
+    fallbackRecorderName: string | null,
 ): string | null {
     if (!recorderSpaceUserId) {
         return fallbackRecorderName;
@@ -52,8 +51,8 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
         };
     }
 
-    const recordingMetadata = recordingSchema.safeParse(space.getMetadata().get("recording"));
-    if (!recordingMetadata.success || recordingMetadata.data.status === "idle") {
+    const recording = get(space.state.observe("recording"));
+    if (recording.status === "idle") {
         return {
             status: "idle" as const,
             isCurrentUserRecorder: false,
@@ -62,10 +61,10 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
         };
     }
 
-    const recorderSpaceUserId = recordingMetadata.data.recorder ?? null;
+    const recorderSpaceUserId = recording.recorder;
 
     return {
-        status: recordingMetadata.data.status,
+        status: recording.status,
         isCurrentUserRecorder: recorderSpaceUserId === space.mySpaceUserId,
         recorderName: getRecorderDisplayName(space, recorderSpaceUserId, null),
         recorderSpaceUserId,
@@ -76,7 +75,7 @@ export function getRecordingSpaceRows(
     allSpaces: SpaceInterface[],
     recordableSpaces: SpaceInterface[],
     recordingState: RecordingState,
-    canStartRecording: boolean
+    canStartRecording: boolean,
 ): RecordingSpaceRow[] {
     const recordableSpaceNames = new Set(recordableSpaces.map((space) => space.getName()));
 
@@ -184,7 +183,7 @@ export function getActionableRecordingRows(rows: RecordingSpaceRow[]): Recording
 export function getShouldDisplayRecordingButton(
     rows: RecordingSpaceRow[],
     recordableSpaces: SpaceInterface[],
-    roomButtonState?: RecordingButtonState
+    roomButtonState?: RecordingButtonState,
 ): boolean {
     if (roomButtonState === "hidden") {
         return rows.some((row) => row.status !== "available");
@@ -204,7 +203,7 @@ export function getShouldDisplayRecordingButton(
 export function getDirectRecordingActionRow(
     rows: RecordingSpaceRow[],
     allSpaces: SpaceInterface[],
-    recordableSpaces: SpaceInterface[]
+    recordableSpaces: SpaceInterface[],
 ): RecordingSpaceRow | undefined {
     const actionableRows = getActionableRecordingRows(rows);
     if (actionableRows.length !== 1 || rows.length !== 1) {
@@ -243,7 +242,7 @@ function computeRecordingButtonState(
     isLogged: boolean,
     actionableRows: RecordingSpaceRow[],
     hasOwnRecording: boolean,
-    hasPendingRequest: boolean
+    hasPendingRequest: boolean,
 ): "disabled" | "normal" | "active" {
     if (!isLogged) {
         return "disabled";
@@ -270,7 +269,7 @@ export function createRecordingMenuStateStore(
         canStartRecording: boolean;
         isUserLoggedIn: boolean;
         roomButtonState?: RecordingButtonState;
-    }
+    },
 ): Readable<RecordingMenuState> {
     const { canStartRecording, isUserLoggedIn, roomButtonState } = options;
 
@@ -295,7 +294,7 @@ export function createRecordingMenuStateStore(
                 isUserLoggedIn,
                 actionableRows,
                 hasOwnRecording,
-                hasPendingRequest
+                hasPendingRequest,
             ),
             currentRows,
             directRow,

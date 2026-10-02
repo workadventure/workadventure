@@ -3,24 +3,28 @@ import type {
     EmojiMapping,
     GeneratedSecretStorageKey,
     KeyBackupInfo,
+    ShowSasCallbacks,
     VerificationRequest,
 } from "matrix-js-sdk/lib/crypto-api";
-import { VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
-import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
-import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
-import { openModal } from "svelte-modals";
+import {
+    VerificationRequestEvent,
+    VerifierEvent,
+    VerificationPhase,
+    deriveRecoveryKeyFromPassphrase,
+    decodeRecoveryKey,
+} from "matrix-js-sdk/lib/crypto-api";
 import { writable } from "svelte/store";
+import type { Writable } from "svelte/store";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
-import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
-import { Deferred } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import { alreadyAskForInitCryptoConfiguration } from "../../Stores/AlreadyAskForInitCryptoConfigurationStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
 import VerificationEmojiDialog from "./VerificationEmojiDialog.svelte";
-import DeviceVerificationPendingModal from "./DeviceVerificationPendingModal.svelte";
+import DeviceVerificationModal from "./DeviceVerificationModal.svelte";
 import AskStartVerificationModal from "./AskStartVerificationModal.svelte";
 import ChooseDeviceVerificationMethodModal from "./ChooseDeviceVerificationMethodModal.svelte";
+import { modals } from "@wa-modals";
 
 export type KeyParams = { passphrase?: string; recoveryKey?: string };
 
@@ -28,11 +32,14 @@ export class MatrixSecurity {
     isEncryptionRequiredAndNotSet = writable(false);
     private matrixClientStore: MatrixClient | null = null;
     private isVerifyingDevice = false;
+    private automaticDeviceVerificationPromptRequested = false;
+    // The in-flight own-device SAS verification request, so DeviceVerificationModal can cancel it on close.
+    private ownDeviceSasRequest: VerificationRequest | null = null;
     public shouldDisplayModal = false;
     constructor(
         private initializingEncryptionPromise: Promise<void> | undefined = undefined,
         private restoreRoomMessagesPromise: Promise<void> | undefined = undefined,
-        private _openModal = openModal
+        private _openModal = modals.open,
     ) {}
 
     initClientCryptoConfiguration = async (): Promise<void> => {
@@ -59,7 +66,7 @@ export class MatrixSecurity {
         this.shouldDisplayModal = true;
         this.initializingEncryptionPromise = new Promise<void>((resolve, initializingEncryptionReject) => {
             (async () => {
-                const keyBackupInfo = await client.getKeyBackupVersion();
+                const keyBackupInfo = await crypto.getKeyBackupInfo();
                 const isCrossSigningReady = await crypto.isCrossSigningReady();
 
                 if (!isCrossSigningReady || keyBackupInfo === null) {
@@ -93,13 +100,13 @@ export class MatrixSecurity {
                                             resolve(generatedKey);
                                         },
                                     });
-                                }
+                                },
                             );
 
                             if (generatedKey === null) {
                                 this.isEncryptionRequiredAndNotSet.set(true);
                                 const createSecretStorageKeyError = new Error(
-                                    "createSecretStorageKey : no generated key storage"
+                                    "createSecretStorageKey : no generated key storage",
                                 );
                                 initializingEncryptionReject(createSecretStorageKeyError);
                                 return Promise.reject(createSecretStorageKeyError);
@@ -107,7 +114,6 @@ export class MatrixSecurity {
                             return Promise.resolve(generatedKey);
                         },
                         setupNewKeyBackup: keyBackupInfo === null,
-                        keyBackupInfo: keyBackupInfo ?? undefined,
                     });
 
                     this.isEncryptionRequiredAndNotSet.set(false);
@@ -147,8 +153,8 @@ export class MatrixSecurity {
                 return;
             }
 
-            client
-                .getKeyBackupVersion()
+            crypto
+                .getKeyBackupInfo()
                 .then((keyBackupInfo) => {
                     if (keyBackupInfo !== null && keyBackupInfo !== undefined) {
                         this.restoreBackupMessages(keyBackupInfo).catch((error) => {
@@ -169,11 +175,15 @@ export class MatrixSecurity {
     }
 
     static makeInputToKey(
-        keyInfo: SecretStorage.SecretStorageKeyDescription
-    ): (keyParams: KeyParams) => Promise<Uint8Array> {
-        return ({ passphrase, recoveryKey }): Promise<Uint8Array> => {
+        keyInfo: SecretStorage.SecretStorageKeyDescription,
+    ): (keyParams: KeyParams) => Promise<Uint8Array<ArrayBuffer>> {
+        return ({ passphrase, recoveryKey }): Promise<Uint8Array<ArrayBuffer>> => {
             if (passphrase) {
-                return deriveKey(passphrase, keyInfo.passphrase.salt, keyInfo.passphrase.iterations);
+                return deriveRecoveryKeyFromPassphrase(
+                    passphrase,
+                    keyInfo.passphrase.salt,
+                    keyInfo.passphrase.iterations,
+                );
             } else if (recoveryKey) {
                 return Promise.resolve(decodeRecoveryKey(recoveryKey));
             }
@@ -201,10 +211,13 @@ export class MatrixSecurity {
 
     private async restoreWithCachedKey(keyBackupInfo: KeyBackupInfo) {
         try {
-            if (!this.matrixClientStore) {
-                return Promise.reject(new Error("matrixClientStore is null"));
+            const crypto = this.matrixClientStore?.getCrypto();
+            if (!crypto) {
+                return Promise.reject(new Error("crypto api is not available"));
             }
-            await this.matrixClientStore.restoreKeyBackupWithCache(undefined, undefined, keyBackupInfo);
+            // The decryption key must already be cached in the crypto store (e.g. set when the
+            // backup was created). restoreKeyBackup() downloads and imports the backup using it.
+            await crypto.restoreKeyBackup();
             return true;
         } catch (error) {
             console.error("Unable to restoreKeyBackupWithCache : ", error);
@@ -214,10 +227,13 @@ export class MatrixSecurity {
 
     private async restoreWithSecretStorage(keyBackupInfo: KeyBackupInfo) {
         try {
-            if (!this.matrixClientStore) {
-                return Promise.reject(new Error("matrixClientStore is null"));
+            const crypto = this.matrixClientStore?.getCrypto();
+            if (!crypto) {
+                return Promise.reject(new Error("crypto api is not available"));
             }
-            await this.matrixClientStore.restoreKeyBackupWithSecretStorage(keyBackupInfo);
+            // Load the backup decryption key from 4S into the crypto store, then restore.
+            await crypto.loadSessionBackupPrivateKeyFromSecretStorage();
+            await crypto.restoreKeyBackup();
             return true;
         } catch (error) {
             console.error("Unable to restoreWithSecretStorage : ", error);
@@ -246,7 +262,7 @@ export class MatrixSecurity {
                     if (generatedKey === null) {
                         this.isEncryptionRequiredAndNotSet.set(true);
                         const createSecretStorageKeyError = new Error(
-                            "createSecretStorageKey : no generated secret storage key"
+                            "createSecretStorageKey : no generated secret storage key",
                         );
                         return Promise.reject(createSecretStorageKeyError);
                     }
@@ -256,7 +272,7 @@ export class MatrixSecurity {
                 setupNewSecretStorage: true,
             });
 
-            const keyBackupInfo = await this.matrixClientStore?.getKeyBackupVersion();
+            const keyBackupInfo = await crypto.getKeyBackupInfo();
 
             if (keyBackupInfo !== null && keyBackupInfo !== undefined) {
                 await this.restoreBackupMessages(keyBackupInfo);
@@ -278,69 +294,179 @@ export class MatrixSecurity {
 
             const verificationRequest = await crypto.requestOwnUserVerification();
 
-            const startVerificationDeferred = new Deferred<VerificationEmojiDialogProps>();
+            // Single reactive modal driven by a store, mirroring Element's VerificationPanel: one component
+            // renders "waiting" -> "emoji" -> "done"/"error" straight from the request/verifier state, instead of
+            // handing off between a pending modal and an emoji dialog through a Deferred. That handoff — plus
+            // reading the shared this.isVerifyingDevice flag to gate the emoji display — was the intermittent-hang
+            // source; both are gone here.
+            this.ownDeviceSasRequest = verificationRequest;
+            // Re-entrancy guard for the modal openers ONLY. It is NEVER read to decide whether to show the emojis
+            // (the closure-local sasShown latch does that), and it is cleared on every terminal transition and on
+            // modal close, so it can no longer stick true and block later verification prompts.
+            this.isVerifyingDevice = true;
 
-            this._openModal(DeviceVerificationPendingModal, {
-                startVerificationPromise: startVerificationDeferred.promise,
-                isInitiatedByMe: true,
+            const isThisDeviceVerification = verificationRequest.initiatedByMe;
+            const state: Writable<DeviceVerificationState> = writable({
+                status: "waiting",
+                isThisDeviceVerification,
             });
 
-            const doneVerificationDeferred = new Deferred<void>();
+            this._openModal(DeviceVerificationModal, { verificationState: state });
 
-            verificationRequest.on(VerificationRequestEvent.Change, () => {
-                if (verificationRequest.phase === Phase.Started) {
+            let sasListenerAttached = false;
+            let sasStartRequested = false;
+            let startRetries = 0;
+            let sasShown = false;
+
+            const showSasHandler = (showSasCallbacks: ShowSasCallbacks) => {
+                const emojis = showSasCallbacks.sas.emoji;
+                if (!emojis || sasShown) return;
+                sasShown = true;
+                state.set({
+                    status: "emoji",
+                    isThisDeviceVerification,
+                    emojis,
+                    confirmationCallback: async () => {
+                        await showSasCallbacks.confirm();
+                    },
+                    mismatchCallback: () => {
+                        // Signal m.mismatched_sas to the other device (matrix-js-sdk 41). mismatch() is
+                        // synchronous, so return a resolved promise to satisfy the Promise<void> callback type.
+                        showSasCallbacks.mismatch();
+                        return Promise.resolve();
+                    },
+                });
+            };
+
+            const cleanup = () => {
+                this.isVerifyingDevice = false;
+                if (this.ownDeviceSasRequest === verificationRequest) {
+                    this.ownDeviceSasRequest = null;
+                }
+                verificationRequest.off(VerificationRequestEvent.Change, onVerificationChange);
+                verificationRequest.verifier?.off(VerifierEvent.ShowSas, showSasHandler);
+            };
+
+            // Named handler so it can be removed on terminal phases (the old inline arrow leaked on the
+            // request/verifier for the client's lifetime and could be re-attached on every Change).
+            const onVerificationChange = () => {
+                // As the initiating device we must send the `m.key.verification.start` ourselves once the other
+                // device is ready. `requestOwnUserVerification()` only sends the request; nothing here moves the
+                // flow to the Started phase on its own. Element never auto-starts either: at the Ready phase it
+                // renders a "Verify by emoji" button and only calls request.startVerification(Sas) when the user
+                // clicks it. Our pending UI is just a spinner with no such button, so when WA is the initiator
+                // against Element nobody ever sends the start and the request stalls at Ready forever (both
+                // devices sit "waiting for the other device").
+                //
+                // Before starting we force-download our own devices: on a fresh session the other device's keys
+                // are not cached yet, and startVerification() then rejects with "other device is unknown"
+                // (matrix-org/matrix-rust-sdk#2896). Combined with the sasStartRequested guard that would leave
+                // the request stuck at Ready. getUserDeviceInfo(..., downloadUncached = true) makes the other
+                // device known so the start succeeds. If the peer starts at the same time (glare), the SDK
+                // resolves the tie-break and a redundant start fails harmlessly while the Started branch runs.
+                if (
+                    verificationRequest.phase === VerificationPhase.Ready &&
+                    !sasStartRequested &&
+                    !sasListenerAttached
+                ) {
+                    sasStartRequested = true;
+                    const startSasVerification = async () => {
+                        const ownUserId = this.matrixClientStore?.getUserId();
+                        if (ownUserId) {
+                            await crypto.getUserDeviceInfo([ownUserId], true);
+                        }
+                        if (!verificationRequest.otherPartySupportsMethod(VerificationMethod.Sas)) {
+                            throw new Error("the other device does not support SAS verification");
+                        }
+                        await verificationRequest.startVerification(VerificationMethod.Sas);
+                    };
+                    startSasVerification().catch((error) => {
+                        console.error("Failed to start SAS verification from the initiating device", error);
+                        // sasStartRequested is set before the awaits, so a transient reject (e.g. the other
+                        // device's keys still propagating just after getUserDeviceInfo) would otherwise latch
+                        // the request at Ready forever. Allow a small, bounded number of retries on the next
+                        // Change instead of giving up permanently.
+                        if (startRetries++ < 2) {
+                            sasStartRequested = false;
+                        }
+                    });
+                }
+
+                if (verificationRequest.phase === VerificationPhase.Started && !sasListenerAttached) {
                     const verifier = verificationRequest.verifier;
-
-                    if (!verifier) throw new Error("Verifier is undefined");
-
-                    switch (verificationRequest.chosenMethod) {
-                        case VerificationMethod.Sas:
-                            verifier.on(VerifierEvent.ShowSas, (showSasCallbacks) => {
-                                const emojis = showSasCallbacks.sas.emoji;
-                                const confirmationCallback = async () => {
-                                    await showSasCallbacks.confirm();
-                                };
-                                const mismatchCallback = () => {
-                                    //TODO : use showSasCallbacks.mismatch(); after matris-js-sdk update
-                                    //showSasCallbacks.mismatch();
-                                    return verificationRequest.cancel({ reason: "m.mismatched_sas" });
-                                };
-
-                                if (!emojis || this.isVerifyingDevice) return;
-
-                                this.isVerifyingDevice = true;
-
-                                startVerificationDeferred.resolve({
-                                    emojis,
-                                    confirmationCallback,
-                                    mismatchCallback,
-                                    donePromise: doneVerificationDeferred.promise,
-                                    isThisDeviceVerification: verificationRequest.initiatedByMe,
-                                });
-                            });
-
-                            verifier.verify().catch((error) => {
-                                doneVerificationDeferred.reject(error);
-                            });
-                            break;
-                        default:
-                            throw new Error("The chosen verification method is not implemented");
+                    if (!verifier) {
+                        console.error("Verification reached Started phase without a verifier");
+                        return;
                     }
+                    if (verificationRequest.chosenMethod !== VerificationMethod.Sas) {
+                        console.error("The chosen verification method is not implemented");
+                        return;
+                    }
+
+                    sasListenerAttached = true;
+
+                    // The SAS may already have been computed before this handler first runs; pick it up
+                    // directly instead of waiting for a ShowSas event that already fired (would hang forever).
+                    const alreadyShownSas = verifier.getShowSasCallbacks();
+                    if (alreadyShownSas) {
+                        showSasHandler(alreadyShownSas);
+                    } else {
+                        verifier.on(VerifierEvent.ShowSas, showSasHandler);
+                    }
+
+                    verifier.verify().catch((error) => {
+                        console.error("SAS verify() failed", error);
+                        state.set({ status: "error", isThisDeviceVerification });
+                    });
                 }
 
-                if (verificationRequest.phase === Phase.Done) {
-                    doneVerificationDeferred.resolve();
-                    this.isVerifyingDevice = false;
+                if (verificationRequest.phase === VerificationPhase.Done) {
+                    state.set({ status: "done", isThisDeviceVerification });
                     this.isEncryptionRequiredAndNotSet.set(false);
+                    cleanup();
                 }
 
-                if (verificationRequest.phase === Phase.Cancelled) {
-                    doneVerificationDeferred.reject(new Error("verification request cancelled"));
-                    this.isVerifyingDevice = false;
+                if (verificationRequest.phase === VerificationPhase.Cancelled) {
+                    // A cancel AFTER the emojis were shown is a verification failure the user must see (e.g. the
+                    // peer clicked "they don't match" -> m.mismatched_sas), so surface it as an error. A cancel
+                    // BEFORE the emojis (peer declined / timed out) is a plain cancellation.
+                    state.update((current) =>
+                        current.status === "done"
+                            ? current
+                            : { status: sasShown ? "error" : "cancelled", isThisDeviceVerification },
+                    );
+                    cleanup();
                 }
-            });
+            };
+
+            verificationRequest.on(VerificationRequestEvent.Change, onVerificationChange);
+
+            // The request may already have moved on (e.g. the other device accepted before we subscribed);
+            // the Change listener only fires on *subsequent* transitions, so evaluate the current phase once.
+            onVerificationChange();
         } catch (error) {
+            this.isVerifyingDevice = false;
+            this.ownDeviceSasRequest = null;
             console.error("Failed to verify this device", error);
+        }
+    }
+
+    /**
+     * Cancel the in-flight own-device SAS verification (e.g. the user closed the modal), driving the request to
+     * Cancelled so the re-entrancy flag is released and the peer stops waiting. No-op once terminal.
+     */
+    public async cancelOwnDeviceSasVerification() {
+        const request = this.ownDeviceSasRequest;
+        if (!request) return;
+        try {
+            if (request.phase !== VerificationPhase.Done && request.phase !== VerificationPhase.Cancelled) {
+                await request.cancel();
+            }
+        } catch (error) {
+            console.error("Failed to cancel own device SAS verification", error);
+        } finally {
+            this.isVerifyingDevice = false;
+            this.ownDeviceSasRequest = null;
         }
     }
 
@@ -356,7 +482,20 @@ export class MatrixSecurity {
         });
     }
 
+    public openAutomaticChooseDeviceVerificationMethodModal(): Promise<void> {
+        if (this.automaticDeviceVerificationPromptRequested || this.isVerifyingDevice) {
+            return Promise.resolve();
+        }
+
+        this.automaticDeviceVerificationPromptRequested = true;
+        return this.openChooseDeviceVerificationMethodModal();
+    }
+
     public async openChooseDeviceVerificationMethodModal() {
+        if (this.isVerifyingDevice) {
+            return;
+        }
+
         try {
             this.isVerifyingDevice = true;
 
@@ -390,6 +529,9 @@ export class MatrixSecurity {
 
                 if (!device.getIdentityKey()) return false;
                 if (device.deviceId === currentDeviceID) return false;
+                // A dehydrated device is not a real interactive device to verify against (matches Element's
+                // hasOtherVerifiedDevices); counting it would steer the user to "verify with another device".
+                if (device.dehydrated) return false;
 
                 const verificationStatus = await crypto.getDeviceVerificationStatus(userID, device.deviceId);
                 return !!verificationStatus?.signedByOwner;
@@ -417,6 +559,21 @@ export type VerificationEmojiDialogProps = {
     emojis: EmojiMapping[];
     donePromise: Promise<void>;
     isThisDeviceVerification: boolean;
+};
+
+// State of an own-device SAS verification, driven by verifyOwnDevice() and rendered by DeviceVerificationModal
+// (mirrors QrVerificationState). The whole flow lives in one modal that re-renders off this store.
+//   waiting   - request sent / waiting for the peer / waiting for the SAS to compute (spinner)
+//   emoji     - SAS emojis available; the user compares and clicks match / don't match
+//   done      - verification completed (check + "understood")
+//   cancelled - request cancelled before any emojis were shown (peer declined / timed out)
+//   error     - verification failed (verify() rejected, or the peer signalled a mismatch after the emojis)
+export type DeviceVerificationState = {
+    status: "waiting" | "emoji" | "done" | "cancelled" | "error";
+    isThisDeviceVerification: boolean;
+    emojis?: EmojiMapping[];
+    confirmationCallback?: () => Promise<void>;
+    mismatchCallback?: () => Promise<void>;
 };
 
 export type AskStartVerificationModalProps = {

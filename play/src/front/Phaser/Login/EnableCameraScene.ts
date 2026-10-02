@@ -33,7 +33,7 @@ export class EnableCameraScene extends ResizableScene {
     update(time: number, delta: number): void {}
 
     public login(): void {
-        analyticsClient.validationVideo();
+        analyticsClient.trackAdminEvent("onboarding.video_validated");
 
         enableCameraSceneVisibilityStore.hideEnableCameraScene();
 

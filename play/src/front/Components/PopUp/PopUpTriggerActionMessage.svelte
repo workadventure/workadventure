@@ -3,22 +3,23 @@
     import type { UserInputManager } from "../../Phaser/UserInput/UserInputManager";
     import PopUpContainer from "./PopUpContainer.svelte";
 
-    export let message: string;
-    export let click: () => void;
-    export let userInputManager: UserInputManager;
+    interface Props {
+        message: string;
+        onclick: () => void;
+        userInputManager: UserInputManager;
+    }
+
+    let { message, onclick, userInputManager }: Props = $props();
 
     onMount(() => {
-        userInputManager.addSpaceEventListener(click);
+        userInputManager.addSpaceEventListener(onclick);
     });
 
     onDestroy(() => {
-        userInputManager.removeSpaceEventListener(click);
+        userInputManager.removeSpaceEventListener(onclick);
     });
 </script>
 
-<PopUpContainer reduceOnSmallScreen={true}>
+<PopUpContainer reduceOnSmallScreen={true} {onclick}>
     {message}
-    <svelte:fragment slot="buttons">
-        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={click}> Close </button>
-    </svelte:fragment>
 </PopUpContainer>

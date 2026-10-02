@@ -4,8 +4,12 @@
     import { screenWakeLock } from "../../Utils/ScreenWakeLock";
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 
-    export let actualCowebsite: BBBCoWebsite;
-    export let visible: boolean;
+    interface Props {
+        actualCowebsite: BBBCoWebsite;
+        visible: boolean;
+    }
+
+    let { actualCowebsite, visible }: Props = $props();
     let screenWakeRelease: (() => Promise<void>) | undefined;
 
     onMount(async () => {
@@ -43,6 +47,6 @@
             title="Big Blue Button Meeting"
             class="bg-white w-full h-full"
             id="iframe"
-        />
+        ></iframe>
     </div>
 </div>

@@ -22,7 +22,11 @@
         ["recording-start", recordingStartImg],
     ]);
 
-    export let notification: Notification;
+    interface Props {
+        notification: Notification;
+    }
+
+    let { notification }: Props = $props();
 
     onMount(() => {
         // Clear notification after 5 seconds
@@ -37,7 +41,7 @@
     transition:fly={{ x: 210, duration: 500 }}
 >
     <img
-        src={notification.icon ? icons.get(notification.icon) ?? notification.icon : waImg}
+        src={notification.icon ? (icons.get(notification.icon) ?? notification.icon) : waImg}
         alt="Audio playing"
         class="bg-white/10 rounded-md h-12"
         draggable="false"
@@ -45,18 +49,16 @@
     <p>{notification.text}</p>
 </div>
 
-<style lang="scss">
+<style>
     /*audio html when audio message playing*/
     .notification-playing {
         top: 40px;
         transition: all 0.1s ease-out;
-        //background-color: black;
         display: inline-flex;
         align-items: center;
         z-index: 750;
 
         img {
-            //border-radius: 50%;
             padding: 5px;
         }
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
@@ -8,52 +7,63 @@
     import PopUpCopyUrl from "../PopUp/PopUpCopyUrl.svelte";
     import { popupStore } from "../../Stores/PopupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { scriptUtils } from "../../Api/ScriptUtils";
 
-    export let coWebsite: CoWebsite;
-    export let isLoading = false;
-    export let active = false;
+    interface Props {
+        coWebsite: CoWebsite;
+        isLoading?: boolean;
+        active?: boolean;
+        onclick?: () => void;
+        onclose?: () => void;
+        oncopy?: () => void;
+    }
 
-    const dispatch = createEventDispatcher<{
-        click: void;
-        close: void;
-        copy: void;
-    }>();
+    let { coWebsite, isLoading = false, active = false, onclick, onclose, oncopy }: Props = $props();
 
     function closeTab() {
-        dispatch("close");
+        onclose?.();
         analyticsClient.closeCowebsite();
     }
 
     function select() {
-        dispatch("click");
-        analyticsClient.switchCowebsite();
+        onclick?.();
+        analyticsClient.trackAdminEvent("cowebsite.switched");
+    }
+
+    /**
+     * The URL a human should get: a co-website may hold an embed-only link (Klaxoon's
+     * `from=embedded`, Google's embed form), which is not what you want to paste into a
+     * browser or hand to a colleague.
+     */
+    function baseUrl(): string {
+        return scriptUtils.getWebsiteUrl(coWebsite.getUrl().toString());
     }
 
     function copyUrl() {
-        const url = coWebsite.getUrl().toString();
+        const url = baseUrl();
 
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
-        analyticsClient.copyCowebsiteLink();
-        dispatch("copy");
+        analyticsClient.trackAdminEvent("cowebsite.link_copied");
+        oncopy?.();
         popupStore.addPopup(PopUpCopyUrl, {}, "popupCopyUrl");
     }
 
     function openInNewTab() {
-        const url = coWebsite.getUrl().toString();
+        const url = baseUrl();
 
         window.open(url, "_blank");
-        analyticsClient.openCowebsiteInNewTab();
+        analyticsClient.trackAdminEvent("cowebsite.opened_in_new_tab");
         if (coWebsite.shouldCloseOnOpenInNewTab()) closeTab();
     }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="text h-full flex items-center px-2 rounded transition-all hover:stroke-white {active
         ? 'text-contrast bg-white hover:bg-white/90 tab justify-between bg-contrast/80' // translate-y-2 rounded-b-none for animation but not working inside dropdown
         : 'text-white cursor-pointer bg-white/10 hover:bg-white/20 tab'}"
-    on:click={select}
+    onclick={select}
 >
     {#if !isLoading}
         <img draggable="false" src={coWebsite.getIcon()} alt="" class="h-6 w-6 bg-black rounded-lg align-middle" />
@@ -78,7 +88,9 @@
                 {#if !isLoading}
                     {coWebsite.getTitle()}
                 {:else}
-                    <div class="w-[100px] h-2 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}" />
+                    <div
+                        class="w-[100px] h-2 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}"
+                    ></div>
                 {/if}
             </div>
             {#if !coWebsite.getHideUrl()}
@@ -90,7 +102,7 @@
                             class="w-[150px] h-1 mt-1 animate-pulse rounded-sm {active
                                 ? 'bg-contrast/10'
                                 : 'bg-white/20'}"
-                        />
+                        ></div>
                     {/if}
                 </div>
             {/if}
@@ -102,7 +114,10 @@
                     class="group {active
                         ? 'hover:bg-contrast/10'
                         : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                    on:click|stopPropagation={copyUrl}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        copyUrl();
+                    }}
                 >
                     <CopyIcon
                         height="h-6"
@@ -117,7 +132,10 @@
                     class="group {active
                         ? 'hover:bg-contrast/10'
                         : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                    on:click|stopPropagation={openInNewTab}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        openInNewTab();
+                    }}
                 >
                     <ExternalLinkIcon
                         height="h-6"
@@ -132,7 +150,10 @@
                     class="group {active
                         ? 'hover:bg-contrast/10'
                         : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                    on:click|stopPropagation={closeTab}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        closeTab();
+                    }}
                 >
                     <XIcon
                         height="h-6"

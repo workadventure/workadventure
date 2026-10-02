@@ -1,25 +1,57 @@
 <script lang="ts">
-    export let id: string | undefined = undefined;
-    export let label: string | undefined = undefined;
-    export let placeholder = "";
-    export let min = 0;
-    export let value = min;
-    export let max = 100;
-    export let step = 0;
-    export let onChange: (v: number) => void = () => {};
-    //secondary = bleu   light = noir sinon par défaut la ligne est blanche
-    export let variant: "secondary" | "light" | "" = "";
-    export let buttonShape: "square" | "" = "";
-    export let unit = "%";
-    export let valueFormatter: (v: number) => string = (v) => v.toString();
-    // Control wrapper margins - if false, no margins are applied (useful in flex contexts)
-    export let wrapperMargins = true;
+    import type { Snippet } from "svelte";
 
-    let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
+    interface Props {
+        id?: string;
+        label?: string;
+        placeholder?: string;
+        min: number;
+        value?: number;
+        max: number;
+        step?: number;
+        onchange?: (v: number) => void;
+        //secondary = bleu   light = noir sinon par défaut la ligne est blanche
+        variant?: "secondary" | "light";
+        buttonShape?: "square";
+        unit?: string;
+        valueFormatter?: (v: number) => string;
+        // Control wrapper margins - if false, no margins are applied (useful in flex contexts)
+        wrapperMargins?: boolean;
+        children?: Snippet;
+    }
+
+    let {
+        id = undefined,
+        label = undefined,
+        placeholder = "",
+        min = 0,
+        value = $bindable<number>(),
+        max = 100,
+        step = 0,
+        onchange = () => {},
+        variant = undefined,
+        buttonShape = undefined,
+        unit = "%",
+        valueFormatter = (v) => v.toString(),
+        wrapperMargins = true,
+        children,
+    }: Props = $props();
+
+    // A bound property can be unset (an area saved without a width): render from `min` instead of
+    // giving `value` a $props fallback, which makes Svelte reject `bind:value={undefined}`.
+    let displayValue = $derived(value ?? min);
+
+    $effect(() => {
+        if (value === undefined) {
+            value = min;
+        }
+    });
+
+    let uniqueId = (() => id || `input-${Math.random().toString(36).substring(2, 9)} `)();
 </script>
 
 {#if label}
-    <label for={uniqueId} class="px-3"> {label} <slot />: {valueFormatter(value)} {unit}</label>
+    <label for={uniqueId} class="px-3"> {label} {@render children?.()}: {valueFormatter(displayValue)} {unit}</label>
 {/if}
 
 <div class={wrapperMargins ? "mx-2.5" : "w-full"}>
@@ -30,7 +62,7 @@
         class:input-range-square={buttonShape === "square"}
     >
         <!-- remove the -10px so that the slider does not extend out of the bar -->
-        <div class="input-range-slider" style="width: calc({((value - min) / (max - min)) * 100}% - 10px);">
+        <div class="input-range-slider" style="width: calc({((displayValue - min) / (max - min)) * 100}% - 10px);">
             <div class="input-range-btn group/range -end-5">
                 {#if buttonShape === "square"}
                     <svg
@@ -52,7 +84,7 @@
                 {:else}
                     <div
                         class="input-range-dot absolute bg-secondary rounded-full h-1 w-1 aspect-square left-0 right-0 m-auto group-hover/range:bg-white"
-                    />
+                    ></div>
                 {/if}
             </div>
         </div>
@@ -65,7 +97,7 @@
             {max}
             {step}
             bind:value
-            on:input={() => onChange(value)}
+            oninput={() => onchange(value)}
         />
     </div>
 </div>

@@ -33,7 +33,7 @@ import { ModifyCustomEntityMapStorageCommand } from "./Commands/Entity/ModifyCus
 import { UploadEntityMapStorageCommand } from "./Commands/Entity/UploadEntityMapStorageCommand";
 import { entitiesManager } from "./EntitiesManager";
 import { mapsManager } from "./MapsManager";
-import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
+import { mapPathUsingUrl } from "./Services/PathMapper";
 import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
 import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
 import { DeleteEntityMapStorageCommand } from "./Commands/Entity/DeleteEntityMapStorageCommand";
@@ -41,6 +41,8 @@ import { UploadFileMapStorageCommand } from "./Commands/File/UploadFileMapStorag
 import { hookManager } from "./Modules/HookManager";
 import { UpdateEntityMapStorageCommand } from "./Commands/Entity/UpdateEntityMapStorageCommand";
 import { isModifyAreaMessageOnlyClaim } from "./Services/isModifyAreaMessageOnlyClaim";
+import { canUserEditCustomEntity } from "./Services/canUserEditCustomEntity";
+import { CustomEntityCollectionService } from "./Services/CustomEntityCollectionService";
 
 /**
  * List of commands that can be executed even if the user does not have edit rights on the map
@@ -63,21 +65,28 @@ const mapStorageServer: MapStorageServer = {
     },
     handleClearAfterUpload(
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
-        callback: sendUnaryData<Empty>
+        callback: sendUnaryData<Empty>,
     ): void {
-        const wamUrl = call.request.wamUrl;
-        const url = new URL(wamUrl);
-        const wamKey = mapPathUsingDomainWithPrefix(url.pathname, url.hostname);
-        mapsManager.clearAfterUpload(wamKey);
-        callback(null);
+        try {
+            const wamUrl = call.request.wamUrl;
+            const url = new URL(wamUrl);
+            const wamKey = mapPathUsingUrl(url);
+            mapsManager.clearAfterUpload(wamKey);
+            callback(null);
+        } catch (e: unknown) {
+            const error = asError(e);
+            console.error(`[${new Date().toISOString()}] An error occurred in handleClearAfterUpload`, e);
+            Sentry.captureException(e);
+            callback({ name: "MapStorageError", message: error.message }, null);
+        }
     },
     handleUpdateMapToNewestMessage(
         call: ServerUnaryCall<UpdateMapToNewestWithKeyMessage, Empty>,
-        callback: sendUnaryData<EditMapCommandsArrayMessage>
+        callback: sendUnaryData<EditMapCommandsArrayMessage>,
     ): void {
         try {
             const mapUrl = new URL(call.request.mapKey);
-            const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
+            const mapKey = mapPathUsingUrl(mapUrl);
             const updateMapToNewestMessage = call.request.updateMapToNewestMessage;
             if (!updateMapToNewestMessage) {
                 callback({ name: "MapStorageError", message: "UpdateMapToNewest message does not exist" }, null);
@@ -103,7 +112,7 @@ const mapStorageServer: MapStorageServer = {
 
     handleEditMapCommandWithKeyMessage(
         call: ServerUnaryCall<EditMapCommandWithKeyMessage, Empty>,
-        callback: sendUnaryData<EditMapCommandMessage>
+        callback: sendUnaryData<EditMapCommandMessage>,
     ): void {
         (async () => {
             const editMapCommandMessage = call.request.editMapCommandMessage;
@@ -114,7 +123,7 @@ const mapStorageServer: MapStorageServer = {
 
             // The mapKey is the complete URL to the map. Let's map it to our virtual path.
             const mapUrl = new URL(call.request.mapKey);
-            const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
+            const mapKey = mapPathUsingUrl(mapUrl);
 
             await mapsManager.waitForLock(mapKey, async () => {
                 const editMapCommandMessage = call.request.editMapCommandMessage;
@@ -137,7 +146,7 @@ const mapStorageServer: MapStorageServer = {
                 if (!userCanEdit && !COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT.has(editMapMessage.$case)) {
                     // A user tried to bypass security!
                     throw new Error(
-                        `User ${userUUID} is not allowed to edit the map but tried to execute command: ${editMapMessage.$case} on map ${mapUrl}`
+                        `User ${userUUID} is not allowed to edit the map but tried to execute command: ${editMapMessage.$case} on map ${mapUrl}`,
                     );
                 }
 
@@ -150,7 +159,7 @@ const mapStorageServer: MapStorageServer = {
                             // (e.g., personal area data) or a WAM section accessible to all users.
                             if (!isModifyAreaMessageOnlyClaim(message, userUUID, existingArea)) {
                                 throw new Error(
-                                    `User ${userUUID} is not allowed to edit the map and this modification is not a valid claim or revoke on map ${mapUrl}`
+                                    `User ${userUUID} is not allowed to edit the map and this modification is not a valid claim or revoke on map ${mapUrl}`,
                                 );
                             }
                         }
@@ -172,8 +181,8 @@ const mapStorageServer: MapStorageServer = {
                                     commandId,
                                     area,
                                     hookManager,
-                                    mapUrl.hostname
-                                )
+                                    mapUrl.hostname,
+                                ),
                             );
 
                             const newAreaData = wamFile.getGameMapAreas().getArea(message.id);
@@ -183,26 +192,32 @@ const mapStorageServer: MapStorageServer = {
                                     AreaDataProperties.safeParse(editMapMessage.modifyAreaMessage.properties).data ||
                                     [];
 
-                                const oldServerData = oldPropertiesParsed.reduce((acc, currProperty) => {
-                                    if (currProperty.serverData) {
-                                        acc.push({
-                                            id: currProperty.id,
-                                            serverData: currProperty.serverData,
-                                        });
-                                    }
+                                const oldServerData = oldPropertiesParsed.reduce(
+                                    (acc, currProperty) => {
+                                        if (currProperty.serverData) {
+                                            acc.push({
+                                                id: currProperty.id,
+                                                serverData: currProperty.serverData,
+                                            });
+                                        }
 
-                                    return acc;
-                                }, [] as { id: string; serverData: unknown }[]);
+                                        return acc;
+                                    },
+                                    [] as { id: string; serverData: unknown }[],
+                                );
 
-                                const newServerData = newAreaData.properties.reduce((acc, currProperty) => {
-                                    if (currProperty.serverData) {
-                                        acc.push({
-                                            id: currProperty.id,
-                                            serverData: currProperty.serverData,
-                                        });
-                                    }
-                                    return acc;
-                                }, [] as { id: string; serverData: unknown }[]);
+                                const newServerData = newAreaData.properties.reduce(
+                                    (acc, currProperty) => {
+                                        if (currProperty.serverData) {
+                                            acc.push({
+                                                id: currProperty.id,
+                                                serverData: currProperty.serverData,
+                                            });
+                                        }
+                                        return acc;
+                                    },
+                                    [] as { id: string; serverData: unknown }[],
+                                );
 
                                 editMapMessage.modifyAreaMessage = {
                                     ...newAreaData,
@@ -223,7 +238,7 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new CreateAreaCommand(wamFile, areaObjectConfig, commandId)
+                            new CreateAreaCommand(wamFile, areaObjectConfig, commandId),
                         );
                         break;
                     }
@@ -237,8 +252,8 @@ const mapStorageServer: MapStorageServer = {
                                 message.id,
                                 commandId,
                                 mapUrl.hostname,
-                                hookManager
-                            )
+                                hookManager,
+                            ),
                         );
                         break;
                     }
@@ -258,7 +273,7 @@ const mapStorageServer: MapStorageServer = {
                             if (
                                 entityCommandPermissions &&
                                 !entityCommandPermissions.canEdit(
-                                    getEntityCenterCoordinates({ x, y }, { width, height })
+                                    getEntityCenterCoordinates({ x, y }, { width, height }),
                                 )
                             ) {
                                 Sentry.captureException("User is not allowed to modify the entity on map");
@@ -274,8 +289,8 @@ const mapStorageServer: MapStorageServer = {
                                     commandId,
                                     entity,
                                     hookManager,
-                                    mapUrl.hostname
-                                )
+                                    mapUrl.hostname,
+                                ),
                             );
                         } else {
                             console.info(`[${new Date().toISOString()}] Could not find entity with id: ${message.id}`);
@@ -308,8 +323,8 @@ const mapStorageServer: MapStorageServer = {
                                     properties: message.properties as EntityDataProperties,
                                     name: message.name,
                                 },
-                                commandId
-                            )
+                                commandId,
+                            ),
                         );
                         break;
                     }
@@ -323,29 +338,53 @@ const mapStorageServer: MapStorageServer = {
                                 message.id,
                                 commandId,
                                 mapUrl.hostname,
-                                hookManager
-                            )
+                                hookManager,
+                            ),
                         );
                         break;
                     }
                     case "uploadEntityMessage": {
                         const uploadEntityMessage = editMapMessage.uploadEntityMessage;
+                        // The uploader owns the entity. We overwrite whatever the client sent, and we do it on the
+                        // message itself so that the value is persisted, queued and broadcast to every other client.
+                        uploadEntityMessage.ownerId = userUUID;
                         await entitiesManager.executeCommand(
-                            new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname)
+                            new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname),
                         );
                         break;
                     }
                     case "modifyCustomEntityMessage": {
                         const modifyCustomEntityMessage = editMapMessage.modifyCustomEntityMessage;
+                        await assertUserCanEditCustomEntity(
+                            mapUrl,
+                            modifyCustomEntityMessage.id,
+                            userUUID,
+                            userCanEdit,
+                            "modify",
+                        );
                         await entitiesManager.executeCommand(
-                            new ModifyCustomEntityMapStorageCommand(modifyCustomEntityMessage, mapUrl.hostname)
+                            new ModifyCustomEntityMapStorageCommand(modifyCustomEntityMessage, mapUrl.hostname),
                         );
                         break;
                     }
                     case "deleteCustomEntityMessage": {
                         const deleteCustomEntityMessage = editMapMessage.deleteCustomEntityMessage;
+                        // This check must happen before the command runs: DeleteCustomEntityCommand.execute()
+                        // mutates the in-memory WAM before touching the collection file, so throwing from
+                        // deeper down would leave map-storage with a corrupted WAM.
+                        await assertUserCanEditCustomEntity(
+                            mapUrl,
+                            deleteCustomEntityMessage.id,
+                            userUUID,
+                            userCanEdit,
+                            "delete",
+                        );
                         await entitiesManager.executeCommand(
-                            new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, wamFile, mapUrl.hostname)
+                            new DeleteCustomEntityMapStorageCommand(
+                                deleteCustomEntityMessage,
+                                wamFile,
+                                mapUrl.hostname,
+                            ),
                         );
                         break;
                     }
@@ -355,7 +394,7 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new UpdateWAMSettingCommand(wam, message, commandId)
+                            new UpdateWAMSettingCommand(wam, message, commandId),
                         );
                         break;
                     }
@@ -369,14 +408,14 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new UpdateWAMMetadataCommand(wam, message, commandId)
+                            new UpdateWAMMetadataCommand(wam, message, commandId),
                         );
                         break;
                     }
                     case "uploadFileMessage": {
                         const uploadFileMessage = editMapMessage.uploadFileMessage;
                         await entitiesManager.executeCommand(
-                            new UploadFileMapStorageCommand(uploadFileMessage, mapUrl.hostname)
+                            new UploadFileMapStorageCommand(uploadFileMessage, mapUrl.hostname),
                         );
                         editMapMessage.uploadFileMessage.file = new Uint8Array(0);
                         break;
@@ -406,6 +445,31 @@ const mapStorageServer: MapStorageServer = {
         });
     },
 };
+
+/**
+ * Throws unless the user is allowed to modify or delete the given custom entity.
+ *
+ * The thrown error is turned into an errorCommandMessage that is sent back to the sender only, and
+ * the command is neither applied nor broadcast.
+ */
+async function assertUserCanEditCustomEntity(
+    mapUrl: URL,
+    entityId: string,
+    userUUID: string,
+    userCanEdit: boolean,
+    action: "modify" | "delete",
+): Promise<void> {
+    if (userCanEdit) {
+        // Short-circuit so that we do not read the collection file for users who are allowed anyway.
+        return;
+    }
+    const entity = await new CustomEntityCollectionService(mapUrl.hostname).getEntity(entityId);
+    if (!canUserEditCustomEntity(entity, userUUID, userCanEdit)) {
+        throw new Error(
+            `User ${userUUID} is not allowed to ${action} the custom entity ${entityId} on map ${mapUrl.toString()}: only its creator or a user with map edit rights can.`,
+        );
+    }
+}
 
 function getMessageFromError(error: unknown): string {
     if (error instanceof Error) {

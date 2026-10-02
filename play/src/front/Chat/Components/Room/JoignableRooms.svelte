@@ -1,6 +1,6 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import { readable } from "svelte/store";
+    import { get, readable } from "svelte/store";
     import { fade } from "svelte/transition";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -9,10 +9,14 @@
     import Avatar from "../Avatar.svelte";
     import { IconLoader } from "@wa-icons";
 
-    export let room: { id: string; name: string | undefined };
+    interface Props {
+        room: { id: string; name: string | undefined };
+    }
+
+    let { room }: Props = $props();
     const chat = gameManager.chatConnection;
-    let isJoiningRoom = false;
-    let joinRoomError: string | undefined = undefined;
+    let isJoiningRoom = $state(false);
+    let joinRoomError: string | undefined = $state(undefined);
 
     async function joinRoom() {
         try {
@@ -26,7 +30,7 @@
             if (error instanceof Error) {
                 joinRoomError = error.message;
             } else {
-                joinRoomError = "Unknown error";
+                joinRoomError = get(LL).chat.unknownError();
             }
             setTimeout(() => {
                 joinRoomError = undefined;
@@ -36,33 +40,35 @@
         }
     }
 
-    $: chunks = highlightWords({
-        text: room.name?.match(/\[\d*]/)
-            ? room.name?.substring(0, room.name?.search(/\[\d*]/))
-            : room.name
-            ? room.name
-            : "",
-        query: $chatSearchBarValue,
-    });
+    let chunks = $derived(
+        highlightWords({
+            text: room.name?.match(/\[\d*]/)
+                ? room.name?.substring(0, room.name?.search(/\[\d*]/))
+                : room.name
+                  ? room.name
+                  : "",
+            query: $chatSearchBarValue,
+        }),
+    );
 </script>
 
 <div
-    class="wa-chat-item text-md flex gap-2 flex-row items-center hover:bg-white hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2"
+    class="wa-chat-item text-md flex gap-2 flex-row items-center hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2"
 >
     <div class="relative shrink-0">
         <Avatar compact pictureStore={readable(undefined)} fallbackName={room.name} />
     </div>
     <div class="min-w-0">
         {#each chunks as chunk (chunk.key)}
-            <span class:text-light-blue={chunk.match} class="cursor-default text-sm font-bold text-white/75"
-                >{chunk.text}</span
-            >
+            <span class:text-light-blue={chunk.match} class="cursor-default text-sm font-bold text-white/75">
+                {chunk.text}
+            </span>
         {/each}
     </div>
 </div>
 {#if !isJoiningRoom}
     <div class="flex">
-        <button class="text-blue-300" on:click={() => joinRoom()}>{$LL.chat.join()}</button>
+        <button class="text-blue-300" onclick={() => joinRoom()}>{$LL.chat.join()}</button>
     </div>
 {:else}
     <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">

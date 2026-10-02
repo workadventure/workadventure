@@ -1,6 +1,7 @@
+import { Subject } from "rxjs";
+import type { Movable } from "@workadventure/shared-utils";
 import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { PositionInterface } from "./PositionInterface";
-import type { Movable } from "./Movable";
 import type { PositionNotifier } from "./PositionNotifier";
 import type { Zone } from "./Zone";
 import type { User } from "./User";
@@ -9,6 +10,9 @@ import { GameRoom } from "./GameRoom";
 import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 export class Group implements Movable, CustomJsonReplacerInterface {
+    private readonly movedSubject = new Subject<PositionInterface>();
+    public readonly moved$ = this.movedSubject.asObservable();
+
     private static nextId = 1;
 
     private id: number;
@@ -34,7 +38,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         private groupRadius: number,
         private connectCallback: ConnectCallback,
         private disconnectCallback: DisconnectCallback,
-        private positionNotifier: PositionNotifier
+        private positionNotifier: PositionNotifier,
     ) {
         this.roomId = roomId;
         this.users = new Set<User>();
@@ -127,6 +131,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
         this.x = x;
         this.y = y;
+        this.movedSubject.next({ x, y });
 
         if (this.outOfBounds) {
             return;
@@ -183,7 +188,10 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
         // Broadcast on the right event
         this.disconnectCallback(user, this);
-        this.positionNotifier.emitGroupUsersUpdatedEvent(this);
+        // No need to send a "user left group" ping since the group is already destroyed
+        if (!this.wasDestroyed) {
+            this.positionNotifier.emitGroupUsersUpdatedEvent(this);
+        }
     }
 
     lock(lock = true): void {
@@ -199,10 +207,11 @@ export class Group implements Movable, CustomJsonReplacerInterface {
             this.positionNotifier.leave(this);
         }
 
+        this.wasDestroyed = true;
+
         for (const user of this.users) {
             this.leave(user);
         }
-        this.wasDestroyed = true;
     }
 
     get getSize() {

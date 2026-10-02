@@ -57,7 +57,7 @@ export class GameMapEntities {
 
     public findEntitiesByPrefabId(customEntityId: string): string[] {
         return Object.keys(this.wam.entities).filter(
-            (entityMapKey) => this.wam.entities[entityMapKey].prefabRef.id === customEntityId
+            (entityMapKey) => this.wam.entities[entityMapKey].prefabRef.id === customEntityId,
         );
     }
 

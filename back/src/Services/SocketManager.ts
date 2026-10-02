@@ -2,7 +2,6 @@ import crypto from "crypto";
 import type {
     ZoneMessage,
     AskPositionMessage,
-    BanUserMessage,
     MeetingInvitationRequestMessage,
     MeetingInvitationResponseMessage,
     BatchToPusherRoomMessage,
@@ -26,8 +25,9 @@ import type {
     QueryMessage,
     RoomDescription,
     RoomsList,
+    WorldUser,
+    WorldUsersAnswer,
     SendEventQuery,
-    SendUserMessage,
     SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
     UpdateMapToNewestWithKeyMessage,
@@ -47,9 +47,10 @@ import type {
     DeleteSpaceUserToNotifyMessage,
     AbortQueryMessage,
     SetAreaPropertyVariableMessage,
+    EntityMessage,
     BackEventMessage,
     ConnectToRoomMessage,
-    HandleRecordingWebhookRequest,
+    HandleLivekitWebhookRequest,
 } from "@workadventure/messages";
 import {
     AnswerMessage,
@@ -65,13 +66,13 @@ import * as Sentry from "@sentry/node";
 import { z } from "zod";
 import type { ServiceError } from "@grpc/grpc-js";
 import { asError } from "catch-unknown";
+import type { Movable } from "@workadventure/shared-utils";
 import { GameRoom } from "../Model/GameRoom";
 import type { UserSocket } from "../Model/User";
 import { User } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
 import { GROUP_RADIUS, MINIMUM_DISTANCE } from "../Enum/EnvironmentVariable";
-import type { Movable } from "../Model/Movable";
 import type { PositionInterface } from "../Model/PositionInterface";
 import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import type { Zone, ZonePosition } from "../Model/Zone";
@@ -79,11 +80,13 @@ import type { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
 import type { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
+import type { SessionEndReason } from "../Model/SessionAnalytics";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
 import { emitError, endUserConnectionWithReason } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
+import { isValidEmote } from "./EmoteValidator";
 
 const debug = Debug("socketmanager");
 
@@ -101,7 +104,7 @@ export class SocketManager {
      */
     private static toZoneMessage(
         zonePosition: ZonePosition,
-        zonePayload: ZoneMessage["message"]
+        zonePayload: ZoneMessage["message"],
     ): SubToPusherRoomMessage {
         return {
             message: {
@@ -127,7 +130,7 @@ export class SocketManager {
 
     public async handleConnectToRoom(
         socket: UserSocket,
-        connectToRoomMessage: ConnectToRoomMessage
+        connectToRoomMessage: ConnectToRoomMessage,
     ): Promise<GameRoom> {
         const roomId = connectToRoomMessage.roomId;
         const lastCommandId = connectToRoomMessage.lastCommandId;
@@ -153,7 +156,7 @@ export class SocketManager {
                             return;
                         }
                         resolve(message.editMapCommands);
-                    }
+                    },
                 );
             });
         }
@@ -171,13 +174,13 @@ export class SocketManager {
                         },
                     },
                 },
-                (error: Error | null | undefined) => {
+                (error: unknown) => {
                     if (error) {
-                        reject(error);
+                        reject(asError(error));
                         return;
                     }
                     resolve();
-                }
+                },
             );
         });
 
@@ -187,7 +190,7 @@ export class SocketManager {
     public async handleJoinRoom(socket: UserSocket, room: GameRoom, joinRoomMessage: JoinRoomMessage): Promise<User> {
         const user = await room.join(socket, joinRoomMessage);
 
-        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: room.id });
+        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: room.roomUrl });
 
         if (!socket.writable) {
             console.warn("Socket was aborted");
@@ -296,14 +299,14 @@ export class SocketManager {
     async handleSetAreaPropertyVariableEvent(
         room: GameRoom,
         user: User,
-        message: SetAreaPropertyVariableMessage
+        message: SetAreaPropertyVariableMessage,
     ): Promise<void> {
         const result = await room.setAreaPropertyVariableWithPermissionCheck(
             user.tags,
             message.areaId,
             message.propertyId,
             message.key,
-            message.value
+            message.value,
         );
 
         if (!result.success) {
@@ -311,10 +314,16 @@ export class SocketManager {
             console.warn(
                 `User ${user.uuid} denied permission to set area property variable: ` +
                     `areaId=${message.areaId}, propertyId=${message.propertyId}, key=${message.key}. ` +
-                    `User tags: [${user.tags.join(", ")}]. Error: ${result.error}`
+                    `User tags: [${user.tags.join(", ")}]. Error: ${result.error}`,
             );
             // Note: We don't send an error back to the client as this is a security check
             // The client should have already verified permissions before allowing the action
+        }
+    }
+
+    handleEntityMessage(room: GameRoom, message: EntityMessage): void {
+        if (message.entityEvent) {
+            room.dispatchEntityEvent(message.entityId, message.entityEvent);
         }
     }
 
@@ -373,11 +382,11 @@ export class SocketManager {
                 (
                     currentZone: ZonePosition,
                     playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
-                    listener: RoomSocket
+                    listener: RoomSocket,
                 ) => this.onPlayerDetailsUpdated(currentZone, playerDetailsUpdatedMessage, listener),
                 (currentZone: ZonePosition, group: Group, listener: RoomSocket) => {
                     this.onUserEntersOrLeavesBubble(currentZone, group, listener);
-                }
+                },
             )
                 .then((gameRoom) => {
                     // The room may have been invalidated while it was still loading.
@@ -414,7 +423,7 @@ export class SocketManager {
     private static toUserJoinedZoneMessage(
         user: User,
         currentZone: ZonePosition,
-        fromZone?: Zone | null
+        fromZone?: Zone | null,
     ): SubToPusherRoomMessage {
         if (!Number.isInteger(user.id)) {
             throw new Error(`clientUser.userId is not an integer ${user.id}`);
@@ -463,7 +472,7 @@ export class SocketManager {
         thing: Movable,
         currentZone: ZonePosition,
         position: PositionInterface,
-        listener: RoomSocket
+        listener: RoomSocket,
     ): void {
         if (thing instanceof User) {
             // Note: the position parameter is not used because the thing has already been User.setPosition
@@ -482,7 +491,7 @@ export class SocketManager {
                         position: posMsg,
                     },
                 }),
-                listener
+                listener,
             );
         } else if (thing instanceof Group) {
             this.emitCreateUpdateGroupEvent(listener, currentZone, null, thing);
@@ -512,7 +521,7 @@ export class SocketManager {
                     userIds: group.getUsers().map((user) => user.id),
                 },
             }),
-            client
+            client,
         );
     }
 
@@ -523,7 +532,7 @@ export class SocketManager {
                 $case: "emoteEventMessage",
                 emoteEventMessage,
             }),
-            client
+            client,
         );
     }
 
@@ -531,7 +540,7 @@ export class SocketManager {
         currentZone: ZonePosition,
         groupId: number,
         client: RoomSocket,
-        roomPromise: PromiseLike<GameRoom> | undefined
+        roomPromise: PromiseLike<GameRoom> | undefined,
     ): Promise<void> {
         if (!roomPromise) {
             return;
@@ -546,7 +555,7 @@ export class SocketManager {
     private onPlayerDetailsUpdated(
         currentZone: ZonePosition,
         playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
-        client: RoomSocket
+        client: RoomSocket,
     ) {
         // Ideally, we should pass the position of the concerned user
         emitZoneMessage(
@@ -554,7 +563,7 @@ export class SocketManager {
                 $case: "playerDetailsUpdatedMessage",
                 playerDetailsUpdatedMessage,
             }),
-            client
+            client,
         );
     }
 
@@ -562,7 +571,7 @@ export class SocketManager {
         client: RoomSocket,
         currentZone: ZonePosition,
         fromZone: Zone | null,
-        group: Group
+        group: Group,
     ): void {
         const position = group.getPosition();
         emitZoneMessage(
@@ -580,7 +589,7 @@ export class SocketManager {
                     userIds: group.getUsers().map((user) => user.id),
                 },
             }),
-            client
+            client,
         );
     }
 
@@ -588,7 +597,7 @@ export class SocketManager {
         client: RoomSocket,
         currentZone: ZonePosition,
         groupId: number,
-        newZone: Zone | null
+        newZone: Zone | null,
     ): void {
         emitZoneMessage(
             SocketManager.toZoneMessage(currentZone, {
@@ -598,7 +607,7 @@ export class SocketManager {
                     toZone: SocketManager.toProtoZone(newZone),
                 },
             }),
-            client
+            client,
         );
     }
 
@@ -606,7 +615,7 @@ export class SocketManager {
         client: RoomSocket,
         currentZone: ZonePosition,
         userId: number,
-        newZone: Zone | null
+        newZone: Zone | null,
     ): void {
         emitZoneMessage(
             SocketManager.toZoneMessage(currentZone, {
@@ -616,7 +625,7 @@ export class SocketManager {
                     toZone: SocketManager.toProtoZone(newZone),
                 },
             }),
-            client
+            client,
         );
     }
 
@@ -674,7 +683,7 @@ export class SocketManager {
                     const answer = await this.handleQueryJitsiJwtMessage(
                         gameRoom,
                         user,
-                        queryMessage.query.jitsiJwtQuery
+                        queryMessage.query.jitsiJwtQuery,
                     );
                     answerMessage.answer = {
                         $case: "jitsiJwtAnswer",
@@ -686,7 +695,7 @@ export class SocketManager {
                     const answer = await this.handleJoinBBBMeetingMessage(
                         gameRoom,
                         user,
-                        queryMessage.query.joinBBBMeetingQuery
+                        queryMessage.query.joinBBBMeetingQuery,
                     );
                     answerMessage.answer = {
                         $case: "joinBBBMeetingAnswer",
@@ -716,10 +725,11 @@ export class SocketManager {
                 case "leaveSpaceQuery":
                 case "mapStorageJwtQuery":
                 case "getRecordingsQuery":
+                case "getRecordingThumbnailsQuery":
+                case "banIpPreviewQuery":
                 case "deleteRecordingQuery":
                 case "getSignedUrlQuery":
-                case "startRecordingQuery":
-                case "stopRecordingQuery":
+                case "spaceStateQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
@@ -759,7 +769,7 @@ export class SocketManager {
     public async handleQueryJitsiJwtMessage(
         gameRoom: GameRoom,
         user: User,
-        queryJitsiJwtMessage: JitsiJwtQuery
+        queryJitsiJwtMessage: JitsiJwtQuery,
     ): Promise<JitsiJwtAnswer> {
         const jitsiRoom = queryJitsiJwtMessage.jitsiRoom;
         const jitsiSettings = gameRoom.getJitsiSettings();
@@ -779,11 +789,18 @@ export class SocketManager {
             }
         }
 
+        // Jitsi has two prosody plugins that can grant moderator rights from a JWT:
+        //   - token_moderation reads `moderator` at the top level of the token,
+        //   - token_affiliation reads `context.user.moderator`.
+        // Emit both so deployments using either plugin (#5135) work unchanged.
+        // Dropping the top-level field would break installs still on
+        // token_moderation; adding the context-level field is a no-op for them.
         const jwt = new SignJWT({
             context: {
                 user: {
                     id: user.id,
                     name: user.name,
+                    moderator: isAdmin,
                 },
                 features: {
                     livestreaming: isAdmin,
@@ -814,7 +831,7 @@ export class SocketManager {
     public async handleJoinBBBMeetingMessage(
         gameRoom: GameRoom,
         user: User,
-        joinBBBMeetingQuery: JoinBBBMeetingQuery
+        joinBBBMeetingQuery: JoinBBBMeetingQuery,
     ): Promise<JoinBBBMeetingAnswer> {
         const meetingId = joinBBBMeetingQuery.meetingId;
         const localMeetingId = joinBBBMeetingQuery.localMeetingId;
@@ -824,7 +841,7 @@ export class SocketManager {
         if (bbbSettings === undefined) {
             throw new Error(
                 "Unable to join the conference because either " +
-                    "the BBB_URL or BBB_SECRET environment variables are not set."
+                    "the BBB_URL or BBB_SECRET environment variables are not set.",
             );
         }
 
@@ -877,33 +894,13 @@ export class SocketManager {
         debug(
             `User "${user.name}" (${user.uuid}) joined the BBB meeting "${meetingName}" as ${
                 isAdmin ? "Admin" : "Participant"
-            }.`
+            }.`,
         );
 
         return {
             meetingId,
             clientURL,
         };
-    }
-
-    public handleSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {
-        user.write({
-            $case: "sendUserMessage",
-            sendUserMessage: sendUserMessageToSend,
-        });
-    }
-
-    public handleBanUserMessage(room: GameRoom, user: User, banUserMessageToSend: BanUserMessage) {
-        user.write({
-            $case: "sendUserMessage",
-            sendUserMessage: banUserMessageToSend,
-        });
-
-        setTimeout(() => {
-            // Let's leave the room now.
-            room.leave(user);
-            endUserConnectionWithReason(user.socket, `User was banned: ${banUserMessageToSend.message}`);
-        }, 10000);
     }
 
     public async addZoneListener(call: RoomSocket, roomId: string, x: number, y: number): Promise<void> {
@@ -937,8 +934,8 @@ export class SocketManager {
                                 locked: thing.isLocked(),
                                 userIds: thing.getUsers().map((user) => user.id),
                             },
-                        }
-                    )
+                        },
+                    ),
                 );
             } else {
                 console.error("Unexpected type for Movable returned by setViewport");
@@ -957,6 +954,31 @@ export class SocketManager {
         }
 
         room.removeZoneListener(call, x, y);
+        this.cleanupRoomIfEmpty(room);
+    }
+
+    /**
+     * Removes many zone listeners at once.
+     *
+     * Compared to calling removeZoneListener in a loop, the room is resolved only once and the room cleanup is
+     * only attempted once. It also lets callers get rid of a Promise.all over an unbounded number of zones
+     * (Promise.all throws a RangeError above 2^21 elements).
+     */
+    async removeZoneListeners(
+        call: RoomSocket,
+        roomId: string,
+        zones: Iterable<{ x: number; y: number }>,
+    ): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
+        if (!room) {
+            console.warn("In removeZoneListeners, could not find room with id '" + roomId + "'");
+            return;
+        }
+
+        // GameRoom.removeZoneListener is synchronous, so no Promise juggling is needed here.
+        for (const zone of zones) {
+            room.removeZoneListener(call, zone.x, zone.y);
+        }
         this.cleanupRoomIfEmpty(room);
     }
 
@@ -1043,60 +1065,27 @@ export class SocketManager {
         debug('Room "%s" was forcefully deleted from cache', roomId);
     }
 
-    public async sendAdminMessage(roomId: string, recipientUuid: string, message: string, type: string): Promise<void> {
-        const room = await this.roomsPromises.get(roomId);
-        if (!room) {
-            console.error(
-                "In sendAdminMessage, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
-            );
-            Sentry.captureException(
-                "In sendAdminMessage, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
-            );
-            return;
-        }
-
-        const recipients = room.getUsersByUuid(recipientUuid);
-        if (recipients.size === 0) {
-            console.error(
-                "In sendAdminMessage, could not find user with id '" +
-                    recipientUuid +
-                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
-            );
-            Sentry.captureException(
-                "In sendAdminMessage, could not find user with id '" +
-                    recipientUuid +
-                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
-            );
-            return;
-        }
-
-        for (const recipient of recipients) {
-            recipient.write({
-                $case: "sendUserMessage",
-                sendUserMessage: {
-                    message,
-                    type,
-                },
-            });
-        }
-    }
-
-    public async banUser(roomId: string, recipientUuid: string, message: string): Promise<void> {
+    /**
+     * Ejects a user from the room.
+     * @param type "banned" (permanent, persisted by the admin) or "kicked" (ejection only)
+     */
+    public async banUser(
+        roomId: string,
+        recipientUuid: string,
+        message: string,
+        type: "banned" | "kicked" = "banned",
+    ): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             console.error(
                 "In banUser, could not find room with id '" +
                     roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?",
             );
             Sentry.captureException(
                 "In banUser, could not find room with id '" +
                     roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?",
             );
             return;
         }
@@ -1106,12 +1095,12 @@ export class SocketManager {
             console.error(
                 "In banUser, could not find user with id '" +
                     recipientUuid +
-                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?",
             );
             Sentry.captureException(
                 "In banUser, could not find user with id '" +
                     recipientUuid +
-                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?",
             );
             return;
         }
@@ -1125,10 +1114,10 @@ export class SocketManager {
                 $case: "banUserMessage",
                 banUserMessage: {
                     message,
-                    type: "banned",
+                    type,
                 },
             });
-            endUserConnectionWithReason(recipient.socket, `User was banned: ${message}`);
+            endUserConnectionWithReason(recipient.socket, `User was ${type}: ${message}`);
         }
     }
 
@@ -1139,12 +1128,12 @@ export class SocketManager {
             console.error(
                 "In sendAdminRoomMessage, could not find room with id '" +
                     roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?",
             );
             Sentry.captureException(
                 "In sendAdminRoomMessage, could not find room with id '" +
                     roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?",
             );
             return;
         }
@@ -1167,12 +1156,12 @@ export class SocketManager {
             console.error(
                 "In dispatchWorldFullWarning, could not find room with id '" +
                     roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?",
             );
             Sentry.captureException(
                 "In dispatchWorldFullWarning, could not find room with id '" +
                     roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?",
             );
             return;
         }
@@ -1204,6 +1193,11 @@ export class SocketManager {
     }
 
     handleEmoteEventMessage(room: GameRoom, user: User, emotePromptMessage: EmotePromptMessage) {
+        // The emote is relayed to every player nearby: refuse anything that is not an emoji.
+        if (!isValidEmote(emotePromptMessage.emote)) {
+            debug("Invalid emote received. Dropping message.");
+            return;
+        }
         room.emitEmoteEvent(user, {
             emote: emotePromptMessage.emote,
             actorUserId: user.id,
@@ -1281,8 +1275,21 @@ export class SocketManager {
                         },
                     });
                 }
-            }
+            },
         );
+    }
+
+    getWorldUsers(world: string): WorldUsersAnswer {
+        const users: WorldUser[] = [];
+        for (const room of this.resolvedRooms.values()) {
+            if (!room.roomUrl.startsWith(world)) {
+                continue;
+            }
+            for (const user of room.getUsers().values()) {
+                users.push({ uuid: user.uuid, name: user.name, ipAddress: user.IPAddress, roomUrl: room.roomUrl });
+            }
+        }
+        return { users };
     }
 
     getAllRooms(): RoomsList {
@@ -1347,7 +1354,7 @@ export class SocketManager {
     handleMeetingInvitationRequestMessage(
         room: GameRoom,
         sender: User,
-        message: MeetingInvitationRequestMessage
+        message: MeetingInvitationRequestMessage,
     ): void {
         const isAdmin = sender.tags.includes("admin");
         if (!isAdmin && room.isMeetingInvitationRequestTooHigh(sender.uuid, message.receiverUserUuid)) {
@@ -1383,7 +1390,7 @@ export class SocketManager {
     handleMeetingInvitationResponseMessage(
         room: GameRoom,
         responder: User,
-        message: MeetingInvitationResponseMessage
+        message: MeetingInvitationResponseMessage,
     ): void {
         const requesters = room.getUsersByUuid(message.requestSenderUserUuid);
         if (requesters.size === 0) {
@@ -1434,7 +1441,7 @@ export class SocketManager {
                 joinSpaceMessage.filterType,
                 eventProcessor,
                 joinSpaceMessage.propertiesToSync,
-                joinSpaceMessage.world
+                joinSpaceMessage.world,
             );
             this.spaces.set(joinSpaceMessage.spaceName, space);
             clientEventsEmitter.newSpaceSubject.next(space);
@@ -1457,7 +1464,7 @@ export class SocketManager {
         const space: Space | undefined = this.spaces.get(leaveSpaceMessage.spaceName);
         if (!space) {
             throw new Error(
-                `In handleLeaveSpaceMessage, can't unwatch space ${leaveSpaceMessage.spaceName}, space not found`
+                `In handleLeaveSpaceMessage, can't unwatch space ${leaveSpaceMessage.spaceName}, space not found`,
             );
         }
         this.removeSpaceWatcher(pusher, space);
@@ -1510,7 +1517,7 @@ export class SocketManager {
 
     handleUpdateSpaceMetadataMessage(
         pusher: SpacesWatcher,
-        updateSpaceMetadataMessage: UpdateSpaceMetadataPusherToBackMessage
+        updateSpaceMetadataMessage: UpdateSpaceMetadataPusherToBackMessage,
     ) {
         const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
 
@@ -1520,12 +1527,9 @@ export class SocketManager {
             return;
         }
 
-        if (space) {
-            space.updateMetadata(isMetadata.data, updateSpaceMetadataMessage.senderId).catch((error) => {
-                console.error("Error updating metadata", error);
-                Sentry.captureException(error);
-            });
-        }
+        // Free-form metadata (scripting API, external modules): published as sent. Data the server is the
+        // authority on lives in the space state instead.
+        space?.publishMetadata(isMetadata.data);
     }
 
     handleKickSpaceUserMessage(pusher: SpacesWatcher, kickUserMessage: KickOffMessage) {
@@ -1658,7 +1662,7 @@ export class SocketManager {
             console.info(
                 "In handleExternalModuleMessage, could not find room with id '" +
                     roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?",
             );
             return;
         }
@@ -1668,19 +1672,34 @@ export class SocketManager {
             console.info(
                 "In handleExternalModuleMessage, could not find user with id '" +
                     recipientUuid +
-                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?",
             );
             return;
         }
 
         for (const recipient of recipients) {
-            recipient.socket.write({
-                message: {
-                    $case: "externalModuleMessage",
-                    externalModuleMessage: externalModuleMessage,
-                },
+            recipient.write({
+                $case: "externalModuleMessage",
+                externalModuleMessage: externalModuleMessage,
             });
         }
+    }
+
+    /**
+     * Ends every open meeting and broadcast, for a shutdown that is about to take the
+     * process with them. A session only exists once it has ended, so a deploy that kills
+     * the back without this loses every live conversation silently.
+     *
+     * Only enqueues — the caller drains afterwards. Returns how many were closed.
+     */
+    closeAllSpaceSessions(endReason: SessionEndReason): number {
+        let closed = 0;
+        for (const space of this.spaces.values()) {
+            if (space.closeSession(endReason)) {
+                closed += 1;
+            }
+        }
+        return closed;
     }
 
     /*
@@ -1728,16 +1747,15 @@ export class SocketManager {
         }
     }
 
-    handleRecordingWebhook(request: HandleRecordingWebhookRequest): void {
+    async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
         const space = this.spaces.get(request.spaceName);
         if (!space) {
-            console.warn(
-                `Received recording webhook for missing space ${request.spaceName} (${request.egressId}). Ignoring.`
-            );
+            // Retrying cannot recreate a space that is already gone, so the pusher should acknowledge this as ignored.
+            console.warn(`Received LiveKit webhook for missing space ${request.spaceName}. Ignoring.`);
             return;
         }
 
-        space.handleRecordingWebhook(request);
+        await space.handleLivekitWebhook(request);
     }
 
     handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {
@@ -1753,12 +1771,12 @@ export class SocketManager {
 
     handleDeleteSpaceUserToNotifyMessage(
         pusher: SpacesWatcher,
-        deleteSpaceUserToNotifyMessage: DeleteSpaceUserToNotifyMessage
+        deleteSpaceUserToNotifyMessage: DeleteSpaceUserToNotifyMessage,
     ) {
         const space = this.spaces.get(deleteSpaceUserToNotifyMessage.spaceName);
         if (!space) {
             throw new Error(
-                `Could not find space ${deleteSpaceUserToNotifyMessage.spaceName} to delete user to notify`
+                `Could not find space ${deleteSpaceUserToNotifyMessage.spaceName} to delete user to notify`,
             );
         }
         if (!deleteSpaceUserToNotifyMessage.user) {

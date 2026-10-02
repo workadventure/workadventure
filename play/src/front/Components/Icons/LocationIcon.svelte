@@ -1,8 +1,12 @@
 <script lang="ts">
-    export let height = "h-6";
-    export let width = "w-6";
-    export let stroke = "#ffffff";
-    export let strokeWidth = "1.5";
+    interface Props {
+        height?: string;
+        width?: string;
+        stroke: string;
+        strokeWidth?: string;
+    }
+
+    let { height = "h-6", width = "w-6", stroke = "#ffffff", strokeWidth = "1.5" }: Props = $props();
 </script>
 
 <svg

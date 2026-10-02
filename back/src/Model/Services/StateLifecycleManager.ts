@@ -16,6 +16,7 @@ export class StateLifecycleManager implements IStateLifecycleManager {
     private _currentState: ICommunicationState<ICommunicationStrategy>;
     private _toFinalizeState: ICommunicationState<ICommunicationStrategy> | undefined;
     private _finalizeStateTimeout: ReturnType<typeof setTimeout> | undefined;
+    public onTransition?: () => void;
 
     /**
      * Creates a new StateLifecycleManager with an initial state.
@@ -25,7 +26,7 @@ export class StateLifecycleManager implements IStateLifecycleManager {
      */
     constructor(
         initialState: ICommunicationState<ICommunicationStrategy>,
-        private readonly finalizeDelayMs: number = 5000
+        private readonly finalizeDelayMs: number = 5000,
     ) {
         this._currentState = initialState;
     }
@@ -58,6 +59,7 @@ export class StateLifecycleManager implements IStateLifecycleManager {
         // Move current state to pending finalization
         this._toFinalizeState = this._currentState;
         this._currentState = newState;
+        this.onTransition?.();
 
         // Dispatch switch event to all users through the old state
         this._toFinalizeState.switchState(newState.communicationType);

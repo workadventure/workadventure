@@ -48,7 +48,10 @@ export class AreaPropertyVariablesManager {
      */
     private readonly _serverSubscription: Subscription;
 
-    constructor(private roomConnection: RoomConnection, initialVariables: AreaPropertyVariable[]) {
+    constructor(
+        private roomConnection: RoomConnection,
+        initialVariables: AreaPropertyVariable[],
+    ) {
         // Initialize the variables map from server data
         const variablesMap = new Map<string, unknown>();
         for (const variable of initialVariables) {
@@ -74,7 +77,7 @@ export class AreaPropertyVariablesManager {
 
                 // Emit the change
                 this._variableChanges.set({ areaId, propertyId, key, value });
-            }
+            },
         );
     }
 

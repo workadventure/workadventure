@@ -96,5 +96,3 @@ export type CategoryTag =
       };
 export type SelectableTag = CategoryTag | undefined;
 export const selectCategoryStore = writable<SelectableTag>(undefined);
-
-export const mapEditorRestrictedPropertiesStore = writable<string[]>([]);

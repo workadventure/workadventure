@@ -2,13 +2,14 @@ import { expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 import Menu from "./utils/menu";
 
 test.describe("Action bar responsiveness @nomobile", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
+
     test("Check items in the action bar go in the menu one by one @oidc", async ({ browser }) => {
         await using page = await getPage(
             browser,
@@ -73,7 +74,5 @@ test.describe("Action bar responsiveness @nomobile", () => {
 
         await expect(page.getByTestId("profile-menu").getByText("Share")).toBeVisible();
         await expect(page.getByTestId("profile-menu").getByText("Login")).toBeVisible();
-
-        await page.context().close();
     });
 });

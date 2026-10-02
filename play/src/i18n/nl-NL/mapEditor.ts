@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "Deze kaart is verwijderd",
         deletePromptSubtitle: "Je bent losgekoppeld van deze ruimte.",
         deletePromptDetails: "Verversen zal deze kaart niet herstellen omdat deze niet meer bestaat.",
+        editionFailed: "Je wijziging kon niet worden opgeslagen en is ongedaan gemaakt.",
     },
     sideBar: {
         areaEditor: "Gebied editor tool",
@@ -75,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annuleren",
                 validate: "Valideren",
             },
-            disabled: "Jitsi-integratie is uitgeschakeld voor deze kamer ❌",
             actionButtonLabel: "Start Jitsi-vergadering",
         },
         playAudio: {
@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Speel muziek af",
             error: "Kon geluid niet laden",
             actionButtonLabel: "Speel muziek",
+            playForAllUsersLabel: "Afspelen voor alle gebruikers op de kaart",
+            audibleRadiusLabel: "Hoorbare straal (in pixels)",
+            audibleRadiusPlaceholder: "Overal hoorbaar indien leeg",
         },
         openWebsite: {
             label: "Open Link",
@@ -124,14 +127,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Gebruikers op het podium (podium) kunnen spreken tot alle deelnemers in het bijbehorende "Publiek" gebied.',
             nameLabel: "Naam",
             namePlaceholder: "HoofdPodium",
-            disabled: "Podium is uitgeschakeld voor deze kamer ❌",
             actionButtonLabel: "Deelnemen aan podium",
         },
         listenerMegaphone: {
             label: "Publiek",
             description: "Gebruikers in het publieksgebied kunnen de spreker op het gekoppelde podium horen.",
             nameLabel: "Podiumnaam",
-            disabled: "Publiek is uitgeschakeld voor deze kamer ❌",
             namePlaceholder: "MijnSprekerZone",
             waitingMediaLinkLabel: "Media om weer te geven voordat de livestream begint",
             waitingMediaLinkPlaceholder: "https://www… (media-URL invoeren)",
@@ -143,6 +144,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "Koppel een speciale chatkanaal",
+        allowTalking: "Praten en bubbels vormen toestaan",
+        raiseHandEnabled: "Handopsteken toestaan",
         seeAttendees: "Deelnemers zien",
         start: {
             label: "Startgebied",
@@ -312,6 +315,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "Start met microfoon gedempt",
                 startWithVideoMuted: "Start met video gesloten",
                 disableChat: "Chat uitschakelen",
+                raiseHandEnabled: "Handopsteken toestaan",
                 livekitRoomAdminTag: "Moderatortag voor de vergaderruimte",
                 cancel: "Annuleren",
                 validate: "Valideren",

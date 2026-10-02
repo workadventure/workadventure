@@ -45,6 +45,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "No se detecta sonido de tu micrófono. Puede haber un problema; prueba a cambiar de micrófono en la configuración.",
         noSoundWarningPressEnter: "No se detecta sonido de tu micrófono. Pulsa Enter para abrir la configuración.",
+        advancedNoiseReduction: "Reducción de ruido avanzada",
+        noiseSuppressionInitializing: "Inicializando la supresión de ruido personalizada...",
+        noiseSuppressionUnsupported: "Este navegador no puede ejecutar la supresión de ruido personalizada.",
+        noiseSuppressionError:
+            "La supresión de ruido personalizada falló. Volviendo a la supresión de ruido nativa del navegador.",
         openSettings: "Abrir configuración",
         ignore: "Ignorar",
     },
@@ -69,6 +74,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         SPEAKER: "En una reunión",
         LIVEKIT: "En una reunión",
         LISTENER: "En una reunión",
+        SOUND_BLOCKED: "Sonido bloqueado",
     },
     subtitle: {
         camera: "Cámara",
@@ -84,7 +90,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Desenfoque medio",
         blurHigh: "Desenfoque alto",
         images: "Imágenes",
-        videos: "Vídeos",
     },
     help: {
         chat: {
@@ -98,6 +103,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "Mostrar un emoji",
             desc: "Expresa cómo te sientes con un solo clic usando reacciones emoji. ¡Solo toca y listo!",
+        },
+        raiseHand: {
+            title: "Levanta la mano",
+            desc: "Indica que quieres hablar. Tu mano levantada se muestra en el mapa y en tu vídeo, para que todos sepan a quién le toca.",
         },
         audioManager: {
             title: "Volumen de sonidos ambientales",
@@ -124,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "Elegir zona para bloquear/desbloquear",
             bubbleLabel: "Burbuja de discusión",
             unnamedArea: "Zona sin nombre",
+        },
+        giveBackFloor: {
+            title: "Devolver la palabra",
+            desc: "Se te ha dado la palabra. Haz clic para dejar de hablar y devolverla.",
         },
         megaphone: {
             title: "Detener megáfono",
@@ -172,6 +185,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Puedes usar la función de imagen en imagen para ver un video o una presentación mientras estás en una conversación. Simplemente haz clic en el icono de imagen en imagen y disfruta de tu contenido.",
         },
         videoNotSupported: "Tu navegador no admite la etiqueta de vídeo.",
+    },
+    raisedHands: {
+        speaking: "Con la palabra",
+        title: "Manos levantadas",
+        empty: "Nadie ha levantado la mano",
+        help: "Mira quién ha levantado la mano, por orden, y dale la palabra.",
+        lowerHand: "Bajar la mano",
+        lowerAllHands: "Bajar todas",
     },
     listStatusTitle: {
         enable: "Cambiar tu estado",

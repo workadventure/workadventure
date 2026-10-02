@@ -1,22 +1,24 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { fly } from "svelte/transition";
     import LL from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { isMobileOnboarding } from "../../../Stores/OnboardingStore";
 
-    const dispatch = createEventDispatcher<{
-        next: void;
-        skip: void;
-    }>();
+    interface Props {
+        onnext?: () => void;
+        onskip?: () => void;
+    }
+
+    const { onnext, onskip }: Props = $props();
 
     let worldName: string = gameManager.getCurrentGameScene()?.room?.roomName ?? "WorkAdventure";
 
     function handleNext() {
-        dispatch("next");
+        onnext?.();
     }
+
     function handleSkip() {
-        dispatch("skip");
+        onskip?.();
     }
 </script>
 
@@ -42,14 +44,14 @@
                 <button
                     class="px-6 py-3 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
                     data-testid="onboarding-button-welcome-start"
-                    on:click={handleNext}
+                    onclick={handleNext}
                 >
                     {$LL.onboarding.welcome.start()}
                 </button>
                 <button
                     class="px-6 py-3 bg-transparent hover:bg-white/10 text-white rounded-lg font-semibold transition-all underline-offset-4 hover:underline"
                     data-testid="onboarding-button-welcome-skip"
-                    on:click={handleSkip}
+                    onclick={handleSkip}
                 >
                     {$LL.onboarding.welcome.skip()}
                 </button>

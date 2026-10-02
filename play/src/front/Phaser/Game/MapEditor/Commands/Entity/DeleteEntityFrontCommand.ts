@@ -3,6 +3,7 @@ import { DeleteEntityCommand } from "@workadventure/map-editor";
 import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import type { FrontCommandInterface } from "../FrontCommandInterface";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
+import { analyticsClient } from "../../../../../Administration/AnalyticsClient";
 import { VoidFrontCommand } from "../VoidFrontCommand";
 import { CreateEntityFrontCommand } from "./CreateEntityFrontCommand";
 
@@ -13,7 +14,7 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
         wamFile: WamFile,
         entityId: string,
         commandId: string | undefined,
-        private entitiesManager: EntitiesManager
+        private entitiesManager: EntitiesManager,
     ) {
         super(wamFile, entityId, commandId);
     }
@@ -42,11 +43,12 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
             this.entityData,
             undefined,
             this.entitiesManager,
-            { width: entity.width, height: entity.height }
+            { width: entity.width, height: entity.height },
         );
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
         roomConnection.emitMapEditorDeleteEntity(this.commandId, this.entityId);
+        analyticsClient.trackAdminEvent("map_editor.entity.removed", { entityType: this.entityData?.prefabRef?.id });
     }
 }

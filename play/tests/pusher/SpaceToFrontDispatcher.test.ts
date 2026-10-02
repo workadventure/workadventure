@@ -2,12 +2,13 @@ import type { SubMessage, PusherToBackSpaceMessage } from "@workadventure/messag
 import { SpaceUser } from "@workadventure/messages";
 import { describe, it, vi, expect } from "vitest";
 import { mock } from "vitest-mock-extended";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import { EventProcessor } from "../../src/pusher/models/EventProcessor";
 import type { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
 import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
 import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
-import type { Socket } from "../../src/pusher/services/SocketManager";
 import type { Space } from "../../src/pusher/models/Space";
+import type { PusherWebSocket } from "../../src/pusher/services/PusherWebSocket";
 
 describe("SpaceToFrontDispatcher", () => {
     describe("handleMessage", () => {
@@ -19,18 +20,18 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch = vi.fn();
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
                 const mockSpace = {
                     name: "test",
                     users: new Map<string, SpaceUser>([["foo_1", spaceUser]]),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([[mockSocket, spaceUser]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
                     _localWatchers: new Set<string>(),
                     localName: "test",
                 } as unknown as Space;
@@ -76,17 +77,17 @@ describe("SpaceToFrontDispatcher", () => {
                     spaceUserId: "foo_1",
                 });
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
                 const mockSpace = {
                     users: new Map<string, SpaceUser>(),
                     _localWatchers: new Set<string>(["foo_1"]),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>(),
                     metadata: new Map(),
                     spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
                     localName: "localTest",
@@ -120,18 +121,18 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch = vi.fn();
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
                 const mockSpace = {
                     name: "test",
                     users: new Map<string, SpaceUser>(),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([[mockSocket, spaceUser]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
                     _localWatchers: new Set<string>(),
                     localName: "test",
                 } as unknown as Space;
@@ -184,17 +185,17 @@ describe("SpaceToFrontDispatcher", () => {
                     name: "foo_2",
                 });
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
                 const mockSpace = {
                     users: new Map<string, SpaceUser>([["foo_1", spaceUser]]),
                     _localWatchers: new Set<string>(["foo_1"]),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
                     metadata: new Map(),
                     spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
                     localName: "localTest",
@@ -234,18 +235,18 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch = vi.fn();
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
                 const mockSpace = {
                     name: "test",
                     users: new Map<string, SpaceUser>(),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([[mockSocket, spaceUser]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
                     _localWatchers: new Set<string>(),
                     localName: "test",
                 } as unknown as Space;
@@ -292,17 +293,17 @@ describe("SpaceToFrontDispatcher", () => {
                     name: "foo_1",
                 });
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
                 const mockSpace = {
                     users: new Map<string, SpaceUser>([["foo_1", spaceUser]]),
                     _localWatchers: new Set<string>(["foo_1"]),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
                     metadata: new Map(),
                     spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
                     localName: "localTest",
@@ -350,17 +351,17 @@ describe("SpaceToFrontDispatcher", () => {
                     name: "foo_1",
                 });
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
+                    emitInBatch: mockEmitInBatch,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
-                        emitInBatch: mockEmitInBatch,
                     }),
                 });
 
                 const mockSpace = {
                     users: new Map<string, SpaceUser>([["foo_1", spaceUser]]),
                     _localWatchers: new Set<string>(["foo_1"]),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
                     metadata: new Map(),
                     spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
                     localName: "localTest",
@@ -392,6 +393,64 @@ describe("SpaceToFrontDispatcher", () => {
                 expect(mockEmitInBatch).toHaveBeenCalledOnce();
             });
         });
+        describe("spaceStatePatchMessage", () => {
+            it("applies the patch to the space copy, forwards it, and sends the patched state to a user who joins", async () => {
+                const mockEmitInBatch = vi.fn();
+                const mockSocket = mock<PusherWebSocket>({ emitInBatch: mockEmitInBatch });
+                const mockSpace = {
+                    users: new Map<string, SpaceUser>(),
+                    _localWatchers: new Set<string>(),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map(),
+                    metadata: new Map(),
+                    state: emptySpaceState(),
+                    localName: "localTest",
+                } as unknown as Space;
+                const spaceDispatcher = new SpaceToFrontDispatcher(mockSpace, new EventProcessor());
+                const entry = { spaceUserId: "foo_1", name: "Alice", at: 1 };
+                const patch = JSON.stringify([{ op: "add", path: "/raisedHands/0", value: entry }]);
+
+                spaceDispatcher.handleMessage({
+                    message: {
+                        $case: "initSpaceUsersMessage",
+                        initSpaceUsersMessage: {
+                            spaceName: "test",
+                            users: [],
+                            metadata: "{}",
+                            state: JSON.stringify(emptySpaceState()),
+                        },
+                    },
+                });
+                spaceDispatcher.handleMessage({
+                    message: {
+                        $case: "spaceStatePatchMessage",
+                        spaceStatePatchMessage: { spaceName: "test", patch },
+                    },
+                });
+
+                expect(mockSpace.state.raisedHands).toEqual([entry]);
+                expect(mockEmitInBatch).toHaveBeenCalledWith({
+                    message: {
+                        $case: "spaceStatePatchMessage",
+                        spaceStatePatchMessage: { spaceName: "localTest", patch },
+                    },
+                });
+
+                const newcomerEmitInBatch = vi.fn();
+                await spaceDispatcher.notifyMeState(mock<PusherWebSocket>({ emitInBatch: newcomerEmitInBatch }));
+                expect(newcomerEmitInBatch).toHaveBeenCalledWith({
+                    message: {
+                        $case: "spaceStatePatchMessage",
+                        spaceStatePatchMessage: {
+                            spaceName: "localTest",
+                            patch: JSON.stringify([{ op: "replace", path: "", value: mockSpace.state }]),
+                        },
+                    },
+                });
+                expect(mockSpace.state.raisedHands).toEqual([entry]);
+            });
+        });
+
         describe("pingMessage", () => {
             it.skip("should throw error because it should not be received by the dispatcher - pingMessage should be handle by the space class", () => {
                 const spaceUser = SpaceUser.fromPartial({
@@ -400,7 +459,7 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
                         emitInBatch: mockEmitInBatch,
@@ -410,8 +469,8 @@ describe("SpaceToFrontDispatcher", () => {
                 const mockSpace = {
                     name: "test",
                     users: new Map<string, SpaceUser>(),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([[mockSocket, spaceUser]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
                     _localWatchers: new Set<string>(),
                     localName: "test",
                 } as unknown as Space;
@@ -445,7 +504,7 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
                         emitInBatch: mockEmitInBatch,
@@ -459,8 +518,8 @@ describe("SpaceToFrontDispatcher", () => {
                 const mockSpace = {
                     name: "test",
                     users: new Map<string, SpaceUser>(),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([[mockSocket, spaceUser]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
                     _localWatchers: new Set<string>(),
                     localName: "test",
                     forwarder: mockForwarder,
@@ -494,7 +553,7 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
                         emitInBatch: mockEmitInBatch,
@@ -508,8 +567,8 @@ describe("SpaceToFrontDispatcher", () => {
                 const mockSpace = {
                     name: "test",
                     users: new Map<string, SpaceUser>([["foo_1", spaceUser]]),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([[mockSocket, spaceUser]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
                     _localWatchers: new Set<string>(),
                     localName: "test",
                     forwarder: mockForwarder,
@@ -543,7 +602,7 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
                         emitInBatch: mockEmitInBatch,
@@ -557,8 +616,8 @@ describe("SpaceToFrontDispatcher", () => {
                 const mockSpace = {
                     name: "test",
                     users: new Map<string, SpaceUser>([["foo_1", spaceUser]]),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([[mockSocket, spaceUser]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
                     _localWatchers: new Set<string>(),
                     localName: "test",
                     forwarder: mockForwarder,
@@ -606,17 +665,17 @@ describe("SpaceToFrontDispatcher", () => {
                 const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
                 const mockEmitInBatch2 = vi.fn().mockImplementation((message: SubMessage) => {});
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
                         emitInBatch: mockEmitInBatch,
                     }),
                 });
 
-                const mockSocket2 = mock<Socket>({
+                const mockSocket2 = mock<PusherWebSocket>({
+                    emitInBatch: mockEmitInBatch2,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser2,
-                        emitInBatch: mockEmitInBatch2,
                     }),
                 });
 
@@ -630,11 +689,11 @@ describe("SpaceToFrontDispatcher", () => {
                         ["foo_1", spaceUser],
                         ["foo_2", spaceUser2],
                     ]),
-                    _localConnectedUser: new Map<string, Socket>([
+                    _localConnectedUser: new Map<string, PusherWebSocket>([
                         ["foo_1", mockSocket],
                         ["foo_2", mockSocket2],
                     ]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([
                         [mockSocket, spaceUser],
                         [mockSocket2, spaceUser2],
                     ]),
@@ -694,7 +753,7 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch = vi.fn();
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
                         emitInBatch: mockEmitInBatch,
@@ -708,8 +767,8 @@ describe("SpaceToFrontDispatcher", () => {
                 const mockSpace = {
                     name: "test",
                     users: new Map<string, SpaceUser>([["foo_1", spaceUser]]),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([[mockSocket, spaceUser]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
                     _localWatchers: new Set<string>(),
                     localName: "test",
                     forwarder: mockForwarder,
@@ -747,7 +806,7 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch = vi.fn();
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
                         emitInBatch: mockEmitInBatch,
@@ -761,8 +820,8 @@ describe("SpaceToFrontDispatcher", () => {
                 const mockSpace = {
                     name: "test",
                     users: new Map<string, SpaceUser>([["foo_1", spaceUser]]),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([[mockSocket, spaceUser]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
                     _localWatchers: new Set<string>(),
                     localName: "test",
                     forwarder: mockForwarder,
@@ -812,7 +871,7 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch = vi.fn();
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
                         emitInBatch: mockEmitInBatch,
@@ -829,8 +888,8 @@ describe("SpaceToFrontDispatcher", () => {
                         ["foo_1", spaceUser],
                         ["foo_2", spaceUser2],
                     ]),
-                    _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([[mockSocket, spaceUser]]),
+                    _localConnectedUser: new Map<string, PusherWebSocket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([[mockSocket, spaceUser]]),
                     _localWatchers: new Set<string>(),
                     localName: "test",
                     forwarder: mockForwarder,
@@ -887,21 +946,21 @@ describe("SpaceToFrontDispatcher", () => {
 
                 const mockEmitInBatch3 = vi.fn();
 
-                const mockSocket = mock<Socket>({
+                const mockSocket = mock<PusherWebSocket>({
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser,
                         emitInBatch: mockEmitInBatch,
                     }),
                 });
 
-                const mockSocket2 = mock<Socket>({
+                const mockSocket2 = mock<PusherWebSocket>({
+                    emitInBatch: mockEmitInBatch2,
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser2,
-                        emitInBatch: mockEmitInBatch2,
                     }),
                 });
 
-                const mockSocket3 = mock<Socket>({
+                const mockSocket3 = mock<PusherWebSocket>({
                     getUserData: vi.fn().mockReturnValue({
                         spaceUser: spaceUser2,
                         emitInBatch: mockEmitInBatch3,
@@ -919,12 +978,12 @@ describe("SpaceToFrontDispatcher", () => {
                         ["foo_2", spaceUser2],
                         ["foo_3", spaceUser3],
                     ]),
-                    _localConnectedUser: new Map<string, Socket>([
+                    _localConnectedUser: new Map<string, PusherWebSocket>([
                         ["foo_1", mockSocket],
                         ["foo_2", mockSocket2],
                         ["foo_3", mockSocket3],
                     ]),
-                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([
+                    _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([
                         [mockSocket, spaceUser],
                         [mockSocket2, spaceUser2],
                         [mockSocket3, spaceUser3],
@@ -1002,17 +1061,17 @@ describe("SpaceToFrontDispatcher", () => {
 
             const mockEmitInBatch2 = vi.fn();
 
-            const mockSocket = mock<Socket>({
+            const mockSocket = mock<PusherWebSocket>({
+                emitInBatch: mockEmitInBatch,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser,
-                    emitInBatch: mockEmitInBatch,
                 }),
             });
 
-            const mockSocket2 = mock<Socket>({
+            const mockSocket2 = mock<PusherWebSocket>({
+                emitInBatch: mockEmitInBatch2,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser2,
-                    emitInBatch: mockEmitInBatch2,
                 }),
             });
 
@@ -1022,11 +1081,11 @@ describe("SpaceToFrontDispatcher", () => {
                     ["foo_1", spaceUser],
                     ["foo_2", spaceUser2],
                 ]),
-                _localConnectedUser: new Map<string, Socket>([
+                _localConnectedUser: new Map<string, PusherWebSocket>([
                     ["foo_1", mockSocket],
                     ["foo_2", mockSocket2],
                 ]),
-                _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([
+                _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([
                     [mockSocket, spaceUser],
                     [mockSocket2, spaceUser2],
                 ]),
@@ -1091,17 +1150,17 @@ describe("SpaceToFrontDispatcher", () => {
 
             const mockEmitInBatch2 = vi.fn();
 
-            const mockSocket = mock<Socket>({
+            const mockSocket = mock<PusherWebSocket>({
+                emitInBatch: mockEmitInBatch,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser,
-                    emitInBatch: mockEmitInBatch,
                 }),
             });
 
-            const mockSocket2 = mock<Socket>({
+            const mockSocket2 = mock<PusherWebSocket>({
+                emitInBatch: mockEmitInBatch2,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser2,
-                    emitInBatch: mockEmitInBatch2,
                 }),
             });
 
@@ -1111,11 +1170,11 @@ describe("SpaceToFrontDispatcher", () => {
                     ["foo_1", spaceUser],
                     ["foo_2", spaceUser2],
                 ]),
-                _localConnectedUser: new Map<string, Socket>([
+                _localConnectedUser: new Map<string, PusherWebSocket>([
                     ["foo_1", mockSocket],
                     ["foo_2", mockSocket2],
                 ]),
-                _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>([
+                _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>([
                     [mockSocket, spaceUser],
                     [mockSocket2, spaceUser2],
                 ]),
@@ -1160,17 +1219,17 @@ describe("SpaceToFrontDispatcher", () => {
 
             const mockEmitInBatch2 = vi.fn();
 
-            const mockSocket = mock<Socket>({
+            const mockSocket = mock<PusherWebSocket>({
+                emitInBatch: mockEmitInBatch,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser,
-                    emitInBatch: mockEmitInBatch,
                 }),
             });
 
-            const mockSocket2 = mock<Socket>({
+            const mockSocket2 = mock<PusherWebSocket>({
+                emitInBatch: mockEmitInBatch2,
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: spaceUser2,
-                    emitInBatch: mockEmitInBatch2,
                 }),
             });
 
@@ -1180,7 +1239,7 @@ describe("SpaceToFrontDispatcher", () => {
                     ["foo_1", spaceUser],
                     ["foo_2", spaceUser2],
                 ]),
-                _localConnectedUser: new Map<string, Socket>([
+                _localConnectedUser: new Map<string, PusherWebSocket>([
                     ["foo_1", mockSocket],
                     ["foo_2", mockSocket2],
                 ]),

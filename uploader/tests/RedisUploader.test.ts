@@ -1,19 +1,21 @@
 // import App from "../src/App";
-import {ChildProcess} from "child_process"
+import type {ChildProcess} from "child_process"
 import axios from "axios";
-import {StartedTestContainer} from "testcontainers";
+import type {StartedTestContainer} from "testcontainers";
 import {createClient} from "redis";
 import {describe, expect, vi, it, beforeAll, afterAll} from 'vitest';
 import {PLAY_URL} from "../src/Enum/EnvironmentVariable";
 import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {uploadFile} from "./utils/uploadFile";
 import {download} from "./utils/download";
-import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
+import type {UploadedFileResponse} from "./UploaderTestCommon";
+import {uploadHtmlFileTest, uploadMultipleFilesTest, uploadSingleFileTest, XSS_PAYLOAD} from "./UploaderTestCommon";
 import {RedisContainer} from "./utils/RedisContainer";
 import isPortReachable from "./utils/isPortReachable";
-import startTestServer from "./startTestServer";
+import startTestServer, {stopTestServer} from "./startTestServer";
 
 const APP_PORT = 7373
+const UPLOAD_MAX_FILESIZE = 1024
 
 vi.mock('../src/Enum/EnvironmentVariable', () => ({
     get PLAY_URL() {
@@ -41,6 +43,7 @@ describe("Redis Uploader tests", () => {
             AWS_BUCKET: "",
             AWS_ENDPOINT: "",
             ENABLE_CHAT_UPLOAD: "true",
+            UPLOAD_MAX_FILESIZE: UPLOAD_MAX_FILESIZE.toString(),
             UPLOADER_URL: UPLOADER_URL,
             PLAY_URL: PLAY_URL
          })
@@ -48,16 +51,7 @@ describe("Redis Uploader tests", () => {
     })
 
     afterAll(async ()=> {
-        if (server) {
-            const serverToKill = server;
-            const promise = new Promise(resolve => {
-                serverToKill.on("exit", ()=> {
-                    resolve(0)
-                })
-            });
-            serverToKill.kill("SIGKILL")
-            await promise;
-        }
+        await stopTestServer(server)
         await redisContainer?.stop()
     })
 
@@ -88,9 +82,62 @@ describe("Redis Uploader tests", () => {
         await uploadMultipleFilesTest(UPLOADER_URL);
     })
 
+    it("should not serve an uploaded html file as html", async ()=> {
+        const data = await uploadHtmlFileTest(UPLOADER_URL);
+
+        const downloadResponse = await axios.get<string>(data.location)
+        expect(downloadResponse.headers["x-content-type-options"]).toEqual("nosniff")
+        expect(downloadResponse.headers["content-security-policy"]).toContain("sandbox")
+    })
+
+    it("should not let the uploaded file name dictate the stored extension", async ()=> {
+        const response = await uploadFile<UploadedFileResponse[]>(
+            `${UPLOADER_URL}/upload-file`,
+            [{name: "poc.html/../../evil", contents: XSS_PAYLOAD}]
+        );
+
+        // No usable extension in the file name: the id is a bare uuid.
+        expect(response.data[0].id).not.toContain(".")
+        expect(response.data[0].id).not.toContain("/")
+    })
+
+    it("should refuse a file bigger than the limit", async ()=> {
+        const tooBig = "a".repeat(UPLOAD_MAX_FILESIZE + 1);
+
+        const response = await uploadFile(
+            `${UPLOADER_URL}/upload-file`,
+            [{name: "too-big.txt", contents: tooBig}],
+            {validateStatus: () => true}
+        );
+
+        expect(response.status).toBe(413)
+    })
+
+    it("should refuse an audio message bigger than the limit", async ()=> {
+        const tooBig = "a".repeat(UPLOAD_MAX_FILESIZE + 1);
+
+        const response = await uploadFile(
+            `${UPLOADER_URL}/upload-audio-message`,
+            [{name: "too-big.mp3", contents: tooBig}],
+            {validateStatus: () => true}
+        );
+
+        expect(response.status).toBe(413)
+    })
+
+    it("should not expose a route to delete a file", async ()=> {
+        const responseData = await uploadSingleFileTest(UPLOADER_URL);
+
+        const response = await axios.delete(`${UPLOADER_URL}/upload-file/${responseData.id}`,
+            {validateStatus: () => true})
+
+        expect(response.status).toBe(404)
+        // The file is still there.
+        expect(await download(responseData.location)).toEqual("file contents")
+    })
 
     it("should upload and download audio message file to redis", async ()=> {
-        const uploadResponse = await uploadFile(
+        const uploadResponse = await uploadFile<UploadedFileResponse>(
             `${UPLOADER_URL}/upload-audio-message`,
             [{name: "temp-server.txt", contents: "temp file contents"}]);
 

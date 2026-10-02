@@ -1,10 +1,5 @@
 import { v4 as uuid } from "uuid";
-import {
-    type PlayerMessageType,
-    type MessageReferenceEvent,
-    type TriggerPlayerMessageEvent,
-    triggerPlayerMessage,
-} from "../../Events/Ui/TriggerPlayerMessageEvent";
+import { type PlayerMessageType, triggerPlayerMessage } from "../../Events/Ui/TriggerPlayerMessageEvent";
 import { removePlayerMessage } from "../../Events/Ui/TriggerPlayerMessageEvent";
 import { queryWorkadventure } from "../IframeApiContribution";
 import type { PlayerMessageOptions } from "../ui";
@@ -15,7 +10,10 @@ export class PlayerMessage {
     private readonly message: string;
     private readonly callback: () => void;
 
-    constructor(playerMessageOptions: PlayerMessageOptions, private onRemove: () => void) {
+    constructor(
+        playerMessageOptions: PlayerMessageOptions,
+        private onRemove: () => void,
+    ) {
         this.uuid = uuid();
         this.message = playerMessageOptions.message;
         this.type = playerMessageOptions.type ?? "message";
@@ -30,7 +28,7 @@ export class PlayerMessage {
                 message: this.message,
                 type: this.type,
                 uuid: this.uuid,
-            } as TriggerPlayerMessageEvent,
+            },
         });
     }
 
@@ -39,7 +37,7 @@ export class PlayerMessage {
             type: removePlayerMessage,
             data: {
                 uuid: this.uuid,
-            } as MessageReferenceEvent,
+            },
         });
         this.onRemove();
     }

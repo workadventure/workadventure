@@ -8,7 +8,10 @@ import type { RoomConnection } from "../../../../../Connection/RoomConnection";
  * Represents a front command for updating WAM metadata.
  */
 export class UpdateWAMMetadataFrontCommand extends Command implements FrontCommandInterface {
-    constructor(private readonly modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage, commandId?: string) {
+    constructor(
+        private readonly modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage,
+        commandId?: string,
+    ) {
         super(commandId);
     }
 

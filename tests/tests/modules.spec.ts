@@ -2,12 +2,13 @@ import { test } from "@playwright/test";
 import { assertLogMessage, startRecordLogs } from "./utils/log";
 import { getPage } from "./utils/auth";
 import { publicTestMapUrl } from "./utils/urls";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.describe("Module @nomobile", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
+
     test("loading should work out of the box", async ({ browser }, { project }) => {
         await using page = await getPage(
             browser,

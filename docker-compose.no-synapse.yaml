@@ -1,4 +1,3 @@
-version: "3.6"
 services:
   # disables the Synapse service
   # use with command:

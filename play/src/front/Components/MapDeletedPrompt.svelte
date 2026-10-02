@@ -38,7 +38,7 @@
     </div>
 </main>
 
-<style lang="scss">
+<style>
     main.mapDeletedScreen {
         min-width: 300px;
         z-index: 700;

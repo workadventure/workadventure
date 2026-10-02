@@ -2,11 +2,18 @@
     /* eslint no-undef: 0 */
     import { onDestroy, onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
-    import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
-    import AwaitLoaderPlugin from "phaser3-rex-plugins/plugins/awaitloader-plugin.js";
-    import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+    import * as Phaser from "phaser";
+    import "phaser4-rex-plugins/plugins/awaitloader.js";
+    import AwaitLoaderPlugin from "phaser4-rex-plugins/plugins/awaitloader-plugin.js";
+    import OutlineFilterPlugin from "phaser4-rex-plugins/plugins/outlinefilter-plugin.js";
     import type { Unsubscriber } from "svelte/store";
-    import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE } from "../Enum/EnvironmentVariable";
+    import {
+        DEBUG_MODE,
+        SENTRY_DSN_FRONT,
+        SENTRY_ENVIRONMENT,
+        SENTRY_RELEASE,
+        SENTRY_TRACES_SAMPLE_RATE,
+    } from "../Enum/EnvironmentVariable";
     import { HdpiManager } from "../Phaser/Services/HdpiManager";
     import { EntryScene } from "../Phaser/Login/EntryScene";
     import { LoginScene } from "../Phaser/Login/LoginScene";
@@ -18,6 +25,7 @@
     import { ErrorScene } from "../Phaser/Reconnecting/ErrorScene";
     import { Game } from "../Phaser/Game/Game";
     import { waScaleManager } from "../Phaser/Services/WaScaleManager";
+    import { startBackgroundBootPump } from "../Phaser/Services/BackgroundBootPump";
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
@@ -25,18 +33,19 @@
     import { urlManager } from "../Url/UrlManager";
     import { FileListener } from "../Phaser/FileUpload/FileListener";
     import { isStructuredCloneSupported } from "../Utils/BrowserCompatibility";
+    import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BrowserNotSupported from "./BrowserNotSupported/BrowserNotSupported.svelte";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-    let game: Game;
-    let gameDiv: HTMLDivElement;
-    let activeCowebsite = $coWebsites[0];
-    let gameContainer: HTMLDivElement;
+    let game: Game | undefined = $state();
+    let gameDiv: HTMLDivElement | undefined = $state();
+    let activeCowebsite = $state($coWebsites[0]);
+    let gameContainer: HTMLDivElement | undefined = $state();
     let canvas: HTMLCanvasElement;
     let handleCanvasClick: () => void;
-    let browserNotSupported = false;
+    let browserNotSupported = $state(false);
 
     onMount(() => {
         // Check browser compatibility before initializing the app
@@ -50,11 +59,21 @@
                     dsn: SENTRY_DSN_FRONT,
                     release: SENTRY_RELEASE,
                     environment: SENTRY_ENVIRONMENT,
-                    integrations: [Sentry.browserTracingIntegration()],
-                    // Set tracesSampleRate to 1.0 to capture 100%
-                    // of transactions for performance monitoring.
-                    // We recommend adjusting this value in production
-                    tracesSampleRate: 0.2,
+                    // Keep Sentry's default `browserApiErrors` integration but disable its
+                    // requestAnimationFrame wrapping: it re-wraps the rAF callback on every frame,
+                    // a measurable steady-state main-thread cost in a real-time/game app that runs
+                    // a rAF loop continuously. The other wrapped APIs (setTimeout/setInterval/
+                    // addEventListener/XHR) fire far less often and keep their instrumentation.
+                    integrations: (defaultIntegrations) =>
+                        defaultIntegrations
+                            .filter((integration) => integration.name !== "BrowserApiErrors")
+                            .concat(
+                                Sentry.browserApiErrorsIntegration({ requestAnimationFrame: false }),
+                                Sentry.browserTracingIntegration(),
+                            ),
+                    // Sample rate for performance tracing; configurable via env (default 0.2).
+                    // Set to 1.0 to capture 100% of transactions.
+                    tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE ?? 0.2,
                     attachStacktrace: true,
                 };
 
@@ -123,6 +142,10 @@
         const hdpiManager = new HdpiManager(640 * 480, 196 * 196);
         const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({ width, height });
 
+        if (!gameDiv) {
+            return;
+        }
+
         const config: Phaser.Types.Core.GameConfig = {
             type: mode,
             title: "WorkAdventure",
@@ -159,11 +182,6 @@
             plugins: {
                 global: [
                     {
-                        key: "rexWebFontLoader",
-                        plugin: WebFontLoaderPlugin,
-                        start: true,
-                    },
-                    {
                         key: "rexAwaitLoader",
                         plugin: AwaitLoaderPlugin,
                         start: true,
@@ -180,10 +198,10 @@
             powerPreference: "low-power",
             callbacks: {
                 postBoot: (game) => {
-                    // Install rexOutlinePipeline only if the renderer is WebGL.
+                    // Install rexOutlineFilter only if the renderer is WebGL.
                     const renderer = game.renderer;
                     if (renderer instanceof WebGLRenderer) {
-                        game.plugins.install("rexOutlinePipeline", OutlinePipelinePlugin, true);
+                        game.plugins.install("rexOutlineFilter", OutlineFilterPlugin, true);
                     }
                 },
             },
@@ -191,6 +209,8 @@
         };
 
         game = new Game(config);
+
+        stopBootPump = startBackgroundBootPump(game);
 
         waScaleManager.setGame(game);
 
@@ -214,22 +234,27 @@
         desktopApi.init();
     });
 
-    $: if ($coWebsites.length > 0) {
-        activeCowebsite = $coWebsites[0];
-    }
+    $effect(() => {
+        if ($coWebsites.length > 0) {
+            activeCowebsite = $coWebsites[0];
+        }
+    });
 
     function closeCoWebsiteFullScreen() {
-        gameContainer.classList.remove("hidden");
+        gameContainer?.classList.remove("hidden");
         coWebsites.remove(activeCowebsite);
     }
 
-    $: if ($fullScreenCowebsite && $coWebsites.length < 1) {
-        closeCoWebsiteFullScreen();
-    }
+    $effect(() => {
+        if ($fullScreenCowebsite && $coWebsites.length < 1) {
+            closeCoWebsiteFullScreen();
+        }
+    });
 
     //$: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
 
     let canvasSizeUnsubscriber: Unsubscriber;
+    let stopBootPump: (() => void) | undefined;
     onMount(() => {
         canvasSizeUnsubscriber = canvasSize.subscribe(({ width, height }) => {
             if (width < 1 || height < 1) {
@@ -242,6 +267,7 @@
 
     onDestroy(() => {
         canvasSizeUnsubscriber?.();
+        stopBootPump?.();
         if (canvas && handleCanvasClick) {
             canvas.removeEventListener("click", handleCanvasClick);
         }
@@ -258,10 +284,13 @@
     >
         <div
             id="game"
-            class="relative flex-1 overflow-hidden {$fullScreenCowebsite ? 'hidden' : ''}"
+            class="relative {$fullScreenCowebsite ? 'hidden' : ''}"
+            class:game-scene-loaded={$gameSceneIsLoadedStore}
             bind:this={gameDiv}
         >
-            <GameOverlay {game} />
+            {#if game}
+                <GameOverlay {game} />
+            {/if}
         </div>
         {#if $coWebsites.length > 0}
             <div class="flex-1">

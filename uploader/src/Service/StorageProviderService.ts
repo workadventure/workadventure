@@ -1,4 +1,4 @@
-import {StorageProvider} from "./StorageProvider";
+import type {StorageProvider} from "./StorageProvider";
 import {s3StorageProvider} from "./S3StorageProvider";
 import {redisStorageProvider} from "./RedisStorageProvider";
 import {NullStorageProvider} from "./NullStorageProvider";

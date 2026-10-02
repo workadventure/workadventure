@@ -11,7 +11,7 @@ export class UploadEntityFrontCommand extends UploadEntityCommand implements Fro
     constructor(
         uploadEntityMessage: UploadEntityMessage,
         private entitiesManager: EntitiesManager,
-        private entitiesCollectionManager: EntitiesCollectionsManager
+        private entitiesCollectionManager: EntitiesCollectionsManager,
     ) {
         super(uploadEntityMessage);
     }
@@ -43,7 +43,7 @@ export class UploadEntityFrontCommand extends UploadEntityCommand implements Fro
             { id: this.uploadEntityMessage.id },
             gameManager.getCurrentGameScene().getGameMap().getWamFile(),
             this.entitiesManager,
-            this.entitiesCollectionManager
+            this.entitiesCollectionManager,
         );
     }
 }

@@ -4,7 +4,11 @@
     import LL from "../../../../../i18n/i18n-svelte";
     import { IconInbox } from "@wa-icons";
 
-    export let content: Readable<ChatMessageContent>;
+    interface Props {
+        content: Readable<ChatMessageContent>;
+    }
+
+    let { content }: Props = $props();
 </script>
 
 {#if $content.mediaState === "loading"}

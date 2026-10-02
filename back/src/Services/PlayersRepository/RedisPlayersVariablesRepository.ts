@@ -38,11 +38,11 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
             if (isPublicStr === undefined || value === undefined) {
                 console.error(
                     'Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: ',
-                    entry[1]
+                    entry[1],
                 );
                 Sentry.captureException(
                     `Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: 
-                    ${entry[1]}`
+                    ${entry[1]}`,
                 );
                 continue;
             }
@@ -102,7 +102,7 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
         value: string,
         isPublic: boolean,
         expire?: number,
-        maxExpire?: number
+        maxExpire?: number,
     ): Promise<void> {
         // The value is passed to JSON.stringify client side. If value is "undefined", JSON.stringify returns "undefined"
         // which is translated to empty string when fetching the value in the pusher.

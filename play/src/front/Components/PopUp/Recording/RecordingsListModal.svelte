@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { NonUndefinedFields, Recording } from "@workadventure/messages";
     import type { GameScene } from "../../../Phaser/Game/GameScene";
     import PopUpContainer from "../PopUpContainer.svelte";
@@ -13,13 +13,14 @@
     import { VideoCoWebsite } from "../../../WebRtc/CoWebsite/VideoCoWebsite";
     import DownloadIcon from "../../Icons/DownloadIcon.svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import Button from "../../UI/Button.svelte";
     import { IconRefresh, IconTrash, IconCamera, IconLayoutGrid, IconList, IconPlayFilled, IconDots } from "@wa-icons";
 
     const connection: GameScene["connection"] = gameManager.getCurrentGameScene().connection;
 
     type ViewMode = "list" | "card";
 
-    let viewMode: ViewMode = "list";
+    let viewMode: ViewMode = "card";
     let recordings: NonUndefinedFields<Recording>[] = [];
     let isLoading: boolean = false;
     let isError: boolean = false;
@@ -34,8 +35,13 @@
     }
 
     let hoveredRecordIndex: number = -1;
-    let thumbnailIndex: number = 1;
+    let thumbnailIndex: number = 0;
     let thumbnailInterval: number | null = null;
+    /** Signed thumbnail URLs of the recording being hovered, empty while they load. */
+    let hoveredThumbnails: string[] = [];
+    /** Thumbnails are fetched per recording, on hover: keep them for as long as the modal is open. */
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity
+    const thumbnailsRequests = new Map<string, Promise<string[]>>();
 
     /** Card mode: filename of the card showing the actions panel (download/delete), or null */
     let actionsCardFilename: string | null = null;
@@ -84,7 +90,7 @@
                 new URL(signedUrl),
                 filename,
                 50, // 50% width
-                true // closable
+                true, // closable
             );
             coWebsites.add(videoCoWebsite);
         } catch (error) {
@@ -119,6 +125,8 @@
 
     async function queryRecordings(): Promise<void> {
         isLoading = true;
+        // The signed URLs these hold expire after an hour.
+        thumbnailsRequests.clear();
         if (!connection) return;
         try {
             const recordingsAnswer = await connection.queryRecordings();
@@ -132,14 +140,41 @@
         }
     }
 
-    function startThumbnailCycle(recordIndex: number, thumbnails: NonUndefinedFields<Recording>["thumbnails"]): void {
-        if (thumbnails.length <= 2) return;
+    /**
+     * The list only carries one poster per recording, so the frames of the hover preview are fetched
+     * for that recording only, the first time it is hovered.
+     */
+    function loadThumbnails(baseFilename: string): Promise<string[]> {
+        let request = thumbnailsRequests.get(baseFilename);
+        if (!request) {
+            request = (connection?.queryRecordingThumbnails(baseFilename) ?? Promise.resolve([])).catch((error) => {
+                console.error("Failed to query recording thumbnails:", error);
+                // Let a later hover try again.
+                thumbnailsRequests.delete(baseFilename);
+                return [];
+            });
+            thumbnailsRequests.set(baseFilename, request);
+        }
+        return request;
+    }
 
+    async function startThumbnailCycle(recordIndex: number, record: NonUndefinedFields<Recording>): Promise<void> {
         hoveredRecordIndex = recordIndex;
-        thumbnailIndex = 1;
+        thumbnailIndex = 0;
+        hoveredThumbnails = [];
 
+        const urls = await loadThumbnails(record.baseFilename);
+
+        // The pointer may have left, or moved to another recording, while the thumbnails were loading.
+        if (hoveredRecordIndex !== recordIndex || urls.length <= 1) return;
+
+        hoveredThumbnails = urls;
+        // Hovering the same recording twice while it loads resolves both calls: never leak the first interval.
+        if (thumbnailInterval) {
+            clearInterval(thumbnailInterval);
+        }
         thumbnailInterval = window.setInterval(() => {
-            thumbnailIndex = (thumbnailIndex + 1) % thumbnails.length || 1;
+            thumbnailIndex = (thumbnailIndex + 1) % urls.length;
         }, 650);
     }
 
@@ -149,7 +184,21 @@
             thumbnailInterval = null;
         }
         hoveredRecordIndex = -1;
-        thumbnailIndex = 1;
+        thumbnailIndex = 0;
+        hoveredThumbnails = [];
+    }
+
+    function thumbnailSrc(
+        record: NonUndefinedFields<Recording>,
+        isHovered: boolean,
+        index: number,
+        thumbnails: string[],
+    ): string | undefined {
+        if (isHovered && thumbnails.length > 0) {
+            return thumbnails[index];
+        }
+        // Recordings whose thumbnails failed to generate have no poster.
+        return record.posterUrl || undefined;
     }
 
     function getDaysUntilExpiration(filename: string): number | null {
@@ -160,6 +209,7 @@
         }
 
         const recordingDate = new Date(dateMatch[1]);
+        // eslint-disable-next-line svelte/prefer-svelte-reactivity
         const expirationDate = new Date(recordingDate);
         expirationDate.setMonth(expirationDate.getMonth() + 3);
 
@@ -170,17 +220,14 @@
         return daysRemaining;
     }
 
-    /** Return expiration date (recording + 3 months) or null */
-    function getExpirationDate(filename: string): Date | null {
+    function formatExpirationDate(filename: string): string {
         const dateMatch = filename.match(/recording-(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/);
-        if (!dateMatch) return null;
+        if (!dateMatch) return "";
+
+        // eslint-disable-next-line svelte/prefer-svelte-reactivity
         const d = new Date(dateMatch[1]);
         d.setMonth(d.getMonth() + 3);
-        return d;
-    }
 
-    function formatExpirationDate(filename: string): string {
-        const d = getExpirationDate(filename);
         if (!d) return "";
         return d.toLocaleDateString(undefined, {
             day: "numeric",
@@ -202,6 +249,9 @@
             minute: "2-digit",
         });
     }
+
+    // The modal can be closed while a thumbnail cycle is running.
+    onDestroy(stopThumbnailCycle);
 
     onMount(async () => {
         try {
@@ -226,7 +276,7 @@
                         <button
                             type="button"
                             class="inline-flex cursor-pointer items-center justify-center rounded border border-white/20 bg-white/5 p-2 h-12 w-12 text-inherit transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-                            on:click={() => setViewMode(viewMode === "list" ? "card" : "list")}
+                            onclick={() => setViewMode(viewMode === "list" ? "card" : "list")}
                             title={viewMode === "list" ? $LL.recording.viewCards() : $LL.recording.viewList()}
                             aria-label={viewMode === "list" ? $LL.recording.viewCards() : $LL.recording.viewList()}
                         >
@@ -238,14 +288,14 @@
                         </button>
                         <button
                             class="inline-flex cursor-pointer items-center justify-center rounded border border-white/20 bg-white/5 h-12 w-12 text-inherit transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-                            on:click={() => queryRecordings()}
+                            onclick={() => queryRecordings()}
                             title={$LL.recording.refresh()}
                         >
                             <IconRefresh />
                             <span class="sr-only">{$LL.recording.refresh()}</span>
                         </button>
                     </div>
-                    <ButtonClose dataTestId="close-recording-modal" on:click={() => close()} />
+                    <ButtonClose dataTestId="close-recording-modal" onclick={() => close()} />
                 </div>
             </div>
 
@@ -263,9 +313,9 @@
                             !
                         </div>
                         <p class="m-0 text-[0.9375rem] text-red-300">{$LL.recording.errorFetchingRecordings()}</p>
-                        <button class="btn btn-secondary btn-sm" on:click={() => queryRecordings()}>
+                        <Button variant="secondary" size="sm" onclick={() => queryRecordings()}>
                             {$LL.recording.refresh()}
-                        </button>
+                        </Button>
                     </div>
                 {:else if recordings.length === 0}
                     <div class="flex flex-col items-center justify-center gap-3 py-8 px-4 text-center">
@@ -283,46 +333,54 @@
                             {@const days = getDaysUntilExpiration(record.videoFile.filename)}
                             {@const expiryDateStr = formatExpirationDate(record.videoFile.filename)}
                             <li class="flex min-h-20 items-stretch gap-2 my-1">
-                                <button
-                                    type="button"
-                                    class="group flex min-w-0 flex-1 cursor-pointer items-stretch gap-3 overflow-hidden rounded border-none bg-white/[0.06] p-0 m-0 text-left text-inherit transition-all hover:-translate-y-px hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
-                                    on:mouseenter={() => startThumbnailCycle(index, record.thumbnails)}
-                                    on:mouseleave={stopThumbnailCycle}
-                                    on:click={() =>
-                                        openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
-                                    data-testid="recording-item-{index}"
+                                <div
+                                    role="presentation"
+                                    class="group flex min-w-0 flex-1 items-stretch gap-3 overflow-hidden rounded border-none bg-white/[0.06] p-0 m-0 text-left text-inherit transition-all hover:-translate-y-px hover:bg-white/10"
+                                    onmouseenter={() => startThumbnailCycle(index, record)}
+                                    onmouseleave={stopThumbnailCycle}
                                 >
-                                    <span
-                                        class="relative w-40 min-w-40 shrink-0 overflow-hidden rounded bg-black/30 aspect-video"
+                                    <button
+                                        type="button"
+                                        class="flex min-w-0 flex-1 cursor-pointer items-stretch gap-3 border-none bg-transparent p-0 m-0 text-left text-inherit focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+                                        onclick={() =>
+                                            openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
+                                        data-testid="recording-item-{index}"
                                     >
-                                        <img
-                                            class="absolute inset-0 h-full w-full object-cover"
-                                            src={hoveredRecordIndex === index
-                                                ? record.thumbnails[thumbnailIndex]?.url
-                                                : record.thumbnails[1]?.url}
-                                            alt=""
-                                        />
                                         <span
-                                            class="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                                            aria-hidden="true"
+                                            class="relative block w-40 min-w-40 shrink-0 self-center overflow-hidden rounded bg-black/30 aspect-video"
                                         >
-                                            <IconPlayFilled class="h-6 w-6" />
-                                        </span>
-                                    </span>
-                                    <span class="flex min-w-0 flex-1 flex-col justify-center gap-1 py-3 pr-2 pl-0">
-                                        <span class="text-[0.9375rem] font-semibold leading-tight"
-                                            >{formatRecordingDate(record.videoFile.filename)}</span
-                                        >
-                                        {#if days !== null && expiryDateStr}
-                                            <span class="text-xs text-white/60">
-                                                {$LL.recording.expireIn({
-                                                    days,
-                                                    s: days !== 1 ? "s" : "",
-                                                })}
-                                                · {$LL.recording.expiresOn({ date: expiryDateStr })}
+                                            <img
+                                                class="absolute inset-0 h-full w-full object-cover"
+                                                src={thumbnailSrc(
+                                                    record,
+                                                    hoveredRecordIndex === index,
+                                                    thumbnailIndex,
+                                                    hoveredThumbnails,
+                                                )}
+                                                alt=""
+                                            />
+                                            <span
+                                                class="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                                aria-hidden="true"
+                                            >
+                                                <IconPlayFilled class="h-6 w-6" />
                                             </span>
-                                        {/if}
-                                    </span>
+                                        </span>
+                                        <span class="flex min-w-0 flex-1 flex-col justify-center gap-1 py-3 pr-2 pl-0">
+                                            <span class="text-[0.9375rem] font-semibold leading-tight">
+                                                {formatRecordingDate(record.videoFile.filename)}
+                                            </span>
+                                            {#if days !== null && expiryDateStr}
+                                                <span class="text-xs text-white/60">
+                                                    {$LL.recording.expireIn({
+                                                        days,
+                                                        s: days !== 1 ? "s" : "",
+                                                    })}
+                                                    · {$LL.recording.expiresOn({ date: expiryDateStr })}
+                                                </span>
+                                            {/if}
+                                        </span>
+                                    </button>
                                     <div
                                         class="flex shrink-0 items-center gap-1 self-center rounded border hover:border-white/20 hover:bg-white/5 p-1 mr-2"
                                         role="group"
@@ -332,9 +390,9 @@
                                             type="button"
                                             class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border-none bg-transparent p-0 text-white/70 transition-colors hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
                                             data-testid="recording-download-{index}"
-                                            on:click={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
+                                            onclick={(event) => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
                                                 downloadRecording(record).catch((error) => {
                                                     console.error("Failed to download recording:", error);
                                                 });
@@ -348,9 +406,9 @@
                                             type="button"
                                             class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border-none bg-transparent p-0 text-red-400/90 transition-colors hover:bg-red-500/20 hover:text-red-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
                                             data-testid="recording-delete-{index}"
-                                            on:click={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
+                                            onclick={(event) => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
                                                 handleDelete(record).catch((error) => {
                                                     console.error("Failed to delete recording:", error);
                                                 });
@@ -361,7 +419,7 @@
                                             <IconTrash class="h-4 w-4" />
                                         </button>
                                     </div>
-                                </button>
+                                </div>
                             </li>
                         {/each}
                     </ul>
@@ -383,7 +441,7 @@
                                             type="button"
                                             class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border-none bg-white/15 py-2.5 px-3 text-sm font-medium text-inherit transition-colors hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
                                             data-testid="recording-download-{index}"
-                                            on:click={() =>
+                                            onclick={() =>
                                                 downloadRecording(record).catch((error) => {
                                                     console.error("Failed to download recording:", error);
                                                 })}
@@ -395,7 +453,7 @@
                                             type="button"
                                             class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border-none bg-red-500/20 py-2.5 px-3 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
                                             data-testid="recording-delete-{index}"
-                                            on:click={() => handleDelete(record)}
+                                            onclick={() => handleDelete(record)}
                                         >
                                             <IconTrash class="h-4 w-4" />
                                             {$LL.recording.contextMenu.delete()}
@@ -403,7 +461,7 @@
                                         <button
                                             type="button"
                                             class="mt-1 text-xs text-white/60 underline-offset-2 hover:text-white/80 hover:underline"
-                                            on:click={() => (actionsCardFilename = null)}
+                                            onclick={() => (actionsCardFilename = null)}
                                         >
                                             {$LL.recording.back()}
                                         </button>
@@ -412,9 +470,9 @@
                                     <button
                                         type="button"
                                         class="flex min-w-0 flex-1 cursor-pointer flex-col overflow-hidden rounded border-none bg-transparent p-0 m-0 text-left text-inherit focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
-                                        on:mouseenter={() => startThumbnailCycle(index, record.thumbnails)}
-                                        on:mouseleave={stopThumbnailCycle}
-                                        on:click={() =>
+                                        onmouseenter={() => startThumbnailCycle(index, record)}
+                                        onmouseleave={stopThumbnailCycle}
+                                        onclick={() =>
                                             openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
                                         data-testid="recording-item-{index}"
                                     >
@@ -423,9 +481,12 @@
                                         >
                                             <img
                                                 class="absolute inset-0 h-full w-full object-cover"
-                                                src={hoveredRecordIndex === index
-                                                    ? record.thumbnails[thumbnailIndex]?.url
-                                                    : record.thumbnails[1]?.url}
+                                                src={thumbnailSrc(
+                                                    record,
+                                                    hoveredRecordIndex === index,
+                                                    thumbnailIndex,
+                                                    hoveredThumbnails,
+                                                )}
                                                 alt=""
                                             />
                                             <span
@@ -453,7 +514,7 @@
                                     <button
                                         type="button"
                                         class="absolute top-2 right-2 z-10 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-white/20 bg-black/50 text-white/90 backdrop-blur-sm transition-colors hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-                                        on:click={(e) => {
+                                        onclick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
                                             actionsCardFilename = record.videoFile.filename;

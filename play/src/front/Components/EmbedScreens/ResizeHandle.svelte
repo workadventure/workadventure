@@ -2,11 +2,15 @@
     import { onDestroy, onMount } from "svelte";
     import LL from "../../../i18n/i18n-svelte";
 
-    export let minHeight: number;
-    export let maxHeight: number;
-    export let onResize: (height: number) => void;
-    export let onResizeEnd: () => void = () => {};
-    export let dataTestid: string = "resize-handle";
+    interface Props {
+        minHeight: number;
+        maxHeight: number;
+        onResize: (height: number) => void;
+        onResizeEnd: () => void;
+        dataTestid: string;
+    }
+
+    let { minHeight, maxHeight, onResize, onResizeEnd = () => {}, dataTestid = "resize-handle" }: Props = $props();
 
     let dragHandle: HTMLElement;
     let parentElement: HTMLElement;

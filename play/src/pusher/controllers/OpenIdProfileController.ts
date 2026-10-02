@@ -11,14 +11,14 @@ export class OpenIdProfileController extends BaseHttpController {
     routes(): void {
         this.app.get("/profile", async (req, res) => {
             debug(
-                `OpenIdProfileController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`
+                `OpenIdProfileController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`,
             );
             const query = validateQuery(
                 req,
                 res,
                 z.object({
                     accessToken: z.string(),
-                })
+                }),
             );
             if (query === undefined) {
                 return;
@@ -34,8 +34,8 @@ export class OpenIdProfileController extends BaseHttpController {
                     email as string | undefined,
                     name as string | undefined,
                     profile as string | undefined,
-                    tags as string[] | undefined
-                )
+                    tags as string[] | undefined,
+                ),
             );
             return;
         });
@@ -80,7 +80,7 @@ export class OpenIdProfileController extends BaseHttpController {
                                 ${
                                     tags != undefined
                                         ? `<p style="margin: 0;font-size: 12px;">Your access right:</p><p style="margin: 0 0 5px 0;font-weight: bold;">${tags?.join(
-                                              ", "
+                                              ", ",
                                           )}</p>`
                                         : ""
                                 }

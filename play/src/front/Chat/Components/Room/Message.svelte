@@ -1,15 +1,23 @@
 <script lang="ts">
-    import type { ComponentType } from "svelte";
-    import { createEventDispatcher } from "svelte";
-    import { derived } from "svelte/store";
+    import { derived, readable } from "svelte/store";
     import type { Readable } from "svelte/store";
-    import type { ChatMessage, ChatMessageType, ChatRoomMember } from "../../Connection/ChatConnection";
+    import type {
+        ChatMessage,
+        ChatMessageType,
+        ChatRoomMember,
+        ChatThreadSummary,
+    } from "../../Connection/ChatConnection";
+    import type { WorkAdventureComponent } from "../../../../types/component";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
+    import AvatarBox from "../../../Components/UI/Avatar.svelte";
     import Avatar from "../Avatar.svelte";
 
     import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
     import { getMatrixClientForChatTint } from "../../Utils";
-    import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
+    import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+    import { isThreadPanelEnabledStore, selectedThreadStore } from "../../Stores/SelectedThreadStore";
+    import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
     import MessageOptions from "./MessageOptions.svelte";
     import MessageImage from "./Message/MessageImage.svelte";
     import MessageText from "./Message/MessageText.svelte";
@@ -20,21 +28,31 @@
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
+    import Message from "./Message.svelte";
+    import ThreadSummary from "./ThreadSummary.svelte";
     import { IconTrash } from "@wa-icons";
 
-    export let message: ChatMessage;
-    export let replyDepth = 0;
-    export let showHeader = true;
-    /** Matrix rooms: member avatars follow Matrix profile (same pipeline as DM row / room list). */
-    export let membersForMessageAvatars: Readable<readonly ChatRoomMember[]> | undefined = undefined;
+    interface Props {
+        message: ChatMessage;
+        replyDepth?: number;
+        showHeader?: boolean;
+        /** Matrix rooms: member avatars follow Matrix profile (same pipeline as DM row / room list). */
+        membersForMessageAvatars?: Readable<readonly ChatRoomMember[]>;
+        /** Root message reply preview; hide inside an open thread timeline (main room only). */
+        showThreadSummary?: boolean;
+    }
 
-    let messageRef: HTMLDivElement | undefined;
+    let {
+        message,
+        replyDepth = 0,
+        showHeader = true,
+        membersForMessageAvatars = undefined,
+        showThreadSummary = true,
+    }: Props = $props();
 
-    const dispatch = createEventDispatcher<{
-        updateMessageBody: { id: string };
-    }>();
+    let messageRef: HTMLDivElement | undefined = $state();
 
-    const {
+    let {
         id,
         sender,
         isMyMessage,
@@ -46,48 +64,67 @@
         isDeleted,
         isModified,
         reactions,
-    } = message;
+    } = $derived(message);
 
-    const updateMessageBody = () => {
-        dispatch("updateMessageBody", {
-            id: message.id,
-        });
+    let messageFromSystem = $derived(type === "incoming" || type === "outcoming");
+
+    const messageType: { [key in ChatMessageType]: WorkAdventureComponent } = {
+        image: MessageImage,
+        text: MessageText,
+        file: MessageFile,
+        audio: MessageAudioFile,
+        video: MessageVideoFile,
+        incoming: MessageIncoming,
+        outcoming: MessageOutcoming,
+        proximity: MessageText,
     };
 
-    const messageFromSystem = type === "incoming" || type === "outcoming";
+    let reactionsWithUsers = $derived(
+        derived(
+            [reactions, ...Array.from(reactions.values()).map((reaction) => reaction.users)],
+            ([$reactions, ...$users]) => {
+                return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
+            },
+        ),
+    );
+    const emptyThreadSummary = readable<ChatThreadSummary | null>(null);
 
-    const messageType: { [key in ChatMessageType]: ComponentType } = {
-        image: MessageImage as ComponentType,
-        text: MessageText as ComponentType,
-        file: MessageFile as ComponentType,
-        audio: MessageAudioFile as ComponentType,
-        video: MessageVideoFile as ComponentType,
-        incoming: MessageIncoming as ComponentType,
-        outcoming: MessageOutcoming as ComponentType,
-        proximity: MessageText as ComponentType,
-    };
-
-    const reactionsWithUsers = derived(
-        [reactions, ...Array.from(reactions.values()).map((reaction) => reaction.users)],
-        ([$reactions, ...$users]) => {
-            return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
-        }
+    let messageSenderAvatarColor = $derived(
+        resolveChatUserColor(message.sender?.chatId ?? "", message.sender?.color, getMatrixClientForChatTint()),
     );
 
-    $: messageSenderAvatarColor = resolveChatUserColor(
-        message.sender?.chatId ?? "",
-        message.sender?.color,
-        getMatrixClientForChatTint()
-    );
-
-    $: roomMembersList = membersForMessageAvatars ? $membersForMessageAvatars : undefined;
-    $: memberForSender =
+    let roomMembersList = $derived(membersForMessageAvatars ? $membersForMessageAvatars : undefined);
+    let memberForSender = $derived(
         roomMembersList && message.sender?.chatId
             ? roomMembersList.find((m) => m.id === message.sender!.chatId)
-            : undefined;
-    $: messageAvatarPictureStore = memberForSender?.pictureStore ?? message.sender?.pictureStore;
-    $: waParensStore = memberForSender?.waDisplayNameIfDifferent;
-    $: waDisplayNameParens = waParensStore ? $waParensStore : undefined;
+            : undefined,
+    );
+    let messageAvatarPictureStore = $derived(memberForSender?.pictureStore ?? message.sender?.pictureStore);
+    let waParensStore = $derived(memberForSender?.waDisplayNameIfDifferent);
+    let waDisplayNameParens = $derived($waParensStore ? $waParensStore : undefined);
+    let threadSummary = $derived(message.threadSummary ?? emptyThreadSummary);
+    let hasThreadSummary = $derived(
+        showThreadSummary && replyDepth === 0 && !isQuotedMessage && !!$threadSummary && $threadSummary.replyCount > 0,
+    );
+
+    async function openThread() {
+        const thread = await message.openThread?.();
+        if (!thread) {
+            return;
+        }
+
+        selectedChatMessageToReply.set(null);
+
+        if ($isThreadPanelEnabledStore) {
+            selectedRoomStore.set(thread.parentRoom);
+            roomSidePanelStore.open("threads");
+            selectedThreadStore.set(thread);
+            return;
+        }
+
+        selectedThreadStore.clear();
+        selectedRoomStore.set(thread);
+    }
 </script>
 
 <div
@@ -107,14 +144,14 @@
             : 'justify-start pl-3'}"
     >
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showHeader}
-            <div class="avatar overflow-hidden mt-4 shrink-0">
+            <AvatarBox class="overflow-hidden mt-4 shrink-0">
                 <Avatar
                     compact
                     pictureStore={messageAvatarPictureStore}
                     fallbackName={sender?.username}
                     color={messageSenderAvatarColor}
                 />
-            </div>
+            </AvatarBox>
         {/if}
 
         <div class="flex flex-col justify-end max-w-full {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
@@ -168,7 +205,8 @@
                         </div>
                     {/if}
 
-                    <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
+                    {@const MessageComponent = messageType[type]}
+                    <MessageComponent {content} />
 
                     {#if $reactionsWithUsers.length > 0}
                         <MessageReactions
@@ -186,11 +224,7 @@
                 {#if quotedMessage && replyDepth < 1 && !$isDeleted}
                     <div class="p-1 opacity-80">
                         <div class="response bg-white/10 rounded">
-                            <svelte:self
-                                replyDepth={replyDepth + 1}
-                                message={quotedMessage}
-                                {membersForMessageAvatars}
-                            />
+                            <Message replyDepth={replyDepth + 1} message={quotedMessage} {membersForMessageAvatars} />
                         </div>
                     </div>
                 {/if}
@@ -201,8 +235,12 @@
                         ? 'right-2 bg-contrast/80'
                         : 'right-6 bg-secondary/80'}"
                 >
-                    <MessageOptions {message} {messageRef} />
+                    <MessageOptions {message} {messageRef} onOpenThread={openThread} />
                 </div>
+            {/if}
+
+            {#if hasThreadSummary && $threadSummary}
+                <ThreadSummary summary={$threadSummary} {openThread} />
             {/if}
         </div>
     </div>

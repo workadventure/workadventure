@@ -1,20 +1,24 @@
 <script lang="ts">
     import type { TodoTaskInterface } from "@workadventure/shared-utils";
-    export let task: TodoTaskInterface;
 
-    export let oddColor: string | boolean = "odd:bg-white/10";
-    export let evenColor: string | boolean = "even:bg-white/5";
+    interface Props {
+        task: TodoTaskInterface;
+        oddColor?: string | boolean;
+        evenColor?: string | boolean;
+    }
 
-    let opendDescription = false;
+    let { task, oddColor = "odd:bg-white/10", evenColor = "even:bg-white/5" }: Props = $props();
+
+    let opendDescription = $state(false);
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="flex flex-col text-left my-2 p-2 box-border hover:bg-white/15 transition-all {oddColor ?? ''} {evenColor ??
         ''} rounded-md"
     class:cursor-pointer={task.status == "completed"}
-    on:click={() => (opendDescription = !opendDescription)}
+    onclick={() => (opendDescription = !opendDescription)}
 >
     <p class="text-lg m-0 p-0" class:line-through={task.status === "completed" && !opendDescription}>
         <span class="font-bold">{task.title}</span>

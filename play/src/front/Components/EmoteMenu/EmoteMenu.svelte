@@ -7,13 +7,17 @@
     import { emoteMenuStore } from "../../Stores/EmoteStore";
     import { locale } from "../../../i18n/i18n-svelte";
 
-    export let onEmojiClick: (event: EmojiClickEvent) => void = () => {};
-    // onClose is triggered when the "Esc" key is pressed
-    export let onClose: () => void = () => {};
+    interface Props {
+        onEmojiClick: (event: EmojiClickEvent) => void;
+        // onClose is triggered when the "Esc" key is pressed
+        onClose: () => void;
+    }
+
+    let { onEmojiClick = () => {}, onClose = () => {} }: Props = $props();
 
     let emojiPicker: Picker;
 
-    const emojiClickEventHandler = onEmojiClick;
+    const emojiClickEventHandler = (event: EmojiClickEvent) => onEmojiClick(event);
 
     function loadLanguage(language: string, country: string) {
         switch (language) {
@@ -172,12 +176,12 @@
         }
     }
 
-    $: {
+    $effect(() => {
         const language = $locale.split("-")[0];
         const country = $locale.split("-")[1];
 
         loadLanguage(language, country);
-    }
+    });
 
     onMount(() => {
         emojiPicker.addEventListener("emoji-click", emojiClickEventHandler);
@@ -196,13 +200,14 @@
 </script>
 
 <svelte:window
-    on:keydown={(e) => {
+    onkeydown={(e) => {
         if (e.key === "Escape") {
             close();
         }
     }}
 />
-<emoji-picker id="emoji-picker" class="pointer-events-auto" use:clickOutside={close} bind:this={emojiPicker} />
+<emoji-picker id="emoji-picker" class="pointer-events-auto" use:clickOutside={close} bind:this={emojiPicker}
+></emoji-picker>
 
 <style>
     @media screen and (max-width: 640px) {

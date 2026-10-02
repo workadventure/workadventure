@@ -21,7 +21,7 @@ import type { ModifyAreaMessage } from "@workadventure/messages";
 export function isModifyAreaMessageOnlyClaim(
     message: ModifyAreaMessage,
     userUUID: string,
-    existingArea: AreaData | undefined
+    existingArea: AreaData | undefined,
 ): boolean {
     if (!existingArea) {
         return false;

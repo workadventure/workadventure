@@ -271,6 +271,7 @@ play:
     START_ROOM_URL: /_/global/raw.githubusercontent.com/workadventure/map-starter-kit/master/office.tmj
     ENABLE_CHAT_ONLINE_LIST: "true"
     ENABLE_CHAT_DISCONNECTED_LIST: "true"
+    CLIENT_DISCONNECTION_RETENTION_MS: "30000"
     MAX_HISTORY_CHAT: 0
     ENABLE_REPORT_ISSUES_MENU: "false"
     #GRPC_VERBOSITY: DEBUG
@@ -315,6 +316,13 @@ play:
     roomApiDomainName: ""
     # ClassName to use for the play container. If not set, will fallback to (root.ingress.className)
     className: ""
+    sticky:
+      enabled: true
+      cookie:
+        name: "wa_ws_affinity"
+        httpOnly: true
+        secure: true
+        sameSite: "lax"
 
 
 # #########################################################
@@ -735,6 +743,7 @@ mapstorage:
     AWS_ENDPOINT: ""
     S3_UPLOAD_CONCURRENCY_LIMIT: ""
     MAX_UNCOMPRESSED_SIZE: ""
+    DIRECT_UPLOAD_URL: ""
     USE_DOMAIN_NAME_IN_PATH: "false"
     CACHE_CONTROL: ""
     ENABLE_WEB_HOOK: "false"
@@ -777,6 +786,9 @@ mapstorage:
     domainNames: []
     # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
+    # Annotations added to the map-storage ingress on top of (root.ingress.annotationsRoot).
+    # A key set here overrides the same key from annotationsRoot.
+    annotations: {}
 
 ingress:
   enabled: false

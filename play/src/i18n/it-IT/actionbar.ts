@@ -45,6 +45,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Nessun suono rilevato dal microfono. Potrebbe esserci un problema; prova a cambiare microfono nelle impostazioni.",
         noSoundWarningPressEnter: "Nessun suono rilevato dal microfono. Premi Invio per aprire le impostazioni.",
+        advancedNoiseReduction: "Riduzione avanzata del rumore",
+        noiseSuppressionInitializing: "Inizializzazione della soppressione del rumore personalizzata...",
+        noiseSuppressionUnsupported: "Questo browser non può eseguire la soppressione del rumore personalizzata.",
+        noiseSuppressionError:
+            "Soppressione del rumore personalizzata non riuscita. Ripiego sulla soppressione del rumore nativa del browser.",
         openSettings: "Apri impostazioni",
         ignore: "Ignora",
     },
@@ -69,6 +74,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         SPEAKER: "In una riunione",
         LIVEKIT: "In una riunione",
         LISTENER: "In una riunione",
+        SOUND_BLOCKED: "Audio bloccato",
     },
     subtitle: {
         camera: "Fotocamera",
@@ -84,7 +90,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Sfocatura media",
         blurHigh: "Sfocatura alta",
         images: "Immagini",
-        videos: "Video",
     },
     help: {
         chat: {
@@ -98,6 +103,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "Mostra un emoji",
             desc: "Esprimi come ti senti con un solo clic usando le reazioni emoji. Basta toccare e via!",
+        },
+        raiseHand: {
+            title: "Alza la mano",
+            desc: "Segnala che vuoi parlare. La tua mano alzata viene mostrata sulla mappa e sul tuo video, così tutti sanno a chi tocca.",
         },
         audioManager: {
             title: "Volume dei suoni ambientali",
@@ -124,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "Scegli l'area da bloccare/sbloccare",
             bubbleLabel: "Bolla di discussione",
             unnamedArea: "Area senza nome",
+        },
+        giveBackFloor: {
+            title: "Restituire la parola",
+            desc: "Ti è stata data la parola. Clicca per smettere di parlare e restituirla.",
         },
         megaphone: {
             title: "Ferma megafono",
@@ -172,6 +185,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Puoi utilizzare la funzionalità picture in picture per guardare un video o una presentazione mentre sei in una conversazione. Basta cliccare sull'icona picture in picture e goderti il tuo contenuto.",
         },
         videoNotSupported: "Il tuo browser non supporta il tag video.",
+    },
+    raisedHands: {
+        speaking: "Al microfono",
+        title: "Mani alzate",
+        empty: "Nessuno ha alzato la mano",
+        help: "Guarda chi ha alzato la mano, in ordine, e dagli la parola.",
+        lowerHand: "Abbassa la mano",
+        lowerAllHands: "Abbassa tutte",
     },
     listStatusTitle: {
         enable: "Cambia il tuo stato",

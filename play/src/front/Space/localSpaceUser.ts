@@ -1,5 +1,5 @@
 import { get, readable, writable } from "svelte/store";
-import type { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
+import { FilterType, type PrivateSpaceEvent, type SpaceEvent } from "@workadventure/messages";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { availabilityStatusStore } from "../Stores/MediaStore";
@@ -27,6 +27,7 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
         jitsiParticipantId: undefined,
         characterTextures: [],
         attendeesState: false,
+        cpuLimited: false,
         pictureStore: readable<string | undefined>(undefined, (set) => {
             const unsubscribe = gameManager
                 .getCurrentGameScene()
@@ -44,6 +45,18 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
             emitPublicMessage: (message: NonNullable<SpaceEvent["event"]>) => {
                 throw new Error("should not be called");
             },
+            canAskToMuteAudioOrTurnOffVideo: writable(false),
+            // The local user stands in no space of their own: no action on them names a meeting.
+            filterType: FilterType.LIVE_STREAMING_USERS,
+            getName: () => "",
+            state: {
+                giveFloor: () => {
+                    throw new Error("should not be called");
+                },
+                revokeFloor: () => {
+                    throw new Error("should not be called");
+                },
+            },
         },
         reactiveUser: {
             spaceUserId: "",
@@ -60,6 +73,7 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
             cameraState: writable(false),
             microphoneState: writable(false),
             attendeesState: writable(false),
+            cpuLimited: writable(false),
             screenSharingState: writable(true),
             megaphoneState: writable(false),
             jitsiParticipantId: writable(undefined),

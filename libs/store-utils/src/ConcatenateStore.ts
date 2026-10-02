@@ -31,7 +31,7 @@ export class ConcatenateStore<T> implements Readable<Array<T>> {
                     arr.push(...value);
                 }
                 return arr;
-            })
+            }),
         );
     }
 

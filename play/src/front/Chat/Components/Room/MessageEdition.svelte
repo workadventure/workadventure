@@ -5,11 +5,15 @@
     import LL from "../../../../i18n/i18n-svelte";
     import MessageInput from "./MessageInput.svelte";
 
-    export let message: ChatMessage;
-    let messageInput: HTMLDivElement;
+    interface Props {
+        message: ChatMessage;
+    }
 
-    let inputValue = get(message.content).body;
-    let editError = false;
+    let { message }: Props = $props();
+    let messageInput: HTMLDivElement | undefined = $state();
+
+    let inputValue = $state((() => get(message.content).body)());
+    let editError = $state(false);
 
     async function editMessage(newContent: string) {
         try {
@@ -41,14 +45,14 @@
         <button
             class="hover:bg-white/10 text-white py-0.5 text-sm px-3 w-full text-center items-center justify-center rounded"
             data-testid="cancelMessageEditionButton"
-            on:click={() => selectedChatMessageToEdit.set(null)}
+            onclick={() => selectedChatMessageToEdit.set(null)}
         >
             {$LL.chat.createRoom.buttons.cancel()}
         </button>
         <button
             class="bg-white hover:bg-white/80 text-secondary py-0.5 text-sm px-3 w-full text-center items-center justify-center rounded"
             data-testid="saveMessageEditionButton"
-            on:click={() => editMessage(inputValue)}
+            onclick={() => editMessage(inputValue)}
         >
             {$LL.chat.createRoom.buttons.edit()}
         </button>

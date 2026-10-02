@@ -77,9 +77,9 @@ export class PingController extends BaseHttpController {
                                 } else {
                                     resolve(result);
                                 }
-                            }
+                            },
                         );
-                    })
+                    }),
                 );
             }
 

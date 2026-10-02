@@ -6,14 +6,28 @@
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
-    import type { ChatRoom } from "../Connection/ChatConnection";
+    import { isThreadPanelEnabledStore, selectedThreadStore } from "../Stores/SelectedThreadStore";
+    import { roomSidePanelStore } from "../Stores/RoomSidePanelStore";
+    import {
+        hasChatRoomMembershipManagement,
+        hasChatRoomModeration,
+        hasChatRoomNotificationControl,
+        hasChatRoomSettingsManagement,
+        hasProximityChatSidePanel,
+        type ChatConversation,
+        type ChatRoom,
+        type ChatRoomMembershipManagement,
+        type ChatRoomModeration,
+        type ChatRoomNotificationControl,
+        type ChatRoomSettingsManagement,
+        type ChatThread,
+        type ProximityChatSidePanelRoom,
+    } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
-    import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
     import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { chatNotificationStore } from "../../Stores/ProximityNotificationStore";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -26,66 +40,62 @@
     import ChatHeader from "./ChatHeader.svelte";
     import RequireConnection from "./requireConnection.svelte";
     import RefreshChat from "./RefreshChat.svelte";
+    import RoomSidePanel from "./Room/RoomSidePanel.svelte";
+    import {
+        CHAT_TWO_COLUMN_LAYOUT_LIMIT,
+        canDisplayRoomListAndTimeline,
+        getRoomSidePanelPlacement,
+        shouldShowRoomSidePanelToggle,
+        shouldShowRoomTimeline,
+    } from "./RoomListLayout";
+    import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
     import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
 
-    export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
+    interface Props {
+        sideBarWidth?: number;
+    }
+
+    let { sideBarWidth = INITIAL_SIDEBAR_WIDTH }: Props = $props();
 
     const gameScene = gameManager.getCurrentGameScene();
     /** Same condition as opening the user list from the chat header. */
     const showDirectMessageUserListButton =
         gameScene.room.isChatOnlineListEnabled || gameScene.room.isChatDisconnectedListEnabled;
 
-    const proximityChatRoom = gameScene.proximityChatRoom;
+    const proximityChatRoomManager = gameScene.proximityChatRoomManager;
+    const proximityRooms = proximityChatRoomManager.roomsStore;
     const chat = gameManager.chatConnection;
     const shouldRetrySendingEvents = chat.shouldRetrySendingEvents;
 
     const chatConnectionStatus = chat.connectionStatus;
-    const CHAT_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 2;
+    const THREAD_PANEL_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 3;
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
     let roomInvitations = chat.invitations;
     let roomFolders = chat.folders;
-    let proximityHasUnreadMessages = proximityChatRoom.hasUnreadMessages;
-    const proximityUnreadCount = proximityChatRoom.unreadMessagesCount;
 
-    let displayDirectRooms = false;
-    let displayRooms = false;
-    let displayRoomInvitations = false;
-
-    //let proximityChatRoomHasUserInProximityChatSubscribtion: Unsubscriber | undefined;
-    //let _hasUserInProximityChat = false;
-    //let proximityChatRoomHasUnreadMessagesSubscribtion: Unsubscriber | undefined;
-    //let _hasUnreadMessages = false;
+    let displayDirectRooms = $state(false);
+    let displayRooms = $state(false);
+    let displayRoomInvitations = $state(false);
 
     onMount(() => {
         expandOrCollapseRoomsIfEmpty();
-        /*proximityChatRoomHasUserInProximityChatSubscribtion = proximityChatRoom.hasUserInProximityChat.subscribe(
-            (hasUserInProximityChat) => {
-                _hasUserInProximityChat = hasUserInProximityChat;
-            }
-        );
-        proximityChatRoomHasUnreadMessagesSubscribtion = proximityChatRoom.hasUnreadMessages.subscribe(
-            (hasUnreadMessages) => {
-                _hasUnreadMessages = hasUnreadMessages;
-            }
-        );*/
     });
 
     const directRoomsUnsubscriber = directRooms.subscribe((directRooms) =>
-        openDirectRoomsIfCollapsedBeforeNewRoom(directRooms)
+        openDirectRoomsIfCollapsedBeforeNewRoom(directRooms),
     );
     const roomsUnsubscriber = rooms.subscribe((rooms) => openRoomsIfCollapsedBeforeNewRoom(rooms));
     const roomInvitationsUnsubscriber = roomInvitations.subscribe((roomInvitations) =>
-        openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations)
+        openRoomInvitationsIfCollapsedBeforeNewRoom(roomInvitations),
     );
 
     onDestroy(() => {
         directRoomsUnsubscriber();
         roomsUnsubscriber();
         roomInvitationsUnsubscriber();
-        //if (proximityChatRoomHasUserInProximityChatSubscribtion) proximityChatRoomHasUserInProximityChatSubscribtion();
-        //if (proximityChatRoomHasUnreadMessagesSubscribtion) proximityChatRoomHasUnreadMessagesSubscribtion();
+        isThreadPanelEnabledStore.set(false);
     });
 
     async function initChatConnectionEncryption() {
@@ -94,7 +104,7 @@
         } catch (error) {
             console.error("Failed to initChatConnectionEncryption", error);
         }
-        analyticsClient.startMatrixEncryptionConfiguration();
+        analyticsClient.trackAdminEvent("chat.matrix_encryption_configuration.started");
     }
 
     const isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
@@ -136,33 +146,99 @@
         displayRoomInvitations = !displayRoomInvitations;
     }
 
-    function toggleDisplayProximityChat() {
-        selectedRoomStore.set(proximityChatRoom);
-        proximityChatRoom.hasUnreadMessages.set(false);
-        proximityChatRoom.unreadMessagesCount.set(0);
-        chatNotificationStore.clearAll();
-        proximityChatRoom.unreadNotificationCount.set(0);
+    function isThreadConversation(conversation: ChatConversation | undefined): conversation is ChatThread {
+        return conversation?.conversationKind === "thread";
     }
 
-    $: filteredDirectRoom = $directRooms
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
-    $: filteredRooms = $rooms
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
-    $: filteredRoomInvitations = $roomInvitations
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+    function getRoomWithSidePanel(
+        conversation: ChatConversation | undefined,
+    ):
+        | (ChatRoom &
+              ChatRoomMembershipManagement &
+              ChatRoomModeration &
+              ChatRoomNotificationControl &
+              ChatRoomSettingsManagement)
+        | ProximityChatSidePanelRoom
+        | undefined {
+        if (hasProximityChatSidePanel(conversation)) {
+            return conversation;
+        }
 
-    $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
+        if (
+            hasChatRoomMembershipManagement(conversation) &&
+            hasChatRoomModeration(conversation) &&
+            hasChatRoomNotificationControl(conversation) &&
+            hasChatRoomSettingsManagement(conversation)
+        ) {
+            return conversation;
+        }
+
+        return undefined;
+    }
+
+    let filteredDirectRoom = $derived(
+        $directRooms
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+    );
+    let filteredRooms = $derived(
+        $rooms
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+    );
+    let filteredRoomInvitations = $derived(
+        $roomInvitations
+            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
+            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+    );
+
+    let displayTwoColumnLayout = $derived(
+        canDisplayRoomListAndTimeline({
+            minimumTwoColumnWidth: CHAT_TWO_COLUMN_LAYOUT_LIMIT,
+            sideBarWidth,
+        }),
+    );
+    let displayThreeColumnLayout = $derived(sideBarWidth >= THREAD_PANEL_LAYOUT_LIMIT);
+    let selectedRoomWithSidePanel = $derived(getRoomWithSidePanel($selectedRoomStore));
+    let hasSelectedRoomWithSidePanel = $derived(selectedRoomWithSidePanel !== undefined);
+    let showRoomSidePanelToggle = $derived(shouldShowRoomSidePanelToggle(hasSelectedRoomWithSidePanel));
+    let roomSidePanelPlacement = $derived(
+        getRoomSidePanelPlacement({
+            canDisplayThirdColumn: displayThreeColumnLayout,
+            hasCompatibleRoom: hasSelectedRoomWithSidePanel,
+            isOpen: $roomSidePanelStore.isOpen,
+        }),
+    );
+    let showRoomSidePanelInThirdColumn = $derived(roomSidePanelPlacement === "third-column");
+    let showRoomSidePanelInTimelineColumn = $derived(roomSidePanelPlacement === "timeline-column");
+    $effect(() => {
+        isThreadPanelEnabledStore.set(hasSelectedRoomWithSidePanel);
+    });
+    $effect(() => {
+        if (!displayThreeColumnLayout || !isThreadConversation($selectedRoomStore)) {
+            return;
+        }
+        const selectedThread = $selectedRoomStore;
+        selectedRoomStore.set(selectedThread.parentRoom);
+        selectedThreadStore.set(selectedThread);
+    });
+    $effect(() => {
+        if (hasSelectedRoomWithSidePanel || !$selectedThreadStore) {
+            return;
+        }
+        selectedRoomStore.set($selectedThreadStore);
+        selectedThreadStore.clear();
+    });
+    let roomListGridClass = $derived(
+        showRoomSidePanelInThirdColumn
+            ? "grid-cols-[335px_minmax(0,1fr)_360px]"
+            : displayTwoColumnLayout && $navChat.key === "chat"
+              ? "grid-cols-[auto_minmax(0,1fr)]"
+              : "grid-cols-[1fr]",
+    );
 </script>
 
-<div
-    class="overflow-auto h-full grid grid-rows-[1fr_auto] {sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 &&
-    $navChat.key === 'chat'
-        ? 'grid-cols-[auto_1fr]'
-        : 'grid-cols-[1fr]'}"
->
+<div class="overflow-auto h-full grid grid-rows-[1fr_auto] {roomListGridClass}">
     {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
         <div
             class="w-full flex flex-col border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
@@ -188,71 +264,36 @@
                     <RequireConnection />
                 {:else if $loginTokenErrorStore}
                     <RequireConnection>
-                        <span slot="emoji">
+                        {#snippet emoji()}
                             <IconRefresh font-size="50" />
-                        </span>
-                        <span slot="title">
+                        {/snippet}
+                        {#snippet title()}
                             {$LL.chat.loginTokenError()}
-                        </span>
-                        <span slot="button-label">
+                        {/snippet}
+                        {#snippet buttonLabel()}
                             {$LL.chat.reconnect()}
-                        </span>
+                        {/snippet}
                     </RequireConnection>
                 {/if}
 
-                <div class="px-2 py-3 border border-solid border-x-0 border-t border-y-0 border-b-0 border-white/10">
+                {#if $proximityRooms.length > 0}
                     <div
-                        class="group relative px-3 rounded h-11 w-full flex space-x-2 items-center {$proximityHasUnreadMessages
-                            ? 'hover:bg-contrast-200/20 bg-contrast-200/10'
-                            : 'hover:bg-contrast-200/10'}"
+                        class="px-2 py-3 border border-solid border-x-0 border-t border-y-0 border-b-0 border-white/10"
                     >
-                        <button
-                            class="flex items-center space-x-2 grow m-0 p-0"
-                            on:click={toggleDisplayProximityChat}
-                            data-testid="toggleDisplayProximityChat"
-                        >
-                            <div class="relative">
-                                <div
-                                    class="rounded-full bg-white/10 h-7 w-7 border border-solid text-white flex items-center justify-center p-[1px] relative {$proximityHasUnreadMessages
-                                        ? 'border-white'
-                                        : 'border-white/70'}"
-                                >
-                                    <div class="absolute overflow-hidden w-full h-full rounded-full">
-                                        <div
-                                            class=" flex items-center justify-center translate-y-[3px] group-hover:translate-y-[0] transition-all"
-                                        >
-                                            <WokaFromUserId userId={-1} customWidth="32px" placeholderSrc="" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div
-                                class="cursor-default text-sm grow text-start ps-1 {$proximityHasUnreadMessages
-                                    ? 'text-white font-bold'
-                                    : 'text-white/75'}"
+                        <div class="flex flex-col">
+                            <ShowMore
+                                items={$proximityRooms}
+                                maxNumber={8}
+                                idKey="id"
+                                showNothingToDisplayMessage={false}
                             >
-                                {$LL.chat.proximity()}
-                            </div>
-                            {#if $proximityHasUnreadMessages}
-                                <div class="relative flex h-7 w-7 items-center justify-center">
-                                    <span
-                                        class="absolute top-1 start-2 block h-4 w-4 rounded-full bg-white animate-ping"
-                                    />
-                                    <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white" />
-                                    <div
-                                        class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
-                                        aria-label="{$proximityUnreadCount} unread"
-                                    >
-                                        <span>{$proximityUnreadCount > 9 ? "9" : $proximityUnreadCount}</span>
-                                        {#if $proximityUnreadCount > 9}
-                                            <span class="text-xxs">+</span>
-                                        {/if}
-                                    </div>
-                                </div>
-                            {/if}
-                        </button>
+                                {#snippet children({ item: room })}
+                                    <ProximityRoomRow {room} />
+                                {/snippet}
+                            </ShowMore>
+                        </div>
                     </div>
-                </div>
+                {/if}
                 {#if $chatConnectionStatus === "ONLINE"}
                     {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}
                         <p class="p-0 m-0 text-gray-400">{$LL.chat.availableRooms()}</p>
@@ -265,23 +306,25 @@
                     {#if filteredRoomInvitations.length > 0}
                         <button
                             class="group relative m-0 px-3 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
-                            on:click={toggleDisplayRoomInvitations}
+                            onclick={toggleDisplayRoomInvitations}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
                                 {$LL.chat.invitations()}
                             </div>
-                            <button
+                            <div
                                 class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp
                                     class={`transform transition ${!displayRoomInvitations ? "" : "rotate-180"}`}
                                 />
-                            </button>
+                            </div>
                         </button>
                         {#if displayRoomInvitations}
                             <div class="flex flex-col overflow-auto ps-3 pr-4 pb-3">
-                                <ShowMore items={filteredRoomInvitations} maxNumber={8} idKey="id" let:item={room}>
-                                    <RoomInvitation {room} />
+                                <ShowMore items={filteredRoomInvitations} maxNumber={8} idKey="id">
+                                    {#snippet children({ item: room })}
+                                        <RoomInvitation {room} />
+                                    {/snippet}
                                 </ShowMore>
                             </div>
                         {/if}
@@ -293,7 +336,7 @@
                         <button
                             type="button"
                             class="flex items-center min-w-0 flex-1 text-start m-0 p-0 h-full bg-transparent border-0 cursor-pointer text-inherit rounded-none appearance-none"
-                            on:click={toggleDisplayDirectRooms}
+                            onclick={toggleDisplayDirectRooms}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase truncate">
                                 {$LL.chat.people()}
@@ -306,7 +349,10 @@
                                 class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white shrink-0 m-0"
                                 aria-label={$LL.chat.users()}
                                 title={$LL.chat.users()}
-                                on:click|stopPropagation={() => navChat.switchToUserList()}
+                                onclick={(event) => {
+                                    event.stopPropagation();
+                                    navChat.switchToUserList();
+                                }}
                             >
                                 <IconPlus />
                             </button>
@@ -315,7 +361,10 @@
                             type="button"
                             class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white shrink-0 m-0"
                             aria-expanded={displayDirectRooms}
-                            on:click|stopPropagation={toggleDisplayDirectRooms}
+                            onclick={(event) => {
+                                event.stopPropagation();
+                                toggleDisplayDirectRooms();
+                            }}
                         >
                             <IconChevronUp class={`transform transition ${!displayDirectRooms ? "" : "rotate-180"}`} />
                         </button>
@@ -323,19 +372,21 @@
 
                     {#if displayDirectRooms}
                         <div class="flex flex-col px-2 pb-2">
-                            <ShowMore items={filteredDirectRoom} maxNumber={8} idKey="id" let:item={room}>
-                                <Room {room} />
+                            <ShowMore items={filteredDirectRoom} maxNumber={8} idKey="id">
+                                {#snippet children({ item: room })}
+                                    <Room {room} />
+                                {/snippet}
                             </ShowMore>
                         </div>
                     {/if}
 
                     <div class="flex items-center space-x-2 grow m-0 p-0">
                         <!-- TODO : use div instead of button to avoid focus issues try to find a better solution -->
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <div
                             class="group relative px-3 m-0 mb-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
-                            on:click={toggleDisplayRooms}
+                            onclick={toggleDisplayRooms}
                             data-testid="roomAccordeon"
                         >
                             <div class="flex items-center space-x-2 grow m-0 p-0">
@@ -353,8 +404,10 @@
                     </div>
                     {#if displayRooms}
                         <div class="px-2 pb-2">
-                            <ShowMore items={filteredRooms} maxNumber={8} idKey="id" let:item={room}>
-                                <Room {room} />
+                            <ShowMore items={filteredRooms} maxNumber={8} idKey="id">
+                                {#snippet children({ item: room })}
+                                    <Room {room} />
+                                {/snippet}
                             </ShowMore>
                         </div>
                     {/if}
@@ -367,13 +420,19 @@
         </div>
     {/if}
     {#if $selectedRoomStore !== undefined}
-        <div class="overflow-y-auto">
-            <RoomTimeline room={$selectedRoomStore} />
+        <div class="overflow-y-auto min-w-0">
+            {#if showRoomSidePanelInTimelineColumn && selectedRoomWithSidePanel}
+                <RoomSidePanel room={selectedRoomWithSidePanel} showCloseButton closeOnTimelineFocus />
+            {:else if shouldShowRoomTimeline(roomSidePanelPlacement)}
+                {#key $selectedRoomStore.id}
+                    <RoomTimeline room={$selectedRoomStore} {showRoomSidePanelToggle} />
+                {/key}
+            {/if}
         </div>
-    {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
+    {:else if $selectedRoomStore === undefined && displayTwoColumnLayout}
         <div class="flex flex-col flex-1 ps-4 items-center pt-8">
             <div class="text-center px-3 max-w-md">
-                <img src={getCloseImg} alt="Discussion bubble" draggable="false" />
+                <img class="mx-auto" src={getCloseImg} alt={$LL.chat.getCloserTitle()} draggable="false" />
                 <div class="text-lg font-bold text-center">{$LL.chat.noRoomOpen()}</div>
                 <div class="text-sm opacity-50 text-center">
                     {$LL.chat.noRoomOpenDescription()}
@@ -382,13 +441,24 @@
         </div>
     {/if}
 
-    <div class="w-full flex flex-col col-span-2 h-fit">
+    {#if showRoomSidePanelInThirdColumn && selectedRoomWithSidePanel}
+        <div class="overflow-y-auto min-w-0 border border-solid border-y-0 border-r-0 border-white/10">
+            <RoomSidePanel room={selectedRoomWithSidePanel} />
+        </div>
+    {/if}
+
+    <div class="w-full flex flex-col col-span-full h-fit">
         <ExternalComponents zone="chatBand" />
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
             <div class="w-full">
                 <button
                     data-testid="restoreEncryptionButton"
-                    on:click|stopPropagation={initChatConnectionEncryption}
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        initChatConnectionEncryption().catch((error) => {
+                            console.error("Failed to initialize chat encryption", error);
+                        });
+                    }}
                     class="text-white flex gap-2 justify-center w-full bg-neutral hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
                 >
                     <IconCloudLock font-size="20" />

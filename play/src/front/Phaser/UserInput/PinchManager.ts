@@ -1,4 +1,5 @@
-import { Pinch } from "phaser3-rex-plugins/plugins/gestures.js";
+import type * as Phaser from "phaser";
+import { Pinch } from "phaser4-rex-plugins/plugins/gestures.js";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { GameScene } from "../Game/GameScene";
 

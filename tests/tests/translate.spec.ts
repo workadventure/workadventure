@@ -1,12 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.describe("Translation @nomobile", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
+
     test("can be switched to French", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/mousewheel.json", "translate"));
 
@@ -17,7 +18,5 @@ test.describe("Translation @nomobile", () => {
         await page.reload();
         await page.getByTestId("action-user").click(); // new way
         await expect(page.locator('button:has-text("Paramètres")')).toBeVisible();
-
-        await page.context().close();
     });
 });

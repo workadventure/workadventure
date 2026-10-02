@@ -1,11 +1,12 @@
+import * as Phaser from "phaser";
 import type { Unsubscriber, Readable } from "svelte/store";
 import { get, readable } from "svelte/store";
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
 import { SayMessageType, AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
-import { defaultWoka, Deferred } from "@workadventure/shared-utils";
+import { defaultWoka, Deferred, type Movable, type PositionInterface } from "@workadventure/shared-utils";
+import { Subject } from "rxjs";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { TalkIcon } from "../Components/TalkIcon";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { PictureStore } from "../../Stores/PictureStore";
@@ -15,7 +16,6 @@ import { Companion } from "../Companion/Companion";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 
 import { UsernameDisplay } from "../Components/UsernameDisplay";
@@ -23,12 +23,16 @@ import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager"
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
 import { ThinkingCloud } from "./ThinkingCloud";
-import Container = Phaser.GameObjects.Container;
-import Sprite = Phaser.GameObjects.Sprite;
-import DOMElement = Phaser.GameObjects.DOMElement;
-import RenderTexture = Phaser.GameObjects.RenderTexture;
 
-const playerNameY = -16;
+import Container = Phaser.GameObjects.Container;
+import RenderTexture = Phaser.GameObjects.RenderTexture;
+import DOMElement = Phaser.GameObjects.DOMElement;
+import Sprite = Phaser.GameObjects.Sprite;
+import Tween = Phaser.Tweens.Tween;
+import Circle = Phaser.Geom.Circle;
+import Body = Phaser.Physics.Arcade.Body;
+
+const playerNameY = -18;
 const interactiveRadius = 25;
 
 export const CHARACTER_BODY_WIDTH = 16;
@@ -38,14 +42,25 @@ export const CHARACTER_BODY_OFFSET_Y = 8;
 
 export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 
-export type PathFollowResult = { x: number; y: number; cancelled: boolean };
+export type PathFollowResult = {
+    x: number;
+    y: number;
+    cancelled: boolean;
+    /**
+     * Set when the path was aborted because its next waypoint started colliding (e.g. an area got locked
+     * mid-walk); the character stopped just before the blocking tile.
+     */
+    blocked?: boolean;
+};
 
-export abstract class Character extends Container implements OutlineableInterface {
+export abstract class Character extends Container implements OutlineableInterface, Movable {
+    private readonly movedSubject = new Subject<PositionInterface>();
+    public readonly moved$ = this.movedSubject.asObservable();
+
     private bubble: RenderTexture | null | DOMElement = null;
     private usernameDisplay: UsernameDisplay | undefined;
-    private readonly talkIcon: TalkIcon;
-    protected readonly speakerIcon: SpeakerIcon;
     private availabilityStatus: AvailabilityStatusType = AvailabilityStatus.ONLINE;
+    private raisedHand = false;
     public readonly playerName: string;
     public sprites: Map<string, Sprite>;
     protected _lastDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
@@ -53,9 +68,9 @@ export abstract class Character extends Container implements OutlineableInterfac
     private invisible: boolean;
     private clickable: boolean;
     public companion?: Companion;
-    private emote: Phaser.GameObjects.DOMElement | null = null;
-    private emoteTween: Phaser.Tweens.Tween | null = null;
-    private texts: Map<string, Phaser.GameObjects.DOMElement> = new Map();
+    private emote: DOMElement | null = null;
+    private emoteTween: Tween | null = null;
+    private texts: Map<string, DOMElement> = new Map();
     private textsToBuild = new Map();
     scene: GameScene;
     private lastRenderedSprite: string | undefined;
@@ -68,6 +83,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected pathWalkingSpeed?: number;
     private currentPathSegmentDistanceFromStart = 0;
     private pathFollowingResolve?: (result: PathFollowResult) => void;
+    private readonly syncDisplayPositionWithPhysics = (): void => {
+        this.setDepthIfNeeded(this.y + 16);
+        this.updateUsernameDisplayPosition();
+    };
 
     /**
      * A deferred promise that resolves when the texture of the character is actually displayed.
@@ -85,7 +104,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         frame: string | number,
         isClickable: boolean,
         companionTexturePromise: CancelablePromise<string> | undefined,
-        userId?: string | null
+        userId?: string | null,
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
@@ -174,9 +193,11 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.x,
                 this.y + playerNameY,
                 this.playerName,
-                playerNameOutlineColor
+                playerNameOutlineColor,
             );
-            this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true, true);
+            this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true);
+            this.usernameDisplay.setRaisedHand(this.raisedHand, true);
+            this.usernameDisplay.setPlayerDepth(this.depth);
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
                 this.usernameDisplay?.setPlayerNameOutlineColor(color);
@@ -185,14 +206,10 @@ export abstract class Character extends Container implements OutlineableInterfac
             this.scene.markDirty();
         }, 0);
 
-        this.talkIcon = new TalkIcon(scene, 0, -45);
-        this.speakerIcon = new SpeakerIcon(scene, 0, -45);
-        this.add([this.talkIcon, this.speakerIcon]);
-
         if (isClickable) {
             this.setInteractive({
-                hitArea: new Phaser.Geom.Circle(8, 8, interactiveRadius),
-                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
+                hitArea: new Circle(8, 8, interactiveRadius),
+                hitAreaCallback: Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
         }
@@ -202,12 +219,14 @@ export abstract class Character extends Container implements OutlineableInterfac
         scene.add.existing(this);
 
         this.scene.physics.world.enableBody(this);
-        this.getBody().setImmovable(true);
-        this.getBody().setCollideWorldBounds(true);
+        const body = this.getBody();
+        body.setImmovable(true);
+        body.setCollideWorldBounds(true);
         this.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT);
-        this.getBody().setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
-        this.getBody().setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
-        this.setDepth(this.y + 16);
+        body.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
+        body.setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
+        this.scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
+        this.setDepthIfNeeded(this.y + 16);
     }
 
     private waitAndGetSnapshot(): Promise<string> {
@@ -240,6 +259,13 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
+    private setDepthIfNeeded(depth: number): void {
+        if (this.depth !== depth) {
+            this.setDepth(depth);
+            this.usernameDisplay?.setPlayerDepth(depth);
+        }
+    }
+
     public setClickable(clickable = true): void {
         if (this.clickable === clickable) {
             return;
@@ -247,8 +273,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.clickable = clickable;
         if (clickable) {
             this.setInteractive({
-                hitArea: new Phaser.Geom.Circle(8, 8, interactiveRadius),
-                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
+                hitArea: new Circle(8, 8, interactiveRadius),
+                hitAreaCallback: Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
             return;
@@ -260,7 +286,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         return this.clickable;
     }
 
-    public getPosition(): { x: number; y: number } {
+    public getPosition(): PositionInterface {
         return { x: this.x, y: this.y };
     }
 
@@ -304,21 +330,21 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public toggleTalk(show = true, forceClose = false): void {
-        if (this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER) {
-            this.talkIcon.show(false, forceClose);
-            this.speakerIcon.show(show, forceClose);
-        } else {
-            this.talkIcon.show(show, forceClose);
-            this.speakerIcon.show(false, forceClose);
-        }
+    public toggleTalk(show = true): void {
+        this.usernameDisplay?.setTalking(show, this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER);
+    }
+
+    public setRaisedHand(raised: boolean): void {
+        this.raisedHand = raised;
+        this.usernameDisplay?.setRaisedHand(raised);
+        this.scene.markDirty();
     }
 
     public setAvailabilityStatus(availabilityStatus: AvailabilityStatusType, instant = false): void {
         if (availabilityStatus !== AvailabilityStatus.UNCHANGED) {
             this.availabilityStatus = availabilityStatus;
         }
-        this.usernameDisplay?.setAvailabilityStatus(availabilityStatus, instant, false);
+        this.usernameDisplay?.setAvailabilityStatus(availabilityStatus, instant);
     }
 
     public getAvailabilityStatus() {
@@ -374,9 +400,9 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
     }
 
-    protected getBody(): Phaser.Physics.Arcade.Body {
+    protected getBody(): Body {
         const body = this.body;
-        if (!(body instanceof Phaser.Physics.Arcade.Body)) {
+        if (!(body instanceof Body)) {
             throw new Error("Container does not have arcade body");
         }
         return body;
@@ -387,9 +413,11 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     setPosition(x: number, y: number): this {
-        super.setPosition(x, y);
+        super.setPosition(Math.round(x), Math.round(y));
         this.setDepth(this.y + 16);
+        this.usernameDisplay?.setPlayerDepth(this.depth);
         this.updateUsernameDisplayPosition();
+        this.movedSubject?.next({ x: this.x, y: this.y });
         return this;
     }
 
@@ -411,7 +439,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public finishFollowingPath(cancelled = false): void {
+    public finishFollowingPath(cancelled = false, blocked = false): void {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
         this.currentPathSegmentDistanceFromStart = 0;
@@ -419,7 +447,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         const resolve = this.pathFollowingResolve;
         this.pathFollowingResolve = undefined;
-        resolve?.({ x: this.x, y: this.y, cancelled });
+        resolve?.({ x: this.x, y: this.y, cancelled, blocked });
     }
 
     protected isFollowingPath(): boolean {
@@ -429,6 +457,12 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected getPathWalkingSpeed(): number {
         return this.pathWalkingSpeed ?? WOKA_SPEED;
     }
+
+    /**
+     * Called each time a waypoint of the followed path is reached, i.e. on each tile change.
+     * Subclasses can abort the path following from here (e.g. when the next waypoint started colliding).
+     */
+    protected onPathWaypointReached(): void {}
 
     protected adjustPathToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
         const body = this.getBody();
@@ -465,6 +499,12 @@ export abstract class Character extends Container implements OutlineableInterfac
                 return;
             }
 
+            this.onPathWaypointReached();
+            if (!this.pathToFollow) {
+                // The hook aborted the path following.
+                return;
+            }
+
             segmentStartPos = this.pathToFollow[0];
             segmentEndPos = this.pathToFollow[1];
             xDistance = segmentEndPos.x - segmentStartPos.x;
@@ -490,7 +530,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         // In path finding mode, diagonal movement can make x and y deltas almost equal.
         // Biasing y prevents the animation from flickering between horizontal and vertical directions.
-        if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.1)) {
+        if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.5)) {
             if (x < oldX) {
                 this._lastDirection = PositionMessage_Direction.LEFT;
             } else if (x > oldX) {
@@ -527,7 +567,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                     this.scene,
                     0,
                     0 - CHARACTER_BODY_HEIGHT / 2 - 50,
-                    speechBubble.getElement()
+                    speechBubble.getElement(),
                 );
                 this.add(this.bubble);
                 break;
@@ -554,8 +594,9 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     destroy(): void {
         this.usernameDisplay?.destroy();
-        for (const sprite of this.sprites.values()) {
-            if (this.scene) {
+        if (this.scene) {
+            this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
+            for (const sprite of this.sprites.values()) {
                 this.scene.sys.updateList.remove(sprite);
             }
         }
@@ -570,7 +611,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.cancelPreviousEmote();
         const emoteY = -45;
         const span = document.createElement("span");
-        span.innerHTML = emote;
+        // The emote comes from another player: it is plain text (an emoji) and must never be interpreted as HTML.
+        span.textContent = emote;
         this.emote = new DOMElement(this.scene, -1, 0, span, "z-index:10;");
         this.emote.setAlpha(0);
         this.add(this.emote);
@@ -584,7 +626,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         callback = () => this.destroyText(id),
         createStackAnimation = true,
         type: "warning" | "message" = "message",
-        escapeCallback?: () => void
+        escapeCallback?: () => void,
     ) {
         if (this.texts.has(id)) {
             this.destroyText(id);
@@ -605,7 +647,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             -30 + this.texts.size * 2,
             callback,
             type,
-            escapeCallback
+            escapeCallback,
         );
         this.add(speechDomElement);
         this.texts.set(id, speechDomElement);
@@ -731,10 +773,12 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public pointerOverOutline(color: number): void {
         this.outlineColorStore.pointerOver(color);
+        this.usernameDisplay?.setToForeFront(true);
     }
 
     public pointerOutOutline(): void {
         this.outlineColorStore.pointerOut();
+        this.usernameDisplay?.setToForeFront(false);
     }
 
     public characterCloseByOutline(color: number): void {

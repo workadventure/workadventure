@@ -5,12 +5,13 @@
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import Button from "../UI/Button.svelte";
     import { IconX, IconArrowsMaximize, IconArrowsMinimize } from "@wa-icons";
 
-    let modalIframe: HTMLIFrameElement;
+    let modalIframe: HTMLIFrameElement | undefined = $state();
     let mainModal: HTMLDivElement;
 
-    let isFullScreened = false;
+    let isFullScreened = $state(false);
 
     function close() {
         modalVisibilityStore.set(false);
@@ -30,7 +31,7 @@
 
     onMount(() => {
         resizeObserver.observe(mainModal);
-        if ($modalIframeStore?.allowApi) {
+        if ($modalIframeStore?.allowApi && modalIframe) {
             iframeListener.registerIframe(modalIframe);
         }
         // Note: the fullscreen functionality is not implemented yet
@@ -44,7 +45,9 @@
         // because of a possible race condition where the $modalIframeStore store is emptied before onDestroy is called,
         // which would lead to an error in unregisterIframe.
         //if ($modalIframeStore?.allowApi) {
-        iframeListener.unregisterIframe(modalIframe);
+        if (modalIframe) {
+            iframeListener.unregisterIframe(modalIframe);
+        }
         //}
     });
 
@@ -52,13 +55,13 @@
         ? new URL($modalIframeStore.src, gameManager.currentStartedRoom.mapUrl).toString()
         : undefined;
 
-    let isMobile = isMediaBreakpointUp("md");
+    let isMobile = $state(isMediaBreakpointUp("md"));
     const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
     });
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 
 <div
     class="menu-container fixed h-dvh w-dvw z-[2000] pointer-events-auto top-0 transition-all {isMobile
@@ -68,7 +71,7 @@
 >
     <div class="w-full h-full bg-contrast/80 backdrop-blur rounded" transition:blur={{ amount: 10, duration: 250 }}>
         <div
-            class={`flex justify-center items-center content-center bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute z-50 hover:opacity-100 opacity-25 transition-opacity duration-300
+            class={`flex justify-center items-center content-center bg-contrast/80 backdrop-blur p-2 space-y-0 @lg/main-layout:space-y-2 rounded-lg absolute z-50 hover:opacity-100 opacity-25 transition-opacity duration-300
                 ${
                     isFullScreened || isMobile
                         ? "top-4 right-4"
@@ -82,27 +85,39 @@
         >
             {#if modalUrl != undefined}
                 {#if $modalIframeStore?.allowFullScreen}
-                    <button
-                        class="btn btn-light btn-ghost rounded hidden @lg/main-layout:block"
-                        on:click={() => (isFullScreened = !isFullScreened)}
+                    <Button
+                        variant="light"
+                        appearance="ghost"
+                        square
+                        class="rounded hidden @lg/main-layout:block"
+                        onclick={() => (isFullScreened = !isFullScreened)}
                     >
-                        {#if isFullScreened}
-                            <IconArrowsMinimize font-size="20" class="text-white" />
-                        {:else}
-                            <IconArrowsMaximize font-size="20" class="text-white" />
-                        {/if}
-                    </button>
+                        {#snippet icon()}
+                            {#if isFullScreened}
+                                <IconArrowsMinimize font-size="20" class="text-white" />
+                            {:else}
+                                <IconArrowsMaximize font-size="20" class="text-white" />
+                            {/if}
+                        {/snippet}
+                    </Button>
                 {/if}
             {/if}
             {#if $modalIframeStore?.closable == undefined || $modalIframeStore?.closable == true}
-                <button
-                    on:click|preventDefault|stopPropagation={close}
-                    class="btn btn-danger rounded m-0"
+                <Button
+                    onclick={(event) => {
+                        event.preventDefault();
+                        close();
+                    }}
+                    variant="danger"
+                    square
+                    class="rounded m-0"
                     style={isFullScreened == true ? "" : "margin: 0px;"}
-                    data-testid="close-modal-button"
+                    dataTestId="close-modal-button"
                 >
-                    <IconX font-size="20" class="text-white" />
-                </button>
+                    {#snippet icon()}
+                        <IconX font-size="20" class="text-white" />
+                    {/snippet}
+                </Button>
             {/if}
         </div>
         {#if modalUrl != undefined}
@@ -117,12 +132,12 @@
                 class="border-0 relative z-40"
                 allowtransparency
                 style="color-scheme: auto"
-            />
+            ></iframe>
         {/if}
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .menu-container {
         &.mobile {
             width: 100% !important;

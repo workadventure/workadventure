@@ -11,7 +11,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         room: "Accés a l'habitació denegat. No t'és permès entrar a aquesta habitació.",
         teleport: "Não está autorizado a teletransportar-se para este utilizador.",
     },
-    importantMessage: "Missatge important",
     connectionLost: "Conexió perduda. Reconectant...",
     connectionLostTitle: "Conexió perduda",
     connectionLostSubtitle: "Reconectant",
@@ -23,6 +22,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     mapEditorNotEnabled: "L'editor de mapes no està habilitat en aquest món.",
     backgroundProcessing: {
         failedToApply: "Error en aplicar els efectes de fons",
+        notSupportedOnThisBrowser: "Els efectes de fons no són compatibles amb aquest navegador",
     },
     popupBlocked: {
         title: "Bloqueig de finestres emergents",

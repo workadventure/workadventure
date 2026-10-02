@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 . "$(dirname "$0")/_/husky.sh"
 
 # Check if all strings are translated in all languages
@@ -36,6 +36,10 @@ npm run precommit
 (
 cd libs/map-editor || exit
 npm run precommit
+)
+(
+cd libs/messages || exit
+npm run export-json-schema
 )
 (
 cd libs/shared-utils || exit

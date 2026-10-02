@@ -1,6 +1,6 @@
-import type { FilterType } from "@workadventure/messages";
+import type { FilterType, SpaceKind } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
-import type { SpaceInterface } from "../SpaceInterface";
+import type { RaisedHandSection, SpaceInterface } from "../SpaceInterface";
 import type { VideoBox } from "../VideoBox";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];
@@ -15,7 +15,9 @@ export interface SpaceRegistryInterface {
             metadata?: Map<string, unknown>;
             // True if the user is allowed to start/stop recording in the space. Defaults to false.
             canRecord?: boolean;
-        }
+            // What the space is, declared to the back; a space that declares nothing is measured as nothing.
+            spaceKind?: SpaceKind;
+        },
     ): Promise<SpaceInterface>;
     exist(spaceName: string): boolean;
     leaveSpace(space: SpaceInterface): Promise<void>;
@@ -24,6 +26,8 @@ export interface SpaceRegistryInterface {
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
     readonly isLiveStreamingStore: Readable<boolean>;
     readonly isLiveStreamingAudioStore: Readable<boolean>;
+    readonly raisedHandSectionsStore: Readable<RaisedHandSection[]>;
     readonly shouldPublishScreenShareStore: Readable<boolean>;
     spacesEligibleForRecording: Readable<SpaceInterface[]>;
+    readonly spacesSynchronizingMedia: Readable<SpaceInterface[]>;
 }

@@ -1,1099 +1,305 @@
-import type { PostHog } from "posthog-js";
+import type { PostHog } from "@posthog/types";
+import type {
+    AnalyticsEventArgs,
+    AnalyticsEventName,
+    AnalyticsEventReportMessage,
+    TimedAnalyticsEventName,
+    TimedAnalyticsEventOpenProperties,
+} from "@workadventure/messages";
+// By path rather than through the package barrel, and that is the point: this
+// module's only import is a type, so what lands in the bundle is 117 strings. The
+// same table used to live on the catalog entries, which pulled ~166 live Zod
+// schemas into the browser to look one up.
+import { postHogEventKey, postHogIntervalKeys } from "@workadventure/messages/src/JsonMessages/AnalyticsPostHogKeys";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
-import type { Emoji } from "../Stores/Utils/emojiSchema";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare let window: any;
+import { hasCapability } from "../Connection/Capabilities";
+import { liveMeetingContexts, openTimedEventPerMeeting } from "./CurrentMeeting";
+import type { EndTimedAnalyticsEvent } from "./TimedAnalyticsEvent";
+import {
+    forgetOpenTimedAnalyticsEvents,
+    openTimedAnalyticsEvent,
+    resumeOpenTimedAnalyticsEvents,
+} from "./TimedAnalyticsEvent";
+
+type AdminAnalyticsSender = (message: AnalyticsEventReportMessage) => void;
+type AdminAnalyticsEvent = AnalyticsEventReportMessage["events"][number];
+
+const MAX_PENDING_ADMIN_EVENTS = 100;
+
+/** Handed back when the admin sink is off: an end that measures nothing. */
+const NO_INTERVAL: EndTimedAnalyticsEvent = () => {};
+
+/** The declared subset of an interval's properties that travels to PostHog, or all of it. */
+function pick(properties: Record<string, unknown>, keys: readonly string[] | undefined): Record<string, unknown> {
+    return keys === undefined
+        ? properties
+        : Object.fromEntries(keys.filter((key) => key in properties).map((key) => [key, properties[key]]));
+}
+
+declare global {
+    interface Window {
+        posthog?: PostHog;
+    }
+}
+
+/**
+ * Whether an in-meeting event has to be placed on the meetings this tab is in.
+ *
+ * Centrally rather than at each of the dozen call sites: the answer is the same for
+ * all of them and a field that has to be remembered eleven times is a field that will
+ * be forgotten once. Without it these rows say a microphone was muted somewhere, by
+ * someone, and cannot be placed on a meeting.
+ *
+ * An explicit `meetingId` wins: an action on one participant belongs to that
+ * participant's space, and the Jitsi lifecycle events are the authority on themselves.
+ * Without one, the event is about this tab as a whole and is reported once per live
+ * meeting — the microphone is heard in all of them.
+ */
+function needsMeetingContext(eventName: string, properties: object): boolean {
+    return eventName.startsWith("meeting.") && !("meetingId" in properties);
+}
 
 class AnalyticsClient {
-    private posthogPromise: Promise<PostHog> | undefined;
+    private isEnabled_ = false;
+    private adminAnalyticsSender: AdminAnalyticsSender | undefined;
+    private pendingAdminEvents: AdminAnalyticsEvent[] = [];
+    private previousRoomId: string | undefined;
 
     constructor() {
-        const postHogApiKey = POSTHOG_API_KEY;
-        if (postHogApiKey && POSTHOG_URL) {
-            this.posthogPromise = import("posthog-js").then(({ default: posthog }) => {
-                posthog.init(postHogApiKey, { api_host: POSTHOG_URL });
-                //the posthog toolbar need a reference in window to be able to work
-                window.posthog = posthog;
-                return posthog;
-            });
+        if ((POSTHOG_API_KEY || POSTHOG_URL) && (!POSTHOG_API_KEY || !POSTHOG_URL)) {
+            console.warn("PostHog is partially configured. Analytics will not be sent.");
+        }
+
+        if (POSTHOG_API_KEY && POSTHOG_URL && !this.posthog) {
+            console.warn("PostHog is configured but not initialized. Analytics will not be sent.");
+        }
+
+        this.isEnabled_ = POSTHOG_API_KEY != undefined && POSTHOG_URL != undefined;
+    }
+
+    private get posthog(): PostHog | undefined {
+        return window.posthog;
+    }
+
+    public get isEnabled(): boolean {
+        return this.isEnabled_;
+    }
+
+    setAdminAnalyticsSender(sender: AdminAnalyticsSender | undefined): void {
+        this.adminAnalyticsSender = sender;
+        if (!sender) {
+            // The connection is going away (ConnectionManager clears the sender on
+            // cleanup). Every interval this socket still holds open is closed by the
+            // pusher itself as socket_closed, so these handles are already spent —
+            // and this now says so for handles held anywhere, not just the ones
+            // filed here. CoWebsiteStore keeps its own and has no idea a socket
+            // exists; a later close from it is a no-op rather than an unpaired frame.
+            forgetOpenTimedAnalyticsEvents();
+        } else {
+            // A socket is back. Whatever is still happening starts measuring again.
+            resumeOpenTimedAnalyticsEvents();
+        }
+        this.flushPendingAdminEvents();
+    }
+
+    /**
+     * The single choke point every analytics event goes through — both sinks.
+     *
+     * Called straight from the code that does the thing. There used to be a method
+     * here per event — 133 of them, each a name and a signature wrapping this one
+     * line — so reading what a button reported meant opening this file and finding
+     * `menuCredit()` to learn it sends `menu.credit.opened`. The event name at the
+     * point of use says that without the hop, and 133 names stopped being invented.
+     *
+     * Generic over the event name so the catalog checks both halves of the call: an
+     * unknown name and a property the event does not declare are both compile errors
+     * at the call site, rather than an event the admin silently drops months later.
+     * The properties argument is optional for the bare signals, which declare none.
+     *
+     * PostHog is fed from the same call, by looking the event up in
+     * POSTHOG_EVENT_KEYS — the only place a PostHog name is written down, bar the
+     * methods left below. Those reach two PostHog names for one event, which a map
+     * keyed by event cannot express, so they capture on their own line; keeping them
+     * here is what keeps `posthog.capture("wa_…")` out of the call sites.
+     */
+    public trackAdminEvent<N extends AnalyticsEventName>(eventName: N, ...args: AnalyticsEventArgs<N>): void {
+        const [given = {}] = args;
+
+        // Ahead of the capability gate, and deliberately: PostHog is the sink that
+        // predates this pipeline, and on a world whose pusher does not advertise
+        // api/analytics/events-batch it is the only one there is. Gating it on that
+        // capability would switch analytics off for every such world. Once, whatever
+        // the number of meetings: PostHog counts the action, not where it happened.
+        const postHogKey = postHogEventKey(eventName, given);
+        if (postHogKey) {
+            this.posthog?.capture(postHogKey, given);
+        }
+
+        if (!this.canSendAdminAnalytics()) {
+            return;
+        }
+
+        const contexts = needsMeetingContext(eventName, given) ? liveMeetingContexts() : [{}];
+        for (const context of contexts) {
+            const clientEventTimeMs = Date.now();
+            this.dispatchAdminEvent({
+                eventName,
+                source: "front",
+                clientEventTimeMs,
+                eventId: `${eventName}:${clientEventTimeMs}:${Math.random().toString(36).slice(2)}`,
+                properties: { ...context, ...given },
+            } satisfies AdminAnalyticsEvent);
         }
     }
 
+    /**
+     * Opens an interval and hands the handle to the caller, who is the only one who
+     * knows when the thing it measures ends.
+     *
+     * Always returns a handle, even when the admin sink is off, so no caller has to
+     * branch on a capability it should not know about — the returned handle simply
+     * measures nothing.
+     */
+    public openTimedEvent<N extends TimedAnalyticsEventName>(
+        eventName: N,
+        openProperties: TimedAnalyticsEventOpenProperties<N>,
+        options: { reopenOnReconnect?: boolean } = {},
+    ): EndTimedAnalyticsEvent {
+        // Ahead of the capability gate, exactly as in trackAdminEvent and for the same
+        // reason: on a world whose pusher does not advertise the batch endpoint,
+        // PostHog is the only sink there is.
+        const keys = postHogIntervalKeys(eventName);
+        if (keys) {
+            this.posthog?.capture(keys.opens, pick(openProperties, keys.opensProperties));
+        }
+
+        const end = needsMeetingContext(eventName, openProperties)
+            ? openTimedEventPerMeeting((context) =>
+                  this.openAdminInterval(eventName, { ...context, ...openProperties }, options),
+              )
+            : this.openAdminInterval(eventName, openProperties, options);
+
+        if (!keys?.closes) {
+            return end;
+        }
+
+        // One capture however often it is called: `end` is idempotent and PostHog has
+        // to be too, or a holder that closes twice counts two.
+        const closes = keys.closes;
+        let captured = false;
+        return () => {
+            end();
+            if (captured) {
+                return;
+            }
+            captured = true;
+            this.posthog?.capture(closes, pick(openProperties, keys.opensProperties));
+        };
+    }
+
+    private openAdminInterval<N extends TimedAnalyticsEventName>(
+        eventName: N,
+        properties: TimedAnalyticsEventOpenProperties<N>,
+        options: { reopenOnReconnect?: boolean },
+    ): EndTimedAnalyticsEvent {
+        return this.canSendAdminAnalytics()
+            ? openTimedAnalyticsEvent(eventName, properties, this.sendTimedEventReport, options)
+            : NO_INTERVAL;
+    }
+
+    private dispatchAdminEvent(event: AdminAnalyticsEvent): void {
+        if (!this.adminAnalyticsSender) {
+            this.pendingAdminEvents.push(event);
+            if (this.pendingAdminEvents.length > MAX_PENDING_ADMIN_EVENTS) {
+                this.pendingAdminEvents.shift();
+            }
+            return;
+        }
+
+        this.adminAnalyticsSender({ events: [event] });
+    }
+
+    /**
+     * Routes a timed event's control frames through the same buffer as everything
+     * else, rather than straight at the sender.
+     *
+     * The buffer is why: before the room connection exists there is nowhere to send,
+     * and an interval opened then would otherwise vanish while its close still went
+     * out — the pusher drops an unpaired close, so the interval would be lost with no
+     * trace. Buffered, both frames arrive in order and the pusher pairs them.
+     *
+     * The pusher starts timing when the open *reaches* it, so a frame that waits in
+     * this buffer shortens the interval it reports. Nothing here opens an interval
+     * before the connection is up (you cannot stand in an area, or share a screen, in
+     * a room you have not joined), so the wait is bounded by the flush that
+     * setAdminAnalyticsSender triggers. If the buffer overflows and drops an open,
+     * the pusher drops the close too: a lost interval, never an invented one.
+     */
+    private readonly sendTimedEventReport = (message: AnalyticsEventReportMessage): void => {
+        for (const event of message.events ?? []) {
+            this.dispatchAdminEvent(event);
+        }
+    };
+
+    private canSendAdminAnalytics(): boolean {
+        return "capabilities" in window && hasCapability("api/analytics/events-batch") === "v1";
+    }
+
+    private flushPendingAdminEvents(): void {
+        if (!this.adminAnalyticsSender || this.pendingAdminEvents.length === 0) {
+            return;
+        }
+
+        const events = this.pendingAdminEvents;
+        this.pendingAdminEvents = [];
+        this.adminAnalyticsSender({ events });
+    }
+
     identifyUser(uuid: string, email: string | null, roomId: string | null): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.identify(uuid, { uuid, email, wa: true, roomId });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    loggedWithSso(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-logged-sso");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    loggedWithToken(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-logged-token");
-            })
-            .catch((e) => console.error(e));
+        this.posthog?.identify(uuid, { uuid, email, wa: true, roomId });
+        this.trackAdminEvent("auth.user_identified", { roomId });
     }
 
     enteredRoom(roomId: string, roomGroup: string | null): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("$pageView", { roomId, roomGroup });
-                posthog.capture("enteredRoom");
-            })
-            .catch((e) => console.error(e));
+        this.trackAdminEvent("room.visited", { roomId, roomGroup });
+        if (this.previousRoomId && this.previousRoomId !== roomId) {
+            this.trackAdminEvent("room.changed", { fromRoomId: this.previousRoomId, toRoomId: roomId });
+        }
+        this.previousRoomId = roomId;
     }
 
-    openedMenu(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-menu");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    launchEmote(emote: Emoji): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-emote-launch", { ...emote });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    editEmote(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-emote-edit");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    clickOnCustomButton(id: string, label?: string, toolTip?: string, imageSrc?: string) {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-custom-button", { id, label, toolTip, imageSrc });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    enteredJitsi(roomName: string, roomId: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-entered-jitsi", { roomName, roomId });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    enteredMeetingRoom(roomName: string, roomId: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-entered-meeting-room", { roomName, roomId });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    validationName(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-name-validation");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    validationWoka(scene: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-woka-validation", { scene });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    validationVideo(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-video-validation");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    /** New feature analytics **/
-    openedChat(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-chat");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openInvite(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-invite");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    lockDiscussion(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_lockroom");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    screenSharing(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-screensharing");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    follow(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_follow");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    camera(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_camera");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    microphone(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_microphone");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    retryConnectionWebRtc(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_retry_connection_webrtc");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    retryConnectionLivekit(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_retry_connection_livekit");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openBackgroundSettings(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_open_background_settings");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    selectCamera(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_select_camera");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    selectMicrophone(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_select_microphone");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    selectSpeaker(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_select_speaker");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    settingMicrophone(value: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_setting_microphone", {
-                    checkbox: value,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    settingBackground(background: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_setting_background", {
-                    backgroundType: background,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    settingCamera(value: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_setting_camera", {
-                    checkbox: value,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    settingNotification(value: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_setting_notification", {
-                    checkbox: value,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    settingPictureInPicture(value: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_setting_picture_in_picture", {
-                    checkbox: value,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    settingFullscreen(value: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_setting_fullscreen", {
-                    checkbox: value,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    settingAskWebsite(value: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_setting_ask_website", {
-                    checkbox: value,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    settingRequestFollow(value: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_setting_request_follow", {
-                    checkbox: value,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    settingDecreaseAudioVolume(value: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_setting_decrease_audio_volume", {
-                    checkbox: value,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    login(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_login");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    logout(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_logout");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openedWebsite(url: URL): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_opened_website", { url: url.toString() });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    menuCredit(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_credit");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    menuProfile(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_profile");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    menuSetting() {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_setting");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    menuChat(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_chat");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    menuCustom(name: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_custom", { name });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    menuShortcuts(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_shortcuts");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    globalMessage(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_globalmessage");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    sendGlocalTextMessage(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_globalmessage_send");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    sendGlobalSoundMessage(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_globalmessage_sound");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    reportIssue(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_report");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    menuContact(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_contact");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    inviteCopyLink(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_invite_copylink");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    inviteCopyLinkWalk(value: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_invite_copylink_walk", {
-                    checkbox: value,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    editCompanion(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_edit_companion");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    editCamera(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_edit_camera");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    editName(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_edit_name");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    editWoka(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_edit_woka");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    goToPersonalDesk(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_go_to_personal_desk");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    unclaimPersonalDesk(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_unclaim_personal_desk");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    selectWoka(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_wokascene_select");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    selectCompanion(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_companionscene_select");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    selectCustomWoka(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_wokascene_custom");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    layoutPresentChange(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_layout_present");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    addNewParticipant(peerId: string, userId: string, uuid: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_spontaneous_discussion", { peerId, userId, uuid });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openMegaphone(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_action_megaphone");
-            })
-            .catch((e) => console.error(e));
-    }
-
+    // The two ends of one broadcast, named for PostHog, which counts each press. The
+    // admin gets the time on air from the back instead, as `broadcast.participation.ended`.
+    //
+    // The interval is the caller's: startMegaphoneLive is reachable twice without an
+    // intervening stop (the modal and the action bar both lead there), and only the
+    // caller can tell a second press from a second broadcast. Everything that ends a
+    // broadcast goes through stopMegaphoneLive, including being kicked off the stage.
     startMegaphone(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_start_megaphone");
-            })
-            .catch((e) => console.error(e));
+        this.posthog?.capture("wa_start_megaphone");
     }
 
     stopMegaphone(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_stop_megaphone");
-            })
-            .catch((e) => console.error(e));
+        this.posthog?.capture("wa_stop_megaphone");
     }
 
-    toggleMapEditor(open: boolean): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture(`wa_mapeditor_${open ? "open" : "close"}`);
-            })
-            .catch((e) => console.error(e));
+    // enterArea/leaveArea keep their own posthog.capture for the same reason megaphone
+    // does: PostHog counts an enter and a leave, the admin gets one `area.dwell` row.
+    enterArea(id: string, name: string): EndTimedAnalyticsEvent {
+        this.posthog?.capture(`wa_map-editor_enter_area`, { id, name });
+
+        return this.openTimedEvent("area.dwell", { areaId: id, areaName: name }, { reopenOnReconnect: true });
     }
 
-    addMapEditorProperty(type: string, propertyName: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                // 8 decembre 2023: this event is not used anymore
-                // posthog.capture(`wa_map-editor_${type}_add_${propertyName}_property`);
-                posthog.capture(`wa_map-editor_add_property`, {
-                    name: propertyName,
-                    type,
-                });
-            })
-            .catch((e) => console.error(e));
+    leaveArea(id: string, name: string): void {
+        this.posthog?.capture(`wa_map-editor_leaver_area`, { id, name });
     }
 
-    removeMapEditorProperty(type: string, propertyName: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                // 8 decembre 2023: this event is not used anymore
-                // posthog.capture(`wa_map-editor_${type}_remove_${propertyName}_property`);
-                posthog.capture(`wa_map-editor_remove_property`, {
-                    name: propertyName,
-                    type,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openMapEditorTool(toolName: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                // 8 decembre 2023: this event is not used anymore
-                // posthog.capture(`wa_map-editor_open_${toolName}`);
-                posthog.capture(`wa_map-editor_open_tool`, {
-                    name: toolName,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    clickPropertyMapEditor(name: string, style?: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture(`wa_map-editor_click_property`, {
-                    name,
-                    style,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    enterAreaMapEditor(id: string, name: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture(`wa_map-editor_enter_area`, {
-                    id,
-                    name,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    leaveAreaMapEditor(id: string, name: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture(`wa_map-editor_leaver_area`, {
-                    id,
-                    name,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    turnTestSuccess(protocol: string | null): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture(`wa_turn_test_success`, { protocol });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    turnTestFailure(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture(`wa_turn_test_failure`);
-            })
-            .catch((e) => console.error(e));
-    }
-    turnTestTimeout(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture(`wa_turn_test_timeout`);
-            })
-            .catch((e) => console.error(e));
-    }
-
-    noVideoStreamReceived(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture(`wa_no_video_stream_received`);
-            })
-            .catch((e) => console.error(e));
-    }
-
-    moreActionMetting(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_more_meeting_action");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    pinMeetingAction(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_pin_meeting_action");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    muteMicrophoneMeetingAction(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_mute_microphone_meeting_action");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    muteMicrophoneEverybodyMeetingAction(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_mute_microphone_everybody_meeting_action");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    muteVideoMeetingAction(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_mute_video_meeting_action");
-            })
-            .catch((e) => console.error(e));
-    }
-    muteVideoEverybodyMeetingAction(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_mute_video_everybody_meeting_action");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    kickoffMeetingAction(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_kickoff_meeting_action");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    sendPrivateMessageMeetingAction(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_send_private_message_meeting_action");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    reportMeetingAction(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_report_meeting_action");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openExplorationMode(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture(`wa_map-exploration-open`);
-            })
-            .catch((e) => console.error(e));
-    }
-
-    closeExplorationMode(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture(`wa_map-exploration-close`);
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openedRoomList(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-room-list");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openedPopup(targetRectangle: string, id: number): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_opened_popup", { targetRectangle, id });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openGlobalMessage(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_action_globalmessage");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openGlobalAudio(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_action_globalaudio");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openExternalModuleCalendar(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-external-module-calendar");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openExternalModuleTodoList(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-external-module-todolist");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openExternalModule(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-external-module");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    settingAudioVolume(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_setting_audio_volume");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openPicker(applicationName: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_map-editor_open_picker", { applicationName });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openApplicationWithoutPicker(applicationName: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_map-editor_open_application", { applicationName });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openCowebsiteInNewTab(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_open_cowebsite_in_new_tab");
-            })
-            .catch((e) => console.error(e));
-    }
-    copyCowebsiteLink(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_copy_cowebsite_link");
-            })
-            .catch((e) => console.error(e));
-    }
+    // PostHog only. `cowebsite.closed` is now the end of an interval the store opens
+    // and closes, so reporting it from the close BUTTON would both duplicate it and
+    // miss the fifteen other ways a cowebsite goes away.
     closeCowebsite(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_close_cowebsite");
-            })
-            .catch((e) => console.error(e));
-    }
-    fullScreenCowebsite(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_fullscreen_cowebsite");
-            })
-            .catch((e) => console.error(e));
-    }
-    switchCowebsite(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_switch_cowebsite");
-            })
-            .catch((e) => console.error(e));
-    }
-    openProfileMenu(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_open_profile_menu");
-            })
-            .catch((e) => console.error(e));
-    }
-    filterInMapExplorer(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_filter_in_map_explorer");
-            })
-            .catch((e) => console.error(e));
-    }
-    resizeCameraLayout(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_resize_camera_layout");
-            })
-            .catch((e) => console.error(e));
-    }
-    openUserList(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_open_user_list");
-            })
-            .catch((e) => console.error(e));
-    }
-    openMessageList(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_open_message_list");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    sendMessageFromUserList(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_send_message_from_user_list");
-            })
-            .catch((e) => console.error(e));
-    }
-    createMatrixRoom(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_create_matrix_room");
-            })
-            .catch((e) => console.error(e));
-    }
-    createMatrixFolder(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_create_matrix_folder");
-            })
-            .catch((e) => console.error(e));
-    }
-    startMatrixEncryptionConfiguration(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_start_matrix_encryption_configuration");
-            })
-            .catch((e) => console.error(e));
-    }
-    externalModuleChatBandClick(externalModuleName: string, action: string): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_external_module_chat_band_click", {
-                    externalModuleName,
-                    action,
-                });
-            })
-            .catch((e) => console.error(e));
-    }
-    dragDropFile() {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_drag_drop_file");
-            })
-            .catch((e) => console.error(e));
-    }
-    openSayBubble(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_say_bubble_open");
-            })
-            .catch((e) => console.error(e));
-    }
-    openThinkBubble(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_think_bubble_open");
-            })
-            .catch((e) => console.error(e));
-    }
-    clickTopOpenMapExplorer(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_click_top_open_map_explorer");
-            })
-            .catch((e) => console.error(e));
-    }
-    clickCenterToUser(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_click_center_to_user");
-            })
-            .catch((e) => console.error(e));
-    }
-    clickToZoomIn(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_click_to_zoom_in");
-            })
-            .catch((e) => console.error(e));
-    }
-    clickToZoomOut(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_click_to_zoom_out");
-            })
-            .catch((e) => console.error(e));
-    }
-    clickPictureInPicture(open: boolean): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_click_picture_in_picture", { open });
-            })
-            .catch((e) => console.error(e));
-    }
-    goToUser(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_go_to_user");
-            })
-            .catch((e) => console.error(e));
-    }
-    showBusinessCard(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_show_business_card");
-            })
-            .catch((e) => console.error(e));
-    }
-    reportUser(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_report_user");
-            })
-            .catch((e) => console.error(e));
-    }
-    openWokaMenu(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_open_woka_menu");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    recordingStart(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_recording_start");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    recordingStop(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_recording_stop");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openedRecordingList(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_opened_recording_list");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    /** Web app install prompt analytics */
-    pwaInstallPromptShown(isIos: boolean): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_pwa_install_prompt_shown", { isIos });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    pwaInstallClick(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_pwa_install_click");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    pwaContinueInBrowserClick(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_pwa_continue_in_browser_click");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    pwaInstallOutcome(outcome: "accepted" | "dismissed"): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_pwa_install_outcome", { outcome });
-            })
-            .catch((e) => console.error(e));
-    }
-    pwaInstallFromProfileMenuClick(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_pwa_install_from_profile_menu_click");
-            })
-            .catch((e) => console.error(e));
+        this.posthog?.capture("wa_close_cowebsite");
     }
 }
 export const analyticsClient = new AnalyticsClient();

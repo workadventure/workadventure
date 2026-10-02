@@ -2,10 +2,13 @@
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
 
-    export let url: string;
-    export let allowApi: boolean;
+    interface Props {
+        url: string;
+        allowApi: boolean;
+        allow: string | undefined;
+    }
 
-    export let allow: string | undefined;
+    let { url, allowApi, allow }: Props = $props();
 
     let HTMLIframe: HTMLIFrameElement;
 
@@ -22,4 +25,4 @@
     });
 </script>
 
-<iframe title="customSubMenu" src={url} bind:this={HTMLIframe} {allow} class="border-none w-full h-full m-0" />
+<iframe title="customSubMenu" src={url} bind:this={HTMLIframe} {allow} class="border-none w-full h-full m-0"></iframe>

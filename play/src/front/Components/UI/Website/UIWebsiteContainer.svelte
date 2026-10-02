@@ -9,7 +9,7 @@
     {/each}
 </div>
 
-<style lang="scss">
+<style>
     #ui-website-container {
         position: absolute;
         z-index: 180;

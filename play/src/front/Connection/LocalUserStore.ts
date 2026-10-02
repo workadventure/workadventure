@@ -61,12 +61,19 @@ export const languageKey = "language";
 const videoQualityKey = "videoQuality";
 const screenShareQualityKey = "screenShareQuality";
 const bandwidthConstrainedScreenSharePreferenceKey = "bandwidthConstrainedScreenSharePreference";
+const codecRetryTimesKey = "codecRetryTimes";
 const legacyVideoBandwidthKey = "videoBandwidth";
 const legacyScreenShareBandwidthKey = "screenShareBandwidth";
+const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
+const noiseSuppressionProviderKey = "noiseSuppressionProvider";
+const microphoneAutoGainControlKey = "microphoneAutoGainControl";
+const microphoneEchoCancellationKey = "microphoneEchoCancellation";
+const microphoneBrowserNoiseSuppressionKey = "microphoneBrowserNoiseSuppression";
 const INITIAL_MAP_EDITOR_SIDEBAR_WIDTH = 448;
 
 export type VideoQualitySetting = "low" | "recommended" | "high";
 export type BandwidthConstrainedPreference = "maintain-framerate" | "maintain-resolution" | "balanced";
+export type NoiseSuppressionProvider = "workadventure" | "voiceIsolation";
 
 const JwtAuthToken = z
     .object({
@@ -390,7 +397,7 @@ class LocalUserStore {
                 .map(function (c) {
                     return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
                 })
-                .join("")
+                .join(""),
         );
 
         return JSON.parse(jsonPayload);
@@ -551,24 +558,26 @@ class LocalUserStore {
         localStorage.setItem(cameraPrivacySettings, option.toString());
     }
 
-    getCameraPrivacySettings() {
-        //if this setting doesn't exist in LocalUserStore, we set a default value
-        if (localStorage.getItem(cameraPrivacySettings) == null) {
-            localStorage.setItem(cameraPrivacySettings, "false");
+    /** Returns the camera privacy setting, or the given default if the user has not stored a preference yet. */
+    getCameraPrivacySettings(defaultCameraPrivacySettings: boolean = false) {
+        const storedValue = localStorage.getItem(cameraPrivacySettings);
+        if (storedValue == null) {
+            return defaultCameraPrivacySettings;
         }
-        return localStorage.getItem(cameraPrivacySettings) === "true";
+        return storedValue === "true";
     }
 
     setMicrophonePrivacySettings(option: boolean) {
         localStorage.setItem(microphonePrivacySettings, option.toString());
     }
 
-    getMicrophonePrivacySettings() {
-        //if this setting doesn't exist in LocalUserStore, we set a default value
-        if (localStorage.getItem(microphonePrivacySettings) == null) {
-            localStorage.setItem(microphonePrivacySettings, "true");
+    /** Returns the microphone privacy setting, or the given default if the user has not stored a preference yet. */
+    getMicrophonePrivacySettings(defaultMicrophonePrivacySettings: boolean = true) {
+        const storedValue = localStorage.getItem(microphonePrivacySettings);
+        if (storedValue == null) {
+            return defaultMicrophonePrivacySettings;
         }
-        return localStorage.getItem(microphonePrivacySettings) === "true";
+        return storedValue === "true";
     }
 
     getAllUserProperties(context: string): Map<string, PlayerVariable> {
@@ -587,7 +596,7 @@ class LocalUserStore {
                         if (isPublicStr === undefined || value === undefined) {
                             console.error(
                                 'Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: ',
-                                storedValue
+                                storedValue,
                             );
                             continue;
                         }
@@ -623,7 +632,7 @@ class LocalUserStore {
                         } catch (err) {
                             console.info(
                                 "getAllUserProperties => value cannot be parsed to JSON, undefined returned.",
-                                err
+                                err,
                             );
                             valueReturned = undefined;
                         }
@@ -643,7 +652,7 @@ class LocalUserStore {
         value: unknown,
         context: string,
         isPublic: boolean,
-        expire: number | undefined
+        expire: number | undefined,
     ): void {
         const key = userProperties + "_" + context + "__|__" + name;
 
@@ -771,6 +780,25 @@ class LocalUserStore {
         return "maintain-resolution";
     }
 
+    // When each video codec the browser called not smooth was last tried again, keyed by direction and codec
+    // ("encode:vp9"), as a timestamp
+    getCodecRetryTimes(): Record<string, number> {
+        try {
+            const raw = localStorage.getItem(codecRetryTimesKey);
+            if (!raw) {
+                return {};
+            }
+            const parsed = z.record(z.number()).safeParse(JSON.parse(raw));
+            return parsed.success ? parsed.data : {};
+        } catch {
+            return {};
+        }
+    }
+
+    setCodecRetryTime(codec: string, time: number): void {
+        localStorage.setItem(codecRetryTimesKey, JSON.stringify({ ...this.getCodecRetryTimes(), [codec]: time }));
+    }
+
     // Background transformation settings
     setBackgroundMode(value: string) {
         localStorage.setItem("backgroundMode", value);
@@ -797,12 +825,53 @@ class LocalUserStore {
         return localStorage.getItem("backgroundImage");
     }
 
-    setBackgroundVideo(value: string) {
-        localStorage.setItem("backgroundVideo", value);
+    setNoiseSuppressionEnabled(value: boolean) {
+        localStorage.setItem(noiseSuppressionEnabledKey, value.toString());
     }
 
-    getBackgroundVideo(): string | null {
-        return localStorage.getItem("backgroundVideo");
+    getNoiseSuppressionEnabled(): boolean {
+        if (localStorage.getItem(noiseSuppressionProviderKey) === "browser") {
+            localStorage.setItem(noiseSuppressionEnabledKey, "false");
+            localStorage.setItem(noiseSuppressionProviderKey, "workadventure");
+            return false;
+        }
+        return localStorage.getItem(noiseSuppressionEnabledKey) === "true";
+    }
+
+    setNoiseSuppressionProvider(value: NoiseSuppressionProvider) {
+        localStorage.setItem(noiseSuppressionProviderKey, value);
+    }
+
+    getNoiseSuppressionProvider(): NoiseSuppressionProvider {
+        const value = localStorage.getItem(noiseSuppressionProviderKey);
+        if (value === "voiceIsolation" || value === "workadventure") {
+            return value;
+        }
+        return "workadventure";
+    }
+
+    setMicrophoneAutoGainControl(value: boolean) {
+        localStorage.setItem(microphoneAutoGainControlKey, value.toString());
+    }
+
+    getMicrophoneAutoGainControl(): boolean {
+        return localStorage.getItem(microphoneAutoGainControlKey) !== "false";
+    }
+
+    setMicrophoneEchoCancellation(value: boolean) {
+        localStorage.setItem(microphoneEchoCancellationKey, value.toString());
+    }
+
+    getMicrophoneEchoCancellation(): boolean {
+        return localStorage.getItem(microphoneEchoCancellationKey) !== "false";
+    }
+
+    setMicrophoneBrowserNoiseSuppression(value: boolean) {
+        localStorage.setItem(microphoneBrowserNoiseSuppressionKey, value.toString());
+    }
+
+    getMicrophoneBrowserNoiseSuppression(): boolean {
+        return localStorage.getItem(microphoneBrowserNoiseSuppressionKey) !== "false";
     }
 
     getRequestedStatus(): RequestedStatus | null {
@@ -894,6 +963,23 @@ class LocalUserStore {
 
     getMatrixLoginToken() {
         return localStorage.getItem(matrixLoginToken);
+    }
+
+    /**
+     * Forgets everything that identifies the current Matrix session.
+     *
+     * Called on logout, and whenever the homeserver tells us the session is dead: credentials left behind
+     * are replayed on the next page load, and MatrixClientWrapper only resets its stores when the stored
+     * user id differs from the one it just logged in with - so a leftover user id would restore the broken
+     * session instead of starting over. The device id is deliberately kept: it is stored per user and the
+     * next login overwrites it with the one the homeserver hands out.
+     */
+    clearMatrixSession() {
+        this.setMatrixLoginToken(null);
+        this.setMatrixUserId(null);
+        this.setMatrixAccessToken(null);
+        this.setMatrixRefreshToken(null);
+        this.setMatrixAccessTokenExpireDate(null);
     }
 
     //TODO : Remove duplicate code (getMatrixUserId) and change matrix id to chatID in localStorage

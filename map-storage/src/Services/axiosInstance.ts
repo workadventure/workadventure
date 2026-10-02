@@ -20,5 +20,5 @@ _axios.interceptors.request.use(
     },
     (error) => {
         return Promise.reject(asError(error));
-    }
+    },
 );

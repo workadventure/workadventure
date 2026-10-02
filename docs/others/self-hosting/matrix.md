@@ -84,7 +84,7 @@ integration. This user will be used by WorkAdventure to create rooms and invite 
 You can create a new user in Synapse using the `register_new_matrix_user` script:
 
 ```
-register_new_matrix_user -u @admin-wa:myserver.com -p mypassword -c /etc/matrix-synapse/homeserver.yaml -a http://localhost:8008
+register_new_matrix_user -u admin-wa -p mypassword -c /etc/matrix-synapse/homeserver.yaml -a http://localhost:8008
 ```
 
 See https://manpages.debian.org/testing/matrix-synapse/register_new_matrix_user.1.en.html
@@ -103,6 +103,8 @@ If you are using docker-compose to start WorkAdventure, you can set the followin
 MATRIX_API_URI=
 # The public URL of the Matrix server. This is the URL that the WorkAdventure clients will use to communicate with the Matrix server.
 MATRIX_PUBLIC_URI=
+# The Matrix server name used in Matrix user and room IDs. This must match the server_name in the Synapse configuration.
+MATRIX_DOMAIN=
 # A valid Matrix user that will be used to create rooms and invite users.
 MATRIX_ADMIN_USER=
 MATRIX_ADMIN_PASSWORD=
@@ -122,6 +124,8 @@ play:
     MATRIX_API_URI: ""
     # The public URL of the Matrix server. This is the URL that the WorkAdventure clients will use to communicate with the Matrix server.
     MATRIX_PUBLIC_URI: ""
+    # The Matrix server name used in Matrix user and room IDs. This must match the server_name in the Synapse configuration.
+    MATRIX_DOMAIN: ""
     # A valid Matrix user that will be used to create rooms and invite users.
     MATRIX_ADMIN_USER: ""
   secretEnv:

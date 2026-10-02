@@ -3,6 +3,10 @@ export * from "./protobuf-transformers/undefinedChecker";
 export * from "./protobuf-transformers/transformers";
 
 export * from "./JsonMessages/AdminApiData";
+export * from "./JsonMessages/AnalyticsEventCatalog";
+export * from "./JsonMessages/AnalyticsEventsBatch";
+// Not re-exported through here on purpose: the front imports it by path so it gets
+// the PostHog names without the catalog's Zod schemas. See AnalyticsPostHogKeys.ts.
 export * from "./JsonMessages/ApiVersion";
 export * from "./JsonMessages/ApplicationDefinitionInterface";
 export * from "./JsonMessages/CapabilitiesData";
@@ -13,7 +17,6 @@ export * from "./JsonMessages/MapDetailsData";
 export * from "./JsonMessages/MetaTagFavicon";
 export * from "./JsonMessages/MetaTagManifestIcon";
 export * from "./JsonMessages/PlayerTextures";
-export * from "./JsonMessages/RegisterData";
 export * from "./JsonMessages/RoomRedirect";
 export * from "./JsonMessages/OpidWokaNamePolicy";
 export * from "./JsonMessages/MeResponse";

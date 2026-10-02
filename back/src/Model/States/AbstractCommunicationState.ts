@@ -15,7 +15,7 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         protected readonly _currentStrategy: T,
         protected users: ReadonlyMap<string, SpaceUser>,
         protected usersToNotify: ReadonlyMap<string, SpaceUser>,
-        protected readonly MAX_USERS_FOR_WEBRTC: number = Number(CommunicationConfig.MAX_USERS_FOR_WEBRTC)
+        protected readonly MAX_USERS_FOR_WEBRTC: number = Number(CommunicationConfig.MAX_USERS_FOR_WEBRTC),
     ) {}
 
     public init(): Promise<void> {
@@ -29,7 +29,7 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
             {
                 $case: "switchMessage" | "finalizeSwitchMessage";
             }
-        >
+        >,
     ): void {
         const privateEvent: PrivateEvent = {
             spaceName: this._space.getSpaceName(),
@@ -38,7 +38,7 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
             spaceEvent: {
                 event,
             },
-        } as PrivateEvent;
+        };
         this._space.dispatchPrivateEvent(privateEvent);
     }
 
@@ -107,7 +107,7 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
 
     public handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
-        senderUserId: string
+        senderUserId: string,
     ): void {
         this._currentStrategy.handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
     }

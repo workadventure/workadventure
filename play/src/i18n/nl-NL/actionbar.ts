@@ -46,6 +46,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             "Geen geluid gedetecteerd van je microfoon. Er kan een probleem zijn; probeer je microfoon te wijzigen in de instellingen.",
         noSoundWarningPressEnter:
             "Geen geluid gedetecteerd van je microfoon. Druk op Enter om de instellingen te openen.",
+        advancedNoiseReduction: "Geavanceerde ruisreductie",
+        noiseSuppressionInitializing: "Aangepaste ruisonderdrukking initialiseren...",
+        noiseSuppressionUnsupported: "Deze browser kan aangepaste ruisonderdrukking niet uitvoeren.",
+        noiseSuppressionError:
+            "Aangepaste ruisonderdrukking is mislukt. Er wordt teruggevallen op de ingebouwde ruisonderdrukking van de browser.",
         openSettings: "Instellingen openen",
         ignore: "Negeren",
     },
@@ -70,6 +75,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         SPEAKER: "In een vergadering",
         LIVEKIT: "In een vergadering",
         LISTENER: "In een vergadering",
+        SOUND_BLOCKED: "Geluid geblokkeerd",
     },
     subtitle: {
         camera: "Camera",
@@ -85,7 +91,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Middelmatige vervaging",
         blurHigh: "Grote vervaging",
         images: "Afbeeldingen",
-        videos: "Video's",
     },
     help: {
         chat: {
@@ -99,6 +104,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "Een emoji weergeven",
             desc: "Druk uit hoe je je voelt met slechts één klik met emoji-reacties. Gewoon tikken en gaan!",
+        },
+        raiseHand: {
+            title: "Hand opsteken",
+            desc: "Geef aan dat je iets wilt zeggen. Je opgestoken hand wordt op de kaart en op je video getoond, zodat iedereen weet wie er aan de beurt is.",
         },
         audioManager: {
             title: "Volume van omgevingsgeluiden",
@@ -125,6 +134,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "Kies gebied om te vergrendelen/ontgrendelen",
             bubbleLabel: "Discussiebubbel",
             unnamedArea: "Naamloos gebied",
+        },
+        giveBackFloor: {
+            title: "Woord teruggeven",
+            desc: "Je hebt het woord gekregen. Klik om te stoppen met spreken en het terug te geven.",
         },
         megaphone: {
             title: "Megafoon stoppen",
@@ -173,6 +186,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "U kunt de picture-in-picture functie gebruiken om een video of presentatie te bekijken terwijl u in een gesprek bent. Klik gewoon op het picture-in-picture pictogram en geniet van uw inhoud.",
         },
         videoNotSupported: "Uw browser ondersteunt de videotag niet.",
+    },
+    raisedHands: {
+        speaking: "Aan het woord",
+        title: "Opgestoken handen",
+        empty: "Niemand heeft de hand opgestoken",
+        help: "Bekijk wie zijn hand heeft opgestoken, op volgorde, en geef diegene het woord.",
+        lowerHand: "Hand laten zakken",
+        lowerAllHands: "Alle laten zakken",
     },
     listStatusTitle: {
         enable: "Wijzig je status",

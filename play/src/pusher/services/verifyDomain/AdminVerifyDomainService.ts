@@ -41,7 +41,7 @@ export class AdminVerifyDomainService implements VerifyDomainInterface {
             .catch((err) => {
                 console.error(
                     `Invalid redirection URL. Domain provided is unknown. This might be a hacking attempt.`,
-                    err
+                    err,
                 );
                 return false;
             });

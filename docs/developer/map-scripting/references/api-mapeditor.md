@@ -12,8 +12,8 @@ We opted for a different approach to the event's detection of 'enter' and 'leave
 ## Detecting when the user enters/leaves an area edited by the map editor
 
 ```ts
-WA.mapEditor.area.onEnter(name: string): Subscription
-WA.mapEditor.area.onLeave(name: string): Subscription
+WA.mapEditor.area.onEnter(name: string): Subscription<{ reason: "initial" | "move" }>
+WA.mapEditor.area.onLeave(name: string): Subscription<{ reason: "initial" | "move" }>
 ```
 
 Listens to the position of the current user. The event is triggered when the user enters or leaves a given area.
@@ -35,6 +35,21 @@ const myAreaLeaveSubscriber = WA.mapEditor.area.onLeave("myAreaName").subscribe(
 // If you want to stop listening to the events at some point:
 myAreaEnterSubscriber.unsubscribe();
 myAreaLeaveSubscriber.unsubscribe();
+```
+
+**Note:** If the user is already inside the area when the `onEnter` callback is registered, the callback will fire immediately 
+upon subscription. Similarly, if the user is already outside the area when an `onLeave` callback is registered, that callback 
+will also fire immediately. If you want to avoid this behavior, you can check the "reason" parameter in the callback, which will 
+be "initial" in this case. If the user enters or leaves the area after the subscription, the "reason" parameter will be "move".
+
+```ts
+WA.mapEditor.area.onEnter("myAreaName").subscribe(({ reason }) => {
+    if (reason === "initial") {
+        // The user was already inside the area when the subscription was made.
+        return;
+    }
+    // ...
+});
 ```
 
 ## Getting the list of all areas created in the map editor

@@ -25,7 +25,7 @@ test.describe("Say bubbles @nomobile @nowebkit", () => {
         await using bobPage = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "say_bubbles"));
 
         // Wait for both users to be connected
-        await expect(alicePage.getByText("Bob", { exact: true })).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByText("Bob", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
         await Map.teleportToPosition(alicePage, 15 * 12, 15 * 12);
 
         // Alice sends a message
@@ -41,8 +41,6 @@ test.describe("Say bubbles @nomobile @nowebkit", () => {
         await expect(bobPage.locator(".say-bubble")).toHaveText("Hello Bob, this is a test message!");
 
         // Close both pages
-        await alicePage.context().close();
-        await bobPage.context().close();
     });
 
     test("should display a thinking bubble and be received by other users", async ({ browser }) => {
@@ -56,7 +54,7 @@ test.describe("Say bubbles @nomobile @nowebkit", () => {
         await using bobPage = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "say_bubbles"));
 
         // Wait for both users to be connected
-        await expect(alicePage.getByText("Bob", { exact: true })).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByText("Bob", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
         await Map.teleportToPosition(alicePage, 15 * 12, 15 * 12);
 
         // Alice sends a thinking message
@@ -74,8 +72,6 @@ test.describe("Say bubbles @nomobile @nowebkit", () => {
         await expect(bobPage.locator(".thinking-cloud")).toHaveText("This is a thinking message for Bob!");
 
         // Close both pages
-        await alicePage.context().close();
-        await bobPage.context().close();
     });
 
     test("should display a Say and Think bubble via action menu", async ({ browser }) => {
@@ -94,7 +90,5 @@ test.describe("Say bubbles @nomobile @nowebkit", () => {
         await menu.closeSayPopup(alicePage);
         // Open think popup
         await menu.clickOnThinkBubble(alicePage);
-
-        await alicePage.context().close();
     });
 });
