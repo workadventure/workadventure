@@ -59,4 +59,26 @@ describe("StringUtils", () => {
             expect(StringUtils.containsNonLatinCharacters("123!@#")).toBe(false);
         });
     });
+
+    describe("toUrlHashName", () => {
+        it("should keep a name that already works in a URL", () => {
+            expect(StringUtils.toUrlHashName("reception")).toBe("reception");
+            expect(StringUtils.toUrlHashName("from-lobby")).toBe("from-lobby");
+            expect(StringUtils.toUrlHashName("room_2")).toBe("room_2");
+        });
+
+        it("should lowercase the name and replace spaces with dashes", () => {
+            expect(StringUtils.toUrlHashName("  Main  Hall ")).toBe("main-hall");
+        });
+
+        it("should drop accents but keep the letters", () => {
+            expect(StringUtils.toUrlHashName("Réception")).toBe("reception");
+            expect(StringUtils.toUrlHashName("Café Ölçü")).toBe("cafe-olcu");
+        });
+
+        it("should remove the characters that break the URL hash", () => {
+            expect(StringUtils.toUrlHashName("a&b=c#d%e")).toBe("abcde");
+            expect(StringUtils.toUrlHashName("hall!@$^*.")).toBe("hall");
+        });
+    });
 });
