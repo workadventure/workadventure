@@ -24,7 +24,7 @@ Please note that [access to the map editor](index.md) is required to perform the
 ![](../images/editor/megaphone_general.png)
 
 1. Open the map editor (**Tools** > **Map editor** in the action bar).
-2. Click the "configure my room" icon. A configuration modal will appear.
+2. Click the **Configure my room** icon. A configuration window opens.
 3. Navigate to the **Megaphone** tab.
 4. Toggle the megaphone on or off.
 5. Give a name to your megaphone in **Space name**.
@@ -42,8 +42,15 @@ The tab also offers the following options:
 - **Auditorium mode** (off by default): the person broadcasting sees the camera of every participant who has their camera on.
   The participants do not see each other, and nobody in the audience is heard: only the person broadcasting speaks.
 - **Enable megaphone recording** (off by default): allows recording what is broadcast through the megaphone.
-  In **Recording rights**, you can restrict recording to some tags. The user must also be allowed to record in the room
-  (see the **Recording** tab) and to use the megaphone. Turning recording off does not stop a recording in progress.
+  In **Recording rights**, you can restrict recording to some tags. To record, users must be logged in and allowed
+  to use the megaphone, and they must match the rights of the **Recording** tab and of **Recording rights**.
+  Users with the `admin` tag skip both recording rights, but still need the right to use the megaphone.
+  Turning recording off does not stop a recording in progress.
+
+:::note
+The help text under **Auditorium mode** mentions the microphones of the audience. In practice, only their cameras
+are shared with the person broadcasting: the audience is not heard, unless someone is given the floor.
+:::
 
 Click **Save** to apply the settings.
 
@@ -66,10 +73,10 @@ Rooms where the megaphone is disabled do not receive the broadcast.
 
 ![](../images/editor/megaphone_live_settings.png)
 
-4. Turn on your camera, your microphone and/or your screen sharing (at least one of them), choose your camera and microphone if needed,
-   then click **Start megaphone**.
+4. Turn on your camera or your microphone in the action bar (**Start megaphone** stays disabled until one of them is on).
+   You can also share your screen. Choose your camera and microphone in this window if needed, then click **Start megaphone**.
 
-Everyone in the room or the world now sees and hears you, like in a video call.
+Everyone reached by the megaphone now receives what you have turned on: your camera, your microphone and your screen.
 Your video tile carries a megaphone badge (and is framed in yellow when your camera is on), and the megaphone button appears in the action bar, highlighted.
 
 ![](../images/editor/megaphone_live.png)
@@ -85,7 +92,8 @@ The participants see your video tile with the same megaphone badge:
 
 While you are broadcasting, participants can raise their hand. Their raised hand appears in a **Raised hands** panel
 that only you and the administrators see. From this panel, you can lower hands or **Give the floor** to someone:
-their camera and microphone are then broadcast to everyone, until you click **Take back the floor** or they give it back.
+their camera and microphone are then broadcast to everyone, if they are on. Giving the floor does not turn them on:
+someone whose microphone is off is asked to turn it on. Click **Take back the floor** to stop, or let them give the floor back.
 
 ### Recording the megaphone
 
@@ -104,7 +112,7 @@ Participants get an "Announcement" notification and, if sound notifications are 
 If you can't see **Send global message** in the **Tools** menu, please check:
 
 - that the megaphone is enabled in this room (see [Configuring the megaphone](#configuring-the-megaphone))
-- that you are logged in with an account that has one of the tags allowed to use the megaphone (see [Configuring the megaphone](#configuring-the-megaphone))
+- if **Rights** lists tags, that you are logged in with an account that has one of them. If **Rights** is empty, anyone can use the megaphone (see [Configuring the megaphone](#configuring-the-megaphone))
 
 Administrators always see the button, but **Start live message** stays unavailable if the megaphone is disabled or if they don't have one of the allowed tags.
 
