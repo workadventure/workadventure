@@ -59,7 +59,7 @@
         status = undefined,
         errorHelperText = null,
         min = 0,
-        max = 50,
+        max,
         step = 0,
         onkeypress = () => {},
         onkeydown = () => {},
