@@ -44,6 +44,7 @@
     import MaxUsersInAreaPropertyEditor from "../PropertyEditor/MaxUsersInAreaPropertyEditor.svelte";
     import LockableAreaPropertyEditor from "../PropertyEditor/LockableAreaPropertyEditor.svelte";
     import { getAreaMapEditors, hasMeetingProperty } from "../../../Rules/MeetingRules";
+    import { StringUtils } from "../../../Utils/StringUtils";
 
     let properties: AreaDataProperties = $state([]);
     let areaName = $state("");
@@ -470,6 +471,10 @@
     }
 
     function onUpdateName() {
+        // A start area reached with "#name" in the URL keeps a name that works in a URL, also when renamed
+        if (properties.some((property) => property.type === "start" && property.isDefault === false)) {
+            areaName = StringUtils.toUrlHashName(areaName);
+        }
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.setAreaName(areaName);
         }
