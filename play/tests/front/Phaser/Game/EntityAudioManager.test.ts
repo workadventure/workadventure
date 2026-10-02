@@ -148,6 +148,15 @@ describe("EntityAudioManager", () => {
             expect(playAudio).toHaveBeenCalledWith(SOUND_URL, MAP_URL, 1, false);
         });
 
+        it("should play at full volume when the radius was emptied in the editor", () => {
+            const { entityMessages, player } = givenAnEntityAudioManager([aBroadcastProperty({ audibleRadius: null })]);
+            player.x = 5000;
+
+            entityMessages.next(soundPlayedMessage());
+
+            expect(playAudio).toHaveBeenCalledWith(SOUND_URL, MAP_URL, 1, false);
+        });
+
         it("should lower the volume with the distance to the entity", () => {
             const { entityMessages, player } = givenAnEntityAudioManager([aBroadcastProperty({ audibleRadius: 200 })]);
             player.x = 150; // 50px away from an entity whose radius is 200
