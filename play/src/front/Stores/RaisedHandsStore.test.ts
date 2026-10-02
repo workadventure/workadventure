@@ -1,70 +1,74 @@
 import { type Writable, get } from "svelte/store";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { RaisedHand } from "../Space/SpaceInterface";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { RaisedHand, RaisedHandSection, SpaceInterface } from "../Space/SpaceInterface";
 
-// The raise-hand stores derive from the (metadata-sourced) queue exposed by PeerStore. Mock it with a plain writable.
+// The raise-hand stores derive from the per-space sections exposed by PeerStore. Mock it with a plain writable.
 vi.mock("./PeerStore", async () => {
     const { writable: w } = await import("svelte/store");
-    return { raisedHandsStore: w<RaisedHand[]>([]) };
+    return { raisedHandSectionsStore: w<RaisedHandSection[]>([]) };
 });
 
-import { raisedHandsStore } from "./PeerStore";
-import { raisedHandsOrderStore, raisedHandPlayerIdsStore } from "./RaisedHandsStore";
+import { raisedHandSectionsStore } from "./PeerStore";
+import { findHandPosition, raisedHandsOrderStore, raisedHandPlayerIdsStore } from "./RaisedHandsStore";
 
-const queue = raisedHandsStore as unknown as Writable<RaisedHand[]>;
+const sections = raisedHandSectionsStore as unknown as Writable<RaisedHandSection[]>;
+
+function section(spaceName: string, hands: RaisedHand[]): RaisedHandSection {
+    return { space: { getName: () => spaceName } as SpaceInterface, hands, speakers: [], onAirHere: false };
+}
+
+const alice = { spaceUserId: "room_1", name: "Alice", at: 1000 };
+const bob = { spaceUserId: "room_2", name: "Bob", at: 2000 };
+const carol = { spaceUserId: "room_3", name: "Carol", at: 500 };
 
 describe("raisedHandsOrderStore", () => {
-    beforeEach(() => queue.set([]));
-    afterEach(() => queue.set([]));
+    afterEach(() => sections.set([]));
 
-    it("maps each spaceUserId to its 1-based position in the queue order", () => {
-        queue.set([
-            { spaceUserId: "room_1", name: "Alice", at: 1000 },
-            { spaceUserId: "room_2", name: "Bob", at: 2000 },
-        ]);
+    it("numbers each space's queue on its own", () => {
+        // Carol raised her hand for the megaphone first; in the bubble, Bob is still first.
+        sections.set([section("bubble", [bob, alice]), section("megaphone", [carol, bob])]);
 
         const order = get(raisedHandsOrderStore);
-        expect(order.get("room_1")).toBe(1);
-        expect(order.get("room_2")).toBe(2);
-        expect(order.size).toBe(2);
+        expect(findHandPosition(order, "bubble", bob.spaceUserId)).toEqual({ position: 1, queueSize: 2 });
+        expect(findHandPosition(order, "megaphone", bob.spaceUserId)).toEqual({ position: 2, queueSize: 2 });
     });
 
-    it("is empty when nobody raised their hand", () => {
-        queue.set([]);
-        expect(get(raisedHandsOrderStore).size).toBe(0);
+    it("does not show a hand raised in another space on a tile of this one", () => {
+        sections.set([section("bubble", [alice]), section("megaphone", [carol])]);
+
+        expect(findHandPosition(get(raisedHandsOrderStore), "bubble", carol.spaceUserId)).toBeUndefined();
     });
 
-    it("reorders when the queue changes (e.g. the first lowers their hand)", () => {
-        queue.set([
-            { spaceUserId: "room_1", name: "Alice", at: 1000 },
-            { spaceUserId: "room_2", name: "Bob", at: 2000 },
-        ]);
-        queue.set([{ spaceUserId: "room_2", name: "Bob", at: 2000 }]);
+    it("looks the local tile's hand up in every queue, as its space is a placeholder", () => {
+        sections.set([section("bubble", [alice]), section("megaphone", [carol, bob])]);
+
+        expect(findHandPosition(get(raisedHandsOrderStore), undefined, bob.spaceUserId)).toEqual({
+            position: 2,
+            queueSize: 2,
+        });
+    });
+
+    it("renumbers when the queue changes (e.g. the first lowers their hand)", () => {
+        sections.set([section("bubble", [alice, bob])]);
+        sections.set([section("bubble", [bob])]);
 
         const order = get(raisedHandsOrderStore);
-        expect(order.has("room_1")).toBe(false);
-        expect(order.get("room_2")).toBe(1);
+        expect(findHandPosition(order, "bubble", alice.spaceUserId)).toBeUndefined();
+        expect(findHandPosition(order, "bubble", bob.spaceUserId)).toEqual({ position: 1, queueSize: 1 });
     });
 });
 
 describe("raisedHandPlayerIdsStore", () => {
-    beforeEach(() => queue.set([]));
-    afterEach(() => queue.set([]));
+    afterEach(() => sections.set([]));
 
-    it("parses the numeric player id from each spaceUserId", () => {
-        queue.set([
-            { spaceUserId: "room_5", name: "Alice", at: 1 },
-            { spaceUserId: "room_6", name: "Bob", at: 2 },
-        ]);
+    it("parses the numeric player id of every raised hand, whatever its space", () => {
+        sections.set([section("bubble", [alice]), section("megaphone", [bob, alice])]);
 
-        const ids = get(raisedHandPlayerIdsStore);
-        expect(ids.has(5)).toBe(true);
-        expect(ids.has(6)).toBe(true);
-        expect(ids.size).toBe(2);
+        expect([...get(raisedHandPlayerIdsStore)].sort()).toEqual([1, 2]);
     });
 
     it("ignores spaceUserIds without a numeric suffix (e.g. the local user)", () => {
-        queue.set([{ spaceUserId: "local", name: "Me", at: 1 }]);
+        sections.set([section("bubble", [{ spaceUserId: "local", name: "Me", at: 1 }])]);
         expect(get(raisedHandPlayerIdsStore).size).toBe(0);
     });
 });

@@ -3,11 +3,11 @@ globalThis.Phaser = Phaser;
 
 import { describe, expect, it, vi } from "vitest";
 import { Subject } from "rxjs";
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { FilterType } from "@workadventure/messages";
 import { emptySpaceState } from "@workadventure/shared-utils";
 import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
-import { SpaceRegistry, uniqueBySpaceUserId } from "../SpaceRegistry/SpaceRegistry";
+import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import type { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
@@ -244,55 +244,73 @@ describe("SpaceProviderInterface implementation", () => {
                 expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledTimes(3);
             });
         });
-        describe("SpaceRegistry lowerHand", () => {
-            it("should ask only the space that holds the raised hand to lower it", async () => {
-                const roomConnectionMock = new MockRoomConnectionForSpaces();
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
-
-                await spaceRegistry.joinSpace(
-                    "space-without-hands",
-                    FilterType.ALL_USERS,
-                    [],
-                    new AbortController().signal,
-                );
-                const spaceWithHands = await spaceRegistry.joinSpace(
-                    "space-with-hands",
-                    FilterType.ALL_USERS,
-                    [],
-                    new AbortController().signal,
-                );
+        describe("SpaceRegistry raisedHandSectionsStore", () => {
+            const replaceState = (
+                roomConnectionMock: MockRoomConnectionForSpaces,
+                space: SpaceInterface,
+                state: Partial<ReturnType<typeof emptySpaceState>>,
+            ) =>
                 roomConnectionMock.spaceStatePatchMessageStream.next({
-                    spaceName: spaceWithHands.getName(),
-                    patch: JSON.stringify([
-                        {
-                            op: "replace",
-                            path: "",
-                            value: {
-                                ...emptySpaceState(),
-                                raisedHands: [{ spaceUserId: "user-1", name: "Alice", at: 1 }],
-                            },
-                        },
-                    ]),
+                    spaceName: space.getName(),
+                    patch: JSON.stringify([{ op: "replace", path: "", value: { ...emptySpaceState(), ...state } }]),
                 });
 
-                await spaceRegistry.lowerHand("user-1");
-
-                expect(roomConnectionMock.alterSpaceState).toHaveBeenCalledOnce();
-                expect(roomConnectionMock.alterSpaceState).toHaveBeenCalledWith(
-                    spaceWithHands.getName(),
-                    { $case: "lowerHand", lowerHand: { targetSpaceUserId: "user-1" } },
-                    { timeout: undefined },
-                );
-            });
-            it("should do nothing when nobody raised that hand", async () => {
+            it("should keep one section per space with a raised hand, never merging spaces", async () => {
                 const roomConnectionMock = new MockRoomConnectionForSpaces();
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
+                const spaceRegistry = new SpaceRegistry(roomConnectionMock, new Subject());
 
-                await spaceRegistry.joinSpace("space-test", FilterType.ALL_USERS, [], new AbortController().signal);
+                await spaceRegistry.joinSpace("space-quiet", FilterType.ALL_USERS, [], new AbortController().signal);
+                const bubble = await spaceRegistry.joinSpace(
+                    "space-bubble",
+                    FilterType.ALL_USERS,
+                    [],
+                    new AbortController().signal,
+                );
+                const megaphone = await spaceRegistry.joinSpace(
+                    "space-megaphone",
+                    FilterType.LIVE_STREAMING_USERS,
+                    [],
+                    new AbortController().signal,
+                );
+                replaceState(roomConnectionMock, bubble, {
+                    raisedHands: [{ spaceUserId: "user-1", name: "Alice", at: 1 }],
+                });
+                replaceState(roomConnectionMock, megaphone, {
+                    raisedHands: [
+                        { spaceUserId: "user-2", name: "Bob", at: 2 },
+                        { spaceUserId: "user-1", name: "Alice", at: 3 },
+                    ],
+                });
 
-                await spaceRegistry.lowerHand("nobody");
+                const sections = get(spaceRegistry.raisedHandSectionsStore);
+                expect(sections.map((section) => section.space.getName())).toEqual(["space-bubble", "space-megaphone"]);
+                expect(sections[0].hands.map((hand) => hand.name)).toEqual(["Alice"]);
+                expect(sections[1].hands.map((hand) => hand.name)).toEqual(["Bob", "Alice"]);
+            });
 
-                expect(roomConnectionMock.alterSpaceState).not.toHaveBeenCalled();
+            it("should say the local user is on air as a host, but not as a guest given the floor", async () => {
+                const roomConnectionMock = new MockRoomConnectionForSpaces();
+                roomConnectionMock.emitJoinSpace.mockResolvedValue("room_me");
+                const spaceRegistry = new SpaceRegistry(roomConnectionMock, new Subject());
+                const megaphone = await spaceRegistry.joinSpace(
+                    "space-megaphone",
+                    FilterType.LIVE_STREAMING_USERS,
+                    [],
+                    new AbortController().signal,
+                );
+                replaceState(roomConnectionMock, megaphone, {
+                    raisedHands: [{ spaceUserId: "user-2", name: "Bob", at: 2 }],
+                });
+                expect(get(spaceRegistry.raisedHandSectionsStore)[0].onAirHere).toBe(false);
+
+                megaphone.startStreaming();
+                expect(get(spaceRegistry.raisedHandSectionsStore)[0].onAirHere).toBe(true);
+
+                replaceState(roomConnectionMock, megaphone, {
+                    raisedHands: [{ spaceUserId: "user-2", name: "Bob", at: 2 }],
+                    floorHolders: [{ spaceUserId: megaphone.mySpaceUserId, name: "Me" }],
+                });
+                expect(get(spaceRegistry.raisedHandSectionsStore)[0].onAirHere).toBe(false);
             });
         });
         describe("SpaceRegistry race condition handling", () => {
@@ -384,14 +402,5 @@ describe("SpaceProviderInterface implementation", () => {
                 expect(roomConnectionMock.emitJoinSpace).toHaveBeenCalledOnce();
             });
         });
-    });
-});
-
-describe("uniqueBySpaceUserId", () => {
-    it("should keep a user raising their hand in two spaces once, in first-seen order", () => {
-        // A hand raised in a bubble also reaches the room megaphone: the same spaceUserId is in both queues.
-        const alice = { spaceUserId: "room_alice", name: "Alice" };
-        const bob = { spaceUserId: "room_bob", name: "Bob" };
-        expect(uniqueBySpaceUserId([[alice, bob], [bob], [alice]])).toEqual([alice, bob]);
     });
 });
