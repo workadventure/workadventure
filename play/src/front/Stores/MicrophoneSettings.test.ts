@@ -36,6 +36,7 @@ describe("buildMicrophoneAudioConstraints", () => {
         noiseSuppressionEnabled: false,
         browserNoiseSuppressionEnabled: true,
         effectiveNoiseSuppressionProvider: "workadventure" as const,
+        noiseSuppressionEngine: "deepfilternet" as const,
         browserNoiseSuppressionSupported: true,
         workAdventureNoiseSuppressionFailed: false,
         customNoiseSuppressionActive: false,
@@ -106,12 +107,27 @@ describe("buildMicrophoneAudioConstraints", () => {
         });
     });
 
-    it("disables native processing and requests 16 kHz for active WorkAdventure noise suppression", () => {
+    it("disables native processing without a sample rate for active DeepFilterNet3 noise suppression", () => {
+        const constraints = buildMicrophoneAudioConstraints({
+            ...defaultOptions,
+            noiseSuppressionEnabled: true,
+            customNoiseSuppressionActive: true,
+        });
+
+        expect(constraints).toMatchObject({
+            noiseSuppression: false,
+            voiceIsolation: false,
+        });
+        expect(constraints).not.toHaveProperty("sampleRate");
+    });
+
+    it("disables native processing and requests 16 kHz for active DTLN noise suppression", () => {
         expect(
             buildMicrophoneAudioConstraints({
                 ...defaultOptions,
                 microphoneDeviceId: "mic-1",
                 noiseSuppressionEnabled: true,
+                noiseSuppressionEngine: "dtln",
                 customNoiseSuppressionActive: true,
             }),
         ).toMatchObject({

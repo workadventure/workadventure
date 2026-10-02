@@ -64,6 +64,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "ใช้ระบบตัดเสียงรบกวนในตัวของเบราว์เซอร์",
             voiceIsolation: "แยกเสียงพูด",
             voiceIsolationDescription: "ใช้ระบบแยกเสียงพูดของเบราว์เซอร์และระบบปฏิบัติการเมื่อรองรับ",
+            noiseSuppressionEngine: "เอนจินลดเสียงรบกวน",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (ใหม่, เสียงเต็มแบนด์)",
+            noiseSuppressionEngineDtln: "DTLN (เอนจินเดิม)",
         },
         language: {
             title: "ภาษา",

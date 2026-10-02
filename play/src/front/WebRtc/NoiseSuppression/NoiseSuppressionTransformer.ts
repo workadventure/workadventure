@@ -5,6 +5,11 @@ import {
     type NoiseSuppressionAudioWorkletHandle,
     type NoiseSuppressionAudioWorkletOutboundMessage,
 } from "@workadventure/noise-suppression/audio-worklet";
+import {
+    createDeepFilterNetAudioWorklet,
+    DEEPFILTERNET_SAMPLE_RATE,
+} from "@workadventure/noise-suppression/deepfilternet";
+import type { NoiseSuppressionEngine } from "../../Connection/LocalUserStore";
 
 export interface NoiseSuppressionStatusMessage {
     status: "initializing" | "ready" | "error";
@@ -12,6 +17,7 @@ export interface NoiseSuppressionStatusMessage {
 }
 
 interface NoiseSuppressionTransformerOptions {
+    engine: NoiseSuppressionEngine;
     onStatusChange?: (message: NoiseSuppressionStatusMessage) => void;
 }
 
@@ -20,21 +26,35 @@ interface NoiseSuppressionSupport {
     message?: string;
 }
 
-const NOISE_SUPPRESSION_SAMPLE_RATE = 16000;
+/** What both engines' worklet handles have in common. */
+interface WorkletHandle {
+    node: AudioWorkletNode;
+    ready: Promise<unknown>;
+    dispose(): void;
+}
+
+const DTLN_SAMPLE_RATE = 16000;
 export class NoiseSuppressionTransformer {
+    public readonly engine: NoiseSuppressionEngine;
     private readonly audioContext: AudioContext;
     private readonly onStatusChange?: (message: NoiseSuppressionStatusMessage) => void;
     private lastProcessorStatus: NoiseSuppressionStatusMessage["status"] | undefined;
     private sourceNode: MediaStreamAudioSourceNode | undefined;
-    private workletHandle: NoiseSuppressionAudioWorkletHandle | undefined;
+    private workletHandle: WorkletHandle | undefined;
     private stopObservingWorkletMessages: (() => void) | undefined;
     private destinationNode: MediaStreamAudioDestinationNode | undefined;
     private outputTrack: MediaStreamTrack | undefined;
     private inputTrack: MediaStreamTrack | undefined;
 
-    constructor(options?: NoiseSuppressionTransformerOptions) {
-        this.audioContext = new AudioContext({ sampleRate: NOISE_SUPPRESSION_SAMPLE_RATE });
-        this.onStatusChange = options?.onStatusChange;
+    constructor(options: NoiseSuppressionTransformerOptions) {
+        this.engine = options.engine;
+        this.audioContext = new AudioContext({
+            sampleRate: this.engine === "dtln" ? DTLN_SAMPLE_RATE : DEEPFILTERNET_SAMPLE_RATE,
+        });
+        this.onStatusChange = options.onStatusChange;
+        // Safari and background tabs suspend the context: the output track stays "live" but carries silence.
+        this.audioContext.addEventListener("statechange", this.resumeIfSuspended);
+        document.addEventListener("visibilitychange", this.resumeIfSuspended);
     }
 
     public static getSupport(): NoiseSuppressionSupport {
@@ -75,6 +95,10 @@ export class NoiseSuppressionTransformer {
         if (!this.workletHandle) {
             throw new Error("Noise suppression worklet node failed to initialize.");
         }
+        // Loading the model blocks the audio thread (~0.3 s for DeepFilterNet3): wire the microphone only once it is
+        // done, or the voice we send drops out right when noise suppression starts. A failure rejects here.
+        await this.workletHandle.ready;
+        this.throwIfAborted(signal);
 
         const inputStream = new MediaStream([inputTrack]);
         this.sourceNode = this.audioContext.createMediaStreamSource(inputStream);
@@ -138,17 +162,11 @@ export class NoiseSuppressionTransformer {
             return;
         }
 
-        const workletHandle = await createNoiseSuppressionAudioWorklet(this.audioContext, {
-            bypassUntilReady: true,
-        });
-
-        this.stopObservingWorkletMessages = observeNoiseSuppressionAudioWorkletMessages(
-            workletHandle,
-            (message: NoiseSuppressionAudioWorkletOutboundMessage) => {
-                this.handleWorkletMessage(message);
-            },
-        );
+        const workletHandle =
+            this.engine === "dtln" ? await this.createDtlnWorklet() : await this.createDeepFilterNetWorklet();
         this.workletHandle = workletHandle;
+        // A crash after start-up (e.g. a wasm trap) only surfaces here.
+        this.workletHandle.node.addEventListener("processorerror", this.handleProcessorError);
 
         workletHandle.ready
             .then(() => {
@@ -172,11 +190,50 @@ export class NoiseSuppressionTransformer {
             });
     }
 
+    private async createDtlnWorklet(): Promise<WorkletHandle> {
+        const workletHandle: NoiseSuppressionAudioWorkletHandle = await createNoiseSuppressionAudioWorklet(
+            this.audioContext,
+            { bypassUntilReady: true },
+        );
+        this.stopObservingWorkletMessages = observeNoiseSuppressionAudioWorkletMessages(
+            workletHandle,
+            (message: NoiseSuppressionAudioWorkletOutboundMessage) => {
+                this.handleWorkletMessage(message);
+            },
+        );
+        return workletHandle;
+    }
+
+    private async createDeepFilterNetWorklet(): Promise<WorkletHandle> {
+        // Package defaults: 25 dB of attenuation while speaking (a faint, steady background), 45 dB in pauses.
+        return createDeepFilterNetAudioWorklet(this.audioContext, { bypassUntilReady: true });
+    }
+
+    private readonly handleProcessorError = (): void => {
+        this.lastProcessorStatus = "error";
+        this.onStatusChange?.({ status: "error", message: "The noise suppression AudioWorklet processor failed." });
+    };
+
+    private readonly resumeIfSuspended = (): void => {
+        if (this.audioContext.state !== "suspended" || !this.outputTrack) {
+            return;
+        }
+        this.audioContext.resume().catch((error: unknown) => {
+            // Silence is worse than noise: give up so the controller falls back to the raw microphone.
+            console.warn("Could not resume the noise suppression AudioContext", error);
+            this.lastProcessorStatus = "error";
+            this.onStatusChange?.({ status: "error", message: "Noise suppression was suspended by the browser." });
+        });
+    };
+
     public async closeAndDestroy(): Promise<void> {
+        this.audioContext.removeEventListener("statechange", this.resumeIfSuspended);
+        document.removeEventListener("visibilitychange", this.resumeIfSuspended);
         this.stop();
         this.stopObservingWorkletMessages?.();
         this.stopObservingWorkletMessages = undefined;
         if (this.workletHandle) {
+            this.workletHandle.node.removeEventListener("processorerror", this.handleProcessorError);
             this.workletHandle.dispose();
             this.workletHandle = undefined;
         }

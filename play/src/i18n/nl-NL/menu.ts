@@ -65,6 +65,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "Gebruik de ingebouwde ruisonderdrukking van je browser.",
             voiceIsolation: "Stemisolatie",
             voiceIsolationDescription: "Gebruik stemisolatie van je browser en besturingssysteem wanneer beschikbaar.",
+            noiseSuppressionEngine: "Ruisonderdrukkingsengine",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (nieuw, volledige spraakband)",
+            noiseSuppressionEngineDtln: "DTLN (vorige engine)",
         },
         language: {
             title: "Taal",

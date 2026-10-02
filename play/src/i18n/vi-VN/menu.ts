@@ -64,6 +64,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "Dùng bộ khử tiếng ồn tích hợp của trình duyệt.",
             voiceIsolation: "Tách giọng nói",
             voiceIsolationDescription: "Dùng tính năng tách giọng nói của trình duyệt và hệ điều hành khi khả dụng.",
+            noiseSuppressionEngine: "Công cụ khử tiếng ồn",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (mới, giọng nói toàn dải)",
+            noiseSuppressionEngineDtln: "DTLN (công cụ cũ)",
         },
         language: {
             title: "Ngôn ngữ",

@@ -63,6 +63,9 @@ const menu: BaseTranslation = {
             browserNoiseSuppressionDescription: "Use your browser's built-in noise suppression.",
             voiceIsolation: "Voice isolation",
             voiceIsolationDescription: "Use your browser and operating system voice isolation when available.",
+            noiseSuppressionEngine: "Noise suppression engine",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (new, full-band voice)",
+            noiseSuppressionEngineDtln: "DTLN (previous engine)",
         },
         language: {
             title: "Language",
