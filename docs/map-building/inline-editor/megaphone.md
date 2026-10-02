@@ -35,6 +35,8 @@ Please note that [access to the map editor](index.md) is required to perform the
 
 The tab also offers the following options:
 
+![](../images/editor/megaphone_options.png)
+
 - **Enable sound notifications** (on by default): a sound is played to everyone when someone starts broadcasting through the megaphone.
   Choose the sound in **Notification sound**. The sound is not played to users whose status mutes notifications.
 - **Auditorium mode** (off by default): the person broadcasting sees the camera of every participant who has their camera on.
@@ -53,14 +55,30 @@ Rooms where the megaphone is disabled do not receive the broadcast.
 
 ## How do I use the megaphone?
 
-1. Click **Tools** > **Send global message** in the action bar.
-2. In the **Megaphone** section, click **Start live message**.
-3. Turn on your camera, your microphone and/or your screen sharing, and choose your camera and microphone if needed.
-4. Click **Start megaphone**.
+![](../images/editor/megaphone_menu.png)
+
+1. Click **Tools** in the action bar.
+2. Click **Send global message**.
+
+![](../images/editor/megaphone_global_message.png)
+
+3. In the **Megaphone** section, click **Start live message**.
+
+![](../images/editor/megaphone_live_settings.png)
+
+4. Turn on your camera, your microphone and/or your screen sharing (at least one of them), choose your camera and microphone if needed,
+   then click **Start megaphone**.
 
 Everyone in the room or the world now sees and hears you, like in a video call.
+Your video is framed in yellow with a megaphone badge, and the megaphone button appears in the action bar, highlighted.
 
-To stop, click **Stop megaphone** in the action bar, or in the **Send global message** window.
+![](../images/editor/megaphone_live.png)
+
+To stop, click the megaphone button in the action bar (1), or **Stop megaphone** in the **Global communication** window.
+
+The participants see your video framed in yellow, with the same megaphone badge:
+
+![](../images/editor/megaphone_audience.png)
 
 From the same window, administrators can also send a **text message** or an **audio message** to everyone.
 
@@ -79,7 +97,7 @@ If you are also in a discussion you can record, choose **Record megaphone**.
 
 ### How do I know if the megaphone is enabled?
 
-While you are broadcasting, a **Stop megaphone** button appears in the action bar and a megaphone icon appears next to your Woka's name.
+While you are broadcasting, the megaphone button of the action bar is highlighted in orange and your video is framed in yellow, with a megaphone badge.
 Participants get an "Announcement" notification and, if sound notifications are enabled, hear a sound when the broadcast starts.
 
 ### I can't see the "Send global message" button. How do I enable it?
