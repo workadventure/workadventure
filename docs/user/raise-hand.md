@@ -12,7 +12,7 @@ Your raised hand is shown on the map and on your video, and everyone in the conv
 The **Raise your hand** button sits in the action bar, next to the camera and microphone buttons.
 On small screens, it is in the profile menu.
 
-<!-- TODO screenshot: The "Raise your hand" button -->
+![The "Raise your hand" button, with the hand up](images/raise-hand-button.png)
 
 Click it to raise your hand, and click it again to lower it. The button has three states:
 
@@ -40,7 +40,7 @@ Your hand is raised in one conversation, not everywhere. If you are in several c
 
 Click a conversation to raise your hand there. A highlighted line means your hand is already up in that conversation: click it again to lower it.
 
-<!-- TODO screenshot: Choosing where to raise your hand -->
+![Choosing where to raise your hand: the hand is already up in the megaphone](images/raise-hand-picker.png)
 
 ## What others see
 
@@ -49,14 +49,14 @@ When you raise your hand, the people in that conversation see:
 - a hand next to your name, above your Woka on the map,
 - your name in green on your video, with a hand badge. When several people raise their hand, the badge shows your position in the queue.
 
-<!-- TODO screenshot: A raised hand on the map and on the video -->
+![Bob and Carol raised their hand: on the map, on their video, and in the "Raised hands" panel](images/raise-hand-video.png)
 
 In a discussion bubble or a meeting room, a **Raised hands** panel also opens in the top-right corner of everyone's screen. It lists the people with a raised hand, in the order they raised it, so whoever leads the discussion knows who is next.
 On a podium or in the megaphone, only the speakers and the administrators see this panel (see [For speakers and moderators](#for-speakers-and-moderators)).
 
 The panel only appears while at least one hand is raised. Click its title to fold it.
 
-<!-- TODO screenshot: The "Raised hands" panel -->
+![The "Raised hands" panel](images/raise-hand-panel.png)
 
 ## Lowering your hand
 
@@ -82,6 +82,8 @@ The person is told "A moderator lowered your hand".
 ### Giving the floor
 
 When you are speaking on a podium or in the megaphone, the people in your audience who raised their hand appear in your **Raised hands** panel, with the same **Lower hand** and **Lower all** buttons.
+
+![The "Raised hands" panel of a speaker in the megaphone](images/raise-hand-speaker-panel.png)
 
 Click **Give the floor** next to someone to let them speak to the whole audience. You can also find **Give the floor** in the "More actions" menu of their video.
 
