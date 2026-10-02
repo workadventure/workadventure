@@ -39,5 +39,5 @@ The map editor provides a set of tools that can be accessed from the toolbar on 
 - The **delete** tool allows you to easily delete any entity places on the map using the entity editor tool.
 - The **[area editor tool](area-editor/)** allows you to define areas that will be triggered when the player walks on them. Those areas
   can also be used to trigger actions (like opening a website, entering a Jitsi room, etc...).
-- Use **[configure my room](megaphone.md)** to modify global settings of the room you are currently in.
-  As of now, it only allows configuring the megaphone.
+- Use **configure my room** to modify global settings of the room you are currently in: room settings,
+  the **[megaphone](megaphone.md)** and recording.
