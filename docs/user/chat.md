@@ -60,11 +60,11 @@ Once a room has encryption enabled, it cannot be disabled.
 The **Users** field can be used to invite users to the room. Users can be invited by their name or their Matrix ID (if you
 want to invite users with a Matrix ID outside WorkAdventure to join).
 
-**Who can read history** option can be used to decide what part of the chat history is visible to new users joining the room.
+**Visibility of previous messages** decides what part of the chat history new users can read.
 
-- **Anyone** means that new users can read the entire chat history.
-- **Members only (since they joined)** means that new users can only read the chat history from the moment they joined the room.
-- **Members only (since they were invited)** applies to private rooms. New users can only read the chat history from the moment they were invited to the room (even if they did not join the room at that time).
+- **All messages are visible**: new users can read the entire chat history.
+- **Messages sent after joining are visible**: new users can only read the messages sent after they joined the room.
+- **Messages sent after being invited are visible**: new users can read the messages sent after they were invited, even if they did not join the room at that time.
 
 :::info
 If you are using the SAAS version of WorkAdventure, there is another way to create a Matrix room that [automatically
@@ -83,6 +83,11 @@ In order to open a chat with another user in your WorkAdventure world, you need 
 If you are creating a private room, you will also need to invite users.
 
 Invited users will receive a notification in the chat room list and they can accept or decline the invitation.
+
+### Moderation
+
+Depending on the room's permissions, admins and moderators can kick or ban participants and delete messages.
+See [Moderating chat rooms](/user/chat-moderation).
 
 ## User list
 
