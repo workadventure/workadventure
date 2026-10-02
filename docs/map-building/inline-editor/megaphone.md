@@ -70,14 +70,14 @@ Rooms where the megaphone is disabled do not receive the broadcast.
    then click **Start megaphone**.
 
 Everyone in the room or the world now sees and hears you, like in a video call.
-Your video is framed in yellow with a megaphone badge, and the megaphone button appears in the action bar, highlighted.
+Your video tile carries a megaphone badge (and is framed in yellow when your camera is on), and the megaphone button appears in the action bar, highlighted.
 
 ![](../images/editor/megaphone_live.png)
 
 To stop, click the megaphone button in the action bar (1), or **Stop megaphone** in the **Global communication** window.
 From this window, administrators can also send a **text message** or an **audio message** to everyone.
 
-The participants see your video framed in yellow, with the same megaphone badge:
+The participants see your video tile with the same megaphone badge:
 
 ![](../images/editor/megaphone_audience.png)
 
@@ -96,7 +96,7 @@ If you are also in a discussion you can record, choose **Record megaphone**.
 
 ### How do I know if the megaphone is enabled?
 
-While you are broadcasting, the megaphone button of the action bar is highlighted in orange and your video is framed in yellow, with a megaphone badge.
+While you are broadcasting, the megaphone button of the action bar is highlighted in orange and your video tile carries a megaphone badge (framed in yellow when your camera is on).
 Participants get an "Announcement" notification and, if sound notifications are enabled, hear a sound when the broadcast starts.
 
 ### I can't see the "Send global message" button. How do I enable it?
