@@ -228,6 +228,7 @@ import { EmoteManager } from "./EmoteManager";
 import { EntityAudioManager } from "./EntityAudioManager";
 import { OutlineManager } from "./UI/OutlineManager";
 import { soundManager } from "./SoundManager";
+import { worldEnteredProperties } from "./WorldEnteredAnalytics";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { AreaPropertyVariablesManager } from "./AreaPropertyVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
@@ -405,6 +406,11 @@ export class GameScene extends DirtyScene {
     private readonly worldLoadStartedAt = performance.now();
     private mapLoadSucceededAnalyticsSent = false;
     private mapLoadFailedAnalyticsSent = false;
+    // The scene can be built long before it starts (exits are preloaded), so world.entered counts from preload().
+    private sceneStartedAt = 0;
+    private mapResource: PerformanceResourceTiming | undefined;
+    private mapResourceObserver: PerformanceObserver | undefined;
+    private static worldEnteredReported = false;
     private cleanupDone = false;
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
@@ -497,6 +503,17 @@ export class GameScene extends DirtyScene {
 
     //hook preload scene
     preload(): void {
+        this.sceneStartedAt = performance.now();
+        // Observed rather than looked up once ready: the Resource Timing buffer keeps 250 entries, and a session that
+        // has been running for a while (chat sync, avatars, analytics batches) has filled it long before a room change.
+        this.mapResourceObserver = new PerformanceObserver((list) => {
+            const entry = list.getEntriesByName(new URL(this.mapUrlFile, window.location.href).href).pop();
+            if (entry) {
+                this.mapResource = entry as PerformanceResourceTiming;
+            }
+        });
+        this.mapResourceObserver.observe({ type: "resource" });
+
         //initialize frame event of scripting API
         this.listenToIframeEvents();
 
@@ -1016,6 +1033,7 @@ export class GameScene extends DirtyScene {
                                 this.initUserPermissionsOnEntity();
                                 this.hide(false);
                                 gameSceneIsLoadedStore.set(true);
+                                this.trackWorldEntered();
                                 this.sceneReadyToStartDeferred.resolve();
                                 this.initializeAreaManager();
                             })
@@ -1072,9 +1090,23 @@ export class GameScene extends DirtyScene {
         }
 
         this.mapLoadSucceededAnalyticsSent = true;
-        const durationMs = this.getWorldLoadDurationMs();
-        analyticsClient.trackAdminEvent("map_loading.succeeded", { durationMs });
-        analyticsClient.trackAdminEvent("world.entered", { durationMs });
+        analyticsClient.trackAdminEvent("map_loading.succeeded", { durationMs: this.getWorldLoadDurationMs() });
+    }
+
+    /** The scene is shown and the player can move. */
+    private trackWorldEntered(): void {
+        this.mapResourceObserver?.disconnect();
+        analyticsClient.trackAdminEvent(
+            "world.entered",
+            worldEnteredProperties({
+                sceneStartedAt: this.sceneStartedAt,
+                firstLoad: !GameScene.worldEnteredReported,
+                reconnection: this.isReconnecting === true,
+                setupScreenShown: gameManager.setupScreenShown,
+                mapResource: this.mapResource,
+            }),
+        );
+        GameScene.worldEnteredReported = true;
     }
 
     private trackMapLoadingFailure(reason: string): void {
@@ -1202,6 +1234,7 @@ export class GameScene extends DirtyScene {
 
     public cleanupClosingScene(): void {
         this.abortController?.abort();
+        this.mapResourceObserver?.disconnect();
         this.unregisterAudioContextPlaybackRetry?.();
         this.unregisterAudioContextPlaybackRetry = undefined;
 

@@ -266,6 +266,10 @@ export const POSTHOG_EVENT_KEYS: Partial<
 
   "websocket.reconnected": "wa_socket_reconnected",
   "websocket.reconnecting": "wa_socket_reconnecting",
+
+  // New to PostHog, on purpose: the time it takes the game to become playable is
+  // read there next to the web vitals. One per scene load, about as many as $pageView.
+  "world.entered": "wa_world_entered",
 };
 
 /**
