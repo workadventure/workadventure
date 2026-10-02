@@ -25,6 +25,7 @@ In the "More options" section, you can configure the default state when entering
 
 - **Camera off**: Check this option to enter the meeting room with the camera disabled by default
 - **Microphone off**: Check this option to enter the meeting room with the microphone disabled by default
+- **Allow raising hands**: Uncheck this option to hide the [raise hand](/user/raise-hand) button in the meeting room. It is checked by default.
 
 Use these options if you expect a big number of participants in your meeting room (for instance for a small meetup). For big meetings, we advise to use a podium instead.
 ![](../../images/editor/meeting_room_options.png)

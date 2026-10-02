@@ -54,5 +54,7 @@ The "See attendees" option is useful when speakers want to interact with their a
 If you enable "associate a dedicated chat channel" in both areas, both chats will be merged and can be used by users in the podium and in the audience.
 :::
 
+12. (Optional) Turn off **"Allow raising hands"** to stop people in the audience from [raising their hand](/user/raise-hand). It is on by default, and lets speakers give the floor to someone in the audience.
+
 You're done ! Now, anyone in the audience will be able to hear/see the speakers that are on the podium/stage.
 When a user will enter the podium, he will trigger the megaphone directly and will stream to the audience associated with the podium.
