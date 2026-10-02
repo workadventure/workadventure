@@ -71,6 +71,7 @@ vi.mock("../../Stores/MegaphoneStore", () => {
         requestedMegaphoneStore: writable(false),
         megaphoneSpaceStore: writable(undefined),
         megaphoneCanBeUsedStore: writable(false),
+        givenFloorSpaceStore: writable(undefined),
     };
 });
 
@@ -180,7 +181,7 @@ describe("SpaceRegistry across a reconnection to the server", () => {
         newConnection.emitJoinSpace.mockResolvedValue("room_me");
         registry.resume(newConnection);
 
-        newConnection.initSpaceUsersMessageStream.next({ spaceName: "meeting", users: [bob], metadata: "" });
+        newConnection.initSpaceUsersMessageStream.next({ spaceName: "meeting", users: [bob], metadata: "", state: "" });
         await vi.advanceTimersByTimeAsync(30_000);
 
         expect(space.getSpaceUserBySpaceUserId("room_bob")).toBeDefined();
@@ -199,7 +200,7 @@ describe("SpaceRegistry across a reconnection to the server", () => {
         registry.resume(newConnection);
 
         // Bob is not back yet when the back first lists the space, and comes back a few seconds later
-        newConnection.initSpaceUsersMessageStream.next({ spaceName: "meeting", users: [], metadata: "" });
+        newConnection.initSpaceUsersMessageStream.next({ spaceName: "meeting", users: [], metadata: "", state: "" });
         await vi.advanceTimersByTimeAsync(5_000);
         newConnection.addSpaceUserMessageStream.next({ spaceName: "meeting", user: bob });
         await vi.advanceTimersByTimeAsync(30_000);

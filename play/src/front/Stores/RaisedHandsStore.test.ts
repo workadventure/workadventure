@@ -13,8 +13,15 @@ import { findHandPosition, raisedHandsOrderStore, raisedHandPlayerIdsStore } fro
 
 const sections = raisedHandSectionsStore as unknown as Writable<RaisedHandSection[]>;
 
-function section(spaceName: string, hands: RaisedHand[]): RaisedHandSection {
-    return { space: { getName: () => spaceName } as SpaceInterface, hands, speakers: [], onAirHere: false };
+function section(spaceName: string, hands: RaisedHand[], roomUserIds = new Map<string, number>()): RaisedHandSection {
+    const space = {
+        getName: () => spaceName,
+        getSpaceUserBySpaceUserId: (spaceUserId: string) => {
+            const roomUserId = roomUserIds.get(spaceUserId);
+            return roomUserId === undefined ? undefined : { roomUserId };
+        },
+    } as unknown as SpaceInterface;
+    return { space, hands, speakers: [], onAirHere: false };
 }
 
 const alice = { spaceUserId: "room_1", name: "Alice", at: 1000 };
@@ -69,6 +76,21 @@ describe("raisedHandPlayerIdsStore", () => {
 
     it("ignores spaceUserIds without a numeric suffix (e.g. the local user)", () => {
         sections.set([section("bubble", [{ spaceUserId: "local", name: "Me", at: 1 }])]);
+        expect(get(raisedHandPlayerIdsStore).size).toBe(0);
+    });
+
+    it("takes the player id the pusher sent with the user when the spaceUserId ends with a hash", () => {
+        const dave = { spaceUserId: "room_9f86d081884c7d659a2feaa0c55ad015", name: "Dave", at: 1 };
+        sections.set([section("bubble", [dave], new Map([[dave.spaceUserId, 42]]))]);
+
+        expect([...get(raisedHandPlayerIdsStore)]).toEqual([42]);
+    });
+
+    it("never reads a player id out of a hash that starts with digits", () => {
+        // parseInt("3fa9…") would answer 3, someone else's Woka
+        const erin = { spaceUserId: "room_3fa9d081884c7d659a2feaa0c55ad015", name: "Erin", at: 1 };
+        sections.set([section("bubble", [erin])]);
+
         expect(get(raisedHandPlayerIdsStore).size).toBe(0);
     });
 });

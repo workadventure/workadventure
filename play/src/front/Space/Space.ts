@@ -1294,6 +1294,7 @@ export class Space implements SpaceInterface {
      */
     public rejoinThrough(connection: RoomConnectionForSpacesInterface): void {
         this._connection = connection;
+        this.state.useConnection(connection);
         // Whoever left meanwhile was never announced to us: drop the users the server has not confirmed in time
         this.unconfirmedUsers = new Set(Array.from(this._users.keys()).filter((id) => id !== this._mySpaceUserId));
         clearTimeout(this.unconfirmedUsersTimeout);
@@ -1365,6 +1366,11 @@ export class Space implements SpaceInterface {
                         spaceName: this.getName(),
                     },
                 });
+            }
+            // The kind is not part of the join: a back that recreated the space (it restarted, or destroyed it) no
+            // longer knows it. Setting the kind the back already has changes nothing.
+            if (this.kind) {
+                this.state.setKind(this.kind);
             }
             onRejoined?.();
         })().catch((e) => {
