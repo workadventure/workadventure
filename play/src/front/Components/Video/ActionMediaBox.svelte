@@ -2,7 +2,6 @@
     import { type Writable, writable } from "svelte/store";
     import { FilterType } from "@workadventure/messages";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
-    import banUserSvg from "../images/ban-user.svg";
     import NoVideoSvg from "../images/no-video.svg";
     import { LL } from "../../../i18n/i18n-svelte";
     import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
@@ -90,16 +89,6 @@
     /*function ban() {
         trackStreamWrapper.ban();
     }*/
-
-    function kickoff(spaceUser: SpaceUserExtended) {
-        analyticsClient.trackAdminEvent("meeting.participant.kicked", meetingOf(spaceUser.space));
-        spaceUser.emitPrivateEvent({
-            $case: "kickOffUser",
-            kickOffUser: {},
-        });
-
-        close();
-    }
 
     function giveFloor(spaceUser: SpaceUserExtended) {
         analyticsClient.trackAdminEvent("meeting.floor.given");
@@ -291,22 +280,6 @@
         >
             <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.muteVideoEveryBody()}
-        </button>
-    {/if}
-
-    <!-- Kickoff user -->
-    {#if $userIsAdminStore}
-        <button
-            id="kickoff-user"
-            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-            onclick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                kickoff(spaceUser);
-            }}
-        >
-            <img src={banUserSvg} class="w-4 h-4" alt="" draggable="false" />
-            {$LL.camera.menu.kickoffUser()}
         </button>
     {/if}
 

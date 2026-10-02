@@ -30,8 +30,16 @@ const report: BaseTranslation = {
         hint: {
             block: "Stop seeing and hearing them. Only for you, and reversible.",
             report: "Alert the administrators.",
+            remove: "Remove them from this conversation. They stay on the map.",
             kick: "Disconnect them now. They may come back.",
             ban: "Disconnect them for good.",
+        },
+        remove: {
+            title: "Remove",
+            content:
+                "{userName} leaves this conversation right away, and stops broadcasting if they are live. They stay in the world.",
+            submit: "Remove",
+            confirmTitle: "Remove {userName}",
         },
         kick: {
             title: "Kick",

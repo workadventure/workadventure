@@ -31,8 +31,15 @@ const report: DeepPartial<Translation["report"]> = {
         hint: {
             block: "不再看到和听到对方。仅对你生效，可撤销。",
             report: "通知管理员。",
+            remove: "将其移出此对话。仍留在地图上。",
             kick: "立即断开连接。对方可以再次加入。",
             ban: "永久断开连接。",
+        },
+        remove: {
+            title: "移出对话",
+            content: "{userName} 会立即离开此对话，如正在直播则停止直播。仍留在世界中。",
+            submit: "移出对话",
+            confirmTitle: "将 {userName} 移出对话",
         },
         kick: {
             title: "移出",

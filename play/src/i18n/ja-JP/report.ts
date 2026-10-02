@@ -31,8 +31,15 @@ const report: DeepPartial<Translation["report"]> = {
         hint: {
             block: "相手の映像と音声を受け取らない。自分だけに適用され、取り消せます。",
             report: "管理者に通報します。",
+            remove: "この会話から外します。マップには残ります。",
             kick: "今すぐ切断します。再参加は可能です。",
             ban: "永久に切断します。",
+        },
+        remove: {
+            title: "会話から外す",
+            content: "{userName} はすぐにこの会話から外れ、配信中の場合は配信が停止します。ワールドには残ります。",
+            submit: "会話から外す",
+            confirmTitle: "{userName} を会話から外す",
         },
         kick: {
             title: "退出させる",

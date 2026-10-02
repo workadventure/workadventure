@@ -114,6 +114,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
             Sentry.captureException(e);
         });
         chatZoneLiveStore.set(false);
+        notificationPlayingStore.playNotification(get(LL).notification.removedFromConversation());
     });
 
     // If the local user leaves the space while holding a floor granted through a raised hand, drop the

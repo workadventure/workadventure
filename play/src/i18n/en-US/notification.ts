@@ -13,6 +13,7 @@ const notification: BaseTranslation = {
     floorRevoked: "You no longer have the floor",
     floorGivenBack: "You gave back the floor",
     handLowered: "A moderator lowered your hand",
+    removedFromConversation: "A moderator removed you from the conversation. You are still on the map.",
     actionFailed: "This action could not be completed",
     notificationSentToMuteMicrophone: "A notification was sent to {name} to mute their microphone",
     notificationSentToMuteCamera: "A notification was sent to {name} to mute their camera",
