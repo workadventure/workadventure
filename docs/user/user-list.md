@@ -44,7 +44,7 @@ Click **…** next to a person to see what you can do. The actions depend on whe
 ![The actions on Grégoire, who is on another map](images/user-list-actions-other.png)
 
 - **Teleport**: takes you to the person's map, then your Woka walks up to them.
-- **Moderate**, as above. **Invite** is also listed, but an invitation only reaches people on your map: teleport to them first.
+- **Moderate** and **Invite**, as above. If they accept your invitation, they are taken to your map and walk to you.
 
 If the person has a business card, **Business Card** opens it.
 

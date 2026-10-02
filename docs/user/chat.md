@@ -99,7 +99,7 @@ You can invite other users to join your current meeting in two ways:
 - In the user list, click **…** next to the user, then **Invite**
 - Click the user's Woka on the map (or their name in the user list, if they are on your map) to open their card, then **Invite**
 
-The invitation only reaches people who are on the same map as you.
+You can invite someone who is on another map of your world: the invitation tells them which map you are on.
 
 When you send an invitation, a sound notification will play to confirm the invitation was sent.
 
@@ -109,7 +109,7 @@ When another user invites you to their meeting, you will see a popup notificatio
 The name of the user inviting you
 An "Accept" button to join the meeting
 A "Decline" button to reject the invitation
-If you accept the invitation, you will automatically move to join the meeting with the inviting user.
+If you accept the invitation, you will automatically move to join the meeting with the inviting user. If they are on another map, you are first taken to their map.
 
 ### Rate limits and restrictions
 To prevent spam, meeting invitations have the following limits:
