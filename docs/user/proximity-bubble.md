@@ -7,7 +7,7 @@ sidebar_position: 5
 In WorkAdventure, you talk to people by walking up to them, like in a real office.
 When your Woka stops next to someone, a **discussion bubble** opens around you: you can hear each other, see each other's camera, and chat in writing.
 
-![Alice, Bob and Carol in a discussion bubble: the circle on the map and their video at the top of the screen](images/proximity-bubble-overview.png)
+![David, Grégoire and Gregory in a discussion bubble: the circle on the map and their video at the top of the screen](images/proximity-bubble-overview.png)
 
 ## Joining a bubble
 
@@ -17,6 +17,7 @@ Walk up to someone and stop next to them: a bubble opens as soon as you stop. Wa
 - A sound plays when you enter the bubble, and another one when you leave it.
 - The video of each person in the bubble appears at the top of your screen. Your own video is labelled **You**.
 - The bubble has its own chat: you can write to everyone in it (see [Chat](/user/chat)).
+- The participants icon in the action bar lists everyone in the bubble (see [Using the meeting](/user/meetings)).
 
 To join a conversation that has already started, walk to the people in the bubble and stop inside the circle.
 
@@ -56,7 +57,7 @@ When someone shares their screen, their screen is enlarged automatically.
 
 Click the arrow next to a person's name, on their video, to open their menu:
 
-![The menu of Bob's video](images/proximity-bubble-tile-menu.png)
+![The menu of David's video](images/proximity-bubble-tile-menu.png)
 
 - The slider next to the speaker icon sets the volume of this person, for you only. Click the speaker icon to mute them for you.
 - **Ask to mute audio**: ask the person to turn their microphone off. They see "Can I mute your microphone?" and choose **Yes** or **No**.
@@ -64,7 +65,7 @@ Click the arrow next to a person's name, on their video, to open their menu:
 - **Moderation**: block the person (you stop seeing and hearing them, only for you, and you can unblock them later) or report them to the administrators.
 
 The first two requests are greyed out when the person's microphone or camera is already off.
-Administrators see **Mute audio** and **Turn off video** instead, which turn them off without asking, plus **Mute audio for everybody**, **Turn off video for everybody** and **Kick off user**.
+Administrators see **Mute audio** and **Turn off video** instead, which turn them off without asking, plus **Mute audio for everybody**, **Turn off video for everybody** and **Kick off user**. For meeting rooms, see [Moderating meeting rooms](/admin/jitsi-moderation).
 
 If the person has a business card, the menu also shows **Visit card**.
 
@@ -74,7 +75,7 @@ To keep a conversation between the people already in it, lock the bubble: people
 
 1. While you are in a bubble, click the lock button in the action bar.
 
-![A locked bubble: the lock button and the circle are red, and Dave stays outside](images/proximity-bubble-locked.png)
+![A locked bubble: the lock button and the circle are red, and Alice stays outside](images/proximity-bubble-locked.png)
 
 When the bubble is locked:
 
