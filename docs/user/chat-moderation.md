@@ -8,8 +8,8 @@ This page explains how to moderate a [Matrix chat room](/user/chat#matrix-chat-r
 participant, deleting messages and changing what each role is allowed to do.
 
 :::note
-Moderation only applies to Matrix chat rooms. The Proximity Chat has no moderator: messages are not stored and only
-the people in the bubble can read them.
+This page covers Matrix chat rooms. The Proximity Chat has its own, separate controls (for example to moderate
+questions).
 :::
 
 ## Roles
@@ -76,7 +76,8 @@ Click **Ban** next to a participant (4). They are removed from the room and **ca
 invites them, until they are unbanned.
 
 Banned participants stay in the list with the **Banned** status. Click **Unban** (1) to lift the ban. Unbanning does
-not bring them back to the room: they need to be invited again.
+not bring them back to the room: they can join again under the room's access rules. In an **Invite only** room, they
+need a new invitation.
 
 ![A banned participant](images/chat-moderation/manage_participants_banned.png)
 
@@ -103,14 +104,17 @@ everyone.
 
 ![The trash icon on a message](images/chat-moderation/delete_message.png)
 
-- Everyone can delete their own messages (if the room allows it).
-- Moderators and Admins can delete messages from participants with a lower role.
+- Everyone can delete their own messages, if the room allows **Delete own messages**.
+- To delete someone else's message, you need **Delete own messages** and **Delete messages from others**, and a
+  higher role than the author.
 
-Polls work the same way: their author, or a participant with a higher role, can delete them.
+Polls follow almost the same rules: their author can always delete them. Deleting someone else's poll requires
+**Delete messages from others** and a higher role than the author.
 
 ## Room settings and permissions
 
-Open the room panel and click **Settings**. If your role does not allow any change, the settings are shown read-only.
+Open the room panel and click **Settings**. If your role does not allow any change, the panel only shows the room
+type, encryption, access and visibility of previous messages, without letting you edit them.
 
 ![The Settings section](images/chat-moderation/room_settings.png)
 
@@ -135,7 +139,7 @@ The **Permissions** list sets the minimum role (User, Moderator or Admin) needed
 - **Delete own messages**, **Delete messages from others**
 - **Kick users**, **Ban users**, **Invite users**
 - **Change room name**, **Change room topic**, **Change history visibility**, **Change access**
-- **Change permissions**: who can edit this list and give roles to other participants.
+- **Change permissions**: who can edit this list. Changing a participant's role also requires the Admin role.
 - **Change settings**: every other room setting that is not listed above.
 
 ![The Permissions list](images/chat-moderation/room_permissions.png)
@@ -144,14 +148,18 @@ The screenshot shows the starting values of a room created in WorkAdventure. A r
 administrator, or in another Matrix client) may start with other values: check this list rather than assuming a
 default.
 
+WorkAdventure adds a few rules of its own on top of this list: setting **Invite users** to **User**
+does not show the **Invitations** field to Users: only Admins see it.
+
 For example, to make an announcement room where only moderators can write, set **Send messages** to **Moderator**.
 
 Click **Save** to apply the changes. Only people allowed to **Change permissions** can edit this list.
 
 ## Folders
 
-Folders have participants too. If you are allowed to invite, kick or ban in a folder, open the folder menu (**⋯**) and
-choose **Participants**. Removing someone from a folder does not remove them from the rooms in this folder.
+Folders have participants too. Open the folder menu (**⋯**) and choose **Participants**. This option only appears if
+you can create rooms in this folder and invite, kick or ban its participants. Removing someone from a folder does not
+remove them from the rooms in this folder.
 
 :::info
 If you are using the SaaS version of WorkAdventure, administrators can create chat rooms whose members and moderators
