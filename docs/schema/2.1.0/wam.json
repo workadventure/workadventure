@@ -132,6 +132,20 @@
                         },
                         "triggerMessage": {
                           "type": "string"
+                        },
+                        "playForAllUsers": {
+                          "type": "boolean"
+                        },
+                        "audibleRadius": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -395,6 +409,10 @@
                             "disableChat": {
                               "type": "boolean",
                               "default": false
+                            },
+                            "raiseHandEnabled": {
+                              "type": "boolean",
+                              "default": true
                             }
                           },
                           "required": [
@@ -731,6 +749,14 @@
                         "chatEnabled": {
                           "type": "boolean",
                           "default": false
+                        },
+                        "allowTalking": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "raiseHandEnabled": {
+                          "type": "boolean",
+                          "default": true
                         },
                         "waitingLink": {
                           "type": "string"
