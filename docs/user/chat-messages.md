@@ -32,13 +32,13 @@ Hover over a message to show its actions, from left to right:
 
 ![The actions of a message: reply, thread, react, edit, delete](images/chat-messages-message-actions.png)
 
-- **Reply**: quotes the message above yours. A **Reply to** banner shows the message you answer; click ✕ to cancel.
+- **Reply**: your message is sent with the original message quoted inside it. A **Reply to** banner shows the message you answer; click ✕ to cancel.
 - **Thread** (**Open thread**): starts or opens a side conversation on this message (see [Threads](#threads)).
 - **React**: adds an emoji under the message. Click an emoji under a message to add yours or take it back.
-- **Edit**: only on your own messages. Change the text, then click **Edit** (**Enter** does not save). The message then shows "(Modified)".
-- **Delete**: on your own messages, and on other people's messages if you moderate the room. There is no confirmation: the message is replaced by "Message deleted". See [Moderating chat rooms](chat-moderation.md#deleting-messages).
+- **Edit**: only on your own text messages. Change the text, then click **Edit** (**Enter** does not save). The message then shows "(Modified)".
+- **Delete**: on your own messages, and on other people's messages if you moderate the room, depending on the room's permissions. There is no confirmation: the message is replaced by "Message deleted". See [Moderating chat rooms](chat-moderation.md#deleting-messages).
 
-On an image or a file, a download button is added.
+On an image or a file, a download button comes first.
 
 ![Replying to a message](images/chat-messages-reply.png)
 
@@ -48,19 +48,19 @@ A thread keeps a side conversation out of the main one. Under a message with a t
 
 ![A thread: the question and its two replies](images/chat-messages-thread.png)
 
-The **Threads** section of the room panel (the ⓘ button at the top of the room) lists all the threads of the room.
+The **Threads** section of the [room panel](chat-moderation.md#the-room-panel) lists all the threads of the room.
 
 ## Sharing files
 
 In a chat room, you can share files in three ways:
 
-- click **+**, then **File attachment**, and pick one or more files,
+- click **+** next to the message box, then **File attachment**, and pick one or more files,
 - drag and drop files onto the conversation,
 - paste files into the message box.
 
-The files appear above the message box: remove one with its ✕, then send. Images are shown in the conversation: click one to see it in large, with **Open in new tab**. Audio and video files play in the conversation. Other files show as a line to download.
+The files appear above the message box: remove one with its ✕, then send. Images are shown in the conversation: click one to see it in large; the arrow button at the top opens it in a new tab. Audio and video files play in the conversation. Other files show as a line to download.
 
-You cannot share files in the proximity chat. Your administrator can also turn file sharing off.
+You cannot share files in the proximity chat. Your administrator can also turn file sharing off: **File attachment** is then greyed out.
 
 ## Sharing apps
 
@@ -73,6 +73,6 @@ The same menu creates a **Poll** and, in the proximity chat, opens the **Questio
 ## Unread messages and sounds
 
 - Each room shows how many messages you have not read, and the chat button in the action bar shows the total.
-- A sound plays when a message arrives in a room you are not looking at. Turn it off in the menu, **Chat** tab, **Chat sounds**.
+- A sound plays when a message arrives in a room you are not looking at. If you are logged in, turn it off in the menu, **Chat** tab, **Chat sounds**.
 - When WorkAdventure is in the background, you get a desktop notification if you turned on **Notifications** in the [Settings](/user/settings#other-settings).
-- To stop the notifications of a busy room, open its menu in the room list and click **Mute Room**.
+- To silence a busy room (sound and notifications), open its menu in the room list and click **Mute Room**.
