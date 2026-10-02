@@ -44,8 +44,8 @@ const report: DeepPartial<Translation["report"]> = {
             title: "從世界封鎖",
             content: "{userName} 將被中斷連線，且無法再用此帳號加入此世界。",
             submit: "封鎖",
-            confirmTitle: "永久封鎖 {userName}？",
-            confirmContent: "無法在遊戲中復原。只有管理員才能在後台解除封鎖。",
+            confirmTitle: "封鎖 {userName}？",
+            confirmContent: "管理員之後可以在選單的「被封鎖的使用者」頁面（若此世界提供）或後台解除封鎖。",
             scope: {
                 account: "此帳號",
                 ip: "此帳號及其 IP 位址",

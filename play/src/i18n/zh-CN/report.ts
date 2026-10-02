@@ -44,8 +44,8 @@ const report: DeepPartial<Translation["report"]> = {
             title: "从世界封禁",
             content: "{userName} 将被断开连接，且无法再用此账号加入此世界。",
             submit: "封禁",
-            confirmTitle: "永久封禁 {userName}？",
-            confirmContent: "无法在游戏中撤销。只有管理员才能在后台解除封禁。",
+            confirmTitle: "封禁 {userName}？",
+            confirmContent: "管理员之后可以在菜单的“被封禁的用户”页面（如果此世界提供）或后台解除封禁。",
             scope: {
                 account: "此账号",
                 ip: "此账号及其 IP 地址",

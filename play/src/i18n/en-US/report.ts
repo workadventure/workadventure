@@ -43,9 +43,9 @@ const report: BaseTranslation = {
             title: "Ban from the world",
             content: "{userName} is disconnected and will not be able to join this world again with this account.",
             submit: "Ban",
-            confirmTitle: "Ban {userName} for good?",
+            confirmTitle: "Ban {userName}?",
             confirmContent:
-                "This cannot be undone from the game. Only an administrator can lift the ban from the back office.",
+                'An administrator can lift the ban later from the "Banned users" page of the menu, if this world has one, or from the back office.',
             scope: {
                 account: "This account",
                 ip: "This account and its IP address",

@@ -44,9 +44,9 @@ const report: DeepPartial<Translation["report"]> = {
             title: "Aus der Welt verbannen",
             content: "{userName} wird getrennt und kann dieser Welt mit diesem Konto nicht mehr beitreten.",
             submit: "Verbannen",
-            confirmTitle: "{userName} endgültig verbannen?",
+            confirmTitle: "{userName} verbannen?",
             confirmContent:
-                "Das lässt sich im Spiel nicht rückgängig machen. Nur ein Administrator kann den Bann im Backoffice aufheben.",
+                "Ein Administrator kann den Bann später auf der Seite „Gesperrte Benutzer“ im Menü aufheben, falls diese Welt sie anbietet, oder im Backoffice.",
             scope: {
                 account: "Dieses Konto",
                 ip: "Dieses Konto und seine IP-Adresse",
