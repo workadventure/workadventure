@@ -96,6 +96,24 @@ class Chat {
         }
     }
 
+    /** Open user list, unfold the other maps, open the dropdown for the given user on another map, then click Invite. */
+    async UL_inviteOnOtherMap(page: Page, nickname: string) {
+        await this.openUserList(page, false);
+        const user = page.locator(".user", { hasText: nickname });
+        // The other maps are folded: unfold them one by one until the user shows up
+        for (const roomHeader of await page
+            .locator(".users > button")
+            .filter({ hasNot: page.getByTestId("user-list-room-here") })
+            .all()) {
+            if (await user.first().isVisible()) {
+                break;
+            }
+            await roomHeader.click();
+        }
+        await user.locator(".wa-dropdown").click();
+        await page.getByTestId("user-list-invite").click();
+    }
+
     async UL_acceptInvitation(page: Page) {
         await expect(page.getByTestId("meeting-invitation-popup")).toBeVisible({ timeout: 15_000 });
         await page.getByRole("button", { name: "Accept" }).first().click();

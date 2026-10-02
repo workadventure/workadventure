@@ -193,7 +193,9 @@
 
     function inviteUserToMeeting() {
         if (chatUser == undefined || chatUser.uuid == undefined) return;
-        connection?.emitMeetingInvitationRequest(chatUser.uuid);
+        gameManager
+            .getCurrentGameScene()
+            .inviteManager?.requestMeetingInvitation(chatUser.uuid, undefined, chatUser.playUri ?? undefined);
     }
 
     /** Reactive on `$isMatrixChatEnabledStore` so the connection appears when Matrix chat connects. */

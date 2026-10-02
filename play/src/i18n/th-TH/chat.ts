@@ -44,6 +44,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         invitationAccepted: "คำเชิญของคุณได้รับการยอมรับโดย {name}",
         defaultResponderName: "ผู้ใช้",
         limitReached: "คุณส่งคำเชิญประชุมมากเกินไป กรุณาลองใหม่ภายหลัง",
+        otherMap: "อยู่บนแผนที่ {map}: หากยอมรับ คุณจะถูกพาไปที่นั่น",
     },
     imagePreview: {
         close: "ปิด",

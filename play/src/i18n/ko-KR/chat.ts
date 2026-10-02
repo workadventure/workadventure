@@ -44,6 +44,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         invitationAccepted: "{name}님이 초대를 수락했습니다",
         defaultResponderName: "해당 사용자",
         limitReached: "회의 초대를 너무 많이 보냈습니다. 나중에 다시 시도해 주세요.",
+        otherMap: "{map} 맵에 있습니다. 수락하면 그곳으로 이동합니다.",
     },
     imagePreview: {
         close: "닫기",

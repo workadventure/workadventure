@@ -45,6 +45,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         invitationAccepted: "{name}が招待を受け入れました",
         defaultResponderName: "ユーザー",
         limitReached: "ミーティングへの招待を送りすぎました。しばらくしてからもう一度お試しください。",
+        otherMap: "マップ「{map}」にいます。承諾するとそこへ移動します。",
     },
     imagePreview: {
         close: "閉じる",

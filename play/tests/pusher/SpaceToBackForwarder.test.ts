@@ -876,5 +876,41 @@ describe("SpaceToBackForwarder", () => {
             send();
             expect(forwardSpy).toHaveBeenCalledOnce();
         });
+
+        const inviteFromOtherMap = (uuid: string, tags: string[]) => {
+            const mockSpace = {
+                name: "test",
+                users: new Map([["foo_1", { spaceUserId: "foo_1", uuid, tags }]]),
+            } as unknown as Space;
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
+            const forwardSpy = vi.spyOn(spaceForwarder, "forwardMessageToSpaceBack").mockImplementation(() => {});
+            const send = () =>
+                spaceForwarder.sendPrivateEvent(
+                    {
+                        spaceName: "test",
+                        receiverUserId: "foo_2",
+                        spaceEvent: { event: { $case: "meetingInvitationRequest", meetingInvitationRequest: {} } },
+                    },
+                    { spaceUserId: "foo_1" } as SocketData,
+                );
+            return { send, forwardSpy };
+        };
+
+        it("should drop invitations to another map past 50 in 10 minutes", () => {
+            const { send, forwardSpy } = inviteFromOtherMap("spammer", []);
+            for (let i = 0; i < 50; i++) {
+                send();
+            }
+            expect(send).toThrow();
+            expect(forwardSpy).toHaveBeenCalledTimes(50);
+        });
+
+        it("should not limit invitations to another map sent by an admin", () => {
+            const { send, forwardSpy } = inviteFromOtherMap("admin-inviter", ["admin"]);
+            for (let i = 0; i < 51; i++) {
+                send();
+            }
+            expect(forwardSpy).toHaveBeenCalledTimes(51);
+        });
     });
 });

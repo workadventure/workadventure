@@ -44,6 +44,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         invitationAccepted: "La teva invitació ha estat acceptada per {name}",
         defaultResponderName: "L'usuari",
         limitReached: "Has enviat massa invitacions a reunions. Si us plau, torna-ho a provar més tard.",
+        otherMap: "Al mapa {map}: si acceptes, hi aniràs.",
     },
     imagePreview: {
         close: "Tancar",
