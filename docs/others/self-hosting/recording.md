@@ -140,7 +140,7 @@ Once configured:
 6. Stop the recording when done
 7. Access your recordings from **Recordings** in the **Apps** menu of the action bar
 
-For how recording works for users (who can stop, automatic stops, the recordings list), see [Recording meetings](/admin/recording).
+For how recording works for users (who can stop, automatic stops, the recordings list), see [Recording meetings](https://docs.workadventu.re/admin/recording).
 
 Recordings are stored with the following path structure in your S3 bucket:
 ```
