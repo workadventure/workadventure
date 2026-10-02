@@ -72,7 +72,7 @@ import type { UserSocket } from "../Model/User";
 import { User } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
-import { GROUP_RADIUS, MINIMUM_DISTANCE } from "../Enum/EnvironmentVariable";
+import { GROUP_RADIUS, KEEP_CONVERSATIONS_ON_RESTART, MINIMUM_DISTANCE } from "../Enum/EnvironmentVariable";
 import type { PositionInterface } from "../Model/PositionInterface";
 import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import type { Zone, ZonePosition } from "../Model/Zone";
@@ -344,6 +344,10 @@ export class SocketManager {
      * and its bubble, for as long as spaces keep theirs, in case the same tab reconnects through another pusher.
      */
     detachFromRoom(room: GameRoom, user: User) {
+        if (!KEEP_CONVERSATIONS_ON_RESTART) {
+            this.leaveRoom(room, user);
+            return;
+        }
         room.detach(user, DETACHED_USER_GRACE_MS, () => this.leaveRoom(room, user));
     }
 
@@ -1483,6 +1487,10 @@ export class SocketManager {
             const space = this.spaces.get(spaceName);
             if (!space) {
                 console.error(`In handleUnwatchAllSpaces, can't unwatch space ${spaceName}, space not found`);
+                return;
+            }
+            if (!KEEP_CONVERSATIONS_ON_RESTART) {
+                this.removeSpaceWatcher(pusher, space);
                 return;
             }
             // The pusher is gone (stream ended, or it stopped answering pings): its users keep their place for a

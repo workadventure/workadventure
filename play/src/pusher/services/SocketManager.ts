@@ -64,7 +64,13 @@ import type { BackConnection } from "../models/Websocket/SocketData";
 
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
-import { EMBEDDED_DOMAINS_WHITELIST, FRONT_URL, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from "../enums/EnvironmentVariable";
+import {
+    EMBEDDED_DOMAINS_WHITELIST,
+    FRONT_URL,
+    GRPC_MAX_MESSAGE_SIZE,
+    KEEP_CONVERSATIONS_ON_RESTART,
+    SECRET_KEY,
+} from "../enums/EnvironmentVariable";
 import type { SpaceInterface } from "../models/Space";
 import { Space } from "../models/Space";
 import { SpaceConnection } from "../models/SpaceConnection";
@@ -864,15 +870,18 @@ export class SocketManager implements ZoneEventListener {
                 }
             }
         } finally {
-            if (socketData.backConnection?.writable) {
-                // Tell the back the user left: a stream that just ends is this pusher going away, and the back
-                // would keep the user's place in case it reconnects elsewhere. (Not when the back already closed it.)
-                socketData.backConnection.write({
-                    message: {
-                        $case: "leaveRoomMessage",
-                        leaveRoomMessage: {},
-                    },
-                });
+            if (socketData.backConnection) {
+                if (KEEP_CONVERSATIONS_ON_RESTART && socketData.backConnection.writable) {
+                    // Tell the back the user left: a stream that just ends is this pusher going away, and the back
+                    // would keep the user's place in case it reconnects elsewhere. (Not when the back already closed
+                    // it.) Off, an older back would report every departure as an empty message.
+                    socketData.backConnection.write({
+                        message: {
+                            $case: "leaveRoomMessage",
+                            leaveRoomMessage: {},
+                        },
+                    });
+                }
                 socketData.backConnection.end();
             }
         }

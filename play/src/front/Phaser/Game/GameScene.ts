@@ -56,6 +56,7 @@ import {
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
+    KEEP_CONVERSATIONS_ON_RESTART,
     MAX_PER_GROUP,
     MINIMUM_DISTANCE,
     POSITION_DELAY,
@@ -1543,6 +1544,10 @@ export class GameScene extends DirtyScene {
     }
 
     private setServerLost(lost: boolean): void {
+        if (!KEEP_CONVERSATIONS_ON_RESTART) {
+            // The spaces are not kept across the reload: no conversation to bound while the server is away.
+            return;
+        }
         this.serverLost = lost;
         this._spaceRegistry?.setServerLost(lost);
     }
@@ -2113,7 +2118,7 @@ export class GameScene extends DirtyScene {
                             console.info("Pusher reachable again. Reloading scene.");
                             // The conversations going on (LiveKit, P2P) do not go through the server: keep them
                             // alive across the reload, the next scene joins their spaces again.
-                            this.cleanupClosingScene({ keepSpaces: true });
+                            this.cleanupClosingScene({ keepSpaces: KEEP_CONVERSATIONS_ON_RESTART });
                             this.createSuccessorGameScene(true, true);
                         })
                         .catch((e) => {
