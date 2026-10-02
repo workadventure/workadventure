@@ -1101,6 +1101,20 @@ export const ANALYTICS_EVENTS = {
       meetingProvider: z
         .enum(["webrtc", "livekit"])
         .describe("Which backend was retried."),
+      // `disconnectReason` rather than a new key: the admin's anonymization
+      // allowlist already keeps it, and this one is an enum label too.
+      disconnectReason: z
+        .string()
+        .optional()
+        .describe(
+          "LiveKit only: the livekit-client DisconnectReason name (SIGNAL_CLOSE, JOIN_FAILURE, SERVER_SHUTDOWN…). `UNKNOWN` means livekit-client gave none, which is what it does once its own ~50 s of reconnect attempts have failed.",
+        ),
+      wasConnected: z
+        .boolean()
+        .optional()
+        .describe(
+          "LiveKit only: false when the room dropped before it ever finished joining.",
+        ),
     }),
     description: "A media connection was retried.",
   }),
@@ -1697,12 +1711,64 @@ export const ANALYTICS_EVENTS = {
   "user.report.clicked": signal("The user reported someone."),
   "user.woka_menu.opened": signal("The user opened the Woka context menu."),
   "user_list.opened": signal("The user opened the user list."),
-  "websocket.reconnected": signal(
-    "A websocket retry succeeded and the client is back. PostHog has counted this as wa_socket_reconnected since long before this pipeline; this side had nothing, so a reconnection that worked and one that never did looked the same here.",
-  ),
-  "websocket.reconnecting": signal(
-    "The client is retrying its websocket connection. Counted as an experience issue.",
-  ),
+  // Every property below is optional: a tab loaded before they existed still sends
+  // these events bare, and the pusher would drop it for a missing required key.
+  "websocket.reconnected": event({
+    properties: z.object({
+      attempts: z
+        .number()
+        .optional()
+        .describe("Sockets opened to get back: 1 when the first retry held."),
+      downtimeSeconds: z
+        .number()
+        .optional()
+        .describe(
+          "Wall-clock seconds from the drop to the socket being back, to one decimal. A laptop that slept through it counts the sleep.",
+        ),
+    }),
+    description:
+      "A websocket retry succeeded and the client is back. PostHog has counted this as wa_socket_reconnected since long before this pipeline; this side had nothing, so a reconnection that worked and one that never did looked the same here.",
+  }),
+  "websocket.reconnecting": event({
+    properties: z.object({
+      attempt: z
+        .number()
+        .optional()
+        .describe(
+          "Which retry of this outage. One event per retry, so filter on 1 to count outages and to read the close that started them.",
+        ),
+      closeCode: z
+        .number()
+        .optional()
+        .describe(
+          "CloseEvent.code of the socket that just closed. 1006 is a drop with no close frame (network, proxy); 1001/1012 a server going away; 4000+ WorkAdventure's own.",
+        ),
+      wasClean: z
+        .boolean()
+        .optional()
+        .describe("CloseEvent.wasClean: whether a close handshake happened."),
+      closeReason: z
+        .string()
+        .optional()
+        .describe(
+          "CloseEvent.reason, absent when empty — which it always is for a drop the browser detected itself.",
+        ),
+      secondsSinceLastServerMessage: z
+        .number()
+        .optional()
+        .describe(
+          "Seconds between the last frame the server sent (or the socket opening) and the close, to one decimal. The back pings every 80 s, so a proxy idle timeout shows up as a spike at its value. WebSocket ping frames are invisible to the page and not counted. Absent until a socket has opened at least once.",
+        ),
+      tabVisible: z
+        .boolean()
+        .optional()
+        .describe(
+          "Whether the tab was visible when the socket closed. Hidden tabs get their timers throttled.",
+        ),
+    }),
+    description:
+      "The client is retrying its websocket connection. Counted as an experience issue.",
+  }),
 } as const satisfies Record<string, AnalyticsEventDefinition>;
 
 /* -------------------------------------------------------------------------- */

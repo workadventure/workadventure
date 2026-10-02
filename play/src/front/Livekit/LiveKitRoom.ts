@@ -758,7 +758,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         // STATE_MISMATCH, JOIN_FAILURE, or no reason at all (livekit-client gave up after its reconnect attempts):
         // ask the back for a fresh invitation. LivekitConnection builds the replacement room when it arrives.
         if (this.everConnected) {
-            this.requestRestart();
+            this.requestRestart(disconnectReasonLabel);
             return;
         }
         setTimeout(() => {
@@ -766,12 +766,16 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 // The space left LiveKit mode in the meantime
                 return;
             }
-            this.requestRestart();
+            this.requestRestart(disconnectReasonLabel);
         }, RESTART_DELAY_WHEN_NEVER_CONNECTED_MS);
     }
 
-    private requestRestart() {
-        analyticsClient.trackAdminEvent("media.connection_retry", { meetingProvider: "livekit" });
+    private requestRestart(disconnectReason: string) {
+        analyticsClient.trackAdminEvent("media.connection_retry", {
+            meetingProvider: "livekit",
+            disconnectReason,
+            wasConnected: this.everConnected,
+        });
         this.space.emitBackEvent({
             event: {
                 $case: "meetingConnectionRestartMessage",
