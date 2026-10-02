@@ -14,6 +14,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLost: "连接丢失。重新连接中...",
     connectionLostTitle: "连接丢失。",
     connectionLostSubtitle: "重新连接中",
+    serverUpdatingTitle: "正在更新 WorkAdventure",
+    serverUpdatingSubtitle: "您的对话仍在继续",
     waitingConnectionTitle: "等待连接",
     waitingConnectionSubtitle: "连接",
     megaphoneNeeds: "要使用扩音器，您必须激活摄像头或麦克风，或共享屏幕。",

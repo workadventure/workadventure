@@ -14,6 +14,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLost: "Mất kết nối. Đang kết nối lại...",
     connectionLostTitle: "Mất kết nối",
     connectionLostSubtitle: "Đang kết nối lại",
+    serverUpdatingTitle: "Đang cập nhật WorkAdventure",
+    serverUpdatingSubtitle: "Cuộc trò chuyện của bạn vẫn tiếp tục",
     waitingConnectionTitle: "Đang chờ kết nối",
     waitingConnectionSubtitle: "Đang kết nối",
     megaphoneNeeds: "Để dùng loa phóng thanh, bạn phải bật camera hoặc micrô, hoặc chia sẻ màn hình.",

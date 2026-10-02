@@ -39,6 +39,7 @@ import { asError } from "catch-unknown";
 import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
 import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
+import { isServerUpgrading } from "../../Connection/ServerUpgrade";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { iceServersManager } from "../../WebRtc/IceServersManager";
@@ -873,12 +874,17 @@ export class GameScene extends DirtyScene {
                             );
                             return;
                         }
+                        const upgrading = isServerUpgrading();
                         errorScreenStore.setError(
                             ErrorScreenMessage.fromPartial({
                                 type: "reconnecting",
                                 code: "CONNECTION_LOST",
-                                title: get(LL).warning.connectionLostTitle(),
-                                details: get(LL).warning.connectionLostSubtitle(),
+                                title: upgrading
+                                    ? get(LL).warning.serverUpdatingTitle()
+                                    : get(LL).warning.connectionLostTitle(),
+                                details: upgrading
+                                    ? get(LL).warning.serverUpdatingSubtitle()
+                                    : get(LL).warning.connectionLostSubtitle(),
                                 image: this._room.errorSceneLogo,
                             }),
                         );
