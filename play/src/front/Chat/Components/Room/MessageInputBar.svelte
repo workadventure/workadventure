@@ -47,7 +47,7 @@
     import excalidrawSvg from "../../../Components/images/applications/icon_excalidraw.svg";
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import tldrawJpeg from "../../../Components/images/applications/icon_tldraw.jpeg";
-    import { shouldDisableMessageInput, shouldDisableSendButton } from "./MessageInputBarDisabling";
+    import { canAttachFiles, shouldDisableMessageInput, shouldDisableSendButton } from "./MessageInputBarDisabling";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
@@ -278,7 +278,22 @@
         }
     }
 
+    let fileAttachmentAllowed = $derived(
+        canAttachFiles({
+            isUploadEnabled: fileAttachementEnabled,
+            isProximityChatRoom,
+            canSendMessages: $canSendMessages,
+        }),
+    );
+
     export function handleFiles(filesToAdd: FileList) {
+        // Drag and drop and paste land here too: apply the same rule as the File attachment button.
+        if (!fileAttachmentAllowed) {
+            if (!fileAttachementEnabled) {
+                warningMessageStore.addWarningMessage($LL.chat.disabledByAdmin(), { closable: true });
+            }
+            return;
+        }
         const newFiles = [...filesToAdd].map((file) => ({ id: uuid(), file }));
         files = [...files, ...newFiles];
         addToPreviews(newFiles);
@@ -742,7 +757,7 @@
                 class={applicationButtonClass}
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={!fileAttachementEnabled || isProximityChatRoom || !$canSendMessages}
+                disabled={!fileAttachmentAllowed}
             >
                 <IconPaperclip font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
