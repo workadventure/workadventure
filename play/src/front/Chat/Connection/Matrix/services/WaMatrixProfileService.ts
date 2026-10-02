@@ -10,6 +10,7 @@ import Debug from "debug";
 import { getColorByString } from "../../../../Utils/ColorGenerator";
 import { localUserStore } from "../../../../Connection/LocalUserStore";
 import type { UserProviderMerger } from "../../../UserProviderMerger/UserProviderMerger";
+import { matrixMediaAuthService } from "../MatrixMediaAuthService";
 
 const debug = Debug("matrix");
 
@@ -93,22 +94,25 @@ async function sha256HexOfBlob(blob: Blob): Promise<string> {
  */
 async function fetchWokaImageAsBlob(client: MatrixClient, src: string): Promise<Blob | undefined> {
     try {
-        const url = matrixOrPlainUrlToHttp(client, src);
+        if (!src.startsWith("mxc:")) {
+            const response = await fetch(src);
+            return response.ok ? response.blob() : undefined;
+        }
+        // Direct in-page fetch of Matrix content: on an authenticated-media homeserver,
+        // target the authenticated endpoint and carry the Authorization header explicitly.
+        const useAuthentication = matrixMediaAuthService.isEnabledForDirectFetch();
+        const url =
+            client.mxcUrlToHttp(src, undefined, undefined, undefined, undefined, undefined, useAuthentication) ??
+            undefined;
         if (!url) {
             return undefined;
         }
-        const response = await fetch(url);
+        const authorizationHeader = useAuthentication ? matrixMediaAuthService.getAuthorizationHeader() : undefined;
+        const response = await fetch(url, authorizationHeader ? { headers: authorizationHeader } : undefined);
         return response.ok ? response.blob() : undefined;
     } catch {
         return undefined;
     }
-}
-
-function matrixOrPlainUrlToHttp(client: MatrixClient, src: string): string | undefined {
-    if (src.startsWith("mxc:")) {
-        return client.mxcUrlToHttp(src) ?? undefined;
-    }
-    return src;
 }
 
 /**
@@ -200,7 +204,17 @@ function avatarHttp96(client: MatrixClient, mxc: string | null | undefined): str
     if (!mxc) {
         return undefined;
     }
-    return client.mxcUrlToHttp(mxc, 96, 96) ?? undefined;
+    return (
+        client.mxcUrlToHttp(
+            mxc,
+            96,
+            96,
+            undefined,
+            undefined,
+            undefined,
+            matrixMediaAuthService.isEnabledForTagSrc(),
+        ) ?? undefined
+    );
 }
 
 export function resolveDirectMessagePeerAvatarUrl(

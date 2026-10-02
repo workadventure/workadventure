@@ -19,6 +19,31 @@ export type MatrixResolvedAttachmentMedia = {
     cleanup: () => void;
 };
 
+/**
+ * Authenticated media (MSC3916 / spec v1.11) options.
+ *
+ * When omitted, media resolution keeps its legacy behaviour (unauthenticated
+ * endpoints, plain fetch), so nothing changes on homeservers that do not enforce
+ * authenticated media.
+ */
+export type MatrixMediaResolveOptions = {
+    /**
+     * Emit authenticated (`/_matrix/client/v1/media/...`) URLs for unencrypted
+     * media that is consumed by DOM elements (`<img>`, `<audio>`, `<video>`,
+     * download links). The Authorization header is injected by the media service
+     * worker, so this must only be true when that worker is active.
+     */
+    useAuthenticatedUrls?: boolean;
+    /**
+     * For encrypted media, which is downloaded and decrypted directly by the
+     * page rather than by a DOM element.
+     */
+    encryptedDownload?: {
+        useAuthenticatedUrls?: boolean;
+        authorizationHeader?: Record<string, string> | undefined;
+    };
+};
+
 type BlobUrlRegistry = {
     createFromBuffer: (buffer: ArrayBuffer, mimeType: string | undefined) => string;
     cleanup: () => void;
@@ -134,15 +159,22 @@ function getThumbnailEncryptedFile(content: MediaEventContent): EncryptedFile | 
     return info?.thumbnail_file;
 }
 
-function getHttpUrl(client: MatrixClient, mxcUrl: string | undefined): string | undefined {
+function getHttpUrl(client: MatrixClient, mxcUrl: string | undefined, useAuthentication = false): string | undefined {
     if (mxcUrl === undefined) {
         return undefined;
     }
-    return client.mxcUrlToHttp(mxcUrl) ?? undefined;
+    return (
+        client.mxcUrlToHttp(mxcUrl, undefined, undefined, undefined, undefined, undefined, useAuthentication) ??
+        undefined
+    );
 }
 
-async function downloadArrayBuffer(url: string, signal: AbortSignal): Promise<ArrayBuffer> {
-    const response = await fetch(url, { signal });
+async function downloadArrayBuffer(
+    url: string,
+    signal: AbortSignal,
+    headers?: Record<string, string>,
+): Promise<ArrayBuffer> {
+    const response = await fetch(url, headers ? { signal, headers } : { signal });
     if (!response.ok) {
         throw new MediaDownloadError("media download failed");
     }
@@ -155,12 +187,13 @@ async function resolveEncryptedBlobUrl(
     mimeType: string | undefined,
     blobRegistry: BlobUrlRegistry,
     signal: AbortSignal,
+    encryptedDownload: MatrixMediaResolveOptions["encryptedDownload"],
 ): Promise<string> {
-    const downloadUrl = getHttpUrl(client, encryptedFile.url);
+    const downloadUrl = getHttpUrl(client, encryptedFile.url, encryptedDownload?.useAuthenticatedUrls ?? false);
     if (downloadUrl === undefined) {
         throw new MediaDownloadError("missing encrypted media URL");
     }
-    const encryptedBuffer = await downloadArrayBuffer(downloadUrl, signal);
+    const encryptedBuffer = await downloadArrayBuffer(downloadUrl, signal, encryptedDownload?.authorizationHeader);
     let decryptedBuffer: ArrayBuffer;
     try {
         decryptedBuffer = await decryptEncryptedFile(new Uint8Array(encryptedBuffer), encryptedFile);
@@ -174,10 +207,12 @@ export async function resolveImageMediaFromEvent(
     event: MatrixEvent,
     client: MatrixClient,
     signal: AbortSignal,
+    options: MatrixMediaResolveOptions = {},
 ): Promise<MatrixResolvedImageMedia> {
     const rawContent = event.getOriginalContent();
     const content = toMediaEventContent(rawContent);
     const blobRegistry = createBlobUrlRegistry();
+    const useAuthenticatedUrls = options.useAuthenticatedUrls ?? false;
     if (content === undefined) {
         return {
             sourceUrl: undefined,
@@ -198,8 +233,8 @@ export async function resolveImageMediaFromEvent(
         )?.thumbnail_url;
         return {
             isEncrypted: false,
-            sourceUrl: getHttpUrl(client, content.url),
-            thumbnailUrl: getHttpUrl(client, thumbnailUrl),
+            sourceUrl: getHttpUrl(client, content.url, useAuthenticatedUrls),
+            thumbnailUrl: getHttpUrl(client, thumbnailUrl, useAuthenticatedUrls),
             error: undefined,
             cleanup: blobRegistry.cleanup,
         };
@@ -222,6 +257,7 @@ export async function resolveImageMediaFromEvent(
             content.info?.mimetype,
             blobRegistry,
             signal,
+            options.encryptedDownload,
         );
         const thumbnailFile = getThumbnailEncryptedFile(content);
         if (thumbnailFile === undefined) {
@@ -246,6 +282,7 @@ export async function resolveImageMediaFromEvent(
             )?.thumbnail_info?.mimetype,
             blobRegistry,
             signal,
+            options.encryptedDownload,
         );
         return { sourceUrl, thumbnailUrl, isEncrypted: true, error: undefined, cleanup: blobRegistry.cleanup };
     } catch (error) {
@@ -267,6 +304,7 @@ export async function resolveAttachmentMediaFromEvent(
     event: MatrixEvent,
     client: MatrixClient,
     signal: AbortSignal,
+    options: MatrixMediaResolveOptions = {},
 ): Promise<MatrixResolvedAttachmentMedia> {
     const rawContent = event.getOriginalContent();
     const content = toAttachmentMediaEventContent(rawContent);
@@ -283,7 +321,7 @@ export async function resolveAttachmentMediaFromEvent(
     if (!isEncryptedMediaContent(content)) {
         return {
             isEncrypted: false,
-            sourceUrl: getHttpUrl(client, content.url ?? content.file?.url),
+            sourceUrl: getHttpUrl(client, content.url ?? content.file?.url, options.useAuthenticatedUrls ?? false),
             error: undefined,
             cleanup: blobRegistry.cleanup,
         };
@@ -305,6 +343,7 @@ export async function resolveAttachmentMediaFromEvent(
             content.info?.mimetype,
             blobRegistry,
             signal,
+            options.encryptedDownload,
         );
         return { sourceUrl, isEncrypted: true, error: undefined, cleanup: blobRegistry.cleanup };
     } catch (error) {
