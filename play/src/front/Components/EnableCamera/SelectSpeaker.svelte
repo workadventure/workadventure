@@ -38,7 +38,7 @@
 
     <div class="flex items-center justify-center w-full">
         <div class="flex flex-wrap items-center justify-center w-full">
-            {#each deviceList as speaker, index (index)}
+            {#each deviceList as speaker, index (speaker.deviceId)}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
@@ -67,7 +67,9 @@
                         </div>
                         <div class="space-y-1 min-w-0">
                             <div class="text-lg bold truncate leading-tight">
-                                {StringUtils.normalizeDeviceName(speaker.label)}
+                                {speaker.label
+                                    ? StringUtils.normalizeDeviceName(speaker.label)
+                                    : $LL.actionbar.speaker.unnamedDevice({ index: index + 1 })}
                             </div>
                             {#if selectedDevice === speaker.deviceId}
                                 <Chip>{$LL.camera.active()}</Chip>
@@ -77,9 +79,22 @@
                         </div>
                     </div>
                     {#if selectedDevice === speaker.deviceId}
-                        <Button variant="secondary" square class="self-end" type="button">
+                        <Button
+                            variant="secondary"
+                            square
+                            class="self-end"
+                            type="button"
+                            aria-label={$LL.actionbar.speaker.test()}
+                            title={$LL.actionbar.speaker.test()}
+                            onclick={(event) => {
+                                // Stop the click from bubbling to the parent card, which would
+                                // re-select the device instead of only testing it.
+                                event.stopPropagation();
+                                event.preventDefault();
+                                onplaysound?.(speaker.deviceId);
+                            }}
+                        >
                             {#snippet icon()}
-                                <!-- TODO HUGO -->
                                 <IconUnMute font-size="20" />
                             {/snippet}
                         </Button>

@@ -1,3 +1,6 @@
+import type { Unsubscriber } from "svelte/store";
+import { bindAudioContextOutput } from "./AudioOutputManager";
+
 export interface AudioContextProbe {
     readonly isPlaybackAvailable: boolean;
     resume: () => Promise<void>;
@@ -13,6 +16,8 @@ export interface AudioContextProbe {
  */
 class AudioContextManager {
     private audioContexts: Map<number, AudioContext> = new Map();
+    /** One per context: keeps it on the user's selected audio output for as long as it lives. */
+    private sinkUnbinders: Map<number, Unsubscriber> = new Map();
     private isShuttingDown = false;
 
     /**
@@ -35,6 +40,10 @@ class AudioContextManager {
             const options = sampleRate ? { sampleRate } : undefined;
             context = new AudioContext(options);
             this.audioContexts.set(key, context);
+            // Everything played through a context — the WebAudio playback fallback, the scripting
+            // API's PCM streams — bypasses media elements, so it needs its own routing to follow
+            // the selected output instead of always landing on the system default.
+            this.sinkUnbinders.set(key, bindAudioContextOutput(context));
             console.debug(
                 `[AudioContextManager] Created new AudioContext with ${
                     sampleRate ? `sample rate ${sampleRate}` : "default sample rate"
@@ -57,6 +66,7 @@ class AudioContextManager {
         if (context && context.state !== "closed") {
             // Remove from map before closing to prevent concurrent access
             this.audioContexts.delete(key);
+            this.unbindSink(key);
             try {
                 await context.close();
                 console.debug(`[AudioContextManager] Closed AudioContext with key ${key}`);
@@ -64,8 +74,14 @@ class AudioContextManager {
                 console.error(`[AudioContextManager] Error closing AudioContext with key ${key}:`, err);
                 // Re-add to map if close failed
                 this.audioContexts.set(key, context);
+                this.sinkUnbinders.set(key, bindAudioContextOutput(context));
             }
         }
+    }
+
+    private unbindSink(key: number): void {
+        this.sinkUnbinders.get(key)?.();
+        this.sinkUnbinders.delete(key);
     }
 
     /**
@@ -89,6 +105,8 @@ class AudioContextManager {
         await Promise.all(closePromises);
         // Clear the map after all contexts are closed
         this.audioContexts.clear();
+        this.sinkUnbinders.forEach((unbind) => unbind());
+        this.sinkUnbinders.clear();
         console.debug("[AudioContextManager] All AudioContexts closed");
     }
 

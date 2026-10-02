@@ -32,8 +32,19 @@ export function isFirefox(): boolean {
     return window.navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
 }
 
+/**
+ * Detects Safari without going through `getNavigatorType`, which throws on any user agent that is
+ * none of Firefox / Chrome / Safari (embedded browsers, webviews). This one must never throw: it is
+ * called at module evaluation time (see `speakerSelectionSupported` in MediaStore), where an
+ * exception would take the whole media pipeline down with it.
+ *
+ * Every Chromium browser also carries "Safari" in its user agent, hence the exclusions. Chrome, Firefox,
+ * Edge and Opera on iOS (CriOS, FxiOS...) are WebKit under the hood and stay Safari here, as they were with
+ * `getNavigatorType`: the WebRTC quirk handling (TURN detection) relies on it.
+ */
 export function isSafari(): boolean {
-    return getNavigatorType() === NavigatorType.safari;
+    const userAgent = window.navigator.userAgent;
+    return /Safari/i.test(userAgent) && !/Chrome|Chromium|Android/i.test(userAgent);
 }
 
 export function isMac(): boolean {

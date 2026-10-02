@@ -54,6 +54,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         ignore: "Ignorěrowaś",
     },
     speaker: {
+        test: "Awdiowuchod testowaś",
+        unnamedDevice: "Awdiowuchod {index}",
+        loading: "Pyta se za awdiowuchodami …",
+        unsupported:
+            "Toś ten wobglědowak njedopušća wuběrk awdiowuchoda. Zuk se wótgrawa pśez rěd, kótaryž jo w systemowych nastajenjach wubrany.",
+        fallbackInUse: "Twój wobglědowak jo toś ten rěd wótpokazał. Zuk se wótgrawa pśez standardny rěd systema.",
         disabled: "Waš głośnik jo deaktiwěrowany",
         activate: "Waš głośnik aktiwěrowaś",
         noDevices: "Žedne głośnikowe rědy namakane",
