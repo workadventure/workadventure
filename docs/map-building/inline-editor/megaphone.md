@@ -75,12 +75,11 @@ Your video is framed in yellow with a megaphone badge, and the megaphone button 
 ![](../images/editor/megaphone_live.png)
 
 To stop, click the megaphone button in the action bar (1), or **Stop megaphone** in the **Global communication** window.
+From this window, administrators can also send a **text message** or an **audio message** to everyone.
 
 The participants see your video framed in yellow, with the same megaphone badge:
 
 ![](../images/editor/megaphone_audience.png)
-
-From the same window, administrators can also send a **text message** or an **audio message** to everyone.
 
 ### Raising a hand
 
