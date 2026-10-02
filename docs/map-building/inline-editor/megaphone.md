@@ -94,6 +94,7 @@ While you are broadcasting, participants can raise their hand. Their raised hand
 that only you and the administrators see. From this panel, you can lower hands or **Give the floor** to someone:
 their camera and microphone are then broadcast to everyone, if they are on. Giving the floor does not turn them on:
 someone whose microphone is off is asked to turn it on. Click **Take back the floor** to stop, or let them give the floor back.
+See [Raising your hand](/user/raise-hand#giving-the-floor) for the details.
 
 ### Recording the megaphone
 
