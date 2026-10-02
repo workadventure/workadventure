@@ -11,7 +11,7 @@ You can adjust WorkAdventure in two places:
 
 ## Choosing your camera, microphone and speakers
 
-Hover over the microphone and camera buttons in the action bar, then click the small arrow under them (1).
+Hover over the microphone and camera buttons in the action bar, then click the small arrow under them (1). During a conversation, the arrow is always visible.
 
 ![The device panel, opened from the arrow under the microphone and camera buttons](images/settings-media-panel.png)
 
@@ -23,22 +23,22 @@ The **Settings** tab of the panel lists your devices in three sections:
 
 Click a device to switch to it right away. WorkAdventure remembers your choice for the next time.
 
-Some browsers, like Safari, do not let websites choose the audio output: the **Audio output** section is then empty, and the sound plays on the default output of your computer.
+Some browsers, like Safari, do not let websites choose the audio output: the **Audio output** section is then empty, and the sound plays on the default output of your computer. On other browsers, if no output can be listed, the section says **No speaker device found**.
 
 If a section shows **Camera access blocked** or **Microphone access blocked**, your browser denies WorkAdventure access to the device: click **Open settings** to see how to allow it in your browser.
 
 Under the microphones, the **Advanced noise reduction** switch turns on WorkAdventure's noise reduction (see [Microphone settings](#microphone-settings)).
 The gear next to **Microphone** opens the microphone settings of the Settings menu.
 
-When WorkAdventure hears nothing from your microphone, the "No sound detected" message offers an **Open settings** button: it opens this panel.
+When WorkAdventure hears nothing from your microphone, the message "No sound detected from your microphone" offers an **Open settings** button: it opens this panel.
 
 ### The camera and microphone setup screen
 
-The screen **Turn on your camera and microphone** opens when you enter WorkAdventure (unless your administrator turned it off). You can open it again at any time: click your name in the top-right corner, then **Edit cam / mic** (1).
+The screen **Turn on your camera and microphone** opens the first time you enter WorkAdventure (unless your administrator turned it off). You can open it again at any time: click your name in the top-right corner, then **Edit cam / mic** (1).
 
 ![Your profile menu: "Edit cam / mic" (1) and "All settings" (2)](images/settings-profile-menu.png)
 
-It shows a card per device: **Microphone** with a sound level meter, **Edit camera** with a preview of your camera, and **Edit audio output**. Click **Edit** on a card to choose another device. In the audio output card, the speaker button plays a test sound. Click **Save** to go back to the map.
+It shows a card per device: **Microphone** with a sound level meter, **Edit camera** with a preview of your camera and, except on Safari, **Edit audio output**. Click **Edit** on a card to choose another device. In the audio output card, the speaker button plays a test sound. Click **Save** to go back to the map.
 
 ![The camera and microphone setup screen](images/settings-edit-cam-mic.png)
 
@@ -58,19 +58,19 @@ You cannot upload your own image.
 
 Your choice is saved, and applied whenever your camera is on.
 
-Background effects need a computer with at least 4 processor cores and a recent browser. Otherwise, the tab says "Background effects are not supported on this browser". If the effect stops working during a conversation, the message "Failed to apply background effects" appears and your camera goes back to **No effect**.
+Background effects need a computer with at least 4 processor cores and a recent browser with graphics acceleration. Otherwise, the tab says "Background effects are not supported on this browser". If the effect fails while your camera is on, the message "Failed to apply background effects" appears and your camera goes back to **No effect**.
 
 ## The Settings menu
 
 Click your name in the top-right corner, then **All settings** (2 on the image above).
 
-The menu opens on its **Settings** tab. The other tabs, like **Shortcuts** and **Help & tutorials**, depend on your WorkAdventure.
+The menu opens on its **Settings** tab. The **Credit**, **Shortcuts** and **Help & tutorials** tabs are always there; other tabs, like **Chat** or **Contact**, depend on your WorkAdventure.
 
 ### Video quality and screen sharing quality
 
 ![Video quality and screen sharing quality](images/settings-quality.png)
 
-- **Video quality** sets the quality of the camera video you send: **Low**, **Recommended** (the default) or **High**. Choose **Low** if your connection is slow.
+- **Video quality** sets the quality of camera videos: **Low**, **Recommended** (the default) or **High**. Choose **Low** if your connection is slow: your video is sent in lower quality and, in large meetings, you also receive the others' videos in lower quality.
 - **Screen sharing quality** does the same for your screen sharing.
 
 Under **If network bandwidth is limited**, choose what your screen sharing keeps when the connection gets slow:
@@ -117,13 +117,13 @@ The last section, also titled **All settings**, groups these settings:
 
 ![The away mode and the other settings](images/settings-other.png)
 
-- **Bubble sound**: the sound played when you enter or leave a discussion bubble, **Ding** (the default) or **Wobble**. Click ▶ to listen to it.
+- **Bubble sound**: the sound played when you, or someone else, join or leave your discussion bubble: **Ding** (the default) or **Wobble**. Click ▶ to listen to it.
 - **Fullscreen**: shows WorkAdventure in full screen.
 - **Notifications**: shows desktop notifications. Your browser asks for your permission; if you refuse, the switch turns back off.
 - **Enable picture-in-picture** (on by default): when you leave the WorkAdventure tab during a conversation, the videos open in a small floating window. This needs a browser that supports it, like Chrome or Edge.
 - **Always ask before opening websites and Jitsi Meet rooms**: when a website or a Jitsi room of the map would open by itself, WorkAdventure asks you first.
 - **Ignore requests to follow other users**: you no longer receive requests to follow someone.
-- **Decrease audio player volume while speaking**: in the current version, the music and sounds of the map are always lowered while you speak, whatever the position of this switch.
+- **Decrease audio player volume while speaking**: in the current version, the music and sounds of the map are always played at half volume while you are in a conversation, whatever the position of this switch.
 - **Block ambient sounds and music**: stops the music and sounds played by the map.
 - **Disable map animations**: stops the animated tiles of the map.
 - **Display video quality statistics**: shows technical information (resolution, codec…) on the videos.
