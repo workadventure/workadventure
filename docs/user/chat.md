@@ -84,6 +84,11 @@ If you are creating a private room, you will also need to invite users.
 
 Invited users will receive a notification in the chat room list and they can accept or decline the invitation.
 
+### Moderation
+
+Room admins and moderators can kick or ban participants, delete messages and change what each role is allowed to do.
+See [Moderating chat rooms](/user/chat-moderation).
+
 ## User list
 
 The user list shows the list of users in relation with your world. In this list, you will see:
