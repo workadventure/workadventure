@@ -107,6 +107,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "ยกมือ",
             desc: "ส่งสัญญาณว่าคุณต้องการพูด มือที่ยกขึ้นของคุณจะแสดงบนแผนที่และบนวิดีโอของคุณ เพื่อให้ทุกคนรู้ว่าถึงตาใครต่อไป",
         },
+        wokaEmote: {
+            title: "เล่นอีโมต",
+            desc: "ให้ Woka ของคุณกระโดด เต้น หรือหมุนตัว กด G ค้างไว้เพื่อเปิดวงล้อ แล้วปล่อยเพื่อเล่น",
+        },
         audioManager: {
             title: "ระดับเสียงแวดล้อม",
             desc: "ตั้งค่าระดับเสียงได้โดยคลิกที่นี่",
@@ -229,6 +233,25 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "คุณยังไม่มีโต๊ะส่วนตัว",
         errorMoving: "ไม่สามารถไปยังโต๊ะส่วนตัวของคุณได้",
         errorUnclaiming: "ไม่สามารถยกเลิกการจองโต๊ะส่วนตัวของคุณได้",
+    },
+    wokaEmote: {
+        button: "อีโมต",
+        wheelTitle: "วงล้ออีโมต",
+        hint: "เลือกอีโมต",
+        names: {
+            jump: "กระโดด",
+            spin: "หมุนตัว",
+            dance: "เต้น",
+            celebrate: "ฉลอง",
+            nod: "ใช่",
+            question: "งุนงง",
+            laugh: "หัวเราะ",
+            moonwalk: "มูนวอล์ก",
+            runInPlace: "วิ่งอยู่กับที่",
+            nope: "ไม่",
+            love: "หัวใจ",
+            afk: "ไม่อยู่",
+        },
     },
 };
 export default actionbar;
