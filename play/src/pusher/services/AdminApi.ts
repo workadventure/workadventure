@@ -1013,16 +1013,23 @@ class AdminApi implements AdminInterface {
      *        required: true
      *        type: "string"
      *        description: The member UUID
+     *      - name: "playUri"
+     *        in: "query"
+     *        required: true
+     *        type: "string"
+     *        description: The room of the player asking. The member must belong to the world of this room.
+     *        example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
      *     responses:
      *       200:
      *        schema:
      *            $ref: '#/definitions/MemberData'
      *       404:
-     *        description: No member found.
+     *        description: No member found in the world of this room.
      */
-    async getMember(memberUUID: string): Promise<MemberData> {
-        const response = await axios.get<MemberData>(`${ADMIN_API_URL}/api/members/${memberUUID}`, {
+    async getMember(playUri: string, memberUUID: string): Promise<MemberData> {
+        const response = await axios.get<MemberData>(`${ADMIN_API_URL}/api/members/${encodeURIComponent(memberUUID)}`, {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            params: { playUri },
         });
         return response.data;
     }

@@ -1513,14 +1513,25 @@ export class SocketManager implements ZoneEventListener {
         return { iceServers: await adminService.getIceServers(userId, userUuid, roomId) };
     }
 
-    async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer | undefined> {
+    /**
+     * Any player can send any member UUID, so the admin only answers for members of the player's world (roomId),
+     * and the email is only relayed to map editors (the personal area property editor is its only reader).
+     */
+    async handleGetMemberQuery(
+        client: PusherWebSocket,
+        getMemberQuery: GetMemberQuery,
+    ): Promise<GetMemberAnswer | undefined> {
+        const { roomId, canEdit } = client.getUserData();
+        if (!roomId) {
+            return undefined;
+        }
         try {
-            const memberFromApi = await adminService.getMember(getMemberQuery.uuid);
+            const memberFromApi = await adminService.getMember(roomId, getMemberQuery.uuid);
             return {
                 member: {
                     id: memberFromApi.id,
                     name: memberFromApi.name ?? undefined,
-                    email: memberFromApi.email ?? undefined,
+                    email: canEdit ? (memberFromApi.email ?? undefined) : undefined,
                     visitCardUrl: memberFromApi.visitCardUrl ?? undefined,
                     chatID: memberFromApi.chatID ?? undefined,
                 },
