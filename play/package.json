@@ -104,7 +104,7 @@
     "@fontsource/press-start-2p": "^5.2.7",
     "@fontsource/roboto": "^5.2.10",
     "@fontsource/roboto-condensed": "^5.2.8",
-    "@grpc/grpc-js": "^1.14.4",
+    "@grpc/grpc-js": "^1.14.5",
     "@livekit/track-processors": "^0.7.2",
     "@mediapipe/tasks-vision": "^0.10.35",
     "@sentry/browser": "^10.54.0",

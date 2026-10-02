@@ -20,7 +20,7 @@
   "author": "WorkAdventure",
   "license": "ISC",
   "dependencies": {
-    "@grpc/grpc-js": "^1.14.4",
+    "@grpc/grpc-js": "^1.14.5",
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.1.2",
     "axios": "^1.16.1",
