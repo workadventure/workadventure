@@ -44,7 +44,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "แบนจากโลกนี้",
             content: "{userName} จะถูกตัดการเชื่อมต่อ และเข้าโลกนี้ด้วยบัญชีนี้ไม่ได้อีก",
             submit: "แบน",
-            confirmTitle: "แบน {userName} ถาวรหรือไม่",
+            confirmTitle: "แบน {userName} หรือไม่",
             confirmContent:
                 'ผู้ดูแลสามารถยกเลิกการแบนได้ภายหลังจากหน้า "ผู้ใช้ที่ถูกแบน" ในเมนู (หากโลกนี้มี) หรือจากระบบหลังบ้าน',
             scope: {

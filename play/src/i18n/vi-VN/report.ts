@@ -44,7 +44,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "Cấm khỏi thế giới",
             content: "{userName} bị ngắt kết nối và không thể tham gia lại thế giới này bằng tài khoản này.",
             submit: "Cấm",
-            confirmTitle: "Cấm {userName} vĩnh viễn?",
+            confirmTitle: "Cấm {userName}?",
             confirmContent:
                 'Quản trị viên có thể gỡ lệnh cấm sau đó từ trang "Người dùng bị cấm" trong menu (nếu thế giới này có) hoặc từ back-office.',
             scope: {

@@ -44,7 +44,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "ワールドから追放する",
             content: "{userName} は切断され、このアカウントではこのワールドに参加できなくなります。",
             submit: "追放する",
-            confirmTitle: "{userName} を永久に追放しますか？",
+            confirmTitle: "{userName} を追放しますか？",
             confirmContent:
                 "管理者は後から、メニューの「禁止されたユーザー」ページ（このワールドにある場合）またはバックオフィスで追放を解除できます。",
             scope: {

@@ -44,7 +44,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "Bannir du monde",
             content: "{userName} est déconnecté et ne pourra plus rejoindre ce monde avec ce compte.",
             submit: "Bannir",
-            confirmTitle: "Bannir {userName} définitivement ?",
+            confirmTitle: "Bannir {userName} ?",
             confirmContent:
                 "Un administrateur pourra lever le bannissement depuis la page « Utilisateurs bannis » du menu, si ce monde en dispose, ou depuis le back-office.",
             scope: {

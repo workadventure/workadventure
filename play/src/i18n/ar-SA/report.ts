@@ -44,7 +44,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "حظر من العالم",
             content: "يتم فصل {userName} ولن يتمكن من الانضمام إلى هذا العالم مجددًا بهذا الحساب.",
             submit: "حظر",
-            confirmTitle: "حظر {userName} نهائيًا؟",
+            confirmTitle: "حظر {userName}؟",
             confirmContent:
                 "يمكن للمدير رفع الحظر لاحقًا من صفحة «المستخدمون المحظورون» في القائمة إن كانت متاحة في هذا العالم، أو من لوحة الإدارة.",
             scope: {

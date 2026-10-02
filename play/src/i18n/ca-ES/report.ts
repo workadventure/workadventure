@@ -45,7 +45,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "Bandejar del món",
             content: "{userName} es desconnecta i no podrà tornar a entrar en aquest món amb aquest compte.",
             submit: "Bandejar",
-            confirmTitle: "Bandejar {userName} definitivament?",
+            confirmTitle: "Bandejar {userName}?",
             confirmContent:
                 "Un administrador pot aixecar el bandeig més tard des de la pàgina «Usuaris bandejats» del menú, si aquest món en té, o des del back-office.",
             scope: {

@@ -44,7 +44,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "ze swěta wuzamknyć",
             content: "{userName} so dźěli a njemóže wjace z tutym kontom do tutoho swěta zastupić.",
             submit: "wuzamknyć",
-            confirmTitle: "{userName} na přeco wuzamknyć?",
+            confirmTitle: "{userName} wuzamknyć?",
             confirmContent:
                 "Administrator móže wuzamknjenje pozdźišo na stronje „Zablokowani wužiwarjo“ w meniju zběhnyć, jeli tutón swět ju ma, abo w backoffice.",
             scope: {

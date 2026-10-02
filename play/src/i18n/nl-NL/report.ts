@@ -45,7 +45,7 @@ const report: DeepPartial<Translation["report"]> = {
             title: "Verbannen uit de wereld",
             content: "{userName} wordt losgekoppeld en kan deze wereld niet meer betreden met dit account.",
             submit: "Verbannen",
-            confirmTitle: "{userName} definitief verbannen?",
+            confirmTitle: "{userName} verbannen?",
             confirmContent:
                 'Een beheerder kan de ban later opheffen via de pagina "Verbannen gebruikers" in het menu, als deze wereld die heeft, of via de backoffice.',
             scope: {
