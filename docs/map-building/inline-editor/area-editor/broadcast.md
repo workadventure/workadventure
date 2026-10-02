@@ -47,14 +47,18 @@ The "See attendees" option is useful when speakers want to interact with their a
 
 ![](../../images/editor/megaphone_listener_2.png)
 
-10. Select the name of the podium that you already created in the "podium name" selector.
-11. (Optional) You can also create a chat channel for this zone. This channel will be used to chat with the people in the audience.
+10. Select the podium that you already created in the **Podium Name** selector.
+11. (Optional) You can also create a chat channel for this zone. This channel will be used to chat with the people in the audience. It is also needed for [polls and questions](/user/polls-and-questions) in this zone.
 
 :::note
 If you enable "associate a dedicated chat channel" in both areas, both chats will be merged and can be used by users in the podium and in the audience.
 :::
 
-12. (Optional) Turn off **"Allow raising hands"** so that people in this audience can no longer [raise their hand](/user/raise-hand) to the speakers. It is on by default, and lets speakers give the floor to someone in the audience. It does not stop people from raising their hand in a discussion bubble.
+12. (Optional) Turn on **Allow talking and forming bubbles** to let the people in the audience talk to each other in discussion bubbles. It is off by default: people in the audience can only listen, and their camera and microphone buttons are hidden.
+![The options of an audience zone](../../images/editor/audience_options.png)
+
+13. (Optional) In **Media to display before the live starts**, paste the link of a video or a page (YouTube, for instance). The audience sees it until a speaker steps on the podium. Without it, they see "Waiting for speaker".
+14. (Optional) Turn off **"Allow raising hands"** so that people in this audience can no longer [raise their hand](/user/raise-hand) to the speakers. It is on by default, and lets speakers give the floor to someone in the audience. It does not stop people from raising their hand in a discussion bubble.
 
 You're done ! Now, anyone in the audience will be able to hear/see the speakers that are on the podium/stage.
 When a user will enter the podium, he will trigger the megaphone directly and will stream to the audience associated with the podium.
