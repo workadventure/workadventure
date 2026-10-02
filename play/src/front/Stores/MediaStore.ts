@@ -60,23 +60,17 @@ import { NoiseSuppressionController } from "./NoiseSuppressionController";
 import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
+import {
+    cameraAccessIssueStore,
+    deviceHelpContext,
+    type MediaAccessIssue,
+    mediaPermissionDeniedStore,
+    microphoneAccessIssueStore,
+} from "./MediaStatusStore";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
-export type MediaAccessIssue = "permission_denied" | "no_device";
 type MediaDeviceAnalyticsKind = "camera" | "microphone" | "camera_microphone";
-
-/**
- * Last camera access failure, or no videoinput reported by the browser.
- * Cleared when the user turns the camera off manually, when a video track is obtained, or when a camera appears.
- */
-export const cameraAccessIssueStore = writable<MediaAccessIssue | null>(null);
-
-/**
- * Last microphone access failure, or no audioinput reported by the browser.
- * Cleared when the user turns the microphone off manually, when an audio track is obtained, or when a microphone appears.
- */
-export const microphoneAccessIssueStore = writable<MediaAccessIssue | null>(null);
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -746,7 +740,9 @@ function hasLiveTrack(tracks: MediaStreamTrack[]): boolean {
 
 function classifyMediaAccessError(error: unknown): MediaAccessIssue | null {
     const name = error instanceof Error ? error.name : "";
-    if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") {
+    // SecurityError is not one: it comes from the page itself (an iframe without allow="camera; microphone", a
+    // permissions policy), and pointing the user to their browser settings would not help.
+    if (name === "NotAllowedError" || name === "PermissionDeniedError") {
         return "permission_denied";
     }
     if (name === "NotFoundError" || name === "DevicesNotFoundError") {
@@ -816,9 +812,6 @@ async function runRawStreamUpdate(
         });
     }
 
-    cameraAccessIssueStore.set(null);
-    microphoneAccessIssueStore.set(null);
-
     const nextConstraints = {
         video: constraints.video ?? false,
         audio: constraints.audio ?? false,
@@ -839,6 +832,16 @@ async function runRawStreamUpdate(
         constraints.audio !== false &&
         warmAudioTrack === undefined &&
         (!deepEqual(oldConstraints.audio, constraints.audio) || !hasLiveAudioTrack);
+
+    // Only clear an issue for a device we are about to retry. Failing to access a device turns it off, which
+    // immediately triggers another update for the very same device with no request in it: clearing
+    // unconditionally would erase the failure we just recorded.
+    if (mustRequestNewVideo) {
+        cameraAccessIssueStore.set(null);
+    }
+    if (mustRequestNewAudio) {
+        microphoneAccessIssueStore.set(null);
+    }
 
     if (currentStream) {
         const oldStream = currentStream;
@@ -976,13 +979,11 @@ async function runRawStreamUpdate(
                 );
                 emitCurrentStreamOrError(setIfCurrent, e);
                 const classified = classifyMediaAccessError(e);
-                trackMediaAccessIssue(mustRequestNewAudio ? "camera_microphone" : "camera", classified);
-                requestedCameraState.disableWebcam();
+                trackMediaAccessIssue("camera", classified);
                 cameraAccessIssueStore.set(classified);
-                if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
-                    microphoneAccessIssueStore.set(classified);
-                }
+                // Only the camera is turned off. That triggers another update requesting the microphone alone, so
+                // the microphone gets its own outcome instead of inheriting the camera's failure.
+                requestedCameraState.disableWebcam();
             } else if (!constraints.video && !constraints.audio) {
                 console.error("Error. getUserMedia called with no audio and no video.");
                 setIfCurrent({
@@ -993,9 +994,10 @@ async function runRawStreamUpdate(
                 console.info("Error. Unable to get microphone and/or camera access.", newConstraints, e);
                 emitCurrentStreamOrError(setIfCurrent, e);
                 if (mustRequestNewAudio) {
-                    trackMediaAccessIssue("microphone", classifyMediaAccessError(e));
+                    const classified = classifyMediaAccessError(e);
+                    trackMediaAccessIssue("microphone", classified);
+                    microphoneAccessIssueStore.set(classified);
                     requestedMicrophoneState.disableMicrophone();
-                    microphoneAccessIssueStore.set(classifyMediaAccessError(e));
                 }
             }
         }
@@ -1566,19 +1568,8 @@ export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
  * Context for the camera action-bar tooltip when the camera is off: permission denied vs no usable device.
  */
 export const cameraButtonHelpContextStore = derived(
-    [cameraAccessIssueStore, cameraListStore, devicesNotLoaded],
-    ([issue, cameras, notLoaded]) => {
-        if (issue === "permission_denied") {
-            return "permission" as const;
-        }
-        if (issue === "no_device") {
-            return "no_device" as const;
-        }
-        if (!notLoaded && cameras !== undefined && cameras.length === 0) {
-            return "no_device" as const;
-        }
-        return null;
-    },
+    [mediaPermissionDeniedStore, cameraAccessIssueStore, cameraListStore, devicesNotLoaded],
+    ([denied, issue, cameras, notLoaded]) => deviceHelpContext(denied.camera, issue, cameras, notLoaded),
 );
 
 export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
@@ -1593,19 +1584,8 @@ export const microphoneListStore = derived(deviceListStore, ($deviceListStore) =
  * Context for the microphone action-bar tooltip when the mic is off: permission denied vs no usable device.
  */
 export const microphoneButtonHelpContextStore = derived(
-    [microphoneAccessIssueStore, microphoneListStore, devicesNotLoaded],
-    ([issue, mics, notLoaded]) => {
-        if (issue === "permission_denied") {
-            return "permission" as const;
-        }
-        if (issue === "no_device") {
-            return "no_device" as const;
-        }
-        if (mics !== undefined && mics.length === 0) {
-            return "no_device" as const;
-        }
-        return null;
-    },
+    [mediaPermissionDeniedStore, microphoneAccessIssueStore, microphoneListStore, devicesNotLoaded],
+    ([denied, issue, mics, notLoaded]) => deviceHelpContext(denied.microphone, issue, mics, notLoaded),
 );
 
 export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {

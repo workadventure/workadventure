@@ -25,6 +25,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         microphoneContent: "Bạn phải cho phép truy cập micrô trong trình duyệt của mình.",
         firefoxContent:
             'Vui lòng đánh dấu ô "Ghi nhớ quyết định này" nếu bạn không muốn Firefox tiếp tục hỏi quyền truy cập.',
+        safariContent:
+            'Mở Safari > Cài đặt cho trang web này… (hoặc Safari > Cài đặt > Trang web > Camera / Micrô), đặt trang này thành "Cho phép", rồi tải lại trang.',
         allow: "Cho phép webcam",
         allowMicrophone: "Cho phép micrô",
         allowCameraMicrophone: "Cho phép webcam và micrô",

@@ -41,22 +41,18 @@
         [LL, cameraButtonHelpContextStore, requestedCameraState, silentStore, availabilityStatusStore],
         ([$LL, ctx, camOn, silent, status]) => {
             const permissionMedia = (() => {
-                try {
-                    if (isAndroid()) {
-                        return $LL.camera.help.tooltip.permissionMedia.android();
-                    }
-                    const nt = getNavigatorType();
-                    if (nt === NavigatorType.firefox) {
-                        return $LL.camera.help.tooltip.permissionMedia.firefox();
-                    }
-                    if (nt === NavigatorType.chrome) {
-                        return $LL.camera.help.tooltip.permissionMedia.chrome();
-                    }
-                    if (nt === NavigatorType.safari) {
-                        return $LL.camera.help.tooltip.permissionMedia.safari();
-                    }
-                } catch {
-                    // getNavigatorType() throws on some embedded or uncommon browsers
+                if (isAndroid()) {
+                    return $LL.camera.help.tooltip.permissionMedia.android();
+                }
+                const nt = getNavigatorType();
+                if (nt === NavigatorType.firefox) {
+                    return $LL.camera.help.tooltip.permissionMedia.firefox();
+                }
+                if (nt === NavigatorType.chrome) {
+                    return $LL.camera.help.tooltip.permissionMedia.chrome();
+                }
+                if (nt === NavigatorType.safari) {
+                    return $LL.camera.help.tooltip.permissionMedia.safari();
                 }
                 return $LL.camera.help.tooltip.permissionMedia.default();
             })();

@@ -23,6 +23,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "브라우저에서 카메라와 마이크 사용을 허용해야 합니다.",
         cameraContent: "브라우저에서 카메라 사용을 허용해야 합니다.",
         microphoneContent: "브라우저에서 마이크 사용을 허용해야 합니다.",
+        safariContent:
+            'Safari > 이 웹사이트에 대한 설정…(또는 Safari > 설정 > 웹사이트 > 카메라 / 마이크)을 열고 이 사이트를 "허용"으로 설정한 다음 페이지를 새로 고치세요.',
         firefoxContent: 'Firefox가 계속해서 권한을 묻지 않도록 하려면 "이 결정을 기억" 체크박스를 클릭하세요.',
         allow: "웹캠 허용",
         allowMicrophone: "마이크 허용",
