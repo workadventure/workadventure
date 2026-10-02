@@ -35,18 +35,6 @@ Map creators can also turn raising hands off in a meeting room or in an audience
 ### Choosing where to raise your hand
 
 You raise and lower your hand separately in each conversation, and your hand can be up in more than one at a time.
-If you are in several conversations at once (for instance in a discussion bubble while sitting in the audience of a podium), clicking the button opens a list of those conversations:
-
-- **Discussion bubble**: the people around you,
-- **Megaphone**: the person broadcasting through the megaphone,
-- the name of the meeting room or of the podium.
-
-Click a conversation to raise your hand there. A highlighted line means your hand is already up in that conversation: click it again to lower it.
-
-If you raised your hand in the megaphone before joining another conversation, the megaphone stays in the list so that you can lower your hand there.
-
-![Choosing where to raise your hand: the hand is already up in the megaphone](images/raise-hand-picker.png)
-
 ## What others see
 
 When you raise your hand, the people in that conversation see:
