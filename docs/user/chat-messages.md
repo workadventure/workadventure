@@ -73,6 +73,4 @@ The same menu creates a **Poll** and, in the proximity chat, opens the **Questio
 ## Unread messages and sounds
 
 - Each room shows how many messages you have not read, and the chat button in the action bar shows the total.
-- A sound plays when a message arrives in a room you are not looking at. If you are logged in, turn it off in the menu, **Chat** tab, **Chat sounds**.
-- When WorkAdventure is in the background, you get a desktop notification if you turned on **Notifications** in the [Settings](/user/settings#other-settings).
-- To silence a busy room (sound and notifications), open its menu in the room list and click **Mute Room**.
+- Sounds, desktop notifications and **Mute Room** (to silence a busy room): see [Notifications](/user/notifications).
