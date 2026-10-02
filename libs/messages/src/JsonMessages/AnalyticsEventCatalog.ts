@@ -1287,6 +1287,45 @@ export const ANALYTICS_EVENTS = {
     description: "The user confirmed their Woka during onboarding.",
   }),
 
+  "onboarding.started": event({
+    properties: z.object({
+      nameSkipReason: z
+        .enum(["name_known", "name_imposed", "name_random"])
+        .optional()
+        .describe(
+          "Why the name screen is skipped: the name was already known (a previous visit, or the account), or the world set it (fixed or random). Absent when the screen is shown.",
+        ),
+      wokaSkipReason: z
+        .enum(["woka_known", "woka_imposed", "woka_random", "pwa_install"])
+        .optional()
+        .describe(
+          "Why the Woka screen is skipped: the Woka was already known (this browser or the account), the world set it (fixed or random), or the Web App install prompt led straight into the room. Absent when the screen is shown.",
+        ),
+      cameraSkipReason: z
+        .enum([
+          "camera_skipped_by_world",
+          "camera_already_configured",
+          "pwa_install",
+        ])
+        .optional()
+        .describe(
+          "Why the camera screen is skipped: the world turns it off (its skip camera page setting, or SKIP_CAMERA_PAGE on an install without an admin), the camera and microphone were chosen on a previous visit, or the Web App install prompt led straight into the room. Absent when the screen is shown.",
+        ),
+    }),
+    description:
+      "The arrival sequence (name, Woka, companion, camera) was worked out, once per page load, before any of its screens. Carries why each skipped screen is skipped; the screens actually displayed are reported by onboarding.screen_shown.",
+  }),
+
+  "onboarding.screen_shown": event({
+    properties: z.object({
+      screen: z
+        .enum(["name", "woka", "companion", "camera"])
+        .describe("The arrival screen displayed."),
+    }),
+    description:
+      "An arrival screen was displayed, before the player entered the room. Not sent when the same screen is opened again from the menu. Followed by the screen's own validation event (onboarding.name_validated, onboarding.woka_validated, onboarding.companion_selected, onboarding.video_validated) when the player gets past it.",
+  }),
+
   "feedback.opened": event({
     properties: z.object({ feedbackSource: feedbackSourceField }),
     description: "The user opened the feedback form.",

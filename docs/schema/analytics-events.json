@@ -1285,6 +1285,28 @@
       }
     },
     {
+      "title": "onboarding.screen_shown",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.screen_shown"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.screen_shown"
+        }
+      }
+    },
+    {
+      "title": "onboarding.started",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.started"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.started"
+        }
+      }
+    },
+    {
       "title": "onboarding.video_validated",
       "properties": {
         "eventName": {
@@ -2000,6 +2022,8 @@
               "onboarding.companion_selected",
               "onboarding.custom_woka_selected",
               "onboarding.name_validated",
+              "onboarding.screen_shown",
+              "onboarding.started",
               "onboarding.video_validated",
               "onboarding.woka_selected",
               "onboarding.woka_validated",
@@ -3936,6 +3960,60 @@
       "additionalProperties": true,
       "description": "The user confirmed their name during onboarding.",
       "title": "onboarding.name_validated"
+    },
+    "onboarding.screen_shown": {
+      "type": "object",
+      "properties": {
+        "screen": {
+          "type": "string",
+          "enum": [
+            "name",
+            "woka",
+            "companion",
+            "camera"
+          ],
+          "description": "The arrival screen displayed."
+        }
+      },
+      "additionalProperties": true,
+      "title": "onboarding.screen_shown",
+      "description": "An arrival screen was displayed, before the player entered the room. Not sent when the same screen is opened again from the menu. Followed by the screen's own validation event (onboarding.name_validated, onboarding.woka_validated, onboarding.companion_selected, onboarding.video_validated) when the player gets past it."
+    },
+    "onboarding.started": {
+      "type": "object",
+      "properties": {
+        "nameSkipReason": {
+          "type": "string",
+          "enum": [
+            "name_known",
+            "name_imposed",
+            "name_random"
+          ],
+          "description": "Why the name screen is skipped: the name was already known (a previous visit, or the account), or the world set it (fixed or random). Absent when the screen is shown."
+        },
+        "wokaSkipReason": {
+          "type": "string",
+          "enum": [
+            "woka_known",
+            "woka_imposed",
+            "woka_random",
+            "pwa_install"
+          ],
+          "description": "Why the Woka screen is skipped: the Woka was already known (this browser or the account), the world set it (fixed or random), or the Web App install prompt led straight into the room. Absent when the screen is shown."
+        },
+        "cameraSkipReason": {
+          "type": "string",
+          "enum": [
+            "camera_skipped_by_world",
+            "camera_already_configured",
+            "pwa_install"
+          ],
+          "description": "Why the camera screen is skipped: the world turns it off (its skip camera page setting, or SKIP_CAMERA_PAGE on an install without an admin), the camera and microphone were chosen on a previous visit, or the Web App install prompt led straight into the room. Absent when the screen is shown."
+        }
+      },
+      "additionalProperties": true,
+      "title": "onboarding.started",
+      "description": "The arrival sequence (name, Woka, companion, camera) was worked out, once per page load, before any of its screens. Carries why each skipped screen is skipped; the screens actually displayed are reported by onboarding.screen_shown."
     },
     "onboarding.video_validated": {
       "type": "object",
