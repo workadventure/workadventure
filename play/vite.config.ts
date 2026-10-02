@@ -42,6 +42,9 @@ export default defineConfig(({ mode }) => {
                 //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
             },
             assetsInclude: ["**/*.tflite", "**/*.wasm"],
+            css: {
+                devSourcemap: true,
+            },
         },
         plugins: [
             tailwindcss(),
