@@ -55,6 +55,7 @@ import type {
 import { noUndefined } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
+import { asError } from "catch-unknown";
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
 import type { WebSocket } from "uWebSockets.js";
@@ -339,7 +340,7 @@ export class SocketManager implements ZoneEventListener {
                                 apiClient.getChannel().getTarget() +
                                 "' for room '" +
                                 socketData.roomId +
-                                "'at :" +
+                                "' at " +
                                 date.toLocaleString("en-GB"),
                             err,
                         );
@@ -347,7 +348,7 @@ export class SocketManager implements ZoneEventListener {
                             this.closeWebsocketConnection(
                                 client,
                                 WS_CLOSE_CODE_SESSION_DESTROYED,
-                                "Error while connecting to back server",
+                                `Back lost: ${err.message}`,
                             );
                         }
                     } catch (e: unknown) {
@@ -385,7 +386,7 @@ export class SocketManager implements ZoneEventListener {
             this.closeWebsocketConnection(
                 client,
                 WS_CLOSE_CODE_SESSION_DESTROYED,
-                "Error while connecting to back server",
+                `Error while connecting to back server: ${asError(e).message}`,
             );
         }
     }
@@ -471,7 +472,7 @@ export class SocketManager implements ZoneEventListener {
             this.closeWebsocketConnection(
                 client,
                 WS_CLOSE_CODE_SESSION_DESTROYED,
-                "Error while connecting to back server",
+                `Error while connecting to back server: ${asError(e).message}`,
             );
         }
     }
