@@ -45,7 +45,8 @@ const report: DeepPartial<Translation["report"]> = {
             content: "{userName}님의 연결이 끊기며, 이 계정으로는 이 월드에 다시 참여할 수 없습니다.",
             submit: "차단",
             confirmTitle: "{userName}님을 영구 차단할까요?",
-            confirmContent: "게임 내에서는 되돌릴 수 없습니다. 관리자만 백오피스에서 차단을 해제할 수 있습니다.",
+            confirmContent:
+                '관리자는 나중에 메뉴의 "차단된 사용자" 페이지(이 월드에 있는 경우) 또는 백오피스에서 차단을 해제할 수 있습니다.',
             scope: {
                 account: "이 계정",
                 ip: "이 계정과 IP 주소",

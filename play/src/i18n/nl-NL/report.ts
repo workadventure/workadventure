@@ -47,7 +47,7 @@ const report: DeepPartial<Translation["report"]> = {
             submit: "Verbannen",
             confirmTitle: "{userName} definitief verbannen?",
             confirmContent:
-                "Dit kan niet ongedaan worden gemaakt vanuit het spel. Alleen een beheerder kan de ban opheffen via de backoffice.",
+                'Een beheerder kan de ban later opheffen via de pagina "Verbannen gebruikers" in het menu, als deze wereld die heeft, of via de backoffice.',
             scope: {
                 account: "Dit account",
                 ip: "Dit account en het IP-adres",

@@ -47,7 +47,7 @@ const report: DeepPartial<Translation["report"]> = {
             submit: "Banir",
             confirmTitle: "Banir {userName} definitivamente?",
             confirmContent:
-                "Isso não pode ser desfeito pelo jogo. Só um administrador pode remover o banimento pelo back-office.",
+                'Um administrador pode remover o banimento depois pela página "Usuários banidos" do menu, se este mundo tiver uma, ou pelo back-office.',
             scope: {
                 account: "Esta conta",
                 ip: "Esta conta e o endereço IP dela",

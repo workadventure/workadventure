@@ -47,7 +47,7 @@ const report: DeepPartial<Translation["report"]> = {
             submit: "Banear",
             confirmTitle: "¿Banear a {userName} definitivamente?",
             confirmContent:
-                "No se puede deshacer desde el juego. Solo un administrador puede levantar el baneo desde el back-office.",
+                "Un administrador puede levantar el baneo más tarde desde la página «Usuarios baneados» del menú, si este mundo la tiene, o desde el back-office.",
             scope: {
                 account: "Esta cuenta",
                 ip: "Esta cuenta y su dirección IP",

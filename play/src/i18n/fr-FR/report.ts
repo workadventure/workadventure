@@ -46,7 +46,7 @@ const report: DeepPartial<Translation["report"]> = {
             submit: "Bannir",
             confirmTitle: "Bannir {userName} définitivement ?",
             confirmContent:
-                "C'est irréversible depuis le jeu. Seul un administrateur peut lever le bannissement depuis le back-office.",
+                "Un administrateur pourra lever le bannissement depuis la page « Utilisateurs bannis » du menu, si ce monde en dispose, ou depuis le back-office.",
             scope: {
                 account: "Ce compte",
                 ip: "Ce compte et son adresse IP",

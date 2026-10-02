@@ -46,7 +46,7 @@ const report: DeepPartial<Translation["report"]> = {
             submit: "Wuzamknuś",
             confirmTitle: "{userName} na pśecej wuzamknuś?",
             confirmContent:
-                "To njedajo se w graśu wótwołaś. Jano administrator móžo wuzamknjenje w backoffice zběgnuś.",
+                "Administrator móžo wuzamknjenje pózdźej na boku „Blokěrowane wužywarje“ w meniju zběgnuś, jolic ten swět jen ma, abo w backoffice.",
             scope: {
                 account: "Toś to konto",
                 ip: "Toś to konto a jogo IP-adresa",

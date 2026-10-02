@@ -47,7 +47,7 @@ const report: DeepPartial<Translation["report"]> = {
             submit: "Bandisci",
             confirmTitle: "Bandire {userName} definitivamente?",
             confirmContent:
-                "Non può essere annullato dal gioco. Solo un amministratore può revocare il ban dal back-office.",
+                'Un amministratore può revocare il ban in seguito dalla pagina "Utenti bannati" del menu, se disponibile in questo mondo, oppure dal back-office.',
             scope: {
                 account: "Questo account",
                 ip: "Questo account e il suo indirizzo IP",
