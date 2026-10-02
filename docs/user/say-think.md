@@ -26,8 +26,8 @@ Type your text (up to 100 characters), then press **Enter**. You can switch betw
 
 A new bubble replaces the previous one. Everyone who can see your Woka sees it.
 
-Your status chooses which one opens first: **Think** when you are **Busy**, **Back in a moment** or **Do not disturb** (see [Your availability status](/user/availability-status)), **Say** in a meeting or on a podium. You can change it in the list.
+Your status can override the shortcut: the window opens on **Think** when you are **Busy**, **Back in a moment** or **Do not disturb** (see [Your availability status](/user/availability-status)), and on **Say** in a meeting or on a podium. You can still change it in the list.
 
 :::info For administrators
-The bubbles can be turned off: **Enable comics-like bubbles** in the world settings of the admin (premium worlds), or `ENABLE_SAY` on a self-hosted server.
+The bubbles can be turned off for a whole world: **Enable comics-like bubbles**, in the **Chat & User List** section of the world settings in the admin (premium worlds).
 :::
