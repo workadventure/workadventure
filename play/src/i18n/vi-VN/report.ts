@@ -31,8 +31,16 @@ const report: DeepPartial<Translation["report"]> = {
         hint: {
             block: "Không nhìn và nghe người này nữa. Chỉ áp dụng cho bạn, và có thể hoàn tác.",
             report: "Báo cho quản trị viên.",
+            remove: "Cho họ rời cuộc trò chuyện này. Họ vẫn ở trên bản đồ.",
             kick: "Ngắt kết nối ngay. Họ có thể quay lại.",
             ban: "Ngắt kết nối vĩnh viễn.",
+        },
+        remove: {
+            title: "Cho rời cuộc trò chuyện",
+            content:
+                "{userName} rời cuộc trò chuyện này ngay lập tức và ngừng phát trực tiếp nếu đang phát. Họ vẫn ở trong thế giới.",
+            submit: "Cho rời",
+            confirmTitle: "Cho {userName} rời cuộc trò chuyện",
         },
         kick: {
             title: "Đưa ra",

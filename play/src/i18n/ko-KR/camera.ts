@@ -92,7 +92,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "추가 작업",
         closeMenu: "메뉴 닫기",
         senPrivateMessage: "비공개 메시지 보내기(곧 제공 예정)",
-        kickoffUser: "사용자 내보내기",
         giveFloor: "발언권 주기",
         revokeFloor: "발언권 회수",
         muteAudioUser: "해당 사용자 오디오 음소거",

@@ -93,7 +93,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "Dalše akcije",
         closeMenu: "Meny zacyniś",
         senPrivateMessage: "Pśewatne powěsće posłaś (Pśichadźe)",
-        kickoffUser: "Wužiwarja wotmětowaś",
         giveFloor: "Słowo daś",
         revokeFloor: "Słowo wótewześ",
         muteAudioUser: "Audio stummschalten",

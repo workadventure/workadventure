@@ -95,7 +95,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "Més accions",
         closeMenu: "Tancar el menú",
         senPrivateMessage: "Enviar un missatge privat (pròximament)",
-        kickoffUser: "Expulsar usuari",
         giveFloor: "Donar la paraula",
         revokeFloor: "Retirar la paraula",
         muteAudioUser: "Silenciar audio",

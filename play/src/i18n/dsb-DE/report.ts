@@ -31,8 +31,15 @@ const report: DeepPartial<Translation["report"]> = {
         hint: {
             block: "Wužywarja wěcej njewiźeś a njesłyšaś. Jano za tebje, a wótwołajobne.",
             report: "Administratorow informěrowaś.",
+            remove: "Z toś togo rozgrona wótpóraś. Wóstanjo na kórśe.",
             kick: "Něnto źěliś. Wužywaŕ móžo se wrośiś.",
             ban: "Na pśecej źěliś.",
+        },
+        remove: {
+            title: "Z rozgrona wótpóraś",
+            content: "{userName} ned toś to rozgrono spušćijo, a wusyłanje se skóńcy, jolic běžy. Wóstanjo w swěśe.",
+            submit: "Wótpóraś",
+            confirmTitle: "{userName} z rozgrona wótpóraś",
         },
         kick: {
             title: "Wótwónoźeś",

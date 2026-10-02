@@ -32,8 +32,16 @@ const report: DeepPartial<Translation["report"]> = {
         hint: {
             block: "Deixar de veure'l i sentir-lo. Només per a tu, i reversible.",
             report: "Avisar els administradors.",
+            remove: "Treure'l d'aquesta conversa. Es queda al mapa.",
             kick: "Desconnectar-lo ara. Podrà tornar.",
             ban: "Desconnectar-lo definitivament.",
+        },
+        remove: {
+            title: "Treure",
+            content:
+                "{userName} surt d'aquesta conversa immediatament i, si està en directe, la seva emissió s'atura. Es queda al món.",
+            submit: "Treure",
+            confirmTitle: "Treure {userName}",
         },
         kick: {
             title: "Expulsar",
