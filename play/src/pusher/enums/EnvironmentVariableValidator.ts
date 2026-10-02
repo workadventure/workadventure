@@ -69,6 +69,24 @@ export const EnvironmentVariables = z.object({
         .describe("Allowed CORS origin for API requests. Use '*' to allow any domain"),
     PUSHER_URL: AbsoluteOrRelativeUrl.optional().describe("Public URL of the pusher service"),
     FRONT_URL: AbsoluteOrRelativeUrl.optional().describe("Public URL of the frontend application"),
+    ASSETS_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe(
+            "Public URL of the 'front' container serving the JS/CSS assets (for instance https://assets.example.com). If empty, the pusher serves the assets itself.",
+        ),
+    ASSETS_INTERNAL_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe(
+            "URL the pusher uses to fetch the index.html template and proxy the static files from the 'front' container, for instance http://front. Defaults to ASSETS_URL.",
+        ),
     MAP_STORAGE_API_TOKEN: z.string().describe("API token for authenticating with the map-storage service"),
     REDIS_HOST: z.string().optional().transform(emptyStringToUndefined).describe("Redis server hostname or IP address"),
     REDIS_PORT: PositiveIntAsString.optional()

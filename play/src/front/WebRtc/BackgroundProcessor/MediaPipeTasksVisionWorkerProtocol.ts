@@ -1,8 +1,8 @@
 import type { BackgroundConfig } from "./createBackgroundTransformer";
-import type { SegmenterModel } from "./tasksVisionAssets";
+import type { SegmenterModel, TasksVisionAssetUrls } from "./tasksVisionAssets";
 
 export type TasksVisionWorkerRequest =
-    | { type: "initialize"; config: BackgroundConfig }
+    | { type: "initialize"; config: BackgroundConfig; assets: TasksVisionAssetUrls }
     | { type: "update-config"; requestId: number; config: Partial<BackgroundConfig> }
     /** Image-bitmap transport: one frame at a time, the main thread waits for the "frame" answer. */
     | { type: "process-frame"; frameId: number; frame: ImageBitmap; timestampMs: number }

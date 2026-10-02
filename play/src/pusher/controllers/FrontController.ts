@@ -17,28 +17,20 @@ import {
     GOOGLE_DRIVE_PICKER_CLIENT_ID,
 } from "../enums/EnvironmentVariable";
 import { validateQuery } from "../services/QueryValidator";
+import type { FrontAssets } from "../services/FrontAssets";
 import { BaseHttpController } from "./BaseHttpController";
 
 const debug = Debug("pusher:requests");
 
 export class FrontController extends BaseHttpController {
-    private indexFile: string;
     private redirectToAdminFile: string;
     private script: Promise<string> | undefined;
 
-    constructor(protected app: Application) {
+    constructor(
+        protected app: Application,
+        private readonly frontAssets: FrontAssets,
+    ) {
         super(app);
-
-        let indexPath: string;
-        if (fs.existsSync("dist/public/index.html")) {
-            // In prod mode
-            indexPath = "dist/public/index.html";
-        } else if (fs.existsSync("index.html")) {
-            // In dev mode
-            indexPath = "index.html";
-        } else {
-            throw new Error("Could not find index.html file");
-        }
 
         let redirectToAdminPath: string;
         if (fs.existsSync("dist/public/redirectToAdmin.html")) {
@@ -51,11 +43,7 @@ export class FrontController extends BaseHttpController {
             throw new Error("Could not find redirectToAdmin.html file");
         }
 
-        this.indexFile = fs.readFileSync(indexPath, "utf8");
         this.redirectToAdminFile = fs.readFileSync(redirectToAdminPath, "utf8");
-
-        // Pre-parse the index file for speed (and validation)
-        Mustache.parse(this.indexFile);
     }
 
     private async getScript() {
@@ -155,7 +143,7 @@ export class FrontController extends BaseHttpController {
             return;
         });
 
-        this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
+        this.app.get("/manifest.json", (req: Request, res: Response) => {
             debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const query = validateQuery(
                 req,
@@ -219,8 +207,13 @@ export class FrontController extends BaseHttpController {
     }
 
     private async displayFront(req: Request, res: Response, url: string) {
+        const template = this.frontAssets.getIndexTemplate();
+        if (template === undefined) {
+            res.status(503).set("Retry-After", "2").send("WorkAdventure is starting, please retry in a few seconds.");
+            return;
+        }
         const builder = new MetaTagsBuilder(url);
-        let html = this.indexFile;
+        let html = template;
 
         let redirectUrl: string | undefined;
 
@@ -272,7 +265,7 @@ export class FrontController extends BaseHttpController {
                     userId: uuid(),
                 };
             }
-            html = Mustache.render(this.indexFile, {
+            html = Mustache.render(template, {
                 ...metaTagsData,
                 // TODO change it to push data from admin
                 msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,

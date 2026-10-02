@@ -2,11 +2,10 @@ import { ImageSegmenter, type MPMask } from "@mediapipe/tasks-vision";
 import { ResegmentController } from "./ResegmentController";
 import { TasksVisionCompositor } from "./TasksVisionCompositor";
 import {
-    SEGMENTER_MODEL_URLS,
-    TASKS_VISION_WORKER_FILESET,
     installTasksVisionModuleFactory,
     selectSegmenterModel,
     type SegmenterModel,
+    type TasksVisionAssetUrls,
 } from "./tasksVisionAssets";
 import type {
     SerializedWorkerError,
@@ -77,6 +76,7 @@ export class MediaPipeTasksVisionWorkerRuntime {
     private fatal = false;
     private activeStream: { streamId: number; abortController: AbortController } | null = null;
     private messageQueue: Promise<void> = Promise.resolve();
+    private assets: TasksVisionAssetUrls | null = null;
 
     constructor(private readonly post: PostToMainThread) {}
 
@@ -94,7 +94,7 @@ export class MediaPipeTasksVisionWorkerRuntime {
         this.messageQueue = this.messageQueue
             .then(async () => {
                 if (message.type === "initialize") {
-                    await this.initialize(message.config);
+                    await this.initialize(message.config, message.assets);
                 } else if (message.type === "update-config") {
                     await this.updateConfig(message.requestId, message.config);
                 } else {
@@ -106,8 +106,9 @@ export class MediaPipeTasksVisionWorkerRuntime {
             });
     }
 
-    private async initialize(config: BackgroundConfig): Promise<void> {
+    private async initialize(config: BackgroundConfig, assets: TasksVisionAssetUrls): Promise<void> {
         this.config = { ...config };
+        this.assets = assets;
         try {
             const delegate = await this.initializeMediaPipe();
             await this.updateBackgroundImage();
@@ -151,14 +152,21 @@ export class MediaPipeTasksVisionWorkerRuntime {
         if (!this.glCanvas) {
             throw new Error("The WebGL canvas is unavailable");
         }
-        await installTasksVisionModuleFactory();
-        return ImageSegmenter.createFromOptions(TASKS_VISION_WORKER_FILESET, {
-            baseOptions: { modelAssetPath: SEGMENTER_MODEL_URLS[model], delegate: this.delegate },
-            canvas: this.glCanvas,
-            runningMode: "VIDEO",
-            outputCategoryMask: false,
-            outputConfidenceMasks: true,
-        });
+        const assets = this.assets;
+        if (!assets) {
+            throw new Error("The asset URLs were not received");
+        }
+        await installTasksVisionModuleFactory(assets.wasmLoaderPath);
+        return ImageSegmenter.createFromOptions(
+            { wasmLoaderPath: assets.wasmLoaderPath, wasmBinaryPath: assets.wasmBinaryPath },
+            {
+                baseOptions: { modelAssetPath: assets.models[model], delegate: this.delegate },
+                canvas: this.glCanvas,
+                runningMode: "VIDEO",
+                outputCategoryMask: false,
+                outputConfidenceMasks: true,
+            },
+        );
     }
 
     /**

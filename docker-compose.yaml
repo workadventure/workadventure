@@ -64,6 +64,10 @@ services:
       ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
       PUSHER_URL: http://play.workadventure.localhost
       FRONT_URL: http://play.workadventure.localhost
+      # The page loads its modules from the Vite dev server on another origin, like it loads the assets from the
+      # "front" container in production. The pusher reads index.html from Vite (same container).
+      ASSETS_URL: http://front.workadventure.localhost
+      ASSETS_INTERNAL_URL: http://localhost:8080
       UPLOADER_URL: http://uploader.workadventure.localhost
       ICON_URL: http://icon.workadventure.localhost
       STUN_SERVER: "${STUN_SERVER:-}"
@@ -179,11 +183,10 @@ services:
       - "traefik.http.routers.front.service=front"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
 
-      # Serve Vite's dev module graph (/src, /node_modules, /@fs) same-origin under the play host
-      # (instead of the pusher 303-redirecting them to front.*). Web Workers must be same-origin, so
-      # without this the matrix-js-sdk IndexedDB worker fails to load cross-origin and persistence
-      # falls back to the main thread. Priority 2 beats the play catch-all (priority 1); the front
-      # router still wins on the front.* host via its longer (higher default priority) Host rule.
+      # Serve Vite's dev module graph (/src, /node_modules, /@fs) same-origin under the play host too.
+      # Some dev-only URLs are root-relative and resolve against the page (e.g. the noise suppression
+      # AudioWorklet of @workadventure/noise-suppression/vite). Priority 2 beats the play catch-all
+      # (priority 1); the front router still wins on the front.* host via its longer Host rule.
       - "traefik.http.routers.play-vite.rule=HostRegexp(`^.+$`) && (PathPrefix(`/src`) || PathPrefix(`/node_modules`) || PathPrefix(`/@fs`) || PathPrefix(`/@vite`) || PathPrefix(`/@id`))"
       - "traefik.http.routers.play-vite.priority=2"
       - "traefik.http.routers.play-vite.service=front"

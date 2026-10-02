@@ -27,6 +27,8 @@ Environment variables for the Play service (frontend and pusher).
 | `ALLOWED_CORS_ORIGIN` | No | Allowed CORS origin for API requests. Use '*' to allow any domain |
 | `PUSHER_URL` | No | Public URL of the pusher service |
 | `FRONT_URL` | No | Public URL of the frontend application |
+| `ASSETS_URL` | No | Public URL of the 'front' container serving the JS/CSS assets (for instance https://assets.example.com). If empty, the pusher serves the assets itself. |
+| `ASSETS_INTERNAL_URL` | No | URL the pusher uses to fetch the index.html template and proxy the static files from the 'front' container, for instance http://front. Defaults to ASSETS_URL. |
 | `MAP_STORAGE_API_TOKEN` | Yes | API token for authenticating with the map-storage service |
 | `REDIS_HOST` | No | Redis server hostname or IP address |
 | `REDIS_PORT` | No | Redis server port. Defaults to 6379 |
