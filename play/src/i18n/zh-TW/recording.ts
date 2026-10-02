@@ -47,10 +47,6 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "錄製正在進行中",
             notEnabled: "此世界已停用錄製。",
         },
-        spacePicker: {
-            megaphone: "錄製擴音器",
-            discussion: "錄製討論",
-        },
     },
 };
 

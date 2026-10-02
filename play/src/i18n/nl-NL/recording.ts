@@ -47,10 +47,6 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Een opname is bezig",
             notEnabled: "Opnames zijn uitgeschakeld voor deze wereld.",
         },
-        spacePicker: {
-            megaphone: "Megafoon opnemen",
-            discussion: "Discussie opnemen",
-        },
     },
 };
 

@@ -46,10 +46,6 @@ const recording: BaseTranslation = {
             inProgress: "A recording is in progress",
             notEnabled: " Recordings are disabled for this world.",
         },
-        spacePicker: {
-            megaphone: "Record megaphone",
-            discussion: "Record discussion",
-        },
     },
 };
 

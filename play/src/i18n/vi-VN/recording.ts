@@ -47,10 +47,6 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Đang có một bản ghi được thực hiện",
             notEnabled: " Tính năng ghi hình bị tắt trên thế giới này.",
         },
-        spacePicker: {
-            megaphone: "Ghi loa phóng thanh",
-            discussion: "Ghi cuộc thảo luận",
-        },
     },
 };
 

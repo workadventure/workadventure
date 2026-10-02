@@ -47,10 +47,6 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Nagraśe běžy",
             notEnabled: "Nagraśa su za toś ten swět znjemóžnjone.",
         },
-        spacePicker: {
-            megaphone: "Megafon nagraś",
-            discussion: "Diskusiju nagraś",
-        },
     },
 };
 

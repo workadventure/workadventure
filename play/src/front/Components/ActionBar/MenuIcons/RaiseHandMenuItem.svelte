@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
     import type { Readable } from "svelte/store";
     import { derived, get } from "svelte/store";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
@@ -11,10 +10,9 @@
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { spaceLabel } from "../../../Space/spaceLabel";
-    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import { LL } from "../../../../i18n/i18n-svelte";
     import RaiseHandIcon from "../../Icons/RaiseHandIcon.svelte";
-    import RaiseHandSpacePicker, { type RaiseHandSpaceEntry } from "../../PopUp/RaiseHandSpacePicker.svelte";
+    import { type TargetRow, TargetPickerController } from "./TargetPickerController";
 
     // A single control for the whole "ask to speak" lifecycle, so the raise-hand and give-back buttons are
     // never shown at once:
@@ -36,13 +34,24 @@
         },
     );
 
-    let closeFloatingUi: (() => void) | undefined = undefined;
     let triggerElement: HTMLElement | undefined = $state(undefined);
+    const picker = new TargetPickerController(() => triggerElement);
 
-    function closePicker(): void {
-        closeFloatingUi?.();
-        closeFloatingUi = undefined;
-    }
+    // The spaces the hand can go to, as picker rows (a store, so an open picker follows the hands going up and down).
+    const rows: Readable<TargetRow[]> = derived(
+        [raiseHandSpacesStore, requestedHandRaiseState],
+        ([$spaces, $raisedIn]) =>
+            $spaces.map((space, index) => {
+                const kind = space.kind ?? "space";
+                const sameKind = $spaces.filter((other) => (other.kind ?? "space") === kind).length > 1;
+                return {
+                    id: space.getName(),
+                    label: spaceLabel(space),
+                    selected: $raisedIn.has(space.getName()),
+                    testId: `raise-hand-space-option-${kind}${sameKind ? `-${index}` : ""}`,
+                };
+            }),
+    );
 
     // On stage: hand the floor back yourself (same effect as the former dedicated give-back button).
     function giveBackFloor(): void {
@@ -72,43 +81,13 @@
         if ($silentStore) {
             return;
         }
-        const spaces = $raiseHandSpacesStore;
-        if (spaces.length === 1) {
-            toggleHand(spaces[0].getName());
-            return;
-        }
-        if (closeFloatingUi) {
-            closePicker();
-            return;
-        }
-        if (spaces.length === 0 || !triggerElement) {
-            return;
-        }
-        const raisedIn = get(requestedHandRaiseState);
-        const entries: RaiseHandSpaceEntry[] = spaces.map((space) => ({
-            spaceName: space.getName(),
-            kind: space.kind ?? "",
-            label: spaceLabel(space),
-            raised: raisedIn.has(space.getName()),
-        }));
-        closeFloatingUi = showFloatingUi(
-            triggerElement,
-            RaiseHandSpacePicker,
-            {
-                entries,
-                onselect: (entry: RaiseHandSpaceEntry) => toggleHand(entry.spaceName),
-                onclose: closePicker,
-            },
-            { placement: "bottom" },
-            8,
-            true,
-        );
+        picker.actOrPick(rows, {
+            title: $LL.actionbar.help.raiseHand.title(),
+            testId: "raise-hand-space-picker",
+            icon: handIcon,
+            onselect: (row: TargetRow) => toggleHand(row.id),
+        });
     }
-
-    // The picker is portal-rendered at the app root: it must not outlive the button (e.g. when leaving the bubble).
-    onDestroy(() => {
-        closePicker();
-    });
 </script>
 
 <ActionBarButton
@@ -130,3 +109,12 @@
         hover="group-hover/btn-raise-hand:fill-white"
     />
 </ActionBarButton>
+
+{#snippet handIcon(row: TargetRow)}
+    <RaiseHandIcon
+        height="h-5"
+        width="w-5"
+        strokeColor={row.selected ? "stroke-contrast fill-white" : "stroke-white fill-transparent"}
+        hover=""
+    />
+{/snippet}
