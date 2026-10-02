@@ -1,10 +1,12 @@
-import { app, dialog } from "electron";
+import { app, dialog, type MessageBoxOptions } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import * as isDev from "electron-is-dev";
+import isDev from "electron-is-dev";
 import * as util from "util";
 
 import { createAndShowNotification } from "./notification";
+import { createDesktopConfig } from "./desktop-url-policy";
+import { t } from "./i18n";
 
 const sleep = util.promisify(setTimeout);
 
@@ -21,17 +23,24 @@ export async function checkForUpdates() {
         return;
     }
 
-    // check for updates right away
-    await autoUpdater.checkForUpdates();
-
-    isCheckPending = false;
+    isCheckPending = true;
+    try {
+        await autoUpdater.checkForUpdates();
+    } catch (error) {
+        // Previously the flag was never reset on error, which silently disabled every subsequent
+        // check for the lifetime of the process. Always reset in a finally so a transient network
+        // failure does not break auto-update forever.
+        log.warn("Auto-update check failed.", error);
+    } finally {
+        isCheckPending = false;
+    }
 }
 
 export async function manualRequestUpdateCheck() {
     isManualRequestedUpdate = true;
 
     createAndShowNotification({
-        body: "Checking for updates ...",
+        body: t("update.checking"),
     });
 
     await checkForUpdates();
@@ -39,19 +48,31 @@ export async function manualRequestUpdateCheck() {
 }
 
 async function init() {
+    // In dev (electron .) the app.version is whatever package.json says — often "managedbyci"
+    // which electron-updater rejects with ERR_UPDATER_INVALID_VERSION. The unhandledRejection
+    // handler then pops a modal dialog that blocks the boot. Skip entirely in dev.
+    if (isDev) {
+        log.info("Auto-updater disabled in development.");
+        return;
+    }
+
     autoUpdater.logger = log;
+    autoUpdater.setFeedURL({
+        provider: "generic",
+        url: createDesktopConfig().updateFeedUrl,
+    });
 
     autoUpdater.on(
         "update-downloaded",
         ({ releaseNotes, releaseName }: { releaseNotes: string; releaseName: string }) => {
             void (async () => {
-                const dialogOpts = {
+                const dialogOpts: MessageBoxOptions = {
                     type: "question",
-                    buttons: ["Install and Restart", "Install Later"],
+                    buttons: [t("update.installAndRestart"), t("update.installLater")],
                     defaultId: 0,
-                    title: "WorkAdventure - Update",
+                    title: t("update.title"),
                     message: process.platform === "win32" ? releaseNotes : releaseName,
-                    detail: "A new version has been downloaded. Restart the application to apply the updates.",
+                    detail: t("update.ready"),
                 };
 
                 const { response } = await dialog.showMessageBox(dialogOpts);
@@ -74,8 +95,8 @@ async function init() {
 
         autoUpdater.on("update-available", () => {
             createAndShowNotification({
-                title: "WorkAdventure - Update available",
-                body: "Please go to our website and install the newest version",
+                title: t("update.availableTitle"),
+                body: t("update.availableBody"),
             });
         });
     }
@@ -83,7 +104,7 @@ async function init() {
     autoUpdater.on("update-not-available", () => {
         if (isManualRequestedUpdate) {
             createAndShowNotification({
-                body: "No update available.",
+                body: t("update.none"),
             });
         }
     });
@@ -91,7 +112,9 @@ async function init() {
     await checkForUpdates();
 
     // run update check every hour again
-    setInterval(() => checkForUpdates, 1000 * 60 * 1);
+    setInterval(() => {
+        void checkForUpdates();
+    }, 1000 * 60 * 60);
 }
 
 export default {
