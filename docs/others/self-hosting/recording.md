@@ -133,12 +133,14 @@ LIVEKIT_RECORDING_S3_REGION=us-east-1
 Once configured:
 
 1. Start or restart your WorkAdventure services
-2. Log in to WorkAdventure with a user. Only logged in users with the `admin` or `recorder` tag can start recordings.
+2. Log in to WorkAdventure with a user. By default, any logged-in user can start a recording; you can restrict it to some tags in the map editor, **Configure my room** > **Recording** > **Rights** (the `admin` tag is always allowed).
 3. Join a bubble with another user
-4. Click on the recording button in the action bar (video camera icon with a red dot)
-5. The recording should start, and all participants will see a recording indicator
+4. Click on the recording button in the action bar
+5. The recording should start: the other participants see "*Name* has started a recording"
 6. Stop the recording when done
-7. Access your recordings from the recordings menu in the "apps" submenu of the action bar
+7. Access your recordings from **Recordings** in the **Apps** menu of the action bar
+
+For how recording works for users (who can stop, automatic stops, the recordings list), see [Recording meetings](https://docs.workadventu.re/admin/recording).
 
 Recordings are stored with the following path structure in your S3 bucket:
 ```
