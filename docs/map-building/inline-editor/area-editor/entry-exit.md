@@ -19,7 +19,7 @@ A **start area** is where people appear when they arrive on your map. An **exit 
 ![Adding a start area in the map editor](../../images/editor/start_area_1.png)
 
 5. Give your area a **name**. The name is used in the URL of the map and in the exit area selector, so it must be unique
-   on the map. Keep it simple: lowercase letters and digits only (for instance `reception`).
+   on the map. Use lowercase letters, digits and dashes (for instance `reception` or `main-hall`).
 6. Choose the **Start position type**:
     - **Use by default**: people who open the map with a plain link (no `#` at the end) appear in this area, unless
       they have a personal desk on the map. If several areas are "used by default", one of them is picked at random.
@@ -49,9 +49,9 @@ Anyone opening this link appears in the `reception` start area instead of the de
 - This works with **every** start area, whatever its type. The "Use if URL contains #[area-name]" type only means the
   area is never used when the link has no `#`.
 - The name after the `#` must match the area name exactly (it is case-sensitive).
-- When you select the "Use if URL contains #[area-name]" type, the editor rewrites the area name: it converts it to
-  lowercase, replaces spaces with dashes and removes other characters, including existing dashes and accented letters
-  (`Main Hall` becomes `main-hall`, `from-lobby` becomes `fromlobby`). Check the name after choosing the type.
+- When you select the "Use if URL contains #[area-name]" type, and whenever you rename such an area, the editor makes
+  the name usable in a link: it converts it to lowercase, removes accents, replaces spaces with dashes and removes any
+  character other than letters, digits, `-` and `_` (`Main Hall` becomes `main-hall`, `Réception` becomes `reception`).
 - If no start position of the map (in the map editor or in Tiled) has this name, people arrive as if there was no `#`.
 
 ### Get the link from the Share menu
