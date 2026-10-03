@@ -82,6 +82,7 @@ const isUsingDeprecatedOpenIdVariables =
 export const OPID_SCOPE = env.OPENID_SCOPE || env.OPID_SCOPE || "openid email profile ";
 export const OPID_PROMPT =
     env.OPENID_PROMPT || env.OPID_PROMPT || (isUsingDeprecatedOpenIdVariables ? "login" : undefined);
+export const OPID_ACCESS_TYPE = env.OPENID_ACCESS_TYPE || undefined;
 export const OPID_USERNAME_CLAIM = env.OPENID_USERNAME_CLAIM || env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = env.OPENID_LOCALE_CLAIM || env.OPID_LOCALE_CLAIM || "locale";
 export const OPID_WOKA_NAME_POLICY = env.OPENID_WOKA_NAME_POLICY || env.OPID_WOKA_NAME_POLICY || "user_input";

@@ -231,10 +231,27 @@ export class AuthenticateController extends BaseHttpController {
                 }
 
                 try {
-                    const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
+                    const checkResult = await openIDClient.checkTokenAuthWithRefresh(
+                        authTokenData.accessToken,
+                        authTokenData.encryptedRefreshToken,
+                    );
+                    const resCheckTokenAuth = checkResult.userInfo;
+
+                    const authToken = checkResult.refreshed
+                        ? await jwtTokenManager.createAuthToken(
+                              authTokenData.identifier,
+                              checkResult.accessToken,
+                              authTokenData.username,
+                              authTokenData.locale,
+                              authTokenData.tags,
+                              authTokenData.matrixUserId,
+                              checkResult.encryptedRefreshToken,
+                          )
+                        : token;
+
                     res.json({
                         username: authTokenData?.username,
-                        authToken: token,
+                        authToken,
                         locale: authTokenData?.locale,
                         matrixUserId: authTokenData?.matrixUserId,
                         matrixServerUrl: (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
@@ -320,6 +337,7 @@ export class AuthenticateController extends BaseHttpController {
                 userInfo?.locale,
                 userInfo?.tags,
                 email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined,
+                userInfo?.encrypted_refresh_token,
             );
 
             const matrixPublicUri = userInfo.matrix_url ?? MATRIX_PUBLIC_URI;
@@ -569,7 +587,7 @@ export class AuthenticateController extends BaseHttpController {
             // TODO: change that to use end session endpoint
             // Use post logout redirect and id token hint to redirect on the logut session endpoint of the OpenId provider
             // https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
-            await openIDClient.logoutUser(authTokenData.accessToken);
+            await openIDClient.logoutUser(authTokenData.accessToken, authTokenData.encryptedRefreshToken);
 
             // if no redirect, redirect to playUri and connect user to the world
             // if the world is with authentication mandatory, the user will be redirected to the login screen

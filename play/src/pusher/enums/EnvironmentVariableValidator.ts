@@ -212,6 +212,10 @@ export const EnvironmentVariables = z.object({
         .optional()
         .describe("OAuth2 scopes to request (space-separated). Defaults to 'openid email profile'"),
     OPENID_PROMPT: z.string().optional().describe("OpenID Connect prompt parameter (e.g., 'login', 'consent')"),
+    OPENID_ACCESS_TYPE: z
+        .string()
+        .optional()
+        .describe("OAuth2 'access_type' parameter sent on the authorization request (e.g. 'offline')"),
     OPENID_USERNAME_CLAIM: z
         .string()
         .optional()
