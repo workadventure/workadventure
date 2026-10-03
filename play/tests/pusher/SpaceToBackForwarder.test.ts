@@ -1,4 +1,4 @@
-import type { SubMessage } from "@workadventure/messages";
+import type { PrivateEventFrontToPusher, SubMessage } from "@workadventure/messages";
 import { FilterType, SpaceUser } from "@workadventure/messages";
 import { describe, it, vi, expect } from "vitest";
 import { mock } from "vitest-mock-extended";
@@ -877,40 +877,92 @@ describe("SpaceToBackForwarder", () => {
             expect(forwardSpy).toHaveBeenCalledOnce();
         });
 
-        const inviteFromOtherMap = (uuid: string, tags: string[]) => {
-            const mockSpace = {
-                name: "test",
-                users: new Map([["foo_1", { spaceUserId: "foo_1", uuid, tags }]]),
-            } as unknown as Space;
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
+        /** A sender, and receivers each with a tab per entry of `tabs` (receiver i has tabs `r{i}_t0`, `r{i}_t1`...). */
+        const inviteFromOtherMap = (uuid: string, tags: string[], receivers: number, tabs = 1) => {
+            const users = new Map<string, unknown>([["foo_1", { spaceUserId: "foo_1", uuid, tags }]]);
+            for (let i = 0; i < receivers; i++) {
+                for (let t = 0; t < tabs; t++) {
+                    users.set(`r${i}_t${t}`, { spaceUserId: `r${i}_t${t}`, uuid: `${uuid}-receiver-${i}` });
+                }
+            }
+            const spaceForwarder = new SpaceToBackForwarder(
+                { name: "test", users } as unknown as Space,
+                eventProcessor,
+            );
             const forwardSpy = vi.spyOn(spaceForwarder, "forwardMessageToSpaceBack").mockImplementation(() => {});
-            const send = () =>
-                spaceForwarder.sendPrivateEvent(
-                    {
-                        spaceName: "test",
-                        receiverUserId: "foo_2",
-                        spaceEvent: { event: { $case: "meetingInvitationRequest", meetingInvitationRequest: {} } },
-                    },
-                    { spaceUserId: "foo_1" } as SocketData,
-                );
-            return { send, forwardSpy };
+            const sendTo = (receiverUserId: string, event: PrivateEventFrontToPusher["spaceEvent"]) =>
+                spaceForwarder.sendPrivateEvent({ spaceName: "test", receiverUserId, spaceEvent: event }, {
+                    spaceUserId: "foo_1",
+                } as SocketData);
+            // Like the front: one event per tab of the receiver
+            const invite = (receiver: number) => {
+                for (let t = 0; t < tabs; t++) {
+                    sendTo(`r${receiver}_t${t}`, {
+                        event: { $case: "meetingInvitationRequest", meetingInvitationRequest: {} },
+                    });
+                }
+            };
+            return { invite, forwardSpy };
         };
 
-        it("should drop invitations to another map past 50 in 10 minutes", () => {
-            const { send, forwardSpy } = inviteFromOtherMap("spammer", []);
+        it("should drop invitations to another map past 50 people in 10 minutes, counting each person once", () => {
+            const { invite, forwardSpy } = inviteFromOtherMap("spammer", [], 51, 2);
             for (let i = 0; i < 50; i++) {
-                send();
+                invite(i);
             }
-            expect(send).toThrow();
-            expect(forwardSpy).toHaveBeenCalledTimes(50);
+            expect(forwardSpy).toHaveBeenCalledTimes(100);
+            expect(() => invite(50)).toThrow();
+        });
+
+        it("should drop a fourth invitation to the same person in 10 minutes", () => {
+            const { invite, forwardSpy } = inviteFromOtherMap("insistent", [], 1);
+            invite(0);
+            invite(0);
+            invite(0);
+            expect(() => invite(0)).toThrow();
+            expect(forwardSpy).toHaveBeenCalledTimes(3);
+        });
+
+        it("should reset the limit when an invitation is accepted, like the client", () => {
+            const { invite, forwardSpy } = inviteFromOtherMap("accepted", [], 1);
+            invite(0);
+            invite(0);
+            invite(0);
+            // The invitee answers from their own pusher, here the same one
+            const invitee = new SpaceToBackForwarder(
+                {
+                    name: "test",
+                    users: new Map([
+                        ["foo_1", { spaceUserId: "foo_1", uuid: "accepted", tags: [] }],
+                        ["r0_t0", { spaceUserId: "r0_t0", uuid: "accepted-receiver-0", tags: [] }],
+                    ]),
+                } as unknown as Space,
+                eventProcessor,
+            );
+            vi.spyOn(invitee, "forwardMessageToSpaceBack").mockImplementation(() => {});
+            invitee.sendPrivateEvent(
+                {
+                    spaceName: "test",
+                    receiverUserId: "foo_1",
+                    spaceEvent: {
+                        event: { $case: "meetingInvitationResponse", meetingInvitationResponse: { accept: true } },
+                    },
+                },
+                { spaceUserId: "r0_t0" } as SocketData,
+            );
+            invite(0);
+            expect(forwardSpy).toHaveBeenCalledTimes(4);
         });
 
         it("should not limit invitations to another map sent by an admin", () => {
-            const { send, forwardSpy } = inviteFromOtherMap("admin-inviter", ["admin"]);
+            const { invite, forwardSpy } = inviteFromOtherMap("admin-inviter", ["admin"], 51);
             for (let i = 0; i < 51; i++) {
-                send();
+                invite(i);
             }
-            expect(forwardSpy).toHaveBeenCalledTimes(51);
+            invite(0);
+            invite(0);
+            invite(0);
+            expect(forwardSpy).toHaveBeenCalledTimes(54);
         });
     });
 });
