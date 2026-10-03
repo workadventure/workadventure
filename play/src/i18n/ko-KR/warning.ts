@@ -14,6 +14,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLost: "연결이 끊어졌습니다. 다시 연결 중...",
     connectionLostTitle: "연결이 끊어짐",
     connectionLostSubtitle: "다시 연결 중",
+    serverUpdatingTitle: "WorkAdventure 업데이트 중",
+    serverUpdatingSubtitle: "대화는 계속 이어집니다",
     waitingConnectionTitle: "연결 대기 중",
     waitingConnectionSubtitle: "연결 중",
     megaphoneNeeds: "확성기를 사용하려면 카메라나 마이크를 활성화하거나 화면을 공유해야 합니다.",

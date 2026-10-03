@@ -208,3 +208,27 @@ describe("WebRTCCommunicationStrategy disconnect teardown", () => {
         expect(disconnects.map((event) => [event.senderUserId, event.receiverUserId])).toEqual([["user-b", "user-a"]]);
     });
 });
+
+describe("WebRTCCommunicationStrategy.reconnectUser", () => {
+    it("re-establishes, with a new connection id, every connection the reconnected user had", async () => {
+        const { strategy, dispatchPrivateEvent, connectionId, userA } = await setupStrategyWithConnection();
+
+        strategy.reconnectUser(userA);
+
+        const starts = webRtcStartDispatches(dispatchPrivateEvent);
+        expect(starts.map((start) => start.receiverUserId).sort()).toEqual(["user-a", "user-b"]);
+        const newConnectionIds = new Set(
+            starts.map((start) => start.spaceEvent.event.webRtcStartMessage?.connectionId),
+        );
+        expect(newConnectionIds.size).toBe(1);
+        expect(newConnectionIds.has(connectionId)).toBe(false);
+    });
+
+    it("does nothing for a user without connections", async () => {
+        const { strategy, dispatchPrivateEvent } = await setupStrategyWithConnection();
+
+        strategy.reconnectUser(createUser("user-c"));
+
+        expect(dispatchPrivateEvent).not.toHaveBeenCalled();
+    });
+});

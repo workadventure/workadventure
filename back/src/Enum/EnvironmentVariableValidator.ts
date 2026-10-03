@@ -158,6 +158,11 @@ Note that anonymous players don't have any TTL limit because their data is store
         .describe(
             "Move a bubble of more than two users to LiveKit as soon as one of them reports that its video encoders cannot keep up in WebRTC (one encoder per peer), even below MAX_USERS_FOR_WEBRTC, and keep it there while that user is present. Costs LiveKit bandwidth for bubbles that would have stayed peer-to-peer. Defaults to true",
         ),
+    KEEP_CONVERSATIONS_ON_RESTART: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "Keep the ongoing conversations (LiveKit, P2P) going when a play or back server restarts. A user whose pusher goes away without a goodbye keeps its place and its bubble for 30 seconds, and a back that just restarted resumes the LiveKit rooms and bubbles still running. Set the same value on play. Defaults to false",
+        ),
 
     LIVEKIT_RECORDING_S3_ENDPOINT: z
         .string()

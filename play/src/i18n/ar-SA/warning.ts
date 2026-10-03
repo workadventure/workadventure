@@ -14,6 +14,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLost: "تم فقدان الاتصال. جاري استعادة الاتصال...", // "Connection lost. Reconnecting..."
     connectionLostTitle: "تم فقدان الاتصال", // "Connection lost"
     connectionLostSubtitle: "إعادة الاتصال", // "Reconnecting"
+    serverUpdatingTitle: "جارٍ تحديث WorkAdventure", // "Updating WorkAdventure"
+    serverUpdatingSubtitle: "محادثاتك مستمرة", // "Your conversations go on"
     waitingConnectionTitle: "انتظار الاتصال", // "Waiting for connection"
     waitingConnectionSubtitle: "الاتصال", // "Connecting"
     megaphoneNeeds: "لاستخدام الميكروفون، يجب عليك تفعيل الكاميرا أو الميكروفون أو مشاركة شاشتك.", // "To use the microphone, you must enable the camera or microphone, or share your screen."

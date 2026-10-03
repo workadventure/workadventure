@@ -15,6 +15,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLost: "Zwiski přetorhnjene. Zaso zwjazować.. ",
     connectionLostTitle: "zwiski přetorhnjene",
     connectionLostSubtitle: "zaso zwjazować",
+    serverUpdatingTitle: "WorkAdventure so aktualizuje",
+    serverUpdatingSubtitle: "Waše rozmołwy dale běža",
     waitingConnectionTitle: "na zwisk čakać",
     waitingConnectionSubtitle: "zwjazać",
     megaphoneNeeds:

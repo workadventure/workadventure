@@ -59,6 +59,8 @@ export interface FrontConfigurationInterface {
     ENABLE_CHAT_ONLINE_LIST: boolean | undefined;
     ENABLE_CHAT_DISCONNECTED_LIST: boolean | undefined;
     ENABLE_SAY: boolean | undefined;
+    // Undefined from an older pusher: off
+    KEEP_CONVERSATIONS_ON_RESTART: boolean | undefined;
     ENABLE_ISSUE_REPORT: boolean | undefined;
     GRPC_MAX_MESSAGE_SIZE: number;
     TURN_CREDENTIALS_RENEWAL_TIME: number;

@@ -14,6 +14,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLost: "Connexion perdue. Reconnexion...",
     connectionLostTitle: "Connexion perdue",
     connectionLostSubtitle: "Reconnexion",
+    serverUpdatingTitle: "Mise à jour de WorkAdventure",
+    serverUpdatingSubtitle: "Vos conversations continuent",
     waitingConnectionTitle: "En attente du serveur",
     waitingConnectionSubtitle: "Connexion",
     megaphoneNeeds: "Pour utiliser le mégaphone, vous devez activer votre caméra ou votre microphone.",

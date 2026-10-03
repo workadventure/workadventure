@@ -15,6 +15,11 @@ export interface ICommunicationStrategy {
     addUserReady(userId: string): void;
     canSwitch(): boolean;
     cleanup(): void;
+    /**
+     * The user's front lost its media while the back kept its place (it came back through another pusher within the
+     * reconnection grace period): signal its media again, as if it had just joined, without touching anyone else's.
+     */
+    reconnectUser(user: SpaceUser): void;
     handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
         senderUserId?: string,

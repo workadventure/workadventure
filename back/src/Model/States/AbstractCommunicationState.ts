@@ -105,6 +105,11 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         });
     }
 
+    public handleUserReconnected(user: SpaceUser): void {
+        this.notifyUserOfCurrentStrategy(user, this._communicationType);
+        this._currentStrategy.reconnectUser(user);
+    }
+
     public handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
         senderUserId: string,

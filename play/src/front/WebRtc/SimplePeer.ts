@@ -52,6 +52,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             // Note: the abort controller is used for the regular shutdown of the videoPeer and for cleaning errors
             abortController: AbortController;
             connectionId: string;
+            // Set once the connection is created
+            peer?: RemotePeer;
         }
     > = new Map();
     private abortController = new AbortController();
@@ -201,6 +203,18 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         });
     }
 
+    private adoptConnectionId(userId: string, videoPeer: RemotePeer, connectionId: string): void {
+        this._customWebRTCLogger.info("connection kept across a server reconnection", { userId, connectionId });
+        videoPeer.adoptConnectionId(connectionId);
+        // A screen share with the same user travels on its own connection, signaled under the same id.
+        this.screenSharePeers
+            .get(userId)
+            ?.promise.then((screenSharingPeer) => screenSharingPeer.adoptConnectionId(connectionId))
+            .catch(() => {
+                // A screen sharing connection that failed to start has nothing to keep.
+            });
+    }
+
     private receiveWebrtcDisconnect(user: UserSimplePeerInterface): void {
         this.closeConnection(user.userId);
     }
@@ -220,6 +234,13 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         const peerConnection = this.videoPeers.get(user.userId);
         if (peerConnection) {
             if (peerConnection.connectionId === connectionId) {
+                return peerConnection.promise;
+            }
+            if (peerConnection.peer?._connected) {
+                // The back re-established this connection because one of us reconnected to the server (a play or
+                // back restart), but the media never stopped flowing between the two browsers: keep it.
+                this.adoptConnectionId(user.userId, peerConnection.peer, connectionId);
+                peerConnection.connectionId = connectionId;
                 return peerConnection.promise;
             }
             // The connectionId has changed (e.g., due to a reconnection attempt).
@@ -297,6 +318,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
                 this._analyticsClient.trackAdminEvent("conversation.participant_added");
 
+                const entry = this.videoPeers.get(user.userId);
+                if (entry?.promise === peerPromise) {
+                    entry.peer = peer;
+                }
                 resolve(peer);
             })().catch((e) => {
                 reject(asError(e));

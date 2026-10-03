@@ -1,18 +1,19 @@
 import { type Readable, derived } from "svelte/store";
+import type { SpaceInterface } from "../Space/SpaceInterface";
 import { raisedHandSectionsStore } from "./PeerStore";
 
 /**
- * Extracts the numeric player (zone) id encoded in a spaceUserId of the form `${roomUrl}_${userId}`.
- * Returns undefined for the local user ("local") or any id that does not match the expected format.
- * (Same encoding as ProximityChatRoom.extractUserIdAndRoomUrlFromSpaceId.)
+ * The player (Woka) id of a space user. The pusher sends it with the user (roomUserId). An older pusher did not, but
+ * its spaceUserIds ended with it (`${roomUrl}_${userId}`). Today's end with a hash, which may start with digits: only
+ * a short all-digit suffix is read. Undefined for the local user ("local") and for a user this space did not send.
  */
-function getPlayerIdFromSpaceUserId(spaceUserId: string): number | undefined {
-    const lastUnderscoreIndex = spaceUserId.lastIndexOf("_");
-    if (lastUnderscoreIndex === -1) {
-        return undefined;
+function getPlayerId(space: SpaceInterface, spaceUserId: string): number | undefined {
+    const roomUserId = space.getSpaceUserBySpaceUserId(spaceUserId)?.roomUserId;
+    if (roomUserId) {
+        return roomUserId;
     }
-    const playerId = parseInt(spaceUserId.substring(lastUnderscoreIndex + 1), 10);
-    return isNaN(playerId) ? undefined : playerId;
+    const legacyUserId = /_(\d{1,9})$/.exec(spaceUserId)?.[1];
+    return legacyUserId === undefined ? undefined : Number(legacyUserId);
 }
 
 /**
@@ -55,16 +56,17 @@ export function findHandPosition(
 }
 
 /**
- * Readable set of numeric player ids (derived from each raised participant's spaceUserId) whose hand is raised
- * in any space. Drives the raised-hand indicator above the woka on the map (keyed by player id): a hand raised
- * for a megaphone speaker is a public signal on the map too.
+ * Readable set of numeric player ids whose hand is raised in any space. Drives the raised-hand indicator above the
+ * woka on the map (keyed by player id): a hand raised for a megaphone speaker is a public signal on the map too.
  */
 export const raisedHandPlayerIdsStore: Readable<Set<number>> = derived(raisedHandSectionsStore, (sections) => {
     const playerIds = new Set<number>();
-    for (const entry of sections.flatMap((section) => section.hands)) {
-        const playerId = getPlayerIdFromSpaceUserId(entry.spaceUserId);
-        if (playerId !== undefined) {
-            playerIds.add(playerId);
+    for (const section of sections) {
+        for (const entry of section.hands) {
+            const playerId = getPlayerId(section.space, entry.spaceUserId);
+            if (playerId !== undefined) {
+                playerIds.add(playerId);
+            }
         }
     }
     return playerIds;

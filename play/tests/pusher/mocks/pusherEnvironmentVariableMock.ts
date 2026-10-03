@@ -95,6 +95,7 @@ export const MATRIX_ADMIN_USER = "test-matrix-user";
 export const MATRIX_ADMIN_PASSWORD = "test-matrix-password";
 export const MATRIX_DOMAIN = "matrix.test";
 export const ENABLE_SAY = true;
+export const KEEP_CONVERSATIONS_ON_RESTART = false;
 export const LIVEKIT_RECORDING_S3_ENDPOINT: string | undefined = undefined;
 export const LIVEKIT_RECORDING_S3_CDN_ENDPOINT: string | undefined = undefined;
 export const LIVEKIT_RECORDING_S3_ACCESS_KEY: string | undefined = undefined;
@@ -171,6 +172,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     MATRIX_DOMAIN,
     ENABLE_SAY,
     ENABLE_ISSUE_REPORT,
+    KEEP_CONVERSATIONS_ON_RESTART,
     GRPC_MAX_MESSAGE_SIZE,
     TURN_CREDENTIALS_RENEWAL_TIME,
     DEFAULT_WOKA_NAME,

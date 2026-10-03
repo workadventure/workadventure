@@ -1252,6 +1252,9 @@ message RoomJoinedMessage {
   bool canEdit = 16;
   CompanionTextureMessage companionTexture = 18;
   repeated AreaPropertyVariableMessage areaPropertyVariable = 19;
+  // Filled by the pusher, not the back. Stable across reconnections of the same browser tab (see
+  // play/src/pusher/services/SpaceUserId.ts), so a call can be picked up again after a play/back restart.
+  string spaceUserId = 20;
 }
 
 message WebRtcStartMessage {
@@ -1630,6 +1633,14 @@ message JoinRoomMessage {
   // and kill stale connections immediately instead of waiting for ping timeout
   //TODO : remove the optional when the tabId is always present in the query string (next version of the app )
   optional string tabId = 19;
+  // The id this tab holds in the room's spaces (see play/src/pusher/services/SpaceUserId.ts)
+  string spaceUserId = 20;
+  // The proximity bubble this tab was in before it reconnected (a play or back restart). A back that just restarted
+  // gives a bubble re-formed by the same people its former space back, so the conversation goes on in the same
+  // LiveKit room (see GameRoom.join).
+  string previousBubbleSpaceName = 21;
+  // The world the room belongs to: space names, and LiveKit room names, are prefixed with it by the pusher.
+  string world = 22;
 }
 
 message UserJoinedZoneMessage {
@@ -1728,7 +1739,13 @@ message PusherToBackMessage {
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 33;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 34;
     EntityMessage entityMessage = 35;
+    // The client left: sent by the pusher right before it ends the stream. A stream that ends without it is a pusher
+    // going away (restart, crash): the back keeps the user's place for a while (see RoomManager.connectToRoom).
+    LeaveRoomMessage leaveRoomMessage = 36;
   }
+}
+
+message LeaveRoomMessage {
 }
 
 
@@ -1959,6 +1976,9 @@ message SpaceUser{
   bool cpuLimited = 20;
   // Raise-hand state is NOT stored per-user here: it lives in the space state (SpaceStateQuery / SpaceStatePatchMessage),
   // which is broadcast to all members, including a megaphone speaker without seeAttendees.
+  // The user's id in the room (its Woka), which changes on every connection while spaceUserId does not. The front
+  // used to parse it out of spaceUserId. (21 was briefly handRaised on master, never released: left unused.)
+  int32 roomUserId = 22;
 }
 
 /*message PartialSpaceUser{

@@ -5,6 +5,10 @@ import { waitForStoreValue } from "./Utils/waitForStoreValue";
 
 export const gameSceneIsLoadedStore = writable(false);
 
+// The main layout (videos, the audio of the conversations) is on screen. It is not while the game reconnects to the
+// server: see ConversationsDuringReconnection.
+export const mainLayoutMountedStore = writable(false);
+
 export const gameSceneStore = writable<GameScene | undefined>(undefined);
 
 export const waitForGameSceneStore = () => {

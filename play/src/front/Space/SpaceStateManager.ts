@@ -38,7 +38,7 @@ export class SpaceStateManager {
 
     constructor(
         private readonly spaceName: string,
-        private readonly connection: RoomConnectionForSpacesInterface,
+        private connection: RoomConnectionForSpacesInterface,
         private readonly mySpaceUserId: SpaceUser["spaceUserId"],
     ) {
         // Unlike the users, the state reaches every member of the space, watching it or not: no filter to register.
@@ -112,6 +112,14 @@ export class SpaceStateManager {
 
     public destroy(): void {
         this.destroyed = true;
+    }
+
+    /**
+     * The space was joined again through a new server connection (see Space.rejoinThrough). The state itself is
+     * replaced by the full copy the new pusher sends on the join, as on any join.
+     */
+    public useConnection(connection: RoomConnectionForSpacesInterface): void {
+        this.connection = connection;
     }
 
     // Unlike the other state changes, a refused recording is reported by the caller (the recording menu).

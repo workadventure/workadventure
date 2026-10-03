@@ -765,6 +765,8 @@ jobs:
             MAX_USERS_FOR_WEBRTC: "3"
             MAX_DISPLAYED_VIDEOS: "6"
             ENABLE_TUTORIAL: false
+            # TEMP(#6596): try the new behaviour on this PR's environment. Revert before merging.
+            KEEP_CONVERSATIONS_ON_RESTART: true
           commonSecretEnv:
             ADMIN_API_TOKEN: "${ADMIN_API_TOKEN}"
             ADMIN_SOCKETS_TOKEN: "${ADMIN_SOCKETS_TOKEN}"
