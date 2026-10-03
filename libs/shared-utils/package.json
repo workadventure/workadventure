@@ -37,7 +37,7 @@
     "lint-staged": "^17.0.5",
     "prettier": "^3.8.3",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.11"
   },
   "files": [
     "src"
