@@ -1764,7 +1764,8 @@ export class GameMapFrontWrapper {
                 }
             }
         }
-        return names;
+        // A "start" layer and a "start" area, or two start areas with the same name, would list the name twice.
+        return [...new Set(names)];
     }
 
     public isStartObject(obj: ITiledMapLayer | ITiledMapObject): boolean {
