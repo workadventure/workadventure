@@ -4523,12 +4523,40 @@
       "properties": {
         "durationMs": {
           "type": "number",
-          "description": "How long entering the world took."
+          "description": "Milliseconds from this scene starting to load to the game being playable: map, tilesets, scripts, websocket, room join. Excludes setup screens and, on a room change, the time spent on the previous map. Older rows, emitted before the event moved to the playable moment, carry the same span as map_loading.succeeded instead."
+        },
+        "firstLoad": {
+          "type": "boolean",
+          "description": "True for the first scene of the page; false for a room change or a rebuild after a lost connection."
+        },
+        "reconnection": {
+          "type": "boolean",
+          "description": "True when the scene was rebuilt because the connection to the server was lost."
+        },
+        "sinceNavigationStartMs": {
+          "type": "number",
+          "description": "First load only: milliseconds from navigation start (performance.timeOrigin) to the game being playable, app download and boot included. Includes human time when setupScreenShown or openedInBackground is true — filter them out to read it as a load time."
+        },
+        "setupScreenShown": {
+          "type": "boolean",
+          "description": "First load only: a login, Woka, companion, camera or app-install screen came before the game."
+        },
+        "openedInBackground": {
+          "type": "boolean",
+          "description": "First load only: the page started in a hidden tab, where the game does not boot until the tab is shown."
+        },
+        "mapDownloadMs": {
+          "type": "number",
+          "description": "Resource Timing duration of the map file (.tmj) request this scene made. Absent when the map came from the cache of an earlier scene in the same page."
+        },
+        "mapBytes": {
+          "type": "number",
+          "description": "Encoded (compressed) size of the map file. Absent when the map is on another origin that does not send Timing-Allow-Origin, which hides it."
         }
       },
       "additionalProperties": true,
       "title": "world.entered",
-      "description": "The user finished entering a world."
+      "description": "The game became playable: the scene is shown and the player can move. One per scene: the first load of a page, each room change, each rebuild after a lost connection."
     }
   }
 }
