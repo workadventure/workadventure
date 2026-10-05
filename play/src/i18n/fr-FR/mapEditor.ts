@@ -465,7 +465,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Mode auditorium activé",
                 audienceVideoFeedbackActivatedDisabled: "Mode auditorium désactivé",
                 audienceVideoFeedbackActivatedHelper:
-                    "Mode auditorium activé : Recevez le flux caméra et microphone de tous les utilisateurs (avec caméra et microphone activés) dans la salle/monde. Mais le participant ne pourra pas voir les autres participants. Désactivé par défaut.",
+                    "Mode auditorium activé : Recevez le flux caméra de tous les utilisateurs (avec caméra activée) dans la salle/monde, sans leur son. Mais le participant ne pourra pas voir les autres participants. Désactivé par défaut.",
                 error: {
                     title: "Veuillez entrer un nom",
                     save: {

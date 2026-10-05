@@ -465,7 +465,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Modo auditório ativado",
                 audienceVideoFeedbackActivatedDisabled: "Modo auditório desativado",
                 audienceVideoFeedbackActivatedHelper:
-                    "Modo auditório ativado: Receba o fluxo de câmera e microfone de todos os usuários (com câmera e microfone ativados) na sala/mundo. Mas o participante não poderá ver os outros participantes. Desativado por padrão.",
+                    "Modo auditório ativado: Receba o fluxo de câmera de todos os usuários (com câmera ativada) na sala/mundo, sem o áudio deles. Mas o participante não poderá ver os outros participantes. Desativado por padrão.",
                 error: {
                     title: "Por favor, digite um título",
                     save: {

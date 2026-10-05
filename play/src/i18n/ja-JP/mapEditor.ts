@@ -461,7 +461,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "オーディトリアムモード",
                 audienceVideoFeedbackActivatedDisabled: "オーディトリアムモード",
                 audienceVideoFeedbackActivatedHelper:
-                    "オーディトリアムモードが有効化されました：ルーム/ワールド内のすべてのユーザー（カメラとマイクが有効化されている）のカメラとマイクストリームを受信します。ただし、参加者は他の参加者を見ることができません。デフォルトでは無効です。",
+                    "オーディトリアムモードが有効化されました：ルーム/ワールド内のすべてのユーザー（カメラが有効化されている）のカメラストリームを、音声なしで受信します。ただし、参加者は他の参加者を見ることができません。デフォルトでは無効です。",
                 error: {
                     title: "タイトルを入力してください",
                     save: {
