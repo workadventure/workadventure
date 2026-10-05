@@ -54,8 +54,6 @@ The preview at the top shows the result. Choose:
 - **Small blur**, **Middle blur** or **High blur**,
 - one of the images.
 
-You cannot upload your own image.
-
 Your choice is saved, and applied whenever your camera is on.
 
 Background effects need a computer with at least 4 processor cores and a recent browser with graphics acceleration. Otherwise, the tab says "Background effects are not supported on this browser". If the effect fails while your camera is on, the message "Failed to apply background effects" appears and your camera goes back to **No effect**.
