@@ -34,6 +34,8 @@
     import { FileListener } from "../Phaser/FileUpload/FileListener";
     import { isStructuredCloneSupported } from "../Utils/BrowserCompatibility";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
+    import { highlightFullScreen } from "../Stores/ActionsCamStore";
+    import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BrowserNotSupported from "./BrowserNotSupported/BrowserNotSupported.svelte";
@@ -249,6 +251,10 @@
         if ($fullScreenCowebsite && $coWebsites.length < 1) {
             closeCoWebsiteFullScreen();
         }
+    });
+
+    $effect(() => {
+        game?.setCoveredByUi($fullScreenCowebsite || ($highlightFullScreen && $highlightedEmbedScreen !== undefined));
     });
 
     //$: $coWebsites.length < 1 ? (flexBasis = undefined) : null;
