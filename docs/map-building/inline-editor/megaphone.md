@@ -47,11 +47,6 @@ The tab also offers the following options:
   Users with the `admin` tag skip both recording rights, but still need the right to use the megaphone.
   Turning recording off does not stop a recording in progress.
 
-:::note
-The help text under **Auditorium mode** mentions the microphones of the audience. In practice, only their cameras
-are shared with the person broadcasting: the audience is not heard, unless someone is given the floor.
-:::
-
 Click **Save** to apply the settings.
 
 :::caution

@@ -465,7 +465,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Auditorium-Modus aktiviert",
                 audienceVideoFeedbackActivatedDisabled: "Auditorium-Modus deaktiviert",
                 audienceVideoFeedbackActivatedHelper:
-                    "Auditorium-Modus aktiviert: Empfangen Sie den Kamera- und Mikrofonstream aller Benutzer (mit aktivierter Kamera und Mikrofon) im Raum/der Welt. Der Teilnehmer kann jedoch die anderen Teilnehmer nicht sehen. Standardmäßig deaktiviert.",
+                    "Auditorium-Modus aktiviert: Empfangen Sie den Kamerastream aller Benutzer (mit aktivierter Kamera) im Raum/der Welt, ohne deren Ton. Der Teilnehmer kann jedoch die anderen Teilnehmer nicht sehen. Standardmäßig deaktiviert.",
                 error: {
                     title: "Fehler",
                     save: {

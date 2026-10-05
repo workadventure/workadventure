@@ -460,7 +460,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Auditoriumowy modus zmóžnjeny",
                 audienceVideoFeedbackActivatedDisabled: "Auditoriumowy modus znjemóžnjeny",
                 audienceVideoFeedbackActivatedHelper:
-                    "Auditoriumowy modus zmóžnjeny: Dóstaće přenosowanje kamery a mikrofona wšěch wužiwarjow (z zmóžnjenej kameru a mikrofonom) w runinje/swěće. Ale wobdźělnik njemóže druhich wobdźělnikow widźeć. Po standardźe znjemóžnjeny.",
+                    "Auditoriumowy modus zmóžnjeny: Dóstaće přenosowanje kamery wšěch wužiwarjow (z zmóžnjenej kameru) w runinje/swěće, bjez jich zynka. Ale wobdźělnik njemóže druhich wobdźělnikow widźeć. Po standardźe znjemóžnjeny.",
                 error: {
                     title: "Prošu zapodać mjeno",
                     save: {

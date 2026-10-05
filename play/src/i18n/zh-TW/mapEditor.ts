@@ -452,7 +452,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "禮堂模式",
                 audienceVideoFeedbackActivatedDisabled: "禮堂模式",
                 audienceVideoFeedbackActivatedHelper:
-                    "禮堂模式已啟用：接收房間／世界中所有使用者（已啟用攝影機和麥克風）的攝影機和麥克風串流。但參與者將無法看到其他參與者。預設停用。",
+                    "禮堂模式已啟用：接收房間／世界中所有使用者（已啟用攝影機）的攝影機串流，不含聲音。但參與者將無法看到其他參與者。預設停用。",
                 error: {
                     title: "請輸入標題",
                     save: {

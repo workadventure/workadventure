@@ -457,7 +457,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "โหมดหอประชุม",
                 audienceVideoFeedbackActivatedDisabled: "โหมดหอประชุม",
                 audienceVideoFeedbackActivatedHelper:
-                    "เปิดโหมดหอประชุม: รับสตรีมกล้องและไมโครโฟนของผู้ใช้ทุกคน (ที่เปิดกล้องและไมโครโฟน) ในห้อง/โลก แต่ผู้เข้าร่วมจะไม่เห็นผู้เข้าร่วมคนอื่น ปิดเป็นค่าเริ่มต้น",
+                    "เปิดโหมดหอประชุม: รับสตรีมกล้องของผู้ใช้ทุกคน (ที่เปิดกล้อง) ในห้อง/โลก โดยไม่มีเสียง แต่ผู้เข้าร่วมจะไม่เห็นผู้เข้าร่วมคนอื่น ปิดเป็นค่าเริ่มต้น",
                 error: {
                     title: "กรุณากรอกชื่อ",
                     save: {

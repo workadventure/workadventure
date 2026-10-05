@@ -462,7 +462,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Mode auditori activat",
                 audienceVideoFeedbackActivatedDisabled: "Mode auditori desactivat",
                 audienceVideoFeedbackActivatedHelper:
-                    "Mode auditori activat: Rep el flux de càmera i micròfon de tots els usuaris (amb càmera i micròfon activats) a la sala/món. Però l'assistent no podrà veure els altres assistents. Desactivat per defecte.",
+                    "Mode auditori activat: Rep el flux de càmera de tots els usuaris (amb càmera activada) a la sala/món, sense el seu àudio. Però l'assistent no podrà veure els altres assistents. Desactivat per defecte.",
                 error: {
                     title: "Siusplau, introduïu un nom",
                     save: {
