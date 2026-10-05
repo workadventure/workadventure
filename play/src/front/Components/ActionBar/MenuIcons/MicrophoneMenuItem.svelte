@@ -40,22 +40,18 @@
         [LL, microphoneButtonHelpContextStore, requestedMicrophoneState, silentStore, availabilityStatusStore],
         ([$LL, ctx, micOn, silent, status]) => {
             const permissionMedia = (() => {
-                try {
-                    if (isAndroid()) {
-                        return $LL.camera.help.microphoneTooltip.permissionMedia.android();
-                    }
-                    const nt = getNavigatorType();
-                    if (nt === NavigatorType.firefox) {
-                        return $LL.camera.help.microphoneTooltip.permissionMedia.firefox();
-                    }
-                    if (nt === NavigatorType.chrome) {
-                        return $LL.camera.help.microphoneTooltip.permissionMedia.chrome();
-                    }
-                    if (nt === NavigatorType.safari) {
-                        return $LL.camera.help.microphoneTooltip.permissionMedia.safari();
-                    }
-                } catch {
-                    // getNavigatorType() throws on some embedded or uncommon browsers
+                if (isAndroid()) {
+                    return $LL.camera.help.microphoneTooltip.permissionMedia.android();
+                }
+                const nt = getNavigatorType();
+                if (nt === NavigatorType.firefox) {
+                    return $LL.camera.help.microphoneTooltip.permissionMedia.firefox();
+                }
+                if (nt === NavigatorType.chrome) {
+                    return $LL.camera.help.microphoneTooltip.permissionMedia.chrome();
+                }
+                if (nt === NavigatorType.safari) {
+                    return $LL.camera.help.microphoneTooltip.permissionMedia.safari();
                 }
                 return $LL.camera.help.microphoneTooltip.permissionMedia.default();
             })();

@@ -24,6 +24,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         cameraContent: "คุณต้องอนุญาตให้เข้าถึงกล้องในเบราว์เซอร์ของคุณ",
         microphoneContent: "คุณต้องอนุญาตให้เข้าถึงไมโครโฟนในเบราว์เซอร์ของคุณ",
         firefoxContent: 'กรุณาทำเครื่องหมายที่ช่อง "Remember this decision" หากไม่ต้องการให้ Firefox ถามสิทธิ์ซ้ำอีก',
+        safariContent:
+            'เปิด Safari > การตั้งค่าสำหรับเว็บไซต์นี้… (หรือ Safari > การตั้งค่า > เว็บไซต์ > กล้อง / ไมโครโฟน) ตั้งค่าเว็บไซต์นี้เป็น "อนุญาต" แล้วรีเฟรชหน้าเว็บ',
         allow: "อนุญาตเว็บแคม",
         allowMicrophone: "อนุญาตไมโครโฟน",
         allowCameraMicrophone: "อนุญาตเว็บแคมและไมโครโฟน",
