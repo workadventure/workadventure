@@ -8,6 +8,7 @@
         bubbleSoundStore,
     } from "../../Stores/AudioManagerStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+    import { getBubbleSoundUrl } from "../../WebRtc/AudioOutputManager";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../Utils/locales";
@@ -295,10 +296,6 @@
     function changeVideoQualityStats() {
         localUserStore.setDisplayVideoQualityStats(videoQualityStats);
         displayVideoQualityStore.set(videoQualityStats);
-    }
-
-    function getBubbleSoundUrl(bubbleSound: string): string {
-        return `/resources/objects/webrtc-in-${bubbleSound}.mp3`;
     }
 </script>
 

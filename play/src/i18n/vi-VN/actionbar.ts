@@ -53,6 +53,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         ignore: "Bỏ qua",
     },
     speaker: {
+        test: "Kiểm tra đầu ra âm thanh",
+        unnamedDevice: "Đầu ra âm thanh {index}",
+        loading: "Đang tìm đầu ra âm thanh…",
+        unsupported:
+            "Trình duyệt này không cho phép chọn đầu ra âm thanh. Âm thanh được phát trên thiết bị đã chọn trong cài đặt hệ thống.",
+        fallbackInUse:
+            "Trình duyệt của bạn đã từ chối thiết bị này. Âm thanh đang được phát trên thiết bị mặc định của hệ thống.",
         disabled: "Loa của bạn đang tắt",
         activate: "Bật loa của bạn",
         noDevices: "Không tìm thấy thiết bị loa",
