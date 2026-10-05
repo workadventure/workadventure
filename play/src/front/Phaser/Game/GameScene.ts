@@ -95,6 +95,7 @@ import { emoteStore } from "../../Stores/EmoteStore";
 import { isHandRaisedStore, requestedHandRaiseState } from "../../Stores/RaiseHandStore";
 import { raisedHandPlayerIdsStore } from "../../Stores/RaisedHandsStore";
 import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
+import { wokaEmoteStore } from "../../Stores/WokaEmoteStore";
 import {
     jitsiParticipantsCountStore,
     userIsAdminStore,
@@ -221,6 +222,7 @@ import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
 import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
+import { getWokaEmote, WOKA_EMOTES, WOKA_EMOTE_SOUND_PATH, wokaEmoteSoundKey } from "./Emote/WokaEmoteCatalog";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -524,6 +526,11 @@ export class GameScene extends DirtyScene {
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
         this.load.audio("meeting-in", "/resources/objects/meeting-in.wav");
         this.load.audio("meeting-out", "/resources/objects/meeting-out.wav");
+        for (const emote of WOKA_EMOTES) {
+            if (emote.sound) {
+                this.load.audio(wokaEmoteSoundKey(emote.sound), WOKA_EMOTE_SOUND_PATH + emote.sound.file);
+            }
+        }
 
         this.sound.pauseOnBlur = false;
 
@@ -2728,6 +2735,20 @@ export class GameScene extends DirtyScene {
         // A zone whose option says no needs no safety net: the hand is raised per space, so walking into such a
         // zone leaves the hand raised elsewhere (e.g. in the bubble) alone, and a space the hand is up in stays
         // offered by the button so it can still be lowered (see raiseHandSpacesStore).
+
+        this.unsubscribers.push(
+            wokaEmoteStore.subscribe((wokaEmoteId) => {
+                if (wokaEmoteId && get(enableUserInputsStore)) {
+                    const definition = getWokaEmote(wokaEmoteId);
+                    this.CurrentPlayer?.playWokaEmote(wokaEmoteId);
+                    // The wheel icon rides along as the emoji fallback. Clients that know the animation
+                    // ignore it; a back that does not know the identifier relays it as a plain bubble
+                    // instead of dropping the emote for everyone but us.
+                    this.connection?.emitWokaEmoteEvent(wokaEmoteId, definition.bubble ?? definition.icon);
+                    wokaEmoteStore.set(null);
+                }
+            }),
+        );
 
         this.unsubscribers.push(
             followUsersColorStore.subscribe((color) => {

@@ -106,6 +106,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "举手",
             desc: "示意你想发言。你举起的手会显示在地图和你的视频上，让大家知道接下来轮到谁。",
         },
+        wokaEmote: {
+            title: "播放表情",
+            desc: "让你的 Woka 跳跃、跳舞或旋转。按住 G 打开轮盘，松开即可播放。",
+        },
         audioManager: {
             title: "环境声音音量",
             desc: "点击此处配置音频音量。",
@@ -228,6 +232,25 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "您还没有个人办公桌",
         errorMoving: "无法到达您的个人办公桌",
         errorUnclaiming: "无法释放您的个人办公桌",
+    },
+    wokaEmote: {
+        button: "表情动作",
+        wheelTitle: "表情轮盘",
+        hint: "选择一个表情",
+        names: {
+            jump: "跳跃",
+            spin: "旋转",
+            dance: "跳舞",
+            celebrate: "庆祝",
+            nod: "是",
+            question: "疑惑",
+            laugh: "大笑",
+            moonwalk: "太空步",
+            runInPlace: "原地跑",
+            nope: "拒绝",
+            love: "爱心",
+            afk: "离开",
+        },
     },
 };
 

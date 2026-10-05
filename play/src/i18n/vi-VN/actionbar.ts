@@ -107,6 +107,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Giơ tay",
             desc: "Ra hiệu rằng bạn muốn phát biểu. Bàn tay giơ lên của bạn được hiển thị trên bản đồ và trên video của bạn, để mọi người biết đến lượt ai tiếp theo.",
         },
+        wokaEmote: {
+            title: "Thể hiện cảm xúc",
+            desc: "Cho Woka của bạn nhảy, khiêu vũ hoặc xoay vòng. Giữ G để mở vòng chọn, thả ra để thực hiện.",
+        },
         audioManager: {
             title: "Âm lượng âm thanh môi trường",
             desc: "Bấm vào đây để chỉnh âm lượng.",
@@ -229,6 +233,25 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Bạn chưa có bàn làm việc cá nhân",
         errorMoving: "Không thể đi tới bàn làm việc cá nhân của bạn",
         errorUnclaiming: "Không thể trả lại bàn làm việc cá nhân của bạn",
+    },
+    wokaEmote: {
+        button: "Biểu cảm",
+        wheelTitle: "Vòng biểu cảm",
+        hint: "Chọn một biểu cảm",
+        names: {
+            jump: "Nhảy",
+            spin: "Xoay vòng",
+            dance: "Khiêu vũ",
+            celebrate: "Ăn mừng",
+            nod: "Đồng ý",
+            question: "Bối rối",
+            laugh: "Cười",
+            moonwalk: "Moonwalk",
+            runInPlace: "Chạy tại chỗ",
+            nope: "Không",
+            love: "Trái tim",
+            afk: "Vắng mặt",
+        },
     },
 };
 export default actionbar;

@@ -108,6 +108,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Aixeca la mà",
             desc: "Indica que vols parlar. La teva mà aixecada es mostra al mapa i al teu vídeo, perquè tothom sàpiga a qui li toca.",
         },
+        wokaEmote: {
+            title: "Reproduir una emote",
+            desc: "Fes que el teu Woka salti, balli o giri. Mantén premuda la G per obrir la roda i deixa-la anar per reproduir.",
+        },
         audioManager: {
             title: "Volum dels sons ambientals",
             desc: "Configureu el volum d'àudio fent clic aquí.",
@@ -230,6 +234,25 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Encara no teniu un escriptori personal",
         errorMoving: "No es pot arribar al vostre escriptori personal",
         errorUnclaiming: "No es pot alliberar el vostre escriptori personal",
+    },
+    wokaEmote: {
+        button: "Emotes",
+        wheelTitle: "Roda d'emotes",
+        hint: "Tria una emote",
+        names: {
+            jump: "Saltar",
+            spin: "Pirueta",
+            dance: "Ballar",
+            celebrate: "Celebrar",
+            nod: "Sí",
+            question: "Perplex",
+            laugh: "Riure",
+            moonwalk: "Moonwalk",
+            runInPlace: "Córrer al lloc",
+            nope: "No",
+            love: "Cor",
+            afk: "Absent",
+        },
     },
 };
 
