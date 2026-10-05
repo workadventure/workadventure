@@ -14,6 +14,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLost: "Verbindung verloren. Verbindung wird wiederhergestellt...",
     connectionLostTitle: "Verbindung verloren",
     connectionLostSubtitle: "Verbindung wiederherstellen",
+    serverUpdatingTitle: "WorkAdventure wird aktualisiert",
+    serverUpdatingSubtitle: "Ihre Gespräche laufen weiter",
     waitingConnectionTitle: "Warten auf Verbindung",
     waitingConnectionSubtitle: "Verbinden",
     megaphoneNeeds:

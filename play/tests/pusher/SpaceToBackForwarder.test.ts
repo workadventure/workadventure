@@ -264,6 +264,57 @@ describe("SpaceToBackForwarder", () => {
         });
     });
 
+    describe("same tab registering again", () => {
+        // spaceUserId is stable per tab: a tab that reconnects to the same pusher can register again before its
+        // previous socket was swept.
+        function setup() {
+            const makeSocket = () => {
+                const userData = { spaceUserId: "room_tab", name: "Alice", spaces: new Set<string>() };
+                return mock<PusherWebSocket>({ getUserData: vi.fn().mockReturnValue(userData) });
+            };
+            const send = vi.fn().mockResolvedValue(undefined);
+            const space = {
+                name: "test",
+                _localConnectedUser: new Map<string, PusherWebSocket>(),
+                _localConnectedUserWithSpaceUser: new Map<PusherWebSocket, SpaceUser>(),
+                _localWatchers: new Set<string>(),
+                query: { send },
+                isEmpty: () => false,
+                cleanup: vi.fn(),
+            } as unknown as Space;
+            const forwarder = new SpaceToBackForwarder(space, eventProcessor);
+            vi.spyOn(forwarder, "deleteUserFromNotify").mockImplementation(() => {});
+            const sentCases = () => send.mock.calls.map(([query]) => (query as { $case: string }).$case);
+            return { space, forwarder, makeSocket, sentCases };
+        }
+
+        it("removes the stale registration before adding the new one", async () => {
+            const { space, forwarder, makeSocket, sentCases } = setup();
+            const oldSocket = makeSocket();
+            const newSocket = makeSocket();
+            await forwarder.registerUser(oldSocket, FilterType.ALL_USERS);
+
+            await forwarder.registerUser(newSocket, FilterType.ALL_USERS);
+
+            expect(sentCases()).toEqual(["addSpaceUserQuery", "removeSpaceUserQuery", "addSpaceUserQuery"]);
+            expect(space._localConnectedUser.get("room_tab")).toBe(newSocket);
+        });
+
+        it("does not remove the new registration when the old socket is swept afterwards", async () => {
+            const { space, forwarder, makeSocket, sentCases } = setup();
+            const oldSocket = makeSocket();
+            const newSocket = makeSocket();
+            await forwarder.registerUser(oldSocket, FilterType.ALL_USERS);
+            // The id already belongs to the new socket (as if registerUser had raced the sweep).
+            space._localConnectedUser.set("room_tab", newSocket);
+
+            await forwarder.unregisterUser(oldSocket);
+
+            expect(sentCases()).toEqual(["addSpaceUserQuery"]);
+            expect(space._localConnectedUser.get("room_tab")).toBe(newSocket);
+        });
+    });
+
     describe("updateUser", () => {
         it("should forward to back when user is found and not already added", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();

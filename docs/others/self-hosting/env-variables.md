@@ -61,6 +61,7 @@ Environment variables for the Play service (frontend and pusher).
 | `PROVIDE_DEFAULT_WOKA_NAME` | No | How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended). |
 | `PROVIDE_DEFAULT_WOKA_TEXTURE` | No | How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE). |
 | `ENABLE_SAY` | No | Whether the users can communicate via comics-style bubbles. |
+| `KEEP_CONVERSATIONS_ON_RESTART` | No | Keep the ongoing conversations (LiveKit, P2P) going when a play or back server restarts: the browser keeps its calls while it reconnects, and hangs them up if the server is not back within 2 minutes. Set the same value on back. Defaults to false |
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
@@ -184,6 +185,7 @@ Environment variables for the Back service (backend API).
 | `LIVEKIT_API_SECRET` | No | The Livekit API secret. |
 | `MAX_USERS_FOR_WEBRTC` | Yes | The maximum number of users for WebRTC. |
 | `LIVEKIT_SWITCH_ON_CPU_LIMITATION` | No | Move a bubble of more than two users to LiveKit as soon as one of them reports that its video encoders cannot keep up in WebRTC (one encoder per peer), even below MAX_USERS_FOR_WEBRTC, and keep it there while that user is present. Costs LiveKit bandwidth for bubbles that would have stayed peer-to-peer. Defaults to true |
+| `KEEP_CONVERSATIONS_ON_RESTART` | No | Keep the ongoing conversations (LiveKit, P2P) going when a play or back server restarts. A user whose pusher goes away without a goodbye keeps its place and its bubble for 30 seconds, and a back that just restarted resumes the LiveKit rooms and bubbles still running. Set the same value on play. Defaults to false |
 | `LIVEKIT_RECORDING_S3_ENDPOINT` | No | The S3 endpoint for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_ACCESS_KEY` | No | The S3 access key for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |

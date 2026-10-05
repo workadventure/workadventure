@@ -15,6 +15,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLost: "通信切断。再接続しています…",
     connectionLostTitle: "通信切断",
     connectionLostSubtitle: "再接続",
+    serverUpdatingTitle: "WorkAdventure を更新中",
+    serverUpdatingSubtitle: "会話はそのまま続いています",
     waitingConnectionTitle: "接続待機中",
     waitingConnectionSubtitle: "接続中",
     megaphoneNeeds: "メガホンを使用するには、カメラまたはマイクを起動するか、画面を共有する必要があります。",

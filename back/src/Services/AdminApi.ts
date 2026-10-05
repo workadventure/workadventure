@@ -64,7 +64,11 @@ class AdminApi {
         return send(0);
     }
 
-    async fetchLivekitCredentials(spaceId: string, playUri: string): Promise<LivekitCredentialsResponse> {
+    /**
+     * undefined when the admin gives this room no LiveKit server: it answers an empty list for a room that is not
+     * one of its worlds' (a public map, say).
+     */
+    async fetchLivekitCredentials(spaceId: string, playUri: string): Promise<LivekitCredentialsResponse | undefined> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
@@ -81,8 +85,12 @@ class AdminApi {
             params,
         });
 
+        if (Array.isArray(res.data) && res.data.length === 0) {
+            return undefined;
+        }
         return LivekitCredentialsResponse.parse(res.data);
     }
+
     async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect | ErrorApiData> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));

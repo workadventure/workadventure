@@ -13,6 +13,8 @@ const warning: BaseTranslation = {
     connectionLost: "Connection lost. Reconnecting...",
     connectionLostTitle: "Connection lost",
     connectionLostSubtitle: "Reconnecting",
+    serverUpdatingTitle: "Updating WorkAdventure",
+    serverUpdatingSubtitle: "Your conversations go on",
     waitingConnectionTitle: "Waiting for connection",
     waitingConnectionSubtitle: "Connecting",
     megaphoneNeeds: "To use the megaphone, you must activate your camera or your microphone or share your screen.",

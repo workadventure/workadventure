@@ -26,6 +26,7 @@ import waLogo from "../Components/images/logo.svg";
 import WebsocketReconnectingToast from "../Components/Toasts/WebsocketReconnectingToast.svelte";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { toastStore } from "../Stores/ToastStoreSingleton";
+import { isServerUpgrading, listenToServerUpgradeAnnouncements } from "./ServerUpgrade";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -59,6 +60,11 @@ class ConnectionManager {
     // "Reopen closed tab" copy sessionStorage, which would give two live pages the same id and make them
     // kill each other's connection in a loop.
     private readonly _tabId: string = uuidv4();
+    /**
+     * The proximity bubble we were in when the connection to the server was lost, sent until we are connected again:
+     * a back that restarted meanwhile gives the bubble, re-formed by the same people, its former space back.
+     */
+    public previousBubbleSpaceName: string | undefined;
 
     get unloading() {
         return this._unloading;
@@ -409,6 +415,7 @@ class ConnectionManager {
                 .then((connect) => {
                     // Set the default application integration for the room
 
+                    listenToServerUpgradeAnnouncements(connection);
                     this.bindWebsocketReconnectingToast(connection);
                     analyticsClient.setAdminAnalyticsSender((message) => connection.emitAnalyticsEventReport(message));
                     analyticsClient.trackAdminEvent("session.started", { roomId: roomUrl, schemaVersion: 1 });
@@ -524,7 +531,11 @@ class ConnectionManager {
         //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         connection.websocketReconnectingStream.subscribe((reconnecting) => {
             if (reconnecting) {
-                toastStore.addToast(WebsocketReconnectingToast, {}, websocketReconnectingToastId);
+                toastStore.addToast(
+                    WebsocketReconnectingToast,
+                    { upgrading: isServerUpgrading() },
+                    websocketReconnectingToastId,
+                );
                 return;
             }
 

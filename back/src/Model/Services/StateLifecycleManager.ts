@@ -83,6 +83,11 @@ export class StateLifecycleManager implements IStateLifecycleManager {
         }, this.finalizeDelayMs);
     }
 
+    async replaceInitialState(newState: ICommunicationState<ICommunicationStrategy>): Promise<void> {
+        this._currentState = newState;
+        await newState.init();
+    }
+
     /**
      * Dispatches a switch event from the current state.
      * Used when notifying users of the current state type without transitioning.

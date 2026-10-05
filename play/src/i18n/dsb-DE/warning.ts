@@ -14,6 +14,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLost: "Zwězanje jo pśetergnjone. Zwězanje naspjet startowaś...",
     connectionLostTitle: "Zwězanja su pśetergnjone",
     connectionLostSubtitle: "Zwězanje naspjet startowaś...",
+    serverUpdatingTitle: "WorkAdventure se aktualizěrujo",
+    serverUpdatingSubtitle: "Wašne rozgrona běže dalej",
     waitingConnectionTitle: "Na zwězanje cakaś",
     waitingConnectionSubtitle: "Zwězaś",
     megaphoneNeeds: "Aby megafon wužywał, musyš swóju kameru abo swój mikrofon aktiwěrowaś abo swóju wobrazowku źěliś.",
