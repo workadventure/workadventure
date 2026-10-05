@@ -404,7 +404,6 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("Client has no back connection");
         }
 
-        let joinRoomEventEmitted = false;
         try {
             const joinRoomMessage: JoinRoomMessage = {
                 userUuid: socketData.userUuid,
@@ -428,7 +427,7 @@ export class SocketManager implements ZoneEventListener {
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
             clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
-            joinRoomEventEmitted = true;
+            socketData.joinRoomEventEmitted = true;
 
             const pusherToBackMessage: PusherToBackMessage = {
                 message: {
@@ -444,8 +443,8 @@ export class SocketManager implements ZoneEventListener {
             Sentry.captureException(e);
             console.error(`An error occurred on "join_room" event`, e);
 
-            // Proper unregister: make sure the back connection (stream) is closed if it was created and
-            // undo the earlier emitted client join to keep metrics consistent.
+            // Proper unregister: make sure the back connection (stream) is closed if it was created.
+            // The client join emitted earlier is undone by leaveRoom(), through closeWebsocketConnection() below.
             if (streamToBack) {
                 try {
                     streamToBack.end();
@@ -455,15 +454,13 @@ export class SocketManager implements ZoneEventListener {
                 }
             }
 
-            // If we had emitted a client join event earlier, emit a leave to keep gauges correct
             try {
-                if (joinRoomEventEmitted) {
-                    clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                if (socketData.joinRoomEventEmitted) {
                     // Closes the session along with everything else, sessions last.
                     analyticsTimedEventTracker.closeConnection(socketData, "join_failed");
                 }
             } catch (emitErr) {
-                console.warn("Error while emitting client leave after failed join:", emitErr);
+                console.warn("Error while closing the analytics session after failed join:", emitErr);
                 Sentry.captureException(emitErr);
             }
 
@@ -843,7 +840,13 @@ export class SocketManager implements ZoneEventListener {
                     //Client.leave(Client.roomId);
                 } finally {
                     //delete Client.roomId;
-                    clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    // Only undo a join this socket emitted, and only once: a socket can close before sending
+                    // JoinRoomFrontMessage, and a normal close cleans the socket up twice (ending the back
+                    // connection below makes the back end the stream, whose "end" handler cleans up again).
+                    if (socketData.joinRoomEventEmitted) {
+                        socketData.joinRoomEventEmitted = false;
+                        clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    }
                     // One call closes every interval this socket holds, session
                     // included and emitted last — see sessionsLast(). The admin
                     // attributes a conversation to the session containing it and drops

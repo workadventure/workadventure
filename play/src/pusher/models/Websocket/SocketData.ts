@@ -44,6 +44,9 @@ export type ConnectingSocketData = {
     canEdit: boolean;
     spaceUserId: string;
     backConnection?: BackConnection;
+    // True between the client join emitted on JoinRoomFrontMessage and its matching client leave, so that a socket
+    // closing before it joined, or cleaned up twice, never decrements the client gauges.
+    joinRoomEventEmitted?: boolean;
     listenedZones: Set<string>;
     pusherRoom: PusherRoom | undefined;
     spaces: Set<SpaceName>;
