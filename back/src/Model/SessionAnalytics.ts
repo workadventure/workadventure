@@ -1,6 +1,15 @@
+import { createHash } from "node:crypto";
 import type { AnalyticsStoredEvent, SpaceKind } from "@workadventure/messages";
 import type { AnalyticsEventsQueue } from "@workadventure/shared-utils";
 import { analyticsEventsQueue } from "../Services/AnalyticsEventsQueue";
+
+/**
+ * The parts carry the room URL two or three times (the space name, the spaceUserId), and
+ * a URL-encoded slug takes them to 480 characters: past MAX_EVENT_ID_LENGTH, so the admin
+ * would 422 the row. A hash keeps the id short and deterministic, which is what lets a
+ * retried batch collapse in ClickHouse.
+ */
+const eventIdOf = (...parts: (string | number)[]): string => createHash("sha256").update(parts.join(":")).digest("hex");
 
 /** Why a session or a participation ended. */
 export type SessionEndReason = "closed" | "back_shutdown";
@@ -219,7 +228,7 @@ export class SessionAnalytics {
                     eventName: "meeting.participation.ended",
                     member: participation.member,
                     atMs,
-                    eventId: `${this.id}:${session.openedAtMs}:${participation.member.spaceUserId}`,
+                    eventId: eventIdOf(this.id, session.openedAtMs, participation.member.spaceUserId),
                     properties: {
                         meetingId: this.meetingId,
                         meetingKind: session.kind,
@@ -244,7 +253,7 @@ export class SessionAnalytics {
                 // whole thing as that person's.
                 member: undefined,
                 atMs: endedAtMs,
-                eventId: `${this.id}:${session.openedAtMs}`,
+                eventId: eventIdOf(this.id, session.openedAtMs),
                 properties: {
                     meetingId: this.meetingId,
                     meetingKind: session.kind,
