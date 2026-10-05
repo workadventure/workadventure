@@ -60,7 +60,7 @@ import axios, { isAxiosError } from "axios";
 import type { WebSocket } from "uWebSockets.js";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { PusherRoom } from "../models/PusherRoom";
-import type { BackConnection } from "../models/Websocket/SocketData";
+import type { BackConnection, SocketData } from "../models/Websocket/SocketData";
 
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
@@ -427,7 +427,7 @@ export class SocketManager implements ZoneEventListener {
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
-            clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
+            this.emitClientJoin(socketData);
             joinRoomEventEmitted = true;
 
             const pusherToBackMessage: PusherToBackMessage = {
@@ -458,7 +458,7 @@ export class SocketManager implements ZoneEventListener {
             // If we had emitted a client join event earlier, emit a leave to keep gauges correct
             try {
                 if (joinRoomEventEmitted) {
-                    clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    this.emitClientLeave(socketData);
                     // Closes the session along with everything else, sessions last.
                     analyticsTimedEventTracker.closeConnection(socketData, "join_failed");
                 }
@@ -820,6 +820,25 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
+    // clientJoin / clientLeave drive the socket gauges, so they must be strictly paired per socket: leaveRoom runs
+    // for sockets that never joined, and runs twice when the client closes first (once on the WebSocket close, once
+    // more when the back stream we ended echoes its "end").
+    private emitClientJoin(socketData: SocketData): void {
+        if (socketData.clientJoinEmitted) {
+            return;
+        }
+        socketData.clientJoinEmitted = true;
+        clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
+    }
+
+    private emitClientLeave(socketData: SocketData): void {
+        if (!socketData.clientJoinEmitted) {
+            return;
+        }
+        socketData.clientJoinEmitted = false;
+        clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+    }
+
     leaveRoom(socket: PusherWebSocket): void {
         // leave previous room and world
         const socketData = socket.getUserData();
@@ -843,7 +862,7 @@ export class SocketManager implements ZoneEventListener {
                     //Client.leave(Client.roomId);
                 } finally {
                     //delete Client.roomId;
-                    clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                    this.emitClientLeave(socketData);
                     // One call closes every interval this socket holds, session
                     // included and emitted last — see sessionsLast(). The admin
                     // attributes a conversation to the session containing it and drops

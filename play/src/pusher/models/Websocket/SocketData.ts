@@ -44,6 +44,8 @@ export type ConnectingSocketData = {
     canEdit: boolean;
     spaceUserId: string;
     backConnection?: BackConnection;
+    // True between the clientJoin event and its matching clientLeave (see SocketManager.emitClientJoin).
+    clientJoinEmitted?: boolean;
     listenedZones: Set<string>;
     pusherRoom: PusherRoom | undefined;
     spaces: Set<SpaceName>;
