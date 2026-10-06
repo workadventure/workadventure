@@ -66,7 +66,7 @@ When the automatic status ends, your previous status comes back. But walking alw
 
 ## What the others see
 
-Your colored dot and the name of your status appear next to your name in the [user list](/user/user-list). On the map, your dot appears next to your name, and people see the name of your status when they click your Woka. In the user list, **Silent** and **Not available** are shown as "Unavailable".
+Your colored dot and the name of your status appear next to your name in the [user list](/user/user-list). On the map, your dot appears next to your name, and people see the name of your status when they click your Woka.
 
 :::info Microsoft Teams
 If your administrator connected WorkAdventure to Microsoft Teams, your status can be synchronized with your Teams presence, in one or both directions (see [Microsoft Teams](/admin/integrations/microsoft-teams/ms-teams#presence-synchronization)).
