@@ -4,7 +4,6 @@ import type { DeepPartial } from "../DeepPartial";
 const chat: DeepPartial<Translation["chat"]> = {
     intro: "Hier is je chatgeschiedenis:",
     adventurers: "Gebruikers",
-    onlineUsers: "Gebruikers online",
     getCloserTitle: "Nader tot iemand",
     noRoomOpen: "Open een gesprek",
     noRoomOpenDescription:

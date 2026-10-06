@@ -3,7 +3,6 @@ import type { BaseTranslation } from "../i18n-types";
 const chat: BaseTranslation = {
     intro: "Here is your chat history:",
     adventurers: "Users",
-    onlineUsers: "Online user",
     getCloserTitle: "Get closer to someone",
     noRoomOpen: "Open a conversation",
     noRoomOpenDescription: "Nothing to display yet. Start a chat or approach someone to see your messages appear here.",

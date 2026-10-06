@@ -4,7 +4,6 @@ import type { Translation } from "../i18n-types";
 const chat: DeepPartial<Translation["chat"]> = {
     intro: "Tu je twój wotběh powěsćow:",
     adventurers: "Wužiwarjo",
-    onlineUsers: "Wužiwarjo online",
     getCloserTitle: "Přizamkni so někomu",
     noRoomOpen: "Wočiń rozmołwu",
     noRoomOpenDescription:
@@ -90,7 +89,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     invite: "přeprosyć",
     roomEmpty: "Tutón rum je prózdny, přeprošuj sej kolegu abo přećela, zo bychu so tebi přidružili!",
     userOnline: "wužiwar je online",
-    usersOnline: "Wužiwarjo su online",
+    usersOnline: "wužiwarjo su online",
     open: "wočinić",
     me: "ja",
     you: "ty",

@@ -16,5 +16,5 @@
     >
         {$userWorldCount}
     </div>
-    <div class="text-xs font-bold">{$LL.chat.onlineUsers()}</div>
+    <div class="text-xs font-bold">{$userWorldCount === 1 ? $LL.chat.userOnline() : $LL.chat.usersOnline()}</div>
 </div>
