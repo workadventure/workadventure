@@ -315,6 +315,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "이 메시지는 당신이 삭제했습니다",
     messageEdited: "수정됨",
     messageEditedError: "메시지를 수정할 수 없습니다. 다시 시도해 주세요.",
+    messageEdition: {
+        save: "저장",
+        cancel: "취소",
+    },
     waiting: "대기 중",
     nothingToDisplay: "표시할 내용이 없습니다",
     showMore: "메시지 {number}개 더 보기",
@@ -347,7 +351,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "초대받은 이후의 메시지만 보입니다",
         },
         buttons: {
-            edit: "편집",
             create: "만들기",
             cancel: "취소",
         },

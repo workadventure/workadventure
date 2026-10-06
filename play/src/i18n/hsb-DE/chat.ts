@@ -314,6 +314,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "Wy sće tutu powěsć zhašał.",
     messageEdited: "Zmjenjeny",
     messageEditedError: "Njemóžno, powěsć změnić. Wopytajće hišće raz.",
+    messageEdition: {
+        save: "Składować",
+        cancel: "Přetorhnyć",
+    },
     waiting: "Čakajucy",
     nothingToDisplay: "Ničo za pokazanje",
     showMore: "Pokazać {number} wjace",
@@ -346,7 +350,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "Jenož čłonki (wot jich přeprošenja)",
         },
         buttons: {
-            edit: "Wobdźěłać",
             create: "Napořeć",
             cancel: "Přetorhnyć",
         },

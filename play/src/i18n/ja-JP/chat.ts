@@ -314,6 +314,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "このメッセージを削除しました",
     messageEdited: "修正済み",
     messageEditedError: "メッセージを編集できませんでした。再試行してください。",
+    messageEdition: {
+        save: "保存",
+        cancel: "キャンセル",
+    },
     waiting: "待機中",
     nothingToDisplay: "表示するものはありません",
     showMore: "{number} 件をさらに表示",
@@ -346,7 +350,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "メンバーのみ (招待されてから)",
         },
         buttons: {
-            edit: "編集",
             create: "作成",
             cancel: "キャンセル",
         },

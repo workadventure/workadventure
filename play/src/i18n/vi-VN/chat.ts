@@ -313,6 +313,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "Bạn đã xóa tin nhắn này",
     messageEdited: "Đã chỉnh sửa",
     messageEditedError: "Không thể chỉnh sửa tin nhắn. Hãy thử lại.",
+    messageEdition: {
+        save: "Lưu",
+        cancel: "Hủy",
+    },
     waiting: "Đang chờ",
     nothingToDisplay: "Không có gì để hiển thị",
     showMore: "Hiện thêm {number}",
@@ -345,7 +349,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "Hiển thị tin nhắn gửi sau khi được mời",
         },
         buttons: {
-            edit: "Sửa",
             create: "Tạo",
             cancel: "Hủy",
         },

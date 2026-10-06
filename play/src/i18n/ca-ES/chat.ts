@@ -313,6 +313,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "Heu eliminat aquest missatge",
     messageEdited: "Modificat",
     messageEditedError: "No s'ha pogut editar el missatge. Torneu-ho a provar.",
+    messageEdition: {
+        save: "Desa",
+        cancel: "Cancel·lar",
+    },
     waiting: "Esperant",
     nothingToDisplay: "Res a mostrar",
     showMore: "Mostrar {number} més",
@@ -345,7 +349,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "Els missatges enviats després de ser convidat són visibles",
         },
         buttons: {
-            edit: "Editar",
             create: "Crear",
             cancel: "Cancel·lar",
         },

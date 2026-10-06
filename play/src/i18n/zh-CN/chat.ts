@@ -311,6 +311,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "您已删除此消息",
     messageEdited: "已修改",
     messageEditedError: "无法编辑消息。请重试。",
+    messageEdition: {
+        save: "保存",
+        cancel: "取消",
+    },
     waiting: "等待中",
     nothingToDisplay: "无内容显示",
     showMore: "显示更多 {number} 条",
@@ -343,7 +347,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "被邀请后发送的消息可见",
         },
         buttons: {
-            edit: "编辑",
             create: "创建",
             cancel: "取消",
         },

@@ -313,6 +313,10 @@ const chat: BaseTranslation = {
     messageDeletedByYou: "You deleted this message",
     messageEdited: "Modified",
     messageEditedError: "Unable to edit message. Try again.",
+    messageEdition: {
+        save: "Save",
+        cancel: "Cancel",
+    },
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
     showMore: "Show {number} more",
@@ -345,7 +349,6 @@ const chat: BaseTranslation = {
             invited: "Messages sent after being invited are visible",
         },
         buttons: {
-            edit: "Edit",
             create: "Create",
             cancel: "Cancel",
         },

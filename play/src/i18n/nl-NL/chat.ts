@@ -314,6 +314,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "Je hebt dit bericht verwijderd",
     messageEdited: "Aangepast",
     messageEditedError: "Bericht kon niet worden bewerkt. Probeer het opnieuw.",
+    messageEdition: {
+        save: "Opslaan",
+        cancel: "Annuleren",
+    },
     waiting: "Wachten",
     nothingToDisplay: "Niets om weer te geven",
     showMore: "Toon {number} meer",
@@ -346,7 +350,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "Alleen leden (sinds ze werden uitgenodigd)",
         },
         buttons: {
-            edit: "Bewerken",
             create: "Maken",
             cancel: "Annuleren",
         },
