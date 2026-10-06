@@ -14,22 +14,26 @@
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
+    import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
 
     import MicOnIcon from "../../Icons/MicOnIcon.svelte";
     import MicOffIcon from "../../Icons/MicOffIcon.svelte";
 
+    const disabledByStatusStore = derived(
+        [availabilityStatusStore, silentStore],
+        ([$availabilityStatusStore, $silentStore]) =>
+            $availabilityStatusStore === AvailabilityStatus.BUSY ||
+            $availabilityStatusStore === AvailabilityStatus.AWAY ||
+            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
+            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+            $silentStore,
+    );
+
     const microphoneButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
-        [availabilityStatusStore, requestedMicrophoneState, microphoneListStore],
-        ([$availabilityStatusStore, $requestedMicrophoneState, $microphoneListStore]) => {
-            if (
-                $availabilityStatusStore === AvailabilityStatus.BUSY ||
-                $availabilityStatusStore === AvailabilityStatus.AWAY ||
-                $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-                $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
-                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-                $silentStore === true ||
-                ($microphoneListStore !== undefined && $microphoneListStore.length === 0)
-            ) {
+        [disabledByStatusStore, requestedMicrophoneState, microphoneListStore],
+        ([$disabledByStatusStore, $requestedMicrophoneState, $microphoneListStore]) => {
+            if ($disabledByStatusStore || ($microphoneListStore !== undefined && $microphoneListStore.length === 0)) {
                 return "disabled";
             }
             return $requestedMicrophoneState ? "normal" : "forbidden";
@@ -37,8 +41,15 @@
     );
 
     const microphoneActionBarTooltipStore = derived(
-        [LL, microphoneButtonHelpContextStore, requestedMicrophoneState, silentStore, availabilityStatusStore],
-        ([$LL, ctx, micOn, silent, status]) => {
+        [LL, microphoneButtonHelpContextStore, disabledByStatusStore, availabilityStatusStore],
+        ([$LL, ctx, disabledByStatus, status]) => {
+            if (disabledByStatus) {
+                return {
+                    title: $LL.actionbar.help.micDisabledByStatus.title(),
+                    desc: $LL.actionbar.help.micDisabledByStatus.desc({ status: getStatusLabel(status) }),
+                    media: "",
+                };
+            }
             const permissionMedia = (() => {
                 try {
                     if (isAndroid()) {
