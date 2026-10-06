@@ -11,6 +11,8 @@ const actionbar: BaseTranslation = {
     participantSendMessage: "Enviar mensagem",
     participantInviteUser: "Convidar usuário",
     participantExitFullscreen: "Sair da tela cheia",
+    participantShowList: "Mostrar a lista de participantes",
+    participantHideList: "Ocultar a lista de participantes",
     profil: "Editar seu nome",
     focusMode: "Modo foco",
     rightMode: "Modo direito",

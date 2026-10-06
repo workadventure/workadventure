@@ -307,7 +307,9 @@
                 class="pointer-events-auto absolute right-0 top-1/2 z-[321] flex h-16 w-10 -translate-y-1/2 items-center justify-center rounded-l-lg border border-white/10 border-e-0 bg-contrast/50 shadow-md backdrop-blur transition-colors duration-200 hover:bg-white/10"
                 aria-expanded={highlightParticipantCamerasListOpen}
                 aria-controls="highlightFullScreenParticipantCamerasList"
-                aria-label={highlightParticipantCamerasListOpen ? "Hide participant list" : "Show participant list"}
+                aria-label={highlightParticipantCamerasListOpen
+                    ? $LL.actionbar.participantHideList()
+                    : $LL.actionbar.participantShowList()}
                 data-testid="toggle-highlight-participant-cameras-list"
                 onclick={() => (highlightParticipantCamerasListOpen = !highlightParticipantCamerasListOpen)}
             >
