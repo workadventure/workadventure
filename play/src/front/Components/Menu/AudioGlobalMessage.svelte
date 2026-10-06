@@ -21,7 +21,8 @@
     const AUDIO_TYPE = "audio";
 
     export type AudioGlobalMessageHandle = {
-        sendAudioMessage(broadcast: boolean): Promise<void>;
+        /** Resolves to false when nothing was sent; the error is then shown under the upload area. */
+        sendAudioMessage(broadcast: boolean): Promise<boolean>;
     };
 
     interface Props {
@@ -33,13 +34,13 @@
     handleSending = {
         async sendAudioMessage(broadcast: boolean) {
             if (gameScene == undefined) {
-                return;
+                return false;
             }
             const inputAudio = HtmlUtils.getElementByIdOrFail<HTMLInputElement>("input-send-audio");
             const selectedFile = inputAudio.files ? inputAudio.files[0] : null;
             if (!selectedFile) {
                 errorFile = true;
-                throw new Error("no file selected");
+                return false;
             }
 
             const fd = new FormData();
@@ -56,9 +57,11 @@
                 fileName = undefined;
                 gameScene.connection?.emitGlobalMessage(audioGlobalMessage);
                 errorUpload = false;
+                return true;
             } catch (err) {
                 console.error(err);
                 errorUpload = true;
+                return false;
             }
         },
     };
