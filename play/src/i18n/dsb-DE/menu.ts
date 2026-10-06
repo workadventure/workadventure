@@ -71,7 +71,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
         privacySettings: {
             title: "Modus njepśibytnosći",
-            explanation: 'Jolic až WorkAdventure-tab njejo aktiwny, ga aktiwěrujo se "modus njepśibytnosći".',
+            explanation:
+                'Gaž do drugego wokna abo tabu pśejźośo, aktiwěrujo se "modus njepśibytnosći", nic pak w rozgronje abo pśi wusyłanju.',
             cameraToggle: 'Kameru we "modusu njepśibytnosći" aktiwěrowanu wóstajiś.',
             microphoneToggle: 'Mikrofon we "modusu njepśibytnosći" aktiwěrowany wóstajiś.',
         },

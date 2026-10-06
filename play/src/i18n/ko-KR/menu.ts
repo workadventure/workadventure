@@ -70,7 +70,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
         privacySettings: {
             title: "자리 비움 모드",
-            explanation: '브라우저에서 WorkAdventure 탭이 보이지 않을 때 WorkAdventure는 "자리 비움 모드"로 전환됩니다',
+            explanation:
+                '다른 창이나 탭으로 전환하면 WorkAdventure는 "자리 비움 모드"로 전환됩니다(대화 중이나 방송 중에는 제외).',
             cameraToggle: '"자리 비움 모드"에서 카메라 활성 상태 유지',
             microphoneToggle: '"자리 비움 모드"에서 마이크 활성 상태 유지',
         },

@@ -72,7 +72,7 @@ const menu: BaseTranslation = {
         privacySettings: {
             title: "Modo ausente",
             explanation:
-                'Enquanto a guia WorkAdventure em seu navegador não estiver visível. WorkAdventure muda para "modo ausente"',
+                'Ao mudar para outra janela ou aba, o WorkAdventure muda para o "modo ausente", exceto durante uma conversa ou uma transmissão.',
             cameraToggle: 'Mantenha a câmera ativa no "modo ausente"',
             microphoneToggle: 'Mantenha o microfone ativo no "modo ausente"',
         },

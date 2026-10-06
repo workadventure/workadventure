@@ -68,8 +68,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
         privacySettings: {
             title: "离开模式设置",
-            explanation:
-                '当WorkAdventure标签页在后台时, 会切换到"离开模式"。在该模式中，你可以选择自动禁用摄像头 和/或 麦克风 直到标签页显示。',
+            explanation: '当你切换到其他窗口或标签页时，WorkAdventure 会切换到"离开模式"（对话或直播期间除外）。',
             cameraToggle: '在"离开模式"中保持摄像头活动',
             microphoneToggle: '在"离开模式"中保持麦克风活动',
         },

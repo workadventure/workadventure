@@ -68,8 +68,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
         privacySettings: {
             title: "離開模式設定",
-            explanation:
-                "當 WorkAdventure 分頁在背景時，會切換到「離開模式」。在該模式中，您可以選擇自動停用攝影機和／或麥克風，直到分頁顯示為止。",
+            explanation: "當您切換到其他視窗或分頁時，WorkAdventure 會切換到「離開模式」（對話或直播期間除外）。",
             cameraToggle: "在「離開模式」中保持攝影機開啟",
             microphoneToggle: "在「離開模式」中保持麥克風開啟",
         },

@@ -71,7 +71,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "โหมดไม่อยู่",
             explanation:
-                'เมื่อแท็บ WorkAdventure ในเบราว์เซอร์ของคุณไม่ได้แสดงอยู่ WorkAdventure จะสลับเป็น "โหมดไม่อยู่"',
+                'เมื่อคุณสลับไปยังหน้าต่างหรือแท็บอื่น WorkAdventure จะสลับเป็น "โหมดไม่อยู่" ยกเว้นระหว่างการสนทนาหรือการถ่ายทอดสด',
             cameraToggle: 'เปิดกล้องต่อไปใน "โหมดไม่อยู่"',
             microphoneToggle: 'เปิดไมโครโฟนต่อไปใน "โหมดไม่อยู่"',
         },

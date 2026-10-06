@@ -71,7 +71,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "Chế độ vắng mặt",
             explanation:
-                'Khi thẻ WorkAdventure trong trình duyệt không hiển thị, WorkAdventure chuyển sang "chế độ vắng mặt"',
+                'Khi bạn chuyển sang cửa sổ hoặc thẻ khác, WorkAdventure chuyển sang "chế độ vắng mặt", trừ khi đang trò chuyện hoặc phát sóng.',
             cameraToggle: 'Giữ camera hoạt động trong "chế độ vắng mặt"',
             microphoneToggle: 'Giữ micrô hoạt động trong "chế độ vắng mặt"',
         },
