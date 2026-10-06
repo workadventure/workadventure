@@ -28,7 +28,16 @@
         startScreenShareWithSource,
     } from "../../Stores/ScreenSharingStore";
     import { recordingStore } from "../../Stores/RecordingStore";
+    import {
+        currentAnnotationColorStore,
+        currentAnnotationToolStore,
+        localAnnotationActiveStore,
+        isAnnotationTool,
+    } from "../../Stores/ScreenAnnotationStore";
+    import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
+    import { screenOverlayBridge } from "../../Api/Desktop/ScreenOverlayBridge";
     import { presenterHudBridge } from "../../Api/Desktop/PresenterHudBridge";
+    import { presenterEffectsBridge } from "../../Api/Desktop/PresenterEffectsBridge";
     import {
         NativePictureInPictureClient,
         isNativePictureInPictureAvailable,
@@ -265,10 +274,25 @@
                     recording: Boolean($recording?.isRecording),
                 }),
             );
+            const annotationState = derived(
+                [
+                    currentAnnotationToolStore,
+                    currentAnnotationColorStore,
+                    localAnnotationActiveStore,
+                    requestedScreenSharingState,
+                ],
+                ([$tool, $color, $active, $sharing]) => ({
+                    available: Boolean($sharing),
+                    active: Boolean($active),
+                    tool: $tool,
+                    color: $color,
+                }),
+            );
             nativeClient = new NativePictureInPictureClient({
                 streamables: streamableCollectionStore,
                 selfBox: myCameraPeerStore,
                 deviceState,
+                annotationState,
                 commandHandlers: {
                     toggleMic: () => {
                         if (get(requestedMicrophoneState)) {
@@ -302,14 +326,40 @@
                             display_id: source.displayId,
                         });
                     },
+                    annotationToggle: () => {
+                        localAnnotationActiveStore.set(!get(localAnnotationActiveStore));
+                    },
+                    annotationSetTool: (tool) => {
+                        if (isAnnotationTool(tool)) {
+                            currentAnnotationToolStore.set(tool);
+                        }
+                    },
+                    annotationSetColor: (color) => {
+                        currentAnnotationColorStore.set(color);
+                    },
+                    annotationUndo: () => {
+                        const target = screenAnnotationManager.localUserId;
+                        if (target) {
+                            screenAnnotationManager.undoLastLocalElement(target);
+                        }
+                    },
+                    annotationClear: () => {
+                        const target = screenAnnotationManager.localUserId;
+                        if (target) {
+                            screenAnnotationManager.clearAll(target);
+                        }
+                    },
                     // TODO(presenter-bar): wire chat + reactions. Provide the `chatMessages` dep
                     // (mirror of the proximity ProximityChatRoom messages) and the `sendChat` /
                     // `sendReaction` handlers (ProximityChatRoom.sendMessage + emote), then add the
                     // chat panel + reaction buttons to the PiP renderer. The protocol is already in
                     // place (DesktopPipState.chatMessages + DesktopPipCommand send-chat/send-reaction).
+                    // Deferred until the annotation flow is validated on a real desktop build.
                 },
             });
+            screenOverlayBridge.start();
             presenterHudBridge.start();
+            presenterEffectsBridge.start();
         } else if (!isDocumentPictureInPictureSupported(window)) {
             debug("PictureInPicture is not supported by the browser");
             pictureInPictureSupportedStore.set(false);
@@ -347,10 +397,16 @@
             }
         });
 
-        // Tear down every presenter-facing surface (the screen share) whose audience just vanished:
-        // requestedScreenSharingState=false clears activeScreenShareSourceStore, so PresenterHudBridge
-        // closes the meeting bar.
+        // Tear down every presenter-facing surface (annotation drawing + screen share) whose
+        // audience just vanished. Cascades through the existing bridges:
+        //   localAnnotationActiveStore=false → PresenterHudBridge closes annotation bar,
+        //     ScreenOverlayBridge drops draw mode.
+        //   requestedScreenSharingState=false → ScreenOverlayBridge closes the overlay,
+        //     activeScreenShareSourceStore clears → PresenterHudBridge closes meeting bar.
         function closePresenterSurfaces(): void {
+            if (get(localAnnotationActiveStore)) {
+                localAnnotationActiveStore.set(false);
+            }
             if (get(requestedScreenSharingState)) {
                 requestedScreenSharingState.disableScreenSharing();
             }
@@ -412,7 +468,9 @@
             unsubscribeRemote();
             unsubscribeActiveConv();
             unsubscribeSceneLoaded();
+            screenOverlayBridge.stop();
             presenterHudBridge.stop();
+            presenterEffectsBridge.stop();
             try {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore

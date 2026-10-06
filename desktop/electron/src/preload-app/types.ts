@@ -50,6 +50,17 @@ export type DesktopPipChatMessage = {
     isSelf: boolean;
 };
 
+/**
+ * Screen-annotation toolbar state pushed to the floating window. The drawing surface itself is a
+ * separate transparent overlay window; this only carries the control state.
+ */
+export type DesktopPipAnnotationState = {
+    available: boolean;
+    active: boolean;
+    tool: string;
+    color: string;
+};
+
 export type DesktopPipState = {
     tiles: DesktopPipTile[];
     micEnabled: boolean;
@@ -59,6 +70,7 @@ export type DesktopPipState = {
     recording?: boolean;
     canRecord?: boolean;
     chatMessages?: DesktopPipChatMessage[];
+    annotation?: DesktopPipAnnotationState;
     /** True when the local user can moderate the meeting (mute-everybody / kick tile actions). */
     canModerate?: boolean;
     /** True when the local user may ask others to mute (non-admin ask-to-mute tile actions). */
@@ -73,7 +85,16 @@ export type DesktopPipCommand =
     | { type: "focus-main" }
     | { type: "close" }
     | { type: "send-chat"; text: string }
-    | { type: "send-reaction"; emote: string };
+    | { type: "send-reaction"; emote: string }
+    | { type: "annotation-toggle" }
+    | { type: "annotation-set-tool"; tool: string }
+    | { type: "annotation-set-color"; color: string }
+    | { type: "annotation-undo" }
+    | { type: "annotation-redo" }
+    | { type: "annotation-clear" }
+    | { type: "annotation-toggle-local-hide" }
+    | { type: "annotation-toggle-others" }
+    | { type: "presenter-set-tool"; tool: string };
 
 export type WorkAdventureDesktopPipApi = {
     readonly supported: true;
@@ -129,19 +150,67 @@ export type WorkAdventureDesktopNavigationApi = {
 /** A slice of the desktop's native catalog, in the OS language. */
 export type DesktopNativeStrings = { lang: string; strings: Record<string, string> };
 
+export type DesktopOverlayPoint = { x: number; y: number };
+
+export type DesktopOverlayElement = {
+    id: string;
+    authorUserId: string;
+    tool: string;
+    color: string;
+    width: number;
+    points: DesktopOverlayPoint[];
+    text?: string;
+};
+
+export type DesktopOverlayToolState = {
+    tool: string;
+    color: string;
+    width: number;
+};
+
+export type DesktopOverlayDrawOp =
+    | { type: "upsert"; element: DesktopOverlayElement; commit: boolean }
+    | { type: "remove"; id: string }
+    | { type: "undo" }
+    | { type: "clear" };
+
+/** Drives the transparent screen-annotation overlay window from the main renderer. */
+export type WorkAdventureDesktopOverlayApi = {
+    open: (opts: { displayId?: number; sourceId?: string }) => Promise<boolean>;
+    close: () => Promise<void>;
+    setDrawMode: (enabled: boolean) => void;
+    setTool: (tool: DesktopOverlayToolState) => void;
+    pushElements: (elements: DesktopOverlayElement[]) => void;
+    onDraw: (callback: (op: DesktopOverlayDrawOp) => void) => () => void;
+    onExit: (callback: () => void) => () => void;
+};
+
 /**
- * State pushed to the floating presenter HUD window (meeting bar) shown on the shared screen. It is
- * content-protected: visible to the presenter, excluded from the captured pixels.
+ * State pushed to the floating presenter HUD windows (meeting bar + annotation bar) shown on the
+ * shared screen. Both windows are content-protected: visible to the presenter, excluded from the
+ * captured pixels.
  */
 export type DesktopPresenterHudState = {
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;
+    annotation: {
+        active: boolean;
+        tool: string;
+        color: string;
+        othersCanDraw: boolean;
+        locallyHidden: boolean;
+        canUndo: boolean;
+        canRedo: boolean;
+    };
+    /** Active presenter cursor tool: "none" | "laser" | "spotlight" | "loupe". */
+    presenterTool?: string;
 };
 
 /**
- * Drives the presenter HUD (Zoom-style meeting bar), placed on the shared display. Commands raised by
- * the bar reuse the {@link DesktopPipCommand} union.
+ * Drives the presenter HUD (Zoom-style meeting bar, with the annotation toolbar as one of its
+ * panels), placed on the shared display. Commands raised by the bar reuse the
+ * {@link DesktopPipCommand} union.
  */
 export type WorkAdventureDesktopHudApi = {
     openMeetingBar: (opts: { displayId?: number; sourceId?: string }) => Promise<boolean>;
@@ -363,6 +432,20 @@ export type WorkAdventureDesktopApi = {
     onMediaPreempted?: (callback: () => void) => () => void;
     /** This world entered a meeting and media was turned off in another tab, named here. */
     onOtherMeetingMuted?: (callback: (worldName: string) => void) => () => void;
+    /**
+     * Presenter tools: main tracks the global cursor over the shared display and streams it here
+     * so the renderer can mirror the effect (laser / spotlight / loupe) to viewers.
+     */
+    presenter: {
+        /**
+         * Start tracking for the given tool on the shared display; "none" stops tracking. Pass the
+         * capture sourceId (`screen:<id>`) so main can resolve the display when display_id is
+         * absent (e.g. Wayland) instead of falling back to the primary screen.
+         */
+        setTool: (tool: "none" | "laser" | "spotlight" | "loupe", displayId?: number, sourceId?: string) => void;
+        /** Normalized (0..1) cursor position over the shared display. Returns an unsubscriber. */
+        onCursor: (callback: (x: number, y: number) => void) => () => void;
+    };
     onMuteToggle: (callback: () => void) => void;
     onCameraToggle: (callback: () => void) => void;
     getWindowState: () => Promise<DesktopWindowState>;
@@ -383,6 +466,7 @@ export type WorkAdventureDesktopApi = {
     cancelIdentifyScreens?: () => void;
     pip?: WorkAdventureDesktopPipApi;
     navigation: WorkAdventureDesktopNavigationApi;
+    screenOverlay?: WorkAdventureDesktopOverlayApi;
     presenterHud?: WorkAdventureDesktopHudApi;
     companion?: WorkAdventureDesktopCompanionApi;
 };
