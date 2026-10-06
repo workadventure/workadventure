@@ -33,7 +33,7 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
         },
     ],
     appName: "WorkAdventure",
-    shortAppName: "WA",
+    shortAppName: "WorkAdventure",
     themeColor: "#1B2A41",
     cardImage: "https://workadventu.re/images/general/logo-og.png",
 };
@@ -47,7 +47,14 @@ export class MetaTagsBuilder {
         if (ADMIN_API_URL) {
             const metaTags = await this.getMetaFromAdmin();
             if (metaTags) {
-                return { ...MetaTagsDefaultValue, ...metaTags };
+                // Without an app name, the installed app is named after the page title. The short name falls
+                // back to the app name.
+                return {
+                    ...MetaTagsDefaultValue,
+                    appName: metaTags.title,
+                    shortAppName: metaTags.appName ?? metaTags.title,
+                    ...metaTags,
+                };
             }
         }
         userAgent = userAgent || "";

@@ -299,8 +299,8 @@ export class FrontController extends BaseHttpController {
         const metaTagsData = await builder.getMeta(req.header("User-Agent"));
 
         const manifest = {
-            short_name: metaTagsData.title,
-            name: metaTagsData.title,
+            short_name: metaTagsData.shortAppName,
+            name: metaTagsData.appName,
             icons: metaTagsData.manifestIcons,
             start_url: url.replace(`${req.protocol}://${req.hostname}`, ""),
             background_color: metaTagsData.themeColor,
