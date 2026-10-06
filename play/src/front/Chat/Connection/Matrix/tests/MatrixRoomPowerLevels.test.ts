@@ -2,9 +2,19 @@ import { EventType } from "matrix-js-sdk";
 import { describe, expect, it } from "vitest";
 import type { RoomPowerLevelsEventContent } from "matrix-js-sdk/lib/@types/state_events";
 import { ChatPermissionLevel, type ChatRoomPermissionsState } from "../../ChatConnection";
-import { buildRoomPowerLevelsContent, getRoomPermissionsState } from "../MatrixRoomPowerLevels";
+import {
+    buildRoomPowerLevelsContent,
+    getChatPermissionLevelForPowerLevel,
+    getRoomPermissionsState,
+} from "../MatrixRoomPowerLevels";
+import { MatrixChatRoomMember } from "../MatrixChatRoomMember";
 
 describe("MatrixRoomPowerLevels", () => {
+    it("rounds a member's own level down and a required level up", () => {
+        expect(MatrixChatRoomMember.getPermissionLevel(75)).toBe(ChatPermissionLevel.MODERATOR);
+        expect(getChatPermissionLevelForPowerLevel(75)).toBe(ChatPermissionLevel.ADMIN);
+    });
+
     it("maps custom Matrix levels to the next WorkAdventure permission role", () => {
         const powerLevels: RoomPowerLevelsEventContent = {
             events_default: 0,

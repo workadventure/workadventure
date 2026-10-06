@@ -18,8 +18,8 @@ Every participant of a chat room has one of three roles:
 
 | Role          | Usual rights                                                                                  |
 |---------------|-----------------------------------------------------------------------------------------------|
-| **Admin**     | Everything, including changing permissions, giving roles and inviting people.                 |
-| **Moderator** | Kick and ban participants, delete other participants' messages, rename the room.              |
+| **Admin**     | Everything, including changing permissions and giving roles.                                  |
+| **Moderator** | Invite, kick and ban participants, delete other participants' messages, rename the room.      |
 | **User**      | Send messages and reactions, delete their own messages.                                       |
 
 The person who creates a room is its **Admin**.
@@ -31,6 +31,10 @@ but cannot kick another Moderator or an Admin. An Admin cannot kick or demote an
 
 :::info Matrix power levels
 Roles are a simplified view of Matrix power levels: **User** is 0, **Moderator** is 50 and **Admin** is 100.
+
+A room created in another Matrix client may use other levels, for example 75. A participant at 75 is shown, and
+treated, as a **Moderator**: the highest role they fully reach. A permission at 75 is shown as **Admin**: the lowest
+role that is enough for it. So WorkAdventure never shows a role as allowed to do something that Matrix refuses.
 :::
 
 ## The room panel
@@ -61,7 +65,8 @@ use them.
 
 ### Inviting people
 
-Only Admins see the **Invitations** field (1). Type a name or a Matrix ID, then click **Send invitations**.
+The **Invitations** field (1) only appears if you are allowed to invite people (**Invite users** in the
+[permissions](#permissions)). Type a name or a Matrix ID, then click **Send invitations**.
 
 When a participant has left the room, an **Invite** button appears next to their name to invite them again.
 
@@ -148,8 +153,8 @@ The screenshot shows the starting values of a room created in WorkAdventure. A r
 administrator, or in another Matrix client) may start with other values: check this list rather than assuming a
 default.
 
-WorkAdventure adds a few rules of its own on top of this list: setting **Invite users** to **User**
-does not show the **Invitations** field to Users: only Admins see it.
+WorkAdventure adds a rule of its own on top of this list: inviting people always needs at least the **Moderator**
+role, even when **Invite users** is set to **User**.
 
 For example, to make an announcement room where only moderators can write, set **Send messages** to **Moderator**.
 
@@ -158,8 +163,8 @@ Click **Save** to apply the changes. Only people allowed to **Change permissions
 ## Folders
 
 Folders have participants too. Open the folder menu (**⋯**) and choose **Participants**. This option only appears if
-you can create rooms in this folder and invite, kick or ban its participants. Removing someone from a folder does not
-remove them from the rooms in this folder.
+you can invite, kick or ban its participants. Removing someone from a folder does not remove them from the rooms in
+this folder.
 
 :::info
 If you are using the SaaS version of WorkAdventure, administrators can create chat rooms whose members and moderators

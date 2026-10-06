@@ -7,6 +7,12 @@ const DEFAULT_EVENT_POWER_LEVEL = 0;
 const DEFAULT_STATE_POWER_LEVEL = 50;
 const DEFAULT_MODERATION_POWER_LEVEL = 50;
 
+/**
+ * Maps a REQUIRED power level to the lowest role that meets it (75 -> ADMIN). A member's OWN level is
+ * rounded the other way, to the highest role it reaches (MatrixChatRoomMember.getPermissionLevel: 75 ->
+ * MODERATOR). This is on purpose: with three roles, rounding both ways down or both ways up would show
+ * a role as allowed to do something that Matrix refuses.
+ */
 export function getChatPermissionLevelForPowerLevel(powerLevel: number): ChatPermissionLevel {
     if (powerLevel <= MatrixChatRoomMember.getPowerLevel(ChatPermissionLevel.USER)) {
         return ChatPermissionLevel.USER;
