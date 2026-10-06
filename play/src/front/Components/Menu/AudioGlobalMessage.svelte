@@ -76,6 +76,10 @@
         if (!file) {
             return;
         }
+        // Sending reads the file from the input: put the dropped file there too.
+        if (fileInput) {
+            fileInput.files = event.dataTransfer.files;
+        }
         fileName = file.name;
         fileSize = getFileSize(file.size);
         errorFile = false;
