@@ -1,51 +1,49 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-
-const { interpolate, resolveNativeLocale, sanitizeStringTable, textDirection } = require("./native-locale-policy");
+import { expect, test } from "vitest";
+import { interpolate, resolveNativeLocale, sanitizeStringTable, textDirection } from "./native-locale-policy";
 
 test("native locale matches on the language prefix and falls back to English", () => {
-    assert.equal(resolveNativeLocale("fr-CA"), "fr");
-    assert.equal(resolveNativeLocale("fr"), "fr");
-    assert.equal(resolveNativeLocale("pt_BR"), "pt");
-    assert.equal(resolveNativeLocale("en-GB"), "en");
-    assert.equal(resolveNativeLocale("sv-SE"), "en");
-    assert.equal(resolveNativeLocale(""), "en");
+    expect(resolveNativeLocale("fr-CA")).toBe("fr");
+    expect(resolveNativeLocale("fr")).toBe("fr");
+    expect(resolveNativeLocale("pt_BR")).toBe("pt");
+    expect(resolveNativeLocale("en-GB")).toBe("en");
+    expect(resolveNativeLocale("sv-SE")).toBe("en");
+    expect(resolveNativeLocale("")).toBe("en");
 });
 
 test("native locale splits Chinese by script", () => {
-    assert.equal(resolveNativeLocale("zh-CN"), "zh-CN");
-    assert.equal(resolveNativeLocale("zh"), "zh-CN");
-    assert.equal(resolveNativeLocale("zh-TW"), "zh-TW");
-    assert.equal(resolveNativeLocale("zh-HK"), "zh-TW");
-    assert.equal(resolveNativeLocale("zh-Hant-TW"), "zh-TW");
+    expect(resolveNativeLocale("zh-CN")).toBe("zh-CN");
+    expect(resolveNativeLocale("zh")).toBe("zh-CN");
+    expect(resolveNativeLocale("zh-TW")).toBe("zh-TW");
+    expect(resolveNativeLocale("zh-HK")).toBe("zh-TW");
+    expect(resolveNativeLocale("zh-Hant-TW")).toBe("zh-TW");
 });
 
 test("interpolate fills known placeholders and keeps unknown ones", () => {
-    assert.equal(interpolate("Close {count} tabs", { count: 3 }), "Close 3 tabs");
-    assert.equal(interpolate("{a} and {b}", { a: "x" }), "x and {b}");
-    assert.equal(interpolate("No params"), "No params");
+    expect(interpolate("Close {count} tabs", { count: 3 })).toBe("Close 3 tabs");
+    expect(interpolate("{a} and {b}", { a: "x" })).toBe("x and {b}");
+    expect(interpolate("No params")).toBe("No params");
 });
 
 test("string tables must be flat, string-valued and bounded", () => {
-    assert.deepEqual(sanitizeStringTable({ lang: "fr-FR", "companion.chat": "Discussion" }), {
+    expect(sanitizeStringTable({ lang: "fr-FR", "companion.chat": "Discussion" })).toStrictEqual({
         lang: "fr-FR",
         "companion.chat": "Discussion",
     });
-    assert.equal(sanitizeStringTable(null), undefined);
-    assert.equal(sanitizeStringTable(["a"]), undefined);
-    assert.equal(sanitizeStringTable({ nested: { a: "b" } }), undefined);
-    assert.equal(sanitizeStringTable({ a: "x".repeat(1001) }), undefined);
+    expect(sanitizeStringTable(null)).toBe(undefined);
+    expect(sanitizeStringTable(["a"])).toBe(undefined);
+    expect(sanitizeStringTable({ nested: { a: "b" } })).toBe(undefined);
+    expect(sanitizeStringTable({ a: "x".repeat(1001) })).toBe(undefined);
     const tooMany = {};
     for (let i = 0; i < 501; i++) {
         tooMany["k" + i] = "v";
     }
-    assert.equal(sanitizeStringTable(tooMany), undefined);
+    expect(sanitizeStringTable(tooMany)).toBe(undefined);
 });
 
 test("Arabic reads right to left, the other shipped languages left to right", () => {
-    assert.equal(textDirection("ar"), "rtl");
-    assert.equal(textDirection("ar-SA"), "rtl");
-    assert.equal(textDirection("fr"), "ltr");
-    assert.equal(textDirection("zh-TW"), "ltr");
-    assert.equal(textDirection(""), "ltr");
+    expect(textDirection("ar")).toBe("rtl");
+    expect(textDirection("ar-SA")).toBe("rtl");
+    expect(textDirection("fr")).toBe("ltr");
+    expect(textDirection("zh-TW")).toBe("ltr");
+    expect(textDirection("")).toBe("ltr");
 });
