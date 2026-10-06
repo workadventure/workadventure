@@ -62,6 +62,13 @@ linux:
         - AppImage
         - deb
 
+appImage:
+    # The AppImage launcher (AppRun) already adds --no-sandbox when the Chromium sandbox cannot start,
+    # e.g. on Ubuntu 24.04 where AppArmor forbids unprivileged user namespaces. Without this, the
+    # desktop entry would also pass it unconditionally, and an AppImage integrated in the menu would run
+    # unsandboxed everywhere.
+    executableArgs: []
+
 publish:
     provider: generic
     url: https://desktop-updates.workadventu.re/stable
