@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "Torna alla selezione comunicazione",
-        selectCommunication: "Seleziona comunicazione",
         title: "Comunicazione globale",
-        selectCamera: "Seleziona una fotocamera 📹",
-        selectMicrophone: "Seleziona un microfono 🎙️",
         liveMessage: {
             startMegaphone: "Avvia megafono",
             stopMegaphone: "Ferma megafono",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Avvia messaggio in diretta",
             and: "e",
             toAll: "a tutti i partecipanti",
-            confirm: "Conferma",
-            cancel: "Annulla",
             notice: `
             Il messaggio in diretta o "Megafono" ti consente di inviare un messaggio in diretta con la tua fotocamera e il tuo microfono a tutte le persone collegate nella stanza o nel mondo.
 

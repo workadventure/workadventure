@@ -3,10 +3,7 @@ import type { BaseTranslation } from "../i18n-types";
 const megaphone: BaseTranslation = {
     modal: {
         backToSelectCommunication: "Voltar para selecionar comunicação",
-        selectCommunication: "Selecionar comunicação",
         title: "Comunicação global",
-        selectCamera: "Selecione uma câmera 📹",
-        selectMicrophone: "Selecione um microfone 🎙️",
         liveMessage: {
             startMegaphone: "Iniciar megafone",
             stopMegaphone: "Parar megafone",
@@ -18,8 +15,6 @@ const megaphone: BaseTranslation = {
             button: "Iniciar mensagem ao vivo",
             and: "e",
             toAll: "para todos os participantes",
-            confirm: "Confirmar",
-            cancel: "Cancelar",
             notice: `
             A mensagem ao vivo ou "Megafone" permite que você envie uma mensagem ao vivo com sua câmera e microfone para todas as pessoas conectadas na sala ou no mundo.
 

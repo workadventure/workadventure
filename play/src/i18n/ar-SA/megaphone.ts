@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "العودة إلى اختيار الاتصال",
-        selectCommunication: "اختر الاتصال",
         title: "الاتصال العالمي",
-        selectCamera: "اختر كاميرا 📹", // Select a camera
-        selectMicrophone: "اختر ميكروفون 🎙️", // Select a microphone
         liveMessage: {
             startMegaphone: "ابدأ الميكروفون", // Start megaphone
             stopMegaphone: "إيقاف الميغافون",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "ابدأ رسالة مباشرة", // Start live message
             and: "و", // and
             toAll: "إلى جميع المشاركين", // to all participants
-            confirm: "تأكيد", // Confirm
-            cancel: "إلغاء", // Cancel
             notice: `
             تتيح لك الرسالة المباشرة أو "الميكروفون" إرسال رسالة مباشرة باستخدام الكاميرا والميكروفون الخاصين بك إلى جميع الأشخاص في الغرفة أو في العالم.
 

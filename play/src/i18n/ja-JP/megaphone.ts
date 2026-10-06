@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "通信方法の選択に戻る",
-        selectCommunication: "通信方法を選択",
         title: "グローバル通信",
-        selectCamera: "カメラを選択 📹",
-        selectMicrophone: "マイクを選択 🎙️",
         liveMessage: {
             startMegaphone: "メガホンを開始",
             stopMegaphone: "メガホンを停止",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "ライブメッセージを開始",
             and: "と",
             toAll: "参加者全員に",
-            confirm: "確認",
-            cancel: "キャンセル",
             notice: `ライブメッセージまたはメガホンを使えば、カメラとマイクを使って、ルーム内またはワールドに参加しているすべての人にライブメッセージを送ることができます。
 
             このメッセージは、ビデオ通話やバブルディスカッションのように画面の下隅に表示されます。

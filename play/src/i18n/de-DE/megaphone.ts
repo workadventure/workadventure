@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "Zurück zur Kommunikationsauswahl",
-        selectCommunication: "Kommunikation auswählen",
         title: "Globale Kommunikation",
-        selectCamera: "Wähle eine Kamera 📹",
-        selectMicrophone: "Wähle ein Mikrofon 🎙️",
         liveMessage: {
             startMegaphone: "Megaphon starten",
             stopMegaphone: "Megaphon stoppen",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Live-Nachricht starten",
             and: "und",
             toAll: "an alle Teilnehmer",
-            confirm: "Bestätigen",
-            cancel: "Abbrechen",
             notice: `
             Die Live-Nachricht oder "Megaphon" ermöglicht es dir, eine Live-Nachricht mit deiner Kamera und deinem Mikrofon an alle Personen im Raum oder in der Welt zu senden.
 

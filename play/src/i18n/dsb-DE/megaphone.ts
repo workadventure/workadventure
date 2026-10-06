@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "Slědk k wuběranjeju komunikacije",
-        selectCommunication: "Komunikaciju wubraś",
         title: "Globalna komunikacija",
-        selectCamera: "Kameru wubraś 📹",
-        selectMicrophone: "Mikrofon wubraś 🎙️",
         liveMessage: {
             startMegaphone: "Megafon startowaś",
             stopMegaphone: "Megafon zastajiś",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Žywy powěsć startowaś",
             and: "a",
             toAll: "na wšyknych wobźělnikow",
-            confirm: "Wobkšuśiś",
-            cancel: "Pśetergnuś",
             notice: `
             Žywa powěsć abo "Megafon" wam zmóžnja, žywu powěsć z wašej kameru a wašym mikrofonu na wšykne luźe pósłaś, kótarež su w rumje abo w swěśe zwězane.
 

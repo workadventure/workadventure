@@ -3,10 +3,7 @@ import type { BaseTranslation } from "../i18n-types";
 const megaphone: BaseTranslation = {
     modal: {
         backToSelectCommunication: "Back to select communication",
-        selectCommunication: "Select communication",
         title: "Global communication",
-        selectCamera: "Select a camera 📹",
-        selectMicrophone: "Select a microphone 🎙️",
         liveMessage: {
             startMegaphone: "Start megaphone",
             stopMegaphone: "Stop megaphone",
@@ -18,12 +15,10 @@ const megaphone: BaseTranslation = {
             button: "Start live message",
             and: "and",
             toAll: "to all participants",
-            confirm: "Confirm",
-            cancel: "Cancel",
             notice: `
             The live message or "Megaphone" allows you to send a live message with your camera and microphone to all the people connected in the room or the world.
 
-            This message will be displayer at the bottom corner of the screen, like a video call or bubble discussion.
+            This message will be displayed at the bottom corner of the screen, like a video call or bubble discussion.
 
             An example of a live message use case: "Hello everyone, shall we start the conference? 🎉 Follow my avatar to the conference area and open the video app 🚀"
             `,

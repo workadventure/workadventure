@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "Retour à la sélection de communication",
-        selectCommunication: "Sélectionner la communication",
         title: "Communication globale",
-        selectCamera: "Sélectionnez une caméra",
-        selectMicrophone: "Sélectionnez un microphone",
         liveMessage: {
             startMegaphone: "Démarrer un live",
             stopMegaphone: "Arrêter le live",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Démarrer un live",
             and: "et",
             toAll: "à tous les participants",
-            confirm: "Confirmer",
-            cancel: "Annuler",
             notice: `Le Live ou "Mégaphone" vous permet de diffuser votre caméra et votre microphone à toutes les personnes connectées dans le salon et/ou le monde.
             
             Ce message sera affiché en bas de l'écran, comme une vidéo ou une bulle de discussion.
