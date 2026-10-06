@@ -1,12 +1,13 @@
 import electronIsDev from "electron-is-dev";
 
 /**
- * Whether the frameless presenter surface — the meeting bar — should be hidden from screen capture
- * via `setContentProtection(true)`
+ * Whether the frameless presenter surfaces — the meeting bar, the annotation bar and the transparent
+ * screen-share overlay — should be hidden from screen capture via `setContentProtection(true)`
  * (NSWindowSharingNone on macOS, SetWindowDisplayAffinity/WDA_MONITOR on Windows).
  *
  * In production this exclusion is a real feature: viewers of a shared screen must not see the
- * presenter's own control chrome.
+ * presenter's own control chrome, and the local annotation overlay is kept out of the captured pixels
+ * so strokes aren't drawn twice (once baked into the video, once via the network overlay).
  *
  * The catch is that content protection blanks these windows in EVERY capture, including the
  * developer's own screenshots and screen recordings — which makes the components impossible to
