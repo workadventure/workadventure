@@ -182,9 +182,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         pictureInPicture: {
             title: "Bild-im-Bild",
-            descDisabled:
-                "Leider ist diese Funktion auf Ihrem Gerät nicht verfügbar ❌. Bitte versuchen Sie, ein anderes Gerät oder einen anderen Browser wie Chrome oder Edge zu verwenden, um auf diese Funktion zuzugreifen.",
-            desc: "Sie können die Bild-im-Bild-Funktion verwenden, um ein Video oder eine Präsentation anzusehen, während Sie sich in einer Unterhaltung befinden. Klicken Sie einfach auf das Bild-im-Bild-Symbol und genießen Sie Ihren Inhalt.",
+            desc: "Zeigt die Videos Ihrer Unterhaltung in einem kleinen schwebenden Fenster an, damit Sie Ihre Gesprächspartner weiterhin sehen, während Sie in einem anderen Tab oder einer anderen App arbeiten.",
         },
         videoNotSupported: "Ihr Browser unterstützt das Video-Tag nicht.",
     },

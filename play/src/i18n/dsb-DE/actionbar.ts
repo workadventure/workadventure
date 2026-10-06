@@ -180,9 +180,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         pictureInPicture: {
             title: "Wobraz we wobrazu",
-            descDisabled:
-                "Bóžko toś ta funkcija njejo na wašom rěźe k dispoziciji ❌. Pšosym wopytajśo drugi rěd abo browser wužywaś, na pśikład Chrome abo Edge, aby pśistup k toś tej funkciji dostał.",
-            desc: "Móžośo funkciju wobraz we wobrazu wužywaś, aby wideo abo pśedstajenje woglědali, mjaztym až sćo w rozgronje. Klikniśo jadnorje na symbol wobraz we wobrazu a wužywajśo swój wopśimjeś.",
+            desc: "Pokazujo wideo wašogo rozgrona w małem pławajucem woknje, aby luźi, z kótarymiž powědaśo, dalej wiźeł, mjaztym až w drugem rejtarku abo drugem nałoženju źěłaśo.",
         },
         videoNotSupported: "Waš browser njepódpěra wideo-tag.",
     },

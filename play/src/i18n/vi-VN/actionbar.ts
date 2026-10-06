@@ -179,9 +179,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         pictureInPicture: {
             title: "Hình trong hình",
-            descDisabled:
-                "Rất tiếc, tính năng này không khả dụng trên thiết bị của bạn ❌. Hãy thử thiết bị hoặc trình duyệt khác, như Chrome hoặc Edge, để dùng tính năng này.",
-            desc: "Bạn có thể dùng chế độ hình trong hình để xem video hoặc bài thuyết trình trong khi đang trò chuyện. Chỉ cần bấm vào biểu tượng hình trong hình và tận hưởng nội dung của bạn.",
+            desc: "Hiển thị video của cuộc trò chuyện trong một cửa sổ nổi nhỏ, để bạn vẫn thấy những người đang nói chuyện cùng khi làm việc ở thẻ hoặc ứng dụng khác.",
         },
         videoNotSupported: "Trình duyệt của bạn không hỗ trợ thẻ video.",
     },

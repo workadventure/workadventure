@@ -184,9 +184,7 @@ const actionbar: BaseTranslation = {
         },
         pictureInPicture: {
             title: "Picture in picture",
-            descDisabled:
-                "Infelizmente, este recurso não está disponível no seu dispositivo ❌. Tente usar outro dispositivo ou navegador, como Chrome ou Edge, para acessar este recurso.",
-            desc: "Você pode usar o recurso picture in picture para assistir a um vídeo ou uma apresentação enquanto está em uma conversa. Basta clicar no ícone picture in picture e aproveitar seu conteúdo.",
+            desc: "Mostra os vídeos da sua conversa em uma pequena janela flutuante, para você continuar vendo as pessoas com quem fala enquanto trabalha em outra aba ou aplicativo.",
         },
         videoNotSupported: "Seu navegador não suporta a tag de vídeo.",
     },

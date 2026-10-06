@@ -180,9 +180,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         pictureInPicture: {
             title: "Imagen en imagen",
-            descDisabled:
-                "Desafortunadamente, esta función no está disponible en tu dispositivo ❌. Por favor, intenta usar otro dispositivo o navegador, como Chrome o Edge, para acceder a esta función.",
-            desc: "Puedes usar la función de imagen en imagen para ver un video o una presentación mientras estás en una conversación. Simplemente haz clic en el icono de imagen en imagen y disfruta de tu contenido.",
+            desc: "Muestra los vídeos de tu conversación en una pequeña ventana flotante, para que sigas viendo a las personas con las que hablas mientras trabajas en otra pestaña u otra aplicación.",
         },
         videoNotSupported: "Tu navegador no admite la etiqueta de vídeo.",
     },
