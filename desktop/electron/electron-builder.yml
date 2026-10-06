@@ -37,15 +37,16 @@ mac:
         # in System Settings > Privacy & Security on first use.
         NSScreenCaptureDescription: "WorkAdventure uses screen capture for screen sharing in virtual worlds."
     # zip is REQUIRED for electron-updater on macOS (delta + diff updates).
+    # One universal build (Intel + Apple Silicon in the same app) rather than one per architecture: with
+    # two DMGs, Apple Silicon users who pick the Intel one run it under Rosetta, slowly, without knowing.
+    # The app has no native module of its own, so the two architectures merge as they are.
     target:
         - target: dmg
           arch:
-              - x64
-              - arm64
+              - universal
         - target: zip
           arch:
-              - x64
-              - arm64
+              - universal
 
 linux:
     icon: assets/icons/logo.png
