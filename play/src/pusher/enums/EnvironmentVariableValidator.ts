@@ -298,7 +298,7 @@ export const EnvironmentVariables = z.object({
         ),
     ENABLE_SAY: BoolAsString.optional()
         .transform((val) => toBool(val, true))
-        .describe("Whether the users can communicate via comics-style bubbles."),
+        .describe("Whether the users can communicate via comics-style bubbles. Defaults to true."),
     ENABLE_ISSUE_REPORT: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Whether the feature 'issue report' is enabled or not on this room. Defaults to true."),
