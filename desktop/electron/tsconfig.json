@@ -18,6 +18,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  // The tests are plain JS run by vitest, whose typings need a newer TypeScript than this one.
-  "exclude": ["node_modules", "dist", "src/**/*.test.js"]
+  // The tests are plain JS run by vitest and Playwright, whose typings need a newer TypeScript than this one.
+  "exclude": ["node_modules", "dist", "build", "src/**/*.test.js", "e2e", "playwright.config.js"]
 }
