@@ -5,6 +5,7 @@ import { askIfUserWantToJoinBubbleOf, askToChangeStatus } from "../statusChanger
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { popupStore } from "../../../Stores/PopupStore";
 import NotificationPermissionModal from "../../../Components/ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
+import { DISABLE_NOTIFICATIONS } from "../../../Enum/EnvironmentVariable";
 import { BasicStatusStrategy } from "./BasicStatusStrategy";
 
 export class BusyStatusStrategy extends BasicStatusStrategy {
@@ -24,7 +25,10 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
             askIfUserWantToJoinBubbleOf(this.userNameInteraction);
         });
 
-        this.basicRules.push(this.showNotificationPermissionModal);
+        // Do not ask for a permission that will never be used.
+        if (!DISABLE_NOTIFICATIONS) {
+            this.basicRules.push(this.showNotificationPermissionModal);
+        }
     }
 
     allowNotificationSound(): boolean {

@@ -8,7 +8,7 @@ WorkAdventure tells you what is happening in four ways: notifications on your de
 
 ## Desktop notifications
 
-Desktop notifications appear on your computer, outside the browser, when WorkAdventure is not the window you are looking at. They are **off by default**.
+Desktop notifications appear on your computer, outside the browser, when WorkAdventure is not the window you are looking at. They are **off by default**. The administrator of the server can also turn them off for everyone: the **Notifications** switch is then not shown in the Settings.
 
 You get one when:
 
