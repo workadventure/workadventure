@@ -9,21 +9,15 @@
     import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine, playerMovedInTheLast10Seconds } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
-    import { activePictureInPictureStore, screenShareStreamElementsStore } from "../../../Stores/PeerStore";
+    import { pictureInPictureLayoutStore, screenShareStreamElementsStore } from "../../../Stores/PeerStore";
     import type { CamerasContainerMode } from "../../Video/VideoBoxLayout";
     import { selectPictureInPictureHighlight } from "../../Video/PictureInPicture/PictureInPictureHighlightPolicy";
-    import { isNativePictureInPictureAvailable } from "../../Video/PictureInPicture/NativePictureInPictureClient";
 
     interface Props {
         inPictureInPicture: boolean;
     }
 
     let { inPictureInPicture }: Props = $props();
-
-    // Desktop app: PiP is the native Electron utility window, which carries its own controls.
-    // The in-window DOM is NOT reparented there, so this extra action bar would just duplicate
-    // the main ActionBar inside the app. Only the browser DocumentPictureInPicture needs it.
-    const useNativeDesktopPip = isNativePictureInPictureAvailable();
 
     let camContainer: HTMLDivElement | undefined = $state();
     let highlightScreen: HTMLDivElement | undefined = $state();
@@ -91,13 +85,13 @@
     let pictureInPictureHighlightedScreen = $derived(
         selectPictureInPictureHighlight(
             inPictureInPicture,
-            $activePictureInPictureStore,
+            $pictureInPictureLayoutStore,
             $screenShareStreamElementsStore,
             $highlightedEmbedScreen,
         ),
     );
     let pipHighlightLayoutEnabled = $derived(
-        inPictureInPicture && $activePictureInPictureStore && pictureInPictureHighlightedScreen != undefined,
+        inPictureInPicture && $pictureInPictureLayoutStore && pictureInPictureHighlightedScreen != undefined,
     );
     let pipHighlightLandscape = $derived(pipHighlightLayoutEnabled && containerWidth > containerHeight);
     let pipCameraContainerStyle = $derived(
@@ -171,7 +165,8 @@
             </div>
         {/if}
 
-        {#if $activePictureInPictureStore && !useNativeDesktopPip}
+        <!-- The browser's picture-in-picture window only: the desktop companion carries its own controls. -->
+        {#if $pictureInPictureLayoutStore}
             <div
                 class="flex-none"
                 class:fixed={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
