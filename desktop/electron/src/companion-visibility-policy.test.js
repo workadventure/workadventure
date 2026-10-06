@@ -1,7 +1,13 @@
 import { expect, test } from "vitest";
-import { shouldShowCompanion, latchAfterPresenceChange, latchAfterMainWindowBlur, leftWorld } from "./companion-visibility-policy";
+import {
+    shouldShowCompanion,
+    latchAfterPresenceChange,
+    latchAfterMainWindowBlur,
+    leftWorld,
+    staysInViewAfterBlur,
+} from "./companion-visibility-policy";
 
-const away = { inWorld: true, mainWindowFocused: false };
+const away = { inWorld: true, mainWindowInView: false };
 
 // ── The regression this whole policy exists for ──────────────────────────────────────────────
 test("stays closed when the user is merely away in a world (no trigger)", () => {
@@ -13,7 +19,7 @@ test("opens once a trigger armed the latch", () => {
 });
 
 test("stays closed on the landing / login page even with the latch armed", () => {
-    expect(shouldShowCompanion({ inWorld: false, mainWindowFocused: false, autoOpenLatch: true })).toBe(false);
+    expect(shouldShowCompanion({ inWorld: false, mainWindowInView: false, autoOpenLatch: true })).toBe(false);
 });
 
 // ── Precedence ───────────────────────────────────────────────────────────────────────────────
@@ -26,8 +32,8 @@ test("screen sharing keeps the panel where no meeting bar replaces it (Linux)", 
 });
 
 test("focusing WA hides the panel unless the meeting video is running", () => {
-    expect(shouldShowCompanion({ inWorld: true, mainWindowFocused: true, autoOpenLatch: true })).toBe(false);
-    expect(shouldShowCompanion({ inWorld: true, mainWindowFocused: true, pipActive: true })).toBe(true);
+    expect(shouldShowCompanion({ inWorld: true, mainWindowInView: true, autoOpenLatch: true })).toBe(false);
+    expect(shouldShowCompanion({ inWorld: true, mainWindowInView: true, pipActive: true })).toBe(true);
 });
 
 test("an incoming invitation reopens the panel even after a manual dismissal", () => {
@@ -85,4 +91,21 @@ test("does not fire when already outside, or while staying inside", () => {
     expect(leftWorld({ inWorld: false }, { inWorld: false })).toBe(false);
     expect(leftWorld({ inWorld: true }, { inWorld: true })).toBe(false);
     expect(leftWorld({ inWorld: false }, { inWorld: true })).toBe(false);
+});
+
+// ── Leaving WA vs moving to another screen ───────────────────────────────────────────────────
+test("WA stays in view when the user moves to another screen", () => {
+    expect(staysInViewAfterBlur({ knowsWindowPositions: true, pointerDisplayId: 2, windowDisplayId: 1 })).toBe(true);
+});
+
+test("losing focus on WA's own screen leaves it", () => {
+    expect(staysInViewAfterBlur({ knowsWindowPositions: true, pointerDisplayId: 1, windowDisplayId: 1 })).toBe(false);
+});
+
+test("losing focus leaves WA where window positions are unknown (Wayland)", () => {
+    expect(staysInViewAfterBlur({ knowsWindowPositions: false, pointerDisplayId: 2, windowDisplayId: 1 })).toBe(false);
+});
+
+test("WA still in view on another screen keeps the panel closed, even with the latch armed", () => {
+    expect(shouldShowCompanion({ inWorld: true, mainWindowInView: true, autoOpenLatch: true })).toBe(false);
 });

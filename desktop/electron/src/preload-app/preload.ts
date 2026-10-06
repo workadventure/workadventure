@@ -45,6 +45,14 @@ const companionApi: WorkAdventureDesktopCompanionApi = {
         subscribe("app:companion:command-to-main", (command) => callback(command as CompanionCommand)),
 };
 
+// Lets the companion open when the window gets fully covered, even on another screen than the
+// one the user moved to (see onMainWindowHidden).
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+        ipcRenderer.send("app:page-hidden");
+    }
+});
+
 const api: WorkAdventureDesktopApi = {
     desktop: true,
     isDevelopment: () => ipcRenderer.invoke("is-development"),

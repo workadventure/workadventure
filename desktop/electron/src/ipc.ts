@@ -7,7 +7,7 @@ import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustSe
 import settings from "./settings";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { notePresenceReport, setRendererPresence } from "./presence";
-import { closeCompanionPip, dismissCompanion, openCompanionForPip } from "./companion-controller";
+import { closeCompanionPip, dismissCompanion, onMainWindowHidden, openCompanionForPip } from "./companion-controller";
 import {
     getControllingWorldContents,
     getDesktopWindowState,
@@ -266,6 +266,14 @@ export default () => {
             requestedStatus: raw.requestedStatus,
             statusLocked: Boolean(raw.statusLocked),
         });
+    });
+
+    // The world page went hidden: the window was fully covered or minimized (the browser engine
+    // tracks occlusion on macOS and Windows). Only the visible tab counts, background tabs are hidden.
+    ipcMain.on("app:page-hidden", (event) => {
+        if (isFromActiveRenderer(event)) {
+            onMainWindowHidden();
+        }
     });
 
     ipcMain.on("app:setTabTitle", (event, title: unknown) => {
