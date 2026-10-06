@@ -76,7 +76,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             microphoneToggle: "在「離開模式」中保持麥克風開啟",
         },
         save: "儲存",
-        otherSettings: "所有設定",
+        otherSettings: "其他設定",
         fullscreen: "全螢幕",
         notifications: "通知",
         enablePictureInPicture: "啟用子母畫面",

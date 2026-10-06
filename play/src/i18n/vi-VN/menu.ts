@@ -79,7 +79,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             microphoneToggle: 'Giữ micrô hoạt động trong "chế độ vắng mặt"',
         },
         save: "Lưu",
-        otherSettings: "Tất cả cài đặt",
+        otherSettings: "Cài đặt khác",
         fullscreen: "Toàn màn hình",
         notifications: "Thông báo",
         enablePictureInPicture: "Bật hình trong hình",

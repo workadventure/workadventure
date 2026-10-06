@@ -79,7 +79,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             microphoneToggle: '"자리 비움 모드"에서 마이크 활성 상태 유지',
         },
         save: "저장",
-        otherSettings: "모든 설정",
+        otherSettings: "기타 설정",
         fullscreen: "전체 화면",
         notifications: "알림",
         enablePictureInPicture: "PIP(화면 속 화면) 활성화",

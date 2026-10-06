@@ -80,7 +80,7 @@ const menu: BaseTranslation = {
             microphoneToggle: 'Mantenha o microfone ativo no "modo ausente"',
         },
         save: "Salvar",
-        otherSettings: "Todas as configurações",
+        otherSettings: "Outras configurações",
         fullscreen: "Tela cheia",
         notifications: "Notificações",
         enablePictureInPicture: "Habilitar picture-in-picture",
