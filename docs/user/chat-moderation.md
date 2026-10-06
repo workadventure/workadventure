@@ -31,6 +31,10 @@ but cannot kick another Moderator or an Admin. An Admin cannot kick or demote an
 
 :::info Matrix power levels
 Roles are a simplified view of Matrix power levels: **User** is 0, **Moderator** is 50 and **Admin** is 100.
+
+A room created in another Matrix client may use other levels, for example 75. A participant at 75 is shown, and
+treated, as a **Moderator**: the highest role they fully reach. A permission at 75 is shown as **Admin**: the lowest
+role that is enough for it. So WorkAdventure never shows a role as allowed to do something that Matrix refuses.
 :::
 
 ## The room panel
