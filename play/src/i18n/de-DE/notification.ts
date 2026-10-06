@@ -4,7 +4,6 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} möchte mit dir sprechen",
     message: "{name} sendet eine Nachricht",
-    chatRoom: "im Forum",
     askToMuteMicrophone: "Bitte dein Mikrofon stummschalten 🙏",
     askToMuteCamera: "Bitte deine Kamera stummschalten 🙏",
     microphoneMuted: "Dein Mikrofon wurde von einem Moderator stummgeschaltet",
@@ -16,10 +15,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     handLowered: "Ein Moderator hat deine Hand gesenkt",
     removedFromConversation: "Ein Moderator hat dich aus dem Gespräch genommen.",
     actionFailed: "Diese Aktion konnte nicht ausgeführt werden",
-    notificationSentToMuteMicrophone: "Eine Benachrichtigung wurde an {name} gesendet, um das Mikrofon stummzuschalten",
-    notificationSentToMuteCamera: "Eine Benachrichtigung wurde an {name} gesendet, um die Kamera stummzuschalten",
     announcement: "Ankündigung",
-    open: "Öffnen",
     help: {
         title: "Zugriff auf Benachrichtigungen verweigert",
         permissionDenied: "Zugriff verweigert",

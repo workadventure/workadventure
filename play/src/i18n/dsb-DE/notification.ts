@@ -4,7 +4,6 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} co z tobu diskutěrowaś",
     message: "{name} sćelo śi powěsć",
-    chatRoom: "we forumje",
     askToMuteMicrophone: "Mógu waš mikrofon němy cyniś?",
     askToMuteCamera: "Mógu wašu kameru němy cyniś?",
     microphoneMuted: "Waš mikrofon jo se wót moderatora němy cynił",
@@ -16,10 +15,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     handLowered: "Moderator jo twoju ruku spušćił",
     removedFromConversation: "Moderator jo śi z rozgrona wótpórał.",
     actionFailed: "Toś ta akcija njejo se raźiła",
-    notificationSentToMuteMicrophone: "Powěźeńka jo se na {name} pósłała, aby jogo mikrofon němy cynił",
-    notificationSentToMuteCamera: "Powěźeńka jo se na {name} pósłała, aby jogo kameru němy cyniła",
     announcement: "Připowěźeńka",
-    open: "Wócyniś",
     help: {
         title: "Pśistup k powěźeńkam wótpokazany",
         permissionDenied: "Pśistup wótpokazany",

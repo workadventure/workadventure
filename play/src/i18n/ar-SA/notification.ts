@@ -4,7 +4,6 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} يريد مناقشتك", // {name} wants to discuss with you
     message: "{name} يرسل رسالة", // {name} sends a message
-    chatRoom: "في المنتدى", // in the forum
     askToMuteMicrophone: "يرجى كتم الميكروفون 🙏", // please mute your microphone
     askToMuteCamera: "يرجى كتم الكاميرا 🙏", // please mute your camera
     microphoneMuted: "تم كتم ميكروفونك بواسطة مشرف",
@@ -13,7 +12,6 @@ const notification: DeepPartial<Translation["notification"]> = {
     givenTheFloorEnableMicrophone: "حان دورك للتحدث — فعّل الميكروفون",
     floorRevoked: "لم يعد لديك الكلمة",
     announcement: "إعلان",
-    open: "فتح",
     help: {
         title: "تم رفض الوصول إلى الإشعارات", // access to notifications denied
         permissionDenied: "تم الرفض", // access denied
@@ -33,8 +31,6 @@ const notification: DeepPartial<Translation["notification"]> = {
     handLowered: "قام أحد المشرفين بخفض يدك",
     removedFromConversation: "أزالك مشرف من المحادثة.",
     actionFailed: "تعذر إكمال هذا الإجراء",
-    notificationSentToMuteMicrophone: "تم إرسال إشعار إلى {name} لكتم ميكروفونه",
-    notificationSentToMuteCamera: "تم إرسال إشعار إلى {name} لكتم كاميرته",
     recordingStarted: "بدأ شخص واحد في المناقشة تسجيلاً.",
     urlCopiedToClipboard: "تم نسخ الرابط إلى الحافظة",
 };

@@ -167,9 +167,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
-        discussion: "想與您討論",
-        message: "傳送了一則訊息",
-        forum: "在論壇上",
         in: "在",
     },
     see: "查看",

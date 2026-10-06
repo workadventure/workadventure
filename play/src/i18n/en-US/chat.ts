@@ -169,9 +169,6 @@ const chat: BaseTranslation = {
         },
     },
     notification: {
-        discussion: "wants to discuss with you",
-        message: "sends a message",
-        forum: "on the forum",
         in: "in",
     },
     see: "See",

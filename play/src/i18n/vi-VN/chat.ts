@@ -169,9 +169,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
-        discussion: "muốn trò chuyện với bạn",
-        message: "đã gửi một tin nhắn",
-        forum: "trên diễn đàn",
         in: "trong",
     },
     see: "Xem",

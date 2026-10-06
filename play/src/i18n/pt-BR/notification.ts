@@ -3,7 +3,6 @@ import type { BaseTranslation } from "../i18n-types";
 const notification: BaseTranslation = {
     discussion: "{name} quer discutir com você",
     message: "{name} envia uma mensagem",
-    chatRoom: "na sala de chat",
     askToMuteMicrophone: "Posso silenciar seu microfone?",
     askToMuteCamera: "Posso silenciar sua câmera?",
     microphoneMuted: "Seu microfone foi silenciado por um moderador",
@@ -12,7 +11,6 @@ const notification: BaseTranslation = {
     givenTheFloorEnableMicrophone: "É a sua vez de falar — ative o microfone",
     floorRevoked: "Você não tem mais a palavra",
     announcement: "Anúncio",
-    open: "Abrir",
     help: {
         title: "Acesso às notificações negado",
         permissionDenied: "Permissão negada",
@@ -32,8 +30,6 @@ const notification: BaseTranslation = {
     handLowered: "Um moderador baixou sua mão",
     removedFromConversation: "Um moderador tirou você da conversa.",
     actionFailed: "Não foi possível concluir esta ação",
-    notificationSentToMuteMicrophone: "Uma notificação foi enviada para {name} para silenciar o microfone",
-    notificationSentToMuteCamera: "Uma notificação foi enviada para {name} para silenciar a câmera",
     screenSharingError: "Não é possível iniciar o compartilhamento de tela",
     recordingStarted: "Uma pessoa na discussão iniciou uma gravação.",
     urlCopiedToClipboard: "URL copiada para a área de transferência",
