@@ -11,7 +11,7 @@
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import ChatHeader from "../ChatHeader.svelte";
     import UserList from "./UserList.svelte";
-    import { IconChevronUp, IconUserPlus } from "@wa-icons";
+    import { IconChevronUp, IconShare } from "@wa-icons";
 
     interface Props {
         userProviderMerger: UserProviderMerger;
@@ -158,8 +158,8 @@
             onclick={toggleInviteMenu}
             data-testid="user-list-invite-button"
         >
-            <IconUserPlus font-size="18" />
-            {$LL.chat.userList.invite()}
+            <IconShare font-size="18" />
+            {$LL.menu.invite.share()}
         </button>
     {/if}
 </div>

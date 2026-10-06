@@ -52,6 +52,6 @@ If the person has a business card, **Business Card** opens it.
 
 The paper plane icon next to a person opens a direct conversation with them in the chat. It only appears when the chat rooms are enabled in your world. It is greyed out for people who are not logged in.
 
-## The Invite button
+## The Share button
 
-The **Invite** button at the bottom of the list does not invite a specific person: it opens the link of the room, to share it with someone who is not in WorkAdventure yet.
+The **Share** button at the bottom of the list opens the link of the room, to share it with someone who is not in WorkAdventure yet. To invite someone who is already in your world to your conversation, use **Invite** in the actions on that person.
