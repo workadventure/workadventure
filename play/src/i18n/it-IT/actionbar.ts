@@ -127,6 +127,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Smetti di seguire",
             desc: "Puoi scegliere di smettere di seguire un utente in qualsiasi momento. Il tuo Woka smetterà quindi di seguirli, restituendoti la tua libertà di movimento.",
         },
+        stopLeading: {
+            title: "Smetti di guidare",
+            desc: "Puoi smettere di guidare in qualsiasi momento. Tutti quelli che ti seguono smetteranno di seguirti e ritroveranno la loro libertà di movimento.",
+        },
         lock: {
             title: "Blocca conversazione",
             desc: "Abilitando questa funzione, garantisci che nessuno possa unirsi alla discussione. Sei il padrone del tuo spazio, e solo quelli già presenti possono interagire.",

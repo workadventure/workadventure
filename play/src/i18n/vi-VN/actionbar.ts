@@ -126,6 +126,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Ngừng đi theo",
             desc: "Bạn có thể ngừng đi theo một người dùng bất cứ lúc nào. Woka của bạn sẽ ngừng đi theo họ, trả lại cho bạn sự tự do di chuyển.",
         },
+        stopLeading: {
+            title: "Ngừng dẫn đường",
+            desc: "Bạn có thể ngừng dẫn đường bất cứ lúc nào. Những người đang đi theo bạn sẽ ngừng đi theo và được tự do di chuyển trở lại.",
+        },
         lock: {
             title: "Khóa cuộc trò chuyện",
             desc: "Khi bật tính năng này, bạn đảm bảo không ai có thể tham gia cuộc thảo luận. Bạn là chủ không gian của mình, chỉ những người đã có mặt mới có thể tương tác.",

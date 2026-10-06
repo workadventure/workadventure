@@ -174,40 +174,19 @@
         {/if}
 
         {#if $followStateStore === "active" || $followStateStore === "ending"}
-            {#if $followRoleStore === "follower"}
-                <Button
-                    variant="danger"
-                    size="sm"
-                    class="w-full"
-                    onclick={(event) => {
-                        event.preventDefault();
-                        reset();
-                    }}
-                    >{$LL.actionbar.help.unfollow.title()}
-                </Button>
-            {:else if $followUsersStore.length === 1}
-                <Button
-                    variant="danger"
-                    size="sm"
-                    class="w-full"
-                    onclick={(event) => {
-                        event.preventDefault();
-                        reset();
-                    }}
-                    >{$LL.actionbar.help.unfollow.title()}
-                </Button>
-            {:else if $followUsersStore.length > 2}
-                <Button
-                    variant="danger"
-                    size="sm"
-                    class="w-full"
-                    onclick={(event) => {
-                        event.preventDefault();
-                        reset();
-                    }}
-                    >{$LL.actionbar.cancel()}
-                </Button>
-            {/if}
+            <Button
+                variant="danger"
+                size="sm"
+                class="w-full"
+                onclick={(event) => {
+                    event.preventDefault();
+                    reset();
+                }}
+            >
+                {$followRoleStore === "follower"
+                    ? $LL.actionbar.help.unfollow.title()
+                    : $LL.actionbar.help.stopLeading.title()}
+            </Button>
         {/if}
     {/snippet}
 </PopUpContainer>
