@@ -110,7 +110,7 @@
         stopPictureInPictureEventDelegation = [];
     }
 
-    function destroyPictureInPictureComponent() {
+    function destroyPictureInPictureComponent(keepRequest = false) {
         detachPictureInPictureEventDelegation();
 
         if (!parentDivElement) {
@@ -119,12 +119,22 @@
         // eslint-disable-next-line svelte/no-dom-manipulating
         parentDivElement.append(divElement);
 
-        if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
+        if (pipWindow) pipWindow.removeEventListener("pagehide", onPictureInPictureWindowPageHide);
         if (pipWindow) pipWindow.close();
         pipWindow = undefined;
         pipRequested = false;
         activePictureInPictureStore.set(false);
+        // The window is closed, so the next click on the picture-in-picture button opens it again
+        if (!keepRequest) askPictureInPictureActivatingStore.set(false);
         debug("Exiting Picture in Picture mode");
+    }
+
+    function onPictureInPictureWindowPageHide() {
+        destroyPictureInPictureComponent();
+    }
+
+    function forgetPictureInPictureRequest() {
+        askPictureInPictureActivatingStore.set(false);
     }
 
     const unsubscribeIsInRemoteConversation = isInRemoteConversation.subscribe((isTalking) => {
@@ -201,7 +211,7 @@
                 activePictureInPictureStore.set(true);
                 await tick();
 
-                pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
+                pipWindow.addEventListener("pagehide", onPictureInPictureWindowPageHide);
             })
             .catch((error: Error) => {
                 debug("Picture-in-Picture is not supported", error);
@@ -252,7 +262,14 @@
         }
 
         const onFocus = () => {
-            destroyPictureInPictureComponent();
+            // The picture-in-picture window takes the focus when it opens, so a click on the picture-in-picture
+            // button first focuses this window, which closes the picture-in-picture window. If the button opened it,
+            // forget its request only after that click: forgetting it now would make the click open the window again.
+            const keepRequest = $askPictureInPictureActivatingStore;
+            destroyPictureInPictureComponent(keepRequest);
+            if (keepRequest) {
+                window.addEventListener("click", forgetPictureInPictureRequest, { once: true });
+            }
         };
 
         window.addEventListener("focus", onFocus);
@@ -268,6 +285,7 @@
                 debug("PictureInPicture enterpictureinpicture handler is not supported", e);
             }
             window.removeEventListener("focus", onFocus);
+            window.removeEventListener("click", forgetPictureInPictureRequest);
         };
     });
 
