@@ -16,6 +16,7 @@ import {
     isActiveWorldContents,
     isControllingWorldContents,
     loadDesktopTarget,
+    switchToOpenWorld,
     openWorldTab,
 } from "./window";
 import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle, setTabInMeeting } from "./tab-manager";
@@ -424,6 +425,9 @@ export default () => {
             return { ok: false, error: t(`landing.${validation.code}`), trustOrigin };
         }
         const safeUrl = validation.url;
+        if (switchToOpenWorld(safeUrl, event.sender)) {
+            return { ok: true };
+        }
         try {
             const loaded = await loadDesktopTarget(safeUrl);
             return loaded ? { ok: true } : { ok: false, error: t("landing.worldNotLoaded") };
@@ -445,6 +449,9 @@ export default () => {
         const validation = validateDesktopNavigationUrl(rawUrl, getDesktopConfig());
         if (!validation.ok) {
             return { ok: false, error: t(`landing.${validation.code}`) };
+        }
+        if (switchToOpenWorld(validation.url, event.sender)) {
+            return { ok: true };
         }
         try {
             const loaded = await loadDesktopTarget(validation.url);

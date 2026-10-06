@@ -1,5 +1,25 @@
 import { expect, test } from "vitest";
-import { addWorldToHistory, createDesktopConfig, createDesktopLoginUrl, createDesktopLogoutUrl, createRoomUrlWithAuthToken, extractDesktopAuthCallback, formatWorldHistoryLabel, isAllowedNavigationUrl, isDesktopLoginUrl, isDesktopLogoutUrl, isRoomUrl, normalizePersistedLastRoomUrl, normalizePersistedWorldHistory, normalizePersistedPortalUrl, redactSensitiveString, resolveInitialTarget, stripSensitiveQueryParams, validateDesktopNavigationUrl } from "./desktop-url-policy";
+import {
+    addWorldToHistory,
+    createDesktopConfig,
+    createDesktopLoginUrl,
+    createDesktopLogoutUrl,
+    createRoomUrlWithAuthToken,
+    extractDesktopAuthCallback,
+    formatWorldHistoryLabel,
+    isAllowedNavigationUrl,
+    isDesktopLoginUrl,
+    isDesktopLogoutUrl,
+    isRoomUrl,
+    worldKeyOf,
+    normalizePersistedLastRoomUrl,
+    normalizePersistedWorldHistory,
+    normalizePersistedPortalUrl,
+    redactSensitiveString,
+    resolveInitialTarget,
+    stripSensitiveQueryParams,
+    validateDesktopNavigationUrl,
+} from "./desktop-url-policy";
 
 function withNodeEnv(value, fn) {
     const previous = process.env.NODE_ENV;
@@ -39,15 +59,19 @@ test("resolves launch target from deep link, then last room, then portal", () =>
         allowedHostSuffixes: [".workadventu.re"],
     });
 
-    expect(resolveInitialTarget(config, {
+    expect(
+        resolveInitialTarget(config, {
             pendingDeepLinkUrl: "https://play.workadventu.re/@/deep/world/room",
             lastRoomUrl: "https://play.workadventu.re/@/last/world/room",
-        })).toBe("https://play.workadventu.re/@/deep/world/room");
+        })
+    ).toBe("https://play.workadventu.re/@/deep/world/room");
 
-    expect(resolveInitialTarget(config, {
+    expect(
+        resolveInitialTarget(config, {
             pendingDeepLinkUrl: "https://evil.test/@/deep/world/room",
             lastRoomUrl: "https://play.workadventu.re/@/last/world/room",
-        })).toBe("https://play.workadventu.re/@/last/world/room");
+        })
+    ).toBe("https://play.workadventu.re/@/last/world/room");
 
     expect(resolveInitialTarget(config, {})).toBe("https://play.workadventu.re/");
 });
@@ -74,11 +98,13 @@ test("validates and normalizes world URLs entered in the desktop navigation UI",
         code: "urlProtocol",
         error: "Only http(s):// URLs are supported.",
     });
-    expect(validateDesktopNavigationUrl("https://user:secret@play.workadventu.re/@/team/world/room", config)).toStrictEqual({
-            ok: false,
-            code: "urlHost",
-            error: "Invalid URL — missing host or contains credentials.",
-        });
+    expect(
+        validateDesktopNavigationUrl("https://user:secret@play.workadventu.re/@/team/world/room", config)
+    ).toStrictEqual({
+        ok: false,
+        code: "urlHost",
+        error: "Invalid URL — missing host or contains credentials.",
+    });
     expect(validateDesktopNavigationUrl("https://evil.test/@/team/world/room", config).code).toBe("urlNotAllowed");
     expect(validateDesktopNavigationUrl(" https://play.workadventu.re/@/team/world/room ", config)).toStrictEqual({
         ok: true,
@@ -139,10 +165,12 @@ test("blocks http:// outside development for non-loopback hosts", () => {
         expect(isAllowedNavigationUrl("http://play.workadventu.re/@/team/world/room", config)).toBe(false);
         expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config)).toBe(true);
         // Loopback over http stays allowed because the loopback OAuth callback server is local.
-        expect(isAllowedNavigationUrl("http://127.0.0.1:12345/", {
+        expect(
+            isAllowedNavigationUrl("http://127.0.0.1:12345/", {
                 ...config,
                 allowedOrigins: ["http://127.0.0.1:12345"],
-            })).toBe(true);
+            })
+        ).toBe(true);
     });
 });
 
@@ -167,9 +195,11 @@ test("migrates the previous broken local hosted map URL from persisted portal_ur
 });
 
 test("migrates the previous https local global map URL to the admin portal", () => {
-    expect(normalizePersistedPortalUrl(
+    expect(
+        normalizePersistedPortalUrl(
             "https://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Areas/StartAreas/start_areas.json"
-        )).toBe("https://admin.workadventu.re/");
+        )
+    ).toBe("https://admin.workadventu.re/");
 });
 
 test("migrates the previous https local global map URL from environment config to the admin portal", () => {
@@ -193,38 +223,54 @@ test("detects WorkAdventure room URLs that are safe to remember", () => {
 });
 
 test("normalizePersistedLastRoomUrl strips the URL fragment so hash-only changes don't spawn new entries", () => {
-    expect(normalizePersistedLastRoomUrl("https://play.workadventu.re/@/team/world/room#chat=1")).toBe("https://play.workadventu.re/@/team/world/room");
-    expect(normalizePersistedLastRoomUrl("https://play.workadventu.re/@/team/world/room?foo=bar#lang=fr")).toBe("https://play.workadventu.re/@/team/world/room?foo=bar");
+    expect(normalizePersistedLastRoomUrl("https://play.workadventu.re/@/team/world/room#chat=1")).toBe(
+        "https://play.workadventu.re/@/team/world/room"
+    );
+    expect(normalizePersistedLastRoomUrl("https://play.workadventu.re/@/team/world/room?foo=bar#lang=fr")).toBe(
+        "https://play.workadventu.re/@/team/world/room?foo=bar"
+    );
 });
 
 test("normalizePersistedLastRoomUrl keeps URLs that were once seeded as broken portal_url values", () => {
     // These URLs were on the legacy portal_url migration list because an old buggy build
     // saved them as portal_url. They are still legitimate room URLs — the user must be able
     // to visit them and have them recorded in Recent worlds.
-    expect(normalizePersistedLastRoomUrl("http://play.workadventure.localhost/~/maps/areas.wam")).toBe("http://play.workadventure.localhost/~/maps/areas.wam");
-    expect(normalizePersistedLastRoomUrl("https://play.workadventure.localhost/~/maps/areas.wam")).toBe("https://play.workadventure.localhost/~/maps/areas.wam");
+    expect(normalizePersistedLastRoomUrl("http://play.workadventure.localhost/~/maps/areas.wam")).toBe(
+        "http://play.workadventure.localhost/~/maps/areas.wam"
+    );
+    expect(normalizePersistedLastRoomUrl("https://play.workadventure.localhost/~/maps/areas.wam")).toBe(
+        "https://play.workadventure.localhost/~/maps/areas.wam"
+    );
 });
 
 test("keeps a sanitized, deduplicated list of recently visited worlds", () => {
-    expect(normalizePersistedWorldHistory([
+    expect(
+        normalizePersistedWorldHistory([
             "https://play.workadventu.re/@/team/new/room?token=secret",
             "not-a-url",
             "https://play.workadventu.re/login-screen",
             "https://user:password@play.workadventu.re/@/team/private/room",
             "https://play.workadventu.re/@/team/new/room",
             "https://play.workadventu.re/@/team/old/room",
-        ])).toStrictEqual(["https://play.workadventu.re/@/team/new/room", "https://play.workadventu.re/@/team/old/room"]);
+        ])
+    ).toStrictEqual(["https://play.workadventu.re/@/team/new/room", "https://play.workadventu.re/@/team/old/room"]);
 
-    expect(addWorldToHistory(
+    expect(
+        addWorldToHistory(
             ["https://play.workadventu.re/@/team/old/room", "https://play.workadventu.re/@/team/current/room"],
             "https://play.workadventu.re/@/team/current/room?code=oauth-code",
             2
-        )).toStrictEqual(["https://play.workadventu.re/@/team/current/room", "https://play.workadventu.re/@/team/old/room"]);
+        )
+    ).toStrictEqual(["https://play.workadventu.re/@/team/current/room", "https://play.workadventu.re/@/team/old/room"]);
 });
 
 test("formats readable recent-world labels without exposing the full URL", () => {
-    expect(formatWorldHistoryLabel("https://play.workadventu.re/@/acme/headquarters/reception")).toBe("acme / headquarters / reception");
-    expect(formatWorldHistoryLabel("https://play.workadventu.re/_/global/maps.example.com/map.json", 22)).toBe("play.workadventu.re/_…");
+    expect(formatWorldHistoryLabel("https://play.workadventu.re/@/acme/headquarters/reception")).toBe(
+        "acme / headquarters / reception"
+    );
+    expect(formatWorldHistoryLabel("https://play.workadventu.re/_/global/maps.example.com/map.json", 22)).toBe(
+        "play.workadventu.re/_…"
+    );
 });
 
 test("detects and upgrades login-screen URLs for desktop OIDC", () => {
@@ -240,7 +286,9 @@ test("adds a loopback callback URL to desktop login-screen URLs", () => {
     const loginUrl =
         "https://play.workadventu.re/login-screen?playUri=https%3A%2F%2Fplay.workadventu.re%2F%40%2Fteam%2Fworld%2Froom";
 
-    expect(createDesktopLoginUrl(loginUrl, "http://127.0.0.1:48919/auth/callback")).toBe(`${loginUrl}&desktop=true&desktopCallbackUrl=http%3A%2F%2F127.0.0.1%3A48919%2Fauth%2Fcallback`);
+    expect(createDesktopLoginUrl(loginUrl, "http://127.0.0.1:48919/auth/callback")).toBe(
+        `${loginUrl}&desktop=true&desktopCallbackUrl=http%3A%2F%2F127.0.0.1%3A48919%2Fauth%2Fcallback`
+    );
 });
 
 test("detects and upgrades logout URLs for desktop browser flow", () => {
@@ -256,56 +304,72 @@ test("adds a loopback callback URL to desktop logout URLs", () => {
     const logoutUrl =
         "https://play.workadventu.re/logout?playUri=https%3A%2F%2Fplay.workadventu.re%2F%40%2Fteam%2Fworld%2Froom&token=abc";
 
-    expect(createDesktopLogoutUrl(logoutUrl, "http://127.0.0.1:48919/logout/callback")).toBe(`${logoutUrl}&desktop=true&desktopCallbackUrl=http%3A%2F%2F127.0.0.1%3A48919%2Flogout%2Fcallback`);
+    expect(createDesktopLogoutUrl(logoutUrl, "http://127.0.0.1:48919/logout/callback")).toBe(
+        `${logoutUrl}&desktop=true&desktopCallbackUrl=http%3A%2F%2F127.0.0.1%3A48919%2Flogout%2Fcallback`
+    );
 });
 
 test("extracts desktop auth callback origin and one-shot code", () => {
-    expect(extractDesktopAuthCallback(
-            "workadventure://auth/callback?origin=https%3A%2F%2Fplay.workadventu.re&code=abc123"
-        )).toStrictEqual({
-            origin: "https://play.workadventu.re",
-            code: "abc123",
-            matrixLoginToken: undefined,
-        });
+    expect(
+        extractDesktopAuthCallback("workadventure://auth/callback?origin=https%3A%2F%2Fplay.workadventu.re&code=abc123")
+    ).toStrictEqual({
+        origin: "https://play.workadventu.re",
+        code: "abc123",
+        matrixLoginToken: undefined,
+    });
 
     // Matrix-configured deployments carry the one-shot Synapse login token alongside the WA code.
-    expect(extractDesktopAuthCallback(
+    expect(
+        extractDesktopAuthCallback(
             "workadventure://auth/callback?origin=https%3A%2F%2Fplay.workadventu.re&code=abc123&matrixLoginToken=syt_login"
-        )).toStrictEqual({
-            origin: "https://play.workadventu.re",
-            code: "abc123",
-            matrixLoginToken: "syt_login",
-        });
+        )
+    ).toStrictEqual({
+        origin: "https://play.workadventu.re",
+        code: "abc123",
+        matrixLoginToken: "syt_login",
+    });
 
     expect(extractDesktopAuthCallback("workadventure://join?url=https%3A%2F%2Fplay.workadventu.re%2F")).toBe(undefined);
 });
 
 test("adds exchanged desktop auth token to target room URL", () => {
-    expect(createRoomUrlWithAuthToken("https://play.workadventu.re/@/team/world/room?foo=bar#spawn", "token value")).toBe("https://play.workadventu.re/@/team/world/room?foo=bar&token=token+value#spawn");
+    expect(
+        createRoomUrlWithAuthToken("https://play.workadventu.re/@/team/world/room?foo=bar#spawn", "token value")
+    ).toBe("https://play.workadventu.re/@/team/world/room?foo=bar&token=token+value#spawn");
 
     // With a Matrix login token, both land on the room URL for the front to consume.
-    expect(createRoomUrlWithAuthToken(
+    expect(
+        createRoomUrlWithAuthToken(
             "https://play.workadventu.re/@/team/world/room?foo=bar#spawn",
             "token value",
             "syt_login"
-        )).toBe("https://play.workadventu.re/@/team/world/room?foo=bar&token=token+value&matrixLoginToken=syt_login#spawn");
+        )
+    ).toBe("https://play.workadventu.re/@/team/world/room?foo=bar&token=token+value&matrixLoginToken=syt_login#spawn");
 });
 
 test("strips sensitive query params before persisting a URL", () => {
-    expect(stripSensitiveQueryParams(
+    expect(
+        stripSensitiveQueryParams(
             "https://play.workadventu.re/@/team/world/room?token=secret&matrixLoginToken=syt_login&foo=bar&code=abc"
-        )).toBe("https://play.workadventu.re/@/team/world/room?foo=bar");
+        )
+    ).toBe("https://play.workadventu.re/@/team/world/room?foo=bar");
     expect(stripSensitiveQueryParams(undefined)).toBe(undefined);
     expect(stripSensitiveQueryParams("not-a-url")).toBe("not-a-url");
 });
 
 test("normalizePersistedLastRoomUrl drops sensitive query params", () => {
-    expect(normalizePersistedLastRoomUrl("https://play.workadventu.re/@/team/world/room?token=secret&foo=bar")).toBe("https://play.workadventu.re/@/team/world/room?foo=bar");
+    expect(normalizePersistedLastRoomUrl("https://play.workadventu.re/@/team/world/room?token=secret&foo=bar")).toBe(
+        "https://play.workadventu.re/@/team/world/room?foo=bar"
+    );
 });
 
 test("redacts sensitive query params in arbitrary strings (for logs)", () => {
-    expect(redactSensitiveString("Failed to load https://play.workadventu.re/@/team/world/room?token=secret&foo=bar")).toBe("Failed to load https://play.workadventu.re/@/team/world/room?token=REDACTED&foo=bar");
-    expect(redactSensitiveString("multiple ?code=abc&token=xyz&refresh_token=def")).toBe("multiple ?code=REDACTED&token=REDACTED&refresh_token=REDACTED");
+    expect(
+        redactSensitiveString("Failed to load https://play.workadventu.re/@/team/world/room?token=secret&foo=bar")
+    ).toBe("Failed to load https://play.workadventu.re/@/team/world/room?token=REDACTED&foo=bar");
+    expect(redactSensitiveString("multiple ?code=abc&token=xyz&refresh_token=def")).toBe(
+        "multiple ?code=REDACTED&token=REDACTED&refresh_token=REDACTED"
+    );
     expect(redactSensitiveString("")).toBe("");
     expect(redactSensitiveString(undefined)).toBe(undefined);
 });
@@ -317,4 +381,33 @@ test("white-label origins confirmed by the portal become navigable, over https o
         expect(isAllowedNavigationUrl("https://other.example/@/team/world/room", config)).toBe(false);
         expect(isAllowedNavigationUrl("http://plain.example/@/team/world/room", config)).toBe(false);
     });
+});
+
+test("rooms of the same world share a world key, whatever the room, query or hash", () => {
+    expect(worldKeyOf("https://play.workadventu.re/@/team/world/lobby")).toBe(
+        "https://play.workadventu.re/@/team/world"
+    );
+    expect(worldKeyOf("https://play.workadventu.re/@/team/world/office?token=abc#desk")).toBe(
+        "https://play.workadventu.re/@/team/world"
+    );
+    expect(worldKeyOf("https://play.workadventu.re/@/team/other/lobby")).not.toBe(
+        worldKeyOf("https://play.workadventu.re/@/team/world/lobby")
+    );
+});
+
+test("a server without an admin is one world, a public map is its own", () => {
+    expect(worldKeyOf("https://wa.example.com/~/maps/office.wam")).toBe("https://wa.example.com");
+    expect(worldKeyOf("https://wa.example.com/~/maps/garden.wam")).toBe("https://wa.example.com");
+    expect(worldKeyOf("https://play.workadventu.re/_/global/maps.example.com/office/map.json")).toBe(
+        "https://play.workadventu.re/_/global/maps.example.com/office/map.json"
+    );
+    expect(worldKeyOf("https://play.workadventu.re/_/global/maps.example.com/garden/map.json")).not.toBe(
+        worldKeyOf("https://play.workadventu.re/_/global/maps.example.com/office/map.json")
+    );
+});
+
+test("pages that are not rooms belong to no world", () => {
+    expect(worldKeyOf("https://play.workadventu.re/login-screen")).toBeUndefined();
+    expect(worldKeyOf("file:///Applications/WorkAdventure.app/assets/landing/index.html")).toBeUndefined();
+    expect(worldKeyOf("")).toBeUndefined();
 });

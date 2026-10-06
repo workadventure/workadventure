@@ -1,7 +1,7 @@
 import { BrowserWindow, WebContentsView } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
-import { formatWorldHistoryLabel } from "./desktop-url-policy";
+import { formatWorldHistoryLabel, worldKeyOf } from "./desktop-url-policy";
 import { createWorldViewWebPreferences } from "./world-view-policy";
 import { createMeetingTabs } from "./meeting-tab-policy";
 import { t } from "./i18n";
@@ -287,6 +287,12 @@ export function closeTab(id: string): void {
     }
     emitControllingChangeIfNeeded();
     emitChange();
+}
+
+/** The tab that shows the world `url` belongs to, if any. */
+export function findTabShowingWorld(url: string): WorldTab | undefined {
+    const key = worldKeyOf(url);
+    return key === undefined ? undefined : tabs.find((tab) => worldKeyOf(tab.url) === key);
 }
 
 export function getTabs(): WorldTab[] {
