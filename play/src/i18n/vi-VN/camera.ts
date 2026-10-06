@@ -94,7 +94,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "Thao tác khác",
         closeMenu: "Đóng menu",
         senPrivateMessage: "Gửi tin nhắn riêng (sắp ra mắt)",
-        kickoffUser: "Mời người dùng ra khỏi phòng",
         giveFloor: "Trao quyền phát biểu",
         revokeFloor: "Thu hồi quyền phát biểu",
         muteAudioUser: "Tắt tiếng",

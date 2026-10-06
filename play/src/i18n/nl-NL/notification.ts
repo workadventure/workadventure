@@ -13,6 +13,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     floorRevoked: "Je hebt niet langer het woord",
     floorGivenBack: "Je hebt het woord teruggegeven",
     handLowered: "Een moderator heeft je hand laten zakken",
+    removedFromConversation: "Een moderator heeft je uit het gesprek gehaald.",
     actionFailed: "Deze actie kon niet worden voltooid",
     notificationSentToMuteMicrophone: "Er is een melding verzonden naar {name} om de microfoon te dempen",
     notificationSentToMuteCamera: "Er is een melding verzonden naar {name} om de camera te dempen",

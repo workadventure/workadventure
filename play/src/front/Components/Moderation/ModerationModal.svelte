@@ -11,8 +11,18 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import { hasCapability } from "../../Connection/Capabilities";
+    import { mediaSynchronizedSpacesStore } from "../../Stores/PeerStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { meetingOf } from "../../Administration/CurrentMeeting";
     import { modals } from "@wa-modals";
-    import { IconAlertTriangle, IconChevronLeft, IconDoorExit, IconForbid, IconForbid2 } from "@wa-icons";
+    import {
+        IconAlertTriangle,
+        IconChevronLeft,
+        IconDoorExit,
+        IconForbid,
+        IconForbid2,
+        IconUserMinus,
+    } from "@wa-icons";
 
     interface Props {
         isOpen: boolean;
@@ -23,7 +33,7 @@
     let { isOpen, userUuid, userName }: Props = $props();
 
     /** Undefined on the list of actions, set once the moderator picked one. */
-    type Step = "report" | "kick" | "ban";
+    type Step = "report" | "remove" | "kick" | "ban";
     let step: Step | undefined = $state(undefined);
 
     let userIsBlocked = $state(false);
@@ -32,6 +42,14 @@
     let textIsEmpty = $state(false);
 
     const canReport = connectionManager.currentRoom?.canReport ?? false;
+
+    /**
+     * The conversations (bubble, meeting room, megaphone) the moderator shares with the user: removing them only
+     * makes sense from there, and the private event that does it goes through those spaces.
+     */
+    const sharedSpaces = $derived(
+        $mediaSynchronizedSpacesStore.filter((space) => space.getSpaceUserByUuid(userUuid) !== undefined),
+    );
 
     /** A ban locks out the account only, unless the moderator also bans the IP it connected from. */
     let banScope: "account" | "ip" = $state("account");
@@ -82,9 +100,25 @@
         modals.close();
     }
 
+    function removeFromConversation() {
+        for (const space of sharedSpaces) {
+            const spaceUser = space.getSpaceUserByUuid(userUuid);
+            if (spaceUser === undefined) {
+                continue;
+            }
+            analyticsClient.trackAdminEvent("meeting.participant.kicked", meetingOf(space));
+            spaceUser.emitPrivateEvent({
+                $case: "kickOffUser",
+                kickOffUser: {},
+            });
+        }
+    }
+
     function submit() {
         const connection = gameManager.getCurrentGameScene().connection;
-        if (step === "report") {
+        if (step === "remove") {
+            removeFromConversation();
+        } else if (step === "report") {
             if (text.trim() === "") {
                 textIsEmpty = true;
                 return;
@@ -113,6 +147,7 @@
 
 {#snippet forbidIcon()}<IconForbid font-size="24" />{/snippet}
 {#snippet alertIcon()}<IconAlertTriangle font-size="24" />{/snippet}
+{#snippet removeIcon()}<IconUserMinus font-size="24" />{/snippet}
 {#snippet doorIcon()}<IconDoorExit font-size="24" />{/snippet}
 {#snippet banIcon()}<IconForbid2 font-size="24" />{/snippet}
 {#snippet backIcon()}<IconChevronLeft font-size="20" />{/snippet}
@@ -147,6 +182,8 @@
             <h2 class="mb-0">
                 {#if step === "report"}
                     {$LL.report.title()}
+                {:else if step === "remove"}
+                    {$LL.report.moderate.remove.confirmTitle({ userName })}
                 {:else if step === "kick"}
                     {$LL.report.moderate.kick.confirmTitle({ userName })}
                 {:else if step === "ban"}
@@ -183,6 +220,15 @@
                         {$LL.report.moderate.adminOnly()}
                         <span class="h-px grow bg-white/20"></span>
                     </div>
+                    {#if sharedSpaces.length > 0}
+                        {@render actionRow(
+                            $LL.report.moderate.remove.title(),
+                            $LL.report.moderate.hint.remove(),
+                            removeIcon,
+                            () => pick("remove"),
+                            "moderation-remove-action",
+                        )}
+                    {/if}
                     {@render actionRow(
                         $LL.report.moderate.kick.title(),
                         $LL.report.moderate.hint.kick(),
@@ -204,6 +250,8 @@
                 <p class="mb-0 opacity-70">
                     {#if step === "report"}
                         {$LL.report.content()}
+                    {:else if step === "remove"}
+                        {$LL.report.moderate.remove.content({ userName })}
                     {:else if step === "kick"}
                         {$LL.report.moderate.kick.content({ userName })}
                     {:else}
@@ -265,16 +313,19 @@
                         {$LL.report.moderate.ban.confirmContent()}
                     </p>
                 {/if}
-                <TextArea
-                    label={step === "report" ? $LL.report.message.title() : $LL.report.moderate.reason.label()}
-                    placeHolder={step === "report" ? "" : $LL.report.moderate.reason.placeholder({ userName })}
-                    bind:value={text}
-                    optional={step !== "report"}
-                    height="h-[80px]"
-                    maxlength={500}
-                    onkeypress={() => (textIsEmpty = false)}
-                    dataTestId="moderation-text"
-                />
+                <!-- Removing someone from a conversation carries no message: the toast they get says it all. -->
+                {#if step !== "remove"}
+                    <TextArea
+                        label={step === "report" ? $LL.report.message.title() : $LL.report.moderate.reason.label()}
+                        placeHolder={step === "report" ? "" : $LL.report.moderate.reason.placeholder({ userName })}
+                        bind:value={text}
+                        optional={step !== "report"}
+                        height="h-[80px]"
+                        maxlength={500}
+                        onkeypress={() => (textIsEmpty = false)}
+                        dataTestId="moderation-text"
+                    />
+                {/if}
                 {#if textIsEmpty}
                     <p class="mb-0 flex flex-row items-center gap-2 font-semibold" role="alert">
                         <IconAlertTriangle font-size="20" class="shrink-0" />
@@ -297,6 +348,8 @@
         >
             {#if step === "report"}
                 {$LL.report.submit()}
+            {:else if step === "remove"}
+                {$LL.report.moderate.remove.submit()}
             {:else if step === "kick"}
                 {$LL.report.moderate.kick.submit()}
             {:else if banScope === "ip" && canBanIp && (ipPreview?.users.length ?? 0) > 0}
