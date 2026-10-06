@@ -1,18 +1,36 @@
-import { BrowserWindow } from "electron";
+import { BrowserWindow, screen } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
-import { resolveDisplay } from "./overlay-window";
 import settings from "./settings";
 import { COMPANION_MIN_HEIGHT, COMPANION_MIN_WIDTH, normalizeCompanionBounds } from "./companion-window-policy";
 import { shouldProtectWindowFromCapture } from "./content-protection";
 
 /**
  * Presenter HUD windows (Zoom-style), placed on the SHARED display while screen sharing. The
- * "meeting bar" (mic / camera / switch screen / stop share / annotate, plus its "…" menu and the
- * annotation toolbar panel) is frameless, always-on-top, draggable, and — crucially — content-
- * protected (`setContentProtection(true)`), so the presenter sees it but it is EXCLUDED from the
- * captured pixels. Only the transparent annotation overlay (a separate window) is captured.
+ * "meeting bar" (mic / camera / switch screen / stop share, plus its "…" menu) is frameless,
+ * always-on-top, draggable, and — crucially — content-protected (`setContentProtection(true)`), so
+ * the presenter sees it but it is EXCLUDED from the captured pixels.
  */
+
+/** The display with the given id, or the primary display when there is none (or no id). */
+function resolveDisplay(displayId: number | undefined, label = "HUD"): Electron.Display {
+    const all = screen.getAllDisplays();
+    if (typeof displayId === "number") {
+        const match = all.find((display) => display.id === displayId);
+        if (match) {
+            ElectronLog.info(`${label} target display ${match.id} bounds=${JSON.stringify(match.bounds)}`);
+            return match;
+        }
+        ElectronLog.warn(
+            `${label}: no display matches id ${displayId}; using primary. Available ids: ${all
+                .map((d) => d.id)
+                .join(", ")}`
+        );
+    } else {
+        ElectronLog.warn(`${label}: no displayId resolved; using primary display.`);
+    }
+    return screen.getPrimaryDisplay();
+}
 
 export type HudKind = "meeting-bar" | "companion";
 
@@ -94,24 +112,6 @@ export function sendHudState(kind: HudKind, state: unknown): void {
     const entry = hudWindows.get(kind);
     if (entry && !entry.window.isDestroyed() && entry.ready) {
         entry.window.webContents.send("app:hud:state", state);
-    }
-}
-
-/**
- * Force every open HUD window back to the top of its z-level. Called when another window at the
- * same always-on-top level (specifically the transparent annotation overlay) is shown after the
- * HUDs — otherwise the newcomer sits above them and swallows the presenter's clicks.
- */
-export function raiseHudsToTop(): void {
-    for (const entry of hudWindows.values()) {
-        if (entry.window.isDestroyed()) {
-            continue;
-        }
-        try {
-            entry.window.moveTop();
-        } catch (error) {
-            ElectronLog.debug("HUD moveTop failed", error);
-        }
     }
 }
 
@@ -222,11 +222,8 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         ElectronLog.debug(`HUD ${kind} setVisibleOnAllWorkspaces failed`, error);
     }
     try {
-        // relativeLevel +1 lifts the HUD one layer above the transparent overlay window (which
-        // also lives at "screen-saver"). Without this the overlay — opened asynchronously from
-        // the draw-mode subscription — lands on top of the HUD and, once draw mode captures
-        // pointer events, the presenter can no longer click the meeting-bar buttons: the clicks
-        // are absorbed by the overlay. macOS reads the relativeLevel; on
+        // relativeLevel +1 lifts the HUD one layer above other "screen-saver" windows, so they cannot
+        // land on top of it and absorb the presenter's clicks. macOS reads the relativeLevel; on
         // other platforms the second-layer bump is a no-op but the moveTop below still runs.
         newWindow.setAlwaysOnTop(true, "screen-saver", 1);
     } catch (error) {
@@ -245,9 +242,9 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         if (!newWindow.isDestroyed()) {
             // Never steal focus from the app the presenter is currently driving.
             newWindow.showInactive();
-            // Cross-platform belt-and-braces: even with the relativeLevel bump above, if the
-            // overlay was created just after the HUD, it can end up sitting above until the next
-            // window ordering event. moveTop() forces the HUD to the top of its level right now.
+            // Cross-platform belt-and-braces: even with the relativeLevel bump above, a window of the
+            // same level created just after the HUD can end up sitting above until the next window
+            // ordering event. moveTop() forces the HUD to the top of its level right now.
             newWindow.moveTop();
         }
     });
@@ -346,8 +343,8 @@ export function setMeetingBarExpanded(sender: Electron.WebContents, expanded: bo
     }
     const collapsed = HUD_SIZES["meeting-bar"].height;
     const bounds = entry.window.getBounds();
-    // Expanding: use the requested height (a short annotation panel asks for less than the full
-    // picker height), clamped between the collapsed pill and the tallest panel.
+    // Expanding: use the requested height (a short panel asks for less than the full picker
+    // height), clamped between the collapsed pill and the tallest panel.
     const requested = typeof height === "number" ? height : MEETING_BAR_EXPANDED_HEIGHT;
     const targetHeight = expanded ? Math.min(Math.max(requested, collapsed), MEETING_BAR_EXPANDED_HEIGHT) : collapsed;
     if (bounds.height === targetHeight) {

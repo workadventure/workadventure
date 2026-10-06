@@ -8,7 +8,6 @@ import settings from "./settings";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { setRendererPresence } from "./presence";
 import { closeCompanionPip, dismissCompanion, openCompanionForPip } from "./companion-controller";
-import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
 import {
     getControllingWorldContents,
     getDesktopWindowState,
@@ -22,17 +21,6 @@ import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle, s
 import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
 import { isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import { isPipWindowOpen, sendToPip } from "./pip-window";
-import {
-    awaitOverlayReady,
-    closeOverlayWindow,
-    createOverlayWindow,
-    getOverlayWindow,
-    isOverlayWindowOpen,
-    markOverlayReady,
-    sendToOverlay,
-    setOverlayDrawMode,
-    setOverlayKeyboardFocus,
-} from "./overlay-window";
 import {
     broadcastHudState,
     closeHudWindow,
@@ -70,7 +58,6 @@ type CapturerCacheEntry = {
     result: Array<{ id: string; name: string; thumbnailURL: string; display_id?: number }>;
 };
 const desktopCapturerCacheByFrame = new Map<string, CapturerCacheEntry>();
-let presenterToolGeneration = 0;
 let pipOwner: Electron.WebContents | undefined;
 
 const keepAwakeByTab = new Map<number, number>();
@@ -140,8 +127,8 @@ function sanitizeDesktopCapturerOptions(options: unknown): Electron.SourcesOptio
     };
 }
 
-/** Map a `screen:<id>:<n>` desktopCapturer source to its Electron Display.id, so the annotation
- * overlay covers the screen that is actually being shared. */
+/** Map a `screen:<id>:<n>` desktopCapturer source to its Electron Display.id, so the meeting bar
+ * goes on the screen that is actually being shared. */
 async function resolveDisplayIdFromScreenSource(sourceId: string): Promise<number | undefined> {
     try {
         const sources = await desktopCapturer.getSources({ types: ["screen"] });
@@ -285,54 +272,6 @@ export default () => {
         setActiveWorldTitle(title);
     });
 
-    // Presenter tools: start/stop global cursor tracking over the shared display. When a tool is
-    // active, main polls the cursor and streams normalized positions back to the renderer, which
-    // broadcasts them to viewers over the space. tool === "none" (or empty) stops tracking.
-    ipcMain.on("app:presenter:setTool", (event, payload: unknown) => {
-        if (!isFromMainRenderer(event)) {
-            return;
-        }
-        const generation = ++presenterToolGeneration;
-        const raw = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
-        const tool = typeof raw.tool === "string" ? raw.tool : "none";
-        const sourceId = typeof raw.sourceId === "string" ? raw.sourceId : undefined;
-        if (tool !== "laser" && tool !== "spotlight" && tool !== "loupe") {
-            stopPresenterCursor();
-            sendToOverlay("app:overlay:presenter-effect", { tool: "none", x: 0, y: 0, scale: 0, active: false });
-            return;
-        }
-        void (async () => {
-            let displayId = typeof raw.displayId === "number" ? raw.displayId : undefined;
-            // Resolve the display from the capture source when display_id is missing (e.g. Wayland),
-            // so the cursor is normalized against the SHARED screen, not the primary one.
-            if (displayId === undefined && sourceId && sourceId.startsWith("screen:")) {
-                displayId = await resolveDisplayIdFromScreenSource(sourceId);
-                // A newer tool choice, or a tab switch (which stops the cursor), happened meanwhile.
-                if (generation !== presenterToolGeneration || !isFromMainRenderer(event)) {
-                    return;
-                }
-            }
-            startPresenterCursor(displayId, (x, y, point) => {
-                // → the world renderer, which broadcasts to viewers over the space. Viewers map this
-                // onto the full shared-display video, so the display-normalized (x, y) is right for them.
-                getControllingWorldContents()?.send("app:on-presenter-cursor", { x, y });
-                // → the content-protected overlay, so the PRESENTER sees the effect locally over the
-                // shared app (not captured, so viewers don't get a doubled render). The overlay window
-                // does NOT always cover the whole display (on macOS the menu-bar strip is excluded), so
-                // the display-normalized (x, y) would draw the dot off the real cursor. Re-normalize the
-                // raw cursor against the overlay's actual on-screen rect so it sits on the cursor tip.
-                const overlay = getOverlayWindow();
-                if (!overlay || overlay.isDestroyed()) {
-                    return;
-                }
-                const rect = overlay.getContentBounds();
-                const ox = rect.width > 0 ? Math.min(1, Math.max(0, (point.x - rect.x) / rect.width)) : x;
-                const oy = rect.height > 0 ? Math.min(1, Math.max(0, (point.y - rect.y) / rect.height)) : y;
-                sendToOverlay("app:overlay:presenter-effect", { tool, x: ox, y: oy, scale: 0, active: true });
-            });
-        })();
-    });
-
     ipcMain.handle("app:getDesktopCapturerSources", async (event, options: unknown) => {
         const config = getDesktopConfig();
         const senderFrame = event.senderFrame;
@@ -362,7 +301,7 @@ export default () => {
             name: source.name,
             thumbnailURL: source.thumbnail.toDataURL(),
             // Electron exposes display_id (as a string) for screen sources; used to place the
-            // annotation overlay on the correct display.
+            // meeting bar on the correct display.
             display_id: source.display_id ? Number(source.display_id) : undefined,
         }));
         // Entries only serve the throttle window: drop the stale ones (frames of closed tabs and
@@ -640,88 +579,9 @@ export default () => {
         sendToPip("app:pip:state-to-pip", state);
     });
 
-    // ---- Screen-annotation overlay (transparent, always-on-top, click-through) ----
-    // A real desktop window that covers the shared screen; captured by getDisplayMedia so strokes
-    // are baked into the shared pixels. Draw ops from the presenter are relayed to the main renderer,
-    // which routes them through the normal Space-event annotation sync.
-    function isFromOverlayRenderer(event: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent): boolean {
-        const overlayWin = getOverlayWindow();
-        return Boolean(overlayWin) && !overlayWin!.isDestroyed() && event.sender === overlayWin!.webContents;
-    }
-
-    ipcMain.handle("app:overlay:open", async (event, opts: unknown) => {
-        if (!isFromMainRenderer(event)) {
-            ElectronLog.warn("Rejected overlay open from non-main renderer");
-            return false;
-        }
-        const options = (opts && typeof opts === "object" ? opts : {}) as { displayId?: unknown; sourceId?: unknown };
-        let displayId = typeof options.displayId === "number" ? options.displayId : undefined;
-        // Cover the screen that is actually being shared (not the primary display).
-        if (displayId === undefined && typeof options.sourceId === "string" && options.sourceId.startsWith("screen:")) {
-            displayId = await resolveDisplayIdFromScreenSource(options.sourceId);
-        }
-        ElectronLog.info(
-            `overlay:open sourceId=${String(options.sourceId)} displayIdIn=${String(
-                options.displayId
-            )} resolvedDisplayId=${String(displayId)}`
-        );
-        if (!isOverlayWindowOpen()) {
-            const owner = event.sender;
-            createOverlayWindow({
-                displayId,
-                onClosed: () => {
-                    // To the world that opened it: by the time it closes, another tab may be active.
-                    if (!owner.isDestroyed()) {
-                        owner.send("app:overlay:exit-to-main");
-                    }
-                },
-            });
-        }
-        await awaitOverlayReady();
-        return true;
-    });
-
-    ipcMain.handle("app:overlay:close", (event) => {
-        if (!isFromMainRenderer(event)) return;
-        closeOverlayWindow();
-    });
-
-    // Main renderer → overlay renderer
-    ipcMain.on("app:overlay:set-draw-mode", (event, enabled: unknown) => {
-        if (!isFromMainRenderer(event) || !isOverlayWindowOpen()) return;
-        setOverlayDrawMode(enabled === true);
-        sendToOverlay("app:overlay:draw-mode", enabled === true);
-    });
-    ipcMain.on("app:overlay:set-tool", (event, tool: unknown) => {
-        if (!isFromMainRenderer(event) || !isOverlayWindowOpen()) return;
-        sendToOverlay("app:overlay:tool", tool);
-    });
-    ipcMain.on("app:overlay:set-elements", (event, elements: unknown) => {
-        if (!isFromMainRenderer(event) || !isOverlayWindowOpen()) return;
-        sendToOverlay("app:overlay:elements", elements);
-    });
-
-    // Overlay renderer → main renderer (active world view)
-    ipcMain.on("app:overlay:draw-from-overlay", (event, op: unknown) => {
-        if (!isFromOverlayRenderer(event)) return;
-        getControllingWorldContents()?.send("app:overlay:draw-to-main", op);
-    });
-    ipcMain.on("app:overlay:request-exit", (event) => {
-        if (!isFromOverlayRenderer(event)) return;
-        getControllingWorldContents()?.send("app:overlay:exit-to-main");
-    });
-    ipcMain.on("app:overlay:set-keyboard-focus", (event, enabled: unknown) => {
-        if (!isFromOverlayRenderer(event)) return;
-        setOverlayKeyboardFocus(enabled === true);
-    });
-    ipcMain.on("app:overlay:ready", (event) => {
-        if (!isFromOverlayRenderer(event)) return;
-        markOverlayReady();
-    });
-
-    // ---- Presenter HUD (meeting bar + annotation bar) ----
-    // Two content-protected floating windows placed on the SHARED display: the presenter sees
-    // them, the captured stream does not. State is pushed from the main renderer; user actions
+    // ---- Presenter HUD (meeting bar) ----
+    // A content-protected floating window placed on the SHARED display: the presenter sees it,
+    // the captured stream does not. State is pushed from the main renderer; user actions
     // come back as commands (same union as the PiP commands).
     async function resolveHudDisplayId(opts: unknown): Promise<number | undefined> {
         const options = (opts && typeof opts === "object" ? opts : {}) as { displayId?: unknown; sourceId?: unknown };

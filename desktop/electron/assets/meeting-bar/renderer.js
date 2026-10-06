@@ -1,8 +1,8 @@
 // Meeting bar renderer (sandboxed, vanilla JS).
 //
 // Zoom-style presenter controls floating on the SHARED screen. Compact bar (mic / camera /
-// screen-share / annotate / more) with an overflow "…" menu (presenter tools, switch source,
-// change devices, display tabs, settings, back to the app). The window is content-protected in
+// screen-share / more) with an overflow "…" menu (switch source, change devices, display tabs,
+// settings, back to the app). The window is content-protected in
 // the main process, so none of this UI leaks into the captured stream. Thin, stateless client:
 // state is pushed by the WorkAdventure renderer, every click goes back as a command.
 (function () {
@@ -61,12 +61,10 @@
     var btnMic = byId("bar-mic");
     var btnCam = byId("bar-cam");
     var btnStop = byId("bar-stop");
-    var btnAnnotate = byId("bar-annotate");
     var btnMore = byId("bar-more");
 
     var menu = byId("menu");
     var menuCaret = byId("mn-caret");
-    var miLaser = byId("mn-laser");
     var miSwitch = byId("mn-switch");
     var miDevices = byId("mn-devices");
     var miTabs = byId("mn-tabs");
@@ -81,27 +79,14 @@
     var dvBody = byId("dv-body");
     var dvCancel = byId("dv-cancel");
 
-    var annotationPanel = byId("annotation");
-    var anCaret = byId("an-caret");
-    var anTools = annotationPanel.querySelectorAll("[data-tool]");
-    var anColors = annotationPanel.querySelectorAll("[data-color]");
-    var anUndo = byId("an-undo");
-    var anRedo = byId("an-redo");
-    var anEye = byId("an-eye");
-    var anOthers = byId("an-others");
-
     var pickerOpen = false;
     var menuOpen = false;
     var devicesOpen = false;
-    var annotationActive = false;
     var pickerKind = "screen";
     var lastSources = [];
     var lastDevices = null;
     var lastCamEnabled = false;
     var lastMicEnabled = false;
-    // The annotation panel is a single short row; grow the window just enough to clear the pill so
-    // the transparent area above it doesn't blanket (and swallow clicks over) the shared screen.
-    var ANNOTATION_EXPAND_HEIGHT = 128;
 
     function setBtnState(btn, isOn, forbiddenWhenOff) {
         btn.dataset.state = isOn ? "on" : "off";
@@ -115,29 +100,9 @@
         setBtnState(btnCam, state.cameraEnabled === true, true);
         lastMicEnabled = state.micEnabled === true;
         lastCamEnabled = state.cameraEnabled === true;
-        var annotation = state.annotation || {};
-        setBtnState(btnAnnotate, annotation.active === true, false);
-        // Annotation toolbar (a panel of this window): reflect the active tool / colour / toggles.
-        annotationActive = annotation.active === true;
-        anTools.forEach(function (b) {
-            b.classList.toggle("is-active", b.getAttribute("data-tool") === annotation.tool);
-        });
-        anColors.forEach(function (b) {
-            b.classList.toggle("is-active", b.getAttribute("data-color") === annotation.color);
-        });
-        anEye.dataset.state = annotation.locallyHidden === true ? "off" : "on";
-        anEye.classList.toggle("is-active", annotation.locallyHidden === true);
-        anOthers.classList.toggle("is-active", annotation.othersCanDraw === true);
-        // Grey out undo / redo when there is nothing to undo / redo.
-        anUndo.disabled = annotation.canUndo !== true;
-        anRedo.disabled = annotation.canRedo !== true;
-        // Cursor highlight (laser) — the only presenter tool left in the "…" menu, shown as a switch.
-        var presenterTool = state.presenterTool || "none";
-        miLaser.setAttribute("aria-checked", presenterTool === "laser" ? "true" : "false");
         lastDevices = state.devices || null;
         if (devicesOpen) renderDevices();
         miTabs.setAttribute("aria-checked", state.tabBarEnabled === true ? "true" : "false");
-        syncAnnotationPanel();
     });
 
     btnMic.addEventListener("click", function () {
@@ -149,56 +114,12 @@
     btnStop.addEventListener("click", function () {
         api.sendCommand({ type: "toggle-screenshare" });
     });
-    btnAnnotate.addEventListener("click", function () {
-        api.sendCommand({ type: "annotation-toggle" });
-    });
 
-    // ─────────── Annotation toolbar (panel above the pill, like the "…" menu) ───────────
-    // Grow the window to the tallest open panel: the picker/menu need the full height, the short
-    // annotation row needs far less, and nothing open collapses back to the pill.
+    // Grow the window while the picker / devices panel / "…" menu is open, collapse it back to the
+    // pill otherwise.
     function updateExpanded() {
-        if (menuOpen || pickerOpen || devicesOpen) {
-            api.setExpanded(true);
-        } else if (annotationActive) {
-            api.setExpanded(true, ANNOTATION_EXPAND_HEIGHT);
-        } else {
-            api.setExpanded(false);
-        }
+        api.setExpanded(menuOpen || pickerOpen || devicesOpen);
     }
-    function positionAnnotationCaret() {
-        var pr = annotationPanel.getBoundingClientRect();
-        var ar = btnAnnotate.getBoundingClientRect();
-        anCaret.style.left = Math.round((ar.left + ar.right) / 2 - pr.left) + "px";
-    }
-    // The annotation panel yields to the transient "…" menu / pickers, then returns when they close.
-    function syncAnnotationPanel() {
-        var show = annotationActive && !menuOpen && !pickerOpen && !devicesOpen;
-        annotationPanel.classList.toggle("visible", show);
-        if (show) positionAnnotationCaret();
-        updateExpanded();
-    }
-    anTools.forEach(function (b) {
-        b.addEventListener("click", function () {
-            api.sendCommand({ type: "annotation-set-tool", tool: b.getAttribute("data-tool") });
-        });
-    });
-    anColors.forEach(function (b) {
-        b.addEventListener("click", function () {
-            api.sendCommand({ type: "annotation-set-color", color: b.getAttribute("data-color") });
-        });
-    });
-    anUndo.addEventListener("click", function () {
-        api.sendCommand({ type: "annotation-undo" });
-    });
-    anRedo.addEventListener("click", function () {
-        api.sendCommand({ type: "annotation-redo" });
-    });
-    anEye.addEventListener("click", function () {
-        api.sendCommand({ type: "annotation-toggle-local-hide" });
-    });
-    anOthers.addEventListener("click", function () {
-        api.sendCommand({ type: "annotation-toggle-others" });
-    });
 
     // ─────────── Overflow "…" menu ───────────
     function onMenuOutside(e) {
@@ -223,7 +144,7 @@
         if (devicesOpen) closeDevices();
         menuOpen = true;
         btnMore.setAttribute("aria-expanded", "true");
-        syncAnnotationPanel();
+        updateExpanded();
         positionMenu();
         document.addEventListener("mousedown", onMenuOutside, true);
     }
@@ -233,7 +154,7 @@
         btnMore.setAttribute("aria-expanded", "false");
         menu.classList.remove("visible");
         document.removeEventListener("mousedown", onMenuOutside, true);
-        syncAnnotationPanel();
+        updateExpanded();
     }
     btnMore.addEventListener("click", function () {
         if (menuOpen) closeMenu();
@@ -246,13 +167,6 @@
             fn();
         };
     }
-    miLaser.addEventListener("click", function () {
-        // Optimistic switch flip; the real state comes back in the pushed presenterTool.
-        var next = miLaser.getAttribute("aria-checked") !== "true";
-        miLaser.setAttribute("aria-checked", next ? "true" : "false");
-        api.sendCommand({ type: "presenter-set-tool", tool: "laser" });
-        closeMenu();
-    });
     miSwitch.addEventListener("click", function () {
         closeMenu();
         openPicker();
@@ -279,7 +193,7 @@
     function openPicker() {
         if (devicesOpen) closeDevices();
         pickerOpen = true;
-        syncAnnotationPanel();
+        updateExpanded();
         picker.classList.add("visible");
         pickerBody.className = "pk-body loading";
         pickerBody.textContent = t("meetingBar.loadingSources", "Loading sources…");
@@ -298,7 +212,7 @@
     function closePicker() {
         pickerOpen = false;
         picker.classList.remove("visible");
-        syncAnnotationPanel();
+        updateExpanded();
     }
 
     function renderPicker() {
@@ -354,7 +268,7 @@
     function openDevices() {
         if (pickerOpen) closePicker();
         devicesOpen = true;
-        syncAnnotationPanel();
+        updateExpanded();
         devicesEl.classList.add("visible");
         renderDevices();
         document.addEventListener("mousedown", onDevicesOutside, true);
@@ -364,7 +278,7 @@
         devicesOpen = false;
         devicesEl.classList.remove("visible");
         document.removeEventListener("mousedown", onDevicesOutside, true);
-        syncAnnotationPanel();
+        updateExpanded();
     }
     function addDeviceNote(text) {
         var note = document.createElement("div");
@@ -451,7 +365,6 @@
         if (menuOpen) closeMenu();
         else if (pickerOpen) closePicker();
         else if (devicesOpen) closeDevices();
-        else if (annotationActive) api.sendCommand({ type: "annotation-toggle" });
     });
 
     // Signal readiness AFTER all subscriptions are wired; the main process replays the last

@@ -8,7 +8,7 @@
     "main": "dist/main.js",
     "license": "SEE LICENSE IN LICENSE.txt",
     "scripts": {
-        "build": "tsup-node ./src/main.ts ./src/preload-app/preload.ts ./src/preload-overlay/preload.ts ./src/preload-hud/preload.ts ./src/preload-tabs/preload.ts ./src/preload-screen-identify/preload.ts",
+        "build": "tsup-node ./src/main.ts ./src/preload-app/preload.ts ./src/preload-hud/preload.ts ./src/preload-tabs/preload.ts ./src/preload-screen-identify/preload.ts",
         "dev": "npm run build -- --watch --onSuccess 'electron dist/main.js'",
         "bundle": "npm run build && electron-builder install-app-deps && electron-builder",
         "typecheck": "tsc --noEmit",
