@@ -74,7 +74,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "離席モード",
             explanation:
-                "ブラウザの WorkAdventure タブが表示されていない間、WorkAdventure は離席モードに切り替わります。",
+                "別のウィンドウやタブに切り替えると、WorkAdventure は離席モードに切り替わります（会話中や配信中を除く）。",
             cameraToggle: "離席モードでカメラをアクティブに保つ",
             microphoneToggle: "離席モードでマイクをアクティブに保つ",
         },

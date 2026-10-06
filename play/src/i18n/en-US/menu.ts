@@ -73,7 +73,7 @@ const menu: BaseTranslation = {
         privacySettings: {
             title: "Away mode",
             explanation:
-                'While the WorkAdventure tab in your browser is not visible. WorkAdventure switches to "away mode"',
+                'When you switch to another window or tab, WorkAdventure switches to "away mode", except during a conversation or a broadcast.',
             cameraToggle: 'Keep camera active in "away mode"',
             microphoneToggle: 'Keep microphone active in "away mode"',
         },

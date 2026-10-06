@@ -76,7 +76,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
         privacySettings: {
             title: "Abwesenheitsmodus",
-            explanation: "Falls der WorkAdventure-Tab nicht aktiv ist, wird in den „Abwesenheitsmodus“ umgeschaltet.",
+            explanation:
+                "Wenn Sie zu einem anderen Fenster oder Tab wechseln, schaltet WorkAdventure in den „Abwesenheitsmodus“, außer während eines Gesprächs oder einer Übertragung.",
             cameraToggle: "Kamera im „Abwesenheitsmodus“ aktiviert lassen.",
             microphoneToggle: "Mikrofon im „Abwesenheitsmodus“ aktiviert lassen.",
         },

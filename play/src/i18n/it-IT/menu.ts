@@ -76,7 +76,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "Modalità assente",
             explanation:
-                'Quando la scheda WorkAdventure nel tuo browser non è visibile, WorkAdventure passa alla modalità "assente"',
+                'Quando passi a un\'altra finestra o scheda, WorkAdventure passa alla modalità "assente", tranne durante una conversazione o una trasmissione.',
             cameraToggle: 'Mantieni la fotocamera attiva in modalità "assente"',
             microphoneToggle: 'Mantieni il microfono attivo in modalità "assente"',
         },

@@ -76,7 +76,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "Mode no present",
             explanation:
-                'Quan la pestanya de WorkAdventure al seu navegador no és visible, WorkAdventure cambia al "mode no present"',
+                'En canviar a una altra finestra o pestanya, WorkAdventure passa al "mode no present", excepte durant una conversa o una emissió.',
             cameraToggle: 'Mantenir la càmera activa en "mode no present"',
             microphoneToggle: 'Mantenir el micròfon actiu en "mode no present"',
         },

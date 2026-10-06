@@ -75,7 +75,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "Afwezigheidsmodus",
             explanation:
-                'Wanneer het WorkAdventure-tabblad in je browser niet zichtbaar is, schakelt WorkAdventure over naar de "afwezigheidsmodus"',
+                'Wanneer je naar een ander venster of tabblad gaat, schakelt WorkAdventure over naar de "afwezigheidsmodus", behalve tijdens een gesprek of een uitzending.',
             cameraToggle: 'Houd camera actief in "afwezigheidsmodus"',
             microphoneToggle: 'Houd microfoon actief in "afwezigheidsmodus"',
         },

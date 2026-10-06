@@ -74,7 +74,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
         privacySettings: {
             title: "modus njepřitomnosće",
-            explanation: 'Jeli Work Adventure Tab aktiwny njeje, so do „modusa njepřitomnosće" přešaltuje.',
+            explanation:
+                'Hdyž do druheho wokna abo taba přeńdźeće, so do „modusa njepřitomnosće" přešaltuje, nic pak w rozmołwje abo při wusyłanju.',
             cameraToggle: 'Kameru w „modusu njepřitomnosće" aktiwěrowanu wostajić.',
             microphoneToggle: 'Mikrofon w „modusu njepřitomnosće" aktiwěrowany wostajić.',
         },
