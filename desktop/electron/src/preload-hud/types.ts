@@ -1,4 +1,4 @@
-// Protocol between the main process and the presenter HUD windows (meeting bar + annotation bar).
+// Protocol between the main process and the presenter HUD windows (meeting bar, companion).
 // Kept dependency-free so the sandboxed HUD renderers stay isolated.
 
 /** Mirrors DesktopPresenterHudState in preload-app/types.ts (and the play front). */
@@ -6,17 +6,6 @@ export type HudState = {
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;
-    annotation: {
-        active: boolean;
-        tool: string;
-        color: string;
-        othersCanDraw: boolean;
-        locallyHidden: boolean;
-        canUndo: boolean;
-        canRedo: boolean;
-    };
-    /** Active presenter tool: "none" | "laser" | "spotlight" | "loupe". */
-    presenterTool?: string;
     /** Available cam/mic input devices + current selection, for the "Change cam / mic" picker. */
     devices?: {
         cameras: { id: string; label: string }[];
@@ -36,15 +25,6 @@ export type HudCommand =
     | { type: "pick-source"; sourceId: string; sourceName: string; displayId?: number }
     | { type: "focus-main" }
     | { type: "toggle-tabs" }
-    | { type: "annotation-toggle" }
-    | { type: "annotation-set-tool"; tool: string }
-    | { type: "annotation-set-color"; color: string }
-    | { type: "annotation-undo" }
-    | { type: "annotation-redo" }
-    | { type: "annotation-clear" }
-    | { type: "annotation-toggle-local-hide" }
-    | { type: "annotation-toggle-others" }
-    | { type: "presenter-set-tool"; tool: string }
     | { type: "pick-device"; kind: "camera" | "microphone"; deviceId: string };
 
 export type HudSource = {
@@ -56,7 +36,7 @@ export type HudSource = {
 };
 
 export type WorkAdventureHudApi = {
-    /** Full presenter state (mic/camera/share/annotation), pushed on every change. */
+    /** Full presenter state (mic/camera/share/devices), pushed on every change. */
     onState: (callback: (state: HudState) => void) => () => void;
     /** Send a user action back to the WorkAdventure renderer. */
     sendCommand: (command: HudCommand) => void;
@@ -64,8 +44,8 @@ export type WorkAdventureHudApi = {
     requestSources: () => Promise<HudSource[]>;
     /**
      * Grow/shrink the meeting bar window so a panel fits (bottom edge stays anchored). `height` is
-     * the target window height when expanding — a short panel (the annotation bar) passes a small
-     * value so the window doesn't blanket the shared screen with a click-catching transparent area.
+     * the target window height when expanding — a short panel passes a small value so the window
+     * doesn't blanket the shared screen with a click-catching transparent area.
      */
     setExpanded: (expanded: boolean, height?: number) => void;
     /**
