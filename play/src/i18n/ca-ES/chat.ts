@@ -19,7 +19,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "Afegir amic",
     },
     loader: "Carregant...",
-    typing: "està escrivint...",
     users: "Usuaris",
     chat: "Xat",
     userList: {
@@ -132,7 +131,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "Escriu el teu missatge...",
-        typing: " està escrivint...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -192,26 +190,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "Reenviar",
     delete: "Eliminar",
     messageDeleted: "Missatge eliminat",
-    emoji: {
-        icon: "Icona per obrir o tancar la finestra emergent d'emoji seleccionat",
-        search: "Cercar emojis...",
-        categories: {
-            recents: "Emojis recents",
-            smileys: "Cares somrients i emocions",
-            people: "Persones i cos",
-            animals: "Animals i natura",
-            food: "Menjar i begudes",
-            activities: "Activitats",
-            travel: "Viatges i llocs",
-            objects: "Objectes",
-            symbols: "Símbols",
-            flags: "Banderes",
-            custom: "Personalitzat",
-        },
-        notFound: "No s'han trobat emojis",
-    },
-    said: "ha dit:",
-    reply: "Respondre",
     replyTo: "Respondre a",
     thread: {
         panelTitle: "Tots els fils",
@@ -228,9 +206,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "L'inici d'aquesta conversa no està disponible. Encara podeu llegir i respondre.",
         openError: "No s'ha pogut obrir aquest fil.",
     },
-    react: "Reaccionar",
-    copy: "Copiar",
-    copied: "Copiat!",
     poll: {
         title: "Enquesta",
         closed: "Enquesta tancada.",
@@ -293,15 +268,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "Mostra totes les preguntes",
     },
     file: {
-        fileContentNoEmbed: "El contingut no està disponible per visualitzar. Si us plau, descarregueu-lo",
-        download: "descarregar",
-        openCoWebsite: "Obrir en co-website",
         loadingAttachment: "S'està carregant el fitxer adjunt...",
         attachmentDownloadError: "No s'ha pogut descarregar aquest fitxer adjunt.",
         attachmentDecryptError: "No s'ha pogut desxifrar aquest fitxer adjunt.",
-        copy: "copiar l'enllaç",
-        tooBig: "{fileName} és massa gran {maxFileSize}.",
-        notLogged: "Necessiteu iniciar sessió per pujar un fitxer.",
     },
     needRefresh: "La vostra connexió ha expirat, necessiteu actualitzar la pàgina per tornar-vos a connectar al xat.",
     refresh: "Actualitzar",

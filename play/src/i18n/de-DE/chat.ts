@@ -19,7 +19,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "Freund*in hinzufügen",
     },
     loader: "Lädt...",
-    typing: "schreibt...",
     users: "Benutzer",
     chat: "Chat",
     userList: {
@@ -134,7 +133,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "Gib deine Nachricht ein...",
-        typing: " tippt...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -194,26 +192,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "Zurücksenden",
     delete: "Löschen",
     messageDeleted: "Nachricht gelöscht",
-    emoji: {
-        icon: "Emojis",
-        search: "Emojis suchen...",
-        categories: {
-            recents: "Zuletzt verwendet",
-            smileys: "Smileys & Emotionen",
-            people: "Personen & Körper",
-            animals: "Tiere & Natur",
-            food: "Essen & Trinken",
-            activities: "Aktivitäten",
-            travel: "Reisen & Orte",
-            objects: "Objekte",
-            symbols: "Symbole",
-            flags: "Flaggen",
-            custom: "Benutzerdefiniert",
-        },
-        notFound: "Keine Emojis gefunden",
-    },
-    said: "sagte:",
-    reply: "Antworten",
     replyTo: "Antworten auf",
     thread: {
         panelTitle: "Alle Threads",
@@ -230,9 +208,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "Der Anfang dieser Unterhaltung ist nicht verfügbar. Sie können dennoch lesen und antworten.",
         openError: "Dieser Thread konnte nicht geöffnet werden.",
     },
-    react: "Reagieren",
-    copy: "Kopieren",
-    copied: "Kopiert!",
     poll: {
         title: "Umfrage",
         closed: "Umfrage geschlossen.",
@@ -295,15 +270,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "Alle Fragen anzeigen",
     },
     file: {
-        fileContentNoEmbed: "Inhalt nicht verfügbar. Bitte herunterladen",
-        download: "Herunterladen",
-        openCoWebsite: "In Co-Website öffnen",
         loadingAttachment: "Anhang wird geladen...",
         attachmentDownloadError: "Dieser Anhang konnte nicht heruntergeladen werden.",
         attachmentDecryptError: "Dieser Anhang konnte nicht entschlüsselt werden.",
-        copy: "Link kopieren",
-        tooBig: "{fileName} ist zu groß {maxFileSize}.",
-        notLogged: "Sie müssen angemeldet sein, um eine Datei hochzuladen.",
     },
     needRefresh:
         "Ihre Verbindung ist abgelaufen. Bitte aktualisieren Sie die Seite, um die Verbindung zum Chat wiederherzustellen.",

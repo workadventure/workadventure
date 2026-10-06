@@ -19,7 +19,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "ともだち登録",
     },
     loader: "読み込み中...",
-    typing: "が入力中...",
     users: "ユーザー",
     chat: "チャット",
     userList: {
@@ -133,7 +132,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "メッセージを入力...",
-        typing: " 入力中...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -193,26 +191,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "再送信",
     delete: "削除",
     messageDeleted: "メッセージの削除",
-    emoji: {
-        icon: "Emojis",
-        search: "絵文字の検索...",
-        categories: {
-            recents: "最近使った絵文字",
-            smileys: "スマイリーとエモーション",
-            people: "ピープル",
-            animals: "動物と自然",
-            food: "フードとドリンク",
-            activities: "アクティビティ",
-            travel: "旅行と場所",
-            objects: "物",
-            symbols: "記号",
-            flags: "フラッグ",
-            custom: "カスタム",
-        },
-        notFound: "絵文字が見つかりません",
-    },
-    said: "と言いました:",
-    reply: "返信する",
     replyTo: "返信先",
     thread: {
         panelTitle: "すべてのスレッド",
@@ -229,9 +207,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "この会話の冒頭は利用できません。読み取りと返信は引き続き可能です。",
         openError: "このスレッドを開けませんでした。",
     },
-    react: "反応する",
-    copy: "コピーする",
-    copied: "コピーしました",
     poll: {
         title: "投票",
         closed: "投票は終了しました。",
@@ -294,15 +269,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "すべての質問を表示",
     },
     file: {
-        fileContentNoEmbed: "コンテンツを閲覧できません。ダウンロードしてください。",
-        download: "ダウンロード",
-        openCoWebsite: "共同ウェブサイトで開く",
         loadingAttachment: "Loading attachment...",
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "この添付ファイルを復号できません。",
-        copy: "リンクをコピーする",
-        tooBig: "{fileName} は大きすぎます {maxFileSize}。",
-        notLogged: "ファイルをアップロードするにはログインする必要があります。",
     },
     needRefresh: "接続が切れました。チャットに再接続するには、ページを更新する必要があります。",
     refresh: "更新",

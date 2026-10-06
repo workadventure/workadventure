@@ -19,7 +19,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "Aggiungi amico",
     },
     loader: "Caricamento...",
-    typing: "sta scrivendo...",
     users: "Utenti",
     chat: "Chat",
     userList: {
@@ -133,7 +132,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "Inserisci il tuo messaggio...",
-        typing: " sta scrivendo...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -193,26 +191,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "Rimanda indietro",
     delete: "Elimina",
     messageDeleted: "Messaggio eliminato",
-    emoji: {
-        icon: "Emojis",
-        search: "Cerca emoji...",
-        categories: {
-            recents: "Emoji recenti",
-            smileys: "Faccine & Emozioni",
-            people: "Persone & Corpo",
-            animals: "Animali & Natura",
-            food: "Cibo & Bevande",
-            activities: "Attività",
-            travel: "Viaggi & Luoghi",
-            objects: "Oggetti",
-            symbols: "Simboli",
-            flags: "Bandiere",
-            custom: "Personalizzato",
-        },
-        notFound: "Nessuna emoji trovata",
-    },
-    said: "ha detto:",
-    reply: "Rispondi",
     replyTo: "Rispondi a",
     thread: {
         panelTitle: "Tutti i thread",
@@ -229,9 +207,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "L'inizio di questa conversazione non è disponibile. Puoi comunque leggere e rispondere.",
         openError: "Impossibile aprire questo thread.",
     },
-    react: "Reagisci",
-    copy: "Copia",
-    copied: "Copiato!",
     poll: {
         title: "Sondaggio",
         closed: "Sondaggio chiuso.",
@@ -294,15 +269,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "Vedi tutte le domande",
     },
     file: {
-        fileContentNoEmbed: "Contenuto non disponibile per la visualizzazione. Si prega di scaricarlo",
-        download: "scarica",
-        openCoWebsite: "Apri nel co-sito",
         loadingAttachment: "Caricamento allegato...",
         attachmentDownloadError: "Impossibile scaricare questo allegato.",
         attachmentDecryptError: "Impossibile decriptare questo allegato.",
-        copy: "copia il link",
-        tooBig: "{fileName} è troppo grande {maxFileSize}.",
-        notLogged: "Devi essere loggato per caricare un file.",
     },
     needRefresh: "La tua connessione è scaduta, devi aggiornare la pagina per riconnetterti alla chat.",
     refresh: "Aggiorna",

@@ -19,7 +19,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "Voeg vriend toe",
     },
     loader: "Laden...",
-    typing: "is aan het typen...",
     users: "Gebruikers",
     chat: "Chat",
     userList: {
@@ -133,7 +132,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "Voer je bericht in...",
-        typing: " aan het typen...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -193,26 +191,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "Terugsturen",
     delete: "Verwijderen",
     messageDeleted: "Bericht verwijderd",
-    emoji: {
-        icon: "Emojis",
-        search: "Zoek emoji's...",
-        categories: {
-            recents: "Recente Emoji's",
-            smileys: "Smileys & Emotie",
-            people: "Mensen & Lichaam",
-            animals: "Dieren & Natuur",
-            food: "Eten & Drinken",
-            activities: "Activiteiten",
-            travel: "Reizen & Plaatsen",
-            objects: "Objecten",
-            symbols: "Symbolen",
-            flags: "Vlaggen",
-            custom: "Aangepast",
-        },
-        notFound: "Geen emoji's gevonden",
-    },
-    said: "zei:",
-    reply: "Antwoorden",
     replyTo: "Antwoorden op",
     thread: {
         panelTitle: "Alle threads",
@@ -229,9 +207,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "Het begin van dit gesprek is niet beschikbaar. Je kunt nog steeds lezen en antwoorden.",
         openError: "Kan deze thread niet openen.",
     },
-    react: "Reageren",
-    copy: "Kopiëren",
-    copied: "Gekopieerd!",
     poll: {
         title: "Peiling",
         closed: "Peiling gesloten.",
@@ -294,15 +269,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "Alle vragen bekijken",
     },
     file: {
-        fileContentNoEmbed: "Inhoud niet beschikbaar om te bekijken. Download het alstublieft.",
-        download: "download",
-        openCoWebsite: "Openen in co-website",
         loadingAttachment: "Bijlage laden...",
         attachmentDownloadError: "Kan deze bijlage niet downloaden.",
         attachmentDecryptError: "Kan deze bijlage niet ontsleutelen.",
-        copy: "kopieer de link",
-        tooBig: "{fileName} is te groot {maxFileSize}.",
-        notLogged: "Je moet ingelogd zijn om een bestand te uploaden.",
     },
     needRefresh: "Je verbinding is verlopen, je moet de pagina verversen om opnieuw verbinding te maken met de chat.",
     refresh: "Verversen",

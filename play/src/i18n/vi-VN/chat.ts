@@ -19,7 +19,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "Kết bạn",
     },
     loader: "Đang tải...",
-    typing: "đang nhập...",
     users: "Người dùng",
     chat: "Trò chuyện",
     userList: {
@@ -132,7 +131,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "Nhập tin nhắn của bạn...",
-        typing: " đang nhập...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -192,26 +190,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "Gửi lại",
     delete: "Xóa",
     messageDeleted: "Tin nhắn đã bị xóa",
-    emoji: {
-        icon: "Biểu tượng mở hoặc đóng cửa sổ chọn biểu tượng cảm xúc",
-        search: "Tìm biểu tượng cảm xúc...",
-        categories: {
-            recents: "Dùng gần đây",
-            smileys: "Mặt cười & cảm xúc",
-            people: "Con người & cơ thể",
-            animals: "Động vật & thiên nhiên",
-            food: "Đồ ăn & thức uống",
-            activities: "Hoạt động",
-            travel: "Du lịch & địa điểm",
-            objects: "Đồ vật",
-            symbols: "Ký hiệu",
-            flags: "Cờ",
-            custom: "Tùy chỉnh",
-        },
-        notFound: "Không tìm thấy biểu tượng cảm xúc nào",
-    },
-    said: "đã nói :",
-    reply: "Trả lời",
     replyTo: "Trả lời",
     thread: {
         panelTitle: "Tất cả chuỗi tin nhắn",
@@ -228,9 +206,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "Phần đầu của cuộc trò chuyện này không khả dụng. Bạn vẫn có thể đọc và trả lời.",
         openError: "Không thể mở chuỗi tin nhắn này.",
     },
-    react: "Bày tỏ cảm xúc",
-    copy: "Sao chép",
-    copied: "Đã sao chép!",
     poll: {
         title: "Bình chọn",
         closed: "Bình chọn đã đóng.",
@@ -293,15 +268,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "Xem tất cả câu hỏi",
     },
     file: {
-        fileContentNoEmbed: "Nội dung không xem trực tiếp được. Vui lòng tải xuống",
-        download: "tải xuống",
-        openCoWebsite: "Mở trong co-website",
         loadingAttachment: "Đang tải tệp đính kèm...",
         attachmentDownloadError: "Không thể tải tệp đính kèm này.",
         attachmentDecryptError: "Không thể giải mã tệp đính kèm này.",
-        copy: "sao chép liên kết",
-        tooBig: "{fileName} quá lớn {maxFileSize}.",
-        notLogged: "Bạn cần đăng nhập để tải tệp lên.",
     },
     needRefresh: "Kết nối của bạn đã hết hạn, bạn cần tải lại trang để kết nối lại với trò chuyện.",
     refresh: "Tải lại",

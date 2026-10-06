@@ -17,7 +17,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "加好友",
     },
     loader: "載入中...",
-    typing: "正在輸入...",
     users: "使用者",
     chat: "聊天",
     userList: {
@@ -130,7 +129,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "輸入您的訊息...",
-        typing: " 正在輸入...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -190,26 +188,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "重新傳送",
     delete: "刪除",
     messageDeleted: "訊息已刪除",
-    emoji: {
-        icon: "開啟或關閉表情符號選擇彈出視窗的圖示",
-        search: "搜尋表情符號...",
-        categories: {
-            recents: "最近使用的表情符號",
-            smileys: "笑臉和表情",
-            people: "人物和身體",
-            animals: "動物和自然",
-            food: "食物和飲料",
-            activities: "活動",
-            travel: "旅行和地點",
-            objects: "物品",
-            symbols: "符號",
-            flags: "旗幟",
-            custom: "自訂",
-        },
-        notFound: "找不到表情符號",
-    },
-    said: "說：",
-    reply: "回覆",
     replyTo: "回覆",
     thread: {
         panelTitle: "所有討論串",
@@ -226,9 +204,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "此對話的開頭無法使用。您仍可閱讀和回覆。",
         openError: "無法開啟此討論串。",
     },
-    react: "反應",
-    copy: "複製",
-    copied: "已複製！",
     poll: {
         title: "投票",
         closed: "投票已結束。",
@@ -291,15 +266,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "查看所有問題",
     },
     file: {
-        fileContentNoEmbed: "內容無法檢視。請下載",
-        download: "下載",
-        openCoWebsite: "在協作網站中開啟",
         loadingAttachment: "正在載入附件...",
         attachmentDownloadError: "無法下載此附件。",
         attachmentDecryptError: "無法解密此附件。",
-        copy: "複製連結",
-        tooBig: "{fileName} 太大 {maxFileSize}。",
-        notLogged: "您需要登入才能上傳檔案。",
     },
     needRefresh: "您的連線已過期，需要重新整理頁面以重新連線到聊天。",
     refresh: "重新整理",
