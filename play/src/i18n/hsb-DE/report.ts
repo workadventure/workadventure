@@ -37,7 +37,7 @@ const report: DeepPartial<Translation["report"]> = {
         },
         remove: {
             title: "Z rozmołwy wotstronić",
-            content: "{userName} hnydom tutu rozmołwu wopušći, a wusyłanje so skónči, jeli běži. Wostanje w swěće.",
+            content: "{userName} hnydom tutu rozmołwu wopušći, a wusyłanje so skónči, jeli běži. Wostanje na karće.",
             submit: "Wotstronić",
             confirmTitle: "{userName} z rozmołwy wotstronić",
         },

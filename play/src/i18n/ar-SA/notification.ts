@@ -31,7 +31,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     screenSharingError: "تعذر بدء مشاركة الشاشة",
     floorGivenBack: "لقد أعدت الكلمة",
     handLowered: "قام أحد المشرفين بخفض يدك",
-    removedFromConversation: "أزالك مشرف من المحادثة. ما زلت على الخريطة.",
+    removedFromConversation: "أزالك مشرف من المحادثة.",
     actionFailed: "تعذر إكمال هذا الإجراء",
     notificationSentToMuteMicrophone: "تم إرسال إشعار إلى {name} لكتم ميكروفونه",
     notificationSentToMuteCamera: "تم إرسال إشعار إلى {name} لكتم كاميرته",

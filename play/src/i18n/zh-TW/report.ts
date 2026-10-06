@@ -37,7 +37,7 @@ const report: DeepPartial<Translation["report"]> = {
         },
         remove: {
             title: "移出對話",
-            content: "{userName} 會立即離開此對話，若正在直播則停止直播。仍留在世界中。",
+            content: "{userName} 會立即離開此對話，若正在直播則停止直播。仍留在地圖上。",
             submit: "移出對話",
             confirmTitle: "將 {userName} 移出對話",
         },

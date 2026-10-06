@@ -37,7 +37,7 @@ const report: DeepPartial<Translation["report"]> = {
         },
         remove: {
             title: "Z rozgrona wótpóraś",
-            content: "{userName} ned toś to rozgrono spušćijo, a wusyłanje se skóńcy, jolic běžy. Wóstanjo w swěśe.",
+            content: "{userName} ned toś to rozgrono spušćijo, a wusyłanje se skóńcy, jolic běžy. Wóstanjo na kórśe.",
             submit: "Wótpóraś",
             confirmTitle: "{userName} z rozgrona wótpóraś",
         },

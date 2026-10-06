@@ -14,7 +14,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     floorRevoked: "発言権がなくなりました",
     floorGivenBack: "発言権を返しました",
     handLowered: "モデレーターがあなたの手を下げました",
-    removedFromConversation: "モデレーターによって会話から外されました。マップにはまだいます。",
+    removedFromConversation: "モデレーターによって会話から外されました。",
     actionFailed: "この操作を完了できませんでした",
     notificationSentToMuteMicrophone: "{name} にマイクをミュートする通知が送信されました",
     notificationSentToMuteCamera: "{name} にカメラをミュートする通知が送信されました",

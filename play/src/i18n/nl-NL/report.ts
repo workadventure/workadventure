@@ -39,7 +39,7 @@ const report: DeepPartial<Translation["report"]> = {
         remove: {
             title: "Uit gesprek halen",
             content:
-                "{userName} verlaat dit gesprek meteen, en een lopende uitzending stopt. De persoon blijft in de wereld.",
+                "{userName} verlaat dit gesprek meteen. Als deze persoon live uitzendt, stopt die uitzending. De persoon blijft op de kaart.",
             submit: "Uit gesprek halen",
             confirmTitle: "{userName} uit het gesprek halen",
         },

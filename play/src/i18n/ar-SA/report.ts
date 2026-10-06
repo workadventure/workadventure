@@ -37,7 +37,7 @@ const report: DeepPartial<Translation["report"]> = {
         },
         remove: {
             title: "إزالة من المحادثة",
-            content: "يغادر {userName} هذه المحادثة فورًا، ويتوقف بثه إن كان مباشرًا. يبقى في العالم.",
+            content: "يغادر {userName} هذه المحادثة فورًا، ويتوقف بثه إن كان مباشرًا. يبقى على الخريطة.",
             submit: "إزالة",
             confirmTitle: "إزالة {userName} من المحادثة",
         },

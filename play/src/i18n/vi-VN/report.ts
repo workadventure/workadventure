@@ -38,7 +38,7 @@ const report: DeepPartial<Translation["report"]> = {
         remove: {
             title: "Cho rời cuộc trò chuyện",
             content:
-                "{userName} rời cuộc trò chuyện này ngay lập tức và ngừng phát trực tiếp nếu đang phát. Họ vẫn ở trong thế giới.",
+                "{userName} rời cuộc trò chuyện này ngay lập tức và ngừng phát trực tiếp nếu đang phát. Họ vẫn ở trên bản đồ.",
             submit: "Cho rời",
             confirmTitle: "Cho {userName} rời cuộc trò chuyện",
         },

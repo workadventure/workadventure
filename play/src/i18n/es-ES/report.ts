@@ -39,7 +39,7 @@ const report: DeepPartial<Translation["report"]> = {
         remove: {
             title: "Retirar",
             content:
-                "{userName} sale de esta conversación de inmediato y, si está en directo, su emisión se detiene. Sigue en el mundo.",
+                "{userName} sale de esta conversación de inmediato y, si está en directo, su emisión se detiene. Sigue en el mapa.",
             submit: "Retirar",
             confirmTitle: "Retirar a {userName}",
         },

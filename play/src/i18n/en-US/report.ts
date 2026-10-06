@@ -37,7 +37,7 @@ const report: BaseTranslation = {
         remove: {
             title: "Remove",
             content:
-                "{userName} leaves this conversation right away, and stops broadcasting if they are live. They stay in the world.",
+                "{userName} leaves this conversation right away and stops broadcasting if they are live. They stay on the map.",
             submit: "Remove",
             confirmTitle: "Remove {userName}",
         },

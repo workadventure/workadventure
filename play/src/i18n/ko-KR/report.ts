@@ -37,7 +37,7 @@ const report: DeepPartial<Translation["report"]> = {
         },
         remove: {
             title: "대화에서 제외",
-            content: "{userName}님은 즉시 이 대화에서 나가며, 방송 중이면 방송이 중지됩니다. 월드에는 남아 있습니다.",
+            content: "{userName}님은 즉시 이 대화에서 나가며, 방송 중이면 방송이 중지됩니다. 지도에는 남아 있습니다.",
             submit: "제외",
             confirmTitle: "{userName} 대화에서 제외",
         },

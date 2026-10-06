@@ -38,7 +38,7 @@ const report: DeepPartial<Translation["report"]> = {
         remove: {
             title: "Aus Gespräch nehmen",
             content:
-                "{userName} verlässt dieses Gespräch sofort, und eine laufende Übertragung wird beendet. Die Person bleibt in der Welt.",
+                "{userName} verlässt dieses Gespräch sofort. Falls die Person gerade sendet, wird ihre Übertragung beendet. Die Person bleibt auf der Karte.",
             submit: "Aus Gespräch nehmen",
             confirmTitle: "{userName} aus dem Gespräch nehmen",
         },

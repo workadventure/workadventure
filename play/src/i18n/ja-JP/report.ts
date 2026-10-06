@@ -37,7 +37,7 @@ const report: DeepPartial<Translation["report"]> = {
         },
         remove: {
             title: "会話から外す",
-            content: "{userName} はすぐにこの会話から外れ、配信中の場合は配信が停止します。ワールドには残ります。",
+            content: "{userName} はすぐにこの会話から外れ、配信中の場合は配信が停止します。マップには残ります。",
             submit: "会話から外す",
             confirmTitle: "{userName} を会話から外す",
         },

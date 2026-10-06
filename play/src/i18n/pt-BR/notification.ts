@@ -30,7 +30,7 @@ const notification: BaseTranslation = {
     addNewTag: "adicionar uma nova tag: '{tag}'",
     floorGivenBack: "Você devolveu a palavra",
     handLowered: "Um moderador baixou sua mão",
-    removedFromConversation: "Um moderador tirou você da conversa. Você continua no mapa.",
+    removedFromConversation: "Um moderador tirou você da conversa.",
     actionFailed: "Não foi possível concluir esta ação",
     notificationSentToMuteMicrophone: "Uma notificação foi enviada para {name} para silenciar o microfone",
     notificationSentToMuteCamera: "Uma notificação foi enviada para {name} para silenciar a câmera",

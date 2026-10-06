@@ -39,7 +39,7 @@ const report: DeepPartial<Translation["report"]> = {
         remove: {
             title: "Treure",
             content:
-                "{userName} surt d'aquesta conversa immediatament i, si està en directe, la seva emissió s'atura. Es queda al món.",
+                "{userName} surt d'aquesta conversa immediatament i, si està en directe, la seva emissió s'atura. Es queda al mapa.",
             submit: "Treure",
             confirmTitle: "Treure {userName}",
         },
