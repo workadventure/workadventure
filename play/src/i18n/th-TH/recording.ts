@@ -41,11 +41,9 @@ const recording: DeepPartial<Translation["recording"]> = {
         },
         desc: {
             needLogin: "คุณต้องเข้าสู่ระบบเพื่อบันทึก",
-            needPremium: "คุณต้องเป็นสมาชิกพรีเมียมเพื่อบันทึก",
             advert: "ผู้เข้าร่วมทุกคนจะได้รับแจ้งว่าคุณกำลังเริ่มการบันทึก",
             yourRecordInProgress: "กำลังบันทึกอยู่ คลิกเพื่อหยุด",
             inProgress: "กำลังบันทึกอยู่",
-            notEnabled: " การบันทึกถูกปิดใช้งานในโลกนี้",
         },
         spacePicker: {
             megaphone: "บันทึกเมกะโฟน",

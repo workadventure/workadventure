@@ -41,11 +41,9 @@ const recording: DeepPartial<Translation["recording"]> = {
         },
         desc: {
             needLogin: "Bạn cần đăng nhập để ghi hình.",
-            needPremium: "Bạn cần tài khoản premium để ghi hình.",
             advert: "Tất cả người tham gia sẽ được thông báo rằng bạn bắt đầu ghi hình.",
             yourRecordInProgress: "Đang ghi hình, bấm để dừng.",
             inProgress: "Đang có một bản ghi được thực hiện",
-            notEnabled: " Tính năng ghi hình bị tắt trên thế giới này.",
         },
         spacePicker: {
             megaphone: "Ghi loa phóng thanh",

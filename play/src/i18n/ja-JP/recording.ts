@@ -41,11 +41,9 @@ const recording: DeepPartial<Translation["recording"]> = {
         },
         desc: {
             needLogin: "録画するにはログインする必要があります。",
-            needPremium: "録画するにはプレミアム会員である必要があります。",
             advert: "すべての参加者に、録画を開始することを通知します。",
             yourRecordInProgress: "録画が進行中です。クリックして停止します。",
             inProgress: "録画が進行中です",
-            notEnabled: "このワールドでは録画が無効になっています。",
         },
         spacePicker: {
             megaphone: "メガホンを録音する",

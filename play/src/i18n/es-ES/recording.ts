@@ -41,11 +41,9 @@ const recording: DeepPartial<Translation["recording"]> = {
         },
         desc: {
             needLogin: "Debes estar conectado para grabar.",
-            needPremium: "Debes ser premium para grabar.",
             advert: "Todos los participantes serán notificados de que estás iniciando una grabación.",
             yourRecordInProgress: "Grabación en curso, haz clic para detenerla.",
             inProgress: "Una grabación está en curso",
-            notEnabled: "Las grabaciones están desactivadas para este mundo.",
         },
         spacePicker: {
             megaphone: "Grabar megáfono",
