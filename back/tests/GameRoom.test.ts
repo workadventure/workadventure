@@ -227,6 +227,48 @@ describe("GameRoom", () => {
         expect(connectCalled).toBe(true);
     });
 
+    describe("when a member of a group walks up to a user", () => {
+        // user1 and user2 form a group centered on (150, 100). user3 stands 250px away, too far to join.
+        // user2 then walks to (390, 100): the group center moves to (245, 100), 155px from user3.
+        async function createGroupNextToUser3() {
+            const world = await createWorld();
+            const user1 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("1", 100, 100));
+            const user2 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("2", 200, 100));
+            const user3 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("3", 400, 100));
+            expect(user1.group).toBeDefined();
+            expect(user3.group).toBeUndefined();
+            return { world, user1, user2, user3 };
+        }
+
+        it("should pull the user in, even though the other members are met first", async () => {
+            const { world, user1, user2, user3 } = await createGroupNextToUser3();
+
+            world.updatePosition(user2, new Point(390, 100));
+
+            expect(user3.group).toBe(user1.group);
+        });
+
+        it("should not pull the user in if the group is locked", async () => {
+            const { world, user1, user2, user3 } = await createGroupNextToUser3();
+            user1.group?.lock();
+
+            world.updatePosition(user2, new Point(390, 100));
+
+            expect(user3.group).toBeUndefined();
+        });
+
+        it("should not pull the user in while they walk, only once they stop", async () => {
+            const { world, user1, user2, user3 } = await createGroupNextToUser3();
+            world.updatePosition(user3, new Point(400, 100, "left", true));
+
+            world.updatePosition(user2, new Point(390, 100));
+            expect(user3.group).toBeUndefined();
+
+            world.updatePosition(user3, new Point(400, 100));
+            expect(user3.group).toBe(user1.group);
+        });
+    });
+
     it("should disconnect user1 and user2", async () => {
         let connectCalled = false;
         let disconnectCallNumber = 0;

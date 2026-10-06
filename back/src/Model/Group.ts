@@ -141,11 +141,15 @@ export class Group implements Movable, CustomJsonReplacerInterface {
     }
 
     searchForNearbyUsers(): void {
-        if (!this.currentZone) return;
+        // A locked group lets nobody in, not even the users its members walk up to.
+        if (!this.currentZone || this.isLocked()) return;
 
         for (const user of this.positionNotifier.getAllUsersInSquareAroundZone(this.currentZone)) {
+            if (this.isFull()) return;
             //  Todo: Merge two groups with a leader
-            if (user.silent || user.group || this.isFull()) return; //we ignore users that are already in a group.
+            // We ignore users that are already in a group or silent, and users still walking: like in
+            // GameRoom.updateUserGroup, a user joins a group when they stop.
+            if (user.silent || user.group || user.getPosition().moving) continue;
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), this.getPosition());
             if (distance < this.groupRadius) {
                 this.join(user);
