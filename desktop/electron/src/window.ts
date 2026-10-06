@@ -934,7 +934,8 @@ export function switchToOpenWorld(url: string, requester?: Electron.WebContents)
         return false;
     }
     const requestingTab = requester ? getTabByContents(requester) : undefined;
-    ElectronLog.info(`Switching to the tab that already shows ${worldKeyOf(url)}.`);
+    // The world key, not the URL: it carries no token.
+    ElectronLog.info(`Switching to the tab that already shows ${worldKeyOf(url) ?? ""}.`);
     activateTab(existing.id);
     if (requestingTab && worldKeyOf(requestingTab.url) === undefined) {
         closeTab(requestingTab.id);
