@@ -84,6 +84,71 @@ If you are creating a private room, you will also need to invite users.
 
 Invited users will receive a notification in the chat room list and they can accept or decline the invitation.
 
+### Moderating a room
+
+Matrix chat rooms come with moderation tools that let you manage who is in a room and what each member is allowed to do.
+Moderation is based on **roles** (which map to Matrix "power levels" under the hood).
+
+#### Roles
+
+Every member of a room has one of three roles:
+
+| Role | Description |
+| --- | --- |
+| **User** | The default role. Can read and send messages. |
+| **Moderator** | An elevated role sitting between User and Admin. |
+| **Admin** | Full control over the room, including moderation and role management. The user who creates a room is automatically an Admin. |
+
+#### Viewing the participants
+
+The list of participants is available in two places:
+
+- **The "Participants" section** of a room (in the room side panel) shows every member who has **joined** the room, with
+  their avatar, name and role. If you are allowed to invite users, an **Invite** button is displayed at the top of the section.
+- **The "Manage participants" window** gives the full view. Open it from the room's options menu (the three-dot menu) by
+  selecting **Participants**, or from the **Invite** button of the Participants section. This window lists every member —
+  including those who were only invited, who have left, or who have been banned — together with their membership status,
+  their role and the available moderation actions. It also displays the **Room ID** (click it to copy it to your clipboard).
+
+Each member is shown with a badge indicating their membership status:
+
+- **Joined** — the member is currently in the room.
+- **Invited** — the member has been invited but has not joined yet.
+- **Left** — the member has left the room (or was kicked from it).
+- **Banned** — the member has been banned from the room.
+
+#### Changing a member's role
+
+Room **Admins** can change the role of other members from the **Manage participants** window, using the role selector
+displayed next to each participant.
+
+A few rules apply:
+
+- You can only assign a role **up to your own level**. An Admin can therefore grant the User, Moderator or Admin role.
+- You can only change the role of a member whose current role is **below yours**. In particular, an Admin cannot change
+  the role of another Admin.
+- The role selector is only available for members who have **joined** the room.
+
+:::info
+Changing a role updates the room's Matrix power levels. The change is applied for everyone and is visible to all members of the room.
+:::
+
+#### Kicking and banning members
+
+From the **Manage participants** window, room Admins can take the following actions on a member:
+
+- **Kick** — removes the member from the room. A kicked member can be invited again and, if the room is public, can join
+  again on their own.
+- **Ban** — removes the member and prevents them from joining again until they are unbanned. When a member is already
+  banned, this button becomes **Unban**.
+- **Unban** — lifts a ban so the member can be invited again or join the room again.
+- **Invite** — re-invites a member who has left the room.
+
+:::note
+Moderation actions are reserved for room **Admins**, and you can only act on members whose role is below yours. As a result,
+you can never kick, ban or change the role of another Admin.
+:::
+
 ## User list
 
 The user list shows the list of users in relation with your world. In this list, you will see:
