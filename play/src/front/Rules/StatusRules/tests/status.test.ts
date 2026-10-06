@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { TimedRules } from "../statusRules";
 import { BasicStatusStrategy } from "../StatusStrategy/BasicStatusStrategy";
@@ -7,6 +7,9 @@ import { StatusStrategyFactory } from "../StatusFactory/StatusStrategyFactory";
 import type { StatusStrategyFactoryInterface } from "../StatusChanger";
 import { StatusChanger } from "../StatusChanger";
 import type { StatusStrategyInterface } from "../StatusStrategyInterface";
+import { BusyStatusStrategy } from "../StatusStrategy/BusyStatusStrategy";
+import { popupStore } from "../../../Stores/PopupStore";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 
 // The real strategies reach popups and MediaStore, whose module graph cycles back through
 // MediaManager -> ScreenSharingStore and dies on import. Stub the leaves so the factory
@@ -180,6 +183,39 @@ describe("Status Rules", () => {
             const strategy = StatusStrategyFactory.createStrategy(AvailabilityStatus.SOUND_BLOCKED);
 
             expect(strategy.allowNotificationSound()).toBe(false);
+        });
+    });
+    // Busy asks to allow desktop notifications, to warn about who wants to talk. It used to ask
+    // whenever localStorage had no trace of a previous question, even with notifications granted.
+    describe("Busy asks to allow notifications", () => {
+        const asksForNotifications = (permission: NotificationPermission, lastRequest: string | null): boolean => {
+            vi.stubGlobal("Notification", { permission });
+            vi.spyOn(localUserStore, "getLastNotificationPermissionRequest").mockReturnValue(lastRequest);
+            vi.mocked(popupStore.addPopup).mockClear();
+
+            new BusyStatusStrategy().applyBasicRules();
+
+            return vi.mocked(popupStore.addPopup).mock.calls.length > 0;
+        };
+
+        afterEach(() => {
+            vi.unstubAllGlobals();
+        });
+
+        it("should not ask when notifications are already granted", () => {
+            expect(asksForNotifications("granted", null)).toBe(false);
+        });
+
+        it("should ask while the browser has not decided", () => {
+            expect(asksForNotifications("default", new Date().toString())).toBe(true);
+        });
+
+        it("should ask again only every two weeks once notifications are denied", () => {
+            const threeWeeksAgo = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toString();
+
+            expect(asksForNotifications("denied", null)).toBe(true);
+            expect(asksForNotifications("denied", new Date().toString())).toBe(false);
+            expect(asksForNotifications("denied", threeWeeksAgo)).toBe(true);
         });
     });
     describe("StatusStrategy", () => {
