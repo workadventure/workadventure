@@ -178,9 +178,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         pictureInPicture: {
             title: "子母畫面",
-            descDisabled:
-                "很遺憾，此功能在您的裝置上無法使用 ❌。請嘗試使用其他裝置或瀏覽器（如 Chrome 或 Edge）以使用此功能。",
-            desc: "您可以使用子母畫面功能，在對話時觀看影片或簡報。只要點選子母畫面圖示即可享受您的內容。",
+            desc: "在一個小型浮動視窗中顯示對話的影片，讓您在其他分頁或應用程式中工作時，也能持續看到交談的對象。",
         },
         videoNotSupported: "您的瀏覽器不支援影片標籤。",
     },

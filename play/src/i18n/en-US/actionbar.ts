@@ -179,9 +179,7 @@ const actionbar: BaseTranslation = {
         },
         pictureInPicture: {
             title: "Picture in picture",
-            descDisabled:
-                "Unfortunately, this feature is not available on your device ❌. Please try using another device or browser, like Chrome or Edge, to access this feature.",
-            desc: "You can use the picture in picture feature to watch a video or a presentation while you are in a conversation. Just click on the picture in picture icon and enjoy your content.",
+            desc: "Shows the videos of your conversation in a small floating window, so you can keep seeing the people you talk to while you work in another tab or app.",
         },
         videoNotSupported: "Your browser does not support the video tag.",
     },

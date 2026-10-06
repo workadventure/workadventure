@@ -178,9 +178,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         pictureInPicture: {
             title: "画中画",
-            descDisabled:
-                "不幸的是，此功能在您的设备上不可用 ❌。请尝试使用其他设备或浏览器，如 Chrome 或 Edge，以访问此功能。",
-            desc: "您可以使用画中画功能在对话时观看视频或演示。只需点击画中画图标即可享受您的内容。",
+            desc: "在一个小的悬浮窗口中显示对话的视频，让您在其他标签页或应用中工作时也能继续看到对话的人。",
         },
         videoNotSupported: "您的浏览器不支持视频标签。",
     },

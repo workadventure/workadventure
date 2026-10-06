@@ -181,9 +181,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         pictureInPicture: {
             title: "Picture in picture",
-            descDisabled:
-                "Helaas is deze functie niet beschikbaar op uw apparaat ❌. Probeer een ander apparaat of browser te gebruiken, zoals Chrome of Edge, om toegang te krijgen tot deze functie.",
-            desc: "U kunt de picture-in-picture functie gebruiken om een video of presentatie te bekijken terwijl u in een gesprek bent. Klik gewoon op het picture-in-picture pictogram en geniet van uw inhoud.",
+            desc: "Toont de video's van uw gesprek in een klein zwevend venster, zodat u uw gesprekspartners blijft zien terwijl u in een ander tabblad of een andere app werkt.",
         },
         videoNotSupported: "Uw browser ondersteunt de videotag niet.",
     },
