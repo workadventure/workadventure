@@ -22,12 +22,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     userList: {
         disconnected: "未連線到世界",
         isHere: "在此地圖上",
-        inAnotherMap: "在另一個地圖中",
-        in: "在 ",
         teleport: "傳送",
-        search: "只要尋找！",
         TalkTo: "與...交談",
-        teleporting: "傳送中...",
         businessCard: "名片",
         sendMessage: "傳送訊息",
         follow: "定位",
