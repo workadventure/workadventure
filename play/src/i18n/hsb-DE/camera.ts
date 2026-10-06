@@ -84,7 +84,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "ćichi wobłuk",
         silentZoneDesc:
-            "Sće w ćichim wobłuku. Móžeće jenož ludźi widźeć a słyšeć, z kotrymiž sće. Móžeće druhich ludźi w rumnje nje widźeć abo nje słyšeć.",
+            "Sće w ćichim wobłuku. Tu njemóže nichtó z wami rěčeć, a waš mikrofon a waša kamera staj deaktiwěrowanej.",
         nameTag: "Wy",
         loading: "Waša kamera so začituje...",
     },

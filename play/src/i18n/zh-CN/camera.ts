@@ -82,7 +82,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     my: {
         silentZone: "安静区",
-        silentZoneDesc: "您在安静区。您只能看到和听到与您在一起的人。您无法看到或听到房间中的其他人。",
+        silentZoneDesc: "您在安静区。这里没有人可以和您交谈，您的麦克风和摄像头已关闭。",
         nameTag: "你",
         loading: "正在加载您的摄像头...",
     },

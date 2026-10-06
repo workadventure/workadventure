@@ -83,7 +83,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "조용한 구역",
         silentZoneDesc:
-            "현재 조용한 구역에 있습니다. 함께 있는 사람들만 보고 들을 수 있으며, 방 안의 다른 사람들은 볼 수도, 들을 수도 없습니다.",
+            "현재 조용한 구역에 있습니다. 여기서는 아무도 당신과 대화할 수 없으며, 마이크와 카메라가 꺼져 있습니다.",
         nameTag: "나",
         loading: "카메라를 불러오는 중입니다...",
     },
