@@ -41,7 +41,7 @@
 
     let selectedCamera: string | undefined = $state(undefined);
     let selectedMicrophone: string | undefined = $state(undefined);
-    const sound = new Audio("/resources/objects/webrtc-in.mp3");
+    const sound = new Audio(`/resources/objects/webrtc-in-${localUserStore.getBubbleSound()}.mp3`);
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
