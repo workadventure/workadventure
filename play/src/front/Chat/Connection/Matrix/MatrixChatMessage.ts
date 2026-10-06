@@ -3,6 +3,8 @@ import { Direction, EventType, MatrixEventEvent, MsgType, RelationType } from "m
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
+import { Marked } from "marked";
+import type { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { MapStore } from "@workadventure/store-utils";
 import type {
     ChatMessage,
@@ -18,6 +20,21 @@ import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
 import { resolveAttachmentMediaFromEvent, resolveImageMediaFromEvent } from "./MatrixMediaResolver";
 import { shouldRenderQuotedReply } from "./MatrixThreadUtils";
+
+const markdown = new Marked({ breaks: true });
+
+/**
+ * The content of a text message. `body` is the Markdown the user typed; other Matrix clients show it as plain text,
+ * Markdown signs included, unless the event also carries the HTML version in `formatted_body`.
+ */
+export function getTextMessageContent(message: string): RoomMessageEventContent {
+    return {
+        msgtype: MsgType.Text,
+        body: message,
+        format: "org.matrix.custom.html",
+        formatted_body: markdown.parse(message, { async: false }),
+    };
+}
 
 export class MatrixChatMessage implements ChatMessage {
     id: string;
@@ -129,8 +146,12 @@ export class MatrixChatMessage implements ChatMessage {
 
         if (quotedMessage !== undefined && content.formatted_body) {
             this.quotedMessage = quotedMessage;
+            // Some clients put a quote of the replied message before the reply, in <mx-reply> in the HTML: strip it
+            // there. Otherwise, render the Markdown body, like any other message.
             return {
-                body: content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, ""),
+                body: content.formatted_body.startsWith("<mx-reply>")
+                    ? content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, "")
+                    : content.body,
                 url: undefined,
             };
         }
@@ -350,11 +371,11 @@ export class MatrixChatMessage implements ChatMessage {
             throw new Error("Missing permission to edit this message");
         }
         try {
+            const content = getTextMessageContent(newContent);
             await this.room.client.sendEvent(this.room.roomId, EventType.RoomMessage, {
-                msgtype: MsgType.Text,
+                ...content,
                 "m.relates_to": { rel_type: RelationType.Replace, event_id: this.id },
-                "m.new_content": { msgtype: MsgType.Text, body: newContent },
-                body: newContent,
+                "m.new_content": content,
             });
         } catch (error) {
             console.error(error);

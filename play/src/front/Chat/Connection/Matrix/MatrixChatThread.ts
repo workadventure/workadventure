@@ -26,7 +26,7 @@ import type {
 import LL from "../../../../i18n/i18n-svelte";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import type { PictureStore } from "../../../Stores/PictureStore";
-import type { MatrixChatMessage } from "./MatrixChatMessage";
+import { getTextMessageContent, type MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import type { MatrixChatRoom } from "./MatrixChatRoom";
 import { applyThreadRelationToContent, isThreadReplyEvent } from "./MatrixThreadUtils";
@@ -546,7 +546,7 @@ export class MatrixChatThread implements ChatThread {
     }
 
     private getMessageContent(message: string): RoomMessageEventContent {
-        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+        const content = getTextMessageContent(message);
         this.applyThreadRelationContent(content);
         return content;
     }

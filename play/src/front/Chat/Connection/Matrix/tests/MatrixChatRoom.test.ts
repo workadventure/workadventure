@@ -37,6 +37,7 @@ vi.mock(
 vi.mock("../../../Stores/ChatStore.ts", () => {
     return {
         selectedRoomStore: writable(undefined),
+        selectedChatMessageToReply: writable(null),
     };
 });
 
@@ -89,6 +90,23 @@ describe("MatrixChatRoom", () => {
             room["onRoomNewMember"]({} as MatrixEvent, {} as RoomState, createMemberStub("@bob:matrix.org"));
 
             expect(get(room.members)).toHaveLength(2);
+        });
+    });
+
+    describe("sendMessage", () => {
+        it("should send the Markdown as HTML too, so that other Matrix clients show the formatting", () => {
+            const room = Object.create(MatrixChatRoom.prototype) as MatrixChatRoom;
+            const sendMessage = vi.fn(() => Promise.resolve());
+            Object.assign(room, { matrixRoom: { roomId: "!room:matrix.org", client: { sendMessage } } });
+
+            room.sendMessage("**bold** and `code`");
+
+            expect(sendMessage).toHaveBeenCalledWith("!room:matrix.org", {
+                msgtype: "m.text",
+                body: "**bold** and `code`",
+                format: "org.matrix.custom.html",
+                formatted_body: "<p><strong>bold</strong> and <code>code</code></p>\n",
+            });
         });
     });
 

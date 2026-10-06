@@ -83,7 +83,7 @@ import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { waitForGameSceneStore } from "../../../Stores/GameSceneStore";
 import { ProximityChatRoom } from "../Proximity/ProximityChatRoom";
-import { MatrixChatMessage } from "./MatrixChatMessage";
+import { getTextMessageContent, MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatLightPoll } from "./MatrixChatLightPoll";
 import { MatrixChatPoll } from "./MatrixChatPoll";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
@@ -1778,7 +1778,7 @@ export class MatrixChatRoom
     }
 
     private getMessageContent(message: string): RoomMessageEventContent {
-        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+        const content = getTextMessageContent(message);
         this.applyReplyContentIfReplyTo(content);
         return content;
     }
