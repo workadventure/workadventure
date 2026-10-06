@@ -265,7 +265,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     question: {
         title: "Prašenja",
-        description: "Prašenja zetkanja wočinić",
+        description: "Prašenja stajić a za nje hłosować.",
+        proximityOnly: "Jenož w rozmołwowej bałce.",
         ask: "Prašenje stajić",
         placeholder: "Napisaj swoje prašenje...",
         send: "Pósłać",

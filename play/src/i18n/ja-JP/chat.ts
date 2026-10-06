@@ -265,7 +265,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     question: {
         title: "質問",
-        description: "ミーティングの質問を開く",
+        description: "質問を投稿して賛成票を入れる",
+        proximityOnly: "ディスカッションバブルでのみ利用できます。",
         ask: "質問する",
         placeholder: "質問を書いてください...",
         send: "送信",

@@ -264,7 +264,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     question: {
         title: "คำถาม",
-        description: "เปิดคำถามของการประชุม",
+        description: "ถามคำถามและโหวต",
+        proximityOnly: "ใช้ได้เฉพาะในแชทระยะใกล้",
         ask: "ถามคำถาม",
         placeholder: "เขียนคำถามของคุณ...",
         send: "ส่ง",

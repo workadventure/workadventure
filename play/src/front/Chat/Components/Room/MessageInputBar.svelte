@@ -775,7 +775,7 @@
                 <IconHelpCircle font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.question.title()}</h2>
                 <p class={applicationDescriptionClass}>
-                    {canOpenQuestions ? $LL.chat.question.description() : $LL.chat.disabled()}
+                    {canOpenQuestions ? $LL.chat.question.description() : $LL.chat.question.proximityOnly()}
                 </p>
             </button>
         </div>

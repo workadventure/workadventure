@@ -264,7 +264,8 @@ const chat: BaseTranslation = {
     },
     question: {
         title: "Questions",
-        description: "Open meeting questions",
+        description: "Ask questions and vote for them.",
+        proximityOnly: "Only in the proximity chat.",
         ask: "Ask a question",
         placeholder: "Write your question...",
         send: "Send",

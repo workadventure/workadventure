@@ -264,7 +264,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     question: {
         title: "Câu hỏi",
-        description: "Câu hỏi mở của cuộc họp",
+        description: "Đặt câu hỏi và ủng hộ các câu hỏi.",
+        proximityOnly: "Chỉ có trong trò chuyện lân cận.",
         ask: "Đặt câu hỏi",
         placeholder: "Viết câu hỏi của bạn...",
         send: "Gửi",
