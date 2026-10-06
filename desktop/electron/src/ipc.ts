@@ -6,7 +6,7 @@ import { pathToFileURL } from "url";
 import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustServer } from "./origin-verification";
 import settings from "./settings";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
-import { setRendererPresence } from "./presence";
+import { notePresenceReport, setRendererPresence } from "./presence";
 import { closeCompanionPip, dismissCompanion, openCompanionForPip } from "./companion-controller";
 import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
 import {
@@ -254,6 +254,7 @@ export default () => {
         if (!isWorldContents(event.sender) || !presence || typeof presence !== "object") {
             return;
         }
+        notePresenceReport(event.sender.id);
         const raw = presence as Record<string, unknown>;
         // Every tab reports whether it is in a meeting: that decides which tab drives media. One
         // meeting at a time: the tab that was in one drops its mic, camera and screen share (they are
@@ -272,6 +273,7 @@ export default () => {
             cameraEnabled: Boolean(raw.cameraEnabled),
             screenSharing: Boolean(raw.screenSharing),
             inWorld: Boolean(raw.inWorld),
+            onboarding: Boolean(raw.onboarding),
             invitationPending: Boolean(raw.invitationPending),
             requestedStatus: raw.requestedStatus,
             statusLocked: Boolean(raw.statusLocked),
