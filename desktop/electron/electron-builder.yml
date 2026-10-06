@@ -7,6 +7,9 @@ protocols:
       schemes:
           - workadventure
 
+# Without a signing identity, sign the app ad hoc so that macOS remembers camera / microphone decisions.
+afterSign: helpers/adhoc-sign.js
+
 files:
     - "dist/**/*"
     - "assets/**/*"
