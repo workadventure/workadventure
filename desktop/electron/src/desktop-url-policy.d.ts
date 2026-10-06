@@ -29,6 +29,7 @@ export function isAllowedNavigationUrl(value: string, config: DesktopConfig): bo
 export function isDesktopLoginUrl(value: string): boolean;
 export function isDesktopLogoutUrl(value: string): boolean;
 export function isRoomUrl(value: string): boolean;
+export function worldKeyOf(value: string): string | undefined;
 export function addWorldToHistory(history: unknown, value: string, limit?: number): string[];
 export function formatWorldHistoryLabel(value: string, maxLength?: number): string;
 export function validateDesktopNavigationUrl(value: unknown, config: DesktopConfig): DesktopNavigationValidationResult;
