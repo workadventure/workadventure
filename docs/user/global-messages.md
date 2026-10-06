@@ -30,7 +30,7 @@ Everyone connected to the room (or to the world) sees the message at the top of 
 ## Sending an audio message
 
 1. Click **Send an audio message**.
-2. Click the upload area and choose an audio file (MP3, OGG…). Dragging a file onto the area does not work yet: use the click.
+2. Click the upload area and choose an audio file (MP3, OGG…), or drag the file onto it.
 3. Tick **Broadcast to all rooms of the world** if needed, then click **Send**.
 
 The sound plays right away for everyone connected to the room (or to the world). A small **Audio message** panel appears at the top right; its pause button mutes the sound, and the message stops if you don't resume it within 5 seconds.
