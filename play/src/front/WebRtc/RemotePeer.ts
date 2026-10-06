@@ -84,7 +84,6 @@ export class RemotePeer extends Peer implements Streamable {
     public readonly muteAudio: Writable<boolean> = writable(false);
     public readonly displayMode: "fit" | "cover";
     public readonly usePresentationMode: boolean;
-    public readonly displayInPictureInPictureMode = true;
     public isReceivingStream = false;
     private readonly _name: Readable<string>;
     private readonly _isBlocked: Readable<boolean>;
