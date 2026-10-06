@@ -1,6 +1,6 @@
 import type { MatrixClient, MatrixEvent } from "matrix-js-sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { resolveAttachmentMediaFromEvent } from "../MatrixMediaResolver";
+import { resolveAttachmentMediaFromEvent, uploadAttachment } from "../MatrixMediaResolver";
 
 afterEach(() => {
     vi.restoreAllMocks();
@@ -213,5 +213,55 @@ describe("resolveAttachmentMediaFromEvent", () => {
         expect(result.sourceUrl).toBeUndefined();
         expect(result.error).toBe("decrypt");
         result.cleanup();
+    });
+});
+
+describe("uploadAttachment", () => {
+    it("should upload the file itself in an unencrypted room", async () => {
+        const uploadContent = vi.fn(() => Promise.resolve({ content_uri: "mxc://example.org/plain" }));
+        const file = new File(["hello"], "hello.txt", { type: "text/plain" });
+
+        const result = await uploadAttachment({ uploadContent } as unknown as MatrixClient, file, false);
+
+        expect(result).toEqual({ url: "mxc://example.org/plain" });
+        expect(uploadContent).toHaveBeenCalledWith(file);
+    });
+
+    it("should upload only the ciphertext in an encrypted room, and the chat should decrypt it back", async () => {
+        const plainText = "the quarterly figures";
+        const uploadContent = vi.fn((_blob: Blob) => Promise.resolve({ content_uri: "mxc://example.org/encrypted" }));
+        const client = {
+            uploadContent,
+            mxcUrlToHttp: (mxc: string) => `https://example.com/${mxc}`,
+        } as unknown as MatrixClient;
+
+        const result = await uploadAttachment(client, new File([plainText], "figures.txt"), true);
+
+        expect(result.url).toBeUndefined();
+        expect(result.file?.url).toBe("mxc://example.org/encrypted");
+        const cipherText = await uploadContent.mock.calls[0][0].arrayBuffer();
+        expect(new TextDecoder().decode(cipherText)).not.toContain(plainText);
+
+        const decryptedBlobs: Blob[] = [];
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(() => Promise.resolve({ ok: true, arrayBuffer: () => Promise.resolve(cipherText) })),
+        );
+        vi.stubGlobal("URL", {
+            createObjectURL: (blob: Blob) => {
+                decryptedBlobs.push(blob);
+                return "blob:decrypted";
+            },
+            revokeObjectURL: vi.fn(),
+        });
+        const event = {
+            getOriginalContent: () => ({ msgtype: "m.file", body: "figures.txt", file: result.file }),
+        } as unknown as MatrixEvent;
+
+        const media = await resolveAttachmentMediaFromEvent(event, client, new AbortController().signal);
+
+        expect(media.error).toBeUndefined();
+        expect(await decryptedBlobs[0].text()).toBe(plainText);
+        media.cleanup();
     });
 });

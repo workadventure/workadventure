@@ -95,6 +95,7 @@ import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
 import { getThreadSummary, shouldDisplayEventInRoomTimeline } from "./MatrixThreadUtils";
 import { buildRoomPowerLevelsContent, getRoomPermissionsState } from "./MatrixRoomPowerLevels";
+import { uploadAttachment } from "./MatrixMediaResolver";
 
 type EventId = string;
 
@@ -2041,7 +2042,6 @@ export class MatrixChatRoom
 
     private async sendFile(file: File) {
         try {
-            const uploadResponse = await this.matrixRoom.client.uploadContent(file);
             const content: Omit<MediaEventContent, "info"> & {
                 info: Partial<MediaEventInfo>;
                 formatted_body?: string;
@@ -2055,9 +2055,7 @@ export class MatrixChatRoom
                     mimetype: file.type,
                 },
                 msgtype: this.getMessageTypeFromFile(file),
-                url: uploadResponse.content_uri,
-
-                // set more specifically later
+                ...(await uploadAttachment(this.matrixRoom.client, file, this.matrixRoom.hasEncryptionStateEvent())),
             };
             this.applyReplyContentIfReplyTo(content);
 

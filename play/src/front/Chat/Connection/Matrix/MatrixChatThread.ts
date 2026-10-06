@@ -30,6 +30,7 @@ import type { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import type { MatrixChatRoom } from "./MatrixChatRoom";
 import { applyThreadRelationToContent, isThreadReplyEvent } from "./MatrixThreadUtils";
+import { uploadAttachment } from "./MatrixMediaResolver";
 
 export class MatrixChatThread implements ChatThread {
     readonly id: string;
@@ -530,7 +531,7 @@ export class MatrixChatThread implements ChatThread {
             return undefined;
         }
         try {
-            const uploadResponse = await this.parentRoom.getMatrixRoom().client.uploadContent(file);
+            const matrixRoom = this.parentRoom.getMatrixRoom();
             const content = {
                 body: file.name,
                 formatted_body: file.name,
@@ -539,7 +540,7 @@ export class MatrixChatThread implements ChatThread {
                     mimetype: file.type,
                 },
                 msgtype: this.getMessageTypeFromFile(file),
-                url: uploadResponse.content_uri,
+                ...(await uploadAttachment(matrixRoom.client, file, matrixRoom.hasEncryptionStateEvent())),
             } as RoomMessageEventContent &
                 Omit<MediaEventContent, "info"> & {
                     info: Partial<MediaEventInfo>;

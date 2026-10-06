@@ -58,6 +58,59 @@ async function assertCipherHash(
     }
 }
 
+function encodeBase64Unpadded(bytes: Uint8Array): string {
+    let binary = "";
+    for (const byte of bytes) {
+        binary += String.fromCharCode(byte);
+    }
+    return btoa(binary).replace(/=+$/, "");
+}
+
+/**
+ * Encrypts an attachment the way the Matrix spec describes it ("Sending encrypted attachments"): AES-CTR with a
+ * random 256-bit key, a counter block whose low 64 bits start at zero, and the SHA-256 of the ciphertext.
+ */
+export async function encryptAttachment(
+    plainText: ArrayBuffer,
+): Promise<{ cipherText: ArrayBuffer; info: Omit<EncryptedFile, "url"> }> {
+    const iv = new Uint8Array(16);
+    crypto.getRandomValues(iv.subarray(0, 8));
+    const cryptoKey = await crypto.subtle.generateKey({ name: "AES-CTR", length: 256 }, true, ["encrypt", "decrypt"]);
+    const cipherText = await crypto.subtle.encrypt({ name: "AES-CTR", counter: iv, length: 64 }, cryptoKey, plainText);
+    const { k } = await crypto.subtle.exportKey("jwk", cryptoKey);
+    if (k === undefined) {
+        throw new Error("The attachment key could not be exported");
+    }
+    const sha256 = await crypto.subtle.digest("SHA-256", cipherText);
+    return {
+        cipherText,
+        info: {
+            v: "v2",
+            key: { alg: "A256CTR", ext: true, k, key_ops: ["encrypt", "decrypt"], kty: "oct" },
+            iv: encodeBase64Unpadded(iv),
+            hashes: { sha256: encodeBase64Unpadded(new Uint8Array(sha256)) },
+        },
+    };
+}
+
+/**
+ * Uploads the file of an attachment message. In an end-to-end encrypted room, the homeserver only gets the
+ * ciphertext: the key goes in the `file` field of the event, which is encrypted with the rest of the message.
+ */
+export async function uploadAttachment(
+    client: MatrixClient,
+    file: File,
+    isRoomEncrypted: boolean,
+): Promise<Pick<MediaEventContent, "url" | "file">> {
+    if (!isRoomEncrypted) {
+        return { url: (await client.uploadContent(file)).content_uri };
+    }
+    const { cipherText, info } = await encryptAttachment(await file.arrayBuffer());
+    // A bare Blob has no name and no type: the upload leaks neither the file name nor its mime type.
+    const { content_uri } = await client.uploadContent(new Blob([cipherText]));
+    return { file: { ...info, url: content_uri } };
+}
+
 async function decryptEncryptedFile(
     cipherText: Uint8Array<ArrayBuffer>,
     encryptedFile: EncryptedFile,
