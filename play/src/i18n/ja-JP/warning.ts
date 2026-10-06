@@ -48,7 +48,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         leave: "終了",
     },
     pwaInstall: {
-        title: "WorkAdventureをインストール",
         description:
             "より快適に使えるよう、アプリをインストールしましょう。すばやくアクセスでき、起動時に読み込まれ、アプリのように利用できます。",
         descriptionIos: "より快適にすばやくアクセスできるよう、WorkAdventure をホーム画面に追加しましょう。",
@@ -64,7 +63,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep3: "「追加」をタップして確認します。",
         install: "WorkAdventureアプリをインストール",
         installing: "インストール中…",
-        skip: "ブラウザで続ける",
         continue: "ブラウザで続ける",
         neverShowPage: "次回から表示しない",
     },

@@ -47,7 +47,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         leave: "Rời đi",
     },
     pwaInstall: {
-        title: "Cài đặt WorkAdventure",
         description:
             "Cài đặt ứng dụng để có trải nghiệm tốt hơn: truy cập nhanh, khởi động cùng máy và trải nghiệm như ứng dụng riêng.",
         descriptionIos: "Thêm WorkAdventure vào Màn hình chính để có trải nghiệm tốt hơn và truy cập nhanh.",
@@ -64,7 +63,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep3: 'Nhấn "Thêm" để xác nhận.',
         install: "Cài đặt ứng dụng WorkAdventure",
         installing: "Đang cài đặt…",
-        skip: "Vẫn dùng trong trình duyệt",
         continue: "Tiếp tục trong trình duyệt",
         neverShowPage: "Đừng hỏi lại",
     },

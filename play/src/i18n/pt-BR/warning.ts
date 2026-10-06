@@ -46,7 +46,6 @@ const warning: BaseTranslation = {
         leave: "Sair",
     },
     pwaInstall: {
-        title: "Instalar WorkAdventure",
         description:
             "Instale o app para ter uma experiência melhor: acesso rápido, inicialização automática e uma experiência de app.",
         descriptionIos: "Adicione o WorkAdventure à Tela de Início para ter uma experiência melhor e acesso rápido.",
@@ -63,7 +62,6 @@ const warning: BaseTranslation = {
         iosStep3: 'Toque em "Adicionar" para confirmar.',
         install: "Instalar o app WorkAdventure",
         installing: "Instalando…",
-        skip: "Continuar no navegador",
         continue: "Continuar no navegador",
         neverShowPage: "Não perguntar novamente",
     },

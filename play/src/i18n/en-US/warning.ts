@@ -45,7 +45,6 @@ const warning: BaseTranslation = {
         leave: "Leave",
     },
     pwaInstall: {
-        title: "Install WorkAdventure",
         description:
             "Install the app for a better experience: quick access, load on startup and an app-like experience.",
         descriptionIos: "Add WorkAdventure to your Home Screen for a better experience and quick access.",
@@ -62,7 +61,6 @@ const warning: BaseTranslation = {
         iosStep3: 'Tap "Add" to confirm.',
         install: "Install WorkAdventure App",
         installing: "Installing…",
-        skip: "Continuing in browser",
         continue: "Continue in browser",
         neverShowPage: "Don't ask again",
     },

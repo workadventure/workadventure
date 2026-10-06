@@ -47,7 +47,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         leave: "종료",
     },
     pwaInstall: {
-        title: "WorkAdventure 설치",
         description:
             "더 나은 경험을 위해 앱을 설치하세요. 빠른 접근, 시작 시 자동 실행, 앱과 같은 사용 경험을 제공합니다.",
         descriptionIos: "더 나은 경험과 빠른 접근을 위해 WorkAdventure를 홈 화면에 추가하세요.",
@@ -63,7 +62,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep3: '"추가"를 탭하여 확인하세요.',
         install: "WorkAdventure 앱 설치",
         installing: "설치 중…",
-        skip: "브라우저에서 계속",
         continue: "브라우저에서 계속",
         neverShowPage: "다시 묻지 않기",
     },

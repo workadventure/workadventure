@@ -45,7 +45,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         leave: "離開",
     },
     pwaInstall: {
-        title: "安裝 WorkAdventure",
         description: "安裝應用程式以獲得更好的體驗：快速存取、開機啟動以及更像原生應用程式的體驗。",
         descriptionIos: "將 WorkAdventure 加入主畫面，以獲得更好的體驗和快速存取。",
         feature1Title: "快速存取",
@@ -60,7 +59,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep3: "點選「加入」以確認。",
         install: "安裝 WorkAdventure 應用程式",
         installing: "安裝中…",
-        skip: "在瀏覽器中繼續",
         continue: "在瀏覽器中繼續",
         neverShowPage: "不再詢問",
     },

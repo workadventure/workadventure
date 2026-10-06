@@ -47,7 +47,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         leave: "Wopušćiś",
     },
     pwaInstall: {
-        title: "WorkAdventure instalěrowaś",
         description:
             "Instalěrujśo app za lěpše dožywjenje: malsny pśistup, start pśi zachopjenju a dožywjenje ako w app.",
         descriptionIos: "Pśidajśo WorkAdventure k startowemu wobrazoju za lěpše dožywjenje a malsny pśistup.",
@@ -64,7 +63,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep3: "Pótusniśo „Pśidaś“, aby wobkšuśił.",
         install: "WorkAdventure-app instalěrowaś",
         installing: "Instalěrujo se…",
-        skip: "W wobglědowaku pókšacowaś",
         continue: "W wobglědowaku pókšacowaś",
         neverShowPage: "Wěcej se njepšašaś",
     },
