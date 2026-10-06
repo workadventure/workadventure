@@ -223,10 +223,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     copied: "Copiato!",
     poll: {
         title: "Sondaggio",
-        closed: "Sondaggio chiuso.",
-        vote: "Vota",
-        updateVote: "Aggiorna voto",
-        removeVote: "Rimuovi voto",
         submitError: "Impossibile inviare il voto. Riprova.",
         endError: "Impossibile chiudere il sondaggio. Riprova.",
         deleteError: "Impossibile eliminare il sondaggio. Riprova.",

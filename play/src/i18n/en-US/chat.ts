@@ -222,10 +222,6 @@ const chat: BaseTranslation = {
     copied: "Copied!",
     poll: {
         title: "Poll",
-        closed: "Poll closed.",
-        vote: "Vote",
-        updateVote: "Update vote",
-        removeVote: "Remove vote",
         submitError: "Unable to submit your vote. Try again.",
         endError: "Unable to close the poll. Try again.",
         deleteError: "Unable to delete the poll. Try again.",

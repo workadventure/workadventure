@@ -223,10 +223,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     copied: "Gekopieerd!",
     poll: {
         title: "Peiling",
-        closed: "Peiling gesloten.",
-        vote: "Stemmen",
-        updateVote: "Stem wijzigen",
-        removeVote: "Stem verwijderen",
         submitError: "Kan uw stem niet verzenden. Probeer het opnieuw.",
         endError: "Kan de peiling niet sluiten. Probeer het opnieuw.",
         deleteError: "Kan de peiling niet verwijderen. Probeer het opnieuw.",

@@ -224,10 +224,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     copied: "Kopiert!",
     poll: {
         title: "Umfrage",
-        closed: "Umfrage geschlossen.",
-        vote: "Abstimmen",
-        updateVote: "Stimme ändern",
-        removeVote: "Stimme entfernen",
         submitError: "Ihre Stimme konnte nicht übermittelt werden. Bitte versuchen Sie es erneut.",
         endError: "Die Umfrage konnte nicht beendet werden. Bitte versuchen Sie es erneut.",
         deleteError: "Die Umfrage konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
