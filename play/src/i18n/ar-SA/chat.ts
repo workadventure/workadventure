@@ -59,7 +59,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     connecting: "جار الاتصال بالخادم ...",
     waitingInit: "في انتظار تهيئة الخادم ...",
     waitingData: "في انتظار بيانات المستخدم ...",
-    searchUser: "ابحث عن مستخدم، خريطة، إلخ ...",
+    searchUser: "ابحث عن مستخدم...",
     searchChat: "ابحث عن قناة، رسالة، إلخ ...",
     people: "رسالة مباشرة",
     rooms: "محادثات المجموعة",

@@ -60,7 +60,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     connecting: "서버에 연결 중...",
     waitingInit: "서버 초기화 대기 중...",
     waitingData: "사용자 데이터 대기 중...",
-    searchUser: "사용자, 지도 등을 검색...",
+    searchUser: "사용자 검색...",
     searchChat: "채널, 메시지 등을 검색...",
     people: "다이렉트 메시지",
     rooms: "그룹 대화",

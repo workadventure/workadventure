@@ -61,7 +61,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     connecting: "Zwisk k prezentnym serverej...",
     waitingInit: "Čaka na initalizaciju servera ...",
     waitingData: "Čaka na wužiwarske daty ...",
-    searchUser: "Pyta za wužiwarja, kartu atd. ...",
+    searchUser: "Pyta za wužiwarja...",
     searchChat: "Pyta za kanalom, powěsću atd. ...",
     people: "Direktna powěsć",
     rooms: "Skupinske rozmołwy",

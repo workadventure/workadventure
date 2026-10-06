@@ -58,7 +58,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     connecting: "正在连接到服务器...",
     waitingInit: "等待服务器初始化...",
     waitingData: "等待用户数据...",
-    searchUser: "搜索用户、地图等...",
+    searchUser: "搜索用户...",
     searchChat: "搜索频道、消息等...",
     people: "私信",
     rooms: "群组对话",

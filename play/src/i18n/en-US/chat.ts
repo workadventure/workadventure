@@ -59,7 +59,7 @@ const chat: BaseTranslation = {
     connecting: "Connecting to server ...",
     waitingInit: "Waiting for server initialization ...",
     waitingData: "Waiting user data ...",
-    searchUser: "Search for user, map, etc ...",
+    searchUser: "Search for a user...",
     searchChat: "Search for channel, message, etc ...",
     people: "Direct Message",
     rooms: "Group Conversations",
