@@ -24,8 +24,8 @@
     );
 
     async function getDesktopCapturerSources() {
-        if (!window.WAD) {
-            throw new Error("This component can only be used in the desktop app");
+        if (!window.WAD?.getDesktopCapturerSources) {
+            throw new Error("This component can only be used in a desktop app that lists the sources");
         }
         try {
             errorMessage = undefined;

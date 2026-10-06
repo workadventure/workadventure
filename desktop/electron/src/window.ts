@@ -1,4 +1,4 @@
-import { BrowserWindow, app, net, shell, session } from "electron";
+import { BrowserWindow, app, desktopCapturer, net, shell, session } from "electron";
 import ElectronLog from "electron-log";
 import http from "http";
 import crypto from "crypto";
@@ -28,6 +28,7 @@ import {
 } from "./desktop-url-policy";
 import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-policy";
+import { usesSystemScreenSharePicker } from "./platform-capture-policy";
 import { rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
 import { onMainWindowBlur, onMainWindowFocus, stopCompanion, updateCompanion } from "./companion-controller";
@@ -589,6 +590,26 @@ function configureSession() {
         const allowedPermissions = new Set(["media", "display-capture", "notifications", "fullscreen"]);
         callback(allowedPermissions.has(permission) && isAllowedNavigationUrl(requestingUrl, getDesktopConfig()));
     });
+
+    // Wayland lets no app list the screens: the world falls back to getDisplayMedia, and the
+    // system portal asked here (one dialog) is the picker. Elsewhere the in-app picker is used.
+    if (usesSystemScreenSharePicker(process.platform, process.env)) {
+        session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+            const frame = request.frame;
+            if (!frame || frame.parent !== null || !isAllowedNavigationUrl(frame.url, getDesktopConfig())) {
+                ElectronLog.warn(`Rejected screen share request from disallowed frame "${frame?.url ?? ""}".`);
+                callback({});
+                return;
+            }
+            desktopCapturer
+                .getSources({ types: ["screen", "window"] })
+                .then((sources) => callback(sources[0] ? { video: sources[0] } : {}))
+                .catch((error) => {
+                    ElectronLog.error("Screen share portal failed", error);
+                    callback({});
+                });
+        });
+    }
 }
 
 function configureNavigationSecurity(webContents: Electron.WebContents) {

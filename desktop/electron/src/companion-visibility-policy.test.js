@@ -21,6 +21,10 @@ test("screen sharing hides the panel, beating every other rule", () => {
     expect(shouldShowCompanion({ ...away, screenSharing: true, autoOpenLatch: true, invitationPending: true })).toBe(false);
 });
 
+test("screen sharing keeps the panel where no meeting bar replaces it (Linux)", () => {
+    expect(shouldShowCompanion({ ...away, screenSharing: true, meetingBarAvailable: false, autoOpenLatch: true })).toBe(true);
+});
+
 test("focusing WA hides the panel unless the meeting video is running", () => {
     expect(shouldShowCompanion({ inWorld: true, mainWindowFocused: true, autoOpenLatch: true })).toBe(false);
     expect(shouldShowCompanion({ inWorld: true, mainWindowFocused: true, pipActive: true })).toBe(true);

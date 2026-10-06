@@ -377,7 +377,8 @@ export type WorkAdventureDesktopApi = {
     onCameraToggle: (callback: () => void) => void;
     getWindowState: () => Promise<DesktopWindowState>;
     onWindowStateChange: (callback: (state: DesktopWindowState) => void) => () => void;
-    getDesktopCapturerSources: (options: SourcesOptions) => Promise<DesktopCapturerSource[]>;
+    /** Absent where the system picks the source (Linux under Wayland): getDisplayMedia is used instead. */
+    getDesktopCapturerSources?: (options: SourcesOptions) => Promise<DesktopCapturerSource[]>;
     /**
      * Open a big-numbered, click-to-share overlay on every physical display and resolve the screen
      * source the user clicks (null on Escape). Optional: absent on older desktop shells, so callers
