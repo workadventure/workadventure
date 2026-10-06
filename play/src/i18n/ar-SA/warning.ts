@@ -7,7 +7,6 @@ const warning: DeepPartial<Translation["warning"]> = {
     limit: "لقد اقترب هذا العالم من حدود قدرته الاستيعابية!", // "This world is close to its capacity limit!"
     accessDenied: {
         camera: "تم رفض الوصول إلى الكاميرا. انقر هنا للتحقق من أذونات متصفحك.", // "Camera access denied. Click here to check your browser permissions."
-        screenSharing: "تم رفض مشاركة الشاشة. انقر هنا للتحقق من أذونات متصفحك.", // "Screen sharing denied. Click here to check your browser permissions."
         teleport: "تفتقر إلى الأذن للانتقال إلى هذا المستخدم.", // "You lack permission to teleport to this user."
         room: "غير مسموح بالدخول. تفتقر إلى الأذن لدخول هذه الغرفة.", // "Access not permitted. You lack permission to enter this room."
     },

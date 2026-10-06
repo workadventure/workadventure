@@ -6,8 +6,6 @@ const video: DeepPartial<Translation["video"]> = {
     no_video_stream_received: "No s'ha rebut cap flux de vídeo.",
     user_is_muted: "{name} està silenciat.",
     reduce: "Reduir",
-    toggle_fullscreen: "Canviar a pantalla completa",
-    exit_fullscreen: "Sortir de pantalla completa",
     connecting: "Connectant...",
     reconnecting: "Reconnectant...",
     persistent_connection_issue: "Reconnectant... Connexió inestable...",

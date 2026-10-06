@@ -5,8 +5,6 @@ const video: BaseTranslation = {
     no_video_stream_received: "No video stream received.",
     user_is_muted: "{name} is muted.",
     reduce: "Reduce",
-    toggle_fullscreen: "Toggle fullscreen",
-    exit_fullscreen: "Exit fullscreen",
     connecting: "Connecting...",
     reconnecting: "Reconnecting...",
     persistent_connection_issue: "Reconnecting... Unstable connection...",
