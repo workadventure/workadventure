@@ -22,13 +22,9 @@ const chat: BaseTranslation = {
     userList: {
         disconnected: "Not connected to the world",
         isHere: "Is on this map",
-        inAnotherMap: "In another map",
-        in: "In ",
         teleport: "Teleport",
-        search: "Just look it up!",
         // walkTo: "Walk to",
         TalkTo: "Talk To",
-        teleporting: "Teleporting ...",
         businessCard: "Business Card",
         sendMessage: "Send Message",
         follow: "Locate",

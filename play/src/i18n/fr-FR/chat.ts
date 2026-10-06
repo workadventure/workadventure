@@ -24,13 +24,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     userList: {
         disconnected: "Non connecté au monde",
         isHere: "Sur cette map",
-        inAnotherMap: "Dans une autre map",
-        in: "Dans ",
         teleport: "Se téléporter",
-        search: "Il suffit de chercher !",
         // walkTo: "Marcher jusqu'à",
         TalkTo: "Parler à",
-        teleporting: "Téléportation ...",
         businessCard: "Carte de visite",
         sendMessage: "Envoyer un message",
         follow: "Localiser",

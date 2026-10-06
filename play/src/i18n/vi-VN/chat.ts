@@ -24,12 +24,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     userList: {
         disconnected: "Chưa kết nối vào thế giới",
         isHere: "Đang ở bản đồ này",
-        inAnotherMap: "Ở bản đồ khác",
-        in: "Ở ",
         teleport: "Dịch chuyển",
-        search: "Cứ tìm thử xem!",
         TalkTo: "Nói chuyện",
-        teleporting: "Đang dịch chuyển ...",
         businessCard: "Danh thiếp",
         sendMessage: "Gửi tin nhắn",
         follow: "Định vị",

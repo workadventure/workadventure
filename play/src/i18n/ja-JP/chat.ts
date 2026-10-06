@@ -24,13 +24,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     userList: {
         disconnected: "ワールドに接続されていません",
         isHere: "このマップ上",
-        inAnotherMap: "別のマップ",
-        in: "In ",
         teleport: "テレポート",
-        search: "調べてみて！",
         // walkTo: "会いに行く",
         TalkTo: "話す",
-        teleporting: "テレポート中...",
         businessCard: "名刺",
         sendMessage: "メッセージを送信",
         follow: "位置を特定",
