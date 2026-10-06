@@ -73,7 +73,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             microphoneToggle: '在"离开模式"中保持麦克风活动',
         },
         save: "保存",
-        otherSettings: "所有设置",
+        otherSettings: "其他设置",
         fullscreen: "全屏",
         notifications: "通知",
         enablePictureInPicture: "启用画中画",

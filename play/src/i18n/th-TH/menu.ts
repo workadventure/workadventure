@@ -76,7 +76,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             microphoneToggle: 'เปิดไมโครโฟนต่อไปใน "โหมดไม่อยู่"',
         },
         save: "บันทึก",
-        otherSettings: "การตั้งค่าทั้งหมด",
+        otherSettings: "การตั้งค่าอื่นๆ",
         fullscreen: "เต็มหน้าจอ",
         notifications: "การแจ้งเตือน",
         enablePictureInPicture: "เปิดใช้ภาพซ้อนภาพ",

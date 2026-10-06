@@ -77,7 +77,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             microphoneToggle: 'Mikrofon w „modusu njepřitomnosće" aktiwěrowany wostajić.',
         },
         save: "składować",
-        otherSettings: "wšě nastajenja",
+        otherSettings: "Druhe nastajenja",
         fullscreen: "połny wobraz",
         notifications: "powěsće",
         enablePictureInPicture: "wobraz-we-wobrazu aktiwěrować",

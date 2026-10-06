@@ -78,7 +78,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             microphoneToggle: 'Mantener el micrófono activa en "modo no presente"',
         },
         save: "Guardar",
-        otherSettings: "Todas las configuraciones",
+        otherSettings: "Otras configuraciones",
         fullscreen: "Pantalla completa",
         notifications: "Notificaciones",
         enablePictureInPicture: "Activar picture-in-picture",

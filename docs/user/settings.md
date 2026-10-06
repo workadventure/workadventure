@@ -111,7 +111,7 @@ The administrator of your WorkAdventure can change these defaults.
 
 ### Other settings
 
-The last section, also titled **All settings**, groups these settings:
+The last section groups these settings:
 
 ![The away mode and the other settings](images/settings-other.png)
 
