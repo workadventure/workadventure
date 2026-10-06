@@ -393,6 +393,8 @@ export type WorkAdventureDesktopApi = {
         screenSharing: boolean;
         /** True while a game scene is loaded (gates the companion auto-show to actual worlds). */
         inWorld?: boolean;
+        /** True while a first-connection screen (name, Woka, companion, camera) waits for the user. */
+        onboarding?: boolean;
         /** True while a meeting invitation is pending — force-opens the companion for its banner. */
         invitationPending?: boolean;
         requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
