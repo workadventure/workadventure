@@ -234,10 +234,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     copied: "Kopěrowane!",
     poll: {
         title: "Wótběg",
-        closed: "Wótběg jo se zacynił.",
-        vote: "Wótběgowaś",
-        updateVote: "Wótběg wóspjetowaś",
-        removeVote: "Wótběg wótpóraś",
         submitError: "Waš wótběg njedajo se pósłaś. Prošu wopytajśo hyšći raz.",
         endError: "Wótběg njedajo se skóńcyś. Prošu wopytajśo hyšći raz.",
         deleteError: "Wótběg njedajo se lašowaś. Prošu wopytajśo hyšći raz.",

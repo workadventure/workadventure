@@ -233,10 +233,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     copied: "Copiat!",
     poll: {
         title: "Enquesta",
-        closed: "Enquesta tancada.",
-        vote: "Votar",
-        updateVote: "Actualitzar vot",
-        removeVote: "Treure el vot",
         submitError: "No s'ha pogut enviar el vot. Torneu-ho a provar.",
         endError: "No s'ha pogut tancar l'enquesta. Torneu-ho a provar.",
         deleteError: "No s'ha pogut suprimir l'enquesta. Torneu-ho a provar.",

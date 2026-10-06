@@ -234,10 +234,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     copied: "コピーしました",
     poll: {
         title: "投票",
-        closed: "投票は終了しました。",
-        vote: "投票する",
-        updateVote: "投票を更新",
-        removeVote: "投票を取り消す",
         submitError: "投票を送信できませんでした。もう一度お試しください。",
         endError: "投票を終了できませんでした。もう一度お試しください。",
         deleteError: "投票を削除できませんでした。もう一度お試しください。",

@@ -231,10 +231,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     copied: "已复制！",
     poll: {
         title: "投票",
-        closed: "投票已结束。",
-        vote: "投票",
-        updateVote: "更新投票",
-        removeVote: "撤销投票",
         submitError: "无法提交您的投票，请重试。",
         endError: "无法结束投票，请重试。",
         deleteError: "无法删除投票，请重试。",

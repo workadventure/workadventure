@@ -233,10 +233,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     copied: "Đã sao chép!",
     poll: {
         title: "Bình chọn",
-        closed: "Bình chọn đã đóng.",
-        vote: "Bình chọn",
-        updateVote: "Đổi lựa chọn",
-        removeVote: "Bỏ lựa chọn",
         submitError: "Không thể gửi lựa chọn của bạn. Hãy thử lại.",
         endError: "Không thể đóng cuộc bình chọn. Hãy thử lại.",
         deleteError: "Không thể xóa cuộc bình chọn. Hãy thử lại.",
