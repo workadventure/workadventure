@@ -159,7 +159,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Ihren Bildschirm teilen",
-            desc: "Möchten Sie Ihren Bildschirm mit anderen Benutzern teilen? Sie können! Sie können Ihren Bildschirm allen im Chat zeigen, und Sie können wählen, ob Sie Ihren gesamten Bildschirm oder nur ein bestimmtes Fenster teilen möchten.",
+            desc: "Möchten Sie Ihren Bildschirm mit anderen Benutzern teilen? Sie können! Sie können Ihren Bildschirm den Personen in Ihrer Blase oder Ihrem Besprechungsraum zeigen, und Sie können wählen, ob Sie Ihren gesamten Bildschirm oder nur ein bestimmtes Fenster teilen möchten.",
         },
         apps: {
             title: "Drittanbieter-Anwendungen",

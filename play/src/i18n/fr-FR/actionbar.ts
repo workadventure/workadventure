@@ -155,7 +155,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Partager votre écran",
-            desc: "Vous voulez partager votre écran avec les autres utilisateurs ? C'est possible ! Vous pourrez montrer votre écran à tous les utilisateurs de la discussion et vous pouvez choisir de partager l'intégralité de votre écran ou seulement une fenêtre spécifique.",
+            desc: "Vous voulez partager votre écran avec les autres utilisateurs ? C'est possible ! Vous pourrez montrer votre écran aux personnes de votre bulle ou de votre salle de réunion et vous pouvez choisir de partager l'intégralité de votre écran ou seulement une fenêtre spécifique.",
         },
         unfollow: {
             title: "Arrêter de suivre",

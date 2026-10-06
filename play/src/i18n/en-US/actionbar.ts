@@ -156,7 +156,7 @@ const actionbar: BaseTranslation = {
         },
         share: {
             title: "Share your screen",
-            desc: "Want to share your screen with other users? You can! You can show your screen to everyone in the chat, and you can choose to share your entire screen or just a specific window.",
+            desc: "Want to share your screen with other users? You can! You can show your screen to the people in your bubble or meeting room, and you can choose to share your entire screen or just a specific window.",
         },
         apps: {
             title: "Third party applications",

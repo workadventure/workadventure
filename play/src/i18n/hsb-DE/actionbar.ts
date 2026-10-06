@@ -157,7 +157,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Wašu wobrazowku dźělić",
-            desc: "Chceće wašu wobrazowku z druhimi wužiwarjemi dźělić? Móžeće! Móžeće wašu wobrazowku wšěm w chatu pokazać, a móžeće wubrać, zo byšće cyłu wobrazowku abo jenož wěsty wokno dźělili.",
+            desc: "Chceće wašu wobrazowku z druhimi wužiwarjemi dźělić? Móžeće! Móžeće wašu wobrazowku ludźom we wašej bublinje abo wašej wobdźělnej rumnosći pokazać, a móžeće wubrać, zo byšće cyłu wobrazowku abo jenož wěsty wokno dźělili.",
         },
         apps: {
             title: "Třeće nałoženja",

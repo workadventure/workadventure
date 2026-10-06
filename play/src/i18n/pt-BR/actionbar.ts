@@ -161,7 +161,7 @@ const actionbar: BaseTranslation = {
         },
         share: {
             title: "Compartilhar sua tela",
-            desc: "Quer compartilhar sua tela com outros usuários? Você pode! Você pode mostrar sua tela para todos no chat, e pode escolher compartilhar sua tela inteira ou apenas uma janela específica.",
+            desc: "Quer compartilhar sua tela com outros usuários? Você pode! Você pode mostrar sua tela para as pessoas na sua bolha ou sala de reunião, e pode escolher compartilhar sua tela inteira ou apenas uma janela específica.",
         },
         apps: {
             title: "Aplicações de terceiros",

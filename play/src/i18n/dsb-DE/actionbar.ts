@@ -157,7 +157,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Wašu wobrazowku źěliś",
-            desc: "Cośo wašu wobrazowku z drugimi wužywarjami źěliś? Móžośo! Móžośo wašu wobrazowku wšyknym w chatu pokazaś, a móžośo wubraś, aby cyłu wobrazowku abo jano wěsty wokno źělili.",
+            desc: "Cośo wašu wobrazowku z drugimi wužywarjami źěliś? Móžośo! Móžośo wašu wobrazowku luźam we wašej bublinje abo wašom zmakanjowem rumje pokazaś, a móžośo wubraś, aby cyłu wobrazowku abo jano wěsty wokno źělili.",
         },
         apps: {
             title: "Tśeśe nałoženja",
