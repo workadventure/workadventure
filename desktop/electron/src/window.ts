@@ -22,6 +22,7 @@ import {
     isRoomUrl,
     resolveInitialTarget,
     stripSensitiveQueryParams,
+    worldKeyOf,
     type DesktopAuthCallback,
     type DesktopConfig,
 } from "./desktop-url-policy";
@@ -34,9 +35,12 @@ import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetP
 import { stopPresenterCursor } from "./presenter-cursor";
 import {
     activateTab,
+    closeTab,
     createWorldView,
+    findTabShowingWorld,
     getActiveWorldContents,
     getControllingWorldContents,
+    getTabByContents,
     isActiveWorldContents,
     isControllingWorldContents,
     layoutActiveView,
@@ -927,13 +931,45 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
 }
 
 /**
- * Open a world in a NEW tab (Landing when no url). Used by the tab strip's "+" button, the
- * tray/menu recent + pinned entries, and deep-links, so opening a world never replaces the tab
- * the user is currently in.
+ * Switch to the tab that already shows the world of `url`, if any (true). The requesting tab is
+ * closed when it held no world: a Landing opened only to pick that world.
+ */
+export function switchToOpenWorld(url: string, requester?: Electron.WebContents): boolean {
+    const existing = findTabShowingWorld(url);
+    if (!existing || existing.view.webContents === requester) {
+        return false;
+    }
+    const requestingTab = requester ? getTabByContents(requester) : undefined;
+    ElectronLog.info(`Switching to the tab that already shows ${worldKeyOf(url)}.`);
+    activateTab(existing.id);
+    if (requestingTab && worldKeyOf(requestingTab.url) === undefined) {
+        closeTab(requestingTab.id);
+    }
+    showWindow();
+    return true;
+}
+
+/**
+ * Open a world (Landing when no url), from the tab strip's "+" button, the tray/menu recent + pinned
+ * entries, deep links and window.open. A world already open in a tab is switched to rather than opened
+ * twice. Otherwise it gets a new tab, so it never replaces the tab the user is in — unless the tab bar
+ * is hidden: a tab the user cannot see is a world they cannot reach, so the world they leave is closed.
  */
 export async function openWorldTab(url?: string): Promise<void> {
     if (!mainWindow) {
         await createWindow(url);
+        return;
+    }
+    if (url && switchToOpenWorld(url)) {
+        return;
+    }
+    if (settings.get("tab_bar_enabled") === false) {
+        if (url) {
+            await loadDesktopTarget(url);
+        } else {
+            await loadLandingPage();
+        }
+        showWindow();
         return;
     }
     const config = getDesktopConfig();
