@@ -214,8 +214,6 @@ export interface ProximityChatSidePanelRoom extends ChatRoom, ChatRoomNotificati
 
 export interface ChatRoomModeration {
     readonly id: string;
-    /** True when the current user is room admin (Matrix power level). Used to gate invite / kick / ban / role changes in the UI. */
-    readonly isCurrentUserRoomAdmin: Readable<boolean>;
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
     readonly hasPermissionForRoomStateEvent: (eventType: keyof StateEvents) => Readable<boolean>;
@@ -588,11 +586,7 @@ export function hasChatRoomModeration(
     conversation: ChatConversation | undefined,
 ): conversation is ChatRoom & ChatRoomModeration {
     const candidate = conversation as (ChatRoom & Partial<ChatRoomModeration>) | undefined;
-    return (
-        candidate?.conversationKind === "room" &&
-        typeof candidate.isCurrentUserRoomAdmin?.subscribe === "function" &&
-        typeof candidate.hasPermissionTo === "function"
-    );
+    return candidate?.conversationKind === "room" && typeof candidate.hasPermissionTo === "function";
 }
 
 export function hasChatRoomNotificationControl(

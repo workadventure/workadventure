@@ -19,7 +19,6 @@
 
     let { isOpen, room }: Props = $props();
     let members = $derived(room.members);
-    let isRoomAdmin = $derived(room.isCurrentUserRoomAdmin);
 
     let invitations: { value: string; label: string }[] = $state([]);
     let sendingInvitationsToRoom = $state(false);
@@ -118,7 +117,7 @@
                     </div>
                 {/if}
 
-                {#if $isRoomAdmin}
+                {#if $hasPermissionToInvite}
                     <section class="flex flex-col gap-2">
                         <h2 class="text-xs font-medium uppercase tracking-wide text-white/45">
                             {$LL.chat.manageRoomUsers.invitations()}
@@ -157,11 +156,11 @@
             <Button variant="secondary" class="flex-1" onclick={() => modals.close()}>
                 {$LL.chat.manageRoomUsers.buttons.cancel()}
             </Button>
-            {#if $isRoomAdmin}
+            {#if $hasPermissionToInvite}
                 <Button
                     dataTestId="createRoomButton"
                     class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
-                    disabled={invitations === undefined || invitations.length === 0 || !$hasPermissionToInvite}
+                    disabled={invitations === undefined || invitations.length === 0}
                     onclick={inviteUsersAndCloseModalOnSuccess}
                     >{$LL.chat.manageRoomUsers.buttons.sendInvitations()}
                 </Button>

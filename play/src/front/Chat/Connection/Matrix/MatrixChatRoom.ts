@@ -151,7 +151,6 @@ export class MatrixChatRoom
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
     currentRoomMember: Readable<MatrixChatRoomMember | undefined>;
-    readonly isCurrentUserRoomAdmin: Readable<boolean>;
     private notSentEvents: MapStore<string, MatrixEvent> = new MapStore<string, MatrixEvent>();
     shouldRetrySendingEvents = derived(this.notSentEvents, (notSentEvents) => notSentEvents.size > 0);
 
@@ -398,21 +397,6 @@ export class MatrixChatRoom
         this.currentRoomMember = derived(
             this.members,
             (members) => members.filter((member) => member.id === this.matrixRoom.myUserId)[0],
-        );
-
-        this.isCurrentUserRoomAdmin = derived(
-            this.members,
-            (members, set) => {
-                const me = members.find((m) => m.id === this.matrixRoom.myUserId);
-                if (!me) {
-                    set(false);
-                    return () => {};
-                }
-                return me.permissionLevel.subscribe((level) => {
-                    set(level === ChatPermissionLevel.ADMIN);
-                });
-            },
-            false,
         );
 
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
