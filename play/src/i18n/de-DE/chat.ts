@@ -664,7 +664,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Dateianhang",
         description: "Laden Sie eine Datei hoch, um sie zu teilen",
-        featureComingSoon: "Funktion kommt bald!",
     },
     loginTokenError: "Ein Fehler ist aufgetreten. Bitte versuchen Sie, sich erneut anzumelden",
     reconnect: "Erneut verbinden",

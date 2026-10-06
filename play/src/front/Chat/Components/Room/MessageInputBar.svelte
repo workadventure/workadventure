@@ -753,9 +753,11 @@
                 <IconPaperclip font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
                 <p class={applicationDescriptionClass}>
-                    {fileAttachementEnabled && !isProximityChatRoom
-                        ? $LL.chat.fileAttachment.description()
-                        : $LL.chat.fileAttachment.featureComingSoon()}
+                    {!fileAttachementEnabled
+                        ? $LL.chat.disabledByAdmin()
+                        : isProximityChatRoom || !$canSendMessages
+                          ? $LL.chat.disabled()
+                          : $LL.chat.fileAttachment.description()}
                 </p>
             </button>
 

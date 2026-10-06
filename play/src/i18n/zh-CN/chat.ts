@@ -653,7 +653,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "文件附件",
         description: "上传并共享文件",
-        featureComingSoon: "即将推出！",
     },
     loginTokenError: "发生错误。请尝试重新连接",
     reconnect: "重新连接",

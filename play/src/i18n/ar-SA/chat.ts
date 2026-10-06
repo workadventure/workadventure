@@ -656,7 +656,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "إرفاق ملف",
         description: "تحميل ومشاركة ملف",
-        featureComingSoon: "قريبًا!",
     },
     loginTokenError: "حدث خطأ. يرجى إعادة الاتصال", // An error occurred. Please try to reconnect
     reconnect: "إعادة الاتصال", // Reconnect

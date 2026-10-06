@@ -656,7 +656,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "ไฟล์แนบ",
         description: "อัปโหลดและแชร์ไฟล์",
-        featureComingSoon: "เร็ว ๆ นี้!",
     },
     loginTokenError: "เกิดข้อผิดพลาด กรุณาลองเชื่อมต่อใหม่",
     reconnect: "เชื่อมต่อใหม่",

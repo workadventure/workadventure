@@ -657,7 +657,6 @@ const chat: BaseTranslation = {
     fileAttachment: {
         title: "File attachment",
         description: "Upload and share a file",
-        featureComingSoon: "Coming soon!",
     },
     loginTokenError: "An error occurred. Please try to reconnect",
     reconnect: "Reconnect",

@@ -659,7 +659,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Datajowy zbytny zapis",
         description: "Nagraś dataju, aby ju źělił",
-        featureComingSoon: "Funkcija pśiducy!",
     },
     loginTokenError: "Zmólka jo nastała. Pšosym wopytaj, se znowa pśizjawiś",
     reconnect: "Znowa zwězaś",

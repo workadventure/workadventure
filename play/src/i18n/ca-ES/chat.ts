@@ -657,7 +657,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Adjunt de fitxer",
         description: "Puja i comparteix un fitxer",
-        featureComingSoon: "Properament!",
     },
     loginTokenError: "S'ha produït un error. Si us plau, intenteu tornar-vos a connectar",
     reconnect: "Tornar a connectar",
