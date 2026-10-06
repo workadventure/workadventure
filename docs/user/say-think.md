@@ -10,7 +10,7 @@ Make a comic-style bubble appear above your Woka, to say something to the people
 
 ## Writing a bubble
 
-- Press **Enter** to open a **Say** bubble, or **Ctrl + Enter** to open a **Think** bubble.
+- Press **Enter** to open a **Say** bubble, or **Ctrl + Enter** to open a **Think** bubble (Ctrl on a Mac too, not Cmd).
 - Or click the emoji button in the action bar, then **Say** or **Think**.
 
 ![The Say and Think buttons, under the emojis](images/say-think-menu.png)
@@ -30,4 +30,6 @@ Your status can override the shortcut: the window opens on **Think** when you ar
 
 :::info For administrators
 The bubbles can be turned off for a whole world: **Enable comics-like bubbles**, in the **Chat & User List** section of the world settings in the admin (premium worlds).
+
+On a self-hosted server, `ENABLE_SAY=false` turns them off on every map.
 :::
