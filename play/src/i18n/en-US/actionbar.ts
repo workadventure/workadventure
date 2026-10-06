@@ -57,7 +57,7 @@ const actionbar: BaseTranslation = {
         activate: "Activate your speaker",
         noDevices: "No speaker device found",
         noDevicesDesc:
-            "Your browser does not list any selectable audio output. Some browsers limit this (for example Safari). Try another browser, reconnect headphones or speakers, check your system sound settings and your computer's configuration (privacy, devices).",
+            "Your browser does not list any selectable audio output. Some browsers limit this. Try another browser, reconnect headphones or speakers, check your system sound settings and your computer's configuration (privacy, devices).",
     },
     status: {
         ONLINE: "Online",

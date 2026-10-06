@@ -57,7 +57,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         activate: "Bật loa của bạn",
         noDevices: "Không tìm thấy thiết bị loa",
         noDevicesDesc:
-            "Trình duyệt của bạn không liệt kê đầu ra âm thanh nào có thể chọn. Một số trình duyệt hạn chế điều này (ví dụ Safari). Hãy thử trình duyệt khác, cắm lại tai nghe hoặc loa, kiểm tra cài đặt âm thanh hệ thống và cấu hình máy tính của bạn (quyền riêng tư, thiết bị).",
+            "Trình duyệt của bạn không liệt kê đầu ra âm thanh nào có thể chọn. Một số trình duyệt hạn chế điều này. Hãy thử trình duyệt khác, cắm lại tai nghe hoặc loa, kiểm tra cài đặt âm thanh hệ thống và cấu hình máy tính của bạn (quyền riêng tư, thiết bị).",
     },
     status: {
         ONLINE: "Trực tuyến",

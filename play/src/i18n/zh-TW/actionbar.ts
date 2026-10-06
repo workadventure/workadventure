@@ -56,7 +56,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         activate: "啟用您的喇叭",
         noDevices: "找不到喇叭裝置",
         noDevicesDesc:
-            "瀏覽器未列出可選擇的音訊輸出裝置。某些瀏覽器會限制此項（例如 Safari）。請嘗試其他瀏覽器、重新連接耳機或喇叭，檢查系統聲音設定和電腦的設定（隱私、裝置）。",
+            "瀏覽器未列出可選擇的音訊輸出裝置。某些瀏覽器會限制此項。請嘗試其他瀏覽器、重新連接耳機或喇叭，檢查系統聲音設定和電腦的設定（隱私、裝置）。",
     },
     status: {
         ONLINE: "線上",
