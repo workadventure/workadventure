@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { canHideWindowsFromCapture, usesSystemScreenSharePicker } from "./platform-capture-policy";
+import { canHideWindowsFromCapture, knowsWindowPositions, usesSystemScreenSharePicker } from "./platform-capture-policy";
 
 test("the system share dialog is the picker under Wayland only", () => {
     expect(usesSystemScreenSharePicker("linux", { XDG_SESSION_TYPE: "wayland" })).toBe(true);
@@ -12,4 +12,10 @@ test("only macOS and Windows can keep a window out of the capture", () => {
     expect(canHideWindowsFromCapture("darwin")).toBe(true);
     expect(canHideWindowsFromCapture("win32")).toBe(true);
     expect(canHideWindowsFromCapture("linux")).toBe(false);
+});
+
+test("window positions are unknown under Wayland only", () => {
+    expect(knowsWindowPositions("linux", { XDG_SESSION_TYPE: "wayland" })).toBe(false);
+    expect(knowsWindowPositions("linux", { XDG_SESSION_TYPE: "x11" })).toBe(true);
+    expect(knowsWindowPositions("darwin", {})).toBe(true);
 });

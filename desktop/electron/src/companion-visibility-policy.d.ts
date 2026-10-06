@@ -4,7 +4,7 @@ export type CompanionVisibilityState = {
     screenSharing?: boolean;
     /** False where no content-protected meeting bar can replace the panel during a share (Linux). */
     meetingBarAvailable?: boolean;
-    mainWindowFocused?: boolean;
+    mainWindowInView?: boolean;
     pipActive?: boolean;
     invitationPending?: boolean;
     inWorld?: boolean;
@@ -24,4 +24,9 @@ export function latchAfterPresenceChange(
     next: CompanionPresenceEdge
 ): boolean;
 export function latchAfterMainWindowBlur(latch: boolean, presence: CompanionPresenceEdge): boolean;
+export function staysInViewAfterBlur(blur: {
+    knowsWindowPositions?: boolean;
+    pointerDisplayId?: number;
+    windowDisplayId?: number;
+}): boolean;
 export function leftWorld(previous: CompanionPresenceEdge, next: CompanionPresenceEdge): boolean;
