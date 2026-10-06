@@ -18,6 +18,8 @@
     import { coWebsites, windowSize } from "../Stores/CoWebsiteStore";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
+    import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
+    import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
     import { popupStore } from "../Stores/PopupStore";
     import {
         mapEditorAskToClaimPersonalAreaStore,
@@ -78,6 +80,8 @@
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
+    import Calendar from "./Calendar/Calendar.svelte";
+    import TodoList from "./TodoList/TodoList.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     import MeetingInvitationPopup from "./MeetingInvitation/MeetingInvitationPopup.svelte";
     import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
@@ -328,6 +332,16 @@
                 </span>
             </button>
         </div>
+    {/if}
+
+    <!-- Rendered here rather than beside #main-layout: its notifications and toasts must show above these
+         panels, and they cannot leave its stacking context (z-10). The calendar reminder opens the agenda and
+         announces the meeting at the same time, in the same corner. -->
+    {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
+        <Calendar />
+    {/if}
+    {#if $todoListIsActivatedStore && $isTodoListVisibleStore}
+        <TodoList />
     {/if}
 
     <AudioPlayer />
