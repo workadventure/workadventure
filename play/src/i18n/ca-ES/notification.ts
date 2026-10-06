@@ -30,9 +30,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "Actualitzar",
         continue: "Continuar sense notificacions",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Permetre les notificacions des de la barra d’adreces a Chrome",
     },
     addNewTag: 'afegir un nou tag: "{tag}"',
     screenSharingError: "No es pot iniciar el compartir de pantalla",

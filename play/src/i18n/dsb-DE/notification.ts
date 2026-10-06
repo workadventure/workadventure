@@ -30,9 +30,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "Aktualizěrowaś",
         continue: "Bźez powěźeńkow pókšacowaś",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Powěźeńki pśez adresowe pólo w Chrome zwóliś",
     },
     addNewTag: 'nowy tag pśidaś: "{tag}"',
     screenSharingError: "Źělenje wobrazowki njedajo se startowaś",

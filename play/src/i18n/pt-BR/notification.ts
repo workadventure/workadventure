@@ -23,9 +23,9 @@ const notification: BaseTranslation = {
         refresh: "Atualizar",
         continue: "Continuar sem notificação",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Permitir notificações na barra de endereços do Chrome",
     },
     addNewTag: "adicionar uma nova tag: '{tag}'",
     floorGivenBack: "Você devolveu a palavra",

@@ -30,9 +30,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "Tải lại",
         continue: "Tiếp tục không cần thông báo",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Cho phép thông báo từ thanh địa chỉ trong Chrome",
     },
     addNewTag: "thêm nhãn mới: '{tag}'",
     screenSharingError: "Không thể bắt đầu chia sẻ màn hình",

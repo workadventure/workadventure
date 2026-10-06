@@ -23,9 +23,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "تحديث", // refresh
         continue: "المتابعة بدون إشعار", // continue without notification
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png", // firefox
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png", // chrome
         },
+        screenAlt: "السماح بالإشعارات من شريط العناوين في Chrome", // allow notifications from the address bar in Chrome
     },
     addNewTag: "إضافة علامة جديدة: '{tag}'", // add new tag: '{tag}'
     screenSharingError: "تعذر بدء مشاركة الشاشة",

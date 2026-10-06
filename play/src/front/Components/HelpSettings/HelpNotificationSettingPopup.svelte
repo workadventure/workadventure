@@ -49,22 +49,16 @@
         <div class="p-4 italic opacity-50 text-sm leading-4">
             {$LL.notification.help.content()}
         </div>
-        <div class="h-72 overflow-hidden opacity-80 saturate-50">
+        <div class="max-h-72 overflow-hidden opacity-80 saturate-50">
             {#if isFirefox}
                 <p class="err">
                     {$LL.notification.help.firefoxContent()}
                 </p>
-                <img
-                    draggable="false"
-                    src={$LL.notification.help.screen.firefox()}
-                    alt="help camera setup"
-                    class="w-full m-auto"
-                />
             {:else if isChrome && !isAndroid}
                 <img
                     draggable="false"
                     src={$LL.notification.help.screen.chrome()}
-                    alt="help camera setup"
+                    alt={$LL.notification.help.screenAlt()}
                     class="w-full m-auto"
                 />
             {/if}
