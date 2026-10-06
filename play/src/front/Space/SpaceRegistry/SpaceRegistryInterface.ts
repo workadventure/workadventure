@@ -28,7 +28,6 @@ export interface SpaceRegistryInterface {
     readonly isLiveStreamingAudioStore: Readable<boolean>;
     readonly raisedHandSectionsStore: Readable<RaisedHandSection[]>;
     readonly shouldPublishScreenShareStore: Readable<boolean>;
-    readonly isScreenSharingAvailableStore: Readable<boolean>;
     spacesEligibleForRecording: Readable<SpaceInterface[]>;
     readonly spacesSynchronizingMedia: Readable<SpaceInterface[]>;
 }

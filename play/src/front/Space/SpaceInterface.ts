@@ -195,8 +195,8 @@ export interface SpaceInterface {
     waitForSpaceUser(spaceUserId: SpaceUser["spaceUserId"], timeoutMs: number): Promise<SpaceUserExtended>;
 
     /**
-     * In megaphone see-attendees space (LIVE_STREAMING_USERS_WITH_FEEDBACK), only the speaker should publish screen share.
-     * Returns true when the local user may publish/send screen share, false when they are a listener in see-attendees mode.
+     * In a live streaming space (megaphone, podium), only the speakers publish their screen share.
+     * Returns true when the local user may publish/send screen share, false when they are in the audience.
      */
     shouldPublishScreenShare(): boolean;
 

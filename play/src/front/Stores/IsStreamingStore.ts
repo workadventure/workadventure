@@ -38,10 +38,10 @@ function liveStreamingStateStore(
 export const isLiveStreamingStore = liveStreamingStateStore((spaceRegistry) => spaceRegistry.isLiveStreamingStore);
 
 /**
- * This store is true if a screen share would reach someone in any space (not as a megaphone audience, for instance).
+ * This store is true if a screen share would reach someone in any space (never as a megaphone or podium audience).
  */
 export const isScreenSharingAvailableStore = liveStreamingStateStore(
-    (spaceRegistry) => spaceRegistry.isScreenSharingAvailableStore,
+    (spaceRegistry) => spaceRegistry.shouldPublishScreenShareStore,
 );
 
 /**
