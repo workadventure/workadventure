@@ -17,7 +17,7 @@
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
-    import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import { pictureInPictureLayoutStore } from "../../Stores/PeerStore";
     import { blocker } from "../../Utils/screenBlocker";
     import { findHandPosition, raisedHandsOrderStore } from "../../Stores/RaisedHandsStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -434,8 +434,8 @@
                                     class="z-[251] absolute p-2 right-1 white"
                                     class:top-1={videoEnabled}
                                     class:top-0={!videoEnabled}
-                                    class:text-white={$activePictureInPictureStore}
-                                    class:opacity-20={$activePictureInPictureStore}
+                                    class:text-white={$pictureInPictureLayoutStore}
+                                    class:opacity-20={$pictureInPictureLayoutStore}
                                 >
                                     {#if $hasAudioStore && !remoteMicrophoneMuted && !audioStateMismatch}
                                         <SoundMeterWidget
