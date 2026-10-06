@@ -10,8 +10,8 @@ const say: DeepPartial<Translation["say"]> = {
     button: "Bubbel maken",
     tooltip: {
         description: {
-            say: "Toont een chatbubbel boven je personage. Zichtbaar voor iedereen op de kaart, blijft 5 seconden weergegeven.",
-            think: "Toont een gedachtebubbel boven je personage. Zichtbaar voor alle spelers op de kaart, blijft weergegeven zolang je niet beweegt.",
+            say: "Toont een chatbubbel boven je personage. Zichtbaar voor iedereen die je personage kan zien, blijft 5 seconden weergegeven.",
+            think: "Toont een gedachtebubbel boven je personage. Zichtbaar voor iedereen die je personage kan zien, blijft weergegeven zolang je niet beweegt.",
         },
     },
 };

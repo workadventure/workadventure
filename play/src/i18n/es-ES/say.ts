@@ -10,8 +10,8 @@ const say: DeepPartial<Translation["say"]> = {
     button: "Crear una burbuja",
     tooltip: {
         description: {
-            say: "Muestra una burbuja de chat sobre tu personaje. Visible para todos en el mapa, permanece visible durante 5 segundos.",
-            think: "Muestra una burbuja de pensamiento sobre tu personaje. Visible para todos los jugadores en el mapa, permanece visible mientras no te muevas.",
+            say: "Muestra una burbuja de chat sobre tu personaje. Visible para cualquiera que vea tu personaje, permanece visible durante 5 segundos.",
+            think: "Muestra una burbuja de pensamiento sobre tu personaje. Visible para cualquiera que vea tu personaje, permanece visible mientras no te muevas.",
         },
     },
 };

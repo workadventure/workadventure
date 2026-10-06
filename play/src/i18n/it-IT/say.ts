@@ -10,8 +10,8 @@ const say: DeepPartial<Translation["say"]> = {
     button: "Crea bolla",
     tooltip: {
         description: {
-            say: "Mostra una bolla di chat sopra il tuo personaggio. Visibile a tutti sulla mappa, rimane visualizzata per 5 secondi.",
-            think: "Mostra una bolla di pensiero sopra il tuo personaggio. Visibile a tutti i giocatori sulla mappa, rimane visualizzata finché non ti muovi.",
+            say: "Mostra una bolla di chat sopra il tuo personaggio. Visibile a chiunque veda il tuo personaggio, rimane visualizzata per 5 secondi.",
+            think: "Mostra una bolla di pensiero sopra il tuo personaggio. Visibile a chiunque veda il tuo personaggio, rimane visualizzata finché non ti muovi.",
         },
     },
 };

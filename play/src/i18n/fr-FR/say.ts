@@ -10,8 +10,8 @@ const say: DeepPartial<Translation["say"]> = {
     button: "Créer une bulle",
     tooltip: {
         description: {
-            say: "Affiche une bulle de discussion au-dessus de votre personnage. Visible par tous sur la carte, elle reste affichée pendant 5 secondes.",
-            think: "Affiche une bulle de pensée au-dessus de votre personnage. Visible par tous les joueurs sur la carte, elle reste affichée tant que vous ne bougez pas.",
+            say: "Affiche une bulle de discussion au-dessus de votre personnage. Visible par tous ceux qui voient votre personnage, elle reste affichée pendant 5 secondes.",
+            think: "Affiche une bulle de pensée au-dessus de votre personnage. Visible par tous ceux qui voient votre personnage, elle reste affichée tant que vous ne bougez pas.",
         },
     },
 };
