@@ -97,14 +97,15 @@
             title={$LL.chat.createFolder.title()}
             onclick={openCreateSpace}
         />
-        {#if shouldDisplayManageParticipantButton && folder}
-            <RoomOption
-                dataTestId="manageParticipantOption"
-                IconComponent={IconUserEdit}
-                title={$LL.chat.manageRoomUsers.roomOption()}
-                onclick={openManageParticipantsModal}
-            />
-        {/if}
+    {/if}
+
+    {#if shouldDisplayManageParticipantButton && folder}
+        <RoomOption
+            dataTestId="manageParticipantOption"
+            IconComponent={IconUserEdit}
+            title={$LL.chat.manageRoomUsers.roomOption()}
+            onclick={openManageParticipantsModal}
+        />
     {/if}
 
     {#if folder}

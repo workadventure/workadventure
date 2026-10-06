@@ -159,8 +159,8 @@ Click **Save** to apply the changes. Only people allowed to **Change permissions
 ## Folders
 
 Folders have participants too. Open the folder menu (**⋯**) and choose **Participants**. This option only appears if
-you can create rooms in this folder and invite, kick or ban its participants. Removing someone from a folder does not
-remove them from the rooms in this folder.
+you can invite, kick or ban its participants. Removing someone from a folder does not remove them from the rooms in
+this folder.
 
 :::info
 If you are using the SaaS version of WorkAdventure, administrators can create chat rooms whose members and moderators
