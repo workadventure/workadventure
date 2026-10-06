@@ -1,15 +1,11 @@
-"use strict";
-
-const test = require("node:test");
-const assert = require("node:assert");
-
-const { createWorldViewWebPreferences } = require("./world-view-policy");
+import { expect, test } from "vitest";
+import { createWorldViewWebPreferences } from "./world-view-policy";
 
 test("world views keep the hardened renderer settings", () => {
     const preferences = createWorldViewWebPreferences("/preload.js");
-    assert.strictEqual(preferences.nodeIntegration, false);
-    assert.strictEqual(preferences.contextIsolation, true);
-    assert.strictEqual(preferences.sandbox, true);
-    assert.strictEqual(preferences.webSecurity, true);
-    assert.strictEqual(preferences.preload, "/preload.js");
+    expect(preferences.nodeIntegration).toBe(false);
+    expect(preferences.contextIsolation).toBe(true);
+    expect(preferences.sandbox).toBe(true);
+    expect(preferences.webSecurity).toBe(true);
+    expect(preferences.preload).toBe("/preload.js");
 });

@@ -12,7 +12,7 @@
         "dev": "npm run build -- --watch --onSuccess 'electron dist/main.js'",
         "bundle": "npm run build && electron-builder install-app-deps && electron-builder",
         "typecheck": "tsc --noEmit",
-        "test": "node --test src/**/*.test.js",
+        "test": "vitest run",
         "lint": "eslint src/ . --ext .ts",
         "fix": "eslint --fix src/ . --ext .ts",
         "pretty": "prettier --write 'src/**/*.{ts,tsx}'",
@@ -37,6 +37,7 @@
         "eslint": "^8.12.0",
         "prettier": "^2.6.2",
         "tsup": "^5.12.4",
-        "typescript": "^4.6.3"
+        "typescript": "^4.6.3",
+        "vitest": "^4.1.7"
     }
 }

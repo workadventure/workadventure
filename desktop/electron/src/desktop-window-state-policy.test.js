@@ -1,7 +1,5 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-
-const { createDesktopWindowState } = require("./desktop-window-state-policy");
+import { expect, test } from "vitest";
+import { createDesktopWindowState } from "./desktop-window-state-policy";
 
 test("creates a visible focused desktop window state", () => {
     const state = createDesktopWindowState({
@@ -10,7 +8,7 @@ test("creates a visible focused desktop window state", () => {
         isMinimized: () => false,
     });
 
-    assert.deepEqual(state, {
+    expect(state).toStrictEqual({
         focused: true,
         visible: true,
         minimized: false,
@@ -24,7 +22,7 @@ test("creates a hidden minimized desktop window state", () => {
         isMinimized: () => true,
     });
 
-    assert.deepEqual(state, {
+    expect(state).toStrictEqual({
         focused: false,
         visible: false,
         minimized: true,
@@ -32,7 +30,7 @@ test("creates a hidden minimized desktop window state", () => {
 });
 
 test("uses a safe inactive state when no window exists", () => {
-    assert.deepEqual(createDesktopWindowState(undefined), {
+    expect(createDesktopWindowState(undefined)).toStrictEqual({
         focused: false,
         visible: false,
         minimized: false,

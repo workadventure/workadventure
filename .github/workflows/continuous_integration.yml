@@ -471,7 +471,7 @@ jobs:
         run: yarn run lint
         working-directory: "desktop/electron"
 
-      - name: "Jasmine"
+      - name: "Unit tests"
         run: yarn run test
         working-directory: "desktop/electron"
 

@@ -1,16 +1,14 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-
-const { shouldMaximizeBeforeLoad } = require("./window-state-policy");
+import { expect, test } from "vitest";
+import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 
 test("maximizes before loading remote content on first launch without persisted bounds", () => {
-    assert.equal(shouldMaximizeBeforeLoad({ width: 1000, height: 800 }), true);
+    expect(shouldMaximizeBeforeLoad({ width: 1000, height: 800 })).toBe(true);
 });
 
 test("preserves a normal restored window with persisted bounds", () => {
-    assert.equal(shouldMaximizeBeforeLoad({ x: 10, y: 20, width: 1200, height: 900 }), false);
+    expect(shouldMaximizeBeforeLoad({ x: 10, y: 20, width: 1200, height: 900 })).toBe(false);
 });
 
 test("restores a maximized window before loading remote content", () => {
-    assert.equal(shouldMaximizeBeforeLoad({ x: 10, y: 20, width: 1200, height: 900, isMaximized: true }), true);
+    expect(shouldMaximizeBeforeLoad({ x: 10, y: 20, width: 1200, height: 900, isMaximized: true })).toBe(true);
 });
