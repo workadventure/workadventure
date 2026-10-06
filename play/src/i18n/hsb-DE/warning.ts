@@ -57,7 +57,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Description:
             "Dźeržće WorkAdventure wot browserowych rajtarkow dźělene a namakajće jo spěšnje w swojej nadawkowej lajsće.",
         iosStepsTitle: "Kak instalować",
-        iosStep1: "Tłóč na tłóčatko „Dźělić“ (kwadrat ze šipku) deleka w Safari.",
+        iosStep1: "Tłóč na tłóčatko „Dźělić“ (kwadrat ze šipku) w swojim wobhladowaku.",
         iosStep2: "Skuluj deleka a tłóč na „K startowemu wobrazowej přidać“.",
         iosStep3: "Tłóč na „Přidać“, zo by wobkrućił.",
         install: "WorkAdventure-app instalować",

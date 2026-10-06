@@ -52,7 +52,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Title: "獨立應用程式視窗",
         feature2Description: "讓 WorkAdventure 與瀏覽器分頁分開，並可在工作列中一眼找到它。",
         iosStepsTitle: "如何安裝",
-        iosStep1: "在 Safari 底部點選「分享」按鈕（帶箭頭的方框）。",
+        iosStep1: "點選瀏覽器中的「分享」按鈕（帶箭頭的方框）。",
         iosStep2: "向下捲動並點選「加入主畫面」。",
         iosStep3: "點選「加入」以確認。",
         install: "安裝 WorkAdventure 應用程式",

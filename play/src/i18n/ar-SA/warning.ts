@@ -53,7 +53,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Title: "نافذة تطبيق مستقلة",
         feature2Description: "أبقِ WorkAdventure منفصلًا عن علامات تبويب المتصفح واعثر عليه بسرعة في شريط المهام.",
         iosStepsTitle: "كيفية التثبيت",
-        iosStep1: "اضغط على زر المشاركة (مربع مع سهم) في أسفل Safari.",
+        iosStep1: "اضغط على زر المشاركة (مربع مع سهم) في متصفحك.",
         iosStep2: "مرر للأسفل واضغط على «إضافة إلى الشاشة الرئيسية».",
         iosStep3: "اضغط على «إضافة» للتأكيد.",
         install: "تثبيت تطبيق WorkAdventure",

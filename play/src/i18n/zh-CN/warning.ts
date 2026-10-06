@@ -52,7 +52,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Title: "独立应用窗口",
         feature2Description: "让 WorkAdventure 与浏览器标签页分开，并可在任务栏中一眼找到它。",
         iosStepsTitle: "如何安装",
-        iosStep1: "在 Safari 底部点击“分享”按钮（带箭头的方框）。",
+        iosStep1: "点击浏览器中的“分享”按钮（带箭头的方框）。",
         iosStep2: "向下滚动并点击“添加到主屏幕”。",
         iosStep3: "点击“添加”以确认。",
         install: "安装 WorkAdventure 应用",

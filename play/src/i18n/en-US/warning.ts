@@ -53,7 +53,7 @@ const warning: BaseTranslation = {
         feature2Description:
             "Keep WorkAdventure separate from your browser tabs and find WorkAdventure at a glance in your taskbar.",
         iosStepsTitle: "How to install",
-        iosStep1: "Tap the Share button (square with arrow) at the bottom of Safari.",
+        iosStep1: "Tap your browser's Share button (square with arrow).",
         iosStep2: 'Scroll down and tap "Add to Home Screen".',
         iosStep3: 'Tap "Add" to confirm.',
         install: "Install WorkAdventure App",

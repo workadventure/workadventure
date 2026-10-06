@@ -55,7 +55,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Description:
             "Źaržćo WorkAdventure wótkźělone wót rejtarikow wobglědowaka a namakajśo jo malsnje w swójej nadawkowej rědce.",
         iosStepsTitle: "Kak instalěrowaś",
-        iosStep1: "Pótusniśo tłocašk „Źěliś“ (kwadrat z šypku) dołojce w Safari.",
+        iosStep1: "Pótusniśo tłocašk „Źěliś“ (kwadrat z šypku) w swójom wobglědowaku.",
         iosStep2: "Skulěrujśo dołojce a pótusniśo „K startowemu wobrazoju pśidaś“.",
         iosStep3: "Pótusniśo „Pśidaś“, aby wobkšuśił.",
         install: "WorkAdventure-app instalěrowaś",

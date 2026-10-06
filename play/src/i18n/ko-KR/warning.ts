@@ -54,7 +54,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Title: "전용 앱 창",
         feature2Description: "WorkAdventure를 브라우저 탭과 분리해 두고 작업 표시줄에서 한눈에 찾으세요.",
         iosStepsTitle: "설치 방법",
-        iosStep1: "Safari 하단의 공유 버튼(화살표가 있는 사각형)을 탭하세요.",
+        iosStep1: "브라우저의 공유 버튼(화살표가 있는 사각형)을 탭하세요.",
         iosStep2: '아래로 스크롤하여 "홈 화면에 추가"를 탭하세요.',
         iosStep3: '"추가"를 탭하여 확인하세요.',
         install: "WorkAdventure 앱 설치",

@@ -56,7 +56,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Title: "専用のアプリウィンドウ",
         feature2Description: "WorkAdventure をブラウザのタブから分けて、タスクバーですぐに見つけられます。",
         iosStepsTitle: "インストール方法",
-        iosStep1: "Safariの下部にある「共有」ボタン（四角と矢印）をタップします。",
+        iosStep1: "ブラウザの「共有」ボタン（四角と矢印）をタップします。",
         iosStep2: "下にスクロールして「ホーム画面に追加」をタップします。",
         iosStep3: "「追加」をタップして確認します。",
         install: "WorkAdventureアプリをインストール",

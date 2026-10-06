@@ -57,7 +57,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Description:
             "Mantén WorkAdventure separat de les pestanyes del navegador i troba'l d'un cop d'ull a la barra de tasques.",
         iosStepsTitle: "Com instal·lar",
-        iosStep1: "Toqueu el botó Compartir (quadrat amb fletxa) a la part inferior de Safari.",
+        iosStep1: "Toqueu el botó Compartir (quadrat amb fletxa) del navegador.",
         iosStep2: "Desplaceu-vos cap avall i toqueu «Afegir a la pantalla d'inici».",
         iosStep3: "Toqueu «Afegir» per confirmar.",
         install: "Instal·lar l'app WorkAdventure",

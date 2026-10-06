@@ -58,7 +58,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Description:
             "Halten Sie WorkAdventure getrennt von Ihren Browser-Tabs und finden Sie WorkAdventure auf einen Blick in Ihrer Taskleiste.",
         iosStepsTitle: "So installieren Sie",
-        iosStep1: "Tippen Sie auf die Teilen-Schaltfläche (Quadrat mit Pfeil) unten in Safari.",
+        iosStep1: "Tippen Sie in Ihrem Browser auf die Teilen-Schaltfläche (Quadrat mit Pfeil).",
         iosStep2: "Scrollen Sie nach unten und tippen Sie auf „Zum Home-Bildschirm“.",
         iosStep3: "Tippen Sie auf „Hinzufügen“, um zu bestätigen.",
         install: "WorkAdventure-App installieren",

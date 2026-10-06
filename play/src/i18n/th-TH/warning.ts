@@ -54,7 +54,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Title: "หน้าต่างแอปโดยเฉพาะ",
         feature2Description: "แยก WorkAdventure ออกจากแท็บเบราว์เซอร์ และเห็น WorkAdventure ได้ทันทีในทาสก์บาร์ของคุณ",
         iosStepsTitle: "วิธีติดตั้ง",
-        iosStep1: "แตะปุ่มแชร์ (สี่เหลี่ยมพร้อมลูกศร) ที่ด้านล่างของ Safari",
+        iosStep1: "แตะปุ่มแชร์ (สี่เหลี่ยมพร้อมลูกศร) ในเบราว์เซอร์ของคุณ",
         iosStep2: 'เลื่อนลงแล้วแตะ "เพิ่มลงในหน้าจอโฮม"',
         iosStep3: 'แตะ "เพิ่ม" เพื่อยืนยัน',
         install: "ติดตั้งแอป WorkAdventure",

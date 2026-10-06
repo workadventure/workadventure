@@ -55,7 +55,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Description:
             "Tách WorkAdventure khỏi các thẻ trình duyệt và tìm thấy WorkAdventure ngay trên thanh tác vụ.",
         iosStepsTitle: "Cách cài đặt",
-        iosStep1: "Nhấn nút Chia sẻ (hình vuông có mũi tên) ở cuối Safari.",
+        iosStep1: "Nhấn nút Chia sẻ (hình vuông có mũi tên) trên trình duyệt của bạn.",
         iosStep2: 'Cuộn xuống và nhấn "Thêm vào Màn hình chính".',
         iosStep3: 'Nhấn "Thêm" để xác nhận.',
         install: "Cài đặt ứng dụng WorkAdventure",

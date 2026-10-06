@@ -55,7 +55,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Description:
             "Houd WorkAdventure gescheiden van je browsertabbladen en vind WorkAdventure in een oogopslag terug op je taakbalk.",
         iosStepsTitle: "Hoe te installeren",
-        iosStep1: "Tik op de deelknop (vierkant met pijl) onderaan in Safari.",
+        iosStep1: "Tik op de deelknop (vierkant met pijl) van je browser.",
         iosStep2: 'Scroll naar beneden en tik op "Voeg toe aan startscherm".',
         iosStep3: 'Tik op "Toevoegen" om te bevestigen.',
         install: "WorkAdventure-app installeren",
