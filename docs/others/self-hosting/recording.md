@@ -30,6 +30,20 @@ Your S3 bucket must have:
 - **Read and write permissions** for the WorkAdventure back and play services (to save, list, serve and delete recordings)
 - Does not need public access, as recordings are served via signed URLs
 
+### Retention
+
+The recordings list shows an expiry date for each recording, 3 months after it was made. WorkAdventure does not delete recordings itself: that date is only true if the bucket deletes old objects on its own.
+Add a lifecycle rule that expires objects after 90 days. For example, with the AWS CLI:
+
+```bash
+aws s3api put-bucket-lifecycle-configuration \
+  --bucket workadventure-recordings \
+  --lifecycle-configuration '{"Rules":[{"ID":"expire-recordings","Status":"Enabled","Filter":{"Prefix":""},"Expiration":{"Days":90}}]}'
+```
+
+On another S3-compatible storage, add `--endpoint-url` with your S3 endpoint, and check that the storage supports lifecycle rules.
+Without such a rule, recordings stay in the bucket until their owner deletes them from the list.
+
 ### Understanding the S3 Endpoints
 
 WorkAdventure uses two endpoint configurations:
