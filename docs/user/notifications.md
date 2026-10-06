@@ -25,7 +25,7 @@ You only get them if all of these are true:
 
 ### If you refused notifications
 
-If notifications are blocked in your browser and you click **Accept** on **Allow notifications?**, WorkAdventure shows **Notifications access denied**, with a picture of where to change it (in Chrome and Firefox):
+If notifications are blocked in your browser and you click **Accept** on **Allow notifications?**, or turn on **Notifications** in the Settings, WorkAdventure shows **Notifications access denied**, with a picture of where to change it (in Chrome and Firefox):
 
 ![The "Notifications access denied" window](images/notifications-denied.png)
 
@@ -35,7 +35,7 @@ Once you have refused, WorkAdventure cannot ask again. To allow notifications:
 2. Turn on **Notifications** (or set it to **Allow**, depending on your browser).
 3. Reload the page (**Refresh**), then turn on **Notifications** in the Settings.
 
-If notifications are blocked, the **Notifications** switch of the Settings turns itself back off.
+If notifications are blocked, the **Notifications** switch of the Settings goes back off.
 
 ## Messages inside WorkAdventure
 

@@ -26,7 +26,7 @@
 </script>
 
 <form
-    class="helpNotificationSettings z-[600] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col m-auto w-full md:w-2/3 xl:w-[380px] text-sm md:text-base absolute top-10 left-0 right-0 overflow-hidden"
+    class="helpNotificationSettings z-[901] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col m-auto w-full md:w-2/3 xl:w-[380px] text-sm md:text-base absolute top-10 left-0 right-0 overflow-hidden"
     style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
     onsubmit={(event) => {
         event.preventDefault();
