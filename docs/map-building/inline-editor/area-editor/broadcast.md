@@ -54,7 +54,7 @@ The "See attendees" option is useful when speakers want to interact with their a
 If you enable "associate a dedicated chat channel" in both areas, both chats will be merged and can be used by users in the podium and in the audience.
 :::
 
-12. (Optional) Turn on **Allow talking and forming bubbles** to let the people in the audience talk to each other in discussion bubbles. It is off by default: people in the audience can only listen, and their camera and microphone buttons are hidden.
+12. (Optional) Turn on **Allow talking and forming bubbles** to let the people in the audience talk to each other in discussion bubbles. It is off by default: people in the audience can only listen to the speaker and cannot chit-chat with their neighbors.
 ![The options of an audience zone](../../images/editor/audience_options.png)
 
 13. (Optional) In **Media to display before the live starts**, paste the link of a video or a page (YouTube, for instance). The audience sees it until a speaker steps on the podium. Without it, they see "Waiting for speaker".
