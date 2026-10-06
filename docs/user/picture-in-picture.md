@@ -10,7 +10,7 @@ It needs a Chromium-based browser (Chrome, Edge…) or Firefox on a computer. On
 
 ## Opening the floating window
 
-During a conversation (a discussion bubble, a meeting room, a podium or the megaphone), click the picture-in-picture button in the action bar (its tooltip says **Picture in picture**). If the window was closed in another way before, you may need to click the button twice to open it again.
+During a conversation (a discussion bubble, a meeting room, a podium or the megaphone), click the picture-in-picture button in the action bar (its tooltip says **Picture in picture**).
 
 ![The picture-in-picture button in the action bar](images/picture-in-picture-button.png)
 
