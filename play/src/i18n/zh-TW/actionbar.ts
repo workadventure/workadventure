@@ -12,6 +12,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "傳送訊息",
     participantInviteUser: "邀請使用者",
     participantExitFullscreen: "退出全螢幕",
+    participantShowList: "顯示參與者清單",
+    participantHideList: "隱藏參與者清單",
     profil: "編輯您的姓名",
     calendar: "行事曆",
     todoList: "待辦事項清單",

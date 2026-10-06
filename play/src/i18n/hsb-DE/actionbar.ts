@@ -12,6 +12,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "Powěsć pósłać",
     participantInviteUser: "Wužiwarja přeprosyć",
     participantExitFullscreen: "Połny wobraz skónčić",
+    participantShowList: "Lisćinu wobdźělnikow pokazać",
+    participantHideList: "Lisćinu wobdźělnikow schować",
     profil: "Waše mjeno wobdźěłać",
     calendar: "Kalender",
     todoList: "Lisćina nadawkow",

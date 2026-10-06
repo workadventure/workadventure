@@ -13,6 +13,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "Écrire un message",
     participantInviteUser: "Inviter un utilisateur",
     participantExitFullscreen: "Quitter le mode plein écran",
+    participantShowList: "Afficher la liste des participants",
+    participantHideList: "Masquer la liste des participants",
     profil: "Mon nom",
     woka: "Mon avatar",
     companion: "Mon compagnon",

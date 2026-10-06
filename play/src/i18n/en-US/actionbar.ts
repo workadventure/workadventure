@@ -11,6 +11,8 @@ const actionbar: BaseTranslation = {
     participantSendMessage: "Send a message",
     participantInviteUser: "Invite a user",
     participantExitFullscreen: "Exit fullscreen",
+    participantShowList: "Show participant list",
+    participantHideList: "Hide participant list",
     profil: "Edit your name",
     calendar: "Calendar",
     todoList: "Todo list",

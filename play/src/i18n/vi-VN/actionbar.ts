@@ -12,6 +12,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "Gửi tin nhắn",
     participantInviteUser: "Mời người dùng",
     participantExitFullscreen: "Thoát toàn màn hình",
+    participantShowList: "Hiện danh sách người tham gia",
+    participantHideList: "Ẩn danh sách người tham gia",
     profil: "Sửa tên của bạn",
     calendar: "Lịch",
     todoList: "Danh sách việc cần làm",
