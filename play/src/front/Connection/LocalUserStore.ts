@@ -325,7 +325,7 @@ class LocalUserStore {
         localStorage.setItem(decreaseAudioPlayerVolumeWhileTalking, value.toString());
     }
     getDecreaseAudioPlayerVolumeWhileTalking(): boolean {
-        return localStorage.getItem(decreaseAudioPlayerVolumeWhileTalking) === "true";
+        return localStorage.getItem(decreaseAudioPlayerVolumeWhileTalking) !== "false";
     }
 
     setDisableAnimations(value: boolean): void {

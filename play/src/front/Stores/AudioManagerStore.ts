@@ -24,7 +24,7 @@ function createAudioManagerVolumeStore() {
         muted: false,
         volume: 1,
         soundVolume: 1,
-        decreaseWhileTalking: true,
+        decreaseWhileTalking: localUserStore.getDecreaseAudioPlayerVolumeWhileTalking(),
         volumeReduced: false,
         loop: false,
         talking: false,
