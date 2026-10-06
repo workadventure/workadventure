@@ -19,7 +19,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "Danh sách việc cần làm",
     woka: "Tùy chỉnh nhân vật của bạn",
     companion: "Thêm thú đồng hành",
-    test: "Kiểm tra cài đặt của tôi",
     editCamMic: "Cài đặt cam / mic",
     allSettings: "Tất cả cài đặt",
     installPwa: "Cài đặt ứng dụng web",
@@ -31,19 +30,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Camera của bạn đang tắt",
         activate: "Bật camera của bạn",
-        noDevices: "Không tìm thấy camera",
-        setBackground: "Đặt ảnh nền",
-        blurEffects: "Hiệu ứng làm mờ",
-        disableBackgroundEffects: "Tắt hiệu ứng nền",
-        close: "Đóng",
     },
     microphone: {
         disabled: "Micrô của bạn đang tắt",
         activate: "Bật micrô của bạn",
-        noDevices: "Không tìm thấy micrô",
         noSoundWarning:
             "Không phát hiện âm thanh từ micrô của bạn. Có thể đang có sự cố; hãy thử đổi micrô trong phần cài đặt.",
-        noSoundWarningPressEnter: "Không phát hiện âm thanh từ micrô của bạn. Nhấn Enter để mở cài đặt.",
         advancedNoiseReduction: "Khử tiếng ồn nâng cao",
         noiseSuppressionInitializing: "Đang khởi tạo bộ khử tiếng ồn tùy chỉnh...",
         noiseSuppressionUnsupported: "Trình duyệt này không chạy được bộ khử tiếng ồn tùy chỉnh.",
@@ -54,7 +46,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Loa của bạn đang tắt",
-        activate: "Bật loa của bạn",
         noDevices: "Không tìm thấy thiết bị loa",
         noDevicesDesc:
             "Trình duyệt của bạn không liệt kê đầu ra âm thanh nào có thể chọn. Một số trình duyệt hạn chế điều này. Hãy thử trình duyệt khác, cắm lại tai nghe hoặc loa, kiểm tra cài đặt âm thanh hệ thống và cấu hình máy tính của bạn (quyền riêng tư, thiết bị).",
@@ -167,14 +158,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "Danh sách phòng",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        calendar: {
-            title: "Lịch",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        todolist: {
-            title: "Danh sách việc cần làm",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         pictureInPicture: {

@@ -19,7 +19,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "Aufgabenliste",
     woka: "Ihr Avatar anpassen",
     companion: "Begleiter hinzufügen",
-    test: "Meine Einstellungen testen",
     editCamMic: "Kamera / Mikrofon bearbeiten",
     allSettings: "Alle Einstellungen",
     installPwa: "Web-App installieren",
@@ -31,20 +30,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Ihre Kamera ist deaktiviert",
         activate: "Kamera aktivieren",
-        noDevices: "Kein Kameragerät gefunden",
-        setBackground: "Hintergrund festlegen",
-        blurEffects: "Unschärfeeffekte",
-        disableBackgroundEffects: "Hintergrundeffekte deaktivieren",
-        close: "Schließen",
     },
     microphone: {
         disabled: "Ihr Mikrofon ist deaktiviert",
         activate: "Mikrofon aktivieren",
-        noDevices: "Kein Mikrofon gefunden",
         noSoundWarning:
             "Kein Ton von Ihrem Mikrofon erkannt. Möglicherweise liegt ein Problem vor; versuchen Sie, Ihr Mikrofon in den Einstellungen zu wechseln.",
-        noSoundWarningPressEnter:
-            "Kein Ton von Ihrem Mikrofon erkannt. Drücken Sie Enter, um die Einstellungen zu öffnen.",
         advancedNoiseReduction: "Erweiterte Geräuschreduzierung",
         noiseSuppressionInitializing: "Benutzerdefinierte Geräuschunterdrückung wird initialisiert...",
         noiseSuppressionUnsupported:
@@ -57,7 +48,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Ihr Lautsprecher ist deaktiviert",
-        activate: "Lautsprecher aktivieren",
         noDevices: "Kein Lautsprecher gefunden",
         noDevicesDesc:
             "Ihr Browser listet keine auswählbare Audioausgabe auf. Einige Browser schränken das ein. Versuchen Sie einen anderen Browser, schließen Sie Kopfhörer oder Lautsprecher erneut an, prüfen Sie die Systemtöne und die Konfiguration des Computers (Datenschutz, Geräte).",
@@ -171,14 +161,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "Raumliste",
             desc: "Durchsuchen Sie die Liste der Räume, um zu sehen, wer anwesend ist, und treten Sie mit einem Klick einer Unterhaltung bei.",
-        },
-        calendar: {
-            title: "Kalender",
-            desc: "Sehen Sie sich Ihre bevorstehenden Besprechungen an und treten Sie ihnen direkt von WorkAdventure aus bei.",
-        },
-        todolist: {
-            title: "Aufgabenliste",
-            desc: "Verwalten Sie Ihre Aufgaben des Tages, ohne Ihren Arbeitsbereich zu verlassen.",
         },
         pictureInPicture: {
             title: "Bild-im-Bild",

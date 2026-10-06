@@ -20,7 +20,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     woka: "아바타 꾸미기",
     companion: "동반자 추가",
     //megaphone: "Use megaphone",
-    test: "내 설정 테스트",
     editCamMic: "카메라 / 마이크 설정",
     allSettings: "모든 설정",
     installPwa: "웹 앱 설치",
@@ -32,19 +31,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "카메라가 비활성화되어 있습니다",
         activate: "카메라 활성화",
-        noDevices: "사용 가능한 카메라 장치를 찾을 수 없습니다",
-        setBackground: "배경 설정",
-        blurEffects: "블러 효과",
-        disableBackgroundEffects: "배경 효과 끄기",
-        close: "닫기",
     },
     microphone: {
         disabled: "마이크가 비활성화되어 있습니다",
         activate: "마이크 활성화",
-        noDevices: "사용 가능한 마이크 장치를 찾을 수 없습니다",
         noSoundWarning:
             "마이크에서 소리가 감지되지 않습니다. 문제가 있을 수 있습니다 — 설정에서 마이크를 변경해 보세요.",
-        noSoundWarningPressEnter: "마이크에서 소리가 감지되지 않습니다. Enter를 눌러 설정을 엽니다.",
         advancedNoiseReduction: "고급 소음 감소",
         noiseSuppressionInitializing: "사용자 지정 소음 억제를 초기화하는 중...",
         noiseSuppressionUnsupported: "이 브라우저에서는 사용자 지정 소음 억제를 실행할 수 없습니다.",
@@ -55,7 +47,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "스피커가 비활성화되어 있습니다",
-        activate: "스피커 활성화",
         noDevices: "사용 가능한 스피커 장치를 찾을 수 없습니다",
         noDevicesDesc:
             "브라우저에 선택 가능한 오디오 출력이 표시되지 않습니다. 일부 브라우저는 이를 제한합니다. 다른 브라우저를 시도하거나 헤드폰이나 스피커를 다시 연결하거나, 시스템 음향 설정과 컴퓨터 설정(개인 정보 보호, 장치)을 확인하세요.",
@@ -168,14 +159,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "방 목록",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        calendar: {
-            title: "캘린더",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        todolist: {
-            title: "할 일 목록",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         pictureInPicture: {

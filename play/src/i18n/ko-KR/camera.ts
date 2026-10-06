@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "카메라 설정",
-    editMic: "마이크 설정",
     editSpeaker: "오디오 출력 설정",
     active: "활성화됨",
     disabled: "비활성화됨",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "카메라 / 마이크 접근 권한이 필요합니다",
         cameraTitle: "카메라 접근 권한이 필요합니다",
         microphoneTitle: "마이크 접근 권한이 필요합니다",
-        permissionDenied: "권한 거부됨",
         cameraPermissionDenied: "카메라 권한이 거부되었습니다",
         microphonePermissionDenied: "마이크 권한이 거부되었습니다",
         cameraMicrophonePermissionDenied: "카메라와 마이크 권한이 거부되었습니다",
@@ -101,14 +99,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "비디오 끄기 요청",
         muteVideoEveryBody: "모든 사용자 비디오 끄기",
         blockOrReportUser: "관리 / 신고",
-    },
-    backgroundEffects: {
-        imageTitle: "배경 이미지",
-        blurTitle: "배경 흐림 효과",
-        resetTitle: "배경 효과 끄기",
-        title: "배경 효과",
-        close: "닫기",
-        blurAmount: "흐림 정도",
     },
 };
 

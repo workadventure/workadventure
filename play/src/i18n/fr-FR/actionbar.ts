@@ -21,7 +21,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     //megaphone: "Utiliser le mégaphone",
     calendar: "Calendrier",
     todoList: "Liste de tâches",
-    test: "Tester",
     editCamMic: "Caméra / micro",
     allSettings: "Tous les paramètres",
     installPwa: "Installer l'application web",
@@ -33,19 +32,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Votre caméra est désactivée",
         activate: "Activer votre caméra",
-        noDevices: "Aucune caméra trouvée",
-        setBackground: "Définir le fond",
-        blurEffects: "Effets de flou",
-        disableBackgroundEffects: "Désactiver les effets de fond",
-        close: "Fermer",
     },
     microphone: {
         disabled: "Votre micro est désactivé",
         activate: "Activer votre micro",
-        noDevices: "Aucun micro trouvé",
         noSoundWarning:
             "Aucun son détecté sur votre micro. Un problème est possible ; essayez de changer de micro dans les réglages.",
-        noSoundWarningPressEnter: "Aucun son détecté sur votre micro. Appuyez sur Entrée pour ouvrir les réglages.",
         advancedNoiseReduction: "Réduction avancée du bruit",
         noiseSuppressionInitializing: "Initialisation de la réduction du bruit personnalisée...",
         noiseSuppressionUnsupported: "Ce navigateur ne peut pas exécuter la réduction du bruit personnalisée.",
@@ -57,7 +49,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Votre haut-parleur est désactivé",
-        activate: "Activer votre haut-parleur",
         noDevices: "Aucun haut-parleur trouvé",
         noDevicesDesc:
             "Le navigateur ne propose aucune sortie audio sélectionnable. Certains navigateurs limitent ce choix. Essayez un autre navigateur, reconnectez casque ou enceintes, vérifiez les réglages audio du système et les configurations de l’ordinateur.",
@@ -171,14 +162,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "Liste des salons",
             desc: "Parcourez la liste des salons pour voir qui est présent et rejoindre une conversation en un clic.",
-        },
-        calendar: {
-            title: "Calendrier",
-            desc: "Consultez vos réunions à venir et rejoignez-les directement depuis WorkAdventure.",
-        },
-        todolist: {
-            title: "Liste de tâches",
-            desc: "Gérez vos tâches du jour sans quitter votre espace de travail.",
         },
         pictureInPicture: {
             title: "Picture in Picture",

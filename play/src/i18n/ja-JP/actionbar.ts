@@ -19,7 +19,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "タスクリスト",
     woka: "アバターをカスタマイズ",
     companion: "コンパニオンを追加",
-    test: "設定をテスト",
     editCamMic: "カメラ / マイクを編集",
     allSettings: "すべての設定",
     installPwa: "ウェブアプリをインストール",
@@ -31,19 +30,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "カメラが無効になっています",
         activate: "カメラを有効にする",
-        noDevices: "カメラデバイスが見つかりません",
-        setBackground: "背景を設定",
-        blurEffects: "ぼかし効果",
-        disableBackgroundEffects: "背景効果を無効にする",
-        close: "閉じる",
     },
     microphone: {
         disabled: "マイクが無効になっています",
         activate: "マイクを有効にする",
-        noDevices: "マイクデバイスが見つかりません",
         noSoundWarning:
             "マイクから音が検出されません。問題がある可能性があります — 設定でマイクを変更してみてください。",
-        noSoundWarningPressEnter: "マイクから音が検出されません。Enterキーを押して設定を開いてください。",
         advancedNoiseReduction: "高度なノイズ低減",
         noiseSuppressionInitializing: "カスタムノイズ抑制を初期化しています...",
         noiseSuppressionUnsupported: "このブラウザではカスタムノイズ抑制を実行できません。",
@@ -54,7 +46,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "スピーカーが無効になっています",
-        activate: "スピーカーを有効にする",
         noDevices: "スピーカーデバイスが見つかりません",
         noDevicesDesc:
             "ブラウザに選択可能な音声出力が表示されません。ブラウザによっては制限があります。別のブラウザを試すか、ヘッドフォンやスピーカーを再接続するか、システムのサウンド設定とパソコンの設定（プライバシー、デバイス）を確認してください。",
@@ -168,14 +159,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "ルームリスト",
             desc: "ルームのリストを閲覧して、誰がいるか確認し、ワンクリックで会話に参加できます。",
-        },
-        calendar: {
-            title: "カレンダー",
-            desc: "今後の会議を確認し、WorkAdventureから直接参加できます。",
-        },
-        todolist: {
-            title: "タスクリスト",
-            desc: "ワークスペースを離れることなく、その日のタスクを管理できます。",
         },
         pictureInPicture: {
             title: "ピクチャーインピクチャー",

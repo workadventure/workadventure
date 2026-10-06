@@ -19,7 +19,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "Takenlijst",
     woka: "Pas je avatar aan",
     companion: "Metgezel toevoegen",
-    test: "Test mijn instellingen",
     editCamMic: "Bewerk camera / microfoon",
     allSettings: "Alle instellingen",
     installPwa: "Web-app installeren",
@@ -31,20 +30,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Je camera is uitgeschakeld",
         activate: "Activeer je camera",
-        noDevices: "Geen camera-apparaat gevonden",
-        setBackground: "Achtergrond instellen",
-        blurEffects: "Vervagingseffecten",
-        disableBackgroundEffects: "Achtergrondeffecten uitschakelen",
-        close: "Sluiten",
     },
     microphone: {
         disabled: "Je microfoon is uitgeschakeld",
         activate: "Activeer je microfoon",
-        noDevices: "Geen microfoonapparaat gevonden",
         noSoundWarning:
             "Geen geluid gedetecteerd van je microfoon. Er kan een probleem zijn; probeer je microfoon te wijzigen in de instellingen.",
-        noSoundWarningPressEnter:
-            "Geen geluid gedetecteerd van je microfoon. Druk op Enter om de instellingen te openen.",
         advancedNoiseReduction: "Geavanceerde ruisreductie",
         noiseSuppressionInitializing: "Aangepaste ruisonderdrukking initialiseren...",
         noiseSuppressionUnsupported: "Deze browser kan aangepaste ruisonderdrukking niet uitvoeren.",
@@ -56,7 +47,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Je luidspreker is uitgeschakeld",
-        activate: "Activeer je luidspreker",
         noDevices: "Geen luidsprekerapparaat gevonden",
         noDevicesDesc:
             "Je browser toont geen selecteerbare audio-uitvoer. Sommige browsers beperken dit. Probeer een andere browser, sluit koptelefoon of speakers opnieuw aan, controleer de systeemgeluidsinstellingen en de configuratie van de computer (privacy, apparaten).",
@@ -170,14 +160,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "Kamerlijst",
             desc: "Bekijk de lijst met kamers om te zien wie er is en doe met één klik mee aan een gesprek.",
-        },
-        calendar: {
-            title: "Kalender",
-            desc: "Bekijk je aanstaande vergaderingen en doe er direct vanuit WorkAdventure aan mee.",
-        },
-        todolist: {
-            title: "Takenlijst",
-            desc: "Beheer je taken van de dag zonder je werkruimte te verlaten.",
         },
         pictureInPicture: {
             title: "Picture in picture",

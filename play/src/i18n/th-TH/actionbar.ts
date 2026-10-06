@@ -20,7 +20,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     woka: "ปรับแต่งอวาตาร์ของคุณ",
     companion: "เพิ่มเพื่อนคู่หู",
     //megaphone: "Use megaphone",
-    test: "ทดสอบการตั้งค่าของฉัน",
     editCamMic: "แก้ไขกล้อง / ไมค์",
     allSettings: "การตั้งค่าทั้งหมด",
     installPwa: "ติดตั้งเว็บแอป",
@@ -32,18 +31,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "กล้องของคุณถูกปิดอยู่",
         activate: "เปิดกล้องของคุณ",
-        noDevices: "ไม่พบอุปกรณ์กล้อง",
-        setBackground: "ตั้งค่าพื้นหลัง",
-        blurEffects: "เอฟเฟกต์เบลอ",
-        disableBackgroundEffects: "ปิดเอฟเฟกต์พื้นหลัง",
-        close: "ปิด",
     },
     microphone: {
         disabled: "ไมโครโฟนของคุณถูกปิดอยู่",
         activate: "เปิดไมโครโฟนของคุณ",
-        noDevices: "ไม่พบอุปกรณ์ไมโครโฟน",
         noSoundWarning: "ไม่พบเสียงจากไมโครโฟนของคุณ อาจมีปัญหา ลองเปลี่ยนไมโครโฟนในการตั้งค่า",
-        noSoundWarningPressEnter: "ไม่พบเสียงจากไมโครโฟนของคุณ กด Enter เพื่อเปิดการตั้งค่า",
         advancedNoiseReduction: "การลดเสียงรบกวนขั้นสูง",
         noiseSuppressionInitializing: "กำลังเริ่มต้นระบบตัดเสียงรบกวนแบบกำหนดเอง...",
         noiseSuppressionUnsupported: "เบราว์เซอร์นี้ไม่สามารถใช้ระบบตัดเสียงรบกวนแบบกำหนดเองได้",
@@ -54,7 +46,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "ลำโพงของคุณถูกปิดอยู่",
-        activate: "เปิดลำโพงของคุณ",
         noDevices: "ไม่พบอุปกรณ์ลำโพง",
         noDevicesDesc:
             "เบราว์เซอร์ของคุณไม่แสดงรายการเอาต์พุตเสียงที่เลือกได้ เบราว์เซอร์บางตัวจำกัดความสามารถนี้ ลองใช้เบราว์เซอร์อื่น เชื่อมต่อหูฟังหรือลำโพงใหม่ ตรวจสอบการตั้งค่าเสียงของระบบและการกำหนดค่าคอมพิวเตอร์ของคุณ (ความเป็นส่วนตัว อุปกรณ์)",
@@ -167,14 +158,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "รายการห้อง",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        calendar: {
-            title: "ปฏิทิน",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        todolist: {
-            title: "รายการสิ่งที่ต้องทำ",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         pictureInPicture: {

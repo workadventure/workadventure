@@ -3,7 +3,6 @@ import type { DeepPartial } from "../DeepPartial";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Camera bewerken",
-    editMic: "Microfoon bewerken",
     editSpeaker: "Audio-uitvoer bewerken",
     active: "Actief",
     disabled: "Uitgeschakeld",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Camera / Microfoon toegang nodig",
         cameraTitle: "Cameratoegang nodig",
         microphoneTitle: "Microfoontoegang nodig",
-        permissionDenied: "Toegang geweigerd",
         cameraPermissionDenied: "Cameratoestemming geweigerd",
         microphonePermissionDenied: "Microfoontoestemming geweigerd",
         cameraMicrophonePermissionDenied: "Camera- en microfoontoestemming geweigerd",
@@ -104,14 +102,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "Vragen om video te dempen",
         muteVideoEveryBody: "Video dempen voor iedereen",
         blockOrReportUser: "Gebruiker blokkeren of rapporteren",
-    },
-    backgroundEffects: {
-        imageTitle: "Achtergrondafbeeldingen",
-        blurTitle: "Achtergrondvervaging",
-        resetTitle: "Achtergrondeffecten uitschakelen",
-        title: "Achtergrondeffecten",
-        close: "Sluiten",
-        blurAmount: "Vervagingshoeveelheid",
     },
 };
 

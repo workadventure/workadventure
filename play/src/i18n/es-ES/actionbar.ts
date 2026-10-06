@@ -19,7 +19,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "Lista de tareas",
     woka: "Personalizar tu avatar",
     companion: "Añadir compañero",
-    test: "Probar mi configuración",
     editCamMic: "Editar cámara / micrófono",
     allSettings: "Todas las configuraciones",
     installPwa: "Instalar aplicación web",
@@ -31,19 +30,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Tu cámara está desactivada",
         activate: "Activar tu cámara",
-        noDevices: "No se encontró ningún dispositivo de cámara",
-        setBackground: "Establecer fondo",
-        blurEffects: "Efectos de desenfoque",
-        disableBackgroundEffects: "Desactivar efectos de fondo",
-        close: "Cerrar",
     },
     microphone: {
         disabled: "Tu micrófono está desactivado",
         activate: "Activar tu micrófono",
-        noDevices: "No se encontró ningún dispositivo de micrófono",
         noSoundWarning:
             "No se detecta sonido de tu micrófono. Puede haber un problema; prueba a cambiar de micrófono en la configuración.",
-        noSoundWarningPressEnter: "No se detecta sonido de tu micrófono. Pulsa Enter para abrir la configuración.",
         advancedNoiseReduction: "Reducción de ruido avanzada",
         noiseSuppressionInitializing: "Inicializando la supresión de ruido personalizada...",
         noiseSuppressionUnsupported: "Este navegador no puede ejecutar la supresión de ruido personalizada.",
@@ -55,7 +47,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Tu altavoz está desactivado",
-        activate: "Activar tu altavoz",
         noDevices: "No se encontró ningún dispositivo de altavoz",
         noDevicesDesc:
             "El navegador no muestra ninguna salida de audio seleccionable. Algunos navegadores lo limitan. Prueba otro navegador, vuelve a conectar auriculares o altavoces, revisa la configuración de sonido del sistema y la configuración del equipo.",
@@ -169,14 +160,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "Lista de salas",
             desc: "Explora la lista de salas para ver quién está presente y unirte a una conversación con un clic.",
-        },
-        calendar: {
-            title: "Calendario",
-            desc: "Consulta tus reuniones próximas y únete a ellas directamente desde WorkAdventure.",
-        },
-        todolist: {
-            title: "Lista de tareas",
-            desc: "Gestiona tus tareas del día sin salir de tu espacio de trabajo.",
         },
         pictureInPicture: {
             title: "Imagen en imagen",

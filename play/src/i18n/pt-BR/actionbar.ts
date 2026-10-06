@@ -23,7 +23,6 @@ const actionbar: BaseTranslation = {
     woka: "Personalizar seu avatar",
     companion: "Adicionar companheiro",
     //megaphone: "Usar megafone",
-    test: "Testar minhas configurações",
     editCamMic: "Editar câmera / microfone",
     allSettings: "Todas as configurações",
     installPwa: "Instalar aplicativo web",
@@ -35,19 +34,12 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Sua câmera está desabilitada",
         activate: "Ativar sua câmera",
-        noDevices: "Nenhum dispositivo de câmera encontrado",
-        setBackground: "Definir fundo",
-        blurEffects: "Efeitos de desfoque",
-        disableBackgroundEffects: "Desabilitar efeitos de fundo",
-        close: "Fechar",
     },
     microphone: {
         disabled: "Seu microfone está desabilitado",
         activate: "Ativar seu microfone",
-        noDevices: "Nenhum dispositivo de microfone encontrado",
         noSoundWarning:
             "Nenhum som detectado do seu microfone. Pode haver um problema; tente trocar o microfone nas configurações.",
-        noSoundWarningPressEnter: "Nenhum som detectado do seu microfone. Pressione Enter para abrir as configurações.",
         advancedNoiseReduction: "Redução de ruído avançada",
         noiseSuppressionInitializing: "Inicializando a supressão de ruído personalizada...",
         noiseSuppressionUnsupported: "Este navegador não pode executar a supressão de ruído personalizada.",
@@ -59,7 +51,6 @@ const actionbar: BaseTranslation = {
     },
     speaker: {
         disabled: "Seu alto-falante está desabilitado",
-        activate: "Ativar seu alto-falante",
         noDevices: "Nenhum dispositivo de alto-falante encontrado",
         noDevicesDesc:
             "O navegador não lista nenhuma saída de áudio selecionável. Alguns navegadores limitam isso. Tente outro navegador, reconecte fones ou alto-falantes, verifique as configurações de som do sistema e as configurações do computador (privacidade, dispositivos).",
@@ -173,14 +164,6 @@ const actionbar: BaseTranslation = {
         roomList: {
             title: "Lista de salas",
             desc: "Explore e navegue entre diferentes salas disponíveis para encontrar o espaço perfeito para suas atividades.",
-        },
-        calendar: {
-            title: "Calendário",
-            desc: "Gerencie seus eventos e compromissos diretamente integrados à sua experiência no workspace.",
-        },
-        todolist: {
-            title: "Lista de tarefas",
-            desc: "Organize e acompanhe suas tarefas e projetos de forma eficiente dentro do ambiente virtual.",
         },
         pictureInPicture: {
             title: "Picture in picture",
