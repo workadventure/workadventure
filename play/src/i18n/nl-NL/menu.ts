@@ -148,7 +148,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     chat: {
         matrixIDLabel: "Je Matrix ID",
-        settings: "Instellingen",
         resetKeyStorageUpButtonLabel: "Reset je sleutelopslag",
         resetKeyStorageConfirmationModal: {
             title: "Bevestiging van reset van sleutelopslag",

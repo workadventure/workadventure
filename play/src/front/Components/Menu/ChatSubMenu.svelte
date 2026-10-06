@@ -4,17 +4,11 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import InputCheckbox from "../Input/InputCheckbox.svelte";
     import Button from "../UI/Button.svelte";
     import resetKeyStorageConfirmationModal from "./ResetKeyStorageConfirmationModal.svelte";
     import { modals } from "@wa-modals";
 
-    let chatSounds: boolean = $state(localUserStore.getChatSounds());
     let mychatID = localUserStore.getChatId();
-
-    function changeChatSounds() {
-        localUserStore.setChatSounds(chatSounds);
-    }
 
     function openResetKeyStorage() {
         modals.open(resetKeyStorageConfirmationModal);
@@ -30,15 +24,6 @@
                     <div class="flex justify-center p-2 bg-white text-secondary rounded">
                         {mychatID}
                     </div>
-                </div>
-                <div class="flex flex-col w-full h-full items-start justify-start pb-4">
-                    <span class="font-xl blue-title text-lg">{$LL.menu.chat.settings()}</span>
-                    <InputCheckbox
-                        data-testid="chatSounds"
-                        bind:value={chatSounds}
-                        onchange={changeChatSounds}
-                        label={$LL.menu.settings.chatSounds()}
-                    />
                 </div>
                 <section class="centered-column resizing-width m-auto resizing-text">
                     <Button class="p-2 bg-danger-900 min-w-[220px] flex items-center" onclick={openResetKeyStorage}

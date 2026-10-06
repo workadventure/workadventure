@@ -148,7 +148,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     chat: {
         matrixIDLabel: "Matrix ID của bạn",
-        settings: "Cài đặt",
         resetKeyStorageUpButtonLabel: "Đặt lại kho khóa của bạn",
         resetKeyStorageConfirmationModal: {
             title: "Xác nhận đặt lại kho khóa",
