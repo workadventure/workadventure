@@ -161,7 +161,7 @@ export class FrontController extends BaseHttpController {
                 req,
                 res,
                 z.object({
-                    url: z.string(),
+                    url: z.string().url(),
                 }),
             );
             if (query === undefined) {
@@ -277,6 +277,7 @@ export class FrontController extends BaseHttpController {
                 // TODO change it to push data from admin
                 msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
                 url,
+                encodedUrl: encodeURIComponent(url),
                 script: await this.getScript(),
                 posthogApiKey: FRONT_ENVIRONMENT_VARIABLES.POSTHOG_API_KEY,
                 posthogUrl: FRONT_ENVIRONMENT_VARIABLES.POSTHOG_URL,
@@ -297,16 +298,17 @@ export class FrontController extends BaseHttpController {
         const builder = new MetaTagsBuilder(url);
 
         const metaTagsData = await builder.getMeta(req.header("User-Agent"));
+        // The room is on the manifest's origin: keep only its path and query (this also works when the host has a port).
+        const { pathname, search } = new URL(url);
 
         const manifest = {
-            short_name: metaTagsData.title,
-            name: metaTagsData.title,
+            short_name: metaTagsData.shortAppName,
+            name: metaTagsData.appName,
             icons: metaTagsData.manifestIcons,
-            start_url: url.replace(`${req.protocol}://${req.hostname}`, ""),
+            start_url: pathname + search,
             background_color: metaTagsData.themeColor,
-            display_override: ["window-control-overlay", "minimal-ui"],
+            display_override: ["minimal-ui"],
             display: "standalone",
-            orientation: "portrait-primary",
             scope: "/",
             lang: "en",
             theme_color: metaTagsData.themeColor,

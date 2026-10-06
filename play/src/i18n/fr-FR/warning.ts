@@ -47,9 +47,8 @@ const warning: DeepPartial<Translation["warning"]> = {
         leave: "Quitter",
     },
     pwaInstall: {
-        title: "Installer WorkAdventure",
         description:
-            "Installez l'application pour une meilleure expérience : accès rapide, lancement au démarrage et utilisation comme une application.",
+            "Installez l'application pour une meilleure expérience : accès rapide et utilisation comme une application.",
         descriptionIos:
             "Ajoutez WorkAdventure à votre écran d'accueil pour une meilleure expérience et un accès rapide.",
         feature1Title: "Accès rapide",
@@ -57,15 +56,12 @@ const warning: DeepPartial<Translation["warning"]> = {
         feature2Title: "Fenêtre d'application dédiée",
         feature2Description:
             "Gardez WorkAdventure séparé de vos onglets de navigateur et retrouvez-le d'un coup d'œil dans votre barre des tâches.",
-        feature3Title: "Lancement au démarrage",
-        feature3Description: "Lancez WorkAdventure lorsque votre appareil démarre.",
         iosStepsTitle: "Comment installer",
-        iosStep1: "Appuyez sur le bouton Partager (carré avec flèche) en bas de Safari.",
+        iosStep1: "Appuyez sur le bouton Partager (carré avec flèche) de votre navigateur.",
         iosStep2: "Faites défiler vers le bas et appuyez sur « Ajouter à l'écran d'accueil ».",
         iosStep3: "Appuyez sur « Ajouter » pour confirmer.",
         install: "Installer l'App WorkAdventure",
         installing: "Installation…",
-        skip: "Continuer dans le navigateur",
         continue: "Continuer dans le navigateur",
         neverShowPage: "Ne plus me demander",
     },

@@ -16,7 +16,7 @@
     } from "../../Stores/PwaInstallStore";
     import { detectIos, markPwaPromptNeverShow } from "../../Utils/PwaInstallEligibility";
     import Button from "../UI/Button.svelte";
-    import { IconApps, IconAppWindow, IconHistory } from "@wa-icons";
+    import { IconApps, IconAppWindow } from "@wa-icons";
 
     let logo = $state(logoImg);
     let sceneBg = $state(bgMap);
@@ -147,20 +147,6 @@
                             <p class="m-0 text-sm font-bold text-white">{$LL.warning.pwaInstall.feature2Title()}</p>
                             <p class="m-0 text text-white">
                                 {$LL.warning.pwaInstall.feature2Description()}
-                            </p>
-                        </div>
-                    </li>
-                    <li class="flex gap-3">
-                        <span
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded text-white/50"
-                            aria-hidden="true"
-                        >
-                            <IconHistory class="h-6 w-6" />
-                        </span>
-                        <div class="min-w-0">
-                            <p class="m-0 text-sm font-bold text-white">{$LL.warning.pwaInstall.feature3Title()}</p>
-                            <p class="m-0 text text-white">
-                                {$LL.warning.pwaInstall.feature3Description()}
                             </p>
                         </div>
                     </li>

@@ -24,21 +24,19 @@ Click **Install WorkAdventure App**, then confirm in the window your browser ope
 
 The browser decides when an app can be installed, so these entries may only appear after you have used WorkAdventure for a little while. You can also use the install icon in the address bar of your browser.
 
-To have WorkAdventure start with your computer, turn it on in your browser's app settings (in Chrome and Edge, open the installed app's menu, or `chrome://apps` / `edge://apps`). WorkAdventure does not do it by itself.
+To have WorkAdventure start with your computer, turn it on in your browser's app settings (in Chrome and Edge, open the installed app's menu, or `chrome://apps` / `edge://apps`).
 
 ## On an iPhone or an iPad
 
 The install screen explains how to add WorkAdventure to your Home Screen:
 
-1. Tap the Share button (the square with an arrow) in Safari.
+1. Tap the Share button (the square with an arrow) of your browser. In Safari, it is usually at the bottom of the screen on an iPhone and at the top on an iPad.
 2. Scroll down and tap **Add to Home Screen**.
 3. Tap **Add** to confirm.
 
 You can also open it from **Install Web App** in your profile menu.
 
 ![The install screen on an iPad](images/install-app-screen-ios.png)
-
-On an iPad, the Share button is at the top of the screen, not at the bottom as the install screen says.
 
 ## On other browsers
 
