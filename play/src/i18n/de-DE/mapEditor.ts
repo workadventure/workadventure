@@ -503,9 +503,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         description:
             "Erlaubt das Erkunden des Raums. Sie können sich im Raum bewegen und mit Objekten interagieren. Es gibt 2 Modi: 'Erkundung' und 'Suche'. Im 'Suchmodus' können Sie nach Entitäten und Bereichen im Raum suchen oder filtern. Im 'Erkundungsmodus' können Sie sich frei im Raum bewegen.",
         noEntitiesFound: "Keine Entität im Raum gefunden 🙅‍♂️",
-        entitiesFound: "Objekt{{s}} gefunden",
+        entitiesFound: "{{Objekt|Objekte}} gefunden",
         noAreasFound: "Kein Bereich im Raum gefunden 🙅‍♀️",
-        areasFound: "Bereich{{s}} gefunden",
+        areasFound: "{{Bereich|Bereiche}} gefunden",
+        noName: "Kein Name",
         noDescriptionFound: "Keine Beschreibung gefunden 🫥",
         details: {
             close: "Schließen",
@@ -525,6 +526,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "Zum Raum wechseln: {roomNameSelected}... Bis bald... 🫡",
         searchLabel: "Einen Raum suchen",
         searchPlaceholder: "Schreiben...",
+        active: "Aktiv",
     },
 };
 

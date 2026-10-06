@@ -503,9 +503,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         description:
             "Permet d'explorer la salle. Vous pourrez vous déplacer dans la salle et interagir avec les objets. Deux modes sont disponibles : 'Exploration' et 'Recherche'. Le mode 'Recherche' vous proposera de rechercher ou de filtrer les entités et les zones de la salle. Le mode 'Exploration' vous permettra de vous déplacer librement dans la salle.",
         noEntitiesFound: "Aucune entité trouvée dans la carte 🙅‍♂️",
-        entitiesFound: "Entités trouvées",
+        entitiesFound: "{{Entité trouvée|Entités trouvées}}",
         noAreasFound: "Aucune zone trouvée dans la carte 🙅‍♀️",
-        areasFound: "Zones trouvées",
+        areasFound: "{{Zone trouvée|Zones trouvées}}",
+        noName: "Sans nom",
         noDescriptionFound: "Aucune description trouvée 🫥",
         details: {
             close: "Fermer",
@@ -525,6 +526,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "En partance pour la salle : {roomNameSelected}... À très vite... 🫡",
         searchLabel: "Chercher une salle",
         searchPlaceholder: "Par nom ou description...",
+        active: "Active",
     },
 };
 

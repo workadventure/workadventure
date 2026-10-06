@@ -492,9 +492,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         description:
             "يسمح باستكشاف الغرفة. يمكنك التحرك في الغرفة والتفاعل مع الكائنات. هناك وضعان: 'استكشاف' و 'بحث'. في 'وضع البحث'، يمكنك البحث عن الكيانات والمناطق في الغرفة أو تصفيتها. في 'وضع الاستكشاف'، يمكنك التحرك بحرية في الغرفة.", // Allows exploring the room. You can move around the room and interact with objects. There are 2 modes: 'Exploration' and 'Search'. In 'Search mode', you can search for entities and areas in the room or filter them. In 'Exploration mode', you can move freely in the room.
         noEntitiesFound: "لم يتم العثور على كائن في الغرفة 🙅‍♂️", // No entity found in the room 🙅‍♂️
-        entitiesFound: "تم العثور على {{s}} كائنات", // {{s}} objects found
+        entitiesFound: "تم العثور على كائنات", // objects found
         noAreasFound: "لم يتم العثور على منطقة في الغرفة 🙅‍♀️", // No area found in the room 🙅‍♀️
-        areasFound: "تم العثور على {{s}} مناطق", // {{s}} areas found
+        areasFound: "تم العثور على مناطق", // areas found
+        noName: "بدون اسم", // No name
         noDescriptionFound: "لم يتم العثور على وصف 🫥", // No description found 🫥
         details: {
             close: "إغلاق", // Close
@@ -514,6 +515,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "الانتقال إلى الغرفة: {roomNameSelected}... إلى اللقاء... 🫡", // Moving to room: {roomNameSelected}... See you soon... 🫡
         searchLabel: "ابحث عن غرفة", // Search for a room
         searchPlaceholder: "اكتب...", // Type...
+        active: "نشطة", // Active
     },
 };
 

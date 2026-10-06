@@ -495,9 +495,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         description:
             "방을 탐색하면서 이곳저곳을 돌아다니고 오브젝트와 상호작용할 수 있습니다. '탐색' 모드와 '검색' 모드 두 가지가 있습니다. 검색 모드에서는 방 안의 오브젝트와 영역을 검색/필터링할 수 있고, 탐색 모드에서는 자유롭게 이동할 수 있습니다.",
         noEntitiesFound: "이 방에서 오브젝트를 찾지 못했습니다 🙅‍♂️",
-        entitiesFound: "object{{s}}개 발견",
+        entitiesFound: "개의 오브젝트 발견",
         noAreasFound: "이 방에서 영역을 찾지 못했습니다 🙅‍♀️",
-        areasFound: "area{{s}}개 발견",
+        areasFound: "개의 영역 발견",
+        noName: "이름 없음",
         noDescriptionFound: "설명을 찾지 못했습니다 🫥",
         details: {
             close: "닫기",
@@ -517,6 +518,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "선택한 방으로 이동 중입니다: {roomNameSelected}... 곧 만나요... 🫡",
         searchLabel: "방 검색",
         searchPlaceholder: "검색어를 입력하세요...",
+        active: "활성화됨",
     },
 };
 

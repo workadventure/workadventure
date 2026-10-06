@@ -498,6 +498,7 @@ const mapEditor: BaseTranslation = {
         entitiesFound: "object{{s}} found",
         noAreasFound: "No area found in the room 🙅‍♀️",
         areasFound: "area{{s}} found",
+        noName: "No name",
         noDescriptionFound: "No description found 🫥",
         details: {
             close: "Close",
@@ -517,6 +518,7 @@ const mapEditor: BaseTranslation = {
         movingToRoom: "Moving to the room: {roomNameSelected}... See you soon... 🫡",
         searchLabel: "Search a room",
         searchPlaceholder: "Type keywords...",
+        active: "Active",
     },
 };
 

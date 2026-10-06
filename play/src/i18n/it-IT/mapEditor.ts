@@ -500,9 +500,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         description:
             "Permetti di esplorare la stanza. Potrai muoverti nella stanza e interagire con gli oggetti. Sono disponibili 2 modalità: 'Esplorazione' e 'Ricerca'. La modalità 'Ricerca' ti proporrà di cercare o filtrare entità e aree nella stanza. La modalità 'Esplorazione' ti permetterà di muoverti liberamente nella stanza.",
         noEntitiesFound: "Nessuna entità trovata nella stanza 🙅‍♂️",
-        entitiesFound: "oggetto{{s}} trovato",
+        entitiesFound: "{{oggetto trovato|oggetti trovati}}",
         noAreasFound: "Nessuna area trovata nella stanza 🙅‍♀️",
-        areasFound: "area{{s}} trovata",
+        areasFound: "{{area trovata|aree trovate}}",
+        noName: "Senza nome",
         noDescriptionFound: "Nessuna descrizione trovata 🫥",
         details: {
             close: "Chiudi",
@@ -522,6 +523,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "Spostamento nella stanza: {roomNameSelected}... A presto... 🫡",
         searchLabel: "Cerca una stanza",
         searchPlaceholder: "Scrivi...",
+        active: "Attiva",
     },
 };
 

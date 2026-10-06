@@ -495,6 +495,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         entitiesFound: "วัตถุที่พบ",
         noAreasFound: "ไม่พบพื้นที่ในห้อง 🙅‍♀️",
         areasFound: "พื้นที่ที่พบ",
+        noName: "ไม่มีชื่อ",
         noDescriptionFound: "ไม่พบคำอธิบาย 🫥",
         details: {
             close: "ปิด",
@@ -514,6 +515,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "กำลังย้ายไปยังห้อง: {roomNameSelected}... แล้วพบกัน... 🫡",
         searchLabel: "ค้นหาห้อง",
         searchPlaceholder: "พิมพ์คำค้นหา...",
+        active: "ใช้งานอยู่",
     },
 };
 

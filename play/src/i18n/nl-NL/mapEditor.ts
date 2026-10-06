@@ -503,9 +503,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         description:
             "Sta toe om de kamer te verkennen. Je kunt door de kamer bewegen en met objecten interageren. 2 modi zijn beschikbaar: 'Verkenning' en 'Zoeken'. De 'Zoekmodus' zal je voorstellen om entiteiten en gebieden in de kamer te zoeken of te filteren. De 'Verkenningsmodus' laat je vrij door de kamer bewegen.",
         noEntitiesFound: "Geen entiteiten gevonden in de kamer 🙅‍♂️",
-        entitiesFound: "object{{s}} gevonden",
+        entitiesFound: "{{object|objecten}} gevonden",
         noAreasFound: "Geen gebieden gevonden in de kamer 🙅‍♀️",
-        areasFound: "gebied{{s}} gevonden",
+        areasFound: "{{gebied|gebieden}} gevonden",
+        noName: "Geen naam",
         noDescriptionFound: "Geen beschrijving gevonden 🫥",
         details: {
             close: "Sluiten",
@@ -525,6 +526,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "Verplaatsen naar de kamer: {roomNameSelected}... Tot ziens... 🫡",
         searchLabel: "Zoek een kamer",
         searchPlaceholder: "Typ trefwoorden...",
+        active: "Actief",
     },
 };
 
