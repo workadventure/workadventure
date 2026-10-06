@@ -21,7 +21,7 @@ While you share, the button is highlighted, and your share appears as a second v
 
 ![Gregory shares his screen: the button is highlighted, and his share appears next to his camera](images/screen-sharing-presenter.png)
 
-If your browser refuses, or if you close its window without choosing, the message "Cannot start screen sharing" appears.
+If you close the browser's window without choosing, nothing is shared: click the button again to choose. If your screen cannot be shared, the message "Cannot start screen sharing" appears.
 
 ## What the others see
 
