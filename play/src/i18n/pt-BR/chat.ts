@@ -60,7 +60,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     connecting: "Conectando ao servidor...",
     waitingInit: "Aguardando inicialização do servidor...",
     waitingData: "Aguardando dados do usuário...",
-    searchUser: "Procurar usuário, mapa, etc...",
+    searchUser: "Procurar usuário...",
     searchChat: "Procurar canal, mensagem, etc...",
     people: "Mensagem direta",
     rooms: "Conversas em grupo",
