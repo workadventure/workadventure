@@ -55,6 +55,4 @@ The maximum resolution is set when you start sharing: after a change, stop and s
 
 - **On a phone or a tablet**: most mobile browsers cannot share the screen, so the button does not appear.
 - **In a Jitsi or BigBlueButton room**: use the screen sharing of Jitsi or BigBlueButton instead. Opening one of them stops your WorkAdventure share.
-- **In a silent zone**: you cannot share your screen.
 - **The map turned it off**: the map's script can disable screen sharing. The button is then greyed out.
-- **In the audience of the megaphone**: when the speaker can see the audience, you can turn on screen sharing, but the speaker does not receive it.
