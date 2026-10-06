@@ -13,6 +13,7 @@
         "bundle": "npm run build && electron-builder install-app-deps && electron-builder",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
+        "e2e": "playwright test",
         "lint": "eslint src/ . --ext .ts",
         "fix": "eslint --fix src/ . --ext .ts",
         "pretty": "prettier --write 'src/**/*.{ts,tsx}'",
@@ -29,6 +30,7 @@
         "node-fetch": "^3.2.10"
     },
     "devDependencies": {
+        "@playwright/test": "^1.63.0",
         "@types/auto-launch": "^5.0.2",
         "@typescript-eslint/eslint-plugin": "^5.18.0",
         "@typescript-eslint/parser": "^5.18.0",
