@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { readable } from "svelte/store";
-import { NativePictureInPictureClient, shouldOpenNativePictureInPicture } from "./NativePictureInPictureClient";
+import { readable, writable } from "svelte/store";
+import type { RemoteVideoTrack } from "livekit-client";
+import {
+    followLivekitVideo,
+    NativePictureInPictureClient,
+    shouldOpenNativePictureInPicture,
+} from "./NativePictureInPictureClient";
 
 describe("shouldOpenNativePictureInPicture", () => {
     const base = {
@@ -110,5 +115,42 @@ describe("NativePictureInPictureClient", () => {
         expect(pip.close).toHaveBeenCalled();
         delete desktopWindow.WAD;
         vi.unstubAllGlobals();
+    });
+});
+
+describe("followLivekitVideo", () => {
+    function fakeTrack(id: string) {
+        return {
+            mediaStreamTrack: { id } as MediaStreamTrack,
+            observeElementInfo: vi.fn(),
+            stopObservingElementInfo: vi.fn(),
+        };
+    }
+
+    it("mirrors the remote video and keeps LiveKit sending it as a picture-in-picture viewer", () => {
+        const first = fakeTrack("first");
+        const second = fakeTrack("second");
+        const remoteVideoTrack = writable<RemoteVideoTrack | undefined>(first as unknown as RemoteVideoTrack);
+        const release = vi.fn();
+        const onTrack = vi.fn();
+
+        const stop = followLivekitVideo(
+            { remoteVideoTrack, acquireVideoSubscription: vi.fn(() => release) },
+            false,
+            onTrack,
+        );
+
+        expect(onTrack).toHaveBeenLastCalledWith(first.mediaStreamTrack);
+        const viewer = first.observeElementInfo.mock.calls[0][0];
+        expect(viewer).toMatchObject({ visible: true, pictureInPicture: true });
+
+        remoteVideoTrack.set(second as unknown as RemoteVideoTrack);
+        expect(first.stopObservingElementInfo).toHaveBeenCalledWith(viewer);
+        expect(second.observeElementInfo).toHaveBeenCalledWith(viewer);
+        expect(onTrack).toHaveBeenLastCalledWith(second.mediaStreamTrack);
+
+        stop();
+        expect(second.stopObservingElementInfo).toHaveBeenCalledWith(viewer);
+        expect(release).toHaveBeenCalledOnce();
     });
 });

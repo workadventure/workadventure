@@ -1,7 +1,8 @@
 import { get, type Readable, type Unsubscriber } from "svelte/store";
 import Debug from "debug";
+import type { ElementInfo, RemoteVideoTrack } from "livekit-client";
 import { userIsAdminStore } from "../../../Stores/GameStore";
-import type { Streamable } from "../../../Space/Streamable";
+import type { LivekitStreamable, Streamable } from "../../../Space/Streamable";
 import type { VideoBox } from "../../../Space/VideoBox";
 import type {
     DesktopPipAnnotationState,
@@ -32,6 +33,46 @@ export function getDesktopPipApi(target: Window = window): NonNullable<WorkAdven
 
 export function isNativePictureInPictureAvailable(target: Window = window): boolean {
     return Boolean(getDesktopPipApi(target));
+}
+
+/**
+ * Follow the video of a LiveKit participant for the companion. LiveKit keeps it out of the
+ * streamStore (audio only) and stops sending it when no visible element shows it, even more so
+ * when the window is in the background. The companion keeps the subscription and shows up as a
+ * picture-in-picture viewer, which LiveKit keeps feeding, so the video reaches it while the main
+ * window is hidden.
+ */
+export function followLivekitVideo(
+    media: Pick<LivekitStreamable, "remoteVideoTrack" | "acquireVideoSubscription">,
+    screenSharing: boolean,
+    onTrack: (track: MediaStreamTrack | undefined) => void,
+): Unsubscriber {
+    const releaseSubscription = media.acquireVideoSubscription();
+    // ponytail: fixed companion tile size, LiveKit takes the largest of all viewers anyway.
+    const [width, height] = screenSharing ? [1280, 720] : [640, 360];
+    const companionViewer: ElementInfo = {
+        element: {},
+        width: () => width,
+        height: () => height,
+        visible: true,
+        pictureInPicture: true,
+        visibilityChangedAt: undefined,
+        observe: () => {},
+        stopObserving: () => {},
+    };
+    let observed: RemoteVideoTrack | undefined;
+    const unsubscribe = media.remoteVideoTrack.subscribe((track) => {
+        observed?.stopObservingElementInfo(companionViewer);
+        observed = track;
+        track?.observeElementInfo(companionViewer);
+        onTrack(track?.mediaStreamTrack);
+    });
+    return () => {
+        unsubscribe();
+        observed?.stopObservingElementInfo(companionViewer);
+        observed = undefined;
+        releaseSubscription();
+    };
 }
 
 type StreamablesStore = Readable<Map<string, VideoBox>>;
@@ -586,9 +627,14 @@ export class NativePictureInPictureClient {
         });
         this.hasVideoUnsubscribers.set(boxId, hasVideoUnsub);
 
-        const streamUnsub = streamable.media.streamStore.subscribe((stream) => {
-            this.applyStream(boxId, stream);
-        });
+        const streamUnsub =
+            streamable.media.type === "livekit"
+                ? followLivekitVideo(streamable.media, streamable.videoType === "screenSharing", (track) =>
+                      this.applyStream(boxId, track ? new MediaStream([track]) : undefined),
+                  )
+                : streamable.media.streamStore.subscribe((stream) => {
+                      this.applyStream(boxId, stream);
+                  });
         this.streamUnsubscribers.set(boxId, streamUnsub);
 
         // Voice activity → active-speaker border in the companion tile.
