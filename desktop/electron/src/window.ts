@@ -26,9 +26,10 @@ import {
     type DesktopConfig,
 } from "./desktop-url-policy";
 import { shouldMaximizeBeforeLoad } from "./window-state-policy";
+import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-policy";
 import { rememberWorldUrl } from "./world-history";
 import { onMainWindowBlur, onMainWindowFocus, stopCompanion, updateCompanion } from "./companion-controller";
-import { getPresenceSnapshot, onPresenceChange, resetPresence } from "./presence";
+import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetPresence } from "./presence";
 import {
     activateTab,
     createWorldView,
@@ -63,7 +64,8 @@ const INITIAL_REVEAL_FALLBACK_MS = 8000;
 // after it (Phaser boot, gameManager.init, map download, WS connect), and none of it fires
 // `did-fail-load` when it stalls: the user just watches a loading screen that never ends. The
 // renderer already reports when it is in (presence.inWorld, driven by gameSceneIsLoadedStore), so
-// treat that as the success criterion and bounce back to the Landing if it never comes.
+// treat that as the success criterion and bounce back to the Landing if it never comes. The clock
+// stops on the first-connection screens (name, Woka, camera): they wait for the user, not the network.
 const REACH_WORLD_TIMEOUT_MS = 45_000;
 const DESKTOP_CALLBACK_FLOW_TTL_MS = 5 * 60 * 1000;
 const DESKTOP_CALLBACK_SECRET_BYTES = 32;
@@ -85,6 +87,9 @@ let activeTabTeardownWired = false;
 let initialRevealTimer: ReturnType<typeof setTimeout> | undefined;
 let reachWorldTimer: ReturnType<typeof setTimeout> | undefined;
 let stopWatchingPresence: (() => void) | undefined;
+// The view and the navigation the watchdog judges: its front must have reported presence since then.
+let reachWorldContentsId: number | undefined;
+let reachWorldNavigationStartedAt = 0;
 const desktopCallbackFlows = new Map<string, DesktopCallbackFlow>();
 
 function randomToken(bytes: number) {
@@ -172,19 +177,33 @@ function cancelReachWorldWatchdog() {
  * live (arming cancels the previous one) and the recovery targets the active view, so it always
  * describes the tab the user is looking at. Portal and Landing loads have no game scene to wait for.
  */
-function armReachWorldWatchdog(target: string) {
+function armReachWorldWatchdog(target: string, contentsId: number, navigationStartedAt: number) {
     cancelReachWorldWatchdog();
     if (!isRoomUrl(target)) {
         return;
     }
+    reachWorldContentsId = contentsId;
+    reachWorldNavigationStartedAt = navigationStartedAt;
 
-    const startedAt = Date.now();
+    let startedAt = Date.now();
     stopWatchingPresence = onPresenceChange(() => {
-        if (!getPresenceSnapshot().inWorld) {
-            return;
+        switch (reachWorldWatchdogStep(getPresenceSnapshot(), reachWorldTimer !== undefined)) {
+            case "reached":
+                ElectronLog.info(`Reached the world in ${Date.now() - startedAt}ms.`);
+                cancelReachWorldWatchdog();
+                break;
+            case "pause":
+                if (reachWorldTimer !== undefined) {
+                    clearTimeout(reachWorldTimer);
+                    reachWorldTimer = undefined;
+                }
+                break;
+            case "resume":
+                // Done with the first-connection screens: the world gets the whole budget again.
+                startedAt = Date.now();
+                scheduleReachWorldDeadline(startedAt);
+                break;
         }
-        ElectronLog.info(`Reached the world in ${Date.now() - startedAt}ms.`);
-        cancelReachWorldWatchdog();
     });
     scheduleReachWorldDeadline(startedAt);
 }
@@ -196,9 +215,20 @@ function isMainWindowOnScreen() {
 function scheduleReachWorldDeadline(startedAt: number) {
     reachWorldTimer = setTimeout(() => {
         reachWorldTimer = undefined;
-        if (getPresenceSnapshot().inWorld) {
-            cancelReachWorldWatchdog();
-            return;
+        const frontReportsPresence =
+            reachWorldContentsId !== undefined &&
+            hasReportedPresenceSince(reachWorldContentsId, reachWorldNavigationStartedAt);
+        switch (reachWorldDeadlineAction(getPresenceSnapshot(), frontReportsPresence)) {
+            case "reached":
+                cancelReachWorldWatchdog();
+                return;
+            case "wait":
+                // Paused: the presence listener restarts the clock when the user leaves those screens.
+                return;
+            case "unknown":
+                ElectronLog.info("The world does not report its presence: its load is not judged.");
+                cancelReachWorldWatchdog();
+                return;
         }
         // Chromium schedules no animation frames for a hidden or minimized window, which freezes the
         // world's boot loop — frozen, not broken. Bouncing to the Landing here would destroy the
@@ -878,8 +908,9 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
     });
     pendingDeepLinkUrl = undefined;
     try {
+        const navigationStartedAt = Date.now();
         await contents.loadURL(target);
-        armReachWorldWatchdog(target);
+        armReachWorldWatchdog(target, contents.id, navigationStartedAt);
         showWindow();
         return true;
     } catch (error) {

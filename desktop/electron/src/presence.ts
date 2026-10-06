@@ -27,6 +27,8 @@ type PresenceState = {
     idle: boolean;
     /** True while a game scene is loaded (the user is actually in a world, not on landing/login). */
     inWorld: boolean;
+    /** True while a first-connection screen (name, Woka, companion, camera) waits for the user. */
+    onboarding: boolean;
     /** True while a meeting invitation is pending — the companion force-opens to show its banner. */
     invitationPending: boolean;
     /** The user's current chosen availability (the tray Status radio reflects this). */
@@ -42,6 +44,7 @@ const state: PresenceState = {
     screenSharing: false,
     idle: false,
     inWorld: false,
+    onboarding: false,
     invitationPending: false,
     requestedStatus: "online",
     statusLocked: false,
@@ -56,6 +59,18 @@ function coerceAvailability(value: unknown): TrayAvailability {
 }
 
 const listeners = new Set<() => void>();
+
+// When each renderer last reported its presence, by webContents id. Only a world whose front reports
+// presence can be judged by the reach-the-world watchdog: an older WorkAdventure front never does.
+const lastPresenceReportAt = new Map<number, number>();
+
+export function notePresenceReport(webContentsId: number): void {
+    lastPresenceReportAt.set(webContentsId, Date.now());
+}
+
+export function hasReportedPresenceSince(webContentsId: number, since: number): boolean {
+    return (lastPresenceReportAt.get(webContentsId) ?? 0) >= since;
+}
 
 function emit(): void {
     for (const listener of listeners) {
@@ -80,6 +95,7 @@ export function setRendererPresence(next: {
     cameraEnabled?: boolean;
     screenSharing?: boolean;
     inWorld?: boolean;
+    onboarding?: boolean;
     invitationPending?: boolean;
     requestedStatus?: unknown;
     statusLocked?: boolean;
@@ -89,6 +105,7 @@ export function setRendererPresence(next: {
     const cameraEnabled = Boolean(next.cameraEnabled);
     const screenSharing = Boolean(next.screenSharing);
     const inWorld = Boolean(next.inWorld);
+    const onboarding = Boolean(next.onboarding);
     const invitationPending = Boolean(next.invitationPending);
     const requestedStatus = coerceAvailability(next.requestedStatus);
     const statusLocked = Boolean(next.statusLocked);
@@ -98,6 +115,7 @@ export function setRendererPresence(next: {
         state.cameraEnabled === cameraEnabled &&
         state.screenSharing === screenSharing &&
         state.inWorld === inWorld &&
+        state.onboarding === onboarding &&
         state.invitationPending === invitationPending &&
         state.requestedStatus === requestedStatus &&
         state.statusLocked === statusLocked
@@ -109,6 +127,7 @@ export function setRendererPresence(next: {
     state.cameraEnabled = cameraEnabled;
     state.screenSharing = screenSharing;
     state.inWorld = inWorld;
+    state.onboarding = onboarding;
     state.invitationPending = invitationPending;
     state.requestedStatus = requestedStatus;
     state.statusLocked = statusLocked;
@@ -136,6 +155,7 @@ export function resetPresence(): void {
     state.screenSharing = false;
     state.idle = false;
     state.inWorld = false;
+    state.onboarding = false;
     state.invitationPending = false;
     state.requestedStatus = "online";
     state.statusLocked = false;
@@ -181,6 +201,7 @@ export function getPresenceSnapshot(): {
     cameraEnabled: boolean;
     screenSharing: boolean;
     inWorld: boolean;
+    onboarding: boolean;
     invitationPending: boolean;
 } {
     return {
@@ -189,6 +210,7 @@ export function getPresenceSnapshot(): {
         cameraEnabled: state.cameraEnabled,
         screenSharing: state.screenSharing,
         inWorld: state.inWorld,
+        onboarding: state.onboarding,
         invitationPending: state.invitationPending,
     };
 }
