@@ -31,6 +31,20 @@ import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager
 import type { ICommunicationStrategy, IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
 
 /**
+ * Recordings whose space was destroyed (everyone left the meeting, the bubble
+ * dissolved) before LiveKit reported the end of their egress, which only comes
+ * once the file is uploaded. Their manager stays reachable by recording session
+ * until then, so that end still reaches the admin (the customer's
+ * recording.completed webhook). The hour bounds an egress that never reports.
+ */
+const orphanedRecordings = new Map<string, CommunicationManager>();
+const ORPHANED_RECORDING_TTL_MS = 60 * 60 * 1000;
+
+export function findOrphanedRecording(recordingSessionId: string): CommunicationManager | undefined {
+    return orphanedRecordings.get(recordingSessionId);
+}
+
+/**
  * Factory interface for creating the initial communication state.
  * Used for dependency injection in tests.
  */
@@ -108,6 +122,7 @@ export class CommunicationManager implements ICommunicationManager {
      */
     private readonly _sessionAnalytics: SessionAnalytics;
     private readonly recordingEventNotifier: (payload: RecordingEventPayload) => Promise<void>;
+    private destroyed = false;
 
     private static readonly DEFAULT_LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
@@ -471,6 +486,11 @@ export class CommunicationManager implements ICommunicationManager {
                 }
 
                 this.notifyRecordingEnded(request, result.recorder);
+                orphanedRecordings.delete(request.recordingSessionId);
+                if (this.destroyed) {
+                    // The space is gone: nobody left to tell, no state to transition.
+                    return;
+                }
 
                 if (result.unexpected) {
                     this.space.dispatchPrivateEvent({
@@ -616,8 +636,13 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public destroy(): void {
+        this.destroyed = true;
         this._sessionAnalytics.close();
         this._recordingManager.destroy();
+        for (const recordingSessionId of this._recordingManager.getRecordingSessionIds()) {
+            orphanedRecordings.set(recordingSessionId, this);
+            setTimeout(() => orphanedRecordings.delete(recordingSessionId), ORPHANED_RECORDING_TTL_MS).unref();
+        }
     }
 }
 

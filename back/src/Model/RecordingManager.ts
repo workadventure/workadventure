@@ -43,6 +43,8 @@ export interface IRecordingManager {
         roomName: string,
     ): { processed: boolean; recorder: SpaceUser | null; unexpected: boolean; hasActiveSessions: boolean };
     hasRecordingSession(recordingSessionId: string): boolean;
+    /** The sessions still waiting for LiveKit to report the end of their egress. */
+    getRecordingSessionIds(): string[];
     handleAddUser(user: SpaceUser): void;
     isRecording: boolean;
     destroy(): void;
@@ -134,6 +136,10 @@ export class RecordingManager implements IRecordingManager {
 
     public hasRecordingSession(recordingSessionId: string): boolean {
         return this.sessions.has(recordingSessionId);
+    }
+
+    public getRecordingSessionIds(): string[] {
+        return Array.from(this.sessions.keys());
     }
 
     public getRecordingState(): ManagedRecordingState {
