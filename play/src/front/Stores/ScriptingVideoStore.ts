@@ -25,7 +25,6 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         muteAudio: writable(false),
         // FIXME: move this to fit after our tests
         displayMode: "cover",
-        displayInPictureInPictureMode: false,
         usePresentationMode: false,
         volume: writable(1),
         closeStreamable: () => {},

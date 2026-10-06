@@ -69,7 +69,6 @@ export interface Streamable {
     // In fit mode, the video will fit into the container and be fully visible, even if it does not fill the full container
     // In cover mode, the video will cover the full container, even if it means that some parts of the video are not visible
     readonly displayMode: "fit" | "cover";
-    readonly displayInPictureInPictureMode: boolean;
     readonly usePresentationMode: boolean;
     readonly spaceUserId: string | undefined;
     readonly closeStreamable: () => void;

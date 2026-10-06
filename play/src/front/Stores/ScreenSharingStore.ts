@@ -348,7 +348,6 @@ const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, func
         flipX: false,
         muteAudio: writable(true),
         displayMode: "fit" as const,
-        displayInPictureInPictureMode: true,
         usePresentationMode: true,
         closeStreamable: () => {},
         canCloseStreamable: () => false,

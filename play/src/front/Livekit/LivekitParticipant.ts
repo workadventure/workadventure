@@ -533,7 +533,6 @@ export class LiveKitParticipant {
             flipX: false,
             muteAudio: this._muteAudioStore,
             displayMode: "cover",
-            displayInPictureInPictureMode: true,
             usePresentationMode: false,
             media: {
                 type: "livekit",
@@ -566,7 +565,6 @@ export class LiveKitParticipant {
             flipX: false,
             muteAudio: writable(false),
             displayMode: "fit",
-            displayInPictureInPictureMode: true,
             usePresentationMode: true,
             media: {
                 type: "livekit",
