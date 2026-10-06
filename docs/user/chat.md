@@ -37,34 +37,30 @@ Matrix chat rooms are **persistent chat rooms**.
 
 ### Creating a chat room
 
-Anyone logged can create a chat room. 
+Anyone who is logged in can create a chat room.
 
-![](images/create-room-button.png)
+Click the **⋯** button next to the **Group Conversations** section, then choose **Create new discussion**. A form opens:
 
-A click on the "+" icon next to the "Rooms" section will prompt a form to create a new chat room.
+- **Name**: the name of the room. It is required.
+- **Activate end to end encryption**: messages in the room are encrypted using end-to-end encryption. It means nobody
+  except the participants of the room can read the messages. Not even the WorkAdventure server administrators.
+  Once a room has encryption enabled, it cannot be disabled.
+- **Users**: the people to invite, by their name or their Matrix ID (if you want to invite users with a Matrix ID
+  outside WorkAdventure to join).
+- **Visibility of previous messages** decides what part of the chat history new users can read:
+  - **Messages sent after joining are visible** (the default): new users can only read the messages sent after they
+    joined the room.
+  - **Messages sent after being invited are visible**: new users can read the messages sent after they were invited,
+    even if they did not join the room at that time.
+  - **All messages are visible**: new users can read the entire chat history.
 
-![](images/create-room-popup.png)
+Click **Create**. You are the **Admin** of the new room, and the room is **invite only**: only the people you invite
+can join it. You can invite more people later from the [Manage participants](/user/chat-moderation#managing-participants)
+window.
 
-**Room visibility** can be set to "Public" or "Private". Public rooms are visible to **everyone**, while private rooms are 
-only visible to users that have been invited to the room.
-
-:::note
-When we say public rooms are accessible to *everyone*, we mean it. The Matrix protocol is federated, and anyone with a 
-Matrix account can join a public room. Even if they are not logged in WorkAdventure.
-:::
-
-**Encryption** can be enabled for private rooms. When enabled, messages in the chat room are encrypted using end-to-end encryption.
-It means nobody except the participants of the room can read the messages. Not even the WorkAdventure server administrators.
-Once a room has encryption enabled, it cannot be disabled.
-
-The **Users** field can be used to invite users to the room. Users can be invited by their name or their Matrix ID (if you
-want to invite users with a Matrix ID outside WorkAdventure to join).
-
-**Visibility of previous messages** decides what part of the chat history new users can read.
-
-- **All messages are visible**: new users can read the entire chat history.
-- **Messages sent after joining are visible**: new users can only read the messages sent after they joined the room.
-- **Messages sent after being invited are visible**: new users can read the messages sent after they were invited, even if they did not join the room at that time.
+To create a room inside a folder, open the folder's **⋯** menu and choose **Create new room**. This room is open to the
+members of the folder, so the form has no **Users** field. It has no encryption option either. Check
+**Suggested room** to suggest the room to the members of the folder.
 
 :::info
 If you are using the SAAS version of WorkAdventure, there is another way to create a Matrix room that [automatically
@@ -73,14 +69,14 @@ binds members to a room based on their tags](/admin/chat/matrix-admin-managed-ro
 
 ### Folders
 
-Rooms can be organized in folders. Folders can be created by clicking on the "Create folder" button.
+Rooms can be organized in folders. To create a folder, choose **Create new folder** in the same **⋯** menu.
 
 The folder notion in WorkAdventure is usually called a "space" in other Matrix client.
 
 ### Invitations
 
 In order to open a chat with another user in your WorkAdventure world, you need to invite them to a chat room.
-If you are creating a private room, you will also need to invite users.
+A room created outside a folder is invite only: invite the people who should join it.
 
 Invited users will receive a notification in the chat room list and they can accept or decline the invitation.
 
