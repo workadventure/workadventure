@@ -394,6 +394,28 @@ function isRoomUrl(value) {
     );
 }
 
+/**
+ * The world a room URL belongs to, to find the tab that already shows it. Rooms of the same world share
+ * a key: /@/{team}/{world} on an admin-hosted server, the whole server for map-storage rooms (the ~ and
+ * * paths), since a server without an admin is a single world. A public map (/_/) is a world of its own.
+ * Undefined for anything that is not a room (Landing, portal, login).
+ */
+function worldKeyOf(value) {
+    const url = parseHttpUrl(value);
+    if (!url || !isRoomUrl(url.toString())) {
+        return undefined;
+    }
+    const segments = url.pathname.split("/");
+    const at = segments.indexOf("@");
+    if (at !== -1 && segments[at + 1] && segments[at + 2]) {
+        return `${url.origin}/@/${segments[at + 1]}/${segments[at + 2]}`;
+    }
+    if (segments.includes("_")) {
+        return url.origin + url.pathname;
+    }
+    return url.origin;
+}
+
 // `error` is the English text; `code` lets the caller show it in the user's language
 // (landing.<code> in the native catalog).
 function validateDesktopNavigationUrl(value, config) {
@@ -478,6 +500,7 @@ module.exports = {
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
     isRoomUrl,
+    worldKeyOf,
     addWorldToHistory,
     formatWorldHistoryLabel,
     validateDesktopNavigationUrl,
