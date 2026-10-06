@@ -190,6 +190,18 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return derived(stores, (list) => list.some(Boolean)).subscribe(set);
     });
 
+    // True while some space would receive our screen share: one where we stream video and that takes our screen share.
+    // Checked space by space: a megaphone audience the speaker can see streams its camera there, but not its screen.
+    public readonly isScreenSharingAvailableStore: Readable<boolean> = derived(
+        this.spacesWhere((space) =>
+            derived(
+                [space.isStreamingVideoStore, space.shouldPublishScreenShareStore],
+                ([$isStreamingVideo, $shouldPublishScreenShare]) => $isStreamingVideo && $shouldPublishScreenShare,
+            ),
+        ),
+        (spaces) => spaces.length > 0,
+    );
+
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream,

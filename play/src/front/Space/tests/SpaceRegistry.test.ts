@@ -313,6 +313,46 @@ describe("SpaceProviderInterface implementation", () => {
                 expect(get(spaceRegistry.raisedHandSectionsStore)[0].onAirHere).toBe(false);
             });
         });
+        describe("SpaceRegistry isScreenSharingAvailableStore", () => {
+            const megaphoneFields = ["cameraState", "microphoneState", "screenSharingState", "megaphoneState"];
+
+            it("should be true in a bubble and for a speaker, not for an audience the speaker sees", async () => {
+                const spaceRegistry = new SpaceRegistry(new MockRoomConnectionForSpaces(), new Subject());
+                expect(get(spaceRegistry.isScreenSharingAvailableStore)).toBe(false);
+
+                // A megaphone audience the speaker cannot see, on top of one the speaker sees: each space alone
+                // either streams our camera or takes screen shares, never both, so no screen share reaches anyone.
+                await spaceRegistry.joinSpace(
+                    "room-megaphone",
+                    FilterType.LIVE_STREAMING_USERS,
+                    megaphoneFields,
+                    new AbortController().signal,
+                );
+                const speakerZone = await spaceRegistry.joinSpace(
+                    "speaker-zone",
+                    FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK,
+                    [...megaphoneFields, "attendeesState"],
+                    new AbortController().signal,
+                );
+                speakerZone.startListenerStreaming();
+                expect(get(spaceRegistry.isLiveStreamingStore)).toBe(true);
+                expect(get(spaceRegistry.isScreenSharingAvailableStore)).toBe(false);
+
+                speakerZone.startStreaming();
+                expect(get(spaceRegistry.isScreenSharingAvailableStore)).toBe(true);
+
+                speakerZone.stopStreaming();
+                expect(get(spaceRegistry.isScreenSharingAvailableStore)).toBe(false);
+
+                await spaceRegistry.joinSpace(
+                    "bubble",
+                    FilterType.ALL_USERS,
+                    ["cameraState", "microphoneState", "screenSharingState"],
+                    new AbortController().signal,
+                );
+                expect(get(spaceRegistry.isScreenSharingAvailableStore)).toBe(true);
+            });
+        });
         describe("SpaceRegistry race condition handling", () => {
             it("should handle race condition when leaving and joining the same space immediately", async () => {
                 const roomConnectionMock = new MockRoomConnectionForSpaces();

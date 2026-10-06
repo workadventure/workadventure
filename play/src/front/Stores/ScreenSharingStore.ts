@@ -17,7 +17,7 @@ import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMe
 import type {} from "../Api/Desktop";
 import { screenShareStreamElementsStore } from "./PeerStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
-import { isLiveStreamingStore } from "./IsStreamingStore";
+import { isScreenSharingAvailableStore } from "./IsStreamingStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -76,7 +76,7 @@ export const screenShareQualityStore = createScreenShareQualityStore();
 /**
  * A store containing whether the screen sharing button should be displayed or hidden.
  */
-export const screenSharingAvailableStore = isLiveStreamingStore;
+export const screenSharingAvailableStore = isScreenSharingAvailableStore;
 
 /**
  * A store containing the media constraints we want to apply.
