@@ -9,6 +9,7 @@ import {
     leftWorld,
     shouldShowCompanion,
 } from "./companion-visibility-policy";
+import { canHideWindowsFromCapture } from "./platform-capture-policy";
 
 /**
  * Drives the unified Companion — the People / Chat / Meeting / Controls window. It never steals
@@ -53,6 +54,8 @@ function wantOpen(): boolean {
     const p = getPresenceSnapshot();
     return shouldShowCompanion({
         screenSharing: p.screenSharing,
+        // The meeting bar replaces the panel while sharing, where it can be kept out of the capture.
+        meetingBarAvailable: canHideWindowsFromCapture(process.platform),
         mainWindowFocused: isMainWindowFocused(),
         pipActive,
         invitationPending: p.invitationPending,
