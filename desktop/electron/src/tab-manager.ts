@@ -77,7 +77,7 @@ export function onTabsChange(listener: () => void): () => void {
 
 /**
  * Subscribe to ACTIVE-tab changes only (not title/list churn). window.ts uses this to tear down
- * the PiP / overlay / HUD windows that belonged to the previously-active world when the user
+ * the PiP / HUD windows that belonged to the previously-active world when the user
  * switches tabs — otherwise their relays would misroute to the new tab's renderer.
  */
 export function onActiveTabChange(listener: () => void): () => void {
@@ -86,8 +86,8 @@ export function onActiveTabChange(listener: () => void): () => void {
 }
 
 // ---- The tab that drives media ----
-// Global controls (mute/camera shortcuts, tray, companion, PiP, meeting bar, overlay, presenter
-// cursor) follow the world that is in a meeting, even while another tab is on screen; with no meeting
+// Global controls (mute/camera shortcuts, tray, companion, PiP, meeting bar) follow the world that
+// is in a meeting, even while another tab is on screen; with no meeting
 // they follow the active tab. One meeting at a time: when a second tab enters a meeting, the first one
 // is told to drop its microphone, camera and screen share (see setTabInMeeting).
 const meetingTabs = createMeetingTabs();
@@ -115,7 +115,7 @@ function emitControllingChangeIfNeeded(): void {
 
 /**
  * Subscribe to changes of the tab that drives media (see above). window.ts tears down the PiP /
- * overlay / HUD windows of the previous one: their relays are keyed to it.
+ * HUD windows of the previous one: their relays are keyed to it.
  */
 export function onControllingTabChange(listener: () => void): () => void {
     controllingChangeListeners.add(listener);

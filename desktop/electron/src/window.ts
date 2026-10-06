@@ -27,10 +27,8 @@ import {
 } from "./desktop-url-policy";
 import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { rememberWorldUrl } from "./world-history";
-import { closeOverlayWindow } from "./overlay-window";
 import { onMainWindowBlur, onMainWindowFocus, stopCompanion, updateCompanion } from "./companion-controller";
 import { getPresenceSnapshot, onPresenceChange, resetPresence } from "./presence";
-import { stopPresenterCursor } from "./presenter-cursor";
 import {
     activateTab,
     createWorldView,
@@ -692,7 +690,7 @@ export async function createWindow(initialUrl?: string) {
     // No setMenu(null): on Windows/Linux it would drop the application menu, and with it the World
     // menu's accelerators (new/close/switch tab). autoHideMenuBar keeps the bar out of sight.
     setShell(mainWindow);
-    // The companion (which hosts the meeting video), overlay, HUD windows and presenter cursor belong
+    // The companion (which hosts the meeting video) and the HUD windows belong
     // to the tab that drives media: the one in a meeting, or the active one when there is none (see
     // tab-manager). Switching to another tab during a meeting leaves them alone. When that tab
     // changes, tear them down: their relays are keyed to it, so leaving them open would misroute
@@ -702,9 +700,7 @@ export async function createWindow(initialUrl?: string) {
     if (!activeTabTeardownWired) {
         activeTabTeardownWired = true;
         onControllingTabChange(() => {
-            closeOverlayWindow();
             closeAllHudWindows();
-            stopPresenterCursor();
             stopCompanion();
             forgetHudState();
             // Presence is a single global describing the controlling tab, and only that renderer is
@@ -737,9 +733,7 @@ export async function createWindow(initialUrl?: string) {
         mainWindow = undefined;
         resetTabStrip();
         resetTabs();
-        closeOverlayWindow();
         closeAllHudWindows();
-        stopPresenterCursor();
         stopCompanion();
         // The renderer that fed presence is gone — drop to the disconnected baseline so the tray dot
         // stops showing a stale "online" and the world-only quick actions gray out.
