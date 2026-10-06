@@ -53,6 +53,7 @@
 
     let fullscreen: boolean = $state(localUserStore.getFullscreen());
     let notification: boolean = $state(localUserStore.getNotification());
+    let chatSounds: boolean = $state(localUserStore.getChatSounds());
     let allowPictureInPicture: boolean = $state(localUserStore.getAllowPictureInPicture());
     let blockAudio: boolean = $state(localUserStore.getBlockAudio());
     let forceCowebsiteTrigger: boolean = $state(localUserStore.getForceCowebsiteTrigger());
@@ -206,6 +207,10 @@
                 })
                 .catch((e) => console.error(e));
         }
+    }
+
+    function changeChatSounds() {
+        localUserStore.setChatSounds(chatSounds);
     }
 
     function changePictureInPicture() {
@@ -724,6 +729,14 @@
                 bind:value={notification}
                 onchange={changeNotification}
                 label={$LL.menu.settings.notifications()}
+            />
+        </div>
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="chat-sounds-toggle"
+                bind:value={chatSounds}
+                onchange={changeChatSounds}
+                label={$LL.menu.settings.chatSounds()}
             />
         </div>
         <div class="flex cursor-pointer items-center relative m-4">

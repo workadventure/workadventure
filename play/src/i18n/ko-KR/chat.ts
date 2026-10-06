@@ -19,7 +19,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "친구 추가",
     },
     loader: "불러오는 중...",
-    typing: "입력 중...",
     users: "사용자",
     chat: "채팅",
     userList: {
@@ -133,7 +132,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "메시지를 입력하세요...",
-        typing: " 입력 중...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -194,26 +192,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "되돌려 보내기",
     delete: "삭제",
     messageDeleted: "메시지가 삭제되었습니다",
-    emoji: {
-        icon: "이모티콘 선택 팝업을 열거나 닫는 아이콘",
-        search: "이모티콘 검색...",
-        categories: {
-            recents: "최근 이모티콘",
-            smileys: "스마일 및 감정",
-            people: "사람 및 신체",
-            animals: "동물 및 자연",
-            food: "음식 및 음료",
-            activities: "활동",
-            travel: "여행 및 장소",
-            objects: "물건",
-            symbols: "기호",
-            flags: "깃발",
-            custom: "사용자 정의",
-        },
-        notFound: "일치하는 이모티콘이 없습니다",
-    },
-    said: "이(가) 말했습니다:",
-    reply: "답장",
     replyTo: "대상에게 답장",
     thread: {
         panelTitle: "모든 스레드",
@@ -230,9 +208,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "이 대화의 시작 부분을 사용할 수 없습니다. 읽기와 답장은 계속할 수 있습니다.",
         openError: "이 스레드를 열 수 없습니다.",
     },
-    react: "반응",
-    copy: "복사",
-    copied: "복사되었습니다!",
     poll: {
         title: "투표",
         closed: "투표가 종료되었습니다.",
@@ -295,15 +270,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "모든 질문 보기",
     },
     file: {
-        fileContentNoEmbed: "내용을 바로 볼 수 없습니다. 파일을 다운로드해 확인해 주세요",
-        download: "다운로드",
-        openCoWebsite: "코웹사이트에서 열기",
         loadingAttachment: "첨부 파일을 불러오는 중...",
         attachmentDownloadError: "이 첨부 파일을 다운로드할 수 없습니다.",
         attachmentDecryptError: "이 첨부 파일을 복호화할 수 없습니다.",
-        copy: "링크 복사",
-        tooBig: "{fileName} 파일이 너무 큽니다. 최대 크기: {maxFileSize}.",
-        notLogged: "파일을 업로드하려면 로그인해야 합니다.",
     },
     needRefresh: "연결이 만료되었습니다. 채팅에 다시 연결하려면 페이지를 새로고침해야 합니다.",
     refresh: "새로고침",
@@ -315,6 +284,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "이 메시지는 당신이 삭제했습니다",
     messageEdited: "수정됨",
     messageEditedError: "메시지를 수정할 수 없습니다. 다시 시도해 주세요.",
+    messageEdition: {
+        save: "저장",
+        cancel: "취소",
+    },
     waiting: "대기 중",
     nothingToDisplay: "표시할 내용이 없습니다",
     showMore: "메시지 {number}개 더 보기",
@@ -347,7 +320,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "초대받은 이후의 메시지만 보입니다",
         },
         buttons: {
-            edit: "편집",
             create: "만들기",
             cancel: "취소",
         },
@@ -658,7 +630,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "파일 첨부",
         description: "파일 업로드 및 공유",
-        featureComingSoon: "곧 제공 예정!",
     },
     loginTokenError: "오류가 발생했습니다. 다시 연결해 주세요",
     reconnect: "다시 연결",

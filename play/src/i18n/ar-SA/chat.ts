@@ -18,7 +18,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "إضافة صديق",
     },
     loader: "جار التحميل...",
-    typing: "يكتب...",
     users: "المستخدمون",
     chat: "الدردشة",
     userList: {
@@ -131,7 +130,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "أدخل رسالتك...",
-        typing: " يكتب...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -191,26 +189,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "إعادة الإرسال",
     delete: "حذف",
     messageDeleted: "تم حذف الرسالة",
-    emoji: {
-        icon: "رمز لفتح أو إغلاق نافذة اختيار الرموز التعبيرية",
-        search: "ابحث عن الرموز التعبيرية...",
-        categories: {
-            recents: "الرموز التعبيرية الحديثة",
-            smileys: "الوجوه التعبيرية والعاطفة",
-            people: "الأشخاص والجسم",
-            animals: "الحيوانات والطبيعة",
-            food: "الطعام والشراب",
-            activities: "الأنشطة",
-            travel: "السفر والأماكن",
-            objects: "الأشياء",
-            symbols: "الرموز",
-            flags: "الأعلام",
-            custom: "مخصص",
-        },
-        notFound: "لم يتم العثور على رموز تعبيرية",
-    },
-    said: "قال :",
-    reply: "رد",
     replyTo: "رد على",
     thread: {
         panelTitle: "جميع المواضيع",
@@ -227,9 +205,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "بداية هذه المحادثة غير متاحة. لا يزال بإمكانك القراءة والرد.",
         openError: "تعذر فتح هذا الموضوع.",
     },
-    react: "تفاعل",
-    copy: "نسخ",
-    copied: "تم النسخ!",
     poll: {
         title: "استطلاع",
         closed: "تم إغلاق الاستطلاع.",
@@ -292,15 +267,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "عرض كل الأسئلة",
     },
     file: {
-        fileContentNoEmbed: "المحتوى غير متاح للعرض. يرجى تنزيله",
-        download: "تنزيل",
-        openCoWebsite: "فتح في الموقع المشترك",
         loadingAttachment: "Loading attachment...",
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "تعذر فك تشفير هذا المرفق.",
-        copy: "نسخ الرابط",
-        tooBig: "{fileName} كبير جدًا {maxFileSize}.",
-        notLogged: "تحتاج إلى تسجيل الدخول لتحميل ملف.",
     },
     needRefresh: "انتهت صلاحية اتصالك، تحتاج إلى تحديث الصفحة لإعادة الاتصال بالدردشة.",
     refresh: "تحديث",
@@ -312,6 +281,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "لقد حذفت هذه الرسالة",
     messageEdited: "تم التعديل",
     messageEditedError: "تعذر تعديل الرسالة. حاول مرة أخرى.",
+    messageEdition: {
+        save: "حفظ",
+        cancel: "إلغاء",
+    },
     waiting: "في انتظار",
     nothingToDisplay: "لا يوجد شيء لعرضه",
     showMore: "عرض {number} المزيد",
@@ -344,7 +317,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "الأعضاء فقط (منذ دعوتهم)",
         },
         buttons: {
-            edit: "تعديل",
             create: "إنشاء",
             cancel: "إلغاء",
         },
@@ -656,7 +628,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "إرفاق ملف",
         description: "تحميل ومشاركة ملف",
-        featureComingSoon: "قريبًا!",
     },
     loginTokenError: "حدث خطأ. يرجى إعادة الاتصال", // An error occurred. Please try to reconnect
     reconnect: "إعادة الاتصال", // Reconnect

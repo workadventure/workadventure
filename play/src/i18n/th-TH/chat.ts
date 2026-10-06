@@ -18,7 +18,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "เพิ่มเพื่อน",
     },
     loader: "กำลังโหลด...",
-    typing: "กำลังพิมพ์...",
     users: "ผู้ใช้",
     chat: "แชท",
     userList: {
@@ -132,7 +131,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "พิมพ์ข้อความของคุณ...",
-        typing: " กำลังพิมพ์...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -192,26 +190,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "ส่งกลับ",
     delete: "ลบ",
     messageDeleted: "ข้อความถูกลบ",
-    emoji: {
-        icon: "ไอคอนเปิดหรือปิดป็อปอัปเลือกอีโมจิ",
-        search: "ค้นหาอีโมจิ...",
-        categories: {
-            recents: "อีโมจิล่าสุด",
-            smileys: "รอยยิ้มและอารมณ์",
-            people: "ผู้คนและร่างกาย",
-            animals: "สัตว์และธรรมชาติ",
-            food: "อาหารและเครื่องดื่ม",
-            activities: "กิจกรรม",
-            travel: "การเดินทางและสถานที่",
-            objects: "สิ่งของ",
-            symbols: "สัญลักษณ์",
-            flags: "ธง",
-            custom: "กำหนดเอง",
-        },
-        notFound: "ไม่พบอีโมจิ",
-    },
-    said: "กล่าวว่า :",
-    reply: "ตอบกลับ",
     replyTo: "ตอบกลับถึง",
     thread: {
         panelTitle: "เธรดทั้งหมด",
@@ -228,9 +206,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "ช่วงต้นของการสนทนานี้ไม่พร้อมใช้งาน แต่คุณยังอ่านและตอบกลับได้",
         openError: "ไม่สามารถเปิดเธรดนี้ได้",
     },
-    react: "แสดงความรู้สึก",
-    copy: "คัดลอก",
-    copied: "คัดลอกแล้ว!",
     poll: {
         title: "โพล",
         closed: "โพลปิดแล้ว",
@@ -293,15 +268,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "ดูคำถามทั้งหมด",
     },
     file: {
-        fileContentNoEmbed: "ไม่สามารถแสดงเนื้อหาได้ กรุณาดาวน์โหลด",
-        download: "ดาวน์โหลด",
-        openCoWebsite: "เปิดในเว็บไซต์ฝัง",
         loadingAttachment: "กำลังโหลดไฟล์แนบ...",
         attachmentDownloadError: "ไม่สามารถดาวน์โหลดไฟล์แนบนี้ได้",
         attachmentDecryptError: "ไม่สามารถถอดรหัสไฟล์แนบนี้ได้",
-        copy: "คัดลอกลิงก์",
-        tooBig: "{fileName} ใหญ่เกินไป {maxFileSize}",
-        notLogged: "คุณต้องเข้าสู่ระบบเพื่ออัปโหลดไฟล์",
     },
     needRefresh: "การเชื่อมต่อของคุณหมดอายุ กรุณารีเฟรชหน้าเพื่อเชื่อมต่อแชทใหม่",
     refresh: "รีเฟรช",
@@ -313,6 +282,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "คุณลบข้อความนี้แล้ว",
     messageEdited: "แก้ไขแล้ว",
     messageEditedError: "ไม่สามารถแก้ไขข้อความได้ ลองใหม่อีกครั้ง",
+    messageEdition: {
+        save: "บันทึก",
+        cancel: "ยกเลิก",
+    },
     waiting: "กำลังรอ",
     nothingToDisplay: "ไม่มีอะไรให้แสดง",
     showMore: "แสดงเพิ่มอีก {number}",
@@ -345,7 +318,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "มองเห็นข้อความที่ส่งหลังได้รับเชิญ",
         },
         buttons: {
-            edit: "แก้ไข",
             create: "สร้าง",
             cancel: "ยกเลิก",
         },
@@ -656,7 +628,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "ไฟล์แนบ",
         description: "อัปโหลดและแชร์ไฟล์",
-        featureComingSoon: "เร็ว ๆ นี้!",
     },
     loginTokenError: "เกิดข้อผิดพลาด กรุณาลองเชื่อมต่อใหม่",
     reconnect: "เชื่อมต่อใหม่",

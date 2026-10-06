@@ -17,7 +17,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "添加朋友",
     },
     loader: "加载中...",
-    typing: "正在输入...",
     users: "用户",
     chat: "聊天",
     userList: {
@@ -130,7 +129,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "输入您的消息...",
-        typing: " 正在输入...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -190,26 +188,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "重新发送",
     delete: "删除",
     messageDeleted: "消息已删除",
-    emoji: {
-        icon: "打开或关闭表情符号选择弹出窗口的图标",
-        search: "搜索表情符号...",
-        categories: {
-            recents: "最近使用的表情符号",
-            smileys: "笑脸和表情",
-            people: "人物和身体",
-            animals: "动物和自然",
-            food: "食物和饮料",
-            activities: "活动",
-            travel: "旅行和地点",
-            objects: "物品",
-            symbols: "符号",
-            flags: "旗帜",
-            custom: "自定义",
-        },
-        notFound: "未找到表情符号",
-    },
-    said: "说:",
-    reply: "回复",
     replyTo: "回复",
     thread: {
         panelTitle: "所有话题串",
@@ -226,9 +204,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "此对话的开头不可用。您仍可阅读和回复。",
         openError: "无法打开此话题串。",
     },
-    react: "反应",
-    copy: "复制",
-    copied: "已复制！",
     poll: {
         title: "投票",
         closed: "投票已结束。",
@@ -291,15 +266,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "查看所有问题",
     },
     file: {
-        fileContentNoEmbed: "内容无法查看。请下载",
-        download: "下载",
-        openCoWebsite: "在协作网站中打开",
         loadingAttachment: "Loading attachment...",
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "无法解密此附件。",
-        copy: "复制链接",
-        tooBig: "{fileName} 太大 {maxFileSize}。",
-        notLogged: "您需要登录才能上传文件。",
     },
     needRefresh: "您的连接已过期，需要刷新页面以重新连接到聊天。",
     refresh: "刷新",
@@ -311,6 +280,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "您已删除此消息",
     messageEdited: "已修改",
     messageEditedError: "无法编辑消息。请重试。",
+    messageEdition: {
+        save: "保存",
+        cancel: "取消",
+    },
     waiting: "等待中",
     nothingToDisplay: "无内容显示",
     showMore: "显示更多 {number} 条",
@@ -343,7 +316,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "被邀请后发送的消息可见",
         },
         buttons: {
-            edit: "编辑",
             create: "创建",
             cancel: "取消",
         },
@@ -653,7 +625,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "文件附件",
         description: "上传并共享文件",
-        featureComingSoon: "即将推出！",
     },
     loginTokenError: "发生错误。请尝试重新连接",
     reconnect: "重新连接",

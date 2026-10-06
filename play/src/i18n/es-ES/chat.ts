@@ -19,7 +19,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "Añadir amigo",
     },
     loader: "Cargando...",
-    typing: "está escribiendo...",
     users: "Usuarios",
     chat: "Chat",
     userList: {
@@ -132,7 +131,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "Escribe tu mensaje...",
-        typing: " está escribiendo...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -192,26 +190,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "Reenviar",
     delete: "Eliminar",
     messageDeleted: "Mensaje eliminado",
-    emoji: {
-        icon: "Icono para abrir o cerrar la ventana emergente de emoji seleccionado",
-        search: "Buscar emojis...",
-        categories: {
-            recents: "Emojis recientes",
-            smileys: "Caras sonrientes y emociones",
-            people: "Personas y cuerpo",
-            animals: "Animales y naturaleza",
-            food: "Comida y bebida",
-            activities: "Actividades",
-            travel: "Viajes y lugares",
-            objects: "Objetos",
-            symbols: "Símbolos",
-            flags: "Banderas",
-            custom: "Personalizado",
-        },
-        notFound: "No se encontraron emojis",
-    },
-    said: "dijo:",
-    reply: "Responder",
     replyTo: "Responder a",
     thread: {
         panelTitle: "Todos los hilos",
@@ -228,9 +206,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "El inicio de esta conversación no está disponible. Aún puede leer y responder.",
         openError: "No se pudo abrir este hilo.",
     },
-    react: "Reaccionar",
-    copy: "Copiar",
-    copied: "¡Copiado!",
     poll: {
         title: "Encuesta",
         closed: "Encuesta cerrada.",
@@ -293,15 +268,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "Ver todas las preguntas",
     },
     file: {
-        fileContentNoEmbed: "Contenido no disponible para visualizar. Por favor, descárguelo",
-        download: "descargar",
-        openCoWebsite: "Abrir en co-website",
         loadingAttachment: "Loading attachment...",
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "No se puede descifrar este archivo adjunto.",
-        copy: "copiar el enlace",
-        tooBig: "{fileName} es demasiado grande {maxFileSize}.",
-        notLogged: "Necesita iniciar sesión para subir un archivo.",
     },
     needRefresh: "Su conexión ha expirado, necesita actualizar la página para volver a conectarse al chat.",
     refresh: "Actualizar",
@@ -313,6 +282,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "Has eliminado este mensaje",
     messageEdited: "Modificado",
     messageEditedError: "No se pudo editar el mensaje. Inténtelo de nuevo.",
+    messageEdition: {
+        save: "Guardar",
+        cancel: "Cancelar",
+    },
     waiting: "Esperando",
     nothingToDisplay: "Nada que mostrar",
     showMore: "Mostrar {number} más",
@@ -345,7 +318,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "Los mensajes enviados después de ser invitado son visibles",
         },
         buttons: {
-            edit: "Editar",
             create: "Crear",
             cancel: "Cancelar",
         },
@@ -657,7 +629,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Adjunto de archivo",
         description: "Suba y comparta un archivo",
-        featureComingSoon: "¡Próximamente!",
     },
     loginTokenError: "Ocurrió un error. Por favor, intente volver a conectarse",
     reconnect: "Reconectar",

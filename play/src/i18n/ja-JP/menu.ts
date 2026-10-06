@@ -147,7 +147,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     chat: {
         matrixIDLabel: "あなたの Matrix ID",
-        settings: "設定",
         resetKeyStorageUpButtonLabel: "キーストレージをリセット",
         resetKeyStorageConfirmationModal: {
             title: "キーストレージリセットの確認",
