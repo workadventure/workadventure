@@ -86,7 +86,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Stiller Bereich",
         silentZoneDesc:
-            "Sie befinden sich in einer stillen Zone. Sie können nur die Menschen sehen und hören, mit denen Sie zusammen sind. Sie können die anderen Menschen im Raum nicht sehen oder hören.",
+            "Sie befinden sich in einer stillen Zone. Hier kann niemand mit Ihnen sprechen, und Ihr Mikrofon und Ihre Kamera sind ausgeschaltet.",
         nameTag: "Sie",
         loading: "Ihre Kamera wird geladen...",
     },
