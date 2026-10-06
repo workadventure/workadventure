@@ -107,12 +107,12 @@
     );
     let pollCardValue = $derived(
         room.pollCatalogueHydrationState == null
-            ? `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`
+            ? `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.status.open()}`
             : $pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle"
               ? $LL.chat.loading()
               : $pollCatalogueHydrationState.status === "error"
                 ? $LL.chat.roomPanel.status.retry()
-                : `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`,
+                : `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.status.open()}`,
     );
     let pollCardHint = $derived(
         room.pollCatalogueHydrationState != null && $pollCatalogueHydrationState.status === "error"

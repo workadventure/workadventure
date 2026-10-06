@@ -132,7 +132,7 @@
                         ? 'border-white/10 bg-white/5 text-white/60'
                         : 'border-success-900/30 bg-success-900/20 text-white'}"
                 >
-                    {$pollState.isEnded ? $LL.chat.poll.kind.closed() : $LL.chat.poll.kind.open()}
+                    {$pollState.isEnded ? $LL.chat.poll.status.closed() : $LL.chat.poll.status.open()}
                 </span>
                 <span class="text-xs text-white/50" data-testid="pollParticipantsCount">
                     {$LL.chat.poll.participants({ count: $pollState.totalVotes })}

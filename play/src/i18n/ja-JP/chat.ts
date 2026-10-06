@@ -231,9 +231,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         spoiledVotes: "無効票 {count} 件",
         resultsAfterVote: "投票後に結果が表示されます。",
         resultsWhenClosed: "投票が終了すると結果が表示されます。",
+        status: {
+            open: "受付中",
+            closed: "終了",
+        },
         kind: {
-            open: "公開",
-            closed: "非公開",
+            open: "結果を表示",
+            closed: "結果を非表示",
         },
         end: {
             cta: "投票を終了",

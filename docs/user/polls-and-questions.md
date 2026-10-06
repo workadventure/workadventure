@@ -15,8 +15,8 @@ Polls work in the proximity chat (a bubble, a meeting room or a podium) and in c
 1. In the chat, click **+** next to the message box, then **Poll**.
 2. Type your **Question** and at least two **Answers** (up to 20). Click **Add answer** for more, or the trash icon to remove one.
 3. Choose the **Visibility**:
-   - **Open**: each person sees the results as soon as they have voted.
-   - **Closed**: the results stay hidden until you close the poll.
+   - **Results visible**: each person sees the results as soon as they have voted.
+   - **Results hidden**: the results stay hidden until you close the poll.
 4. Click **Create poll**.
 
 ![The "Create poll" window](images/polls-create.png)
@@ -27,9 +27,9 @@ Each person can choose one answer.
 
 Click an answer to vote. Click another answer to change your vote, or the same answer again to take your vote back.
 
-The number of votes is always shown. In an **Open** poll, you see the results after voting:
+The number of votes is always shown. If the results are visible, you see them after voting:
 
-![An open poll after voting: 2 votes for "Sushi bar"](images/polls-results.png)
+![A poll with visible results after voting: 2 votes for "Sushi bar"](images/polls-results.png)
 
 ### Closing a poll
 

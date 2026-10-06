@@ -230,9 +230,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         spoiledVotes: "{count} phiếu không hợp lệ",
         resultsAfterVote: "Kết quả sẽ hiển thị sau khi bạn bình chọn.",
         resultsWhenClosed: "Kết quả sẽ hiển thị khi cuộc bình chọn đóng.",
+        status: {
+            open: "Đang mở",
+            closed: "Đã đóng",
+        },
         kind: {
-            open: "Mở",
-            closed: "Kín",
+            open: "Hiện kết quả",
+            closed: "Ẩn kết quả",
         },
         end: {
             cta: "Đóng bình chọn",

@@ -230,9 +230,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         spoiledVotes: "{count} โหวตเสีย",
         resultsAfterVote: "ผลลัพธ์จะแสดงหลังจากคุณโหวต",
         resultsWhenClosed: "ผลลัพธ์จะแสดงเมื่อโพลถูกปิด",
-        kind: {
+        status: {
             open: "เปิด",
             closed: "ปิด",
+        },
+        kind: {
+            open: "แสดงผลลัพธ์",
+            closed: "ซ่อนผลลัพธ์",
         },
         end: {
             cta: "ปิดโพล",

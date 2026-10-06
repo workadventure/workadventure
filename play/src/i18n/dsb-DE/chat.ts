@@ -231,9 +231,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         spoiledVotes: "{count} njepłaśiwy hłos(y)",
         resultsAfterVote: "Wuslědki pokazuju se pó wašom wótběgu.",
         resultsWhenClosed: "Wuslědki pokazuju se, gaž wótběg jo se zacynił.",
-        kind: {
+        status: {
             open: "Wótwórjeny",
             closed: "Zacynjony",
+        },
+        kind: {
+            open: "Wuslědki widobne",
+            closed: "Wuslědki schowane",
         },
         end: {
             cta: "Wótběg skóńcyś",
