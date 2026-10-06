@@ -267,6 +267,7 @@ export type WorkAdventureDesktopApi = {
         cameraEnabled: boolean;
         screenSharing: boolean;
         inWorld?: boolean;
+        onboarding?: boolean;
         invitationPending?: boolean;
         requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
         statusLocked?: boolean;

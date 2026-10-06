@@ -2,6 +2,7 @@ import { derived, get, type Readable, type Unsubscriber } from "svelte/store";
 import { AvailabilityStatus, AskPositionMessage_AskType } from "@workadventure/messages";
 import {
     availabilityStatusStore,
+    enableCameraSceneVisibilityStore,
     requestedCameraState,
     requestedMicrophoneState,
     requestedStatusStore,
@@ -15,6 +16,10 @@ import { LL } from "../../../i18n/i18n-svelte";
 import { requestedScreenSharingState, screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
 import { activePictureInPictureStore, askPictureInPictureActivatingStore } from "../../Stores/PeerStore";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
+import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
+import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
+import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
@@ -52,6 +57,8 @@ type PresenceSnapshot = {
     cameraEnabled: boolean;
     screenSharing: boolean;
     inWorld: boolean;
+    /** A first-connection screen (name, Woka, companion, camera) is waiting for the user. */
+    onboarding: boolean;
     invitationPending: boolean;
     requestedStatus: TrayAvailability;
     statusLocked: boolean;
@@ -377,6 +384,18 @@ class DesktopApi {
         // reflects the mic/camera state in its quick-action checkmarks.
         if (window.WAD.setPresence) {
             const setPresence = window.WAD.setPresence;
+            // The screens shown before the world, which wait for the user: the shell must not mistake
+            // them for a stalled load.
+            const onboardingStore = derived(
+                [
+                    loginSceneVisibleStore,
+                    selectCharacterSceneVisibleStore,
+                    selectCompanionSceneVisibleStore,
+                    enableCameraSceneVisibilityStore,
+                    pwaInstallSceneVisibleStore,
+                ],
+                (visible) => visible.some(Boolean),
+            );
             const presenceStore = derived(
                 [
                     isInActiveConversationStore,
@@ -386,6 +405,7 @@ class DesktopApi {
                     requestedStatusStore,
                     availabilityStatusStore,
                     gameSceneIsLoadedStore,
+                    onboardingStore,
                     meetingInvitationRequestStore,
                 ],
                 ([
@@ -396,6 +416,7 @@ class DesktopApi {
                     $requested,
                     $availability,
                     $inWorld,
+                    $onboarding,
                     $invitation,
                 ]): PresenceSnapshot => ({
                     inMeeting: Boolean($inMeeting),
@@ -403,6 +424,7 @@ class DesktopApi {
                     cameraEnabled: Boolean($cam),
                     screenSharing: Boolean($share),
                     inWorld: Boolean($inWorld),
+                    onboarding: $onboarding,
                     invitationPending: $invitation !== null,
                     requestedStatus: requestedStatusToKey($requested),
                     statusLocked: STATUS_LOCKED_SET.has($availability),
