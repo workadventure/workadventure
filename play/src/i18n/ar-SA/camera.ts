@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "تحرير الكاميرا",
-    editMic: "تحرير الميكروفون",
     editSpeaker: "تحرير إخراج الصوت",
     active: "نشط",
     disabled: "معطل",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "مطلوب الوصول إلى الكاميرا / الميكروفون", // Access to camera/microphone required
         cameraTitle: "مطلوب الوصول إلى الكاميرا",
         microphoneTitle: "مطلوب الوصول إلى الميكروفون",
-        permissionDenied: "تم الرفض", // Access denied
         cameraPermissionDenied: "تم رفض إذن الكاميرا",
         microphonePermissionDenied: "تم رفض إذن الميكروفون",
         cameraMicrophonePermissionDenied: "تم رفض أذني الكاميرا والميكروفون",
@@ -101,14 +99,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "طلب كتم الفيديو", // Ask to mute video
         muteVideoEveryBody: "كتم الفيديو للجميع", // Mute video for everybody
         blockOrReportUser: "الإشراف", // Moderation
-    },
-    backgroundEffects: {
-        imageTitle: "صور الخلفية", // Background Images
-        blurTitle: "ضبابية الخلفية", // Background Blur
-        resetTitle: "تعطيل تأثيرات الخلفية", // Disable background effects
-        title: "تأثيرات الخلفية", // Background Effects
-        close: "إغلاق", // Close
-        blurAmount: "مقدار الضبابية", // Blur Amount
     },
 };
 

@@ -20,7 +20,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "قائمة المهام",
     woka: "تخصيص صورتك الرمزية",
     companion: "إضافة رفيق",
-    test: "اختبر إعداداتي",
     editCamMic: "تحرير الكاميرا / الميكروفون",
     allSettings: "جميع الإعدادات",
     installPwa: "تثبيت تطبيق الويب",
@@ -32,18 +31,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "الكاميرا معطلة",
         activate: "قم بتنشيط الكاميرا",
-        noDevices: "لم يتم العثور على جهاز كاميرا",
-        setBackground: "تعيين الخلفية",
-        blurEffects: "تأثيرات الضبابية",
-        disableBackgroundEffects: "تعطيل تأثيرات الخلفية",
-        close: "إغلاق",
     },
     microphone: {
         disabled: "الميكروفون معطل",
         activate: "قم بتنشيط الميكروفون",
-        noDevices: "لم يتم العثور على جهاز ميكروفون",
         noSoundWarning: "لم يتم اكتشاف أي صوت من الميكروفون. قد تكون هناك مشكلة — جرب تغيير الميكروفون في الإعدادات.",
-        noSoundWarningPressEnter: "لم يتم اكتشاف أي صوت من الميكروفون. اضغط على Enter لفتح الإعدادات.",
         advancedNoiseReduction: "تقليل الضوضاء المتقدم",
         noiseSuppressionInitializing: "جارٍ تهيئة تقليل الضوضاء المخصص...",
         noiseSuppressionUnsupported: "لا يمكن لهذا المتصفح تشغيل تقليل الضوضاء المخصص.",
@@ -53,7 +45,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "مكبر الصوت معطل",
-        activate: "قم بتنشيط مكبر الصوت",
         noDevices: "لم يتم العثور على جهاز مكبر صوت",
         noDevicesDesc:
             "لا يعرض المتصفح أي مخرجات صوت يمكن اختيارها. بعض المتصفحات تقتصر على ذلك. جرّب متصفحًا آخر، أو أعد توصيل سماعات الرأس أو السماعات، أو تحقق من إعدادات صوت النظام وإعدادات الجهاز (الخصوصية، الأجهزة).",
@@ -167,14 +158,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "قائمة الغرف",
             desc: "عرض قائمة الغرف المتاحة.",
-        },
-        calendar: {
-            title: "التقويم",
-            desc: "عرض التقويم الخاص بك.",
-        },
-        todolist: {
-            title: "قائمة المهام",
-            desc: "إدارة قائمة المهام الخاصة بك بسهولة.",
         },
         pictureInPicture: {
             title: "صورة داخل صورة",

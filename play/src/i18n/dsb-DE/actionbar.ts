@@ -20,7 +20,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "Lisćina nadawkow",
     woka: "Waš avatar pśiměriś",
     companion: "Towariša pśidaś",
-    test: "Móje nastajenja testowaś",
     editCamMic: "Kameru / mikrofon wobźěłaś",
     allSettings: "Wšykne nastajenja",
     installPwa: "Web-App instalěrowaś",
@@ -32,19 +31,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Waša kamera jo deaktiwěrowana",
         activate: "Wašu kameru aktiwěrowaś",
-        noDevices: "Žedne kamerowe rědy namakane",
-        setBackground: "Pozadk nastajiś",
-        blurEffects: "Rozmazowe efekty",
-        disableBackgroundEffects: "Pozadkowe efekty deaktiwěrowaś",
-        close: "Zacyniś",
     },
     microphone: {
         disabled: "Waš mikrofon jo deaktiwěrowany",
         activate: "Waš mikrofon aktiwěrowaś",
-        noDevices: "Žedne mikrofonowe rědy namakane",
         noSoundWarning:
             "Žedyn zwuk z wašogo mikrofona namakany. Móžo problem byś; wopytajśo mikrofon w nastajenjach změniś.",
-        noSoundWarningPressEnter: "Žedyn zwuk z wašogo mikrofona namakany. Tłóčće Enter, aby nastajenja wócyniś.",
         advancedNoiseReduction: "Rozšyrjone wótpóranje šuma",
         noiseSuppressionInitializing: "Swójske wótpóranje šuma se inicializěrujo...",
         noiseSuppressionUnsupported: "Toś ten wobglědowak njamóžo swójske wótpóranje šuma wuwjasć.",
@@ -55,7 +47,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Waš głośnik jo deaktiwěrowany",
-        activate: "Waš głośnik aktiwěrowaś",
         noDevices: "Žedne głośnikowe rědy namakane",
         noDevicesDesc:
             "Waš browser nalistujo žednu wuběrabnu awdiowudaśu. Někotre browsery to wobgranicuju. Wopytajśo drugi browser, znowego zwjěžćo fejšniki abo głośniki, pśekontrolěrujśo systemowe awdionastajenja a konfiguraciju kompjutra (datowy škit, graty).",
@@ -169,14 +160,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "Lisćina rumow",
             desc: "Pśepytajśo lisćinu rumow, aby widźeli, chto jo pśitomny, a pśidajśo se z jadnym klikom rozgronjeju.",
-        },
-        calendar: {
-            title: "Kalender",
-            desc: "Glejśo swóje pśichodne zetkanja a pśidajśo se jim direktnje z WorkAdventure.",
-        },
-        todolist: {
-            title: "Lisćina nadawkow",
-            desc: "Rědowaśo swóje nadawki dnja, bźez togo aby swój źěłowy rum wopušćili.",
         },
         pictureInPicture: {
             title: "Wobraz we wobrazu",

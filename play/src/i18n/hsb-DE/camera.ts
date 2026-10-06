@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Kameru wobdźěłać",
-    editMic: "Mikrofon wobdźěłać",
     editSpeaker: "Audiowyjadowanje wobdźěłać",
     active: "Aktiwny",
     disabled: "Deaktiwěrowany",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "přistup ke kamerje/mikrofonje trěbny",
         cameraTitle: "Přistup ke kamerje trěbny",
         microphoneTitle: "Přistup k mikrofonej trěbny",
-        permissionDenied: "přistup zapowědźeny",
         cameraPermissionDenied: "Dowolnosć za kameru zapowědźena",
         microphonePermissionDenied: "Dowolnosć za mikrofon zapowědźena",
         cameraMicrophonePermissionDenied: "Dowolnosć za kameru a mikrofon zapowědźena",
@@ -102,14 +100,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "prosyć, zo by video stummschalten",
         muteVideoEveryBody: "video za wšěch stummschalten",
         blockOrReportUser: "wužiwarja blokować abo pśihłasować",
-    },
-    backgroundEffects: {
-        imageTitle: "Wobrazki pozadka",
-        blurTitle: "Pozadk njewjasnosć",
-        resetTitle: "Pozadk efekty deaktiwěrowaś",
-        title: "Pozadk efekty",
-        close: "Zacyniś",
-        blurAmount: "Njewjasnosć měra",
     },
 };
 

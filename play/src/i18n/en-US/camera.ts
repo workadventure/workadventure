@@ -2,7 +2,6 @@ import type { BaseTranslation } from "../i18n-types";
 
 const camera: BaseTranslation = {
     editCam: "Edit camera",
-    editMic: "Edit microphone",
     editSpeaker: "Edit audio output",
     active: "Active",
     disabled: "Disabled",
@@ -15,7 +14,6 @@ const camera: BaseTranslation = {
         title: "Camera / Microphone access needed",
         cameraTitle: "Camera access needed",
         microphoneTitle: "Microphone access needed",
-        permissionDenied: "Permission denied",
         cameraPermissionDenied: "Camera permission denied",
         microphonePermissionDenied: "Microphone permission denied",
         cameraMicrophonePermissionDenied: "Camera and microphone permissions denied",
@@ -102,14 +100,6 @@ const camera: BaseTranslation = {
         askToMuteVideoUser: "Ask to turn off video",
         muteVideoEveryBody: "Turn off video for everybody",
         blockOrReportUser: "Moderation",
-    },
-    backgroundEffects: {
-        imageTitle: "Background Images",
-        blurTitle: "Background Blur",
-        resetTitle: "Disable background effects",
-        title: "Background Effects",
-        close: "Close",
-        blurAmount: "Blur Amount",
     },
 };
 

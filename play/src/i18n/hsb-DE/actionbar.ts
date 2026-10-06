@@ -20,7 +20,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "Lisćina nadawkow",
     woka: "Waš avatar přiměrić",
     companion: "Towaršiće přidać",
-    test: "Moje nastajenja testować",
     editCamMic: "Kameru / mikrofon wobdźěłać",
     allSettings: "Wšě nastajenja",
     installPwa: "Web-App instalować",
@@ -32,19 +31,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Waša kamera je deaktiwowana",
         activate: "Wašu kameru aktiwěrować",
-        noDevices: "Žane kamerowe graty namakane",
-        setBackground: "Pozadk nastajić",
-        blurEffects: "Rozmazanske efekty",
-        disableBackgroundEffects: "Pozadkowe efekty deaktiwěrować",
-        close: "Začinić",
     },
     microphone: {
         disabled: "Waš mikrofon je deaktiwowany",
         activate: "Waš mikrofon aktiwěrować",
-        noDevices: "Žane mikrofonowe graty namakane",
         noSoundWarning:
             "Žadyn zwuk z wašeho mikrofona namakany. Móže problem być; spytajće mikrofon w nastajenjach změnić.",
-        noSoundWarningPressEnter: "Žadyn zwuk z wašeho mikrofona namakany. Tłóčće Enter, zo byšte nastajenja wočinili.",
         advancedNoiseReduction: "Rozšěrjene potłóčowanje šuma",
         noiseSuppressionInitializing: "Swójske potłóčowanje šuma so inicializuje...",
         noiseSuppressionUnsupported: "Tutón wobhladowak njemóže swójske potłóčowanje šuma wuwjesć.",
@@ -55,7 +47,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Waš wótřerěčak je deaktiwowany",
-        activate: "Waš wótřerěčak aktiwěrować",
         noDevices: "Žane wótřerěčakowe graty namakane",
         noDevicesDesc:
             "Waš wobhladowak naliči žanu wuběrabnu awdijowu wudaću. Někotre wobhladowaki to wobmjezuja. Spytajće druhi wobhladowak, zaso zwjazajće fejšniki abo wótřerěčaki, přepruwujće systemowe awdijowe nastajenja a konfiguraciju kompjutra (datowy škit, graty).",
@@ -169,14 +160,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "Lisćina rumow",
             desc: "Přepytajće lisćinu rumow, zo byšće widźeli, štó je přitomny, a přidajće so z jednym klikom rozmołwje.",
-        },
-        calendar: {
-            title: "Kalender",
-            desc: "Hlejće swoje přichodne zetkanja a přidajće so jim direktnje z WorkAdventure.",
-        },
-        todolist: {
-            title: "Lisćina nadawkow",
-            desc: "Rjadujće swoje nadawki dnja, bjezto zo byšće swój dźěłowy rum wopušćili.",
         },
         pictureInPicture: {
             title: "Wobraz we wobrazu",

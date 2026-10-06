@@ -20,7 +20,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "待办事项列表",
     woka: "自定义您的头像",
     companion: "添加同伴",
-    test: "测试我的设置",
     editCamMic: "编辑摄像头 / 麦克风",
     allSettings: "所有设置",
     installPwa: "安装网页应用",
@@ -32,18 +31,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "您的摄像头已禁用",
         activate: "激活您的摄像头",
-        noDevices: "未找到摄像头设备",
-        setBackground: "设置背景",
-        blurEffects: "模糊效果",
-        disableBackgroundEffects: "禁用背景效果",
-        close: "关闭",
     },
     microphone: {
         disabled: "您的麦克风已禁用",
         activate: "激活您的麦克风",
-        noDevices: "未找到麦克风设备",
         noSoundWarning: "未检测到麦克风声音。可能存在问题 — 请尝试在设置中更换麦克风。",
-        noSoundWarningPressEnter: "未检测到麦克风声音。按 Enter 打开设置。",
         advancedNoiseReduction: "高级降噪",
         noiseSuppressionInitializing: "正在初始化自定义噪声抑制...",
         noiseSuppressionUnsupported: "此浏览器无法运行自定义噪声抑制。",
@@ -53,7 +45,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "您的扬声器已禁用",
-        activate: "激活您的扬声器",
         noDevices: "未找到扬声器设备",
         noDevicesDesc:
             "浏览器未列出可选择的音频输出设备。某些浏览器会限制此项。请尝试其他浏览器、重新连接耳机或扬声器，检查系统声音设置和计算机的配置（隐私、设备）。",
@@ -167,14 +158,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "房间列表",
             desc: "浏览房间列表以查看谁在场并一键加入对话。",
-        },
-        calendar: {
-            title: "日历",
-            desc: "查看您即将举行的会议并直接从 WorkAdventure 加入它们。",
-        },
-        todolist: {
-            title: "待办事项列表",
-            desc: "在不离开工作空间的情况下管理您当天的任务。",
         },
         pictureInPicture: {
             title: "画中画",

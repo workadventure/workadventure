@@ -20,7 +20,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "待辦事項清單",
     woka: "自訂您的頭像",
     companion: "新增夥伴",
-    test: "測試我的設定",
     editCamMic: "編輯攝影機 / 麥克風",
     allSettings: "所有設定",
     installPwa: "安裝網頁應用程式",
@@ -32,18 +31,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "您的攝影機已停用",
         activate: "啟用您的攝影機",
-        noDevices: "找不到攝影機裝置",
-        setBackground: "設定背景",
-        blurEffects: "模糊效果",
-        disableBackgroundEffects: "停用背景效果",
-        close: "關閉",
     },
     microphone: {
         disabled: "您的麥克風已停用",
         activate: "啟用您的麥克風",
-        noDevices: "找不到麥克風裝置",
         noSoundWarning: "未偵測到麥克風聲音。可能有問題 — 請嘗試在設定中更換麥克風。",
-        noSoundWarningPressEnter: "未偵測到麥克風聲音。按 Enter 開啟設定。",
         advancedNoiseReduction: "進階降噪",
         noiseSuppressionInitializing: "正在初始化自訂噪音抑制...",
         noiseSuppressionUnsupported: "此瀏覽器無法執行自訂噪音抑制。",
@@ -53,7 +45,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "您的喇叭已停用",
-        activate: "啟用您的喇叭",
         noDevices: "找不到喇叭裝置",
         noDevicesDesc:
             "瀏覽器未列出可選擇的音訊輸出裝置。某些瀏覽器會限制此項。請嘗試其他瀏覽器、重新連接耳機或喇叭，檢查系統聲音設定和電腦的設定（隱私、裝置）。",
@@ -167,14 +158,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "房間清單",
             desc: "瀏覽房間清單，查看誰在場並一鍵加入對話。",
-        },
-        calendar: {
-            title: "行事曆",
-            desc: "查看您即將舉行的會議，並直接從 WorkAdventure 加入。",
-        },
-        todolist: {
-            title: "待辦事項清單",
-            desc: "不必離開工作空間即可管理您當天的任務。",
         },
         pictureInPicture: {
             title: "子母畫面",

@@ -20,7 +20,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "Lista delle cose da fare",
     woka: "Personalizza il tuo avatar",
     companion: "Aggiungi compagno",
-    test: "Testa le mie impostazioni",
     editCamMic: "Modifica camera / microfono",
     allSettings: "Tutte le impostazioni",
     installPwa: "Installa app web",
@@ -32,19 +31,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "La tua fotocamera è disabilitata",
         activate: "Attiva la tua fotocamera",
-        noDevices: "Nessun dispositivo fotocamera trovato",
-        setBackground: "Imposta sfondo",
-        blurEffects: "Effetti sfocatura",
-        disableBackgroundEffects: "Disabilita effetti di sfondo",
-        close: "Chiudi",
     },
     microphone: {
         disabled: "Il tuo microfono è disabilitato",
         activate: "Attiva il tuo microfono",
-        noDevices: "Nessun dispositivo microfono trovato",
         noSoundWarning:
             "Nessun suono rilevato dal microfono. Potrebbe esserci un problema; prova a cambiare microfono nelle impostazioni.",
-        noSoundWarningPressEnter: "Nessun suono rilevato dal microfono. Premi Invio per aprire le impostazioni.",
         advancedNoiseReduction: "Riduzione avanzata del rumore",
         noiseSuppressionInitializing: "Inizializzazione della soppressione del rumore personalizzata...",
         noiseSuppressionUnsupported: "Questo browser non può eseguire la soppressione del rumore personalizzata.",
@@ -55,7 +47,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Il tuo altoparlante è disabilitato",
-        activate: "Attiva il tuo altoparlante",
         noDevices: "Nessun dispositivo altoparlante trovato",
         noDevicesDesc:
             "Il browser non elenca alcuna uscita audio selezionabile. Alcuni browser limitano questa scelta. Prova un altro browser, ricollega cuffie o altoparlanti, controlla le impostazioni audio di sistema e le impostazioni del computer (privacy, dispositivi).",
@@ -169,14 +160,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         roomList: {
             title: "Lista delle stanze",
             desc: "Esplora la lista delle stanze per vedere chi è presente e unirti a una conversazione con un clic.",
-        },
-        calendar: {
-            title: "Calendario",
-            desc: "Consulta le tue riunioni imminenti e unisciti direttamente da WorkAdventure.",
-        },
-        todolist: {
-            title: "Lista delle cose da fare",
-            desc: "Gestisci le tue attività del giorno senza lasciare il tuo spazio di lavoro.",
         },
         pictureInPicture: {
             title: "Picture in picture",

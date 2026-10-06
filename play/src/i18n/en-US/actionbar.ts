@@ -20,7 +20,6 @@ const actionbar: BaseTranslation = {
     woka: "Customize your avatar",
     companion: "Add companion",
     //megaphone: "Use megaphone",
-    test: "Test my settings",
     editCamMic: "Edit cam / mic",
     allSettings: "All settings",
     installPwa: "Install Web App",
@@ -32,19 +31,12 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
-        noDevices: "No camera device found",
-        setBackground: "Set background",
-        blurEffects: "Blur effects",
-        disableBackgroundEffects: "Disable background effects",
-        close: "Close",
     },
     microphone: {
         disabled: "Your microphone is disabled",
         activate: "Activate your microphone",
-        noDevices: "No microphone device found",
         noSoundWarning:
             "No sound detected from your microphone. There may be a problem; try changing your microphone in settings.",
-        noSoundWarningPressEnter: "No sound detected from your microphone. Press Enter to open settings.",
         advancedNoiseReduction: "Advanced noise reduction",
         noiseSuppressionInitializing: "Initializing custom noise suppression...",
         noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
@@ -54,7 +46,6 @@ const actionbar: BaseTranslation = {
     },
     speaker: {
         disabled: "Your speaker is disabled",
-        activate: "Activate your speaker",
         noDevices: "No speaker device found",
         noDevicesDesc:
             "Your browser does not list any selectable audio output. Some browsers limit this. Try another browser, reconnect headphones or speakers, check your system sound settings and your computer's configuration (privacy, devices).",
@@ -167,14 +158,6 @@ const actionbar: BaseTranslation = {
         },
         roomList: {
             title: "Room list",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        calendar: {
-            title: "Calendar",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        todolist: {
-            title: "Todolist",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         pictureInPicture: {
