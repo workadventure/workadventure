@@ -97,6 +97,19 @@ export function createPinnedWorldMenuItems(): MenuItemConstructorOptions[] {
     }));
 }
 
+/**
+ * "New tab" (Cmd+T): a new tab only makes sense with the tab bar shown — a hidden tab is a world the
+ * user cannot reach — so show the bar first, and tick its menu checkbox.
+ */
+function openNewTab(): void {
+    if (settings.get("tab_bar_enabled") === false) {
+        settings.set("tab_bar_enabled", true);
+        setTabStripVisible(true);
+        createNativeApplicationMenu();
+    }
+    void openWorldTab();
+}
+
 export function openNativeWorldSwitcher(): void {
     void (async () => {
         if (!getWindow()) {
@@ -167,7 +180,7 @@ export function createNativeApplicationMenu(): void {
                 {
                     label: t("menu.newTab"),
                     accelerator: "CmdOrCtrl+T",
-                    click: () => void openWorldTab(),
+                    click: openNewTab,
                 },
                 {
                     label: t("menu.closeTab"),
