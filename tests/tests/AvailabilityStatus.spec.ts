@@ -27,11 +27,11 @@ test.describe("Availability Status", () => {
             await Menu.openMenu(page);
 
             //await expect(page.locator('.status-button').getByText(statusName)).toHaveClass('opacity-50')
-            await expect(page.getByRole("button", { name: statusName }).locator("svg")).toBeVisible();
+            await Menu.expectSelectedStatus(page, statusName);
 
             //move to trigger status change
             await Map.walkTo(page, "ArrowRight", 100);
-            await expect(page.getByRole("button", { name: "Online" }).locator("svg")).toBeVisible();
+            await Menu.expectSelectedStatus(page, "Online");
         });
 
         test("should disable microphone and camera @nowebkit", async ({ browser }, { project }) => {
@@ -54,8 +54,8 @@ test.describe("Availability Status", () => {
             await Menu.clickOnStatus(page, statusName);
             //await Menu.closeNotificationPopUp(page);
 
-            await expect(page.getByTestId("camera-button").locator(".bg-danger")).toBeHidden();
-            await expect(page.getByTestId("microphone-button").locator(".bg-danger")).toBeHidden();
+            await Menu.expectCameraDisabled(page);
+            await Menu.expectMicrophoneDisabled(page);
         });
 
         test("should keep same webcam and microphone config when you go back to online status @nowebkit", async ({
@@ -214,7 +214,7 @@ test.describe("Availability Status", () => {
 
                 await page.getByText("Accept").first().click();
                 await Menu.openMenu(page);
-                await expect(page.getByRole("button", { name: "Online" }).locator("svg")).toBeVisible();
+                await Menu.expectSelectedStatus(page, "Online");
             });
 
             test("should keep busy status  after refuse conversation @nowebkit @nomobile", async ({
@@ -254,10 +254,12 @@ test.describe("Availability Status", () => {
 
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
 
-                //click on close button
-                await page.getByText("Accept").first().click();
+                await page
+                    .locator(".popup-container", { has: page.locator("#acceptDiscussion") })
+                    .getByRole("button", { name: "Close" })
+                    .click();
                 await Menu.openMenu(page);
-                await expect(page.getByRole("button", { name: statusName }).locator("svg")).toBeVisible();
+                await Menu.expectSelectedStatus(page, statusName);
             });
         });
     });
@@ -280,9 +282,9 @@ test.describe("Availability Status", () => {
 
             await Menu.openMenu(page);
 
-            await expect(page.getByRole("button", { name: statusName }).locator("svg")).toBeVisible();
+            await Menu.expectSelectedStatus(page, statusName);
             await Map.walkTo(page, "ArrowRight", 100);
-            await Menu.expectStatus(page, "Online");
+            await Menu.expectSelectedStatus(page, "Online");
         });
 
         test("should disable microphone and camera @nowebkit", async ({ browser, browserName }) => {
@@ -382,11 +384,11 @@ test.describe("Availability Status", () => {
             await expect(page.getByTestId("profile-menu")).toBeHidden();
 
             await Menu.openMenu(page);
-            await expect(page.getByRole("button", { name: statusName }).locator("svg")).toBeVisible();
+            await Menu.expectSelectedStatus(page, statusName);
 
             //move to trigger status change
             await Map.walkTo(page, "ArrowRight", 100);
-            await Menu.expectStatus(page, "Online");
+            await Menu.expectSelectedStatus(page, "Online");
         });
 
         test("should disable microphone and camera @nowebkit", async ({ browser, browserName }) => {
