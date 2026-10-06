@@ -13,6 +13,7 @@ import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
 import { VideoBox } from "../Space/VideoBox";
 import { localEncoderStatsStore } from "../WebRtc/LocalEncoderStats";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
+import { isScreenSharingPickerCancelled } from "./ScreenSharingErrors";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
 import { screenShareStreamElementsStore } from "./PeerStore";
@@ -288,6 +289,14 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 currentStream = undefined;
                 requestedScreenSharingState.disableScreenSharing();
                 const error = asError(e);
+                if (isScreenSharingPickerCancelled(error)) {
+                    // Not an error: nothing is shared, and no "Cannot start screen sharing" message.
+                    set({
+                        type: "success",
+                        stream: undefined,
+                    });
+                    return;
+                }
                 console.info(`Error. Unable to share screen. ${error.message}`, e);
                 set({
                     type: "error",
