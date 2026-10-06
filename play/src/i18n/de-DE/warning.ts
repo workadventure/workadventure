@@ -70,6 +70,8 @@ const warning: DeepPartial<Translation["warning"]> = {
         continue: "Im Browser fortfahren",
         neverShowPage: "Nicht erneut fragen",
     },
+    otherMeetingMuted:
+        "Sie sind jetzt hier in einem Meeting. Ihr Mikrofon, Ihre Kamera und Ihre Bildschirmfreigabe wurden in {world} ausgeschaltet.",
 };
 
 export default warning;

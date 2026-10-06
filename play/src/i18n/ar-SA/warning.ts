@@ -65,6 +65,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         continue: "المتابعة في المتصفح",
         neverShowPage: "لا تسأل مرة أخرى",
     },
+    otherMeetingMuted: "أنت الآن في اجتماع هنا. تم إيقاف الميكروفون والكاميرا ومشاركة الشاشة في {world}.",
 };
 
 export default warning;

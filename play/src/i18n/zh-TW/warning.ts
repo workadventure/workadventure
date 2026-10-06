@@ -64,6 +64,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         continue: "在瀏覽器中繼續",
         neverShowPage: "不再詢問",
     },
+    otherMeetingMuted: "你現在正在這裡開會。你在 {world} 中的麥克風、攝影機和螢幕分享已關閉。",
 };
 
 export default warning;

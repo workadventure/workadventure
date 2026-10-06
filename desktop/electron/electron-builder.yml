@@ -1,10 +1,15 @@
 appId: re.workadventu.desktop
 
+# Top level, not under linux: macOS only gets CFBundleURLTypes (and so `open-url` deep links) from
+# here or mac.protocols, and the Windows installer registers the scheme from here too.
+protocols:
+    - name: WorkAdventure
+      schemes:
+          - workadventure
+
 files:
     - "dist/**/*"
     - "assets/**/*"
-    - from: "../local-app/dist/"
-      to: "local-app/dist"
 
 directories:
     output: ./build
@@ -12,20 +17,58 @@ directories:
 dmg:
     icon: false
 
-linux:
-    category: "TODO;TODO"
-    packageCategory: "TODO;TODO"
-    icon: "assets/icons/logo.icns"
-    target:
-        - AppImage
-    artifactName: "${productName}-${version}-${arch}.${ext}"
-
 win:
     icon: "assets/icons/logo.ico"
     artifactName: "${productName}-${version}-setup.${ext}"
+    target:
+        - nsis
+
+mac:
+    icon: assets/icons/logo.icns
+    category: public.app-category.business
+    # Ad hoc until the Developer ID certificate is configured: an unsigned app (Electron's own linker
+    # signature) cannot have its camera / microphone decisions remembered by macOS, which then asks on
+    # every access. Hardened runtime with an ad hoc signature would make library validation refuse
+    # Electron's frameworks, so it waits for the certificate too. With the certificate: remove
+    # `identity` and set `hardenedRuntime: true` again (required for notarization).
+    identity: "-"
+    hardenedRuntime: false
+    gatekeeperAssess: false
+    entitlements: assets/entitlements.mac.plist
+    entitlementsInherit: assets/entitlements.mac.inherit.plist
+    extendInfo:
+        NSCameraUsageDescription: "WorkAdventure uses your camera to enable video calls inside virtual worlds."
+        NSMicrophoneUsageDescription: "WorkAdventure uses your microphone to enable voice calls inside virtual worlds."
+        # macOS screen recording prompt copy. The system also requires the user to grant Screen Recording
+        # in System Settings > Privacy & Security on first use.
+        NSScreenCaptureDescription: "WorkAdventure uses screen capture for screen sharing in virtual worlds."
+    # zip is REQUIRED for electron-updater on macOS (delta + diff updates).
+    # One universal build (Intel + Apple Silicon in the same app) rather than one per architecture: with
+    # two DMGs, Apple Silicon users who pick the Intel one run it under Rosetta, slowly, without knowing.
+    # The app has no native module of its own, so the two architectures merge as they are.
+    target:
+        - target: dmg
+          arch:
+              - universal
+        - target: zip
+          arch:
+              - universal
+
+linux:
+    icon: assets/icons/logo.png
+    category: Network;InstantMessaging
+    maintainer: TheCodingMachine <hello@workadventu.re>
+    target:
+        - AppImage
+        - deb
+
+appImage:
+    # The AppImage launcher (AppRun) already adds --no-sandbox when the Chromium sandbox cannot start,
+    # e.g. on Ubuntu 24.04 where AppArmor forbids unprivileged user namespaces. Without this, the
+    # desktop entry would also pass it unconditionally, and an AppImage integrated in the menu would run
+    # unsandboxed everywhere.
+    executableArgs: []
 
 publish:
-    provider: github
-    owner: thecodingmachine
-    repo: workadventure
-    releaseType: release
+    provider: generic
+    url: https://desktop-updates.workadventu.re/stable
