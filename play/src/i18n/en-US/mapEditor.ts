@@ -17,7 +17,6 @@ const mapEditor: BaseTranslation = {
         exploreTheRoom: "Explore the room",
         closeMapEditor: "Close map editor",
         mapManagerActivated: "Map manager activated",
-        mapExplorerActivated: "Map overview",
         exploreTheRoomActivated: "Explore the room activated",
         areaEditorActivated: "Area editor activated",
         entityEditorActivated: "Entity editor activated",
@@ -492,8 +491,6 @@ const mapEditor: BaseTranslation = {
     },
     explorer: {
         title: "Explore the room",
-        description:
-            "Allow to explore the room. You be able to move around the room and interact with objects. 2 mode are available: 'Exploration' and 'Search'. The 'Search mode' mode will propose you to search or filter entities and areas in the room. The 'Exploration mode' mode will let you move freely in the room.",
         noEntitiesFound: "No entity found in the room 🙅‍♂️",
         entitiesFound: "object{{s}} found",
         noAreasFound: "No area found in the room 🙅‍♀️",

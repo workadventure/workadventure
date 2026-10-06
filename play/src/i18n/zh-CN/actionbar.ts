@@ -166,7 +166,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "房间列表",
-            desc: "浏览房间列表以查看谁在场并一键加入对话。",
         },
         calendar: {
             title: "日历",

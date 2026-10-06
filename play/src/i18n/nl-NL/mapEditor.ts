@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "Verken de kamer",
         closeMapEditor: "Sluit kaart editor",
         mapManagerActivated: "Kaartbeheerder geactiveerd",
-        mapExplorerActivated: "Kaartoverzicht",
         exploreTheRoomActivated: "Verken de kamer geactiveerd",
         areaEditorActivated: "Gebied editor geactiveerd",
         entityEditorActivated: "Entiteit editor geactiveerd",
@@ -500,8 +499,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "Verken de kamer",
-        description:
-            "Sta toe om de kamer te verkennen. Je kunt door de kamer bewegen en met objecten interageren. 2 modi zijn beschikbaar: 'Verkenning' en 'Zoeken'. De 'Zoekmodus' zal je voorstellen om entiteiten en gebieden in de kamer te zoeken of te filteren. De 'Verkenningsmodus' laat je vrij door de kamer bewegen.",
         noEntitiesFound: "Geen entiteiten gevonden in de kamer 🙅‍♂️",
         entitiesFound: "{{object|objecten}} gevonden",
         noAreasFound: "Geen gebieden gevonden in de kamer 🙅‍♀️",

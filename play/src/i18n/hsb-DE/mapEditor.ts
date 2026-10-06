@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "Wobłuk wužiwać",
         closeMapEditor: "Mapu zacyniś",
         mapManagerActivated: "Mapowy manager je aktiwny",
-        mapExplorerActivated: "Přehlad karty",
         exploreTheRoomActivated: "Wobłuk wužiwać",
         areaEditorActivated: "Płoninu wobdźěłać",
         entityEditorActivated: "Entita wobdźěłać",
@@ -494,8 +493,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "Wobłuk wužiwać",
-        description:
-            "Dowolić wobłuk wužiwać. Móžeće so po wobłuku hibać a z objektami interagować. 2 modusa steji k dispoziciji: 'Wužiwanje' a 'Pytanje'. Modus 'Pytanje' wam předstaja, zo byšće entity a wobłuki w wobłuku pytałi abo filtrowali. Modus 'Wužiwanje' wam dowoli, lichotnje so po wobłuku hibać.",
         noEntitiesFound: "Žana entita w wobłuku namakana 🙅‍♂️",
         entitiesFound: "objekt namakany",
         noAreasFound: "Žadyn wobłuk w wobłuku namakany 🙅‍♀️",

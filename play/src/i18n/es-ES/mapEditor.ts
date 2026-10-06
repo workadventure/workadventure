@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "Explorar la sala",
         closeMapEditor: "Cerrar editor de mapa",
         mapManagerActivated: "Gestor de mapa activado",
-        mapExplorerActivated: "Vista general del mapa",
         exploreTheRoomActivated: "Explorar la sala activado",
         areaEditorActivated: "Editor de zonas activado",
         entityEditorActivated: "Editor de entidades activado",
@@ -497,8 +496,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "Explorar la sala",
-        description:
-            "Permite explorar la sala. Podrá moverse por la sala e interactuar con los objetos. Hay 2 modos disponibles: 'Exploración' y 'Búsqueda'. El modo 'Búsqueda' le permitirá buscar o filtrar entidades y zonas de la sala. El modo 'Exploración' le permitirá moverse libremente por la sala.",
         noEntitiesFound: "No se encontraron entidades en la sala 🙅‍♂️",
         entitiesFound: "objeto{{s}} encontrado{{s}}",
         noAreasFound: "No se encontraron zonas en la sala 🙅‍♀️",

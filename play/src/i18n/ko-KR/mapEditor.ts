@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "방 탐색",
         closeMapEditor: "지도 편집기 닫기",
         mapManagerActivated: "지도 편집 모드로 전환되었습니다",
-        mapExplorerActivated: "지도 개요 보기",
         exploreTheRoomActivated: "방 탐색 모드로 전환되었습니다",
         areaEditorActivated: "영역 편집 모드로 전환되었습니다",
         entityEditorActivated: "오브젝트 편집 모드로 전환되었습니다",
@@ -492,8 +491,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "방 탐색",
-        description:
-            "방을 탐색하면서 이곳저곳을 돌아다니고 오브젝트와 상호작용할 수 있습니다. '탐색' 모드와 '검색' 모드 두 가지가 있습니다. 검색 모드에서는 방 안의 오브젝트와 영역을 검색/필터링할 수 있고, 탐색 모드에서는 자유롭게 이동할 수 있습니다.",
         noEntitiesFound: "이 방에서 오브젝트를 찾지 못했습니다 🙅‍♂️",
         entitiesFound: "개의 오브젝트 발견",
         noAreasFound: "이 방에서 영역을 찾지 못했습니다 🙅‍♀️",

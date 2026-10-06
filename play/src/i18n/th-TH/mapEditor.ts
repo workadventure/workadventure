@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "สำรวจห้อง",
         closeMapEditor: "ปิดตัวแก้ไขแผนที่",
         mapManagerActivated: "เปิดใช้ตัวจัดการแผนที่แล้ว",
-        mapExplorerActivated: "ภาพรวมแผนที่",
         exploreTheRoomActivated: "เปิดใช้การสำรวจห้องแล้ว",
         areaEditorActivated: "เปิดใช้ตัวแก้ไขพื้นที่แล้ว",
         entityEditorActivated: "เปิดใช้ตัวแก้ไขวัตถุแล้ว",
@@ -489,8 +488,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "สำรวจห้อง",
-        description:
-            "โหมดสำรวจห้อง คุณสามารถเดินไปรอบ ๆ ห้องและโต้ตอบกับวัตถุได้ มี 2 โหมดให้ใช้: 'สำรวจ' และ 'ค้นหา' โหมด 'ค้นหา' จะให้คุณค้นหาหรือกรองวัตถุและพื้นที่ในห้อง โหมด 'สำรวจ' จะให้คุณเคลื่อนที่ได้อย่างอิสระในห้อง",
         noEntitiesFound: "ไม่พบวัตถุในห้อง 🙅‍♂️",
         entitiesFound: "วัตถุที่พบ",
         noAreasFound: "ไม่พบพื้นที่ในห้อง 🙅‍♀️",

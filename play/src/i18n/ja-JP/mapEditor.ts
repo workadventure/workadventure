@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "ルームの探索",
         closeMapEditor: "マップエディターの終了",
         mapManagerActivated: "マップマネージャーの起動",
-        mapExplorerActivated: "マップの概要",
         exploreTheRoomActivated: "ルームの探索",
         areaEditorActivated: "エリアエディターの起動",
         entityEditorActivated: "エンティティエディターの起動",
@@ -494,8 +493,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "ルームの探索",
-        description:
-            "ルーム内を探索することができます。ルーム内を移動し、オブジェクトと対話することができます。「検索」と「探索」の 2 つのモードがあります。「検索」モードでは、ルーム内のエンティティやエリアを検索したりフィルタリングすることができます。「探索」モードでは、ルーム内を自由に移動することができます。",
         noEntitiesFound: "ルーム内にエンティティがありません 🙅‍♂️",
         entitiesFound: "オブジェクトが見つかりました",
         noAreasFound: "ルーム内にエリアがありません 🙅‍♀️",

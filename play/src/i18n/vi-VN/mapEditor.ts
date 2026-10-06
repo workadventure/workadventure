@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "Khám phá phòng",
         closeMapEditor: "Đóng trình chỉnh sửa bản đồ",
         mapManagerActivated: "Đã bật trình quản lý bản đồ",
-        mapExplorerActivated: "Tổng quan bản đồ",
         exploreTheRoomActivated: "Đã bật khám phá phòng",
         areaEditorActivated: "Đã bật trình chỉnh sửa khu vực",
         entityEditorActivated: "Đã bật trình chỉnh sửa đối tượng",
@@ -493,8 +492,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "Khám phá phòng",
-        description:
-            "Cho phép khám phá phòng. Bạn có thể di chuyển quanh phòng và tương tác với các đối tượng. Có 2 chế độ: 'Khám phá' và 'Tìm kiếm'. Chế độ 'Tìm kiếm' cho phép bạn tìm hoặc lọc các đối tượng và khu vực trong phòng. Chế độ 'Khám phá' cho phép bạn di chuyển tự do trong phòng.",
         noEntitiesFound: "Không tìm thấy đối tượng nào trong phòng 🙅‍♂️",
         entitiesFound: "đối tượng được tìm thấy",
         noAreasFound: "Không tìm thấy khu vực nào trong phòng 🙅‍♀️",
