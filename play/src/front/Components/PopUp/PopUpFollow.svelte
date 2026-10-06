@@ -23,11 +23,6 @@
         closeBanner();
     }
 
-    function abortEnding() {
-        followStateStore.set("active");
-        closeBanner();
-    }
-
     function reset() {
         const gameScene = gameManager.getCurrentGameScene();
         gameScene.connection?.emitFollowAbort();
@@ -46,9 +41,7 @@
     }
 
     let showButtons = $derived(
-        ($followStateStore === "requesting" && $followRoleStore === "follower") ||
-            $followStateStore === "ending" ||
-            $followStateStore === "active",
+        ($followStateStore === "requesting" && $followRoleStore === "follower") || $followStateStore === "active",
     );
 </script>
 
@@ -81,18 +74,7 @@
         </div>
     {/if}
 
-    {#if $followStateStore === "ending"}
-        <div class="w-56 min-h-10 bottom-12 text-center z-[150] bg-contrast/80 backdrop-blur rounded-lg text-white">
-            <div>{$LL.follow.interactMenu.title.interact()}</div>
-            {#if $followRoleStore === "follower"}
-                <div class="m-1">{$LL.follow.interactMenu.stop.follower({ leader: name($followUsersStore[0]) })}</div>
-            {:else if $followRoleStore === "leader"}
-                <div class="m-1">{$LL.follow.interactMenu.stop.leader()}</div>
-            {/if}
-        </div>
-    {/if}
-
-    {#if $followStateStore === "active" || $followStateStore === "ending"}
+    {#if $followStateStore === "active"}
         <div
             class="blue-dialog-box outline-light w-96 min-h-10 text-center m-auto z-[150] rounded-lg overflow-hidden text-white hover:animate-none transition-all pointer-events-auto responsive-follow-asker"
         >
@@ -149,31 +131,7 @@
             </Button>
         {/if}
 
-        {#if $followStateStore === "ending"}
-            <Button
-                variant="secondary"
-                class="w-1/2"
-                onclick={(event) => {
-                    event.preventDefault();
-                    reset();
-                }}
-            >
-                {$LL.follow.interactMenu.yes()}
-            </Button>
-            <Button
-                variant="light"
-                appearance="ghost"
-                class="w-1/2"
-                onclick={(event) => {
-                    event.preventDefault();
-                    abortEnding();
-                }}
-            >
-                {$LL.follow.interactMenu.no()}
-            </Button>
-        {/if}
-
-        {#if $followStateStore === "active" || $followStateStore === "ending"}
+        {#if $followStateStore === "active"}
             <Button
                 variant="danger"
                 size="sm"

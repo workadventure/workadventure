@@ -16,7 +16,6 @@
                 break;
             case "requesting":
             case "active":
-            case "ending":
                 gameManager.getCurrentGameScene().connection?.emitFollowAbort();
                 followUsersStore.stopFollowing();
                 break;
