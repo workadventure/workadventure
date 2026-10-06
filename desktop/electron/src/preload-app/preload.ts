@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { canHideWindowsFromCapture, usesSystemScreenSharePicker } from "../platform-capture-policy";
 import type {
     CompanionCommand,
     DesktopPipCommand,
@@ -88,9 +89,17 @@ const api: WorkAdventureDesktopApi = {
         ipcRenderer.on("app:on-window-state-change", listener);
         return () => ipcRenderer.removeListener("app:on-window-state-change", listener);
     },
-    getDesktopCapturerSources: (options) => ipcRenderer.invoke("app:getDesktopCapturerSources", options),
-    identifyScreens: () => ipcRenderer.invoke("app:screen-identify:start"),
-    cancelIdentifyScreens: () => ipcRenderer.send("app:screen-identify:cancel"),
+    // Under Wayland the system share dialog is the picker: without these, the front shares through
+    // getDisplayMedia, which the main process answers with that dialog (see configureSession).
+    ...(usesSystemScreenSharePicker(process.platform, process.env)
+        ? {}
+        : {
+              getDesktopCapturerSources: (
+                  options: Parameters<NonNullable<WorkAdventureDesktopApi["getDesktopCapturerSources"]>>[0]
+              ) => ipcRenderer.invoke("app:getDesktopCapturerSources", options),
+              identifyScreens: () => ipcRenderer.invoke("app:screen-identify:start"),
+              cancelIdentifyScreens: () => ipcRenderer.send("app:screen-identify:cancel"),
+          }),
     pip: pipApi,
     navigation: {
         joinWorld: (url: string) => ipcRenderer.invoke("app:navigation:joinWorld", url),
@@ -102,7 +111,8 @@ const api: WorkAdventureDesktopApi = {
         openAdminSignup: () => ipcRenderer.invoke("app:navigation:openAdminSignup"),
         getStrings: () => ipcRenderer.sendSync("app:i18n:landing") as DesktopNativeStrings | null,
     },
-    presenterHud: presenterHudApi,
+    // The meeting bar floats over the shared screen: only where it can be kept out of the capture.
+    presenterHud: canHideWindowsFromCapture(process.platform) ? presenterHudApi : undefined,
     companion: companionApi,
 };
 

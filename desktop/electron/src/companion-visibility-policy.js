@@ -19,6 +19,7 @@
  *
  * @param {{
  *   screenSharing?: boolean,
+ *   meetingBarAvailable?: boolean,
  *   mainWindowFocused?: boolean,
  *   pipActive?: boolean,
  *   invitationPending?: boolean,
@@ -30,8 +31,9 @@
  */
 function shouldShowCompanion(state) {
     const s = state || {};
-    // Screen sharing hard-hides the panel — the content-protected presenter HUD carries the controls.
-    if (s.screenSharing) {
+    // Screen sharing hides the panel where the content-protected meeting bar carries the controls
+    // instead. Without a meeting bar (Linux cannot keep it out of the capture), the panel stays.
+    if (s.screenSharing && s.meetingBarAvailable !== false) {
         return false;
     }
     // Focused on WA (with no active meeting video keeping it alive) → hide; the app has everything.
