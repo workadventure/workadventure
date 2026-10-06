@@ -56,11 +56,11 @@
     let loadingDirectRoomAccess = false;
 
     function openWokaMenu() {
-        if (user.uuid == undefined) return;
+        const currentScene = gameManager.getCurrentGameScene();
+        // The back only locates users of our own map: for anyone else, a LOCATE would get no answer.
+        if (user.uuid == undefined || user.playUri !== currentScene.roomUrl) return;
         // Track the open woka menu action
         analyticsClient.trackAdminEvent("user.woka_menu.opened");
-
-        const currentScene = gameManager.getCurrentGameScene();
 
         const remotePlayerData = currentScene.getRemotePlayersRepository().getPlayerByUuid(user.uuid);
         if (remotePlayerData != undefined) {
