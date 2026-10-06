@@ -121,7 +121,7 @@ The last section, also titled **All settings**, groups these settings:
 - **Enable picture-in-picture** (on by default): when you leave the WorkAdventure tab during a conversation, the videos open in a small floating window. This needs a browser that supports it, like Chrome or Edge.
 - **Always ask before opening websites and Jitsi Meet rooms**: when a website or a Jitsi room of the map would open by itself, WorkAdventure asks you first.
 - **Ignore requests to follow other users**: you no longer receive requests to follow someone.
-- **Decrease audio player volume while speaking**: in the current version, the music and sounds of the map are always played at half volume while you are in a conversation, whatever the position of this switch.
+- **Decrease audio player volume while speaking** (on by default): while you are in a conversation, the music and sounds of the map play at half volume.
 - **Block ambient sounds and music**: stops the music and sounds played by the map.
 - **Disable map animations**: stops the animated tiles of the map.
 - **Display video quality statistics**: shows technical information (resolution, codec…) on the videos.

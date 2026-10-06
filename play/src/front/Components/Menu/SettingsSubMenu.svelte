@@ -5,6 +5,7 @@
     import {
         audioManagerFileStore,
         audioManagerVisibilityStore,
+        audioManagerVolumeStore,
         bubbleSoundStore,
     } from "../../Stores/AudioManagerStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -250,6 +251,7 @@
         });
 
         localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
+        audioManagerVolumeStore.setDecreaseWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
     }
 
     function changeDisableAnimations() {
