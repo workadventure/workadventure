@@ -8,8 +8,9 @@ import {
     latchAfterPresenceChange,
     leftWorld,
     shouldShowCompanion,
+    staysInViewAfterBlur,
 } from "./companion-visibility-policy";
-import { canHideWindowsFromCapture } from "./platform-capture-policy";
+import { canHideWindowsFromCapture, knowsWindowPositions } from "./platform-capture-policy";
 
 /**
  * Drives the unified Companion — the People / Chat / Meeting / Controls window. It never steals
@@ -19,7 +20,8 @@ import { canHideWindowsFromCapture } from "./platform-capture-policy";
  *
  * It does NOT simply appear whenever WA is backgrounded — that made it noise. Two deliberate
  * triggers arm a one-shot latch (see companion-visibility-policy): a bubble forming around the
- * user, or switching away from the app while already in a meeting. Leaving the world closes the
+ * user, or leaving the app while already in a meeting. Moving to another screen while WA keeps
+ * showing there is not leaving it. Leaving the world closes the
  * panel and disarms everything, so each away-session needs a fresh trigger.
  */
 
@@ -44,6 +46,9 @@ let pipActive = false;
 let autoOpenLatch = false;
 // Last presence seen, so presence callbacks can compute rising / falling edges.
 let lastPresence = { inWorld: false, inMeeting: false };
+// WA lost focus but keeps showing on another screen (see staysInViewAfterBlur), until it gets
+// minimized or fully covered.
+let mainWindowStaysInView = false;
 
 function isMainWindowFocused(): boolean {
     const mainWindow = getWindow();
@@ -56,7 +61,7 @@ function wantOpen(): boolean {
         screenSharing: p.screenSharing,
         // The meeting bar replaces the panel while sharing, where it can be kept out of the capture.
         meetingBarAvailable: canHideWindowsFromCapture(process.platform),
-        mainWindowFocused: isMainWindowFocused(),
+        mainWindowInView: isMainWindowFocused() || mainWindowStaysInView,
         pipActive,
         invitationPending: p.invitationPending,
         inWorld: p.inWorld,
@@ -136,17 +141,43 @@ function handlePresenceChange(): void {
 
 /**
  * The main window lost focus. Switching to another window *while in a meeting* is the second
- * auto-show trigger; blurring outside a meeting deliberately does nothing.
+ * auto-show trigger, unless that window is on another screen and WA keeps showing; blurring outside
+ * a meeting deliberately does nothing.
  */
 export function onMainWindowBlur(): void {
+    const mainWindow = getWindow();
+    mainWindowStaysInView =
+        Boolean(mainWindow && !mainWindow.isDestroyed()) &&
+        staysInViewAfterBlur({
+            knowsWindowPositions: knowsWindowPositions(process.platform, process.env),
+            pointerDisplayId: screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).id,
+            windowDisplayId: mainWindow ? screen.getDisplayMatching(mainWindow.getBounds()).id : undefined,
+        });
+    if (!mainWindowStaysInView) {
+        leaveMainWindow();
+    }
+    updateCompanion();
+}
+
+/** The main window got minimized, hidden or fully covered: WA is out of view, even on another screen. */
+export function onMainWindowHidden(): void {
+    if (isMainWindowFocused()) {
+        return;
+    }
+    mainWindowStaysInView = false;
+    leaveMainWindow();
+    updateCompanion();
+}
+
+function leaveMainWindow(): void {
     const p = getPresenceSnapshot();
     autoOpenLatch = latchAfterMainWindowBlur(autoOpenLatch, { inWorld: p.inWorld, inMeeting: p.inMeeting });
-    updateCompanion();
 }
 
 /** The main window regained focus: the away-session is over, so disarm and revert any override. */
 export function onMainWindowFocus(): void {
     autoOpenLatch = false;
+    mainWindowStaysInView = false;
     updateCompanion();
 }
 

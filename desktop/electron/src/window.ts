@@ -30,7 +30,13 @@ import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-policy";
 import { usesSystemScreenSharePicker } from "./platform-capture-policy";
 import { rememberWorldUrl } from "./world-history";
-import { onMainWindowBlur, onMainWindowFocus, stopCompanion, updateCompanion } from "./companion-controller";
+import {
+    onMainWindowBlur,
+    onMainWindowFocus,
+    onMainWindowHidden,
+    stopCompanion,
+    updateCompanion,
+} from "./companion-controller";
 import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetPresence } from "./presence";
 import {
     activateTab,
@@ -805,14 +811,18 @@ export async function createWindow(initialUrl?: string) {
     // close PiP defensively here: doing so would wipe manually-opened PiP whenever the user
     // clicks back onto the main app, AND the destroy-in-flight also races with the utility
     // window's loadFile, spraying ERR_FAILED logs and occasionally taking the whole app down.
-    // Any of these can change whether the main window is focused, which feeds the companion panel's
-    // visibility. Focus and blur are split out because they are edges, not just state: blurring
-    // *during a meeting* is one of the two triggers that arm the companion's auto-show, and
-    // focusing ends the away-session. Hide/minimize deliberately keep the plain re-evaluation —
-    // treating them as a blur would arm the panel every time the window is tucked away.
+    // Any of these can change whether the main window is in view, which feeds the companion panel's
+    // visibility. Focus, blur and hiding are split out because they are edges, not just state:
+    // leaving WA *during a meeting* is one of the two triggers that arm the companion's auto-show
+    // (a blur towards another screen where WA keeps showing does not count, hiding it does), and
+    // focusing ends the away-session.
     const onWindowStateEvent = () => {
         emitDesktopWindowStateChange();
         updateCompanion();
+    };
+    const onWindowHidden = () => {
+        emitDesktopWindowStateChange();
+        onMainWindowHidden();
     };
     mainWindow.on("focus", () => {
         emitDesktopWindowStateChange();
@@ -823,8 +833,8 @@ export async function createWindow(initialUrl?: string) {
         onMainWindowBlur();
     });
     mainWindow.on("show", onWindowStateEvent);
-    mainWindow.on("hide", onWindowStateEvent);
-    mainWindow.on("minimize", onWindowStateEvent);
+    mainWindow.on("hide", onWindowHidden);
+    mainWindow.on("minimize", onWindowHidden);
     mainWindow.on("restore", onWindowStateEvent);
 
     // mainWindow.on('close', async (event) => {

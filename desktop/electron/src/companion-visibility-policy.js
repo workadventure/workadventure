@@ -6,7 +6,9 @@
  * The panel used to appear on *every* alt-tab away from a world, which made it noise. It now only
  * auto-opens on two deliberate triggers, both of which set a one-shot "latch":
  *   1. a bubble forms around the user (someone joined them), or
- *   2. the user is already in a meeting and switches away from the app.
+ *   2. the user is already in a meeting and leaves the app: focus goes to another window on WA's
+ *      screen, or WA gets minimized or fully covered. Moving to another screen while WA keeps
+ *      showing is not leaving.
  * Anything else — walking around a world alone, tabbing out of an empty world — leaves the latch
  * down and the panel closed. Returning to the app, leaving the meeting, or leaving the world drops
  * the latch again, so each away-session needs a fresh trigger.
@@ -20,7 +22,7 @@
  * @param {{
  *   screenSharing?: boolean,
  *   meetingBarAvailable?: boolean,
- *   mainWindowFocused?: boolean,
+ *   mainWindowInView?: boolean,
  *   pipActive?: boolean,
  *   invitationPending?: boolean,
  *   inWorld?: boolean,
@@ -36,8 +38,9 @@ function shouldShowCompanion(state) {
     if (s.screenSharing && s.meetingBarAvailable !== false) {
         return false;
     }
-    // Focused on WA (with no active meeting video keeping it alive) → hide; the app has everything.
-    if (s.mainWindowFocused && !s.pipActive) {
+    // WA in view (focused, or still showing on another screen) with no active meeting video keeping
+    // it alive → hide; the app has everything.
+    if (s.mainWindowInView && !s.pipActive) {
         return false;
     }
     // An incoming meeting invitation force-opens the panel even after a manual dismissal.
@@ -108,6 +111,19 @@ function latchAfterMainWindowBlur(latch, presence) {
 }
 
 /**
+ * Whether WA stays in view once it lost focus: the pointer went to another screen, so the user
+ * moved there and WA keeps showing on its own. Where window positions are unknown (Wayland),
+ * losing focus counts as leaving.
+ *
+ * @param {{knowsWindowPositions?: boolean, pointerDisplayId?: number, windowDisplayId?: number}} blur
+ * @returns {boolean}
+ */
+function staysInViewAfterBlur(blur) {
+    const b = blur || {};
+    return Boolean(b.knowsWindowPositions) && b.pointerDisplayId !== b.windowDisplayId;
+}
+
+/**
  * True when presence just crossed from inside a world to outside it — the moment the panel should
  * close and every latch reset. Callers debounce this: `inWorld` also dips false during a same-world
  * scene reload (a portal hop), and tearing the panel down there would kill a live meeting video.
@@ -124,5 +140,6 @@ module.exports = {
     shouldShowCompanion,
     latchAfterPresenceChange,
     latchAfterMainWindowBlur,
+    staysInViewAfterBlur,
     leftWorld,
 };
