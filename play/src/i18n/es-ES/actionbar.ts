@@ -157,7 +157,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Compartir tu pantalla",
-            desc: "¿Quieres compartir tu pantalla con otros usuarios? ¡Puedes! Puedes mostrar tu pantalla a todos en el chat, y puedes elegir compartir toda tu pantalla o solo una ventana específica.",
+            desc: "¿Quieres compartir tu pantalla con otros usuarios? ¡Puedes! Puedes mostrar tu pantalla a las personas de tu burbuja o sala de reuniones, y puedes elegir compartir toda tu pantalla o solo una ventana específica.",
         },
         apps: {
             title: "Aplicaciones de terceros",

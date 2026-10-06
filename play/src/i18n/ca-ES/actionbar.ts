@@ -157,7 +157,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Compartir la teva pantalla",
-            desc: "Vols compartir la teva pantalla amb altres usuaris? Pots! Pots mostrar la teva pantalla a tothom al xat, i pots triar compartir tota la teva pantalla o només una finestra específica.",
+            desc: "Vols compartir la teva pantalla amb altres usuaris? Pots! Pots mostrar la teva pantalla a les persones de la teva bombolla o sala de reunions, i pots triar compartir tota la teva pantalla o només una finestra específica.",
         },
         apps: {
             title: "Aplicacions de tercers",

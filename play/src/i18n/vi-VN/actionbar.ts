@@ -156,7 +156,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Chia sẻ màn hình của bạn",
-            desc: "Muốn chia sẻ màn hình với những người dùng khác? Hoàn toàn được! Bạn có thể cho mọi người trong cuộc trò chuyện xem màn hình của mình, và có thể chọn chia sẻ toàn bộ màn hình hoặc chỉ một cửa sổ cụ thể.",
+            desc: "Muốn chia sẻ màn hình với những người dùng khác? Hoàn toàn được! Bạn có thể cho những người trong bong bóng hoặc phòng họp của bạn xem màn hình của mình, và có thể chọn chia sẻ toàn bộ màn hình hoặc chỉ một cửa sổ cụ thể.",
         },
         apps: {
             title: "Ứng dụng bên thứ ba",

@@ -158,7 +158,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Je scherm delen",
-            desc: "Wil je je scherm delen met andere gebruikers? Dat kan! Je kunt je scherm aan iedereen in de chat tonen, en je kunt kiezen om je hele scherm of alleen een specifiek venster te delen.",
+            desc: "Wil je je scherm delen met andere gebruikers? Dat kan! Je kunt je scherm tonen aan de mensen in je bubbel of vergaderruimte, en je kunt kiezen om je hele scherm of alleen een specifiek venster te delen.",
         },
         apps: {
             title: "Applicaties van derden",
