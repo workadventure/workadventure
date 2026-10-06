@@ -28,7 +28,6 @@ import recording from "./recording";
 import locate from "./locate";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
-import screenAnnotation from "./screenAnnotation";
 import desktop from "./desktop";
 
 const en_US: BaseTranslation = {
@@ -61,7 +60,6 @@ const en_US: BaseTranslation = {
     locate,
     randomNames,
     onboarding,
-    screenAnnotation,
     desktop,
 };
 

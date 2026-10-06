@@ -17,7 +17,6 @@ import { recordingStore } from "../../Stores/RecordingStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace, watchRaiseHandState } from "../Utils/BindMuteEvents";
-import { bindScreenAnnotationEventsToSpace } from "../Utils/BindScreenAnnotationEvents";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { meetingEnded, meetingStarted } from "../../Administration/CurrentMeeting";
 import { isMeetingSpace } from "../../Rules/MeetingRules";
@@ -299,7 +298,6 @@ export class SpacePeerManager {
 
         _bindMuteEventsToSpace(this.space);
         this.raiseHandStateUnsubscriber = watchRaiseHandState(this.space);
-        bindScreenAnnotationEventsToSpace(this.space, this.screenSharingPeerRemoved);
 
         // The state store re-emits on every change of the space state: only react when the recording changed.
         // Starting from "idle" also skips the initial idle state, which is not an event worth reacting to.

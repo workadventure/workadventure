@@ -43,7 +43,7 @@ let previousScreenSharingHadStream = false;
 
 /**
  * The desktopCapturer source currently being shared (Electron). Retained for the whole duration of
- * the share so the screen-annotation overlay can be placed on the RIGHT display. Set when a source
+ * the share so the meeting bar can be placed on the RIGHT display. Set when a source
  * is chosen; cleared only when sharing is turned off (not on every re-acquire).
  */
 export const activeScreenShareSourceStore = writable<DesktopCapturerSource | undefined>(undefined);
@@ -67,8 +67,8 @@ let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
 /**
  * Bumped to capture another source while a share is running (desktop: picking another screen from
  * the meeting bar or the PiP). The constraints do not change, so without it nothing would re-acquire;
- * going through "stop sharing" instead would tear down every side effect of the share (annotations
- * cleared for everyone, meeting bar and overlay closed and reopened).
+ * going through "stop sharing" instead would tear down every side effect of the share (meeting bar
+ * closed and reopened).
  */
 const screenShareSourceSwitchStore = writable(0);
 let lastHandledSourceSwitch = 0;
@@ -203,7 +203,7 @@ async function getDesktopCapturerSources() {
     if (source === null) {
         return;
     }
-    // Retain the chosen source so the annotation overlay can target its display.
+    // Retain the chosen source so the meeting bar can target its display.
     activeScreenShareSourceStore.set(source);
     // Note: getUserMedia with chromeMediaSource does not support audio capture.
     // Audio is only available with getDisplayMedia when sharing a browser tab.

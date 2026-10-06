@@ -4,7 +4,6 @@ import { userIsAdminStore } from "../../../Stores/GameStore";
 import type { Streamable } from "../../../Space/Streamable";
 import type { VideoBox } from "../../../Space/VideoBox";
 import type {
-    DesktopPipAnnotationState,
     DesktopPipChatMessage,
     DesktopPipCommand,
     DesktopPipSdp,
@@ -51,14 +50,9 @@ type CommandHandlers = {
     toggleCamera: () => void;
     toggleScreenshare: () => void;
     pickScreenSource: (source: { id: string; name: string; displayId?: number }) => void;
-    // Optional handlers for the extended presenter-bar surface (chat, reactions, annotation).
+    // Optional handlers for the extended presenter-bar surface (chat, reactions).
     sendChat?: (text: string) => void;
     sendReaction?: (emote: string) => void;
-    annotationToggle?: () => void;
-    annotationSetTool?: (tool: string) => void;
-    annotationSetColor?: (color: string) => void;
-    annotationUndo?: () => void;
-    annotationClear?: () => void;
 };
 
 type NativeClientDeps = {
@@ -68,8 +62,6 @@ type NativeClientDeps = {
     deviceState: DeviceStateStore;
     /** Optional: recent proximity-chat messages mirrored into the floating window. */
     chatMessages?: Readable<DesktopPipChatMessage[]>;
-    /** Optional: screen-annotation toolbar state mirrored into the floating window. */
-    annotationState?: Readable<DesktopPipAnnotationState>;
     commandHandlers: CommandHandlers;
 };
 
@@ -118,7 +110,6 @@ export class NativePictureInPictureClient {
     private selfNameUnsubscriber: Unsubscriber | undefined;
     private deviceStateUnsubscriber: Unsubscriber | undefined;
     private chatMessagesUnsubscriber: Unsubscriber | undefined;
-    private annotationStateUnsubscriber: Unsubscriber | undefined;
 
     private senderByTrackId = new Map<string, RTCRtpSender>();
     /** trackId → boxId (so we can map sender → tile metadata). */
@@ -135,7 +126,6 @@ export class NativePictureInPictureClient {
         recording: false,
     };
     private lastChatMessages: DesktopPipChatMessage[] = [];
-    private lastAnnotationState: DesktopPipAnnotationState | undefined;
 
     private pendingRenegotiate = false;
     private renegotiating = false;
@@ -245,16 +235,10 @@ export class NativePictureInPictureClient {
             this.scheduleStateSend();
         });
 
-        // Optional presenter-bar state (proximity chat + annotation toolbar) → state push.
+        // Optional presenter-bar state (proximity chat) → state push.
         if (this.deps.chatMessages) {
             this.chatMessagesUnsubscriber = this.deps.chatMessages.subscribe((messages) => {
                 this.lastChatMessages = messages;
-                this.scheduleStateSend();
-            });
-        }
-        if (this.deps.annotationState) {
-            this.annotationStateUnsubscriber = this.deps.annotationState.subscribe((state) => {
-                this.lastAnnotationState = state;
                 this.scheduleStateSend();
             });
         }
@@ -324,12 +308,6 @@ export class NativePictureInPictureClient {
             /* ignore */
         }
         this.chatMessagesUnsubscriber = undefined;
-        try {
-            this.annotationStateUnsubscriber?.();
-        } catch {
-            /* ignore */
-        }
-        this.annotationStateUnsubscriber = undefined;
 
         for (const unsub of this.videoBoxUnsubscribers.values()) {
             try {
@@ -494,16 +472,6 @@ export class NativePictureInPictureClient {
                 this.deps.commandHandlers.sendChat?.(command.text);
             } else if (command.type === "send-reaction") {
                 this.deps.commandHandlers.sendReaction?.(command.emote);
-            } else if (command.type === "annotation-toggle") {
-                this.deps.commandHandlers.annotationToggle?.();
-            } else if (command.type === "annotation-set-tool") {
-                this.deps.commandHandlers.annotationSetTool?.(command.tool);
-            } else if (command.type === "annotation-set-color") {
-                this.deps.commandHandlers.annotationSetColor?.(command.color);
-            } else if (command.type === "annotation-undo") {
-                this.deps.commandHandlers.annotationUndo?.();
-            } else if (command.type === "annotation-clear") {
-                this.deps.commandHandlers.annotationClear?.();
             }
         } catch (error) {
             debug("command handler threw", error);
@@ -941,7 +909,6 @@ export class NativePictureInPictureClient {
             recording: this.lastDeviceState.recording,
             canRecord: false,
             chatMessages: this.lastChatMessages,
-            annotation: this.lastAnnotationState,
             canModerate,
             canAskToMute,
         };

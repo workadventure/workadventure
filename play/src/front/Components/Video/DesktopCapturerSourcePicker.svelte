@@ -85,7 +85,7 @@
 
     // "Identify screens": each physical display gets a big-numbered, click-to-share overlay (in the
     // main process). Clicking one resolves that screen source — reusing the same resolve path as a
-    // thumbnail click, so the display_id flows through to the annotation overlay unchanged. Escape
+    // thumbnail click, so the display_id flows through to the meeting bar unchanged. Escape
     // resolves null: leave the picker open.
     async function identifyScreensByClick() {
         // Re-entry is prevented by the button's `disabled={identifying}`, so the guard doesn't read
