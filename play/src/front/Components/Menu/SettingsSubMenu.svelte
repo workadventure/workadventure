@@ -19,6 +19,7 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { videoQualityStore } from "../../Stores/MediaStore";
     import { browserNotificationStore } from "../../Stores/BrowserNotificationStore";
+    import { helpNotificationSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
     import { DISABLE_NOTIFICATIONS } from "../../Enum/EnvironmentVariable";
     import { screenShareQualityStore } from "../../Stores/ScreenSharingStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
@@ -204,7 +205,8 @@
         // Analytics Client
         analyticsClient.trackAdminEvent("settings.notification.changed", { value: notification ? "true" : "false" });
 
-        if (Notification.permission === "granted") {
+        // Turning notifications off never needs the permission.
+        if (!notification || Notification.permission === "granted") {
             localUserStore.setNotification(notification);
             browserNotificationStore.refresh();
         } else {
@@ -215,6 +217,10 @@
                     } else {
                         localUserStore.setNotification(false);
                         notification = false;
+                        // The browser does not ask again once denied: explain how to unblock notifications.
+                        if (response === "denied") {
+                            helpNotificationSettingsVisibleStore.set(true);
+                        }
                     }
                     browserNotificationStore.refresh();
                 })
