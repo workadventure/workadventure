@@ -85,13 +85,13 @@ test.describe("Availability Status", () => {
             await Menu.expectMicrophoneOff(page);
         });
 
-        test("should ask to change notification permission when you pass in Busy status and your browser notification permission is denied @nowebkit @nofirefox", async ({
+        test("should ask to allow notifications in Busy status when the browser does not allow them yet @nowebkit", async ({
             browser,
             browserName,
-        }) => {
+        }, { project }) => {
             test.skip(
-                browserName === "firefox" || browserName === "webkit",
-                "Notification permission management issues",
+                project.name === "chromium" || browserName === "webkit",
+                "The chromium project grants the notification permission; WebKit limitations",
             );
 
             const statusName = "Busy";
@@ -108,7 +108,26 @@ test.describe("Availability Status", () => {
 
             await expect(page.getByText("Allow notifications?")).toBeVisible();
 
-            await page.getByText("Accept").click();
+            await Menu.closeAllowNotificationsPopUpIfAsked(page);
+
+            await expect(page.getByText("Allow notifications?")).toBeHidden();
+        });
+
+        test("should not ask to allow notifications in Busy status when the browser already allows them @nowebkit @nofirefox @nomobile", async ({
+            browser,
+        }, { project }) => {
+            test.skip(project.name !== "chromium", "Only the chromium project grants the notification permission");
+
+            const statusName = "Busy";
+            await using page = await getPage(
+                browser,
+                "Alice",
+                publicTestMapUrl("tests/E2E/empty.json", "availability-status"),
+            );
+
+            await Menu.openMenu(page);
+            // Waits after the click: the question, when asked, is up by then.
+            await Menu.clickOnStatus(page, statusName);
 
             await expect(page.getByText("Allow notifications?")).toBeHidden();
         });
@@ -138,8 +157,7 @@ test.describe("Availability Status", () => {
 
                 await Menu.openMenu(page);
                 await Menu.clickOnStatus(page, statusName);
-                // Click on the Close button in the "Accept notifications" popup
-                await page.getByRole("button", { name: "Close" }).click();
+                await Menu.closeAllowNotificationsPopUpIfAsked(page);
                 // await Menu.closeNotificationPopUp(page);
 
                 const isInBubble = evaluateScript(page, async () => {
@@ -180,8 +198,7 @@ test.describe("Availability Status", () => {
 
                 await Menu.openMenu(page);
                 await Menu.clickOnStatus(page, statusName);
-                // Click on the Close button in the "Accept notifications" popup
-                await page.getByRole("button", { name: "Close" }).click();
+                await Menu.closeAllowNotificationsPopUpIfAsked(page);
                 //await Menu.closeNotificationPopUp(page);
 
                 await using userBob = await getPage(
@@ -220,8 +237,7 @@ test.describe("Availability Status", () => {
 
                 await Menu.openMenu(page);
                 await Menu.clickOnStatus(page, statusName);
-                // Click on the Close button in the "Accept notifications" popup
-                await page.getByRole("button", { name: "Close" }).click();
+                await Menu.closeAllowNotificationsPopUpIfAsked(page);
                 // await Menu.closeNotificationPopUp(page);
                 await using userBob = await getPage(
                     browser,

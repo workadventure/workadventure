@@ -241,6 +241,15 @@ class Menu {
         await page.getByRole("button", { name: "Continue without notification" }).click();
         await expect(page.getByRole("button", { name: "Continue without notification" })).toBeVisible();
     }
+    // Choosing Busy asks "Allow notifications?" unless the browser already allows them: the chromium
+    // project grants the permission, the other projects do not.
+    async closeAllowNotificationsPopUpIfAsked(page: Page) {
+        if (await page.evaluate(() => !("Notification" in window) || Notification.permission === "granted")) return;
+        await page
+            .locator(".popup-container", { has: page.locator("#notificationPermission") })
+            .getByRole("button", { name: "Close" })
+            .click();
+    }
     async closeCameraPopUp(page: Page) {
         if (await page.getByRole("button", { name: "Continue without webcam" }).isHidden()) return;
         await page.getByRole("button", { name: "Continue without webcam" }).click();

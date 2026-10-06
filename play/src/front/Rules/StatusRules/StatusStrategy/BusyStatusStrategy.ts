@@ -31,11 +31,6 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
         return true;
     }
 
-    private NotificationPermissionIs = (permission: "denied" | "default" | "granted") => {
-        if (!("Notification" in window)) return false;
-        return Notification.permission === permission;
-    };
-
     private lastNotificationPermissionRequestMoreThanTwoWeeks = (d1: Date): boolean => {
         const diffTime = Math.abs(new Date().getTime() - d1.getTime());
         const diffDays = diffTime / (1000 * 60 * 60 * 24);
@@ -43,25 +38,22 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
         return diffWeeks >= 2;
     };
 
+    // Ask while the browser has not decided yet. Once it denied, ask again only every two weeks:
+    // the browser will not prompt anymore, so the modal can only point to the browser settings.
     private showNotificationPermissionModal = () => {
-        const localStoragelastNotificationPermissionRequest: string | null =
-            localUserStore.getLastNotificationPermissionRequest();
-        const lastNotificationPermissionRequest = localStoragelastNotificationPermissionRequest
-            ? new Date(localStoragelastNotificationPermissionRequest)
-            : new Date();
+        if (!("Notification" in window) || Notification.permission === "granted") return;
 
-        if (this.NotificationPermissionIs("default")) {
-            this.openNotificationPermissionModal();
-        }
-
+        const lastRequest = localUserStore.getLastNotificationPermissionRequest();
         if (
-            (this.NotificationPermissionIs("denied") &&
-                this.lastNotificationPermissionRequestMoreThanTwoWeeks(lastNotificationPermissionRequest)) ||
-            localStoragelastNotificationPermissionRequest === null
+            Notification.permission === "denied" &&
+            lastRequest !== null &&
+            !this.lastNotificationPermissionRequestMoreThanTwoWeeks(new Date(lastRequest))
         ) {
-            this.openNotificationPermissionModal();
-            localUserStore.setLastNotificationPermissionRequest();
+            return;
         }
+
+        this.openNotificationPermissionModal();
+        localUserStore.setLastNotificationPermissionRequest();
     };
 
     private openNotificationPermissionModal = () => {
