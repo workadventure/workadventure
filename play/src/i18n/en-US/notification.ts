@@ -3,7 +3,6 @@ import type { BaseTranslation } from "../i18n-types";
 const notification: BaseTranslation = {
     discussion: "{name} wants to discuss with you",
     message: "{name} sends a message",
-    chatRoom: "in the chat room",
     askToMuteMicrophone: "Can I mute your microphone?",
     askToMuteCamera: "Can I mute your camera?",
     microphoneMuted: "Your microphone was muted by a moderator",
@@ -15,10 +14,7 @@ const notification: BaseTranslation = {
     handLowered: "A moderator lowered your hand",
     removedFromConversation: "A moderator removed you from the conversation.",
     actionFailed: "This action could not be completed",
-    notificationSentToMuteMicrophone: "A notification was sent to {name} to mute their microphone",
-    notificationSentToMuteCamera: "A notification was sent to {name} to mute their camera",
     announcement: "Announcement",
-    open: "Open",
     help: {
         title: "Notifications access denied",
         permissionDenied: "Permission denied",

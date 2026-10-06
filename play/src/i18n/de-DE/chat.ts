@@ -171,9 +171,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
-        discussion: "möchte mit dir diskutieren",
-        message: "sendet eine Nachricht",
-        forum: "im Forum",
         in: "in",
     },
     see: "Sehen",

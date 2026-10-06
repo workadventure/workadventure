@@ -4,7 +4,6 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name}님이 대화를 원합니다",
     message: "{name}님이 메시지를 보냅니다",
-    chatRoom: "채팅방에서",
     askToMuteMicrophone: "마이크를 음소거할까요?",
     askToMuteCamera: "카메라를 음소거할까요?",
     microphoneMuted: "운영자가 마이크를 음소거했습니다",
@@ -13,7 +12,6 @@ const notification: DeepPartial<Translation["notification"]> = {
     givenTheFloorEnableMicrophone: "말할 차례입니다 — 마이크를 켜세요",
     floorRevoked: "더 이상 발언권이 없습니다",
     announcement: "공지사항",
-    open: "열기",
     help: {
         title: "알림 접근이 거부됨",
         permissionDenied: "권한이 거부됨",
@@ -33,8 +31,6 @@ const notification: DeepPartial<Translation["notification"]> = {
     handLowered: "진행자가 당신의 손을 내렸습니다",
     removedFromConversation: "관리자가 회원님을 대화에서 제외했습니다.",
     actionFailed: "이 작업을 완료할 수 없습니다",
-    notificationSentToMuteMicrophone: "{name}님에게 마이크 음소거 알림이 전송되었습니다",
-    notificationSentToMuteCamera: "{name}님에게 카메라 음소거 알림이 전송되었습니다",
     recordingStarted: "토론 중 한 명이 녹화를 시작했습니다.",
     urlCopiedToClipboard: "URL이 클립보드에 복사되었습니다",
 };

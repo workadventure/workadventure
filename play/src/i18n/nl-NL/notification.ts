@@ -15,11 +15,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     handLowered: "Een moderator heeft je hand laten zakken",
     removedFromConversation: "Een moderator heeft je uit het gesprek gehaald.",
     actionFailed: "Deze actie kon niet worden voltooid",
-    notificationSentToMuteMicrophone: "Er is een melding verzonden naar {name} om de microfoon te dempen",
-    notificationSentToMuteCamera: "Er is een melding verzonden naar {name} om de camera te dempen",
     announcement: "Aankondiging",
-    open: "Openen",
-    chatRoom: "in de chatruimte",
     help: {
         title: "Toegang tot meldingen geweigerd",
         permissionDenied: "Toegang geweigerd",

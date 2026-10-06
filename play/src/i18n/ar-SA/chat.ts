@@ -168,9 +168,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
-        discussion: "يريد مناقشة معك",
-        message: "يرسل رسالة",
-        forum: "في المنتدى",
         in: "في",
     },
     see: "رؤية",

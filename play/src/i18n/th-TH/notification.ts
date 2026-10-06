@@ -4,7 +4,6 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} ต้องการพูดคุยกับคุณ",
     message: "{name} ส่งข้อความ",
-    chatRoom: "ในห้องแชท",
     askToMuteMicrophone: "ขอปิดเสียงไมโครโฟนของคุณได้ไหม?",
     askToMuteCamera: "ขอปิดกล้องของคุณได้ไหม?",
     microphoneMuted: "ไมโครโฟนของคุณถูกปิดเสียงโดยผู้ควบคุม",
@@ -16,10 +15,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     handLowered: "ผู้ควบคุมได้ลดมือของคุณลงแล้ว",
     removedFromConversation: "ผู้ดูแลได้นำคุณออกจากการสนทนา",
     actionFailed: "ไม่สามารถดำเนินการนี้ได้",
-    notificationSentToMuteMicrophone: "ส่งการแจ้งเตือนถึง {name} เพื่อขอให้ปิดไมโครโฟนแล้ว",
-    notificationSentToMuteCamera: "ส่งการแจ้งเตือนถึง {name} เพื่อขอให้ปิดกล้องแล้ว",
     announcement: "ประกาศ",
-    open: "เปิด",
     help: {
         title: "การเข้าถึงการแจ้งเตือนถูกปฏิเสธ",
         permissionDenied: "ไม่ได้รับอนุญาต",
