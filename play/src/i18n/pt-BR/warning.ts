@@ -6,7 +6,6 @@ const warning: BaseTranslation = {
     limit: "Este mundo está perto do seu limite!",
     accessDenied: {
         camera: "Acesso à câmera negado. Clique aqui e verifique as permissões do seu navegador.",
-        screenSharing: "Compartilhamento de tela negado. Clique aqui e verifique as permissões do seu navegador.",
         teleport: "Você não tem direito de teleportar este usuário.",
         room: "Acesso a sala negado. Você não tem permissão para entrar nesta sala.",
     },

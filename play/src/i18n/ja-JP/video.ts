@@ -6,8 +6,6 @@ const video: DeepPartial<Translation["video"]> = {
     no_video_stream_received: "ビデオストリームが受信できません。",
     user_is_muted: "{name}はミュートされています。",
     reduce: "縮小",
-    toggle_fullscreen: "フルスクリーンの切り替え",
-    exit_fullscreen: "フルスクリーンを終了",
     connecting: "接続中...",
     reconnecting: "再接続中...",
     persistent_connection_issue: "再接続中... 接続が不安定です...",

@@ -6,8 +6,6 @@ const video: DeepPartial<Translation["video"]> = {
     no_video_stream_received: "Không nhận được luồng video.",
     user_is_muted: "{name} đang tắt tiếng.",
     reduce: "Thu nhỏ",
-    toggle_fullscreen: "Bật/tắt toàn màn hình",
-    exit_fullscreen: "Thoát toàn màn hình",
     connecting: "Đang kết nối...",
     reconnecting: "Đang kết nối lại...",
     persistent_connection_issue: "Đang kết nối lại... Kết nối không ổn định...",
