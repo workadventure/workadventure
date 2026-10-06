@@ -3,7 +3,7 @@ import { SpeakerMegaphonePropertyData } from "./types";
 
 export function getSpeakerMegaphoneAreaName(
     areas: Map<string, AreaData> = new Map(),
-    areaId: string
+    areaId: string,
 ): string | undefined {
     for (const area of areas.values()) {
         const speakerMegaphonePropertyRaw = area.properties.find((property) => property.type === "speakerMegaphone");
@@ -25,7 +25,7 @@ export function getSpeakerMegaphoneAreaName(
  */
 export function getSpeakerMegaphoneAreaInfo(
     areas: Map<string, AreaData> = new Map(),
-    areaId: string
+    areaId: string,
 ): { name: string; seeAttendees: boolean } | undefined {
     for (const area of areas.values()) {
         if (area.id !== areaId) {

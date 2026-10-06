@@ -1,14 +1,17 @@
+import * as Phaser from "phaser";
 import type { Writable } from "svelte/store";
 import { writable } from "svelte/store";
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import { PositionMessage_Direction } from "@workadventure/messages";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { debugRepo } from "../../Utils/Debuggers";
+
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
+import Body = Phaser.Physics.Arcade.Body;
 
 export interface CompanionStatus {
     x: number;
@@ -103,7 +106,7 @@ export class Companion extends Container {
             const speed = 256;
             this.getBody().setVelocity(
                 Math.min(Math.abs(xDist * 2.5), speed) * xDir,
-                Math.min(Math.abs(yDist * 2.5), speed) * yDir
+                Math.min(Math.abs(yDist * 2.5), speed) * yDir,
             );
 
             if (Math.abs(xDist) > Math.abs(yDist)) {
@@ -218,10 +221,10 @@ export class Companion extends Container {
         ];
     }
 
-    private getBody(): Phaser.Physics.Arcade.Body {
+    private getBody(): Body {
         const body = this.body;
 
-        if (!(body instanceof Phaser.Physics.Arcade.Body)) {
+        if (!(body instanceof Body)) {
             throw new Error("Container does not have arcade body");
         }
 

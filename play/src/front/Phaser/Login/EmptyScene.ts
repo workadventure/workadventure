@@ -1,9 +1,9 @@
-import { Scene } from "phaser";
+import * as Phaser from "phaser";
 import { gameManager } from "../Game/GameManager";
 
 export const EmptySceneName = "EmptyScene";
 
-export class EmptyScene extends Scene {
+export class EmptyScene extends Phaser.Scene {
     constructor() {
         super({
             key: EmptySceneName,

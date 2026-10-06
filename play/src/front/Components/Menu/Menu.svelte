@@ -1,9 +1,9 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { fly } from "svelte/transition";
-    import type { ComponentType } from "svelte";
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
+    import type { WorkAdventureComponent } from "../../../types/component";
     import chevronImg from "../images/chevron.svg";
     import type { MenuItem } from "../../Stores/MenuStore";
     import {
@@ -28,9 +28,19 @@
     import ShortcutSubMenu from "./ShortcutSubMenu.svelte";
     import HelpSubMenu from "./HelpSubMenu.svelte";
 
-    let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
-    let activeComponent: ComponentType = ProfileSubMenu;
-    let props: { url: string; allowApi: boolean; allow: string | undefined };
+    // raw, not $state: this holds one of the objects in subMenusStore and is compared back against
+    // them with ===, both here and in the markup. A deep-reactive $state would proxy it, and a proxy
+    // never matches the object it wraps - so the active item would stop matching itself: no
+    // highlight in the list, and includes() below would decide the open menu had been removed from
+    // the store and switch away from it, tearing down whatever it was showing. It is only ever
+    // reassigned, never mutated, so there is nothing for the proxy to do anyway.
+    let activeSubMenu: MenuItem = $state.raw($subMenusStore[$activeSubMenuStore]);
+    let activeComponent: WorkAdventureComponent = $state(ProfileSubMenu);
+    let props: { url: string; allowApi: boolean; allow?: string } = $state({
+        url: "",
+        allowApi: false,
+        allow: undefined,
+    });
     let unsubscriberSubMenuStore: Unsubscriber;
     let unsubscriberActiveSubMenuStore: Unsubscriber;
 
@@ -38,14 +48,14 @@
         unsubscriberActiveSubMenuStore = activeSubMenuStore.subscribe((value) => {
             if ($subMenusStore.length >= value - 1) {
                 switchMenu($subMenusStore[value]).catch((e) =>
-                    console.error("Failed to switch menu on activeSubMenuStore change", e)
+                    console.error("Failed to switch menu on activeSubMenuStore change", e),
                 );
             }
         });
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
                 switchMenu($subMenusStore[$activeSubMenuStore]).catch((e) =>
-                    console.error("Failed to switch menu on subMenusStore change", e)
+                    console.error("Failed to switch menu on subMenusStore change", e),
                 );
             }
         });
@@ -70,35 +80,35 @@
             switch (menu.key) {
                 case SubMenusInterface.profile:
                     activeComponent = ProfileSubMenu;
-                    analyticsClient.menuProfile();
+                    analyticsClient.trackAdminEvent("profile.opened", { source: "menu" });
                     break;
                 case SubMenusInterface.settings:
                     activeComponent = SettingsSubMenu;
-                    analyticsClient.menuSetting();
+                    analyticsClient.trackAdminEvent("settings.opened");
                     break;
                 case SubMenusInterface.aboutRoom:
                     activeComponent = AboutRoomSubMenu;
-                    analyticsClient.menuCredit();
+                    analyticsClient.trackAdminEvent("menu.credit.opened");
                     break;
                 case SubMenusInterface.contact:
                     activeComponent = ContactSubMenu;
-                    analyticsClient.menuContact();
+                    analyticsClient.trackAdminEvent("menu.contact.opened");
                     break;
                 case SubMenusInterface.globalMessages:
                     activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
-                    analyticsClient.globalMessage();
+                    analyticsClient.trackAdminEvent("global_message.opened", { source: "menu" });
                     break;
                 case SubMenusInterface.report:
                     activeComponent = ReportSubMenu;
-                    analyticsClient.reportIssue();
+                    analyticsClient.trackAdminEvent("feedback.opened", { feedbackSource: "external_report_url" });
                     break;
                 case SubMenusInterface.chat:
                     activeComponent = ChatSubMenu;
-                    analyticsClient.menuChat();
+                    analyticsClient.trackAdminEvent("menu.chat.opened");
                     break;
                 case SubMenusInterface.shortcuts:
                     activeComponent = ShortcutSubMenu;
-                    analyticsClient.menuShortcuts();
+                    analyticsClient.trackAdminEvent("menu.shortcuts.opened");
                     break;
                 case SubMenusInterface.help:
                     activeComponent = HelpSubMenu;
@@ -106,7 +116,7 @@
             }
         } else {
             // Save custom menu click for analytics
-            analyticsClient.menuCustom(menu.key);
+            analyticsClient.trackAdminEvent("menu.custom.opened", { name: menu.key });
 
             const customMenu = customMenuIframe.get(menu.key);
             if (customMenu !== undefined) {
@@ -131,18 +141,20 @@
         }
     }
 
-    $: subMenuTranslations = $subMenusStore.map((subMenu) =>
-        subMenu.type === "scripting" ? subMenu.label : $LL.menu.sub[subMenu.key]()
+    let subMenuTranslations = $derived(
+        $subMenusStore.map((subMenu) => (subMenu.type === "scripting" ? subMenu.label : $LL.menu.sub[subMenu.key]())),
     );
+
+    const SvelteComponent = $derived(activeComponent);
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 
 <!-- TODO HUGO : REMOVE !important -->
 <div
     class="h-3/4 top-0 flex-col gap-3 @md/main-layout:flex-row [@media(min-height:953px)]/main-layout:h-3/4 w-11/12 @2xl:max-w-screen-2xl close-window pointer-events-auto absolute flex right-0 left-0 bottom-0 z-[900] m-auto overflow-hidden font-main"
     transition:fly={{ y: 1000, duration: 150 }}
-    on:blur={closeMenu}
+    onblur={closeMenu}
 >
     <div class="flex flex-row items-center gap-2">
         <div
@@ -164,17 +176,23 @@
                                     submenu
                                         ? 'w-full @md/main-layout:h-full'
                                         : 'w-0 @md/main-layout:h-0'} "
-                                />
+                                ></div>
                             </div>
 
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
                             <div
                                 class="menu-item-container group flex items-center @md/main-layout:justify-start justify-center h-full py-3.5 px-2 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md @md/main-layout:rounded-lg overflow-hidden {activeSubMenu ===
                                 submenu
                                     ? 'active opacity-100 bg-contrast/50 text-white'
                                     : 'opacity-60 hover:bg-white/10'}"
-                                on:click|preventDefault|stopPropagation={() => switchMenu(submenu)}
+                                onclick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    switchMenu(submenu).catch((error) => {
+                                        console.error("Failed to switch menu", error);
+                                    });
+                                }}
                                 transition:fly={{ delay: i * 75, x: 200, duration: 150 }}
                             >
                                 <button
@@ -201,7 +219,7 @@
         <div
             class="p-2 rounded-lg bg-contrast/80 backdrop-blur-md flex items-center justify-center w-fit @md/main-layout:hidden"
         >
-            <ButtonClose on:click={closeMenu} dataTestId="closeMenuBtn" />
+            <ButtonClose onclick={closeMenu} dataTestId="closeMenuBtn" />
         </div>
     </div>
     <div
@@ -211,17 +229,17 @@
             class="h-full mt-0 text-white rounded-none @md/main-layout:rounded-tl-lg overflow-y-scroll @md/main-layout:overflow-none"
             id="submenu"
         >
-            <svelte:component this={activeComponent} {...props} />
+            <SvelteComponent {...props} />
         </div>
     </div>
     <div class="right-menu-side-bar w-fit h-full @md/main-layout:flex flex-col items-start justify-start hidden">
         <div class="p-2 rounded-lg bg-contrast/80 backdrop-blur-md flex items-center justify-center w-fit">
-            <ButtonClose on:click={closeMenu} id="closeMenu" dataTestId="closeMenuBtn" />
+            <ButtonClose onclick={closeMenu} id="closeMenu" dataTestId="closeMenuBtn" />
         </div>
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .menu-nav-sidebar nav::-webkit-scrollbar {
         display: none;
     }

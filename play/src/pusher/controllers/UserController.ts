@@ -66,7 +66,7 @@ export class UserController extends BaseHttpController {
                 z.object({
                     name: z.string(),
                     roomUrl: z.string(),
-                })
+                }),
             );
 
             if (body === undefined) {
@@ -139,7 +139,7 @@ export class UserController extends BaseHttpController {
                 z.object({
                     textures: z.array(z.string()),
                     roomUrl: z.string(),
-                })
+                }),
             );
 
             if (body === undefined) {
@@ -213,7 +213,7 @@ export class UserController extends BaseHttpController {
                     z.object({
                         texture: z.string().nullable(),
                         roomUrl: z.string(),
-                    })
+                    }),
                 );
 
                 if (body === undefined) {
@@ -232,7 +232,7 @@ export class UserController extends BaseHttpController {
 
                 res.status(204).send("");
                 return;
-            }
+            },
         );
     }
 }

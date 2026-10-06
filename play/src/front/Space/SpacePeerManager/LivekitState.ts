@@ -11,13 +11,13 @@ export class LivekitState implements ICommunicationState {
         private _space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
-        private _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>
+        private _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
     ) {
         this.livekitConnection = new LivekitConnection(
             this._space,
             this._streamableSubjects,
             this._blockedUsersStore,
-            this._screenSharingLocalStreamStore
+            this._screenSharingLocalStreamStore,
         );
     }
 
@@ -50,7 +50,7 @@ export class LivekitState implements ICommunicationState {
 
     retryAllFailedConnections(): void {
         console.warn(
-            "[LivekitState] retryAllFailedConnections called but LiveKit does not support failed connection retry. This case should not happen."
+            "[LivekitState] retryAllFailedConnections called but LiveKit does not support failed connection retry. This case should not happen.",
         );
     }
 

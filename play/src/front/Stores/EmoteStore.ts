@@ -78,7 +78,7 @@ export const isEmoteIndex = (value: number): value is EmoteIndex => {
 export const displayEmote = (emoteIndex: EmoteIndex) => {
     const emoji: Emoji | null | undefined = get(emoteDataStore).get(emoteIndex);
     if (emoji) {
-        analyticsClient.launchEmote(emoji);
+        analyticsClient.trackAdminEvent("emote.launched", { name: emoji.name });
         emoteStore.set(emoji);
     }
 };

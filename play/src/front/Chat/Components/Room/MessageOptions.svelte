@@ -1,14 +1,24 @@
 <script lang="ts">
     import type { ChatMessage } from "../../Connection/ChatConnection";
+    import LL from "../../../../i18n/i18n-svelte";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import EmojiButton from "./EmojiButton.svelte";
-    import { IconArrowBackUp, IconArrowDown, IconPencil, IconTrash } from "@wa-icons";
+    import { IconArrowBackUp, IconArrowDown, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
 
-    export let message: ChatMessage;
-    export let messageRef: HTMLDivElement | undefined;
+    interface Props {
+        message: ChatMessage;
+        messageRef?: HTMLDivElement;
+        onOpenThread?: () => Promise<void>;
+    }
+
+    let { message, messageRef, onOpenThread = undefined }: Props = $props();
 
     function replyToMessage() {
         selectedChatMessageToReply.set(message);
+    }
+
+    async function openThread() {
+        await onOpenThread?.();
     }
 
     function removeMessage() {
@@ -19,11 +29,11 @@
         selectedChatMessageToEdit.set(message);
     }
 
-    function addReaction(event: CustomEvent<string>) {
-        message.addReaction(event.detail).catch((error) => console.error(error));
+    function addReaction(emoji: string) {
+        message.addReaction(emoji).catch((error) => console.error(error));
     }
 
-    const { content, isMyMessage, type, canDelete } = message;
+    let { content, canDelete, canReact, canEdit } = $derived(message);
 </script>
 
 <div class="flex flex-row gap-1 items-center">
@@ -40,16 +50,28 @@
     <button
         class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
         data-testid="replyToMessageButton"
-        on:click={replyToMessage}
+        onclick={replyToMessage}
     >
         <IconArrowBackUp font-size={16} />
     </button>
-    <EmojiButton on:change={addReaction} {messageRef} />
-    {#if isMyMessage && type === "text"}
+    {#if message.openThread}
+        <button
+            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
+            data-testid="openThreadButton"
+            title={$LL.chat.thread.openThreadButtonTitle()}
+            onclick={openThread}
+        >
+            <IconMessageCircle2 font-size={16} />
+        </button>
+    {/if}
+    {#if $canReact}
+        <EmojiButton onchange={addReaction} {messageRef} />
+    {/if}
+    {#if $canEdit}
         <button
             class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
             data-testid="editMessageButton"
-            on:click={selectMessageToEdit}
+            onclick={selectMessageToEdit}
         >
             <IconPencil font-size={16} />
         </button>
@@ -58,7 +80,7 @@
         <button
             class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
             data-testid="removeMessageButton"
-            on:click={removeMessage}
+            onclick={removeMessage}
         >
             <IconTrash font-size={16} />
         </button>

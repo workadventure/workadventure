@@ -6,7 +6,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     editMic: "Modifier le micro",
     editSpeaker: "Modifier la sortie audio",
     active: "Actif",
-    disabled: "Desactivé",
+    disabled: "Désactivé",
     notRecommended: "Non recommandé",
     enable: {
         title: "Allumez votre caméra et votre microphone",
@@ -14,12 +14,23 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     help: {
         title: "Accès à la caméra / au microphone nécessaire",
+        cameraTitle: "Accès à la caméra nécessaire",
+        microphoneTitle: "Accès au microphone nécessaire",
         permissionDenied: "Permission refusée",
+        cameraPermissionDenied: "Permission caméra refusée",
+        microphonePermissionDenied: "Permission microphone refusée",
+        cameraMicrophonePermissionDenied: "Permissions caméra et microphone refusées",
         content: "Vous devez autoriser l'accès à la caméra et au microphone dans votre navigateur.",
+        cameraContent: "Vous devez autoriser l'accès à la caméra dans votre navigateur.",
+        microphoneContent: "Vous devez autoriser l'accès au microphone dans votre navigateur.",
         firefoxContent:
             'Veuillez cocher la case "Se souvenir de cette décision" si vous ne voulez pas que Firefox vous demande sans cesse l\'autorisation.',
         allow: "Autoriser la webcam",
+        allowMicrophone: "Autoriser le microphone",
+        allowCameraMicrophone: "Autoriser la webcam et le microphone",
         continue: "Continuer sans webcam",
+        continueWithoutMicrophone: "Continuer sans microphone",
+        continueCameraMicrophone: "Continuer sans webcam et microphone",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/fr-FR-chrome.png",
@@ -56,17 +67,17 @@ const camera: DeepPartial<Translation["camera"]> = {
         },
     },
     webrtc: {
-        title: "Erreur de connexion avec le serveur vidéo relai",
-        titlePending: "En attente de connexion avec le serveur vidéo relai",
+        title: "Erreur de connexion avec le serveur vidéo relais",
+        titlePending: "En attente de connexion avec le serveur vidéo relais",
         error: "Impossible d'accéder au serveur TURN",
         content:
             "Impossible de se connecter au serveur vidéo relais. La connexion audio/vidéo avec d'autres utilisateurs pourrait ne pas fonctionner.",
         solutionVpn:
-            "Si vous êtes connectés avec <strong>un VPN</strong>, vous devez vous déconnecter du VPN et rafraîchir votre page pour profiter de la meilleure expérience possible.",
+            "Si vous êtes connecté avec <strong>un VPN</strong>, vous devez vous déconnecter du VPN et rafraîchir votre page pour profiter de la meilleure expérience possible.",
         solutionVpnNotAskAgain: "Compris, ne plus afficher cette page 🫡",
         solutionHotspot:
-            "Si vous êtes sur un réseau sécurisé (réseau d'entreprise...), essayez de changer de réseau. Par exemple, en créant un <strong>hotspot Wifi</strong> avec votre smartphone.",
-        solutionNetworkAdmin: "Si vous êtes <strong>administrateur réseay</strong>, consultez le ",
+            "Si vous êtes sur un réseau sécurisé (réseau d'entreprise...), essayez de changer de réseau. Par exemple, en créant un <strong>hotspot Wi-Fi</strong> avec votre smartphone.",
+        solutionNetworkAdmin: "Si vous êtes <strong>administrateur réseau</strong>, consultez le ",
         preparingYouNetworkGuide: '"guide de préparation du réseau"',
         refresh: "Rafraîchir",
         continue: "Continuer",
@@ -84,7 +95,8 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "Plus d'actions",
         closeMenu: "Fermer le menu",
         senPrivateMessage: "Envoyer un message privé (bientôt disponible)",
-        kickoffUser: "Exclure l'utilisateur",
+        giveFloor: "Donner la parole",
+        revokeFloor: "Reprendre la parole",
         muteAudioUser: "Couper le son",
         askToMuteAudioUser: "Demander à couper le son",
         muteAudioEveryBody: "Couper le son pour tout le monde",
@@ -95,7 +107,6 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     backgroundEffects: {
         imageTitle: "Images de fond",
-        videoTitle: "Vidéos de fond",
         blurTitle: "Flou",
         resetTitle: "Désactiver les effets de fond",
         title: "Effets de fond",

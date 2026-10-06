@@ -42,7 +42,7 @@ class OpenIDClient {
                 .catch((e) => {
                     // If this fails, let's try with only the openid-configuration configuration.
                     console.info(
-                        "Failed to fetch OIDC configuration for both .well-known/openid-configuration and oauth-authorization-server. Trying .well-known/openid-configuration only."
+                        "Failed to fetch OIDC configuration for both .well-known/openid-configuration and oauth-authorization-server. Trying .well-known/openid-configuration only.",
                     );
                     this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER + "/.well-known/openid-configuration")
                         .then((issuer) => {
@@ -70,7 +70,7 @@ class OpenIDClient {
         manuallyTriggered: "true" | undefined,
         chatRoomId: string | undefined,
         providerId: string | undefined,
-        providerScopes: string[] | undefined
+        providerScopes: string[] | undefined,
     ): Promise<string> {
         return this.initClient().then((client) => {
             if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
@@ -117,7 +117,7 @@ class OpenIDClient {
     public getUserInfo(
         req: Request,
         res: Response,
-        playUri: string
+        playUri: string,
     ): Promise<{
         tags: string[] | undefined;
         email: string;

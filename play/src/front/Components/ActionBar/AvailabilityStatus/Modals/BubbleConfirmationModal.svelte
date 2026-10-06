@@ -7,7 +7,11 @@
     } from "../../../../Rules/StatusRules/statusChangerFunctions";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
-    export let name: string;
+    interface Props {
+        name: string;
+    }
+
+    let { name }: Props = $props();
 
     const confirmationModalProps: ConfirmationModalPropsInterface = {
         handleAccept: () => {

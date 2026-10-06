@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 globalThis.Phaser = Phaser;
 
 import { describe, expect, it, vi } from "vitest";
@@ -104,34 +104,10 @@ vi.mock("../../Stores/MediaStore", async (importOriginal) => {
     };
 });
 
-vi.mock("../../Enum/EnvironmentVariable.ts", () => {
-    return {
-        MATRIX_ADMIN_USER: "admin",
-        MATRIX_DOMAIN: "domain",
-        STUN_SERVER: "stun:test.com:19302",
-        TURN_SERVER: "turn:test.com:19302",
-        TURN_USER: "user",
-        TURN_PASSWORD: "password",
-        POSTHOG_API_KEY: "test-api-key",
-        POSTHOG_URL: "https://test.com",
-        MAX_USERNAME_LENGTH: 10,
-        PUSHER_URL: "http://localhost",
-        FALLBACK_LOCALE: "en-US",
-        ENABLE_CHAT: true,
-        KLAXOON_ENABLED: false,
-        KLAXOON_CLIENT_ID: "",
-        YOUTUBE_ENABLED: false,
-        GOOGLE_DRIVE_ENABLED: false,
-        GOOGLE_DOCS_ENABLED: false,
-        GOOGLE_SHEETS_ENABLED: false,
-        GOOGLE_SLIDES_ENABLED: false,
-        ERASER_ENABLED: false,
-        EXCALIDRAW_ENABLED: false,
-        EXCALIDRAW_DOMAINS: [],
-        CARDS_ENABLED: false,
-        TLDRAW_ENABLED: false,
-    };
-});
+vi.mock(
+    "../../Enum/EnvironmentVariable.ts",
+    () => import("../../../../tests/front/mocks/frontEnvironmentVariableMock"),
+);
 
 const signal = new AbortController().signal;
 
@@ -147,7 +123,7 @@ describe("SpaceFilter", () => {
                 signal,
                 {
                     metadata: new Map<string, unknown>(),
-                }
+                },
             );
             const spaceUserId = "foo_0";
             const user: Pick<SpaceUserExtended, "spaceUserId"> = {
@@ -167,7 +143,7 @@ describe("SpaceFilter", () => {
                 signal,
                 {
                     metadata: new Map<string, unknown>(),
-                }
+                },
             );
             const spaceUserId = "foo_1";
 
@@ -196,7 +172,7 @@ describe("SpaceFilter", () => {
                 signal,
                 {
                     metadata: new Map<string, unknown>(),
-                }
+                },
             );
             const spaceUserId = "";
 
@@ -228,7 +204,7 @@ describe("SpaceFilter", () => {
                 signal,
                 {
                     metadata: new Map<string, unknown>(),
-                }
+                },
             );
             const spaceUserId = "";
 
@@ -265,7 +241,7 @@ describe("SpaceFilter", () => {
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
                 [],
-                new AbortController().signal
+                new AbortController().signal,
             );
             const spaceUserId = "";
 
@@ -298,16 +274,9 @@ describe("SpaceFilter", () => {
                 emitJoinSpace: vi.fn(),
             } as unknown as RoomConnection;
 
-            const space = await Space.create(
-                "space-name",
-                FilterType.ALL_USERS,
-                mockRoomConnection as unknown as RoomConnection,
-                [],
-                signal,
-                {
-                    metadata: new Map<string, unknown>(),
-                }
-            );
+            const space = await Space.create("space-name", FilterType.ALL_USERS, mockRoomConnection, [], signal, {
+                metadata: new Map<string, unknown>(),
+            });
 
             const unsubscribe = space.usersStore.subscribe(() => {});
 
@@ -330,16 +299,9 @@ describe("SpaceFilter", () => {
                 emitJoinSpace: vi.fn(),
             } as unknown as RoomConnection;
 
-            const space = await Space.create(
-                "space-name",
-                FilterType.ALL_USERS,
-                mockRoomConnection as unknown as RoomConnection,
-                [],
-                signal,
-                {
-                    metadata: new Map<string, unknown>(),
-                }
-            );
+            const space = await Space.create("space-name", FilterType.ALL_USERS, mockRoomConnection, [], signal, {
+                metadata: new Map<string, unknown>(),
+            });
 
             const unsubscribe = space.usersStore.subscribe(() => {});
             unsubscribe();

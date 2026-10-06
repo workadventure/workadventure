@@ -45,6 +45,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "No s'ha detectat cap so del micròfon. Pot haver-hi un problema; prova de canviar el micròfon a la configuració.",
         noSoundWarningPressEnter: "No s'ha detectat cap so del micròfon. Prem Enter per obrir la configuració.",
+        advancedNoiseReduction: "Reducció avançada del soroll",
+        noiseSuppressionInitializing: "S'està inicialitzant la supressió de soroll personalitzada...",
+        noiseSuppressionUnsupported: "Aquest navegador no pot executar la supressió de soroll personalitzada.",
+        noiseSuppressionError:
+            "La supressió de soroll personalitzada ha fallat. Es torna a la supressió de soroll nativa del navegador.",
         openSettings: "Obrir configuració",
         ignore: "Ignora",
     },
@@ -69,6 +74,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         SPEAKER: "En una reunió",
         LIVEKIT: "En una reunió",
         LISTENER: "En una reunió",
+        SOUND_BLOCKED: "So bloquejat",
     },
     subtitle: {
         camera: "Càmera",
@@ -84,7 +90,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Desenfocament mitjà",
         blurHigh: "Desenfocament alt",
         images: "Imatges",
-        videos: "Vídeos",
     },
     help: {
         chat: {
@@ -98,6 +103,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "Mostrar un emoji",
             desc: "Expressa com et sents amb un sol clic utilitzant reaccions emoji. Només toca i ja està!",
+        },
+        raiseHand: {
+            title: "Aixeca la mà",
+            desc: "Indica que vols parlar. La teva mà aixecada es mostra al mapa i al teu vídeo, perquè tothom sàpiga a qui li toca.",
         },
         audioManager: {
             title: "Volum dels sons ambientals",
@@ -124,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "Tria la zona per bloquejar/desbloquejar",
             bubbleLabel: "Bombolla de discussió",
             unnamedArea: "Zona sense nom",
+        },
+        giveBackFloor: {
+            title: "Retornar la paraula",
+            desc: "Se t’ha donat la paraula. Fes clic per deixar de parlar i retornar-la.",
         },
         megaphone: {
             title: "Aturar megàfon",
@@ -172,6 +185,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Pots utilitzar la funció d'imatge en imatge per veure un vídeo o una presentació mentre estàs en una conversa. Simplement fes clic a la icona d'imatge en imatge i gaudeix del teu contingut.",
         },
         videoNotSupported: "El teu navegador no admet l'etiqueta de vídeo.",
+    },
+    raisedHands: {
+        speaking: "Amb la paraula",
+        title: "Mans aixecades",
+        empty: "Ningú no ha aixecat la mà",
+        help: "Mira qui ha aixecat la mà, per ordre, i dóna-li la paraula.",
+        lowerHand: "Abaixa la mà",
+        lowerAllHands: "Abaixa-les totes",
     },
     listStatusTitle: {
         enable: "Canviar el teu estat",

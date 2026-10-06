@@ -35,7 +35,8 @@ export const isApplicationDefinitionInterface = z.object({
     example: "https://www.youtube.com/embed/$1",
   }),
   default: extendApi(z.boolean().optional().default(false), {
-    description: "Is the application the default one and shown in the menu, map edotor, map explorer, and chat. If disabled, the apllication is kept but with a different opacity and tooltip.",
+    description:
+      "Is the application the default one and shown in the menu, map edotor, map explorer, and chat. If disabled, the apllication is kept but with a different opacity and tooltip.",
     example: true,
   }),
   forceNewTab: extendApi(z.boolean().optional().default(false), {
@@ -47,7 +48,8 @@ export const isApplicationDefinitionInterface = z.object({
     example: true,
   }),
   policy: extendApi(z.string().optional(), {
-    description: "The permission policy used by the application. Example: fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture...",
+    description:
+      "The permission policy used by the application. Example: fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture...",
     example: "http://example.com/my/policy.html",
   }),
 });

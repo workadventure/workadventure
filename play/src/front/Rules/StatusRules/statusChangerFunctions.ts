@@ -38,6 +38,6 @@ export const askIfUserWantToJoinBubbleOf = (name: string) => {
         {
             name,
         },
-        "bubbleConfirmationModal"
+        "bubbleConfirmationModal",
     );
 };

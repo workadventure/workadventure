@@ -1,4 +1,3 @@
-import { get } from "svelte/store";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import type { ChatUser } from "../../Connection/ChatConnection";
 
@@ -10,47 +9,44 @@ export interface SelectItem {
 }
 
 export const searchChatMembersRule = () => {
-    const chat = gameManager.chatConnection;
     const userProviderMergerPromise = gameManager.getCurrentGameScene().userProviderMerger;
 
-    async function searchMembers(filterText: string) {
-        try {
-            const chatUsers = await chat.searchChatUsers(filterText);
-            if (chatUsers === undefined) {
-                return [];
-            }
-            return chatUsers.map((user) => ({ value: user.id, label: user.name ?? user.id }));
-        } catch (error) {
-            console.error(error);
-        }
+    /**
+     * Subscribes to the list of users known by the user providers (world members from the Admin API,
+     * users currently connected and users we already have a direct room with).
+     *
+     * The subscription must be kept alive for as long as the list is displayed: the providers only
+     * load their users (and only honor `setFilter`) while their store has at least one subscriber.
+     */
+    async function subscribeToWorldMembers(onMembers: (members: SelectItem[]) => void): Promise<() => void> {
+        const userProviderMerger = await userProviderMergerPromise;
 
-        return [];
-    }
-
-    async function searchWorldMembers(filterText: string): Promise<SelectItem[]> {
-        try {
-            const userProviderMerger = await userProviderMergerPromise;
-            const chatUsersMap = get(userProviderMerger.usersByRoomStore);
+        return userProviderMerger.usersByRoomStore.subscribe((chatUsersMap) => {
             const chatUsers = Array.from(chatUsersMap.values())
                 .flatMap((room) => room.users)
-                .filter((user) => user.username?.includes(filterText) && user.chatId) as (ChatUser & {
-                chatId: string;
-            })[];
-            if (chatUsers === undefined) {
-                return [];
-            }
-            return chatUsers.map((user) => ({
-                value: user.chatId,
-                label: user.username ?? user.spaceUserId?.toString(),
-                verified: true,
-                created: false,
-            }));
-        } catch (error) {
-            console.error(error);
-        }
+                .filter((user) => user.chatId) as (ChatUser & { chatId: string })[];
 
-        return [];
+            onMembers(
+                chatUsers.map((user) => ({
+                    value: user.chatId,
+                    label: user.username ?? user.spaceUserId?.toString(),
+                    verified: true,
+                    created: false,
+                })),
+            );
+        });
     }
 
-    return { searchMembers, searchWorldMembers };
+    /**
+     * Asks the user providers to reload their users for the given search text.
+     *
+     * This is what makes users that are not part of the members initially loaded from the Admin API
+     * (only the first few hundreds are) reachable: the search is performed by the Admin API itself.
+     */
+    async function searchWorldMembers(searchText: string): Promise<void> {
+        const userProviderMerger = await userProviderMergerPromise;
+        await userProviderMerger.setFilter(searchText);
+    }
+
+    return { subscribeToWorldMembers, searchWorldMembers };
 };

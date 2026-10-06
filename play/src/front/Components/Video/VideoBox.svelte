@@ -3,17 +3,22 @@
     import type { VideoBox } from "../../Space/VideoBox";
     import { playerMovedInTheLast10Seconds } from "../../Stores/VideoLayoutStore";
     import VideoBoxOptimizer from "./VideoBoxOptimizer.svelte";
+    import type { VideoBoxLayout } from "./VideoBoxLayout";
 
-    export let videoBox: VideoBox;
-    export let isOnOneLine: boolean;
-    export let oneLineMode: "vertical" | "horizontal";
-    export let videoWidth: number;
-    export let videoHeight: number | undefined;
-    export let intersectionObserver: IntersectionObserver | undefined;
+    interface Props {
+        videoBox: VideoBox;
+        layout: VideoBoxLayout;
+        // Without an observer, the video is always loaded.
+        intersectionObserver?: IntersectionObserver;
+    }
 
-    const streamable = videoBox.streamable;
+    let { videoBox, layout, intersectionObserver }: Props = $props();
 </script>
 
-{#if (($highlightedEmbedScreen !== videoBox || $playerMovedInTheLast10Seconds) && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
-    <VideoBoxOptimizer {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} {intersectionObserver} />
+<!--
+    The picture-in-picture grid shows every box. Elsewhere, the highlighted box is displayed in the highlight area
+    instead, except when the player just moved (the highlight area is then hidden).
+-->
+{#if layout.kind === "pipGrid" || $highlightedEmbedScreen !== videoBox || $playerMovedInTheLast10Seconds}
+    <VideoBoxOptimizer {videoBox} {layout} {intersectionObserver} />
 {/if}

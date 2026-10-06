@@ -5,16 +5,17 @@ import { createZipFromDirectory } from "./utils/zip";
 import { RENDERER_MODE } from "./utils/environment";
 import { map_storage_url, maps_domain } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.use({
     baseURL: map_storage_url,
 });
 
 test.describe("Map-storage Upload API @nomobile", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
+
     test("users are asked to reconnect when a map is updated", async ({ request, browser }) => {
         const uploadFile1 = await request.put("map1.wam", {
             multipart: {
@@ -79,10 +80,6 @@ test.describe("Map-storage Upload API @nomobile", () => {
         // Now let's check the user in map1 did reload, but not on map2
         await expect(page.locator(".test-class")).toHaveText("New version of map detected. Refresh needed");
         await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 
     test("users are informed and disconnected when a map is deleted", async ({ request, browser }) => {
@@ -132,9 +129,6 @@ test.describe("Map-storage Upload API @nomobile", () => {
 
         await expect(page.getByText("This map has been deleted")).toBeVisible();
         await expect(page2.getByText("This map has been deleted")).toBeHidden();
-
-        await page2.context().close();
-        await page.context().close();
     });
 
     test("can upload ZIP file", async ({ request }) => {
@@ -186,6 +180,40 @@ test.describe("Map-storage Upload API @nomobile", () => {
         const accessFile5 = await request.get(`subdir/file2.txt`);
         expect(accessFile5.ok()).toBeTruthy();
         expect(await accessFile5.text()).toContain("world");
+    });
+
+    test("can upload ZIP file to the advertised upload endpoint", async ({ request }) => {
+        // This is what the map uploader (@workadventure/upload-maps) does: it first asks the map-storage where to
+        // POST the ZIP (the endpoint is public), then POSTs there, declaring the world with X-Map-Storage-Host.
+        const endpointUrl = new URL("upload-endpoint", map_storage_url);
+        endpointUrl.username = "";
+        endpointUrl.password = "";
+        const endpointResponse = await request.get(endpointUrl.toString());
+        expect(endpointResponse.ok()).toBeTruthy();
+        const { url } = (await endpointResponse.json()) as { url: string };
+        // Without DIRECT_UPLOAD_URL configured, the map-storage advertises its own /upload
+        expect(url).toMatch(/\/upload$/);
+
+        const credentials = new URL(map_storage_url);
+        const uploadUrl = new URL(url);
+        uploadUrl.username = credentials.username;
+        uploadUrl.password = credentials.password;
+
+        createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
+        const uploadFile = await request.post(uploadUrl.toString(), {
+            headers: {
+                "X-Map-Storage-Host": credentials.host,
+            },
+            multipart: {
+                file: fs.createReadStream("./assets/file1.zip"),
+                directory: "/direct-upload",
+            },
+        });
+        expect(uploadFile.ok()).toBeTruthy();
+
+        const accessFile = await request.get("direct-upload/file1.txt");
+        expect(accessFile.ok()).toBeTruthy();
+        expect(await accessFile.text()).toContain("hello");
     });
 
     test("not authenticated requests are rejected", async ({ request }) => {
@@ -598,7 +626,7 @@ test.describe("Map-storage Upload API @nomobile", () => {
 
         const listOfMaps2 = await request.get("maps");
         const maps2 = await listOfMaps2.json();
-        expect(maps2["single-map.wam"]).toBeUndefined();
+        expect(maps2["maps"]["single-map.wam"]).toBeUndefined();
     });
 
     test("special characters support", async ({ request }) => {
@@ -648,10 +676,83 @@ test.describe("Map-storage Upload API @nomobile", () => {
         });
         expect(patch.ok()).toBeTruthy();
 
+        // Assert the patch landed on the file the GET route resolves to. A read and a write that
+        // disagree on the storage key both answer 200 while leaving this stale.
+        const accessFileWithEmojiPatched = await request.get(`🍕.wam`);
+        expect(await accessFileWithEmojiPatched.text()).toContain("https://example.com/newmap.tmj");
+
         const deleteFile = await request.delete(`🍕.wam`);
-        expect(deleteFile.ok()).toBeTruthy();
+        expect(deleteFile.status()).toBe(204);
 
         const accessFileWithEmoji3 = await request.get(`🍕.wam`);
-        expect(accessFileWithEmoji3.ok()).toBeFalsy();
+        expect(accessFileWithEmoji3.status()).toBe(404);
     });
+
+    // A storage key is literal: the ZIP upload writes the entry names as-is, so a map in a
+    // directory named "My maps" is stored under a key holding a real space. Every route that
+    // derives its key from a URL sees "My%20maps" instead and has to convert it back.
+    //
+    // The test above cannot catch a failure to do so, because it creates its file with PUT: the
+    // writer and the readers then share whatever spelling the request carried, and agree with each
+    // other while both being wrong. These cases cross that boundary — written by the ZIP upload,
+    // read back through a URL.
+    //
+    // Playwright has no test.each: a loop over the cases is how it parameterizes tests.
+    const directoriesNeedingEncoding = [
+        { name: "a space", directory: "My maps" },
+        { name: "an accent", directory: "Dossier accentué" },
+        // "+" only means "space" in a query string, so it must survive as a literal here.
+        { name: "a plus sign", directory: "plus+dir" },
+        // The widest of the set: four UTF-8 bytes, so four escapes for one character in the URL,
+        // and a surrogate pair once decoded back.
+        { name: "an emoji", directory: "🍕" },
+    ];
+
+    for (const { name, directory } of directoriesNeedingEncoding) {
+        test(`a map in a directory containing ${name} can be read, patched and deleted`, async ({ request }) => {
+            const wamPath = `${directory}/map.wam`;
+
+            createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
+            const upload = await request.post("upload", {
+                multipart: {
+                    file: fs.createReadStream("./assets/file1.zip"),
+                    directory: `/${directory}`,
+                },
+            });
+            expect(upload.ok()).toBeTruthy();
+
+            // The map list is built by listing the storage itself, so this pins the spelling of the
+            // key on disk: literal, never percent-encoded.
+            const listOfMaps = await request.get("maps");
+            expect((await listOfMaps.json())["maps"][wamPath]).toBeDefined();
+
+            // From here on Playwright percent-encodes the path, so every request exercises the
+            // "URL back to storage key" conversion.
+            const beforePatch = await request.get(wamPath);
+            expect(beforePatch.status()).toBe(200);
+
+            const patch = await request.patch(wamPath, {
+                headers: {
+                    "Content-Type": "application/json-patch+json",
+                },
+                data: JSON.stringify([{ op: "replace", path: "/mapUrl", value: "https://example.com/patched.tmj" }]),
+            });
+            expect(patch.status()).toBe(200);
+
+            const afterPatch = await request.get(wamPath);
+            expect(await afterPatch.text()).toContain("https://example.com/patched.tmj");
+
+            const deleted = await request.delete(wamPath);
+            expect(deleted.status()).toBe(204);
+
+            const afterDelete = await request.get(wamPath);
+            expect(afterDelete.status()).toBe(404);
+
+            const listAfterDelete = await request.get("maps");
+            expect((await listAfterDelete.json())["maps"][wamPath]).toBeUndefined();
+
+            // Leave the storage as we found it for the tests sharing this map-storage.
+            expect((await request.delete(directory)).status()).toBe(204);
+        });
+    }
 });

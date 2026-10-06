@@ -4,13 +4,17 @@
 
     import tooltipArrow from "../images/arrow-top.svg";
 
-    export let text: string;
-    export let rightPosition = "false";
-    export let leftPosition = "false";
+    interface Props {
+        text: string;
+        rightPosition?: boolean | string;
+        leftPosition?: boolean | string;
+    }
+
+    let { text, rightPosition = false, leftPosition = false }: Props = $props();
 
     let tooltipElement: HTMLDivElement;
     let textElement: HTMLSpanElement;
-    let toolTipPosition = "top-tooltip";
+    let toolTipPosition = $state("top-tooltip");
 
     function hide() {
         textElement?.style.setProperty("visibility", "hidden");
@@ -20,9 +24,9 @@
     }
 
     onMount(() => {
-        if (leftPosition === "true") {
+        if (leftPosition === true) {
             toolTipPosition = "left-tooltip";
-        } else if (rightPosition === "true") {
+        } else if (rightPosition === true) {
             toolTipPosition = "right-tooltip";
         }
         tooltipElement?.parentElement?.addEventListener("mouseenter", show);

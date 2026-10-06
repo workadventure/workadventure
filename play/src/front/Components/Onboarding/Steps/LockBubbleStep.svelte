@@ -1,14 +1,15 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { fly } from "svelte/transition";
     import LL from "../../../../i18n/i18n-svelte";
 
-    const dispatch = createEventDispatcher<{
-        next: void;
-    }>();
+    interface Props {
+        onnext?: () => void;
+    }
+
+    const { onnext }: Props = $props();
 
     function handleNext() {
-        dispatch("next");
+        onnext?.();
     }
 </script>
 
@@ -34,7 +35,7 @@
             </p>
             <button
                 class="mt-4 px-4 py-2 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
-                on:click={handleNext}
+                onclick={handleNext}
             >
                 {$LL.onboarding.lockBubble.next()}
             </button>

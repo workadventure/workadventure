@@ -1,18 +1,19 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { fly } from "svelte/transition";
     import LL from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { isMobileOnboarding } from "../../../Stores/OnboardingStore";
 
-    const dispatch = createEventDispatcher<{
-        next: void;
-    }>();
+    interface Props {
+        onnext?: () => void;
+    }
+
+    const { onnext }: Props = $props();
 
     const worldName = gameManager.getCurrentGameScene()?.room?.roomName ?? "WorkAdventure";
 
     function handleNext() {
-        dispatch("next");
+        onnext?.();
     }
 </script>
 
@@ -38,7 +39,7 @@
             <div class="flex justify-center gap-4 pt-4">
                 <button
                     class="px-5 py-3 sm:px-6 min-h-11 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
-                    on:click={handleNext}
+                    onclick={handleNext}
                 >
                     {$LL.onboarding.complete.finish()}
                 </button>

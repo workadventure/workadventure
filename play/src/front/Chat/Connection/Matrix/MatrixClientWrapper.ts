@@ -1,23 +1,26 @@
 import { Buffer } from "buffer";
-import Olm from "@matrix-org/olm";
 
 import type { ICreateClientOpts, MatrixClient, SecretStorage } from "matrix-js-sdk";
-import { createClient, IndexedDBCryptoStore, IndexedDBStore } from "matrix-js-sdk";
+import { createClient, IndexedDBCryptoStore, IndexedDBStore, MatrixError } from "matrix-js-sdk";
 
 import type { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
-import { openModal } from "svelte-modals";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import type { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
 import { customMatrixLogger } from "./CustomMatrixLogger";
+import { clearMatrixStores } from "./MatrixStoreCleanup";
+import { initialSyncAwareFetch } from "./MatrixInitialSyncFetch";
+// Inline worker (bundled as a same-origin blob) that drives matrix-js-sdk's IndexedDB store off the
+// main thread. See matrixIndexedDbWorker.ts for why the entry script and `?worker&inline` are needed.
+import MatrixIndexedDbWorker from "./matrixIndexedDbWorker?worker&inline";
+import { modals } from "@wa-modals";
 
-globalThis.Olm = Olm;
 window.Buffer = Buffer;
 
 export interface MatrixClientWrapperInterface {
     initMatrixClient(): Promise<MatrixClient>;
-    cacheSecretStorageKey(keyId: string, key: Uint8Array): void;
+    cacheSecretStorageKey(keyId: string, key: Uint8Array<ArrayBuffer>): void;
 }
 
 export interface MatrixLocalUserStore {
@@ -55,15 +58,29 @@ export class InvalidLoginTokenError extends Error {
     }
 }
 
+/**
+ * The user is logged in to WorkAdventure but this browser holds no Matrix session at all: no access token
+ * and no login token to exchange (storage evicted, session revoked on an earlier visit, ...). Nothing in the
+ * current page can recover from that; only a fresh OpenID login mints a new Matrix login token, so the UI
+ * must offer the "reconnect" prompt rather than a dead-end error banner.
+ */
+export class MissingMatrixCredentialsError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "MissingMatrixCredentialsError";
+    }
+}
+
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
     private client!: MatrixClient;
-    private secretStorageKeys: Record<string, Uint8Array> = {};
+    private secretStorageKeys: Record<string, Uint8Array<ArrayBuffer>> = {};
+    private secretStorageKeyRequestPromise: Promise<[string, Uint8Array<ArrayBuffer>] | null> | undefined;
     private clientClosed = false;
 
     constructor(
         private baseUrl: string,
         private localUserStore: MatrixLocalUserStore,
-        private _createClient: (opts: ICreateClientOpts) => MatrixClient = createClient
+        private _createClient: (opts: ICreateClientOpts) => MatrixClient = createClient,
     ) {}
 
     public async initMatrixClient(): Promise<MatrixClient> {
@@ -106,17 +123,17 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         if (!accessToken) {
             console.error("Unable to connect to matrix, access token is null");
-            throw new Error("Unable to connect to matrix, access token is null");
+            throw new MissingMatrixCredentialsError("Unable to connect to matrix, access token is null");
         }
 
         if (!matrixUserId) {
             console.error("Unable to connect to matrix, matrixUserId is null");
-            throw new Error("Unable to connect to matrix, matrixUserId is null");
+            throw new MissingMatrixCredentialsError("Unable to connect to matrix, matrixUserId is null");
         }
 
         if (!matrixDeviceId) {
             console.error("Unable to connect to matrix, matrixDeviceId is null");
-            throw new Error("Unable to connect to matrix, matrixDeviceId is null");
+            throw new MissingMatrixCredentialsError("Unable to connect to matrix, matrixDeviceId is null");
         }
 
         const { matrixStore, matrixCryptoStore } = this.matrixWebClientStore(matrixUserId);
@@ -142,6 +159,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 //VerificationMethod.Reciprocate,
             ],
             timelineSupport: true,
+            fetchFn: initialSyncAwareFetch,
         };
 
         if (this.clientClosed) {
@@ -152,7 +170,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         this.client = this._createClient(matrixCreateClientOpts);
 
         if (oldMatrixUserId !== matrixUserId) {
-            await this.client.clearStores();
+            await clearMatrixStores(this.client);
         }
 
         return this.client;
@@ -178,11 +196,16 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             indexedDB: globalThis.indexedDB,
             localStorage: globalThis.localStorage,
             dbName: "workadventure-matrix",
+            // Run sync persistence on a dedicated web worker so the structured-clone of the
+            // accumulated /sync blob (persistSyncData -> store.put) does not block the main
+            // thread. Without this, matrix-js-sdk falls back to the main-thread backend and can
+            // freeze the UI for several seconds on large stores.
+            workerFactory: typeof Worker !== "undefined" ? () => new MatrixIndexedDbWorker() : undefined,
         });
 
         const indexDbCryptoStore = new IndexedDBCryptoStore(
             globalThis.indexedDB,
-            `crypto-store-${this.baseUrl}-${matrixUserId}`
+            `crypto-store-${this.baseUrl}-${matrixUserId}`,
         );
 
         return { matrixStore: indexDbStore, matrixCryptoStore: indexDbCryptoStore };
@@ -190,7 +213,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
     private async retrieveMatrixConnectionDataFromLoginToken(
         matrixServerUrl: string,
-        loginToken: string
+        loginToken: string,
     ): Promise<{
         matrixUserId: string;
         accessToken: string;
@@ -204,13 +227,12 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         const client = this._createClient(options);
 
         try {
-            const { user_id, access_token, refresh_token, expires_in_ms, device_id } = await client.login(
-                "m.login.token",
-                {
-                    token: loginToken,
-                    initial_device_display_name: "WorkAdventure",
-                }
-            );
+            // login(type, data) is deprecated in 41.8.0 in favour of loginRequest({ type, ...data }).
+            const { user_id, access_token, refresh_token, expires_in_ms, device_id } = await client.loginRequest({
+                type: "m.login.token",
+                token: loginToken,
+                initial_device_display_name: "WorkAdventure",
+            });
 
             this.localUserStore.setMatrixUserId(user_id);
             this.localUserStore.setMatrixAccessToken(access_token);
@@ -235,8 +257,22 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 deviceId: device_id,
             };
         } catch (e) {
-            console.error("Invalid login token", e);
-            throw new InvalidLoginTokenError("Invalid login token");
+            if (e instanceof MatrixError) {
+                // The homeserver answered, so the login token has been spent (an m.login.token is single use)
+                // or was rejected outright. Either way it must never be replayed: the branch that exchanges it
+                // runs before the stored access token is even looked at, so keeping a dead token here would
+                // make every later initMatrixClient() fail on it - locking the user out of the chat for good,
+                // even though perfectly valid credentials are sitting in local storage.
+                this.localUserStore.setMatrixLoginToken(null);
+                console.error("Invalid login token", e);
+                throw new InvalidLoginTokenError("Invalid login token");
+            }
+
+            // No answer from the homeserver (network failure, CORS, aborted request): the token was most
+            // likely never seen and stays usable, so keep it for the next attempt and report what really
+            // happened instead of blaming the token.
+            console.error("Unable to exchange the Matrix login token", e);
+            throw e;
         }
     }
 
@@ -244,7 +280,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         keys,
     }: {
         keys: Record<string, SecretStorageKeyDescriptionAesV1>;
-    }): Promise<[string, Uint8Array] | null> {
+    }): Promise<[string, Uint8Array<ArrayBuffer>] | null> {
         let keyId = await this.client.secretStorage.getDefaultKeyId();
         let keyInfo!: SecretStorage.SecretStorageKeyDescription;
         if (keyId) {
@@ -269,15 +305,30 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             return [keyId, this.secretStorageKeys[keyId]];
         }
 
-        const key = await new Promise<Uint8Array | null>((resolve, reject) => {
+        if (this.secretStorageKeyRequestPromise) {
+            return this.secretStorageKeyRequestPromise;
+        }
+
+        this.secretStorageKeyRequestPromise = this.openSecretStorageKeyDialog(keyId, keyInfo).finally(() => {
+            this.secretStorageKeyRequestPromise = undefined;
+        });
+
+        return this.secretStorageKeyRequestPromise;
+    }
+
+    private async openSecretStorageKeyDialog(
+        keyId: string,
+        keyInfo: SecretStorage.SecretStorageKeyDescription,
+    ): Promise<[string, Uint8Array<ArrayBuffer>] | null> {
+        const key = await new Promise<Uint8Array<ArrayBuffer> | null>((resolve) => {
             if (!matrixSecurity.shouldDisplayModal) {
                 resolve(null);
                 return;
             }
-            openModal(AccessSecretStorageDialog, {
+            modals.open(AccessSecretStorageDialog, {
                 keyInfo,
                 matrixClient: this.client,
-                onClose: (key: Uint8Array | null) => resolve(key),
+                onClose: (key: Uint8Array<ArrayBuffer> | null) => resolve(key),
             });
         });
 
@@ -289,7 +340,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         return [keyId, key];
     }
 
-    public cacheSecretStorageKey(keyId: string, key: Uint8Array) {
+    public cacheSecretStorageKey(keyId: string, key: Uint8Array<ArrayBuffer>) {
         this.secretStorageKeys[keyId] = key;
     }
 

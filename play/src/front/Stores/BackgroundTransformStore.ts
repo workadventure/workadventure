@@ -1,17 +1,23 @@
-import { writable, derived } from "svelte/store";
+import { writable, derived, readable } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
-import type { BackgroundConfig, BackgroundMode } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+import {
+    getBackgroundProcessingUnsupportedReason,
+    isBackgroundMode,
+    type BackgroundConfig,
+    type BackgroundMode,
+} from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 
 /**
  * Store for background transformation settings
  */
 function createBackgroundConfigStore() {
+    // A stored mode that no longer exists (e.g. the removed "video" mode) falls back to "none".
+    const storedMode = localUserStore.getBackgroundMode();
     const initialConfig: BackgroundConfig = {
-        mode: (localUserStore.getBackgroundMode() as BackgroundMode) || "none", // Default to blur for testing
-        blurAmount: localUserStore.getBackgroundBlurAmount() || 15, // Nice blur amount for testing
+        mode: isBackgroundMode(storedMode) ? storedMode : "none",
+        blurAmount: localUserStore.getBackgroundBlurAmount() || 15,
         backgroundImage: localUserStore.getBackgroundImage() || undefined,
-        backgroundVideo: localUserStore.getBackgroundVideo() || undefined,
     };
 
     const { subscribe, set, update } = writable<BackgroundConfig>(initialConfig);
@@ -22,7 +28,7 @@ function createBackgroundConfigStore() {
             update((config) => {
                 const newConfig = { ...config, mode };
                 localUserStore.setBackgroundMode(mode);
-                analyticsClient.settingBackground(mode);
+                analyticsClient.trackAdminEvent("settings.background.changed", { backgroundType: mode });
                 return newConfig;
             });
         },
@@ -41,14 +47,6 @@ function createBackgroundConfigStore() {
                 return newConfig;
             });
         },
-        setBackgroundVideo: (videoUrl: string) => {
-            update((config) => {
-                const newConfig = { ...config, backgroundVideo: videoUrl, mode: "video" as BackgroundMode };
-                localUserStore.setBackgroundVideo(videoUrl);
-                localUserStore.setBackgroundMode("video");
-                return newConfig;
-            });
-        },
         reset: () => {
             const resetConfig = { ...initialConfig, mode: "none" as BackgroundMode };
             set(resetConfig);
@@ -64,13 +62,16 @@ export const backgroundConfigStore = createBackgroundConfigStore();
  */
 export const backgroundProcessingEnabledStore = derived(
     backgroundConfigStore,
-    ($backgroundConfig) => $backgroundConfig.mode !== "none"
+    ($backgroundConfig) => $backgroundConfig.mode !== "none",
 );
 
 /**
- * Store indicating if MediaPipe is supported
+ * Whether this device can run background effects at all. Probed on first subscription (it creates a WebGL2
+ * context), so opening the settings panel is what pays for it.
  */
-export const mediaPipeSupported = writable(true); // Will be updated after checking browser support
+export const backgroundProcessingSupportedStore = readable(true, (set) => {
+    set(getBackgroundProcessingUnsupportedReason() === null);
+});
 
 /**
  * Predefined background options
@@ -136,23 +137,6 @@ export const backgroundPresets = {
             name: "Ronchi",
             url: "./static/images/background/Ronchi.jpg",
             thumbnail: "./static/images/background/thumbnail/Ronchi.jpg",
-        },
-    ],
-    videos: [
-        {
-            name: "Waterfall",
-            url: "./static/Videos/background/waterfall.mp4",
-            thumbnail: "./static/Videos/background/thumbnail/waterfall.jpg",
-        },
-        {
-            name: "Stars",
-            url: "./static/Videos/background/stars.mp4",
-            thumbnail: "./static/Videos/background/thumbnail/stars.jpg",
-        },
-        {
-            name: "Matrix",
-            url: "./static/Videos/background/matrix.mp4",
-            thumbnail: "./static/Videos/background/thumbnail/matrix.jpg",
         },
     ],
 };

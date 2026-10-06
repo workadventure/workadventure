@@ -1,6 +1,6 @@
-import type { ComponentType } from "svelte";
 import { writable } from "svelte/store";
 import { v4 } from "uuid";
+import type { WorkAdventureComponent } from "../../types/component";
 
 export type WokaMenuAction = {
     uuid?: string;
@@ -9,9 +9,10 @@ export type WokaMenuAction = {
     protected?: boolean;
     priority?: number;
     style?: "is-success" | "is-error" | "is-primary" | string;
-    actionIcon?: string | ComponentType;
+    actionIcon?: string | WorkAdventureComponent;
     testId?: string;
 };
+
 export interface WokaMenuData {
     wokaName: string;
     actions: WokaMenuAction[];

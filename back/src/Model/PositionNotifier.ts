@@ -9,7 +9,7 @@
  * number of players around the current player.
  */
 import type { EmoteEventMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
-import type { Movable } from "../Model/Movable";
+import type { Movable } from "@workadventure/shared-utils";
 import type { PositionInterface } from "../Model/PositionInterface";
 import type { RoomSocket } from "../RoomManager";
 import { User } from "../Model/User";
@@ -55,7 +55,7 @@ export class PositionNotifier {
         private onEmote: EmoteCallback,
         private onLockGroup: LockGroupCallback,
         private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
-        private onGroupUsersUpdated: GroupUsersUpdatedCallback
+        private onGroupUsersUpdated: GroupUsersUpdatedCallback,
     ) {}
 
     private getZoneDescriptorFromCoordinates(x: number, y: number): ZoneDescriptor {
@@ -120,7 +120,7 @@ export class PositionNotifier {
                 this.onPlayerDetailsUpdated,
                 this.onGroupUsersUpdated,
                 i,
-                j
+                j,
             );
             this.zones[j][i] = zone;
         }

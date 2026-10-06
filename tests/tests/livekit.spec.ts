@@ -15,20 +15,18 @@ import Megaphone from "./utils/map-editor/megaphone";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import AreaLivekit from "./utils/AreaLivekit";
+import { dismissNoMicrophoneSoundToastWhenShown } from "./utils/noMicrophoneSoundToast";
 
 test.setTimeout(240_000);
 
-test.describe("Meeting actions test", () => {
-    test.beforeEach(
-        "Ignore tests on mobilechromium because map editor not available for mobile devices",
-        ({ browserName, page, browser }) => {
-            //Map Editor not available on mobile adn webkit have issue with camera
-            if (browserName === "webkit" || isMobile(page) || browser.browserType().name() === "firefox") {
-                test.skip();
-                return;
-            }
-        },
-    );
+test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
+    test.beforeEach("Ignore tests on firefox, mobile and webkit", ({ browserName, page, browser }) => {
+        //Map Editor not available on mobile adn webkit have issue with camera
+        if (browserName === "webkit" || isMobile(page) || browser.browserType().name() === "firefox") {
+            test.skip();
+            return;
+        }
+    });
 
     test("Should display 4 cameras on screen", async ({ browser }) => {
         // Go to the empty map
@@ -65,9 +63,7 @@ test.describe("Meeting actions test", () => {
         await expect(page.locator("#cameras-container").getByText("Mallory")).toBeVisible({ timeout: 30_000 });
 
         // Required because the "No sound" popup can clutter the view and prevent us clicking the "All settings" close button.
-        await page.addLocatorHandler(page.getByTestId("no-microphone-sound-ignore"), async () => {
-            await page.getByTestId("no-microphone-sound-ignore").click();
-        });
+        await dismissNoMicrophoneSoundToastWhenShown(page);
 
         // Let's enable the video quality display and test it works
         await Menu.openMenu(page);
@@ -84,14 +80,6 @@ test.describe("Meeting actions test", () => {
         await expect(page.getByRole("cell", { name: "video/VP9" }).first()).toBeHidden();
 
         // Clean up
-        await page.close();
-        await userBob.close();
-        await userEve.close();
-        await userMallory.close();
-        await userBob.context().close();
-        await userEve.context().close();
-        await userMallory.context().close();
-        await page.context().close();
     });
 
     test("Should display 5 cameras on screen", async ({ browser }) => {
@@ -200,19 +188,6 @@ test.describe("Meeting actions test", () => {
 
         await expectLivekitConnectionsCountToBe(page, 4);
         await expectWebRtcConnectionsCountToBe(page, 0);
-
-        // Clean up
-        await page.close();
-        await userBob.close();
-        await userEve.close();
-        await userMallory.close();
-        await userJohn.close();
-
-        await userBob.context().close();
-        await userEve.context().close();
-        await userMallory.context().close();
-        await userJohn.context().close();
-        await page.context().close();
     });
 
     test("Should create and join livekit room only when there is a speaker @oidc", async ({ browser, request }) => {
@@ -265,10 +240,10 @@ test.describe("Meeting actions test", () => {
         await Menu.clickStartMegaphone(page);
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userAlice.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userBob.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userEve.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userAlice.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userBob.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userEve.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
         await expectLivekitRoomsCountToBe(userAlice, 1);
         await expectLivekitRoomsCountToBe(userBob, 1);
@@ -293,10 +268,10 @@ test.describe("Meeting actions test", () => {
         await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
         await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
 
-        await expect(page2.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userAlice.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userBob.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
-        await expect(userEve.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userAlice.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userBob.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+        await expect(userEve.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
         await expectLivekitRoomsCountToBe(userAlice, 1);
         await expectLivekitRoomsCountToBe(userBob, 1);
@@ -312,12 +287,6 @@ test.describe("Meeting actions test", () => {
         await expectLivekitRoomsCountToBe(userAlice, 0);
         await expectLivekitRoomsCountToBe(userBob, 0);
         await expectLivekitRoomsCountToBe(userEve, 0);
-
-        await page2.context().close();
-        await page.context().close();
-        await userAlice.context().close();
-        await userBob.context().close();
-        await userEve.context().close();
     });
 
     test("should keep microphone and camera state when joining/leaving a livekit room @oidc", async ({
@@ -345,9 +314,6 @@ test.describe("Meeting actions test", () => {
         await Map.teleportToPosition(page, 0, 0);
         await Menu.expectButtonState(page, "camera-button", "normal");
         await Menu.expectButtonState(page, "microphone-button", "forbidden");
-
-        await page.context().close();
-        await page.close();
     });
 
     test("Should handle rapid transitions between podium and audience zones @oidc", async ({ browser, request }) => {
@@ -469,11 +435,5 @@ test.describe("Meeting actions test", () => {
         });
 
         // Cleanup
-        await speakerAdmin.context().close();
-        await speakerAlice.context().close();
-        await audienceEve.context().close();
-        await audienceJohn.context().close();
-        await audienceMallory.context().close();
-        await switchingUserPage.context().close();
     });
 });

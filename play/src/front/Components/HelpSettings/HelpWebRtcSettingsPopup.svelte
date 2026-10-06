@@ -8,8 +8,9 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import Spinner from "../Icons/Spinner.svelte";
     import InputCheckbox from "../Input/InputCheckbox.svelte";
+    import Button from "../UI/Button.svelte";
 
-    let notAskAgain = false;
+    let notAskAgain = $state(false);
 
     function refresh() {
         window.location.reload();
@@ -42,7 +43,10 @@
 <form
     class="helpCameraSettings z-[600] bg-contrast/80 backdrop-blur rounded-lg text-white self-center pointer-events-auto flex flex-col m-auto w-full md:w-2/3 2xl:w-1/4 text-sm md:text-base"
     style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
-    on:submit|preventDefault={close}
+    onsubmit={(event) => {
+        event.preventDefault();
+        close();
+    }}
     transition:fly={{ y: -50, duration: 500 }}
 >
     <section class="mb-0 p-4">
@@ -73,16 +77,30 @@
         <InputCheckbox
             id="askagain"
             bind:value={notAskAgain}
-            onChange={onChangesAskAgain}
+            onchange={onChangesAskAgain}
             label={$LL.camera.webrtc.solutionVpnNotAskAgain()}
         />
     </section>
     <section class="justify-center bottom-0 w-full bg-contrast p-4 flex flex-row space-x-4 mt-4 rounded-b-lg">
-        <button class="btn bg-white/10 hover:bg-white/20 grow" on:click|preventDefault={refresh}
-            >{$LL.camera.webrtc.refresh()}</button
+        <Button
+            class="bg-white/10 hover:bg-white/20 grow"
+            onclick={(event) => {
+                event.preventDefault();
+                refresh();
+            }}
         >
-        <button type="submit" class="btn btn-secondary grow" on:click|preventDefault={close}
-            >{$LL.camera.webrtc.continue()}</button
+            {$LL.camera.webrtc.refresh()}
+        </Button>
+        <Button
+            type="submit"
+            variant="secondary"
+            class="grow"
+            onclick={(event) => {
+                event.preventDefault();
+                close();
+            }}
         >
+            {$LL.camera.webrtc.continue()}
+        </Button>
     </section>
 </form>

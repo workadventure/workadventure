@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "Aquest mapa s'ha suprimit",
         deletePromptSubtitle: "Se t'ha desconnectat d'aquesta sala.",
         deletePromptDetails: "Actualitzar no restaurarà aquest mapa perquè ja no existeix.",
+        editionFailed: "No s'ha pogut desar el teu canvi i s'ha desfet.",
     },
     sideBar: {
         areaEditor: "Eina d'edició d'àrees",
@@ -75,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Cancel·lar",
                 validate: "Validar",
             },
-            disabled: "La integració de Jitsi està desactivada per a aquesta sala ❌",
             actionButtonLabel: "Iniciar una reunió Jitsi",
         },
         playAudio: {
@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Reproduir música",
             error: "No s'ha pogut carregar el so",
             actionButtonLabel: "Reproduir música",
+            playForAllUsersLabel: "Reproduir per a tots els usuaris del mapa",
+            audibleRadiusLabel: "Radi audible (en píxels)",
+            audibleRadiusPlaceholder: "Audible arreu si és buit",
         },
         openWebsite: {
             label: "Obrir enllaç",
@@ -122,14 +125,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Els usuaris al pòdium (escenari) poden parlar a tots els assistents a l\'àrea "Audiència" corresponent.',
             nameLabel: "Nom",
             namePlaceholder: "EscenariPrincipal",
-            disabled: "El pòdium està desactivat per a aquesta sala ❌",
             actionButtonLabel: "Unir-se al pòdium",
         },
         listenerMegaphone: {
             label: "Audiència",
             description: "Els usuaris a l'àrea d'audiència poden escoltar l'orador al pòdium vinculat.",
             nameLabel: "Nom del pòdium",
-            disabled: "L'audiència està desactivada per a aquesta sala ❌",
             namePlaceholder: "LaMevaZonaDeParlant",
             waitingMediaLinkLabel: "Mitjà a mostrar abans que comenci la transmissió en directe",
             waitingMediaLinkPlaceholder: "https://www....",
@@ -308,6 +309,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "Iniciar amb el micròfon silenciat",
                 startWithVideoMuted: "Iniciar amb el vídeo tancat",
                 disableChat: "Desactivar el xat",
+                raiseHandEnabled: "Permetre aixecar la mà",
                 livekitRoomAdminTag: "Etiqueta de moderador per a la sala de reunió",
                 cancel: "Cancel·lar",
                 validate: "Validar",
@@ -329,6 +331,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Opcions avançades",
         chatEnabled: "Associar un canal de xat dedicat",
+        allowTalking: "Permetre parlar i formar bombolles",
+        raiseHandEnabled: "Permetre aixecar la mà",
         noProperties: "No s'han definit propietats",
     },
     areaEditor: {
@@ -458,7 +462,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Mode auditori activat",
                 audienceVideoFeedbackActivatedDisabled: "Mode auditori desactivat",
                 audienceVideoFeedbackActivatedHelper:
-                    "Mode auditori activat: Rep el flux de càmera i micròfon de tots els usuaris (amb càmera i micròfon activats) a la sala/món. Però l'assistent no podrà veure els altres assistents. Desactivat per defecte.",
+                    "Mode auditori activat: Rep el flux de càmera de tots els usuaris (amb càmera activada) a la sala/món, sense el seu àudio. Però l'assistent no podrà veure els altres assistents. Desactivat per defecte.",
                 error: {
                     title: "Siusplau, introduïu un nom",
                     save: {

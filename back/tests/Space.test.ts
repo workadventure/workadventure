@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { BackToPusherSpaceMessage, FilterType, PrivateEvent, PublicEvent, SpaceUser } from "@workadventure/messages";
 import { mock } from "vitest-mock-extended";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import { Space } from "../src/Model/Space";
 import type { SpacesWatcher } from "../src/Model/SpacesWatcher";
 import type { EventProcessor } from "../src/Model/EventProcessor";
@@ -36,7 +37,7 @@ describe("Space with filter", () => {
                     ["foo_1", spaceUser1],
                     ["foo_2", spaceUser2],
                     ["foo_3", spaceUser3],
-                ])
+                ]),
             );
 
             const writeFunctionMock = vi.fn();
@@ -58,9 +59,10 @@ describe("Space with filter", () => {
                             spaceName: "test",
                             users: [spaceUser1, spaceUser2, spaceUser3],
                             metadata: JSON.stringify({}),
+                            state: JSON.stringify(emptySpaceState()),
                         },
                     },
-                })
+                }),
             );
         });
 
@@ -90,11 +92,11 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             space.addUser(watcher, spaceUser);
@@ -109,7 +111,7 @@ describe("Space with filter", () => {
                             user: spaceUser,
                         },
                     },
-                })
+                }),
             );
 
             expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
@@ -122,7 +124,7 @@ describe("Space with filter", () => {
                             user: spaceUser,
                         },
                     },
-                })
+                }),
             );
         });
         it("should not send user to the watcher if result of filter is false", () => {
@@ -146,11 +148,11 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             space.addUser(watcher, spaceUser);
@@ -181,11 +183,11 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             space.addUser(watcher, spaceUser);
@@ -218,11 +220,11 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             space.updateUser(
@@ -231,7 +233,7 @@ describe("Space with filter", () => {
                     ...spaceUser,
                     megaphoneState: true,
                 },
-                ["megaphoneState"]
+                ["megaphoneState"],
             );
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
@@ -249,7 +251,7 @@ describe("Space with filter", () => {
                             },
                         },
                     },
-                })
+                }),
             );
 
             expect(mockWriteFunction2).toHaveBeenCalledWith(
@@ -264,7 +266,7 @@ describe("Space with filter", () => {
                             },
                         },
                     },
-                })
+                }),
             );
         });
         it("should send update user message when user is updated and the filter result remains true and the user already matched the filter", () => {
@@ -289,11 +291,11 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             space.updateUser(
@@ -304,7 +306,7 @@ describe("Space with filter", () => {
                     name: "test2",
                     cameraState: true,
                 },
-                ["megaphoneState", "name", "cameraState"]
+                ["megaphoneState", "name", "cameraState"],
             );
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
@@ -325,7 +327,7 @@ describe("Space with filter", () => {
                             updateMask: ["megaphoneState", "name", "cameraState"],
                         },
                     },
-                })
+                }),
             );
 
             expect(mockWriteFunction2).toHaveBeenCalledWith(
@@ -343,7 +345,7 @@ describe("Space with filter", () => {
                             updateMask: ["megaphoneState", "name", "cameraState"],
                         },
                     },
-                })
+                }),
             );
         });
         it("should send delete user message when user is updated and the filter result becomes false and the user previously matched the filter", () => {
@@ -368,11 +370,11 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             space.updateUser(
@@ -381,7 +383,7 @@ describe("Space with filter", () => {
                     ...spaceUser,
                     megaphoneState: false,
                 },
-                ["megaphoneState"]
+                ["megaphoneState"],
             );
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
@@ -396,7 +398,7 @@ describe("Space with filter", () => {
                             spaceUserId: "foo_1",
                         },
                     },
-                })
+                }),
             );
 
             expect(mockWriteFunction2).toHaveBeenCalledWith(
@@ -408,7 +410,7 @@ describe("Space with filter", () => {
                             spaceUserId: "foo_1",
                         },
                     },
-                })
+                }),
             );
         });
         it("should not send anything when user is updated and the filter result remains false and the user did not previously match the filter", () => {
@@ -433,11 +435,11 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             space.updateUser(
@@ -446,7 +448,7 @@ describe("Space with filter", () => {
                     ...spaceUser,
                     megaphoneState: false,
                 },
-                ["megaphoneState"]
+                ["megaphoneState"],
             );
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(0);
@@ -475,11 +477,11 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             space.updateUser(
@@ -488,7 +490,7 @@ describe("Space with filter", () => {
                     ...spaceUser,
                     megaphoneState: false,
                 },
-                ["megaphoneState"]
+                ["megaphoneState"],
             );
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(0);
@@ -522,11 +524,11 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([
                     ["foo_1", spaceUser],
                     ["foo_2", spaceUser],
-                ])
+                ]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
             // Initialize usersToNotify maps needed by removeUser
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
@@ -534,11 +536,11 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([
                     ["foo_1", spaceUser],
                     ["foo_2", spaceUser],
-                ])
+                ]),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher2,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
 
             space.removeUser(watcher, "foo_1");
@@ -555,7 +557,7 @@ describe("Space with filter", () => {
                             spaceUserId: "foo_1",
                         },
                     },
-                })
+                }),
             );
         });
 
@@ -584,11 +586,11 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([
                     ["foo_1", spaceUser],
                     ["foo_2", spaceUser],
-                ])
+                ]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
             // Initialize usersToNotify maps needed by removeUser
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
@@ -596,11 +598,11 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([
                     ["foo_1", spaceUser],
                     ["foo_2", spaceUser],
-                ])
+                ]),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher2,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
 
             space.removeUser(watcher, "foo_1");
@@ -618,7 +620,7 @@ describe("Space with filter", () => {
                             spaceUserId: "foo_1",
                         },
                     },
-                })
+                }),
             );
 
             expect(mockWriteFunction2).toHaveBeenCalledWith(
@@ -630,7 +632,7 @@ describe("Space with filter", () => {
                             spaceUserId: "foo_1",
                         },
                     },
-                })
+                }),
             );
         });
         it("shouldn't send remove user message to all watchers when user is removed and the filter result becomes false", () => {
@@ -657,11 +659,11 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([
                     ["foo_1", spaceUser],
                     ["foo_2", spaceUser],
-                ])
+                ]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
             // Initialize usersToNotify maps needed by removeUser
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
@@ -669,11 +671,11 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([
                     ["foo_1", spaceUser],
                     ["foo_2", spaceUser],
-                ])
+                ]),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher2,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
 
             space.removeUser(watcher, "foo_1");
@@ -701,15 +703,14 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([])
+                new Map<string, SpaceUser>([]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
-            space.publishMetadata(
-                {
+            space.publishMetadata({
                 foo: "bar",
             });
 
@@ -727,7 +728,7 @@ describe("Space with filter", () => {
                             }),
                         },
                     },
-                })
+                }),
             );
 
             expect(mockWriteFunction2).toHaveBeenCalledWith(
@@ -741,7 +742,7 @@ describe("Space with filter", () => {
                             }),
                         },
                     },
-                })
+                }),
             );
         });
         it("should send update metadata message to all watchers", () => {
@@ -760,16 +761,15 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([])
+                new Map<string, SpaceUser>([]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
-            space.publishMetadata(
-                {
-                    "metadata-1": "value-1",
+            space.publishMetadata({
+                "metadata-1": "value-1",
             });
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
@@ -786,7 +786,7 @@ describe("Space with filter", () => {
                             }),
                         },
                     },
-                })
+                }),
             );
 
             expect(mockWriteFunction2).toHaveBeenCalledWith(
@@ -800,10 +800,9 @@ describe("Space with filter", () => {
                             }),
                         },
                     },
-                })
+                }),
             );
         });
-
     });
 
     describe("dispatchPublicEvent", () => {
@@ -823,17 +822,17 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([])
+                new Map<string, SpaceUser>([]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             await space.dispatchPublicEvent(
                 PublicEvent.fromPartial({
                     spaceName: "test",
-                })
+                }),
             );
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
@@ -847,7 +846,7 @@ describe("Space with filter", () => {
                             spaceName: "test",
                         },
                     },
-                })
+                }),
             );
 
             expect(mockWriteFunction2).toHaveBeenCalledWith(
@@ -858,7 +857,7 @@ describe("Space with filter", () => {
                             spaceName: "test",
                         },
                     },
-                })
+                }),
             );
         });
     });
@@ -876,6 +875,11 @@ describe("Space with filter", () => {
             handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
             handleMeetingConnectionRestartMessage: vi.fn(),
+            handleMemberJoined: vi.fn(),
+            handleMemberActiveChanged: vi.fn(),
+            handleMemberLeft: vi.fn(),
+            handleSpaceKindChanged: vi.fn(),
+            closeSession: vi.fn().mockReturnValue(false),
             destroy: vi.fn(),
         });
 
@@ -890,19 +894,19 @@ describe("Space with filter", () => {
                 communicationManager;
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", user]])
+                new Map<string, SpaceUser>([["foo_1", user]]),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher2,
-                new Map<string, SpaceUser>([["foo_1", user]])
+                new Map<string, SpaceUser>([["foo_1", user]]),
             );
 
             space.removeUser(watcher, "foo_1");
@@ -922,11 +926,11 @@ describe("Space with filter", () => {
                 communicationManager;
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", user]])
+                new Map<string, SpaceUser>([["foo_1", user]]),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher,
-                new Map<string, SpaceUser>([])
+                new Map<string, SpaceUser>([]),
             );
 
             space.removeUser(watcher, "foo_1");
@@ -944,7 +948,7 @@ describe("Space with filter", () => {
                             spaceUserId: "foo_1",
                         },
                     },
-                })
+                }),
             );
         });
 
@@ -959,11 +963,11 @@ describe("Space with filter", () => {
                 communicationManager;
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", user]])
+                new Map<string, SpaceUser>([["foo_1", user]]),
             );
 
             space.deleteUserToNotify(watcher, user);
@@ -982,11 +986,11 @@ describe("Space with filter", () => {
                 communicationManager;
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", user]])
+                new Map<string, SpaceUser>([["foo_1", user]]),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", user]])
+                new Map<string, SpaceUser>([["foo_1", user]]),
             );
 
             space.removeWatcher(watcher);
@@ -1006,19 +1010,19 @@ describe("Space with filter", () => {
                 communicationManager;
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", user]])
+                new Map<string, SpaceUser>([["foo_1", user]]),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
             (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher2,
-                new Map<string, SpaceUser>([["foo_1", user]])
+                new Map<string, SpaceUser>([["foo_1", user]]),
             );
 
             space.removeWatcher(watcher);
@@ -1037,7 +1041,7 @@ describe("Space with filter", () => {
                 communicationManager;
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             await space.stopRecordingByServer();
@@ -1068,11 +1072,11 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+                new Map<string, SpaceUser>([["foo_1", spaceUser]]),
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher2,
-                new Map<string, SpaceUser>()
+                new Map<string, SpaceUser>(),
             );
 
             space.dispatchPrivateEvent(
@@ -1080,7 +1084,7 @@ describe("Space with filter", () => {
                     senderUserId: spaceUser.spaceUserId,
                     spaceName: "test",
                     receiverUserId: "foo_1",
-                })
+                }),
             );
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
@@ -1096,7 +1100,7 @@ describe("Space with filter", () => {
                             sender: spaceUser,
                         },
                     },
-                })
+                }),
             );
         });
     });
@@ -1116,9 +1120,245 @@ describe("Space with filter", () => {
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map<string, SpaceUser>([])
+                new Map<string, SpaceUser>([]),
             );
             expect(space.canBeDeleted()).toBe(false);
         });
+    });
+
+    describe("removeUser and usersToNotify", () => {
+        const createCommunicationManagerMock = () => ({
+            handleUserDeleted: vi.fn().mockResolvedValue(undefined),
+            handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
+            handleRecorderLeftSpace: vi.fn().mockResolvedValue(false),
+        });
+
+        const setup = (usersToNotify: Map<string, SpaceUser>) => {
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
+            const communicationManager = createCommunicationManagerMock();
+            const watcher = mock<SpacesWatcher>({ id: "watcher-1", write: vi.fn() });
+            const user = SpaceUser.fromPartial({ spaceUserId: "foo_1", uuid: "uuid-test" });
+
+            (space as unknown as { communicationManager: typeof communicationManager }).communicationManager =
+                communicationManager;
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", user]]),
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher,
+                usersToNotify,
+            );
+
+            return { space, communicationManager, watcher, user };
+        };
+
+        // Without this, the CommunicationManager keeps the departed user in its "users to notify" registry
+        // forever: removeUser drops the entry from the space map, so removeWatcher can no longer repair it.
+        it("should notify the communication manager when it drops the user from usersToNotify itself", () => {
+            const user = SpaceUser.fromPartial({ spaceUserId: "foo_1", uuid: "uuid-test" });
+            const { space, communicationManager, watcher } = setup(new Map([["foo_1", user]]));
+
+            space.removeUser(watcher, "foo_1");
+
+            expect(communicationManager.handleUserToNotifyDeleted).toHaveBeenCalledTimes(1);
+            expect(communicationManager.handleUserToNotifyDeleted).toHaveBeenCalledWith(
+                expect.objectContaining({ spaceUserId: "foo_1" }),
+            );
+        });
+
+        it("should not notify the communication manager when the pusher already unwatched the user", () => {
+            const { space, communicationManager, watcher } = setup(new Map());
+
+            space.removeUser(watcher, "foo_1");
+
+            expect(communicationManager.handleUserToNotifyDeleted).not.toHaveBeenCalled();
+        });
+    });
+});
+
+describe("Space state", () => {
+    function spaceWithUsers(
+        filterType: FilterType.ALL_USERS | FilterType.LIVE_STREAMING_USERS,
+        ...users: Partial<SpaceUser>[]
+    ) {
+        const space = new Space("test", filterType, mock<EventProcessor>(), [], "world");
+        const write = vi.fn();
+        const watcher = mock<SpacesWatcher>({ id: "uuid-watcher", write });
+        (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+            watcher,
+            new Map(users.map((user) => [user.spaceUserId ?? "", SpaceUser.fromPartial(user)])),
+        );
+        (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+            watcher,
+            new Map(),
+        );
+        return { space, watcher, write };
+    }
+
+    function sentPatches(write: ReturnType<typeof vi.fn>): unknown[] {
+        return write.mock.calls
+            .map(([message]) => (message as BackToPusherSpaceMessage).message)
+            .filter((message) => message?.$case === "spaceStatePatchMessage")
+            .map((message) =>
+                message?.$case === "spaceStatePatchMessage"
+                    ? (JSON.parse(message.spaceStatePatchMessage.patch) as unknown)
+                    : undefined,
+            );
+    }
+
+    it("broadcasts a change as a JSON Patch, and nothing when nothing changed", () => {
+        const { space, write } = spaceWithUsers(FilterType.ALL_USERS);
+
+        space.updateState((state) => {
+            state.raisedHands.push({ spaceUserId: "foo_1", name: "Alice", at: 1 });
+        });
+        space.updateState(() => {});
+
+        expect(sentPatches(write)).toEqual([
+            [{ op: "add", path: "/raisedHands/0", value: { spaceUserId: "foo_1", name: "Alice", at: 1 } }],
+        ]);
+    });
+
+    it("leaves the state untouched when the mutation throws", () => {
+        const { space, write } = spaceWithUsers(FilterType.ALL_USERS);
+
+        expect(() =>
+            space.updateState((state) => {
+                state.raisedHands.push({ spaceUserId: "foo_1", name: "Alice", at: 1 });
+                throw new Error("refused");
+            }),
+        ).toThrow("refused");
+
+        expect(space.getState().raisedHands).toEqual([]);
+        expect(sentPatches(write)).toEqual([]);
+    });
+
+    it("sends the whole state to a new watcher", () => {
+        const { space } = spaceWithUsers(FilterType.ALL_USERS);
+        space.updateState((state) => {
+            state.raisedHands.push({ spaceUserId: "foo_1", name: "Alice", at: 1 });
+        });
+        const write = vi.fn();
+
+        space.addWatcher(mock<SpacesWatcher>({ id: "uuid-watcher-2", write }));
+
+        const message = (write.mock.calls[0][0] as BackToPusherSpaceMessage).message;
+        expect(message?.$case).toBe("initSpaceUsersMessage");
+        if (message?.$case === "initSpaceUsersMessage") {
+            expect(JSON.parse(message.initSpaceUsersMessage.state)).toEqual(space.getState());
+        }
+    });
+
+    it("applies a state query sent by a user, and answers after the patch", async () => {
+        const { space, watcher, write } = spaceWithUsers(FilterType.ALL_USERS, {
+            spaceUserId: "foo_1",
+            name: "Alice",
+        });
+
+        const answer = await space.handleQuery(watcher, {
+            id: 1,
+            spaceName: "test",
+            query: {
+                $case: "spaceStateQuery",
+                spaceStateQuery: {
+                    spaceUserId: "foo_1",
+                    query: { query: { $case: "raiseHand", raiseHand: { raised: true } } },
+                },
+            },
+        });
+
+        expect(answer.answer?.$case).toBe("spaceStateAnswer");
+        expect(space.getState().raisedHands.map((entry) => entry.name)).toEqual(["Alice"]);
+        expect(sentPatches(write)).toHaveLength(1);
+    });
+
+    it("answers an error when the query is refused", async () => {
+        const { space, watcher } = spaceWithUsers(FilterType.LIVE_STREAMING_USERS, {
+            spaceUserId: "foo_1",
+            name: "Alice",
+        });
+
+        const answer = await space.handleQuery(watcher, {
+            id: 1,
+            spaceName: "test",
+            query: {
+                $case: "spaceStateQuery",
+                spaceStateQuery: {
+                    spaceUserId: "foo_1",
+                    query: { query: { $case: "lowerHand", lowerHand: { targetSpaceUserId: "foo_2" } } },
+                },
+            },
+        });
+
+        expect(answer.answer?.$case).toBe("error");
+    });
+
+    it("records the kind a client declares, and refuses one outside the enum", async () => {
+        const { space, watcher, write } = spaceWithUsers(FilterType.ALL_USERS, { spaceUserId: "foo_1", name: "Alice" });
+        const setKind = (kind: string) =>
+            space.handleQuery(watcher, {
+                id: 1,
+                spaceName: "test",
+                query: {
+                    $case: "spaceStateQuery",
+                    spaceStateQuery: {
+                        spaceUserId: "foo_1",
+                        query: { query: { $case: "setKind", setKind: { kind } } },
+                    },
+                },
+            });
+
+        expect((await setKind("megaphone")).answer?.$case).toBe("spaceStateAnswer");
+        expect((await setKind("megaphone")).answer?.$case).toBe("spaceStateAnswer");
+        expect((await setKind("lobby")).answer?.$case).toBe("error");
+
+        expect(space.getState().kind).toBe("megaphone");
+        expect(sentPatches(write)).toEqual([[{ op: "add", path: "/kind", value: "megaphone" }]]);
+    });
+
+    it("takes the floor back from a holder whose stream stops", async () => {
+        const { space, watcher } = spaceWithUsers(
+            FilterType.LIVE_STREAMING_USERS,
+            { spaceUserId: "speaker", name: "Sam", megaphoneState: true },
+            { spaceUserId: "guest", name: "Gus" },
+        );
+        await space.handleQuery(watcher, {
+            id: 1,
+            spaceName: "test",
+            query: {
+                $case: "spaceStateQuery",
+                spaceStateQuery: {
+                    spaceUserId: "speaker",
+                    query: { query: { $case: "giveFloor", giveFloor: { targetSpaceUserId: "guest" } } },
+                },
+            },
+        });
+        space.updateUser(watcher, SpaceUser.fromPartial({ spaceUserId: "guest", megaphoneState: true }), [
+            "megaphoneState",
+        ]);
+        expect(space.getState().floorHolders).toHaveLength(1);
+
+        space.updateUser(watcher, SpaceUser.fromPartial({ spaceUserId: "guest", megaphoneState: false }), [
+            "megaphoneState",
+        ]);
+
+        expect(space.getState().floorHolders).toEqual([]);
+    });
+
+    it("drops a leaving user from the raised hands", () => {
+        const { space, watcher } = spaceWithUsers(
+            FilterType.ALL_USERS,
+            { spaceUserId: "foo_1", name: "Alice" },
+            { spaceUserId: "foo_2", name: "Bob" },
+        );
+        space.updateState((state) => {
+            state.raisedHands.push({ spaceUserId: "foo_1", name: "Alice", at: 1 });
+            state.raisedHands.push({ spaceUserId: "foo_2", name: "Bob", at: 2 });
+        });
+
+        space.removeUser(watcher, "foo_1");
+
+        expect(space.getState().raisedHands.map((entry) => entry.spaceUserId)).toEqual(["foo_2"]);
     });
 });

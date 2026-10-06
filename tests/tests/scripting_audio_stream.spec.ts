@@ -18,8 +18,12 @@ async function playAudioStream(page: Page, frequency: number) {
         page,
         async ({ frequency }) => {
             const sampleRate = 24000;
+            const meeting = window.meeting;
+            if (!meeting) {
+                throw new Error("No meeting joined");
+            }
 
-            const audioStream = await WA.player.proximityMeeting.startAudioStream(sampleRate);
+            const audioStream = await meeting.startAudioStream(sampleRate);
 
             // Generate a sine wave
             const amplitude = 1;
@@ -30,7 +34,9 @@ async function playAudioStream(page: Page, frequency: number) {
                 samples[i] = amplitude * Math.sin((2 * Math.PI * frequency * i) / sampleRate);
             }
 
+            // eslint-disable-next-line require-atomic-updates
             window.streamInterrupted = false;
+            // eslint-disable-next-line require-atomic-updates
             window.audioStream = audioStream;
             audioStream.appendAudioData(samples).catch((e) => {
                 window.streamInterrupted = true;
@@ -46,6 +52,10 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
         page,
         async ({ volume }) => {
             const sampleRate = 24000;
+            const meeting = window.meeting;
+            if (!meeting) {
+                throw new Error("No meeting joined");
+            }
 
             return new Promise<void>((resolve, reject) => {
                 const timeout = setTimeout(() => {
@@ -54,16 +64,14 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
                     subscription.unsubscribe();
                 }, 20000);
 
-                const subscription = WA.player.proximityMeeting
-                    .listenToAudioStream(sampleRate)
-                    .subscribe((data: Float32Array) => {
-                        // At some point, the volume of the sound should be high enough to be noticed in the sample
-                        if (data.some((sample) => Math.abs(sample) > volume)) {
-                            resolve();
-                            subscription.unsubscribe();
-                            clearTimeout(timeout);
-                        }
-                    });
+                const subscription = meeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
+                    // At some point, the volume of the sound should be high enough to be noticed in the sample
+                    if (data.some((sample) => Math.abs(sample) > volume)) {
+                        resolve();
+                        subscription.unsubscribe();
+                        clearTimeout(timeout);
+                    }
+                });
             });
         },
         { volume },
@@ -73,7 +81,8 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
 async function waitForJoinProximityChat(page: Page): Promise<void> {
     await evaluateScript(page, async () => {
         return new Promise<void>((resolve) => {
-            const joinSubscription = WA.player.proximityMeeting.onJoin().subscribe(() => {
+            const joinSubscription = WA.player.meetings.onJoin().subscribe((meeting) => {
+                window.meeting = meeting;
                 resolve();
                 joinSubscription.unsubscribe();
             });
@@ -102,7 +111,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
         await Map.teleportToPosition(page, 32, 32);
 
         // Open new page for alice
-        const alice = await getPage(
+        await using alice = await getPage(
             browser,
             "Alice",
             publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"),
@@ -132,14 +141,20 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
         await expect.poll(() => evaluateScript(page, () => window.streamInterrupted)).toBe(false);
 
         // Now, let's add more users to test the switch to Livekit
-        const alice2 = await getPage(
+        await using alice2 = await getPage(
             browser,
             "Alice",
             publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"),
         );
         await Menu.turnOffMicrophone(alice2);
+        const alice2ProximityChatPromise = waitForJoinProximityChat(alice2);
         await Map.teleportToPosition(alice2, 32, 32);
-        const eve = await getPage(browser, "Eve", publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+        await alice2ProximityChatPromise;
+        await using eve = await getPage(
+            browser,
+            "Eve",
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"),
+        );
         await Menu.turnOffMicrophone(eve);
         const proximityChatPromise = waitForJoinProximityChat(eve);
         await Map.teleportToPosition(eve, 32, 32);
@@ -177,10 +192,9 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
 
         // Now, let's disconnect eve to force the switch back to WebRTC
         await eve.close();
-        await eve.context().close();
 
         // Let's wait for eve to be disconnected
-        await expect(alice2.getByText("Eve", { exact: true })).toBeHidden();
+        await expect(alice2.getByText("Eve", { exact: true }).first()).toBeHidden();
 
         // Wait for the delayed LiveKit -> WebRTC fallback before asserting audio again.
         await expectLivekitConnectionsCountToBe(alice2, 0, 35_000);
@@ -188,21 +202,18 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
 
         // After disconnect, alice2 should still receive the sound through WebRTC
         await hasAudioStream(alice2);
-
-        await alice.close();
-        await alice.context().close();
-        await alice2.close();
-        await alice2.context().close();
-
-        await page.context().close();
     });
 
     test("can play and listen to sound files", async ({ browser }, { project }) => {
-        const bob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+        await using bob = await getPage(
+            browser,
+            "Bob",
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"),
+        );
         await Map.teleportToPosition(bob, 32, 32);
 
         // Open new page for alice
-        const alice = await getPage(
+        await using alice = await getPage(
             browser,
             "Alice",
             publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"),
@@ -210,15 +221,19 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
         await Menu.turnOffMicrophone(alice);
 
         // Move alice to the same position as bob
+        const aliceProximityChatPromise = waitForJoinProximityChat(alice);
+        const bobProximityChatPromise = waitForJoinProximityChat(bob);
         await Map.teleportToPosition(alice, 32, 32);
+        await aliceProximityChatPromise;
+        await bobProximityChatPromise;
 
         await expect(alice.getByTestId("screenShareButton")).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
 
         // Test play sound scripting
         await evaluateScript(bob, async () => {
-            WA.player.proximityMeeting
-                .playSound("http://maps.workadventure.localhost/tests/Audience.mp3")
-                .catch((err) => console.error(err));
+            window.meeting.playSound("http://maps.workadventure.localhost/tests/Audience.mp3").catch((err) => {
+                console.error(err);
+            });
         });
 
         // Test listen to sound scripting

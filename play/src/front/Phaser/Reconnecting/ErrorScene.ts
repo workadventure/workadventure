@@ -1,5 +1,7 @@
+import * as Phaser from "phaser";
 import { TextField } from "../Components/TextField";
 import { gameManager } from "../Game/GameManager";
+
 import Image = Phaser.GameObjects.Image;
 import Sprite = Phaser.GameObjects.Sprite;
 import Text = Phaser.GameObjects.Text;
@@ -54,7 +56,7 @@ export class ErrorScene extends Phaser.Scene {
             this,
             this.game.renderer.width / 2,
             this.game.renderer.height / 2 + 24,
-            this.subTitle
+            this.subTitle,
         );
 
         this.messageField = this.add.text(
@@ -64,7 +66,7 @@ export class ErrorScene extends Phaser.Scene {
             {
                 fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif',
                 fontSize: "10px",
-            }
+            },
         );
         this.messageField.setOrigin(0.5, 0.5);
 

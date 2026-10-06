@@ -2,27 +2,24 @@
     import { onMount } from "svelte";
     import MediaBox from "../Video/MediaBox.svelte";
     import type { VideoBox } from "../../Space/VideoBox";
-    import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import type { TokenRemovalHandle } from "../../Utils/TokenBucket";
     import type { DocumentPictureInPictureEvent } from "./PictureInPicture/PictureInPictureWindow";
     import { videoBoxVisibilityTokenBucket } from "./VideoBoxVisibilityTokenBucket";
+    import { pipTileStyle } from "./PictureInPicture/pictureInPictureGridLayout";
+    import type { VideoBoxLayout } from "./VideoBoxLayout";
 
-    export let videoBox: VideoBox;
-    export let isOnOneLine: boolean;
-    export let oneLineMode: "vertical" | "horizontal";
-    export let videoWidth: number;
-    export let videoHeight: number | undefined;
-    export let intersectionObserver: IntersectionObserver | undefined;
+    interface Props {
+        videoBox: VideoBox;
+        layout: VideoBoxLayout;
+        // Only loads the video while the box intersects the observer's root. Without an observer, it is always loaded.
+        intersectionObserver?: IntersectionObserver;
+    }
 
-    let isVisible = !intersectionObserver;
-    let videoBoxElement: HTMLDivElement | undefined;
+    let { videoBox, layout, intersectionObserver }: Props = $props();
 
-    const orderStore = videoBox.displayOrder;
-
-    $: isFirst = $orderStore === 0;
-
-    $: isLast = $orderStore === $oneLineStreamableCollectionStore.length - 1;
+    let isVisible = $state((() => !intersectionObserver)());
+    let videoBoxElement: HTMLDivElement | undefined = $state();
 
     let currentDocumentPictureInPictureWindow: Window | undefined;
     let intersectionObserverRefreshTimeout: number | undefined;
@@ -116,9 +113,9 @@
         };
     });
 
-    let oldIntersectionObserver: IntersectionObserver | undefined = undefined;
+    let oldIntersectionObserver: IntersectionObserver | undefined = $state(undefined);
 
-    $: {
+    $effect(() => {
         if (videoBoxElement && oldIntersectionObserver !== intersectionObserver) {
             oldIntersectionObserver?.unobserve(videoBoxElement);
             oldIntersectionObserver = intersectionObserver;
@@ -127,25 +124,44 @@
                 isVisible = true;
             }
         }
-    }
+    });
+
+    let layoutStyle = $derived.by(() => {
+        switch (layout.kind) {
+            case "pipGrid":
+                return `width: 100%; max-width: 100%; height: 100%; max-height: 100%; ${pipTileStyle(layout.tile)}`;
+            case "row":
+                return `order: ${layout.order}; width: ${layout.width}px; max-width: ${layout.width}px;`;
+            case "grid":
+                return `order: ${layout.order}; width: ${layout.width}px; max-width: ${layout.width}px;${
+                    layout.height !== undefined ? ` height: ${layout.height}px; max-height: ${layout.height}px;` : ""
+                }`;
+        }
+    });
+
+    let layoutClass = $derived.by(() => {
+        switch (layout.kind) {
+            case "pipGrid":
+                return "h-full w-full min-h-0 min-w-0";
+            case "row":
+                return `aspect-video basis-40 shrink-0 min-w-40 grow ${layout.isFirst ? "ml-auto" : ""} ${
+                    layout.isLast ? "mr-auto" : ""
+                }`;
+            case "grid":
+                return `shrink-0 ${layout.height === undefined ? "aspect-video" : ""}`;
+        }
+    });
 </script>
 
+<!--
+    This element must be a direct child of the cameras container (no wrapper in between): it carries all the
+    flex/grid item styles ("order", flex basis/grow/shrink, ml-auto / mr-auto,
+    grid placement in picture-in-picture). On a nested element, the parent layout would ignore them.
+-->
 <div
     bind:this={videoBoxElement}
-    style={`order: ${$orderStore}; width: ${videoWidth}px; max-width: ${videoWidth}px;${
-        videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
-    }`}
-    class={` overflow-hidden
-    ${
-        isOnOneLine
-            ? oneLineMode === "horizontal"
-                ? `pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box ${isFirst ? "ml-auto" : ""} ${
-                      isLast ? "mr-auto" : ""
-                  }`
-                : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
-            : "pointer-events-auto shrink-0 camera-box"
-    }`}
-    class:aspect-video={videoHeight === undefined}
+    style={layoutStyle}
+    class={`pointer-events-auto overflow-hidden camera-box ${layoutClass}`}
 >
     {#if isVisible}
         <MediaBox {videoBox} />

@@ -1,6 +1,7 @@
 import { generateSchema } from "@anatine/zod-openapi";
 import {
-    isAdminApiData,
+    analyticsEvent,
+    analyticsEventsBatch,
     isErrorApiErrorData,
     isErrorApiRedirectData,
     isErrorApiRetryData,
@@ -14,7 +15,7 @@ import {
     CompanionDetail,
     isCapabilities,
 } from "@workadventure/messages";
-import type { SchemaObject } from "openapi3-ts";
+import type { SchemaObject } from "openapi3-ts/oas31";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
 import { WorldChatMembersData } from "./WorldChatMembersData";
 import { IceServer } from "./IceServer";
@@ -23,23 +24,26 @@ class SwaggerGenerator {
     definitions(type: string | null): {
         definitions: { [K: string]: SchemaObject };
     } {
-        const definitions = {
-            definitions: {
-                AdminApiData: generateSchema(isAdminApiData),
-                ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
-                FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
-                MapDetailsData: generateSchema(isMapDetailsData),
-                RoomRedirect: generateSchema(isRoomRedirect),
-                WokaDetail: generateSchema(WokaDetail),
-                WorldChatMembersData: generateSchema(WorldChatMembersData),
-            },
-        };
         if (type === "external") {
-            return definitions;
+            return {
+                definitions: {
+                    ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
+                    FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
+                    MapDetailsData: generateSchema(isMapDetailsData),
+                    RoomRedirect: generateSchema(isRoomRedirect),
+                    WokaDetail: generateSchema(WokaDetail),
+                    WorldChatMembersData: generateSchema(WorldChatMembersData),
+                },
+            };
         }
         return {
             definitions: {
-                AdminApiData: generateSchema(isAdminApiData),
+                // The union, not its 166 members: @anatine/zod-openapi renders a
+                // ZodDiscriminatedUnion as one `oneOf` + `discriminator` node, whereas
+                // registering members one by one (as ErrorApiData does, with four)
+                // would put 166 definitions at the top level.
+                AnalyticsEvent: generateSchema(analyticsEvent),
+                AnalyticsEventsBatch: generateSchema(analyticsEventsBatch),
                 Capabilities: generateSchema(isCapabilities),
                 CompanionTextureCollectionList: generateSchema(CompanionTextureCollection.array()),
                 CompanionDetail: generateSchema(CompanionDetail),

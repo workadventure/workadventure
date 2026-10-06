@@ -86,14 +86,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
         await page.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
-
-        await page2.context().close();
-
-        await page.context().close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -158,16 +154,12 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
-        await expect(page.getByText("Admin2", { exact: true })).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("Admin2", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
         await page.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
-
-        await page2.context().close();
-
-        await page.context().close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -277,11 +269,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await pageMeetingA.getByTestId("screenShareButton").click();
         await Menu.expectButtonState(pageMeetingA, "screenShareButton", "normal");
-
-        await pageMeetingA.context().close();
-        await pageMeetingB.context().close();
-        await pageOutsideC.context().close();
-        await pageOutsideD.context().close();
     });
 
     test('Successfully set "SpeakerZone" in the map editor', async ({ browser, request }) => {
@@ -331,10 +318,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(2);
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(2);
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 
     // SCENARIO: Listener in audience zone with "See attendees" disabled must not see local camera feedback.
@@ -435,10 +418,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByTestId("messageInput").fill("Hello from Admin1 again");
         await page.getByTestId("sendMessageButton").click();
         await expect(page2.locator("#message").getByText("Hello from Admin1 again")).toBeVisible({ timeout: 20_000 });
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 
     test('Successfully set "SpeakerZone" with see attendees option in the map editor', async ({ browser, request }) => {
@@ -521,11 +500,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByTestId("messageInput").fill("Hello from Admin1 again");
         await page.getByTestId("sendMessageButton").click();
         await expect(page2.locator("#message").getByText("Hello from Admin1 again")).toBeVisible({ timeout: 20_000 });
-
-        await page2.context().close();
-
-        await page.context().close();
-        await page3.context().close();
     });
 
     test("Megaphone auditorium mode with 5 participants", async ({ browser, request }) => {
@@ -600,28 +574,49 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
             });
         }
 
+        // A listener may keep their local screen share active, but it must not be published to the megaphone speaker.
+        // Skipped on Firefox: Playwright cannot grant getDisplayMedia in Firefox (the request hangs when a display
+        // server is available and rejects with NotFoundError in headless CI), so the screen share never activates.
+        // Same reason as the @nofirefox tag on the other screen-share tests.
+        // eslint-disable-next-line playwright/no-conditional-in-test
+        if (browser.browserType().name() !== "firefox") {
+            await pageListener1.getByTestId("screenShareButton").click();
+            await Menu.expectButtonState(pageListener1, "screenShareButton", "active");
+            await expect(pageSpeaker.locator("#highlighted-media").getByText("Admin2", { exact: true })).toBeHidden({
+                timeout: 20_000,
+            });
+        }
+
         // Verify listeners cannot see each other (only the speaker)
         // Admin2 (listener1) should NOT see Alice, Bob, and John
-        await expect(pageListener1.locator("#cameras-container").getByText("Alice", { exact: true })).toBeHidden({
+        await expect(
+            pageListener1.locator("#cameras-container").getByText("Alice", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageListener1.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+        await expect(pageListener1.locator("#cameras-container").getByText("Bob", { exact: true }).first()).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageListener1.locator("#cameras-container").getByText("John", { exact: true })).toBeHidden({
-            timeout: 20_000,
-        });
+        await expect(pageListener1.locator("#cameras-container").getByText("John", { exact: true }).first()).toBeHidden(
+            {
+                timeout: 20_000,
+            },
+        );
 
         // Alice (listener2) should NOT see Admin2, Bob, and John
-        await expect(pageListener2.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeHidden({
+        await expect(
+            pageListener2.locator("#cameras-container").getByText("Admin2", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageListener2.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+        await expect(pageListener2.locator("#cameras-container").getByText("Bob", { exact: true }).first()).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageListener2.locator("#cameras-container").getByText("John", { exact: true })).toBeHidden({
-            timeout: 20_000,
-        });
+        await expect(pageListener2.locator("#cameras-container").getByText("John", { exact: true }).first()).toBeHidden(
+            {
+                timeout: 20_000,
+            },
+        );
 
         // ============================================================
         // SCENARIO: Late listener (Eve) joins while speaker is broadcasting
@@ -644,21 +639,29 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         });
 
         // The late listener should NOT see other listeners (only the speaker)
-        await expect(pageLateListener.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeHidden({
+        await expect(
+            pageLateListener.locator("#cameras-container").getByText("Admin2", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageLateListener.locator("#cameras-container").getByText("Alice", { exact: true })).toBeHidden({
+        await expect(
+            pageLateListener.locator("#cameras-container").getByText("Alice", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageLateListener.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+        await expect(
+            pageLateListener.locator("#cameras-container").getByText("Bob", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
-        await expect(pageLateListener.locator("#cameras-container").getByText("John", { exact: true })).toBeHidden({
+        await expect(
+            pageLateListener.locator("#cameras-container").getByText("John", { exact: true }).first(),
+        ).toBeHidden({
             timeout: 20_000,
         });
 
         // Close the late listener context after verification
-        await pageLateListener.context().close();
+        await pageLateListener.close();
 
         // ============================================================
         // SCENARIO: Second speaker (Admin2) joins the megaphone session
@@ -740,12 +743,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Stop the megaphone for the first speaker
         await pageSpeaker.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(pageSpeaker.getByRole("heading", { name: "Global communication" })).toBeHidden();
-
-        // Close all contexts
-        for (const { page } of listeners) {
-            await page.context().close();
-        }
-        await pageSpeaker.context().close();
     });
 
     /**
@@ -825,8 +822,5 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // The cameras container should be hidden or show no remote streams
         // Wait for the listener to fully leave the space
         await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeHidden({ timeout: 20_000 });
-
-        await page2.context().close();
-        await page.context().close();
     });
 });

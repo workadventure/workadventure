@@ -63,7 +63,7 @@ class AdminCompanionService implements CompanionServiceInterface {
                 console.error(`Cannot get companion collection list from admin API with token: ${token}`, err);
                 Sentry.captureException(
                     `Cannot get companion collection list from admin API with token: ${token}`,
-                    err
+                    err,
                 );
                 return undefined;
             });

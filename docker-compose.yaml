@@ -31,7 +31,7 @@ services:
           - "matrix.workadventure.localhost"
           - "pusher.workadventure.localhost"
   play:
-    image: thecodingmachine/nodejs:v2-20-bullseye
+    image: ghcr.io/thecodingmachine/nodejs:v2-24-trixie
     command: npm run dev
     # Uncomment to run the production build in dev (along STARTUP_COMMAND_4 and NODE_OPTIONS)
     #command: npm run start
@@ -62,9 +62,12 @@ services:
       HOST: "0.0.0.0"
       NODE_ENV: development
       ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
-      VITE_URL: "http://front.workadventure.localhost"
       PUSHER_URL: http://play.workadventure.localhost
       FRONT_URL: http://play.workadventure.localhost
+      # The page loads its modules from the Vite dev server on another origin, like it loads the assets from the
+      # "front" container in production. The pusher reads index.html from Vite (same container).
+      ASSETS_URL: http://front.workadventure.localhost
+      ASSETS_INTERNAL_URL: http://localhost:8080
       UPLOADER_URL: http://uploader.workadventure.localhost
       ICON_URL: http://icon.workadventure.localhost
       STUN_SERVER: "${STUN_SERVER:-}"
@@ -87,6 +90,7 @@ services:
       OPENID_USERNAME_CLAIM: ${OPENID_USERNAME_CLAIM:-}
       OPENID_LOCALE_CLAIM: ${OPENID_LOCALE_CLAIM:-}
       OPENID_LOGOUT_REDIRECT_URL: "${OPENID_LOGOUT_REDIRECT_URL:-}"
+      OPENID_WOKA_NAME_POLICY: ${OPENID_WOKA_NAME_POLICY:-}
 
       SECRET_KEY: "$SECRET_KEY"
       ADMIN_API_URL: "${ADMIN_API_URL:-}"
@@ -104,11 +108,15 @@ services:
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
       ENABLE_CHAT_ONLINE_LIST: "$ENABLE_CHAT_ONLINE_LIST"
       ENABLE_CHAT_DISCONNECTED_LIST: "$ENABLE_CHAT_DISCONNECTED_LIST"
+      CLIENT_DISCONNECTION_RETENTION_MS: "$CLIENT_DISCONNECTION_RETENTION_MS"
+      PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES: "$PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES"
       ENABLE_TUTORIAL: "$ENABLE_TUTORIAL"
       # Woka settings
       DEFAULT_WOKA_NAME: ${DEFAULT_WOKA_NAME:-}
       DEFAULT_WOKA_TEXTURE: ${DEFAULT_WOKA_TEXTURE:-}
       SKIP_CAMERA_PAGE: ${SKIP_CAMERA_PAGE:-false}
+      DEFAULT_CAMERA_PRIVACY_SETTINGS: ${DEFAULT_CAMERA_PRIVACY_SETTINGS:-false}
+      DEFAULT_MICROPHONE_PRIVACY_SETTINGS: ${DEFAULT_MICROPHONE_PRIVACY_SETTINGS:-true}
       BYPASS_PWA: ${BYPASS_PWA:-false}
       PROVIDE_DEFAULT_WOKA_NAME: ${PROVIDE_DEFAULT_WOKA_NAME:-}
       PROVIDE_DEFAULT_WOKA_TEXTURE: ${PROVIDE_DEFAULT_WOKA_TEXTURE:-}
@@ -132,7 +140,6 @@ services:
       ROOM_API_SECRET_KEY: ${ROOM_API_SECRET_KEY}
       #GRPC_VERBOSITY: DEBUG
       #GRPC_TRACE: all
-      FEATURE_FLAG_BROADCAST_AREAS: "true"
       # Integration tools
       KLAXOON_ENABLED: "$KLAXOON_ENABLED"
       KLAXOON_CLIENT_ID: "${KLAXOON_CLIENT_ID:-}"
@@ -169,13 +176,20 @@ services:
 
       # "selfie-segmentation" or "tasks-vision"
       # TODO: remove "selfie-segmentation" code when tasks-vision is stable enough
-      BACKGROUND_TRANSFORMER_ENGINE: ${BACKGROUND_TRANSFORMER_ENGINE:-}
     labels:
       - "traefik.enable=true"
 
       - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
       - "traefik.http.routers.front.service=front"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
+
+      # Serve Vite's dev module graph (/src, /node_modules, /@fs) same-origin under the play host too.
+      # Some dev-only URLs are root-relative and resolve against the page (e.g. the noise suppression
+      # AudioWorklet of @workadventure/noise-suppression/vite). Priority 2 beats the play catch-all
+      # (priority 1); the front router still wins on the front.* host via its longer Host rule.
+      - "traefik.http.routers.play-vite.rule=HostRegexp(`^.+$`) && (PathPrefix(`/src`) || PathPrefix(`/node_modules`) || PathPrefix(`/@fs`) || PathPrefix(`/@vite`) || PathPrefix(`/@id`))"
+      - "traefik.http.routers.play-vite.priority=2"
+      - "traefik.http.routers.play-vite.service=front"
 
       - "traefik.http.routers.room-api.rule=Host(`room-api.workadventure.localhost`)"
       - "traefik.http.routers.room-api.service=room-api"
@@ -191,6 +205,10 @@ services:
       - "traefik.http.routers.play-ws.priority=2"
       - "traefik.http.routers.play-ws.service=play-ws"
       - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie=true"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.name=wa_ws_affinity"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.httpOnly=true"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.sameSite=lax"
 
   maps:
     image: thecodingmachine/php:8.1-v4-apache-node12
@@ -213,7 +231,7 @@ services:
       - "traefik.http.services.maps.loadbalancer.server.port=80"
 
   back:
-    image: thecodingmachine/nodejs:v2-22-bullseye
+    image: ghcr.io/thecodingmachine/nodejs:v2-24-trixie
     command: npm run dev
     working_dir: /usr/src/app/back
     environment:
@@ -266,7 +284,7 @@ services:
       - "traefik.http.services.back.loadbalancer.server.port=8080"
 
   map-storage:
-    image: thecodingmachine/nodejs:v2-22-bullseye
+    image: ghcr.io/thecodingmachine/nodejs:v2-24-trixie
     command: npm run start:dev
     #command: npm run profile
     working_dir: /usr/src/app/map-storage
@@ -308,7 +326,7 @@ services:
       - "traefik.http.services.map-storage-ui.loadbalancer.server.port=8080"
 
   uploader:
-    image: thecodingmachine/nodejs:v2-20-bullseye
+    image: ghcr.io/thecodingmachine/nodejs:v2-24-trixie
     command: npm run dev
     #command: npm run profile
     working_dir: /usr/src/app/uploader
@@ -341,7 +359,7 @@ services:
       - "traefik.http.services.uploader.loadbalancer.server.port=8080"
 
   messages:
-    image: thecodingmachine/nodejs:v2-20-bullseye-build
+    image: ghcr.io/thecodingmachine/nodejs:v2-24-trixie-build
     environment:
       STARTUP_COMMAND_1: npm install
       STARTUP_COMMAND_2: npm run proto:watch

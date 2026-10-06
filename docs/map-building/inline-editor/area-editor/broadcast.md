@@ -35,7 +35,7 @@ Please note that [access to the map editor](../index.md) is required to perform 
 ![](../../images/editor/broadcast_see_attendees.png)
 
 :::tip
-The "See attendees" option is useful when speakers want to interact with their audience and see their reactions in real-time. When enabled, speakers will see the video bubbles of audience members while presenting, but they will not hear them. To be heard, someone in the audience must step in the speaker zone.
+The "See attendees" option is useful when speakers want to interact with their audience and see their reactions in real-time. When enabled, speakers will see the video bubbles of audience members while presenting, but they will not hear them. To be heard, someone in the audience can step onto the podium, or raise their hand and wait for a speaker or an administrator to give them the floor.
 :::
 
 #### Creating an "audience" zone
@@ -53,6 +53,8 @@ The "See attendees" option is useful when speakers want to interact with their a
 :::note
 If you enable "associate a dedicated chat channel" in both areas, both chats will be merged and can be used by users in the podium and in the audience.
 :::
+
+12. (Optional) Turn off **"Allow raising hands"** so that people in this audience can no longer [raise their hand](/user/raise-hand) to the speakers. It is on by default, and lets speakers give the floor to someone in the audience. It does not stop people from raising their hand in a discussion bubble.
 
 You're done ! Now, anyone in the audience will be able to hear/see the speakers that are on the podium/stage.
 When a user will enter the podium, he will trigger the megaphone directly and will stream to the audience associated with the podium.

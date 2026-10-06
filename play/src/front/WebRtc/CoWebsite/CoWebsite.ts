@@ -1,4 +1,4 @@
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 
 export interface CoWebsite {
     getId(): string;

@@ -7,7 +7,10 @@ export class MatrixChatRelation {
     private handleRelationRemove: (event: MatrixEvent) => void;
     private handleRelationRedaction: (event: MatrixEvent) => void;
 
-    constructor(private message: MatrixChatMessage, private relation: Relations) {
+    constructor(
+        private message: MatrixChatMessage,
+        private relation: Relations,
+    ) {
         this.handleRelationAdd = this.onClientEventAddRelation.bind(this);
         this.handleRelationRemove = this.onClientEventRemoveRelation.bind(this);
         this.handleRelationRedaction = this.onClientEventRedactionRelation.bind(this);

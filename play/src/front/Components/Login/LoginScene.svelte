@@ -9,14 +9,19 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
+    import Button from "../UI/Button.svelte";
 
-    export let game: Game;
+    interface Props {
+        game: Game;
+    }
 
-    const loginScene = game.scene.getScene(LoginSceneName) as LoginScene;
+    let { game }: Props = $props();
 
-    let name = gameManager.getPlayerName() || "";
-    let startValidating = false;
-    let errorName = "";
+    let loginScene = $derived(game.scene.getScene(LoginSceneName) as LoginScene);
+
+    let name = $state(gameManager.getPlayerName() || "");
+    let startValidating = $state(false);
+    let errorName = $state("");
 
     let logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
     let legals = gameManager.currentStartedRoom?.legals ?? {};
@@ -30,7 +35,7 @@
                 encodeURI(legals.termsOfUseUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.termsOfUse() +
-                "</a>"
+                "</a>",
         );
     }
     if (legals?.privacyPolicyUrl) {
@@ -39,7 +44,7 @@
                 encodeURI(legals.privacyPolicyUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.privacyPolicy() +
-                "</a>"
+                "</a>",
         );
     }
     if (legals?.cookiePolicyUrl) {
@@ -48,11 +53,11 @@
                 encodeURI(legals.cookiePolicyUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.cookiePolicy() +
-                "</a>"
+                "</a>",
         );
     }
 
-    let legalString: string | undefined;
+    let legalString: string | undefined = $state();
     if (legalStrings.length > 0) {
         if (Intl.ListFormat) {
             const formatter = new Intl.ListFormat($locale, { style: "long", type: "conjunction" });
@@ -91,26 +96,33 @@
     /* eslint-disable svelte/no-at-html-tags */
 </script>
 
-<section class="self-center absolute z-30 top-0 text-center w-full block">
+<section class="self-center absolute z-30 top-0 text-center w-full">
     <img
         draggable="false"
         src={logo}
         alt="logo"
-        class="main-logo mt-8 {gameManager.currentStartedRoom.loginSceneLogo ? 'max-h-[200px] object-cover' : ''}"
+        class="main-logo inline mt-8 {gameManager.currentStartedRoom.loginSceneLogo
+            ? 'max-h-[200px] object-cover'
+            : ''}"
         style="width: 333px;"
     />
 </section>
 
 <form
     class="loginScene h-dvh flex flex-col items-center justify-center pointer-events-auto relative z-30"
-    on:submit|preventDefault={submit}
+    onsubmit={(event) => {
+        event.preventDefault();
+        submit().catch((error) => {
+            console.error("Failed to submit login", error);
+        });
+    }}
 >
     <div class="w-full sm:w-96 md:w-10/12 lg:w-1/2 xl:w-1/3 rounded mx-auto text-center p-8">
         <section class="text-center flex h-fit flex-col justify-center items-center mb-0">
             <span class="text-white text-lg bold">
                 {$LL.login.input.name.placeholder()}
             </span>
-            <!-- svelte-ignore a11y-autofocus -->
+            <!-- svelte-ignore a11y_autofocus -->
             <input
                 type="text"
                 name="fname"
@@ -120,7 +132,7 @@
                 autofocus
                 maxlength={MAX_USERNAME_LENGTH}
                 bind:value={name}
-                on:keypress={() => {
+                onkeypress={() => {
                     startValidating = true;
                 }}
                 class:border-danger={(name.trim() === "" && startValidating) || errorName !== ""}
@@ -135,12 +147,15 @@
             class="action flex h-fit justify-center m-0"
             class:opacity-50={(name.trim() === "" && startValidating) || errorName !== ""}
         >
-            <button
+            <Button
                 type="submit"
                 disabled={(name.trim() === "" && startValidating) || errorName !== ""}
-                class="mt-4 w-52 md:w-96 bold text-center block btn btn-secondary btn-lg loginSceneFormSubmit"
-                >{$LL.login.continue()}</button
+                variant="secondary"
+                size="lg"
+                class="mt-4 w-52 md:w-96 bold text-center block loginSceneFormSubmit"
             >
+                {$LL.login.continue()}
+            </Button>
         </section>
         {#if legalString}
             <section class="terms-and-conditions h-fit text-center w-full">
@@ -161,5 +176,5 @@
 <div
     class="absolute left-0 top-0 w-full h-full z-20 bg-contrast opacity-80"
     style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
-/>
-<div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{sceneBg}');" />
+></div>
+<div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{sceneBg}');"></div>

@@ -6,7 +6,7 @@ import { derived } from "svelte/store";
  * that only contains video tracks. If there are no video tracks, the store will be undefined.
  */
 export function muteMediaStreamStore(
-    streamStore: Readable<MediaStream | undefined>
+    streamStore: Readable<MediaStream | undefined>,
 ): Readable<MediaStream | undefined> {
     // Create a single MediaStream that will be reused
     const mutedStream = new MediaStream();

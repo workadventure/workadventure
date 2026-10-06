@@ -6,8 +6,8 @@
     import { IconRefresh, IconLoader } from "@wa-icons";
 
     const chat = gameManager.chatConnection;
-    let dismissError = false;
-    let isRefreshing = false;
+    let dismissError = $state(false);
+    let isRefreshing = $state(false);
 
     function refreshChat() {
         isRefreshing = true;
@@ -32,7 +32,7 @@
         {/if}
         <h3>{$LL.chat.whoops()}</h3>
     </div>
-    <button class="bg-danger w-44 text-white rounded-md px-4 py-2" on:click={refreshChat} disabled={isRefreshing}>
+    <button class="bg-danger w-44 text-white rounded-md px-4 py-2" onclick={refreshChat} disabled={isRefreshing}>
         {#if isRefreshing}
             <IconLoader class="animate-spin" />
         {:else}
@@ -44,7 +44,7 @@
     {#if !dismissError}
         <button
             class="rounded-md px-4 py-2"
-            on:click={() => {
+            onclick={() => {
                 dismissError = true;
             }}
         >

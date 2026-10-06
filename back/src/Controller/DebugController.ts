@@ -56,7 +56,7 @@ export class DebugController {
                             }
                         }
                         return value;
-                    })
+                    }),
                 );
         });
     }

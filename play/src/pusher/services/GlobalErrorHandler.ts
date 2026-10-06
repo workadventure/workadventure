@@ -32,7 +32,7 @@ export function globalErrorHandler(error: unknown, request: Request, response: R
                 "An error occurred: " +
                     error.response.status +
                     " " +
-                    (error.response.data && error.message ? error.message : error.response.statusText)
+                    (error.response.data && error.message ? error.message : error.response.statusText),
             );
         } else response.json(errorType.data);
         return;

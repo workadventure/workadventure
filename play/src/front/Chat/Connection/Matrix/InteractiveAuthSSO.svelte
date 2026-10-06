@@ -3,20 +3,34 @@
     import type { AuthDict, MatrixClient } from "matrix-js-sdk";
     import { AuthType } from "matrix-js-sdk";
     import LL from "../../../../i18n/i18n-svelte";
+    import Button from "../../../Components/UI/Button.svelte";
     import { INTERACTIVE_AUTH_PHASE } from "./InteractiveAuthPhase";
 
-    export let authSessionId;
-    export let matrixClient: MatrixClient;
-    export let onPhaseChange: (nextStage: INTERACTIVE_AUTH_PHASE) => void;
-    export let onCancel: () => void;
-    export let submitAuthDict: (auth: AuthDict) => void;
-    export let errorText: string | undefined = undefined;
+    interface Props {
+        authSessionId: string;
+        matrixClient: MatrixClient;
+        onPhaseChange: (nextStage: INTERACTIVE_AUTH_PHASE) => void;
+        onCancel: () => void;
+        submitAuthDict: (auth: AuthDict) => void;
+        errorText?: string;
+    }
 
-    if (!authSessionId) throw new Error("This UIA flow requires an authSessionId");
+    let {
+        authSessionId,
+        matrixClient,
+        onPhaseChange,
+        onCancel,
+        submitAuthDict,
+        errorText = undefined,
+    }: Props = $props();
 
-    let ssoUrl = matrixClient.getFallbackAuthUrl(AuthType.Sso, authSessionId);
+    $effect(() => {
+        if (!authSessionId) throw new Error("This UIA flow requires an authSessionId");
+    });
+
+    let ssoUrl = $derived(matrixClient.getFallbackAuthUrl(AuthType.Sso, authSessionId));
     let popupWindow: Window | null = null;
-    let phase = INTERACTIVE_AUTH_PHASE.PRE_AUTH;
+    let phase = $state(INTERACTIVE_AUTH_PHASE.PRE_AUTH);
 
     const onReceiveMessage = (event: { data: string; origin: string }) => {
         if (event.data === "authDone" && event.origin === matrixClient.getHomeserverUrl()) {
@@ -55,15 +69,15 @@
     <div class="text-red-500" role="alert">{errorText}</div>
 {/if}
 
-<button class="flex-1 justify-center" on:click={onCancel} data-testid="cancelSSO">
+<button class="flex-1 justify-center" onclick={onCancel} data-testid="cancelSSO">
     {$LL.chat.e2ee.interactiveAuth.buttons.cancel()}
 </button>
 {#if phase === INTERACTIVE_AUTH_PHASE.PRE_AUTH}
-    <button class="btn btn-secondary flex-1 justify-center" on:click={onStartAuthClick}>
+    <Button variant="secondary" class="flex-1" onclick={onStartAuthClick}>
         {$LL.chat.e2ee.interactiveAuth.buttons.continueSSO()}
-    </button>
+    </Button>
 {:else}
-    <button class="btn btn-secondary flex-1 justify-center" on:click={onConfirmClick}>
+    <Button variant="secondary" class="flex-1" onclick={onConfirmClick}>
         {$LL.chat.e2ee.interactiveAuth.buttons.finish()}
-    </button>
+    </Button>
 {/if}

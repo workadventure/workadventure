@@ -68,7 +68,7 @@ export type {
     SendChatMessageOptions,
     SendLocalChatMessageOptions,
     SendBubbleChatMessageOptions,
-} from "../../libs/shared-utils/src/Events/ChatEvent";
+} from "@workadventure/shared-utils";
 export type { RoomState } from "./front/Api/Iframe/RoomState";
 export type { PrivatePlayerState } from "./front/Api/Iframe/PrivatePlayerState";
 export type { PublicPlayerState } from "./front/Api/Iframe/PublicPlayerState";
@@ -94,7 +94,7 @@ const initPromise = queryWorkadventure(
     },
     {
         timeout: null,
-    }
+    },
 ).then((gameState) => {
     setPlayerId(gameState.playerId);
     setPlayerName(gameState.nickname);
@@ -179,7 +179,7 @@ const wa = {
      */
     disablePlayerControls(): void {
         console.warn(
-            "Method WA.disablePlayerControls is deprecated. Please use WA.controls.disablePlayerControls instead"
+            "Method WA.disablePlayerControls is deprecated. Please use WA.controls.disablePlayerControls instead",
         );
         controls.disablePlayerControls();
     },
@@ -189,7 +189,7 @@ const wa = {
      */
     restorePlayerControls(): void {
         console.warn(
-            "Method WA.restorePlayerControls is deprecated. Please use WA.controls.restorePlayerControls instead"
+            "Method WA.restorePlayerControls is deprecated. Please use WA.controls.restorePlayerControls instead",
         );
         controls.restorePlayerControls();
     },
@@ -378,7 +378,7 @@ window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
             const safeLooksLikeResponse = isLookingLikeIframeEventWrapper.safeParse(payload);
             if (safeLooksLikeResponse.success) {
                 throw new Error(
-                    "Could not parse message received from WorkAdventure. Message:" + JSON.stringify(payload)
+                    "Could not parse message received from WorkAdventure. Message:" + JSON.stringify(payload),
                 );
             }
         }

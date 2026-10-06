@@ -1,12 +1,25 @@
 <script lang="ts">
-    export let height = "h-6";
-    export let width = "w-6";
-    export let strokeColor = "stroke-white";
-    export let fillColor = "fill-transparent";
-    export let hover = "group-hover/btn-mic:fill-white";
-    export let strokeWidth = "1.5";
-    export let classList = "aspect-ratio transition-all";
-    export let ariaLabel: string | undefined = undefined;
+    interface Props {
+        height?: string;
+        width?: string;
+        strokeColor?: string;
+        fillColor?: string;
+        hover?: string;
+        strokeWidth?: string;
+        classList?: string;
+        ariaLabel?: string;
+    }
+
+    let {
+        height = "h-6",
+        width = "w-6",
+        strokeColor = "stroke-white",
+        fillColor = "fill-transparent",
+        hover = "group-hover/btn-mic:fill-white",
+        strokeWidth = "1.5",
+        classList = "aspect-ratio transition-all",
+        ariaLabel = undefined,
+    }: Props = $props();
 </script>
 
 <svg

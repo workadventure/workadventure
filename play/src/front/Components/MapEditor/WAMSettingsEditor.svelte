@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { ComponentType } from "svelte";
+    import type { Component } from "svelte";
     import { onDestroy, onMount } from "svelte";
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -11,13 +11,14 @@
     } from "../../Stores/MapEditorStore";
     import { userIsAdminStore, userIsEditorStore } from "../../Stores/GameStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
+    import Button from "../UI/Button.svelte";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
     import RecordingSettings from "./ConfigureMyRoom/RecordingSettings.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
 
     import { IconChevronRight } from "@wa-icons";
 
-    let isVisible: boolean;
+    let isVisible: boolean = $state(false);
 
     onMount(() => {
         isVisible = true;
@@ -34,7 +35,7 @@
         isVisible = false;
     });
 
-    function getCurrentComponent(): ComponentType {
+    function getCurrentComponent(): Component {
         switch ($mapEditorWamSettingsEditorToolCurrentMenuItemStore) {
             case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone: {
                 return Megaphone;
@@ -53,7 +54,7 @@
 
     function close() {
         mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(undefined);
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
+        gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(EditorToolName.EntityEditor);
     }
 </script>
 
@@ -64,7 +65,7 @@
         out:fly={{ x: 100, duration: 200 }}
     >
         <div class="absolute top-2 right-2 z-50 close-window {isVisible ? 'visible' : ''} ">
-            <ButtonClose on:click={close} size="md" />
+            <ButtonClose onclick={close} size="md" />
         </div>
         <div class="flex flex-wrap w-full grow max-h-[70vh] overflow-auto">
             <div class="menu mx-auto flex flex-col relative">
@@ -73,41 +74,41 @@
                     <ul>
                         <!-- check if the user has right to update room settings -->
                         {#if $userIsAdminStore}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                             <li
                                 class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
                                     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings}
-                                on:click={() =>
+                                onclick={() =>
                                     mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
-                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings
+                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings,
                                     )}
                             >
                                 <span>{$LL.mapEditor.settings.room.title()}</span>
                                 <IconChevronRight class="-mr-2" />
                             </li>
                         {/if}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                         <li
                             class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
                                 WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone}
-                            on:click={() =>
+                            onclick={() =>
                                 mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
-                                    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
+                                    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone,
                                 )}
                         >
                             <span>{$LL.mapEditor.settings.megaphone.title()}</span>
                         </li>
                         {#if $userIsEditorStore || $userIsAdminStore}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                             <li
                                 class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
                                     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording}
-                                on:click={() =>
+                                onclick={() =>
                                     mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
-                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording
+                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording,
                                     )}
                             >
                                 <span>{$LL.mapEditor.settings.recording.title()}</span>
@@ -119,18 +120,24 @@
 
             <div class="content space-y-6 space overflow-y-scroll">
                 {#if $mapEditorWamSettingsEditorToolCurrentMenuItemStore !== undefined}
-                    <svelte:component this={getCurrentComponent()} />
+                    {@const SvelteComponent = getCurrentComponent()}
+                    <SvelteComponent />
                 {/if}
             </div>
         </div>
 
         <div class="w-full h-fit flex items-center justify-center p-2 space-x-2 bg-contrast/50 pointer-events-auto">
             <div class="flex flex-row justify-content-center w-full gap-2">
-                <button
-                    class="btn btn-outline hover:bg-white/10 w-full close-window"
-                    on:click|preventDefault|stopPropagation={close}
-                    >close
-                </button>
+                <Button
+                    class="btn-outline hover:bg-white/10 w-full close-window"
+                    onclick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        close();
+                    }}
+                >
+                    close
+                </Button>
             </div>
         </div>
     </div>

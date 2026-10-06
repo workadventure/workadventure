@@ -4,6 +4,7 @@
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import Button from "../UI/Button.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
     let isAndroid = isAndroidFct();
@@ -27,7 +28,10 @@
 <form
     class="helpNotificationSettings z-[600] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col m-auto w-full md:w-2/3 xl:w-[380px] text-sm md:text-base absolute top-10 left-0 right-0 overflow-hidden"
     style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
-    on:submit|preventDefault={close}
+    onsubmit={(event) => {
+        event.preventDefault();
+        close();
+    }}
     transition:fly={{ y: -50, duration: 500 }}
 >
     <section class="mb-0">
@@ -67,11 +71,25 @@
         </div>
     </section>
     <section class="flex row justify-center p-4 bg-contrast">
-        <button class="btn bg-white/10 hover:bg-white/20 mr-2 w-full justify-center" on:click|preventDefault={refresh}
-            >{$LL.notification.help.refresh()}</button
+        <Button
+            class="bg-white/10 hover:bg-white/20 mr-2 w-full"
+            onclick={(event) => {
+                event.preventDefault();
+                refresh();
+            }}
         >
-        <button type="submit" class="btn btn-danger w-full justify-center" on:click|preventDefault={close}
-            >{$LL.notification.help.continue()}</button
+            {$LL.notification.help.refresh()}
+        </Button>
+        <Button
+            type="submit"
+            variant="danger"
+            class="w-full"
+            onclick={(event) => {
+                event.preventDefault();
+                close();
+            }}
         >
+            {$LL.notification.help.continue()}
+        </Button>
     </section>
 </form>

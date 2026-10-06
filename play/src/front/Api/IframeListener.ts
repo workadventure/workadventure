@@ -20,15 +20,12 @@ import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
 
 import { gameManager } from "../Phaser/Game/GameManager";
-import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
-import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
 import type { ClosePopupEvent } from "./Events/ClosePopupEvent";
 import { scriptUtils } from "./ScriptUtils";
-import type { IframeErrorAnswerEvent, IframeQueryMap, IframeResponseEvent } from "./Events/IframeEvent";
+import type { IframeQueryMap, IframeResponseEvent } from "./Events/IframeEvent";
 import { isIframeEventWrapper, isIframeQueryWrapper, isLookingLikeIframeEventWrapper } from "./Events/IframeEvent";
-import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import type { PlaySoundEvent } from "./Events/PlaySoundEvent";
 import type { StopSoundEvent } from "./Events/StopSoundEvent";
 import type { LoadSoundEvent } from "./Events/LoadSoundEvent";
@@ -37,9 +34,7 @@ import type { LayerEvent } from "./Events/LayerEvent";
 import type { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import type { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
-import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
-import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
 import type { CameraSetEvent } from "./Events/CameraSetEvent";
 import type { CameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
 import type { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
@@ -52,17 +47,16 @@ import type { SetStatusEvent } from "./Events/SetStatusEvent";
 
 import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
-import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
-import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
+import type {
+    JoinMeetingEvent,
+    MeetingIdEvent,
+    StartStreamInMeetingEvent,
+} from "./Events/ProximityMeeting/MeetingEvent";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import type { ModalEvent } from "./Events/ModalEvent";
 import type { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
 import type { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
-import type {
-    IframeErrorMessagePortEvent,
-    IframeMessagePortMap,
-    IframeSuccessMessagePortEvent,
-} from "./Events/MessagePortEvents";
+import type { IframeMessagePortMap, IframeSuccessMessagePortEvent } from "./Events/MessagePortEvents";
 import { isIframeMessagePortWrapper } from "./Events/MessagePortEvents";
 import { CheckedWorkAdventureMessagePort } from "./Iframe/CheckedWorkAdventureMessagePort";
 import type { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
@@ -70,13 +64,13 @@ import { ScriptLoadedError } from "./ScriptLoadedError";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
-    source: MessageEventSource | null
+    source: MessageEventSource | null,
 ) => IframeQueryMap[T]["answer"] | PromiseLike<IframeQueryMap[T]["answer"]>;
 
 type OpenMessagePortAnswererCallback<T extends keyof IframeMessagePortMap> = (
     data: IframeMessagePortMap[T]["data"],
     port: CheckedWorkAdventureMessagePort<T>,
-    source: MessageEventSource | null
+    source: MessageEventSource | null,
 ) => void | PromiseLike<void>;
 
 /**
@@ -231,6 +225,12 @@ class IframeListener {
     private readonly _stopListeningToStreamInBubbleStream: Subject<void> = new Subject();
     public readonly stopListeningToStreamInBubbleStream = this._stopListeningToStreamInBubbleStream.asObservable();
 
+    private readonly _startListeningToStreamInMeetingStream: Subject<StartStreamInMeetingEvent> = new Subject();
+    public readonly startListeningToStreamInMeetingStream = this._startListeningToStreamInMeetingStream.asObservable();
+
+    private readonly _stopListeningToStreamInMeetingStream: Subject<MeetingIdEvent> = new Subject();
+    public readonly stopListeningToStreamInMeetingStream = this._stopListeningToStreamInMeetingStream.asObservable();
+
     private readonly _addButtonActionBarStream: Subject<AddButtonActionBarEvent> = new Subject();
     public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
 
@@ -303,7 +303,7 @@ class IframeListener {
                             "It seems an iFrame is trying to communicate with WorkAdventure but was not explicitly granted the permission to do so. " +
                                 "If you are looking to use the WorkAdventure Scripting API inside an iFrame, you should allow the " +
                                 'iFrame to communicate with WorkAdventure by checking the "Allow API" checkbox (if you are using the map editor) or using the "openWebsiteAllowApi" property in your map (if you are using Tiled), or passing "true" as a second' +
-                                "parameter to WA.nav.openCoWebSite() (if you are using the scripting API)."
+                                "parameter to WA.nav.openCoWebSite() (if you are using the scripting API).",
                         );
                     }
                     return;
@@ -345,8 +345,8 @@ class IframeListener {
                                     id: queryId,
                                     type: payload.type,
                                     error: errorMsg,
-                                } as IframeErrorAnswerEvent,
-                                "*"
+                                },
+                                "*",
                             );
                             return;
                         }
@@ -354,7 +354,7 @@ class IframeListener {
                         const errorHandler = (reason: unknown) => {
                             console.error(
                                 "An error occurred while responding to an iFrame open port message query.",
-                                reason
+                                reason,
                             );
                             const error = asError(reason);
                             const reasonMsg = error.message;
@@ -364,8 +364,8 @@ class IframeListener {
                                     id: queryId,
                                     messagePort: true,
                                     error: reasonMsg,
-                                } as IframeErrorMessagePortEvent,
-                                "*"
+                                },
+                                "*",
                             );
                         };
 
@@ -377,7 +377,7 @@ class IframeListener {
                                             id: queryId,
                                             messagePort: true,
                                         } satisfies IframeSuccessMessagePortEvent,
-                                        "*"
+                                        "*",
                                     );
                                 })
                                 .catch(errorHandler);
@@ -402,8 +402,8 @@ class IframeListener {
                                     id: queryId,
                                     type: query.type,
                                     error: errorMsg,
-                                } as IframeErrorAnswerEvent,
-                                "*"
+                                },
+                                "*",
                             );
                             return;
                         }
@@ -418,8 +418,8 @@ class IframeListener {
                                     id: queryId,
                                     type: query.type,
                                     error: reasonMsg,
-                                } as IframeErrorAnswerEvent,
-                                "*"
+                                },
+                                "*",
                             );
                         };
 
@@ -432,7 +432,7 @@ class IframeListener {
                                             type: query.type,
                                             data: value,
                                         },
-                                        "*"
+                                        "*",
                                     );
                                 })
                                 .catch(errorHandler);
@@ -446,7 +446,7 @@ class IframeListener {
                             console.error(
                                 `Invalid event "${lookingLikeEvent.data.type}" received from Iframe: `,
                                 lookingLikeEvent.data,
-                                iframeEventGuarded.error.issues
+                                iframeEventGuarded.error.issues,
                             );
                             return;
                         }
@@ -475,6 +475,10 @@ class IframeListener {
                             this._startListeningToStreamInBubbleStream.next(iframeEvent.data);
                         } else if (iframeEvent.type === "stopListeningToStreamInBubble") {
                             this._stopListeningToStreamInBubbleStream.next();
+                        } else if (iframeEvent.type === "startListeningToStreamInMeeting") {
+                            this._startListeningToStreamInMeetingStream.next(iframeEvent.data);
+                        } else if (iframeEvent.type === "stopListeningToStreamInMeeting") {
+                            this._stopListeningToStreamInMeetingStream.next(iframeEvent.data);
                         } else if (iframeEvent.type === "openChat") {
                             this._openChatStream.next(iframeEvent.data);
                         } else if (iframeEvent.type === "closeChat") {
@@ -555,14 +559,14 @@ class IframeListener {
                                 iframeEvent.data.iframe,
                                 iframeEvent.data.key,
                                 foundSrc,
-                                iframeEvent.data.options
+                                iframeEvent.data.options,
                             );
                         } else if (iframeEvent.type == "unregisterMenu") {
                             handleMenuUnregisterEvent(iframeEvent.data.key);
                         } else if (iframeEvent.type == "openMenu") {
                             handleOpenMenuEvent(iframeEvent.data.key);
                         } else if (iframeEvent.type == "login") {
-                            analyticsClient.login();
+                            analyticsClient.trackAdminEvent("auth.login_clicked");
                             window.location.href = "/login";
                         } else if (iframeEvent.type == "redirectPricing") {
                             if (connectionManager.currentRoom && connectionManager.currentRoom.pricingUrl) {
@@ -597,7 +601,7 @@ class IframeListener {
                             // dispacth event on windows
                             const event = new MessageEvent(
                                 "AcitivityPickerFromWorkAdventure",
-                                message as unknown as MessageEventInit<unknown>
+                                message as unknown as MessageEventInit<unknown>,
                             );
                             window.dispatchEvent(event);
                         } else if (iframeEvent.type == "banUser") {
@@ -638,7 +642,7 @@ class IframeListener {
                     Sentry.captureException(reason);
                 });
             },
-            false
+            false,
         );
     }
 
@@ -658,7 +662,7 @@ class IframeListener {
                     console.error('Could not register "iframeCloseCallbacks". No contentWindow.');
                 }
             },
-            { once: true }
+            { once: true },
         );
     }
 
@@ -705,6 +709,7 @@ class IframeListener {
             iframe.src = scriptUrl;
         } else {
             // We are putting a sandbox on this script because it will run in the same domain as the main website.
+            // Without "allow-same-origin", the sandbox gives the iframe an opaque/unique origin and prevents same-origin access.
             iframe.sandbox.add("allow-scripts");
             iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
@@ -715,6 +720,19 @@ class IframeListener {
             // which provides a secure sandboxed environment
             if (isLocalhost) {
                 // Use the pusher /local-script endpoint
+
+                // Important: the /local-script can no longer have a "null" origin because iframes with a "null" origin
+                // cannot be allowed to access localhost resources anymore
+                // (the browser white-lists domains allowed to access localhost, but "null" is not a domain and is not white-listed).
+                // So for "localhost" scripts, we make an exception and inherit the origin of the main page.
+                // This gives scripts run through Vite local server extra privileges, but there is no other way to make
+                // it work with the new browser security rules.
+                // Note: combined with allow-scripts, a localhost map script with "allow-same-origin" can access
+                // parent/main-origin storage and remove the sandbox entirely. However, the scripts are coming
+                // from localhost and are typically running on the developer's machine, so we assume the developer is
+                // trusted and can run scripts with full privileges in the "play" domain.
+                iframe.sandbox.add("allow-same-origin");
+
                 const encodedScriptUrl = encodeURIComponent(scriptUrl);
                 iframe.src = `/local-script?script=${encodedScriptUrl}`;
             } else {
@@ -843,9 +861,9 @@ class IframeListener {
                 data: {
                     message,
                     senderId,
-                } as UserInputChatEvent,
+                },
             },
-            exceptOrigin
+            exceptOrigin,
         );
     }
 
@@ -866,7 +884,31 @@ class IframeListener {
             type: "joinProximityMeetingEvent",
             data: {
                 users: formattedUsers,
-            } as JoinProximityMeetingEvent,
+            },
+        });
+    }
+
+    sendJoinMeetingEvent(meetingId: string, name: string, kind: JoinMeetingEvent["kind"], users: MessageUserJoined[]) {
+        const formattedUsers: AddPlayerEvent[] = users.map((user) => {
+            return {
+                playerId: user.userId,
+                name: user.name,
+                userUuid: user.userUuid,
+                outlineColor: user.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                position: user.position,
+                variables: user.variables,
+            };
+        });
+
+        this.postMessage({
+            type: "joinMeetingEvent",
+            data: {
+                meetingId,
+                name,
+                kind,
+                users: formattedUsers,
+            },
         });
     }
 
@@ -883,7 +925,25 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            } as ParticipantProximityMeetingEvent,
+            },
+        });
+    }
+
+    sendParticipantJoinMeetingEvent(meetingId: string, user: MessageUserJoined) {
+        this.postMessage({
+            type: "participantJoinMeetingEvent",
+            data: {
+                meetingId,
+                user: {
+                    playerId: user.userId,
+                    name: user.name,
+                    userUuid: user.userUuid,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
+                },
+            },
         });
     }
 
@@ -900,7 +960,25 @@ class IframeListener {
                     position: user.position,
                     variables: user.variables,
                 },
-            } as ParticipantProximityMeetingEvent,
+            },
+        });
+    }
+
+    sendParticipantLeaveMeetingEvent(meetingId: string, user: MessageUserJoined) {
+        this.postMessage({
+            type: "participantLeaveMeetingEvent",
+            data: {
+                meetingId,
+                user: {
+                    playerId: user.userId,
+                    name: user.name,
+                    userUuid: user.userUuid,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
+                },
+            },
         });
     }
 
@@ -908,6 +986,15 @@ class IframeListener {
         this.postMessage({
             type: "leaveProximityMeetingEvent",
             data: undefined,
+        });
+    }
+
+    sendLeaveMeetingEvent(meetingId: string) {
+        this.postMessage({
+            type: "leaveMeetingEvent",
+            data: {
+                meetingId,
+            },
         });
     }
 
@@ -934,7 +1021,7 @@ class IframeListener {
             type: "enterEvent",
             data: {
                 name: name,
-            } as EnterLeaveEvent,
+            },
         });
     }
 
@@ -943,60 +1030,7 @@ class IframeListener {
             type: "leaveEvent",
             data: {
                 name: name,
-            } as EnterLeaveEvent,
-        });
-    }
-
-    sendEnterLayerEvent(layerName: string) {
-        this.postMessage({
-            type: "enterLayerEvent",
-            data: {
-                name: layerName,
-            } as ChangeLayerEvent,
-        });
-    }
-
-    sendLeaveLayerEvent(layerName: string) {
-        this.postMessage({
-            type: "leaveLayerEvent",
-            data: {
-                name: layerName,
-            } as ChangeLayerEvent,
-        });
-    }
-
-    sendEnterAreaEvent(areaName: string) {
-        this.postMessage({
-            type: "enterAreaEvent",
-            data: {
-                name: areaName,
-            } as ChangeAreaEvent,
-        });
-    }
-
-    sendLeaveAreaEvent(areaName: string) {
-        this.postMessage({
-            type: "leaveAreaEvent",
-            data: {
-                name: areaName,
-            } as ChangeAreaEvent,
-        });
-    }
-
-    sendEnterMapEditorAreaEvent(areaName: string) {
-        this.postMessage({
-            type: "enterMapEditorAreaEvent",
-            data: {
-                name: areaName,
-            } as ChangeAreaEvent,
-        });
-    }
-    sendLeaveMapEditorAreaEvent(areaName: string) {
-        this.postMessage({
-            type: "leaveMapEditorAreaEvent",
-            data: {
-                name: areaName,
-            } as ChangeAreaEvent,
+            },
         });
     }
 
@@ -1051,7 +1085,7 @@ class IframeListener {
             data: {
                 popupId,
                 buttonId,
-            } as ButtonClickedEvent,
+            },
         });
     }
 
@@ -1104,7 +1138,7 @@ class IframeListener {
     public postMessage(
         message: IframeResponseEvent,
         exceptOrigin?: MessageEventSource,
-        transfer?: Transferable[]
+        transfer?: Transferable[],
     ): void {
         for (const iframe of this.iframes.keys()) {
             if (exceptOrigin === iframe.contentWindow) {
@@ -1149,7 +1183,7 @@ class IframeListener {
                     value,
                 },
             },
-            source ?? undefined
+            source ?? undefined,
         );
     }
 
@@ -1163,7 +1197,7 @@ class IframeListener {
                     value,
                 },
             },
-            source ?? undefined
+            source ?? undefined,
         );
     }
 
@@ -1202,7 +1236,7 @@ class IframeListener {
      */
     public registerOpenMessagePortAnswerer<T extends keyof IframeMessagePortMap>(
         key: T,
-        callback: OpenMessagePortAnswererCallback<T>
+        callback: OpenMessagePortAnswererCallback<T>,
     ): void {
         this.openMessagePortAnswerers[key] = callback;
     }

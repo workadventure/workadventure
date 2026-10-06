@@ -1,5 +1,4 @@
 import * as Sentry from "@sentry/svelte";
-import { openModal } from "svelte-modals";
 import { get } from "svelte/store";
 import type { MatrixClient } from "matrix-js-sdk";
 import { analyticsClient } from "../Administration/AnalyticsClient";
@@ -9,6 +8,7 @@ import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../Stores/CoWebsiteStore";
 import { scriptUtils } from "../Api/ScriptUtils";
+import { getEmbedLink } from "../Utils/EmbedLink";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
@@ -18,6 +18,7 @@ import { hasMatrixChatCapabilities } from "./Connection/ChatConnection";
 import { navChat } from "./Stores/ChatStore";
 import { selectedRoomStore } from "./Stores/SelectRoomStore";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
+import { modals } from "@wa-modals";
 
 export type OpenCoWebsiteObject = {
     url: string;
@@ -31,7 +32,7 @@ export type OpenCoWebsiteObject = {
 //enlever les events lié au chat dans iframelistener
 export const openCoWebSite = (
     { url, allowApi, allowPolicy, widthPercent, closable }: OpenCoWebsiteObject,
-    source: MessageEventSource | null
+    source: MessageEventSource | null,
 ) => {
     if (!url || !source) {
         throw new Error("Unknown query source");
@@ -42,7 +43,7 @@ export const openCoWebSite = (
         allowApi,
         allowPolicy,
         widthPercent,
-        closable
+        closable,
     );
 
     return openSimpleCowebsite(coWebsite);
@@ -63,7 +64,7 @@ export const sendRedirectPricing = () => {
 };
 
 export const sendLogin = () => {
-    analyticsClient.login();
+    analyticsClient.trackAdminEvent("auth.login_clicked");
     window.location.href = "/login";
 };
 
@@ -74,14 +75,14 @@ export const openTab = (url: string) => {
 export const openDirectChatRoom = async (chatID: string) => {
     try {
         if (!get(userIsConnected)) {
-            openModal(RequiresLoginForChatModal);
+            modals.open(RequiresLoginForChatModal);
             return;
         }
         const chatConnection = await gameManager.getChatConnection();
-        let room = chatConnection.getDirectRoomFor(chatID);
+        let room = await chatConnection.getDirectRoomFor(chatID);
         if (!room) room = await chatConnection.createDirectRoom(chatID);
         if (!room) throw new Error("Failed to create room");
-        analyticsClient.createMatrixRoom();
+        analyticsClient.trackAdminEvent("chat.matrix_room.created");
 
         if (get(room.myMembership) === "invite") {
             room.joinRoom().catch((error: unknown) => console.error(error));
@@ -100,7 +101,7 @@ export const openDirectChatRoom = async (chatID: string) => {
 export const openChatRoom = async (roomId: string) => {
     try {
         if (!get(userIsConnected)) {
-            openModal(RequiresLoginForChatModal);
+            modals.open(RequiresLoginForChatModal);
             return;
         }
         const chatConnection = await gameManager.getChatConnection();
@@ -136,7 +137,7 @@ export const openCoWebSiteWithoutSource = ({
         allowPolicy,
         widthPercent,
         closable,
-        hideUrl
+        hideUrl,
     );
 
     return openSimpleCowebsite(coWebsite);
@@ -173,3 +174,36 @@ export function getMatrixClientForChatTint(): MatrixClient | undefined {
     }
     return undefined;
 }
+
+/**
+ * Opens a chat link as a co-website, falling back to a new tab whenever embedding would leave
+ * the user staring at a blank iframe.
+ *
+ * The message keeps showing the link as it was posted. Only at click time do we resolve the embed
+ * form known apps require (YouTube's /embed/, Google's /preview, Klaxoon's from=embedded...):
+ * that is what we probe and what we embed, since the posted form is often not frameable. When no
+ * embed form exists, the link is probed as posted and the probe decides.
+ */
+export const openChatLinkAsCoWebsite = async (rawUrl: string): Promise<void> => {
+    const url = (await getEmbedLink(rawUrl)) ?? rawUrl;
+
+    let embeddable: boolean;
+    try {
+        const answer = await gameManager.getCurrentGameScene().connection?.queryEmbeddableWebsite(url);
+        // state=false means the URL is unreachable, embeddable=false means it refuses to be
+        // framed. Both end up as a blank iframe, so both belong in a new tab.
+        embeddable = answer?.state === true && answer.embeddable;
+    } catch (error) {
+        console.info("Could not check whether chat link is embeddable, opening it in a new tab instead", error);
+        embeddable = false;
+    }
+
+    if (!embeddable) {
+        // openTab() runs the link back through getWebsiteUrl(), which strips embed-only
+        // parameters, so a new tab always lands on the page a human would expect.
+        scriptUtils.openTab(rawUrl);
+        return;
+    }
+
+    openCoWebSiteWithoutSource({ url, closable: true });
+};

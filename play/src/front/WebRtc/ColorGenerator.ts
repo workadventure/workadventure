@@ -10,7 +10,7 @@ function toHexa(r: number, g: number, b: number): string {
 export function getColorRgbFromHue(
     hue: number,
     saturation = 0.5,
-    brightness = 0.95
+    brightness = 0.95,
 ): { r: number; g: number; b: number } {
     const golden_ratio_conjugate = 0.618033988749895;
     hue += golden_ratio_conjugate;

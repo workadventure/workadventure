@@ -5,6 +5,16 @@ metadata:
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
     role: play
+  {{- if .Values.play.ingress.sticky.enabled }}
+  annotations:
+    # Sticky annotations for Traefik are handled at the service level. For nginx annotations, see at the ingress level.
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.name: {{ .Values.play.ingress.sticky.cookie.name | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.httpOnly: {{ .Values.play.ingress.sticky.cookie.httpOnly | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.secure: {{ .Values.play.ingress.sticky.cookie.secure | quote }}
+    traefik.ingress.kubernetes.io/service.sticky.cookie.sameSite: {{ .Values.play.ingress.sticky.cookie.sameSite | quote }}
+  {{- end }}
+
 spec:
   type: {{ .Values.play.service.type }}
   ports:

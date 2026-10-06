@@ -28,8 +28,6 @@ test.describe("WA.player.setStatus() @nowebkit", () => {
         await evaluateScript(page, () => WA.player.setStatus("ONLINE"));
         await Menu.openMenu(page);
         await expect(page.getByRole("button", { name: "Online" }).locator("svg")).toBeVisible();
-
-        await page.context().close();
     });
 
     test("should reject SILENT status (auto-managed)", async ({ browser }) => {
@@ -39,7 +37,5 @@ test.describe("WA.player.setStatus() @nowebkit", () => {
 
         await Menu.openMenu(page);
         await expect(page.getByRole("button", { name: "Online" }).locator("svg")).toBeVisible();
-
-        await page.context().close();
     });
 });

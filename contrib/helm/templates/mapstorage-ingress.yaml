@@ -1,14 +1,21 @@
 {{- if and (or .Values.ingress.enabled .Values.mapstorage.ingress.enabled) (not .Values.singleDomain) -}}
 {{- $fullName := include "workadventure.fullname" . -}}
+{{- $annotations := dict -}}
+{{- with .Values.mapstorage.ingress.annotations -}}
+{{- $annotations = merge $annotations . -}}
+{{- end -}}
+{{- with .Values.ingress.annotationsRoot -}}
+{{- $annotations = merge $annotations . -}}
+{{- end -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ $fullName }}-mapstorage
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotationsRoot }}
+  {{- if gt (len $annotations) 0 }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml $annotations | nindent 4 }}
   {{- end }}
 spec:
   {{- $ingressClassName := coalesce .Values.mapstorage.ingress.className .Values.ingress.className -}}

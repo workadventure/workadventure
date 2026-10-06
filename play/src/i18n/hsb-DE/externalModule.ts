@@ -17,6 +17,19 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             "Teams je Microsoft 365-nałožka, kotraž wam pomha, waš team zwjazany a organizowany dźeržeć. Móžeće chatować, so stakać, wołać a na jednim městnje sobu dźěłać 😍",
         buttonSync: "Moje Teams synchronizować 🚀",
         buttonConnect: "Moje Teams zwjazać 🚀",
+        meetingPopupWaiting: {
+            title: "Teams Microsoft Meetings 🎉",
+            subtitle: "The Teams Meeting is not created yet... is in progress 💪",
+            guestExplain:
+                "Please connect to the platform to create a Teams Online Meeting or ask the owner to create it for you 🚀",
+            guestError: "You are not connected and cannot create Teams Online Meeting 😭",
+            missingScope: "No meeting was created: your Microsoft account is not allowed to create meetings.",
+            missingScopeExplain:
+                "Wait for a participant who can create it, or reconnect — if your administrator has just enabled it, reconnecting is enough.",
+            error: "The Teams meeting could not be created.",
+            errorExplain: "No worries, you can still join meetings when someone else creates one 🙏",
+            reconnect: "Reconnect Teams",
+        },
     },
     discord: {
         integration: "INTEGRACIJA",
@@ -75,6 +88,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupCancel: "Přetorhnyć",
         isSyncronized: "Z Google synchronizowany",
         popupScopeToSyncMeet: "Online-zećělenja wutworić",
+        popupScopeToSyncMeetHelp: "Required to create meetings in Google Meet areas.",
         openingMeet: "Google Meet so wočinje... 🙏",
         unableJoinMeet: "Njeda so na Google Meet wobdźělić 😭",
         googleMeetPopupWaiting: {
@@ -85,6 +99,9 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
                 "Prošu přizjewće so na platformje, zo by Google Meet wutworił, abo prosće wobsedźerja, zo by za was jón wutworil 🚀",
             error: "Nastajenja wašeho Google Workspace wam njedowoluja Meet wutworić.",
             errorExplain: "Žane starosće, móžeće hišće na zećělenja wobdźělić, hdyž něchtó druhi wotkaz dźěli 🙏",
+            missingScope: "No meeting was created: your Google account has not granted meeting creation.",
+            missingScopeExplain: "Wait for a participant who can create it, or reconnect and allow meeting creation.",
+            reconnect: "Reconnect Google",
         },
         popupScopeIsConnectedButton: "Wotzjewić",
         popupScopeIsConnectedExplainText:

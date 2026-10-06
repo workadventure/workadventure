@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "تم حذف هذه الخريطة",
         deletePromptSubtitle: "تم قطع اتصالك بهذه الغرفة.",
         deletePromptDetails: "لن تؤدي إعادة التحميل إلى استعادة هذه الخريطة لأنها لم تعد موجودة.",
+        editionFailed: "تعذر حفظ التغيير الذي أجريته، وتم التراجع عنه.",
     },
     sideBar: {
         areaEditor: "تحرير المنطقة", // Fläche bearbeiten
@@ -75,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "إلغاء",
                 validate: "اعتماد",
             },
-            disabled: "تم تعطيل تكامل Jitsi لهذه الغرفة ❌",
             actionButtonLabel: "بدء اجتماع Jitsi",
         },
         playAudio: {
@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "تشغيل الموسيقى",
             error: "تعذر تحميل الصوت",
             actionButtonLabel: "تشغيل الموسيقى",
+            playForAllUsersLabel: "تشغيل لجميع المستخدمين على الخريطة",
+            audibleRadiusLabel: "نطاق السماع (بالبكسل)",
+            audibleRadiusPlaceholder: "مسموع في كل مكان إذا كان فارغًا",
         },
         openWebsite: {
             label: "فتح رابط",
@@ -122,14 +125,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: 'يمكن للمستخدمين على المنصة (المسرح) التحدث إلى جميع الحاضرين في منطقة "الجمهور" المطابقة.',
             nameLabel: "الاسم",
             namePlaceholder: "المسرح الرئيسي",
-            disabled: "المنصة معطلة لهذه الغرفة ❌",
             actionButtonLabel: "الانضمام إلى المنصة",
         },
         listenerMegaphone: {
             label: "الجمهور",
             description: "يمكن للمستخدمين في منطقة الجمهور سماع المتحدث على المنصة المرتبطة.",
             nameLabel: "اسم المنصة",
-            disabled: "الجمهور معطل لهذه الغرفة ❌",
             waitingMediaLinkLabel: "الوسائط المعروضة قبل بدء البث",
             waitingMediaLinkPlaceholder: "https://www… (أدخل رابط الوسائط)",
             waitingMedialLinkError: "يبدو أن هناك مشكلة في الرابط الذي قدمته. هل يمكنك التحقق منه مرة أخرى؟ 🙏",
@@ -139,6 +140,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "الانضمام إلى الجمهور",
         },
         chatEnabled: "ربط قناة دردشة مخصصة",
+        allowTalking: "السماح بالتحدث وتشكيل الفقاعات",
+        raiseHandEnabled: "السماح برفع اليد",
         seeAttendees: "عرض الحضور",
         start: {
             label: "منطقة البداية",
@@ -305,6 +308,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "بدء مع ميكروفون مكتوم",
                 startWithVideoMuted: "بدء مع كاميرا مغلقة",
                 disableChat: "تعطيل الدردشة",
+                raiseHandEnabled: "السماح برفع اليد",
                 livekitRoomAdminTag: "وسم المشرف لغرفة الاجتماع",
                 cancel: "إلغاء",
                 validate: "اعتماد",
@@ -451,7 +455,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "وضع القاعة مفعّل",
                 audienceVideoFeedbackActivatedDisabled: "وضع القاعة معطّل",
                 audienceVideoFeedbackActivatedHelper:
-                    "وضع القاعة مفعّل: استقبل تدفق الكاميرا والميكروفون لجميع المستخدمين (مع تفعيل الكاميرا والميكروفون) في الغرفة/العالم. لكن الحاضر لن يتمكن من رؤية الحاضرين الآخرين. معطّل افتراضيًا.",
+                    "وضع القاعة مفعّل: استقبل تدفق الكاميرا لجميع المستخدمين (مع تفعيل الكاميرا) في الغرفة/العالم، بدون صوتهم. لكن الحاضر لن يتمكن من رؤية الحاضرين الآخرين. معطّل افتراضيًا.",
                 error: {
                     title: "يرجى إدخال عنوان",
                     save: {

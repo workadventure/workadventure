@@ -1,21 +1,19 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import type { Readable } from "svelte/store";
     import { clickOutside } from "svelte-outside";
     import { LL } from "../../../../i18n/i18n-svelte";
     import type { RecordingSpaceRow } from "../../ActionBar/MenuIcons/RecordingMenuUtils";
 
-    export let rowsStore: Readable<RecordingSpaceRow[]>;
-    export let onSelect: (row: RecordingSpaceRow) => void;
-    export let onClose: (() => void) | undefined = undefined;
+    interface Props {
+        rowsStore: Readable<RecordingSpaceRow[]>;
+        onselect?: (row: RecordingSpaceRow) => void;
+        onclose?: () => void;
+    }
 
-    const dispatch = createEventDispatcher<{
-        close: void;
-    }>();
+    let { rowsStore, onselect, onclose = undefined }: Props = $props();
 
     function handleClose(): void {
-        dispatch("close");
-        onClose?.();
+        onclose?.();
     }
 
     function handleSelect(row: RecordingSpaceRow): void {
@@ -23,7 +21,7 @@
             return;
         }
 
-        onSelect(row);
+        onselect?.(row);
         handleClose();
     }
 
@@ -87,7 +85,7 @@
                         ? 'border-red-400/60 text-red-200 hover:bg-red-500/10'
                         : 'border-white/20 text-white hover:bg-white/10'}"
                     disabled={row.disabled}
-                    on:click={() => handleSelect(row)}
+                    onclick={() => handleSelect(row)}
                 >
                     {row.action === "stop"
                         ? $LL.recording.actionbar.title.stop()

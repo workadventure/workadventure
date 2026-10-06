@@ -12,7 +12,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         teleport: "このユーザーにテレポートする権限がありません。",
         room: "入室拒否。この部屋への入室が許可されていません。",
     },
-    importantMessage: "重要なメッセージ",
     connectionLost: "通信切断。再接続しています…",
     connectionLostTitle: "通信切断",
     connectionLostSubtitle: "再接続",
@@ -28,6 +27,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     backgroundProcessing: {
         failedToApply: "背景効果の適用に失敗しました",
+        notSupportedOnThisBrowser: "このブラウザでは背景効果はサポートされていません",
     },
     duplicateUserConnected: {
         title: "すでに接続されています",

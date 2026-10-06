@@ -5,7 +5,7 @@ import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 import chatUtils from "./utils/chat";
 
-test.describe("Meeting invitation @nomobile", () => {
+test.describe("Meeting invitation @nomobile @nowebkit", () => {
     test.beforeEach(async ({ browserName, page }) => {
         test.skip(browserName === "webkit" || isMobile(page), "Skip on WebKit and mobile");
     });
@@ -43,10 +43,10 @@ test.describe("Meeting invitation @nomobile", () => {
         // Accept invitation
         await chatUtils.UL_acceptInvitation(bob);
 
-        await expect(alice.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 30_000 });
-        await expect(alice.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 15_000 });
-        await expect(bob.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 30_000 });
-        await expect(bob.locator("#cameras-container").getByText("Alice")).toBeVisible({ timeout: 15_000 });
+        await expect(alice.locator("#cameras-container").getByText("You").first()).toBeVisible({ timeout: 30_000 });
+        await expect(alice.locator("#cameras-container").getByText("Bob").first()).toBeVisible({ timeout: 15_000 });
+        await expect(bob.locator("#cameras-container").getByText("You").first()).toBeVisible({ timeout: 30_000 });
+        await expect(bob.locator("#cameras-container").getByText("Alice").first()).toBeVisible({ timeout: 15_000 });
 
         await alice.getByTestId("participant-menu").click();
         await expect(alice.getByTestId("participant-sub-menu")).toBeVisible({ timeout: 5_000 });

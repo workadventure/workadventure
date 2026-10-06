@@ -11,7 +11,7 @@ export class BBBCoWebsite extends SimpleCoWebsite {
         allowPolicy?: string,
         widthPercent?: number,
         closable?: boolean,
-        hideUrl?: boolean
+        hideUrl?: boolean,
     ) {
         // Remove all other BBB coWebsites
         coWebsites.keepOnly((coWebsite) => !(coWebsite instanceof BBBCoWebsite));

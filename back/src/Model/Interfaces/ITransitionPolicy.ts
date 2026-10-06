@@ -17,9 +17,10 @@ export interface ITransitionPolicy {
      * Determines if a transition should occur based on current state and user count.
      * @param currentType - The current communication type
      * @param userCount - The current number of users
+     * @param cpuLimitedUserCount - How many of them raised their `cpuLimited` flag (see SpaceUser)
      * @returns true if a transition should occur
      */
-    shouldTransition(currentType: CommunicationType, userCount: number): boolean;
+    shouldTransition(currentType: CommunicationType, userCount: number, cpuLimitedUserCount?: number): boolean;
 
     /**
      * Determines the next state type based on current state and user count.

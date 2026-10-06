@@ -17,8 +17,8 @@
 </script>
 
 <ActionBarButton
-    on:click={() => {
-        analyticsClient.layoutPresentChange();
+    onclick={() => {
+        analyticsClient.trackAdminEvent("meeting.layout_changed", { layout: "presentation" });
         switchLayoutMode();
     }}
     classList="group/btn-layout"

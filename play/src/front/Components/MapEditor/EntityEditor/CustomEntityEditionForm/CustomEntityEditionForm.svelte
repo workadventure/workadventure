@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { EntityPrefab } from "@workadventure/map-editor";
-    import { createEventDispatcher } from "svelte";
     import LL from "../../../../../i18n/i18n-svelte";
     import EntityImage from "../EntityItem/EntityImage.svelte";
     import type { InputTagOption } from "../../../Input/InputTagOption";
@@ -8,34 +7,51 @@
     import Select from "../../../Input/Select.svelte";
     import Input from "../../../Input/Input.svelte";
     import InputCheckbox from "../../../Input/InputCheckbox.svelte";
+    import Button from "../../../UI/Button.svelte";
     import LogoCollisionGrid from "./LogoCollisionGrid.svg";
     import EntityEditionCollisionGrid from "./EntityEditionCollisionGrid.svelte";
 
-    export let customEntity: EntityPrefab;
-    export let isUploadForm = false;
-
-    let { name, tags, collisionGrid: customEntityCollisionGrid, depthOffset: depthOffsetCustomEntity } = customEntity;
-    let inputTagOptions: InputTagOption[] | undefined = tags.map((tag) => ({ value: tag, label: tag }));
-
-    let collisionGrid = customEntityCollisionGrid ?? [];
-    let floatingObject = isUploadForm ? false : customEntityCollisionGrid === undefined;
-    let depthOffset: number = depthOffsetCustomEntity ? depthOffsetCustomEntity * -1 : 0;
-    let entityImageRef: HTMLImageElement;
-    let displayDepthCustomSelector = false;
-
-    const dispatch = createEventDispatcher<{
-        applyEntityModifications: EntityPrefab;
-        closeForm: undefined;
-        removeEntity: { entityId: string };
-    }>();
-
-    enum depthOptions {
-        GROUND_LEVEL = "GroundLevel",
-        STANDING = "Standing",
-        CUSTOM = "Custom",
+    interface Props {
+        customEntity: EntityPrefab;
+        isUploadForm?: boolean;
+        closeForm?: () => void;
+        removeEntity?: (payload: { entityId: string }) => void;
+        applyEntityModifications?: (entity: EntityPrefab) => void;
     }
 
-    let selectedDepthOption: depthOptions = depthOffset === 0 ? depthOptions.STANDING : depthOptions.CUSTOM;
+    let {
+        customEntity,
+        isUploadForm = false,
+        closeForm = () => {},
+        removeEntity = () => {},
+        applyEntityModifications = () => {},
+    }: Props = $props();
+
+    let {
+        name,
+        tags,
+        collisionGrid: customEntityCollisionGrid,
+        depthOffset: depthOffsetCustomEntity,
+    } = $state((() => customEntity)());
+    let inputTagOptions: InputTagOption[] | undefined = $state(tags.map((tag) => ({ value: tag, label: tag })));
+
+    let collisionGrid = $state(customEntityCollisionGrid ? customEntityCollisionGrid.map((row) => [...row]) : []);
+    let floatingObject = $state((() => (isUploadForm ? false : customEntityCollisionGrid === undefined))());
+    let depthOffset: number = $state(depthOffsetCustomEntity ? depthOffsetCustomEntity * -1 : 0);
+    let entityImageRef: HTMLImageElement | undefined = $state();
+    let displayDepthCustomSelector = $state(false);
+
+    const depthOptions = {
+        GROUND_LEVEL: "GroundLevel",
+        STANDING: "Standing",
+        CUSTOM: "Custom",
+    } as const;
+
+    type DepthOption = (typeof depthOptions)[keyof typeof depthOptions];
+
+    let selectedDepthOption: DepthOption = $state(
+        (() => (depthOffset === 0 ? depthOptions.STANDING : depthOptions.CUSTOM))(),
+    );
 
     function getModifiedCustomEntity(): EntityPrefab {
         return {
@@ -64,7 +80,7 @@
         collisionGrid[rowIndex][columnIndex] = collisionGrid[rowIndex][columnIndex] === 0 ? 1 : 0;
     }
 
-    function updateDepthOffset(depthOption: depthOptions) {
+    function updateDepthOffset(depthOption: DepthOption) {
         if (depthOption === depthOptions.STANDING) {
             depthOffset = 0;
         }
@@ -72,11 +88,11 @@
             displayDepthCustomSelector = true;
         }
         if (depthOption === depthOptions.GROUND_LEVEL) {
-            depthOffset = entityImageRef?.naturalHeight;
+            depthOffset = entityImageRef?.naturalHeight ?? 0;
         }
     }
 
-    function getTranslationForDepthOption(depthOption: depthOptions) {
+    function getTranslationForDepthOption(depthOption: DepthOption) {
         if (depthOption === depthOptions.STANDING) {
             return $LL.mapEditor.entityEditor.customEntityEditorForm.standing();
         }
@@ -86,9 +102,11 @@
         return $LL.mapEditor.entityEditor.customEntityEditorForm.groundLevel();
     }
 
-    $: if (selectedDepthOption) {
-        updateDepthOffset(selectedDepthOption);
-    }
+    $effect(() => {
+        if (selectedDepthOption) {
+            updateDepthOffset(selectedDepthOption);
+        }
+    });
 </script>
 
 <div class="flex flex-col flex-1 gap-2">
@@ -97,22 +115,22 @@
             <EntityEditionCollisionGrid
                 {collisionGrid}
                 {updateCollisionGrid}
-                collisionGridHeight={entityImageRef?.height}
+                collisionGridHeight={entityImageRef?.height ?? 0}
             />
         {/if}
         <EntityImage
             classNames="w-32 max-h-32 object-contain"
-            on:onImageLoad={(event) => generateCollisionGridIfNotExists(event.detail)}
+            imageLoad={(image) => generateCollisionGridIfNotExists(image)}
             imageSource={customEntity.imagePath}
             imageAlt={customEntity.name}
         />
         {#if displayDepthCustomSelector}
             <div>
                 <p class="m-0 p-0 text-xs">{$LL.mapEditor.entityEditor.customEntityEditorForm.wokaAbove()}</p>
-                <div class="rotate-[270deg]" style="width: 30px;margin-top: {entityImageRef?.height - 30}px">
+                <div class="rotate-[270deg]" style="width: 30px;margin-top: {(entityImageRef?.height ?? 0) - 30}px">
                     <input
                         class="!cursor-grab active:!cursor-grabbing slider"
-                        style="width: {entityImageRef?.height}px"
+                        style="width: {entityImageRef?.height ?? 0}px"
                         bind:value={depthOffset}
                         type="range"
                         max={entityImageRef?.naturalHeight}
@@ -168,32 +186,36 @@
     {/if}
     <div class="flex gap-2 flex-wrap justify-center w-full text-sm">
         {#if !isUploadForm}
-            <button
-                class="btn-lg btn btn-danger w-full"
-                data-testid="removeEntity"
-                on:click={() => dispatch("removeEntity", { entityId: customEntity.id })}
-                >{$LL.mapEditor.entityEditor.buttons.delete()}</button
+            <Button
+                size="lg"
+                variant="danger"
+                class="w-full"
+                dataTestId="removeEntity"
+                onclick={() => removeEntity({ entityId: customEntity.id })}
             >
+                {$LL.mapEditor.entityEditor.buttons.delete()}
+            </Button>
         {/if}
 
         <div class="flex gap-2 w-full mt-2">
-            <button class="btn-lg btn btn-contrast w-full" on:click={() => dispatch("closeForm")}
-                >{$LL.mapEditor.entityEditor.buttons.cancel()}</button
-            >
+            <Button size="lg" variant="contrast" class="w-full" onclick={closeForm}>
+                {$LL.mapEditor.entityEditor.buttons.cancel()}
+            </Button>
 
-            <button
-                class="btn-lg btn btn-secondary w-full"
-                data-testid="applyEntityModifications"
-                on:click={() => dispatch("applyEntityModifications", getModifiedCustomEntity())}
-                >{isUploadForm
-                    ? $LL.mapEditor.entityEditor.buttons.upload()
-                    : $LL.mapEditor.entityEditor.buttons.save()}</button
+            <Button
+                size="lg"
+                variant="secondary"
+                class="w-full"
+                dataTestId="applyEntityModifications"
+                onclick={() => applyEntityModifications(getModifiedCustomEntity())}
             >
+                {isUploadForm ? $LL.mapEditor.entityEditor.buttons.upload() : $LL.mapEditor.entityEditor.buttons.save()}
+            </Button>
         </div>
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .slider::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;

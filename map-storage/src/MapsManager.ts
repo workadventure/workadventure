@@ -3,11 +3,18 @@ import { WamFile, WAMFileFormat } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
+import { LockByKey } from "@workadventure/shared-utils/src/LockByKey";
 import { fileSystem } from "./fileSystem";
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
 import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
-import { LockByKey } from "./Services/LockByKey";
+
+/**
+ * Time after which a map edition lock operation is considered stuck and rejected, so a wedged
+ * operation cannot block map edition forever.
+ */
+const EDITION_LOCK_TIMEOUT_MS = 10_000;
+
 class MapsManager {
     private loadedMaps: Map<string, WamFile>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
@@ -15,7 +22,20 @@ class MapsManager {
     private saveMapIntervals: Map<string, NodeJS.Timeout>;
     private mapLastChangeTimestamp: Map<string, number>;
 
-    private readonly editionLocks = new LockByKey<string>();
+    private readonly editionLocks = new LockByKey<string>(
+        (error, key, timeoutMs) => {
+            Sentry.captureException(error, {
+                tags: { key: String(key), location: "withTimeout" },
+                extra: { timeoutMs },
+            });
+        },
+        (error, key) => {
+            console.error(`Edition lock callback failed for key: ${key}`, error);
+            Sentry.captureException(error, {
+                tags: { key: String(key), location: "editionLockCallback" },
+            });
+        },
+    );
 
     private mapListService: MapListService;
 
@@ -41,7 +61,7 @@ class MapsManager {
     }
 
     public waitForLock(mapKey: string, callback: () => Promise<void>): Promise<void> {
-        return this.editionLocks.waitForLock(mapKey, callback);
+        return this.editionLocks.waitForLock(mapKey, callback, EDITION_LOCK_TIMEOUT_MS);
     }
 
     public async executeCommand(mapKey: string, domain: string, command: Command): Promise<void> {
@@ -154,16 +174,20 @@ class MapsManager {
                 // after executeCommand inside the same lock).
                 if (queue.length === 0) {
                     this.editionLocks
-                        .waitForLock(mapKey, () => {
-                            // Re-check after acquiring the lock: a new command may have been
-                            // added while we were waiting.
-                            const currentQueue = this.loadedMapsCommandsQueue.get(mapKey);
-                            if (!currentQueue || currentQueue.length === 0) {
-                                this.loadedMapsCommandsQueue.delete(mapKey);
-                                this.loadedMaps.delete(mapKey);
-                            }
-                            return Promise.resolve();
-                        })
+                        .waitForLock(
+                            mapKey,
+                            () => {
+                                // Re-check after acquiring the lock: a new command may have been
+                                // added while we were waiting.
+                                const currentQueue = this.loadedMapsCommandsQueue.get(mapKey);
+                                if (!currentQueue || currentQueue.length === 0) {
+                                    this.loadedMapsCommandsQueue.delete(mapKey);
+                                    this.loadedMaps.delete(mapKey);
+                                }
+                                return Promise.resolve();
+                            },
+                            EDITION_LOCK_TIMEOUT_MS,
+                        )
                         .catch((e) => {
                             console.error("Error while acquiring or processing lock for cleaning map key ", mapKey, e);
                             Sentry.captureException(e);
@@ -171,7 +195,7 @@ class MapsManager {
                 }
             } else {
                 console.error(
-                    `[${new Date().toISOString()}] Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
+                    `[${new Date().toISOString()}] Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`,
                 );
             }
         }, this.COMMAND_TIME_IN_QUEUE_MS);
@@ -193,7 +217,7 @@ class MapsManager {
                     }
                     if (lastChangeTimestamp + this.NO_CHANGE_DETECTED_MS < +new Date()) {
                         console.info(
-                            `[${new Date().toISOString()}] NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`
+                            `[${new Date().toISOString()}] NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`,
                         );
                         this.clearSaveMapInterval(key);
                     }
@@ -202,7 +226,7 @@ class MapsManager {
                     this.clearSaveMapInterval(key);
                     Sentry.captureException(e);
                 });
-            }, intervalMS)
+            }, intervalMS),
         );
     }
 }

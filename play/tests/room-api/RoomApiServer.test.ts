@@ -62,12 +62,12 @@ describe("RoomApiServer", () => {
                                         code: Status.NOT_FOUND,
                                         message: "Variable not found",
                                     },
-                                    null
+                                    null,
                                 );
                             },
                             saveVariable: (
                                 request: SaveVariableRequest,
-                                callback: (error: any, response: any) => void
+                                callback: (error: any, response: any) => void,
                             ) => {
                                 if (
                                     request.room ===
@@ -82,7 +82,7 @@ describe("RoomApiServer", () => {
                                         code: Status.NOT_FOUND,
                                         message: "Variable not found",
                                     },
-                                    null
+                                    null,
                                 );
                             },
                             listenVariable: (request: VariableRequest) => {

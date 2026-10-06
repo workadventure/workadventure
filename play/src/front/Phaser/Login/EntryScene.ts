@@ -1,4 +1,4 @@
-import { Scene } from "phaser";
+import * as Phaser from "phaser";
 import { ErrorApiData } from "@workadventure/messages";
 import { asError } from "catch-unknown";
 import { gameManager } from "../Game/GameManager";
@@ -13,7 +13,7 @@ export const EntrySceneName = "EntryScene";
  * The EntryScene is not a real scene. It is the first scene loaded and is only used to initialize the gameManager
  * and to route to the next correct scene.
  */
-export class EntryScene extends Scene {
+export class EntryScene extends Phaser.Scene {
     constructor() {
         super({
             key: EntrySceneName,

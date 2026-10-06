@@ -1,13 +1,11 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { afterUpdate, onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { get } from "svelte/store";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
-    import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
-    import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import { modalVisibilityStore, roomListVisibilityStore, showLimitRoomModalStore } from "../Stores/ModalStore";
@@ -15,12 +13,13 @@
     import { wokaMenuStore } from "../Stores/WokaMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
-    import { coWebsites } from "../Stores/CoWebsiteStore";
+    import { coWebsites, windowSize } from "../Stores/CoWebsiteStore";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
     import {
         mapEditorAskToClaimPersonalAreaStore,
+        mapEditorModeStore,
         mapEditorSelectedToolStore,
         mapEditorVisibilityStore,
         mapExplorationObjectSelectedStore,
@@ -34,13 +33,14 @@
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { inputFormFocusStore } from "../Stores/UserInputStore";
     import { showRecordingList } from "../Stores/RecordingStore";
-    import { toastStore } from "../Stores/ToastStore";
+    import { toastStore } from "../Stores/ToastStoreSingleton";
     import { meetingInvitationRequestStore } from "../Stores/MeetingInvitationStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { navChat } from "../Chat/Stores/ChatStore";
     import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
     import { chatNotificationStore } from "../Stores/ProximityNotificationStore";
     import { analyticsClient } from "../Administration/AnalyticsClient";
+    import type { WorkAdventureComponent } from "../../types/component";
     import { LL } from "../../i18n/i18n-svelte";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
@@ -49,10 +49,8 @@
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import Menu from "./Menu/Menu.svelte";
-    import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningBanner from "./WarningContainer/WarningBanner.svelte";
-    import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
     import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
@@ -73,6 +71,7 @@
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
+    import RaisedHandsDock from "./Video/RaisedHandsDock.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
@@ -80,16 +79,22 @@
     import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
     import { IconArrowsMinimize, IconMessageCircle2, IconUserPlus } from "@wa-icons";
 
+    const loadDesktopCapturerSourcePicker = () =>
+        import("./Video/DesktopCapturerSourcePicker.svelte") as Promise<{ default: WorkAdventureComponent }>;
+
     /** When false, the right-hand participant strip in highlight fullscreen is collapsed (toggle with the edge arrow). */
-    let highlightParticipantCamerasListOpen = true;
+    let highlightParticipantCamerasListOpen = $state(true);
 
     const HIGHLIGHT_FULLSCREEN_PARTICIPANT_LIST_AUTO_HIDE_MS = 5000;
+    const MAP_EDITOR_TOOLBAR_WIDTH = 64;
+    const MAP_EDITOR_TOOLBAR_GAP = 16;
+    const MAP_EDITOR_TOOLBAR_RESERVED_WIDTH = MAP_EDITOR_TOOLBAR_WIDTH + MAP_EDITOR_TOOLBAR_GAP;
 
     let participantListAutoHideTimer: ReturnType<typeof setTimeout> | undefined;
     let wasHighlightFullscreenActive = false;
 
     /** On entering highlight fullscreen, show the list then auto-hide after 5s (uses existing slide animation). */
-    afterUpdate(() => {
+    $effect(() => {
         const active = Boolean($highlightedEmbedScreen && $highlightFullScreen);
         if (active && !wasHighlightFullscreenActive) {
             chatVisibilityStore.set(false);
@@ -139,6 +144,27 @@
         }
     };
 
+    function getMapEditorRightReservedSpace({
+        isMapEditorActive,
+        isMapEditorPanelVisible,
+        isMapEditorToolbarVisible,
+        mapEditorPanelWidth,
+    }: {
+        isMapEditorActive: boolean;
+        isMapEditorPanelVisible: boolean;
+        isMapEditorToolbarVisible: boolean;
+        mapEditorPanelWidth: number;
+    }): number {
+        if (!isMapEditorActive) {
+            return 0;
+        }
+
+        return (
+            (isMapEditorPanelVisible ? mapEditorPanelWidth : 0) +
+            (isMapEditorToolbarVisible ? MAP_EDITOR_TOOLBAR_RESERVED_WIDTH : 0)
+        );
+    }
+
     onMount(() => {
         document.addEventListener("focusin", handleFocusInEvent);
         document.addEventListener("focusout", handleFocusOutEvent);
@@ -153,11 +179,19 @@
         }
     });
 
-    $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
-    $: marginRight =
-        $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor
-            ? $mapEditorSideBarWidthStore
-            : 0;
+    let marginLeft = $derived($chatVisibilityStore ? $chatSidebarWidthStore : 0);
+    let mapEditorPanelVisible = $derived(
+        $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor,
+    );
+    let mapEditorToolbarVisible = $derived($windowSize.width >= 768 || !$mapEditorVisibilityStore);
+    let marginRight = $derived(
+        getMapEditorRightReservedSpace({
+            isMapEditorActive: $mapEditorModeStore,
+            isMapEditorPanelVisible: mapEditorPanelVisible,
+            isMapEditorToolbarVisible: mapEditorToolbarVisible,
+            mapEditorPanelWidth: $mapEditorSideBarWidthStore,
+        }),
+    );
 
     function onHighlightFullscreenSendMessage() {
         if (get(chatVisibilityStore) && get(navChat).key === "chat") {
@@ -165,15 +199,18 @@
             return;
         }
         const gameScene = gameManager.getCurrentGameScene();
-        const proximityChatRoom = gameScene.proximityChatRoom;
+        const proximityChatRoom = gameScene.proximityChatRoomManager.resolveTargetRoom();
+        if (!proximityChatRoom) {
+            return;
+        }
         selectedRoomStore.set(proximityChatRoom);
         navChat.switchToChat();
         chatVisibilityStore.set(true);
         proximityChatRoom.hasUnreadMessages.set(false);
         proximityChatRoom.unreadMessagesCount.set(0);
-        chatNotificationStore.clearAll();
+        chatNotificationStore.clearRoom(proximityChatRoom.id);
         proximityChatRoom.unreadNotificationCount.set(0);
-        analyticsClient.openedChat();
+        analyticsClient.trackAdminEvent("chat.opened");
     }
 
     function onHighlightFullscreenInviteUser() {
@@ -182,11 +219,13 @@
             return;
         }
         const gameScene = gameManager.getCurrentGameScene();
-        const proximityChatRoom = gameScene.proximityChatRoom;
+        const proximityChatRoom = gameScene.proximityChatRoomManager.resolveTargetRoom();
+        if (!proximityChatRoom) {
+            return;
+        }
         selectedRoomStore.set(proximityChatRoom);
         navChat.switchToUserList();
         chatVisibilityStore.set(true);
-        analyticsClient.openUserList();
     }
 
     function exitHighlightFullscreen() {
@@ -204,7 +243,7 @@
     style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px "
 >
     {#if $modalVisibilityStore}
-        <div class="bg-black/60 w-full h-full fixed start-0 end-0" />
+        <div class="bg-black/60 w-full h-full fixed start-0 end-0"></div>
     {/if}
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
@@ -238,7 +277,7 @@
                     <ActionBarButton
                         context="menu"
                         label={$LL.actionbar.participantSendMessage()}
-                        on:click={onHighlightFullscreenSendMessage}
+                        onclick={onHighlightFullscreenSendMessage}
                         dataTestId="highlight-fullscreen-send-message"
                     >
                         <IconMessageCircle2 font-size="20" />
@@ -246,7 +285,7 @@
                     <ActionBarButton
                         context="menu"
                         label={$LL.actionbar.participantInviteUser()}
-                        on:click={onHighlightFullscreenInviteUser}
+                        onclick={onHighlightFullscreenInviteUser}
                         dataTestId="highlight-fullscreen-invite-user"
                     >
                         <IconUserPlus font-size="20" />
@@ -254,7 +293,7 @@
                     <ActionBarButton
                         context="menu"
                         label={$LL.actionbar.participantExitFullscreen()}
-                        on:click={exitHighlightFullscreen}
+                        onclick={exitHighlightFullscreen}
                         dataTestId="highlight-fullscreen-exit"
                     >
                         <IconArrowsMinimize font-size="20" />
@@ -270,7 +309,7 @@
                 aria-controls="highlightFullScreenParticipantCamerasList"
                 aria-label={highlightParticipantCamerasListOpen ? "Hide participant list" : "Show participant list"}
                 data-testid="toggle-highlight-participant-cameras-list"
-                on:click={() => (highlightParticipantCamerasListOpen = !highlightParticipantCamerasListOpen)}
+                onclick={() => (highlightParticipantCamerasListOpen = !highlightParticipantCamerasListOpen)}
             >
                 <span
                     class="inline-flex transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
@@ -289,21 +328,15 @@
             <div class="fixed z-[1000] bottom-0 start-0 right-0 m-auto w-max mobile:w-[98vw] md:max-w-[80%]">
                 <div class="popups flex items-end relative w-full justify-center mobile:mb-24 mb-4 h-[calc(100%-96px)]">
                     {#each $popupStore.slice().reverse() as popup, index (popup.uuid)}
+                        {@const PopupComponent = popup.component}
                         <div class="popupwrapper popupwrapper-{index} w-full flex-1" in:fly={{ y: 150, duration: 550 }}>
-                            <svelte:component
-                                this={popup.component}
-                                {...popup.props}
-                                on:close={() => popupStore.removePopup(popup.uuid)}
-                            />
+                            <PopupComponent {...popup.props} onclose={() => popupStore.removePopup(popup.uuid)} />
                         </div>
                     {/each}
                 </div>
             </div>
 
-            <Lazy
-                when={$showDesktopCapturerSourcePicker}
-                component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
-            />
+            <Lazy when={$showDesktopCapturerSourcePicker} component={loadDesktopCapturerSourcePicker} />
             {#if $modalVisibilityStore}
                 <Modal />
             {/if}
@@ -312,9 +345,7 @@
                 <Menu />
             {/if}
 
-            {#if $banMessageStore.length > 0}
-                <BanMessageContainer />
-            {:else if $textMessageStore.length > 0}
+            {#if $textMessageStore.length > 0}
                 <TextMessageContainer />
             {/if}
             <ProximityNotificationContainer />
@@ -328,10 +359,6 @@
 
             {#if $warningBannerStore}
                 <WarningBanner />
-            {/if}
-
-            {#if $showReportScreenStore !== userReportEmpty}
-                <ReportMenu />
             {/if}
 
             {#if $helpNotificationSettingsVisibleStore}
@@ -354,22 +381,26 @@
                 <LimitRoomModal />
             {/if}
 
-            {#if $toastStore.size > 0}
-                <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
-                    {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
-                        {@const toast = toastEntry[1]}
-                        <svelte:component this={toast.component} {...toast.props} />
-                    {/each}
-                </div>
-            {/if}
+            <!-- Toast stack, with the host-side raised-hands dock stacked below it so a toast never covers the
+                 dock's buttons (the dock self-gates on visibleRaisedHandSectionsStore). -->
+            <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
+                {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
+                    {@const toast = toastEntry[1]}
+                    {@const ToastComponent = toast.component}
+                    <ToastComponent {...toast.props} />
+                {/each}
+                <RaisedHandsDock />
+            </div>
 
             {#if $showRecordingList}
                 <RecordingsListModal />
             {/if}
 
             {#if !$highlightFullScreen}
-                <PictureInPicture let:inPictureInPicture>
-                    <PresentationLayout {inPictureInPicture} />
+                <PictureInPicture>
+                    {#snippet children({ inPictureInPicture })}
+                        <PresentationLayout {inPictureInPicture} />
+                    {/snippet}
                 </PictureInPicture>
             {/if}
 
@@ -421,7 +452,7 @@
             {/if}
             <ExternalComponents zone="centeredPopup" />
 
-            <ExplorerMenu />
+            <ExplorerMenu mapEditorRightOffset={mapEditorPanelVisible ? $mapEditorSideBarWidthStore : 0} />
         </section>
         <div class="">
             <!--<ActionBar />-->
@@ -430,9 +461,7 @@
     </div>
 </div>
 
-<style lang="scss">
-    @use "../style/breakpoints.scss" as *;
-
+<style>
     .popups {
         z-index: 1000;
         .popupwrapper {
@@ -454,14 +483,29 @@
                 /* Hide popups after 4 popups */
                 display: none;
             }
-            // For each popups but not first
-            @for $i from 1 through 4 {
-                &:nth-child(#{$i + 1}) {
-                    top: -$i * 16px;
-                    filter: blur($i + 0px);
-                    opacity: 1 - ($i * 0.1);
-                    transform: scale(1 - ($i * 0.05));
-                }
+            &:nth-child(2) {
+                top: -16px;
+                filter: blur(1px);
+                opacity: 0.9;
+                transform: scale(0.95);
+            }
+            &:nth-child(3) {
+                top: -32px;
+                filter: blur(2px);
+                opacity: 0.8;
+                transform: scale(0.9);
+            }
+            &:nth-child(4) {
+                top: -48px;
+                filter: blur(3px);
+                opacity: 0.7;
+                transform: scale(0.85);
+            }
+            &:nth-child(5) {
+                top: -64px;
+                filter: blur(4px);
+                opacity: 0.6;
+                transform: scale(0.8);
             }
         }
     }

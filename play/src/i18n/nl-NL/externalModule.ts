@@ -17,6 +17,19 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             "Teams is een Microsoft 365-app die uw team helpt verbonden en georganiseerd te blijven. U kunt chatten, vergaderen, bellen en samenwerken op één plek 😍",
         buttonSync: "Mijn Teams synchroniseren 🚀",
         buttonConnect: "Mijn Teams verbinden 🚀",
+        meetingPopupWaiting: {
+            title: "Teams Microsoft Meetings 🎉",
+            subtitle: "The Teams Meeting is not created yet... is in progress 💪",
+            guestExplain:
+                "Please connect to the platform to create a Teams Online Meeting or ask the owner to create it for you 🚀",
+            guestError: "You are not connected and cannot create Teams Online Meeting 😭",
+            missingScope: "No meeting was created: your Microsoft account is not allowed to create meetings.",
+            missingScopeExplain:
+                "Wait for a participant who can create it, or reconnect — if your administrator has just enabled it, reconnecting is enough.",
+            error: "The Teams meeting could not be created.",
+            errorExplain: "No worries, you can still join meetings when someone else creates one 🙏",
+            reconnect: "Reconnect Teams",
+        },
     },
     discord: {
         integration: "INTEGRATIE",
@@ -75,6 +88,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupCancel: "Annuleren",
         isSyncronized: "Gesynchroniseerd met Google",
         popupScopeToSyncMeet: "Online vergaderingen maken",
+        popupScopeToSyncMeetHelp: "Required to create meetings in Google Meet areas.",
         openingMeet: "Google Meet openen... 🙏",
         unableJoinMeet: "Kan niet deelnemen aan Google Meet 😭",
         googleMeetPopupWaiting: {
@@ -86,6 +100,9 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             error: "Uw Google Workspace-instellingen staan het maken van een Meet niet toe.",
             errorExplain:
                 "Geen zorgen, u kunt nog steeds deelnemen aan vergaderingen wanneer iemand anders een link deelt 🙏",
+            missingScope: "No meeting was created: your Google account has not granted meeting creation.",
+            missingScopeExplain: "Wait for a participant who can create it, or reconnect and allow meeting creation.",
+            reconnect: "Reconnect Google",
         },
         popupScopeIsConnectedButton: "Uitloggen",
         popupScopeIsConnectedExplainText:

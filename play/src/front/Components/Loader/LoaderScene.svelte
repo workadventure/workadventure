@@ -30,13 +30,13 @@
                 <div
                     class="h-full transition-all duration-200"
                     style="width: {$loaderProgressStore * 100}%; background-color: {primary};"
-                />
+                ></div>
             </div>
         </div>
     </div>
-    <div class="absolute left-0 top-0 w-full h-full bg-cover z-10 blur" style="background-image: url({sceneBg});" />
+    <div class="absolute left-0 top-0 w-full h-full bg-cover z-10 blur" style="background-image: url({sceneBg});"></div>
     <div
         class="absolute left-0 top-0 w-full h-full z-20 backdrop-blur-md opacity-70"
         style="background-color: {bgColor};"
-    />
+    ></div>
 </div>

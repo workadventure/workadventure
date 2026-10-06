@@ -13,8 +13,8 @@ export class CloseTool implements MapEditorTool {
         // Nothing to be done
     }
     public activate(): void {
-        analyticsClient.toggleMapEditor(false);
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+        analyticsClient.trackAdminEvent("map_editor.closed");
+        gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(undefined);
         mapEditorModeStore.switchMode(false);
         mapEditorVisibilityStore.set(false);
     }

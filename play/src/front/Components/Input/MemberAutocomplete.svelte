@@ -1,22 +1,25 @@
 <script lang="ts">
     import Select from "svelte-select";
-    import { createEventDispatcher } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
-    export let placeholder: string;
-    export let value: string | undefined | null = undefined;
+    interface Props {
+        placeholder: string;
+        value?: string | null;
+        select?: (value: { index: number; label: string; value: string }) => void;
+    }
 
-    let selectedValue: { index: number; label: string; value: string } | undefined = value
-        ? {
-              index: 1,
-              label: value,
-              value,
-          }
-        : undefined;
+    let { placeholder, value = undefined, select = () => {} }: Props = $props();
 
-    const dispatch = createEventDispatcher<{
-        onSelect: { index: number; label: string; value: string };
-    }>();
+    let selectedValue: { index: number; label: string; value: string } | undefined = $state(
+        (() =>
+            value
+                ? {
+                      index: 1,
+                      label: value,
+                      value,
+                  }
+                : undefined)(),
+    );
 
     async function searchMembers(filterText: string) {
         const connection = gameManager.getCurrentGameScene().connection;
@@ -28,8 +31,8 @@
                     label: member.name
                         ? `${member.name} ${member.email ? `(${member.email})` : ""}`
                         : member.email
-                        ? member.email
-                        : member.id,
+                          ? member.email
+                          : member.id,
                 }));
             } catch (error) {
                 console.error(error);
@@ -40,7 +43,7 @@
 
     function handleSelectOption() {
         if (selectedValue) {
-            dispatch("onSelect", selectedValue);
+            select(selectedValue);
         }
     }
 </script>

@@ -8,7 +8,7 @@ export class PropertyUtils {
     public static findBooleanProperty(
         name: string,
         properties: ITiledMapProperty[] | undefined,
-        context?: string
+        context?: string,
     ): boolean | undefined {
         const property = PropertyUtils.findProperty(name, properties);
         if (property === undefined) {
@@ -16,7 +16,7 @@ export class PropertyUtils {
         }
         if (typeof property !== "boolean") {
             throw new Error(
-                'Expected property "' + name + '" to be a boolean. ' + (context ? " (" + context + ")" : "")
+                'Expected property "' + name + '" to be a boolean. ' + (context ? " (" + context + ")" : ""),
             );
         }
         return property;
@@ -25,7 +25,7 @@ export class PropertyUtils {
     public static findStringProperty(
         name: string,
         properties: ITiledMapProperty[] | undefined,
-        context?: string
+        context?: string,
     ): string | undefined {
         const property = PropertyUtils.findProperty(name, properties);
         if (property === undefined) {
@@ -33,7 +33,7 @@ export class PropertyUtils {
         }
         if (typeof property !== "string") {
             throw new Error(
-                'Expected property "' + name + '" to be a string. ' + (context ? " (" + context + ")" : "")
+                'Expected property "' + name + '" to be a string. ' + (context ? " (" + context + ")" : ""),
             );
         }
         return property;
@@ -42,7 +42,7 @@ export class PropertyUtils {
     public static mustFindProperty(
         name: string,
         properties: ITiledMapProperty[] | undefined,
-        context?: string
+        context?: string,
     ): Exclude<Json, null> {
         const property = PropertyUtils.findProperty(name, properties);
         if (property === undefined || property === null) {
@@ -54,12 +54,12 @@ export class PropertyUtils {
     public static mustFindStringProperty(
         name: string,
         properties: ITiledMapProperty[] | undefined,
-        context?: string
+        context?: string,
     ): string {
         const property = PropertyUtils.mustFindProperty(name, properties, context);
         if (typeof property !== "string") {
             throw new Error(
-                'Expected property "' + name + '" to be a string. ' + (context ? " (" + context + ")" : "")
+                'Expected property "' + name + '" to be a string. ' + (context ? " (" + context + ")" : ""),
             );
         }
         return property;

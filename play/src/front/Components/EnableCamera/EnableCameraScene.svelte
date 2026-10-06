@@ -19,22 +19,28 @@
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    export let game: Game;
     import { gameManager } from "../../Phaser/Game/GameManager";
 
     import bgMap from "../images/map-exemple.png";
+    import Button from "../UI/Button.svelte";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
     import SelectMicrophone from "./SelectMicrophone.svelte";
     import SelectCamera from "./SelectCamera.svelte";
     import SelectSpeaker from "./SelectSpeaker.svelte";
     import { IconMicrophoneOn, IconCamera } from "@wa-icons";
 
-    const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
+    interface Props {
+        game: Game;
+    }
+
+    let { game }: Props = $props();
+
+    let enableCameraScene = $derived(game.scene.getScene(EnableCameraSceneName) as EnableCameraScene);
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
     let legals = gameManager.currentStartedRoom?.legals ?? {};
 
-    let selectedCamera: string | undefined = undefined;
-    let selectedMicrophone: string | undefined = undefined;
+    let selectedCamera: string | undefined = $state(undefined);
+    let selectedMicrophone: string | undefined = $state(undefined);
     const sound = new Audio("/resources/objects/webrtc-in.mp3");
 
     let legalStrings: string[] = [];
@@ -44,7 +50,7 @@
                 encodeURI(legals.termsOfUseUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.termsOfUse() +
-                "</a>"
+                "</a>",
         );
     }
     if (legals?.privacyPolicyUrl) {
@@ -53,7 +59,7 @@
                 encodeURI(legals.privacyPolicyUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.privacyPolicy() +
-                "</a>"
+                "</a>",
         );
     }
     if (legals?.cookiePolicyUrl) {
@@ -62,11 +68,11 @@
                 encodeURI(legals.cookiePolicyUrl) +
                 '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
                 $LL.login.cookiePolicy() +
-                "</a>"
+                "</a>",
         );
     }
 
-    let legalString: string | undefined;
+    let legalString: string | undefined = $state();
     if (legalStrings.length > 0) {
         if (Intl.ListFormat) {
             const formatter = new Intl.ListFormat($locale, { style: "long", type: "conjunction" });
@@ -138,16 +144,16 @@
         sound.load();
     });
 
-    function handleSelectCamera(event: CustomEvent<string | undefined>) {
-        selectCamera(event.detail);
+    function handleSelectCamera(deviceId: string | undefined) {
+        selectCamera(deviceId);
     }
 
-    function handleSelectMicrophone(event: CustomEvent<string | undefined>) {
-        selectMicrophone(event.detail);
+    function handleSelectMicrophone(device: string | undefined) {
+        selectMicrophone(device);
     }
 
-    function handleSelectSpeaker(event: CustomEvent<string | undefined>) {
-        selectSpeaker(event.detail);
+    function handleSelectSpeaker(deviceId: string | undefined) {
+        selectSpeaker(deviceId);
     }
 
     function selectCamera(newCameraSelected: string | undefined = undefined) {
@@ -185,10 +191,16 @@
     /* eslint-disable svelte/no-at-html-tags */
 </script>
 
-<form class="enableCameraScene pointer-events-auto relative z-30 m-0 px-2" on:submit|preventDefault={submit}>
+<form
+    class="enableCameraScene pointer-events-auto relative z-30 m-0 px-2"
+    onsubmit={(event) => {
+        event.preventDefault();
+        submit();
+    }}
+>
     <section class="flex min-h-dvh">
         <div
-            class="text-white justify-center items-center overflow-hidden w-[100vw] container flex flex-col min-h-dvh pb-36 pt-8 lg:pt-0 relative"
+            class="text-white justify-center items-center overflow-hidden w-[100vw] container flex flex-col min-h-dvh pb-42 md:pb-36 pt-8 lg:pt-0 relative"
         >
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
@@ -198,55 +210,66 @@
             </section>
 
             <div
-                class="flex md:flex-wrap flex-col lg:space-x-4 w-full items-center justify-center lg:flex-row lg:items-stretch lg:px-4 lg:pb-4"
+                class="flex md:flex-wrap flex-col gap-4 w-full items-center justify-center lg:flex-row lg:items-stretch lg:px-4 lg:pb-4"
             >
                 <!-- MICROPHONE -->
 
                 <SelectMicrophone
-                    on:selectDevice={handleSelectMicrophone}
+                    onselectdevice={handleSelectMicrophone}
                     deviceList={$microphoneListStore ?? []}
                     selectedDevice={selectedMicrophone}
                 >
-                    <IconMicrophoneOn font-size="24" slot="icon" />
-                    <span slot="title">{$LL.actionbar.subtitle.microphone()}</span>
-
-                    <div class="absolute top-4 start-0 flex justify-center w-full" slot="widget">
-                        <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
-                    </div>
+                    {#snippet icon()}
+                        <IconMicrophoneOn font-size="24" />
+                    {/snippet}
+                    {#snippet title()}
+                        <span>{$LL.actionbar.subtitle.microphone()}</span>
+                    {/snippet}
+                    {#snippet widget()}
+                        <div class="absolute top-4 start-0 flex justify-center w-full">
+                            <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
+                        </div>
+                    {/snippet}
                 </SelectMicrophone>
 
                 <!-- CAMERA -->
                 <SelectCamera
-                    on:selectDevice={handleSelectCamera}
+                    onselectdevice={handleSelectCamera}
                     deviceList={$cameraListStore ?? []}
                     selectedDevice={selectedCamera}
                 >
-                    <IconCamera font-size="24" slot="icon" />
-                    <span slot="title">{$LL.camera.editCam()}</span>
-                    <span slot="widget">
-                        {#if selectedCamera !== undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
-                            <video
-                                class="myCamVideoSetup bg-contrast/80 backdrop-blur flex items-center justify-center w-full aspect-video overflow-hidden scale-x-[-1]"
-                                use:srcObject={$localStreamStore.stream}
-                                autoplay
-                                muted
-                                playsinline
-                            />
-                        {:else}
-                            <div
-                                class="webrtcsetup flex items-center justify-center w-full aspect-video rounded-lg overflow-hidden bg-contrast"
-                            >
-                                CAM PB <!-- TODO HUGO : catch pb with cam -->
-                            </div>
-                        {/if}
-                    </span>
+                    {#snippet icon()}
+                        <IconCamera font-size="24" />
+                    {/snippet}
+                    {#snippet title()}
+                        <span>{$LL.camera.editCam()}</span>
+                    {/snippet}
+                    {#snippet widget()}
+                        <span>
+                            {#if selectedCamera !== undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
+                                <video
+                                    class="myCamVideoSetup bg-contrast/80 backdrop-blur flex items-center justify-center w-full aspect-video overflow-hidden scale-x-[-1]"
+                                    use:srcObject={$localStreamStore.stream}
+                                    autoplay
+                                    muted
+                                    playsinline
+                                ></video>
+                            {:else}
+                                <div
+                                    class="webrtcsetup flex items-center justify-center w-full aspect-video rounded-lg overflow-hidden bg-contrast"
+                                >
+                                    CAM PB <!-- TODO HUGO : catch pb with cam -->
+                                </div>
+                            {/if}
+                        </span>
+                    {/snippet}
                 </SelectCamera>
 
                 <!-- SPEAKER -->
                 {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
                     <SelectSpeaker
-                        on:playSound={playSoundClick}
-                        on:selectDevice={handleSelectSpeaker}
+                        onplaysound={playSoundClick}
+                        onselectdevice={handleSelectSpeaker}
                         deviceList={$speakerListStore ?? []}
                         selectedDevice={$speakerSelectedStore}
                     />
@@ -258,16 +281,13 @@
                 <section
                     class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-4"
                 >
-                    <button
-                        type="submit"
-                        class="btn btn-light btn-lg btn-ghost w-full md:w-1/2
-              
-                     hidden">{$LL.actionbar.cancel()}</button
-                    >
+                    <Button type="submit" variant="light" appearance="ghost" size="lg" class="w-full md:w-1/2 hidden">
+                        {$LL.actionbar.cancel()}
+                    </Button>
                     <!-- TODO ACTION -->
-                    <button type="submit" class="btn btn-secondary btn-lg w-full md:w-1/2 block"
-                        >{$LL.menu.settings.save()}</button
-                    >
+                    <Button type="submit" variant="secondary" size="lg" class="w-full md:w-1/2 block">
+                        {$LL.menu.settings.save()}
+                    </Button>
                 </section>
                 {#if legalString}
                     <section class="terms-and-conditions h-fit z-40 text-center w-full">
@@ -283,10 +303,10 @@
         </div>
     </section>
 </form>
-<div class="absolute start-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{bgMap}');" />
-<div class="absolute start-0 top-0 w-dvw h-dvh bg-contrast/80 z-20" style="background-color: '{bgColor}';" />
+<div class="fixed start-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{bgMap}');"></div>
+<div class="fixed start-0 top-0 w-dvw h-dvh bg-contrast/80 z-20" style="background-color: '{bgColor}';"></div>
 
-<style lang="scss">
+<style>
     .enableCameraScene {
         h2 {
             margin: 1px;

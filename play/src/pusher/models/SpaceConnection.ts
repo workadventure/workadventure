@@ -39,7 +39,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
 
     constructor(
         private _apiClientRepository = apiClientRepository,
-        private _GRPC_MAX_MESSAGE_SIZE = GRPC_MAX_MESSAGE_SIZE
+        private _GRPC_MAX_MESSAGE_SIZE = GRPC_MAX_MESSAGE_SIZE,
     ) {}
 
     /**
@@ -78,7 +78,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
         try {
             const apiSpaceClient = await this._apiClientRepository.getSpaceClient(
                 space.name,
-                this._GRPC_MAX_MESSAGE_SIZE
+                this._GRPC_MAX_MESSAGE_SIZE,
             );
             const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
             this.registerEventsOnConnection(spaceStreamToBack, backId, apiSpaceClient);
@@ -106,7 +106,8 @@ export class SpaceConnection implements SpaceConnectionInterface {
                         case "kickOffMessage":
                         case "publicEvent":
                         case "privateEvent":
-                        case "spaceAnswerMessage": {
+                        case "spaceAnswerMessage":
+                        case "spaceStatePatchMessage": {
                             const spaceName = this.extractSpaceName(message);
                             if (spaceName) {
                                 const space = this.spacePerBackId.get(backId)?.get(spaceName);
@@ -170,13 +171,13 @@ export class SpaceConnection implements SpaceConnectionInterface {
     private onErrorListener(
         spaceStreamToBack: BackSpaceConnection,
         backId: number,
-        apiSpaceClient: SpaceManagerClient
+        apiSpaceClient: SpaceManagerClient,
     ) {
         return (err: Error) => {
             if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
             console.error(
                 "Error in connection to back server for watchSpace '" + apiSpaceClient.getChannel().getTarget(),
-                err
+                err,
             );
             Sentry.captureException(err);
             this.removeListeners(spaceStreamToBack, backId);
@@ -199,7 +200,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
             spaceStreamToBack.on("error", (err) => {
                 console.error(
                     "Error received on spaceStreamToBack after listeners were removed for backId " + backId,
-                    err
+                    err,
                 );
                 Sentry.captureException(err);
             });
@@ -209,7 +210,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
     private registerEventsOnConnection(
         spaceStreamToBack: BackSpaceConnection,
         backId: number,
-        apiSpaceClient: SpaceManagerClient
+        apiSpaceClient: SpaceManagerClient,
     ) {
         const dataListener = this.onDataListener(spaceStreamToBack, backId);
         const endListener = this.onEndListener(spaceStreamToBack, backId);
@@ -328,6 +329,8 @@ export class SpaceConnection implements SpaceConnectionInterface {
             case "spaceAnswerMessage": {
                 return message.message.spaceAnswerMessage?.spaceName;
             }
+            case "spaceStatePatchMessage":
+                return message.message.spaceStatePatchMessage.spaceName;
             case "pingMessage":
                 return undefined;
             default: {

@@ -3,13 +3,18 @@ import { publicTestMapUrl } from "./utils/urls";
 import Map from "./utils/map";
 import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 
 test.setTimeout(180_000);
+
 test.describe("Connection @nomobile @nowebkit", () => {
-    test.beforeEach(async ({ page, browserName }) => {
-        test.skip(isMobile(page) || browserName === "webkit", "Skip on mobile and WebKit due to limitations");
+    test.beforeEach(async ({ viewport, browserName }) => {
+        test.skip(
+            isMobileViewport(viewport) || browserName === "webkit",
+            "Skip on mobile and WebKit due to limitations",
+        );
     });
+
     test("can succeed even if WorkAdventure starts while pusher is down @slow", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/mousewheel.json", "reconnect"));
 
@@ -31,8 +36,6 @@ test.describe("Connection @nomobile @nowebkit", () => {
         /*await expect(page.locator("button#menuIcon")).toBeVisible({
       timeout: 180_000,
     });*/
-
-        await page.context().close();
     });
 
     test("can succeed on WAM file even if WorkAdventure starts while pusher is down @slow", async ({ browser }) => {
@@ -53,7 +56,5 @@ test.describe("Connection @nomobile @nowebkit", () => {
         });
 
         await Menu.waitForMapLoad(page, 180_000);
-
-        await page.context().close();
     });
 });

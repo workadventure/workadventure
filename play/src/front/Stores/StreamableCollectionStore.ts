@@ -1,4 +1,3 @@
-import { AvailabilityStatus } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import ListenerBox from "../Components/Video/ListenerBox.svelte";
@@ -6,6 +5,8 @@ import { LayoutMode } from "../WebRtc/LayoutManager";
 import LL from "../../i18n/i18n-svelte";
 import { VideoBox } from "../Space/VideoBox";
 import type { Streamable } from "../Space/Streamable";
+import { touchScreenManager } from "../Touch/TouchScreenManager";
+import { localEncoderStatsStore } from "../WebRtc/LocalEncoderStats";
 import { screenSharingLocalVideoBox } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
@@ -16,7 +17,9 @@ import { myCameraStore } from "./MyMediaStore";
 import {
     availabilityStatusStore,
     cameraEnergySavingStore,
+    inLivekitStore,
     isListenerStore,
+    isSpeakerStore,
     listenerSharingCameraStore,
     localStreamStore,
     localVoiceIndicatorStore,
@@ -31,14 +34,8 @@ import { windowSize } from "./CoWebsiteStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
-
-// MyLocalStreamable is a streamable that is the local camera streamable
-// It is used to display the local camera stream in the picture in picture mode when the user have an highlighted embed screen
-export interface MyLocalStreamable extends Streamable {
-    // No readonly because it is used to update the displayInPictureInPictureMode of the local camera streamable
-    displayInPictureInPictureMode: boolean;
-    setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => void;
-}
+import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
+import { shouldDisplayLocalCameraPeer } from "./StreamableCollectionRules";
 
 export const LISTENER_BOX_UNIQUE_ID = "listener-box";
 export const LISTENER_BOX_PRIORITY = -4;
@@ -57,7 +54,7 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
 const mutedLocalStream = muteMediaStreamStore(localstreamStoreValue);
 
 export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) => {
-    const streamable: MyLocalStreamable = {
+    const streamable: Streamable = {
         uniqueId: "-1",
         media: {
             type: "webrtc" as const,
@@ -68,13 +65,14 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
             },
         },
         volumeStore: localVolumeStore,
-        hasVideo: derived(
-            mediaStreamConstraintsStore,
-            ($mediaStreamConstraintsStore) => $mediaStreamConstraintsStore.video !== false
-        ),
-        // hasAudio = true because the webcam has a microphone attached and could potentially play sound
-        hasAudio: writable(true),
-        isMuted: derived(requestedMicrophoneState, (micState) => !micState),
+        hasVideo: derived([mediaStreamConstraintsStore, mutedLocalStream], ([mediaStreamConstraintsStore, stream]) => {
+            return (
+                mediaStreamConstraintsStore.video !== false &&
+                stream !== undefined &&
+                stream.getVideoTracks().length > 0
+            );
+        }),
+        hasAudio: requestedMicrophoneState,
         statusStore: writable("connected" as const),
         name: writable($LL.camera.my.nameTag()),
         showVoiceIndicator: localVoiceIndicatorStore,
@@ -88,10 +86,8 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
         canCloseStreamable: () => false,
         volume: writable(1),
         videoType: "video",
-        setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => {
-            streamable.displayInPictureInPictureMode = displayInPictureInPictureMode;
-        },
         webrtcStats: undefined,
+        senderStats: localEncoderStatsStore.video,
     };
     const videoBox = VideoBox.fromLocalStreamable(streamable, -2);
     set(videoBox);
@@ -110,7 +106,6 @@ const listenerBoxStreamable: Streamable = {
     volumeStore: undefined,
     hasVideo: writable(true),
     hasAudio: writable(false),
-    isMuted: writable(true),
     statusStore: writable("connected" as const),
     name: writable("Listener"),
     showVoiceIndicator: writable(false),
@@ -129,6 +124,51 @@ const listenerBoxStreamable: Streamable = {
 
 const listenerBoxVideoBox: VideoBox = VideoBox.fromLocalStreamable(listenerBoxStreamable, LISTENER_BOX_PRIORITY);
 
+// Store to track if we are in a conversation with someone else
+export const isInRemoteConversation = derived(
+    [videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore, isLiveStreamingStore],
+    ([
+        $videoStreamElementsStore,
+        $screenShareStreamElementsStore,
+        $scriptingVideoStore,
+        $silentStore,
+        $isLiveStreamingStore,
+    ]) => {
+        // If we are live streaming, we are in a conversation
+        if ($isLiveStreamingStore) {
+            return true;
+        }
+
+        // If we are silent, we are not in a conversation
+        if ($silentStore) {
+            return false;
+        }
+
+        // Check if we have any peers
+        if ($videoStreamElementsStore.length > 0) {
+            return true;
+        }
+
+        // Check if we have any screen sharing streams
+        if ($screenShareStreamElementsStore.length > 0) {
+            return true;
+        }
+
+        // Check if we have any scripting videos
+        if ($scriptingVideoStore.size > 0) {
+            return true;
+        }
+
+        return false;
+    },
+);
+
+export const isInActiveConversationStore = derived(
+    [isInRemoteConversation, currentPlayerGroupIdStore, inLivekitStore],
+    ([$isInRemoteConversation, $currentPlayerGroupIdStore, $inLivekitStore]) =>
+        $isInRemoteConversation || $currentPlayerGroupIdStore !== undefined || $inLivekitStore,
+);
+
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
  */
@@ -145,9 +185,10 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             silentStore,
             requestedCameraState,
             windowSize,
-            isLiveStreamingStore,
+            isInActiveConversationStore,
             isListenerStore,
             listenerSharingCameraStore,
+            isSpeakerStore,
             availabilityStatusStore,
         ],
         (
@@ -162,11 +203,12 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $silentStore,
                 $requestedCameraState,
                 $windowSize,
-                $isLiveStreamingStore,
+                $isInActiveConversationStore,
                 $isListenerStore,
                 $listenerSharingCameraStore,
+                $isSpeakerStore,
                 $availabilityStatusStore,
-            ] /*, set*/
+            ] /*, set*/,
         ) => {
             const peers = new Map<string, VideoBox>();
 
@@ -179,31 +221,22 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 }
             };
 
-            const isUnavailableStatus =
-                $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-                $availabilityStatusStore === AvailabilityStatus.SILENT ||
-                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-                $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-                $availabilityStatusStore === AvailabilityStatus.BUSY;
-
-            if ($myCameraStore && !$cameraEnergySavingStore && !$silentStore) {
-                let shouldAddMyCamera = true;
-                if (isUnavailableStatus) {
-                    shouldAddMyCamera = false;
-                }
-                // Are we the only one to display video AND are we not publishing a video stream? If so, let's hide the video.
-                // Are we the only one to display video AND we are on a small screen? If so, let's hide the video (because the webcam takes space and makes iPhones laggy when it starts)
-                if (!$isLiveStreamingStore && (!$requestedCameraState || $windowSize.width < 768)) {
-                    shouldAddMyCamera = false;
-                }
-                // Listeners can only show their camera if they have consented to share it (seeAttendees feature)
-                if ($isListenerStore && !$listenerSharingCameraStore) {
-                    shouldAddMyCamera = false;
-                }
-
-                if (shouldAddMyCamera) {
-                    addPeer($myCameraPeerStore);
-                }
+            if (
+                shouldDisplayLocalCameraPeer({
+                    hasCameraDevice: $myCameraStore,
+                    isCameraEnergySaving: $cameraEnergySavingStore,
+                    isSilent: $silentStore,
+                    requestedCameraState: $requestedCameraState,
+                    windowWidth: $windowSize.width,
+                    isMobile: touchScreenManager.primaryTouchDevice,
+                    isInActiveConversation: $isInActiveConversationStore,
+                    isListener: $isListenerStore,
+                    listenerSharingCamera: $listenerSharingCameraStore,
+                    isSpeaker: $isSpeakerStore,
+                    availabilityStatus: $availabilityStatusStore,
+                })
+            ) {
+                addPeer($myCameraPeerStore);
             }
 
             $screenShareStreamElementsStore.forEach(addPeer);
@@ -226,50 +259,11 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             }
 
             return peers;
-        }
+        },
     );
 }
 
 export const streamableCollectionStore = createStreamableCollectionStore();
-
-// Store to track if we are in a conversation with someone else
-export const isInRemoteConversation = derived(
-    [videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore, isLiveStreamingStore],
-    ([
-        $screenSharingStreamStore,
-        $videoStreamElementsStore,
-        $scriptingVideoStore,
-        $silentStore,
-        $isLiveStreamingStore,
-    ]) => {
-        // If we are live streaming, we are in a conversation
-        if ($isLiveStreamingStore) {
-            return true;
-        }
-
-        // If we are silent, we are not in a conversation
-        if ($silentStore) {
-            return false;
-        }
-
-        // Check if we have any peers
-        if ($videoStreamElementsStore.length > 0) {
-            return true;
-        }
-
-        // Check if we have any screen sharing streams
-        if ($screenSharingStreamStore.length > 0) {
-            return true;
-        }
-
-        // Check if we have any scripting videos
-        if ($scriptingVideoStore.size > 0) {
-            return true;
-        }
-
-        return false;
-    }
-);
 
 // No need to unsubscribe, the store is global
 // eslint-disable-next-line svelte/no-ignored-unsubscribe

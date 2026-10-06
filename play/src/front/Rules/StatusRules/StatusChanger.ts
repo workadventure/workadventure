@@ -1,18 +1,24 @@
 import type { AvailabilityStatus } from "@workadventure/messages";
 import type { StatusStrategyInterface } from "./StatusStrategyInterface";
 import { BasicStatusStrategy } from "./StatusStrategy/BasicStatusStrategy";
-import type { StatusRulesVerificationInterface } from "./statusRules";
-import { InvalidStatusTransitionError } from "./Errors/InvalidStatusTransitionError";
 
 export interface StatusStrategyFactoryInterface {
     createStrategy: (newStatus: AvailabilityStatus) => StatusStrategyInterface;
 }
 
+/**
+ * Applies the side rules that come with a status (timed rules, notification sound policy).
+ *
+ * It only ever *observes* availabilityStatusStore, which already decided the status by
+ * priority — so it deliberately vets nothing. It used to reject "impossible" transitions,
+ * but the store emits them routinely (a BUSY user walking into a silent zone) and
+ * GameScene sends the status to the back off its own subscription regardless. The
+ * rejection could not undo a status, only skip these rules and leave the strategy behind.
+ */
 export class StatusChanger {
     constructor(
-        private _rulesVerification: StatusRulesVerificationInterface,
         private _StatusStrategyFactory: StatusStrategyFactoryInterface,
-        private _statusStrategy: StatusStrategyInterface = new BasicStatusStrategy()
+        private _statusStrategy: StatusStrategyInterface = new BasicStatusStrategy(),
     ) {
         this._statusStrategy.applyAllRules();
     }
@@ -20,9 +26,6 @@ export class StatusChanger {
         return this._statusStrategy.getActualStatus();
     }
     changeStatusTo(newStatus: AvailabilityStatus) {
-        if (!this._rulesVerification.canChangeStatus(this._statusStrategy.getActualStatus()).to(newStatus)) {
-            throw new InvalidStatusTransitionError("");
-        }
         this._statusStrategy.cleanTimedRules();
         this.setStrategy(newStatus);
         this._statusStrategy.applyAllRules();

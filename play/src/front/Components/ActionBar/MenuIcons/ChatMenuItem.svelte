@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { navChat } from "../../../Chat/Stores/ChatStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import MessageCircleIcon from "../../Icons/MessageCircleIcon.svelte";
@@ -11,15 +10,16 @@
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
     import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 
-    export let last: boolean | undefined = undefined;
-    export let chatEnabledInAdmin = false;
+    interface Props {
+        last?: boolean;
+        chatEnabledInAdmin?: boolean;
+        onclick?: () => void;
+    }
 
-    const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
-    const unreadMessagesCount = proximityChatRoom.unreadMessagesCount;
+    let { last = undefined, chatEnabledInAdmin = false, onclick }: Props = $props();
 
-    const dispatch = createEventDispatcher<{
-        click: void;
-    }>();
+    const proximityChatRoomManager = gameManager.getCurrentGameScene().proximityChatRoomManager;
+    const unreadMessagesCount = proximityChatRoomManager.unreadMessagesCount;
 
     function toggleChat() {
         if (!$chatVisibilityStore) {
@@ -28,14 +28,12 @@
         }
 
         chatVisibilityStore.set(!$chatVisibilityStore);
-        proximityChatRoom.unreadMessagesCount.set(0);
-        chatNotificationStore.clearAll();
-        dispatch("click");
+        onclick?.();
     }
 
     const shortcut = ["c"];
 
-    let chatAvailable = false;
+    let chatAvailable = $state(false);
     gameManager
         .getChatConnection()
         .then(() => {
@@ -51,23 +49,33 @@
     const nbUnreadInvitationsMessages = gameManager.chatConnection.nbUnreadInvitationsMessages;
 
     // Calculate total unread count and format it (max 99+)
-    $: totalUnreadCount =
-        $nbUnreadRoomsMessages + $nbUnreadDirectRoomsMessages + $nbUnreadInvitationsMessages + $unreadMessagesCount;
-    $: displayCount = totalUnreadCount > 99 ? "99" : totalUnreadCount.toString();
+    let totalUnreadCount = $derived(
+        $nbUnreadRoomsMessages + $nbUnreadDirectRoomsMessages + $nbUnreadInvitationsMessages + $unreadMessagesCount,
+    );
+    let displayCount = $derived(totalUnreadCount > 99 ? "99" : totalUnreadCount.toString());
 </script>
 
 <ActionBarButton
-    on:click={() => {
+    onclick={() => {
         toggleChat();
         navChat.switchToChat();
         if (!chatEnabledInAdmin) {
-            selectedRoomStore.set(proximityChatRoom);
-            proximityChatRoom.hasUnreadMessages.set(false);
-            proximityChatRoom.unreadMessagesCount.set(0);
-            chatNotificationStore.clearAll();
-            proximityChatRoom.unreadNotificationCount.set(0);
+            const proximityChatRoom = proximityChatRoomManager.resolveTargetRoom();
+            if (proximityChatRoom) {
+                selectedRoomStore.set(proximityChatRoom);
+                proximityChatRoom.hasUnreadMessages.set(false);
+                proximityChatRoom.unreadMessagesCount.set(0);
+                chatNotificationStore.clearRoom(proximityChatRoom.id);
+                proximityChatRoom.unreadNotificationCount.set(0);
+            }
         }
-        analyticsClient.openedChat();
+        // toggleChat() has already flipped the store, so this reads the NEW state.
+        // Reporting unconditionally counted the click that CLOSES the panel as an
+        // opening too, which is why menu_opened_chat has always run at roughly twice
+        // the real figure.
+        if ($chatVisibilityStore) {
+            analyticsClient.trackAdminEvent("chat.opened");
+        }
     }}
     classList="group/btn-message-circle rounded-r-lg pe-2 {last ? '' : '@sm/actions:rounded-r-none @sm/actions:pe-0'}"
     tooltipTitle={$LL.actionbar.help.chat.title()}
@@ -83,8 +91,8 @@
 </ActionBarButton>
 {#if $chatZoneLiveStore || totalUnreadCount > 0}
     <div>
-        <span class="w-4 h-4 block rounded-full absolute -top-1 -start-1 animate-ping bg-white" />
-        <span class="w-3 h-3 block rounded-full absolute -top-0.5 -start-0.5 bg-white" />
+        <span class="w-4 h-4 block rounded-full absolute -top-1 -start-1 animate-ping bg-white"></span>
+        <span class="w-3 h-3 block rounded-full absolute -top-0.5 -start-0.5 bg-white"></span>
     </div>
 {/if}
 {#if totalUnreadCount > 0}

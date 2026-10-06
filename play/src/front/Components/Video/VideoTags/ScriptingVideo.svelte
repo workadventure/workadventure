@@ -1,28 +1,36 @@
-<svelte:options immutable={true} />
-
 <script lang="ts">
     import type { ScriptingVideoStreamable } from "../../../Space/Streamable";
 
-    export let style: string;
-    export let className: string;
-    export let videoWidth: number;
-    export let videoHeight: number;
-    export let onLoadVideoElement: (event: Event) => void;
+    interface Props {
+        style: string;
+        className: string;
+        videoWidth: number;
+        videoHeight: number;
+        onLoadVideoElement?: (event: Event) => void;
+        media: ScriptingVideoStreamable;
+    }
 
-    export let media: ScriptingVideoStreamable;
+    let {
+        style,
+        className,
+        videoWidth = $bindable(),
+        videoHeight = $bindable(),
+        onLoadVideoElement,
+        media,
+    }: Props = $props();
     let videoElement: HTMLVideoElement;
 </script>
 
-<!-- svelte-ignore a11y-media-has-caption -->
+<!-- svelte-ignore a11y_media_has_caption -->
 <video
     {style}
     bind:videoWidth
     bind:videoHeight
     bind:this={videoElement}
-    on:loadedmetadata={onLoadVideoElement}
+    onloadedmetadata={onLoadVideoElement}
     class={className}
     autoplay
     playsinline
     src={media.url}
     loop={media.config.loop}
-/>
+></video>

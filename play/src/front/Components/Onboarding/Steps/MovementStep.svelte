@@ -1,13 +1,15 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { fly } from "svelte/transition";
     import LL from "../../../../i18n/i18n-svelte";
     import { isMobileOnboarding, pressedKeysStore } from "../../../Stores/OnboardingStore";
     import { touchScreenManager } from "../../../Touch/TouchScreenManager";
 
-    const dispatch = createEventDispatcher<{
-        next: void;
-    }>();
+    interface Props {
+        onnext?: () => void;
+    }
+
+    const { onnext }: Props = $props();
 
     let keyboardLayout: "QWERTY" | "AZERTY" = "QWERTY";
 
@@ -62,6 +64,7 @@
 
         const keyLabel = getKeyLabel(event.code);
         if (keyLabel) {
+            // eslint-disable-next-line svelte/prefer-svelte-reactivity
             pressedKeysStore.update((keys) => new Set(keys).add(event.code));
         }
     }
@@ -70,6 +73,7 @@
         const keyLabel = getKeyLabel(event.code);
         if (keyLabel) {
             pressedKeysStore.update((keys) => {
+                // eslint-disable-next-line svelte/prefer-svelte-reactivity
                 const next = new Set(keys);
                 next.delete(event.code);
                 return next;
@@ -90,7 +94,7 @@
     });
 
     function handleNext() {
-        dispatch("next");
+        onnext?.();
     }
 </script>
 
@@ -149,7 +153,7 @@
                     <div class="flex gap-1">
                         <kbd
                             class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                                'ArrowUp'
+                                'ArrowUp',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                                 : ''}"
@@ -158,7 +162,7 @@
                         </kbd>
                         <kbd
                             class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                                'ArrowLeft'
+                                'ArrowLeft',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                                 : ''}"
@@ -167,7 +171,7 @@
                         </kbd>
                         <kbd
                             class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                                'ArrowDown'
+                                'ArrowDown',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                                 : ''}"
@@ -176,7 +180,7 @@
                         </kbd>
                         <kbd
                             class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                                'ArrowRight'
+                                'ArrowRight',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                                 : ''}"
@@ -188,7 +192,7 @@
             {/if}
             <button
                 class="mt-4 px-4 py-2 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
-                on:click={handleNext}
+                onclick={handleNext}
             >
                 {$LL.onboarding.movement.next()}
             </button>

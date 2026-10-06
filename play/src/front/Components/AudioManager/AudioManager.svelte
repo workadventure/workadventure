@@ -13,7 +13,7 @@
     let audioPlayerVol: HTMLInputElement;
     let unsubscriberVolumeStore: Unsubscriber | null = null;
 
-    let currentVolume: number = localUserStore.getAudioPlayerVolume();
+    let currentVolume: number = $state(localUserStore.getAudioPlayerVolume());
 
     onMount(() => {
         let volume = Math.min(localUserStore.getAudioPlayerVolume(), get(audioManagerVolumeStore).volume);
@@ -98,12 +98,12 @@
         <!--        </div>-->
         <span>{$LL.audio.volumeCtrl()}</span>
         <div class="audio-manager-player-volume flex items-center justify-center">
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
                 id="audioplayer_volume_icon_playing"
                 bind:this={audioPlayerVolumeIcon}
-                on:click={onMute}
+                onclick={onMute}
                 class="pr-4 flex items-center"
             >
                 <svg
@@ -143,9 +143,9 @@
                 max="1"
                 step="0.025"
                 bind:this={audioPlayerVol}
-                on:change={setVolume}
-                on:input={setVolume}
-                on:keydown={disallowKeys}
+                onchange={setVolume}
+                oninput={setVolume}
+                onkeydown={disallowKeys}
                 class="grow"
             />
             <div class="text-white ml-4">

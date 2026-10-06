@@ -3,7 +3,7 @@ import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import type { IframeMessagePortData, IframeMessagePortMap } from "../Events/MessagePortEvents";
-import type { IframeEvent, IframeQuery, IframeQueryMap, IframeQueryWrapper } from "../Events/IframeEvent";
+import type { IframeEvent, IframeQuery, IframeQueryMap } from "../Events/IframeEvent";
 import { CheckedIframeMessagePort } from "./CheckedIframeMessagePort";
 
 export function sendToWorkadventure(content: IframeEvent, transfer?: Transferable[]) {
@@ -19,7 +19,7 @@ export const answerPromises = new Map<
         resolve: (
             value:
                 | IframeQueryMap[keyof IframeQueryMap]["answer"]
-                | PromiseLike<IframeQueryMap[keyof IframeQueryMap]["answer"]>
+                | PromiseLike<IframeQueryMap[keyof IframeQueryMap]["answer"]>,
         ) => void;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         reject: (reason?: any) => void;
@@ -42,7 +42,7 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
         signal?: AbortSignal;
         // Default to 15 seconds timeout. Set to null to disable timeout.
         timeout?: number | null;
-    }
+    },
 ): Promise<IframeQueryMap[T]["answer"]> {
     if (options?.signal?.aborted) {
         return Promise.reject(asError(options?.signal?.reason));
@@ -53,7 +53,7 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
     }
     if (options?.timeout !== null) {
         signals.push(
-            abortTimeout(options?.timeout ?? 15000, new AbortError("The query took too long and was aborted"))
+            abortTimeout(options?.timeout ?? 15000, new AbortError("The query took too long and was aborted")),
         );
     }
     const finalSignal = abortAny(signals);
@@ -63,9 +63,9 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
             {
                 id: queryNumber,
                 query: content,
-            } as IframeQueryWrapper<T>,
+            },
             "*",
-            options?.transfer
+            options?.transfer,
         );
 
         const onAbort = () => {
@@ -105,7 +105,7 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
 
 export async function openMessagePort<K extends keyof IframeMessagePortMap>(
     type: K,
-    data: IframeMessagePortData<K>["data"]
+    data: IframeMessagePortData<K>["data"],
 ): Promise<CheckedIframeMessagePort<K>> {
     return new Promise<CheckedIframeMessagePort<K>>((resolve, reject) => {
         const port = new MessageChannel();
@@ -117,7 +117,7 @@ export async function openMessagePort<K extends keyof IframeMessagePortMap>(
                 data,
             },
             "*",
-            [port.port1]
+            [port.port1],
         );
 
         answerPromisesMessagePort.set(queryNumberMessagePort, {
@@ -138,7 +138,7 @@ export async function openMessagePort<K extends keyof IframeMessagePortMap>(
 export abstract class IframeApiContribution<
     T extends {
         callbacks: unknown[];
-    }
+    },
 > {
     abstract callbacks: T["callbacks"];
 }

@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import type { AreaData, AtLeast, LockableAreaPropertyData } from "@workadventure/map-editor";
 import { deepmergeIntoCustom, type DeepMergeLeafURI } from "deepmerge-ts";
 import { get } from "svelte/store";
@@ -9,12 +10,16 @@ import type { AreasManager } from "../Game/GameMap/AreasManager";
 import { setAreaPropertyVariable } from "../../Stores/AreaPropertyVariablesStore";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 
+import Rectangle = Phaser.GameObjects.Rectangle;
+import Collider = Phaser.Physics.Arcade.Collider;
+import StaticBody = Phaser.Physics.Arcade.StaticBody;
+
 const mergeInto = deepmergeIntoCustom<unknown, { DeepMergeArraysURI: DeepMergeLeafURI }>({
     mergeArrays: false,
 });
 
-export class Area extends Phaser.GameObjects.Rectangle {
-    private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
+export class Area extends Rectangle {
+    private areaCollider: Collider | undefined = undefined;
     private userHasCollideWithArea = false;
     private highlightTimeOut: undefined | NodeJS.Timeout = undefined;
     private collideTimeOut: undefined | NodeJS.Timeout = undefined;
@@ -25,7 +30,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
         overlap?: boolean,
         // FIXME: remove this, this is useless
         private connection = gameManager.getCurrentGameScene().connection,
-        private areasManager?: AreasManager
+        private areasManager?: AreasManager,
     ) {
         const collide = areasManager?.shouldAreaCollide(areaData.id) ?? false;
         super(
@@ -36,7 +41,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
             areaData.width,
             areaData.height + 1,
             collide ? 0xff0000 : overlap ? 0x0000ff : 0x000000,
-            collide || overlap ? 0.1 : 0
+            collide || overlap ? 0.1 : 0,
         );
         this.scene.add.existing(this).setVisible(false);
         this.scene.physics.add.existing(this, true);
@@ -53,7 +58,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
         this.setSize(this.areaData.width, this.areaData.height + 1);
         this.updateDisplayOrigin();
         this.update();
-        const areaStaticBody = this.body as Phaser.Physics.Arcade.StaticBody;
+        const areaStaticBody = this.body as StaticBody;
         areaStaticBody.updateFromGameObject();
     }
 
@@ -94,10 +99,14 @@ export class Area extends Phaser.GameObjects.Rectangle {
     private applyCollider() {
         if (this.areaCollider === undefined) {
             this.areaCollider = this.scene.physics.add.collider(this.scene.CurrentPlayer, this, () =>
-                this.onCollideAction()
+                this.onCollideAction(),
             );
-            // If the user is already colliding with the area when the collider is applied, we need to mark it so we don't trigger the collide action until they leave and re-enter the area.
-            if (!this.userHasCollideWithArea && this.scene.physics.overlap(this.scene.CurrentPlayer, this)) {
+            // If the user is already inside the area when the collider is applied, we need to mark it so we don't
+            // trigger the collide action until they leave and re-enter the area.
+            const isCurrentPlayerAlreadyInArea =
+                this.areasManager?.isCurrentPlayerInArea(this.areaData.id) ??
+                this.scene.physics.overlap(this.scene.CurrentPlayer, this);
+            if (!this.userHasCollideWithArea && isCurrentPlayerAlreadyInArea) {
                 this.userHasCollideWithArea = true;
             }
         }
@@ -148,7 +157,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
         });
     }
 
-    private displayWarningMessageOnCollide() {
+    public displayBlockedWarningMessage() {
         // Get the reason why the area is blocked
         let message: string = get(LL).area.noAccess(); // Default message
         const messageId = `area-blocked-${this.areaData.id}`;
@@ -163,7 +172,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
                         if (this.connection?.hasTag("admin")) {
                             const lockableProperty = this.areaData.properties.find(
                                 (property): property is LockableAreaPropertyData =>
-                                    property.type === "lockableAreaPropertyData"
+                                    property.type === "lockableAreaPropertyData",
                             );
 
                             if (lockableProperty) {
@@ -201,7 +210,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
             5000, // Display for 5 seconds
             callback,
             true, // Create stack animation
-            "warning" // Use warning type for styling
+            "warning", // Use warning type for styling
         );
     }
 
@@ -227,14 +236,14 @@ export class Area extends Phaser.GameObjects.Rectangle {
                     this.highLightArea();
                 }
 
-                this.displayWarningMessageOnCollide();
+                this.displayBlockedWarningMessage();
                 this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
             }
         } else if (!this.userHasCollideWithArea) {
             // Fallback if areasManager is not available
             this.userHasCollideWithArea = true;
             this.highLightArea();
-            this.displayWarningMessageOnCollide();
+            this.displayBlockedWarningMessage();
             this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
         }
     }

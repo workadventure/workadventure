@@ -4,34 +4,34 @@ type AreaDataPropertyChangeCallback = (
     area: AtLeast<AreaData, "id">,
     oldProperty: AreaDataProperty,
     newProperty: AreaDataProperty,
-    hostname: string
+    hostname: string,
 ) => Promise<AreaDataProperty>;
 type AreaDataPropertyDeleteCallback = (
     area: AtLeast<AreaData, "id">,
     property: AreaDataProperty,
-    hostname: string
+    hostname: string,
 ) => Promise<AreaDataProperty>;
 type AreaDataPropertyAddCallback = (
     area: AtLeast<AreaData, "id">,
     property: AreaDataProperty,
-    hostname: string
+    hostname: string,
 ) => Promise<AreaDataProperty>;
 
 type EntityDataPropertyChangeCallback = (
     entity: Partial<WAMEntityData>,
     oldProperty: EntityDataProperty,
     newProperty: EntityDataProperty,
-    hostname: string
+    hostname: string,
 ) => Promise<EntityDataProperty>;
 type EntityDataPropertyDeleteCallback = (
     entity: Partial<WAMEntityData>,
     property: EntityDataProperty,
-    hostname: string
+    hostname: string,
 ) => Promise<EntityDataProperty>;
 type EntityDataPropertyAddCallback = (
     entity: Partial<WAMEntityData>,
     property: EntityDataProperty,
-    hostname: string
+    hostname: string,
 ) => Promise<EntityDataProperty>;
 
 export class HookManager {
@@ -54,7 +54,7 @@ export class HookManager {
         area: AtLeast<AreaData, "id">,
         oldProperty: AreaDataProperty,
         newProperty: AreaDataProperty,
-        hostname: string
+        hostname: string,
     ): Promise<void> {
         for (const callback of this.areaPropertyChangeCallbacks) {
             // eslint-disable-next-line no-await-in-loop
@@ -79,7 +79,7 @@ export class HookManager {
     public async fireAreaPropertyDelete(
         area: AtLeast<AreaData, "id">,
         property: AreaDataProperty,
-        hostname: string
+        hostname: string,
     ): Promise<void> {
         for (const callback of this.areaPropertyDeleteCallbacks) {
             // eslint-disable-next-line no-await-in-loop
@@ -96,7 +96,7 @@ export class HookManager {
     public async fireAreaPropertyAdd(
         area: AtLeast<AreaData, "id">,
         property: AreaDataProperty,
-        hostname: string
+        hostname: string,
     ): Promise<void> {
         for (const callback of this.areaPropertyAddCallbacks) {
             // eslint-disable-next-line no-await-in-loop
@@ -123,7 +123,7 @@ export class HookManager {
         entity: Partial<WAMEntityData>,
         oldProperty: EntityDataProperty,
         newProperty: EntityDataProperty,
-        hostname: string
+        hostname: string,
     ): Promise<void> {
         for (const callback of this.entityPropertyChangeCallbacks) {
             // eslint-disable-next-line no-await-in-loop
@@ -148,7 +148,7 @@ export class HookManager {
     public async fireEntityPropertyDelete(
         entity: Partial<WAMEntityData>,
         property: EntityDataProperty,
-        hostname: string
+        hostname: string,
     ): Promise<void> {
         for (const callback of this.entityPropertyDeleteCallbacks) {
             // eslint-disable-next-line no-await-in-loop
@@ -165,7 +165,7 @@ export class HookManager {
     public async fireEntityPropertyAdd(
         entity: Partial<WAMEntityData>,
         property: EntityDataProperty,
-        hostname: string
+        hostname: string,
     ): Promise<void> {
         for (const callback of this.entityPropertyAddCallbacks) {
             // eslint-disable-next-line no-await-in-loop

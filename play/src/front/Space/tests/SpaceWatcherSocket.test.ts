@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 globalThis.Phaser = Phaser;
 
 import { describe, vi, expect, it } from "vitest";
@@ -8,7 +8,6 @@ import { FilterType } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import type { RoomConnection } from "../../Connection/RoomConnection";
 import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
@@ -102,34 +101,10 @@ vi.mock("../../WebRtc/MediaManager", () => {
     };
 });
 
-vi.mock("../../Enum/EnvironmentVariable.ts", () => {
-    return {
-        MATRIX_ADMIN_USER: "admin",
-        MATRIX_DOMAIN: "domain",
-        STUN_SERVER: "stun:test.com:19302",
-        TURN_SERVER: "turn:test.com:19302",
-        TURN_USER: "user",
-        TURN_PASSWORD: "password",
-        POSTHOG_API_KEY: "test-api-key",
-        POSTHOG_URL: "https://test.com",
-        MAX_USERNAME_LENGTH: 10,
-        PUSHER_URL: "http://localhost",
-        FALLBACK_LOCALE: "en-US",
-        ENABLE_CHAT: true,
-        KLAXOON_ENABLED: false,
-        KLAXOON_CLIENT_ID: "",
-        YOUTUBE_ENABLED: false,
-        GOOGLE_DRIVE_ENABLED: false,
-        GOOGLE_DOCS_ENABLED: false,
-        GOOGLE_SHEETS_ENABLED: false,
-        GOOGLE_SLIDES_ENABLED: false,
-        ERASER_ENABLED: false,
-        EXCALIDRAW_ENABLED: false,
-        EXCALIDRAW_DOMAINS: [],
-        CARDS_ENABLED: false,
-        TLDRAW_ENABLED: false,
-    };
-});
+vi.mock(
+    "../../Enum/EnvironmentVariable.ts",
+    () => import("../../../../tests/front/mocks/frontEnvironmentVariableMock"),
+);
 
 describe("SpaceRegistry", () => {
     it("should call updateSpaceMetadata when stream updateSpaceMetadata receive a new message", async () => {
@@ -142,12 +117,12 @@ describe("SpaceRegistry", () => {
             }),
         };
 
-        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection, new Subject());
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
         const space = await spaceRegistry.joinSpace(
             "space-name",
             FilterType.ALL_USERS,
             [],
-            new AbortController().signal
+            new AbortController().signal,
         );
 
         roomConnection.updateSpaceMetadataMessageStream.next(updateSpaceMetadataMessage);

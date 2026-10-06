@@ -2,13 +2,14 @@ import { expect, test } from "@playwright/test";
 import { evaluateScript } from "../utils/scripting";
 import { publicTestMapUrl } from "../utils/urls";
 import { getPage } from "../utils/auth";
-import { isMobile } from "../utils/isMobile";
+import { isMobileViewport } from "../utils/isMobile";
 import Menu from "../utils/menu";
 
 test.describe("Iframe API @nodesktop", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(!isMobile(page), "Run only on mobile");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(!isMobileViewport(viewport), "Run only on mobile");
     });
+
     test("disable invite user button", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
         await page.evaluate(() => localStorage.setItem("debug", "*"));
@@ -23,9 +24,8 @@ test.describe("Iframe API @nodesktop", () => {
         // Check if the map editor is enabled
 
         await expect(page.getByRole("button", { name: "Share" })).toBeHidden();
-
-        await page.context().close();
     });
+
     test("disable screen sharing @nowebkit", async ({ browser, browserName }) => {
         // Skipping webkit because it has no webcam. Therefore, it opens the chat directly.
         // The chat masks the buttons we are interested in.
@@ -57,10 +57,6 @@ test.describe("Iframe API @nodesktop", () => {
 
         // Check if the screen sharing is enabled
         await expect(page.getByTestId("screenShareButton")).toBeEnabled();
-
-        await pageBob.context().close();
-
-        await page.context().close();
     });
 
     test("disable right click user button", async ({ browser }) => {
@@ -80,7 +76,5 @@ test.describe("Iframe API @nodesktop", () => {
         });
 
         // TODO: check if the right click is enabled
-
-        await page.context().close();
     });
 });

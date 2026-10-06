@@ -3,17 +3,18 @@
     import { onDestroy } from "svelte";
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
+    import Button from "../UI/Button.svelte";
     import VisitCard from "../VisitCard/VisitCard.svelte";
 
     import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
 
-    let actionsMenuData: ActionsMenuData | undefined;
-    let sortedActions: ActionsMenuAction[] | undefined;
+    let actionsMenuData: ActionsMenuData | undefined = $state();
+    let sortedActions: ActionsMenuAction[] | undefined = $state();
 
     let actionsMenuStoreUnsubscriber: Unsubscriber | null;
 
-    function onKeyDown(e: KeyboardEvent) {
+    function onkeydown(e: KeyboardEvent) {
         if (e.key === "Escape") {
             closeActionsMenu();
         }
@@ -23,7 +24,7 @@
         actionsMenuStore.clear();
     }
 
-    let buttonsLayout: "row" | "column" = "row";
+    let buttonsLayout: "row" | "column" = $state("row");
 
     actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value) => {
         actionsMenuData = value;
@@ -56,7 +57,7 @@
     });
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window {onkeydown} />
 
 {#if actionsMenuData}
     <div
@@ -66,7 +67,7 @@
         <div>
             <div class="w-full bg-cover relative">
                 <div class="absolute top-2 right-2">
-                    <ButtonClose on:click={closeActionsMenu} dataTestId="closeActionsMenuButton" />
+                    <ButtonClose onclick={closeActionsMenu} dataTestId="closeActionsMenuButton" />
                 </div>
 
                 <div class="flex flex-col items-center justify-center gap-2 p-2 py-6">
@@ -108,14 +109,20 @@
                 class:flex-row={buttonsLayout === "row"}
             >
                 {#each sortedActions ?? [] as action (action.uuid)}
-                    <button
-                        type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center w-full h-full !bg-white/10 hover:!bg-white/20 {action.style ??
-                            ''}"
-                        class:mx-2={buttonsLayout === "column"}
-                        on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
-                        on:click|preventDefault={async () => {
-                            await action.callback();
+                    <Button
+                        variant="light"
+                        appearance="ghost"
+                        class="text-nowrap w-full h-full !bg-white/10 hover:!bg-white/20 {action.style ??
+                            ''} {buttonsLayout === 'column' ? 'mx-2' : ''}"
+                        onclick={(event) => {
+                            analyticsClient.trackAdminEvent("map_editor.property.clicked", {
+                                name: action.actionName,
+                                style: action.style,
+                            });
+                            event.preventDefault();
+                            Promise.resolve(action.callback()).catch((error) => {
+                                console.error("Failed to run action", error);
+                            });
                         }}
                     >
                         <span class="flex flex-row gap-2 items-center justify-center text-nowrap">
@@ -125,16 +132,16 @@
                                     style="background-color: {action.iconColor ?? 'white'};
                                 -webkit-mask: url({action.actionIcon}) no-repeat center;
                                     mask: url({action.actionIcon}) no-repeat center;"
-                                />
+                                ></div>
                             {/if}
                             {action.actionName}
                         </span>
-                    </button>
+                    </Button>
                 {/each}
             </div>
         {/if}
     </div>
 {/if}
 
-<style lang="scss">
+<style>
 </style>

@@ -6,7 +6,7 @@ export class UpdateWAMMetadataCommand extends Command {
     constructor(
         protected wam: WAMFileFormat,
         protected modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage,
-        id?: string
+        id?: string,
     ) {
         super(id);
     }

@@ -25,7 +25,7 @@ describe("AdminAuthenticator", () => {
                         options: {
                             headers?: { "X-API-Key": string };
                             params?: { roomUrl: string };
-                        }
+                        },
                     ) => {
                         return new Promise((resolve, reject) => {
                             if (!options.headers || !options.headers["X-API-Key"]) {

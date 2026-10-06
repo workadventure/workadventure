@@ -11,26 +11,27 @@
     import logoImg from "../images/logo-min-white.png";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import type { Room } from "../../Connection/Room";
+    import Button from "./Button.svelte";
     import errorGif from "./images/error.gif";
     import { IconRefresh } from "@wa-icons";
 
     let errorScreen = $errorScreenStore;
 
-    let startRoom: Room | undefined;
+    let startRoom: Room | undefined = $state();
     try {
         startRoom = gameManager?.currentStartedRoom;
     } catch {
         startRoom = undefined;
     }
 
-    let logoErrorSrc = startRoom?.loginSceneLogo ?? logoImg;
+    let logoErrorSrc = $derived(startRoom?.loginSceneLogo ?? logoImg);
 
     function click() {
         if (errorScreen?.type === "unauthorized") connectionManager.logout();
         else window.location.reload();
     }
     let details = errorScreen?.details ?? "";
-    let timeVar = errorScreen?.timeToRetry ?? 0;
+    let timeVar = $state(errorScreen?.timeToRetry ?? 0);
 
     if (errorScreen?.type === "retry") {
         let interval = setInterval(() => {
@@ -48,12 +49,17 @@
         connectionManager.logout();
     }
 
-    $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
+    let detailsStylized = $derived((details ?? "").replace("{time}", `${timeVar / 1000}`));
 </script>
+
+{#snippet refreshIcon()}
+    <IconRefresh />
+{/snippet}
 
 {#if $errorScreenStore}
     <main
         class="errorScreen bg-contrast pointer-events-auto w-full text-white text-center absolute flex flex-wrap items-center justify-center h-full top-0 left-0 right-0 mx-auto overflow-scroll py-5"
+        data-testid={$errorScreenStore.type === "reconnecting" ? "reconnecting-error-screen" : undefined}
         style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
         transition:fly={{ y: -200, duration: 500 }}
     >
@@ -65,6 +71,7 @@
                     <img
                         src={errorScreen?.imageLogo ?? logoErrorSrc}
                         alt="Logo error"
+                        class="mx-auto"
                         style="max-height:25vh; max-width:80%;"
                         draggable="false"
                     />
@@ -83,28 +90,31 @@
             {#if $errorScreenStore.type !== "retry" && $errorScreenStore.type !== "reconnecting"}<p class="code">
                     Code : {$errorScreenStore.code}
                 </p>{/if}
-            <p class="details flex flex-row items-center justify-center content-center gap-2">
-                <span>{detailsStylized}</span>
+            <div class="details flex flex-row items-center justify-center content-center gap-2">
+                <span class="whitespace-pre-line">{detailsStylized}</span>
                 {#if $errorScreenStore.type === "retry"}
-                    <div class="loading" />
+                    <div class="loading"></div>
                 {:else if $errorScreenStore.type === "reconnecting"}
                     <LoaderIcon />
                 {/if}
-            </p>
+            </div>
             <div class="flex gap-2">
                 {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                    <button
+                    <Button
                         type="button"
-                        class="btn-lg btn btn-light btn-border button flex items-center gap-2"
-                        on:click={click}
+                        size="lg"
+                        variant="light"
+                        appearance="border"
+                        class="button"
+                        icon={$errorScreenStore.type === "retry" ? refreshIcon : undefined}
+                        onclick={click}
                     >
-                        {#if $errorScreenStore.type === "retry"}<IconRefresh />{/if}
                         {$errorScreenStore.buttonTitle}
-                    </button>
+                    </Button>
                     {#if $userIsConnected}
-                        <button type="button" class="btn-lg btn btn-secondary button" on:click={logout}>
+                        <Button type="button" size="lg" variant="secondary" class="button" onclick={logout}>
                             {$LL.menu.profile.logout()}
-                        </button>
+                        </Button>
                     {/if}
                 {/if}
             </div>
@@ -112,7 +122,7 @@
     </main>
 {/if}
 
-<style lang="scss">
+<style>
     main.errorScreen {
         min-width: 300px;
         z-index: 700;
@@ -129,12 +139,9 @@
         p.code {
             font-size: 12px;
             opacity: 0.6;
+            /* Prefixed too, or WebKit ignores the opt-in and `body` keeps this unselectable. */
+            -webkit-user-select: text;
             user-select: text;
-        }
-        p.details {
-            font-size: 12px;
-            max-width: 80%;
-            margin: 0 auto 35px auto;
         }
         .loading {
             display: inline-block;
@@ -156,26 +163,10 @@
             left: 0;
             top: -19px;
         }
-
-        @keyframes ellipsis {
-            to {
-                width: 1.25em;
-            }
-        }
-
-        @-webkit-keyframes ellipsis {
-            to {
-                width: 1.25em;
-            }
-        }
-
-        .button {
+        /* Global so it reaches the <button> rendered by <Button> (scoped CSS would not). */
+        :global(.button) {
             cursor: pointer;
             font-size: 14px;
-            .reload {
-                margin-top: -4px;
-                width: 22px;
-            }
         }
     }
 
@@ -188,6 +179,18 @@
             .icon {
                 height: 60px;
             }
+        }
+    }
+
+    @keyframes ellipsis {
+        to {
+            width: 1.25em;
+        }
+    }
+
+    @-webkit-keyframes ellipsis {
+        to {
+            width: 1.25em;
         }
     }
 </style>

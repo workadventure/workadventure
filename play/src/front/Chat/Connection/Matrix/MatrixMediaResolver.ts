@@ -1,5 +1,6 @@
 import type { IContent, MatrixClient, MatrixEvent } from "matrix-js-sdk";
 import type { EncryptedFile, MediaEventContent } from "matrix-js-sdk/lib/@types/media";
+import { sanitizeInlineMimeType } from "../../../Utils/InlineMimeType";
 
 type MediaErrorKind = "download" | "decrypt";
 
@@ -26,7 +27,7 @@ type BlobUrlRegistry = {
 class MediaDownloadError extends Error {}
 class MediaDecryptError extends Error {}
 
-function decodeBase64Unpadded(value: string): Uint8Array {
+function decodeBase64Unpadded(value: string): Uint8Array<ArrayBuffer> {
     const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
     const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
     const binary = atob(padded);
@@ -37,7 +38,10 @@ function decodeBase64Unpadded(value: string): Uint8Array {
     return bytes;
 }
 
-async function assertCipherHash(cipherText: Uint8Array, expectedSha256: string | undefined): Promise<void> {
+async function assertCipherHash(
+    cipherText: Uint8Array<ArrayBuffer>,
+    expectedSha256: string | undefined,
+): Promise<void> {
     if (expectedSha256 === undefined) {
         return;
     }
@@ -54,7 +58,10 @@ async function assertCipherHash(cipherText: Uint8Array, expectedSha256: string |
     }
 }
 
-async function decryptEncryptedFile(cipherText: Uint8Array, encryptedFile: EncryptedFile): Promise<ArrayBuffer> {
+async function decryptEncryptedFile(
+    cipherText: Uint8Array<ArrayBuffer>,
+    encryptedFile: EncryptedFile,
+): Promise<ArrayBuffer> {
     await assertCipherHash(cipherText, encryptedFile.hashes?.sha256);
     const keyData = decodeBase64Unpadded(encryptedFile.key.k);
     const iv = decodeBase64Unpadded(encryptedFile.iv);
@@ -66,7 +73,9 @@ function createBlobUrlRegistry(): BlobUrlRegistry {
     const blobUrls = new Set<string>();
 
     const createFromBuffer = (buffer: ArrayBuffer, mimeType: string | undefined): string => {
-        const blob = new Blob([buffer], { type: mimeType ?? "application/octet-stream" });
+        // The mime type comes from the event and is not trusted: a same-origin blob: URL typed
+        // image/svg+xml or text/html would run scripts at our origin when opened as a document.
+        const blob = new Blob([buffer], { type: sanitizeInlineMimeType(mimeType) });
         const blobUrl = URL.createObjectURL(blob);
         blobUrls.add(blobUrl);
         return blobUrl;
@@ -108,7 +117,9 @@ function toAttachmentMediaEventContent(content: IContent): MediaEventContent | u
     if (typeof content.body !== "string") {
         return undefined;
     }
-    if (content.msgtype !== "m.file" && content.msgtype !== "m.audio" && content.msgtype !== "m.video") {
+    // m.image is in the list because an image whose filename and mimetype disagree is shown as a
+    // plain file, and its encrypted media still has to be decrypted through this path.
+    if (!["m.file", "m.audio", "m.video", "m.image"].includes(content.msgtype ?? "")) {
         return undefined;
     }
     return content as MediaEventContent;
@@ -143,7 +154,7 @@ async function resolveEncryptedBlobUrl(
     encryptedFile: EncryptedFile,
     mimeType: string | undefined,
     blobRegistry: BlobUrlRegistry,
-    signal: AbortSignal
+    signal: AbortSignal,
 ): Promise<string> {
     const downloadUrl = getHttpUrl(client, encryptedFile.url);
     if (downloadUrl === undefined) {
@@ -162,7 +173,7 @@ async function resolveEncryptedBlobUrl(
 export async function resolveImageMediaFromEvent(
     event: MatrixEvent,
     client: MatrixClient,
-    signal: AbortSignal
+    signal: AbortSignal,
 ): Promise<MatrixResolvedImageMedia> {
     const rawContent = event.getOriginalContent();
     const content = toMediaEventContent(rawContent);
@@ -210,7 +221,7 @@ export async function resolveImageMediaFromEvent(
             encryptedSourceFile,
             content.info?.mimetype,
             blobRegistry,
-            signal
+            signal,
         );
         const thumbnailFile = getThumbnailEncryptedFile(content);
         if (thumbnailFile === undefined) {
@@ -234,7 +245,7 @@ export async function resolveImageMediaFromEvent(
                     | undefined
             )?.thumbnail_info?.mimetype,
             blobRegistry,
-            signal
+            signal,
         );
         return { sourceUrl, thumbnailUrl, isEncrypted: true, error: undefined, cleanup: blobRegistry.cleanup };
     } catch (error) {
@@ -255,7 +266,7 @@ export async function resolveImageMediaFromEvent(
 export async function resolveAttachmentMediaFromEvent(
     event: MatrixEvent,
     client: MatrixClient,
-    signal: AbortSignal
+    signal: AbortSignal,
 ): Promise<MatrixResolvedAttachmentMedia> {
     const rawContent = event.getOriginalContent();
     const content = toAttachmentMediaEventContent(rawContent);
@@ -293,7 +304,7 @@ export async function resolveAttachmentMediaFromEvent(
             encryptedSourceFile,
             content.info?.mimetype,
             blobRegistry,
-            signal
+            signal,
         );
         return { sourceUrl, isEncrypted: true, error: undefined, cleanup: blobRegistry.cleanup };
     } catch (error) {

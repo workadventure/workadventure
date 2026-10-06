@@ -1,5 +1,4 @@
 <script lang="ts">
-    import type { AreaData } from "@workadventure/map-editor";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
     import {
@@ -23,7 +22,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconMapSearch, IconDesk, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
+    import { IconMapSearch, IconDesk, IconDeskExit, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -51,13 +50,13 @@
     function toggleMapEditorMode() {
         //if (isMobile) return;
         if ($mapEditorModeStore && !$mapExplorationModeStore) {
-            analyticsClient.toggleMapEditor(false);
+            analyticsClient.trackAdminEvent("map_editor.closed");
             mapEditorModeStore.switchMode(false);
-            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(undefined);
         } else {
-            analyticsClient.toggleMapEditor(true);
+            analyticsClient.trackAdminEvent("map_editor.opened");
             mapEditorModeStore.switchMode(true);
-            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(EditorToolName.EntityEditor);
         }
         isTodoListVisibleStore.set(false);
         isCalendarVisibleStore.set(false);
@@ -66,14 +65,14 @@
 
     function toggleMapExplorerMode() {
         if ($mapExplorationModeStore) {
-            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(undefined);
             mapEditorModeStore.switchMode(false);
         } else {
             mapEditorModeStore.switchMode(true);
-            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(EditorToolName.ExploreTheRoom);
         }
 
-        analyticsClient.clickTopOpenMapExplorer();
+        analyticsClient.trackAdminEvent("map_explorer.top_button_clicked");
         isTodoListVisibleStore.set(false);
         isCalendarVisibleStore.set(false);
         closeMapMenu();
@@ -110,10 +109,10 @@
                 return;
             }
             // Use unclaim personal area method of the map editor mode manager
-            await mapEditorModeManager.unclaimPersonalArea($personalAreaDataStore as unknown as AreaData);
+            await mapEditorModeManager.unclaimPersonalArea($personalAreaDataStore);
 
             // Send analytics event
-            analyticsClient.unclaimPersonalDesk();
+            analyticsClient.trackAdminEvent("personal_desk.unclaimed");
 
             // Close the menu
             openedMenuStore.close("profileMenu");
@@ -126,7 +125,7 @@
 
 {#if $mapEditorMenuVisibleStore}
     <ActionBarButton
-        on:click={toggleMapEditorMode}
+        onclick={toggleMapEditorMode}
         label={$LL.actionbar.mapEditor()}
         state={$mapEditorModeStore && !$mapExplorationModeStore ? "active" : "normal"}
     >
@@ -135,7 +134,7 @@
 {/if}
 {#if $mapManagerActivated}
     <ActionBarButton
-        on:click={toggleMapExplorerMode}
+        onclick={toggleMapExplorerMode}
         label={$LL.mapEditor.sideBar.exploreTheRoom()}
         state={$mapExplorationModeStore ? "active" : "normal"}
     >
@@ -143,7 +142,7 @@
     </ActionBarButton>
 {/if}
 {#if $globalMessageVisibleStore}
-    <ActionBarButton on:click={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
+    <ActionBarButton onclick={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
         <IconSpeakerPhone font-size="20" />
     </ActionBarButton>
 {/if}
@@ -151,7 +150,7 @@
     <ActionBarButton
         dataTestId="go-to-personal-desk-button"
         label={$LL.actionbar.personalDesk.label()}
-        on:click={goToPersonalDesk}
+        onclick={goToPersonalDesk}
         state={$isInsidePersonalAreaStore ? "disabled" : "normal"}
         classList="group/btn-personal-desk"
     >
@@ -159,10 +158,10 @@
     </ActionBarButton>
     <ActionBarButton
         label={$LL.actionbar.personalDesk.unclaim()}
-        on:click={unclaimPersonalDesk}
+        onclick={unclaimPersonalDesk}
         classList="group/btn-personal-desk"
     >
-        <IconDesk font-size="20" />
+        <IconDeskExit font-size="20" />
     </ActionBarButton>
 {/if}
 

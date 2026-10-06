@@ -1,5 +1,7 @@
+import * as Phaser from "phaser";
 import { DEPTH_UI_INDEX } from "../Game/DepthIndexes";
 import { waScaleManager } from "../Services/WaScaleManager";
+
 import Sprite = Phaser.GameObjects.Sprite;
 
 export interface RadialMenuItem {
@@ -12,7 +14,12 @@ export const RadialMenuClickEvent = "radialClick";
 export class RadialMenu extends Phaser.GameObjects.Container {
     private resizeCallback: OmitThisParameter<() => void>;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, private items: RadialMenuItem[]) {
+    constructor(
+        scene: Phaser.Scene,
+        x: number,
+        y: number,
+        private items: RadialMenuItem[],
+    ) {
         super(scene, x, y);
         this.setDepth(DEPTH_UI_INDEX);
         this.scene.add.existing(this);

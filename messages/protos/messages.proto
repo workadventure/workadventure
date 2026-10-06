@@ -21,6 +21,10 @@ enum AvailabilityStatus {
   BACK_IN_A_MOMENT = 10;
   LIVEKIT = 11;
   LISTENER = 12;
+  // Set automatically when the browser refuses to play audio for lack of a user
+  // gesture. Unlike BACK_IN_A_MOMENT, which the user picks, this one is imposed and
+  // clears on the next click.
+  SOUND_BLOCKED = 13;
 }
 
 message PositionMessage {
@@ -136,6 +140,89 @@ message WebRtcSignal {
   string connectionId = 3;
 }
 
+enum VideoQualityStreamCategory {
+  VIDEO_QUALITY_STREAM_CATEGORY_VIDEO = 0;
+  VIDEO_QUALITY_STREAM_CATEGORY_SCREEN_SHARING = 1;
+}
+
+enum VideoQualityTransportType {
+  VIDEO_QUALITY_TRANSPORT_TYPE_P2P = 0;
+  VIDEO_QUALITY_TRANSPORT_TYPE_LIVEKIT = 1;
+}
+
+enum VideoQualityRelayProtocol {
+  VIDEO_QUALITY_RELAY_PROTOCOL_UDP = 0;
+  VIDEO_QUALITY_RELAY_PROTOCOL_TCP = 1;
+  VIDEO_QUALITY_RELAY_PROTOCOL_TLS = 2;
+}
+
+// Direction of a video stream from the reporter's point of view.
+enum VideoQualityStreamDirection {
+  VIDEO_QUALITY_STREAM_DIRECTION_INBOUND = 0;
+  VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND = 1;
+}
+
+// Why the browser's encoder is not sending at full quality (RTCOutboundRtpStreamStats.qualityLimitationReason).
+enum VideoQualityLimitationReason {
+  VIDEO_QUALITY_LIMITATION_REASON_NONE = 0;
+  VIDEO_QUALITY_LIMITATION_REASON_CPU = 1;
+  VIDEO_QUALITY_LIMITATION_REASON_BANDWIDTH = 2;
+  VIDEO_QUALITY_LIMITATION_REASON_OTHER = 3;
+}
+
+message VideoQualitySampleMessage {
+  uint64 clientEventTimeMs = 1;
+  optional uint64 sampleSeq = 2;
+  string streamId = 3;
+  optional string connectionId = 4;
+  optional string sessionId = 5;
+  optional string remoteUserUuid = 6;
+  string remoteSpaceUserId = 7;
+  string spaceName = 8;
+  VideoQualityStreamCategory streamCategory = 9;
+  VideoQualityTransportType transportType = 10;
+  optional bool relay = 11;
+  optional VideoQualityRelayProtocol relayProtocol = 12;
+  optional string livekitServerUrl = 13;
+  double fps = 14;
+  optional double fpsStdDev = 15;
+  double jitter = 16;
+  double bandwidthBytesPerSecond = 17;
+  uint32 frameWidth = 18;
+  uint32 frameHeight = 19;
+  optional string mimeType = 20;
+  VideoQualityStreamDirection direction = 21;
+  // Outbound streams only.
+  optional VideoQualityLimitationReason qualityLimitationReason = 22;
+  // Outbound streams only: encoder implementation reported by the browser (e.g. "libaom", "libvpx", "ExternalEncoder").
+  optional string encoderImplementation = 23;
+}
+
+message VideoQualityReportMessage {
+  repeated VideoQualitySampleMessage samples = 1;
+}
+
+message AnalyticsEventMessage {
+  string eventName = 1;
+  string source = 2;
+  uint64 clientEventTimeMs = 3;
+  string eventId = 4;
+  // A flat bag of key/value pairs describing this one event. Its shape is declared per event in
+  // AnalyticsEventCatalog (@workadventure/messages), which the pusher enforces: an event name it
+  // does not carry is dropped, and so is a payload missing a field the entry requires. The payload
+  // stays passthrough, so a newer front may add fields to a known event without a lockstep deploy —
+  // only the event NAME is closed.
+  //
+  // Note this is deliberately NOT how high-frequency samples travel: VideoQualityReportMessage keeps
+  // its own strongly-typed shape rather than paying Value's per-sample field names and untyped
+  // numbers, and being pusher-synthesized is what lets the admin trust its source.
+  google.protobuf.Value properties = 5;
+}
+
+message AnalyticsEventReportMessage {
+  repeated AnalyticsEventMessage events = 1;
+}
+
 message ReportPlayerMessage {
   string reportedUserUuid = 1;
   string reportComment = 2;
@@ -144,6 +231,12 @@ message ReportPlayerMessage {
 message BanPlayerMessage {
   string banUserUuid = 1;
   string banUserName = 2;
+  // true: kick the user out of the room only, without persisting anything in the admin
+  bool kick = 3;
+  // reason given by the moderator, displayed to the kicked/banned user and stored with the ban
+  string reason = 4;
+  // ban: also ban the IP the user connected from, which locks out everyone behind it (see BanIpPreviewQuery)
+  bool byIp = 5;
 }
 
 message UpdateChatIdMessage {
@@ -218,10 +311,15 @@ message UpdateWAMSettingsMessage {
 }
 
 message UpdateMegaphoneSettingMessage {
+  // The megaphone block to store in the WAM file, or nothing to clear it. Schemaless here, but
+  // UpdateWAMSettingCommand parses it against MegaphoneSettings (libs/map-editor) before it is written,
+  // so anything that does not match that schema is rejected rather than stored.
   google.protobuf.Value settings = 1;
 }
 
 message UpdateRecordingSettingMessage {
+  // The recording block to store in the WAM file, or nothing to clear it. Parsed against
+  // RecordingSettings (libs/map-editor) by UpdateWAMSettingCommand before it is written.
   google.protobuf.Value settings = 1;
 }
 
@@ -249,7 +347,14 @@ message ModifyAreaMessage {
   optional int32 y = 4;
   optional uint32 width = 5;
   optional uint32 height = 6;
+  // AreaDataProperty values (libs/map-editor): a discriminated union on `type`, not free-form JSON.
+  // Only applied when modifyProperties is set. Nothing checks them at this boundary, but the
+  // map-storage re-parses the whole WAM file after the command runs and rejects the change if the
+  // result no longer matches WAMFileFormat (MapsManager, "Security check").
   repeated google.protobuf.Value properties = 7;
+  // Whether `properties` above means anything. It exists because protobuf cannot tell an unset
+  // repeated field from an empty one: without this flag, "do not touch the properties" and "erase
+  // every property" would arrive identically. Leave it unset to keep the area's current properties.
   optional bool modifyProperties = 8;
   optional bool modifyServerData = 9;
 }
@@ -265,6 +370,8 @@ message CreateAreaMessage {
   uint32 width = 4;
   uint32 height = 5;
   string name = 6;
+  // AreaDataProperty values (libs/map-editor): a discriminated union on `type`, not free-form JSON.
+  // See ModifyAreaMessage.properties for where they are checked.
   repeated google.protobuf.Value properties = 7;
 }
 
@@ -274,6 +381,8 @@ message CreateEntityMessage {
   int32 y = 3;
   string collectionName = 4;
   string prefabId = 5;
+  // EntityDataProperty values (libs/map-editor): a discriminated union on `type`, not free-form JSON.
+  // See ModifyAreaMessage.properties for where they are checked.
   repeated google.protobuf.Value properties = 6;
   optional string name = 7;
   uint32 width = 8;
@@ -303,8 +412,16 @@ message UploadEntityMessage {
   string imagePath = 5;
   CustomEntityDirection direction = 6;
   string color = 7;
+  // A grid of numbers, one row per tile row, saying which tiles of the entity block movement
+  // (CollisionGrid in libs/map-editor, i.e. number[][]). Nested arrays are why this is a Value and not
+  // a repeated field: protobuf has no repeated-of-repeated. The map-storage parses it against that
+  // schema before storing (CustomEntityCollectionService).
   optional google.protobuf.Value collisionGrid = 8;
   optional int32 depthOffset = 9;
+  // UUID of the user who uploaded the entity. Always overwritten by map-storage with the
+  // authenticated user UUID: any value sent by the client is discarded. It is sent back in the
+  // broadcast copy of the command so every client knows who owns the asset.
+  optional string ownerId = 10;
 }
 
 message UploadFileMessage {
@@ -320,6 +437,7 @@ message ModifyCustomEntityMessage {
   string id = 1;
   string name = 2;
   repeated string tags = 3;
+  // See UploadEntityMessage.collisionGrid. Leave unset to keep the entity's current grid.
   optional google.protobuf.Value collisionGrid = 4;
   optional int32 depthOffset = 5;
 }
@@ -332,11 +450,26 @@ message ModifyEntityMessage {
   string id = 1;
   int32 x = 2;
   int32 y = 3;
+  // EntityDataProperty values (libs/map-editor): a discriminated union on `type`, not free-form JSON.
+  // See ModifyAreaMessage.properties for where they are checked.
   repeated google.protobuf.Value properties = 4;
+  // Same role as ModifyAreaMessage.modifyProperties: leave unset to keep the entity's current properties.
   optional bool modifyProperties = 5;
   optional string name = 6;
   uint32 width = 7;
   uint32 height = 8;
+}
+
+// Transport envelope for websocket frames sent from front to pusher.
+message FrontToPusherWebSocketMessage {
+  uint32 nonce = 1;
+  ClientToServerMessage message = 2;
+}
+
+// Transport envelope for websocket frames sent from pusher to front.
+message PusherToFrontWebSocketMessage {
+  uint32 nonce = 1;
+  ServerToClientMessage message = 2;
 }
 
 message ClientToServerMessage {
@@ -373,12 +506,21 @@ message ClientToServerMessage {
     MeetingInvitationRequestMessage meetingInvitationRequestMessage = 48;
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 49;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 46;
+    VideoQualityReportMessage videoQualityReportMessage = 50;
+    AnalyticsEventReportMessage analyticsEventReportMessage = 52;
+    EntityMessage entityMessage = 53;
   }
 }
 
+// An event delivered to a client, either broadcast by another player's script (WA.event) or by the
+// Room API. The name and payload are defined by whoever wrote the map's script, so they are opaque
+// here on purpose: this is an extension point, and constraining it would break the scripting API.
 message ReceivedEventMessage {
   string name = 1;
+  // Whatever the sender attached, verbatim. The server does not read it.
   google.protobuf.Value data = 2;
+  // The id, within the room, of the player whose script sent the event. Absent when it came from the
+  // Room API rather than from a player.
   optional int32 senderId = 3;
 }
 
@@ -418,6 +560,24 @@ message AreaPropertyVariableMessage {
   string propertyId = 2;
   string key = 3;
   string value = 4;
+}
+
+// A sound attached to an entity was activated and must be played by every player of the map.
+message EntitySoundPlayed {
+  string soundUrl = 1;
+}
+
+// Events that happen on a given entity. New entity events are added to this oneof.
+message EntityEvent {
+  oneof event {
+    EntitySoundPlayed entitySoundPlayed = 1;
+  }
+}
+
+// An entity event, sent by a player and broadcast to the whole room
+message EntityMessage {
+  string entityId = 1;
+  EntityEvent entityEvent = 2;
 }
 
 message SetPlayerVariableMessage {
@@ -480,8 +640,9 @@ message QueryMessage {
     GetRecordingsQuery getRecordingsQuery = 17;
     DeleteRecordingQuery deleteRecordingQuery = 18;
     GetSignedUrlQuery getSignedUrlQuery = 19;
-    StartRecordingQuery startRecordingQuery = 21;
-    StopRecordingQuery stopRecordingQuery = 22;
+    GetRecordingThumbnailsQuery getRecordingThumbnailsQuery = 23;
+    BanIpPreviewQuery banIpPreviewQuery = 24;
+    SpaceStateQueryFrontToPusher spaceStateQuery = 25;
   }
 }
 
@@ -517,9 +678,13 @@ message EmbeddableWebsiteQuery {
 message RoomsFromSameWorldQuery {
 }
 
+// A player's script broadcasting an event to the room (WA.event). The back stamps the sender's id on
+// it and fans it out; see ReceivedEventMessage for the delivered form.
 message SendEventQuery {
   string name = 1;
+  // Defined by the map's script, so opaque here on purpose. The server does not read it.
   google.protobuf.Value data = 2;
+  // Leave empty to reach every player in the room, or list the ids to reach only those.
   repeated int32 targetUserIds = 3;
 }
 
@@ -563,17 +728,15 @@ message GetRecordingsQuery {
   optional string uuid = 2;
 }
 
+// Thumbnails of a single recording, fetched on demand: the list only carries one poster per recording.
+message GetRecordingThumbnailsQuery {
+  string baseFilename = 1;
+}
+
 message DeleteRecordingQuery {
   string recordingId = 1;
 }
 
-message StartRecordingQuery {
-  string spaceName = 1;
-}
-
-message StopRecordingQuery {
-  string spaceName = 1;
-}
 
 message AnswerMessage {
   int32 id = 1;
@@ -598,8 +761,9 @@ message AnswerMessage {
     GetRecordingsAnswer getRecordingsAnswer = 19;
     DeleteRecordingAnswer deleteRecordingAnswer = 20;
     GetSignedUrlAnswer getSignedUrlAnswer = 21;
-    StartRecordingAnswer startRecordingAnswer = 22;
-    StopRecordingAnswer stopRecordingAnswer = 23;
+    GetRecordingThumbnailsAnswer getRecordingThumbnailsAnswer = 24;
+    BanIpPreviewAnswer banIpPreviewAnswer = 25;
+    SpaceStateAnswer spaceStateAnswer = 26;
   }
 }
 
@@ -648,11 +812,6 @@ message RoomsFromSameWorldAnswer {
 message SendEventAnswer {
 }
 
-message StartRecordingAnswer {
-}
-
-message StopRecordingAnswer {
-}
 
 message SearchMemberAnswer {
   repeated Member members = 1;
@@ -689,6 +848,11 @@ message GetRecordingsAnswer {
   repeated Recording recordings = 1;
 }
 
+message GetRecordingThumbnailsAnswer {
+  // Signed URLs, evenly spaced over the recording, oldest first.
+  repeated string urls = 1;
+}
+
 message DeleteRecordingAnswer {
   bool success = 1;
   optional string errorMessage = 2;
@@ -696,6 +860,25 @@ message DeleteRecordingAnswer {
 
 message GetSignedUrlAnswer {
   string signedUrl = 1;
+}
+
+// Who else a ban by IP of banUserUuid would lock out. Reserved to the admins of the world (enforced by the pusher).
+message BanIpPreviewQuery {
+  string banUserUuid = 1;
+}
+
+// Someone connected to the world from the same IP address as the user to ban. No IP address, no email.
+message BanIpPreviewUser {
+  string name = 1;
+}
+
+message BanIpPreviewAnswer {
+  // false when the user to ban is not connected any more: their IP is unknown, they cannot be banned by IP
+  bool ipKnown = 1;
+  // the moderator shares that IP: they cannot ban it without locking themselves out
+  bool includesModerator = 2;
+  // everyone else connected to the world from that IP right now
+  repeated BanIpPreviewUser users = 3;
 }
 
 message Member {
@@ -730,22 +913,15 @@ message Recording {
   string timestamp = 1;
   string baseFilename = 2;
   VideoFile videoFile = 3;
-  repeated Thumbnail thumbnails = 4;
+  // Signed URL of the thumbnail shown in the list, empty if the recording has none.
+  // The other thumbnails are fetched on demand, see GetRecordingThumbnailsQuery.
+  string posterUrl = 4;
 }
 
 message VideoFile {
   string key = 1;
   string filename = 2;
   optional uint64 size = 3;
-}
-
-message Thumbnail {
-  string key = 1;
-  string url = 2;
-  string filename = 3;
-  optional uint64 size = 4;
-  optional int32 sequenceNumber = 5;
-  optional int32 timestampSeconds = 6;
 }
 
 /*********** PUSHER TO BACK QUERYMESSAGES *************/
@@ -756,8 +932,7 @@ message SpaceQueryMessage {
   oneof query {
     AddSpaceUserQuery addSpaceUserQuery = 5;
     RemoveSpaceUserQuery removeSpaceUserQuery = 6;
-    StartSpaceRecordingQuery startSpaceRecordingQuery = 7;
-    StopSpaceRecordingQuery stopSpaceRecordingQuery = 8;
+    SpaceStateQueryPusherToBack spaceStateQuery = 9;
   }
 }
 
@@ -772,14 +947,104 @@ message RemoveSpaceUserQuery {
   string spaceUserId = 2;
 }
 
-message StartSpaceRecordingQuery {
-  string spaceName = 1;
-  string spaceUserId = 2;
+/*********** SPACE STATE *************/
+
+// The typed, server-owned state of a space (raised hands, floor holders, recording, proximity polls and Q&A).
+// Clients never write it: they send a SpaceStateQuery, the back applies it to its SpaceState and broadcasts the
+// change as a JSON Patch (SpaceStatePatchMessage). The shape of the state lives in @workadventure/shared-utils.
+message SpaceStateQuery {
+  oneof query {
+    RaiseHandQuery raiseHand = 1;
+    LowerHandQuery lowerHand = 2;
+    GiveFloorQuery giveFloor = 3;
+    RevokeFloorQuery revokeFloor = 4;
+    StartRecordingQuery startRecording = 5;
+    StopRecordingQuery stopRecording = 6;
+    CreatePollQuery createPoll = 7;
+    VotePollQuery votePoll = 8;
+    ClosePollQuery closePoll = 9;
+    DeletePollQuery deletePoll = 10;
+    AskQuestionQuery askQuestion = 11;
+    UpvoteQuestionQuery upvoteQuestion = 12;
+    AnswerQuestionQuery answerQuestion = 13;
+    DeleteQuestionQuery deleteQuestion = 14;
+    SetSpaceKindQuery setKind = 15;
+  }
 }
 
-message StopSpaceRecordingQuery {
+// Declares what the space is (see spaceKindSchema). Sent by every client joining a space it knows the kind of.
+message SetSpaceKindQuery {
+  string kind = 1;
+}
+// Raises or lowers the sender's own hand.
+message RaiseHandQuery {
+  bool raised = 1;
+}
+// Moderator only: lowers someone else's hand.
+message LowerHandQuery {
+  string targetSpaceUserId = 1;
+}
+// Moderator only: gives the floor to a user (lowers their hand at the same time).
+message GiveFloorQuery {
+  string targetSpaceUserId = 1;
+}
+// Moderator only: takes the floor back. A floor holder may also revoke their own floor.
+message RevokeFloorQuery {
+  string targetSpaceUserId = 1;
+}
+message StartRecordingQuery {
+}
+message StopRecordingQuery {
+}
+message CreatePollQuery {
+  string question = 1;
+  // "open" or "closed"
+  string kind = 2;
+  repeated string answers = 3;
+  int32 maxSelections = 4;
+}
+message VotePollQuery {
+  string pollId = 1;
+  repeated string answerIds = 2;
+}
+message ClosePollQuery {
+  string pollId = 1;
+  optional string closingMessage = 2;
+}
+message DeletePollQuery {
+  string pollId = 1;
+}
+message AskQuestionQuery {
+  string body = 1;
+}
+message UpvoteQuestionQuery {
+  string questionId = 1;
+  bool upvoted = 2;
+}
+message AnswerQuestionQuery {
+  string questionId = 1;
+}
+message DeleteQuestionQuery {
+  string questionId = 1;
+}
+
+message SpaceStateQueryFrontToPusher {
   string spaceName = 1;
-  string spaceUserId = 2;
+  SpaceStateQuery query = 2;
+}
+
+message SpaceStateQueryPusherToBack {
+  string spaceUserId = 1;
+  SpaceStateQuery query = 2;
+}
+
+message SpaceStateAnswer {
+}
+
+// A JSON Patch (RFC 6902, serialized as JSON) to apply to the SpaceState of the space.
+message SpaceStatePatchMessage {
+  string spaceName = 1;
+  string patch = 2;
 }
 
 /*********** PUSHER TO BACK ANSWER MESSAGES *************/
@@ -793,8 +1058,7 @@ message SpaceAnswerMessage {
     RemoveSpaceUserAnswer removeSpaceUserAnswer = 5;
     JoinSpaceAnswer joinSpaceAnswer = 6;
     LeaveSpaceAnswer leaveSpaceAnswer = 7;
-    StartSpaceRecordingAnswer startSpaceRecordingAnswer = 8;
-    StopSpaceRecordingAnswer stopSpaceRecordingAnswer = 9;
+    SpaceStateAnswer spaceStateAnswer = 10;
   }
 }
 
@@ -808,11 +1072,6 @@ message RemoveSpaceUserAnswer {
   string spaceUserId = 2;
 }
 
-message StartSpaceRecordingAnswer {
-}
-
-message StopSpaceRecordingAnswer {
-}
 
 enum RecordingWebhookPhase {
   RECORDING_WEBHOOK_PHASE_UNSPECIFIED = 0;
@@ -830,6 +1089,25 @@ message HandleRecordingWebhookRequest {
   string status = 7;
   string error = 8;
   int64 createdAt = 9;
+  // Milliseconds since the epoch, 0 when LiveKit did not report them.
+  int64 startedAtMs = 10;
+  int64 endedAtMs = 11;
+  // The files LiveKit wrote for this egress (empty until the egress ended).
+  repeated RecordingFileResult fileResults = 12;
+}
+
+message RecordingFileResult {
+  // Object key in the recording bucket, as LiveKit reports it.
+  string filename = 1;
+  int64 sizeBytes = 2;
+  int64 durationMs = 3;
+}
+
+message HandleLivekitWebhookRequest {
+  string spaceName = 1;
+  string recordingSessionId = 2;
+  bytes rawBody = 3;
+  string authorizationHeader = 4;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -878,6 +1156,8 @@ message SubMessage {
     InitSpaceUsersMessage initSpaceUsersMessage = 25;
     AreaPropertyVariableMessage areaPropertyVariableMessage = 26;
     DuplicateUserConnectedMessage duplicateUserConnectedMessage = 27;
+    EntityMessage entityMessage = 31;
+    SpaceStatePatchMessage spaceStatePatchMessage = 32;
   }
 }
 
@@ -984,6 +1264,9 @@ message MeetingConnectionRestartMessage {
   // Optional. Present for WebRTC reconnections to specify which peer to reconnect with.
   // Absent for LiveKit reconnections, where no specific peer is targeted.
   optional string userId = 1;
+  // Optional for backward compatibility during rolling deployments.
+  // Once all clients send it, this can become required in the next protocol version.
+  optional string connectionId = 2;
 }
 
 message WebRtcDisconnectMessage {
@@ -1014,9 +1297,6 @@ message RefreshRoomMessage{
 }
 
 message DeleteMapMessage{
-}
-
-message WorldFullMessage{
 }
 
 message TokenExpiredMessage{
@@ -1279,7 +1559,6 @@ message ServerToClientMessage {
     BanUserMessage banUserMessage = 13;
     //AdminRoomMessage adminRoomMessage = 14;
     WorldFullWarningMessage worldFullWarningMessage = 15;
-    WorldFullMessage worldFullMessage = 16;
     RefreshRoomMessage refreshRoomMessage = 17;
     WorldConnectionMessage worldConnectionMessage = 18;
     //EmoteEventMessage emoteEventMessage = 19;
@@ -1326,9 +1605,6 @@ message JoinRoomFrontMessage {
   ViewportMessage viewportMessage = 2;
   string name = 3;
   AvailabilityStatus availabilityStatus = 6;
-  // Unique identifier for the browser tab, used to detect reconnections from the same tab
-  // and kill stale connections immediately instead of waiting for ping timeout
-  string tabId = 8;
 }
 
 /**
@@ -1435,8 +1711,6 @@ message PusherToBackMessage {
     UserMovesMessage userMovesMessage = 3;
     ItemEventMessage itemEventMessage = 4;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
-    SendUserMessage sendUserMessage = 12;
-    BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
     VariableMessage variableMessage = 15;
     FollowRequestMessage followRequestMessage = 16;
@@ -1453,6 +1727,7 @@ message PusherToBackMessage {
     MeetingInvitationRequestMessage meetingInvitationRequestMessage = 32;
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 33;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 34;
+    EntityMessage entityMessage = 35;
   }
 }
 
@@ -1468,6 +1743,7 @@ message SubToPusherRoomMessage {
     ErrorMessage errorMessage = 2;
     EditMapCommandMessage editMapCommandMessage = 3;
     ReceivedEventMessage receivedEventMessage = 6;
+    EntityMessage entityMessage = 9;
     // Zone-specific messages (all grouped in ZoneMessage)
     ZoneMessage zoneMessage = 7;
     AreaPropertyVariableMessage areaPropertyVariableMessage = 8;
@@ -1537,14 +1813,6 @@ message MapStorageDeleteMessage {
   string wamUrl = 1;
 }
 
-// A message sent by an administrator to a recipient
-message AdminMessage {
-  string message = 1;
-  string recipientUuid = 2;
-  string roomId = 3;
-  string type = 4;
-}
-
 // A message sent by an administrator to everyone in a specific room
 message AdminRoomMessage {
   string message = 1;
@@ -1573,15 +1841,37 @@ message RoomsList {
   repeated RoomDescription roomDescription = 1;
 }
 
+message WorldUsersQuery {
+  // The world URL the admin returns for the user. A room belongs to the world when its URL starts with it.
+  string world = 1;
+}
+
+// A user connected to a room of the world. Carries their IP address: never forward it to a game client.
+message WorldUser {
+  string uuid = 1;
+  string name = 2;
+  string ipAddress = 3;
+  string roomUrl = 4;
+}
+
+message WorldUsersAnswer {
+  repeated WorldUser users = 1;
+}
+
 message DispatchGlobalEventRequest {
   string name = 1;
+  // Defined by whoever posts the global event; delivered to the map scripts untouched.
   google.protobuf.Value value = 2;
 }
 
 message ExternalModuleMessage {
   string moduleId = 1;
+  // Optional on the wire, required in practice: the back drops the message and logs
+  // "isn't implemented yet" if either recipientUuid or roomId is missing. Sending to a whole room, or
+  // to a user across rooms, is not built yet.
   optional string recipientUuid = 2;
   optional string roomId = 3;
+  // Defined by the external module; the back only routes it.
   google.protobuf.Value message = 4;
 }
 
@@ -1620,6 +1910,7 @@ message BackToPusherSpaceMessage{
     PrivateEventBackToPusher privateEvent = 14;
     SpaceAnswerMessage spaceAnswerMessage = 15;
     InitSpaceUsersMessage initSpaceUsersMessage = 16;
+    SpaceStatePatchMessage spaceStatePatchMessage = 17;
   }
 }
 
@@ -1663,6 +1954,11 @@ message SpaceUser{
   google.protobuf.StringValue chatID = 17; // used
   bool showVoiceIndicator = 18;
   bool attendeesState = 19;
+  // Raised by a client whose video encoders could not keep up while it encoded for several P2P peers: the back moves
+  // the space to LiveKit and keeps it there while such a user is present. Never lowered within a session.
+  bool cpuLimited = 20;
+  // Raise-hand state is NOT stored per-user here: it lives in the space state (SpaceStateQuery / SpaceStatePatchMessage),
+  // which is broadcast to all members, including a megaphone speaker without seeAttendees.
 }
 
 /*message PartialSpaceUser{
@@ -1696,6 +1992,9 @@ message InitSpaceUsersMessage{
   string spaceName = 1;
   repeated SpaceUser users = 2;
   string metadata = 3;
+  // Back to pusher only: the whole SpaceState, as JSON. Later changes arrive as SpaceStatePatchMessage. The pusher
+  // hands the state to a user who joins the space as a patch replacing the root.
+  string state = 4;
 }
 
 /**
@@ -1809,27 +2108,41 @@ message Filter {
  *********************************************************************************/
 
 
-/* Duplicated events from RoomAPI */
+/*
+ * Duplicated events from RoomAPI
+ *
+ * These mirror the messages of room-api.proto, which the pusher hands through to the back's RoomManager
+ * rpcs. They are duplicated rather than imported because room-api.proto is the published contract of the
+ * public API and this file is internal; keep the two in step when either changes.
+ */
 
 message VariableRequest {
+  // Full URL of the room, e.g. "https://play.workadventu.re/@/my-organization/my-world/my-room".
   string room = 1;
+  // Name of the variable, as declared by a variable object in the map.
   string name = 2;
 }
 
 message SaveVariableRequest {
   string room = 1;
+  // Name of the variable. The back fails the call if the map does not declare it: the map is the only
+  // place variables can be created.
   string name = 2;
+  // Any JSON value. Stored serialized; writing the value the variable already holds notifies nobody.
   google.protobuf.Value value = 3;
 
 }
 
 message EventRequest {
   string room = 1;
+  // Name of the event to listen to. Only events dispatched under this exact name are streamed.
   string name = 2;
 }
 
 message EventResponse {
   google.protobuf.Value data = 1;
+  // The id, within the room, of the player who dispatched the event. Absent when it came from the
+  // Room API itself.
   optional int32 senderId = 2;
 }
 
@@ -1838,5 +2151,6 @@ message DispatchEventRequest {
   string name = 2;
   google.protobuf.Value data = 3;
   // If targetUserIds is empty, the event is broadcast to all users in the room. Otherwise, it targets the users with the given ids.
+  // Careful: a targeted event reaches those users' clients only — listenEvent subscribers do not see it.
   repeated int32 targetUserIds = 4;
 }

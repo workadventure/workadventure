@@ -1,12 +1,12 @@
 import type { MatrixEvent, Room } from "matrix-js-sdk";
-import { EventType, RelationType } from "matrix-js-sdk";
+import { Direction, EventType, RelationType } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
-import type { Writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
-import type { ComponentType, SvelteComponent } from "svelte";
 import type { ChatMessageReaction, ChatUser } from "../ChatConnection";
+import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../../../types/component";
 import ReactionIcon from "../../Components/Room/ReactionIcon.svelte";
-import { chatUserFactory } from "./MatrixChatUser";
+import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 
 type EventId = string;
 type ChatUserWithEventId = ChatUser & { eventId: EventId };
@@ -16,8 +16,13 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
     messageId: string;
     users: MapStore<string, ChatUserWithEventId>;
     reacted: Writable<boolean>;
+    canReact: Readable<boolean>;
 
-    constructor(private matrixRoom: Room, event: MatrixEvent) {
+    constructor(
+        private matrixRoom: Room,
+        event: MatrixEvent,
+        canReactStore?: Readable<boolean>,
+    ) {
         const relation = event.getRelation();
         if (relation === null || relation.rel_type !== "m.annotation") {
             throw Error("Wrong matrix event object for MessageReaction");
@@ -33,20 +38,30 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
         this.messageId = targetEventId;
         this.users = new MapStore<string, ChatUserWithEventId>();
         this.reacted = writable(false);
-        this.addUser(event.getSender(), event.getId());
+        this.canReact =
+            canReactStore ??
+            writable(
+                this.matrixRoom
+                    .getLiveTimeline()
+                    .getState(Direction.Backward)
+                    ?.maySendEvent(EventType.Reaction, this.matrixRoom.client.getSafeUserId()) ?? false,
+            );
+        this.addUser(event);
     }
 
-    public addUser(userId: string | undefined, userReactionEventId: string | undefined) {
+    public addUser(event: MatrixEvent) {
+        const userId = event.getSender();
+        const userReactionEventId = event.getId();
         if (userId === undefined || userReactionEventId === undefined) {
             return;
         }
         if (this.users.get(userId) !== undefined) {
             return;
         }
-        const user = this.matrixRoom.client.getUser(userId);
+        const user = chatUserFactoryFromEvent(this.matrixRoom, event);
         if (user) {
-            this.users.set(user.userId, {
-                ...chatUserFactory(user, this.matrixRoom.client),
+            this.users.set(user.chatId, {
+                ...user,
                 eventId: userReactionEventId,
             });
             this.reacted.set(this.users.get(this.matrixRoom.myUserId) !== undefined);
@@ -61,6 +76,9 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
     }
 
     react() {
+        if (!get(this.canReact)) {
+            return;
+        }
         const userWithReactionEventId = this.users.get(this.matrixRoom.myUserId);
         if (userWithReactionEventId === undefined) {
             this.sendMyReaction().catch((error) => console.error(error));
@@ -84,12 +102,16 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
             await this.matrixRoom.client
                 .redactEvent(this.matrixRoom.roomId, myReactionEventId)
                 .catch((error) => console.error(error));
+            this.removeUser(this.matrixRoom.myUserId);
         } catch (error) {
             console.error(error);
         }
     }
 
-    public get component(): { component: ComponentType<SvelteComponent>; props: Record<string, unknown> } {
+    public get component(): {
+        component: WorkAdventureComponent;
+        props: WorkAdventureComponentProps;
+    } {
         return {
             component: ReactionIcon,
             props: {

@@ -1,19 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Writable } from "stream";
+import type { Writable } from "stream";
 import { describe, expect, it } from "vitest";
-import { BackToPusherSpaceMessage } from "@workadventure/messages";
+import type { BackToPusherSpaceMessage } from "@workadventure/messages";
 import { mock } from "vitest-mock-extended";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
-import { SpaceSocket } from "../src/SpaceManager";
+import type { SpaceSocket } from "../src/SpaceManager";
 
 describe("SpacesWatcher", () => {
     it("should close the socket because no pong was answered to the ping within 20sec", async () => {
         const eventsWatcher: BackToPusherSpaceMessage[] = [];
         let isClosed = false;
         const spaceSocketToPusher = mock<SpaceSocket>({
-            write(chunk: BackToPusherSpaceMessage): boolean {
+            write(chunk: BackToPusherSpaceMessage, callback?: () => void): boolean {
                 eventsWatcher.push(chunk);
+                callback?.();
                 return true;
             },
             end(): ReturnType<Writable["end"]> extends Writable ? SpaceSocket : void {
@@ -43,7 +44,8 @@ describe("SpacesWatcher", () => {
         // eslint-disable-next-line prefer-const
         let watcher: SpacesWatcher;
         const spaceSocketToPusher = mock<SpaceSocket>({
-            write(chunk: BackToPusherSpaceMessage): boolean {
+            write(chunk: BackToPusherSpaceMessage, callback?: () => void): boolean {
+                callback?.();
                 if (chunk?.message?.$case === "pingMessage") {
                     setTimeout(() => watcher?.clearPongTimeout(), 0);
                 }

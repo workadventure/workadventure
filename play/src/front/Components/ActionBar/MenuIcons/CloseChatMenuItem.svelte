@@ -1,22 +1,26 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import ActionBarButton from "../ActionBarButton.svelte";
-    import { chatVisibilityStore, intentionallyClosedChatDuringMeetingStore } from "../../../Stores/ChatStore";
+    import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
     import { ProximityChatRoom } from "../../../Chat/Connection/Proximity/ProximityChatRoom";
     import { IconX } from "@wa-icons";
 
-    export let last: boolean | undefined = undefined;
+    interface Props {
+        last?: boolean;
+    }
+
+    let { last = undefined }: Props = $props();
 
     function closeChat() {
         chatVisibilityStore.set(false);
         const selectedRoom = get(selectedRoomStore);
         if (selectedRoom instanceof ProximityChatRoom) {
-            intentionallyClosedChatDuringMeetingStore.set(true);
+            selectedRoom.intentionallyClosed.set(true);
         }
     }
 </script>
 
-<ActionBarButton on:click={closeChat} dataTestId="closeChatButton" {last} disabledHelp={false}>
+<ActionBarButton onclick={closeChat} dataTestId="closeChatButton" {last} disabledHelp={false}>
     <IconX font-size="20" />
 </ActionBarButton>

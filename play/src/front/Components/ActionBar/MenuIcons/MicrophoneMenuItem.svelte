@@ -25,6 +25,7 @@
                 $availabilityStatusStore === AvailabilityStatus.BUSY ||
                 $availabilityStatusStore === AvailabilityStatus.AWAY ||
                 $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+                $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
                 $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
                 $silentStore === true ||
                 ($microphoneListStore !== undefined && $microphoneListStore.length === 0)
@@ -32,7 +33,7 @@
                 return "disabled";
             }
             return $requestedMicrophoneState ? "normal" : "forbidden";
-        }
+        },
     );
 
     const microphoneActionBarTooltipStore = derived(
@@ -74,11 +75,11 @@
                 };
             }
             return { title: "", desc: "", media: "" };
-        }
+        },
     );
 
     function microphoneClick(): void {
-        analyticsClient.microphone();
+        analyticsClient.trackAdminEvent("media.microphone.toggled");
         if ($silentStore) return;
         if ($requestedMicrophoneState === true) {
             requestedMicrophoneState.disableMicrophone();
@@ -89,7 +90,7 @@
 </script>
 
 <ActionBarButton
-    on:click={microphoneClick}
+    onclick={microphoneClick}
     classList="group/btn-mic peer/mic"
     disabledHelp={$openedMenuStore !== undefined}
     state={$microphoneButtonStateStore}

@@ -9,6 +9,14 @@ export const megaphoneCanBeUsedStore = writable<boolean>(false);
 
 export const requestedMegaphoneStore = writable<boolean>(false);
 
+/**
+ * The space in which the local user was given the floor after raising their hand.
+ * When set, the local user has been promoted to speaker by a host and the "give back the floor" control is
+ * shown so they can hand the floor back themselves. Cleared when they give it back, when a host revokes it,
+ * or when they leave the space.
+ */
+export const givenFloorSpaceStore = writable<SpaceInterface | undefined>(undefined);
+
 export interface MegaphoneSpaceSettings {
     spaceName: string;
     audienceVideoFeedbackActivated: boolean;
@@ -38,12 +46,12 @@ export const liveStreamingEnabledStore: Readable<boolean> = derived(
             $requestedMicrophoneState,
             $requestedScreenSharingState,
         ],
-        set
+        set,
     ) => {
         set(
             $isSpeakerStore ||
                 ($requestedMegaphoneStore &&
-                    ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState))
+                    ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState)),
         );
         if (
             $requestedMegaphoneStore &&
@@ -53,5 +61,5 @@ export const liveStreamingEnabledStore: Readable<boolean> = derived(
         ) {
             requestedMegaphoneStore.set(false);
         }
-    }
+    },
 );

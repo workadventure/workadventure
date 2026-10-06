@@ -2,13 +2,19 @@
     import { fly } from "svelte/transition";
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { mediaPermissionDeniedStore } from "../../Stores/MediaStatusStore";
     import { popupStore } from "../../Stores/PopupStore";
+    import Button from "../UI/Button.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
     let isAndroid = isAndroidFct();
     let isFirefox = getNavigatorType() === NavigatorType.firefox;
     let isChrome = getNavigatorType() === NavigatorType.chrome;
-    let showDetails = false;
+    let showDetails = $state(false);
+
+    let cameraDenied = $derived($mediaPermissionDeniedStore.camera);
+    let microphoneDenied = $derived($mediaPermissionDeniedStore.microphone);
+    let cameraAndMicrophoneDenied = $derived(cameraDenied && microphoneDenied);
 
     function allow() {
         showDetails = !showDetails;
@@ -21,22 +27,43 @@
 
 <form
     class="helpCameraSettings z-[600] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col w-full md:w-2/3 xl:w-[380px] text-sm md:text-base overflow-hidden"
-    on:submit|preventDefault={close}
+    onsubmit={(event) => {
+        event.preventDefault();
+        close();
+    }}
     transition:fly={{ y: -50, duration: 500 }}
 >
     <section class="mb-0">
         <div class="mb-0 text-lg bold border border-solid border-transparent border-b-white/20 bg-white/10 px-4 py-3">
-            {$LL.camera.help.title()}
+            {#if cameraAndMicrophoneDenied}
+                {$LL.camera.help.title()}
+            {:else if cameraDenied}
+                {$LL.camera.help.cameraTitle()}
+            {:else}
+                {$LL.camera.help.microphoneTitle()}
+            {/if}
         </div>
         {#if showDetails}
             <div class="px-4 mt-4">
                 <p class="help-text !text-danger-800">
                     <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
-                    {$LL.camera.help.permissionDenied()}
+                    {#if cameraAndMicrophoneDenied}
+                        {$LL.camera.help.cameraMicrophonePermissionDenied()}
+                    {:else if cameraDenied}
+                        {$LL.camera.help.cameraPermissionDenied()}
+                    {:else}
+                        {$LL.camera.help.microphonePermissionDenied()}
+                    {/if}
                 </p>
             </div>
             <div class="p-4 italic opacity-50 text-sm leading-4">
-                {$LL.camera.help.content()}
+                {#if cameraAndMicrophoneDenied}
+                    {$LL.camera.help.content()}
+                {:else if cameraDenied}
+                    {$LL.camera.help.cameraContent()}
+                {:else}
+                    {$LL.camera.help.microphoneContent()}
+                {/if}
             </div>
             {#if isFirefox}
                 <p class="err">
@@ -48,14 +75,14 @@
                     <img
                         draggable="false"
                         src={$LL.camera.help.screen.firefox()}
-                        alt="help camera setup"
+                        alt="help media setup"
                         class="w-full m-auto"
                     />
                 {:else if isChrome && !isAndroid}
                     <img
                         draggable="false"
                         src={$LL.camera.help.screen.chrome()}
-                        alt="help camera setup"
+                        alt="help media setup"
                         class="w-full m-auto"
                     />
                 {/if}
@@ -63,11 +90,41 @@
         {/if}
     </section>
     <section class="flex row justify-center p-4 bg-contrast">
-        <button class="btn btn-sm btn-border btn-success mr-2 w-full justify-center" on:click|preventDefault={allow}
-            >{$LL.camera.help.allow()}</button
+        <Button
+            variant="success"
+            appearance="border"
+            size="sm"
+            class="mr-2 w-full"
+            onclick={(event) => {
+                event.preventDefault();
+                allow();
+            }}
         >
-        <button type="submit" class="btn btn-danger btn-sm w-full justify-center" on:click|preventDefault={close}
-            >{$LL.camera.help.continue()}</button
+            {#if cameraAndMicrophoneDenied}
+                {$LL.camera.help.allowCameraMicrophone()}
+            {:else if cameraDenied}
+                {$LL.camera.help.allow()}
+            {:else}
+                {$LL.camera.help.allowMicrophone()}
+            {/if}
+        </Button>
+        <Button
+            type="submit"
+            variant="danger"
+            size="sm"
+            class="w-full"
+            onclick={(event) => {
+                event.preventDefault();
+                close();
+            }}
         >
+            {#if cameraAndMicrophoneDenied}
+                {$LL.camera.help.continueCameraMicrophone()}
+            {:else if cameraDenied}
+                {$LL.camera.help.continue()}
+            {:else}
+                {$LL.camera.help.continueWithoutMicrophone()}
+            {/if}
+        </Button>
     </section>
 </form>

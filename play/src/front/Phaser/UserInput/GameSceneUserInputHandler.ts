@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { Player } from "../Player/Player";
@@ -18,6 +19,9 @@ import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Shortcut } from "./UserInputManager";
+
+import Pointer = Phaser.Input.Pointer;
+import GameObject = Phaser.GameObjects.GameObject;
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -98,16 +102,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handleMouseWheelEvent(
-        pointer: Phaser.Input.Pointer,
-        gameObjects: Phaser.GameObjects.GameObject[],
+        pointer: Pointer,
+        gameObjects: GameObject[],
         deltaX: number,
         deltaY: number,
-        deltaZ: number
+        deltaZ: number,
     ): void {
         this.gameScene.handleMouseWheel(deltaY);
     }
 
-    public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+    public handlePointerUpEvent(pointer: Pointer, gameObjects: GameObject[]): void {
         if (pointer.wasTouch || pointer.leftButtonReleased()) {
             for (const object of gameObjects) {
                 if (isActivatable(object)) {
@@ -121,7 +125,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             return;
         }
 
-        if (!this.gameScene.userInputManager.isControlsEnabled) {
+        if (
+            !this.gameScene.userInputManager.isControlsEnabled &&
+            !this.gameScene.userInputManager.isRightClickEnabled
+        ) {
             return;
         }
 
@@ -143,16 +150,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                     x: worldPoint.x,
                     y: worldPoint.y,
                 },
-                true
+                true,
             )
             .catch((reason) => {
                 console.warn(reason);
             });
     }
 
-    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
+    public handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {}
 
-    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
+    public handlePointerMoveEvent(pointer: Pointer, gameObjects: GameObject[]): void {}
 
     private handleKeyF() {
         const state = get(followStateStore);
@@ -215,7 +222,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 break;
             }
             case "KeyR": {
-                this.gameScene.CurrentPlayer.rotate();
+                this.gameScene.CurrentPlayer?.rotate();
                 break;
             }
             case "KeyC":
@@ -292,16 +299,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
         popupStore.addPopup(SayPopUp, { type: this.controlKeyisPressed ? "think" : "say" }, "say");
         if (this.controlKeyisPressed) {
-            analyticsClient.openThinkBubble();
+            analyticsClient.trackAdminEvent("bubble.think.opened");
         } else {
-            analyticsClient.openSayBubble();
+            analyticsClient.trackAdminEvent("bubble.say.opened");
         }
     }
 
     public handleKeyUpEvent(event: KeyboardEvent): KeyboardEvent {
         switch (event.key) {
             case "Escape": {
-                const dismissed = this.gameScene.CurrentPlayer.dismissNewMediaDevicePrompts((deviceId) => {
+                const dismissed = this.gameScene.CurrentPlayer?.dismissNewMediaDevicePrompts((deviceId) => {
                     localUserStore.addIgnoredNewMediaDeviceId(deviceId);
                 });
                 if (dismissed) {
@@ -338,7 +345,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             activatable.activate();
             activatable.destroyText("object");
         }
-        this.gameScene.CurrentPlayer.handlePressSpacePlayerTextCallback();
+        this.gameScene.CurrentPlayer?.handlePressSpacePlayerTextCallback();
     }
 
     public addSpaceEventListener(callback: () => void): void {

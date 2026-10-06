@@ -6,7 +6,7 @@ export const isSetTilesEvent = z.array(
         y: z.number(),
         tile: z.union([z.number(), z.string(), z.null()]),
         layer: z.string(),
-    })
+    }),
 );
 
 /**

@@ -52,7 +52,7 @@ class App {
 
         if (PROMETHEUS_PORT && this.prometheusApp) {
             this.prometheusApp.listen(PROMETHEUS_PORT, () =>
-                console.info(`WorkAdventure Prometheus API starting on port ${PROMETHEUS_PORT}!`)
+                console.info(`WorkAdventure Prometheus API starting on port ${PROMETHEUS_PORT}!`),
             );
         }
     }

@@ -1,15 +1,20 @@
-import {ChildProcess} from "child_process";
-import {MinioContainer, StartedMinioContainer} from "@testcontainers/minio";
+import type {ChildProcess} from "child_process";
+import { asError } from "catch-unknown";
+import type { StartedTestContainer} from "testcontainers";
+import {GenericContainer, Wait} from "testcontainers";
 import AWS from "aws-sdk";
 import {describe, expect, vi, it, beforeAll, beforeEach, afterAll, afterEach} from 'vitest';
 import {PLAY_URL} from "../src/Enum/EnvironmentVariable";
-import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
-import startTestServer from "./startTestServer";
+import {uploadHtmlFileTest, uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
+import startTestServer, {stopTestServer} from "./startTestServer";
 import isPortReachable from "./utils/isPortReachable";
 
-const MINIO_IMAGE = "minio/minio:RELEASE.2025-09-07T16-13-09Z";
-const MINIO_ACCESS_KEY = "fake-access-key";
-const MINIO_SECRET_KEY = "fake-secret";
+// RustFS is the S3-compatible server the docker-compose stacks already use. It replaces minio/minio,
+// which can no longer be pulled from Docker Hub ("repository does not exist or may require login").
+const RUSTFS_IMAGE = "rustfs/rustfs:1.0.0-alpha.83";
+const RUSTFS_S3_PORT = 9000;
+const S3_ACCESS_KEY = "fake-access-key";
+const S3_SECRET_KEY = "fake-secret";
 const TEST_BUCKET = "storage-bucket";
 
 vi.mock('../src/Enum/EnvironmentVariable', () => ({
@@ -22,37 +27,42 @@ describe("S3 Uploader tests", () => {
     const APP_PORT = 7374
     const UPLOADER_URL = `http://localhost:${APP_PORT}`
     let server: ChildProcess| undefined;
-    let minioContainer: StartedMinioContainer | undefined
+    let s3Container: StartedTestContainer | undefined
     let endpoint: string
 
     let s3: AWS.S3
     vi.setConfig({ testTimeout: 30000, hookTimeout: 30000 })
     beforeAll(async ()=> {
-        minioContainer = await new MinioContainer(MINIO_IMAGE)
-            .withUsername(MINIO_ACCESS_KEY)
-            .withPassword(MINIO_SECRET_KEY)
+        s3Container = await new GenericContainer(RUSTFS_IMAGE)
+            .withCommand(["/data"])
+            .withEnvironment({
+                RUSTFS_ACCESS_KEY: S3_ACCESS_KEY,
+                RUSTFS_SECRET_KEY: S3_SECRET_KEY,
+            })
+            .withExposedPorts(RUSTFS_S3_PORT)
+            .withWaitStrategy(Wait.forLogMessage(/started successfully/))
             .start()
 
-        endpoint = minioContainer.getConnectionUrl()
+        endpoint = `http://${s3Container.getHost()}:${s3Container.getMappedPort(RUSTFS_S3_PORT)}`
 
         AWS.config.update({
-            accessKeyId: MINIO_ACCESS_KEY,
-            secretAccessKey: MINIO_SECRET_KEY,
+            accessKeyId: S3_ACCESS_KEY,
+            secretAccessKey: S3_SECRET_KEY,
             region: "us-east-1"
         });
         const options = {
             s3ForcePathStyle: true,
             endpoint: endpoint,
-            accessKeyId: MINIO_ACCESS_KEY,
-            secretAccessKey: MINIO_SECRET_KEY
+            accessKeyId: S3_ACCESS_KEY,
+            secretAccessKey: S3_SECRET_KEY
         };
         s3 = new AWS.S3(options);
 
         server = startTestServer({
             SERVER_PORT: APP_PORT,
-            AWS_ACCESS_KEY_ID: MINIO_ACCESS_KEY,
+            AWS_ACCESS_KEY_ID: S3_ACCESS_KEY,
             AWS_BUCKET: TEST_BUCKET,
-            AWS_SECRET_ACCESS_KEY: MINIO_SECRET_KEY,
+            AWS_SECRET_ACCESS_KEY: S3_SECRET_KEY,
             AWS_DEFAULT_REGION: "us-east-1",
             AWS_ENDPOINT: endpoint,
             REDIS_HOST: "",
@@ -85,42 +95,42 @@ describe("S3 Uploader tests", () => {
     })
 
     afterAll(async ()=> {
-        if (server) {
-            const serverToKill = server;
-            const promise = new Promise(resolve => {
-                serverToKill.on("exit", ()=> {
-                    resolve(0)
-                })
-            });
-            serverToKill.kill("SIGKILL")
-            await promise;
-        }
-        if (minioContainer) {
-            const stream = await minioContainer.logs();
+        await stopTestServer(server)
+        if (s3Container) {
+            const stream = await s3Container.logs();
             stream
                 //.on("data", line => console.log(line))
                 .on("err", line => console.error(line))
                 .on("end", () => console.log("Stream closed"));
         }
 
-        await minioContainer?.stop()
+        await s3Container?.stop()
     })
 
     it("should upload one file to s3", async ()=> {
         const responseData = await uploadSingleFileTest(UPLOADER_URL);
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             s3.listObjects({Bucket: TEST_BUCKET}, (err, objects) => {
-                if (err) reject()
+                if (err) {
+                    reject(err)
+                    return;
+                }
                 const files = objects?.Contents || []
                 try {
                     expect(files[0]?.Key).toEqual(responseData.id)
-                    resolve(0)
+                    resolve()
                 } catch (e) {
                     console.error(e)
-                    reject()
+                    reject(asError(e))
                 }
             })
         })
+    })
+
+    it("should not serve an uploaded html file as html", async ()=> {
+        // The download is a redirect to a presigned URL, so the content type and the disposition
+        // are overridden in the signed URL itself.
+        await uploadHtmlFileTest(UPLOADER_URL);
     })
 
     it("should upload multiple files to S3", async ()=> {
@@ -128,14 +138,17 @@ describe("S3 Uploader tests", () => {
         const file1 = responseData[0]
         const file2 = responseData[1]
 
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             s3.listObjects({Bucket: TEST_BUCKET}, (err, objects) => {
-                if (err) reject()
+                if (err) {
+                    reject(err)
+                    return;
+                }
                 const files = objects?.Contents || []
                 const fileNames = files.map(f=>f.Key)
                 expect(fileNames).toContain(file1.id)
                 expect(fileNames).toContain(file2.id)
-                resolve(0)
+                resolve()
             })
         })
     })

@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -9,8 +10,19 @@ import { WaScaleManagerEvent } from "../Services/WaScaleManager";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import type { RemotePlayer } from "../Entity/RemotePlayer";
+import {
+    SMOOTH_BUTTON_ZOOM_DURATION,
+    SMOOTH_BUTTON_ZOOM_TARGET_EPSILON,
+    getContinuousButtonZoomFactor,
+    getRetargetedButtonZoomModifier,
+    getSmoothButtonZoomModifier,
+} from "./CameraZoomUtils";
 import type { GameScene } from "./GameScene";
+
 import Clamp = Phaser.Math.Clamp;
+import EventEmitter = Phaser.Events.EventEmitter;
+import Camera = Phaser.Cameras.Scene2D.Camera;
+import Tween = Phaser.Tweens.Tween;
 
 export enum CameraManagerEvent {
     CameraUpdate = "CameraUpdate",
@@ -50,12 +62,20 @@ type ZoomAnimation = {
  * The CameraManager handles the transitions / animations between the different camera modes.
  * It also handles the smooth zoom in and out of the camera.
  */
-export class CameraManager extends Phaser.Events.EventEmitter {
-    private camera: Phaser.Cameras.Scene2D.Camera;
+export class CameraManager extends EventEmitter {
+    private camera: Camera;
     private waScaleManager: WaScaleManager;
 
     private cameraAnimation: CameraAnimation | undefined;
     private zoomAnimation: ZoomAnimation | undefined;
+
+    // Button zoom is kept separate from the regular tween-based zoom so repeated clicks can retarget
+    // the current destination without recreating a Phaser tween on every press.
+    private buttonZoomAnimation: ZoomAnimation | undefined;
+    private smoothButtonZoomStartModifier: number | undefined;
+    private smoothButtonZoomTargetModifier: number | undefined;
+    private smoothButtonZoomElapsedMs = 0;
+    private continuousButtonZoomFactorPerSecond: number | undefined;
 
     private playerToFollow?: Player | RemotePlayer;
     private zoomLocked: boolean;
@@ -70,7 +90,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private explorerFocusOn: { x: number; y: number } = { x: 0, y: 0 };
 
     // The tween for the camera offset
-    private cameraOffsetCurrentTween?: Phaser.Tweens.Tween;
+    private cameraOffsetCurrentTween?: Tween;
 
     // The box we should center the camera on (expressed in screen pixels, not game pixels).
     private cameraOffsetBox: Box | undefined;
@@ -81,7 +101,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     constructor(
         private scene: GameScene,
         private mapSize: { width: number; height: number },
-        waScaleManager: WaScaleManager
+        waScaleManager: WaScaleManager,
     ) {
         super();
 
@@ -107,7 +127,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                     -this.mapSize.width,
                     -this.mapSize.height,
                     this.mapSize.width * 3,
-                    this.mapSize.height * 3
+                    this.mapSize.height * 3,
                 );
             } else {
                 // We set the bounds back after a call to start following the player
@@ -118,7 +138,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         // Set zoom out to the maximum possible value
         this.waScaleManager.maxZoomOut = this.waScaleManager.getTargetZoomModifierFor(
             this.mapSize.width,
-            this.mapSize.height
+            this.mapSize.height,
         );
 
         this.scene.game.events.on(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
@@ -130,22 +150,25 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     public destroy(): void {
         this.cancelOffsetTween();
+        this.zoomAnimation?.onInterrupt();
+        this.zoomAnimation = undefined;
         this.scene.game.events.off(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
 
         this.scene.game.events.off(WaScaleManagerEvent.RefreshFocusOnTarget);
         this.camera.off("followupdate", this.onFollowUpdate);
+        this.off(CameraManagerEvent.CameraUpdate, this.onCameraUpdate);
         this.unsubscribeMapEditorModeStore();
         super.destroy();
     }
 
-    public getCamera(): Phaser.Cameras.Scene2D.Camera {
+    public getCamera(): Camera {
         return this.camera;
     }
 
     private animateToFocus(
         target: Character | { x: number; y: number },
         duration: number,
-        callback?: () => void
+        callback?: () => void,
     ): void {
         this.cameraAnimation?.onInterrupt();
 
@@ -167,7 +190,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             1,
             1,
             this.camera.followOffset.x,
-            this.camera.followOffset.y
+            this.camera.followOffset.y,
         );
 
         // Note: if duration = 0, the addCounter onUpdate is directly triggered to the "1" progress value.
@@ -176,7 +199,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             to: 1,
             duration,
             ease: Easing.SineEaseOut,
-            onUpdate: (tween: Phaser.Tweens.Tween) => {
+            onUpdate: (tween: Tween) => {
                 const progress = tween.getValue() ?? 0;
                 const shiftX = (target.x - origin.x) * progress;
                 const shiftY = (target.y - origin.y) * progress;
@@ -410,7 +433,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
         const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(
             width * multiplier,
-            height * multiplier
+            height * multiplier,
         );
         const currentZoomModifier = this.waScaleManager.zoomModifier;
         return targetZoomModifier - currentZoomModifier;
@@ -452,11 +475,16 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.camera.centerOn(focusOn.x, focusOn.y);
 
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-            }
+            },
         );
 
         this.camera.on("followupdate", this.onFollowUpdate);
+        this.on(CameraManagerEvent.CameraUpdate, this.onCameraUpdate);
     }
+
+    private onCameraUpdate = () => {
+        this.scene.sendViewportToServer();
+    };
 
     private getCameraUpdateEventData(): CameraManagerEventCameraUpdateData {
         return {
@@ -496,7 +524,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.cameraOffsetCurrentTween = undefined;
     }
 
-    private stopTween(tween: Phaser.Tweens.Tween | undefined): void {
+    private stopTween(tween: Tween | undefined): void {
         if (!tween) {
             return;
         }
@@ -519,18 +547,82 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.animateToZoomLevel(this.waScaleManager.zoomModifier * zoomFactor, duration, callback);
     }
 
+    /**
+     * Applies one Explorer menu click step.
+     * If another click arrives while the previous step is still animating, the target is moved again
+     * and the animation restarts from the current zoom, which avoids the visible "restart" effect.
+     */
+    public smoothZoomByFactor(zoomFactor: number): void {
+        if (this.isZoomLocked()) {
+            return;
+        }
+
+        this.smoothButtonZoomTargetModifier = getRetargetedButtonZoomModifier(
+            this.waScaleManager.zoomModifier,
+            zoomFactor,
+            this.smoothButtonZoomTargetModifier,
+        );
+        this.smoothButtonZoomStartModifier = this.waScaleManager.zoomModifier;
+        this.smoothButtonZoomElapsedMs = 0;
+        this.continuousButtonZoomFactorPerSecond = undefined;
+
+        if (!this.buttonZoomAnimation) {
+            this.zoomAnimation?.onInterrupt();
+            this.startButtonZoomAnimation();
+        }
+    }
+
+    /**
+     * Starts long-press zoom. The caller passes a per-second factor so the update loop can remain frame-rate independent.
+     */
+    public startContinuousZoom(zoomFactorPerSecond: number): void {
+        if (this.isZoomLocked()) {
+            return;
+        }
+
+        this.smoothButtonZoomTargetModifier = undefined;
+        this.smoothButtonZoomStartModifier = undefined;
+        this.smoothButtonZoomElapsedMs = 0;
+        this.continuousButtonZoomFactorPerSecond = zoomFactorPerSecond;
+
+        if (!this.buttonZoomAnimation) {
+            this.zoomAnimation?.onInterrupt();
+            this.startButtonZoomAnimation();
+        }
+    }
+
+    /**
+     * Ends long-press zoom and asks WaScaleManager to settle outside animation mode.
+     * This lets its existing zoom bounds and canvas resize logic finish cleanly.
+     */
+    public stopContinuousZoom(): void {
+        if (this.continuousButtonZoomFactorPerSecond === undefined) {
+            return;
+        }
+
+        this.waScaleManager.setZoomModifier(this.waScaleManager.zoomModifier, this.camera, false);
+        this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+        this.stopButtonZoomAnimation();
+    }
+
     private animateToZoomLevel(targetZoomModifier: number, duration: number, callback?: () => void): void {
         this.zoomAnimation?.onInterrupt();
         const startZoomModifier = this.waScaleManager.zoomModifier;
         const startDate = Date.now();
 
+        const easeAlgo = Easing.QuintEaseOut;
+
         const zoomTween = this.scene.tweens.addCounter({
             from: startZoomModifier,
             to: targetZoomModifier,
             duration,
-            ease: Easing.SineEaseOut,
-            onUpdate: (tween: Phaser.Tweens.Tween) => {
-                this.waScaleManager.setZoomModifier(tween.getValue() ?? 0, this.camera, true);
+            ease: easeAlgo,
+            onUpdate: (tween: Tween) => {
+                const value = tween.getValue();
+                if (value === null) {
+                    return;
+                }
+                this.waScaleManager.setZoomModifier(value, this.camera, true);
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
             onComplete: () => {
@@ -545,15 +637,19 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
                 let elapsedTime = Date.now() - startDate;
                 if (elapsedTime > duration) {
-                    elapsedTime = 1;
+                    elapsedTime = duration;
                 }
+
+                const easeFunction = Phaser.Tweens.Builders.GetEaseFunction(easeAlgo);
+
                 let value;
                 if (duration !== 0) {
-                    value = (elapsedTime / duration) * (targetZoomModifier - startZoomModifier) + startZoomModifier;
+                    value =
+                        easeFunction(elapsedTime / duration) * (targetZoomModifier - startZoomModifier) +
+                        startZoomModifier;
                 } else {
                     value = targetZoomModifier;
                 }
-
                 this.waScaleManager.setZoomModifier(value, this.camera, true);
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
@@ -566,11 +662,103 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             },
         };
     }
+
+    private startButtonZoomAnimation(): void {
+        // We drive the button zoom from the scene update event because it handles both click easing
+        // and continuous hold zoom with the same cleanup path.
+        this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.animateButtonZoom);
+
+        const buttonZoomAnimation: ZoomAnimation = {
+            onInterrupt: () => {
+                this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animateButtonZoom);
+                this.smoothButtonZoomStartModifier = undefined;
+                this.smoothButtonZoomTargetModifier = undefined;
+                this.smoothButtonZoomElapsedMs = 0;
+                this.continuousButtonZoomFactorPerSecond = undefined;
+                this.buttonZoomAnimation = undefined;
+                if (this.zoomAnimation === buttonZoomAnimation) {
+                    this.zoomAnimation = undefined;
+                }
+            },
+        };
+
+        this.buttonZoomAnimation = buttonZoomAnimation;
+        this.zoomAnimation = buttonZoomAnimation;
+    }
+
+    private stopButtonZoomAnimation(): void {
+        this.buttonZoomAnimation?.onInterrupt();
+    }
+
+    private updateButtonZoomModifier(targetZoomModifier: number, animating: boolean): void {
+        this.waScaleManager.setZoomModifier(targetZoomModifier, this.camera, animating);
+        this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+    }
+
+    private isButtonZoomLimitReached(previousZoomModifier: number, requestedZoomModifier: number): boolean {
+        // WaScaleManager clamps by mutating its internal zoom modifier when bounds are reached.
+        // Comparing the requested direction with the exposed bound flags tells us when to stop the loop.
+        if (requestedZoomModifier > previousZoomModifier && this.waScaleManager.isMaximumZoomInReached) {
+            return true;
+        }
+
+        if (requestedZoomModifier < previousZoomModifier && this.waScaleManager.isMaximumZoomOutReached) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private readonly animateButtonZoom = (_time: number, delta: number): void => {
+        if (this.continuousButtonZoomFactorPerSecond !== undefined) {
+            // Long press zoom is multiplicative and frame-rate independent.
+            const currentZoomModifier = this.waScaleManager.zoomModifier;
+            const targetZoomModifier =
+                currentZoomModifier * getContinuousButtonZoomFactor(this.continuousButtonZoomFactorPerSecond, delta);
+
+            this.updateButtonZoomModifier(targetZoomModifier, true);
+
+            if (this.isButtonZoomLimitReached(currentZoomModifier, targetZoomModifier)) {
+                this.stopContinuousZoom();
+            }
+            return;
+        }
+
+        // Click zoom uses elapsed time from the last click target change, not only the frame delta.
+        // This keeps the easing curve stable even if the browser drops frames.
+        const startZoomModifier = this.smoothButtonZoomStartModifier;
+        const targetZoomModifier = this.smoothButtonZoomTargetModifier;
+        if (startZoomModifier === undefined || targetZoomModifier === undefined) {
+            this.stopButtonZoomAnimation();
+            return;
+        }
+
+        const currentZoomModifier = this.waScaleManager.zoomModifier;
+        this.smoothButtonZoomElapsedMs += delta;
+        const nextZoomModifier = getSmoothButtonZoomModifier(
+            startZoomModifier,
+            targetZoomModifier,
+            this.smoothButtonZoomElapsedMs,
+            SMOOTH_BUTTON_ZOOM_DURATION,
+        );
+
+        this.updateButtonZoomModifier(nextZoomModifier, true);
+
+        if (
+            this.smoothButtonZoomElapsedMs >= SMOOTH_BUTTON_ZOOM_DURATION ||
+            Math.abs(this.waScaleManager.zoomModifier - targetZoomModifier) <= SMOOTH_BUTTON_ZOOM_TARGET_EPSILON ||
+            this.isButtonZoomLimitReached(currentZoomModifier, targetZoomModifier)
+        ) {
+            this.updateButtonZoomModifier(this.waScaleManager.zoomModifier, false);
+            this.stopButtonZoomAnimation();
+        }
+    };
+
     private animate = (time: number, delta: number): void => {
         const cameraSpeed = this.cameraAnimation;
         if (cameraSpeed?.type !== "speed") {
             console.warn(
-                "Camera animation is not in speed mode but animate callback is called. This should not happen."
+                "Camera animation is not in speed mode but animate callback is called. This should not happen.",
             );
             return;
         }

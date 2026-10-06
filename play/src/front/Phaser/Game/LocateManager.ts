@@ -19,7 +19,11 @@ export class LocateManager {
     private locatePositionClearProgressTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
     private wokaMenuStoreUnsubscriber?: () => void;
 
-    constructor(private scene: GameScene, private cameraManager: CameraManager, private connection: RoomConnection) {
+    constructor(
+        private scene: GameScene,
+        private cameraManager: CameraManager,
+        private connection: RoomConnection,
+    ) {
         this.subscribeToLocatePositionMessages();
         this.subscribeToWokaMenuStore();
         wokaMenuProgressStore.set(undefined);
@@ -44,7 +48,9 @@ export class LocateManager {
         // Subscribe to woka menu store to stop following the remote player when the woka menu is closed.
         this.wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
             if (value === undefined && previouslyFollowedRemotePlayer !== undefined) {
-                this.cameraManager.stopFollowRemotePlayer();
+                if (!this.scene.getMapEditorModeManager()?.returnToLastMode()) {
+                    this.cameraManager.stopFollowRemotePlayer();
+                }
                 previouslyFollowedRemotePlayer = undefined;
             } else if (
                 value !== undefined &&
@@ -113,7 +119,7 @@ export class LocateManager {
             const progressPercent = Math.min((progressStep / 10) * 100, 90);
             const messageIndex = Math.min(
                 Math.floor((progressStep / 10) * progressMessages.length),
-                progressMessages.length - 1
+                progressMessages.length - 1,
             );
 
             wokaMenuProgressStore.set({

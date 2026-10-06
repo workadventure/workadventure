@@ -18,7 +18,10 @@ export interface RetryWithBackoffOptions {
  * Error thrown when maximum retry attempts are reached
  */
 export class MaxRetriesReachedError extends Error {
-    constructor(public readonly attemptCount: number, public readonly identifier: string) {
+    constructor(
+        public readonly attemptCount: number,
+        public readonly identifier: string,
+    ) {
         super(`Max retries reached (${attemptCount}) for identifier: ${identifier}`);
         this.name = "MaxRetriesReachedError";
     }

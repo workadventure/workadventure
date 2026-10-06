@@ -6,7 +6,63 @@ import Menu from "./menu";
 import { play_url } from "./urls";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
-import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
+import { dismissNoBrowserSoundInfoToast } from "./doNotDisturbInfoToast";
+
+/**
+ * `getPage()` gives every page its own browser context, and nothing else ever closes those
+ * contexts, so `page.close()` has to close the context too or it leaks for the rest of the worker.
+ *
+ * Closing the context is enough on its own: juggler's `BrowserContext.destroy()` already closes
+ * every page of the context and waits for each `TargetDestroyed`. Closing the page first only adds
+ * a second, redundant teardown of the same tab — and because juggler drops a page from
+ * `context.pages` on the async `TabClose` event, that second close can land on a window Firefox has
+ * already stopped tracking, which is where Firefox 153 throws
+ * `Browser.removeBrowserContext ... can't access property "_maybeDontRestoreTabs"`.
+ *
+ * `Page` already implements `Symbol.asyncDispose` as `close()`, so patching `close` is all it takes
+ * for `await using page = await getPage(...)` to tear the context down as well.
+ */
+/**
+ * Firefox 153 (bundled with Playwright 1.62) intermittently throws out of `context.close()`:
+ *
+ *     Protocol error (Browser.removeBrowserContext): can't access property
+ *     "_maybeDontRestoreTabs", this._windows[aWindow.__SSi] is undefined
+ *
+ * `SessionStore.maybeDontRestoreTabs()` indexes `this._windows[aWindow.__SSi]` with no guard, so it
+ * throws when juggler closes the last tab of a window SessionStore is no longer tracking. It is
+ * purely teardown-time bookkeeping for session restore, which tests never use, and every assertion
+ * in the test has already run by the time it fires — but it still fails the test.
+ *
+ * This is a workaround, not a fix. Firefox bails out of `closeWindow()` before it reaches
+ * `window.close()`, so the window it failed to close leaks for the rest of the worker. That happens
+ * whether or not we rethrow, so swallowing costs nothing beyond hiding the leak. Drop this once the
+ * upstream bug is fixed.
+ */
+async function closeContext(context: BrowserContext): Promise<void> {
+    try {
+        await context.close();
+    } catch (e) {
+        if (!(e instanceof Error)) {
+            throw e;
+        }
+        if (e.message.includes("has been closed") || e.message.includes("_maybeDontRestoreTabs")) {
+            return;
+        }
+        throw e;
+    }
+}
+
+function disposeWithContext(page: Page): Page {
+    const context = page.context();
+    let closePromise: Promise<void> | undefined;
+
+    page.close = () => {
+        closePromise ??= closeContext(context);
+        return closePromise;
+    };
+
+    return page;
+}
 
 function selectWoka(name: string): number {
     let res = 0;
@@ -25,7 +81,12 @@ function isJsonCreate(name: string): boolean {
     const stats = fs.statSync(file);
     const timeCreation = stats.mtime.getTime();
     const twoHoursAgo = new Date().getTime() - 60 * 60 * 1000; // 1 hour in ms
-    return timeCreation > twoHoursAgo;
+    if (timeCreation <= twoHoursAgo) {
+        return false;
+    }
+    // Storage is per origin: a state saved against another deployment (PLAY_URL changed) is worthless here
+    const state = JSON.parse(fs.readFileSync(file, "utf8")) as { origins?: { origin: string }[] };
+    return (state.origins ?? []).some((entry) => entry.origin === new URL(play_url).origin);
 }
 
 async function createUser(
@@ -41,7 +102,8 @@ async function createUser(
         | "UserLogin1"
         | "John"
         | "UserMatrix2"
-        | "User1",
+        | "User1"
+        | "Carol",
     browser: Browser,
     url: string,
 ): Promise<void> {
@@ -74,7 +136,7 @@ async function createUser(
 
     await dismissDuplicateUserConnectedModalIfShown(page);
     await dismissPwaInstallScreenIfShown(page);
-    await dismissDoNotDisturbInfoToast(page);
+    await dismissNoBrowserSoundInfoToast(page);
     await skipOnboardingWhenShown(page);
 
     if (browser.browserType().name() !== "webkit") {
@@ -94,8 +156,10 @@ async function createUser(
             await oidcMemberTagLogin(page);
             break;
         case "UserMatrix":
-        case "UserMatrix2":
             await oidcMatrixUserLogin(page);
+            break;
+        case "UserMatrix2":
+            await oidcMatrixUserLogin(page, "UserMatrix2");
             break;
         case "UserLogin1":
             await oidcLogin(page);
@@ -106,7 +170,9 @@ async function createUser(
 
     await page.context().storageState({ path: "./.auth/" + name + ".json" });
 
-    await context.close();
+    // Closing the context closes its pages; closing the page first is the redundant second teardown
+    // that Firefox 153 chokes on. See `disposeWithContext`.
+    await closeContext(context);
 }
 
 export async function getPage(
@@ -123,27 +189,28 @@ export async function getPage(
         | "UserLogin1"
         | "John"
         | "UserMatrix2"
-        | "User1",
+        | "User1"
+        | "Carol",
     url: string,
     options: {
-        pageCreatedHook?: (page: Page) => void;
+        pageCreatedHook?: (page: Page) => void | Promise<void>;
     } = {},
 ): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
     const page: Page = await newBrowser.newPage();
     if (options.pageCreatedHook) {
-        options.pageCreatedHook(page);
+        await options.pageCreatedHook(page);
     }
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
     await dismissPwaInstallScreenIfShown(page, true);
     await dismissDuplicateUserConnectedModalIfShown(page, true);
-    await dismissDoNotDisturbInfoToast(page);
+    await dismissNoBrowserSoundInfoToast(page);
     await skipOnboardingWhenShown(page);
 
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
-    return page;
+    return disposeWithContext(page);
 }
 
 async function skipOnboardingWhenShown(page: Page) {

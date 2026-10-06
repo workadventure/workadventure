@@ -4,7 +4,7 @@
 
     const MAX_MESSAGES = 3;
 
-    $: messages = $textMessageStore.slice(0, MAX_MESSAGES);
+    let messages = $derived($textMessageStore.slice(0, MAX_MESSAGES));
 </script>
 
 {#if messages.length > 0}

@@ -22,10 +22,13 @@ Environment variables for the Play service (frontend and pusher).
 | `PUSHER_HTTP_PORT` | No | HTTP port for the pusher service. Defaults to 3000 |
 | `PUSHER_WS_PORT` | No | WebSocket port for the pusher service. Defaults to 3001 |
 | `SOCKET_IDLE_TIMER` | No | maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling) |
-| `VITE_URL` | No | URL of the Vite development server (development only) |
+| `CLIENT_DISCONNECTION_RETENTION_MS` | No | Maximum time, in milliseconds, the client keeps sent websocket messages for replay after a short disconnection. Defaults to 30000. |
+| `PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES` | No | Maximum uWebSockets backpressure bytes accepted on admin websocket connections. Defaults to 1048576. |
 | `ALLOWED_CORS_ORIGIN` | No | Allowed CORS origin for API requests. Use '*' to allow any domain |
 | `PUSHER_URL` | No | Public URL of the pusher service |
 | `FRONT_URL` | No | Public URL of the frontend application |
+| `ASSETS_URL` | No | Public URL of the 'front' container serving the JS/CSS assets (for instance https://assets.example.com). If empty, the pusher serves the assets itself. |
+| `ASSETS_INTERNAL_URL` | No | URL the pusher uses to fetch the index.html template and proxy the static files from the 'front' container, for instance http://front. Defaults to ASSETS_URL. |
 | `MAP_STORAGE_API_TOKEN` | Yes | API token for authenticating with the map-storage service |
 | `REDIS_HOST` | No | Redis server hostname or IP address |
 | `REDIS_PORT` | No | Redis server port. Defaults to 6379 |
@@ -42,7 +45,7 @@ Environment variables for the Play service (frontend and pusher).
 | `OPENID_PROMPT` | No | OpenID Connect prompt parameter (e.g., 'login', 'consent') |
 | `OPENID_USERNAME_CLAIM` | No | JWT claim to use as the username. Defaults to 'preferred_username' |
 | `OPENID_LOCALE_CLAIM` | No | JWT claim to use for user locale. Defaults to 'locale' |
-| `OPENID_WOKA_NAME_POLICY` | No | Policy for avatar naming: 'user_input' or 'openid_nickname' |
+| `OPENID_WOKA_NAME_POLICY` | No | Policy for avatar naming: 'user_input', 'allow_override_opid', or 'force_opid' |
 | `OPENID_TAGS_CLAIM` | No | JWT claim containing user tags/roles |
 | `DISABLE_ANONYMOUS` | No | If true, anonymous users cannot access the platform. Defaults to false |
 | `PROMETHEUS_AUTHORIZATION_TOKEN` | No | The token to access the Prometheus metrics. |
@@ -54,6 +57,8 @@ Environment variables for the Play service (frontend and pusher).
 | `DEFAULT_WOKA_NAME` | No | Default name to use for users when they join the room. |
 | `DEFAULT_WOKA_TEXTURE` | No | Default avatar texture URL to use for users. |
 | `SKIP_CAMERA_PAGE` | No | Whether to skip the camera permission request page. Defaults to false. |
+| `DEFAULT_CAMERA_PRIVACY_SETTINGS` | No | Initial value of the camera privacy setting ('keep camera enabled when the tab is away') for users who have not set their own preference. Defaults to false. |
+| `DEFAULT_MICROPHONE_PRIVACY_SETTINGS` | No | Initial value of the microphone privacy setting ('keep microphone enabled when the tab is away') for users who have not set their own preference. Defaults to true. |
 | `BYPASS_PWA` | No | When true, LocalAdmin map details set bypassPwa so the client never shows the Web App install flow. Defaults to false. |
 | `PROVIDE_DEFAULT_WOKA_NAME` | No | How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended). |
 | `PROVIDE_DEFAULT_WOKA_TEXTURE` | No | How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE). |
@@ -61,6 +66,11 @@ Environment variables for the Play service (frontend and pusher).
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
+| `ANALYTICS_FLUSH_INTERVAL_MS` | No | Interval in milliseconds between analytics batch flushes. Renamed from VIDEO_ANALYTICS_FLUSH_INTERVAL_MS: one queue now carries every analytics event, video quality samples included. Defaults to 10000 |
+| `ANALYTICS_TIMEOUT_MS` | No | HTTP timeout in milliseconds for analytics ingestion calls. Renamed from VIDEO_ANALYTICS_TIMEOUT_MS. Defaults to 2000 |
+| `ANALYTICS_MAX_QUEUE_SIZE` | No | Maximum number of analytics events queued in pusher memory. Renamed from VIDEO_ANALYTICS_MAX_QUEUE_SIZE. Defaults to 10000 |
+| `ANALYTICS_MAX_BATCH_SIZE` | No | Maximum number of analytics events sent in one admin batch. Renamed from VIDEO_ANALYTICS_MAX_BATCH_SIZE. Defaults to 1000 |
+| `DRAIN_TIMEOUT_MS` | No | Maximum time in milliseconds spent draining in-memory buffers on SIGTERM / SIGINT before the process exits. Shared by every service that flushes on shutdown, not analytics alone. Must stay comfortably BELOW your orchestrator's grace period (Kubernetes terminationGracePeriodSeconds defaults to 30s), not merely equal to it: the drain has to finish and the process exit before SIGKILL lands, or the intervals it just closed die with it. Defaults to 20000, i.e. 10s of headroom under the Kubernetes default. Raising it above the grace period cannot buy more draining — it only converts a clean exit into a kill. |
 | `START_ROOM_URL` | No | Default room URL where users start when accessing the platform |
 | `DEBUG_MODE` | No | Enable debug mode with additional console logging. Defaults to false |
 | `UPLOADER_URL` | Yes | URL of the file uploader service |
@@ -72,7 +82,7 @@ Environment variables for the Play service (frontend and pusher).
 | `TURN_USER` | No | Username for TURN server authentication |
 | `TURN_PASSWORD` | No | Password for TURN server authentication |
 | `TURN_STATIC_AUTH_SECRET` | No | The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn). |
-| `TURN_CREDENTIALS_RENEWAL_TIME` | No | Time interval (in milliseconds) for renewing TURN server credentials. Defaults to 10800000 milliseconds (3 hours) |
+| `TURN_CREDENTIALS_RENEWAL_TIME` | No | Time interval (in milliseconds) for renewing TURN server credentials. Defaults to 3600000 milliseconds (1 hour). Must stay well below the 24 hours validity of the generated credentials. |
 | `JITSI_URL` | No | URL of the Jitsi Meet server for video conferencing |
 | `JITSI_PRIVATE_MODE` | No | If true, Jitsi rooms are private and require authentication. Defaults to false |
 | `MAX_USERNAME_LENGTH` | No | Maximum allowed length for usernames. Defaults to 10 |
@@ -91,13 +101,13 @@ Environment variables for the Play service (frontend and pusher).
 | `SENTRY_RELEASE` | No | Sentry release version identifier for error tracking |
 | `SENTRY_ENVIRONMENT` | No | Sentry environment name (e.g., 'production', 'staging', 'development') |
 | `SENTRY_TRACES_SAMPLE_RATE` | No | The sampling rate for Sentry traces. Only used if SENTRY_DSN is configured. Defaults to 0.1 |
+| `ROOM_API_BIND_HOST` | No | Bind host for the Room API gRPC server. Defaults to `[::]`. |
 | `ROOM_API_PORT` | No | Port for the Room API gRPC server. Defaults to 50051 |
 | `ROOM_API_SECRET_KEY` | No | Secret key for Room API authentication |
 | `ENABLE_MAP_EDITOR` | No | Enable the built-in map editor. Defaults to false |
 | `MAP_EDITOR_ALLOWED_USERS` | No | Comma-separated list of user IDs allowed to edit maps |
 | `MAP_EDITOR_ALLOW_ALL_USERS` | No | If set to true, all users can edit the map. If set to false, only the users in MAP_EDITOR_ALLOWED_USERS or users with the "admin" or "editor" tag can edit the map. Note: this setting is ignored if an Admin API is configured. |
 | `WOKA_SPEED` | No | Avatar (WOKA) movement speed. Defaults to 9 |
-| `FEATURE_FLAG_BROADCAST_AREAS` | No | Enable broadcast areas feature. Defaults to false |
 | `KLAXOON_ENABLED` | No | Enable Klaxoon embedded application integration. Defaults to false |
 | `KLAXOON_CLIENT_ID` | No | Klaxoon OAuth2 client ID |
 | `YOUTUBE_ENABLED` | No | Enable YouTube map editor tool. Defaults to false |
@@ -123,15 +133,12 @@ Environment variables for the Play service (frontend and pusher).
 | `MATRIX_DOMAIN` | No | Matrix server domain |
 | `EMBEDLY_KEY` | No | Embedly API key for rich link previews |
 | `GRPC_MAX_MESSAGE_SIZE` | Yes | The maximum size of a gRPC message. Defaults to 20 MB. |
-| `LIVEKIT_API_KEY` | No | The LiveKit API key. |
-| `LIVEKIT_API_SECRET` | No | The LiveKit API secret. |
 | `LIVEKIT_RECORDING_S3_ENDPOINT` | No | The S3 endpoint for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_ACCESS_KEY` | No | The S3 access key for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_BUCKET` | No | The S3 bucket for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_REGION` | No | The S3 region for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_CDN_ENDPOINT` | No | The S3 CDN endpoint for Livekit recording. |
-| `BACKGROUND_TRANSFORMER_ENGINE` | No | Virtual background transformer engine: 'tasks-vision' (GPU-accelerated, experimental) or 'selfie-segmentation' (CPU-based, stable). Currently defaults to 'selfie-segmentation'; 'tasks-vision' is intended as the future default once considered stable. |
 
 ## Back Service
 
@@ -178,6 +185,7 @@ Environment variables for the Back service (backend API).
 | `LIVEKIT_API_KEY` | No | The Livekit API key. |
 | `LIVEKIT_API_SECRET` | No | The Livekit API secret. |
 | `MAX_USERS_FOR_WEBRTC` | Yes | The maximum number of users for WebRTC. |
+| `LIVEKIT_SWITCH_ON_CPU_LIMITATION` | No | Move a bubble of more than two users to LiveKit as soon as one of them reports that its video encoders cannot keep up in WebRTC (one encoder per peer), even below MAX_USERS_FOR_WEBRTC, and keep it there while that user is present. Costs LiveKit bandwidth for bubbles that would have stayed peer-to-peer. Defaults to true |
 | `LIVEKIT_RECORDING_S3_ENDPOINT` | No | The S3 endpoint for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_ACCESS_KEY` | No | The S3 access key for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |
@@ -224,6 +232,7 @@ Environment variables for the Map Storage service.
 | `WAM_TEMPLATE_URL` | No | The URL to fetch an empty WAM template |
 | `ENTITY_COLLECTION_URLS` | No | A comma separated list of entity collection URLs to be used when a new TMJ map is uploaded. Note: ignored if WAM_TEMPLATE_URL is set. |
 | `MAP_STORAGE_API_TOKEN` | Yes | API token to access the map-storage REST API |
+| `DIRECT_UPLOAD_URL` | No | Absolute URL of the /upload endpoint reached without going through a proxy that limits request body size (e.g. Cloudflare's 100MB limit). Advertised to the map uploader via GET /upload-endpoint. If empty, the uploader keeps using the URL it was configured with. |
 | `PUSHER_URL` | Yes | URL of the pusher service |
 | `WHITELISTED_RESOURCE_URLS` | No | Comma-separated list of allowed URLs for loading external resources |
 | `SECRET_KEY` | No | The JWT token to use when the map-storage is used as a file server. This token will be used to authenticate the user when accessing files. |

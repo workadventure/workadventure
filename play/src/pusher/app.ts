@@ -1,4 +1,3 @@
-import fs from "fs";
 import type { Application } from "express";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -24,6 +23,7 @@ import {
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
+import { createFrontAssets } from "./services/FrontAssets";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
 import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
@@ -32,6 +32,7 @@ import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
 import { LocalScriptController } from "./controllers/LocalScriptController";
 import { LivekitWebhookController } from "./controllers/LivekitWebhookController";
+import { analyticsEventsQueue } from "./services/AnalyticsEventsQueue";
 
 class App {
     private readonly app: Application;
@@ -42,7 +43,7 @@ class App {
         this.websocketApp = uWebsockets.App();
         this.app = express();
 
-        // LiveKit webhooks must receive the raw body for signature verification; register before express.json().
+        // LiveKit webhooks must keep the raw body for signature verification in the back; register before express.json().
         new LivekitWebhookController(this.app);
 
         this.app.use(express.json());
@@ -69,21 +70,10 @@ class App {
                     "sentry-trace",
                 ],
                 credentials: true,
-            })
+            }),
         );
 
         //this.app.set_error_handler(globalErrorHandler);
-
-        let path: string;
-        if (fs.existsSync("dist/public")) {
-            // In prod mode
-            path = "dist/public";
-        } else if (fs.existsSync("public")) {
-            // In dev mode
-            path = "public";
-        } else {
-            throw new Error("Could not find public folder");
-        }
 
         // Socket controllers
         new IoSocketController(this.websocketApp);
@@ -100,75 +90,18 @@ class App {
         new DebugController(this.app);
         new AdminController(this.app, GRPC_MAX_MESSAGE_SIZE);
         new OpenIdProfileController(this.app);
-        new PingController(this.app);
+        const frontAssets = createFrontAssets();
+        new PingController(this.app, frontAssets);
         new LocalScriptController(this.app);
 
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.app);
         }
-        new FrontController(this.app);
+        new FrontController(this.app, frontAssets);
         new UserController(this.app);
         new MatrixRoomAreaController(this.app);
 
-        const staticOptions = {
-            extensions: [
-                ".css",
-                ".js",
-                ".png",
-                ".svg",
-                ".ico",
-                ".xml",
-                ".mp3",
-                ".json",
-                ".html",
-                ".ttf",
-                ".woff2",
-                ".map",
-                ".gif",
-                ".odf",
-            ],
-            etag: true,
-            maxAge: "15d",
-        };
-
-        this.app.use(
-            "assets",
-            express.static(path + "/assets", {
-                ...staticOptions,
-                maxAge: "1y",
-            })
-        );
-
-        this.app.use(
-            "resources",
-            express.static(path + "/resources", {
-                ...staticOptions,
-                maxAge: "1d",
-            })
-        );
-
-        this.app.use(
-            "static",
-            express.static(path + "/static", {
-                ...staticOptions,
-                maxAge: "1d",
-            })
-        );
-
-        this.app.use(
-            "collections",
-            express.static(path + "/collections", {
-                ...staticOptions,
-                maxAge: "1d",
-            })
-        );
-
-        this.app.use(
-            express.static(path, {
-                ...staticOptions,
-                maxAge: "1h",
-            })
-        );
+        frontAssets.registerStaticRoutes(this.app);
     }
 
     public async init() {
@@ -190,6 +123,7 @@ class App {
             const capabilities = await adminApi.initialise();
             companionListController.setCompanionService(CompanionService.get(capabilities));
             wokaListController.setWokaService(WokaService.get(capabilities));
+            analyticsEventsQueue.setEnabled(capabilities["api/analytics/events-batch"] === "v1");
         } catch (error) {
             console.error("Failed to initialize: problem getting AdminAPI capabilities", error);
             Sentry.captureException(`Failed to initialized companion and woka services : ${error}`);

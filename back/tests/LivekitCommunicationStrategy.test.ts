@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { SpaceUser } from "@workadventure/messages";
+import { FilterType, SpaceUser } from "@workadventure/messages";
+import { emptySpaceState } from "@workadventure/shared-utils";
 import { LivekitCommunicationStrategy } from "../src/Model/Strategies/LivekitCommunicationStrategy";
 import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
 
@@ -12,7 +13,7 @@ function createUser(spaceUserId: string): SpaceUser {
 }
 
 describe("LivekitCommunicationStrategy", () => {
-    it("stops recording through the server path when the last streaming user leaves",async () => {
+    it("stops recording through the server path when the last streaming user leaves", async () => {
         const dispatchPrivateEvent = vi.fn();
         const stopRecordingByServer = vi.fn().mockResolvedValue(undefined);
 
@@ -25,9 +26,12 @@ describe("LivekitCommunicationStrategy", () => {
             dispatchPublicEvent: vi.fn(),
             getSpaceName: () => "test-space",
             getPropertiesToSync: () => [],
-            publishMetadata: vi.fn(),
+            updateState: vi.fn(),
             stopRecordingByServer,
             getUser: vi.fn(),
+            world: "world",
+            getState: () => emptySpaceState(),
+            filterType: FilterType.ALL_USERS,
         };
 
         const livekitService = {
@@ -69,9 +73,12 @@ describe("LivekitCommunicationStrategy", () => {
             dispatchPublicEvent: vi.fn(),
             getSpaceName: () => "test-space",
             getPropertiesToSync: () => [],
-            publishMetadata: vi.fn(),
+            updateState: vi.fn(),
             stopRecordingByServer: vi.fn().mockResolvedValue(undefined),
             getUser: vi.fn(),
+            world: "world",
+            getState: () => emptySpaceState(),
+            filterType: FilterType.ALL_USERS,
         };
 
         const livekitService = {
@@ -101,7 +108,7 @@ describe("LivekitCommunicationStrategy", () => {
                     strategy as unknown as {
                         streamingUsers: Map<string, SpaceUser>;
                     }
-                ).streamingUsers.has(secondStreamer.spaceUserId)
+                ).streamingUsers.has(secondStreamer.spaceUserId),
             ).toBe(true);
         });
 

@@ -57,8 +57,8 @@ export class WAMSettingsEditorTool extends MapEditorTool {
                     data,
                     this.scene.connection.getAllTags(),
                     this.scene.roomUrl,
-                    commandId
-                )
+                    commandId,
+                ),
             );
         }
         return Promise.resolve();

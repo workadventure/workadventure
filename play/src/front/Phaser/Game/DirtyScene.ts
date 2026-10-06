@@ -1,9 +1,8 @@
+import * as Phaser from "phaser";
 import { ResizableScene } from "../Login/ResizableScene";
 import { SKIP_RENDER_OPTIMIZATIONS } from "../../Enum/EnvironmentVariable";
+
 import GameObject = Phaser.GameObjects.GameObject;
-import Events = Phaser.Scenes.Events;
-import AnimationEvents = Phaser.Animations.Events;
-import StructEvents = Phaser.Structs.Events;
 
 /**
  * A scene that can track its dirty/pristine state.
@@ -28,24 +27,24 @@ export abstract class DirtyScene extends ResizableScene {
         }
         this.isAlreadyTracking = true;
         const trackAnimationFunction = this.trackAnimation.bind(this);
-        this.sys.updateList.on(StructEvents.PROCESS_QUEUE_ADD, (gameObject: GameObject) => {
+        this.sys.updateList.on(Phaser.Structs.Events.PROCESS_QUEUE_ADD, (gameObject: GameObject) => {
             this.objectListChanged = true;
-            gameObject.on(AnimationEvents.ANIMATION_UPDATE, trackAnimationFunction);
+            gameObject.on(Phaser.Animations.Events.ANIMATION_UPDATE, trackAnimationFunction);
         });
-        this.sys.updateList.on(StructEvents.PROCESS_QUEUE_REMOVE, (gameObject: GameObject) => {
+        this.sys.updateList.on(Phaser.Structs.Events.PROCESS_QUEUE_REMOVE, (gameObject: GameObject) => {
             this.objectListChanged = true;
-            gameObject.removeListener(AnimationEvents.ANIMATION_UPDATE, trackAnimationFunction);
+            gameObject.removeListener(Phaser.Animations.Events.ANIMATION_UPDATE, trackAnimationFunction);
         });
 
-        this.events.on(Events.RENDER, () => {
+        this.events.on(Phaser.Scenes.Events.RENDER, () => {
             this.objectListChanged = false;
             this.dirty = false;
         });
 
         this.physics.disableUpdate();
-        this.events.on(Events.POST_UPDATE, () => {
+        this.events.on(Phaser.Scenes.Events.POST_UPDATE, () => {
             let objectMoving = false;
-            for (const body of this.physics.world.bodies.entries) {
+            for (const body of this.physics.world.bodies.values()) {
                 if (body.velocity.x !== 0 || body.velocity.y !== 0) {
                     this.objectListChanged = true;
                     objectMoving = true;

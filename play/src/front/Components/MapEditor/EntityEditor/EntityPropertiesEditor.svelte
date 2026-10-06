@@ -24,11 +24,11 @@
 
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
-    let properties: EntityDataProperties = [];
-    let entityName = "";
-    let entityDescription = "";
-    let entitySearchable = false;
-    let showDescriptionField = false;
+    let properties: EntityDataProperties = $state([]);
+    let entityName = $state("");
+    let entityDescription = $state("");
+    let entitySearchable = $state(false);
+    let showDescriptionField = $state(false);
     let selectedEntity: Entity | undefined = undefined;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
@@ -54,7 +54,7 @@
 
     function onAddProperty(type: EntityDataPropertiesKeys, subtype?: string) {
         if ($mapEditorSelectedEntityStore) {
-            analyticsClient.addMapEditorProperty("entity", type || "unknown");
+            analyticsClient.trackAdminEvent("map_editor.property.added", { name: type || "unknown", type: "entity" });
             const property = getPropertyFromType(type, subtype);
             $mapEditorSelectedEntityStore.addProperty(property);
 
@@ -65,7 +65,7 @@
 
     function onAddSpecificProperty(app: ApplicationDefinitionInterface) {
         if (!$mapEditorSelectedEntityStore) return;
-        analyticsClient.addMapEditorProperty("entity", app.name);
+        analyticsClient.trackAdminEvent("map_editor.property.added", { name: app.name, type: "entity" });
         const property: EntityDataProperty = {
             id: uuid(),
             type: "openWebsite",
@@ -105,7 +105,7 @@
 
         properties.description = entityDescription;
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.updateProperty(properties);
+            $mapEditorSelectedEntityStore.updateProperty($state.snapshot(properties));
         }
     }
 
@@ -118,13 +118,13 @@
 
         properties.searchable = entitySearchable;
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.updateProperty(properties);
+            $mapEditorSelectedEntityStore.updateProperty($state.snapshot(properties));
         }
     }
 
     function onUpdateProperty(property: EntityDataProperty) {
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.updateProperty(property);
+            $mapEditorSelectedEntityStore.updateProperty($state.snapshot(property));
         }
     }
 
@@ -153,6 +153,7 @@
                         startWithAudioMuted: false,
                         startWithVideoMuted: false,
                         disableChat: false,
+                        raiseHandEnabled: true,
                     },
                     livekitRoomAdminTag: "",
                 };
@@ -239,6 +240,7 @@
                     buttonLabel: $LL.mapEditor.properties.playAudio.label(),
                     audioLink: "",
                     volume: 1,
+                    playForAllUsers: true,
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
@@ -247,7 +249,10 @@
 
     function onDeleteProperty(id: string) {
         if ($mapEditorSelectedEntityStore) {
-            analyticsClient.removeMapEditorProperty("entity", properties.find((p) => p.id === id)?.type || "unknown");
+            analyticsClient.trackAdminEvent("map_editor.property.removed", {
+                name: properties.find((p) => p.id === id)?.type || "unknown",
+                type: "entity",
+            });
             $mapEditorSelectedEntityStore.deleteProperty(id);
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
@@ -280,16 +285,22 @@
         <div class="header-container">
             <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
         </div>
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-        <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+        <p
+            onclick={(event) => {
+                event.preventDefault();
+                backToSelectObject();
+            }}
+            class="flex flex-row items-center text-xs m-0"
+        >
             <IconArrowLeft font-size="12" class="cursor-pointer" />
             <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
         </p>
         <div class="properties-buttons flex flex-row m-2">
             <AddPropertyButtonWrapper
                 property="playAudio"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("playAudio");
                 }}
             />
@@ -297,76 +308,76 @@
         <div class="properties-buttons flex flex-row flex-wrap m-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openFile"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openFile");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "klaxoon");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="youtube"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "youtube");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="googleDrive"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "googleDrive");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="googleDocs"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "googleDocs");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="googleSheets"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "googleSheets");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="googleSlides"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "googleSlides");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="eraser"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "eraser");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="excalidraw"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "excalidraw");
                 }}
             />
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="tldraw"
-                on:click={() => {
+                onclick={() => {
                     onAddProperty("openWebsite", "tldraw");
                 }}
             />
@@ -376,7 +387,7 @@
                 <AddPropertyButtonWrapper
                     property="openWebsite"
                     subProperty={app.name}
-                    on:click={() => {
+                    onclick={() => {
                         onAddSpecificProperty(app);
                     }}
                 />
@@ -389,7 +400,7 @@
                 type="text"
                 placeholder={$LL.mapEditor.entityEditor.objectNamePlaceholder()}
                 bind:value={entityName}
-                onChange={onUpdateName}
+                onchange={onUpdateName}
             />
         </div>
         <div class="entity-name-container">
@@ -397,11 +408,14 @@
                 <a
                     href="#addDescriptionField"
                     class="pl-0 text-blue-500 flex flex-row items-center"
-                    on:click|preventDefault|stopPropagation={toggleDescriptionField}
-                    >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
+                    onclick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        toggleDescriptionField();
+                    }}>+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
                 >
             {:else}
-                <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500 flex flex-row items-center" onclick={toggleDescriptionField}>
                     <IconChevronDown />{$LL.mapEditor.entityEditor.addDescriptionField()}</button
                 >
 
@@ -410,8 +424,8 @@
                     id="objectDescription"
                     placeHolder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
                     bind:value={entityDescription}
-                    onChange={onUpdateDescription}
-                    onKeyPress={() => {}}
+                    onchange={onUpdateDescription}
+                    onkeypress={() => {}}
                 />
             {/if}
         </div>
@@ -420,37 +434,37 @@
             label={$LL.mapEditor.entityEditor.objectSearchable()}
             id="searchable"
             bind:value={entitySearchable}
-            onChange={onUpdateSearchable}
+            onchange={onUpdateSearchable}
         />
 
-        <div class="properties-container p-1">
-            {#each properties as property (property.id)}
+        <div class="properties-container flex flex-col gap-8 p-1">
+            {#each properties as property, i (property.id)}
                 {#if property.type !== "entityDescriptionProperties"}
-                    <div class="property-box border border-solid border-white/20 bg-white/5 rounded p-2 my-8">
-                        {#if property.type === "playAudio"}
+                    <div class="property-box border border-solid border-white/20 bg-white/5 rounded p-2">
+                        {#if properties[i].type === "playAudio"}
                             <PlayAudioPropertyEditor
-                                {property}
-                                on:close={() => {
+                                bind:property={properties[i]}
+                                onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                on:change={() => onUpdateProperty(property)}
+                                onchange={() => onUpdateProperty(properties[i])}
                             />
-                        {:else if property.type === "openWebsite"}
+                        {:else if properties[i].type === "openWebsite"}
                             <OpenWebsitePropertyEditor
-                                {property}
+                                bind:property={properties[i]}
                                 triggerOptionActivated={false}
-                                on:close={() => {
+                                onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                on:change={() => onUpdateProperty(property)}
+                                onchange={() => onUpdateProperty(properties[i])}
                             />
-                        {:else if property.type === "openFile"}
+                        {:else if properties[i].type === "openFile"}
                             <OpenFilePropertyEditor
-                                {property}
-                                on:close={() => {
+                                bind:property={properties[i]}
+                                onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                on:change={() => onUpdateProperty(property)}
+                                onchange={() => onUpdateProperty(properties[i])}
                             />
                         {/if}
                     </div>
@@ -460,7 +474,7 @@
     </div>
 {/if}
 
-<style lang="scss">
+<style>
     .properties-container {
         overflow-y: auto;
         overflow-x: hidden;
@@ -476,81 +490,9 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         flex-direction: column;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-        }
-        input {
-            flex-grow: 1;
-            min-width: 0;
-        }
+
         * {
             margin-bottom: 0;
         }
     }
-
-    // .input-switch {
-    //     position: relative;
-    //     top: 0px;
-    //     right: 0px;
-    //     bottom: 0px;
-    //     left: 0px;
-    //     display: inline-block;
-    //     height: 1rem;
-    //     width: 2rem;
-    //     -webkit-appearance: none;
-    //     -moz-appearance: none;
-    //     appearance: none;
-    //     border-radius: 9999px;
-    //     border-width: 1px;
-    //     border-style: solid;
-    //     --border-opacity: 1;
-    //     border-color: rgb(77 75 103 / var(--border-opacity));
-    //     --bg-opacity: 1;
-    //     background-color: rgb(15 31 45 / var(--bg-opacity));
-    //     background-image: none;
-    //     padding: 0px;
-    //     --text-opacity: 1;
-    //     color: rgb(242 253 255 / var(--text-opacity));
-    //     outline: 2px solid transparent;
-    //     outline-offset: 2px;
-    //     cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
-    // }
-
-    // .input-switch::before {
-    //     position: absolute;
-    //     left: -3px;
-    //     top: -3px;
-    //     height: 1.25rem;
-    //     width: 1.25rem;
-    //     border-radius: 9999px;
-    //     --bg-opacity: 1;
-    //     background-color: rgb(146 142 187 / var(--bg-opacity));
-    //     transition-property: all;
-    //     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    //     transition-duration: 150ms;
-    //     --content: "";
-    //     content: var(--content);
-    // }
-
-    // .input-switch:checked {
-    //     --border-opacity: 1;
-    //     border-color: rgb(146 142 187 / var(--border-opacity));
-    // }
-
-    // .input-switch:checked::before {
-    //     left: 13px;
-    //     top: -3px;
-    //     --bg-opacity: 1;
-    //     background-color: rgb(65 86 246 / var(--bg-opacity));
-    //     content: var(--content);
-    //     /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-    //     --shadow-colored: 0 0 7px 0 var(--shadow-color);
-    //     box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
-    // }
-
-    // .input-switch:disabled {
-    //     cursor: not-allowed;
-    //     opacity: 0.4;
-    // }
 </style>

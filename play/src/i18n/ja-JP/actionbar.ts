@@ -45,6 +45,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "マイクから音が検出されません。問題がある可能性があります — 設定でマイクを変更してみてください。",
         noSoundWarningPressEnter: "マイクから音が検出されません。Enterキーを押して設定を開いてください。",
+        advancedNoiseReduction: "高度なノイズ低減",
+        noiseSuppressionInitializing: "カスタムノイズ抑制を初期化しています...",
+        noiseSuppressionUnsupported: "このブラウザではカスタムノイズ抑制を実行できません。",
+        noiseSuppressionError: "カスタムノイズ抑制に失敗しました。ブラウザ標準のノイズ抑制に戻します。",
         openSettings: "設定を開く",
         ignore: "無視",
     },
@@ -69,6 +73,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         SPEAKER: "会議中",
         LIVEKIT: "会議中",
         LISTENER: "会議中",
+        SOUND_BLOCKED: "音声がブロックされています",
     },
     subtitle: {
         camera: "カメラ",
@@ -84,7 +89,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "中程度のぼかし",
         blurHigh: "強いぼかし",
         images: "画像",
-        videos: "動画",
     },
     help: {
         chat: {
@@ -98,6 +102,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "絵文字を表示",
             desc: "絵文字のリアクションを使用して、ワンクリックで気持ちを表現できます。タップするだけです！",
+        },
+        raiseHand: {
+            title: "手を挙げる",
+            desc: "発言したいことを知らせます。挙げた手はマップとあなたのビデオに表示され、次が誰の番かみんなにわかります。",
         },
         audioManager: {
             title: "環境音の音量",
@@ -124,6 +132,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "ロック/ロック解除するエリアを選択",
             bubbleLabel: "ディスカッション bubble",
             unnamedArea: "名前のないエリア",
+        },
+        giveBackFloor: {
+            title: "発言権を返す",
+            desc: "発言権が与えられています。クリックすると発言をやめて返します。",
         },
         megaphone: {
             title: "メガホンを停止",
@@ -172,6 +184,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "会話中にビデオやプレゼンテーションを視聴する際に、ピクチャーインピクチャー機能を使用できます。ピクチャーインピクチャーアイコンをクリックするだけで、コンテンツをお楽しみいただけます。",
         },
         videoNotSupported: "お使いのブラウザは動画タグに対応していません。",
+    },
+    raisedHands: {
+        speaking: "発言中",
+        title: "挙手",
+        empty: "挙手している人はいません",
+        help: "誰が挙手したかを順番に確認し、発言権を与えましょう。",
+        lowerHand: "手を下げる",
+        lowerAllHands: "すべて下げる",
     },
     listStatusTitle: {
         enable: "ステータスを変更",

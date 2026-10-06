@@ -1,21 +1,21 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    interface Props {
+        onclick?: (event: MouseEvent) => void;
+    }
 
-    const dispatch = createEventDispatcher<{
-        click: undefined;
-    }>();
+    let { onclick }: Props = $props();
 </script>
 
 <button
     class="close-button"
-    on:click={() => {
-        dispatch("click");
+    onclick={(event) => {
+        onclick?.(event);
     }}
 >
     x
 </button>
 
-<style lang="scss">
+<style>
     .close-button {
         position: absolute;
         padding: 3px;

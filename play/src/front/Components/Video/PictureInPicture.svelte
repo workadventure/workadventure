@@ -1,5 +1,7 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import { onDestroy, onMount, tick } from "svelte";
+    import { on } from "svelte/events";
     import { z } from "zod";
     import Debug from "debug";
     import { isInRemoteConversation, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
@@ -13,14 +15,46 @@
     import {} from "./PictureInPicture/PictureInPictureWindow";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
+    interface Props {
+        children?: Snippet<[{ inPictureInPicture: boolean }]>;
+    }
+
+    let { children }: Props = $props();
+
     const debug = Debug("app:PictureInPicture");
 
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
     let pipWindow: Window | undefined;
-    let mapImage: string | undefined = undefined;
+    let mapImage: string | undefined = $state(undefined);
+    let pipRequested = false;
+    let stopPictureInPictureEventDelegation: Array<() => void> = [];
 
-    /* eslint-disable svelte/no-dom-manipulating */
+    const delegatedPictureInPictureEvents = [
+        "beforeinput",
+        "click",
+        "change",
+        "contextmenu",
+        "dblclick",
+        "focusin",
+        "focusout",
+        "input",
+        "keydown",
+        "keyup",
+        "mousedown",
+        "mousemove",
+        "mouseout",
+        "mouseover",
+        "mouseup",
+        "pointerdown",
+        "pointermove",
+        "pointerout",
+        "pointerover",
+        "pointerup",
+        "touchend",
+        "touchmove",
+        "touchstart",
+    ];
 
     const DocumentPictureInPictureSchema = z.object({
         requestWindow: z
@@ -30,7 +64,7 @@
                     preferInitialWindowPlacement: z.boolean(),
                     height: z.string(),
                     width: z.string(),
-                })
+                }),
             )
             .returns(z.promise(z.instanceof(Window))),
     });
@@ -61,10 +95,28 @@
         });
     }
 
+    function attachPictureInPictureEventDelegation(pipWindow: Window) {
+        detachPictureInPictureEventDelegation();
+
+        // Svelte 5 delegates DOM handlers to the mount document. The PiP DOM is reparented into a
+        // separate document, so a no-op svelte/events listener is enough to run Svelte's delegation there.
+        stopPictureInPictureEventDelegation = delegatedPictureInPictureEvents.map((eventName) =>
+            on(pipWindow.document, eventName, () => {}),
+        );
+    }
+
+    function detachPictureInPictureEventDelegation() {
+        stopPictureInPictureEventDelegation.forEach((stopEventDelegation) => stopEventDelegation());
+        stopPictureInPictureEventDelegation = [];
+    }
+
     function destroyPictureInPictureComponent() {
+        detachPictureInPictureEventDelegation();
+
         if (!parentDivElement) {
             return;
         }
+        // eslint-disable-next-line svelte/no-dom-manipulating
         parentDivElement.append(divElement);
 
         if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
@@ -80,8 +132,6 @@
             destroyPictureInPictureComponent();
         }
     });
-
-    let pipRequested = false;
 
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
@@ -146,6 +196,7 @@
                 // documentPictureInPicture 'enter' / LiveKit may run isElementInPiP immediately;
                 // if <video> nodes are not under pipWin.document yet, contains(el) is false.
                 pipWindow.document.body.append(divElement);
+                attachPictureInPictureEventDelegation(pipWindow);
 
                 activePictureInPictureStore.set(true);
                 await tick();
@@ -200,6 +251,12 @@
             console.warn("PictureInPicture => Could not get mapImage from the current game scene", e);
         }
 
+        const onFocus = () => {
+            destroyPictureInPictureComponent();
+        };
+
+        window.addEventListener("focus", onFocus);
+
         return () => {
             askPictureInPictureActivatingSubscriber();
             unsubscribe();
@@ -210,6 +267,7 @@
             } catch (e: unknown) {
                 debug("PictureInPicture enterpictureinpicture handler is not supported", e);
             }
+            window.removeEventListener("focus", onFocus);
         };
     });
 
@@ -225,8 +283,8 @@
             <div
                 class="fixed z-0 top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 bg-black"
                 style="background-image: url({mapImage});"
-            />
+            ></div>
         {/if}
-        <slot inPictureInPicture={$activePictureInPictureStore} />
+        {@render children?.({ inPictureInPicture: $activePictureInPictureStore })}
     </div>
 </div>

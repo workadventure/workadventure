@@ -7,11 +7,16 @@
     import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
     import { navChat } from "../../Chat/Stores/ChatStore";
     import LL from "../../../i18n/i18n-svelte";
+    import { focusNotificationTarget } from "./NotificationRoomFocus";
 
-    export let notification: ProximityNotification;
+    interface Props {
+        notification: ProximityNotification;
+    }
 
-    const roomType = notification.room.type;
-    $: roomName = notification.room.name;
+    let { notification }: Props = $props();
+
+    let roomType = $derived(notification.room.type);
+    let roomName = $derived(notification.room.name);
 
     const NOTIFICATION_DURATION = 10000; // 10 seconds
 
@@ -26,58 +31,31 @@
     });
 
     function handleClick() {
-        chatNotificationStore.clearAll();
-
         chatVisibilityStore.set(true);
         navChat.switchToChat();
 
         if (notification.openRoomOnClick !== false) {
             const room = notification.room;
+            chatNotificationStore.clearRoom(room.id);
             room.setTimelineAsRead();
             selectedRoomStore.set(room);
-
-            const messageId = notification.messageId;
-            if (messageId) {
-                setTimeout(() => {
-                    scrollToMessage(messageId);
-                }, 300);
-            }
+            focusNotificationTarget(room, notification.messageId, notification.sidePanelSection);
         } else {
+            chatNotificationStore.clearAll();
             // Open the chat on the main chat panel
             selectedRoomStore.set(undefined);
         }
-    }
-
-    function scrollToMessage(messageId: string) {
-        let attempts = 0;
-        const maxAttempts = 10;
-
-        const tryScroll = () => {
-            const messageElement = document.querySelector(`li[data-event-id="${messageId}"]`);
-            if (messageElement) {
-                messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
-                messageElement.classList.add("highlight-message");
-                setTimeout(() => {
-                    messageElement.classList.remove("highlight-message");
-                }, 2000);
-            } else if (attempts < maxAttempts) {
-                attempts++;
-                setTimeout(tryScroll, 200);
-            }
-        };
-
-        tryScroll();
     }
 </script>
 
 <div
     class="proximity-notification bg-contrast/50 rounded backdrop-blur-md flex gap-3 py-3 pl-5 pr-2 shadow-xl pointer-events-auto z-[900] cursor-pointer hover:bg-contrast/90 transition-colors text-white w-[60%] min-w-[300px] max-w-[600px]"
-    on:click={handleClick}
+    onclick={handleClick}
     role="button"
     tabindex="0"
-    on:keydown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
+    onkeydown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
             handleClick();
         }
     }}

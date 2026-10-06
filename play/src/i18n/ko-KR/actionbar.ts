@@ -46,6 +46,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "마이크에서 소리가 감지되지 않습니다. 문제가 있을 수 있습니다 — 설정에서 마이크를 변경해 보세요.",
         noSoundWarningPressEnter: "마이크에서 소리가 감지되지 않습니다. Enter를 눌러 설정을 엽니다.",
+        advancedNoiseReduction: "고급 소음 감소",
+        noiseSuppressionInitializing: "사용자 지정 소음 억제를 초기화하는 중...",
+        noiseSuppressionUnsupported: "이 브라우저에서는 사용자 지정 소음 억제를 실행할 수 없습니다.",
+        noiseSuppressionError: "사용자 지정 소음 억제에 실패했습니다. 브라우저 기본 소음 억제로 돌아갑니다.",
         openSettings: "설정 열기",
         ignore: "무시",
     },
@@ -70,6 +74,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         SPEAKER: "회의 중",
         LIVEKIT: "회의 중",
         LISTENER: "회의 중",
+        SOUND_BLOCKED: "소리 차단됨",
     },
     subtitle: {
         camera: "카메라",
@@ -85,7 +90,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "중간 블러",
         blurHigh: "강한 블러",
         images: "이미지",
-        videos: "비디오",
     },
     help: {
         chat: {
@@ -99,6 +103,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "이모티콘 표시",
             desc: "이모티콘 반응을 사용해 한 번의 클릭으로 감정을 표현해 보세요. 탭 한 번이면 충분합니다!",
+        },
+        raiseHand: {
+            title: "손 들기",
+            desc: "발언하고 싶다는 것을 알립니다. 든 손은 지도와 내 영상에 표시되어 누구 차례인지 모두가 알 수 있습니다.",
         },
         audioManager: {
             title: "주변 소리 볼륨",
@@ -125,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             areaPickerTitle: "잠금/잠금 해제할 영역 선택",
             bubbleLabel: "토론 말풍선",
             unnamedArea: "이름 없는 영역",
+        },
+        giveBackFloor: {
+            title: "발언권 반납",
+            desc: "발언권을 받았습니다. 클릭하면 발언을 멈추고 반납합니다.",
         },
         megaphone: {
             title: "확성기 중지",
@@ -173,6 +185,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "대화 중에 비디오나 프레젠테이션을 보면서 화면 속 화면 기능을 사용할 수 있습니다. 화면 속 화면 아이콘을 클릭하기만 하면 콘텐츠를 즐길 수 있습니다.",
         },
         videoNotSupported: "브라우저에서 비디오 태그를 지원하지 않습니다.",
+    },
+    raisedHands: {
+        speaking: "발언 중",
+        title: "손 든 사람",
+        empty: "손을 든 사람이 없습니다",
+        help: "누가 순서대로 손을 들었는지 확인하고 발언권을 주세요.",
+        lowerHand: "손 내리기",
+        lowerAllHands: "모두 내리기",
     },
     listStatusTitle: {
         enable: "상태 변경",

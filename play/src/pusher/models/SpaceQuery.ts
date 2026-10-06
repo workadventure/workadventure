@@ -1,13 +1,15 @@
 import type { SpaceAnswerMessage, SpaceQueryMessage } from "@workadventure/messages";
 import { asError } from "catch-unknown";
 import type { Space } from "./Space";
+import { SpaceDestroyedError } from "./SpaceValidationErrors";
 
 export class Query {
     private readonly _queries = new Map<
         number,
         {
             answerType: string;
-            resolve: (message: Required<SpaceAnswerMessage>["answer"]) => void;
+            createdAt: number;
+            resolve: (message: NonNullable<SpaceAnswerMessage["answer"]>) => void;
             reject: (e: unknown) => void;
         }
     >();
@@ -15,14 +17,14 @@ export class Query {
 
     constructor(private readonly _space: Space) {}
 
-    public async send<T extends Required<SpaceQueryMessage>["query"]>(
+    public async send<T extends NonNullable<SpaceQueryMessage["query"]>>(
         message: T,
         options?: {
             // Timeout in milliseconds. Defaults to 10000 (10 seconds)
             timeout?: number;
             signal?: AbortSignal;
-        }
-    ): Promise<Required<SpaceAnswerMessage>["answer"]> {
+        },
+    ): Promise<NonNullable<SpaceAnswerMessage["answer"]>> {
         const connection = await this._space.spaceStreamToBackPromise;
         if (!connection || connection.closed) {
             throw new Error("Connection to the back is closed");
@@ -48,6 +50,7 @@ export class Query {
 
             this._queries.set(this._lastQueryId, {
                 answerType,
+                createdAt: Date.now(),
                 resolve,
                 reject,
             });
@@ -69,14 +72,14 @@ export class Query {
 
                     // TODO: we can improve this by sending a cancellation message to the back
                 },
-                { once: true }
+                { once: true },
             );
 
             this._lastQueryId++;
         });
     }
 
-    public receiveAnswer(queryId: number, answer: Required<SpaceAnswerMessage>["answer"]) {
+    public receiveAnswer(queryId: number, answer: NonNullable<SpaceAnswerMessage["answer"]>) {
         if (answer === undefined) {
             throw new Error("Invalid message received. Answer missing.");
         }
@@ -86,7 +89,7 @@ export class Query {
             console.error(
                 "Received an answer for a query we have no record of. This might mean we received an answer after a query timeout.",
                 queryId,
-                answer
+                answer,
             );
             return;
         }
@@ -103,7 +106,12 @@ export class Query {
 
     public destroy() {
         for (const query of this._queries.values()) {
-            query.reject(new Error("Query cancelled because the space is being destroyed"));
+            const durationMs = Date.now() - query.createdAt;
+            query.reject(
+                new SpaceDestroyedError(
+                    `Query "${query.answerType}" cancelled because the space is being destroyed (pending for ${durationMs}ms)`,
+                ),
+            );
         }
     }
 }

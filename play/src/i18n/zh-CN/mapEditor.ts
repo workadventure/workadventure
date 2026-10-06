@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "此地图已被删除",
         deletePromptSubtitle: "你已与此房间断开连接。",
         deletePromptDetails: "刷新不会恢复此地图，因为它已经不存在了。",
+        editionFailed: "您的更改无法保存，已被撤销。",
     },
     sideBar: {
         areaEditor: "区域编辑器工具",
@@ -75,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "取消",
                 validate: "验证",
             },
-            disabled: "此房间的 Jitsi 集成已禁用 ❌",
             actionButtonLabel: "开始 Jitsi 会议",
         },
         playAudio: {
@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "播放音乐",
             error: "无法加载声音",
             actionButtonLabel: "播放音乐",
+            playForAllUsersLabel: "为地图上所有用户播放",
+            audibleRadiusLabel: "可听半径（像素）",
+            audibleRadiusPlaceholder: "留空则处处可听",
         },
         openWebsite: {
             label: "打开链接",
@@ -121,14 +124,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: '讲台（舞台）上的用户可以向匹配的"观众"区域中的所有与会者讲话。',
             nameLabel: "名称",
             namePlaceholder: "主舞台",
-            disabled: "此房间的讲台已禁用 ❌",
             actionButtonLabel: "加入讲台",
         },
         listenerMegaphone: {
             label: "观众",
             description: "观众区域的用户可以听到链接讲台上的演讲者。",
             nameLabel: "讲台名称",
-            disabled: "此房间的观众已禁用 ❌",
             namePlaceholder: "我的演讲者区域",
             waitingMediaLinkLabel: "直播开始前显示的媒体",
             waitingMediaLinkPlaceholder: "https://www....",
@@ -302,6 +303,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "以麦克风静音开始",
                 startWithVideoMuted: "以视频关闭开始",
                 disableChat: "禁用聊天",
+                raiseHandEnabled: "允许举手",
                 livekitRoomAdminTag: "会议室的版主标签",
                 cancel: "取消",
                 validate: "验证",
@@ -322,6 +324,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "高级选项",
         chatEnabled: "关联专用聊天频道",
+        allowTalking: "允许交谈和形成气泡",
+        raiseHandEnabled: "允许举手",
         noProperties: "未定义属性",
     },
     areaEditor: {
@@ -448,7 +452,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "礼堂模式",
                 audienceVideoFeedbackActivatedDisabled: "礼堂模式",
                 audienceVideoFeedbackActivatedHelper:
-                    "礼堂模式已激活：接收房间/世界中所有用户（已激活摄像头和麦克风）的摄像头和麦克风流。但参与者将无法看到其他参与者。默认禁用。",
+                    "礼堂模式已激活：接收房间/世界中所有用户（已激活摄像头）的摄像头流，不含声音。但参与者将无法看到其他参与者。默认禁用。",
                 error: {
                     title: "请输入标题",
                     save: {

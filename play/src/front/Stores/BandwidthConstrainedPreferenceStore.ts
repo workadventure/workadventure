@@ -4,7 +4,7 @@ import type { BandwidthConstrainedPreference } from "../Connection/LocalUserStor
 
 function createBandwidthConstrainedPreferenceStore() {
     const { subscribe, set } = writable<BandwidthConstrainedPreference>(
-        localUserStore.getBandwidthConstrainedScreenSharePreference()
+        localUserStore.getBandwidthConstrainedScreenSharePreference(),
     );
 
     return {

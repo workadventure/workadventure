@@ -1,7 +1,11 @@
 <script lang="ts">
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
-    export let searchActive = false;
+    interface Props {
+        searchActive: boolean;
+    }
+
+    let { searchActive = false }: Props = $props();
     const gameScene = gameManager.getCurrentGameScene();
     const userWorldCount = gameScene.worldUserCounter;
 </script>

@@ -3,18 +3,27 @@ import type { FrontConfigurationInterface } from "../../src/common/FrontConfigur
 // Vitest setup: provide a minimal MediaStream polyfill for Node test environment
 
 class MediaStreamPolyfill {
-    constructor(_tracks?: unknown[]) {}
+    private tracks: unknown[];
+
+    constructor(tracks: unknown[] = []) {
+        this.tracks = tracks;
+    }
+
     getTracks(): unknown[] {
-        return [];
+        return this.tracks;
     }
     getAudioTracks(): unknown[] {
-        return [];
+        return this.tracks.filter((track) => (track as MediaStreamTrack).kind === "audio");
     }
     getVideoTracks(): unknown[] {
-        return [];
+        return this.tracks.filter((track) => (track as MediaStreamTrack).kind === "video");
     }
-    addTrack(_track: unknown): void {}
-    removeTrack(_track: unknown): void {}
+    addTrack(track: unknown): void {
+        this.tracks.push(track);
+    }
+    removeTrack(track: unknown): void {
+        this.tracks = this.tracks.filter((currentTrack) => currentTrack !== track);
+    }
 }
 
 if (typeof globalThis.MediaStream === "undefined") {
@@ -51,13 +60,13 @@ if (typeof window !== "undefined" && window.env === undefined) {
         OPID_WOKA_NAME_POLICY: undefined,
         ENABLE_REPORT_ISSUES_MENU: undefined,
         REPORT_ISSUES_URL: undefined,
+        CLIENT_DISCONNECTION_RETENTION_MS: 30_000,
         SENTRY_DSN_FRONT: undefined,
         SENTRY_DSN_PUSHER: undefined,
         SENTRY_ENVIRONMENT: undefined,
         SENTRY_RELEASE: undefined,
         SENTRY_TRACES_SAMPLE_RATE: undefined,
         WOKA_SPEED: 8,
-        FEATURE_FLAG_BROADCAST_AREAS: false,
         KLAXOON_ENABLED: false,
         KLAXOON_CLIENT_ID: undefined,
         YOUTUBE_ENABLED: false,
@@ -84,7 +93,6 @@ if (typeof window !== "undefined" && window.env === undefined) {
         ENABLE_ISSUE_REPORT: undefined,
         GRPC_MAX_MESSAGE_SIZE: 4194304,
         TURN_CREDENTIALS_RENEWAL_TIME: 0,
-        BACKGROUND_TRANSFORMER_ENGINE: undefined,
         DEFAULT_WOKA_NAME: undefined,
         DEFAULT_WOKA_TEXTURE: undefined,
         SKIP_CAMERA_PAGE: undefined,
@@ -97,7 +105,23 @@ if (typeof window !== "undefined" && window.env === undefined) {
     window.env = defaultEnv;
 }
 
-// jsdom does not implement CanvasRenderingContext2D; Phaser expects it during import.
+if (typeof window !== "undefined" && typeof window.matchMedia === "undefined") {
+    Object.defineProperty(window, "matchMedia", {
+        writable: true,
+        value: (query: string) => ({
+            matches: false,
+            media: query,
+            onchange: null,
+            addListener: () => undefined,
+            removeListener: () => undefined,
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+            dispatchEvent: () => false,
+        }),
+    });
+}
+
+// jsdom does not implement CanvasRenderingContext2D; Phaser expects it when a test imports it.
 // Provide a minimal stub so canvas feature detection does not crash in tests.
 const createStubContext = () => {
     const data = new Uint8ClampedArray([0, 0, 0, 255]);
@@ -115,3 +139,10 @@ const createStubContext = () => {
 HTMLCanvasElement.prototype.getContext = function getContext() {
     return createStubContext();
 };
+
+// Note: do not import Phaser here. Setup files run once per test file and, with `isolate: true`,
+// in a fresh module registry every time, so a global import re-evaluates Phaser's 8.8 MB bundle
+// for each of the ~100 test files. That dominated both the runtime and the peak memory of the
+// suite, and made CI runners exceed their memory limit (SIGKILL / exit 137).
+// Modules that need Phaser import it themselves; the few tests that also need `globalThis.Phaser`
+// set it at the top of their own file (see src/front/Space/tests/*.test.ts).

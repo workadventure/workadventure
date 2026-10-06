@@ -14,7 +14,7 @@ import { getBackDump, getPusherDump, getPusherRooms } from "./utils/debug";
 import { assertLogMessage, startRecordLogs } from "./utils/log";
 import { maps_domain, maps_test_url, play_url, publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 import { evaluateScript } from "./utils/scripting";
 
 async function setVariable(page: Page, value: string) {
@@ -24,9 +24,11 @@ async function setVariable(page: Page, value: string) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             await WA.onInit();
+            // Await the write: "WA.state.textField = value" returns before the front has even received it, and
+            // the test often navigates away right after, which silently drops the variable.
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            WA.state.textField = value;
+            await WA.state.saveVariable("textField", value);
         },
         value,
     );
@@ -45,10 +47,12 @@ async function expectVariableToBe(page: Page, value: string) {
 }
 
 test.setTimeout(360000);
+
 test.describe("Variables @nomobile", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
+
     // WARNING: Since this test restarts Traefik and other components, it might fail when run against the vite dev server.
     // when running with --headed you can manually reload the page to avoid this issue.
     // Or, if you want to reproduce exactly the CI experience, add the following env variables:
@@ -77,17 +81,19 @@ test.describe("Variables @nomobile", () => {
         });
         await expectVariableToBe(page, "new value");
 
+        const reconnectingIndicator = page
+            .getByTestId("websocket-reconnecting-toast")
+            .or(page.getByTestId("reconnecting-error-screen"));
+
         // Let's simulate a browser disconnection
         stopTraefik();
-        // Let's detect the reconnecting screen
-        await expect(page.getByText("Connection to server lost")).toBeVisible();
-
+        await expect(reconnectingIndicator).toBeVisible();
         startTraefik();
 
         try {
-            await expect(page.getByText("Connection to server lost")).toBeHidden();
+            await expect(reconnectingIndicator).toBeHidden();
         } catch (e) {
-            console.error("Error waiting for connection to server lost to be hidden", e);
+            console.error("Error waiting for the reconnecting toast to be hidden", e);
         }
 
         // Now, let's kill the reverse proxy to cut the connexion
@@ -177,8 +183,6 @@ test.describe("Variables @nomobile", () => {
         // Redis will reconnect automatically and will store the variable on reconnect!
         // So we should see the new value.
         await expectVariableToBe(page, "value set after pusher restart");
-
-        await page.context().close();
     });
 
     test("cache doesnt prevent setting a variable in case the map changes @local @nowebkit", async ({
@@ -228,10 +232,6 @@ test.describe("Variables @nomobile", () => {
                 return users;
             })
             .toBe(2);
-
-        await page2.context().close();
-
-        await page.context().close();
     });
 });
 

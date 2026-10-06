@@ -55,7 +55,7 @@ export function createS3ClientWithMD5(configuration = {}) {
         },
         {
             step: "build",
-        }
+        },
     );
     return client;
 }

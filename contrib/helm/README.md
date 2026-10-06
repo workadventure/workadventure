@@ -49,6 +49,26 @@ If you don't provide a `secretKey` (used to encode JWT tokens), the image will g
 
 For a complete reference of all available environment variables, see the [Environment Variables documentation](../../docs/others/self-hosting/env-variables.md) or use the original [docker-compose file](../docker/docker-compose.prod.yaml) for reference. Look at the [original configuration template](../docker/.env.prod.template) for more information about the available variables.
 
+### WebSocket sticky session for reconnection
+
+When running multiple replicas of the `play` service, the reconnect mechanism requires websocket affinity so reconnections from a browser tab return to the same pusher instance.
+
+Enable cookie-based affinity on websocket routes with:
+
+```yaml
+play:
+  ingress:
+    sticky:
+      enabled: true
+      cookie:
+        name: "wa_ws_affinity"
+        httpOnly: true
+        secure: true
+        sameSite: "lax"
+```
+
+For local HTTP-only setups, set `play.ingress.sticky.cookie.secure: false`.
+
 ### Minimal sample configuration file
 
 Assuming you are using the nginx ingress controller, and CertManager for the SSL certificates (with a cluster issuer named `letsencrypt-prod`), here is a minimal configuration file:
@@ -68,6 +88,11 @@ ingress:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   annotationsPath:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+play:
+  ingress:
+    sticky:
+      enabled: true
 
 commonSecretEnv:
   # Secret token to connect to the map storage API.
@@ -244,3 +269,21 @@ commonSecretEnv:
   LIVEKIT_RECORDING_S3_BUCKET: "workadventure-recordings"
   LIVEKIT_RECORDING_S3_REGION: "eu-west-1"
 ```
+
+### Serving the assets from a separate "front" container
+
+By default, the `play` container serves the web page, the WebSocket API and all the JS/CSS assets. With `front.enabled=true`,
+the assets are served by a dedicated nginx container on `assets.<domainName>` (or `front.ingress.domainName`). You can then
+upgrade the front alone by changing `front.image.tag`: the `play` pods are not restarted, so nobody is disconnected.
+
+See [Separate assets container](../../docs/others/self-hosting/assets-container.md) for how it works and its limits.
+
+```yaml
+front:
+  enabled: true
+  # Optional: defaults to assets.<domainName>
+  ingress:
+    domainName: "assets.example.com"
+```
+
+`front.enabled` is not supported in `singleDomain` mode.

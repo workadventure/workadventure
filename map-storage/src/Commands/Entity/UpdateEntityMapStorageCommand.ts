@@ -14,7 +14,7 @@ export class UpdateEntityMapStorageCommand extends UpdateEntityCommand {
         commandId: string | undefined,
         oldConfig: Partial<WAMEntityData> | undefined,
         private hookManager: HookManager,
-        private hostname: string
+        private hostname: string,
     ) {
         super(wamFile, id, dataToModify, commandId, oldConfig);
     }
@@ -41,7 +41,7 @@ export class UpdateEntityMapStorageCommand extends UpdateEntityCommand {
                 promises.push(
                     limit(async () => {
                         await this.hookManager.fireEntityPropertyAdd(this.newConfig, value.data, this.hostname);
-                    })
+                    }),
                 );
 
                 continue;
@@ -57,9 +57,9 @@ export class UpdateEntityMapStorageCommand extends UpdateEntityCommand {
                         this.newConfig,
                         oldProperty,
                         newProperty,
-                        this.hostname
+                        this.hostname,
                     );
-                })
+                }),
             );
         }
 
@@ -71,7 +71,7 @@ export class UpdateEntityMapStorageCommand extends UpdateEntityCommand {
             promises.push(
                 limit(async () => {
                     await this.hookManager.fireEntityPropertyDelete(this.newConfig, oldProperty, this.hostname);
-                })
+                }),
             );
         }
 

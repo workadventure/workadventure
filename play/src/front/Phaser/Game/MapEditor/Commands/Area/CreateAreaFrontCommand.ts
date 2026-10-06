@@ -5,6 +5,7 @@ import type { FrontCommandInterface } from "../FrontCommandInterface";
 import type { TrashEditorTool } from "../../Tools/TrashEditorTool";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 import type { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
+import { analyticsClient } from "../../../../../Administration/AnalyticsClient";
 import { DeleteAreaFrontCommand } from "./DeleteAreaFrontCommand";
 
 export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCommandInterface {
@@ -14,7 +15,7 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
         commandId: string | undefined,
         private areaEditorTool: AreaEditorTool | TrashEditorTool,
         private localCommand: boolean,
-        private gameMapFrontWrapper: GameMapFrontWrapper
+        private gameMapFrontWrapper: GameMapFrontWrapper,
     ) {
         super(wamFile, areaObjectConfig, commandId);
     }
@@ -31,11 +32,12 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
             this.areaConfig.id,
             undefined,
             this.areaEditorTool,
-            this.gameMapFrontWrapper
+            this.gameMapFrontWrapper,
         );
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
         roomConnection.emitMapEditorCreateArea(this.commandId, this.areaConfig);
+        analyticsClient.trackAdminEvent("map_editor.area.created", { areaType: this.areaConfig.name });
     }
 }

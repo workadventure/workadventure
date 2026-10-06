@@ -19,6 +19,8 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { gameManager } from "../GameManager";
 import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
+import { analyticsClient } from "../../../Administration/AnalyticsClient";
+import { warningMessageStore } from "../../../Stores/ErrorStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -86,7 +88,7 @@ export class MapEditorModeManager {
     constructor(
         scene: GameScene,
         private _isInsidePersonalAreaStore = isInsidePersonalAreaStore,
-        private _personalAreaDataStore = personalAreaDataStore
+        private _personalAreaDataStore = personalAreaDataStore,
     ) {
         this.scene = scene;
 
@@ -128,7 +130,7 @@ export class MapEditorModeManager {
      *
      */
     public async executeCommand(
-        command: (Command & FrontCommandInterface) | (Command & FrontCommandInterface & UpdateWAMSettingCommand)
+        command: (Command & FrontCommandInterface) | (Command & FrontCommandInterface & UpdateWAMSettingCommand),
     ): Promise<void> {
         await this.isReverting;
         // Commands are throttled. Only one at a time.
@@ -333,16 +335,25 @@ export class MapEditorModeManager {
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
             limit(async () => {
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
-                    logger(
-                        "ErrorCommandMessage received",
-                        editMapCommandMessage.editMapMessage?.message.errorCommandMessage
-                    );
+                    const reason = editMapCommandMessage.editMapMessage.message.errorCommandMessage.reason;
+                    logger("ErrorCommandMessage received", reason);
+                    // The only place a map editor edit is known to have failed. The
+                    // commands themselves send fire-and-forget, so this is where the
+                    // failure analytics belongs — reporting it next to the send would
+                    // have counted every rejected edit as a success.
+                    analyticsClient.trackAdminEvent("map_editor.save.failed", { reason });
                     const command = this.pendingCommands.find(
-                        (command) => command.commandId === editMapCommandMessage.id
+                        (command) => command.commandId === editMapCommandMessage.id,
                     );
                     if (command) {
-                        logger("removing command of pendingList : ", editMapCommandMessage.id);
-                        this.pendingCommands.splice(this.pendingCommands.indexOf(command), 1);
+                        // The server refused the command, so the optimistic local state is now wrong.
+                        // Roll back every pending command: the ones the server did accept come back
+                        // through this same stream and are re-applied as remote commands.
+                        // Nothing is reported here: map-storage already logged the cause with its
+                        // original stack, and a refusal is also the expected answer to a command the
+                        // user was not allowed to run.
+                        await this.revertPendingCommands();
+                        warningMessageStore.addWarningMessage(get(LL).mapEditor.map.editionFailed());
                     }
                     return;
                 }
@@ -392,7 +403,7 @@ export class MapEditorModeManager {
                     await command.getUndoCommand().execute();
                     // also remove from local history of commands as this is invalid
                     const index = this.localCommandsHistory.findIndex(
-                        (localCommand) => localCommand.commandId === command.commandId
+                        (localCommand) => localCommand.commandId === command.commandId,
                     );
                     if (index !== -1) {
                         this.localCommandsHistory.splice(index, 1);
@@ -415,6 +426,22 @@ export class MapEditorModeManager {
             this.activateTool();
         }
         mapEditorSelectedToolStore.set(tool);
+    }
+
+    public returnToLastMode(): boolean {
+        if (!this.active) {
+            return false;
+        }
+
+        // Only restore exploration when it is the currently active tool. Relying on the
+        // last used tool could switch the active editor tool (Area/Floor/Entity...) to
+        // exploration mode when the Woka menu is closed, which is not desired.
+        if (this.activeTool === EditorToolName.ExploreTheRoom) {
+            this.scene.getCameraManager().setExplorationMode();
+            return true;
+        }
+
+        return false;
     }
 
     private emitMapEditorUpdate(command: FrontCommandInterface, delay = 0): void {
@@ -457,8 +484,8 @@ export class MapEditorModeManager {
                 this.lastlyUsedTool && this.lastlyUsedTool != EditorToolName.CloseMapEditor
                     ? this.lastlyUsedTool
                     : get(mapEditorActivated) || get(mapEditorActivatedForThematics)
-                    ? EditorToolName.EntityEditor
-                    : EditorToolName.ExploreTheRoom
+                      ? EditorToolName.EntityEditor
+                      : EditorToolName.ExploreTheRoom,
             );
         });
     }
@@ -493,7 +520,7 @@ export class MapEditorModeManager {
             return;
         }
         const areaPersonalPropertyData = areaDataToClaim.properties.find(
-            (property) => property.type === "personalAreaPropertyData"
+            (property) => property.type === "personalAreaPropertyData",
         );
         if (!areaPersonalPropertyData) {
             console.error("No area property data");
@@ -524,8 +551,8 @@ export class MapEditorModeManager {
                     undefined,
                     oldAreaDataToRevok,
                     this.editorTools.AreaEditor as AreaEditorTool,
-                    this.scene.getGameMapFrontWrapper()
-                )
+                    this.scene.getGameMapFrontWrapper(),
+                ),
             ).catch((error) => console.error(error));
         }
 
@@ -549,8 +576,8 @@ export class MapEditorModeManager {
                 undefined,
                 oldAreaData,
                 this.editorTools.AreaEditor as AreaEditorTool,
-                this.scene.getGameMapFrontWrapper()
-            )
+                this.scene.getGameMapFrontWrapper(),
+            ),
         ).catch((error) => console.error(error));
         this._isInsidePersonalAreaStore.set(true);
         this._personalAreaDataStore.set(areaDataToClaim);
@@ -573,8 +600,8 @@ export class MapEditorModeManager {
                 undefined,
                 undefined,
                 this.editorTools.AreaEditor as AreaEditorTool,
-                this.scene.getGameMapFrontWrapper()
-            )
+                this.scene.getGameMapFrontWrapper(),
+            ),
         );
         this._isInsidePersonalAreaStore.set(false);
         this._personalAreaDataStore.set(null);

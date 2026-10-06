@@ -1,11 +1,14 @@
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
-import type CancelablePromise from "cancelable-promise";
+import type { CancelablePromise } from "cancelable-promise";
 import { AskPositionMessage_AskType, PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
+import type { PathFollowResult } from "../Entity/Character";
+import { PathTileType } from "../../Utils/PathfindingManager";
+import { isWaypointBlocked } from "../../Utils/PathValidation";
 
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
@@ -15,10 +18,12 @@ import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctio
 import { localUserStore } from "../../Connection/LocalUserStore";
 
 export const hasMovedEventName = "hasMoved";
+export const startMovingEventName = "startMoving";
 export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
     private readonly unsubscribeVisibilityStore: Unsubscriber;
+    private isMoving = false;
 
     constructor(
         Scene: GameScene,
@@ -28,7 +33,7 @@ export class Player extends Character {
         texturesPromise: CancelablePromise<string[]>,
         direction: PositionMessage_Direction,
         moving: boolean,
-        companionTexturePromise: CancelablePromise<string> | undefined
+        companionTexturePromise: CancelablePromise<string> | undefined,
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
@@ -86,12 +91,16 @@ export class Player extends Character {
         this.scene.connection?.emitFollowConfirmation(get(followUsersStore)[0]);
     }
 
-    public setPathToFollow(
-        path: { x: number; y: number }[],
-        speed?: number
-    ): Promise<{ x: number; y: number; cancelled: boolean }> {
+    public setPathToFollow(path: { x: number; y: number }[], speed?: number): Promise<PathFollowResult> {
+        if (!this.isMoving) {
+            this.isMoving = true;
+            this.emit(startMovingEventName, { direction: this._lastDirection, x: this.x, y: this.y });
+        }
+
         this.getBody().setDirectControl(true);
-        return super.setPathToFollow(path, speed);
+        return super.setPathToFollow(path, speed).finally(() => {
+            this.isMoving = false;
+        });
     }
 
     public getCurrentPathDestinationPoint(): { x: number; y: number } | undefined {
@@ -143,9 +152,16 @@ export class Player extends Character {
         // Send movement events
         const emit = () => this.emit(hasMovedEventName, { moving, direction, x: this.x, y: this.y });
         if (moving) {
+            if (!this.isMoving) {
+                this.isMoving = true;
+                this.emit(startMovingEventName, { direction, x: this.x, y: this.y });
+            }
             this.moveBy(x, y);
             emit();
         } else if (get(userMovingStore)) {
+            if (this.isMoving) {
+                this.isMoving = false;
+            }
             this.stop();
             emit();
         }
@@ -200,13 +216,6 @@ export class Player extends Character {
         }
         passStatusToOnline();
         this.playAnimation(this._lastDirection, true);
-        this.scene.physics.world.once(Phaser.Physics.Arcade.Events.WORLD_STEP, () => {
-            // We wait for the physics engine to recompute the correct player position, then we update the depth.
-            const bodyY = body.position.y + body.height / 2 - body.offset.y;
-
-            this.setDepth(bodyY + 16);
-            this.updateUsernameDisplayPosition(body.position.x + body.width / 2 - body.offset.x, bodyY);
-        });
 
         if (this.companion) {
             this.companion.setTarget(this.x, this.y, this._lastDirection);
@@ -230,10 +239,38 @@ export class Player extends Character {
         super.moveToPathPosition(x, y);
     }
 
-    public finishFollowingPath(cancelled = false): void {
+    public finishFollowingPath(cancelled = false, blocked = false): void {
         const wasFollowing = this.isFollowingPath();
-        super.finishFollowingPath(cancelled);
+        super.finishFollowingPath(cancelled, blocked);
         this.onPathFinished(wasFollowing);
+    }
+
+    /**
+     * The collision grid can change while a path is being followed (an area gets locked or full, an
+     * entity is dropped...). Since the path following runs with direct body control, colliders would
+     * not stop us: check the next waypoint on each tile change and abort right before walking onto a
+     * tile that started colliding. Only the NEXT waypoint is checked, on purpose: the woka keeps
+     * walking up to the obstacle, so the blocked warning shows next to the area it talks about, and a
+     * lock lifted before the woka reaches the area never interrupts the walk. GameScene.moveTo() then
+     * reroutes to the destination, or stops there when it is not reachable anymore.
+     */
+    protected onPathWaypointReached(): void {
+        if (!this.pathToFollow || this.pathToFollow.length < 2) {
+            return;
+        }
+        const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
+        const body = this.getBody();
+        if (
+            isWaypointBlocked(
+                this.pathToFollow[1],
+                gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }),
+                gameMapFrontWrapper.getTileDimensions(),
+                body.height / 2 + body.offset.y,
+                PathTileType.Collider,
+            )
+        ) {
+            this.finishFollowingPath(true, true);
+        }
     }
 
     public teleportTo(x: number, y: number): void {
@@ -251,7 +288,7 @@ export class Player extends Character {
         this.scene.connection?.emitAskPosition(
             localUserStore.getLocalUser()?.uuid ?? "",
             this.scene.roomUrl,
-            AskPositionMessage_AskType.LOCATE
+            AskPositionMessage_AskType.LOCATE,
         );
     }
 

@@ -6,8 +6,9 @@ import type { WAMFileFormat } from "@workadventure/map-editor";
 
 import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import type { Socket } from "../services/SocketManager";
 import { socketManager } from "../services/SocketManager";
+import type { PusherWebSocket } from "../services/PusherWebSocket";
+import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
 import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";
@@ -20,24 +21,27 @@ export class PusherRoom {
 
     private backConnection!: ClientDuplexStream<PusherToBackRoomMessage, BatchToPusherRoomMessage>;
     private isClosing = false;
-    private listeners: Set<Socket> = new Set<Socket>();
+    private listeners: Set<PusherWebSocket> = new Set<PusherWebSocket>();
 
     private _wamSettings: WAMFileFormat["settings"] = {};
     private backConnectionClosedAbortController: AbortController = new AbortController();
 
-    constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
+    constructor(
+        public readonly roomUrl: string,
+        private socketListener: ZoneEventListener,
+    ) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener, this);
     }
 
-    public setViewport(socket: Socket, viewport: ViewportInterface): void {
+    public setViewport(socket: PusherWebSocket, viewport: ViewportInterface): void {
         if (this.isClosing) {
             throw new Error(`Cannot set viewport in room ${this.roomUrl}, connection is closing`);
         }
         this.positionNotifier.setViewport(socket, viewport);
     }
 
-    public join(socket: Socket): void {
+    public join(socket: PusherWebSocket): void {
         if (this.isClosing) {
             throw new Error(`Cannot join room ${this.roomUrl}, connection is closing`);
         }
@@ -46,14 +50,19 @@ export class PusherRoom {
         socket.getUserData().pusherRoom = this;
     }
 
-    public leave(socket: Socket): void {
+    public leave(socket: PusherWebSocket): void {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
         socket.getUserData().pusherRoom = undefined;
     }
 
+    /**
+     * A socket is a member of the room from join() until leave(). Zones only appear once the socket sends its
+     * first viewport, one back round-trip after joining, so counting zones alone would report the room as empty
+     * while a socket is still joining and let a concurrent teardown close it under that socket.
+     */
     public isEmpty(): boolean {
-        return this.positionNotifier.isEmpty();
+        return this.listeners.size === 0 && this.positionNotifier.isEmpty();
     }
 
     public needsUpdate(versionNumber: number): boolean {
@@ -134,7 +143,7 @@ export class PusherRoom {
                             for (const listener of this.listeners) {
                                 const userData = listener.getUserData();
                                 if (!readableBy || userData.tags.includes(readableBy)) {
-                                    userData.emitInBatch({
+                                    listener.emitInBatch({
                                         message: {
                                             $case: "variableMessage",
                                             variableMessage: variableMessage,
@@ -146,8 +155,7 @@ export class PusherRoom {
                         }
                         case "editMapCommandMessage": {
                             for (const listener of this.listeners) {
-                                const userData = listener.getUserData();
-                                userData.emitInBatch({
+                                listener.emitInBatch({
                                     message: {
                                         $case: "editMapCommandMessage",
                                         editMapCommandMessage: message.message.editMapCommandMessage,
@@ -160,7 +168,7 @@ export class PusherRoom {
                             const errorMessage = message.message.errorMessage;
                             // Let's dispatch this error to all the listeners
                             for (const listener of this.listeners) {
-                                listener.getUserData().emitInBatch({
+                                listener.emitInBatch({
                                     message: {
                                         $case: "errorMessage",
                                         errorMessage: errorMessage,
@@ -172,7 +180,7 @@ export class PusherRoom {
                         case "receivedEventMessage": {
                             // Let's dispatch this receivedEventMessage to all the listeners
                             for (const listener of this.listeners) {
-                                listener.getUserData().emitInBatch({
+                                listener.emitInBatch({
                                     message: {
                                         $case: "receivedEventMessage",
                                         receivedEventMessage: message.message.receivedEventMessage,
@@ -190,10 +198,23 @@ export class PusherRoom {
                             // Broadcast area property variable changes to all listeners
                             const areaPropertyVariableMessage = message.message.areaPropertyVariableMessage;
                             for (const listener of this.listeners) {
-                                listener.getUserData().emitInBatch({
+                                listener.emitInBatch({
                                     message: {
                                         $case: "areaPropertyVariableMessage",
                                         areaPropertyVariableMessage: areaPropertyVariableMessage,
+                                    },
+                                });
+                            }
+                            break;
+                        }
+                        case "entityMessage": {
+                            // Entity events are room-wide: a sound carries further than a zone
+                            const entityMessage = message.message.entityMessage;
+                            for (const listener of this.listeners) {
+                                listener.emitInBatch({
+                                    message: {
+                                        $case: "entityMessage",
+                                        entityMessage: entityMessage,
                                     },
                                 });
                             }
@@ -217,7 +238,7 @@ export class PusherRoom {
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
                     socketManager.cleanupSocket(listener);
-                    listener.end(1011, "Connection error between pusher and back server");
+                    listener.end(WS_CLOSE_CODE_SESSION_DESTROYED, "Connection error between pusher and back server");
                     console.error("Connection error between pusher and back server", err);
                 }
                 this.backConnectionClosedAbortController.abort();
@@ -232,11 +253,11 @@ export class PusherRoom {
                 for (const listener of this.listeners) {
                     socketManager.cleanupSocket(listener);
                     listener.end(
-                        1011,
+                        WS_CLOSE_CODE_SESSION_DESTROYED,
                         "Room connection closed between pusher and back server " +
                             this.roomUrl +
                             " " +
-                            new Date().toLocaleString("en-GB")
+                            new Date().toLocaleString("en-GB"),
                     );
                 }
                 this.backConnectionClosedAbortController.abort();

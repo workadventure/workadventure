@@ -11,7 +11,7 @@ export class WebRTCState extends CommunicationState<WebRTCCommunicationStrategy>
     constructor(
         protected readonly _space: ICommunicationSpace,
         users: ReadonlyMap<string, SpaceUser>,
-        usersToNotify: ReadonlyMap<string, SpaceUser>
+        usersToNotify: ReadonlyMap<string, SpaceUser>,
     ) {
         super(_space, new WebRTCCommunicationStrategy(_space, users, usersToNotify), users, usersToNotify);
     }

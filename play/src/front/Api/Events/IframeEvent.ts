@@ -40,8 +40,6 @@ import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsiteEvent } from
 import { isCreateDynamicAreaEvent, isDynamicAreaEvent } from "./CreateDynamicAreaEvent";
 import { isUserInputChatEvent } from "./UserInputChatEvent";
 import { isEnterLeaveEvent } from "./EnterLeaveEvent";
-import { isChangeLayerEvent } from "./ChangeLayerEvent";
-import { isChangeAreaEvent } from "./ChangeAreaEvent";
 import { isButtonClickedEvent } from "./ButtonClickedEvent";
 import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
 import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
@@ -68,6 +66,14 @@ import { isReceiveEventEvent } from "./ReceiveEventEvent";
 import { isPlaySoundInBubbleEvent } from "./ProximityMeeting/PlaySoundInBubbleEvent";
 import { isStartStreamInBubbleEvent } from "./ProximityMeeting/StartStreamInBubbleEvent";
 import { isAppendPCMDataEvent } from "./ProximityMeeting/AppendPCMDataEvent";
+import {
+    isAppendPCMDataToMeetingEvent,
+    isJoinMeetingEvent,
+    isMeetingIdEvent,
+    isParticipantMeetingEvent,
+    isPlaySoundInMeetingEvent,
+    isStartStreamInMeetingEvent,
+} from "./ProximityMeeting/MeetingEvent";
 import { isWamMapDataEvent } from "./WamMapDataEvent";
 import { isPlayVideoEvent } from "./Ui/PlayVideoEvent";
 import { isSetStatusEvent } from "./SetStatusEvent";
@@ -362,6 +368,14 @@ export const isIframeEventWrapper = z.union([
         data: z.undefined(),
     }),
     z.object({
+        type: z.literal("startListeningToStreamInMeeting"),
+        data: isStartStreamInMeetingEvent,
+    }),
+    z.object({
+        type: z.literal("stopListeningToStreamInMeeting"),
+        data: isMeetingIdEvent,
+    }),
+    z.object({
         type: z.literal("setStatus"),
         data: isSetStatusEvent,
     }),
@@ -391,6 +405,22 @@ export const isIframeResponseEvent = z.union([
         data: z.undefined(),
     }),
     z.object({
+        type: z.literal("joinMeetingEvent"),
+        data: isJoinMeetingEvent,
+    }),
+    z.object({
+        type: z.literal("participantJoinMeetingEvent"),
+        data: isParticipantMeetingEvent,
+    }),
+    z.object({
+        type: z.literal("participantLeaveMeetingEvent"),
+        data: isParticipantMeetingEvent,
+    }),
+    z.object({
+        type: z.literal("leaveMeetingEvent"),
+        data: isMeetingIdEvent,
+    }),
+    z.object({
         type: z.literal("onFollowed"),
         data: isParticipantProximityMeetingEvent,
     }),
@@ -405,30 +435,6 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("leaveEvent"),
         data: isEnterLeaveEvent,
-    }),
-    z.object({
-        type: z.literal("enterMapEditorAreaEvent"),
-        data: isChangeAreaEvent,
-    }),
-    z.object({
-        type: z.literal("leaveMapEditorAreaEvent"),
-        data: isChangeAreaEvent,
-    }),
-    z.object({
-        type: z.literal("enterLayerEvent"),
-        data: isChangeLayerEvent,
-    }),
-    z.object({
-        type: z.literal("leaveLayerEvent"),
-        data: isChangeLayerEvent,
-    }),
-    z.object({
-        type: z.literal("enterAreaEvent"),
-        data: isChangeAreaEvent,
-    }),
-    z.object({
-        type: z.literal("leaveAreaEvent"),
-        data: isChangeAreaEvent,
     }),
     z.object({
         type: z.literal("buttonClickedEvent"),
@@ -539,6 +545,10 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("appendPCMData"),
         data: isAppendPCMDataEvent,
+    }),
+    z.object({
+        type: z.literal("appendMeetingPCMData"),
+        data: isAppendPCMDataToMeetingEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
@@ -690,20 +700,40 @@ export const iframeQueryMapTypeGuards = {
         query: isPlaySoundInBubbleEvent,
         answer: z.undefined(),
     },
+    playSoundInMeeting: {
+        query: isPlaySoundInMeetingEvent,
+        answer: z.undefined(),
+    },
     startStreamInBubble: {
         query: isStartStreamInBubbleEvent,
+        answer: z.undefined(),
+    },
+    startStreamInMeeting: {
+        query: isStartStreamInMeetingEvent,
         answer: z.undefined(),
     },
     stopStreamInBubble: {
         query: z.undefined(),
         answer: z.undefined(),
     },
+    stopStreamInMeeting: {
+        query: isMeetingIdEvent,
+        answer: z.undefined(),
+    },
     appendPCMData: {
         query: isAppendPCMDataEvent,
         answer: z.undefined(),
     },
+    appendPCMDataToMeeting: {
+        query: isAppendPCMDataToMeetingEvent,
+        answer: z.undefined(),
+    },
     resetAudioBuffer: {
         query: z.undefined(),
+        answer: z.undefined(),
+    },
+    resetMeetingAudioBuffer: {
+        query: isMeetingIdEvent,
         answer: z.undefined(),
     },
     followMe: {

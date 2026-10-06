@@ -1,21 +1,25 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { closeModal } from "svelte-modals";
     import type { MatrixChatConnectionLike, MatrixPeerProfileDiagnostics } from "../Connection/ChatConnection";
     import ButtonClose from "../../Components/Input/ButtonClose.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { IconLoader } from "@wa-icons";
+    import { modals } from "@wa-modals";
 
-    export let connection: MatrixChatConnectionLike;
-    /** Matrix user ID (@user:server) */
-    export let matrixUserId: string;
-    /** Optional label (e.g. WA username) for the dialog title */
-    export let label: string | undefined = undefined;
+    interface Props {
+        connection: MatrixChatConnectionLike;
+        /** Matrix user ID (@user:server) */
+        matrixUserId: string;
+        /** Optional label (e.g. WA username) for the dialog title */
+        label?: string;
+    }
 
-    let loading = true;
-    let loadError: string | undefined;
-    let data: MatrixPeerProfileDiagnostics | undefined;
-    let copiedField: string | undefined;
+    let { connection, matrixUserId, label = undefined }: Props = $props();
+
+    let loading = $state(true);
+    let loadError: string | undefined = $state();
+    let data: MatrixPeerProfileDiagnostics | undefined = $state();
+    let copiedField: string | undefined = $state();
 
     async function loadDiagnostics() {
         loading = true;
@@ -60,13 +64,15 @@
         type="button"
         class="absolute inset-0 w-full h-full cursor-default"
         aria-label={$LL.chat.matrixSettings.close()}
-        on:click={() => closeModal()}
-    />
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
+        onclick={() => modals.close()}
+    ></button>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div
         class="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-contrast/90 text-white shadow-xl backdrop-blur-md pointer-events-auto"
-        on:click|stopPropagation
+        onclick={(event) => {
+            event.stopPropagation();
+        }}
     >
         <div class="flex items-start justify-between gap-3 border-b border-white/10 p-4 sm:p-5">
             <div>
@@ -76,7 +82,7 @@
                 </h2>
                 <p class="mt-1 text-sm text-white/70">{$LL.chat.matrixPeerProfileDebug.subtitle()}</p>
             </div>
-            <ButtonClose dataTestId="close-matrix-peer-debug" size="sm" on:click={() => closeModal()} />
+            <ButtonClose dataTestId="close-matrix-peer-debug" size="sm" onclick={() => modals.close()} />
         </div>
 
         <div class="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5 sm:py-4">
@@ -99,7 +105,7 @@
                         <button
                             type="button"
                             class="group flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-left transition hover:border-white/20"
-                            on:click={() => copyText("id", snapshot.matrixUserId)}
+                            onclick={() => copyText("id", snapshot.matrixUserId)}
                         >
                             <span class="text-white/60">{$LL.chat.matrixSettings.matrixUserId()}</span>
                             <span class="line-clamp-2 break-all text-right text-xs text-white/90"
@@ -114,7 +120,7 @@
                         <button
                             type="button"
                             class="group flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-left transition hover:border-white/20"
-                            on:click={() => copyText("hs", snapshot.homeserverUrl)}
+                            onclick={() => copyText("hs", snapshot.homeserverUrl)}
                         >
                             <span class="text-white/60">{$LL.chat.matrixSettings.homeserver()}</span>
                             <span class="line-clamp-2 break-all text-right text-xs text-white/90"

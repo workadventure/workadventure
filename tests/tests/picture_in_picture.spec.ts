@@ -20,8 +20,8 @@ test.describe("Picture In Picture", () => {
         );
 
         // Wait for both users to be connected
-        await expect(alicePage.getByText("Bob", { exact: true })).toBeVisible({ timeout: 20_000 });
-        await expect(bobPage.getByText("Alice", { exact: true })).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByText("Bob", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+        await expect(bobPage.getByText("Alice", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
 
         // Move to a position where the video call button is visible
         await alicePage.mouse.move(300, 300);
@@ -34,15 +34,12 @@ test.describe("Picture In Picture", () => {
         const page2 = await page2Promise;
         await expect(page2.getByText("Alice")).toBeVisible();
         await expect(page2.getByText("You")).toBeVisible();
-
-        await alicePage.close();
-        await bobPage.close();
     });
 
     test("not available", async ({ page, browser, browserName }) => {
         test.skip(
-            isMobile(page) || browserName === "chromium",
-            "Skip on mobile and no WebKit or Firefox due to limitations",
+            isMobile(page) || browserName === "chromium" || browserName === "firefox",
+            "document PiP is only available in Chrome and Firefox",
         );
 
         await using alicePage = await getPage(
@@ -58,18 +55,21 @@ test.describe("Picture In Picture", () => {
         );
 
         // Wait for both users to be connected
-        await expect(alicePage.getByText("Bob", { exact: true })).toBeVisible({ timeout: 20_000 });
-        await expect(bobPage.getByText("Alice", { exact: true })).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByText("Bob", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+        await expect(bobPage.getByText("Alice", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
 
         // Move to a position where the video call button is visible
         await alicePage.mouse.move(300, 300);
         await bobPage.mouse.move(300, 300);
 
-        // Wait for the video call button to be visible
-        await expect(bobPage.getByTestId("pictureInPictureButtonDisabled")).toBeVisible({ timeout: 10_000 });
-        await expect(alicePage.getByTestId("pictureInPictureButtonDisabled")).toBeVisible({ timeout: 10_000 });
+        // Wait until both users are in the bubble: that is when the PiP button would show up.
+        // (the screen sharing button is not a usable anchor here: WebKit never publishes a stream,
+        // so it stays hidden once the onboarding is over)
+        await expect(bobPage.getByTestId("cameras-container")).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByTestId("cameras-container")).toBeVisible({ timeout: 20_000 });
 
-        await alicePage.close();
-        await bobPage.close();
+        // Check the Picture in Picture button is not available
+        await expect(bobPage.getByTestId("pictureInPictureButton")).toBeHidden({ timeout: 10_000 });
+        await expect(alicePage.getByTestId("pictureInPictureButton")).toBeHidden({ timeout: 10_000 });
     });
 });

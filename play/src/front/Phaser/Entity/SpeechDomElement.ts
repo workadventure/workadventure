@@ -1,6 +1,10 @@
+import * as Phaser from "phaser";
 import { get } from "svelte/store";
 import { marked } from "marked";
 import LL from "../../../i18n/i18n-svelte";
+import { sanitizeHtml } from "../../Utils/HtmlSanitizer";
+
+import DOMElement = Phaser.GameObjects.DOMElement;
 
 let speechKeyShadowFilterUid = 0;
 
@@ -130,7 +134,7 @@ function bubbleOuterStyle(type: "warning" | "message"): string {
     return base.join(";");
 }
 
-export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
+export class SpeechDomElement extends DOMElement {
     private timeoutDestroyText: NodeJS.Timeout | null = null;
     private readonly span: HTMLSpanElement | null = null;
     /** Same reference passed to add/removeEventListener on the escape badge (ESLint listeners rules). */
@@ -144,7 +148,7 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
         y = -50,
         public readonly callback = () => this.destroy(),
         type: "warning" | "message" = "message",
-        private readonly escapeCallback?: () => void
+        private readonly escapeCallback?: () => void,
     ) {
         const spaceMarker = get(LL).trigger.spaceKeyboard();
         const escapeMarker = get(LL).trigger.escapeKeyboard();
@@ -157,15 +161,17 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
         const textMarked = marked.parse(textTransformed);
         const span = document.createElement("span");
 
+        // The text can come from the map (or from the map editor): the Markdown rendering keeps the HTML
+        // it contains, so it must be sanitized before reaching the "innerHTML" sink.
         if (textMarked instanceof Promise) {
             textMarked
                 .then((resolvedText) => {
-                    span.innerHTML = resolvedText;
+                    span.innerHTML = sanitizeHtml(resolvedText);
                     this.wireEscapeHintListener(span);
                 })
                 .catch((e) => console.error(e));
         } else {
-            span.innerHTML = textMarked;
+            span.innerHTML = sanitizeHtml(textMarked);
         }
         span.id = `spanText-${id}`;
         span.classList.add("characterTriggerAction", "speech-dom-inner", `speech-dom-inner--${type}`);

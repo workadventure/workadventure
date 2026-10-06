@@ -1,43 +1,47 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import type { MaxUsersInAreaPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
     import { IconLockHash } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
-    export let property: MaxUsersInAreaPropertyData;
+    interface Props {
+        property: MaxUsersInAreaPropertyData;
+        onchange?: () => void;
+        onclose?: () => void;
+    }
 
-    const dispatch = createEventDispatcher<{
-        change: undefined;
-        close: undefined;
-    }>();
+    let { property = $bindable(), onchange, onclose }: Props = $props();
 
     function onValueChange() {
-        dispatch("change");
+        onchange?.();
     }
 </script>
 
 <PropertyEditorBase
-    on:close={() => {
-        dispatch("close");
+    onclose={() => {
+        onclose?.();
     }}
 >
-    <span slot="header" class="flex justify-center items-center">
-        <IconLockHash font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.maxUsersInAreaPropertyData.label()}
-    </span>
-    <span slot="content">
-        <div class="value-input">
-            <Input
-                id="maxUsersInArea"
-                type="number"
-                label={$LL.mapEditor.properties.maxUsersInAreaPropertyData.label()}
-                placeholder={$LL.mapEditor.properties.maxUsersInAreaPropertyData.placeholder()}
-                bind:value={property.maxUsers}
-                onChange={onValueChange}
-                min={0}
-            />
-        </div>
-    </span>
+    {#snippet header()}
+        <span class="flex justify-center items-center">
+            <IconLockHash font-size="18" class="mr-2" />
+            {$LL.mapEditor.properties.maxUsersInAreaPropertyData.label()}
+        </span>
+    {/snippet}
+    {#snippet content()}
+        <span>
+            <div class="value-input">
+                <Input
+                    id="maxUsersInArea"
+                    type="number"
+                    label={$LL.mapEditor.properties.maxUsersInAreaPropertyData.label()}
+                    placeholder={$LL.mapEditor.properties.maxUsersInAreaPropertyData.placeholder()}
+                    bind:value={property.maxUsers}
+                    onchange={onValueChange}
+                    min={0}
+                />
+            </div>
+        </span>
+    {/snippet}
 </PropertyEditorBase>

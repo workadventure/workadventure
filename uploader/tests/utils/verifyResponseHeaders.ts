@@ -1,4 +1,4 @@
-import {AxiosResponse} from "axios";
+import type {AxiosResponse} from "axios";
 import {expect} from 'vitest';
 import {PLAY_URL} from "../../src/Enum/EnvironmentVariable";
 export function verifyResponseHeaders(response: AxiosResponse) {

@@ -30,7 +30,7 @@ export class StateFactory {
         space: ICommunicationSpace,
         users: ReadonlyMap<string, SpaceUser>,
         usersToNotify: ReadonlyMap<string, SpaceUser>,
-        options?: StateFactoryOptions
+        options?: StateFactoryOptions,
     ): Promise<ICommunicationState<ICommunicationStrategy>> {
         switch (type) {
             case CommunicationType.WEBRTC:
@@ -49,7 +49,7 @@ export class StateFactory {
         space: ICommunicationSpace,
         users: ReadonlyMap<string, SpaceUser>,
         usersToNotify: ReadonlyMap<string, SpaceUser>,
-        playUri?: string
+        playUri?: string,
     ): Promise<LivekitState> {
         if (getCapability(LIVEKIT_CREDENTIALS_CAPABILITY) === LIVKEIT_CREDENTIALS_VERSION) {
             if (!playUri) {
@@ -69,7 +69,7 @@ export class StateFactory {
                     livekitApiSecret: LIVEKIT_API_SECRET,
                 },
                 users,
-                usersToNotify
+                usersToNotify,
             );
         }
     }

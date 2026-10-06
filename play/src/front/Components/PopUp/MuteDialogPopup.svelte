@@ -3,14 +3,19 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import Woka from "../Woka/Woka.svelte";
+    import Button from "../UI/Button.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
-    export let sender: SpaceUserExtended | undefined;
-    export let message: string;
-    export let acceptRequest: () => void;
-    export let refuseRequest: () => void;
+    interface Props {
+        sender: SpaceUserExtended | undefined;
+        message: string;
+        acceptRequest: () => void;
+        refuseRequest: () => void;
+    }
 
-    const pictureStore = sender ? sender.pictureStore : readable<string | undefined>(undefined);
+    let { sender, message, acceptRequest, refuseRequest }: Props = $props();
+
+    let pictureStore = $derived(sender ? sender.pictureStore : readable<string | undefined>(undefined));
 </script>
 
 <PopUpContainer reduceOnSmallScreen={true}>
@@ -27,16 +32,18 @@
             </div>
         </div>
     </div>
-    <svelte:fragment slot="buttons">
-        <button
-            type="button"
-            class="btn btn-outline w-1/2 max-w-80 justify-center responsive-message refuse-request"
-            on:click|preventDefault={() => refuseRequest()}>{$LL.follow.interactMenu.no()}</button
+    {#snippet buttons()}
+        <Button
+            class="btn-outline w-1/2 max-w-80 responsive-message refuse-request"
+            onclick={(event) => {
+                event.preventDefault();
+                refuseRequest();
+            }}
         >
-        <button
-            type="button"
-            class="btn btn-secondary w-1/2 max-w-80 justify-center responsive-message accept-request"
-            on:click={() => acceptRequest()}>{$LL.follow.interactMenu.yes()}</button
-        >
-    </svelte:fragment>
+            {$LL.follow.interactMenu.no()}
+        </Button>
+        <Button variant="secondary" class="w-1/2 max-w-80 responsive-message accept-request" onclick={acceptRequest}>
+            {$LL.follow.interactMenu.yes()}
+        </Button>
+    {/snippet}
 </PopUpContainer>

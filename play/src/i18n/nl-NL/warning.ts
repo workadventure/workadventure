@@ -11,7 +11,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         teleport: "Je hebt geen recht om naar deze gebruiker te teleporteren.",
         room: "Toegang tot de kamer geweigerd. Je mag deze kamer niet betreden.",
     },
-    importantMessage: "Belangrijke boodschap",
     connectionLost: "Verbinding verloren. Herverbinden...",
     connectionLostTitle: "Verbinding verloren",
     connectionLostSubtitle: "Herverbinden",
@@ -22,6 +21,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     mapEditorNotEnabled: "De kaarteditor is niet ingeschakeld op deze wereld.",
     backgroundProcessing: {
         failedToApply: "Achtergrondeffecten toepassen mislukt",
+        notSupportedOnThisBrowser: "Achtergrondeffecten worden niet ondersteund door deze browser",
     },
     popupBlocked: {
         title: "Popup geblokkeerd",

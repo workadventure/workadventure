@@ -4,32 +4,46 @@ import type { Translation } from "../i18n-types";
 const externalModule: DeepPartial<Translation["externalModule"]> = {
     status: {
         onLine: "Module ok ✅",
-        offLine: "Module off ❌",
-        warning: "Module error ⚠️",
+        offLine: "Module hors ligne ❌",
+        warning: "Erreur du module ⚠️",
         sync: "Module en cours de synchro 🔄",
     },
     teams: {
         openingMeeting: "Ouverture de la réunion Teams...",
         unableJoinMeeting: "Impossible de rejoindre la réunion Teams !",
-        userNotConnected: "Vous n'êtes pas syncronisé avec votre compte Outlook ou Google!",
-        connectToYourTeams: "Connectez-vous à votre compte Outllok ou Google 🙏",
+        userNotConnected: "Vous n'êtes pas synchronisé avec votre compte Outlook ou Google !",
+        connectToYourTeams: "Connectez-vous à votre compte Outlook ou Google 🙏",
         temasAppInfo:
             "Teams est une application Microsoft 365 qui aide votre équipe à rester connectée et organisée. Vous pouvez discuter, rencontrer, appeler et collaborer au même endroit 😍",
         buttonSync: "Synchroniser Teams 🚀",
         buttonConnect: "Ouvrir Teams 🚀",
+        meetingPopupWaiting: {
+            title: "Teams Microsoft Meetings 🎉",
+            subtitle: "La réunion Teams n’est pas encore créée… c’est en cours 💪",
+            guestExplain:
+                "Veuillez vous connecter à la plateforme pour créer une réunion Teams, ou demandez au propriétaire d’en créer une pour vous 🚀",
+            guestError: "Vous n’êtes pas connecté, vous ne pouvez donc pas créer de réunion Teams 😭",
+            missingScope:
+                "Aucune réunion n’a été créée : votre compte Microsoft n’est pas autorisé à créer des réunions.",
+            missingScopeExplain:
+                "Attendez qu’un participant la crée, ou reconnectez-vous — si votre administrateur vient de l’activer, une reconnexion suffit.",
+            error: "La réunion Teams n’a pas pu être créée.",
+            errorExplain: "Pas d’inquiétude, vous pouvez toujours rejoindre une réunion créée par quelqu’un d’autre 🙏",
+            reconnect: "Reconnecter Teams",
+        },
     },
     discord: {
         integration: "INTÉGRATION",
         explainText:
-            "En connectant votre compte discord ici, vous pourrez recevoir vos messages directement dans le chat workadventure. Après avoir synchronisé un serveur, nous créerons les salles qu'il contient, vous n'aurez plus qu'à les rejoindre dans le chat Workadventure.",
-        login: "Connexion a Discord",
+            "En connectant votre compte Discord ici, vous pourrez recevoir vos messages directement dans le chat WorkAdventure. Après avoir synchronisé un serveur, nous créerons les salles qu'il contient, vous n'aurez plus qu'à les rejoindre dans le chat WorkAdventure.",
+        login: "Connexion à Discord",
         fetchingServer: "Récupération de vos serveurs... 👀",
         qrCodeTitle: "Connectez-vous à Discord",
         qrCodeExplainText:
-            "Scannez le code QR avec votre application Discord pour vous connecter. Les codes QR sont limités dans le temps, vous devez parfois en régénérer un",
-        qrCodeRegenerate: "Re-générer le QR Code",
+            "Scannez le code QR avec votre application Discord pour vous connecter. Les codes QR sont limités dans le temps, vous devez parfois en régénérer un.",
+        qrCodeRegenerate: "Régénérer le code QR",
         tokenInputLabel: "Jeton Discord",
-        loginToken: "Se connecter avec le token",
+        loginToken: "Se connecter avec le jeton",
         loginTokenExplainText:
             "Vous devez saisir votre jeton Discord. Pour effectuer l'intégration de Discord, consultez",
         sendDiscordToken: "Envoyer",
@@ -76,6 +90,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupCancel: "Annuler",
         isSyncronized: "Synchronisé avec Google",
         popupScopeToSyncMeet: "Créer des réunions en ligne",
+        popupScopeToSyncMeetHelp: "Nécessaire pour créer des réunions dans les zones Google Meet.",
         openingMeet: "Ouverture de Google Meet... 🙏",
         unableJoinMeet: "Impossible de rejoindre Google Meet 😭",
         googleMeetPopupWaiting: {
@@ -87,6 +102,10 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             error: "Les paramètres de votre Google Workspace ne vous permettent pas de créer un Meet.",
             errorExplain:
                 "Pas d'inquiétude, vous pouvez toujours rejoindre une réunion lorsque quelqu'un partage un lien 🙏",
+            missingScope: "Aucune réunion n’a été créée : votre compte Google n’autorise pas la création de réunions.",
+            missingScopeExplain:
+                "Attendez qu’un participant la crée, ou reconnectez-vous en autorisant la création de réunions.",
+            reconnect: "Reconnecter Google",
         },
         popupScopeIsConnectedButton: "Se déconnecter",
         popupScopeIsConnectedExplainText:

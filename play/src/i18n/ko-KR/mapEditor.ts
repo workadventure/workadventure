@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "이 지도는 삭제되었습니다",
         deletePromptSubtitle: "이 방에서 연결이 끊어졌습니다.",
         deletePromptDetails: "이 지도는 더 이상 존재하지 않으므로 새로고침해도 복원되지 않습니다.",
+        editionFailed: "변경 사항을 저장하지 못하여 취소되었습니다.",
     },
     sideBar: {
         areaEditor: "영역 편집 도구",
@@ -75,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "취소",
                 validate: "확인",
             },
-            disabled: "이 방에서는 Jitsi 연동이 비활성화되었습니다 ❌",
             actionButtonLabel: "Jitsi 미팅 시작",
         },
         playAudio: {
@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "음악 재생",
             error: "사운드를 불러오지 못했습니다",
             actionButtonLabel: "음악 재생",
+            playForAllUsersLabel: "맵의 모든 사용자에게 재생",
+            audibleRadiusLabel: "가청 반경 (픽셀)",
+            audibleRadiusPlaceholder: "비워두면 어디서나 들립니다",
         },
         openWebsite: {
             label: "링크 열기",
@@ -122,7 +125,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: '연단(무대)에 있는 사용자는 연결된 "청중" 영역에 있는 모든 참석자에게 말할 수 있습니다.',
             nameLabel: "이름",
             namePlaceholder: "MainStage",
-            disabled: "이 방에서는 연단 기능이 비활성화되었습니다 ❌",
             actionButtonLabel: "연단 참가",
         },
         listenerMegaphone: {
@@ -130,7 +132,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "청중 영역의 사용자는 연결된 연단의 연사를 들을 수 있습니다.",
             nameLabel: "연결할 연단 이름",
             namePlaceholder: "MySpeakerZone",
-            disabled: "이 방에서는 청중 기능이 비활성화되었습니다 ❌",
             waitingMediaLinkLabel: "라이브 시작 전 표시할 미디어",
             waitingMediaLinkPlaceholder: "https://www....",
             waitingMedialLinkError: "링크에 문제가 있는 것 같습니다. 한 번 더 확인해 주시겠어요? 🙏",
@@ -139,6 +140,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "청중 참가",
         },
         chatEnabled: "전용 채팅 채널 연결",
+        allowTalking: "대화 및 버블 형성 허용",
+        raiseHandEnabled: "손들기 허용",
         seeAttendees: "참석자 보기",
         start: {
             label: "시작 영역",
@@ -307,6 +310,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "마이크 음소거 상태로 시작",
                 startWithVideoMuted: "비디오 끈 상태로 시작",
                 disableChat: "채팅 비활성화",
+                raiseHandEnabled: "손들기 허용",
                 livekitRoomAdminTag: "회의실 진행자 태그",
                 cancel: "취소",
                 validate: "확인",
@@ -456,7 +460,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "강당 모드",
                 audienceVideoFeedbackActivatedDisabled: "강당 모드",
                 audienceVideoFeedbackActivatedHelper:
-                    "강당 모드 활성화: 룸/월드의 모든 사용자(카메라 및 마이크가 활성화된)의 카메라 및 마이크 스트림을 수신합니다. 하지만 참석자는 다른 참석자를 볼 수 없습니다. 기본적으로 비활성화됩니다.",
+                    "강당 모드 활성화: 룸/월드의 모든 사용자(카메라가 활성화된)의 카메라 스트림을 오디오 없이 수신합니다. 하지만 참석자는 다른 참석자를 볼 수 없습니다. 기본적으로 비활성화됩니다.",
                 error: {
                     title: "제목을 입력하세요",
                     save: {

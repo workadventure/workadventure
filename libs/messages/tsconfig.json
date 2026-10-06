@@ -8,7 +8,6 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "dist",
 
     "strict": true,
     "noUncheckedIndexedAccess": true,

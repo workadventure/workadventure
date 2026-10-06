@@ -11,7 +11,7 @@ export class DeleteEntityMapStorageCommand extends DeleteEntityCommand {
         id: string,
         commandId: string | undefined,
         private hostName: string,
-        private hookManager: HookManager
+        private hookManager: HookManager,
     ) {
         super(wamFile, id, commandId);
     }
@@ -24,7 +24,7 @@ export class DeleteEntityMapStorageCommand extends DeleteEntityCommand {
                         if (this.entityConfig) {
                             await this.hookManager.fireEntityPropertyDelete(this.entityConfig, property, this.hostName);
                         }
-                    })
+                    }),
                 );
 
                 return acc;

@@ -1,6 +1,6 @@
-import {StorageProvider, Location} from "./StorageProvider";
-import {TempStorageProvider} from "./TempStorageProvider";
-import {TargetDevice} from "./TargetDevice";
+import type {StorageProvider} from "./StorageProvider";
+import type {TempStorageProvider} from "./TempStorageProvider";
+import type {TargetDevice} from "./TargetDevice";
 
 export class NullStorageProvider implements StorageProvider,TempStorageProvider {
     deleteFileById(fileId: string): Promise<void> {
@@ -11,7 +11,7 @@ export class NullStorageProvider implements StorageProvider,TempStorageProvider 
         throw new Error("S3 and Redis for upload file are not defined");
     }
 
-    get(fileId: string): Promise<Buffer | undefined | null> {
+    get(fileId: string): Promise<string | null> {
         throw new Error("S3 and Redis for upload file are not defined");
     }
 

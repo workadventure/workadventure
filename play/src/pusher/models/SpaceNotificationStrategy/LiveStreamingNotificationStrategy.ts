@@ -65,7 +65,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
         context: SpaceNotificationContext,
         user: SpaceUserExtended,
         _partialUser: PartialSpaceUser,
-        updateMask: string[]
+        updateMask: string[],
     ): void {
         // Check if this update affects role (megaphoneState or attendeesState)
         const affectsRole = updateMask.includes("megaphoneState") || updateMask.includes("attendeesState");
@@ -90,7 +90,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
         user: SpaceUserExtended,
         previousRole: UserRole,
         newRole: UserRole,
-        updateMask: string[]
+        updateMask: string[],
     ): void {
         this.log(`${context.spaceName} : user ${user.spaceUserId} role change ${previousRole} -> ${newRole}`);
 
@@ -128,7 +128,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
                 user,
                 previousRole,
                 newRole,
-                updateMask
+                updateMask,
             );
         });
     }
@@ -143,7 +143,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
     filterUsersForObserver(
         _context: SpaceNotificationContext,
         observer: SpaceUserExtended,
-        users: SpaceUserExtended[]
+        users: SpaceUserExtended[],
     ): SpaceUserExtended[] {
         return users.filter((user) => this.shouldObserverSeeUser(observer, user));
     }
@@ -201,7 +201,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
     private sendExistingUsersToWatcher(
         context: SpaceNotificationContext,
         watcher: ReturnType<typeof context.localConnectedUser.get>,
-        observer: SpaceUserExtended
+        observer: SpaceUserExtended,
     ) {
         if (!watcher) return;
 
@@ -215,7 +215,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
     private notifyUpdateWithFiltering(
         context: SpaceNotificationContext,
         user: SpaceUserExtended,
-        updateMask: string[]
+        updateMask: string[],
     ) {
         const subMessage = context.createUpdateUserMessage(user, updateMask);
 
@@ -246,15 +246,13 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
         watcher: ReturnType<typeof context.localConnectedUser.get>,
         user: SpaceUserExtended,
         previousRole: UserRole,
-        newRole: UserRole
+        newRole: UserRole,
     ) {
         if (!watcher) return;
 
         this.log(`${context.spaceName} : handleSelfRoleChange for ${user.spaceUserId}`);
 
-        for (const [spaceUserId, existingUser] of context.users.entries()) {
-            if (spaceUserId === user.spaceUserId) continue;
-
+        for (const existingUser of context.users.values()) {
             const existingUserRole = this.getUserRole(existingUser);
             const wasVisible = this.couldRoleSeeRole(previousRole, existingUserRole);
             const isVisible = this.couldRoleSeeRole(newRole, existingUserRole);
@@ -274,7 +272,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
         user: SpaceUserExtended,
         previousRole: UserRole,
         newRole: UserRole,
-        updateMask: string[]
+        updateMask: string[],
     ) {
         if (!watcher) return;
 
@@ -282,7 +280,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
         const isVisible = this.couldRoleSeeRole(observerRole, newRole);
 
         this.log(
-            `${context.spaceName} : handleOtherWatcherNotification observer(${observerRole}) -> user ${user.spaceUserId} (${previousRole}->${newRole}): wasVisible=${wasVisible}, isVisible=${isVisible}`
+            `${context.spaceName} : handleOtherWatcherNotification observer(${observerRole}) -> user ${user.spaceUserId} (${previousRole}->${newRole}): wasVisible=${wasVisible}, isVisible=${isVisible}`,
         );
 
         if (!wasVisible && isVisible) {

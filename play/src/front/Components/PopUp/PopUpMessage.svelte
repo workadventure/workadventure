@@ -1,19 +1,21 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import TextGlobalMessage from "../Menu/TextGlobalMessage.svelte";
     import { consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
+    import Button from "../UI/Button.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
+
+    interface Props {
+        onclose?: () => void;
+    }
+
+    const { onclose }: Props = $props();
 
     // export let message: string;
     // export let click: () => void;
     // export let userInputManager: UserInputManager;
 
-    const dispatch = createEventDispatcher<{
-        close: void;
-    }>();
-
     function closeBanner() {
-        dispatch("close");
+        onclose?.();
         consoleGlobalMessageManagerVisibleStore.set(false);
     }
 </script>
@@ -31,7 +33,7 @@
         </div>
     </div>
     <div class="flex flex-col mt-2 items-center p-4 bg-contrast pointer-events-auto">
-        <button class="btn btn-secondary w-1/2 justify-center" on:click={closeBanner}>Close Message</button>
+        <button class="btn btn-secondary w-1/2 justify-center" onclick={closeBanner}>Close Message</button>
     </div>
 </div> -->
 
@@ -46,10 +48,10 @@
             <TextGlobalMessage />
         </div>
     </div>
-    <svelte:fragment slot="buttons">
+    {#snippet buttons()}
         <!-- TODO -->
-        <button class="btn btn-light btn-ghost w-1/2 justify-center"> Send Message </button>
+        <Button variant="light" appearance="ghost" class="w-1/2">Send Message</Button>
         <!-- Mettre l'action du send message -->
-        <button class="btn btn-secondary w-1/2 justify-center" on:click={closeBanner}> Close </button>
-    </svelte:fragment>
+        <Button variant="secondary" class="w-1/2" onclick={closeBanner}>Close</Button>
+    {/snippet}
 </PopUpContainer>

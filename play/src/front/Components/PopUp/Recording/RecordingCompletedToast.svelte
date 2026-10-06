@@ -6,11 +6,16 @@
     import AppsIcon from "../../Icons/AppsIcon.svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import ToastContainer from "../../Toasts/ToastContainer.svelte";
+    import Button from "../../UI/Button.svelte";
 
-    export let toastUuid: string;
+    interface Props {
+        toastUuid: string;
+    }
+
+    let { toastUuid }: Props = $props();
 
     function openRecordingList() {
-        analyticsClient.openedRecordingList();
+        analyticsClient.trackAdminEvent("recording.list_opened");
         showRecordingList.set(true);
         recordingStore.hideCompletedPopup();
     }
@@ -62,28 +67,23 @@
         </div>
     </div>
 
-    <svelte:fragment slot="buttons">
-        <button class="btn btn-ghost btn-sm w-1/2" on:click={() => recordingStore.hideCompletedPopup()}>
+    {#snippet buttons()}
+        <Button appearance="ghost" size="sm" class="w-1/2" onclick={() => recordingStore.hideCompletedPopup()}>
             {$LL.recording.close()}
-        </button>
-        <button
-            class="btn btn-secondary btn-sm w-1/2"
-            data-testid="recording-completed-modal-open-recordings-list-button"
-            on:click={openRecordingList}
+        </Button>
+        <Button
+            variant="secondary"
+            size="sm"
+            class="w-1/2"
+            dataTestId="recording-completed-modal-open-recordings-list-button"
+            onclick={openRecordingList}
         >
             {$LL.recording.notification.viewRecordings()}
-        </button>
-    </svelte:fragment>
+        </Button>
+    {/snippet}
 </ToastContainer>
 
-<style lang="scss">
-    .recording-completed-modal {
-        min-width: 360px;
-        max-width: 420px;
-        border: 1px solid rgba(34, 197, 94, 0.3);
-        box-shadow: 0 4px 20px rgba(34, 197, 94, 0.15);
-    }
-
+<style>
     .recording-content {
         position: relative;
         width: 100%;
@@ -196,11 +196,6 @@
     }
 
     @media (max-width: 768px) {
-        .recording-completed-modal {
-            min-width: 300px;
-            max-width: 90vw;
-        }
-
         .recording-title {
             font-size: 15px;
         }

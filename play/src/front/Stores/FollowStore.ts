@@ -88,7 +88,7 @@ export const followUsersColorStore = derived(
             b *= 0.9;
         }
         return (Math.round(r * 255) << 16) | (Math.round(g * 255) << 8) | Math.round(b * 255);
-    }
+    },
 );
 
 export const suscriptionFollowStore = followStateStore.subscribe((followState) => {

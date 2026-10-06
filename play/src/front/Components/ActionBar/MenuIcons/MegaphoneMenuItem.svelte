@@ -7,7 +7,7 @@
 </script>
 
 <ActionBarButton
-    on:click={stopMegaphoneLive}
+    onclick={stopMegaphoneLive}
     classList="group/btn-megaphone"
     tooltipTitle={$LL.actionbar.help.megaphone.title()}
     tooltipDesc={$LL.actionbar.help.megaphone.desc()}

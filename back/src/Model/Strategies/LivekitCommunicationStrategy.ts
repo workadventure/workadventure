@@ -1,4 +1,8 @@
-import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type {
+    HandleRecordingWebhookRequest,
+    MeetingConnectionRestartMessage,
+    SpaceUser,
+} from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -17,7 +21,10 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
      */
     private pendingOperations: Map<string, Promise<void>> = new Map();
 
-    constructor(private space: ICommunicationSpace, private livekitService: LiveKitService) {}
+    constructor(
+        private space: ICommunicationSpace,
+        private livekitService: LiveKitService,
+    ) {}
 
     /**
      * Queues an operation for a specific user to ensure sequential execution.
@@ -72,7 +79,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
                     this.sendLivekitInvitationMessage(receivingUser).catch((error) => {
                         console.error(
                             `Error generating token for user ${receivingUser.spaceUserId} in Livekit:`,
-                            error
+                            error,
                         );
                         Sentry.captureException(error);
                     });
@@ -148,7 +155,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
 
     async initialize(
         users: ReadonlyMap<string, SpaceUser>,
-        usersToNotify: ReadonlyMap<string, SpaceUser>
+        usersToNotify: ReadonlyMap<string, SpaceUser>,
     ): Promise<void> {
         for (const user of users.values()) {
             // We want to add users sequentially
@@ -242,7 +249,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
 
     public handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
-        senderUserId: string
+        senderUserId: string,
     ): void {
         const senderUser = this.space.getUser(senderUserId);
         if (!senderUser) {
@@ -279,5 +286,14 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
     }
     async stopRecording(egressId?: string): Promise<void> {
         await this.livekitService.stopRecording(egressId);
+    }
+
+    async handleLivekitWebhook(
+        rawBody: Buffer | Uint8Array,
+        authorizationHeader: string | undefined,
+        spaceName: string,
+        recordingSessionId: string,
+    ): Promise<HandleRecordingWebhookRequest | "ignored"> {
+        return this.livekitService.handleLivekitWebhook(rawBody, authorizationHeader, spaceName, recordingSessionId);
     }
 }

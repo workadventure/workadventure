@@ -32,7 +32,7 @@ export class VariablesManager {
     private constructor(
         private roomUrl: string,
         private map: ITiledMap | null,
-        private variablesRepository: VariablesRepositoryInterface
+        private variablesRepository: VariablesRepositoryInterface,
     ) {
         // We initialize the list of variable object at room start. The objects cannot be edited later
         // (otherwise, this would cause a security issue if the scripting API can edit this list of objects)
@@ -108,7 +108,7 @@ export class VariablesManager {
                 if (object.class === "variable" || object.type === "variable") {
                     if (object.template) {
                         console.warn(
-                            'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'
+                            'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.',
                         );
                         continue;
                     }
@@ -143,7 +143,7 @@ export class VariablesManager {
                     case "writableBy":
                         if (typeof value !== "string") {
                             throw new Error(
-                                'The writableBy property of variable "' + object.name + '" must be a string'
+                                'The writableBy property of variable "' + object.name + '" must be a string',
                             );
                         }
                         if (value) {
@@ -153,7 +153,7 @@ export class VariablesManager {
                     case "readableBy":
                         if (typeof value !== "string") {
                             throw new Error(
-                                'The readableBy property of variable "' + object.name + '" must be a string'
+                                'The readableBy property of variable "' + object.name + '" must be a string',
                             );
                         }
                         if (value) {
@@ -184,7 +184,7 @@ export class VariablesManager {
             variableObject = this.variableObjects.get(name);
             if (variableObject === undefined) {
                 throw new VariableError(
-                    'Trying to set a variable "' + name + '" that is not defined as an object in the map.'
+                    'Trying to set a variable "' + name + '" that is not defined as an object in the map.',
                 );
             }
 
@@ -198,7 +198,7 @@ export class VariablesManager {
                         variableObject.writableBy +
                         '". User tags: ' +
                         user.tags.join(", ") +
-                        "."
+                        ".",
                 );
             }
 

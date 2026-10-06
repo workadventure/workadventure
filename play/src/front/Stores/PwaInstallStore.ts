@@ -21,7 +21,7 @@ const store = writable<PwaInstallUiState>(initial);
 function syncFromWindow(): void {
     store.update((state) => ({
         ...state,
-        deferredPrompt: typeof window !== "undefined" ? window.__workadventureDeferredPwaPrompt ?? null : null,
+        deferredPrompt: typeof window !== "undefined" ? (window.__workadventureDeferredPwaPrompt ?? null) : null,
         isIos: detectIos(),
     }));
 }
@@ -38,22 +38,33 @@ export function initPwaInstallUiListeners(): () => void {
         window.__workadventureDeferredPwaPrompt = e as BeforeInstallPromptEvent;
         syncFromWindow();
     };
+    const onAppInstalled = () => {
+        window.__workadventureDeferredPwaPrompt = null;
+        pwaInstallProfileMenuEligibleStore.set(false);
+        syncFromWindow();
+    };
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
-    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+    window.addEventListener("appinstalled", onAppInstalled);
+    return () => {
+        window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+        window.removeEventListener("appinstalled", onAppInstalled);
+    };
 }
 
 export async function installPwaFromStore(): Promise<void> {
     const state = get(store);
     if (!state.deferredPrompt) return;
 
-    analyticsClient.pwaInstallClick();
+    analyticsClient.trackAdminEvent("pwa.install_clicked");
     store.update((s) => ({ ...s, installing: true }));
     try {
         await state.deferredPrompt.prompt();
         const { outcome } = await state.deferredPrompt.userChoice;
-        analyticsClient.pwaInstallOutcome(outcome);
+        console.log("outcome", outcome);
+        analyticsClient.trackAdminEvent("pwa.install_outcome", { outcome });
         if (outcome === "accepted") {
             window.__workadventureDeferredPwaPrompt = null;
+            pwaInstallProfileMenuEligibleStore.set(false);
             store.update((s) => ({ ...s, deferredPrompt: null }));
         }
     } finally {
@@ -63,7 +74,6 @@ export async function installPwaFromStore(): Promise<void> {
 }
 
 export function continuePwaInBrowser(): void {
-    analyticsClient.pwaContinueInBrowserClick();
     gameManager.completePwaInstall();
 }
 

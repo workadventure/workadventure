@@ -5,7 +5,7 @@ export const isUpdateWritingStatusChatListEvent = z.object({
         z.object({
             jid: z.string().optional(),
             name: z.string().optional(), // Name is used as a fallback if the user has no JID (in case it is a bot)
-        })
+        }),
     ),
 });
 

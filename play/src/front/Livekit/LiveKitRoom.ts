@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { FilterType } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import type { LocalParticipant, Participant, RemoteParticipant, TrackPublishOptions } from "livekit-client";
 import {
@@ -11,6 +10,9 @@ import {
     Track,
     VideoPresets,
     DisconnectReason,
+    ConnectionState,
+    supportsAV1,
+    supportsVP9,
 } from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -23,12 +25,21 @@ import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrai
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
-import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
-import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
+import {
+    preferredVideoCodecs,
+    selectVideoPreset,
+    type VideoCodec,
+    type VideoQualitySetting,
+} from "../WebRtc/VideoPresets";
+import { demotedCodecStore } from "../WebRtc/CodecPerformance";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { createLivekitSenderStats } from "../WebRtc/WebRtcStatsFactory";
+import { registerLocalEncoderStats } from "../WebRtc/LocalEncoderStats";
+import { subscribeToOutboundVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
-import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
+import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
+import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -43,25 +54,46 @@ type LivekitRoomCounter = {
     decrement: () => void;
 };
 
+// ponytail: fixed delay before asking for a new invitation when the room never managed to connect (the LiveKit
+// server is unreachable right now), so a long outage does not turn into a tight re-invitation loop. Exponential
+// backoff if it ever matters.
+const RESTART_DELAY_WHEN_NEVER_CONNECTED_MS = 5000;
+
 export class LiveKitRoom implements LiveKitRoomInterface {
     private room: Room | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     // Stores LiveKit participants that connected before their corresponding spaceUser was available
     private pendingParticipants: Map<string, RemoteParticipant> = new Map();
     private localParticipant: LocalParticipant | undefined;
+    private scriptingAudioTrack: MediaStreamTrack | undefined;
+    // Scripting stream received while the room was not connected, published once it is (see dispatchStream)
+    private pendingScriptingStream: MediaStream | undefined;
     private localScreenSharingVideoTrack: LocalVideoTrack | undefined;
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
     private localMicrophoneTrack: LocalAudioTrack | undefined;
+    // Encoder health reports of the video tracks we publish (see subscribeToOutboundVideoQualityAnalytics)
+    private cameraAnalyticsUnsubscribe: Unsubscriber | undefined;
+    private screenShareAnalyticsUnsubscribe: Unsubscriber | undefined;
     private screenShareUpdateQueue: Promise<void> = Promise.resolve();
+    private mediaTrackUpdateQueue: Promise<void> = Promise.resolve();
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
+    private unregisterAudioPlaybackRetry: Unsubscriber | undefined;
+    private destroyed = false;
+    private everConnected = false;
+    // Kept so that publications skipped while the room was reconnecting can be replayed on RoomEvent.Reconnected
+    private cameraStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
+    private microphoneStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
+    private screenShareStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
 
     // Bound event handlers to avoid memory leaks
     private readonly boundHandleParticipantConnected = this.handleParticipantConnected.bind(this);
     private readonly boundHandleParticipantDisconnected = this.handleParticipantDisconnected.bind(this);
     private readonly boundHandleActiveSpeakersChanged = this.handleActiveSpeakersChanged.bind(this);
     private readonly boundHandleDisconnected = this.handleDisconnected.bind(this);
+    private readonly boundHandleReconnected = this.handleReconnected.bind(this);
+    private readonly boundHandleAudioPlaybackStatusChanged = this.handleAudioPlaybackStatusChanged.bind(this);
 
     constructor(
         private serverUrl: string,
@@ -76,7 +108,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             increment: incrementLivekitRoomCount,
             decrement: decrementLivekitRoomCount,
         },
-        private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStoreForPublishing
+        private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStoreForPublishing,
     ) {
         this._livekitRoomCounter.increment();
     }
@@ -92,7 +124,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 // Commented out: the default simulcast layers are sufficient for our use case
                 // videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
                 videoCodec: "vp9",
-                // If a user does not support VP9, do not downgrade everyone to VP8.
+                // If a user does not support VP9 or AV1, do not downgrade everyone to VP8.
                 // Instead, let the publisher publish both VP9 and VP8 tracks using simulcast.
                 // Viewers will see the best possible codec they support.
                 backupCodecPolicy: BackupCodecPolicy.SIMULCAST,
@@ -133,18 +165,21 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         await room.connect(this.serverUrl, this.token, {
             autoSubscribe: false,
         });
+        this.everConnected = true;
+        this.handleAudioPlaybackStatusChanged();
         if (this.abortSignal.aborted) {
             await room.disconnect();
             return;
         }
 
         this.synchronizeMediaState();
+        this.flushPendingScriptingStream();
 
         // Subscribe to observeUserJoined to process pending participants when a specific spaceUser becomes available
         this.rxjsSubscriptions.push(
             this.space.observeUserJoined.subscribe((spaceUser) => {
                 this.processPendingParticipantForUser(spaceUser);
-            })
+            }),
         );
 
         // Process existing remote participants
@@ -180,29 +215,56 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         return get(bandwidthConstrainedPreferenceStore);
     }
 
-    private getPresetForTrack(track: MediaStreamVideoTrack, isScreenShare: boolean): { bitrate: number; fps: number } {
+    /**
+     * The best codec we want that the browser can encode. Chosen explicitly because LiveKit silently rewrites an
+     * unsupported codec (Chrome on Android, Chromium without libaom, Firefox, Safari...) to its hardcoded default
+     * of VP8 rather than to `publishDefaults.videoCodec`.
+     */
+    private getVideoCodec(isScreenShare: boolean, track: MediaStreamTrack): VideoCodec {
+        const { width = 1280, height = 720 } = track.getSettings();
+        // H.264 is mandatory in WebRTC and always ends the list; the rare browser without it (Firefox with the
+        // OpenH264 download blocked) is rewritten to VP8 by LiveKit, at the same bitrate budget.
+        const supported: Partial<Record<VideoCodec, () => boolean>> = { av1: supportsAV1, vp9: supportsVP9 };
+        return (
+            preferredVideoCodecs(
+                isScreenShare ? "screenSharing" : "video",
+                this.getQualitySetting(isScreenShare),
+                "encode",
+                width * height,
+            ).find((codec) => supported[codec]?.() ?? true) ?? "h264"
+        );
+    }
+
+    private getPresetForTrack(
+        track: MediaStreamTrack,
+        isScreenShare: boolean,
+        codec: VideoCodec,
+    ): { bitrate: number; fps: number } {
         const settings = track.getSettings();
         const width = settings.width || 1280;
         const height = settings.height || 720;
-        return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare));
+        return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare), codec);
     }
 
-    private handleCameraTrack(localStream: LocalStreamStoreValue | undefined): void {
-        if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
-            this.unpublishCameraTrack().catch((err) => {
-                console.error("An error occurred while unpublishing camera track", err);
+    private queueCameraTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
+        this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
+            .then(() => this.handleCameraTrack(localStream))
+            .catch((err) => {
+                console.error("An error occurred while handling a camera update", err);
                 Sentry.captureException(err);
             });
+    }
+
+    private async handleCameraTrack(localStream: LocalStreamStoreValue | undefined): Promise<void> {
+        if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
+            await this.unpublishCameraTrack();
             return;
         }
 
         const videoTrack = localStream.stream.getVideoTracks()[0];
 
         if (!videoTrack) {
-            this.unpublishCameraTrack().catch((err) => {
-                console.error("An error occurred while unpublishing camera track", err);
-                Sentry.captureException(err);
-            });
+            await this.unpublishCameraTrack();
             return;
         }
 
@@ -211,10 +273,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         // each time we stop and restart the camera.
         if (this.localCameraTrack && this.localCameraTrack.mediaStreamTrack.id === videoTrack.id) {
             if (this.localCameraTrack.isUpstreamPaused) {
-                this.localCameraTrack.resumeUpstream().catch((err) => {
-                    console.error("An error occurred while unmuting camera track", err);
-                    Sentry.captureException(err);
-                });
+                await this.localCameraTrack.resumeUpstream();
             }
             return;
         }
@@ -224,53 +283,61 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         if (!this.localCameraTrack) {
-            this.localCameraTrack = new LocalVideoTrack(videoTrack);
+            if (!this.isRoomConnected()) {
+                // Skipped on purpose: see isRoomConnected(). handleReconnected() replays this update.
+                return;
+            }
+            const cameraTrack = new LocalVideoTrack(videoTrack);
+            const cameraCodec = this.getVideoCodec(false, videoTrack);
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
-                videoCodec: "vp9",
+                videoCodec: cameraCodec,
                 simulcast: true,
                 // Commented out: the default simulcast layers are sufficient for our use case
                 //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
             };
 
-            const preset = this.getPresetForTrack(videoTrack, false);
+            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec);
             publishOptions.videoEncoding = {
                 maxBitrate: preset.bitrate,
                 maxFramerate: preset.fps,
             };
 
-            this.localParticipant.publishTrack(this.localCameraTrack, publishOptions).catch((err) => {
-                console.error("An error occurred while publishing camera track", err);
-                Sentry.captureException(err);
-            });
+            await this.localParticipant.publishTrack(cameraTrack, publishOptions);
+            // Only keep the reference once published: after a failed publish, later updates must publish again
+            // instead of calling replaceTrack() on an unpublished track.
+            this.localCameraTrack = cameraTrack;
+            this.cameraAnalyticsUnsubscribe = this.subscribeToEncoderAnalytics(cameraTrack, "video");
         } else {
-            this.localCameraTrack
-                .replaceTrack(videoTrack, {
-                    userProvidedTrack: true,
-                })
-                .catch((err) => {
-                    console.error("An error occurred while replacing camera track", err);
-                    Sentry.captureException(err);
-                });
+            await this.localCameraTrack.replaceTrack(videoTrack, {
+                userProvidedTrack: true,
+            });
+
+            if (this.localCameraTrack.isUpstreamPaused) {
+                await this.localCameraTrack.resumeUpstream();
+            }
         }
     }
 
-    private handleMicrophoneTrack(localStream: LocalStreamStoreValue | undefined): void {
-        if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
-            this.unpublishMicrophoneTrack().catch((err) => {
-                console.error("An error occurred while unpublishing microphone track", err);
+    private queueMicrophoneTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
+        this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
+            .then(() => this.handleMicrophoneTrack(localStream))
+            .catch((err) => {
+                console.error("An error occurred while handling a microphone update", err);
                 Sentry.captureException(err);
             });
+    }
+
+    private async handleMicrophoneTrack(localStream: LocalStreamStoreValue | undefined): Promise<void> {
+        if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
+            await this.unpublishMicrophoneTrack();
             return;
         }
 
         const audioTrack = localStream.stream.getAudioTracks()[0];
 
         if (!audioTrack) {
-            this.unpublishMicrophoneTrack().catch((err) => {
-                console.error("An error occurred while unpublishing microphone track", err);
-                Sentry.captureException(err);
-            });
+            await this.unpublishMicrophoneTrack();
             return;
         }
 
@@ -279,10 +346,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         // each time we stop and restart the microphone.
         if (this.localMicrophoneTrack && this.localMicrophoneTrack.mediaStreamTrack.id === audioTrack.id) {
             if (this.localMicrophoneTrack.isUpstreamPaused) {
-                this.localMicrophoneTrack.resumeUpstream().catch((err) => {
-                    console.error("An error occurred while unmuting microphone track", err);
-                    Sentry.captureException(err);
-                });
+                await this.localMicrophoneTrack.resumeUpstream();
             }
             return;
         }
@@ -291,59 +355,87 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             throw new Error("Local participant not found");
         }
 
-        if (
-            this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
-            !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
-        ) {
-            return;
-        }
-
         if (!this.localMicrophoneTrack) {
-            this.localMicrophoneTrack = new LocalAudioTrack(audioTrack);
+            if (!this.isRoomConnected()) {
+                // Skipped on purpose: see isRoomConnected(). handleReconnected() replays this update.
+                return;
+            }
+            const microphoneTrack = new LocalAudioTrack(audioTrack);
 
-            this.localParticipant
-                .publishTrack(this.localMicrophoneTrack, {
-                    source: Track.Source.Microphone,
-                })
-                .catch((err) => {
-                    console.error("An error occurred while publishing microphone track", err);
-                    Sentry.captureException(err);
-                });
+            await this.localParticipant.publishTrack(microphoneTrack, {
+                source: Track.Source.Microphone,
+            });
+            // Only keep the reference once published (see handleCameraTrack)
+            this.localMicrophoneTrack = microphoneTrack;
         } else {
-            this.localMicrophoneTrack
-                .replaceTrack(audioTrack, {
-                    userProvidedTrack: true,
-                })
-                .catch((err) => {
-                    console.error("An error occurred while replacing microphone track", err);
-                    Sentry.captureException(err);
-                });
+            await this.localMicrophoneTrack.replaceTrack(audioTrack, {
+                userProvidedTrack: true,
+            });
+
+            if (this.localMicrophoneTrack.isUpstreamPaused) {
+                await this.localMicrophoneTrack.resumeUpstream();
+            }
         }
     }
 
-    private synchronizeMediaState() {
-        this.unsubscribers.push(
-            deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
-                this.handleCameraTrack(localStream);
+    /**
+     * publishTrack() on a room whose signal connection is down waits up to 15 seconds for it to come back, then
+     * rejects AND stops the MediaStreamTrack we handed it, killing the user's own camera/microphone.
+     * Publications are therefore skipped while the room is not connected and replayed by handleReconnected().
+     */
+    private isRoomConnected(): boolean {
+        return this.room?.state === ConnectionState.Connected;
+    }
 
-                if (
-                    this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
-                    !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
-                ) {
-                    this.unpublishMicrophoneTrack().catch((err) => {
-                        console.error("An error occurred while unpublishing microphone track", err);
-                        Sentry.captureException(err);
-                    });
-                    return;
-                }
-                this.handleMicrophoneTrack(localStream);
-            })
+    private handleReconnected() {
+        // Handlers are no-ops for tracks that are already published, so replaying the whole media state is safe.
+        if (this.cameraStreamStore) {
+            this.queueCameraTrackUpdate(get(this.cameraStreamStore));
+        }
+        if (this.microphoneStreamStore) {
+            this.queueMicrophoneTrackUpdate(get(this.microphoneStreamStore));
+        }
+        if (this.screenShareStreamStore) {
+            this.queueScreenShareUpdate(get(this.screenShareStreamStore));
+        }
+        this.flushPendingScriptingStream();
+    }
+
+    private flushPendingScriptingStream() {
+        const stream = this.pendingScriptingStream;
+        if (!stream) {
+            return;
+        }
+        this.pendingScriptingStream = undefined;
+        this.dispatchStream(stream).catch((err) => {
+            console.error("An error occurred while publishing the pending scripting stream", err);
+            Sentry.captureException(err);
+        });
+    }
+
+    private synchronizeMediaState() {
+        this.cameraStreamStore = deriveSwitchStore(this._localStreamStore, this.space.isStreamingVideoStore);
+        this.unsubscribers.push(
+            this.cameraStreamStore.subscribe((localStream) => {
+                this.queueCameraTrackUpdate(localStream);
+            }),
         );
 
+        this.microphoneStreamStore = deriveSwitchStore(this._localStreamStore, this.space.isStreamingAudioStore);
         this.unsubscribers.push(
-            this.screenSharingLocalStreamStore.subscribe((stream) => {
+            this.microphoneStreamStore.subscribe((localStream) => {
+                this.queueMicrophoneTrackUpdate(localStream);
+            }),
+        );
+
+        this.screenShareStreamStore = deriveSwitchStore(
+            this.screenSharingLocalStreamStore,
+            this.space.shouldPublishScreenShareStore,
+        );
+        this.unsubscribers.push(
+            this.screenShareStreamStore.subscribe((stream) => {
                 this.queueScreenShareUpdate(stream);
-            })
+            }),
         );
 
         this.unsubscribers.push(
@@ -354,8 +446,26 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     console.error("An error occurred while switching active device", err);
                     Sentry.captureException(err);
                 });
-            })
+            }),
         );
+
+        // A codec demoted by the CPU limitation detector while we publish with it: publish again without it.
+        // The current value is what the publications above were already chosen with.
+        for (const [category, republish] of [
+            ["video", () => this.republishCamera()],
+            ["screenSharing", () => this.republishScreenShare()],
+        ] as const) {
+            let initial = true;
+            this.unsubscribers.push(
+                demotedCodecStore[category].subscribe(() => {
+                    if (initial) {
+                        initial = false;
+                        return;
+                    }
+                    republish();
+                }),
+            );
+        }
 
         this.unsubscribers.push(
             bandwidthConstrainedPreferenceStore.subscribe((preference) => {
@@ -366,8 +476,39 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     console.error("An error occurred while setting degradation preference", err);
                     Sentry.captureException(err);
                 });
-            })
+            }),
         );
+    }
+
+    /**
+     * The codec of a publication is fixed at publishTrack(): changing it is an unpublish followed by a publish, the
+     * same two updates a share that stops and starts goes through.
+     */
+    private republishScreenShare(): void {
+        this.queueScreenShareUpdate(undefined);
+        this.queueScreenShareUpdate(this.screenShareStreamStore && get(this.screenShareStreamStore));
+    }
+
+    /**
+     * Same for the camera, except that unpublishCameraTrack() only pauses the publication (see the note there): a
+     * real unpublish, once per session at most, so that the next publication picks the codec anew.
+     */
+    private republishCamera(): void {
+        this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
+            .then(async () => {
+                if (!this.localCameraTrack || !this.localParticipant) {
+                    return;
+                }
+                await this.localParticipant.unpublishTrack(this.localCameraTrack, false);
+                this.cameraAnalyticsUnsubscribe?.();
+                this.cameraAnalyticsUnsubscribe = undefined;
+                this.localCameraTrack = undefined;
+            })
+            .catch((err) => {
+                console.error("An error occurred while unpublishing the camera for a codec change", err);
+                Sentry.captureException(err);
+            });
+        this.queueCameraTrackUpdate(this.cameraStreamStore && get(this.cameraStreamStore));
     }
 
     private queueScreenShareUpdate(stream: LocalStreamStoreValue | undefined): void {
@@ -403,24 +544,35 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         if (!this.localScreenSharingVideoTrack) {
-            this.localScreenSharingVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
+            if (!this.isRoomConnected()) {
+                // Skipped on purpose: see isRoomConnected(). handleReconnected() replays this update.
+                return;
+            }
+            const screenShareVideoLocalTrack = new LocalVideoTrack(screenShareVideoTrack);
+            const screenShareCodec = this.getVideoCodec(true, screenShareVideoTrack);
 
             const screenSharePublishOptions: TrackPublishOptions = {
                 source: Track.Source.ScreenShare,
-                videoCodec: "vp9",
+                videoCodec: screenShareCodec,
                 simulcast: true,
                 // Commented out: the default simulcast layers are sufficient for our use case
                 // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
                 degradationPreference: this.getBandwidthConstrainedPreference(),
             };
 
-            const preset = this.getPresetForTrack(screenShareVideoTrack, true);
+            const preset = this.getPresetForTrack(screenShareVideoTrack, true, screenShareCodec);
             screenSharePublishOptions.screenShareEncoding = {
                 maxBitrate: preset.bitrate,
                 maxFramerate: preset.fps,
             };
 
-            await this.localParticipant.publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions);
+            await this.localParticipant.publishTrack(screenShareVideoLocalTrack, screenSharePublishOptions);
+            // Only keep the reference once published (see handleCameraTrack)
+            this.localScreenSharingVideoTrack = screenShareVideoLocalTrack;
+            this.screenShareAnalyticsUnsubscribe = this.subscribeToEncoderAnalytics(
+                screenShareVideoLocalTrack,
+                "screenSharing",
+            );
         } else if (this.localScreenSharingVideoTrack.mediaStreamTrack.id === screenShareVideoTrack.id) {
             // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
             if (this.localScreenSharingVideoTrack.isUpstreamPaused) {
@@ -438,11 +590,16 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         if (screenShareAudioTrack) {
             if (!this.localScreenSharingAudioTrack) {
-                this.localScreenSharingAudioTrack = new LocalAudioTrack(screenShareAudioTrack);
+                if (!this.isRoomConnected()) {
+                    return;
+                }
+                const screenShareAudioLocalTrack = new LocalAudioTrack(screenShareAudioTrack);
 
-                await this.localParticipant.publishTrack(this.localScreenSharingAudioTrack, {
+                await this.localParticipant.publishTrack(screenShareAudioLocalTrack, {
                     source: Track.Source.ScreenShareAudio,
                 });
+                // Only keep the reference once published (see handleCameraTrack)
+                this.localScreenSharingAudioTrack = screenShareAudioLocalTrack;
             } else if (this.localScreenSharingAudioTrack.mediaStreamTrack.id === screenShareAudioTrack.id) {
                 // Note: this cannot really happen as we never pause the upstream. We unpublish the track instead.
                 if (this.localScreenSharingAudioTrack.isUpstreamPaused) {
@@ -495,6 +652,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         // Note: if we ever use "pauseUpstream" again instead of unpublishTrack, we should comment the clear of local track references
         // because of the memory leak issue mentioned above. We need to keep them to be able to replace the tracks when publishing a new screen share.
+        this.screenShareAnalyticsUnsubscribe?.();
+        this.screenShareAnalyticsUnsubscribe = undefined;
         this.localScreenSharingVideoTrack = undefined;
         this.localScreenSharingAudioTrack = undefined;
     }
@@ -544,6 +703,22 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
         this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
+        this.room.on(RoomEvent.Reconnected, this.boundHandleReconnected);
+        this.room.on(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+    }
+
+    private handleAudioPlaybackStatusChanged() {
+        if (!this.room) {
+            return;
+        }
+
+        if (this.room.canPlaybackAudio) {
+            this.unregisterAudioPlaybackRetry?.();
+            this.unregisterAudioPlaybackRetry = undefined;
+            return;
+        }
+
+        this.unregisterAudioPlaybackRetry ??= audioPlaybackStore.register(() => this.room?.startAudio());
     }
 
     private getDisconnectReasonLabel(reason?: DisconnectReason): string {
@@ -554,34 +729,55 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private handleDisconnected(reason?: DisconnectReason) {
-        const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
-
-        if (reason === DisconnectReason.ROOM_CLOSED || reason === DisconnectReason.ROOM_DELETED) {
-            // Normal closure, no need to log an error
+        if (
+            reason === DisconnectReason.CLIENT_INITIATED ||
+            reason === DisconnectReason.ROOM_CLOSED ||
+            reason === DisconnectReason.ROOM_DELETED
+        ) {
+            // We left, or the back closed the room: the switch / finalize messages handle the cleanup.
             return;
         }
 
-        if (reason !== DisconnectReason.CLIENT_INITIATED) {
-            // Error case: let's log and capture the error. We don't want to trigger a reconnection.
-            // If we are in this case, it means that the room was closed by the client for a reason
-            // other than a backend server message.
-            Sentry.captureMessage(`Room disconnected without a valid reason: ${disconnectReasonLabel}`, {
-                level: "warning",
-                tags: {
-                    reason: disconnectReasonLabel,
-                },
-            });
+        const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
+        Sentry.captureMessage(`Room disconnected without a valid reason: ${disconnectReasonLabel}`, {
+            level: "warning",
+            tags: {
+                reason: disconnectReasonLabel,
+            },
+        });
+
+        // livekit-client never reconnects a room once it emitted Disconnected. Tear it down right away so the
+        // media stores stop feeding a dead engine (each publish would otherwise hang 15s and stop the user's track).
+        this.destroy();
+
+        if (reason === DisconnectReason.DUPLICATE_IDENTITY || reason === DisconnectReason.PARTICIPANT_REMOVED) {
+            // Another connection took our place, or the back removed us on purpose: restarting would fight it.
+            return;
         }
 
-        if (reason === DisconnectReason.STATE_MISMATCH || reason === DisconnectReason.JOIN_FAILURE) {
-            analyticsClient.retryConnectionLivekit();
-            this.space.emitBackEvent({
-                event: {
-                    $case: "meetingConnectionRestartMessage",
-                    meetingConnectionRestartMessage: {},
-                },
-            });
+        // STATE_MISMATCH, JOIN_FAILURE, or no reason at all (livekit-client gave up after its reconnect attempts):
+        // ask the back for a fresh invitation. LivekitConnection builds the replacement room when it arrives.
+        if (this.everConnected) {
+            this.requestRestart();
+            return;
         }
+        setTimeout(() => {
+            if (this.abortSignal.aborted) {
+                // The space left LiveKit mode in the meantime
+                return;
+            }
+            this.requestRestart();
+        }, RESTART_DELAY_WHEN_NEVER_CONNECTED_MS);
+    }
+
+    private requestRestart() {
+        analyticsClient.trackAdminEvent("media.connection_retry", { meetingProvider: "livekit" });
+        this.space.emitBackEvent({
+            event: {
+                $case: "meetingConnectionRestartMessage",
+                meetingConnectionRestartMessage: {},
+            },
+        });
     }
 
     private parseParticipantMetadata(participant: Participant): ParticipantMetadata {
@@ -630,9 +826,26 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
+        if (this.scriptingAudioTrack && this.scriptingAudioTrack !== audioTrack) {
+            await this.localParticipant.unpublishTrack(this.scriptingAudioTrack, true);
+        }
+
+        if (this.scriptingAudioTrack === audioTrack) {
+            return;
+        }
+
+        if (!this.isRoomConnected()) {
+            // Same reason as the camera / microphone / screen share: publishing now would hang and then stop the
+            // track. Published by flushPendingScriptingStream() once the room is (re)connected.
+            this.pendingScriptingStream = mediaStream;
+            return;
+        }
+
         await this.localParticipant.publishTrack(audioTrack, {
+            name: SCRIPTING_AUDIO_TRACK_NAME,
             source: Track.Source.Microphone,
         });
+        this.scriptingAudioTrack = audioTrack;
     }
 
     private handleParticipantConnected(participant: RemoteParticipant) {
@@ -667,7 +880,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      */
     private createLiveKitParticipant(
         participant: RemoteParticipant,
-        spaceUser: ReturnType<SpaceInterface["getSpaceUserBySpaceUserId"]>
+        spaceUser: ReturnType<SpaceInterface["getSpaceUserBySpaceUserId"]>,
     ) {
         if (!spaceUser) {
             return;
@@ -682,10 +895,12 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             new LiveKitParticipant(
                 participant,
                 spaceUser,
+                this.space,
+                this.serverUrl,
                 this._streamableSubjects,
                 this._blockedUsersStore,
-                this.abortSignal
-            )
+                this.abortSignal,
+            ),
         );
     }
 
@@ -722,85 +937,52 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         this.participants.delete(participant.sid);
-
         // Also remove from pending participants if present
         const id = this.getParticipantId(participant);
         this.pendingParticipants.delete(id);
     }
 
-    /**
-     * A set of previous participant SIDs who were speaking
-     */
-    private previousSpeakers: Set<string> = new Set();
-
     private handleActiveSpeakersChanged(speakers: Participant[]) {
-        let priority = 0;
-        const speakersSet = new Set(speakers.map((s) => s.sid));
+        this.space.setActiveSpeakers(speakers.map((speaker) => speaker.identity));
+    }
 
-        //TODO: review implementation - iterating over all participants each time
-        this.participants.forEach((participant) => {
-            if (speakersSet.has(participant.participant.sid)) {
-                participant.setActiveSpeaker(true);
-            } else {
-                participant.setActiveSpeaker(false);
-
-                if (this.previousSpeakers.has(participant.participant.sid)) {
-                    // If the participant was previously speaking but is not speaking anymore, we set it as recently spoken
-                    const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(
-                        participant.participant.identity
-                    );
-                    if (previousSpeakerVideoBox) {
-                        previousSpeakerVideoBox.lastSpeakTimestamp = Date.now();
-                    }
-                }
-            }
-        });
-
-        // Let's reset the priority of the participant
-        for (const videoStream of this.space.allVideoStreamStore.values()) {
-            const lastSpeakTimestamp = videoStream.lastSpeakTimestamp;
-            let bonusPriority = 0;
-            if (lastSpeakTimestamp) {
-                // If a participant has spoken but is not speaking anymore, we give a bonus priority based on the time since the last speak.
-                const lastTimeSinceLastSpeak = Date.now() - lastSpeakTimestamp;
-                // The bonus priority is calculated based on the time since the last speak and cannot be greater than 100.
-                bonusPriority = 100 * Math.exp(-lastTimeSinceLastSpeak / 100000);
-            }
-            videoStream.priority = VIDEO_STARTING_PRIORITY + 9999 - bonusPriority;
-        }
-
-        for (const speaker of speakers) {
-            // The current user is always displayed first, so we skip it
-            if (this.space.mySpaceUserId === speaker.identity) {
-                continue;
-            }
-            const extendedVideoStream = this.space.getVideoPeerVideoBox(speaker.identity);
-
-            // If this is a video and not a screen share, we add 2000 to the priority
-            if (!extendedVideoStream) {
-                continue;
-            }
-
-            if (get(extendedVideoStream.streamable)?.displayMode === "cover") {
-                extendedVideoStream.priority = priority + VIDEO_STARTING_PRIORITY;
-            } else {
-                extendedVideoStream.priority = priority + SCREEN_SHARE_STARTING_PRIORITY;
-            }
-            priority++;
-        }
-
-        // Let's trigger an update on the space's videoStreamStore to reorder the view
-        // To do so, we just take the first element of the map and put it back in the store at the same key.
-        if (get(triggerReorderStore) === 0) {
-            triggerReorderStore.set(1);
-        } else {
-            triggerReorderStore.set(0);
-        }
-
-        this.previousSpeakers = speakersSet;
+    /**
+     * Reports the health of the encoder of a published track (CPU / bandwidth limitation, encoder implementation)
+     * to the video quality analytics. The camera track is only paused when the camera is turned off, so its
+     * subscription lives as long as the room: paused tracks encode nothing and produce no sample.
+     */
+    private subscribeToEncoderAnalytics(
+        track: LocalVideoTrack,
+        streamCategory: "video" | "screenSharing",
+    ): Unsubscriber {
+        const senderStats = createLivekitSenderStats(track);
+        // Shown in the local camera / screen share feedback tile
+        const unregisterLocalEncoderStats = registerLocalEncoderStats(streamCategory, senderStats);
+        const unsubscribeAnalytics = subscribeToOutboundVideoQualityAnalytics(
+            senderStats,
+            {
+                streamId: `${this.localParticipant?.sid ?? "local"}:${streamCategory}:outbound`,
+                streamCategory,
+                transportType: "Livekit",
+                // The stream goes to the LiveKit server, not to a single remote user
+                remoteSpaceUserId: "",
+                spaceName: this.space.getName(),
+                livekitServerUrl: this.serverUrl,
+            },
+            (message) => this.space.emitVideoQualityReport(message),
+        );
+        return () => {
+            unsubscribeAnalytics();
+            unregisterLocalEncoderStats();
+        };
     }
 
     public destroy(): void {
+        if (this.destroyed) {
+            // Called both from handleDisconnected() and from LivekitConnection
+            return;
+        }
+        this.destroyed = true;
         try {
             this.unsubscribers.forEach((unsubscriber) => unsubscriber());
             this.rxjsSubscriptions.forEach((subscription) => subscription.unsubscribe());
@@ -810,6 +992,14 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
+            this.room?.off(RoomEvent.Reconnected, this.boundHandleReconnected);
+            this.room?.off(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+            this.unregisterAudioPlaybackRetry?.();
+            this.unregisterAudioPlaybackRetry = undefined;
+            this.cameraAnalyticsUnsubscribe?.();
+            this.cameraAnalyticsUnsubscribe = undefined;
+            this.screenShareAnalyticsUnsubscribe?.();
+            this.screenShareAnalyticsUnsubscribe = undefined;
             this.leaveRoom();
         } finally {
             this._livekitRoomCounter.decrement();

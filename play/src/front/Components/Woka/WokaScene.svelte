@@ -9,8 +9,8 @@
     import WokaSelectScene from "./WokaSelectScene.svelte";
     import WokaCustomizeScene from "./WokaCustomizeScene.svelte";
 
-    let buildOwnWoka = false;
-    let error: string | null = null;
+    let buildOwnWoka = $state(false);
+    let error: string | null = $state(null);
 
     async function saveAndContinue(texturesId: string[]) {
         error = null; // Reset error message
@@ -20,7 +20,7 @@
                 return;
             }
 
-            analyticsClient.validationWoka("SelectWoka");
+            analyticsClient.trackAdminEvent("onboarding.woka_validated", { scene: "SelectWoka" });
             gameManager.setCharacterTextureIds(texturesId);
             await connectionManager.saveTextures(texturesId);
             selectCharacterSceneVisibleStore.set(false);
@@ -40,7 +40,7 @@
         }
     }
 
-    let mounted = false;
+    let mounted = $state(false);
 
     onMount(() => {
         mounted = true;

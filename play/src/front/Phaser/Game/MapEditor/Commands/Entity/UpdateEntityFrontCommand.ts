@@ -5,6 +5,7 @@ import type { Entity } from "../../../../ECS/Entity";
 import type { GameScene } from "../../../GameScene";
 import type { FrontCommandInterface } from "../FrontCommandInterface";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
+import { analyticsClient } from "../../../../../Administration/AnalyticsClient";
 
 export class UpdateEntityFrontCommand extends UpdateEntityCommand implements FrontCommandInterface {
     constructor(
@@ -14,7 +15,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         commandId: string | undefined,
         oldConfig: Partial<WAMEntityData> | undefined,
         private entitiesManager: EntitiesManager,
-        private scene: GameScene
+        private scene: GameScene,
     ) {
         super(wamFile, entityId, dataToModify, commandId, oldConfig);
     }
@@ -34,7 +35,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
             undefined,
             this.newConfig,
             this.entitiesManager,
-            this.scene
+            this.scene,
         );
     }
 
@@ -42,6 +43,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         const entity = this.entitiesManager.getEntities().get(this.entityId);
         if (!entity) {
             console.error("Entity not found");
+            analyticsClient.trackAdminEvent("map_editor.save.failed", { reason: "entity_not_found" });
             return;
         }
         roomConnection.emitMapEditorModifyEntity(
@@ -55,8 +57,12 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
             {
                 width: entity.width,
                 height: entity.height,
-            }
+            },
         );
+        // From the entity, not the delta: a move or a property edit carries no prefabRef.
+        analyticsClient.trackAdminEvent("map_editor.entity.updated", {
+            entityType: entity.getEntityData().prefabRef.id,
+        });
     }
 
     private handleEntityUpdate(config: Partial<WAMEntityData>): void {

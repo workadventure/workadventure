@@ -1,41 +1,41 @@
 <!-- https://lihautan.com/notes/svelte-lazy-load/ -->
 <script lang="ts">
-    import type { ComponentType } from "svelte";
-    import { createEventDispatcher } from "svelte";
+    import type { WorkAdventureComponent } from "../../types/component";
 
-    const dispatch = createEventDispatcher<{
-        onload: void;
-        loaded: void;
-        error: void;
-    }>();
-
-    export let when = false;
-    export let component: () => Promise<{ default: ComponentType }>;
-
-    let loading: Promise<{ default: ComponentType }> | null = null;
-
-    $: if (when) {
-        load();
+    interface Props {
+        when: boolean;
+        component: () => Promise<{ default: WorkAdventureComponent }>;
+        onload?: () => void;
+        onloaded?: () => void;
+        onerror?: () => void;
+        [key: string]: unknown;
     }
 
-    function load() {
-        loading = component();
-        dispatch("onload");
-        loading
-            .then(() => {
-                dispatch("loaded");
-            })
-            .catch(() => {
-                dispatch("error");
-            });
-    }
+    let { when = false, component, onload, onloaded, onerror, ...rest }: Props = $props();
+
+    let loading: Promise<{ default: WorkAdventureComponent }> | null = $state(null);
+
+    $effect(() => {
+        if (when) {
+            const loadingPromise = component();
+            loading = loadingPromise;
+            onload?.();
+            loadingPromise
+                .then(() => {
+                    onloaded?.();
+                })
+                .catch(() => {
+                    onerror?.();
+                });
+        }
+    });
 </script>
 
 {#if when}
     {#await loading then result}
         {@const Component = result?.default}
         {#if Component}
-            <Component {...$$restProps} />
+            <Component {...rest} />
         {/if}
     {/await}
 {/if}

@@ -11,7 +11,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         room: "Acceso a la habitación denegado. No tiene permitido entrar en esta habitación.",
         teleport: "No tiene derecho a teletransportarse a este usuario.",
     },
-    importantMessage: "Mensaje importante",
     connectionLost: "Conexión perdida. Reconectando...",
     connectionLostTitle: "Conexión perdida",
     connectionLostSubtitle: "Reconectando",
@@ -22,6 +21,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     mapEditorNotEnabled: "El editor de mapas no está habilitado en este mundo.",
     backgroundProcessing: {
         failedToApply: "Error al aplicar los efectos de fondo",
+        notSupportedOnThisBrowser: "Los efectos de fondo no son compatibles con este navegador",
     },
     popupBlocked: {
         title: "Bloqueo de ventanas emergentes",

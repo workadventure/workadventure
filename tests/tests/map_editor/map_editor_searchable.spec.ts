@@ -64,7 +64,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Test if the entity is searchable
         await expect(page.locator(".map-editor .sidebar .entities")).toContainText("1 objects found");
         await page.getByTestId("toggleFolderEntity").click();
-        expect(await page.locator(".map-editor .sidebar .entity-items .item").count()).toBe(1);
+        await expect(page.locator(".map-editor .sidebar .entity-items .item")).toHaveCount(1);
 
         // Click on the entity and check that Title and description are correct
         await page.locator(".map-editor .sidebar .entity-items .item").first().click();
@@ -76,9 +76,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Test if the area is searchable
         await expect(page.locator(".map-editor .sidebar .areas")).toContainText("1 areas found");
         await page.getByTestId("toggleFolderArea").click();
-        expect(await page.locator(".map-editor .sidebar .area-items .item").count()).toBe(1);
-
-        await page.close();
-        await page.context().close();
+        await expect(page.locator(".map-editor .sidebar .area-items .item")).toHaveCount(1);
     });
 });

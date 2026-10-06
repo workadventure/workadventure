@@ -2,14 +2,15 @@ import { expect, test } from "@playwright/test";
 import { RENDERER_MODE } from "./utils/environment";
 import { publicTestMapUrl } from "./utils/urls";
 import Map from "./utils/map";
-import { isMobile } from "./utils/isMobile";
+import { isMobileViewport } from "./utils/isMobile";
 import { dismissDuplicateUserConnectedModalIfShown } from "./utils/duplicateUserModal";
 import { dismissPwaInstallScreenIfShown } from "./utils/pwaInstall";
 
 test.describe("Error pages @nowebkit", () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), "Skip on mobile devices");
+    test.beforeEach(async ({ viewport }) => {
+        test.skip(isMobileViewport(viewport), "Skip on mobile devices");
     });
+
     test("successfully displayed for unsupported URLs", async ({ page }) => {
         await page.goto(`/@/not/supported?phaserMode=${RENDERER_MODE}`);
         await expect(page.getByText("Unsupported URL format")).toBeVisible();

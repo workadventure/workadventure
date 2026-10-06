@@ -31,7 +31,7 @@ export class AreasManager {
         private userConnectedTags: string[],
         private userCanEdit: boolean,
         private _personalAreaDataStore = personalAreaDataStore,
-        private onCollisionStateChanged?: () => void
+        private onCollisionStateChanged?: () => void,
     ) {
         this.areaPermissions = new AreaPermissions(gameMapAreas, userConnectedTags, userCanEdit);
         this.initializeAreas();
@@ -69,7 +69,7 @@ export class AreasManager {
     public addArea(areaData: AreaData): void {
         this.areas.set(
             areaData.id,
-            new Area(this.scene, areaData, this.areaPermissions.isOverlappingArea(areaData.id), undefined, this)
+            new Area(this.scene, areaData, this.areaPermissions.isOverlappingArea(areaData.id), undefined, this),
         );
         this.updateMapEditorOptionForSpecificAreas();
 
@@ -121,7 +121,7 @@ export class AreasManager {
             }
             this.areas.set(
                 areaData.id,
-                new Area(this.scene, areaData, this.areaPermissions.isOverlappingArea(areaData.id), undefined, this)
+                new Area(this.scene, areaData, this.areaPermissions.isOverlappingArea(areaData.id), undefined, this),
             );
         });
         this.updateMapEditorOptionForSpecificAreas();
@@ -150,11 +150,14 @@ export class AreasManager {
 
     /**
      * Returns the list of all areas that should collide for the current player.
+     *
+     * Note: this must stay aligned with the physical collider applied on each Area (see Area.applyCollider), which
+     * is based on shouldAreaCollide() too. Otherwise, a pathfinding move (right click, "walk to" / "talk to", the
+     * scripting API...) would compute a path going through an area the player cannot walk into with the keyboard.
+     * Users allowed to edit the map are already granted access by AreaPermissions.isUserHasAreaAccess(), so they
+     * never collide because of missing rights, but they are still stopped by locks and by full areas.
      */
     public getCollidingAreas(): AreaData[] {
-        if (this.userCanEdit) {
-            return [];
-        }
         return Array.from(this.gameMapAreas.getAreas().values()).filter((area) => this.shouldAreaCollide(area.id));
     }
 
@@ -185,7 +188,7 @@ export class AreasManager {
         }
 
         const lockableProperty = area.properties.find(
-            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData",
         );
 
         if (!lockableProperty) {
@@ -213,7 +216,7 @@ export class AreasManager {
         }
 
         const maxUsersProperty = area.properties.find(
-            (property): property is MaxUsersInAreaPropertyData => property.type === "maxUsersInAreaPropertyData"
+            (property): property is MaxUsersInAreaPropertyData => property.type === "maxUsersInAreaPropertyData",
         );
         if (!maxUsersProperty) {
             return false;

@@ -14,7 +14,7 @@ export const defaultPeerFactory: PeerFactoryInterface = {
         _space: SpaceInterface,
         _streamableSubjects: StreamableSubjects,
         _blockedUsersStore: Readable<Set<string>>,
-        _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>
+        _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
     ) => {
         const peer = new SimplePeer(_space, _streamableSubjects, _blockedUsersStore, _screenSharingLocalStreamStore);
         return peer;
@@ -29,13 +29,13 @@ export class WebRTCState implements ICommunicationState {
         private _streamableSubjects: StreamableSubjects,
         _blockedUsersStore: Readable<Set<string>>,
         _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
-        private _peerFactory: PeerFactoryInterface = defaultPeerFactory
+        private _peerFactory: PeerFactoryInterface = defaultPeerFactory,
     ) {
         this._peer = this._peerFactory.create(
             this._space,
             this._streamableSubjects,
             _blockedUsersStore,
-            _screenSharingLocalStreamStore
+            _screenSharingLocalStreamStore,
         );
     }
 

@@ -1,14 +1,15 @@
 <script lang="ts">
-    import { openModal } from "svelte-modals";
     import { userIsConnected } from "../../Stores/MenuStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import InputCheckbox from "../Input/InputCheckbox.svelte";
+    import Button from "../UI/Button.svelte";
     import resetKeyStorageConfirmationModal from "./ResetKeyStorageConfirmationModal.svelte";
+    import { modals } from "@wa-modals";
 
-    let chatSounds: boolean = localUserStore.getChatSounds();
+    let chatSounds: boolean = $state(localUserStore.getChatSounds());
     let mychatID = localUserStore.getChatId();
 
     function changeChatSounds() {
@@ -16,7 +17,7 @@
     }
 
     function openResetKeyStorage() {
-        openModal(resetKeyStorageConfirmationModal);
+        modals.open(resetKeyStorageConfirmationModal);
     }
 </script>
 
@@ -35,15 +36,13 @@
                     <InputCheckbox
                         data-testid="chatSounds"
                         bind:value={chatSounds}
-                        onChange={changeChatSounds}
+                        onchange={changeChatSounds}
                         label={$LL.menu.settings.chatSounds()}
                     />
                 </div>
                 <section class="centered-column resizing-width m-auto resizing-text">
-                    <button
-                        type="button"
-                        class="btn p-2 bg-danger-900 min-w-[220px] flex justify-center items-center"
-                        on:click={openResetKeyStorage}>{$LL.menu.chat.resetKeyStorageUpButtonLabel()}</button
+                    <Button class="p-2 bg-danger-900 min-w-[220px] flex items-center" onclick={openResetKeyStorage}
+                        >{$LL.menu.chat.resetKeyStorageUpButtonLabel()}</Button
                     >
                 </section>
             {:else}
@@ -51,13 +50,12 @@
                     <p class="text-gray-400 w-full text-center pt-2">
                         {$LL.chat.requiresLoginForChat()}
                     </p>
-                    <a
-                        type="button"
-                        class="btn light flex justify-center items-center w-1/2"
+                    <Button
+                        class="light flex items-center w-1/2"
                         href="/login"
-                        on:click={() => analyticsClient.login()}
+                        onclick={() => analyticsClient.trackAdminEvent("auth.login_clicked")}
                     >
-                        {$LL.menu.profile.login()}</a
+                        {$LL.menu.profile.login()}</Button
                     >
                 </div>
             {/if}

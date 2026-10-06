@@ -11,7 +11,6 @@ const warning: DeepPartial<Translation["warning"]> = {
         teleport: "您无权传送给此用户。",
         room: "房间访问被拒绝。你不能进入这个房间",
     },
-    importantMessage: "重要消息",
     connectionLost: "连接丢失。重新连接中...",
     connectionLostTitle: "连接丢失。",
     connectionLostSubtitle: "重新连接中",
@@ -22,6 +21,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     mapEditorNotEnabled: "地图编辑器在此世界中未启用。",
     backgroundProcessing: {
         failedToApply: "应用背景效果失败",
+        notSupportedOnThisBrowser: "此浏览器不支持背景效果",
     },
     popupBlocked: {
         title: "弹出窗口被阻止",

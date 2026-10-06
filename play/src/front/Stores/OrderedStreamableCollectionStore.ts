@@ -43,5 +43,5 @@ export const orderedStreamableCollectionStore = derived(
 
         return;
     },
-    [] as VideoBox[]
+    [] as VideoBox[],
 );

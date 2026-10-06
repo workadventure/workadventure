@@ -14,6 +14,7 @@
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
+    import Button from "../UI/Button.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { warningMessageStore } from "../../Stores/ErrorStore";
@@ -28,7 +29,7 @@
     let iconProperties = writable<Map<string, AddPropertyButtonType>>(new Map());
     let oldEntity: Entity | AreaPreview | undefined;
     let mapExplorationObjectSelectedStoreSubscription: Unsubscriber;
-    let description: string | undefined;
+    let description: string | undefined = $state();
 
     onMount(() => {
         if ($mapExplorationObjectSelectedStore instanceof Entity) {
@@ -87,7 +88,8 @@
     function initPropertyComponents() {
         cleanPropertyComponents();
         // Create the properties buttons for the selected object
-        let newIconProperties = new Map<string, AddPropertyButtonType>();
+        // eslint-disable-next-line svelte/prefer-svelte-reactivity
+        const newIconProperties = new Map<string, AddPropertyButtonType>();
         if ($mapExplorationObjectSelectedStore instanceof Entity) {
             for (const value of $mapExplorationObjectSelectedStore.getProperties()) {
                 newIconProperties.set(value.id, createPropertyData(value));
@@ -146,7 +148,7 @@
                         y: $mapExplorationObjectSelectedStore.y,
                     },
                     true,
-                    WOKA_SPEED * 2.5
+                    WOKA_SPEED * 2.5,
                 )
                 .catch((error) => {
                     console.warn("Error while moving to the entity or area", error);
@@ -154,10 +156,10 @@
                         closable: true,
                     });
                 });
-            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+            gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(undefined);
 
             // Close map editor to walk on the entity or zone
-            analyticsClient.toggleMapEditor(!$mapEditorModeStore);
+            analyticsClient.trackAdminEvent(!$mapEditorModeStore ? "map_editor.opened" : "map_editor.closed");
             mapEditorModeStore.switchMode(!$mapEditorModeStore);
 
             // Close the modal
@@ -165,25 +167,28 @@
         }
     }
 
-    $: actionButtonText =
+    let actionButtonText = $derived(
         $mapExplorationObjectSelectedStore instanceof Entity ||
-        $mapExplorationObjectSelectedStore instanceof AreaPreview
+            $mapExplorationObjectSelectedStore instanceof AreaPreview
             ? $mapExplorationObjectSelectedStore.actionButtonLabel
-            : "";
+            : "",
+    );
 
-    $: objectDisplayName = (() => {
-        if ($mapExplorationObjectSelectedStore instanceof Entity) {
-            const name = $mapExplorationObjectSelectedStore.getEntityData().name;
-            if (name != undefined && name != "") return name;
-            return $mapExplorationObjectSelectedStore.getPrefab().name;
-        }
-        if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
-            const name = $mapExplorationObjectSelectedStore.getAreaData().name;
-            if (name != undefined && name != "") return name;
-            return $mapExplorationObjectSelectedStore.nameFromProperties;
-        }
-        return "";
-    })();
+    let objectDisplayName = $derived(
+        (() => {
+            if ($mapExplorationObjectSelectedStore instanceof Entity) {
+                const name = $mapExplorationObjectSelectedStore.getEntityData().name;
+                if (name != undefined && name != "") return name;
+                return $mapExplorationObjectSelectedStore.getPrefab().name;
+            }
+            if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
+                const name = $mapExplorationObjectSelectedStore.getAreaData().name;
+                if (name != undefined && name != "") return name;
+                return $mapExplorationObjectSelectedStore.nameFromProperties;
+            }
+            return "";
+        })(),
+    );
 </script>
 
 <div class="absolute bottom-0 w-full h-fit flex flex-row justify-center">
@@ -212,12 +217,12 @@
             </div>
             <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
                 <div class="flex flex-row justify-center w-full gap-2">
-                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}
+                    <Button class="btn-outline w-full hover:bg-contrast-600/50" onclick={close}
                         >{$LL.mapEditor.explorer.details.close()}
-                    </button>
-                    <button class="btn btn-secondary w-full whitespace-nowrap" on:click={goTo}>
+                    </Button>
+                    <Button variant="secondary" class="w-full whitespace-nowrap" onclick={goTo}>
                         {actionButtonText}
-                    </button>
+                    </Button>
                 </div>
             </div>
         {:else if $mapExplorationObjectSelectedStore instanceof AreaPreview}
@@ -236,19 +241,19 @@
             </div>
             <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
                 <div class="flex flex-row justify-center w-full gap-2">
-                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}>
+                    <Button class="btn-outline w-full hover:bg-contrast-600/50" onclick={close}>
                         {$LL.mapEditor.explorer.details.close()}
-                    </button>
-                    <button class="btn btn-secondary w-full whitespace-nowrap" on:click={goTo}>
+                    </Button>
+                    <Button variant="secondary" class="w-full whitespace-nowrap" onclick={goTo}>
                         {actionButtonText}
-                    </button>
+                    </Button>
                 </div>
             </div>
         {/if}
     </div>
 </div>
 
-<style lang="scss">
+<style>
     .object-menu {
         height: max-content !important;
         z-index: 2000;

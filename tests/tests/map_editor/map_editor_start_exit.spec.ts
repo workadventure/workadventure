@@ -35,8 +35,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await AreaEditor.setAreaName(page, "MyStartZone");
         await AreaEditor.addProperty(page, "startAreaProperty");
         await Menu.closeMapEditor(page);
-
-        await page.context().close();
     });
 
     test("Successfully set and working exit area in the map editor", async ({ browser, request }) => {
@@ -70,7 +68,5 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.openMenu(page);
         await expect(page.getByTestId("profile-menu")).toBeVisible();
         await expect(page.getByTestId("profile-menu").getByRole("button", { name: "Online" })).toBeVisible();
-
-        await page.context().close();
     });
 });

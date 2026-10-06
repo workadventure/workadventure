@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePrompt: "Este mapa foi excluído",
         deletePromptSubtitle: "Você foi desconectado desta sala.",
         deletePromptDetails: "Atualizar não restaurará este mapa porque ele não existe mais.",
+        editionFailed: "Não foi possível salvar sua alteração e ela foi desfeita.",
     },
     sideBar: {
         areaEditor: "Ferramenta de editor de área",
@@ -75,7 +76,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Cancelar",
                 validate: "Validar",
             },
-            disabled: "Integração Jitsi está desabilitada para esta sala ❌",
             actionButtonLabel: "Iniciar reunião Jitsi",
         },
         playAudio: {
@@ -87,6 +87,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Tocar música",
             error: "Não foi possível carregar o som",
             actionButtonLabel: "Tocar música",
+            playForAllUsersLabel: "Reproduzir para todos os usuários do mapa",
+            audibleRadiusLabel: "Raio audível (em pixels)",
+            audibleRadiusPlaceholder: "Audível em todo lugar se vazio",
         },
         openWebsite: {
             label: "Abrir Link",
@@ -123,14 +126,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Os usuários no pódio (palco) podem falar com todos os participantes na área "Audiência" correspondente.',
             nameLabel: "Nome",
             namePlaceholder: "PalcoPrincipal",
-            disabled: "O pódio está desabilitado para esta sala ❌",
             actionButtonLabel: "Entrar no pódio",
         },
         listenerMegaphone: {
             label: "Audiência",
             description: "Os usuários na área da audiência podem ouvir o palestrante no pódio vinculado.",
             nameLabel: "Nome do Pódio",
-            disabled: "A audiência está desabilitada para esta sala ❌",
             namePlaceholder: "MinhaZonaPalestrante",
             waitingMediaLinkLabel: "Mídia exibida antes do início da transmissão",
             waitingMediaLinkPlaceholder: "https://www… (insira a URL da mídia)",
@@ -142,6 +143,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "Associar um canal de chat dedicado",
+        allowTalking: "Permitir falar e formar bolhas",
+        raiseHandEnabled: "Permitir levantar a mão",
         seeAttendees: "Ver participantes",
         start: {
             label: "Área inicial",
@@ -312,6 +315,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 startWithAudioMuted: "Iniciar com microfone silenciado",
                 startWithVideoMuted: "Iniciar com vídeo fechado",
                 disableChat: "Desabilitar chat",
+                raiseHandEnabled: "Permitir levantar a mão",
                 livekitRoomAdminTag: "Tag de moderador para a sala de reunião",
                 cancel: "Cancelar",
                 validate: "Validar",
@@ -461,7 +465,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Modo auditório ativado",
                 audienceVideoFeedbackActivatedDisabled: "Modo auditório desativado",
                 audienceVideoFeedbackActivatedHelper:
-                    "Modo auditório ativado: Receba o fluxo de câmera e microfone de todos os usuários (com câmera e microfone ativados) na sala/mundo. Mas o participante não poderá ver os outros participantes. Desativado por padrão.",
+                    "Modo auditório ativado: Receba o fluxo de câmera de todos os usuários (com câmera ativada) na sala/mundo, sem o áudio deles. Mas o participante não poderá ver os outros participantes. Desativado por padrão.",
                 error: {
                     title: "Por favor, digite um título",
                     save: {

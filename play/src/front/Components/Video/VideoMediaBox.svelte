@@ -1,16 +1,14 @@
-<svelte:options immutable={true} />
-
 <script lang="ts">
-    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
+    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.css
     import { getContext, onDestroy, onMount } from "svelte";
+    import * as Sentry from "@sentry/svelte";
     import type { Subscription } from "rxjs";
-    import { get } from "svelte/store";
-    import type { Readable } from "svelte/store";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/VideoBox";
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { meetingOf } from "../../Administration/CurrentMeeting";
     import loaderImg from "../images/loader.svg";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
@@ -20,82 +18,184 @@
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import { blocker } from "../../Utils/screenBlocker";
+    import { findHandPosition, raisedHandsOrderStore } from "../../Stores/RaisedHandsStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    import RaisedHandBadge from "./RaisedHandBadge.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
     import WebRtcStats from "./WebRtcStatsBox.svelte";
+    import EncoderStatsBox from "./EncoderStatsBox.svelte";
     import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
 
-    export let fullScreen = false;
-    export let videoBox: VideoBox; // If true, and if there is no video, the height of the video box will be 11rem
-    export let miniMode = false;
-    $: streamableStore = videoBox.streamable;
-    $: effectiveStatusStore = videoBox.statusStore;
-    $: effectiveStatus = $effectiveStatusStore;
-    $: streamable = $streamableStore;
+    interface Props {
+        fullScreen?: boolean;
+        videoBox: VideoBox; // If true, and if there is no video, the height of the video box will be 11rem
+        miniMode?: boolean;
+        activeUserName?: boolean;
+    }
+
+    let { fullScreen = false, videoBox, miniMode = false, activeUserName = true }: Props = $props();
+
+    let streamableStore = $derived(videoBox.streamable);
+    let streamablesStore = $derived(videoBox.streamables);
+    let effectiveStatusStore = $derived(videoBox.statusStore);
+    let effectiveStatus = $derived($effectiveStatusStore);
+    let streamableEntries = $derived($streamablesStore);
+    let activeStreamableEntry = $derived(streamableEntries.find((entry) => !entry.isPending));
+    let streamable = $derived(activeStreamableEntry?.streamable ?? $streamableStore);
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
     let inCameraContainer: boolean = !!getContext("inCameraContainer");
     let inHighlightFullscreenParticipantList: boolean = !!getContext("inHighlightFullscreenParticipantList");
 
-    $: extendedSpaceUser = videoBox.spaceUser;
-    $: megaphoneState = extendedSpaceUser?.reactiveUser.megaphoneState;
+    let extendedSpaceUser = $derived(videoBox.spaceUser);
+    let megaphoneState = $derived(extendedSpaceUser?.reactiveUser.megaphoneState);
+    let microphoneStateStore = $derived(extendedSpaceUser?.reactiveUser.microphoneState);
 
-    $: pictureStore = extendedSpaceUser?.pictureStore;
+    let pictureStore = $derived(extendedSpaceUser?.pictureStore);
 
-    $: name = extendedSpaceUser?.name;
+    let name = $derived(extendedSpaceUser?.name);
 
-    let showUserSubMenu = false;
+    let showUserSubMenu = $state(false);
 
-    $: hasVideoStore = streamable?.hasVideo;
-    $: hasAudioStore = streamable?.hasAudio;
-    $: isMutedStore = streamable?.isMuted;
-    $: volumeMeterStore = streamable?.volumeStore;
-    $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
-    $: isBlockedStore = streamable?.media?.isBlocked;
-    $: volumeStore = streamable?.volume;
-    $: volumeMeter = $volumeMeterStore;
-    $: webRtcStatsStore = $displayVideoQualityStore ? streamable?.webrtcStats : undefined;
-    $: webRtcStats = $webRtcStatsStore;
+    let hasVideoStore = $derived(streamable?.hasVideo);
+    let hasAudioStore = $derived(streamable?.hasAudio);
+    let volumeMeterStore = $derived(streamable?.volumeStore);
+    let showVoiceIndicatorStore = $derived(streamable?.showVoiceIndicator);
+    let isBlockedStore = $derived(streamable?.media?.isBlocked);
+    let mediaStreamStore = $derived(
+        streamable?.media.type === "webrtc" || streamable?.media.type === "livekit"
+            ? streamable.media.streamStore
+            : undefined,
+    );
+    let volumeStore = $derived(streamable?.volume);
+    let volumeMeter = $derived($volumeMeterStore);
+    let webRtcStatsStore = $derived($displayVideoQualityStore ? streamable?.webrtcStats : undefined);
+    let webRtcStats = $derived($webRtcStatsStore);
+    let encoderStatsStore = $derived($displayVideoQualityStore ? streamable?.senderStats : undefined);
+    let encoderStats = $derived($encoderStatsStore);
 
     // Check if user is currently reconnecting (WebRTC retry in progress)
-    $: isReconnecting = effectiveStatus === "reconnecting";
+    let isReconnecting = $derived(effectiveStatus === "reconnecting");
 
-    $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
+    let showVoiceIndicator = $derived(showVoiceIndicatorStore ? $showVoiceIndicatorStore : false);
 
     // If there is no constraintStore, we are in a screen sharing (so video is enabled)
 
-    $: videoEnabled = $hasVideoStore;
+    let videoEnabled = $derived($hasVideoStore);
 
-    $: isMegaphoneSpace = videoBox.isMegaphoneSpace ?? false;
+    let isMegaphoneSpace = $derived(videoBox.isMegaphoneSpace ?? false);
 
     // Check if this is the local user's video box
-    $: isLocalUser = videoBox.uniqueId === "-1" || extendedSpaceUser?.spaceUserId === "local";
+    let isLocalUser = $derived(videoBox.uniqueId === "-1" || extendedSpaceUser?.spaceUserId === "local");
+    // The local tile's space user is a placeholder ("local"): its raised hand is queued under our real spaceUserId.
+    let raisedHandSpaceUserId = $derived(
+        isLocalUser ? (gameManager.getCurrentGameScene().connection?.getSpaceUserId() ?? "") : videoBox.uniqueId,
+    );
+    // The local tile's space user is a placeholder: its hand is looked up in every queue (see findHandPosition).
+    let raisedHandSpaceName = $derived(isLocalUser ? undefined : extendedSpaceUser?.space.getName());
+    let isHandRaised = $derived(
+        findHandPosition($raisedHandsOrderStore, raisedHandSpaceName, raisedHandSpaceUserId) !== undefined,
+    );
+    // Debugging aid for the rare case where the space says the remote microphone is enabled but this receiver has no audio.
+    let audioStateMismatch = $derived(
+        effectiveStatus === "connected" &&
+            streamable?.videoType === "video" &&
+            !isLocalUser &&
+            $isBlockedStore !== true &&
+            $microphoneStateStore === true &&
+            $hasAudioStore === false,
+    );
+    // A muted P2P peer keeps its audio track (paused sender, see RemotePeer): hasAudio alone would still show it as
+    // speaking. Only for remote cameras: the local user's space state is a constant, and a screen share carries tab audio.
+    let remoteMicrophoneMuted = $derived(
+        streamable?.videoType === "video" && !isLocalUser && $microphoneStateStore === false,
+    );
+    // Like audioStateMismatch, but with a 3 seconds delay.
+    let showAudioStateMismatch = $state(false);
+    let loggedAudioMismatchKey: string | undefined = undefined;
+
+    $effect(() => {
+        if (!audioStateMismatch) {
+            return;
+        }
+
+        const audioMismatchKey = `${streamable?.uniqueId ?? "unknown"}:${extendedSpaceUser?.spaceUserId ?? "unknown"}:${streamable?.media.type ?? "unknown"}`;
+        if (loggedAudioMismatchKey === audioMismatchKey) {
+            return;
+        }
+
+        const timeout = setTimeout(() => {
+            const audioTracks =
+                $mediaStreamStore?.getAudioTracks().map((track) => ({
+                    id: track.id,
+                    enabled: track.enabled,
+                    muted: track.muted,
+                    readyState: track.readyState,
+                })) ?? [];
+            const details = {
+                streamableUniqueId: streamable?.uniqueId,
+                streamableType: streamable?.media.type,
+                videoType: streamable?.videoType,
+                spaceUserId: extendedSpaceUser?.spaceUserId,
+                status: effectiveStatus,
+                hasAudio: $hasAudioStore,
+                microphoneState: $microphoneStateStore,
+                audioTrackCount: audioTracks.length,
+                audioTracks,
+            };
+
+            console.warn(
+                "Audio state mismatch: remote microphone is enabled in the space but no receiver audio track is present",
+                details,
+            );
+            Sentry.captureMessage(
+                "Audio state mismatch: remote microphone is enabled in the space but no receiver audio track is present",
+                {
+                    level: "warning",
+                    tags: {
+                        component: "VideoMediaBox",
+                        streamableType: streamable?.media.type ?? "unknown",
+                        videoType: streamable?.videoType ?? "unknown",
+                    },
+                    extra: details,
+                },
+            );
+
+            loggedAudioMismatchKey = audioMismatchKey;
+            showAudioStateMismatch = true;
+        }, 3000);
+
+        return () => {
+            clearTimeout(timeout);
+            showAudioStateMismatch = false;
+        };
+    });
 
     // Check if the local user is streaming with megaphone
     // requestedMegaphoneStore is true when user has requested megaphone
     // We also need to check if they are actually streaming (camera, mic, or screen)
-    $: isLocalUserStreamingMegaphone =
+    let isLocalUserStreamingMegaphone = $derived(
         isLocalUser &&
-        $requestedMegaphoneStore &&
-        ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState);
+            $requestedMegaphoneStore &&
+            ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState),
+    );
 
     let blackListSubject: Subscription | undefined;
     let unBlackListSubject: Subscription | undefined;
-    let blackListVersion = 0;
-    let isCurrentUserBlackListed = false;
-    let userUuidStore: Readable<string> | undefined;
-    let userUuid: string | undefined;
-    $: spaceUserId = extendedSpaceUser?.spaceUserId;
-    $: userUuidStore = extendedSpaceUser?.reactiveUser.uuid;
-    $: userUuid = userUuidStore ? get(userUuidStore) : undefined;
-    $: isCurrentUserBlackListed = computeIsCurrentUserBlackListed(blackListVersion, spaceUserId, userUuid);
+    let blackListVersion = $state(0);
+    let spaceUserId = $derived(extendedSpaceUser?.spaceUserId);
+    let userUuidStore = $derived(extendedSpaceUser?.reactiveUser.uuid);
+    let userUuid = $derived($userUuidStore);
+    let isCurrentUserBlackListed = $derived(computeIsCurrentUserBlackListed(blackListVersion, spaceUserId, userUuid));
 
     function computeIsCurrentUserBlackListed(
         _blackListVersion: number,
         currentSpaceUserId: string | undefined,
-        currentUserUuid: string | undefined
+        currentUserUuid: string | undefined,
     ): boolean {
         return (
             currentSpaceUserId !== undefined &&
@@ -107,12 +207,8 @@
 
     function setFullScreen() {
         exitFullScreen();
-        removeHighlight();
-
-        setTimeout(() => {
-            highlightPeer();
-            highlightFullScreen.set(true);
-        }, 100);
+        highlightPeer();
+        highlightFullScreen.set(true);
     }
 
     function exitFullScreen() {
@@ -123,14 +219,14 @@
         highlightedEmbedScreen.removeHighlight();
     }
 
-    let userMenuButton: HTMLDivElement;
+    let userMenuButton: HTMLDivElement | undefined = $state();
 
     let closeFloatingUi: (() => void) | undefined;
 
     function toggleUserMenu() {
         showUserSubMenu = !showUserSubMenu;
         const spaceUser = extendedSpaceUser;
-        if (showUserSubMenu && spaceUser) {
+        if (showUserSubMenu && spaceUser && userMenuButton) {
             closeFloatingUi = showFloatingUi(
                 userMenuButton,
                 // @ts-ignore See https://github.com/storybookjs/storybook/issues/21884
@@ -149,17 +245,18 @@
                     placement: "bottom",
                 },
                 8,
-                false
+                false,
             );
-            // on:close={() => (showUserSubMenu = false)}
+            // onclose={() => (showUserSubMenu = false)}
         } else {
             closeFloatingUi?.();
             closeFloatingUi = undefined;
         }
     }
 
-    let showAfterDelay = true;
+    let showAfterDelay = $state(true);
     let connectingTimer: ReturnType<typeof setTimeout> | null = null;
+    let markStreamableReadyTimer: ReturnType<typeof setTimeout> | undefined = $state();
 
     // When the status is "connecting", do not show the loader for 500ms to avoid visual glitches during fast connections.
     // EXCEPT when reconnecting: in that case, show the loader immediately to avoid black screen.
@@ -187,11 +284,13 @@
         }
     }
 
-    $: updateShowAfterDelay(effectiveStatus, isReconnecting);
+    $effect(() => {
+        updateShowAfterDelay(effectiveStatus, isReconnecting);
+    });
 
     function highlightPeer() {
         highlightedEmbedScreen.highlight(videoBox);
-        analyticsClient.pinMeetingAction();
+        analyticsClient.trackAdminEvent("meeting.participant.pinned", meetingOf(videoBox.spaceUser.space));
         window.focus();
     }
 
@@ -209,11 +308,13 @@
         unBlackListSubject?.unsubscribe();
         closeFloatingUi?.();
         if (connectingTimer) clearTimeout(connectingTimer);
+        if (markStreamableReadyTimer) clearTimeout(markStreamableReadyTimer);
     });
 </script>
 
 <div
-    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker z-20"
+    {@attach blocker}
+    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox z-20 select-none"
 >
     <div
         class={"w-full transition-all bg-center bg-no-repeat " +
@@ -239,7 +340,7 @@
                 <div
                     class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
                 >
-                    <div class="connecting-spinner" />
+                    <div class="connecting-spinner"></div>
                 </div>
             </div>
             <div class="absolute w-full h-full pointer-events-none">
@@ -262,126 +363,159 @@
             </div>
         {/if}
 
-        {#if showAfterDelay && streamable?.media}
-            <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
-            <CenteredVideo
-                media={streamable?.media}
-                {videoEnabled}
-                status={effectiveStatus}
-                verticalAlign={!inCameraContainer && !inHighlightFullscreenParticipantList && !fullScreen
-                    ? "top"
-                    : "center"}
-                isTalking={showVoiceIndicator}
-                flipX={streamable?.flipX}
-                cover={streamable?.displayMode === "cover" &&
-                    (inCameraContainer || inHighlightFullscreenParticipantList || fullScreen)}
-                isBlocked={$isBlockedStore}
-                withBackground={((inCameraContainer || inHighlightFullscreenParticipantList) &&
-                    effectiveStatus !== "connecting" &&
-                    effectiveStatus !== "reconnecting") ||
-                    $isBlockedStore}
-                isMegaphoneSpace={(isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone}
-            >
-                <UserName
-                    name={name ?? "unknown"}
-                    picture={pictureStore}
-                    isPlayingAudio={showVoiceIndicator}
-                    isCameraDisabled={(!videoEnabled && !miniMode) || effectiveStatus !== "connected"}
-                    isBlocked={$isBlockedStore}
-                    position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
-                        ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
-                        : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
-                    grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
+        {#if showAfterDelay}
+            {#each streamableEntries as streamableEntry (streamableEntry.id)}
+                <div
+                    class="absolute inset-0"
+                    class:pointer-events-none={streamableEntry.isPending}
+                    style={streamableEntry.isPending ? "opacity: 0" : undefined}
                 >
-                    {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
-                        <div
-                            class="flex items-center justify-center picture-in-picture:hidden"
-                            bind:this={userMenuButton}
-                        >
-                            <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
-                        </div>
-                    {/if}
-                </UserName>
-
-                {#if effectiveStatus === "connected" && $hasAudioStore && !$isBlockedStore}
-                    <div
-                        class="z-[251] absolute p-2 right-1 white"
-                        class:top-1={videoEnabled}
-                        class:top-0={!videoEnabled}
-                        class:text-white={$activePictureInPictureStore}
-                        class:opacity-20={$activePictureInPictureStore}
+                    <CenteredVideo
+                        media={streamableEntry.streamable.media}
+                        videoEnabled={streamableEntry.isPending ? true : (videoEnabled ?? false)}
+                        status={streamableEntry.isPending ? "connected" : effectiveStatus}
+                        verticalAlign={!inCameraContainer && !inHighlightFullscreenParticipantList && !fullScreen
+                            ? "top"
+                            : "center"}
+                        isTalking={streamableEntry.isPending ? false : (showVoiceIndicator ?? false)}
+                        flipX={streamableEntry.streamable.flipX ?? false}
+                        cover={streamableEntry.streamable.displayMode === "cover" &&
+                            (inCameraContainer || inHighlightFullscreenParticipantList || fullScreen)}
+                        isBlocked={streamableEntry.isPending ? false : ($isBlockedStore ?? false)}
+                        withBackground={streamableEntry.isPending
+                            ? false
+                            : ((((inCameraContainer || inHighlightFullscreenParticipantList) &&
+                                  effectiveStatus !== "connecting" &&
+                                  effectiveStatus !== "reconnecting") ||
+                                  $isBlockedStore) ??
+                              false)}
+                        isMegaphoneSpace={streamableEntry.isPending
+                            ? false
+                            : (isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone || false}
+                        onvideo={() => {
+                            markStreamableReadyTimer = setTimeout(() => {
+                                if (streamableEntry.isPending) {
+                                    videoBox.markPendingStreamableReady(streamableEntry.id);
+                                }
+                                markStreamableReadyTimer = undefined;
+                                // Even by waiting the first frame, we see a first glitch.
+                                // Maybe the first LiveKit frame is not correctly rendered?
+                                // We noticed waiting a bit makes the glitch disappear.
+                            }, 200);
+                        }}
                     >
-                        {#if !$isMutedStore}
-                            <SoundMeterWidget
-                                volume={volumeMeter}
-                                cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                                barColor="white"
-                            />
-                        {:else if streamable.videoType === "video"}
-                            <IconMicrophoneOff
-                                aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
-                                data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
-                                class="[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
-                            />
+                        {#if !streamableEntry.isPending && activeUserName}
+                            <UserName
+                                name={name ?? "unknown"}
+                                picture={pictureStore}
+                                isPlayingAudio={showVoiceIndicator ?? false}
+                                {isHandRaised}
+                                isCameraDisabled={(!(videoEnabled ?? false) && !miniMode) ||
+                                    effectiveStatus !== "connected"}
+                                isBlocked={$isBlockedStore ?? false}
+                                position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
+                                    ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                                    : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
+                                grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
+                            >
+                                <RaisedHandBadge spaceUserId={raisedHandSpaceUserId} spaceName={raisedHandSpaceName} />
+                                {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
+                                    <div
+                                        class="flex items-center justify-center picture-in-picture:hidden"
+                                        bind:this={userMenuButton}
+                                    >
+                                        <UpDownChevron enabled={showUserSubMenu} onclick={toggleUserMenu} />
+                                    </div>
+                                {/if}
+                            </UserName>
+
+                            {#if effectiveStatus === "connected" && !$isBlockedStore}
+                                <div
+                                    class="z-[251] absolute p-2 right-1 white"
+                                    class:top-1={videoEnabled}
+                                    class:top-0={!videoEnabled}
+                                    class:text-white={$activePictureInPictureStore}
+                                    class:opacity-20={$activePictureInPictureStore}
+                                >
+                                    {#if $hasAudioStore && !remoteMicrophoneMuted && !audioStateMismatch}
+                                        <SoundMeterWidget
+                                            volume={volumeMeter}
+                                            cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                                            barColor="white"
+                                        />
+                                    {:else if streamable?.videoType === "video"}
+                                        <IconMicrophoneOff
+                                            aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                            data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                            class="{showAudioStateMismatch
+                                                ? 'text-red-500 '
+                                                : ''}[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
+                                        />
+                                    {/if}
+                                </div>
+                            {/if}
+                            {#if webRtcStats}
+                                <WebRtcStats {webRtcStats} />
+                            {/if}
+                            {#if encoderStats}
+                                <EncoderStatsBox {encoderStats} />
+                            {/if}
+
+                            <!-- The menu to go fullscreen -->
+                            {#if !inCameraContainer && videoEnabled}
+                                <div
+                                    class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                                >
+                                    <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
+                                        {#if !fullScreen && !$highlightFullScreen}
+                                            <button
+                                                class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
+                                                onclick={removeHighlight}
+                                            >
+                                                <IconArrowsMinimize font-size="20" class="text-white" />
+                                            </button>
+                                        {/if}
+                                        {#if fullScreen}
+                                            <button
+                                                class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                                onclick={exitFullScreen}
+                                            >
+                                                <IconArrowsMinimize font-size="20" class="text-white" />
+                                            </button>
+                                        {:else}
+                                            <button
+                                                class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                                onclick={setFullScreen}
+                                                data-testid="highlight-enter-fullscreen-button"
+                                            >
+                                                <IconArrowsMaximize font-size="20" class="text-white" />
+                                            </button>
+                                        {/if}
+                                    </div>
+                                </div>
+                            {/if}
                         {/if}
-                    </div>
-                {/if}
-                {#if webRtcStats}
-                    <WebRtcStats {webRtcStats} />
-                {/if}
-
-                <!-- The menu to go fullscreen -->
-                {#if !inCameraContainer && videoEnabled}
-                    <div
-                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
-                    >
-                        <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
-                            {#if !fullScreen && !$highlightFullScreen}
-                                <button
-                                    class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                                    on:click={removeHighlight}
-                                >
-                                    <IconArrowsMinimize font-size="20" class="text-white" />
-                                </button>
-                            {/if}
-                            {#if fullScreen}
-                                <button
-                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                                    on:click={exitFullScreen}
-                                >
-                                    <IconArrowsMinimize font-size="20" class="text-white" />
-                                </button>
-                            {:else}
-                                <button
-                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                                    on:click={setFullScreen}
-                                    data-testid="highlight-enter-fullscreen-button"
-                                >
-                                    <IconArrowsMaximize font-size="20" class="text-white" />
-                                </button>
-                            {/if}
-                        </div>
-                    </div>
-                {/if}
-            </CenteredVideo>
+                    </CenteredVideo>
+                </div>
+            {/each}
         {/if}
     </div>
 
     {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
         <button
             class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
-            on:click={highlightPeer}
+            onclick={highlightPeer}
         >
             <IconArrowsMaximize font-size="20" class="text-white" />
         </button>
     {/if}
 
     {#if isCurrentUserBlackListed}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
-            on:click={() => {
+            onclick={() => {
                 if (userUuid !== undefined) blackListManager.cancelBlackList(userUuid);
                 if (spaceUserId !== undefined) blackListManager.cancelBlackList(spaceUserId);
             }}
@@ -412,8 +546,8 @@
         height: 100%;
         aspect-ratio: 1 / 1;
         border-radius: 50%;
-        border: 6px solid theme("colors.light-blue");
-        border-color: theme("colors.light-blue") transparent theme("colors.light-blue") transparent;
+        border: 6px solid var(--color-light-blue);
+        border-color: var(--color-light-blue) transparent var(--color-light-blue) transparent;
         animation: connecting-spinner 1.2s linear infinite;
     }
 

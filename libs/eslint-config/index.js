@@ -98,7 +98,6 @@ export function generateConfig(tsconfigRootDir) {
             },
         },
         {
-
             plugins: {
                 //"@typescript-eslint": typescriptEslint,
                 rxjs: rxjs,

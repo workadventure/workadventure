@@ -14,7 +14,10 @@ export class HdpiManager {
      * @param minRecommendedGamePixelsNumber The minimum number of pixels we want to display "by default" to the user
      * @param absoluteMinPixelNumber The very minimum of game pixels to display. Below, we forbid zooming more
      */
-    public constructor(private minRecommendedGamePixelsNumber: number, private absoluteMinPixelNumber: number) {}
+    public constructor(
+        private minRecommendedGamePixelsNumber: number,
+        private absoluteMinPixelNumber: number,
+    ) {}
 
     /**
      * Returns the optimal size in "game pixels" based on the screen size in "real pixels".
@@ -62,10 +65,10 @@ export class HdpiManager {
         if (gameWidth * gameHeight < this.absoluteMinPixelNumber) {
             this._maxZoomInReached = true;
             const minGameHeight = Math.sqrt(
-                (this.absoluteMinPixelNumber * realPixelScreenSize.height) / realPixelScreenSize.width
+                (this.absoluteMinPixelNumber * realPixelScreenSize.height) / realPixelScreenSize.width,
             );
             const minGameWidth = Math.sqrt(
-                (this.absoluteMinPixelNumber * realPixelScreenSize.width) / realPixelScreenSize.height
+                (this.absoluteMinPixelNumber * realPixelScreenSize.width) / realPixelScreenSize.height,
             );
 
             // Let's reset the zoom modifier (WARNING this is a SIDE EFFECT in a getter)

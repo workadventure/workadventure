@@ -1,13 +1,22 @@
 import type { PingMessage } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
+import type { Application } from "express";
 import Debug from "debug";
 import { apiClientRepository } from "../services/ApiClientRepository";
+import type { FrontAssets } from "../services/FrontAssets";
 import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
 
 const debug = Debug("pusher:requests");
 
 export class PingController extends BaseHttpController {
+    constructor(
+        app: Application,
+        private readonly frontAssets: FrontAssets,
+    ) {
+        super(app);
+    }
+
     // Returns a map mapping map name to file name of the map
     routes(): void {
         /**
@@ -30,6 +39,29 @@ export class PingController extends BaseHttpController {
         this.app.get("/ping", (req, res) => {
             debug(`PingController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             res.status(200).send("pong");
+            return;
+        });
+
+        /**
+         * @openapi
+         * /ready:
+         *   get:
+         *     description: Returns "ready" once the pusher can serve pages. When ASSETS_URL is set, this waits for the index.html template of the front container. Use it as a readiness probe (and /ping as a liveness probe).
+         *     produces:
+         *      - "text/plain;charset=UTF-8"
+         *     responses:
+         *       200:
+         *         description: OK
+         *       503:
+         *         description: The front template is not loaded yet
+         */
+        this.app.get("/ready", (req, res) => {
+            debug(`PingController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            if (this.frontAssets.getIndexTemplate() === undefined) {
+                res.status(503).send("not ready");
+                return;
+            }
+            res.status(200).send("ready");
             return;
         });
 
@@ -77,9 +109,9 @@ export class PingController extends BaseHttpController {
                                 } else {
                                     resolve(result);
                                 }
-                            }
+                            },
                         );
-                    })
+                    }),
                 );
             }
 

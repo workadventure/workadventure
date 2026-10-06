@@ -17,6 +17,19 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             "Teams és una aplicació de Microsoft 365 que ajuda el vostre equip a mantenir-se connectat i organitzat. Podeu xatejar, reunir-vos, trucar i col·laborar tot en un sol lloc 😍",
         buttonSync: "Sincronitzar el meu Teams 🚀",
         buttonConnect: "Connectar el meu Teams 🚀",
+        meetingPopupWaiting: {
+            title: "Teams Microsoft Meetings 🎉",
+            subtitle: "The Teams Meeting is not created yet... is in progress 💪",
+            guestExplain:
+                "Please connect to the platform to create a Teams Online Meeting or ask the owner to create it for you 🚀",
+            guestError: "You are not connected and cannot create Teams Online Meeting 😭",
+            missingScope: "No meeting was created: your Microsoft account is not allowed to create meetings.",
+            missingScopeExplain:
+                "Wait for a participant who can create it, or reconnect — if your administrator has just enabled it, reconnecting is enough.",
+            error: "The Teams meeting could not be created.",
+            errorExplain: "No worries, you can still join meetings when someone else creates one 🙏",
+            reconnect: "Reconnect Teams",
+        },
     },
     discord: {
         integration: "INTEGRACIÓ",
@@ -76,6 +89,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupCancel: "Cancel·lar",
         isSyncronized: "Sincronitzat amb Google",
         popupScopeToSyncMeet: "Crear reunions en línia",
+        popupScopeToSyncMeetHelp: "Required to create meetings in Google Meet areas.",
         openingMeet: "S'està obrint Google Meet... 🙏",
         unableJoinMeet: "No es pot unir a Google Meet 😭",
         googleMeetPopupWaiting: {
@@ -86,6 +100,9 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
                 "Siusplau, inicieu sessió a la plataforma per crear un Google Meet, o demaneu al propietari que en creï un per a vosaltres 🚀",
             error: "La configuració del vostre Google Workspace no us permet crear un Meet.",
             errorExplain: "No us preocupeu, encara podeu unir-vos a reunions quan algú altre comparteix un enllaç 🙏",
+            missingScope: "No meeting was created: your Google account has not granted meeting creation.",
+            missingScopeExplain: "Wait for a participant who can create it, or reconnect and allow meeting creation.",
+            reconnect: "Reconnect Google",
         },
         popupScopeIsConnectedButton: "Tancar sessió",
         popupScopeIsConnectedExplainText:

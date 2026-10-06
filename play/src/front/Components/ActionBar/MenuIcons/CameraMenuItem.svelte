@@ -26,6 +26,7 @@
                 $availabilityStatusStore === AvailabilityStatus.BUSY ||
                 $availabilityStatusStore === AvailabilityStatus.AWAY ||
                 $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+                $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
                 $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
                 $silentStore === true ||
                 ($cameraListStore !== undefined && $cameraListStore.length === 0)
@@ -33,7 +34,7 @@
                 return "disabled";
             }
             return $requestedCameraState ? "normal" : "forbidden";
-        }
+        },
     );
 
     const cameraActionBarTooltipStore = derived(
@@ -75,11 +76,11 @@
                 };
             }
             return { title: "", desc: "", media: "" };
-        }
+        },
     );
 
     function cameraClick(): void {
-        analyticsClient.camera();
+        analyticsClient.trackAdminEvent("media.camera.toggled");
         if ($silentStore) return;
         if ($requestedCameraState === true) {
             requestedCameraState.disableWebcam();
@@ -90,7 +91,7 @@
 </script>
 
 <ActionBarButton
-    on:click={cameraClick}
+    onclick={cameraClick}
     classList="group/btn-cam"
     disabledHelp={$openedMenuStore !== undefined}
     state={$cameraButtonStateStore}
@@ -98,11 +99,11 @@
     tooltipTitle={$cameraActionBarTooltipStore.title}
     desc={$cameraActionBarTooltipStore.desc}
     media={$cameraActionBarTooltipStore.media}
-    on:mouseenter={() => {
+    onmouseenter={() => {
         if ($availabilityStatusStore === AvailabilityStatus.ONLINE) mouseIsHoveringCameraButton.set(true);
         else mouseIsHoveringCameraButton.set(false);
     }}
-    on:mouseleave={() => mouseIsHoveringCameraButton.set(false)}
+    onmouseleave={() => mouseIsHoveringCameraButton.set(false)}
 >
     {#if $requestedCameraState && !$silentStore && $cameraListStore && $cameraListStore.length > 0}
         <CamOnIcon />

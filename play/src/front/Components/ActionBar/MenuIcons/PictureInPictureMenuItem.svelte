@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
 
@@ -14,16 +13,20 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
 
-    const dispatch = createEventDispatcher<{
-        click: void;
-    }>();
+    interface Props {
+        onclick?: () => void;
+    }
+
+    const { onclick }: Props = $props();
 
     function pictureInPictureClick() {
         // Analytics
-        analyticsClient.clickPictureInPicture(!$askPictureInPictureActivatingStore);
+        analyticsClient.trackAdminEvent("meeting.picture_in_picture.toggled", {
+            open: !$askPictureInPictureActivatingStore,
+        });
 
         // Create request to the navigateur to enter picture in picture mode
-        dispatch("click");
+        onclick?.();
 
         // If the settings of user do not allow picture in picture, we enable it
         if (!localUserStore.getAllowPictureInPicture()) {
@@ -37,14 +40,14 @@
 <ActionBarButton
     classList="group/btn-picture-in-picture"
     disabledHelp={$openedMenuStore !== undefined}
-    state={$pictureInPictureSupportedStore ? ($activePictureInPictureStore ? "active" : "normal") : "disabled"}
+    state={$activePictureInPictureStore ? "active" : "normal"}
     dataTestId={$pictureInPictureSupportedStore ? "pictureInPictureButton" : "pictureInPictureButtonDisabled"}
     tooltipTitle={$LL.actionbar.help.pictureInPicture.title()}
     desc={$pictureInPictureSupportedStore
         ? $LL.actionbar.help.pictureInPicture.desc()
         : $LL.actionbar.help.pictureInPicture.descDisabled()}
     media="./static/Videos/PictureInPicture.mp4"
-    on:click={pictureInPictureClick}
+    onclick={pictureInPictureClick}
 >
     {#if $activePictureInPictureStore}
         <PictureInPictureOffIcon />

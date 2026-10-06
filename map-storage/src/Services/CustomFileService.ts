@@ -24,7 +24,7 @@ export class CustomFileService {
 
         const mapPath = mapPathUsingDomainWithPrefix(
             `/private/files/${filename}-${uploadFileMessage.propertyId}${fileExtension}`,
-            this.hostname
+            this.hostname,
         );
         console.info("Uploading file to: ", mapPath);
         await fileSystem.writeByteArrayAsFile(mapPath, file);
@@ -44,7 +44,7 @@ export class CustomFileService {
 
         const mapPath = mapPathUsingDomainWithPrefix(
             `/private/files/${filename}-${property.id}${fileExtension}`,
-            this.hostname
+            this.hostname,
         );
 
         await fileSystem.deleteFiles(mapPath);
