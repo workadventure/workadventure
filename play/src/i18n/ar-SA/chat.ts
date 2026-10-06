@@ -274,7 +274,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     question: {
         title: "الأسئلة",
-        description: "افتح أسئلة الاجتماع",
+        description: "اطرح الأسئلة وصوّت لها.",
+        proximityOnly: "متاح فقط في دردشة القرب.",
         ask: "اطرح سؤالاً",
         placeholder: "اكتب سؤالك...",
         send: "إرسال",

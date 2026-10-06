@@ -277,7 +277,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     question: {
         title: "질문",
-        description: "회의 질문 열기",
+        description: "질문하고 추천하기",
+        proximityOnly: "근접 채팅에서만 사용할 수 있습니다.",
         ask: "질문하기",
         placeholder: "질문을 작성하세요...",
         send: "보내기",
