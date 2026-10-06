@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "Volver a seleccionar comunicación",
-        selectCommunication: "Seleccionar comunicación",
         title: "Comunicación global",
-        selectCamera: "Selecciona una cámara 📹",
-        selectMicrophone: "Selecciona un micrófono 🎙️",
         liveMessage: {
             startMegaphone: "Iniciar megáfono",
             stopMegaphone: "Detener megáfono",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Iniciar mensaje en vivo",
             and: "y",
             toAll: "a todos los participantes",
-            confirm: "Confirmar",
-            cancel: "Cancelar",
             notice: `
             El mensaje en vivo o "Megáfono" te permite enviar un mensaje en vivo con tu cámara y micrófono a todas las personas conectadas en la sala o el mundo.
 

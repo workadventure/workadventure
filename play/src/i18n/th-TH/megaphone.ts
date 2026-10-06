@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "กลับไปเลือกวิธีการสื่อสาร",
-        selectCommunication: "เลือกวิธีการสื่อสาร",
         title: "การสื่อสารแบบทั่วถึง",
-        selectCamera: "เลือกกล้อง 📹",
-        selectMicrophone: "เลือกไมโครโฟน 🎙️",
         liveMessage: {
             startMegaphone: "เริ่มใช้เมกะโฟน",
             stopMegaphone: "หยุดใช้เมกะโฟน",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "เริ่มข้อความสด",
             and: "และ",
             toAll: "ถึงผู้เข้าร่วมทุกคน",
-            confirm: "ยืนยัน",
-            cancel: "ยกเลิก",
             notice: `
             ข้อความสดหรือ "เมกะโฟน" ช่วยให้คุณส่งข้อความสดพร้อมกล้องและไมโครโฟนของคุณไปยังทุกคนที่เชื่อมต่ออยู่ในห้องหรือในโลกนี้
 
