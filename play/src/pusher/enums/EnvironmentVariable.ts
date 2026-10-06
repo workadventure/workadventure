@@ -173,7 +173,7 @@ export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_ADMIN_USER;
 export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWORD;
 export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
 
-export const ENABLE_SAY: boolean = env.ENABLE_SAY || true;
+export const ENABLE_SAY: boolean = env.ENABLE_SAY;
 
 export const LIVEKIT_RECORDING_S3_ENDPOINT: string | undefined = env.LIVEKIT_RECORDING_S3_ENDPOINT;
 export const LIVEKIT_RECORDING_S3_CDN_ENDPOINT: string | undefined = env.LIVEKIT_RECORDING_S3_CDN_ENDPOINT;
@@ -182,7 +182,7 @@ export const LIVEKIT_RECORDING_S3_SECRET_KEY: string | undefined = env.LIVEKIT_R
 export const LIVEKIT_RECORDING_S3_BUCKET: string | undefined = env.LIVEKIT_RECORDING_S3_BUCKET;
 export const LIVEKIT_RECORDING_S3_REGION: string | undefined = env.LIVEKIT_RECORDING_S3_REGION;
 export const LIVEKIT_PIXEL_DENSITY: number = env.LIVEKIT_PIXEL_DENSITY;
-export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT || true;
+export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT;
 // Tutorial settings
 export const ENABLE_TUTORIAL: boolean = env.ENABLE_TUTORIAL ?? true;
 export const ANALYTICS_FLUSH_INTERVAL_MS: number = env.ANALYTICS_FLUSH_INTERVAL_MS;
@@ -250,8 +250,8 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_CHAT_DISCONNECTED_LIST,
     MATRIX_ADMIN_USER,
     MATRIX_DOMAIN,
-    ENABLE_SAY: env.ENABLE_SAY || true,
-    ENABLE_ISSUE_REPORT: env.ENABLE_ISSUE_REPORT || true,
+    ENABLE_SAY,
+    ENABLE_ISSUE_REPORT,
     GRPC_MAX_MESSAGE_SIZE: env.GRPC_MAX_MESSAGE_SIZE,
     TURN_CREDENTIALS_RENEWAL_TIME: env.TURN_CREDENTIALS_RENEWAL_TIME,
     // Woka settings
