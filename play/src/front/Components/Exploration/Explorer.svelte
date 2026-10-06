@@ -61,8 +61,13 @@
     function onChangeFilterHandle() {
         entitiesListFiltered.set(new Map());
         for (let [key, entity] of $mapExplorationEntitiesStore) {
-            // Check filter by name
-            if (filter && filter != "" && entity.getPrefab().name.toLowerCase().indexOf(filter.toLowerCase()) == -1)
+            // Check filter by name: the name shown in the list, or the object type (prefab name)
+            if (
+                filter &&
+                filter != "" &&
+                !getEntityDisplayName(entity).toLowerCase().includes(filter.toLowerCase()) &&
+                !entity.getPrefab().name.toLowerCase().includes(filter.toLowerCase())
+            )
                 continue;
 
             // Check filter by properties

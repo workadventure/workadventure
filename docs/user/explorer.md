@@ -15,7 +15,7 @@ To open it, click the map icon at the bottom right of the screen (under the zoom
 While exploring:
 
 - drag the map, or use the arrow keys, to move the view; use the mouse wheel or the **+** and **−** buttons to zoom,
-- the panel on the right lists the objects and areas of the room. Type in **Search** to filter the areas by name (objects are filtered by their type, for example "Desk"), or click the icons to show only the places with a given feature (meeting room, website, sound…),
+- the panel on the right lists the objects and areas of the room. Type in **Search** to filter the places by name (an object also matches its type, for example "Desk"), or click the icons to show only the places with a given feature (meeting room, website, sound…),
 - hover over a place in the list to see it on the map.
 
 Click a place, or its eye icon, to see its name and description. Click the walking icon, or **Move to area** (**Move to entity** for an object) in the description, to walk there: your Woka goes there and the explorer closes.
