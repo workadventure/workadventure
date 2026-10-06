@@ -7,7 +7,7 @@ import path from "path";
 /**
  * "Identify screens" picker: shows a big number on every physical display and lets the user pick one
  * by clicking it. Returns the matching `screen:` desktopCapturer source (with its display id), which
- * the caller uses to start sharing — and which lets the meeting bar target the exact display.
+ * the caller uses to start sharing — and which lets the annotation overlay target the exact display.
  */
 
 export type IdentifiedScreenSource = {

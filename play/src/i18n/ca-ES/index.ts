@@ -28,6 +28,7 @@ import refreshPrompt from "./refreshPrompt";
 import megaphone from "./megaphone";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
+import screenAnnotation from "./screenAnnotation";
 import desktop from "./desktop";
 import recording from "./recording";
 
@@ -61,6 +62,7 @@ const ca_ES = deepmerge(en_US, {
     randomNames,
     onboarding,
     recording,
+    screenAnnotation,
     desktop,
 });
 
