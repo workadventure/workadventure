@@ -29,7 +29,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "němy",
             description: "Žane rozmołwy w nutřkownym dowolić.",
-            actionButtonLabel: "Njewobceŕać",
         },
         text: {
             label: "Nadpismo",
@@ -76,7 +75,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "přetorhnyć",
                 validate: "waliděrować",
             },
-            actionButtonLabel: "Jitsi-meeting startować",
         },
         playAudio: {
             label: "Awdiodataju wothrać",
@@ -86,7 +84,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Hudźbu wothrać",
             volumeLabel: "sylnosć zwuka",
             error: "Zwuk njemóže so začitać",
-            actionButtonLabel: "Hudźbu wothrać",
             playForAllUsersLabel: "Za wšitkich wužiwarjow na karće wothrać",
             audibleRadiusLabel: "Radius słyšenja (w pikselach)",
             audibleRadiusPlaceholder: "Wšudźe słyšomny, jeli prózdny",
@@ -117,7 +114,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "W nowym tabje wočinić",
             openApplication: "Aplikaciju wočinić",
             hideUrlLabel: "URL schować",
-            actionButtonLabel: "Link wočinić",
         },
         advancedOptions: "Rozšěrjene opcije",
         speakerMegaphone: {
@@ -125,7 +121,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: 'Wužiwarjo na podiumje (podij) móža wšěm wobdźělnikam w přisłušnej "Publikum"-wobłuku rěčeć.',
             nameLabel: "Mjeno",
             namePlaceholder: "HłownyPodij",
-            actionButtonLabel: "K podiumej připojować",
         },
         listenerMegaphone: {
             label: "Publikum",
@@ -138,7 +133,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Zda so, zo je problem ze wotkazom, kotryž sy zapósłał. Prošu přepruwuj jón hišće raz. 🙏",
             waitingMedialLinkHelp: "Prawy wotkaz měł być 'https://monlienmedia.com/…'.",
             waitingSpeaker: "Čaka so na rěčnika 🎤✨",
-            actionButtonLabel: "K publikumjej připojować",
         },
         chatEnabled: "Chat aktiwizowany",
         allowTalking: "Rěčenje a tworjenje pucherjow dowolić",
@@ -154,7 +148,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hashMenuItem: "Wužiwać, jeli URL wobsahuje #[mjeno-wobłuka]",
             infoAreaName:
                 "Mjeno wobłuka so w wuběraku wuchadneho wobłuka wužiwa. Dyrbi na karće jónkróćne być a njesmě prózdne znaki abo specialne znamješka wobsahować.",
-            actionButtonLabel: "K startowemu wobłukej hić",
         },
         exit: {
             label: "Wuchadny wobłuk",
@@ -162,42 +155,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "Kartu wopušćić",
             exitMapStartAreaName: "mjeno startoweho wobłuka",
             defaultStartArea: "Standardowy startowy wobłuk",
-            actionButtonLabel: "K wuchadkej hić",
         },
         youtube: {
             label: "YouTube-Video wočinić",
             description: "YouTube-Video w WorkAdventure abo w nowym tabje wočinić.",
             error: "Prošu zapodać płaćiwy YouTube-URL",
             disabled: "YouTube-wočinjenje je deaktiwowane.",
-            actionButtonLabel: "YouTube-Video wočinić",
         },
         googleDocs: {
             label: "Google Docs wočinić",
             description: "Google Docs w WorkAdventure abo w nowym tabje wočinić.",
             error: "Prošu zapodać płaćiwy Google Docs-URL",
             disabled: "Google Docs-wočinjenje je deaktiwowane.",
-            actionButtonLabel: "Google Docs wočinić",
         },
         klaxoon: {
             label: "Klaxoon wočinić",
             description: "Klaxoon w WorkAdventure abo w nowym tabje wočinić.",
             error: "Prošu zapodać płaćiwy Klaxoon-URL",
             disabled: "Klaxoon-wočinjenje je deaktiwowane.",
-            actionButtonLabel: "Klaxoon wočinić",
         },
         googleSheets: {
             label: "Google Sheets wočinić",
             description: "Google Sheets w WorkAdventure abo w nowym tabje wočinić.",
             error: "Prošu zapodać płaćiwy Google Sheets-URL",
             disabled: "Google Sheets-wočinjenje je deaktiwowane.",
-            actionButtonLabel: "Google Sheets wočinić",
         },
         googleSlides: {
             label: "Google Slides wočinić",
             description: "Google Slides w WorkAdventure abo w nowym tabje wočinić.",
             error: "Prošu zapodać płaćiwy Google Slides-URL",
             disabled: "Google Slides-wočinjenje je deaktiwowane.",
-            actionButtonLabel: "Google Slides wočinić",
         },
         eraser: {
             label: "Eraser",
@@ -205,14 +192,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Wotstronić",
             error: "Prošu zapodać płaćiwy Eraser-URL",
             disabled: "Eraser-wočinjenje je deaktiwowane.",
-            actionButtonLabel: "Kresby wotstronić",
         },
         googleDrive: {
             label: "Google Drive wočinić",
             description: "Google Drive w WorkAdventure abo w nowym tabje wočinić.",
             error: "Prošu zapodać płaćiwy Google Drive-URL",
             disabled: "Google Drive-wočinjenje je deaktiwowane.",
-            actionButtonLabel: "Google Drive wočinić",
         },
         restrictedRightsPropertyData: {
             label: "Prawa přidać",
@@ -225,7 +210,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "Prawa přistupa",
             rightReadDescription:
                 "Prawa přistupa definěruja, štó móže z wobłukom interagować. Wužiwarjo, kotřiž wotpowěduja jednej z tutych toflickow, móža do wobłuka stupić a objekty w wobłuku wužiwać.",
-            actionButtonLabel: "K priwatnemu rumej hić",
         },
         personalAreaPropertyData: {
             label: "Priwatny wobłuk",
@@ -240,7 +224,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "Dowoleny wužiwar",
             owner: "Wobsedźer",
             revokeAccess: "Přistup wzeć",
-            actionButtonLabel: "K priwatnemu blidkej hić",
         },
         excalidraw: {
             label: "Excalidraw wočinić",
@@ -248,7 +231,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Wotewrjeny žórłowy wirtuelny běły tablicowy stil. Kolegatywny a wot kónca do kónca šifrowany.",
             error: "Prošu zapodać płaćiwy Excalidraw-URL",
             disabled: "Excalidraw-wočinjenje je deaktiwowane.",
-            actionButtonLabel: "Excalidraw wočinić",
         },
         cards: {
             label: "Cards wočinić",
@@ -256,14 +238,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Najschnórša a najlóšša rozrisanje, zo byšće swoje wědomje w najkrótšim času dźělił, online, na MS Teams a na mobilnym rěće.",
             error: "Prošu zapodać płaćiwy Cards-URL",
             disabled: "Cards-wočinjenje je deaktiwowane.",
-            actionButtonLabel: "Cards wočinić",
         },
         tldraw: {
             label: "tldraw wočinić",
             description: "Online běły tablicowy / njewobmjezowany canvas SDK.",
             error: "Prošu zapodać płaćiwy tldraw-URL",
             disabled: "tldraw-wočinjenje je deaktiwowane.",
-            actionButtonLabel: "tldraw wočinić",
         },
         matrixRoomPropertyData: {
             label: "Matrix-rum zwjazać",
@@ -272,7 +252,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "Zwobraznjeńske mjeno ruma",
             roomNameLabelPlaceholder: "Mój rum",
             defaultChatRoomAreaName: "Wobłuk ruma",
-            actionButtonLabel: "Chatować započeć",
         },
         tooltipPropertyData: {
             label: "Info-bublina",
@@ -280,7 +259,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "Napišće tu wobsah ✍️",
             duration: "Čas (w sekundach) ⏱️",
             infinityDuration: "Njewobmjezowany čas ⏱️",
-            actionButtonLabel: "Info-bublinu widźeć",
         },
         openFile: {
             label: "Dataju wočinić",
@@ -298,7 +276,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "Dataja je přewulka, maksimalna wulkosć je {size} MB",
             },
             hideUrlLabel: "URL schować",
-            actionButtonLabel: "Dataju wočinić",
         },
         livekitRoomProperty: {
             label: "Meetingowy rum",
@@ -317,7 +294,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "přetorhnyć",
                 validate: "waliděrować",
             },
-            actionButtonLabel: "Meeting započeć",
         },
         maxUsersInAreaPropertyData: {
             label: "Maksimalna ličba wužiwarjow",

@@ -18,7 +18,7 @@ While exploring:
 - the panel on the right lists the objects and areas of the room. Type in **Search** to filter the areas by name (objects are filtered by their type, for example "Desk"), or click the icons to show only the places with a given feature (meeting room, website, sound…),
 - hover over a place in the list to see it on the map.
 
-Click a place, or its eye icon, to see its name and description. Click the walking icon, or the main button of the description (**Move to area**, **Move to entity**, or an action such as **Start meeting** or **Open link**: whatever its label, it only walks you there), to walk there: your Woka goes there and the explorer closes.
+Click a place, or its eye icon, to see its name and description. Click the walking icon, or **Move to area** (**Move to entity** for an object) in the description, to walk there: your Woka goes there and the explorer closes.
 
 ![The description of an area](images/explorer-details.png)
 

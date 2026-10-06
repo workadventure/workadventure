@@ -29,7 +29,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "靜音",
             description: "不允許在此區域內進行對話。",
-            actionButtonLabel: "請勿打擾",
         },
         text: {
             label: "標題文字",
@@ -76,7 +75,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "取消",
                 validate: "驗證",
             },
-            actionButtonLabel: "開始 Jitsi 會議",
         },
         playAudio: {
             label: "播放音訊檔案",
@@ -86,7 +84,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "播放音樂",
             error: "無法載入聲音",
-            actionButtonLabel: "播放音樂",
             playForAllUsersLabel: "為地圖上所有使用者播放",
             audibleRadiusLabel: "可聽半徑（像素）",
             audibleRadiusPlaceholder: "留空則處處可聽",
@@ -117,14 +114,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "強制在新分頁中開啟",
             openApplication: "開啟應用程式",
             hideUrlLabel: "隱藏 URL",
-            actionButtonLabel: "開啟連結",
         },
         speakerMegaphone: {
             label: "講台",
             description: "講台（舞台）上的使用者可以向相符的「觀眾」區域中的所有與會者講話。",
             nameLabel: "名稱",
             namePlaceholder: "主舞台",
-            actionButtonLabel: "加入講台",
         },
         listenerMegaphone: {
             label: "觀眾",
@@ -136,7 +131,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkError: "您提供的連結似乎有問題。您能再檢查一下嗎？🙏",
             waitingMedialLinkHelp: "正確的連結應該是「https://monlienmedia.com/…」。",
             waitingSpeaker: "等待演講者 🎤✨",
-            actionButtonLabel: "加入觀眾",
         },
         seeAttendees: "查看與會者",
         start: {
@@ -148,7 +142,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultMenuItem: "預設使用",
             hashMenuItem: "如果 URL 包含 #[區域名稱] 則使用",
             infoAreaName: "區域名稱將用於退出區域選擇器。它在地圖上必須是唯一的，不能包含空格或特殊字元。",
-            actionButtonLabel: "前往起始點",
         },
         exit: {
             label: "退出區域",
@@ -156,42 +149,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "退出地圖",
             exitMapStartAreaName: "起始區域名稱",
             defaultStartArea: "預設起始區域",
-            actionButtonLabel: "前往出口",
         },
         youtube: {
             label: "開啟 YouTube 影片",
             description: "在 WorkAdventure 內或以新分頁開啟 YouTube 影片。",
             error: "請輸入有效的 YouTube URL",
             disabled: "YouTube 整合已停用。",
-            actionButtonLabel: "開啟 YouTube 影片",
         },
         googleDocs: {
             label: "開啟 Google 文件",
             description: "在 WorkAdventure 內或以新分頁開啟 Google 文件。",
             error: "請輸入有效的 Google 文件 URL",
             disabled: "Google 文件整合已停用。",
-            actionButtonLabel: "開啟 Google 文件",
         },
         klaxoon: {
             label: "開啟 Klaxoon",
             description: "在 WorkAdventure 內或以新分頁開啟 Klaxoon。",
             error: "請輸入有效的 Klaxoon URL",
             disabled: "Klaxoon 整合已停用。",
-            actionButtonLabel: "開啟 Klaxoon",
         },
         googleSheets: {
             label: "開啟 Google 試算表",
             description: "在 WorkAdventure 內或以新分頁開啟 Google 試算表。",
             error: "請輸入有效的 Google 試算表 URL",
             disabled: "Google 試算表整合已停用。",
-            actionButtonLabel: "開啟 Google 試算表",
         },
         googleSlides: {
             label: "開啟 Google 簡報",
             description: "在 WorkAdventure 內或以新分頁開啟 Google 簡報。",
             error: "請輸入有效的 Google 簡報 URL",
             disabled: "Google 簡報整合已停用。",
-            actionButtonLabel: "開啟 Google 簡報",
         },
         eraser: {
             label: "橡皮擦",
@@ -199,14 +186,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "擦除",
             error: "請輸入有效的 Eraser URL",
             disabled: "Eraser 整合已停用。",
-            actionButtonLabel: "擦除繪圖",
         },
         googleDrive: {
             label: "開啟 Google 雲端硬碟",
             description: "在 WorkAdventure 內或以新分頁開啟 Google 雲端硬碟。",
             error: "請輸入有效的 Google 雲端硬碟 URL",
             disabled: "Google 雲端硬碟整合已停用。",
-            actionButtonLabel: "開啟 Google 雲端硬碟",
         },
         restrictedRightsPropertyData: {
             label: "新增權限",
@@ -219,7 +204,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "存取權限",
             rightReadDescription:
                 "存取權限定義誰可以與區域互動。符合這些標籤之一的使用者可以進入區域並使用區域內的物件。",
-            actionButtonLabel: "前往私人房間",
         },
         personalAreaPropertyData: {
             label: "個人區域",
@@ -233,28 +217,24 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "允許的使用者",
             owner: "擁有者",
             revokeAccess: "撤銷存取",
-            actionButtonLabel: "前往個人辦公桌",
         },
         excalidraw: {
             label: "開啟 Excalidraw",
             description: "一個開源虛擬手繪風格白板。協作且端對端加密。",
             error: "請輸入有效的 Excalidraw URL",
             disabled: "Excalidraw 整合已停用。",
-            actionButtonLabel: "開啟 Excalidraw",
         },
         cards: {
             label: "開啟 Cards",
             description: "最快、最簡單的解決方案，可立即在線上、在 MS Teams 和行動裝置上分享您的知識。",
             error: "請輸入有效的 Cards URL",
             disabled: "Cards 整合已停用。",
-            actionButtonLabel: "開啟 Cards",
         },
         tldraw: {
             label: "開啟 tldraw",
             description: "線上白板 / 無限畫布 SDK。",
             error: "請輸入有效的 tldraw URL",
             disabled: "tldraw 整合已停用。",
-            actionButtonLabel: "開啟 tldraw",
         },
         matrixRoomPropertyData: {
             label: "連結 Matrix 房間",
@@ -263,7 +243,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "房間顯示名稱",
             roomNameLabelPlaceholder: "我的房間",
             defaultChatRoomAreaName: "房間區域",
-            actionButtonLabel: "開始聊天",
         },
         tooltipPropertyData: {
             label: "資訊氣泡",
@@ -271,7 +250,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "在此寫入內容 ✍️",
             duration: "持續時間（秒）⏱️",
             infinityDuration: "無限持續時間 ⏱️",
-            actionButtonLabel: "查看資訊氣泡",
         },
         openFile: {
             label: "開啟檔案",
@@ -289,7 +267,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "檔案太大，大小上限為 {size} MB",
             },
             hideUrlLabel: "隱藏 URL",
-            actionButtonLabel: "開啟檔案",
         },
         livekitRoomProperty: {
             label: "會議室",
@@ -308,7 +285,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "取消",
                 validate: "驗證",
             },
-            actionButtonLabel: "開始會議",
         },
         maxUsersInAreaPropertyData: {
             label: "最大使用者數",

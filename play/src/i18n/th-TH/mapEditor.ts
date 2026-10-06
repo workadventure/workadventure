@@ -29,7 +29,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "เงียบ",
             description: "ไม่อนุญาตให้สนทนาภายในพื้นที่นี้",
-            actionButtonLabel: "ห้ามรบกวน",
         },
         text: {
             label: "ข้อความส่วนหัว",
@@ -76,7 +75,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "ยกเลิก",
                 validate: "ตรวจสอบ",
             },
-            actionButtonLabel: "เริ่มการประชุม Jitsi",
         },
         playAudio: {
             label: "เล่นไฟล์เสียง",
@@ -86,7 +84,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "เล่นเพลง",
             error: "ไม่สามารถโหลดเสียงได้",
-            actionButtonLabel: "เล่นเพลง",
             playForAllUsersLabel: "เล่นให้ผู้ใช้ทุกคนบนแผนที่",
             audibleRadiusLabel: "รัศมีที่ได้ยิน (พิกเซล)",
             audibleRadiusPlaceholder: "ได้ยินทุกที่หากเว้นว่าง",
@@ -117,14 +114,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "บังคับเปิดในแท็บใหม่",
             openApplication: "เปิดแอปพลิเคชัน",
             hideUrlLabel: "ซ่อน URL",
-            actionButtonLabel: "เปิดลิงก์",
         },
         speakerMegaphone: {
             label: "เวที",
             description: 'ผู้ใช้บนเวทีสามารถพูดกับผู้เข้าร่วมทุกคนในพื้นที่ "ผู้ชม" ที่เชื่อมโยงกัน',
             nameLabel: "ชื่อ",
             namePlaceholder: "MainStage",
-            actionButtonLabel: "ขึ้นเวที",
         },
         listenerMegaphone: {
             label: "ผู้ชม",
@@ -136,7 +131,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkError: "ดูเหมือนลิงก์ที่คุณให้มามีปัญหา ช่วยตรวจสอบอีกครั้งได้ไหม? 🙏",
             waitingMedialLinkHelp: "ลิงก์ที่ถูกต้องควรเป็น 'https://monlienmedia.com/…'",
             waitingSpeaker: "กำลังรอผู้พูด 🎤✨",
-            actionButtonLabel: "เข้าร่วมผู้ชม",
         },
         seeAttendees: "ดูผู้เข้าร่วม",
         start: {
@@ -149,7 +143,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hashMenuItem: "ใช้เมื่อ URL มี #[ชื่อพื้นที่]",
             infoAreaName:
                 "ชื่อพื้นที่จะถูกใช้ในตัวเลือกพื้นที่ทางออก ต้องไม่ซ้ำกันบนแผนที่ และห้ามมีช่องว่างหรืออักขระพิเศษ",
-            actionButtonLabel: "ไปยังจุดเริ่มต้น",
         },
         exit: {
             label: "พื้นที่ทางออก",
@@ -157,42 +150,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "แผนที่ปลายทาง",
             exitMapStartAreaName: "ชื่อพื้นที่เริ่มต้น",
             defaultStartArea: "พื้นที่เริ่มต้นเริ่มแรก",
-            actionButtonLabel: "ไปยังทางออก",
         },
         youtube: {
             label: "เปิดวิดีโอ YouTube",
             description: "เปิดวิดีโอ YouTube ภายใน WorkAdventure หรือในแท็บใหม่",
             error: "กรุณากรอก URL ของ YouTube ที่ถูกต้อง",
             disabled: "การเชื่อมต่อ YouTube ถูกปิดใช้งาน",
-            actionButtonLabel: "เปิดวิดีโอ YouTube",
         },
         googleDocs: {
             label: "เปิด Google Docs",
             description: "เปิด Google Docs ภายใน WorkAdventure หรือในแท็บใหม่",
             error: "กรุณากรอก URL ของ Google Docs ที่ถูกต้อง",
             disabled: "การเชื่อมต่อ Google Docs ถูกปิดใช้งาน",
-            actionButtonLabel: "เปิด Google Docs",
         },
         klaxoon: {
             label: "เปิด Klaxoon",
             description: "เปิด Klaxoon ภายใน WorkAdventure หรือในแท็บใหม่",
             error: "กรุณากรอก URL ของ Klaxoon ที่ถูกต้อง",
             disabled: "การเชื่อมต่อ Klaxoon ถูกปิดใช้งาน",
-            actionButtonLabel: "เปิด Klaxoon",
         },
         googleSheets: {
             label: "เปิด Google Sheets",
             description: "เปิด Google Sheets ภายใน WorkAdventure หรือในแท็บใหม่",
             error: "กรุณากรอก URL ของ Google Sheets ที่ถูกต้อง",
             disabled: "การเชื่อมต่อ Google Sheets ถูกปิดใช้งาน",
-            actionButtonLabel: "เปิด Google Sheets",
         },
         googleSlides: {
             label: "เปิด Google Slides",
             description: "เปิด Google Slides ภายใน WorkAdventure หรือในแท็บใหม่",
             error: "กรุณากรอก URL ของ Google Slides ที่ถูกต้อง",
             disabled: "การเชื่อมต่อ Google Slides ถูกปิดใช้งาน",
-            actionButtonLabel: "เปิด Google Slides",
         },
         eraser: {
             label: "ยางลบ",
@@ -200,14 +187,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "ลบ",
             error: "กรุณากรอก URL ของ Eraser ที่ถูกต้อง",
             disabled: "การเชื่อมต่อ Eraser ถูกปิดใช้งาน",
-            actionButtonLabel: "ลบภาพวาด",
         },
         googleDrive: {
             label: "เปิด Google Drive",
             description: "เปิด Google Drive ภายใน WorkAdventure หรือในแท็บใหม่",
             error: "กรุณากรอก URL ของ Google Drive ที่ถูกต้อง",
             disabled: "การเชื่อมต่อ Google Drive ถูกปิดใช้งาน",
-            actionButtonLabel: "เปิด Google Drive",
         },
         restrictedRightsPropertyData: {
             label: "เพิ่มสิทธิ์",
@@ -220,7 +205,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "สิทธิ์การเข้าถึง",
             rightReadDescription:
                 "สิทธิ์การเข้าถึงกำหนดว่าใครสามารถโต้ตอบกับพื้นที่ได้ ผู้ใช้ที่มีแท็กตรงกับแท็กเหล่านี้สามารถเข้าสู่พื้นที่และใช้วัตถุภายในพื้นที่ได้",
-            actionButtonLabel: "ไปยังห้องส่วนตัว",
         },
         personalAreaPropertyData: {
             label: "พื้นที่ส่วนตัว",
@@ -235,14 +219,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "ผู้ใช้ที่อนุญาต",
             owner: "เจ้าของ",
             revokeAccess: "เพิกถอนสิทธิ์",
-            actionButtonLabel: "ไปยังโต๊ะส่วนตัว",
         },
         excalidraw: {
             label: "เปิด Excalidraw",
             description: "ไวท์บอร์ดเสมือนสไตล์วาดมือแบบโอเพนซอร์ส ทำงานร่วมกันได้และเข้ารหัสจากต้นทางถึงปลายทาง",
             error: "กรุณากรอก URL ของ Excalidraw ที่ถูกต้อง",
             disabled: "การเชื่อมต่อ Excalidraw ถูกปิดใช้งาน",
-            actionButtonLabel: "เปิด Excalidraw",
         },
         cards: {
             label: "เปิด Cards",
@@ -250,14 +232,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "วิธีที่เร็วและง่ายที่สุดในการแบ่งปันความรู้ของคุณในเวลาอันสั้น ทั้งออนไลน์ บน MS Teams และบนมือถือ",
             error: "กรุณากรอก URL ของ Cards ที่ถูกต้อง",
             disabled: "การเชื่อมต่อ Cards ถูกปิดใช้งาน",
-            actionButtonLabel: "เปิด Cards",
         },
         tldraw: {
             label: "เปิด tldraw",
             description: "ไวท์บอร์ดออนไลน์ / SDK แคนวาสไร้ขอบเขต",
             error: "กรุณากรอก URL ของ tldraw ที่ถูกต้อง",
             disabled: "การเชื่อมต่อ tldraw ถูกปิดใช้งาน",
-            actionButtonLabel: "เปิด tldraw",
         },
         matrixRoomPropertyData: {
             label: "เชื่อมโยงห้อง Matrix",
@@ -266,7 +246,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "ชื่อที่แสดงของห้อง",
             roomNameLabelPlaceholder: "ห้องของฉัน",
             defaultChatRoomAreaName: "พื้นที่ห้อง",
-            actionButtonLabel: "เริ่มแชท",
         },
         tooltipPropertyData: {
             label: "บับเบิลข้อมูล",
@@ -274,7 +253,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "เขียนเนื้อหาที่นี่ ✍️",
             duration: "ระยะเวลา (วินาที) ⏱️",
             infinityDuration: "แสดงตลอดเวลา ⏱️",
-            actionButtonLabel: "ดูบับเบิลข้อมูล",
         },
         openFile: {
             label: "เปิดไฟล์",
@@ -292,7 +270,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "ไฟล์ใหญ่เกินไป ขนาดสูงสุดคือ {size} MB",
             },
             hideUrlLabel: "ซ่อน URL",
-            actionButtonLabel: "เปิดไฟล์",
         },
         livekitRoomProperty: {
             label: "ห้องประชุม",
@@ -311,7 +288,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "ยกเลิก",
                 validate: "ตรวจสอบ",
             },
-            actionButtonLabel: "เริ่มการประชุม",
         },
         maxUsersInAreaPropertyData: {
             label: "จำนวนผู้ใช้สูงสุด",
