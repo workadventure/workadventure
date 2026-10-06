@@ -13,6 +13,7 @@
     import {
         activePictureInPictureStore,
         askPictureInPictureActivatingStore,
+        pictureInPictureLayoutStore,
         pictureInPictureSupportedStore,
     } from "../../Stores/PeerStore";
     import { userAwayFromAppStore } from "../../Stores/DesktopVisibilityStore";
@@ -531,12 +532,12 @@
 
 <div bind:this={parentDivElement} class="h-full w-full">
     <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
-        {#if $activePictureInPictureStore}
+        {#if $pictureInPictureLayoutStore}
             <div
                 class="fixed z-0 top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 bg-black"
                 style="background-image: url({mapImage});"
             ></div>
         {/if}
-        {@render children?.({ inPictureInPicture: $activePictureInPictureStore })}
+        {@render children?.({ inPictureInPicture: $pictureInPictureLayoutStore })}
     </div>
 </div>
