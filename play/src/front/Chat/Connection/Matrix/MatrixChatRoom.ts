@@ -2033,37 +2033,28 @@ export class MatrixChatRoom
     }
 
     async sendFiles(files: FileList) {
-        try {
-            await Promise.allSettled(Array.from(files).map((file) => this.sendFile(file)));
-        } catch (error) {
-            console.error(error);
-        }
+        await Promise.all(Array.from(files).map((file) => this.sendFile(file)));
     }
 
     private async sendFile(file: File) {
-        try {
-            const content: Omit<MediaEventContent, "info"> & {
-                info: Partial<MediaEventInfo>;
-                formatted_body?: string;
-                "m.new_content"?: never;
-                "m.relates_to"?: never;
-            } = {
-                body: file.name,
-                formatted_body: file.name,
-                info: {
-                    size: file.size,
-                    mimetype: file.type,
-                },
-                msgtype: this.getMessageTypeFromFile(file),
-                ...(await uploadAttachment(this.matrixRoom.client, file, this.matrixRoom.hasEncryptionStateEvent())),
-            };
-            this.applyReplyContentIfReplyTo(content);
+        const content: Omit<MediaEventContent, "info"> & {
+            info: Partial<MediaEventInfo>;
+            formatted_body?: string;
+            "m.new_content"?: never;
+            "m.relates_to"?: never;
+        } = {
+            body: file.name,
+            formatted_body: file.name,
+            info: {
+                size: file.size,
+                mimetype: file.type,
+            },
+            msgtype: this.getMessageTypeFromFile(file),
+            ...(await uploadAttachment(this.matrixRoom.client, file, this.matrixRoom.hasEncryptionStateEvent())),
+        };
+        this.applyReplyContentIfReplyTo(content);
 
-            return this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, content);
-        } catch (error) {
-            console.error(error);
-            return;
-        }
+        return this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, content);
     }
 
     private getMessageTypeFromFile(file: File) {

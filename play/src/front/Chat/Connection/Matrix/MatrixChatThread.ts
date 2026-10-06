@@ -519,39 +519,30 @@ export class MatrixChatThread implements ChatThread {
         if (!get(this.canSendMessages)) {
             return;
         }
-        try {
-            await Promise.allSettled(Array.from(files).map((file) => this.sendFile(file)));
-        } catch (error) {
-            console.error(error);
-        }
+        await Promise.all(Array.from(files).map((file) => this.sendFile(file)));
     }
 
     private async sendFile(file: File) {
         if (!get(this.canSendMessages)) {
             return undefined;
         }
-        try {
-            const matrixRoom = this.parentRoom.getMatrixRoom();
-            const content = {
-                body: file.name,
-                formatted_body: file.name,
-                info: {
-                    size: file.size,
-                    mimetype: file.type,
-                },
-                msgtype: this.getMessageTypeFromFile(file),
-                ...(await uploadAttachment(matrixRoom.client, file, matrixRoom.hasEncryptionStateEvent())),
-            } as RoomMessageEventContent &
-                Omit<MediaEventContent, "info"> & {
-                    info: Partial<MediaEventInfo>;
-                };
-            this.applyThreadRelationContent(content);
+        const matrixRoom = this.parentRoom.getMatrixRoom();
+        const content = {
+            body: file.name,
+            formatted_body: file.name,
+            info: {
+                size: file.size,
+                mimetype: file.type,
+            },
+            msgtype: this.getMessageTypeFromFile(file),
+            ...(await uploadAttachment(matrixRoom.client, file, matrixRoom.hasEncryptionStateEvent())),
+        } as RoomMessageEventContent &
+            Omit<MediaEventContent, "info"> & {
+                info: Partial<MediaEventInfo>;
+            };
+        this.applyThreadRelationContent(content);
 
-            return this.parentRoom.getMatrixRoom().client.sendMessage(this.parentRoom.id, this.id, content);
-        } catch (error) {
-            console.error(error);
-            return undefined;
-        }
+        return matrixRoom.client.sendMessage(this.parentRoom.id, this.id, content);
     }
 
     private getMessageContent(message: string): RoomMessageEventContent {

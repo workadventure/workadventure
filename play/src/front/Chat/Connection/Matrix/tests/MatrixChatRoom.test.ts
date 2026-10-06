@@ -91,4 +91,26 @@ describe("MatrixChatRoom", () => {
             expect(get(room.members)).toHaveLength(2);
         });
     });
+
+    describe("sendFiles", () => {
+        it("should reject when an upload fails, so that the chat can tell the user", async () => {
+            const room = Object.create(MatrixChatRoom.prototype) as MatrixChatRoom;
+            const sendMessage = vi.fn();
+            Object.assign(room, {
+                matrixRoom: {
+                    roomId: "!room:matrix.org",
+                    hasEncryptionStateEvent: () => false,
+                    client: {
+                        uploadContent: () => Promise.reject(new Error("M_TOO_LARGE")),
+                        sendMessage,
+                    },
+                },
+            });
+            // jsdom has no DataTransfer to build a real FileList.
+            const files = [new File(["hello"], "hello.txt")] as unknown as FileList;
+
+            await expect(room.sendFiles(files)).rejects.toThrow("M_TOO_LARGE");
+            expect(sendMessage).not.toHaveBeenCalled();
+        });
+    });
 });
