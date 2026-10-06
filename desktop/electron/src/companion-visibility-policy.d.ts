@@ -2,6 +2,8 @@ export type CompanionOverride = "auto" | "force-open" | "force-closed";
 
 export type CompanionVisibilityState = {
     screenSharing?: boolean;
+    /** False where no content-protected meeting bar can replace the panel during a share (Linux). */
+    meetingBarAvailable?: boolean;
     mainWindowFocused?: boolean;
     pipActive?: boolean;
     invitationPending?: boolean;
