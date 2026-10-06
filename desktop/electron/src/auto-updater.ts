@@ -62,32 +62,31 @@ async function init() {
         url: createDesktopConfig().updateFeedUrl,
     });
 
-    autoUpdater.on(
-        "update-downloaded",
-        ({ releaseNotes, releaseName }: { releaseNotes: string; releaseName: string }) => {
-            void (async () => {
-                const dialogOpts: MessageBoxOptions = {
-                    type: "question",
-                    buttons: [t("update.installAndRestart"), t("update.installLater")],
-                    defaultId: 0,
-                    title: t("update.title"),
-                    message: process.platform === "win32" ? releaseNotes : releaseName,
-                    detail: t("update.ready"),
-                };
+    autoUpdater.on("update-downloaded", ({ releaseNotes, releaseName }) => {
+        void (async () => {
+            // Either may be missing, and the notes are a list when fullChangelog is on.
+            const text = process.platform === "win32" ? releaseNotes : releaseName;
+            const dialogOpts: MessageBoxOptions = {
+                type: "question",
+                buttons: [t("update.installAndRestart"), t("update.installLater")],
+                defaultId: 0,
+                title: t("update.title"),
+                message: typeof text === "string" ? text : t("update.title"),
+                detail: t("update.ready"),
+            };
 
-                const { response } = await dialog.showMessageBox(dialogOpts);
-                if (response === 0) {
-                    await sleep(1000);
+            const { response } = await dialog.showMessageBox(dialogOpts);
+            if (response === 0) {
+                await sleep(1000);
 
-                    autoUpdater.quitAndInstall();
+                autoUpdater.quitAndInstall();
 
-                    // Force app to quit. This is just a workaround, ideally autoUpdater.quitAndInstall() should relaunch the app.
-                    // app.confirmedExitPrompt = true;
-                    app.quit();
-                }
-            })();
-        }
-    );
+                // Force app to quit. This is just a workaround, ideally autoUpdater.quitAndInstall() should relaunch the app.
+                // app.confirmedExitPrompt = true;
+                app.quit();
+            }
+        })();
+    });
 
     if (process.platform === "linux" && !process.env.APPIMAGE) {
         autoUpdater.autoDownload = false;
