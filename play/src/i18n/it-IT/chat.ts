@@ -242,9 +242,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         spoiledVotes: "{count} voto/i non validi",
         resultsAfterVote: "I risultati appariranno dopo il voto.",
         resultsWhenClosed: "I risultati saranno mostrati alla chiusura del sondaggio.",
-        kind: {
+        status: {
             open: "Aperto",
             closed: "Chiuso",
+        },
+        kind: {
+            open: "Risultati visibili",
+            closed: "Risultati nascosti",
         },
         end: {
             cta: "Chiudi sondaggio",

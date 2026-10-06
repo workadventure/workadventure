@@ -240,9 +240,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         spoiledVotes: "{count} صوت/أصوات باطلة",
         resultsAfterVote: "ستظهر النتائج بعد التصويت.",
         resultsWhenClosed: "ستُعرض النتائج عند إغلاق الاستطلاع.",
-        kind: {
+        status: {
             open: "مفتوح",
             closed: "مغلق",
+        },
+        kind: {
+            open: "النتائج مرئية",
+            closed: "النتائج مخفية",
         },
         end: {
             cta: "إغلاق الاستطلاع",

@@ -241,9 +241,13 @@ const chat: BaseTranslation = {
         spoiledVotes: "{count} spoiled vote(s)",
         resultsAfterVote: "Results will appear after you vote.",
         resultsWhenClosed: "Results will be shown when the poll is closed.",
-        kind: {
+        status: {
             open: "Open",
             closed: "Closed",
+        },
+        kind: {
+            open: "Results visible",
+            closed: "Results hidden",
         },
         end: {
             cta: "Close poll",

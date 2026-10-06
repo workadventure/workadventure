@@ -242,9 +242,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         spoiledVotes: "{count} ongeldige stem(men)",
         resultsAfterVote: "Resultaten verschijnen nadat u heeft gestemd.",
         resultsWhenClosed: "Resultaten worden getoond wanneer de peiling is gesloten.",
-        kind: {
+        status: {
             open: "Open",
             closed: "Gesloten",
+        },
+        kind: {
+            open: "Resultaten zichtbaar",
+            closed: "Resultaten verborgen",
         },
         end: {
             cta: "Peiling sluiten",

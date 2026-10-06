@@ -243,9 +243,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         spoiledVotes: "{count} ungültige Stimme(n)",
         resultsAfterVote: "Die Ergebnisse werden nach Ihrer Stimmabgabe angezeigt.",
         resultsWhenClosed: "Die Ergebnisse werden angezeigt, wenn die Umfrage geschlossen ist.",
-        kind: {
+        status: {
             open: "Offen",
             closed: "Geschlossen",
+        },
+        kind: {
+            open: "Ergebnisse sichtbar",
+            closed: "Ergebnisse verborgen",
         },
         end: {
             cta: "Umfrage schließen",

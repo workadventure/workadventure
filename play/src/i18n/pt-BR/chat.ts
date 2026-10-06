@@ -242,9 +242,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         spoiledVotes: "{count} voto(s) inválido(s)",
         resultsAfterVote: "Os resultados aparecerão depois que você votar.",
         resultsWhenClosed: "Os resultados serão exibidos quando a enquete for encerrada.",
-        kind: {
+        status: {
             open: "Aberta",
             closed: "Fechada",
+        },
+        kind: {
+            open: "Resultados visíveis",
+            closed: "Resultados ocultos",
         },
         end: {
             cta: "Encerrar enquete",
