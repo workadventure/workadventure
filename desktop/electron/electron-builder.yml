@@ -7,9 +7,6 @@ protocols:
       schemes:
           - workadventure
 
-# Without a signing identity, sign the app ad hoc so that macOS remembers camera / microphone decisions.
-afterSign: helpers/adhoc-sign.js
-
 files:
     - "dist/**/*"
     - "assets/**/*"
@@ -29,7 +26,13 @@ win:
 mac:
     icon: assets/icons/logo.icns
     category: public.app-category.business
-    hardenedRuntime: true
+    # Ad hoc until the Developer ID certificate is configured: an unsigned app (Electron's own linker
+    # signature) cannot have its camera / microphone decisions remembered by macOS, which then asks on
+    # every access. Hardened runtime with an ad hoc signature would make library validation refuse
+    # Electron's frameworks, so it waits for the certificate too. With the certificate: remove
+    # `identity` and set `hardenedRuntime: true` again (required for notarization).
+    identity: "-"
+    hardenedRuntime: false
     gatekeeperAssess: false
     entitlements: assets/entitlements.mac.plist
     entitlementsInherit: assets/entitlements.mac.inherit.plist
