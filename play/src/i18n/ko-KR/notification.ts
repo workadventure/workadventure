@@ -23,9 +23,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "새로 고침",
         continue: "알림 없이 계속하기",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Chrome 주소 표시줄에서 알림 허용하기",
     },
     addNewTag: "새 태그 추가: '{tag}'",
     screenSharingError: "화면 공유를 시작할 수 없습니다",

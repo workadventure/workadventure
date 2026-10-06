@@ -30,9 +30,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "Aktualisieren",
         continue: "Ohne Benachrichtigung fortfahren",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Benachrichtigungen über die Adressleiste in Chrome erlauben",
     },
     addNewTag: "neuen Tag hinzufügen: '{tag}'",
     screenSharingError: "Bildschirmfreigabe kann nicht gestartet werden",

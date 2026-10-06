@@ -23,15 +23,15 @@ const notification: BaseTranslation = {
         title: "Notifications access denied",
         permissionDenied: "Permission denied",
         content:
-            "Do not miss any discussion. Enable notifications to be notified someone wants to talk to you, even you are not on the WorkAdventure tab.",
+            "Do not miss any discussion. Enable notifications to know when someone wants to talk to you, even when you are not on the WorkAdventure tab.",
         firefoxContent:
-            'Please click the "Remember this decision" checkbox, if you don\'t want Firefox to keep asking you the authorization.',
+            'Please check the "Remember this decision" box if you don\'t want Firefox to keep asking you for permission.',
         refresh: "Refresh",
         continue: "Continue without notification",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Allowing notifications from the address bar in Chrome",
     },
     addNewTag: "add a new tag: '{tag}'",
     screenSharingError: "Cannot start screen sharing",

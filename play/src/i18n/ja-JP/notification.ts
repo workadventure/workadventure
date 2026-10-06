@@ -30,9 +30,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "更新",
         continue: "通知なしで続行",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Chrome のアドレスバーから通知を許可する",
     },
     addNewTag: '新しいタグを追加する : "{tag}"',
     screenSharingError: "画面共有を開始できません",

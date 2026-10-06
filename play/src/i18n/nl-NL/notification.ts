@@ -30,9 +30,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "Vernieuwen",
         continue: "Doorgaan zonder melding",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Meldingen toestaan via de adresbalk in Chrome",
     },
     addNewTag: "voeg een nieuw label toe: '{tag}'",
     screenSharingError: "Kan schermdeling niet starten",

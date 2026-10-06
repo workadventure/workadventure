@@ -28,9 +28,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "刷新",
         continue: "继续而不使用通知",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "在 Chrome 地址栏中允许通知",
     },
     addNewTag: '添加新标签: "{tag}"',
     screenSharingError: "无法开始屏幕共享",
