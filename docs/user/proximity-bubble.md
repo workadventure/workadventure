@@ -20,6 +20,7 @@ Walk up to someone and stop next to them: a bubble opens as soon as you stop. Wa
 - The participants icon in the action bar lists everyone in the bubble (see [Using the meeting](/user/meetings)).
 
 To join a conversation that has already started, walk to the people in the bubble and stop inside the circle.
+If someone in a bubble walks up to you while you stand still, you join their bubble too.
 
 A bubble holds up to 4 people by default (the administrator of your WorkAdventure can change this number).
 When a bubble is full, its circle turns red and nobody else can join it.
@@ -81,7 +82,7 @@ When the bubble is locked:
 
 - the lock button is red,
 - the circle of the bubble turns red on everyone's map,
-- people who walk up to the bubble stay outside. They are not told why.
+- nobody else can join: people who walk up to the bubble stay outside, and when someone in the bubble walks up to another person, that person is not pulled in. They are not told why.
 
 Anyone in the bubble can lock or unlock it. Click the lock button again to unlock it.
 The bubble stays locked while people come and go inside it. When the bubble closes, the lock is gone: the next bubble starts unlocked.
