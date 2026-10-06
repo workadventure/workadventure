@@ -18,19 +18,23 @@
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
+    import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
+
+    const disabledByStatusStore = derived(
+        [availabilityStatusStore, silentStore],
+        ([$availabilityStatusStore, $silentStore]) =>
+            $availabilityStatusStore === AvailabilityStatus.BUSY ||
+            $availabilityStatusStore === AvailabilityStatus.AWAY ||
+            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
+            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+            $silentStore,
+    );
 
     const cameraButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
-        [availabilityStatusStore, requestedCameraState, cameraListStore],
-        ([$availabilityStatusStore, $requestedCameraState, $cameraListStore]) => {
-            if (
-                $availabilityStatusStore === AvailabilityStatus.BUSY ||
-                $availabilityStatusStore === AvailabilityStatus.AWAY ||
-                $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-                $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
-                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-                $silentStore === true ||
-                ($cameraListStore !== undefined && $cameraListStore.length === 0)
-            ) {
+        [disabledByStatusStore, requestedCameraState, cameraListStore],
+        ([$disabledByStatusStore, $requestedCameraState, $cameraListStore]) => {
+            if ($disabledByStatusStore || ($cameraListStore !== undefined && $cameraListStore.length === 0)) {
                 return "disabled";
             }
             return $requestedCameraState ? "normal" : "forbidden";
@@ -38,8 +42,15 @@
     );
 
     const cameraActionBarTooltipStore = derived(
-        [LL, cameraButtonHelpContextStore, requestedCameraState, silentStore, availabilityStatusStore],
-        ([$LL, ctx, camOn, silent, status]) => {
+        [LL, cameraButtonHelpContextStore, disabledByStatusStore, availabilityStatusStore],
+        ([$LL, ctx, disabledByStatus, status]) => {
+            if (disabledByStatus) {
+                return {
+                    title: $LL.actionbar.help.camDisabledByStatus.title(),
+                    desc: $LL.actionbar.help.camDisabledByStatus.desc({ status: getStatusLabel(status) }),
+                    media: "",
+                };
+            }
             const permissionMedia = (() => {
                 try {
                     if (isAndroid()) {

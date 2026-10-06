@@ -31,7 +31,7 @@ As soon as you move your Woka, your status goes back to **Online**.
 | Sounds and desktop notifications | on | on | off | off |
 | Reminder to go back online | no | after 1 hour | after 1 hour | after 4 hours |
 
-While your status is **Busy**, **Back in a moment** or **Do not disturb**, the camera and microphone buttons are greyed out. When you go back to **Online**, your camera and microphone return to how you left them.
+While your status is **Busy**, **Back in a moment** or **Do not disturb**, the camera and microphone buttons are greyed out, and hovering over them tells you which status turned them off. When you go back to **Online**, your camera and microphone return to how you left them.
 
 ![The dots next to the names: Gregory is "Back in a moment", David is "Busy", Grégoire is "Do not disturb"](images/availability-status-map.png)
 
