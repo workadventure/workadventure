@@ -49,16 +49,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         leave: "Wopušćić",
     },
     pwaInstall: {
-        description:
-            "Instalujće app za lěpše dožiwjenje: spěšny přistup, start při startowanju a dožiwjenje kaž w app.",
+        description: "Instalujće app za lěpše dožiwjenje: spěšny přistup a dožiwjenje kaž w app.",
         descriptionIos: "Přidajće WorkAdventure na swój startowy wobraz za lěpše dožiwjenje a spěšny přistup.",
         feature1Title: "Spěšny přistup",
         feature1Description: "Startujće WorkAdventure ze startoweho menija, Docka abo z desktopa.",
         feature2Title: "Swójske wokno app",
         feature2Description:
             "Dźeržće WorkAdventure wot browserowych rajtarkow dźělene a namakajće jo spěšnje w swojej nadawkowej lajsće.",
-        feature3Title: "Z wašim kompjutorom startować",
-        feature3Description: "Startujće WorkAdventure, hdyž so waš grat startuje.",
         iosStepsTitle: "Kak instalować",
         iosStep1: "Tłóč na tłóčatko „Dźělić“ (kwadrat ze šipku) deleka w Safari.",
         iosStep2: "Skuluj deleka a tłóč na „K startowemu wobrazowej přidać“.",

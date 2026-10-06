@@ -47,16 +47,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         leave: "Rời đi",
     },
     pwaInstall: {
-        description:
-            "Cài đặt ứng dụng để có trải nghiệm tốt hơn: truy cập nhanh, khởi động cùng máy và trải nghiệm như ứng dụng riêng.",
+        description: "Cài đặt ứng dụng để có trải nghiệm tốt hơn: truy cập nhanh và trải nghiệm như ứng dụng riêng.",
         descriptionIos: "Thêm WorkAdventure vào Màn hình chính để có trải nghiệm tốt hơn và truy cập nhanh.",
         feature1Title: "Truy cập nhanh",
         feature1Description: "Mở WorkAdventure từ menu Start, Dock hoặc màn hình nền của bạn.",
         feature2Title: "Cửa sổ ứng dụng riêng",
         feature2Description:
             "Tách WorkAdventure khỏi các thẻ trình duyệt và tìm thấy WorkAdventure ngay trên thanh tác vụ.",
-        feature3Title: "Khởi động cùng máy tính",
-        feature3Description: "Mở WorkAdventure khi thiết bị của bạn khởi động.",
         iosStepsTitle: "Cách cài đặt",
         iosStep1: "Nhấn nút Chia sẻ (hình vuông có mũi tên) ở cuối Safari.",
         iosStep2: 'Cuộn xuống và nhấn "Thêm vào Màn hình chính".',
