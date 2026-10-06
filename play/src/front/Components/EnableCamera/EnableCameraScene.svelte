@@ -258,7 +258,7 @@
                                 <div
                                     class="webrtcsetup flex items-center justify-center w-full aspect-video rounded-lg overflow-hidden bg-contrast"
                                 >
-                                    CAM PB <!-- TODO HUGO : catch pb with cam -->
+                                    {$LL.camera.my.loading()}
                                 </div>
                             {/if}
                         </span>
