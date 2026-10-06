@@ -4,7 +4,6 @@ import type { Translation } from "../i18n-types";
 const chat: DeepPartial<Translation["chat"]> = {
     intro: "여기는 당신의 채팅 기록입니다:",
     adventurers: "사용자",
-    onlineUsers: "온라인 사용자",
     getCloserTitle: "누군가에게 다가가기",
     noRoomOpen: "대화 열기",
     noRoomOpenDescription:

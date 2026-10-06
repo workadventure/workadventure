@@ -4,7 +4,6 @@ import type { Translation } from "../i18n-types";
 const chat: DeepPartial<Translation["chat"]> = {
     intro: "Đây là lịch sử trò chuyện của bạn:",
     adventurers: "Người dùng",
-    onlineUsers: "Người dùng trực tuyến",
     getCloserTitle: "Lại gần một ai đó",
     noRoomOpen: "Mở một cuộc trò chuyện",
     noRoomOpenDescription:
