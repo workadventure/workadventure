@@ -63,6 +63,13 @@ export class NoiseSuppressionController {
                 this.transformer = new NoiseSuppressionTransformer({
                     engine,
                     onStatusChange: this.updateState.bind(this),
+                    onLoadReport: (report) => {
+                        analyticsClient.trackAdminEvent("media.noise_suppression.load", {
+                            engine,
+                            ...report,
+                            hardwareConcurrency: navigator.hardwareConcurrency ?? 0,
+                        });
+                    },
                 });
             }
 

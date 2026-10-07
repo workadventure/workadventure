@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { trackAdminEvent, FakeTransformer } = vi.hoisted(() => {
     type StatusMessage = { status: "initializing" | "ready" | "error"; message?: string };
-    type Options = { engine: string; onStatusChange?: (message: StatusMessage) => void };
+    type Options = {
+        engine: string;
+        onStatusChange?: (message: StatusMessage) => void;
+        onLoadReport?: (report: Record<string, number>) => void;
+    };
 
     class FakeTransformer {
         static instances: FakeTransformer[] = [];
@@ -22,6 +26,10 @@ const { trackAdminEvent, FakeTransformer } = vi.hoisted(() => {
 
         static getSupport() {
             return FakeTransformer.supported ? { supported: true } : { supported: false, message: "no worklet" };
+        }
+
+        reportLoad(report: Record<string, number>): void {
+            this.options.onLoadReport?.(report);
         }
 
         emit(status: StatusMessage["status"], message?: string): void {
@@ -143,6 +151,18 @@ describe("NoiseSuppressionController", () => {
             { engine: "dtln", status: "unsupported", reason: "no worklet" },
         ]);
         expect(FakeTransformer.instances).toHaveLength(0);
+    });
+
+    it("turns the worklet's load report into one analytics event", async () => {
+        const controller = new NoiseSuppressionController();
+        await controller.transform(microphone, true, "deepfilternet");
+        const report = { windows: 30, medianLoad: 0.04, p95Load: 0.06, maxLoad: 0.1, slowFrames: 2, frames: 6000 };
+
+        FakeTransformer.instances[0].reportLoad(report);
+
+        expect(eventsNamed("media.noise_suppression.load")).toEqual([
+            { engine: "deepfilternet", ...report, hardwareConcurrency: expect.any(Number) },
+        ]);
     });
 
     it("passes the microphone through untouched when noise suppression is off", async () => {

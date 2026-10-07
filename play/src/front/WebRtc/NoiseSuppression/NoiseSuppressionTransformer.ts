@@ -8,6 +8,7 @@ import {
 import {
     createDeepFilterNetAudioWorklet,
     DEEPFILTERNET_SAMPLE_RATE,
+    type LoadReport,
 } from "@workadventure/noise-suppression/deepfilternet";
 import type { NoiseSuppressionEngine } from "../../Connection/LocalUserStore";
 
@@ -18,6 +19,8 @@ export interface NoiseSuppressionStatusMessage {
 
 interface NoiseSuppressionTransformerOptions {
     engine: NoiseSuppressionEngine;
+    /** DeepFilterNet3 only: its measured cost, once, after a minute of processing. */
+    onLoadReport?: (report: LoadReport) => void;
     onStatusChange?: (message: NoiseSuppressionStatusMessage) => void;
 }
 
@@ -38,6 +41,7 @@ export class NoiseSuppressionTransformer {
     public readonly engine: NoiseSuppressionEngine;
     private readonly audioContext: AudioContext;
     private readonly onStatusChange?: (message: NoiseSuppressionStatusMessage) => void;
+    private readonly onLoadReport?: (report: LoadReport) => void;
     private lastProcessorStatus: NoiseSuppressionStatusMessage["status"] | undefined;
     private sourceNode: MediaStreamAudioSourceNode | undefined;
     private workletHandle: WorkletHandle | undefined;
@@ -52,6 +56,7 @@ export class NoiseSuppressionTransformer {
             sampleRate: this.engine === "dtln" ? DTLN_SAMPLE_RATE : DEEPFILTERNET_SAMPLE_RATE,
         });
         this.onStatusChange = options.onStatusChange;
+        this.onLoadReport = options.onLoadReport;
         // Safari and background tabs suspend the context: the output track stays "live" but carries silence.
         this.audioContext.addEventListener("statechange", this.resumeIfSuspended);
         document.addEventListener("visibilitychange", this.resumeIfSuspended);
@@ -219,6 +224,11 @@ export class NoiseSuppressionTransformer {
                     status: "error",
                     message: `Noise suppression is too heavy for this device (${Math.round(load * 100)} % of real time).`,
                 });
+            },
+            onLoadReport: (report) => {
+                if (this.workletHandle) {
+                    this.onLoadReport?.(report);
+                }
             },
         });
     }
