@@ -184,6 +184,13 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
             case "frame":
                 this.handleProcessedFrame(message);
                 return;
+            case "stream-failed":
+                // stopStream() stops the generator before the worker hears "stop-stream", so a pipe that was
+                // stopped or replaced can break on its way out. Only the pipe feeding the output track matters.
+                if (message.streamId === this.streamGeneration && this.activeGenerator) {
+                    this.fail(new Error("Background video pipe failed", { cause: deserializeError(message.error) }));
+                }
+                return;
             case "fatal":
                 this.fail(deserializeError(message.error));
                 return;

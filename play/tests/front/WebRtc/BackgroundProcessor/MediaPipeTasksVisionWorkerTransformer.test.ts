@@ -239,6 +239,25 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
         expect(onSample).toHaveBeenLastCalledWith(expect.objectContaining({ mode: "image" }));
     });
 
+    it("ignores a broken pipe it already replaced, and fails when the pipe feeding the output breaks", async () => {
+        installInsertableStreams();
+        const onTerminalFailure = vi.fn();
+        transformer = new MediaPipeTasksVisionWorkerTransformer({ mode: "blur" }, onTerminalFailure);
+        const inputTrack = { kind: "video" } as unknown as MediaStreamTrack;
+        await transformer.transform(new MediaStream([inputTrack]));
+        await transformer.transform(new MediaStream([inputTrack]));
+        const worker = workerMocks.instances[0];
+        const error = { name: "InvalidStateError", message: "Stream closed" };
+
+        worker.reply({ type: "stream-failed", streamId: 1, error });
+        expect(onTerminalFailure).not.toHaveBeenCalled();
+
+        worker.reply({ type: "stream-failed", streamId: 2, error });
+        expect(onTerminalFailure).toHaveBeenCalledWith(
+            expect.objectContaining({ message: "Background video pipe failed" }),
+        );
+    });
+
     it("closes and reports a terminal failure when the worker gives up", async () => {
         const onTerminalFailure = vi.fn();
         transformer = new MediaPipeTasksVisionWorkerTransformer({ mode: "blur" }, onTerminalFailure);

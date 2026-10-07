@@ -347,4 +347,25 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
         await vi.waitFor(() => expect(readable.locked).toBe(false));
         expect(posted.some((message) => message.type === "fatal")).toBe(false);
     });
+
+    it("reports a broken pipe without giving up on the worker", async () => {
+        send({ type: "initialize", assets, config: { mode: "blur" } });
+        await waitForPosted(1);
+
+        const readable = new ReadableStream<VideoFrame>({
+            start(controller) {
+                controller.enqueue(createVideoFrame(1_000_000));
+            },
+        });
+        // What writing to a generator the main thread already stopped looks like.
+        const writable = new WritableStream<VideoFrame>({
+            write() {
+                throw new DOMException("Stream closed", "InvalidStateError");
+            },
+        });
+        send({ type: "start-stream", streamId: 1, readable, writable });
+
+        await vi.waitFor(() => expect(lastPosted()).toMatchObject({ type: "stream-failed", streamId: 1 }));
+        expect(posted.some((message) => message.type === "fatal")).toBe(false);
+    });
 });
