@@ -273,7 +273,9 @@ class AdminApi implements AdminInterface {
             const mapDetailData = isMapDetailsData.safeParse(res.data);
 
             if (mapDetailData.success) {
-                return mapDetailData.data;
+                // thirdParty carries the world's Jitsi and BBB secrets. Only the back needs them, and it asks
+                // the admin itself; the pusher hands this object to anyone through GET /map.
+                return { ...mapDetailData.data, thirdParty: undefined };
             }
 
             const roomRedirect = isRoomRedirect.safeParse(res.data);
