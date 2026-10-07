@@ -128,3 +128,38 @@ jobs:
           name: workadventure-mac.dmg
           path: desktop/electron/build/*.dmg
           if-no-files-found: error
+
+      # End-to-end tests against the packaged app (desktop/electron/e2e), after the uploads so that a
+      # failure still leaves the installers to try. On Ubuntu the .deb is installed for real, so its
+      # first launch also checks the Chromium sandbox setup (AppArmor).
+      - name: "Install the .deb and a virtual display"
+        if: ${{ github.event_name != 'release' && startsWith(matrix.os, 'ubuntu') }}
+        run: sudo apt-get update && sudo apt-get install -y xvfb ./build/*.deb
+        working-directory: "desktop/electron"
+
+      - name: "End-to-end tests"
+        if: ${{ github.event_name != 'release' }}
+        shell: bash
+        env:
+          CI: true
+        run: |
+          case "$RUNNER_OS" in
+            Linux)
+              WA_E2E_EXECUTABLE=/opt/WorkAdventure/workadventure-desktop xvfb-run --auto-servernum yarn e2e ;;
+            macOS)
+              app=$(find build -maxdepth 2 -name WorkAdventure.app | head -n 1)
+              WA_E2E_EXECUTABLE="$app/Contents/MacOS/WorkAdventure" yarn e2e ;;
+            Windows)
+              WA_E2E_EXECUTABLE=build/win-unpacked/WorkAdventure.exe yarn e2e ;;
+          esac
+        working-directory: "desktop/electron"
+
+      - name: "Upload the end-to-end report"
+        if: ${{ failure() && github.event_name != 'release' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-e2e-report-${{ matrix.runtime }}
+          path: |
+            desktop/electron/e2e-report
+            desktop/electron/e2e-results
+          if-no-files-found: ignore

@@ -13,10 +13,11 @@
         "bundle": "npm run build && electron-builder install-app-deps && electron-builder",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
-        "lint": "eslint src/ . --ext .ts",
-        "fix": "eslint --fix src/ . --ext .ts",
-        "pretty": "prettier --write 'src/**/*.{ts,tsx}'",
-        "pretty-check": "prettier --check 'src/**/*.{ts,tsx}'"
+        "e2e": "playwright test",
+        "lint": "eslint . --ext .ts",
+        "fix": "eslint --fix . --ext .ts",
+        "pretty": "prettier --write 'src/**/*.{ts,tsx}' 'tests/**/*.ts' '*.config.ts'",
+        "pretty-check": "prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.ts' '*.config.ts'"
     },
     "dependencies": {
         "auto-launch": "^5.0.5",
@@ -29,15 +30,17 @@
         "node-fetch": "^3.2.10"
     },
     "devDependencies": {
+        "@playwright/test": "^1.63.0",
         "@types/auto-launch": "^5.0.2",
-        "@typescript-eslint/eslint-plugin": "^5.18.0",
-        "@typescript-eslint/parser": "^5.18.0",
+        "@types/node": "^24.9.0",
+        "@typescript-eslint/eslint-plugin": "^8.60.0",
+        "@typescript-eslint/parser": "^8.60.0",
         "electron": "^42.4.1",
         "electron-builder": "^26.15.3",
-        "eslint": "^8.12.0",
+        "eslint": "^8.57.1",
         "prettier": "^2.6.2",
         "tsup": "^5.12.4",
-        "typescript": "^4.6.3",
+        "typescript": "^5.9.3",
         "vitest": "^4.1.7"
     }
 }
