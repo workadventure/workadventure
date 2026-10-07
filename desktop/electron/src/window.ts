@@ -12,7 +12,6 @@ import { textDirection } from "./native-locale-policy";
 import { createDesktopWindowTitle } from "./app-name-policy";
 import { createDesktopWindowState, type DesktopWindowState } from "./desktop-window-state-policy";
 import {
-    createDesktopConfig,
     createDesktopLoginUrl,
     createDesktopLogoutUrl,
     createRoomUrlWithAuthToken,
@@ -723,7 +722,6 @@ export async function createWindow(initialUrl?: string) {
         return;
     }
 
-    const config = getDesktopConfig();
     configureSession();
 
     // Load the previous state with fallback to defaults
@@ -998,7 +996,6 @@ export async function openWorldTab(url?: string): Promise<void> {
         showWindow();
         return;
     }
-    const config = getDesktopConfig();
     const tab = createWorldView((view) => configureNavigationSecurity(view.webContents));
     activateTab(tab.id);
     if (url) {
@@ -1043,7 +1040,7 @@ function requestDesktopAuthExchange(origin: string, code: string): Promise<{ tok
                         targetUrl: payload.targetUrl,
                     });
                 } catch (error) {
-                    reject(error);
+                    reject(error instanceof Error ? error : new Error("Desktop auth exchange failed"));
                 }
             });
             response.on("error", reject);
