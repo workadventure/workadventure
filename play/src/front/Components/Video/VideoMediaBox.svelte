@@ -3,9 +3,10 @@
     import { getContext, onDestroy, onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
     import type { Subscription } from "rxjs";
+    import { get } from "svelte/store";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import type { VideoBox } from "../../Space/VideoBox";
+    import type { VideoBox, VideoBoxStreamableEntry } from "../../Space/VideoBox";
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { meetingOf } from "../../Administration/CurrentMeeting";
@@ -191,6 +192,25 @@
     let userUuidStore = $derived(extendedSpaceUser?.reactiveUser.uuid);
     let userUuid = $derived($userUuidStore);
     let isCurrentUserBlackListed = $derived(computeIsCurrentUserBlackListed(blackListVersion, spaceUserId, userUuid));
+
+    // Which stream never showed a frame, over which backend, and what its receiving track looked like at that
+    // moment: enough to tell a publisher that sends nothing from a subscription that never started.
+    function reportMissingVideo({ streamable, isPending }: VideoBoxStreamableEntry): void {
+        const media = streamable.media;
+        if (media.type !== "webrtc" && media.type !== "livekit") {
+            return;
+        }
+        const track = get(media.streamStore)?.getVideoTracks()[0];
+        analyticsClient.trackAdminEvent("media.video_stream_missing", {
+            meetingProvider: media.type,
+            remoteSpaceUserId: streamable.spaceUserId,
+            pending: isPending,
+            trackMuted: track?.muted,
+            trackEnded: track ? track.readyState === "ended" : undefined,
+            remoteMuted: media.type === "livekit" ? get(media.remoteVideoTrack)?.isMuted : undefined,
+            documentHidden: document.hidden,
+        });
+    }
 
     function computeIsCurrentUserBlackListed(
         _blackListVersion: number,
@@ -392,6 +412,7 @@
                         isMegaphoneSpace={streamableEntry.isPending
                             ? false
                             : (isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone || false}
+                        onnoVideo={() => reportMissingVideo(streamableEntry)}
                         onvideo={() => {
                             markStreamableReadyTimer = setTimeout(() => {
                                 if (streamableEntry.isPending) {

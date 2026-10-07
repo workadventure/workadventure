@@ -3603,10 +3603,43 @@
     },
     "media.video_stream_missing": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "meetingProvider": {
+          "type": "string",
+          "enum": [
+            "webrtc",
+            "livekit"
+          ],
+          "description": "Which backend the missing stream was coming over."
+        },
+        "remoteSpaceUserId": {
+          "type": "string",
+          "description": "The space user whose video never arrived."
+        },
+        "pending": {
+          "type": "boolean",
+          "description": "The stream was the incoming side of a switch between backends, not yet on screen."
+        },
+        "trackMuted": {
+          "type": "boolean",
+          "description": "The receiving track was muted: no media was arriving from the network."
+        },
+        "trackEnded": {
+          "type": "boolean",
+          "description": "The receiving track had ended."
+        },
+        "remoteMuted": {
+          "type": "boolean",
+          "description": "LiveKit only: the publisher's track was marked as muted."
+        },
+        "documentHidden": {
+          "type": "boolean",
+          "description": "The tab was in the background, where the browser renders no frame at all."
+        }
+      },
       "additionalProperties": true,
-      "description": "A video stream was expected but never arrived. Counted as an experience issue.",
-      "title": "media.video_stream_missing"
+      "title": "media.video_stream_missing",
+      "description": "A video stream was expected but no frame was rendered within 5 seconds. Counted as an experience issue."
     },
     "meeting.actions.opened": {
       "type": "object",

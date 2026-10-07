@@ -1673,9 +1673,43 @@ export const ANALYTICS_EVENTS = {
   "media.turn_test.timeout": signal(
     "The TURN connectivity test timed out. Counted as an experience issue.",
   ),
-  "media.video_stream_missing": signal(
-    "A video stream was expected but never arrived. Counted as an experience issue.",
-  ),
+  "media.video_stream_missing": event({
+    properties: z.object({
+      meetingProvider: z
+        .enum(["webrtc", "livekit"])
+        .describe("Which backend the missing stream was coming over."),
+      remoteSpaceUserId: z
+        .string()
+        .optional()
+        .describe("The space user whose video never arrived."),
+      pending: z
+        .boolean()
+        .describe(
+          "The stream was the incoming side of a switch between backends, not yet on screen.",
+        ),
+      trackMuted: z
+        .boolean()
+        .optional()
+        .describe(
+          "The receiving track was muted: no media was arriving from the network.",
+        ),
+      trackEnded: z
+        .boolean()
+        .optional()
+        .describe("The receiving track had ended."),
+      remoteMuted: z
+        .boolean()
+        .optional()
+        .describe("LiveKit only: the publisher's track was marked as muted."),
+      documentHidden: z
+        .boolean()
+        .describe(
+          "The tab was in the background, where the browser renders no frame at all.",
+        ),
+    }),
+    description:
+      "A video stream was expected but no frame was rendered within 5 seconds. Counted as an experience issue.",
+  }),
   "meeting.actions.opened": event({
     properties: meetingActionProperties,
     description: "The user opened the meeting actions menu.",
