@@ -79,7 +79,9 @@ const api: WorkAdventureDesktopApi = {
     onSystemIdle: (callback) => subscribe("app:on-system-idle", (idle) => callback(Boolean(idle))),
     onMediaPreempted: (callback) => subscribe("app:on-media-preempted", () => callback()),
     onOtherMeetingMuted: (callback) =>
-        subscribe("app:on-other-meeting-muted", (worldName) => callback(String(worldName ?? ""))),
+        subscribe("app:on-other-meeting-muted", (worldName) =>
+            callback(typeof worldName === "string" ? worldName : "")
+        ),
     onMuteToggle: (callback) => {
         ipcRenderer.on("app:on-mute-toggle", callback);
     },

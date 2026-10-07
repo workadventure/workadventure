@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
     "experimentalDecorators": true,
-    "target": "es5",
-    "downlevelIteration": true,
+    // Type checking only: tsup builds the app, for the Node and Chromium of Electron.
+    "target": "es2022",
     "module": "commonjs",
-    "allowJs": true,
     "sourceMap": true,
     "outDir": "./dist",
     "strict": true,
@@ -12,12 +11,9 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
-    //"baseUrl": ".",
-    //"paths": {},
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  // The tests are plain JS run by vitest and Playwright, whose typings need a newer TypeScript than this one.
-  "exclude": ["node_modules", "dist", "build", "src/**/*.test.js", "e2e", "playwright.config.js"]
+  "include": ["src", "tests", "*.config.ts"]
 }
