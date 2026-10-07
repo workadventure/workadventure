@@ -206,7 +206,21 @@ export class NoiseSuppressionTransformer {
 
     private async createDeepFilterNetWorklet(): Promise<WorkletHandle> {
         // Package defaults: 25 dB of attenuation while speaking (a faint, steady background), 45 dB in pauses.
-        return createDeepFilterNetAudioWorklet(this.audioContext, { bypassUntilReady: true });
+        return createDeepFilterNetAudioWorklet(this.audioContext, {
+            bypassUntilReady: true,
+            // The machine cannot keep up (two 2 s windows over 70 % of real time): the audio would crackle, so hand
+            // over to the browser's processing like any other failure.
+            onOverload: (load) => {
+                if (!this.workletHandle) {
+                    return; // Destroyed meanwhile
+                }
+                this.lastProcessorStatus = "error";
+                this.onStatusChange?.({
+                    status: "error",
+                    message: `Noise suppression is too heavy for this device (${Math.round(load * 100)} % of real time).`,
+                });
+            },
+        });
     }
 
     private readonly handleProcessorError = (): void => {
