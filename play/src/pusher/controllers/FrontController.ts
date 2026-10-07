@@ -15,6 +15,7 @@ import {
     LOGROCKET_ID,
     AUTOLOGIN_URL,
     GOOGLE_DRIVE_PICKER_CLIENT_ID,
+    ASSETS_URL,
 } from "../enums/EnvironmentVariable";
 import { validateQuery } from "../services/QueryValidator";
 import type { FrontAssets } from "../services/FrontAssets";
@@ -275,6 +276,9 @@ export class FrontController extends BaseHttpController {
                 posthogUrl: FRONT_ENVIRONMENT_VARIABLES.POSTHOG_URL,
                 authToken: authToken,
                 googleDrivePickerClientId: GOOGLE_DRIVE_PICKER_CLIENT_ID,
+                // The background-effect worker is a blob: wrapper that statically imports its script from the
+                // assets domain, and CSP checks that import against worker-src.
+                assetsOrigin: ASSETS_URL ? new URL(ASSETS_URL).origin : "",
                 cssVariablesOverride,
                 ...option,
             });
