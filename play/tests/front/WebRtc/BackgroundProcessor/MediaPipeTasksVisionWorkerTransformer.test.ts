@@ -253,9 +253,27 @@ describe("MediaPipeTasksVisionWorkerTransformer", () => {
         expect(onTerminalFailure).not.toHaveBeenCalled();
 
         worker.reply({ type: "stream-failed", streamId: 2, error });
-        expect(onTerminalFailure).toHaveBeenCalledWith(
-            expect.objectContaining({ message: "Background video pipe failed" }),
-        );
+        expect(onTerminalFailure).toHaveBeenCalledOnce();
+        const failure = onTerminalFailure.mock.calls[0][0] as Error;
+        expect(failure.message).toBe("Background video pipe failed");
+        // What broke in the worker is what Sentry needs.
+        expect(failure.cause).toMatchObject({ name: "InvalidStateError", message: "Stream closed" });
+    });
+
+    it("ignores a broken pipe after stop(), which leaves the generation unchanged", async () => {
+        installInsertableStreams();
+        const onTerminalFailure = vi.fn();
+        transformer = new MediaPipeTasksVisionWorkerTransformer({ mode: "blur" }, onTerminalFailure);
+        await transformer.transform(new MediaStream([{ kind: "video" } as unknown as MediaStreamTrack]));
+        // The camera was turned off, or the effect set to "none".
+        transformer.stop();
+
+        workerMocks.instances[0].reply({
+            type: "stream-failed",
+            streamId: 1,
+            error: { name: "InvalidStateError", message: "Stream closed" },
+        });
+        expect(onTerminalFailure).not.toHaveBeenCalled();
     });
 
     it("closes and reports a terminal failure when the worker gives up", async () => {

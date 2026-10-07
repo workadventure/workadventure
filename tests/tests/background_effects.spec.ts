@@ -1,8 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+import Map from "./utils/map";
 import Menu from "./utils/menu";
+import { evaluateScript } from "./utils/scripting";
+import { expectWebRtcConnectionsCountToBe } from "./utils/webRtc";
 import { publicTestMapUrl } from "./utils/urls";
+
+declare global {
+    interface Window {
+        __backgroundPipeStarts: number;
+    }
+}
 
 /**
  * Replaces the camera with a static checkerboard drawn on a canvas: the fake device of Chromium animates, which
@@ -39,6 +48,29 @@ async function useStaticCheckerboardCamera(page: Page): Promise<void> {
             paint();
             const videoTracks: MediaStreamTrack[] = canvas.captureStream(30).getVideoTracks();
             return new MediaStream([...videoTracks, ...stream.getAudioTracks()]);
+        };
+    });
+}
+
+/**
+ * Counts the pipes the main thread starts in the background worker: one per camera track it transforms.
+ */
+async function countBackgroundPipeStarts(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+        window.__backgroundPipeStarts = 0;
+        const NativeWorker = window.Worker;
+        window.Worker = class extends NativeWorker {
+            postMessage(...args: Parameters<Worker["postMessage"]>): void {
+                const message: unknown = args[0];
+                if (
+                    typeof message === "object" &&
+                    message !== null &&
+                    (message as { type?: unknown }).type === "start-stream"
+                ) {
+                    window.__backgroundPipeStarts++;
+                }
+                super.postMessage(...args);
+            }
         };
     });
 }
@@ -97,6 +129,72 @@ test.describe("Virtual background @nomobile @nowebkit @nofirefox", () => {
             .poll(
                 async () => {
                     const frames = await page.evaluate(() => window.e2eHooks.compareLocalVideoFrames());
+                    return frames !== null && frames.processedMeanGray > 20 && frames.meanAbsDiff > 8;
+                },
+                { timeout: 60_000 },
+            )
+            .toBe(true);
+    });
+
+    test("toggling the microphone in a conversation keeps the same blur pipe", async ({ browser }) => {
+        test.setTimeout(240_000);
+        const url = publicTestMapUrl("tests/E2E/empty.json", "background-effects-microphone");
+        await using alice = await getPage(browser, "Alice", url, {
+            pageCreatedHook: async (page) => {
+                await useStaticCheckerboardCamera(page);
+                await countBackgroundPipeStarts(page);
+            },
+        });
+        // The onboarding overlay would sit on top of the settings panel: same setup as the first test.
+        await alice.evaluate(() => {
+            localStorage.setItem("tutorialDone", "true");
+        });
+        await alice.reload();
+        await alice.addStyleTag({
+            content: `
+                [data-testid="onboarding-step"],
+                [data-testid^="onboarding-highlight-"] {
+                    display: none !important;
+                    pointer-events: none !important;
+                }
+            `,
+        });
+        await Menu.waitForMapLoad(alice, 120_000);
+        await using bob = await getPage(browser, "Bob", url);
+
+        // Alone, energy saving keeps the microphone closed, so toggling it never rebuilds the raw stream. In a
+        // conversation it does, and that is where the blur pipe used to be rebuilt on every toggle.
+        const position = await evaluateScript(alice, async () => WA.player.getPosition());
+        await Map.teleportToPosition(bob, position.x, position.y);
+        await expectWebRtcConnectionsCountToBe(alice, 1, 30_000);
+        await Menu.turnOnMicrophone(alice);
+
+        await Menu.openMediaSettings(alice);
+        // eslint-disable-next-line playwright/no-force-option
+        await alice.getByTestId("background-settings-tab").click({ force: true });
+        // eslint-disable-next-line playwright/no-force-option
+        await alice.getByTestId("background-blur-50").click({ force: true });
+        await expect
+            .poll(() => alice.evaluate(() => window.__backgroundPipeStarts), { timeout: 60_000 })
+            .toBeGreaterThan(0);
+        const pipeStarts = await alice.evaluate(() => window.__backgroundPipeStarts);
+
+        // Each toggle rebuilds the raw stream around the same camera track. Rebuilding the blur pipe for it
+        // swapped the outgoing video, and sometimes killed the blur.
+        const aliceIsMuted = bob.getByTestId("Alice is muted.");
+        for (let i = 0; i < 3; i++) {
+            await Menu.turnOffMicrophone(alice);
+            await expect(aliceIsMuted).toBeVisible({ timeout: 15_000 });
+            await Menu.turnOnMicrophone(alice);
+            await expect(aliceIsMuted).toBeHidden({ timeout: 15_000 });
+        }
+
+        expect(await alice.evaluate(() => window.__backgroundPipeStarts)).toBe(pipeStarts);
+        // ...and the blur is still applied: a terminal failure would stop the pipe without starting a new one.
+        await expect
+            .poll(
+                async () => {
+                    const frames = await alice.evaluate(() => window.e2eHooks.compareLocalVideoFrames());
                     return frames !== null && frames.processedMeanGray > 20 && frames.meanAbsDiff > 8;
                 },
                 { timeout: 60_000 },

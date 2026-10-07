@@ -211,7 +211,7 @@ export class MediaPipeTasksVisionWorkerTransformer implements BackgroundTransfor
         }
     }
 
-    /** A failure the worker could not recover from: the transformer is closed and the caller told to stop. */
+    /** A failure the transformer does not recover from: it is closed and the caller told to stop. */
     private fail(error: Error): void {
         if (this.closed) {
             return;
