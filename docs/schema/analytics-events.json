@@ -3610,36 +3610,50 @@
             "webrtc",
             "livekit"
           ],
-          "description": "Which backend the missing stream was coming over."
+          "description": "Which backend the missing stream was coming over. Absent for the user's own previews."
+        },
+        "local": {
+          "type": "boolean",
+          "description": "The missing stream was the user's own camera or screen-share preview, which comes over no backend."
+        },
+        "streamCategory": {
+          "type": "string",
+          "enum": [
+            "video",
+            "screenSharing",
+            "scripting",
+            "component"
+          ],
+          "description": "Whether the missing stream was a camera or a screen share."
         },
         "remoteSpaceUserId": {
           "type": "string",
-          "description": "The space user whose video never arrived."
+          "description": "The space user whose video never arrived. Never sent to PostHog."
         },
         "pending": {
           "type": "boolean",
-          "description": "The stream was the incoming side of a switch between backends, not yet on screen."
+          "description": "The stream was replacing one already on screen (a switch between backends or a reconnection) and was not shown yet."
         },
         "trackMuted": {
           "type": "boolean",
-          "description": "The receiving track was muted: no media was arriving from the network."
+          "description": "The video track was muted: no frame was arriving, from the network for a remote stream, from the camera or capture for a local one."
         },
         "trackEnded": {
           "type": "boolean",
-          "description": "The receiving track had ended."
+          "description": "The video track (the receiving one, or the capture track when local) had ended."
         },
         "remoteMuted": {
           "type": "boolean",
           "description": "LiveKit only: the publisher's track was marked as muted."
         },
-        "documentHidden": {
+        "pictureInPicture": {
           "type": "boolean",
-          "description": "The tab was in the background, where the browser renders no frame at all."
+          "description": "The video was in the Picture-in-Picture window, a known source of false alarms. A hidden tab without Picture-in-Picture unmounts the video and never reports this event."
         }
       },
       "additionalProperties": true,
       "title": "media.video_stream_missing",
-      "description": "A video stream was expected but no frame was rendered within 5 seconds. Counted as an experience issue."
+      "description": "A video stream was expected but no frame was rendered within 5 seconds."
     },
     "meeting.actions.opened": {
       "type": "object",

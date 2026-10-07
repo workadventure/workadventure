@@ -200,15 +200,22 @@
         if (media.type !== "webrtc" && media.type !== "livekit") {
             return;
         }
-        const track = get(media.streamStore)?.getVideoTracks()[0];
+        // The user's own camera and screen-share previews are "webrtc" streamables with no space user.
+        const local = streamable.spaceUserId === undefined;
+        // For LiveKit, streamStore only carries the audio: the video track is on the subscription.
+        const remoteVideoTrack = media.type === "livekit" ? get(media.remoteVideoTrack) : undefined;
+        const track =
+            media.type === "livekit" ? remoteVideoTrack?.mediaStreamTrack : get(media.streamStore)?.getVideoTracks()[0];
         analyticsClient.trackAdminEvent("media.video_stream_missing", {
-            meetingProvider: media.type,
+            meetingProvider: local ? undefined : media.type,
+            local,
+            streamCategory: streamable.videoType,
             remoteSpaceUserId: streamable.spaceUserId,
             pending: isPending,
             trackMuted: track?.muted,
             trackEnded: track ? track.readyState === "ended" : undefined,
-            remoteMuted: media.type === "livekit" ? get(media.remoteVideoTrack)?.isMuted : undefined,
-            documentHidden: document.hidden,
+            remoteMuted: remoteVideoTrack?.isMuted,
+            pictureInPicture: get(activePictureInPictureStore),
         });
     }
 

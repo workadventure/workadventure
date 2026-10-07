@@ -1674,41 +1674,61 @@ export const ANALYTICS_EVENTS = {
     "The TURN connectivity test timed out. Counted as an experience issue.",
   ),
   "media.video_stream_missing": event({
+    // Every field is optional: tabs loaded before this event had properties keep sending it bare.
     properties: z.object({
       meetingProvider: z
         .enum(["webrtc", "livekit"])
-        .describe("Which backend the missing stream was coming over."),
+        .optional()
+        .describe(
+          "Which backend the missing stream was coming over. Absent for the user's own previews.",
+        ),
+      local: z
+        .boolean()
+        .optional()
+        .describe(
+          "The missing stream was the user's own camera or screen-share preview, which comes over no backend.",
+        ),
+      streamCategory: z
+        .enum(["video", "screenSharing", "scripting", "component"])
+        .optional()
+        .describe("Whether the missing stream was a camera or a screen share."),
       remoteSpaceUserId: z
         .string()
         .optional()
-        .describe("The space user whose video never arrived."),
+        .describe(
+          "The space user whose video never arrived. Never sent to PostHog.",
+        ),
       pending: z
         .boolean()
+        .optional()
         .describe(
-          "The stream was the incoming side of a switch between backends, not yet on screen.",
+          "The stream was replacing one already on screen (a switch between backends or a reconnection) and was not shown yet.",
         ),
       trackMuted: z
         .boolean()
         .optional()
         .describe(
-          "The receiving track was muted: no media was arriving from the network.",
+          "The video track was muted: no frame was arriving, from the network for a remote stream, from the camera or capture for a local one.",
         ),
       trackEnded: z
         .boolean()
         .optional()
-        .describe("The receiving track had ended."),
+        .describe(
+          "The video track (the receiving one, or the capture track when local) had ended.",
+        ),
       remoteMuted: z
         .boolean()
         .optional()
         .describe("LiveKit only: the publisher's track was marked as muted."),
-      documentHidden: z
+      pictureInPicture: z
         .boolean()
+        .optional()
         .describe(
-          "The tab was in the background, where the browser renders no frame at all.",
+          "The video was in the Picture-in-Picture window, a known source of false alarms. A hidden tab without Picture-in-Picture unmounts the video and never reports this event.",
         ),
     }),
     description:
-      "A video stream was expected but no frame was rendered within 5 seconds. Counted as an experience issue.",
+      "A video stream was expected but no frame was rendered within 5 seconds.",
   }),
   "meeting.actions.opened": event({
     properties: meetingActionProperties,

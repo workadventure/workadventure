@@ -192,6 +192,38 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(JSON.stringify(capture.mock.calls)).not.toContain("NDA-acme.pdf");
     });
 
+    it("never sends PostHog another participant's identifier, which the admin still receives", () => {
+        const sendAdmin = vi.fn();
+        const capture = vi.fn();
+        analyticsClient.setAdminAnalyticsSender(sendAdmin);
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+        window.posthog = { capture } as never;
+
+        analyticsClient.trackAdminEvent("media.video_stream_missing", {
+            meetingProvider: "livekit",
+            remoteSpaceUserId: "https://play.example/@/org/world/room_42",
+            pending: false,
+        });
+
+        // PostHog is not gated by the world's consent policy; the admin strips the key itself for a world that
+        // opted out of user-level activity.
+        expect(capture).toHaveBeenCalledWith("wa_no_video_stream_received", {
+            meetingProvider: "livekit",
+            pending: false,
+        });
+        expect(sendAdmin).toHaveBeenCalledWith({
+            events: [
+                expect.objectContaining({
+                    properties: expect.objectContaining({
+                        remoteSpaceUserId: "https://play.example/@/org/world/room_42",
+                    }),
+                }),
+            ],
+        });
+    });
+
     it("leaves PostHog alone for events it never knew", () => {
         const sendAdmin = vi.fn();
         const capture = vi.fn();
