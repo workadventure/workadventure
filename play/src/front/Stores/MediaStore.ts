@@ -693,6 +693,10 @@ let oldConstraints: { video: MediaTrackConstraints | false; audio: MediaTrackCon
 let backgroundTransformer: BackgroundTransformer | undefined = undefined;
 // Track the last background config to detect if we need to recreate or just update
 let lastBackgroundConfig: BackgroundConfig | undefined = undefined;
+// The running background pipe: the camera track it reads and the track it outputs. The raw stream is rebuilt
+// whenever the microphone changes; when it still carries the same camera track, the pipe is kept instead of
+// being torn down and rebuilt for nothing.
+let backgroundPipe: { input: MediaStreamTrack; output: MediaStreamTrack | undefined } | undefined = undefined;
 // AbortController for the in-flight transform; aborted when a new run is scheduled
 let currentTransformAbortController: AbortController | null = null;
 // AbortController for the in-flight noise suppression transform; aborted when a new run is scheduled
@@ -1160,6 +1164,11 @@ let localStreamUpdateQueue: Promise<void> = Promise.resolve();
 
 type SetLocalVideoTrackIfCurrent = (value: LocalTrackStoreValue) => void;
 
+function stopBackgroundPipe(): void {
+    backgroundTransformer?.stop();
+    backgroundPipe = undefined;
+}
+
 async function runLocalVideoTrackUpdate(
     videoTrackValue: LocalTrackStoreValue,
     backgroundProcessingEnabled: boolean,
@@ -1167,17 +1176,13 @@ async function runLocalVideoTrackUpdate(
     signal: AbortSignal,
 ): Promise<void> {
     if (videoTrackValue.type === "error") {
-        if (backgroundTransformer) {
-            backgroundTransformer.stop();
-        }
+        stopBackgroundPipe();
         setIfCurrent(videoTrackValue);
         return;
     }
 
     if (videoTrackValue.track === undefined || !backgroundProcessingEnabled) {
-        if (backgroundTransformer) {
-            backgroundTransformer.stop();
-        }
+        stopBackgroundPipe();
         setIfCurrent(videoTrackValue);
         return;
     }
@@ -1196,6 +1201,7 @@ async function runLocalVideoTrackUpdate(
                 warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
                 transformer.close();
                 backgroundTransformer = undefined;
+                backgroundPipe = undefined;
                 lastBackgroundConfig = undefined;
                 backgroundConfigStore.reset();
             },
@@ -1209,12 +1215,22 @@ async function runLocalVideoTrackUpdate(
         return;
     }
 
+    if (videoTrackValue.track === backgroundPipe?.input && backgroundPipe.output?.readyState === "live") {
+        setIfCurrent({ type: "success", track: backgroundPipe.output });
+        return;
+    }
+
     try {
         const finalStream = await backgroundTransformer.transform(new MediaStream([videoTrackValue.track]), signal);
         lastBackgroundConfig = { ...get(backgroundConfigStore) };
+        const output = finalStream.getVideoTracks()[0];
+        // Runs are serialized by localStreamUpdateQueue. A terminal failure in the meantime ends `output`, which
+        // the reuse check above looks at.
+        // eslint-disable-next-line require-atomic-updates
+        backgroundPipe = { input: videoTrackValue.track, output };
         setIfCurrent({
             type: "success",
-            track: finalStream.getVideoTracks()[0],
+            track: output,
         });
     } catch (error) {
         const isAbort = error instanceof AbortError || (error instanceof DOMException && error.name === "AbortError");
