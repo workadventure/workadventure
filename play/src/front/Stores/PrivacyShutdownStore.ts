@@ -1,46 +1,76 @@
 import { get, writable } from "svelte/store";
-import { videoStreamElementsStore } from "./PeerStore";
+import { videoStreamElementsStore, activePictureInPictureStore } from "./PeerStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { focusStore } from "./FocusStore";
+import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
 
 /**
- * A store that contains "true" if the webcam should be stopped for privacy reasons - i.e. if the user leaves the page while not in a discussion.
+ * "true" when the webcam should be stopped for privacy reasons — i.e. the user has left the page
+ * AND is not engaged with anyone.
+ *
+ * "Engaged with anyone" covers:
+ *  - the main window is focused
+ *  - the desktop PiP utility window is open (user is actively watching/controlling the call)
+ *  - a proximity bubble has formed (someone is with the user, even before media flows)
+ *  - peers are publishing video (covers active LiveKit room when tracks have subscribed)
+ *  - a live stream is running
+ *
+ * Only focus and the desktop PiP can turn privacy OFF once it is on; the last three only keep it
+ * off while the user leaves.
+ *
+ * NOTE: we deliberately import LEAF stores (currentPlayerGroupIdStore) rather than
+ * `isInActiveConversationStore` from StreamableCollectionStore. The latter would close a
+ * circular import chain (PrivacyShutdownStore → StreamableCollectionStore → ScreenSharingStore →
+ * MediaStore → PrivacyShutdownStore) and trigger a TDZ on `isSpeakerStore` at module load.
+ * `inLivekitStore` lives in MediaStore itself, so we omit it for the same reason — when LiveKit
+ * has subscribed tracks the videoStreamElementsStore branch already keeps privacy off.
  */
 function createPrivacyShutdownStore() {
-    let privacyEnabled = false;
+    const { subscribe, set } = writable(false);
+    let current = false;
 
-    const { subscribe, set } = writable(privacyEnabled);
-
-    // It is ok to not unsubscribe to this store because it is a singleton.
-    // eslint-disable-next-line svelte/no-ignored-unsubscribe
-    focusStore.subscribe((hasFocus) => {
-        const peerCount = get(videoStreamElementsStore).length;
-        const isLiveStreaming = get(isLiveStreamingStore);
-
-        if (!hasFocus && peerCount === 0 && !isLiveStreaming) {
-            privacyEnabled = true;
-            set(true);
+    function recompute() {
+        if (get(focusStore)) {
+            return apply(false);
         }
-        if (hasFocus) {
-            privacyEnabled = false;
-            set(false);
+        const nativePipOpen = Boolean(window.WAD?.desktop && window.WAD.pip) && get(activePictureInPictureStore);
+        // Once the camera is off for privacy, only coming back (or the desktop PiP, which the user is
+        // looking at) turns it on again. The other signals only keep it on while the user is still
+        // engaged; otherwise someone walking up to an AWAY user would switch their camera back on.
+        if (current && !nativePipOpen) {
+            return;
         }
-    });
-
-    // It is ok to not unsubscribe to this store because it is a singleton.
-    // eslint-disable-next-line svelte/no-ignored-unsubscribe
-    videoStreamElementsStore.subscribe((peerElements) => {
-        const hasFocus = get(focusStore);
-        const isLiveStreaming = get(isLiveStreamingStore);
-        if (peerElements.length === 0 && hasFocus === false && !isLiveStreaming) {
-            privacyEnabled = true;
-            set(true);
+        if (nativePipOpen) {
+            return apply(false);
         }
-    });
+        if (get(currentPlayerGroupIdStore) !== undefined) {
+            return apply(false);
+        }
+        if (get(videoStreamElementsStore).length > 0) {
+            return apply(false);
+        }
+        if (get(isLiveStreamingStore)) {
+            return apply(false);
+        }
+        apply(true);
+    }
 
-    return {
-        subscribe,
-    };
+    function apply(next: boolean) {
+        if (next === current) return;
+        current = next;
+        set(next);
+    }
+
+    // Singletons — ok to not unsubscribe.
+    /* eslint-disable svelte/no-ignored-unsubscribe */
+    focusStore.subscribe(recompute);
+    activePictureInPictureStore.subscribe(recompute);
+    currentPlayerGroupIdStore.subscribe(recompute);
+    videoStreamElementsStore.subscribe(recompute);
+    isLiveStreamingStore.subscribe(recompute);
+    /* eslint-enable svelte/no-ignored-unsubscribe */
+
+    return { subscribe };
 }
 
 export const privacyShutdownStore = createPrivacyShutdownStore();

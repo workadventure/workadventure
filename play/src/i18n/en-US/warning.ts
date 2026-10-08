@@ -66,6 +66,8 @@ const warning: BaseTranslation = {
         continue: "Continue in browser",
         neverShowPage: "Don't ask again",
     },
+    otherMeetingMuted:
+        "You're now in a meeting here. Your microphone, camera and screen sharing were turned off in {world}.",
 };
 
 export default warning;
