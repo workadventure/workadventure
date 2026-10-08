@@ -26,6 +26,7 @@ import { isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import { subscribeToOutboundVideoQualityAnalytics, subscribeToVideoQualityAnalytics } from "./VideoQualityAnalytics";
 import { createPeerWebRtcStats } from "./WebRtcStatsFactory";
+import { registerAudioQualitySource } from "./AudioQualityAnalytics";
 import { demotedCodecStore } from "./CodecPerformance";
 import {
     computeVideoEncoding,
@@ -96,6 +97,7 @@ export class RemotePeer extends Peer implements Streamable {
     private senderAnalyticsUnsubscribe: Unsubscriber | undefined;
     private unregisterLocalEncoderStats: Unsubscriber | undefined;
     private demotedCodecUnsubscribe: Unsubscriber | undefined;
+    private unregisterAudioQualitySource: Unsubscriber | undefined;
     private analyticsStatsUnsubscribe: Unsubscriber | undefined;
     private analyticsRemoteStreamUnsubscribe: (() => void) | undefined;
     private receiverMaxBitrateBps: number | undefined;
@@ -727,6 +729,12 @@ export class RemotePeer extends Peer implements Streamable {
             },
             (message) => this.space.emitVideoQualityReport(message),
         );
+        // The microphone rides the "video" connection; a screen share's audio is not a voice
+        if (this.type === "video") {
+            this.unregisterAudioQualitySource = registerAudioQualitySource("P2P", async () =>
+                this.destroyed ? undefined : (this._pc as RTCPeerConnection | undefined)?.getStats(null),
+            );
+        }
     }
 
     private sendBlockMessage(blocking: boolean) {
@@ -910,6 +918,8 @@ export class RemotePeer extends Peer implements Streamable {
             this.unregisterLocalEncoderStats = undefined;
             this.demotedCodecUnsubscribe?.();
             this.demotedCodecUnsubscribe = undefined;
+            this.unregisterAudioQualitySource?.();
+            this.unregisterAudioQualitySource = undefined;
             if (this.closing) {
                 return;
             }
