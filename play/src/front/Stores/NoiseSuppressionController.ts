@@ -1,5 +1,7 @@
 import { get } from "svelte/store";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import type { NoiseSuppressionEngine } from "../Connection/LocalUserStore";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import {
     type NoiseSuppressionStatusMessage,
     NoiseSuppressionTransformer,
@@ -8,10 +10,14 @@ import { noiseSuppressionStateStore } from "./NoiseSuppressionStore";
 
 export class NoiseSuppressionController {
     private transformer: NoiseSuppressionTransformer | undefined;
+    private engine: NoiseSuppressionEngine = "deepfilternet";
+    /** When the current initialization began; cleared once it is reported, so each start is counted once. */
+    private initStartedAt: number | undefined;
 
     public async transform(
         audioTrack: MediaStreamTrack | undefined,
         noiseSuppressionEnabled: boolean,
+        engine: NoiseSuppressionEngine,
         signal?: AbortSignal,
     ): Promise<MediaStreamTrack | undefined> {
         this.throwIfAborted(signal);
@@ -26,6 +32,12 @@ export class NoiseSuppressionController {
             return undefined;
         }
 
+        // Each engine owns its AudioContext (16 kHz for DTLN, 48 kHz for DeepFilterNet3): switching rebuilds it.
+        if (this.transformer && this.transformer.engine !== engine) {
+            await this.destroy();
+        }
+
+        this.engine = engine;
         const currentNoiseSuppressionState = get(noiseSuppressionStateStore);
         if (currentNoiseSuppressionState.status === "error" || currentNoiseSuppressionState.status === "unsupported") {
             await this.destroy();
@@ -35,20 +47,21 @@ export class NoiseSuppressionController {
         const support = NoiseSuppressionTransformer.getSupport();
         if (!support.supported) {
             await this.destroy();
-            noiseSuppressionStateStore.set({
-                status: "unsupported",
-                message: support.message ?? "This browser cannot run custom noise suppression.",
-            });
+            const message = support.message ?? "This browser cannot run custom noise suppression.";
+            noiseSuppressionStateStore.set({ status: "unsupported", message });
+            this.trackFailure("unsupported", message);
             return audioTrack;
         }
 
         if (currentNoiseSuppressionState.status !== "initializing" && currentNoiseSuppressionState.status !== "ready") {
             noiseSuppressionStateStore.set({ status: "initializing" });
+            this.initStartedAt = performance.now();
         }
 
         try {
             if (!this.transformer) {
                 this.transformer = new NoiseSuppressionTransformer({
+                    engine,
                     onStatusChange: this.updateState.bind(this),
                 });
             }
@@ -93,6 +106,14 @@ export class NoiseSuppressionController {
             if (currentState.status !== "ready") {
                 noiseSuppressionStateStore.set({ status: "ready" });
             }
+            if (this.initStartedAt !== undefined) {
+                analyticsClient.trackAdminEvent("media.noise_suppression.started", {
+                    engine: this.engine,
+                    initMs: Math.round(performance.now() - this.initStartedAt),
+                    hardwareConcurrency: navigator.hardwareConcurrency ?? 0,
+                });
+                this.initStartedAt = undefined;
+            }
             return;
         }
 
@@ -103,12 +124,24 @@ export class NoiseSuppressionController {
             return;
         }
 
-        if (currentState.status !== "error" || currentState.message !== message.message) {
-            noiseSuppressionStateStore.set({
-                status: "error",
-                message: message.message ?? "Custom noise suppression failed. Browser microphone processing is active.",
-            });
+        const errorMessage =
+            message.message ?? "Custom noise suppression failed. Browser microphone processing is active.";
+        if (currentState.status !== "error") {
+            noiseSuppressionStateStore.set({ status: "error", message: errorMessage });
+            // One failure often arrives twice (processorerror, then the rejected ready): count the transition only
+            this.trackFailure("error", errorMessage);
+        } else if (currentState.message !== errorMessage) {
+            noiseSuppressionStateStore.set({ status: "error", message: errorMessage });
         }
+    }
+
+    private trackFailure(status: "error" | "unsupported", reason: string): void {
+        this.initStartedAt = undefined;
+        analyticsClient.trackAdminEvent("media.noise_suppression.failed", {
+            engine: this.engine,
+            status,
+            reason: reason.slice(0, 200),
+        });
     }
 
     private throwIfAborted(signal?: AbortSignal): void {

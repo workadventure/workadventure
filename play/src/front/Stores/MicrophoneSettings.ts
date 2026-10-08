@@ -1,4 +1,4 @@
-import type { NoiseSuppressionProvider } from "../Connection/LocalUserStore";
+import type { NoiseSuppressionEngine, NoiseSuppressionProvider } from "../Connection/LocalUserStore";
 
 export interface EffectiveNoiseSuppressionProviderOptions {
     provider: NoiseSuppressionProvider;
@@ -12,6 +12,7 @@ export interface BuildMicrophoneAudioConstraintsOptions {
     noiseSuppressionEnabled: boolean;
     browserNoiseSuppressionEnabled: boolean;
     effectiveNoiseSuppressionProvider: NoiseSuppressionProvider;
+    noiseSuppressionEngine: NoiseSuppressionEngine;
     browserNoiseSuppressionSupported: boolean;
     workAdventureNoiseSuppressionFailed: boolean;
     customNoiseSuppressionActive: boolean;
@@ -37,6 +38,7 @@ export function buildMicrophoneAudioConstraints({
     noiseSuppressionEnabled,
     browserNoiseSuppressionEnabled,
     effectiveNoiseSuppressionProvider,
+    noiseSuppressionEngine,
     browserNoiseSuppressionSupported,
     workAdventureNoiseSuppressionFailed,
     customNoiseSuppressionActive,
@@ -61,7 +63,9 @@ export function buildMicrophoneAudioConstraints({
     if (microphoneDeviceId !== undefined && deviceIdSupported) {
         constraints.deviceId = { exact: microphoneDeviceId };
     }
-    if (customNoiseSuppressionActive && sampleRateSupported) {
+    // DTLN runs at 16 kHz. DeepFilterNet3 needs the full band: its 48 kHz AudioContext resamples whatever the
+    // microphone gives, so no constraint (and never an exact one, which would fail on 44.1 kHz devices).
+    if (customNoiseSuppressionActive && noiseSuppressionEngine === "dtln" && sampleRateSupported) {
         constraints.sampleRate = { ideal: 16000 };
     }
 

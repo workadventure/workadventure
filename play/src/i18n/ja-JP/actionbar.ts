@@ -48,6 +48,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noiseSuppressionInitializing: "カスタムノイズ抑制を初期化しています...",
         noiseSuppressionUnsupported: "このブラウザではカスタムノイズ抑制を実行できません。",
         noiseSuppressionError: "カスタムノイズ抑制に失敗しました。ブラウザ標準のノイズ抑制に戻します。",
+        noiseSuppressionActive: "有効",
         openSettings: "設定を開く",
         ignore: "無視",
     },

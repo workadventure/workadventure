@@ -47,6 +47,7 @@ import {
     microphoneBrowserNoiseSuppressionStore,
     microphoneEchoCancellationStore,
     noiseSuppressionEnabledStore,
+    noiseSuppressionEngineStore,
     noiseSuppressionStateStore,
     voiceIsolationSupportedStore,
 } from "./NoiseSuppressionStore";
@@ -322,6 +323,7 @@ export const audioConstraintStore = derived(
         microphoneBrowserNoiseSuppressionStore,
         noiseSuppressionEnabledStore,
         effectiveNoiseSuppressionProviderStore,
+        noiseSuppressionEngineStore,
         browserNoiseSuppressionSupportedStore,
         customNoiseSuppressionActiveStore,
         noiseSuppressionStateStore,
@@ -333,6 +335,7 @@ export const audioConstraintStore = derived(
         $microphoneBrowserNoiseSuppressionStore,
         $noiseSuppressionEnabledStore,
         $effectiveNoiseSuppressionProviderStore,
+        $noiseSuppressionEngineStore,
         $browserNoiseSuppressionSupportedStore,
         $customNoiseSuppressionActiveStore,
         $noiseSuppressionStateStore,
@@ -345,6 +348,7 @@ export const audioConstraintStore = derived(
             noiseSuppressionEnabled: $noiseSuppressionEnabledStore,
             browserNoiseSuppressionEnabled: $microphoneBrowserNoiseSuppressionStore,
             effectiveNoiseSuppressionProvider: $effectiveNoiseSuppressionProviderStore,
+            noiseSuppressionEngine: $noiseSuppressionEngineStore,
             browserNoiseSuppressionSupported: $browserNoiseSuppressionSupportedStore,
             workAdventureNoiseSuppressionFailed:
                 $noiseSuppressionStateStore.status === "error" || $noiseSuppressionStateStore.status === "unsupported",
@@ -1085,11 +1089,11 @@ let audioProcessedStreamUpdateQueue: Promise<void> = Promise.resolve();
 type SetAudioProcessedTrackIfCurrent = (value: LocalTrackStoreValue) => void;
 
 export const audioProcessedLocalAudioTrackStore = derived<
-    [typeof rawLocalAudioTrackStore, typeof customNoiseSuppressionActiveStore],
+    [typeof rawLocalAudioTrackStore, typeof customNoiseSuppressionActiveStore, typeof noiseSuppressionEngineStore],
     LocalTrackStoreValue
 >(
-    [rawLocalAudioTrackStore, customNoiseSuppressionActiveStore],
-    ([$rawLocalAudioTrackStore, $customNoiseSuppressionActiveStore], set) => {
+    [rawLocalAudioTrackStore, customNoiseSuppressionActiveStore, noiseSuppressionEngineStore],
+    ([$rawLocalAudioTrackStore, $customNoiseSuppressionActiveStore, $noiseSuppressionEngineStore], set) => {
         const myGen = ++audioProcessedStreamGeneration;
         const setIfCurrent: SetAudioProcessedTrackIfCurrent = (value) => {
             if (myGen === audioProcessedStreamGeneration) {
@@ -1111,14 +1115,24 @@ export const audioProcessedLocalAudioTrackStore = derived<
                     return;
                 }
 
-                setIfCurrent({
-                    type: "success",
-                    track: await noiseSuppressionController.transform(
-                        $rawLocalAudioTrackStore.track,
-                        $customNoiseSuppressionActiveStore,
-                        controller.signal,
-                    ),
-                });
+                const processedTrack = noiseSuppressionController.transform(
+                    $rawLocalAudioTrackStore.track,
+                    $customNoiseSuppressionActiveStore,
+                    $noiseSuppressionEngineStore,
+                    controller.signal,
+                );
+                // Loading a noise suppression model takes up to a second or two: send the raw microphone meanwhile
+                // rather than nothing. An already running pipeline answers at once and skips this.
+                const settled = await Promise.race([
+                    processedTrack.then(() => true),
+                    new Promise<false>((resolve) => {
+                        setTimeout(() => resolve(false), 50);
+                    }),
+                ]);
+                if (!settled) {
+                    setIfCurrent($rawLocalAudioTrackStore);
+                }
+                setIfCurrent({ type: "success", track: await processedTrack });
             })
             .catch((e) => {
                 const isAbort = e instanceof AbortError || (e instanceof DOMException && e.name === "AbortError");

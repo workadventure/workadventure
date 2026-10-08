@@ -207,6 +207,11 @@
                 />
             {/each}
             <div class="group flex flex-col relative z-10 py-1 px-2 overflow-hidden">
+                {#snippet noiseSuppressionActive()}
+                    <span data-testid="noise-suppression-active" class="text-success">
+                        {$LL.actionbar.microphone.noiseSuppressionActive()}
+                    </span>
+                {/snippet}
                 <InputSwitch
                     id="noise-suppression-toggle"
                     value={$noiseSuppressionEnabledStore}
@@ -214,6 +219,9 @@
                     margin=""
                     spacing=""
                     alignLabel="center"
+                    description={$noiseSuppressionStateStore.status === "ready" && $noiseSuppressionEnabledStore
+                        ? noiseSuppressionActive
+                        : undefined}
                 >
                     <span class:text-pop-red={isNoiseSuppressionErrorState}>
                         {$LL.actionbar.microphone.advancedNoiseReduction()}
