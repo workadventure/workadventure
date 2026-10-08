@@ -50,7 +50,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noiseSuppressionUnsupported: "Questo browser non può eseguire la soppressione del rumore personalizzata.",
         noiseSuppressionError:
             "Soppressione del rumore personalizzata non riuscita. Ripiego sulla soppressione del rumore nativa del browser.",
-        noiseSuppressionActive: "Riduzione del rumore attiva",
+        noiseSuppressionActive: "Attiva",
         openSettings: "Apri impostazioni",
         ignore: "Ignora",
     },

@@ -49,7 +49,7 @@ const actionbar: BaseTranslation = {
         noiseSuppressionInitializing: "Initializing custom noise suppression...",
         noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
         noiseSuppressionError: "Custom noise suppression failed. Falling back to browser native noise suppression.",
-        noiseSuppressionActive: "Noise reduction active",
+        noiseSuppressionActive: "Active",
         openSettings: "Open settings",
         ignore: "Ignore",
     },

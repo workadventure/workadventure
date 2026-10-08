@@ -49,7 +49,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noiseSuppressionInitializing: "Đang khởi tạo bộ khử tiếng ồn tùy chỉnh...",
         noiseSuppressionUnsupported: "Trình duyệt này không chạy được bộ khử tiếng ồn tùy chỉnh.",
         noiseSuppressionError: "Bộ khử tiếng ồn tùy chỉnh gặp lỗi. Chuyển về bộ khử tiếng ồn tích hợp của trình duyệt.",
-        noiseSuppressionActive: "Đang khử tiếng ồn",
+        noiseSuppressionActive: "Đang bật",
         openSettings: "Mở cài đặt",
         ignore: "Bỏ qua",
     },

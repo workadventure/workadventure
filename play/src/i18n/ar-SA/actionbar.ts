@@ -48,7 +48,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noiseSuppressionInitializing: "جارٍ تهيئة تقليل الضوضاء المخصص...",
         noiseSuppressionUnsupported: "لا يمكن لهذا المتصفح تشغيل تقليل الضوضاء المخصص.",
         noiseSuppressionError: "فشل تقليل الضوضاء المخصص. يتم الرجوع إلى تقليل الضوضاء الأصلي في المتصفح.",
-        noiseSuppressionActive: "تقليل الضوضاء نشط",
+        noiseSuppressionActive: "نشط",
         openSettings: "فتح الإعدادات",
         ignore: "تجاهل",
     },

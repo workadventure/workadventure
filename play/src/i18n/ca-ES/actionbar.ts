@@ -50,7 +50,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noiseSuppressionUnsupported: "Aquest navegador no pot executar la supressió de soroll personalitzada.",
         noiseSuppressionError:
             "La supressió de soroll personalitzada ha fallat. Es torna a la supressió de soroll nativa del navegador.",
-        noiseSuppressionActive: "Reducció de soroll activa",
+        noiseSuppressionActive: "Activa",
         openSettings: "Obrir configuració",
         ignore: "Ignora",
     },
