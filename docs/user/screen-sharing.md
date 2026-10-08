@@ -21,8 +21,6 @@ While you share, the button is highlighted, and your share appears as a second v
 
 ![Gregory shares his screen: the button is highlighted, and his share appears next to his camera](images/screen-sharing-presenter.png)
 
-If you close the browser's window without choosing, nothing is shared: click the button again to choose. If your screen cannot be shared, the message "Cannot start screen sharing" appears.
-
 ## What the others see
 
 The people in the conversation see your screen in a large view, below the videos.
@@ -40,7 +38,7 @@ Several people can share their screen at the same time: the most recent share is
 
 Click the screen sharing button again, or **Stop sharing** in the bar your browser shows.
 
-Your share also stops when you leave the conversation: when you walk out of the bubble, leave the meeting room or step off the podium.
+Your share also stops when you leave the conversation.
 
 ## Image quality
 
@@ -51,9 +49,29 @@ To change the quality of your screen share, open the [Settings](/user/settings#v
 
 The maximum resolution is set when you start sharing: after a change, stop and start your share again.
 
+### Codecs
+
+Your screen is compressed by a video codec before it is sent. WorkAdventure uses the first of these codecs that your computer can run smoothly:
+
+| Codec | Bandwidth for the same image | Work for your computer |
+|---|---|---|
+| **AV1** | the lowest | the highest: on most computers, the processor does it all |
+| **VP9** | about 40 % more than AV1 | about half of AV1 |
+| **H.264** | about twice AV1 | very little: nearly every computer encodes it on the graphics card |
+
+With the **Low** quality, AV1 is skipped.
+
+Your browser tells WorkAdventure which codecs run smoothly on your computer. If after a few minutes, your computer detects
+it has a hard time keeping up, WorkAdventure switches to a simpler codec.
+
+Firefox cannot send AV1 or VP9 in the layered form the media server needs. It means that in large meetings, it falls 
+back to H.264 there.
+
+To check the codec of a video, turn on **Display video quality statistics** in the [Settings](/user/settings#other-settings).
+
 ## When you cannot share your screen
 
 - **On a phone or a tablet**: most mobile browsers cannot share the screen, so the button does not appear.
 - **In a Jitsi or BigBlueButton room**: use the screen sharing of Jitsi or BigBlueButton instead. Opening one of them stops your WorkAdventure share.
 - **The map turned it off**: the map's script can disable screen sharing. The button is then greyed out.
-- **In the audience of a megaphone or a podium**: only the speaker can share their screen. The button does not appear, even when the speaker can see the audience.
+- **"Cannot start screen sharing" appears on a Mac**: macOS does not let your browser record the screen. Allow it in **System Settings** > **Privacy & Security** > **Screen & System Audio Recording**, then restart your browser.
