@@ -391,7 +391,9 @@ export class PusherRoomSocketController {
                     socket.markPermanentlyDisconnected();
                     return Promise.resolve(config.close(socket, code, reason));
                 };
-                if (code === 1000 || code === 1001 || code === WS_CLOSE_CODE_SESSION_DESTROYED) {
+                // Not 1001: Chrome sends it whenever the browser tears a socket down on its own, while the page sees
+                // that same close as 1006 and resumes. A front that leaves for good closes with 1000 itself.
+                if (code === 1000 || code === WS_CLOSE_CODE_SESSION_DESTROYED) {
                     closePermanently().then(forgetRetained, (e) => {
                         console.error(e);
                         forgetRetained();
