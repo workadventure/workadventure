@@ -5,8 +5,8 @@ import { effectiveCameraStateStore } from "../Stores/MediaStore";
 import { registerLocalEncoderStats, type LocalEncoderStats } from "./LocalEncoderStats";
 import {
     CameraStallDetector,
+    MAX_RESTARTS,
     RESTART_GRACE_SAMPLES,
-    RETRY_WINDOW_MS,
     STALL_SAMPLES,
     WARMUP_SAMPLES,
     startCameraStallDetector,
@@ -72,7 +72,7 @@ function run(
 }
 
 describe("CameraStallDetector", () => {
-    it("asks for the camera again after 5 seconds without a frame, once the encoders are warm", () => {
+    it("asks for the camera again after 3 seconds without a frame, once the encoders are warm", () => {
         expect(run(new CameraStallDetector(), frozen(WARMUP_SAMPLES + STALL_SAMPLES + 2))).toEqual([
             [WARMUP_SAMPLES + STALL_SAMPLES - 1, "restart"],
         ]);
@@ -88,17 +88,17 @@ describe("CameraStallDetector", () => {
         ]);
     });
 
-    it("restarts again, rather than giving up, a camera that worked for longer than the retry window", () => {
+    it("restarts a camera that came back each time it freezes, until it froze too often", () => {
         const detector = new CameraStallDetector();
-        expect(run(detector, frozen(WARMUP_SAMPLES + STALL_SAMPLES))).toEqual([
-            [WARMUP_SAMPLES + STALL_SAMPLES - 1, "restart"],
-        ]);
-        // The new camera works, then freezes again long after
-        const workingSeconds = RETRY_WINDOW_MS / 1000;
-        const start = WARMUP_SAMPLES + STALL_SAMPLES;
-        expect(run(detector, [...live(workingSeconds), ...frozen(STALL_SAMPLES)], start)).toEqual([
-            [start + workingSeconds + STALL_SAMPLES - 1, "restart"],
-        ]);
+        // Each episode: frozen until the detector acts, then the new camera works for a while
+        const actions: string[] = [];
+        let second = 0;
+        for (let episode = 0; episode <= MAX_RESTARTS; episode++) {
+            const episodeSamples = [...frozen(RESTART_GRACE_SAMPLES + STALL_SAMPLES), ...live(20)];
+            actions.push(...run(detector, episodeSamples, second).map(([, action]) => action));
+            second += episodeSamples.length;
+        }
+        expect(actions).toEqual([...Array<string>(MAX_RESTARTS).fill("restart"), "give_up"]);
     });
 
     it("waits for the encoders that have a layer to send, and ignores the others", () => {
@@ -117,9 +117,11 @@ describe("CameraStallDetector", () => {
         expect(run(new CameraStallDetector(), samples(30, stats(silent)))).toEqual([]);
     });
 
-    it("does not count the seconds the browser holds frames back on purpose", () => {
-        const congested = { ...encoder(0), qualityLimitationReason: "bandwidth" as const };
-        expect(run(new CameraStallDetector(), samples(30, stats(congested)))).toEqual([]);
+    it("ignores the limitation reason: a LiveKit sender reports bandwidth for minutes, frozen or not", () => {
+        const frozenAndLimited = { ...encoder(0), qualityLimitationReason: "bandwidth" as const };
+        expect(
+            run(new CameraStallDetector(), samples(WARMUP_SAMPLES + STALL_SAMPLES, stats(frozenAndLimited))),
+        ).toEqual([[WARMUP_SAMPLES + STALL_SAMPLES - 1, "restart"]]);
     });
 
     it("starts over when the camera stops being encoded", () => {

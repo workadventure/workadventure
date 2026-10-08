@@ -13,12 +13,15 @@ import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderSt
  * frame, every tile mounted afterwards (someone arriving, coming back from a break) shows "No video stream
  * received", and the user sees a black preview.
  *
- * The encoders tell: with a layer to send, a camera has frames to encode all the time. None for 3 seconds, while the
- * browser reports no bandwidth or CPU limitation (a congested network can hold every frame back for a moment),
- * means the source delivers nothing. We first ask for the camera again, what the user would do by turning it off and on. If
- * the new one stays silent too, the camera is turned off, so that the others get the avatar instead of a red tile,
- * and the user is told why. Switching to another camera is left to the user: the other one may be the camera of a
- * closed laptop, or point elsewhere.
+ * The encoders tell: with a layer to send, a camera has frames to encode all the time. None for 3 seconds means the
+ * source delivers nothing. We first ask for the camera again, what the user would do by turning it off and on. If
+ * the new one never delivers a frame, or the camera keeps freezing, it is turned off, so that the others get the
+ * avatar instead of a red tile, and the user is told why. Switching to another camera is left to the user: the
+ * other one may be the camera of a closed laptop, or point elsewhere.
+ *
+ * The limitation reason is no help: it stays set while the adaptation is in force, a LiveKit sender reports
+ * "bandwidth" for minutes on end, and a frozen camera never moves it. A network that holds every frame back for 3
+ * seconds costs a restart at worst: the camera only goes off when the new one sends nothing at all.
  *
  * Firefox does not report which layers are active: it never gets here.
  */
@@ -26,21 +29,24 @@ import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderSt
 export type CameraStallAction = "restart" | "give_up";
 
 // No frame for 3 seconds: back before a tile mounted meanwhile shows "No video stream received" (5 seconds).
-// Not less: one sample a second, and a congested network can stall the encoder for a second or two.
+// Not less: one sample a second.
 export const STALL_SAMPLES = 3;
 // Encoders starting deliver nothing for a moment
 export const WARMUP_SAMPLES = 3;
 // Room for getUserMedia to hand over the new camera
 export const RESTART_GRACE_SAMPLES = 5;
-// A camera that stalls again this soon after a restart is not coming back by itself
-export const RETRY_WINDOW_MS = 60_000;
+// A camera that keeps freezing is not coming back for good
+export const MAX_RESTARTS = 3;
+export const RESTART_WINDOW_MS = 10 * 60_000;
 const SAMPLE_INTERVAL_MS = 1000;
 
 export class CameraStallDetector {
     private stalledSamples = 0;
     private warmup = WARMUP_SAMPLES;
     private lastSampleTime = -Infinity;
-    private lastRestartTime = -Infinity;
+    private restartTimes: number[] = [];
+    // Whether the camera delivered a frame since the last restart: a new camera that never does is not worth another
+    private deliveredSinceRestart = true;
 
     /**
      * Feeds one reading of the aggregated camera encoder stats. Returns the action to take when it is time.
@@ -50,6 +56,7 @@ export class CameraStallDetector {
             // Camera off, or nobody to send it to: start over
             this.stalledSamples = 0;
             this.warmup = WARMUP_SAMPLES;
+            this.deliveredSinceRestart = true;
             return undefined;
         }
         if (now - this.lastSampleTime < SAMPLE_INTERVAL_MS) {
@@ -64,17 +71,13 @@ export class CameraStallDetector {
         // Only an encoder with a layer to send is expected to encode: dynacast switches the layers nobody watches
         // off, and a P2P peer hiding our tile switches its encoder off.
         const expected = stats.encoders.filter((encoder) => (encoder.activeLayers ?? 0) > 0);
-        if (
-            expected.length === 0 ||
-            stats.encoders.some((encoder) => encoder.activeLayers === undefined) ||
-            expected.some((encoder) => (encoder.activeFps ?? 0) > 0) ||
-            // The browser holds frames back on purpose: not the camera's doing
-            expected.some(
-                (encoder) =>
-                    encoder.qualityLimitationReason === "bandwidth" || encoder.qualityLimitationReason === "cpu",
-            )
-        ) {
+        if (expected.length === 0 || stats.encoders.some((encoder) => encoder.activeLayers === undefined)) {
             this.stalledSamples = 0;
+            return undefined;
+        }
+        if (expected.some((encoder) => (encoder.activeFps ?? 0) > 0)) {
+            this.stalledSamples = 0;
+            this.deliveredSinceRestart = true;
             return undefined;
         }
         this.stalledSamples++;
@@ -82,12 +85,15 @@ export class CameraStallDetector {
             return undefined;
         }
         this.stalledSamples = 0;
-        if (now - this.lastRestartTime < RETRY_WINDOW_MS) {
-            this.lastRestartTime = -Infinity;
+        this.restartTimes = this.restartTimes.filter((time) => now - time < RESTART_WINDOW_MS);
+        if (!this.deliveredSinceRestart || this.restartTimes.length >= MAX_RESTARTS) {
+            this.restartTimes = [];
+            this.deliveredSinceRestart = true;
             this.warmup = WARMUP_SAMPLES;
             return "give_up";
         }
-        this.lastRestartTime = now;
+        this.restartTimes.push(now);
+        this.deliveredSinceRestart = false;
         this.warmup = RESTART_GRACE_SAMPLES;
         return "restart";
     }
