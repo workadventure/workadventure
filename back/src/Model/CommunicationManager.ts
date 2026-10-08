@@ -588,7 +588,7 @@ export class CommunicationManager implements ICommunicationManager {
         }
         if (isPresent) {
             this._sessionAnalytics.join(
-                { uuid: user.uuid, spaceUserId: user.spaceUserId, roomId: user.playUri },
+                { uuid: user.uuid, spaceUserId: user.spaceUserId, roomId: user.playUri, tags: user.tags },
                 // In a broadcast only a speaker is active; in a meeting, being there is.
                 this.space.filterType === FilterType.ALL_USERS ? true : user.megaphoneState,
             );

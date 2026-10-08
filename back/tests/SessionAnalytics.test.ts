@@ -8,6 +8,7 @@ const member = (id: string): SessionMember => ({
     uuid: `uuid-${id}`,
     spaceUserId: `room_${id}`,
     roomId: "https://play.example/room",
+    tags: [`tag-${id}`],
 });
 
 const rowsOf = (enqueue: Enqueue): AnalyticsStoredEvent[] => enqueue.mock.calls.map(([row]) => row);
@@ -56,6 +57,9 @@ describe("SessionAnalytics", () => {
         expect(participations.map((row) => row.properties.joinRank)).toEqual([1, 2, 3]);
         expect(participations.map((row) => row.properties.durationSeconds)).toEqual([120, 120, 60]);
         expect(participations.map((row) => row.userUuid)).toEqual(["uuid-1", "uuid-2", "uuid-3"]);
+        // Each person's tags ride on their own row; the meeting's names nobody, so it has none.
+        expect(participations.map((row) => row.tags)).toEqual([["tag-1"], ["tag-2"], ["tag-3"]]);
+        expect(meetings[0].tags).toEqual([]);
         expect(participations.every((row) => row.properties.meetingId === "space")).toBe(true);
         // Same row shape as a broadcast, and in a meeting everyone is on air: the
         // broadcast-only fields are filled, not omitted, and they say exactly that.
@@ -331,7 +335,7 @@ describe("SessionAnalytics", () => {
                 () => 1791104548966,
             );
             for (const id of ["1", "2"]) {
-                analytics.join({ uuid: `uuid-${id}`, spaceUserId: `${room}_${id}`, roomId: room }, true);
+                analytics.join({ uuid: `uuid-${id}`, spaceUserId: `${room}_${id}`, roomId: room, tags: [] }, true);
             }
             analytics.close();
             return rowsOf(enqueue).map((row) => row.eventId);
