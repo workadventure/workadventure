@@ -192,6 +192,7 @@ export class AnalyticsEventsQueue extends SharedAnalyticsEventsQueue {
             world: socketData.world,
             roomId: socketData.roomId,
             tabId: socketData.tabId,
+            tags: socketData.tags,
             properties: event.properties,
         };
     }

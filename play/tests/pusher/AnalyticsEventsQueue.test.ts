@@ -74,6 +74,7 @@ describe("AnalyticsEventsQueue", () => {
                         world: "world",
                         roomId: "https://play.test/@/team/world/room",
                         tabId: "tab-id",
+                        tags: ["admin", "member"],
                         properties: {
                             connectionId: "connection-id",
                             connectedAt: "2026-04-24T12:00:05.000Z",
@@ -484,6 +485,7 @@ function socketData(overrides: Partial<SocketData> & { analyticsEventsEnabled?: 
         world: "world",
         spaces: new Set(["world.space"]),
         tabId: "tab-id",
+        tags: ["admin", "member"],
         analyticsEventsEnabled: true,
         ...overrides,
     } as SocketData;

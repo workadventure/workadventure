@@ -22,6 +22,8 @@ export type SessionMember = {
     uuid: string;
     spaceUserId: string;
     roomId: string;
+    /** As the admin returned them at connection: what the dashboards filter people by. */
+    tags: string[];
 };
 
 /**
@@ -380,6 +382,7 @@ export class SessionAnalytics {
             world: this.world,
             roomId: input.member?.roomId ?? this.roomId,
             tabId: null,
+            tags: input.member?.tags ?? [],
             properties: input.properties,
         };
     }
