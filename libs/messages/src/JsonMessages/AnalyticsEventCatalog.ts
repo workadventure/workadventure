@@ -1316,6 +1316,54 @@ export const ANALYTICS_EVENTS = {
       "WorkAdventure noise suppression is processing the microphone. Read against media.noise_suppression.failed for each engine's failure rate, the figure that decides whether DeepFilterNet3 can become the default.",
   }),
 
+  "media.noise_suppression.load": event({
+    properties: z.object({
+      engine: noiseSuppressionEngineField,
+      windows: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe("2 s windows measured (30 for the default minute)."),
+      medianLoad: z
+        .number()
+        .nonnegative()
+        .describe(
+          "Median share of real time the worklet spent denoising, per 2 s window. 0.05 = 5 %.",
+        ),
+      p95Load: z
+        .number()
+        .nonnegative()
+        .describe("95th percentile of the per-window load."),
+      maxLoad: z
+        .number()
+        .nonnegative()
+        .describe(
+          "Worst window. Above 0.7 twice in a row, the overload fallback kicks in.",
+        ),
+      slowFrames: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "Frames measured at 3 ms or more, i.e. that took 2 ms or more, close to the 2.67 ms render quantum: the ones that can crackle. Worklets only have Date.now() (1 ms steps), so shorter frames cannot be timed one by one.",
+        ),
+      frames: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe("10 ms frames processed during the measurement."),
+      hardwareConcurrency: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "navigator.hardwareConcurrency, 0 when the browser hides it.",
+        ),
+    }),
+    description:
+      "How heavy WorkAdventure noise suppression really is on this device: sent once per pipeline, after a minute of processing (DeepFilterNet3 only). The data that decides whether noise suppression can be on by default — the overload fallback only says when it is too heavy.",
+  }),
+
   "media.audio_quality.sample": event({
     properties: z.object({
       transportType: z
