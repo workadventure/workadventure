@@ -1019,6 +1019,12 @@ export class GameScene extends DirtyScene {
                                 this.initializeAreaManager();
                             })
                             .catch((e) => {
+                                if (e instanceof CloseEvent) {
+                                    // The socket closed before the room was joined. This is a lost connection, not a
+                                    // bug: RoomConnection emits serverDisconnected and the scene reconnects from there
+                                    // (or the page is unloading, code 1000). setException would throw on a CloseEvent.
+                                    return;
+                                }
                                 console.error("Error while joining the room", e);
                                 Sentry.captureException(e);
                                 errorScreenStore.setException(e);
