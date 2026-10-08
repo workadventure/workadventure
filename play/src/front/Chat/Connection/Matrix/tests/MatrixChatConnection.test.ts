@@ -1,5 +1,14 @@
 import type { MatrixClient, Room } from "matrix-js-sdk";
-import { ClientEvent, EventType, MatrixError, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
+import {
+    ClientEvent,
+    ConnectionError,
+    EventType,
+    MatrixError,
+    PendingEventOrdering,
+    RoomEvent,
+    SyncState,
+} from "matrix-js-sdk";
+import * as Sentry from "@sentry/svelte";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import type { Readable } from "svelte/store";
@@ -13,6 +22,8 @@ import { MatrixChatRoom as MatrixChatRoomClass } from "../MatrixChatRoom";
 import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 import type { MatrixSecurity } from "../MatrixSecurity";
 import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
+
+vi.mock("@sentry/svelte", () => ({ captureException: vi.fn() }));
 
 vi.mock("../../../../Phaser/Game/GameManager", () => {
     return {
@@ -1892,6 +1903,22 @@ describe("MatrixChatConnection", () => {
 
             expect(existingChildFolder.refreshRooms).not.toHaveBeenCalled();
             expect(existingChildFolder.init).toHaveBeenCalledOnce();
+        });
+    });
+
+    describe("onSyncStateChange", () => {
+        it("should report sync errors to Sentry, except when the homeserver cannot be reached", async () => {
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve({} as unknown as MatrixClient));
+            vi.mocked(Sentry.captureException).mockClear();
+
+            matrixChatConnection["onSyncStateChange"](SyncState.Error, SyncState.Reconnecting, {
+                error: new ConnectionError("fetch failed", new TypeError("Failed to fetch")),
+            });
+            expect(Sentry.captureException).not.toHaveBeenCalled();
+
+            const error = new MatrixError({ errcode: "M_UNKNOWN" }, 500);
+            matrixChatConnection["onSyncStateChange"](SyncState.Error, SyncState.Syncing, { error });
+            expect(Sentry.captureException).toHaveBeenCalledWith(error);
         });
     });
 });
