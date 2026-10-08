@@ -6,7 +6,7 @@ sidebar_position: 13
 
 Picture-in-picture shows the videos of your conversation in a small floating window, above your other windows. You can keep seeing the people you talk to while you work in another tab or another app.
 
-It needs a Chromium-based browser (Chrome, Edge…) on a computer. On other browsers, and on phones, the button does not appear.
+It needs a Chromium-based browser (Chrome, Edge…) or Firefox on a computer. On other browsers, and on phones, the button does not appear.
 
 ## Opening the floating window
 
@@ -30,7 +30,6 @@ At the bottom, buttons let you:
 - turn your camera on or off,
 - share your screen.
 
-The sound of the conversation always plays in the WorkAdventure tab, so opening or closing the window never cuts the sound.
 
 ## Closing the floating window
 
