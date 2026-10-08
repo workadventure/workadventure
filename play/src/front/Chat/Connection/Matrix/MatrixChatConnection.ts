@@ -14,6 +14,7 @@ import type {
 } from "matrix-js-sdk";
 import {
     ClientEvent,
+    ConnectionError,
     EventTimeline,
     EventType,
     HttpApiEvent,
@@ -789,7 +790,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 this.connectionStatus.set("ON_ERROR");
                 if (res?.error) {
                     console.error("Matrix sync error (previous state: ", prevState, "): ", res?.error);
-                    Sentry.captureException(res?.error);
+                    // A ConnectionError means the homeserver could not be reached (network down, laptop waking up...).
+                    // The SDK keeps polling /versions every few seconds and resumes the sync once it answers.
+                    if (!(res.error instanceof ConnectionError)) {
+                        Sentry.captureException(res.error);
+                    }
                 }
                 break;
             case SyncState.Reconnecting:
