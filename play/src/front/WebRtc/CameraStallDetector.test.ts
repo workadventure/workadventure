@@ -1,17 +1,34 @@
+import { writable, type Writable } from "svelte/store";
 import { describe, expect, it, vi } from "vitest";
 import type { WebRtcSenderStats } from "../Components/Video/WebRtcStats";
-import type { LocalEncoderStats } from "./LocalEncoderStats";
+import { effectiveCameraStateStore } from "../Stores/MediaStore";
+import { registerLocalEncoderStats, type LocalEncoderStats } from "./LocalEncoderStats";
 import {
     CameraStallDetector,
     RESTART_GRACE_SAMPLES,
     RETRY_WINDOW_MS,
     STALL_SAMPLES,
     WARMUP_SAMPLES,
+    startCameraStallDetector,
 } from "./CameraStallDetector";
 
-// Only the detector's decisions are under test, not its wiring
-vi.mock("../Stores/MediaStore", () => ({ requestedCameraState: {}, restartCamera: vi.fn() }));
-vi.mock("../Stores/ToastStoreSingleton", () => ({ toastStore: {} }));
+const mocks = vi.hoisted(() => ({
+    restartCamera: vi.fn(),
+    disableWebcam: vi.fn(),
+    addToast: vi.fn(),
+    removeToast: vi.fn(),
+}));
+vi.mock("../Stores/MediaStore", async () => {
+    const { writable } = await import("svelte/store");
+    return {
+        effectiveCameraStateStore: writable(false),
+        requestedCameraState: { disableWebcam: mocks.disableWebcam },
+        restartCamera: mocks.restartCamera,
+    };
+});
+vi.mock("../Stores/ToastStoreSingleton", () => ({
+    toastStore: { addToast: mocks.addToast, removeToast: mocks.removeToast },
+}));
 vi.mock("../Components/Toasts/CameraNoImageToast.svelte", () => ({ default: {} }));
 vi.mock("../Administration/AnalyticsClient", () => ({ analyticsClient: { trackAdminEvent: vi.fn() } }));
 
@@ -100,8 +117,42 @@ describe("CameraStallDetector", () => {
         expect(run(new CameraStallDetector(), samples(30, stats(silent)))).toEqual([]);
     });
 
+    it("does not count the seconds the browser holds frames back on purpose", () => {
+        const congested = { ...encoder(0), qualityLimitationReason: "bandwidth" as const };
+        expect(run(new CameraStallDetector(), samples(30, stats(congested)))).toEqual([]);
+    });
+
     it("starts over when the camera stops being encoded", () => {
         const interrupted = [...frozen(WARMUP_SAMPLES + STALL_SAMPLES - 1), undefined, ...frozen(WARMUP_SAMPLES)];
         expect(run(new CameraStallDetector(), interrupted)).toEqual([]);
+    });
+});
+
+describe("startCameraStallDetector", () => {
+    it("leaves alone a camera the user turned off, and restarts a camera that is on and frozen", () => {
+        vi.useFakeTimers();
+        const cameraOn = effectiveCameraStateStore as unknown as Writable<boolean>;
+        const encoderStats = writable<WebRtcSenderStats | undefined>(undefined);
+        const unregister = registerLocalEncoderStats("video", encoderStats);
+        startCameraStallDetector();
+        const feed = (seconds: number) => {
+            for (let second = 0; second < seconds; second++) {
+                vi.advanceTimersByTime(1000);
+                encoderStats.set(encoder(0));
+            }
+        };
+
+        // Turned off by the user: the senders stay, with an active layer and nothing to encode
+        cameraOn.set(false);
+        feed(20);
+        expect(mocks.restartCamera).not.toHaveBeenCalled();
+        expect(mocks.addToast).not.toHaveBeenCalled();
+
+        cameraOn.set(true);
+        feed(WARMUP_SAMPLES + STALL_SAMPLES);
+        expect(mocks.restartCamera).toHaveBeenCalledOnce();
+
+        unregister();
+        vi.useRealTimers();
     });
 });

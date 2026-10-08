@@ -1,6 +1,7 @@
+import { derived } from "svelte/store";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import CameraNoImageToast from "../Components/Toasts/CameraNoImageToast.svelte";
-import { requestedCameraState, restartCamera } from "../Stores/MediaStore";
+import { effectiveCameraStateStore, requestedCameraState, restartCamera } from "../Stores/MediaStore";
 import { toastStore } from "../Stores/ToastStoreSingleton";
 import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderStats";
 
@@ -12,8 +13,9 @@ import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderSt
  * frame, every tile mounted afterwards (someone arriving, coming back from a break) shows "No video stream
  * received", and the user sees a black preview.
  *
- * The encoders tell: with a layer to send, a camera has frames to encode all the time. None for 5 seconds means the
- * source delivers nothing. We first ask for the camera again, what the user would do by turning it off and on. If
+ * The encoders tell: with a layer to send, a camera has frames to encode all the time. None for 3 seconds, while the
+ * browser reports no bandwidth or CPU limitation (a congested network can hold every frame back for a moment),
+ * means the source delivers nothing. We first ask for the camera again, what the user would do by turning it off and on. If
  * the new one stays silent too, the camera is turned off, so that the others get the avatar instead of a red tile,
  * and the user is told why. Switching to another camera is left to the user: the other one may be the camera of a
  * closed laptop, or point elsewhere.
@@ -23,8 +25,9 @@ import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderSt
 
 export type CameraStallAction = "restart" | "give_up";
 
-// No frame for 5 seconds: the delay after which a tile shows "No video stream received"
-export const STALL_SAMPLES = 5;
+// No frame for 3 seconds: back before a tile mounted meanwhile shows "No video stream received" (5 seconds).
+// Not less: one sample a second, and a congested network can stall the encoder for a second or two.
+export const STALL_SAMPLES = 3;
 // Encoders starting deliver nothing for a moment
 export const WARMUP_SAMPLES = 3;
 // Room for getUserMedia to hand over the new camera
@@ -64,7 +67,12 @@ export class CameraStallDetector {
         if (
             expected.length === 0 ||
             stats.encoders.some((encoder) => encoder.activeLayers === undefined) ||
-            expected.some((encoder) => (encoder.activeFps ?? 0) > 0)
+            expected.some((encoder) => (encoder.activeFps ?? 0) > 0) ||
+            // The browser holds frames back on purpose: not the camera's doing
+            expected.some(
+                (encoder) =>
+                    encoder.qualityLimitationReason === "bandwidth" || encoder.qualityLimitationReason === "cpu",
+            )
         ) {
             this.stalledSamples = 0;
             return undefined;
@@ -89,15 +97,29 @@ export const CAMERA_NO_IMAGE_TOAST_ID = "camera-no-image";
 
 /**
  * Fed by the stats of the local camera feedback tile, like CpuLimitationDetector: no getStats() call of its own.
+ *
+ * Only while the camera is on: a camera the user turned off leaves its senders in place, with an active layer and
+ * nothing to encode, which must not read as a frozen camera.
  */
 export function startCameraStallDetector(): void {
     const detector = new CameraStallDetector();
-    // Module singleton: never unsubscribed
+    const cameraStatsStore = derived(
+        [localEncoderStatsStore.video, effectiveCameraStateStore],
+        ([$stats, $cameraOn]) => ($cameraOn ? $stats : undefined),
+    );
+    // Module singletons: never unsubscribed
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
-    localEncoderStatsStore.video.subscribe((stats) => {
+    effectiveCameraStateStore.subscribe((cameraOn) => {
+        if (cameraOn) {
+            // Back on, whichever way: the warning is moot
+            toastStore.removeToast(CAMERA_NO_IMAGE_TOAST_ID);
+        }
+    });
+    // eslint-disable-next-line svelte/no-ignored-unsubscribe
+    cameraStatsStore.subscribe((stats) => {
         const action = detector.sample(stats);
         if (action === "restart") {
-            console.warn("The camera has delivered no frame for 5 seconds: asking for it again");
+            console.warn("The camera has delivered no frame for 3 seconds: asking for it again");
             analyticsClient.trackAdminEvent("media.device_error", { kind: "camera", reason: "stalled" });
             restartCamera();
         } else if (action === "give_up") {
