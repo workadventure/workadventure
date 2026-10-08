@@ -268,11 +268,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        // Are we trying to publish the same track again?
-        // Note: in practice, we never reach this point with the same track, because we get a new track
-        // each time we stop and restart the camera.
+        // Are we trying to publish the same track again? It happens on every emission of the local stream
+        // (a microphone toggle, handleReconnected()...), not only when the camera restarts.
+        // A muted track is a camera that delivers no frames: livekit-client paused its upstream so that the
+        // room sees a muted camera. Resuming it would announce a camera that sends nothing, and every tile
+        // mounted afterwards would show "No video stream received". livekit-client resumes it on "unmute".
         if (this.localCameraTrack && this.localCameraTrack.mediaStreamTrack.id === videoTrack.id) {
-            if (this.localCameraTrack.isUpstreamPaused) {
+            if (this.localCameraTrack.isUpstreamPaused && !videoTrack.muted) {
                 await this.localCameraTrack.resumeUpstream();
             }
             return;
@@ -313,7 +315,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 userProvidedTrack: true,
             });
 
-            if (this.localCameraTrack.isUpstreamPaused) {
+            if (this.localCameraTrack.isUpstreamPaused && !videoTrack.muted) {
                 await this.localCameraTrack.resumeUpstream();
             }
         }
