@@ -203,6 +203,53 @@ describe("LiveKitRoom", () => {
         expect(room["localCameraTrack"]?.mediaStreamTrack.id).toBe("camera-track");
     });
 
+    // A camera that stops delivering frames (taken by another app, laptop waking up) stays "live" but muted.
+    // livekit-client then pauses the upstream, which the room sees as a muted camera: the others get the avatar.
+    // Resuming that upstream tells the room the camera is on again, so every tile mounted afterwards waits for
+    // frames that never come and shows "No video stream received", while the user's own preview stays frozen.
+    describe("with a camera that stopped delivering frames", () => {
+        async function publishFrozenCamera(room: LiveKitRoom, cameraStream: LocalStreamStoreValue) {
+            room["room"] = { state: ConnectionState.Connected } as never;
+            room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+            await room["handleCameraTrack"](cameraStream);
+            const cameraTrack = room["localCameraTrack"];
+            if (!cameraTrack) {
+                throw new Error("The camera was not published");
+            }
+            Object.assign(cameraTrack.mediaStreamTrack, { muted: true });
+            Object.assign(cameraTrack, { isUpstreamPaused: true });
+            return vi.spyOn(cameraTrack, "resumeUpstream");
+        }
+
+        it("should keep the upstream paused when the local stream is emitted again, e.g. on a microphone toggle", async () => {
+            const room = createLiveKitRoom({
+                screenSharingLocalStreamStore: writable(undefined),
+                shouldPublishScreenShareStore: writable(false),
+            });
+            const cameraStream = createCameraStream();
+            const resumeUpstream = await publishFrozenCamera(room, cameraStream);
+
+            await room["handleCameraTrack"](cameraStream);
+
+            expect(resumeUpstream).not.toHaveBeenCalled();
+        });
+
+        it("should keep the upstream paused when LiveKit reconnects", async () => {
+            const room = createLiveKitRoom({
+                screenSharingLocalStreamStore: writable(undefined),
+                shouldPublishScreenShareStore: writable(false),
+            });
+            const cameraStream = createCameraStream();
+            room["cameraStreamStore"] = writable(cameraStream);
+            const resumeUpstream = await publishFrozenCamera(room, cameraStream);
+
+            room["handleReconnected"]();
+            await room["mediaTrackUpdateQueue"];
+
+            expect(resumeUpstream).not.toHaveBeenCalled();
+        });
+    });
+
     it("should defer a scripting stream while the room is not connected and publish it once reconnected", async () => {
         const room = createLiveKitRoom({
             screenSharingLocalStreamStore: writable(undefined),
