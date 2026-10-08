@@ -15,15 +15,21 @@ const { RoomNotResolvedError } = await import("../src/Model/Errors");
 const { adminApi } = await import("../src/Services/AdminApi");
 
 describe("GameRoom.create with an admin", () => {
-    it("rejects a room the admin redirects with a RoomNotResolvedError, without reporting it itself", async () => {
+    it("rejects a deleted room with a RoomNotResolvedError, without reporting it itself", async () => {
+        // What the admin sends (with HTTP 200) for a room that is no longer in the world
         vi.spyOn(adminApi, "fetchMapDetails").mockResolvedValue({
-            redirectUrl: "https://play.test/@/team/world/room",
+            status: "error",
+            type: "error",
+            code: "ROOM_NOT_FOUND",
+            title: "Room not found",
+            subtitle: "The room you are trying to join does not exist.",
+            details: "",
         });
         const noop = () => {};
 
         await expect(
             GameRoom.create(
-                "https://play.test/@/team/world/room.wam",
+                "https://play.test/@/team/world/deleted-room",
                 noop,
                 noop,
                 160,

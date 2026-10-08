@@ -514,9 +514,9 @@ const roomManager = {
                             })
                             .catch((e) => {
                                 if (e instanceof RoomNotResolvedError) {
-                                    // The admin dashboard listens to every room it knows, including URLs that now
-                                    // redirect: there is nothing to watch there. The warning names the URL in case
-                                    // the dashboard's room list is the one to fix.
+                                    // The admin dashboard keeps the room list it loaded: a tab opened before a room
+                                    // was deleted keeps listening to it, and the admin answers "room not found".
+                                    // There is nothing to watch there. The warning names the URL.
                                     console.warn(e.message);
                                     return;
                                 }

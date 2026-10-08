@@ -10,8 +10,8 @@ export class TransitionAbortedError extends Error {
 }
 
 /**
- * Thrown when the admin answers a map details query with a redirect or an error page instead of a map:
- * the room URL does not resolve to a room (renamed or deleted room, old URL...). It is an answer, not a defect.
+ * Thrown when the admin answers a map details query with an error page (sent with HTTP 200, e.g. a deleted room) or a
+ * redirect instead of a map: the room URL does not resolve to a room. It is an answer, not a defect.
  */
 export class RoomNotResolvedError extends Error {
     constructor(roomUrl: string, answer: unknown) {
