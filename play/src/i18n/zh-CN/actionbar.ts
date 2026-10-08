@@ -37,6 +37,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "模糊效果",
         disableBackgroundEffects: "禁用背景效果",
         close: "关闭",
+        noImageWarning: "您的摄像头已停止发送画面。可能有其他应用（Teams、Zoom 等）正在使用它。",
+        retry: "重试",
+        changeCamera: "更换摄像头",
     },
     microphone: {
         disabled: "您的麦克风已禁用",

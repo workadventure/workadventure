@@ -37,6 +37,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "Effetti sfocatura",
         disableBackgroundEffects: "Disabilita effetti di sfondo",
         close: "Chiudi",
+        noImageWarning:
+            "La tua fotocamera ha smesso di inviare immagini. Potrebbe essere in uso da un'altra applicazione (Teams, Zoom…).",
+        retry: "Riprova",
+        changeCamera: "Cambia fotocamera",
     },
     microphone: {
         disabled: "Il tuo microfono è disabilitato",

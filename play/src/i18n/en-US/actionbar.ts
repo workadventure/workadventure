@@ -37,6 +37,9 @@ const actionbar: BaseTranslation = {
         blurEffects: "Blur effects",
         disableBackgroundEffects: "Disable background effects",
         close: "Close",
+        noImageWarning: "Your camera stopped sending images. Another application (Teams, Zoom…) may be using it.",
+        retry: "Try again",
+        changeCamera: "Change camera",
     },
     microphone: {
         disabled: "Your microphone is disabled",

@@ -37,6 +37,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "تأثيرات الضبابية",
         disableBackgroundEffects: "تعطيل تأثيرات الخلفية",
         close: "إغلاق",
+        noImageWarning: "توقفت الكاميرا عن إرسال الصور. ربما يستخدمها تطبيق آخر (Teams أو Zoom…).",
+        retry: "إعادة المحاولة",
+        changeCamera: "تغيير الكاميرا",
     },
     microphone: {
         disabled: "الميكروفون معطل",

@@ -38,6 +38,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "เอฟเฟกต์เบลอ",
         disableBackgroundEffects: "ปิดเอฟเฟกต์พื้นหลัง",
         close: "ปิด",
+        noImageWarning: "กล้องของคุณหยุดส่งภาพแล้ว แอปอื่น (Teams, Zoom…) อาจกำลังใช้งานกล้องอยู่",
+        retry: "ลองอีกครั้ง",
+        changeCamera: "เปลี่ยนกล้อง",
     },
     microphone: {
         disabled: "ไมโครโฟนของคุณถูกปิดอยู่",
