@@ -41,8 +41,7 @@ const actionbar: BaseTranslation = {
         blurEffects: "Efeitos de desfoque",
         disableBackgroundEffects: "Desabilitar efeitos de fundo",
         close: "Fechar",
-        noImageWarning:
-            "Sua câmera parou de enviar imagens. Outro aplicativo (Teams, Zoom…) pode estar usando a câmera.",
+        noImageWarning: "Sua câmera parou de enviar imagens. Outro aplicativo pode estar usando a câmera.",
         retry: "Tentar novamente",
         changeCamera: "Trocar de câmera",
     },

@@ -37,8 +37,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "Hiệu ứng làm mờ",
         disableBackgroundEffects: "Tắt hiệu ứng nền",
         close: "Đóng",
-        noImageWarning:
-            "Camera của bạn đã ngừng gửi hình ảnh. Có thể một ứng dụng khác (Teams, Zoom…) đang sử dụng camera.",
+        noImageWarning: "Camera của bạn đã ngừng gửi hình ảnh. Có thể một ứng dụng khác đang sử dụng camera.",
         retry: "Thử lại",
         changeCamera: "Đổi camera",
     },

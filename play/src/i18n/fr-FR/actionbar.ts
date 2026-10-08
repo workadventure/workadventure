@@ -39,7 +39,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "Effets de flou",
         disableBackgroundEffects: "Désactiver les effets de fond",
         close: "Fermer",
-        noImageWarning: "Votre caméra n'envoie plus d'image. Une autre application (Teams, Zoom…) l'utilise peut-être.",
+        noImageWarning: "Votre caméra n'envoie plus d'image. Une autre application l'utilise peut-être.",
         retry: "Réessayer",
         changeCamera: "Changer de caméra",
     },

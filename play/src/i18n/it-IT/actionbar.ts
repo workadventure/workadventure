@@ -38,7 +38,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disableBackgroundEffects: "Disabilita effetti di sfondo",
         close: "Chiudi",
         noImageWarning:
-            "La tua fotocamera ha smesso di inviare immagini. Potrebbe essere in uso da un'altra applicazione (Teams, Zoom…).",
+            "La tua fotocamera ha smesso di inviare immagini. Potrebbe essere in uso da un'altra applicazione.",
         retry: "Riprova",
         changeCamera: "Cambia fotocamera",
     },

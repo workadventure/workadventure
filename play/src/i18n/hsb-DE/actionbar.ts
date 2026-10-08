@@ -37,7 +37,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "Rozmazanske efekty",
         disableBackgroundEffects: "Pozadkowe efekty deaktiwěrować",
         close: "Začinić",
-        noImageWarning: "Waša kamera hižo žane wobrazy njesćele. Snano ju druha aplikacija (Teams, Zoom …) wužiwa.",
+        noImageWarning: "Waša kamera hižo žane wobrazy njesćele. Snano ju druha aplikacija wužiwa.",
         retry: "Hišće raz spytać",
         changeCamera: "Kameru změnić",
     },

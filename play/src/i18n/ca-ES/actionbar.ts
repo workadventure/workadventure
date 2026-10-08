@@ -37,8 +37,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "Efectes de desenfocament",
         disableBackgroundEffects: "Desactivar efectes de fons",
         close: "Tancar",
-        noImageWarning:
-            "La teva càmera ha deixat d'enviar imatges. Potser una altra aplicació (Teams, Zoom…) l'està fent servir.",
+        noImageWarning: "La teva càmera ha deixat d'enviar imatges. Potser una altra aplicació l'està fent servir.",
         retry: "Torna-ho a provar",
         changeCamera: "Canvia de càmera",
     },
