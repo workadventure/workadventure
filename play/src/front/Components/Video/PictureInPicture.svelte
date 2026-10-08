@@ -28,6 +28,7 @@
     let pipWindow: Window | undefined;
     let mapImage: string | undefined = $state(undefined);
     let pipRequested = false;
+    let unloading = false;
     let stopPictureInPictureEventDelegation: Array<() => void> = [];
 
     const delegatedPictureInPictureEvents = [
@@ -133,6 +134,11 @@
         destroyPictureInPictureComponent();
     }
 
+    function onBeforeUnload() {
+        // beforeunload fires before the page is hidden, unlike pagehide
+        unloading = true;
+    }
+
     function forgetPictureInPictureRequest() {
         askPictureInPictureActivatingStore.set(false);
     }
@@ -153,6 +159,12 @@
         }
 
         if (pipWindow !== undefined || pipRequested) return;
+
+        // Closing the tab or the window hides the page, which would open a picture-in-picture window that outlives it
+        if (unloading) {
+            debug("Request Picture in Picture mode but the page is unloading");
+            return;
+        }
 
         debug("Entering Picture in Picture mode");
         if (!localUserStore.getAllowPictureInPicture()) {
@@ -273,6 +285,7 @@
         };
 
         window.addEventListener("focus", onFocus);
+        window.addEventListener("beforeunload", onBeforeUnload);
 
         return () => {
             askPictureInPictureActivatingSubscriber();
@@ -285,6 +298,7 @@
                 debug("PictureInPicture enterpictureinpicture handler is not supported", e);
             }
             window.removeEventListener("focus", onFocus);
+            window.removeEventListener("beforeunload", onBeforeUnload);
             window.removeEventListener("click", forgetPictureInPictureRequest);
         };
     });
