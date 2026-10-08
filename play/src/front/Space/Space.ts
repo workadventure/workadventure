@@ -309,11 +309,9 @@ export class Space implements SpaceInterface {
         this._isStreamingAudioStore = derived([this._isSpeakerStreamingStore], ([$isSpeakerStreaming]) => {
             return isAllUsersVideoSpace || $isSpeakerStreaming;
         });
+        // In a live streaming space (megaphone, podium), only the speakers share their screen, never the audience
         this.shouldPublishScreenShareStore = derived([this._isSpeakerStreamingStore], ([$isSpeakerStreaming]) => {
-            return (
-                !(this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !$isSpeakerStreaming) &&
-                this.isVideoSpace()
-            );
+            return isAllUsersVideoSpace || (this.isVideoSpace() && $isSpeakerStreaming);
         });
 
         this._peerManager = new SpacePeerManager(this, this._allBlockedUsersStore);
@@ -1052,8 +1050,8 @@ export class Space implements SpaceInterface {
     }
 
     /**
-     * In megaphone see-attendees space (LIVE_STREAMING_USERS_WITH_FEEDBACK), only the speaker should publish screen share.
-     * Returns true when the local user may publish/send screen share, false when they are a listener in see-attendees mode.
+     * In a live streaming space (megaphone, podium), only the speakers publish their screen share.
+     * Returns true when the local user may publish/send screen share, false when they are in the audience.
      */
     public shouldPublishScreenShare(): boolean {
         return get(this.shouldPublishScreenShareStore);
