@@ -65,6 +65,7 @@ import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { hasValidViaEntries } from "./MatrixSpaceRelations";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
 import { clearMatrixStores } from "./MatrixStoreCleanup";
+import { InvalidLoginTokenError } from "./MatrixClientWrapper";
 import {
     pushLocalWokaAndNameToMatrixProfile,
     syncWokaAvatarToMatrixProfileOnWokaChange,
@@ -593,7 +594,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             // went wrong. "ON_ERROR" at least shows the connection error banner.
             this.connectionStatus.set("ON_ERROR");
             console.error(error);
-            Sentry.captureException(error);
+            // A login token is single use and short lived, so it can be dead by the time the chat opens (spent,
+            // or expired while the user was still choosing a Woka). That is not a bug: GameManager answers it
+            // with the "reconnect" prompt, whose OpenID login is the only way to get a new one.
+            if (!(error instanceof InvalidLoginTokenError)) {
+                Sentry.captureException(error);
+            }
         }
     }
 

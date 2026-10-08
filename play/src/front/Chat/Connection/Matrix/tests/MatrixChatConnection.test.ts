@@ -13,6 +13,7 @@ import { MatrixChatRoom as MatrixChatRoomClass } from "../MatrixChatRoom";
 import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 import type { MatrixSecurity } from "../MatrixSecurity";
 import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
+import { InvalidLoginTokenError } from "../MatrixClientWrapper";
 
 vi.mock("../../../../Phaser/Game/GameManager", () => {
     return {
@@ -239,6 +240,20 @@ describe("MatrixChatConnection", () => {
 
             await expect(clientPromise).rejects.toThrow();
             expect(startMatrixClientSpy).not.toHaveBeenCalled();
+        });
+        it("should show the error banner without reporting a dead login token to Sentry", async () => {
+            const Sentry = await import("@sentry/svelte");
+            const captureExceptionSpy = vi.spyOn(Sentry, "captureException").mockClear();
+
+            const matrixChatConnection = await getMatrixConnection(
+                Promise.reject(new InvalidLoginTokenError("Invalid login token")),
+            );
+            expect(get(matrixChatConnection.connectionStatus)).toBe("ON_ERROR");
+            expect(captureExceptionSpy).not.toHaveBeenCalled();
+
+            const error = new Error("Something else");
+            await getMatrixConnection(Promise.reject(error));
+            expect(captureExceptionSpy).toHaveBeenCalledWith(error);
         });
     });
 
