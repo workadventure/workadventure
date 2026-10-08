@@ -39,6 +39,7 @@ import {
 import type { User, UserSocket } from "./Model/User";
 import type { GameRoom } from "./Model/GameRoom";
 import { Admin } from "./Model/Admin";
+import { RoomNotResolvedError } from "./Model/Errors";
 import { getMapStorageClient } from "./Services/MapStorageClient";
 
 const debug = Debug("roommanager");
@@ -512,6 +513,13 @@ const roomManager = {
                                 room = gameRoom;
                             })
                             .catch((e) => {
+                                if (e instanceof RoomNotResolvedError) {
+                                    // The admin dashboard listens to every room it knows, including URLs that now
+                                    // redirect: there is nothing to watch there. The warning names the URL in case
+                                    // the dashboard's room list is the one to fix.
+                                    console.warn(e.message);
+                                    return;
+                                }
                                 console.error(e);
                                 Sentry.captureException(e);
                             });
