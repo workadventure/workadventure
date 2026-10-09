@@ -19,7 +19,9 @@
  *
  * `trackAdminEvent` captures with the event's own properties, so the payload is
  * whatever the catalog declares — not the ad-hoc object each call site used to
- * build before the two sinks were folded into one call.
+ * build before the two sinks were folded into one call. The one exception is
+ * `remoteSpaceUserId`, which it strips: PostHog is not gated by the world's
+ * consent policy, and that key identifies another participant.
  *
  * `Partial` rather than a total `Record` on purpose: most of the catalog has no
  * PostHog counterpart, and requiring a key for every event would mean inventing
