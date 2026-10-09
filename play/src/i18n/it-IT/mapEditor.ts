@@ -244,6 +244,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Revoca accesso",
             actionButtonLabel: "Vai alla scrivania personale",
         },
+        whiteboard: {
+            label: "Lavagna",
+            description:
+                "Una lavagna condivisa da tutti quelli che si trovano nell'area. Tutti vedono i disegni in diretta, con i cursori degli altri.",
+            disabled: "La lavagna è disattivata in questo mondo.",
+            loadError: "Impossibile caricare la lavagna.",
+        },
         excalidraw: {
             label: "Apri Excalidraw",
             description:

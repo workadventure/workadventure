@@ -140,6 +140,17 @@ export const OpenFilePropertyData = PropertyBase.extend({
     hideUrl: z.boolean().optional().default(false),
 });
 
+/**
+ * A collaborative Excalidraw whiteboard attached to an area. Its scene is relayed and stored by the
+ * back, so everybody standing in the area draws on the same board.
+ */
+export const WhiteboardPropertyData = PropertyBase.extend({
+    type: z.literal("whiteboard"),
+    trigger: z.union([z.literal("onenter"), z.literal("onaction"), z.literal("onicon")]).optional(),
+    triggerMessage: z.string().optional(),
+    width: z.number().min(1).max(100).default(50).optional(),
+});
+
 export const ExtensionModuleAreaProperty = PropertyBase.extend({
     type: z.literal("extensionModule"),
     subtype: z.string(),
@@ -255,6 +266,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     LivekitRoomPropertyData,
     MaxUsersInAreaPropertyData,
     LockableAreaPropertyData,
+    WhiteboardPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -502,6 +514,7 @@ export type ExtensionModuleAreaPropertyData = z.infer<typeof ExtensionModuleArea
 export type TooltipPropertyData = z.infer<typeof TooltipPropertyData>;
 export type MaxUsersInAreaPropertyData = z.infer<typeof MaxUsersInAreaPropertyData>;
 export type LockableAreaPropertyData = z.infer<typeof LockableAreaPropertyData>;
+export type WhiteboardPropertyData = z.infer<typeof WhiteboardPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

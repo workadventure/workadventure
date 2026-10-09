@@ -11,6 +11,7 @@ import type {
     LockableAreaPropertyData,
     MatrixRoomPropertyData,
     OpenFilePropertyData,
+    WhiteboardPropertyData,
     OpenWebsitePropertyData,
     PersonalAreaPropertyData,
     PlayAudioPropertyData,
@@ -65,6 +66,7 @@ import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../../WebRtc/CoWebsite/ImageCoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
+import { WhiteboardCoWebsite } from "../../../WebRtc/CoWebsite/WhiteboardCoWebsite";
 import { coWebsites } from "../../../Stores/CoWebsiteStore";
 import {
     ON_ACTION_TRIGGER_BUTTON,
@@ -458,6 +460,10 @@ export class AreasPropertiesListener {
                 );
                 break;
             }
+            case "whiteboard": {
+                this.handleWhiteboardOnEnter(property, areaData);
+                break;
+            }
 
             default: {
                 break;
@@ -577,6 +583,12 @@ export class AreasPropertiesListener {
                 );
                 break;
             }
+            case "whiteboard": {
+                // The board keeps its scene: reopening it only refreshes how it opens.
+                this.handleWhiteboardOnLeave(oldProperty);
+                this.handleWhiteboardOnEnter(newProperty, area);
+                break;
+            }
             case "silent":
             default: {
                 break;
@@ -655,6 +667,10 @@ export class AreasPropertiesListener {
             }
             case "openFile": {
                 this.handleOpenFileOnLeave(property);
+                break;
+            }
+            case "whiteboard": {
+                this.handleWhiteboardOnLeave(property);
                 break;
             }
             default: {
@@ -2042,6 +2058,75 @@ export class AreasPropertiesListener {
                 areaId: areaData.id,
                 areaName: areaData.name,
             });
+        }
+    }
+
+    private handleWhiteboardOnEnter(property: WhiteboardPropertyData, areaData: AreaData): void {
+        if (!this.scene.applicationManager.whiteboardToolActivated || this.openedCoWebsites.has(property.id)) {
+            return;
+        }
+
+        const actionId = "whiteboard-" + uuidv4();
+        const coWebsiteOpen: OpenCoWebsite = { actionId };
+        this.openedCoWebsites.set(property.id, coWebsiteOpen);
+
+        const open = () => {
+            if (coWebsiteOpen.coWebsite) {
+                return;
+            }
+            const url = new URL(`#whiteboard-${areaData.id}-${property.id}`, this.scene.mapUrlFile);
+            const coWebsite = new WhiteboardCoWebsite(
+                url,
+                areaData.id,
+                property.id,
+                areaData.name || get(LL).mapEditor.properties.whiteboard.label(),
+                property.width,
+            );
+            coWebsiteOpen.coWebsite = coWebsite;
+            coWebsites.add(coWebsite, undefined, {
+                targetUrl: url.toString(),
+                triggerProperty: "other",
+                areaId: areaData.id,
+                areaName: areaData.name,
+            });
+            inOpenWebsite.set(true);
+        };
+
+        if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+            this.coWebsitesActionTriggers.set(property.id, actionId);
+            popupStore.addPopup(
+                PopupCowebsite,
+                {
+                    message:
+                        property.triggerMessage ||
+                        (touchScreenManager.detectPrimaryTouchDevice()
+                            ? get(LL).trigger.mobile.cowebsite()
+                            : get(LL).trigger.cowebsite()),
+                    click: () => {
+                        popupStore.removePopup(actionId);
+                        open();
+                    },
+                    userInputManager: this.scene.userInputManager,
+                },
+                actionId,
+            );
+            return;
+        }
+        open();
+    }
+
+    private handleWhiteboardOnLeave(property: WhiteboardPropertyData): void {
+        const coWebsite = this.openedCoWebsites.get(property.id)?.coWebsite;
+        if (coWebsite) {
+            coWebsites.remove(coWebsite);
+        }
+        this.openedCoWebsites.delete(property.id);
+        inOpenWebsite.set(false);
+
+        const actionId = this.coWebsitesActionTriggers.get(property.id);
+        if (actionId) {
+            popupStore.removePopup(actionId);
+            this.coWebsitesActionTriggers.delete(property.id);
         }
     }
 

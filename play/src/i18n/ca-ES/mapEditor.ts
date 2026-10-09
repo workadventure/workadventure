@@ -240,6 +240,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Revocar l'accés",
             actionButtonLabel: "Anar al escriptori personal",
         },
+        whiteboard: {
+            label: "Pissarra",
+            description:
+                "Una pissarra compartida per tothom qui és a la zona. Tothom veu els dibuixos en directe, amb els cursors dels altres.",
+            disabled: "La pissarra està desactivada en aquest món.",
+            loadError: "No s'ha pogut carregar la pissarra.",
+        },
         excalidraw: {
             label: "Obrir Excalidraw",
             description: "Un tauler virtual de dibuix a mà. Col·laboratiu i xifrat de punt a punt.",

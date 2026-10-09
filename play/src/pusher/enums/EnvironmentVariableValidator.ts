@@ -468,6 +468,11 @@ export const EnvironmentVariables = z.object({
     EXCALIDRAW_ENABLED: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Enable Excalidraw embedded whiteboard. Defaults to false"),
+    WHITEBOARD_ENABLED: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "Enable the collaborative whiteboard area property (Excalidraw, hosted by WorkAdventure itself). Defaults to false",
+        ),
     EXCALIDRAW_DOMAINS: z
         .string()
         .optional()

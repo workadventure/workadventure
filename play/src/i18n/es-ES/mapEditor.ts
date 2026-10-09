@@ -240,6 +240,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Revocar acceso",
             actionButtonLabel: "Ir al escritorio personal",
         },
+        whiteboard: {
+            label: "Pizarra",
+            description:
+                "Una pizarra compartida por todos los que están en la zona. Todos ven los dibujos en directo, con los cursores de los demás.",
+            disabled: "La pizarra está desactivada en este mundo.",
+            loadError: "No se ha podido cargar la pizarra.",
+        },
         excalidraw: {
             label: "Abrir Excalidraw",
             description:

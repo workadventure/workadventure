@@ -237,6 +237,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "เพิกถอนสิทธิ์",
             actionButtonLabel: "ไปยังโต๊ะส่วนตัว",
         },
+        whiteboard: {
+            label: "ไวต์บอร์ด",
+            description: "ไวต์บอร์ดที่ทุกคนในพื้นที่ใช้ร่วมกัน ทุกคนเห็นภาพวาดแบบเรียลไทม์พร้อมเคอร์เซอร์ของคนอื่น",
+            disabled: "ไวต์บอร์ดถูกปิดใช้งานในโลกนี้",
+            loadError: "ไม่สามารถโหลดไวต์บอร์ดได้",
+        },
         excalidraw: {
             label: "เปิด Excalidraw",
             description: "ไวท์บอร์ดเสมือนสไตล์วาดมือแบบโอเพนซอร์ส ทำงานร่วมกันได้และเข้ารหัสจากต้นทางถึงปลายทาง",

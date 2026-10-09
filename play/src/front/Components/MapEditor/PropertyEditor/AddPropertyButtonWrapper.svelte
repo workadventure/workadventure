@@ -338,6 +338,22 @@
     />
 {/if}
 
+{#if property === "whiteboard"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.whiteboard.label()}
+        descriptionText={applicationManager.whiteboardToolActivated
+            ? $LL.mapEditor.properties.whiteboard.description()
+            : $LL.mapEditor.properties.whiteboard.disabled()}
+        img={excalidrawSvg}
+        style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
+        disabled={!applicationManager.whiteboardToolActivated || disabled}
+        onclick={(event) => {
+            onclick?.(event);
+        }}
+        testId="addWhiteboardProperty"
+    />
+{/if}
+
 {#if property === "openWebsite" && subProperty === "cards"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.cards.label()}

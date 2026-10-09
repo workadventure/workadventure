@@ -79,6 +79,7 @@ if (typeof window !== "undefined" && window.env === undefined) {
         GOOGLE_DRIVE_PICKER_APP_ID: undefined,
         EXCALIDRAW_ENABLED: false,
         EXCALIDRAW_DOMAINS: [],
+        WHITEBOARD_ENABLED: false,
         CARDS_ENABLED: false,
         TLDRAW_ENABLED: false,
         EMBEDLY_KEY: undefined,

@@ -245,6 +245,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Toegang intrekken",
             actionButtonLabel: "Ga naar persoonlijke werkplek",
         },
+        whiteboard: {
+            label: "Whiteboard",
+            description:
+                "Een whiteboard dat iedereen in het gebied deelt. Iedereen ziet de tekeningen live, met de cursors van de anderen.",
+            disabled: "Het whiteboard is uitgeschakeld in deze wereld.",
+            loadError: "Het whiteboard kon niet worden geladen.",
+        },
         excalidraw: {
             label: "Open Excalidraw",
             description:

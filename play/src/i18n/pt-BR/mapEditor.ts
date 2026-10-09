@@ -245,6 +245,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Revogar acesso",
             actionButtonLabel: "Ir para mesa pessoal",
         },
+        whiteboard: {
+            label: "Quadro branco",
+            description:
+                "Um quadro branco compartilhado por todos que estão na área. Todos veem os desenhos ao vivo, com os cursores dos outros.",
+            disabled: "O quadro branco está desativado neste mundo.",
+            loadError: "Não foi possível carregar o quadro branco.",
+        },
         excalidraw: {
             label: "Abrir Excalidraw",
             description:

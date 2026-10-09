@@ -70,6 +70,7 @@ import { User } from "./User";
 import type { PointInterface } from "./Websocket/PointInterface";
 import { LockableAreaManager } from "./AreaPropertyEvents/LockableAreaManager";
 import { MaxUsersInAreaManager } from "./AreaPropertyEvents/MaxUsersInAreaManager";
+import { WhiteboardManager } from "./Whiteboard/WhiteboardManager";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -114,6 +115,9 @@ export class GameRoom implements BrothersFinder {
 
     private readonly _destroyRoomStream = new Subject<void>();
     public readonly destroyRoomStream = this._destroyRoomStream.asObservable();
+
+    // Declared after the streams above, which it subscribes to.
+    public readonly whiteboardManager = new WhiteboardManager(this);
 
     private constructor(
         public readonly _roomUrl: string,

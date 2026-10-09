@@ -509,6 +509,7 @@ message ClientToServerMessage {
     VideoQualityReportMessage videoQualityReportMessage = 50;
     AnalyticsEventReportMessage analyticsEventReportMessage = 52;
     EntityMessage entityMessage = 53;
+    WhiteboardClientMessage whiteboardClientMessage = 54;
   }
 }
 
@@ -578,6 +579,72 @@ message EntityEvent {
 message EntityMessage {
   string entityId = 1;
   EntityEvent entityEvent = 2;
+}
+
+// A collaborative whiteboard (Excalidraw) attached to a "whiteboard" area property. The back holds
+// the scene of each board and relays changes between the people who opened it. Elements travel as
+// JSON: their schema belongs to Excalidraw, the back only merges them by version.
+message WhiteboardClientMessage {
+  string areaId = 1;
+  string propertyId = 2;
+  oneof message {
+    WhiteboardJoinMessage join = 3;
+    WhiteboardLeaveMessage leave = 4;
+    WhiteboardElementsMessage elements = 5;
+    WhiteboardPointerMessage pointer = 6;
+  }
+}
+
+message WhiteboardJoinMessage {}
+
+message WhiteboardLeaveMessage {}
+
+message WhiteboardElementsMessage {
+  // A JSON array of Excalidraw elements, sent verbatim ("index", "version" and "versionNonce" included).
+  string elementsJson = 1;
+}
+
+message WhiteboardPointerMessage {
+  double x = 1;
+  double y = 2;
+  // "down" or "up"
+  string button = 3;
+  // "pointer" or "laser"
+  string tool = 4;
+  // The scene bounds this user is looking at ([minX, minY, maxX, maxY]), for the people following them.
+  repeated double visibleBounds = 5;
+}
+
+message WhiteboardServerMessage {
+  string areaId = 1;
+  string propertyId = 2;
+  oneof message {
+    WhiteboardSceneMessage scene = 3;
+    WhiteboardElementsMessage elements = 4;
+    WhiteboardRemotePointerMessage pointer = 5;
+    WhiteboardParticipantsMessage participants = 6;
+  }
+}
+
+// The whole board, sent to whoever joins it.
+message WhiteboardSceneMessage {
+  string elementsJson = 1;
+  bool canWrite = 2;
+}
+
+message WhiteboardRemotePointerMessage {
+  int32 userId = 1;
+  WhiteboardPointerMessage pointer = 2;
+}
+
+message WhiteboardParticipant {
+  int32 userId = 1;
+  string name = 2;
+  string uuid = 3;
+}
+
+message WhiteboardParticipantsMessage {
+  repeated WhiteboardParticipant participants = 1;
 }
 
 message SetPlayerVariableMessage {
@@ -1158,6 +1225,7 @@ message SubMessage {
     DuplicateUserConnectedMessage duplicateUserConnectedMessage = 27;
     EntityMessage entityMessage = 31;
     SpaceStatePatchMessage spaceStatePatchMessage = 32;
+    WhiteboardServerMessage whiteboardServerMessage = 33;
   }
 }
 
@@ -1728,6 +1796,7 @@ message PusherToBackMessage {
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 33;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 34;
     EntityMessage entityMessage = 35;
+    WhiteboardClientMessage whiteboardClientMessage = 36;
   }
 }
 

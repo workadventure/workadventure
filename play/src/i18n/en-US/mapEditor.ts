@@ -237,6 +237,13 @@ const mapEditor: BaseTranslation = {
             revokeAccess: "Revoke access",
             actionButtonLabel: "Got to personal desk",
         },
+        whiteboard: {
+            label: "Whiteboard",
+            description:
+                "A whiteboard shared by everybody in the area. Everyone sees the drawings live, with each other's cursors.",
+            disabled: "The whiteboard is disabled on this world.",
+            loadError: "The whiteboard could not be loaded.",
+        },
         excalidraw: {
             label: "Open Excalidraw",
             description: "An open source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",

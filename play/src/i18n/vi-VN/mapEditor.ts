@@ -238,6 +238,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Thu hồi quyền",
             actionButtonLabel: "Tới bàn làm việc cá nhân",
         },
+        whiteboard: {
+            label: "Bảng trắng",
+            description:
+                "Một bảng trắng dùng chung cho mọi người trong khu vực. Mọi người thấy nét vẽ trực tiếp, cùng con trỏ của người khác.",
+            disabled: "Bảng trắng đã bị tắt trong thế giới này.",
+            loadError: "Không thể tải bảng trắng.",
+        },
         excalidraw: {
             label: "Mở Excalidraw",
             description: "Bảng trắng mã nguồn mở kiểu vẽ tay. Cộng tác và mã hóa đầu cuối.",

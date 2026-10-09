@@ -235,6 +235,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "撤销访问",
             actionButtonLabel: "前往个人办公桌",
         },
+        whiteboard: {
+            label: "白板",
+            description: "区域内所有人共享的白板。每个人都能实时看到绘图和其他人的光标。",
+            disabled: "此世界已禁用白板。",
+            loadError: "无法加载白板。",
+        },
         excalidraw: {
             label: "打开 Excalidraw",
             description: "一个开源虚拟手绘风格白板。协作且端到端加密。",

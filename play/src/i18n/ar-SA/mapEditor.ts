@@ -240,6 +240,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "سحب الوصول",
             actionButtonLabel: "الانتقال إلى المكتب الشخصي",
         },
+        whiteboard: {
+            label: "سبورة بيضاء",
+            description: "سبورة بيضاء يتشاركها كل من في المنطقة. يرى الجميع الرسومات مباشرة مع مؤشرات الآخرين.",
+            disabled: "السبورة البيضاء معطّلة في هذا العالم.",
+            loadError: "تعذّر تحميل السبورة البيضاء.",
+        },
         excalidraw: {
             label: "فتح Excalidraw",
             description: "لوحة بيضاء مفتوحة المصدر بأسلوب مرسوم يدويًا. تعاونية ومشفرة طرفًا لطرف.",

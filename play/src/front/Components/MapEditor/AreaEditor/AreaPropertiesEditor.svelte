@@ -42,6 +42,7 @@
     import HighlightPropertyEditor from "../PropertyEditor/HighlightPropertyEditor.svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import MaxUsersInAreaPropertyEditor from "../PropertyEditor/MaxUsersInAreaPropertyEditor.svelte";
+    import WhiteboardPropertyEditor from "../PropertyEditor/WhiteboardPropertyEditor.svelte";
     import LockableAreaPropertyEditor from "../PropertyEditor/LockableAreaPropertyEditor.svelte";
     import { getAreaMapEditors, hasMeetingProperty } from "../../../Rules/MeetingRules";
 
@@ -65,6 +66,7 @@
     let hasTooltipPropertyData: boolean = $state(false);
     let hasLivekitRoomProperty: boolean = $state(false);
     let hasMaxUsersInAreaProperty: boolean = $state(false);
+    let hasWhiteboardProperty: boolean = $state(false);
     let hasLockableAreaProperty: boolean = $state(false);
 
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
@@ -395,6 +397,13 @@
                     type,
                     maxUsers: 15,
                 };
+            case "whiteboard":
+                return {
+                    id,
+                    type,
+                    trigger: ON_ACTION_TRIGGER_ENTER,
+                    width: 50,
+                };
             case "lockableAreaPropertyData":
                 return {
                     id,
@@ -527,6 +536,7 @@
         hasTooltipPropertyData = hasProperty("tooltipPropertyData");
         hasLivekitRoomProperty = hasProperty("livekitRoomProperty");
         hasMaxUsersInAreaProperty = hasProperty("maxUsersInAreaPropertyData");
+        hasWhiteboardProperty = hasProperty("whiteboard");
         hasLockableAreaProperty = hasProperty("lockableAreaPropertyData");
     }
 
@@ -743,6 +753,15 @@
                     onAddProperty("openFile");
                 }}
             />
+
+            {#if !hasWhiteboardProperty}
+                <AddPropertyButtonWrapper
+                    property="whiteboard"
+                    onclick={() => {
+                        onAddProperty("whiteboard");
+                    }}
+                />
+            {/if}
 
             <AddPropertyButtonWrapper
                 property="openWebsite"
@@ -1039,6 +1058,14 @@
                             />
                         {:else if properties[i].type === "maxUsersInAreaPropertyData"}
                             <MaxUsersInAreaPropertyEditor
+                                bind:property={properties[i]}
+                                onclose={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                                onchange={() => onUpdateProperty(property)}
+                            />
+                        {:else if properties[i].type === "whiteboard"}
+                            <WhiteboardPropertyEditor
                                 bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);

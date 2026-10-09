@@ -244,6 +244,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "アクセス権の取消",
             actionButtonLabel: "個人デスクへ移動",
         },
+        whiteboard: {
+            label: "ホワイトボード",
+            description:
+                "エリア内の全員で共有するホワイトボード。他の人のカーソルと一緒に、描いた内容がリアルタイムで表示されます。",
+            disabled: "このワールドではホワイトボードが無効になっています。",
+            loadError: "ホワイトボードを読み込めませんでした。",
+        },
         excalidraw: {
             label: "エクスカリドローを開く",
             description: "オープンソースの仮想手描き風ホワイトボード。共同作業とエンド・ツー・エンド暗号化に対応。",

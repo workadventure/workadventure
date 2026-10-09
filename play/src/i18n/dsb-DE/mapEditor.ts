@@ -243,6 +243,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Pśistup wześ",
             actionButtonLabel: "K priwatnemu blidkoju hyś",
         },
+        whiteboard: {
+            label: "Běła tafla",
+            description:
+                "Běła tafla, kótaruž wšykne w tom wobceŕku źěle. Kuždy wiźi kreslanki direktnje, ze kursorami drugich.",
+            disabled: "Běła tafla jo w toś tom swěśe znjemóžnjona.",
+            loadError: "Běła tafla njejo se dała zacytaś.",
+        },
         excalidraw: {
             label: "Excalidraw wótcyniś",
             description:
