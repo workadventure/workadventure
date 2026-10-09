@@ -1,4 +1,5 @@
-import { readable } from "svelte/store";
+import { derived, readable } from "svelte/store";
+import { waitForStoreValue } from "./Utils/waitForStoreValue";
 
 /**
  * A store containing whether the current page is visible or not.
@@ -18,3 +19,10 @@ export const visibilityStore = readable(document.visibilityState === "visible", 
         document.removeEventListener("visibilitychange", onVisibilityChange);
     };
 });
+
+/**
+ * Resolves once the page is visible, right away if it already is.
+ */
+export function waitUntilVisible(): Promise<true> {
+    return waitForStoreValue(derived(visibilityStore, (visible) => visible || undefined));
+}

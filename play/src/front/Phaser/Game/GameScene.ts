@@ -142,6 +142,7 @@ import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
+import { waitUntilVisible } from "../../Stores/VisibilityStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
@@ -2040,7 +2041,16 @@ export class GameScene extends DirtyScene {
                     console.info("Player disconnected from server. Waiting for pusher ping.");
                     connectionManager
                         .waitForPusherPing()
-                        .then(() => {
+                        .then(async () => {
+                            // Chrome runs the timers of a tab hidden for a few minutes only once a minute, and joining
+                            // the room waits on timers. A scene that lost its socket before joining would not do better
+                            // on a retry: wait for the user rather than reload the whole scene every minute, for hours.
+                            if (!get(gameSceneIsLoadedStore)) {
+                                await waitUntilVisible();
+                                if (this.cleanupDone) {
+                                    return;
+                                }
+                            }
                             console.info("Pusher reachable again. Reloading scene.");
                             this.cleanupClosingScene();
                             this.createSuccessorGameScene(true, true);
