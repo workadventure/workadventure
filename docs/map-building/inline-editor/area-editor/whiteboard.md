@@ -25,6 +25,10 @@ While editing an area, select the "Whiteboard" property. You can choose when the
 - **Show immediately on enter**: the board opens as soon as somebody walks into the area.
 - **On action**: a message invites the user to press a key to open it. You can customize that message.
 
+![](../../images/editor/whiteboard/whiteboard-3.png)
+
+While the map editor is open, the board shrinks to a tile among the cameras, so that it does not hide the map.
+
 ## Saved with the map
 
 The board is kept with the map: walk out and come back the next day, it is still there. It is saved every few seconds while people draw, and as soon as the last person leaves. Deleting the area, the whiteboard property or the map deletes the board.
