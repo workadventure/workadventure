@@ -1235,6 +1235,9 @@ message GroupUsersUpdateMessage {
 message RoomConnectedMessage {
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
   repeated string tag = 5;
+  // Also in RoomJoinedMessage, but the start position (which must avoid the areas the user cannot enter, unless they
+  // can edit the map) is chosen before the room is joined.
+  bool canEdit = 14;
 }
 
 message RoomJoinedMessage {
@@ -1595,6 +1598,7 @@ message ConnectToRoomMessage {
   string roomId = 1;
   google.protobuf.StringValue lastCommandId = 2;
   repeated string tag = 3;
+  bool canEdit = 4;
 }
 
 /**

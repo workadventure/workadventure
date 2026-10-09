@@ -171,6 +171,7 @@ export class SocketManager {
                                 editMapCommands: commandsToApply,
                             },
                             tag: connectToRoomMessage.tag,
+                            canEdit: connectToRoomMessage.canEdit,
                         },
                     },
                 },

@@ -1017,6 +1017,10 @@ export class GameScene extends DirtyScene {
                                 gameSceneIsLoadedStore.set(true);
                                 this.sceneReadyToStartDeferred.resolve();
                                 this.initializeAreaManager();
+                                // #moveTo walks the player along a path: it needs the player (created when the pusher
+                                // answered) and the areas the user cannot enter in the collision grid, which only
+                                // exist once the areas manager is initialized.
+                                this.tryMovePlayerWithMoveToParameter();
                             })
                             .catch((e) => {
                                 if (e instanceof CloseEvent) {
@@ -1161,6 +1165,7 @@ export class GameScene extends DirtyScene {
                 this.mapFile,
                 undefined,
                 urlManager.getStartPositionNameFromUrl(),
+                (position) => this.isPositionAllowedForCurrentUser(position),
             );
             this.CurrentPlayer.setPosition(startPosition.x, startPosition.y);
             this.CurrentPlayer.finishFollowingPath(true);
@@ -2004,6 +2009,19 @@ export class GameScene extends DirtyScene {
         }
     }
 
+    /**
+     * Whether the current user may stand at this position, i.e. it is not inside an area they do not have access to.
+     * Like AreaPermissions, users allowed to edit the map may go anywhere. Unlike the areas manager, this works as soon
+     * as the pusher answered, which is when the start position is chosen.
+     */
+    private isPositionAllowedForCurrentUser(position: PositionInterface): boolean {
+        const gameMapAreas = this.getGameMap().getWamFile()?.getGameMapAreas();
+        if (!this.connection || this.connection.userCanEdit || !gameMapAreas) {
+            return true;
+        }
+        return gameMapAreas.getForbiddenAreasOnPosition(position, this.connection.getAllTags()).length === 0;
+    }
+
     private initializeAreaManager() {
         if (!this.connection) {
             throw new Error("This should never happen");
@@ -2085,15 +2103,13 @@ export class GameScene extends DirtyScene {
                     this.mapFile,
                     this.initPosition,
                     urlManager.getStartPositionNameFromUrl(),
+                    (position) => this.isPositionAllowedForCurrentUser(position),
                 );
 
                 this.createCurrentPlayer(startPosition);
 
                 this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
                 this.cameraManager.startFollowPlayer(this.CurrentPlayer, 0);
-
-                // #moveTo walks the player: it must exist, so this cannot run before the pusher answers.
-                this.tryMovePlayerWithMoveToParameter();
 
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
 
@@ -3680,6 +3696,12 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("teleportPlayerTo", (message) => {
+            // Teleporting skips the colliders: check the access rights of the areas at the destination ourselves.
+            if (!this.isPositionAllowedForCurrentUser(message)) {
+                throw new Error(
+                    "WA.player.teleport: the target position is inside an area the user does not have access to.",
+                );
+            }
             this.CurrentPlayer.teleportTo(message.x, message.y);
         });
 
