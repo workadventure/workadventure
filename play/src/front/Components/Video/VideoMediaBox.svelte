@@ -15,7 +15,7 @@
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
-    import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+    import { rawLocalVideoTrackStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
@@ -204,8 +204,17 @@
         const local = streamable.spaceUserId === undefined;
         // For LiveKit, streamStore only carries the audio: the video track is on the subscription.
         const remoteVideoTrack = media.type === "livekit" ? get(media.remoteVideoTrack) : undefined;
-        const track =
-            media.type === "livekit" ? remoteVideoTrack?.mediaStreamTrack : get(media.streamStore)?.getVideoTracks()[0];
+        let track: MediaStreamTrack | undefined;
+        if (media.type === "livekit") {
+            track = remoteVideoTrack?.mediaStreamTrack;
+        } else if (local && streamable.videoType === "video") {
+            // The local camera preview shows the background effect's output when one is on: the camera's own
+            // state (a frozen camera is muted) is on the raw track.
+            const rawCamera = get(rawLocalVideoTrackStore);
+            track = rawCamera.type === "success" ? rawCamera.track : undefined;
+        } else {
+            track = get(media.streamStore)?.getVideoTracks()[0];
+        }
         analyticsClient.trackAdminEvent("media.video_stream_missing", {
             meetingProvider: local ? undefined : media.type,
             local,
