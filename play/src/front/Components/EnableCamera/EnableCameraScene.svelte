@@ -41,7 +41,9 @@
 
     let selectedCamera: string | undefined = $state(undefined);
     let selectedMicrophone: string | undefined = $state(undefined);
-    const sound = new Audio(`/resources/objects/webrtc-in-${localUserStore.getBubbleSound()}.mp3`);
+    // Not the exact URL the GameScene preloads: Firefox hands this element's cached response to Phaser's XHR,
+    // which rejects it, and the game stops on "Cannot load .../webrtc-in-ding.mp3" (NETWORK_ERROR).
+    const sound = new Audio(`/resources/objects/webrtc-in-${localUserStore.getBubbleSound()}.mp3?speaker-test`);
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
