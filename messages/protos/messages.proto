@@ -969,9 +969,19 @@ message SpaceStateQuery {
     AnswerQuestionQuery answerQuestion = 13;
     DeleteQuestionQuery deleteQuestion = 14;
     SetSpaceKindQuery setKind = 15;
+    SetMicrophoneTrackQuery setMicrophoneTrack = 16;
   }
 }
 
+// Names the sender's microphone among its LiveKit publications (the scripting audio is published as a microphone
+// too). Sent on every microphone publication; the back uses it when the space is recorded automatically.
+message SetMicrophoneTrackQuery {
+  string trackSid = 1;
+  // The browser's language (navigator.language).
+  string language = 2;
+  // The noise suppression applied before publishing: "workadventure", "voiceIsolation" or "none".
+  string noiseSuppression = 3;
+}
 // Declares what the space is (see spaceKindSchema). Sent by every client joining a space it knows the kind of.
 message SetSpaceKindQuery {
   string kind = 1;
