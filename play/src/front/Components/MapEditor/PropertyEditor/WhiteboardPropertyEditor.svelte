@@ -5,15 +5,34 @@
     import Input from "../../Input/Input.svelte";
     import { ON_ACTION_TRIGGER_BUTTON, ON_ACTION_TRIGGER_ENTER } from "../../../WebRtc/LayoutManager";
     import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
+    import Button from "../../UI/Button.svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     interface Props {
         property: WhiteboardPropertyData;
+        areaId: string;
         onchange?: () => void;
         onclose?: () => void;
     }
 
-    let { property = $bindable(), onchange, onclose }: Props = $props();
+    let { property = $bindable(), areaId, onchange, onclose }: Props = $props();
+
+    // Emptying a board cannot be undone: the first click asks, the second one does it.
+    let confirmClear = $state(false);
+
+    function clearBoard(): void {
+        if (!confirmClear) {
+            confirmClear = true;
+            return;
+        }
+        confirmClear = false;
+        gameManager.getCurrentGameScene().connection?.emitWhiteboardMessage({
+            areaId,
+            propertyId: property.id,
+            message: { $case: "clear", clear: {} },
+        });
+    }
 </script>
 
 <PropertyEditorBase
@@ -52,6 +71,18 @@
                     onchange={() => onchange?.()}
                 />
             {/if}
+            <p class="text-sm opacity-70 my-2">{$LL.mapEditor.properties.whiteboard.rightsHint()}</p>
+            <Button
+                variant="danger"
+                appearance={confirmClear ? "filled" : "border"}
+                size="sm"
+                dataTestId="whiteboardClear"
+                onclick={clearBoard}
+            >
+                {confirmClear
+                    ? $LL.mapEditor.properties.whiteboard.clearConfirm()
+                    : $LL.mapEditor.properties.whiteboard.clear()}
+            </Button>
         </span>
     {/snippet}
 </PropertyEditorBase>

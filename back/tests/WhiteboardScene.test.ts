@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { parseWhiteboardElements, WhiteboardScene } from "../src/Model/Whiteboard/WhiteboardScene";
+import {
+    MAX_ELEMENTS_PER_BOARD,
+    parseWhiteboardElements,
+    WhiteboardScene,
+} from "../src/Model/Whiteboard/WhiteboardScene";
 
 const rect = (version: number, versionNonce: number, extra: Record<string, unknown> = {}) => ({
     id: "rect",
@@ -36,5 +40,24 @@ describe("WhiteboardScene", () => {
     it("rejects payloads that are not elements", () => {
         expect(() => parseWhiteboardElements("{}")).toThrow();
         expect(() => parseWhiteboardElements(JSON.stringify([{ id: "x" }]))).toThrow();
+    });
+});
+
+describe("WhiteboardScene limits and clear", () => {
+    it("deletes every element with a newer version", () => {
+        const scene = new WhiteboardScene([rect(4, 7), { ...rect(1, 1), id: "other" }]);
+        const deleted = scene.clear();
+        expect(deleted).toHaveLength(2);
+        expect(deleted.every((element) => element.isDeleted === true)).toBe(true);
+        expect(deleted.find((element) => element.id === "rect")?.version).toBe(5);
+        expect(scene.clear()).toHaveLength(0);
+    });
+
+    it("refuses new elements beyond the cap but keeps updating the existing ones", () => {
+        const scene = new WhiteboardScene(
+            Array.from({ length: MAX_ELEMENTS_PER_BOARD }, (_, i) => ({ ...rect(1, 1), id: `e${i}` })),
+        );
+        expect(scene.merge([{ ...rect(1, 1), id: "one-too-many" }]).accepted).toHaveLength(0);
+        expect(scene.merge([{ ...rect(2, 1), id: "e0" }]).accepted).toHaveLength(1);
     });
 });
