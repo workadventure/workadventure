@@ -8,7 +8,6 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
 import { proximityMeetingStore } from "../Stores/MyMediaStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
-import { DISABLE_NOTIFICATIONS } from "../Enum/EnvironmentVariable";
 import type { NotificationWA } from "./Notification";
 
 type SelectedRoomStore = {
@@ -28,7 +27,6 @@ class NotificationManager {
 
     public hasNotification(): boolean {
         return (
-            !DISABLE_NOTIFICATIONS &&
             Notification.permission === "granted" &&
             statusChanger.allowNotificationSound() &&
             localUserStore.getNotification()

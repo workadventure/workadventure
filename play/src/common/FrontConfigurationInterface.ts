@@ -8,7 +8,6 @@ export interface FrontConfigurationInterface {
     UPLOADER_URL: string;
     ICON_URL: string;
     SKIP_RENDER_OPTIMIZATIONS: boolean;
-    DISABLE_NOTIFICATIONS: boolean;
     JITSI_URL: string | undefined;
     JITSI_PRIVATE_MODE: boolean;
     ENABLE_MAP_EDITOR: boolean;

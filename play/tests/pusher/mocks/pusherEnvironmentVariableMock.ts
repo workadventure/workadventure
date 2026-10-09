@@ -121,7 +121,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     UPLOADER_URL: "http://uploader.test",
     ICON_URL: "http://icon.test",
     SKIP_RENDER_OPTIMIZATIONS: false,
-    DISABLE_NOTIFICATIONS: false,
     JITSI_URL: undefined,
     JITSI_PRIVATE_MODE: false,
     ENABLE_MAP_EDITOR,

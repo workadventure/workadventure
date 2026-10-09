@@ -20,7 +20,6 @@
     import { videoQualityStore } from "../../Stores/MediaStore";
     import { browserNotificationStore } from "../../Stores/BrowserNotificationStore";
     import { helpNotificationSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
-    import { DISABLE_NOTIFICATIONS } from "../../Enum/EnvironmentVariable";
     import { screenShareQualityStore } from "../../Stores/ScreenSharingStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import { bandwidthConstrainedPreferenceStore } from "../../Stores/BandwidthConstrainedPreferenceStore";
@@ -751,16 +750,14 @@
                 label={$LL.menu.settings.fullscreen()}
             />
         </div>
-        {#if !DISABLE_NOTIFICATIONS}
-            <div class="flex cursor-pointer items-center relative m-4">
-                <InputSwitch
-                    id="notification-toggle"
-                    bind:value={notification}
-                    onchange={changeNotification}
-                    label={$LL.menu.settings.notifications()}
-                />
-            </div>
-        {/if}
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="notification-toggle"
+                bind:value={notification}
+                onchange={changeNotification}
+                label={$LL.menu.settings.notifications()}
+            />
+        </div>
         <div class="flex cursor-pointer items-center relative m-4">
             <InputSwitch
                 id="picture-in-picture-toggle"
