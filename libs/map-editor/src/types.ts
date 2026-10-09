@@ -150,7 +150,6 @@ export const WhiteboardPropertyData = PropertyBase.extend({
     ephemeral: z.boolean().optional(),
     trigger: z.union([z.literal("onenter"), z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
-    width: z.number().min(1).max(100).default(50).optional(),
 });
 
 export const ExtensionModuleAreaProperty = PropertyBase.extend({

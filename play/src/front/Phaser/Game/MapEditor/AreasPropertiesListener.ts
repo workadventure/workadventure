@@ -29,7 +29,7 @@ import type { Member } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import type { SpaceInterface } from "../../../Space/SpaceInterface";
-import { LL } from "../../../../i18n/i18n-svelte";
+import { LL, locale } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -66,7 +66,8 @@ import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../../WebRtc/CoWebsite/ImageCoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { WhiteboardCoWebsite } from "../../../WebRtc/CoWebsite/WhiteboardCoWebsite";
+import { whiteboardStore } from "../../../Stores/WhiteboardStore";
+import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
 import { coWebsites } from "../../../Stores/CoWebsiteStore";
 import {
     ON_ACTION_TRIGGER_BUTTON,
@@ -2062,37 +2063,27 @@ export class AreasPropertiesListener {
     }
 
     private handleWhiteboardOnEnter(property: WhiteboardPropertyData, areaData: AreaData): void {
-        if (!this.scene.applicationManager.whiteboardToolActivated || this.openedCoWebsites.has(property.id)) {
+        const connection = this.scene.connection;
+        if (!this.scene.applicationManager.whiteboardToolActivated || !connection) {
             return;
         }
 
-        const actionId = "whiteboard-" + uuidv4();
-        const coWebsiteOpen: OpenCoWebsite = { actionId };
-        this.openedCoWebsites.set(property.id, coWebsiteOpen);
-
+        // Shown like a screen share: a tile among the cameras, highlighted at once, that can go fullscreen.
         const open = () => {
-            if (coWebsiteOpen.coWebsite) {
-                return;
-            }
-            const url = new URL(`#whiteboard-${areaData.id}-${property.id}`, this.scene.mapUrlFile);
-            const coWebsite = new WhiteboardCoWebsite(
-                url,
-                areaData.id,
-                property.id,
-                areaData.name || get(LL).mapEditor.properties.whiteboard.label(),
-                property.width,
-            );
-            coWebsiteOpen.coWebsite = coWebsite;
-            coWebsites.add(coWebsite, undefined, {
-                targetUrl: url.toString(),
-                triggerProperty: "other",
+            const videoBox = whiteboardStore.open({
                 areaId: areaData.id,
-                areaName: areaData.name,
+                propertyId: property.id,
+                title: areaData.name || get(LL).mapEditor.properties.whiteboard.label(),
+                connection,
+                // Excalidraw names English "en" and takes the other WorkAdventure locales as they are.
+                langCode: get(locale).startsWith("en") ? "en" : get(locale),
+                filesUrl: this.whiteboardFilesUrl(areaData.id, property.id),
             });
-            inOpenWebsite.set(true);
+            highlightedEmbedScreen.highlight(videoBox);
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+            const actionId = "whiteboard-" + uuidv4();
             this.coWebsitesActionTriggers.set(property.id, actionId);
             popupStore.addPopup(
                 PopupCowebsite,
@@ -2116,18 +2107,31 @@ export class AreasPropertiesListener {
     }
 
     private handleWhiteboardOnLeave(property: WhiteboardPropertyData): void {
-        const coWebsite = this.openedCoWebsites.get(property.id)?.coWebsite;
-        if (coWebsite) {
-            coWebsites.remove(coWebsite);
-        }
-        this.openedCoWebsites.delete(property.id);
-        inOpenWebsite.set(false);
-
+        whiteboardStore.close(property.id);
         const actionId = this.coWebsitesActionTriggers.get(property.id);
         if (actionId) {
             popupStore.removePopup(actionId);
             this.coWebsitesActionTriggers.delete(property.id);
         }
+    }
+
+    /**
+     * The board's images folder in the map-storage, laid out like WhiteboardLocation there:
+     * private/whiteboards/<map path without .wam>/<areaId>/<propertyId>/
+     */
+    private whiteboardFilesUrl(areaId: string, propertyId: string): URL | undefined {
+        const mapStorageUrl = this.scene.room.mapStorageUrl;
+        const wamUrl = this.scene.wamUrlFile;
+        if (!mapStorageUrl || !wamUrl) {
+            return undefined;
+        }
+        const base = new URL(mapStorageUrl.toString().replace(/\/?$/, "/"));
+        const wamPath = new URL(wamUrl).pathname;
+        if (!wamPath.startsWith(base.pathname) || !wamPath.endsWith(".wam")) {
+            return undefined;
+        }
+        const mapPath = wamPath.substring(base.pathname.length).replace(/\.wam$/, "");
+        return new URL(`private/whiteboards/${mapPath}/${areaId}/${propertyId}/`, base);
     }
 
     private handleOpenFileOnLeave(property: OpenFilePropertyData): void {

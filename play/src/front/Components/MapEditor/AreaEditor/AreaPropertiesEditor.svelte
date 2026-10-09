@@ -402,7 +402,6 @@
                     id,
                     type,
                     trigger: ON_ACTION_TRIGGER_ENTER,
-                    width: 50,
                 };
             case "lockableAreaPropertyData":
                 return {

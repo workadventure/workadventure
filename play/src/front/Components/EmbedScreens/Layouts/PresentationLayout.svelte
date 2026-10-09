@@ -7,7 +7,8 @@
     import { inExternalServiceStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
-    import { isOnOneLine, playerMovedInTheLast10Seconds } from "../../../Stores/VideoLayoutStore";
+    import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
+    import { highlightCollapsedStore } from "../../../Stores/HighlightCollapsedStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
     import type { CamerasContainerMode } from "../../Video/VideoBoxLayout";
@@ -133,7 +134,7 @@
             </div>
         {/if}
 
-        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !$playerMovedInTheLast10Seconds}
+        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !$highlightCollapsedStore}
             <div
                 id="highlighted-media"
                 class="md:mb-0"
