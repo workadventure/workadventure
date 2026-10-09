@@ -15,6 +15,8 @@ export class TransitionPolicy implements ITransitionPolicy {
         private readonly livekitChecker: LivekitAvailabilityChecker,
         private readonly recordingManager: IRecordingManager,
         private readonly switchOnCpuLimitation: boolean = true,
+        /** A recorded space (see AutoRecorder) lives on LiveKit, where the egress records. */
+        private readonly autoRecording: { readonly isEnabled: boolean } = { isEnabled: false },
     ) {}
 
     /**
@@ -27,6 +29,7 @@ export class TransitionPolicy implements ITransitionPolicy {
      * - LiveKit -> WebRTC: when user count drops to or below maxUsersForWebRTC, unless a recording is running or a
      *   `cpuLimited` user is present. The two legs are asymmetric on purpose: once a bubble moved for a flag, only
      *   that user leaving brings it back, so a third member coming and going never bounces it
+     * - A space recorded automatically goes to LiveKit, whatever its size, and never leaves it
      * - VoidState: no transitions
      *
      * @param currentType - The current communication type
@@ -38,7 +41,8 @@ export class TransitionPolicy implements ITransitionPolicy {
         const cpuLimited = this.switchOnCpuLimitation && cpuLimitedUserCount > 0;
 
         if (currentType === CommunicationType.WEBRTC) {
-            const shouldSwitch = userCount > this.maxUsersForWebRTC || (cpuLimited && userCount > 2);
+            const shouldSwitch =
+                this.autoRecording.isEnabled || userCount > this.maxUsersForWebRTC || (cpuLimited && userCount > 2);
             if (shouldSwitch && !this.livekitChecker.isAvailable()) {
                 return false;
             }
@@ -49,7 +53,8 @@ export class TransitionPolicy implements ITransitionPolicy {
             currentType === CommunicationType.LIVEKIT &&
             userCount <= this.maxUsersForWebRTC &&
             !this.recordingManager.isRecording &&
-            !cpuLimited
+            !cpuLimited &&
+            !this.autoRecording.isEnabled
         ) {
             return true;
         }
