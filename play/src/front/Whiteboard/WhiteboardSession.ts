@@ -19,7 +19,6 @@ import type {
     Collaborator,
     DataURL,
     ExcalidrawImperativeAPI,
-    OnUserFollowedPayload,
     SocketId,
 } from "@excalidraw/excalidraw/types";
 import type { WhiteboardParticipant, WhiteboardPointerMessage, WhiteboardServerMessage } from "@workadventure/messages";
@@ -52,12 +51,10 @@ export class WhiteboardSession {
     private readonly knownVersions = new Map<string, number>();
     private readonly collaborators = new Map<SocketId, Collaborator>();
     private participants: WhiteboardParticipant[] = [];
-    private followedUserId: number | undefined;
     private elementsTimer: ReturnType<typeof setTimeout> | undefined;
     private pointerTimer: ReturnType<typeof setTimeout> | undefined;
     private pendingPointer: WhiteboardPointerMessage | undefined;
     private lastPointer: Omit<WhiteboardPointerMessage, "visibleBounds"> | undefined;
-    private boundsChanged = false;
     private joined = false;
     private canWrite = false;
     // Images being sent or fetched, by file id, so that each goes once.
@@ -135,27 +132,22 @@ export class WhiteboardSession {
         this.schedulePointer();
     }
 
+    /** Our view moved: the people following us get it with our next cursor message. */
     public onScrollChange(): void {
-        this.boundsChanged = true;
         if (this.lastPointer) {
             this.schedulePointer();
         }
-    }
-
-    public onUserFollow(payload: OnUserFollowedPayload): void {
-        this.followedUserId = payload.action === "FOLLOW" ? Number(payload.userToFollow.socketId) : undefined;
     }
 
     private schedulePointer(): void {
         if (!this.joined || !this.api || !this.lastPointer) {
             return;
         }
-        const pointer: WhiteboardPointerMessage = { ...this.lastPointer, visibleBounds: [] };
-        if (this.boundsChanged) {
-            pointer.visibleBounds = [...getVisibleSceneBounds(this.api.getAppState())];
-            this.boundsChanged = false;
-        }
-        this.pendingPointer = pointer;
+        // The visible bounds ride along every time (four numbers), for whoever follows us.
+        this.pendingPointer = {
+            ...this.lastPointer,
+            visibleBounds: [...getVisibleSceneBounds(this.api.getAppState())],
+        };
         if (this.pointerTimer !== undefined) {
             return;
         }
@@ -369,7 +361,9 @@ export class WhiteboardSession {
         });
         this.api.updateScene({ collaborators: new Map(this.collaborators) });
 
-        if (userId === this.followedUserId && pointer.visibleBounds.length === 4) {
+        // Excalidraw keeps whom we follow in its state (set from a collaborator's avatar).
+        const followed = this.api.getAppState().userToFollow?.socketId;
+        if (followed === socketId && pointer.visibleBounds.length === 4) {
             const [minX, minY, maxX, maxY] = pointer.visibleBounds;
             const { appState } = zoomToFitBounds({
                 bounds: [minX, minY, maxX, maxY],
