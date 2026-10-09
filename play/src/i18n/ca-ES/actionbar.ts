@@ -30,6 +30,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "La teva càmera està desactivada",
         activate: "Activar la teva càmera",
+        noImageWarning: "La teva càmera ha deixat d'enviar imatges. Potser una altra aplicació l'està fent servir.",
+        retry: "Torna-ho a provar",
+        changeCamera: "Canvia de càmera",
     },
     microphone: {
         disabled: "El teu micròfon està desactivat",

@@ -88,6 +88,33 @@ describe("buildWebRtcSenderStatsFromReport", () => {
         });
     });
 
+    it("tells a source that delivers nothing from layers the sender switched off", () => {
+        const prev = new Map<string, SenderLayerPrev>();
+        const read = (timestamp: number, low: Record<string, unknown>, high: Record<string, unknown>) =>
+            buildWebRtcSenderStatsFromReport(
+                report([
+                    layer("low", { timestamp, bytesSent: 0, frameWidth: 640, frameHeight: 360, ...low }),
+                    layer("high", { timestamp, bytesSent: 0, frameWidth: 1280, frameHeight: 720, ...high }),
+                ]),
+                prev,
+                "Livekit",
+            );
+        read(1000, { active: true, framesEncoded: 0 }, { active: false, framesEncoded: 100 });
+
+        // Dynacast paused the high layer, nobody watching in HD: the low one still encodes
+        const paused = read(2000, { active: true, framesEncoded: 30 }, { active: false, framesEncoded: 100 });
+        expect(paused).toMatchObject({ fps: 0, activeLayers: 1, activeFps: 30 });
+
+        // The camera froze: an active layer, and no frame
+        const frozen = read(3000, { active: true, framesEncoded: 30 }, { active: false, framesEncoded: 100 });
+        expect(frozen).toMatchObject({ activeLayers: 1, activeFps: 0 });
+
+        // A browser that does not report `active` says nothing about it
+        const unknown = read(4000, { framesEncoded: 30 }, { framesEncoded: 100 });
+        expect(unknown?.activeLayers).toBeUndefined();
+        expect(unknown?.activeFps).toBeUndefined();
+    });
+
     it("maps unknown limitation reasons to none and forgets removed layers", () => {
         const prev = new Map<string, SenderLayerPrev>();
         buildWebRtcSenderStatsFromReport(

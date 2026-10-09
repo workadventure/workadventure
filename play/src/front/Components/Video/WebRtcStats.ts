@@ -33,6 +33,11 @@ export interface WebRtcSenderStats {
     bandwidth: number;
     // Frames encoded per second on the largest layer
     fps: number;
+    // Layers configured to be sent: LiveKit's dynacast and a hidden P2P tile switch the others off.
+    // Undefined when the browser does not report it.
+    activeLayers?: number;
+    // Frames encoded per second on the busiest active layer. 0 with active layers: the source delivers nothing.
+    activeFps?: number;
     // Why the browser is not encoding at the requested quality ("cpu" = the machine cannot keep up)
     qualityLimitationReason: WebRtcQualityLimitationReason;
     // Encoder reported by the browser, e.g. "libaom" / "libvpx" (software) or "ExternalEncoder" (hardware)
