@@ -38,6 +38,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "블러 효과",
         disableBackgroundEffects: "배경 효과 끄기",
         close: "닫기",
+        noImageWarning: "카메라에서 영상이 전송되지 않습니다. 다른 애플리케이션이 사용 중일 수 있습니다.",
+        retry: "다시 시도",
+        changeCamera: "카메라 변경",
     },
     microphone: {
         disabled: "마이크가 비활성화되어 있습니다",

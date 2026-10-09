@@ -37,6 +37,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "Vervagingseffecten",
         disableBackgroundEffects: "Achtergrondeffecten uitschakelen",
         close: "Sluiten",
+        noImageWarning: "Je camera stuurt geen beeld meer. Misschien gebruikt een andere toepassing hem.",
+        retry: "Opnieuw proberen",
+        changeCamera: "Andere camera kiezen",
     },
     microphone: {
         disabled: "Je microfoon is uitgeschakeld",

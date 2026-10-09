@@ -37,6 +37,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "Efectes de desenfocament",
         disableBackgroundEffects: "Desactivar efectes de fons",
         close: "Tancar",
+        noImageWarning: "La teva càmera ha deixat d'enviar imatges. Potser una altra aplicació l'està fent servir.",
+        retry: "Torna-ho a provar",
+        changeCamera: "Canvia de càmera",
     },
     microphone: {
         disabled: "El teu micròfon està desactivat",

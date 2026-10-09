@@ -82,6 +82,8 @@ vi.mock("livekit-client", async (importOriginal) => {
     const actual = await importOriginal<typeof LivekitClient>();
     class FakeLocalTrack {
         public isUpstreamPaused = false;
+        public isMuted = false;
+        public unmute = vi.fn().mockResolvedValue(undefined);
         public resumeUpstream = vi.fn().mockResolvedValue(undefined);
         public pauseUpstream = vi.fn().mockResolvedValue(undefined);
         public replaceTrack = vi.fn().mockResolvedValue(undefined);
@@ -248,6 +250,27 @@ describe("LiveKitRoom", () => {
 
             expect(resumeUpstream).not.toHaveBeenCalled();
         });
+    });
+
+    it("should unmute the camera livekit-client muted when its track ended, once a new camera replaces it", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+        await room["handleCameraTrack"](createCameraStream());
+        const cameraTrack = room["localCameraTrack"];
+        if (!cameraTrack) {
+            throw new Error("The camera was not published");
+        }
+        // The camera was unplugged: livekit-client muted it, which disables whatever track replaces it
+        Object.assign(cameraTrack, { isMuted: true });
+        const unmute = vi.spyOn(cameraTrack, "unmute");
+
+        await room["handleCameraTrack"](createCameraStream("new-camera-track"));
+
+        expect(unmute).toHaveBeenCalledOnce();
     });
 
     it("should defer a scripting stream while the room is not connected and publish it once reconnected", async () => {
@@ -481,9 +504,9 @@ function createSpace(
     } as unknown as SpaceInterface;
 }
 
-function createCameraStream(): LocalStreamStoreValue {
+function createCameraStream(id = "camera-track"): LocalStreamStoreValue {
     const track = {
-        id: "camera-track",
+        id,
         kind: "video",
         getSettings: () => ({ width: 1280, height: 720 }),
     } as unknown as MediaStreamTrack;

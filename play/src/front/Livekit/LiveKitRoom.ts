@@ -315,6 +315,12 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 userProvidedTrack: true,
             });
 
+            // livekit-client mutes a camera track that ended (unplugged, killed by the system), and replaceTrack()
+            // keeps the new one disabled while muted: we never mute the camera ourselves, the new track is the cure.
+            if (this.localCameraTrack.isMuted) {
+                await this.localCameraTrack.unmute();
+            }
+
             if (this.localCameraTrack.isUpstreamPaused && !videoTrack.muted) {
                 await this.localCameraTrack.resumeUpstream();
             }

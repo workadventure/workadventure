@@ -37,6 +37,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurEffects: "ぼかし効果",
         disableBackgroundEffects: "背景効果を無効にする",
         close: "閉じる",
+        noImageWarning: "カメラから映像が送信されなくなりました。別のアプリが使用している可能性があります。",
+        retry: "再試行",
+        changeCamera: "カメラを変更",
     },
     microphone: {
         disabled: "マイクが無効になっています",
