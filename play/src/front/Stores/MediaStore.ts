@@ -1028,6 +1028,13 @@ function retryGetUserMedia(retryVideo: boolean, retryAudio: boolean) {
 }
 
 /**
+ * Asks for the camera again: the current one stopped delivering frames (see CameraStallDetector).
+ */
+export function restartCamera(): void {
+    retryGetUserMedia(true, false);
+}
+
+/**
  * A store containing the raw MediaStream object (or undefined if nothing requested, or Error if an error occurred)
  *
  * NOTE: We depend on forceTransformerRecreationStore to detect when mode changes require recreation.

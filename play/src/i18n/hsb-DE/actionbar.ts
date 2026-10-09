@@ -30,6 +30,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Waša kamera je deaktiwowana",
         activate: "Wašu kameru aktiwěrować",
+        noImageWarning: "Waša kamera hižo žane wobrazy njesćele. Snano ju druha aplikacija wužiwa.",
+        retry: "Hišće raz spytać",
+        changeCamera: "Kameru změnić",
     },
     microphone: {
         disabled: "Waš mikrofon je deaktiwowany",

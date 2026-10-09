@@ -31,6 +31,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "กล้องของคุณถูกปิดอยู่",
         activate: "เปิดกล้องของคุณ",
+        noImageWarning: "กล้องของคุณหยุดส่งภาพแล้ว แอปอื่นอาจกำลังใช้งานกล้องอยู่",
+        retry: "ลองอีกครั้ง",
+        changeCamera: "เปลี่ยนกล้อง",
     },
     microphone: {
         disabled: "ไมโครโฟนของคุณถูกปิดอยู่",

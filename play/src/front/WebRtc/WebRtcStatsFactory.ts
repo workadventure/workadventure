@@ -359,10 +359,22 @@ export function buildWebRtcSenderStatsFromReport(
     const timeDiffSeconds = topPrev ? (topLayer.timestamp - topPrev.timestamp) / 1000 : 0;
 
     let bytesSentDelta = 0;
+    // `active` is false on the layers the sender switched off (dynacast, a P2P peer hiding our tile)
+    const reportsActive = layers.every((layer) => typeof layer.active === "boolean");
+    let activeLayers = 0;
+    let activeFps = 0;
     for (const layer of layers) {
         const layerPrev = prev.get(layer.id);
         if (layerPrev) {
             bytesSentDelta += (layer.bytesSent ?? 0) - layerPrev.bytesSent;
+        }
+        if (layer.active === true) {
+            activeLayers++;
+            const layerSeconds = layerPrev ? ((layer.timestamp ?? 0) - layerPrev.timestamp) / 1000 : 0;
+            if (layerPrev && layerSeconds > 0) {
+                const layerFps = ((layer.framesEncoded ?? 0) - layerPrev.framesEncoded) / layerSeconds;
+                activeFps = Math.max(activeFps, layerFps);
+            }
         }
         prev.set(layer.id, {
             bytesSent: layer.bytesSent ?? 0,
@@ -387,6 +399,8 @@ export function buildWebRtcSenderStatsFromReport(
         mimeType: codecs.get(topLayer.codecId)?.mimeType,
         bandwidth: Math.max(0, bytesSentDelta) / timeDiffSeconds,
         fps: Math.max(0, (topLayer.framesEncoded ?? 0) - topPrev.framesEncoded) / timeDiffSeconds,
+        activeLayers: reportsActive ? activeLayers : undefined,
+        activeFps: reportsActive ? activeFps : undefined,
         qualityLimitationReason: toQualityLimitationReason(topLayer.qualityLimitationReason),
         encoderImplementation:
             typeof topLayer.encoderImplementation === "string" ? topLayer.encoderImplementation : undefined,
