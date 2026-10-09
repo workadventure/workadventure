@@ -12,6 +12,7 @@ import {
     KLAXOON_CLIENT_ID,
     KLAXOON_ENABLED,
     TLDRAW_ENABLED,
+    WHITEBOARD_ENABLED,
     YOUTUBE_ENABLED,
 } from "../../Enum/EnvironmentVariable";
 
@@ -27,6 +28,7 @@ export class ApplicationManager {
     public readonly googleDriveToolActivated: boolean | undefined;
     public readonly excalidrawToolActivated: boolean | undefined;
     public readonly excalidrawToolDomains: string[] | undefined = EXCALIDRAW_DOMAINS;
+    public readonly whiteboardToolActivated: boolean;
     public readonly cardsToolActivated: boolean | undefined;
     public readonly tldrawToolActivated: boolean | undefined;
 
@@ -59,6 +61,8 @@ export class ApplicationManager {
 
         const ExcalidrawApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.EXCALIDRAW);
         this.excalidrawToolActivated = ExcalidrawApp?.enabled ?? EXCALIDRAW_ENABLED;
+        // The world's "Excalidraw" application switches the self-hosted whiteboard on and off too.
+        this.whiteboardToolActivated = ExcalidrawApp?.enabled ?? WHITEBOARD_ENABLED;
 
         const CardsApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.CARDS);
         this.cardsToolActivated = CardsApp?.enabled ?? CARDS_ENABLED;
