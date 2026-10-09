@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "استكشاف الغرفة", // Raum erkunden
         closeMapEditor: "إغلاق محرر الخريطة", // Karteneditor schließen
         mapManagerActivated: "تم تفعيل مدير الخريطة", // Kartenmanager aktiviert
-        mapExplorerActivated: "تم تفعيل مستكشف الخريطة", // Kartenübersicht
         exploreTheRoomActivated: "تم تفعيل استكشاف الغرفة", // Raum erkunden aktiviert
         areaEditorActivated: "تم تفعيل تحرير المنطقة", // Fläche bearbeiten aktiviert
         entityEditorActivated: "تم تفعيل تحرير الكيان", // Entität bearbeiten aktiviert
@@ -29,7 +28,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "صامت",
             description: "عدم السماح بإجراء محادثات داخل المنطقة.",
-            actionButtonLabel: "عدم الإزعاج",
         },
         text: {
             label: "نص العنوان",
@@ -76,7 +74,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "إلغاء",
                 validate: "اعتماد",
             },
-            actionButtonLabel: "بدء اجتماع Jitsi",
         },
         playAudio: {
             label: "تشغيل ملف صوتي",
@@ -86,7 +83,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "تشغيل الموسيقى",
             error: "تعذر تحميل الصوت",
-            actionButtonLabel: "تشغيل الموسيقى",
             playForAllUsersLabel: "تشغيل لجميع المستخدمين على الخريطة",
             audibleRadiusLabel: "نطاق السماع (بالبكسل)",
             audibleRadiusPlaceholder: "مسموع في كل مكان إذا كان فارغًا",
@@ -117,7 +113,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "إجبار على فتح تبويب جديد",
             openApplication: "فتح التطبيق",
             hideUrlLabel: "إخفاء الرابط",
-            actionButtonLabel: "فتح الرابط",
         },
         advancedOptions: "خيارات متقدمة",
         speakerMegaphone: {
@@ -125,7 +120,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: 'يمكن للمستخدمين على المنصة (المسرح) التحدث إلى جميع الحاضرين في منطقة "الجمهور" المطابقة.',
             nameLabel: "الاسم",
             namePlaceholder: "المسرح الرئيسي",
-            actionButtonLabel: "الانضمام إلى المنصة",
         },
         listenerMegaphone: {
             label: "الجمهور",
@@ -137,7 +131,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkHelp: "يجب أن يكون الرابط الصحيح هو 'https://monlienmedia.com/…'.",
             waitingSpeaker: "بانتظار المتحدث",
             namePlaceholder: "منطقة المتحدث الخاصة بي",
-            actionButtonLabel: "الانضمام إلى الجمهور",
         },
         chatEnabled: "ربط قناة دردشة مخصصة",
         allowTalking: "السماح بالتحدث وتشكيل الفقاعات",
@@ -153,7 +146,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hashMenuItem: "استخدام إذا احتوى الرابط على #[اسم المنطقة]",
             infoAreaName:
                 "سيتم استخدام اسم المنطقة في محدد منطقة الخروج. يجب أن يكون فريدًا على الخريطة ولا يمكن أن يحتوي على مسافات أو أحرف خاصة.",
-            actionButtonLabel: "الانتقال إلى نقطة البداية",
         },
         exit: {
             label: "منطقة الخروج",
@@ -161,42 +153,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "الخريطة الوجهة",
             exitMapStartAreaName: "اسم منطقة البداية",
             defaultStartArea: "منطقة البداية الافتراضية",
-            actionButtonLabel: "الانتقال إلى الخروج",
         },
         youtube: {
             label: "فتح فيديو يوتيوب",
             description: "فتح فيديو يوتيوب داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط يوتيوب صالح",
             disabled: "تم تعطيل تكامل يوتيوب.",
-            actionButtonLabel: "فتح فيديو يوتيوب",
         },
         googleDocs: {
             label: "فتح مستندات جوجل",
             description: "فتح مستندات جوجل داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط مستندات جوجل صالح",
             disabled: "تم تعطيل تكامل مستندات جوجل.",
-            actionButtonLabel: "فتح مستندات جوجل",
         },
         klaxoon: {
             label: "فتح Klaxoon",
             description: "فتح Klaxoon داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط Klaxoon صالح",
             disabled: "تم تعطيل تكامل Klaxoon.",
-            actionButtonLabel: "فتح Klaxoon",
         },
         googleSheets: {
             label: "فتح جداول جوجل",
             description: "فتح جداول جوجل داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط جداول جوجل صالح",
             disabled: "تم تعطيل تكامل جداول جوجل.",
-            actionButtonLabel: "فتح جداول جوجل",
         },
         googleSlides: {
             label: "فتح عروض جوجل",
             description: "فتح عروض جوجل داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط عروض جوجل صالح",
             disabled: "تم تعطيل تكامل عروض جوجل.",
-            actionButtonLabel: "فتح عروض جوجل",
         },
         eraser: {
             label: "ممحاة",
@@ -204,14 +190,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "مسح",
             error: "يرجى إدخال رابط ممحاة صالح",
             disabled: "تم تعطيل تكامل الممحاة.",
-            actionButtonLabel: "مسح الرسوم",
         },
         googleDrive: {
             label: "فتح Google Drive",
             description: "فتح Google Drive داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط Google Drive صالح",
             disabled: "تم تعطيل تكامل Google Drive.",
-            actionButtonLabel: "فتح Google Drive",
         },
         restrictedRightsPropertyData: {
             label: "إضافة حقوق",
@@ -224,7 +208,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "حقوق الوصول",
             rightReadDescription:
                 "حقوق الوصول تحدد من يمكنه التفاعل مع المنطقة. المستخدمون المطابقون لأحد هذه الوسوم يمكنهم دخول المنطقة واستخدام الكائنات داخلها.",
-            actionButtonLabel: "الانتقال إلى الغرفة الخاصة",
         },
         personalAreaPropertyData: {
             label: "منطقة شخصية",
@@ -238,28 +221,24 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "مستخدم مسموح",
             owner: "المالك",
             revokeAccess: "سحب الوصول",
-            actionButtonLabel: "الانتقال إلى المكتب الشخصي",
         },
         excalidraw: {
             label: "فتح Excalidraw",
             description: "لوحة بيضاء مفتوحة المصدر بأسلوب مرسوم يدويًا. تعاونية ومشفرة طرفًا لطرف.",
             error: "يرجى إدخال رابط Excalidraw صالح",
             disabled: "تم تعطيل تكامل Excalidraw.",
-            actionButtonLabel: "فتح Excalidraw",
         },
         cards: {
             label: "فتح Cards",
             description: "أسرع وأسهل طريقة لمشاركة المعرفة عبر الإنترنت وعلى Teams والجوال.",
             error: "يرجى إدخال رابط Cards صالح",
             disabled: "تم تعطيل تكامل Cards.",
-            actionButtonLabel: "فتح Cards",
         },
         tldraw: {
             label: "فتح tldraw",
             description: "لوحة بيضاء / لوحة قماشية لا نهائية SDK.",
             error: "يرجى إدخال رابط tldraw صالح",
             disabled: "تم تعطيل تكامل tldraw.",
-            actionButtonLabel: "فتح tldraw",
         },
         matrixRoomPropertyData: {
             label: "ربط غرفة Matrix",
@@ -268,7 +247,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "اسم عرض الغرفة",
             roomNameLabelPlaceholder: "غرفتي",
             defaultChatRoomAreaName: "منطقة الغرفة",
-            actionButtonLabel: "بدء الدردشة",
         },
         tooltipPropertyData: {
             label: "فقاعة معلومات",
@@ -276,7 +254,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "اكتب المحتوى هنا ✍️",
             duration: "المدة (بالثواني) ⏱️",
             infinityDuration: "مدة غير محدودة ⏱️",
-            actionButtonLabel: "عرض فقاعة المعلومات",
         },
         openFile: {
             label: "فتح ملف",
@@ -294,7 +271,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "الملف كبير جدًا، الحد الأقصى للحجم هو {size} ميجابايت",
             },
             hideUrlLabel: "إخفاء الرابط",
-            actionButtonLabel: "فتح الملف",
         },
         livekitRoomProperty: {
             label: "غرفة الاجتماع",
@@ -313,7 +289,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "إلغاء",
                 validate: "اعتماد",
             },
-            actionButtonLabel: "بدء الاجتماع",
         },
         maxUsersInAreaPropertyData: {
             label: "الحد الأقصى للمستخدمين",
@@ -513,12 +488,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "استكشاف الغرفة", // Explore room
-        description:
-            "يسمح باستكشاف الغرفة. يمكنك التحرك في الغرفة والتفاعل مع الكائنات. هناك وضعان: 'استكشاف' و 'بحث'. في 'وضع البحث'، يمكنك البحث عن الكيانات والمناطق في الغرفة أو تصفيتها. في 'وضع الاستكشاف'، يمكنك التحرك بحرية في الغرفة.", // Allows exploring the room. You can move around the room and interact with objects. There are 2 modes: 'Exploration' and 'Search'. In 'Search mode', you can search for entities and areas in the room or filter them. In 'Exploration mode', you can move freely in the room.
         noEntitiesFound: "لم يتم العثور على كائن في الغرفة 🙅‍♂️", // No entity found in the room 🙅‍♂️
-        entitiesFound: "تم العثور على {{s}} كائنات", // {{s}} objects found
+        entitiesFound: "تم العثور على كائنات", // objects found
         noAreasFound: "لم يتم العثور على منطقة في الغرفة 🙅‍♀️", // No area found in the room 🙅‍♀️
-        areasFound: "تم العثور على {{s}} مناطق", // {{s}} areas found
+        areasFound: "تم العثور على مناطق", // areas found
+        noName: "بدون اسم", // No name
         noDescriptionFound: "لم يتم العثور على وصف 🫥", // No description found 🫥
         details: {
             close: "إغلاق", // Close
@@ -538,6 +512,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "الانتقال إلى الغرفة: {roomNameSelected}... إلى اللقاء... 🫡", // Moving to room: {roomNameSelected}... See you soon... 🫡
         searchLabel: "ابحث عن غرفة", // Search for a room
         searchPlaceholder: "اكتب...", // Type...
+        active: "نشطة", // Active
     },
 };
 

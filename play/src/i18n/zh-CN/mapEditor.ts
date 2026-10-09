@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "探索房间",
         closeMapEditor: "关闭地图编辑器",
         mapManagerActivated: "地图管理器已激活",
-        mapExplorerActivated: "地图概览",
         exploreTheRoomActivated: "探索房间已激活",
         areaEditorActivated: "区域编辑器已激活",
         entityEditorActivated: "实体编辑器已激活",
@@ -29,7 +28,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "静音",
             description: "不允许在此区域内进行对话。",
-            actionButtonLabel: "请勿打扰",
         },
         text: {
             label: "标题文本",
@@ -76,7 +74,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "取消",
                 validate: "验证",
             },
-            actionButtonLabel: "开始 Jitsi 会议",
         },
         playAudio: {
             label: "播放音频文件",
@@ -86,7 +83,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "播放音乐",
             error: "无法加载声音",
-            actionButtonLabel: "播放音乐",
             playForAllUsersLabel: "为地图上所有用户播放",
             audibleRadiusLabel: "可听半径（像素）",
             audibleRadiusPlaceholder: "留空则处处可听",
@@ -117,14 +113,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "强制在新标签页中打开",
             openApplication: "打开应用程序",
             hideUrlLabel: "隐藏 URL",
-            actionButtonLabel: "打开链接",
         },
         speakerMegaphone: {
             label: "讲台",
             description: '讲台（舞台）上的用户可以向匹配的"观众"区域中的所有与会者讲话。',
             nameLabel: "名称",
             namePlaceholder: "主舞台",
-            actionButtonLabel: "加入讲台",
         },
         listenerMegaphone: {
             label: "观众",
@@ -136,7 +130,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkError: "您提供的链接似乎有问题。您能再检查一下吗？🙏",
             waitingMedialLinkHelp: "正确的链接应该是 'https://monlienmedia.com/…'。",
             waitingSpeaker: "等待演讲者 🎤✨",
-            actionButtonLabel: "加入观众",
         },
         seeAttendees: "查看与会者",
         start: {
@@ -148,7 +141,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultMenuItem: "默认使用",
             hashMenuItem: "如果 URL 包含 #[区域名称] 则使用",
             infoAreaName: "区域名称将用于退出区域选择器。它必须在地图上唯一，不能包含空格或特殊字符。",
-            actionButtonLabel: "前往起始点",
         },
         exit: {
             label: "退出区域",
@@ -156,42 +148,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "退出地图",
             exitMapStartAreaName: "起始区域名称",
             defaultStartArea: "默认起始区域",
-            actionButtonLabel: "前往退出",
         },
         youtube: {
             label: "打开 YouTube 视频",
             description: "在 WorkAdventure 内或作为新标签页打开 YouTube 视频。",
             error: "请输入有效的 YouTube URL",
             disabled: "YouTube 集成已禁用。",
-            actionButtonLabel: "打开 YouTube 视频",
         },
         googleDocs: {
             label: "打开 Google 文档",
             description: "在 WorkAdventure 内或作为新标签页打开 Google 文档。",
             error: "请输入有效的 Google 文档 URL",
             disabled: "Google 文档集成已禁用。",
-            actionButtonLabel: "打开 Google 文档",
         },
         klaxoon: {
             label: "打开 Klaxoon",
             description: "在 WorkAdventure 内或作为新标签页打开 Klaxoon。",
             error: "请输入有效的 Klaxoon URL",
             disabled: "Klaxoon 集成已禁用。",
-            actionButtonLabel: "打开 Klaxoon",
         },
         googleSheets: {
             label: "打开 Google 表格",
             description: "在 WorkAdventure 内或作为新标签页打开 Google 表格。",
             error: "请输入有效的 Google 表格 URL",
             disabled: "Google 表格集成已禁用。",
-            actionButtonLabel: "打开 Google 表格",
         },
         googleSlides: {
             label: "打开 Google 幻灯片",
             description: "在 WorkAdventure 内或作为新标签页打开 Google 幻灯片。",
             error: "请输入有效的 Google 幻灯片 URL",
             disabled: "Google 幻灯片集成已禁用。",
-            actionButtonLabel: "打开 Google 幻灯片",
         },
         eraser: {
             label: "橡皮擦",
@@ -199,14 +185,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "擦除",
             error: "请输入有效的 Eraser URL",
             disabled: "Eraser 集成已禁用。",
-            actionButtonLabel: "擦除绘图",
         },
         googleDrive: {
             label: "打开 Google 云端硬盘",
             description: "在 WorkAdventure 内或作为新标签页打开 Google 云端硬盘。",
             error: "请输入有效的 Google 云端硬盘 URL",
             disabled: "Google 云端硬盘集成已禁用。",
-            actionButtonLabel: "打开 Google 云端硬盘",
         },
         restrictedRightsPropertyData: {
             label: "添加权限",
@@ -219,7 +203,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "访问权限",
             rightReadDescription:
                 "访问权限定义谁可以与区域交互。匹配这些标签之一的用户可以进入区域并使用区域内的对象。",
-            actionButtonLabel: "前往私人房间",
         },
         personalAreaPropertyData: {
             label: "个人区域",
@@ -233,28 +216,24 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "允许的用户",
             owner: "所有者",
             revokeAccess: "撤销访问",
-            actionButtonLabel: "前往个人办公桌",
         },
         excalidraw: {
             label: "打开 Excalidraw",
             description: "一个开源虚拟手绘风格白板。协作且端到端加密。",
             error: "请输入有效的 Excalidraw URL",
             disabled: "Excalidraw 集成已禁用。",
-            actionButtonLabel: "打开 Excalidraw",
         },
         cards: {
             label: "打开 Cards",
             description: "最快、最简单的解决方案，可立即在线、在 MS Teams 和移动设备上分享您的知识。",
             error: "请输入有效的 Cards URL",
             disabled: "Cards 集成已禁用。",
-            actionButtonLabel: "打开 Cards",
         },
         tldraw: {
             label: "打开 tldraw",
             description: "在线白板 / 无限画布 SDK。",
             error: "请输入有效的 tldraw URL",
             disabled: "tldraw 集成已禁用。",
-            actionButtonLabel: "打开 tldraw",
         },
         matrixRoomPropertyData: {
             label: "链接 Matrix 房间",
@@ -263,7 +242,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "房间显示名称",
             roomNameLabelPlaceholder: "我的房间",
             defaultChatRoomAreaName: "房间区域",
-            actionButtonLabel: "开始聊天",
         },
         tooltipPropertyData: {
             label: "信息气泡",
@@ -271,7 +249,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "在此写入内容 ✍️",
             duration: "持续时间（秒）⏱️",
             infinityDuration: "无限持续时间 ⏱️",
-            actionButtonLabel: "查看信息气泡",
         },
         openFile: {
             label: "打开文件",
@@ -289,7 +266,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "文件太大，最大大小为 {size} MB",
             },
             hideUrlLabel: "隐藏 URL",
-            actionButtonLabel: "打开文件",
         },
         livekitRoomProperty: {
             label: "会议室",
@@ -308,7 +284,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "取消",
                 validate: "验证",
             },
-            actionButtonLabel: "开始会议",
         },
         maxUsersInAreaPropertyData: {
             label: "最大用户数",
@@ -505,12 +480,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "探索房间",
-        description:
-            '允许探索房间。您可以在房间内移动并与对象交互。有两种模式可用："探索"和"搜索"。"搜索模式"将建议您搜索或过滤房间中的实体和区域。"探索模式"将让您在房间内自由移动。',
         noEntitiesFound: "在房间中未找到实体 🙅‍♂️",
-        entitiesFound: "找到对象{{s}}",
+        entitiesFound: "找到对象",
         noAreasFound: "在房间中未找到区域 🙅‍♀️",
-        areasFound: "找到区域{{s}}",
+        areasFound: "找到区域",
+        noName: "无名称",
         noDescriptionFound: "未找到描述 🫥",
         details: {
             close: "关闭",
@@ -530,6 +504,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "正在移动到房间: {roomNameSelected}... 再见... 🫡",
         searchLabel: "搜索房间",
         searchPlaceholder: "输入关键词...",
+        active: "当前",
     },
 };
 

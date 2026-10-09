@@ -168,7 +168,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "Lisćina rumow",
-            desc: "Pśepytajśo lisćinu rumow, aby widźeli, chto jo pśitomny, a pśidajśo se z jadnym klikom rozgronjeju.",
         },
         calendar: {
             title: "Kalender",

@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "ルームの探索",
         closeMapEditor: "マップエディターの終了",
         mapManagerActivated: "マップマネージャーの起動",
-        mapExplorerActivated: "マップの概要",
         exploreTheRoomActivated: "ルームの探索",
         areaEditorActivated: "エリアエディターの起動",
         entityEditorActivated: "エンティティエディターの起動",
@@ -29,7 +28,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "静かに",
             description: "室内での会話は禁止です。",
-            actionButtonLabel: "お邪魔しない",
         },
         text: {
             label: "ヘッダーテキスト",
@@ -76,7 +74,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "キャンセル",
                 validate: "有効",
             },
-            actionButtonLabel: "Jitsi ミーティングを開始",
         },
         playAudio: {
             label: "オーディオファイルの再生",
@@ -86,7 +83,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "ミュージックの再生",
             error: "サウンドを読み込めませんでした",
-            actionButtonLabel: "ミュージックを再生",
             playForAllUsersLabel: "マップ上のすべてのユーザーに再生",
             audibleRadiusLabel: "可聴半径（ピクセル）",
             audibleRadiusPlaceholder: "空欄の場合はどこでも聞こえます",
@@ -117,7 +113,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openPickerSelector: "ピッカーセレクターを開く",
             forcedInNewTab: "強制的に新しいタブで表示",
             openApplication: "アプリケーションを開く",
-            actionButtonLabel: "リンクを開く",
         },
         advancedOptions: "高度なオプション",
         speakerMegaphone: {
@@ -126,7 +121,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "ポディウム（ステージ）上のユーザーは、対応する「オーディエンス」エリアのすべての参加者に話すことができます。",
             nameLabel: "名前",
             namePlaceholder: "メインステージ",
-            actionButtonLabel: "ポディウムに参加",
         },
         listenerMegaphone: {
             label: "オーディエンス",
@@ -138,7 +132,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkError: "ご提供いただいたリンクに問題があるようです。もう一度ご確認いただけますか？ 🙏",
             waitingMedialLinkHelp: "正しいリンクは「https://monlienmedia.com/…」です。",
             waitingSpeaker: "登壇者を待機中 🎤✨",
-            actionButtonLabel: "オーディエンスに参加",
         },
 
         chatEnabled: "専用チャットチャンネルを開設",
@@ -155,7 +148,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hashMenuItem: "URL に #[エリア名] が含まれている場合に使用",
             infoAreaName:
                 "エリア名は出口エリアセレクターで使用されます。マップ上で一意である必要があり、スペースや特殊文字を含めることはできません。",
-            actionButtonLabel: "スタート地点へ移動",
         },
         exit: {
             label: "出口エリア",
@@ -163,42 +155,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "出口マップ",
             exitMapStartAreaName: "入口エリア名",
             defaultStartArea: "デフォルトの入口エリア",
-            actionButtonLabel: "出口へ移動",
         },
         youtube: {
             label: "YouTube ビデオを開く",
             description: "WorkAdventure 内で YouTube ビデオを開くか、新しいタブとして開きます。",
             error: "有効な YouTube の URL を入力してください。",
             disabled: "YouTube との統合は無効です。",
-            actionButtonLabel: "YouTube ビデオを開く",
         },
         googleDocs: {
             label: "Google ドキュメントを開く",
             description: "WorkAdventure 内で Google ドキュメントを開くか、新しいタブとして開きます。",
             error: "有効な Google ドキュメントの URL を入力してください。",
             disabled: "Google ドキュメントとの統合は無効です。",
-            actionButtonLabel: "Google ドキュメントを開く",
         },
         klaxoon: {
             label: "Klaxoon を開く",
             description: "WorkAdventure 内で Klaxoon を開くか、新しいタブとして開きます。",
             error: "有効な Klaxoon の URL を入力してください。",
             disabled: "Klaxoon との統合は無効です。",
-            actionButtonLabel: "Klaxoon を開く",
         },
         googleSheets: {
             label: "Google シートを開く",
             description: "WorkAdventure 内で Google シートを開くか、新しいタブとして開きます。",
             error: "有効な Google シートの URL を入力してください。",
             disabled: "Google シートとの統合は無効です。",
-            actionButtonLabel: "Google シートを開く",
         },
         googleSlides: {
             label: "Google スライドを開く",
             description: "WorkAdventure 内で Google スライドを開くか、新しいタブとして開きます。",
             error: "有効な Google スライドの URL を入力してください。",
             disabled: "Google スライドとの統合は無効です。",
-            actionButtonLabel: "Google スライドを開く",
         },
         eraser: {
             label: "Eraser",
@@ -206,14 +192,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "消去",
             error: "有効な Eraser の URL を入力してください。",
             disabled: "Eraser との統合は無効です。",
-            actionButtonLabel: "描画を消去",
         },
         googleDrive: {
             label: "Google ドライブを開く",
             description: "WorkAdventure 内で Google ドライブを開くか、新しいタブとして開きます。",
             error: "有効な Google ドライブの URL を入力してください。",
             disabled: "Google ドライブとの統合は無効です。",
-            actionButtonLabel: "Google ドライブを開く",
         },
         restrictedRightsPropertyData: {
             label: "権限の追加",
@@ -226,7 +210,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "アクセス権",
             rightReadDescription:
                 "アクセス権は、誰がそのエリアにアクセスできるかを定義します。これらのタグのいずれかに一致するユーザーは、エリアに入り、エリア内のオブジェクトを使用することができます。",
-            actionButtonLabel: "プライベートルームへ移動",
         },
         personalAreaPropertyData: {
             label: "パーソナルエリア",
@@ -242,28 +225,24 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "許可されたユーザー",
             owner: "所有者",
             revokeAccess: "アクセス権の取消",
-            actionButtonLabel: "個人デスクへ移動",
         },
         excalidraw: {
             label: "エクスカリドローを開く",
             description: "オープンソースの仮想手描き風ホワイトボード。共同作業とエンド・ツー・エンド暗号化に対応。",
             error: "有効なエクスカリドローの URL を入力してください。",
             disabled: "エクスカリドローとの統合は無効です。",
-            actionButtonLabel: "エクスカリドローを開く",
         },
         cards: {
             label: "カードを開く",
             description: "オンラインで、MS Teams で、モバイルで、素早く簡単に知識を共有できるソリューションです。",
             error: "有効なカードの URL を入力してください。",
             disabled: "カードとの統合は無効です。",
-            actionButtonLabel: "カードを開く",
         },
         tldraw: {
             label: "tldraw を開く",
             description: "オンラインホワイトボード / 無限キャンバス SDK。",
             error: "有効な tldraw の URL を入力してください。",
             disabled: "tldraw との統合は無効です。",
-            actionButtonLabel: "tldraw を開く",
         },
         matrixRoomPropertyData: {
             label: "Matrix ルームをリンク",
@@ -272,7 +251,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "ルームの表示名",
             roomNameLabelPlaceholder: "マイルーム",
             defaultChatRoomAreaName: "ルームエリア",
-            actionButtonLabel: "チャットを開始",
         },
         tooltipPropertyData: {
             label: "情報バブル",
@@ -280,7 +258,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "ここにコンテンツを書く ✍️",
             duration: "期間（秒） ⏱️",
             infinityDuration: "無限の期間 ⏱️",
-            actionButtonLabel: "情報バブルを見る",
         },
         openFile: {
             label: "ファイルを開く",
@@ -298,7 +275,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "ファイルが大きすぎます。最大サイズは {size} MB です",
             },
             hideUrlLabel: "URL を非表示",
-            actionButtonLabel: "ファイルを開く",
         },
         livekitRoomProperty: {
             label: "ミーティングルーム",
@@ -317,7 +293,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "キャンセル",
                 validate: "有効",
             },
-            actionButtonLabel: "ミーティングを開始",
         },
         maxUsersInAreaPropertyData: {
             label: "最大ユーザー数",
@@ -518,12 +493,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "ルームの探索",
-        description:
-            "ルーム内を探索することができます。ルーム内を移動し、オブジェクトと対話することができます。「検索」と「探索」の 2 つのモードがあります。「検索」モードでは、ルーム内のエンティティやエリアを検索したりフィルタリングすることができます。「探索」モードでは、ルーム内を自由に移動することができます。",
         noEntitiesFound: "ルーム内にエンティティがありません 🙅‍♂️",
         entitiesFound: "オブジェクトが見つかりました",
         noAreasFound: "ルーム内にエリアがありません 🙅‍♀️",
         areasFound: "エリアが見つかりました",
+        noName: "名前なし",
         noDescriptionFound: "説明がありません 🫥",
         details: {
             close: "閉じる",
@@ -543,6 +517,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "ルーム {roomNameSelected} に移動中 ... また会いましょう ... 🫡",
         searchLabel: "ルームを検索",
         searchPlaceholder: "ルーム名 ...",
+        active: "アクティブ",
     },
 };
 

@@ -167,13 +167,6 @@
         }
     }
 
-    let actionButtonText = $derived(
-        $mapExplorationObjectSelectedStore instanceof Entity ||
-            $mapExplorationObjectSelectedStore instanceof AreaPreview
-            ? $mapExplorationObjectSelectedStore.actionButtonLabel
-            : "",
-    );
-
     let objectDisplayName = $derived(
         (() => {
             if ($mapExplorationObjectSelectedStore instanceof Entity) {
@@ -221,7 +214,7 @@
                         >{$LL.mapEditor.explorer.details.close()}
                     </Button>
                     <Button variant="secondary" class="w-full whitespace-nowrap" onclick={goTo}>
-                        {actionButtonText}
+                        {$LL.mapEditor.explorer.details.moveToEntity({ name: "" })}
                     </Button>
                 </div>
             </div>
@@ -245,7 +238,7 @@
                         {$LL.mapEditor.explorer.details.close()}
                     </Button>
                     <Button variant="secondary" class="w-full whitespace-nowrap" onclick={goTo}>
-                        {actionButtonText}
+                        {$LL.mapEditor.explorer.details.moveToArea({ name: "" })}
                     </Button>
                 </div>
             </div>

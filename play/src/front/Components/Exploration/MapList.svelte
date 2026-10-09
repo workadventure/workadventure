@@ -170,7 +170,7 @@
                                                         variant="secondary"
                                                         class="z-20 bg-secondary text-white rounded-[8px] absolute top-3 right-3"
                                                     >
-                                                        <div class="px-2">Active</div>
+                                                        <div class="px-2">{$LL.mapEditor.listRoom.active()}</div>
                                                     </Chip>
                                                 {/if}
                                             </div>

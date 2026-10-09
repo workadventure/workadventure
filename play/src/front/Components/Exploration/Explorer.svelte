@@ -61,8 +61,13 @@
     function onChangeFilterHandle() {
         entitiesListFiltered.set(new Map());
         for (let [key, entity] of $mapExplorationEntitiesStore) {
-            // Check filter by name
-            if (filter && filter != "" && entity.getPrefab().name.toLowerCase().indexOf(filter.toLowerCase()) == -1)
+            // Check filter by name: the name shown in the list, or the object type (prefab name)
+            if (
+                filter &&
+                filter != "" &&
+                !getEntityDisplayName(entity).toLowerCase().includes(filter.toLowerCase()) &&
+                !entity.getPrefab().name.toLowerCase().includes(filter.toLowerCase())
+            )
                 continue;
 
             // Check filter by properties
@@ -392,7 +397,7 @@
                                 {$entitiesListFiltered.size}
                             </span>
                             <span class="text-white/75 group-hover:text-white"
-                                >{$LL.mapEditor.explorer.entitiesFound($entitiesListFiltered.size > 1)}</span
+                                >{$LL.mapEditor.explorer.entitiesFound($entitiesListFiltered.size)}</span
                             >
                         </span>
                     {:else}
@@ -482,7 +487,7 @@
                                 {$areasListFiltered.size}
                             </span>
                             <span class="text-white/75 group-hover:text-white"
-                                >{$LL.mapEditor.explorer.areasFound($areasListFiltered.size > 1)}</span
+                                >{$LL.mapEditor.explorer.areasFound($areasListFiltered.size)}</span
                             >
                         </span>
                     {:else}
@@ -517,7 +522,7 @@
                                         "bg-white/10": $mapExplorationObjectSelectedStore === area,
                                     },
                                 ]}
-                                title={area.getAreaData().name || "No name"}
+                                title={area.getAreaData().name || $LL.mapEditor.explorer.noName()}
                             >
                                 <img
                                     draggable="false"
@@ -530,7 +535,7 @@
                                     class:italic={!area.getAreaData().name || area.getAreaData().name == ""}
                                     class:font-bold={area.getAreaData().name && area.getAreaData().name != ""}
                                 >
-                                    {area.getAreaData().name || "No name"}
+                                    {area.getAreaData().name || $LL.mapEditor.explorer.noName()}
                                 </span>
                                 <button
                                     class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
