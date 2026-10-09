@@ -1161,6 +1161,7 @@ export class GameScene extends DirtyScene {
                 this.mapFile,
                 undefined,
                 urlManager.getStartPositionNameFromUrl(),
+                (position) => this.isPositionAllowedForCurrentUser(position),
             );
             this.CurrentPlayer.setPosition(startPosition.x, startPosition.y);
             this.CurrentPlayer.finishFollowingPath(true);
@@ -2004,6 +2005,19 @@ export class GameScene extends DirtyScene {
         }
     }
 
+    /**
+     * Whether the current user may stand at this position, i.e. it is not inside an area they do not have access to.
+     * Like AreaPermissions, users allowed to edit the map may go anywhere. Unlike the areas manager, this works as soon
+     * as the pusher answered, which is when the start position is chosen.
+     */
+    private isPositionAllowedForCurrentUser(position: PositionInterface): boolean {
+        const gameMapAreas = this.getGameMap().getWamFile()?.getGameMapAreas();
+        if (!this.connection || this.connection.userCanEdit || !gameMapAreas) {
+            return true;
+        }
+        return gameMapAreas.getForbiddenAreasOnPosition(position, this.connection.getAllTags()).length === 0;
+    }
+
     private initializeAreaManager() {
         if (!this.connection) {
             throw new Error("This should never happen");
@@ -2085,6 +2099,7 @@ export class GameScene extends DirtyScene {
                     this.mapFile,
                     this.initPosition,
                     urlManager.getStartPositionNameFromUrl(),
+                    (position) => this.isPositionAllowedForCurrentUser(position),
                 );
 
                 this.createCurrentPlayer(startPosition);
