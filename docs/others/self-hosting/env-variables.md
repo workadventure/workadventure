@@ -190,6 +190,13 @@ Environment variables for the Back service (backend API).
 | `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_REGION` | No | The S3 region for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_BUCKET` | No | The S3 bucket for Livekit recording. |
+| `AUTO_RECORDING_ENABLED` | No | Record every microphone of every bubble and meeting area automatically, one audio file per microphone, without user action. Only read when no admin API answers per world (the admin's /api/livekit/credentials carries an autoRecording flag). Recorded spaces always use LiveKit. Needs AUTO_RECORDING_S3_BUCKET. Defaults to false |
+| `AUTO_RECORDING_S3_ENDPOINT` | No | The S3 endpoint the automatic recordings are written to. |
+| `AUTO_RECORDING_S3_ACCESS_KEY` | No | The S3 access key for automatic recordings. |
+| `AUTO_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for automatic recordings. |
+| `AUTO_RECORDING_S3_REGION` | No | The S3 region for automatic recordings. |
+| `AUTO_RECORDING_S3_BUCKET` | No | The S3 bucket for automatic recordings. Without it, automatic recording is off. |
+| `AUTO_RECORDING_SPEAKER_SECRET` | No | Secret of the HMAC that names each speaker in the automatic recordings instead of their user id. Without it, automatic recording is off. |
 
 ## Map Storage Service
 
