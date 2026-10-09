@@ -824,6 +824,10 @@ export class RoomConnection implements RoomConnection {
         // If the socket closes after connection but before the room is joined,
         // reject the roomJoined promise to avoid leaving callers hanging.
         if (!this.userId && !this._closed) {
+            // GameScene awaits roomJoinedPromise only once the map and scripts are loaded, and never if the scene is
+            // torn down first. Callers awaiting it still get the rejection; this only stops an unhandled rejection
+            // when nobody does yet (PLAY-398, ~8k events a month). The lost socket is handled by the reconnection flow.
+            this.roomJoinedPromise.catch(() => undefined);
             this._roomJoinedPromise.reject(event);
         }
         if (event.code !== 1000) {
