@@ -1,7 +1,7 @@
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ConnectionState, DisconnectReason } from "livekit-client";
+import { ConnectionState, DisconnectReason, Track } from "livekit-client";
 import type * as LivekitClient from "livekit-client";
 import type { Readable } from "svelte/store";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
@@ -10,6 +10,7 @@ import type { Streamable } from "../Space/Streamable";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { demotedCodecStore } from "../WebRtc/CodecPerformance";
 import { LiveKitRoom } from "./LiveKitRoom";
+import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 
 const audioPlaybackStoreMock = vi.hoisted(() => {
     const subscribers = new Set<(value: ReadonlySet<unknown>) => void>();
@@ -111,6 +112,38 @@ describe("LiveKitRoom", () => {
 
     afterEach(() => {
         vi.useRealTimers();
+    });
+
+    it("names each microphone publication to the back, but not the scripting audio", () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const setMicrophoneTrack = vi.fn();
+        room["space"] = { state: { setMicrophoneTrack } } as never;
+
+        room["handleLocalTrackPublished"]({
+            source: Track.Source.Microphone,
+            trackName: "microphone",
+            trackSid: "TR_microphone",
+        } as never);
+        room["handleLocalTrackPublished"]({
+            source: Track.Source.Microphone,
+            trackName: SCRIPTING_AUDIO_TRACK_NAME,
+            trackSid: "TR_scripting",
+        } as never);
+        room["handleLocalTrackPublished"]({
+            source: Track.Source.Camera,
+            trackName: "camera",
+            trackSid: "TR_camera",
+        } as never);
+
+        expect(setMicrophoneTrack).toHaveBeenCalledOnce();
+        expect(setMicrophoneTrack).toHaveBeenCalledWith({
+            trackSid: "TR_microphone",
+            language: navigator.language,
+            noiseSuppression: expect.any(String),
+        });
     });
 
     it("registers one retry that restarts blocked LiveKit audio", async () => {

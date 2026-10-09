@@ -6,6 +6,7 @@ import {
     type MeetingConnectionRestartMessage,
     type SpaceUser,
     type SpaceKind,
+    type SetMicrophoneTrackQuery,
     FilterType,
 } from "@workadventure/messages";
 import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
@@ -19,6 +20,7 @@ import { VoidState } from "./States/VoidState";
 import type { IRecordingManager, ManagedRecordingState } from "./RecordingManager";
 import { RecordingManager } from "./RecordingManager";
 import { SessionAnalytics, type SessionEndReason } from "./SessionAnalytics";
+import { AutoRecorder } from "./AutoRecorder";
 import { UserRegistry } from "./Services/UserRegistry";
 import { TransitionPolicy } from "./Policies/TransitionPolicy";
 import { TransitionOrchestrator } from "./Services/TransitionOrchestrator";
@@ -89,6 +91,7 @@ export interface CommunicationManagerDependencies {
     livekitToWebRTCDelayMs?: number;
     recordingManager?: IRecordingManager;
     sessionAnalytics?: SessionAnalytics;
+    autoRecorder?: AutoRecorder;
     /** Where recording lifecycle events go; the admin API by default. */
     recordingEventNotifier?: (payload: RecordingEventPayload) => Promise<void>;
 }
@@ -122,6 +125,8 @@ export class CommunicationManager implements ICommunicationManager {
      * `Space.addUser` IS presence, and a participation's start and end have to be.
      */
     private readonly _sessionAnalytics: SessionAnalytics;
+    /** Records every microphone of the space's meetings when its world asks for it; unrelated to `_recordingManager`. */
+    private readonly autoRecorder: AutoRecorder;
     private readonly recordingEventNotifier: (payload: RecordingEventPayload) => Promise<void>;
     private destroyed = false;
 
@@ -183,6 +188,11 @@ export class CommunicationManager implements ICommunicationManager {
         // Every transition goes through the lifecycle manager, the recording's included.
         this.lifecycleManager.onTransition = () => this._sessionAnalytics.transportChanged();
 
+        // A recorded meeting is a session as the analytics count it, so its files sit under that session's id.
+        this.autoRecorder =
+            dependencies.autoRecorder ?? new AutoRecorder(this.space, () => this.lifecycleManager.getCurrentState());
+        this._sessionAnalytics.onSessionChanged = (session) => this.autoRecorder.sessionChanged(session);
+
         // Initialize transition policy with LiveKit availability checker
         this.policy =
             dependencies.policy ??
@@ -191,6 +201,7 @@ export class CommunicationManager implements ICommunicationManager {
                 new LivekitAvailabilityService(),
                 this._recordingManager,
                 LIVEKIT_SWITCH_ON_CPU_LIMITATION,
+                this.autoRecorder,
             );
     }
 
@@ -204,6 +215,7 @@ export class CommunicationManager implements ICommunicationManager {
         this.userRegistry.addUser(user);
         this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
+        this.resolveAutoRecording(user);
 
         // Decide the strategy before telling the joiner which one to use. If this join tips the
         // bubble into LiveKit, the old state's switchState() already told the joiner (the registry
@@ -218,6 +230,7 @@ export class CommunicationManager implements ICommunicationManager {
     public async handleUserDeleted(user: SpaceUser): Promise<void> {
         const wasPresent = this.isPresent(user.spaceUserId);
         this.userRegistry.deleteUser(user.spaceUserId);
+        this.autoRecorder.userLeft(user.spaceUserId);
         this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
 
@@ -240,6 +253,7 @@ export class CommunicationManager implements ICommunicationManager {
         this.userRegistry.addUserToNotify(user);
         this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
+        this.resolveAutoRecording(user);
 
         // Same ordering as handleUserAdded.
         const stateBefore = this.lifecycleManager.getCurrentState();
@@ -257,6 +271,26 @@ export class CommunicationManager implements ICommunicationManager {
 
         await this.lifecycleManager.getCurrentState().handleUserToNotifyDeleted(user);
         await this.evaluateAndHandleTransition(user);
+    }
+
+    /**
+     * Asks, at the space's first arrival, whether its world is recorded automatically. When the answer is known now,
+     * the policy reads it in this very handler. Otherwise the space moves to LiveKit once the admin has answered
+     * (one call, done before any media flows), through the usual transition: the handler does not wait for it, as
+     * a handler that waited would leave a window for the next message to start a transition of its own.
+     */
+    private resolveAutoRecording(user: SpaceUser): void {
+        this.autoRecorder
+            .resolve(user.playUri)
+            ?.then(async () => {
+                if (this.autoRecorder.isEnabled && this.space.getAllUsers().length > 0) {
+                    await this.evaluateAndHandleTransition(user);
+                }
+            })
+            .catch((error) => {
+                console.error(`Error while moving recorded space ${this.space.getSpaceName()} to LiveKit:`, error);
+                Sentry.captureException(error);
+            });
     }
 
     /**
@@ -616,6 +650,11 @@ export class CommunicationManager implements ICommunicationManager {
     /** A speaker went on or off air. Meetings never call this: present is active there. */
     public handleMemberActiveChanged(spaceUserId: string, active: boolean): void {
         this._sessionAnalytics.setActive(spaceUserId, active);
+    }
+
+    /** A member published their microphone (a new publication after a reconnection, too). */
+    public handleMicrophoneTrackPublished(user: SpaceUser, query: SetMicrophoneTrackQuery): void {
+        this.autoRecorder.microphonePublished(user, query);
     }
 
     /** The space learnt what it is: a session waiting on that may open now. */

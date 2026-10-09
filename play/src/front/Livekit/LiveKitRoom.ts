@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
-import type { LocalParticipant, Participant, RemoteParticipant, TrackPublishOptions } from "livekit-client";
+import type {
+    LocalParticipant,
+    LocalTrackPublication,
+    Participant,
+    RemoteParticipant,
+    TrackPublishOptions,
+} from "livekit-client";
 import {
     BackupCodecPolicy,
     LocalAudioTrack,
@@ -39,6 +45,7 @@ import { registerLocalEncoderStats } from "../WebRtc/LocalEncoderStats";
 import { subscribeToOutboundVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
+import { effectiveNoiseSuppressionProviderStore, noiseSuppressionEnabledStore } from "../Stores/NoiseSuppressionStore";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
@@ -94,6 +101,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private readonly boundHandleDisconnected = this.handleDisconnected.bind(this);
     private readonly boundHandleReconnected = this.handleReconnected.bind(this);
     private readonly boundHandleAudioPlaybackStatusChanged = this.handleAudioPlaybackStatusChanged.bind(this);
+    private readonly boundHandleLocalTrackPublished = this.handleLocalTrackPublished.bind(this);
 
     constructor(
         private serverUrl: string,
@@ -713,6 +721,23 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
         this.room.on(RoomEvent.Reconnected, this.boundHandleReconnected);
         this.room.on(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+        this.room.on(RoomEvent.LocalTrackPublished, this.boundHandleLocalTrackPublished);
+    }
+
+    /**
+     * Names our microphone to the back, which records each microphone separately when the space is recorded
+     * automatically. Every publication counts: a reconnection republishes under a new track id. The scripting
+     * audio is published as a microphone too, so it is told apart by its name.
+     */
+    private handleLocalTrackPublished(publication: LocalTrackPublication): void {
+        if (publication.source !== Track.Source.Microphone || publication.trackName === SCRIPTING_AUDIO_TRACK_NAME) {
+            return;
+        }
+        this.space.state.setMicrophoneTrack({
+            trackSid: publication.trackSid,
+            language: navigator.language,
+            noiseSuppression: get(noiseSuppressionEnabledStore) ? get(effectiveNoiseSuppressionProviderStore) : "none",
+        });
     }
 
     private handleAudioPlaybackStatusChanged() {
@@ -1002,6 +1027,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
             this.room?.off(RoomEvent.Reconnected, this.boundHandleReconnected);
             this.room?.off(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+            this.room?.off(RoomEvent.LocalTrackPublished, this.boundHandleLocalTrackPublished);
             this.unregisterAudioPlaybackRetry?.();
             this.unregisterAudioPlaybackRetry = undefined;
             this.cameraAnalyticsUnsubscribe?.();

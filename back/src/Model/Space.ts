@@ -724,6 +724,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return this.proximityQAManager.delete(sender, query.deleteQuestion.questionId);
             case "setKind":
                 return this.setKind(query.setKind.kind);
+            case "setMicrophoneTrack":
+                return this.communicationManager.handleMicrophoneTrackPublished(sender, query.setMicrophoneTrack);
             default: {
                 const _exhaustiveCheck: never = query;
                 throw new Error("Unknown space state query");
