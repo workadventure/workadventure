@@ -75,6 +75,21 @@ async function countBackgroundPipeStarts(page: Page): Promise<void> {
     });
 }
 
+/**
+ * A blurred checkerboard is neither black nor the checkerboard itself.
+ */
+async function expectBlurredFrame(page: Page): Promise<void> {
+    await expect
+        .poll(
+            async () => {
+                const frames = await page.evaluate(() => window.e2eHooks.compareLocalVideoFrames());
+                return frames !== null && frames.processedMeanGray > 20 && frames.meanAbsDiff > 8;
+            },
+            { timeout: 60_000 },
+        )
+        .toBe(true);
+}
+
 test.describe("Virtual background @nomobile @nowebkit @nofirefox", () => {
     test.beforeEach(
         "Chromium only: the outgoing track is read back with requestVideoFrameCallback",
@@ -115,8 +130,7 @@ test.describe("Virtual background @nomobile @nowebkit @nofirefox", () => {
         // eslint-disable-next-line playwright/no-force-option
         await page.getByTestId("background-blur-50").click({ force: true });
 
-        // Issue #5470: the processed track used to go black. A blurred checkerboard is neither black nor the
-        // checkerboard itself.
+        // Issue #5470: the processed track used to go black.
         await expect
             .poll(() => page.evaluate(() => window.e2eHooks.compareLocalVideoFrames()), { timeout: 60_000 })
             .toEqual(
@@ -125,15 +139,7 @@ test.describe("Virtual background @nomobile @nowebkit @nofirefox", () => {
                     meanAbsDiff: expect.any(Number),
                 }),
             );
-        await expect
-            .poll(
-                async () => {
-                    const frames = await page.evaluate(() => window.e2eHooks.compareLocalVideoFrames());
-                    return frames !== null && frames.processedMeanGray > 20 && frames.meanAbsDiff > 8;
-                },
-                { timeout: 60_000 },
-            )
-            .toBe(true);
+        await expectBlurredFrame(page);
     });
 
     test("toggling the microphone in a conversation keeps the same blur pipe", async ({ browser }) => {
@@ -174,9 +180,9 @@ test.describe("Virtual background @nomobile @nowebkit @nofirefox", () => {
         await alice.getByTestId("background-settings-tab").click({ force: true });
         // eslint-disable-next-line playwright/no-force-option
         await alice.getByTestId("background-blur-50").click({ force: true });
-        await expect
-            .poll(() => alice.evaluate(() => window.__backgroundPipeStarts), { timeout: 60_000 })
-            .toBeGreaterThan(0);
+        // Baseline once the blur is on screen, so a pipe still starting from the click is not blamed on the toggles.
+        await expectBlurredFrame(alice);
+        expect(await alice.evaluate(() => window.__backgroundPipeStarts)).toBeGreaterThan(0);
         const pipeStarts = await alice.evaluate(() => window.__backgroundPipeStarts);
 
         // Each toggle rebuilds the raw stream around the same camera track. Rebuilding the blur pipe for it
@@ -191,14 +197,6 @@ test.describe("Virtual background @nomobile @nowebkit @nofirefox", () => {
 
         expect(await alice.evaluate(() => window.__backgroundPipeStarts)).toBe(pipeStarts);
         // ...and the blur is still applied: a terminal failure would stop the pipe without starting a new one.
-        await expect
-            .poll(
-                async () => {
-                    const frames = await alice.evaluate(() => window.e2eHooks.compareLocalVideoFrames());
-                    return frames !== null && frames.processedMeanGray > 20 && frames.meanAbsDiff > 8;
-                },
-                { timeout: 60_000 },
-            )
-            .toBe(true);
+        await expectBlurredFrame(alice);
     });
 });
