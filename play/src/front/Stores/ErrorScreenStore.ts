@@ -185,7 +185,16 @@ function createErrorScreenStore() {
                 );
                 return;
             }
-            throw error;
+            // Something that is not an Error was thrown (an event, a plain object...). Rethrowing it would leave the
+            // user with no error screen at all, and an unhandled rejection in the caller.
+            set(
+                ErrorScreenMessage.fromPartial({
+                    type: "error",
+                    code: "INTERNAL_ERROR",
+                    title: "An error occurred",
+                    details: String(error),
+                }),
+            );
         },
         delete: () => {
             set(undefined);
