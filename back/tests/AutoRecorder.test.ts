@@ -6,7 +6,7 @@ import type { OpenedSession } from "../src/Model/SessionAnalytics";
 
 const OPENED_AT_MS = Date.parse("2026-10-09T10:00:00.000Z");
 
-const user = (id: string) => ({ spaceUserId: id, uuid: `uuid-${id}` } as SpaceUser);
+const user = (id: string) => ({ spaceUserId: id, uuid: `uuid-${id}` }) as SpaceUser;
 const microphone = (trackSid: string) => ({ trackSid, language: "fr-FR", noiseSuppression: "none" });
 const session = (kind: SpaceKind = "bubble"): OpenedSession => ({
     eventId: "meeting-event-id",
@@ -20,23 +20,27 @@ const settle = () =>
         setTimeout(resolve, 0);
     });
 
-const harness = async (worldRecorded = true) => {
+const harness = async (worldRecorded: boolean | (() => boolean) = true) => {
     let egressCount = 0;
     const state = {
         startTrackEgress: vi.fn((_spaceUserId: string, _trackSid: string, _filepath: string, _s3: unknown) =>
-            Promise.resolve(`EG_${++egressCount}`)
+            Promise.resolve(`EG_${++egressCount}`),
         ),
         stopEgress: vi.fn((_egressId: string) => Promise.resolve()),
         getEgressFile: vi.fn((_egressId: string): Promise<EgressFile | undefined> => Promise.resolve(undefined)),
     };
     const writeManifest = vi.fn((_key: string, _manifest: object) => Promise.resolve());
     let now = OPENED_AT_MS;
-    const recorder = new AutoRecorder({ world: "org/world", getSpaceName: () => "org/world.bubble" }, () => state as never, {
-        resolveWorld: () => Promise.resolve(worldRecorded),
-        writeManifest,
-        nowMs: () => now,
-        manifestDelayMs: 0,
-    });
+    const recorder = new AutoRecorder(
+        { world: "org/world", getSpaceName: () => "org/world.bubble" },
+        () => state as never,
+        {
+            resolveWorld: typeof worldRecorded === "function" ? worldRecorded : () => Promise.resolve(worldRecorded),
+            writeManifest,
+            nowMs: () => now,
+            manifestDelayMs: 0,
+        },
+    );
     await recorder.resolve("https://play.example/@/org/world/office");
     const tick = (seconds: number) => {
         now += seconds * 1000;
@@ -157,6 +161,28 @@ describe("AutoRecorder", () => {
                 },
             ],
         });
+    });
+
+    it("stops recording the meeting within a minute of its world no longer being recorded", async () => {
+        vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+        try {
+            let recorded = true;
+            const { recorder, state, writeManifest } = await harness(() => recorded);
+            recorder.microphonePublished(user("a"), microphone("TR_a"));
+            recorder.sessionChanged(session());
+            await settle();
+
+            recorded = false;
+            vi.advanceTimersByTime(60_000);
+            await settle();
+
+            expect(state.stopEgress).toHaveBeenCalledWith("EG_1");
+            expect(writeManifest).toHaveBeenCalledOnce();
+            recorder.microphonePublished(user("b"), microphone("TR_b"));
+            expect(state.startTrackEgress).toHaveBeenCalledOnce();
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it("writes no manifest for a meeting nobody spoke in", async () => {
