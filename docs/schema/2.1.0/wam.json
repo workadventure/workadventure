@@ -1132,12 +1132,6 @@
                         },
                         "triggerMessage": {
                           "type": "string"
-                        },
-                        "width": {
-                          "type": "number",
-                          "minimum": 1,
-                          "maximum": 100,
-                          "default": 50
                         }
                       },
                       "required": [

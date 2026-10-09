@@ -168,10 +168,13 @@
             {#if media.component}
                 {@const MediaComponent = media.component}
                 <MediaComponent
+                    {...media.props}
                     width={containerWidth ?? 320}
                     height={containerHeight ?? (containerWidth ?? 320) * (9 / 16)}
                 />
             {/if}
+            <!-- The box's own overlays (name, fullscreen menu) go over the component too. -->
+            {@render children?.()}
         </div>
     {:else}
         <div

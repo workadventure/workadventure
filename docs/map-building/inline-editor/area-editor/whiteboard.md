@@ -10,7 +10,11 @@ sidebar_position: 95
 
 The whiteboard property attaches a collaborative whiteboard to an area. Everybody standing in the area draws on the same board, sees the others' drawings as they draw, and sees their cursors with their names.
 
-The whiteboard is [Excalidraw](https://excalidraw.com), drawn by WorkAdventure itself in the side panel: there is no external website and no extra service to install. Drawings go through the WorkAdventure server only.
+The whiteboard is [Excalidraw](https://excalidraw.com), drawn by WorkAdventure itself: there is no external website and no extra service to install. Drawings go through the WorkAdventure server only.
+
+The board shows up like a screen share: in the middle of the screen, above the cameras. It stays there while you walk around the area. Use its button in the top left corner to put it fullscreen (the cameras move to a strip on the side) or to shrink it to a tile among the cameras; click the tile to bring it back.
+
+![](../../images/editor/whiteboard/whiteboard-2.png)
 
 ![](../../images/editor/whiteboard/whiteboard-1.png)
 

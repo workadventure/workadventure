@@ -12,8 +12,6 @@
     import { VideoCoWebsite } from "../../WebRtc/CoWebsite/VideoCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
     import VideoCowebsiteComponent from "../Cowebsites/VideoCowebsiteComponent.svelte";
-    import WhiteboardCowebsiteComponent from "../Cowebsites/WhiteboardCowebsiteComponent.svelte";
-    import { WhiteboardCoWebsite } from "../../WebRtc/CoWebsite/WhiteboardCoWebsite";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { screenOrientationStore } from "../../Stores/ScreenOrientationStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -282,8 +280,6 @@
                     />
                 {:else if coWebsite instanceof VideoCoWebsite}
                     <VideoCowebsiteComponent actualCowebsite={coWebsite} visible={coWebsite === activeCowebsite} />
-                {:else if coWebsite instanceof WhiteboardCoWebsite}
-                    <WhiteboardCowebsiteComponent actualCowebsite={coWebsite} visible={coWebsite === activeCowebsite} />
                 {:else if coWebsite instanceof ImageCoWebsite}
                     <ImageCowebsiteComponent actualCowebsite={coWebsite} visible={coWebsite === activeCowebsite} />
                 {:else if coWebsite instanceof SimpleCoWebsite}
