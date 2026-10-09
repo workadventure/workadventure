@@ -57,7 +57,7 @@ export class Player extends Character {
 
         let x = 0;
         let y = 0;
-        if ((state === "active" || state === "ending") && role === "follower") {
+        if (state === "active" && role === "follower") {
             [x, y] = this.computeFollowMovement();
         }
         if (this.pathToFollow) {

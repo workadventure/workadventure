@@ -127,6 +127,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Slědowanje zastajiś",
             desc: "Móžośo kuždy cas wubraś, aby wužywarja wěcej njeslědujo. Waš Woka buźo pótom slědowanje zastajiś a wam wašu lichotu gibanja wrośiś.",
         },
+        stopLeading: {
+            title: "Wjeźenje zastajiś",
+            desc: "Móžośo kuždy cas wjeźenje zastajiś. Wšykne, kótarež wam slěduju, budu pótom slědowanje zastajiś.",
+        },
         lock: {
             title: "Rozgrono zawrěś",
             desc: "Gaž toś tu funkciju aktiwěrujośo, zawěsćijośo, až njechtó njemóžo se diskusiji pśidaś. Sćo kněz wašogo ruma, a jano te, kótarež su južo pśitomne, mógu interagěrowaś.",

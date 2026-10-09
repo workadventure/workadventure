@@ -164,6 +164,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Arrêter de suivre",
             desc: "Vous pouvez choisir de ne plus suivre un utilisateur à tout moment. Votre Woka cessera alors de le suivre, vous redonnant votre liberté de mouvement.",
         },
+        stopLeading: {
+            title: "Arrêter de guider",
+            desc: "Vous pouvez arrêter de guider à tout moment. Toutes les personnes qui vous suivent cessent alors de vous suivre et retrouvent leur liberté de mouvement.",
+        },
         apps: {
             title: "Applications tierces",
             desc: "Vous avez la liberté de naviguer sur des applications externes tout en restant dans notre application, pour une expérience fluide et enrichie.",
