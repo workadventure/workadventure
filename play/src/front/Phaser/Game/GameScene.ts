@@ -1021,8 +1021,9 @@ export class GameScene extends DirtyScene {
                             .catch((e) => {
                                 if (e instanceof CloseEvent) {
                                     // The socket closed before the room was joined. This is a lost connection, not a
-                                    // bug: RoomConnection emits serverDisconnected and the scene reconnects from there
-                                    // (or the page is unloading, code 1000). setException would throw on a CloseEvent.
+                                    // bug, and the user already sees it: RoomConnection emits serverDisconnected, and
+                                    // the scene shows the connection issue toast and reconnects from there (or the page
+                                    // is unloading, code 1000). An error screen would cover that reconnection.
                                     return;
                                 }
                                 console.error("Error while joining the room", e);
