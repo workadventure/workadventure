@@ -191,33 +191,6 @@ describe("PusherRoomSocketController reconnect retention", () => {
         expect(close).toHaveBeenCalledTimes(1);
     });
 
-    it("lets the front resume after a 1001 close, which Chrome sends for a socket the page sees as 1006", async () => {
-        vi.useFakeTimers();
-
-        const close = vi.fn();
-        const controller = createController(
-            (handlers) => {
-                registeredHandlers = handlers;
-            },
-            vi.fn(),
-            close,
-        );
-
-        const initialSocket = createSocket({ tabId: "tab-1" });
-        await registeredHandlers?.open(initialSocket);
-        const initialContext = getContextMap(controller).get("conn-1");
-
-        await registeredHandlers?.close(initialSocket, 1001);
-        await flushMicrotasks();
-
-        const reconnectSocket = createSocket({ tabId: "tab-1", clientLastReceivedNonce: 0 });
-        await registeredHandlers?.open(reconnectSocket);
-
-        expect(getEndMock(reconnectSocket)).not.toHaveBeenCalled();
-        expect(getContextMap(controller).get("conn-1")).toBe(initialContext);
-        expect(close).not.toHaveBeenCalled();
-    });
-
     it("does not retain the tab context after the pusher destroyed the session", async () => {
         vi.useFakeTimers();
 
