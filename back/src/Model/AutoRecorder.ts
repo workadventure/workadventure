@@ -160,7 +160,9 @@ export type AutoRecorderDependencies = {
  */
 export class AutoRecorder {
     private enabled = false;
-    private resolved = false;
+    /** The room URL the world was asked with, to ask again while a meeting is recorded. */
+    private playUri: string | undefined;
+    private refreshTimer: ReturnType<typeof setInterval> | undefined;
     private readonly microphones = new Map<string, Microphone>();
     private meeting: Meeting | undefined;
     /** What each member's microphone is being recorded to, now. */
@@ -187,14 +189,15 @@ export class AutoRecorder {
     }
 
     /**
-     * Asks once per space: a member's room URL is what the admin finds the world by. Returns the pending answer,
-     * or undefined when `isEnabled` already holds it.
+     * Asks when the space's first member comes: a member's room URL is what the admin finds the world by. Returns the
+     * pending answer, or undefined when `isEnabled` already holds it. The world is asked again at each meeting and
+     * every minute of it (see `refresh`).
      */
     public resolve(playUri: string): Promise<void> | undefined {
-        if (this.resolved) {
+        if (this.playUri !== undefined) {
             return undefined;
         }
-        this.resolved = true;
+        this.playUri = playUri;
         const answer = this.resolveWorld(this.space.world, this.space.getSpaceName(), playUri);
         if (typeof answer === "boolean") {
             this.enabled = answer;
@@ -231,8 +234,40 @@ export class AutoRecorder {
         }
     }
 
+    /**
+     * Asks the world again (an answer cached for a minute, see `isWorldAutoRecorded`): a world that stopped being
+     * recorded stops the meeting being recorded now, not when its space empties.
+     */
+    private refresh(): void {
+        if (this.playUri === undefined) {
+            return;
+        }
+        const answer = this.resolveWorld(this.space.world, this.space.getSpaceName(), this.playUri);
+        if (typeof answer === "boolean") {
+            this.answered(answer);
+            return;
+        }
+        answer
+            .then((enabled) => this.answered(enabled))
+            .catch((error) => {
+                console.error(`Could not ask again whether world ${this.space.world} is recorded:`, error);
+            });
+    }
+
+    private answered(enabled: boolean): void {
+        this.enabled = enabled;
+        if (!enabled) {
+            this.close();
+        }
+    }
+
     private open(session: OpenedSession): void {
         if (!this.enabled || !RECORDED_KINDS.has(session.kind)) {
+            return;
+        }
+        // Only a recorded world is asked again: a world that starts being recorded does so in its next spaces.
+        this.refresh();
+        if (!this.enabled) {
             return;
         }
         const date = new Date(session.openedAtMs).toISOString().slice(0, 10);
@@ -244,9 +279,12 @@ export class AutoRecorder {
         for (const spaceUserId of this.microphones.keys()) {
             this.record(spaceUserId);
         }
+        this.refreshTimer = setInterval(() => this.refresh(), WORLD_FLAG_TTL_MS);
     }
 
     private close(): void {
+        clearInterval(this.refreshTimer);
+        this.refreshTimer = undefined;
         const meeting = this.meeting;
         if (!meeting) {
             return;
