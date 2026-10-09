@@ -78,7 +78,7 @@ import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import type { Zone, ZonePosition } from "../Model/Zone";
 import type { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
-import { findOrphanedRecording } from "../Model/CommunicationManager";
+import { findRecording } from "../Model/CommunicationManager";
 import type { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
 import type { SessionEndReason } from "../Model/SessionAnalytics";
@@ -1749,22 +1749,16 @@ export class SocketManager {
     }
 
     async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
-        // The end of an egress often comes after its space was destroyed, or even
-        // recreated under the same name: such a recording is found by its session.
-        const orphanedRecording = findOrphanedRecording(request.recordingSessionId);
-        if (orphanedRecording) {
-            await orphanedRecording.handleLivekitWebhook(request);
+        const recording = findRecording(request.recordingSessionId);
+        if (!recording) {
+            // Retrying cannot recreate a recording session that is already gone, so the pusher should acknowledge this as ignored.
+            console.warn(
+                `Received LiveKit webhook for missing recording session ${request.recordingSessionId}. Ignoring.`,
+            );
             return;
         }
 
-        const space = this.spaces.get(request.spaceName);
-        if (!space) {
-            // Retrying cannot recreate a space that is already gone, so the pusher should acknowledge this as ignored.
-            console.warn(`Received LiveKit webhook for missing space ${request.spaceName}. Ignoring.`);
-            return;
-        }
-
-        await space.handleLivekitWebhook(request);
+        await recording.handleLivekitWebhook(request);
     }
 
     handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {
