@@ -1158,6 +1158,75 @@ describe("CommunicationManager", () => {
             expect(orchestrator.mocks.scheduleDelayedTransition).not.toHaveBeenCalled();
         });
 
+        it("should route a recording's webhooks by session, to its destroyed space rather than the one recreated under its name", async () => {
+            // Real RecordingManager: the session registers itself, the destruction stops it, the end webhook deletes it.
+            const webhook = (phase: RecordingWebhookPhase, recordingSessionId: string) =>
+                HandleRecordingWebhookRequest.fromPartial({
+                    spaceName: "test-space",
+                    recordingSessionId,
+                    egressId: "egress-1",
+                    roomName: "test-space",
+                    phase,
+                    status: phase === RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED ? "EGRESS_COMPLETE" : "",
+                });
+            const createRecordableState = () => ({
+                ...createState(CommunicationType.LIVEKIT),
+                handleStartRecording: vi.fn().mockResolvedValue({ egressId: "egress-1", roomName: "test-space" }),
+                handleStopRecording: vi.fn().mockResolvedValue(undefined),
+                handleLivekitWebhook: vi.fn(),
+            });
+            const oldSpace = createSpace();
+            const oldState = createRecordableState();
+            const oldOrchestrator = createOrchestrator();
+            const recordingEventNotifier = vi.fn().mockResolvedValue(undefined);
+            const oldManager = new CommunicationManager(oldSpace, {
+                orchestrator: oldOrchestrator,
+                lifecycleManager: createLifecycleManager(oldState),
+                policy: createPolicy(false),
+                recordingEventNotifier,
+            });
+
+            await oldManager.handleStartRecording(createSpaceUser("recorder_1"));
+            const recordingSessionId = oldState.handleStartRecording.mock.calls[0][1] as string;
+            expect(findRecording(recordingSessionId)).toBe(oldManager);
+
+            const livekitRequest = HandleLivekitWebhookRequest.fromPartial({
+                spaceName: "test-space",
+                recordingSessionId,
+                rawBody: Buffer.from("{}"),
+            });
+            oldState.handleLivekitWebhook.mockResolvedValueOnce(
+                webhook(RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED, recordingSessionId),
+            );
+            await findRecording(recordingSessionId)?.handleLivekitWebhook(livekitRequest);
+            expect(oldManager.getRecordingState().status).toBe("recording");
+
+            // Everyone leaves: the space is destroyed, which stops the egress; then someone walks back in.
+            oldManager.destroy();
+            await vi.waitFor(() => expect(oldState.handleStopRecording).toHaveBeenCalled());
+            expect(oldManager.getRecordingState().status).toBe("stopping");
+            const newState = createRecordableState();
+            new CommunicationManager(createSpace(), {
+                lifecycleManager: createLifecycleManager(newState),
+                policy: createPolicy(false),
+                recordingEventNotifier,
+            });
+
+            oldState.handleLivekitWebhook.mockResolvedValueOnce(
+                webhook(RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED, recordingSessionId),
+            );
+            await findRecording(recordingSessionId)?.handleLivekitWebhook(livekitRequest);
+
+            expect(recordingEventNotifier).toHaveBeenCalledTimes(1);
+            expect(recordingEventNotifier).toHaveBeenCalledWith(
+                expect.objectContaining({ phase: "ended", status: "EGRESS_COMPLETE", recordingSessionId }),
+            );
+            expect(newState.handleLivekitWebhook).not.toHaveBeenCalled();
+            expect(findRecording(recordingSessionId)).toBeUndefined();
+            expect(oldSpace.dispatchPrivateEvent).not.toHaveBeenCalled();
+            expect(oldOrchestrator.mocks.scheduleDelayedTransition).not.toHaveBeenCalled();
+        });
+
         it("should notify only the recorder on unexpected end webhooks", () => {
             const space = createSpace();
             const orchestrator = createOrchestrator();
