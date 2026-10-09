@@ -113,16 +113,22 @@ test.describe("Availability Status", () => {
             await expect(page.getByText("Allow notifications?")).toBeHidden();
         });
 
-        test("should not ask to allow notifications in Busy status when the browser already allows them @nowebkit @nofirefox @nomobile", async ({
+        test("should not ask to allow notifications in Busy status when the browser already allows them @nowebkit @nofirefox", async ({
             browser,
-        }, { project }) => {
-            test.skip(project.name !== "chromium", "Only the chromium project grants the notification permission");
-
+        }) => {
             const statusName = "Busy";
             await using page = await getPage(
                 browser,
                 "Alice",
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status"),
+                {
+                    // Granting the "notifications" permission is not enough: headless Chromium still reports
+                    // Notification.permission as "denied". Report it as granted, whatever the browser.
+                    pageCreatedHook: (page) =>
+                        page.addInitScript(() => {
+                            Object.defineProperty(Notification, "permission", { get: () => "granted" });
+                        }),
+                },
             );
 
             await Menu.openMenu(page);
