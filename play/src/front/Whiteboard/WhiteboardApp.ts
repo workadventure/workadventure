@@ -78,7 +78,6 @@ export function mountWhiteboard(target: HTMLElement, options: WhiteboardMountOpt
                     onChange: () => session.onLocalChange(),
                     onPointerUpdate: (payload) => session.onPointerUpdate(payload),
                     onScrollChange: () => session.onScrollChange(),
-                    onUserFollow: (payload) => session.onUserFollow(payload),
                 },
                 // Our own menu, without the links to excalidraw.com, Excalidraw+ and social networks.
                 createElement(
