@@ -146,6 +146,8 @@ export const OpenFilePropertyData = PropertyBase.extend({
  */
 export const WhiteboardPropertyData = PropertyBase.extend({
     type: z.literal("whiteboard"),
+    // An ephemeral board is never saved: it is forgotten a little while after the last person left it.
+    ephemeral: z.boolean().optional(),
     trigger: z.union([z.literal("onenter"), z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
     width: z.number().min(1).max(100).default(50).optional(),

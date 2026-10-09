@@ -247,6 +247,9 @@ const mapEditor: BaseTranslation = {
                 "Who may draw follows the area's Rights property: its write tags draw, the others only look. Without rights, everybody draws.",
             clear: "Clear the whiteboard",
             clearConfirm: "Click again to clear it for everybody",
+            ephemeral: "Ephemeral whiteboard",
+            ephemeralDescription:
+                "Never saved: it empties itself 2 minutes after the last person left. Otherwise it is kept with the map.",
         },
         excalidraw: {
             label: "Open Excalidraw",

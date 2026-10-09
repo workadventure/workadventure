@@ -22,6 +22,8 @@ export interface WhiteboardMountOptions {
     areaId: string;
     propertyId: string;
     langCode: string;
+    /** Where the board's images live in the map-storage; undefined leaves the image tool off. */
+    filesUrl: URL | undefined;
 }
 
 export interface MountedWhiteboard {
@@ -32,12 +34,18 @@ export function mountWhiteboard(target: HTMLElement, options: WhiteboardMountOpt
     const root = createRoot(target);
     // Read-only until the back sends the scene and says whether we may draw.
     let canWrite = false;
-    const session = new WhiteboardSession(options.connection, options.areaId, options.propertyId, {
-        onCanWriteChange: (value) => {
-            canWrite = value;
-            render();
+    const session = new WhiteboardSession(
+        options.connection,
+        options.areaId,
+        options.propertyId,
+        {
+            onCanWriteChange: (value) => {
+                canWrite = value;
+                render();
+            },
         },
-    });
+        options.filesUrl,
+    );
 
     const onApi = (api: ExcalidrawImperativeAPI) => {
         session.attach(api);
@@ -65,7 +73,7 @@ export function mountWhiteboard(target: HTMLElement, options: WhiteboardMountOpt
                             saveToActiveFile: false,
                             export: { saveFileToDisk: true },
                         },
-                        tools: { image: false },
+                        tools: { image: options.filesUrl !== undefined },
                     },
                     onChange: () => session.onLocalChange(),
                     onPointerUpdate: (payload) => session.onPointerUpdate(payload),

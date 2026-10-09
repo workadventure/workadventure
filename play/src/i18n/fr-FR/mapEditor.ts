@@ -262,6 +262,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Qui peut dessiner suit la propriété Droits de la zone : ses tags d'écriture dessinent, les autres regardent. Sans droits, tout le monde dessine.",
             clear: "Vider le tableau",
             clearConfirm: "Cliquez encore pour le vider pour tout le monde",
+            ephemeral: "Tableau éphémère",
+            ephemeralDescription:
+                "Jamais enregistré : il se vide 2 minutes après le départ de la dernière personne. Sinon, il est conservé avec la carte.",
         },
         excalidraw: {
             label: "Ouvrir Excalidraw",

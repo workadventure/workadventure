@@ -254,6 +254,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "描ける人はエリアの権限プロパティに従います。書き込みタグを持つ人は描け、他の人は閲覧のみです。権限がなければ全員が描けます。",
             clear: "ホワイトボードを消去",
             clearConfirm: "もう一度クリックすると全員のボードが消去されます",
+            ephemeral: "一時的なホワイトボード",
+            ephemeralDescription:
+                "保存されません。最後の人が離れてから2分後に空になります。そうでなければ、マップと一緒に保存されます。",
         },
         excalidraw: {
             label: "エクスカリドローを開く",

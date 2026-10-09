@@ -244,6 +244,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "谁能绘图取决于区域的权限属性：拥有写入标签的人可以绘图，其他人只能查看。没有权限设置时，所有人都能绘图。",
             clear: "清空白板",
             clearConfirm: "再次点击即可为所有人清空",
+            ephemeral: "临时白板",
+            ephemeralDescription: "从不保存：最后一个人离开 2 分钟后自动清空。否则会随地图一起保留。",
         },
         excalidraw: {
             label: "打开 Excalidraw",

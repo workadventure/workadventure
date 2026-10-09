@@ -254,6 +254,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Chi può disegnare segue la proprietà Diritti dell'area: i suoi tag di scrittura disegnano, gli altri guardano soltanto. Senza diritti, disegnano tutti.",
             clear: "Svuota la lavagna",
             clearConfirm: "Fai di nuovo clic per svuotarla per tutti",
+            ephemeral: "Lavagna effimera",
+            ephemeralDescription:
+                "Mai salvata: si svuota 2 minuti dopo che l'ultima persona è uscita. Altrimenti viene conservata con la mappa.",
         },
         excalidraw: {
             label: "Apri Excalidraw",

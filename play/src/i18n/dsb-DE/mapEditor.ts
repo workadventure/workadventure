@@ -253,6 +253,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Chto smějo kresliś, slědujo kakosći Pšawa wobceŕka: jogo pisańske tagi kreslijo, drugie jano glědaju. Bźez pšawow kreslijo wšykne.",
             clear: "Tablu wuprozniś",
             clearConfirm: "Klikniśo hyšći raz, aby ju za wšych wuprozniś",
+            ephemeral: "Nachwilna běła tafla",
+            ephemeralDescription:
+                "Njeskłaźijo se nigda: wuproznijo se 2 minuśe pó tom, až jo slědna wósoba wótešła. Howac wóstanjo z kórtu.",
         },
         excalidraw: {
             label: "Excalidraw wótcyniś",

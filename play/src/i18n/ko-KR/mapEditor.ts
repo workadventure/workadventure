@@ -252,6 +252,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "그릴 수 있는 사람은 영역의 권한 속성을 따릅니다. 쓰기 태그가 있는 사람은 그리고, 나머지는 보기만 합니다. 권한이 없으면 모두가 그릴 수 있습니다.",
             clear: "화이트보드 지우기",
             clearConfirm: "한 번 더 클릭하면 모두에게서 지워집니다",
+            ephemeral: "임시 화이트보드",
+            ephemeralDescription:
+                "저장되지 않습니다. 마지막 사람이 떠나고 2분 뒤에 비워집니다. 그렇지 않으면 맵과 함께 보관됩니다.",
         },
         excalidraw: {
             label: "Excalidraw 열기",

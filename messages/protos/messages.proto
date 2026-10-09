@@ -1882,6 +1882,23 @@ message MapStorageClearAfterUploadMessage {
   string wamUrl = 1;
 }
 
+// Identifies the whiteboard of an area property, stored next to its map in the map-storage.
+message WhiteboardStorageKey {
+  string wamUrl = 1;
+  string areaId = 2;
+  string propertyId = 3;
+}
+
+message WhiteboardStorageScene {
+  // A JSON array of Excalidraw elements.
+  string elementsJson = 1;
+}
+
+message WhiteboardStorageSaveRequest {
+  WhiteboardStorageKey key = 1;
+  string elementsJson = 2;
+}
+
 message MapStorageDeleteMessage {
   string wamUrl = 1;
 }

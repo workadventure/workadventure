@@ -255,6 +255,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Wie mag tekenen volgt de eigenschap Rechten van het gebied: de schrijftags tekenen, de anderen kijken alleen. Zonder rechten tekent iedereen.",
             clear: "Whiteboard leegmaken",
             clearConfirm: "Klik nogmaals om het voor iedereen leeg te maken",
+            ephemeral: "Tijdelijk whiteboard",
+            ephemeralDescription:
+                "Wordt nooit opgeslagen: het wordt 2 minuten nadat de laatste persoon vertrok leeggemaakt. Anders blijft het bij de kaart bewaard.",
         },
         excalidraw: {
             label: "Open Excalidraw",

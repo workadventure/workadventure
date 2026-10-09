@@ -3,6 +3,7 @@ import type { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import type {
     AreaData,
+    AreaDataProperty,
     AtLeast,
     EntityCoordinates,
     EntityDataProperties,
@@ -24,6 +25,9 @@ import type {
     MapStorageClearAfterUploadMessage,
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
+    WhiteboardStorageKey,
+    WhiteboardStorageSaveRequest,
+    WhiteboardStorageScene,
 } from "@workadventure/messages";
 import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import type { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
@@ -43,6 +47,8 @@ import { UpdateEntityMapStorageCommand } from "./Commands/Entity/UpdateEntityMap
 import { isModifyAreaMessageOnlyClaim } from "./Services/isModifyAreaMessageOnlyClaim";
 import { canUserEditCustomEntity } from "./Services/canUserEditCustomEntity";
 import { CustomEntityCollectionService } from "./Services/CustomEntityCollectionService";
+import { WhiteboardLocation, WhiteboardStorageService } from "./Services/WhiteboardStorageService";
+import { fileSystem } from "./fileSystem";
 
 /**
  * List of commands that can be executed even if the user does not have edit rights on the map
@@ -59,9 +65,72 @@ const COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT = new Set<string>([
     "modifyAreaMessage",
 ]);
 
+const whiteboardStorageService = new WhiteboardStorageService(fileSystem);
+
+/**
+ * Deletes the stored boards of the whiteboard properties that an area edit removed, or turned ephemeral.
+ */
+async function forgetWhiteboards(
+    mapUrl: URL,
+    areaId: string,
+    before: AreaDataProperty[],
+    after: AreaDataProperty[],
+): Promise<void> {
+    const forgotten = before.filter((property) => {
+        if (property.type !== "whiteboard") {
+            return false;
+        }
+        const kept = after.find((candidate) => candidate.id === property.id);
+        return kept?.type !== "whiteboard" || kept.ephemeral === true;
+    });
+    await Promise.all(
+        forgotten.map(async (property) => {
+            try {
+                await whiteboardStorageService.delete(WhiteboardLocation.fromWamUrl(mapUrl, areaId, property.id));
+            } catch (e) {
+                console.error(
+                    `[${new Date().toISOString()}] Could not delete the whiteboard ${areaId}/${property.id}`,
+                    e,
+                );
+                Sentry.captureException(e);
+            }
+        }),
+    );
+}
+
+function whiteboardLocation(key: WhiteboardStorageKey | undefined): WhiteboardLocation {
+    if (!key) {
+        throw new Error("Missing whiteboard key");
+    }
+    return WhiteboardLocation.fromWamUrl(new URL(key.wamUrl), key.areaId, key.propertyId);
+}
+
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
+    },
+    loadWhiteboard(
+        call: ServerUnaryCall<WhiteboardStorageKey, WhiteboardStorageScene>,
+        callback: sendUnaryData<WhiteboardStorageScene>,
+    ): void {
+        (async () => {
+            const elementsJson = await whiteboardStorageService.load(whiteboardLocation(call.request));
+            callback(null, { elementsJson });
+        })().catch((e: unknown) => {
+            console.error(`[${new Date().toISOString()}] An error occurred in loadWhiteboard`, e);
+            Sentry.captureException(e);
+            callback({ name: "MapStorageError", message: asError(e).message }, null);
+        });
+    },
+    saveWhiteboard(call: ServerUnaryCall<WhiteboardStorageSaveRequest, Empty>, callback: sendUnaryData<Empty>): void {
+        (async () => {
+            await whiteboardStorageService.save(whiteboardLocation(call.request.key), call.request.elementsJson);
+            callback(null);
+        })().catch((e: unknown) => {
+            console.error(`[${new Date().toISOString()}] An error occurred in saveWhiteboard`, e);
+            Sentry.captureException(e);
+            callback({ name: "MapStorageError", message: asError(e).message }, null);
+        });
     },
     handleClearAfterUpload(
         call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
@@ -172,6 +241,7 @@ const mapStorageServer: MapStorageServer = {
                         }
                         const area = wamFile.getGameMapAreas().getArea(message.id);
                         if (area) {
+                            const propertiesBefore = structuredClone(area.properties);
                             await mapsManager.executeCommand(
                                 mapKey,
                                 mapUrl.host,
@@ -186,6 +256,12 @@ const mapStorageServer: MapStorageServer = {
                             );
 
                             const newAreaData = wamFile.getGameMapAreas().getArea(message.id);
+                            await forgetWhiteboards(
+                                mapUrl,
+                                message.id,
+                                propertiesBefore,
+                                newAreaData?.properties ?? [],
+                            );
 
                             if (newAreaData) {
                                 const oldPropertiesParsed =
@@ -244,6 +320,9 @@ const mapStorageServer: MapStorageServer = {
                     }
                     case "deleteAreaMessage": {
                         const message = editMapMessage.deleteAreaMessage;
+                        const propertiesBefore = structuredClone(
+                            wamFile.getGameMapAreas().getArea(message.id)?.properties ?? [],
+                        );
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
@@ -255,6 +334,7 @@ const mapStorageServer: MapStorageServer = {
                                 hookManager,
                             ),
                         );
+                        await forgetWhiteboards(mapUrl, message.id, propertiesBefore, []);
                         break;
                     }
                     case "modifyEntityMessage": {

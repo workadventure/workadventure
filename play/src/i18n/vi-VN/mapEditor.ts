@@ -248,6 +248,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Ai được vẽ tuân theo thuộc tính Quyền của khu vực: thẻ ghi được vẽ, người khác chỉ xem. Không có quyền thì mọi người đều vẽ.",
             clear: "Xóa bảng trắng",
             clearConfirm: "Nhấp lần nữa để xóa cho mọi người",
+            ephemeral: "Bảng trắng tạm thời",
+            ephemeralDescription:
+                "Không bao giờ được lưu: bảng tự xóa 2 phút sau khi người cuối cùng rời đi. Nếu không, bảng được giữ cùng bản đồ.",
         },
         excalidraw: {
             label: "Mở Excalidraw",

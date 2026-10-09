@@ -19,6 +19,26 @@
     let destroyed = false;
     let loadError = $state(false);
 
+    /**
+     * The board's images folder in the map-storage, laid out like WhiteboardLocation there:
+     * private/whiteboards/<map path without .wam>/<areaId>/<propertyId>/
+     */
+    function whiteboardFilesUrl(): URL | undefined {
+        const scene = gameManager.getCurrentGameScene();
+        const mapStorageUrl = scene.room.mapStorageUrl;
+        const wamUrl = scene.wamUrlFile;
+        if (!mapStorageUrl || !wamUrl) {
+            return undefined;
+        }
+        const base = new URL(mapStorageUrl.toString().replace(/\/?$/, "/"));
+        const wamPath = new URL(wamUrl).pathname;
+        if (!wamPath.startsWith(base.pathname) || !wamPath.endsWith(".wam")) {
+            return undefined;
+        }
+        const mapPath = wamPath.substring(base.pathname.length).replace(/\.wam$/, "");
+        return new URL(`private/whiteboards/${mapPath}/${actualCowebsite.areaId}/${actualCowebsite.propertyId}/`, base);
+    }
+
     // Excalidraw names English "en" and takes the other WorkAdventure locales as they are.
     function excalidrawLangCode(waLocale: string): string {
         return waLocale.startsWith("en") ? "en" : waLocale;
@@ -64,6 +84,7 @@
                     areaId: actualCowebsite.areaId,
                     propertyId: actualCowebsite.propertyId,
                     langCode: excalidrawLangCode(get(locale)),
+                    filesUrl: whiteboardFilesUrl(),
                 });
             })
             .catch((error) => {

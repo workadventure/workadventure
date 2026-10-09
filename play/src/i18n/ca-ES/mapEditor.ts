@@ -250,6 +250,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Qui pot dibuixar segueix la propietat Drets de la zona: les seves etiquetes d'escriptura dibuixen, els altres només miren. Sense drets, tothom dibuixa.",
             clear: "Buida la pissarra",
             clearConfirm: "Torna a fer clic per buidar-la per a tothom",
+            ephemeral: "Pissarra efímera",
+            ephemeralDescription:
+                "No es desa mai: es buida 2 minuts després que hagi marxat l'última persona. Si no, es conserva amb el mapa.",
         },
         excalidraw: {
             label: "Obrir Excalidraw",

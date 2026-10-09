@@ -3,6 +3,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import Select from "../../Input/Select.svelte";
     import Input from "../../Input/Input.svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
     import { ON_ACTION_TRIGGER_BUTTON, ON_ACTION_TRIGGER_ENTER } from "../../../WebRtc/LayoutManager";
     import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
     import Button from "../../UI/Button.svelte";
@@ -71,6 +72,13 @@
                     onchange={() => onchange?.()}
                 />
             {/if}
+            <InputSwitch
+                id="whiteboardEphemeral"
+                label={$LL.mapEditor.properties.whiteboard.ephemeral()}
+                bind:value={property.ephemeral}
+                onchange={() => onchange?.()}
+            />
+            <p class="text-sm opacity-70 my-2">{$LL.mapEditor.properties.whiteboard.ephemeralDescription()}</p>
             <p class="text-sm opacity-70 my-2">{$LL.mapEditor.properties.whiteboard.rightsHint()}</p>
             <Button
                 variant="danger"
