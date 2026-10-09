@@ -278,7 +278,6 @@ play:
     #GRPC_TRACE: all
     MAX_USERNAME_LENGTH: 10
     DISABLE_ANONYMOUS: "false"
-    DISABLE_NOTIFICATIONS: "false"
     # Use STARTUP_COMMAND to execute a command when the container starts.
     #STARTUP_COMMAND: "echo 'Hello World!'"
 

@@ -8,7 +8,6 @@ export const ADMIN_URL: string | undefined = undefined;
 export const UPLOADER_URL = "http://uploader.test";
 export const ICON_URL = "http://icon.test";
 export const SKIP_RENDER_OPTIMIZATIONS = false;
-export const DISABLE_NOTIFICATIONS = false;
 export const JITSI_URL: string | undefined = undefined;
 export const JITSI_PRIVATE_MODE = false;
 export const ENABLE_MAP_EDITOR = false;

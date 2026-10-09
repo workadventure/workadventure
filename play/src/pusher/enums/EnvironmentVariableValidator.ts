@@ -353,9 +353,6 @@ export const EnvironmentVariables = z.object({
     SKIP_RENDER_OPTIMIZATIONS: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Skip rendering optimizations (useful for debugging). Defaults to false"),
-    DISABLE_NOTIFICATIONS: BoolAsString.optional()
-        .transform((val) => toBool(val, false))
-        .describe("Disable browser notifications. Defaults to false"),
     TURN_USER: z.string().optional().describe("Username for TURN server authentication"),
     TURN_PASSWORD: z.string().optional().describe("Password for TURN server authentication"),
     TURN_STATIC_AUTH_SECRET: z

@@ -78,7 +78,6 @@ Environment variables for the Play service (frontend and pusher).
 | `STUN_SERVER` | No | Comma separated list of STUN server URLs for WebRTC NAT traversal (format: 'stun:hostname:port') |
 | `TURN_SERVER` | No | Comma separated list of TURN server URLs for WebRTC relay (format: 'turn:hostname:port') |
 | `SKIP_RENDER_OPTIMIZATIONS` | No | Skip rendering optimizations (useful for debugging). Defaults to false |
-| `DISABLE_NOTIFICATIONS` | No | Disable browser notifications. Defaults to false |
 | `TURN_USER` | No | Username for TURN server authentication |
 | `TURN_PASSWORD` | No | Password for TURN server authentication |
 | `TURN_STATIC_AUTH_SECRET` | No | The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn). |
