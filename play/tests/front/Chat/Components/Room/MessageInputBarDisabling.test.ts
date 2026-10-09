@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+    canAttachFiles,
     shouldDisableMessageInput,
     shouldDisableSendButton,
 } from "../../../../../src/front/Chat/Components/Room/MessageInputBarDisabling";
@@ -46,5 +47,16 @@ describe("shouldDisableMessageInput", () => {
                 applicationPropertyInProcessing: false,
             }),
         ).toBe(true);
+    });
+
+    it("allows attaching files only when uploads are enabled, outside the proximity chat, with send rights", () => {
+        expect(canAttachFiles({ isUploadEnabled: true, isProximityChatRoom: false, canSendMessages: true })).toBe(true);
+        expect(canAttachFiles({ isUploadEnabled: false, isProximityChatRoom: false, canSendMessages: true })).toBe(
+            false,
+        );
+        expect(canAttachFiles({ isUploadEnabled: true, isProximityChatRoom: true, canSendMessages: true })).toBe(false);
+        expect(canAttachFiles({ isUploadEnabled: true, isProximityChatRoom: false, canSendMessages: false })).toBe(
+            false,
+        );
     });
 });
