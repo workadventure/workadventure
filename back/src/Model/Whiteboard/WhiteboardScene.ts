@@ -20,13 +20,11 @@ export const MAX_ELEMENTS_PER_MESSAGE = 5000;
 // Deleted elements count too until they are pruned: a board is not meant to hold a whole diagram library.
 export const MAX_ELEMENTS_PER_BOARD = 20000;
 
-const WhiteboardElements = z.array(WhiteboardElement).max(MAX_ELEMENTS_PER_MESSAGE);
-
 /**
- * Throws when the payload is not a JSON array of elements.
+ * Throws when the payload is not a JSON array of elements. A message holds fewer elements than a whole board.
  */
-export function parseWhiteboardElements(json: string): WhiteboardElement[] {
-    return WhiteboardElements.parse(JSON.parse(json));
+export function parseWhiteboardElements(json: string, max = MAX_ELEMENTS_PER_MESSAGE): WhiteboardElement[] {
+    return z.array(WhiteboardElement).max(max).parse(JSON.parse(json));
 }
 
 /**
@@ -98,6 +96,15 @@ export class WhiteboardScene {
             deleted.push(copy);
         }
         return deleted;
+    }
+
+    /** Forgets the elements deleted before that time: past it, nobody can undo their deletion anymore. */
+    public pruneDeletedBefore(time: number): void {
+        for (const [id, element] of this.elements) {
+            if (element.isDeleted === true && (element.updated ?? 0) < time) {
+                this.elements.delete(id);
+            }
+        }
     }
 
     public getElements(): WhiteboardElement[] {

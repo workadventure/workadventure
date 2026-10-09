@@ -1119,6 +1119,9 @@
                           "type": "string",
                           "const": "whiteboard"
                         },
+                        "ephemeral": {
+                          "type": "boolean"
+                        },
                         "trigger": {
                           "type": "string",
                           "enum": [

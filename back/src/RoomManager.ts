@@ -225,7 +225,7 @@ const roomManager = {
                             break;
                         }
                         case "whiteboardClientMessage": {
-                            room.whiteboardManager.handleMessage(user, message.message.whiteboardClientMessage);
+                            await room.whiteboardManager.handleMessage(user, message.message.whiteboardClientMessage);
                             break;
                         }
                         default: {

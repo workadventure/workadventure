@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { AreaData } from "@workadventure/map-editor";
-import { getWhiteboardRights } from "../src/Model/Whiteboard/WhiteboardRights";
+import type { AreaData } from "../src/types";
+import { getWhiteboardRights } from "../src/Whiteboard/WhiteboardRights";
 
 const area = (rights?: { readTags: string[]; writeTags: string[] }): AreaData => ({
     id: "area",

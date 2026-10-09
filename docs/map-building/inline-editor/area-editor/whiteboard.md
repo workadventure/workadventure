@@ -21,6 +21,20 @@ While editing an area, select the "Whiteboard" property. You can choose when the
 - **Show immediately on enter**: the board opens as soon as somebody walks into the area.
 - **On action**: a message invites the user to press a key to open it. You can customize that message.
 
+## Saved with the map
+
+The board is kept with the map: walk out and come back the next day, it is still there. It is saved every few seconds while people draw, and as soon as the last person leaves. Deleting the area, the whiteboard property or the map deletes the board.
+
+Turn on **Ephemeral whiteboard** for a board that is never saved: it empties itself 2 minutes after the last person left.
+
+## Images
+
+Paste or drop an image on the board to share it. Images are stored with the board, only reach the people allowed to see it, and are deleted with it. PNG, JPEG, GIF, WebP and SVG images up to 4 MB are accepted.
+
+## Exporting
+
+The board's menu exports it as a PNG or SVG image, or as a `.excalidraw` file that opens in Excalidraw.
+
 ## Who can draw
 
 The whiteboard follows the [Rights](restricted-area.md) property of the area:

@@ -1,4 +1,4 @@
-import type { AreaData } from "@workadventure/map-editor";
+import type { AreaData } from "../types";
 
 export interface WhiteboardRights {
     canRead: boolean;
