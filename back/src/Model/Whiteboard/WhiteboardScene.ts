@@ -17,6 +17,8 @@ const WhiteboardElement = z
 export type WhiteboardElement = z.infer<typeof WhiteboardElement>;
 
 export const MAX_ELEMENTS_PER_MESSAGE = 5000;
+// Deleted elements count too until they are pruned: a board is not meant to hold a whole diagram library.
+export const MAX_ELEMENTS_PER_BOARD = 20000;
 
 const WhiteboardElements = z.array(WhiteboardElement).max(MAX_ELEMENTS_PER_MESSAGE);
 
@@ -60,6 +62,9 @@ export class WhiteboardScene {
         const outdated: WhiteboardElement[] = [];
         for (const element of incoming) {
             const existing = this.elements.get(element.id);
+            if (existing === undefined && this.elements.size >= MAX_ELEMENTS_PER_BOARD) {
+                continue;
+            }
             if (isNewerElement(element, existing)) {
                 this.elements.set(element.id, element);
                 accepted.push(element);
@@ -71,6 +76,28 @@ export class WhiteboardScene {
             }
         }
         return { accepted, outdated };
+    }
+
+    /**
+     * Deletes every element the way Excalidraw does (a newer, deleted copy), so that every client drops them.
+     */
+    public clear(): WhiteboardElement[] {
+        const deleted: WhiteboardElement[] = [];
+        for (const element of this.elements.values()) {
+            if (element.isDeleted === true) {
+                continue;
+            }
+            const copy = {
+                ...element,
+                isDeleted: true,
+                version: element.version + 1,
+                versionNonce: Math.floor(Math.random() * 2 ** 31),
+                updated: Date.now(),
+            };
+            this.elements.set(copy.id, copy);
+            deleted.push(copy);
+        }
+        return deleted;
     }
 
     public getElements(): WhiteboardElement[] {
