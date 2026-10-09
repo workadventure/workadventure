@@ -2,14 +2,22 @@ import type { Subscription } from "rxjs";
 import {
     CaptureUpdateAction,
     getVisibleSceneBounds,
+    newElementWith,
     reconcileElements,
     restoreElements,
     zoomToFitBounds,
 } from "@excalidraw/excalidraw";
-import type { OrderedExcalidrawElement } from "@excalidraw/excalidraw/element/types";
+import type {
+    ExcalidrawElement,
+    ExcalidrawImageElement,
+    FileId,
+    OrderedExcalidrawElement,
+} from "@excalidraw/excalidraw/element/types";
 import type { RemoteExcalidrawElement } from "@excalidraw/excalidraw/data/reconcile";
 import type {
+    BinaryFileData,
     Collaborator,
+    DataURL,
     ExcalidrawImperativeAPI,
     OnUserFollowedPayload,
     SocketId,
@@ -19,6 +27,15 @@ import type { RoomConnection } from "../Connection/RoomConnection";
 
 const ELEMENTS_THROTTLE_MS = 50;
 const POINTER_THROTTLE_MS = 50;
+
+// The images the map-storage accepts (see WhiteboardStorageService), and the extension they are stored under.
+const FILE_EXTENSIONS: Readonly<Record<string, string>> = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/gif": "gif",
+    "image/webp": "webp",
+    "image/svg+xml": "svg",
+};
 
 export interface WhiteboardSessionListener {
     onCanWriteChange(canWrite: boolean): void;
@@ -42,12 +59,21 @@ export class WhiteboardSession {
     private lastPointer: Omit<WhiteboardPointerMessage, "visibleBounds"> | undefined;
     private boundsChanged = false;
     private joined = false;
+    private canWrite = false;
+    // Images being sent or fetched, by file id, so that each goes once.
+    private readonly transfers = new Set<string>();
+    private token: Promise<string> | undefined;
 
+    /**
+     * @param filesUrl Where the images of this board live in the map-storage (".../<propertyId>/"), or undefined
+     *     when the map is not stored there, which leaves the image tool off.
+     */
     constructor(
         private readonly connection: RoomConnection,
         private readonly areaId: string,
         private readonly propertyId: string,
         private readonly listener: WhiteboardSessionListener,
+        private readonly filesUrl: URL | undefined,
     ) {}
 
     public attach(api: ExcalidrawImperativeAPI): void {
@@ -83,7 +109,11 @@ export class WhiteboardSession {
 
     /** Excalidraw's onChange: schedules the elements whose version moved. */
     public onLocalChange(): void {
-        if (!this.joined || this.elementsTimer !== undefined) {
+        if (!this.joined) {
+            return;
+        }
+        this.uploadPendingImages();
+        if (this.elementsTimer !== undefined) {
             return;
         }
         this.elementsTimer = setTimeout(() => {
@@ -169,6 +199,7 @@ export class WhiteboardSession {
         }
         switch (payload.$case) {
             case "scene": {
+                this.canWrite = payload.scene.canWrite;
                 this.listener.onCanWriteChange(payload.scene.canWrite);
                 this.applyRemoteElements(payload.scene.elementsJson);
                 this.joined = true;
@@ -212,6 +243,114 @@ export class WhiteboardSession {
             }
         }
         this.api.updateScene({ elements: reconciled, captureUpdate: CaptureUpdateAction.NEVER });
+        this.fetchMissingImages(reconciled);
+    }
+
+    /**
+     * Sends the images pasted here to the map-storage, then marks their elements "saved" (with their type, which
+     * the others need to fetch them), so that the change carries the news to everybody.
+     */
+    private uploadPendingImages(): void {
+        const api = this.api;
+        if (!api || !this.filesUrl || !this.canWrite) {
+            return;
+        }
+        const files = api.getFiles();
+        for (const element of api.getSceneElements()) {
+            if (element.type !== "image" || element.status !== "pending" || element.fileId === null) {
+                continue;
+            }
+            const file = files[element.fileId];
+            const extension = file ? FILE_EXTENSIONS[file.mimeType] : undefined;
+            if (!file || !extension || this.transfers.has(file.id)) {
+                continue;
+            }
+            this.transfers.add(file.id);
+            (async () => {
+                const body = await (await fetch(file.dataURL)).blob();
+                const response = await this.fetchFile(`${file.id}.${extension}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": file.mimeType },
+                    body,
+                });
+                if (!response.ok) {
+                    throw new Error(`The map-storage refused the image (${response.status})`);
+                }
+                this.markImageSaved(file.id, file.mimeType);
+            })()
+                .catch((error) => console.error("Could not send a whiteboard image", error))
+                .finally(() => this.transfers.delete(file.id));
+        }
+    }
+
+    private markImageSaved(fileId: FileId, mimeType: string): void {
+        const api = this.api;
+        if (!api) {
+            return;
+        }
+        api.updateScene({
+            elements: api
+                .getSceneElementsIncludingDeleted()
+                .map((element) =>
+                    element.type === "image" && element.fileId === fileId && element.status === "pending"
+                        ? newElementWith(element, { status: "saved", customData: { ...element.customData, mimeType } })
+                        : element,
+                ),
+            captureUpdate: CaptureUpdateAction.NEVER,
+        });
+    }
+
+    /** Fetches the images of the board this browser has not got yet. */
+    private fetchMissingImages(elements: readonly ExcalidrawElement[]): void {
+        const api = this.api;
+        if (!api || !this.filesUrl) {
+            return;
+        }
+        const files = api.getFiles();
+        for (const element of elements) {
+            if (!isSavedImage(element) || files[element.fileId] || this.transfers.has(element.fileId)) {
+                continue;
+            }
+            const fileId = element.fileId;
+            const mimeType = element.customData.mimeType;
+            const extension = FILE_EXTENSIONS[mimeType];
+            if (!extension) {
+                continue;
+            }
+            this.transfers.add(fileId);
+            (async () => {
+                const response = await this.fetchFile(`${fileId}.${extension}`, { method: "GET" });
+                if (!response.ok) {
+                    throw new Error(`The map-storage did not send the image (${response.status})`);
+                }
+                const dataURL = await blobToDataURL(await response.blob());
+                const file: BinaryFileData = {
+                    id: fileId,
+                    mimeType: mimeType as BinaryFileData["mimeType"],
+                    dataURL,
+                    created: Date.now(),
+                };
+                this.api?.addFiles([file]);
+            })()
+                .catch((error) => console.error("Could not fetch a whiteboard image", error))
+                .finally(() => this.transfers.delete(fileId));
+        }
+    }
+
+    /** A request to the map-storage with this user's token, asked again once if it expired. */
+    private async fetchFile(fileName: string, init: RequestInit): Promise<Response> {
+        const send = async () => {
+            this.token ??= this.connection.queryMapStorageJwtToken().then((answer) => answer.jwt);
+            const url = new URL(fileName, this.filesUrl);
+            url.searchParams.set("token", await this.token);
+            return fetch(url, init);
+        };
+        const response = await send();
+        if (response.status !== 403) {
+            return response;
+        }
+        this.token = undefined;
+        return send();
     }
 
     private applyRemotePointer(userId: number, pointer: WhiteboardPointerMessage | undefined): void {
@@ -267,6 +406,27 @@ export class WhiteboardSession {
         }
         this.api.updateScene({ collaborators: new Map(this.collaborators) });
     }
+}
+
+function isSavedImage(
+    element: ExcalidrawElement,
+): element is ExcalidrawImageElement & { fileId: FileId; customData: { mimeType: string } } {
+    return (
+        element.type === "image" &&
+        !element.isDeleted &&
+        element.status === "saved" &&
+        element.fileId !== null &&
+        typeof element.customData?.mimeType === "string"
+    );
+}
+
+function blobToDataURL(blob: Blob): Promise<DataURL> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as DataURL);
+        reader.onerror = () => reject(reader.error ?? new Error("Could not read the image"));
+        reader.readAsDataURL(blob);
+    });
 }
 
 /**
