@@ -42,6 +42,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         invitationAccepted: "您的邀請已被 {name} 接受",
         defaultResponderName: "該使用者",
         limitReached: "您傳送的會議邀請過多，請稍後再試。",
+        otherMap: "在地圖 {map} 上：接受後將前往該地圖。",
     },
     imagePreview: {
         close: "關閉",

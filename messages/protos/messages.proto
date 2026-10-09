@@ -1356,6 +1356,15 @@ message MeetingInvitationResponseReceivedMessage {
   string responderName = 2;
 }
 
+/** A meeting invitation to a user on another map. The sender's name, uuid and map come with the private event. */
+message MeetingInvitationPrivateMessage {
+}
+
+/** The invitee's answer to a MeetingInvitationPrivateMessage. */
+message MeetingInvitationResponsePrivateMessage {
+  bool accept = 1;
+}
+
 /** Send by the server to show invitation request limitation. */
 message MeetingInvitationRequestTooHighMessage {
 }
@@ -1434,6 +1443,10 @@ message PrivateSpaceEvent {
     UnblockUserMessage unblockUserMessage = 21;
     MeetingConnectionRestartMessage meetingConnectionRestartMessage = 22;
     RecordingUnexpectedlyStoppedPrivateMessage recordingUnexpectedlyStoppedMessage = 23;
+    // Sent in the world space, to invite a user on another map (on the same map, MeetingInvitationRequestMessage goes through the room)
+    MeetingInvitationPrivateMessage meetingInvitationRequest = 24;
+    // Sent in the world space by the invitee, back to the user who invited them from another map
+    MeetingInvitationResponsePrivateMessage meetingInvitationResponse = 25;
   }
 }
 
