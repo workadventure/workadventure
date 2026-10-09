@@ -203,7 +203,7 @@
                         <Tooltip text={$LL.mapEditor.properties.cards.label()} />
                         <button
                             onclick={() => {
-                                window.open(`https://excalidraw.com`, "_blanck");
+                                window.open(`https://app.cards-microlearning.com`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
                             id="button-app-klaxoon"
