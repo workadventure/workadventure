@@ -1067,6 +1067,7 @@
                         {:else if properties[i].type === "whiteboard"}
                             <WhiteboardPropertyEditor
                                 bind:property={properties[i]}
+                                areaId={$mapEditorSelectedAreaPreviewStore?.getAreaData().id ?? ""}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}

@@ -244,6 +244,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Một bảng trắng dùng chung cho mọi người trong khu vực. Mọi người thấy nét vẽ trực tiếp, cùng con trỏ của người khác.",
             disabled: "Bảng trắng đã bị tắt trong thế giới này.",
             loadError: "Không thể tải bảng trắng.",
+            rightsHint:
+                "Ai được vẽ tuân theo thuộc tính Quyền của khu vực: thẻ ghi được vẽ, người khác chỉ xem. Không có quyền thì mọi người đều vẽ.",
+            clear: "Xóa bảng trắng",
+            clearConfirm: "Nhấp lần nữa để xóa cho mọi người",
         },
         excalidraw: {
             label: "Mở Excalidraw",

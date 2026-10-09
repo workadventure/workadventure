@@ -248,6 +248,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "영역에 있는 모든 사람이 함께 쓰는 화이트보드입니다. 다른 사람의 커서와 함께 그림이 실시간으로 보입니다.",
             disabled: "이 월드에서는 화이트보드가 비활성화되어 있습니다.",
             loadError: "화이트보드를 불러올 수 없습니다.",
+            rightsHint:
+                "그릴 수 있는 사람은 영역의 권한 속성을 따릅니다. 쓰기 태그가 있는 사람은 그리고, 나머지는 보기만 합니다. 권한이 없으면 모두가 그릴 수 있습니다.",
+            clear: "화이트보드 지우기",
+            clearConfirm: "한 번 더 클릭하면 모두에게서 지워집니다",
         },
         excalidraw: {
             label: "Excalidraw 열기",

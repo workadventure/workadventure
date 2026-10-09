@@ -240,6 +240,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "区域内所有人共享的白板。每个人都能实时看到绘图和其他人的光标。",
             disabled: "此世界已禁用白板。",
             loadError: "无法加载白板。",
+            rightsHint:
+                "谁能绘图取决于区域的权限属性：拥有写入标签的人可以绘图，其他人只能查看。没有权限设置时，所有人都能绘图。",
+            clear: "清空白板",
+            clearConfirm: "再次点击即可为所有人清空",
         },
         excalidraw: {
             label: "打开 Excalidraw",

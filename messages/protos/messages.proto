@@ -592,10 +592,14 @@ message WhiteboardClientMessage {
     WhiteboardLeaveMessage leave = 4;
     WhiteboardElementsMessage elements = 5;
     WhiteboardPointerMessage pointer = 6;
+    // Empties the board. Reserved to the people who may edit the map.
+    WhiteboardClearMessage clear = 7;
   }
 }
 
 message WhiteboardJoinMessage {}
+
+message WhiteboardClearMessage {}
 
 message WhiteboardLeaveMessage {}
 

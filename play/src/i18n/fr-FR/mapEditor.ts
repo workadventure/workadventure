@@ -258,6 +258,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Un tableau blanc partagé par tous ceux qui sont dans la zone. Chacun voit les dessins en direct, avec les curseurs des autres.",
             disabled: "Le tableau blanc est désactivé sur ce monde.",
             loadError: "Le tableau blanc n'a pas pu être chargé.",
+            rightsHint:
+                "Qui peut dessiner suit la propriété Droits de la zone : ses tags d'écriture dessinent, les autres regardent. Sans droits, tout le monde dessine.",
+            clear: "Vider le tableau",
+            clearConfirm: "Cliquez encore pour le vider pour tout le monde",
         },
         excalidraw: {
             label: "Ouvrir Excalidraw",

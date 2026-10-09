@@ -251,6 +251,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Ein Whiteboard für alle im Bereich. Alle sehen die Zeichnungen live, mit den Mauszeigern der anderen.",
             disabled: "Das Whiteboard ist in dieser Welt deaktiviert.",
             loadError: "Das Whiteboard konnte nicht geladen werden.",
+            rightsHint:
+                "Wer zeichnen darf, folgt der Rechte-Eigenschaft des Bereichs: Schreib-Tags zeichnen, die anderen schauen nur zu. Ohne Rechte zeichnen alle.",
+            clear: "Whiteboard leeren",
+            clearConfirm: "Erneut klicken, um es für alle zu leeren",
         },
         excalidraw: {
             label: "Excalidraw öffnen",

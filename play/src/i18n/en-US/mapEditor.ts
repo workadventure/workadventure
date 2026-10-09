@@ -243,6 +243,10 @@ const mapEditor: BaseTranslation = {
                 "A whiteboard shared by everybody in the area. Everyone sees the drawings live, with each other's cursors.",
             disabled: "The whiteboard is disabled on this world.",
             loadError: "The whiteboard could not be loaded.",
+            rightsHint:
+                "Who may draw follows the area's Rights property: its write tags draw, the others only look. Without rights, everybody draws.",
+            clear: "Clear the whiteboard",
+            clearConfirm: "Click again to clear it for everybody",
         },
         excalidraw: {
             label: "Open Excalidraw",
