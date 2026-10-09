@@ -210,6 +210,23 @@ describe("RecordingManager", () => {
         });
     });
 
+    it("tells its owner when a session starts and stops waiting for its egress", async () => {
+        const { state, mocks } = createRecordableState();
+        const { space, orchestrator, userRegistry, lifecycleManager } = createDependencies(state);
+        const manager = new RecordingManager(space, orchestrator, userRegistry, lifecycleManager);
+        manager.onSessionAdded = vi.fn();
+        manager.onSessionRemoved = vi.fn();
+
+        await manager.startRecording(createUser("user-1"));
+        const recordingSessionId = getRecordingSessionId(mocks.handleStartRecording);
+        expect(manager.onSessionAdded).toHaveBeenCalledWith(recordingSessionId);
+        expect(manager.onSessionRemoved).not.toHaveBeenCalled();
+
+        manager.confirmRecordingStartedByWebhook(recordingSessionId, "egress-1", "test-space");
+        manager.finishRecordingByWebhook(recordingSessionId, "egress-1", "test-space");
+        expect(manager.onSessionRemoved).toHaveBeenCalledWith(recordingSessionId);
+    });
+
     it("rolls back to idle when start fails", async () => {
         const { state, mocks } = createRecordableState();
         mocks.handleStartRecording.mockRejectedValueOnce(new Error("boom"));

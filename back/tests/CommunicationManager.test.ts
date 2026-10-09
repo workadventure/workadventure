@@ -9,7 +9,7 @@ import {
 } from "@workadventure/messages";
 import { emptySpaceState } from "@workadventure/shared-utils";
 import type { InitialStateFactory } from "../src/Model/CommunicationManager";
-import { CommunicationManager, findOrphanedRecording } from "../src/Model/CommunicationManager";
+import { CommunicationManager, findRecording } from "../src/Model/CommunicationManager";
 import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
 import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
 import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
@@ -90,7 +90,6 @@ describe("CommunicationManager", () => {
             stopRecording: vi.fn().mockResolvedValue(undefined),
             stopRecordingByServer: vi.fn().mockResolvedValue(null),
             stopRecordingIfRecorderMatches: vi.fn().mockResolvedValue(null),
-            hasRecordingSession: vi.fn().mockReturnValue(false),
             getRecordingSessionIds: vi.fn().mockReturnValue([]),
             confirmRecordingStartedByWebhook: vi.fn().mockReturnValue(false),
             finishRecordingByWebhook: vi
@@ -106,7 +105,6 @@ describe("CommunicationManager", () => {
             stopRecording: mocks.stopRecording,
             stopRecordingByServer: mocks.stopRecordingByServer,
             stopRecordingIfRecorderMatches: mocks.stopRecordingIfRecorderMatches,
-            hasRecordingSession: mocks.hasRecordingSession,
             getRecordingSessionIds: mocks.getRecordingSessionIds,
             confirmRecordingStartedByWebhook: mocks.confirmRecordingStartedByWebhook,
             finishRecordingByWebhook: mocks.finishRecordingByWebhook,
@@ -1075,8 +1073,6 @@ describe("CommunicationManager", () => {
             const recordingManager = createRecordingManager();
             const policy = createPolicy(false);
 
-            recordingManager.mocks.hasRecordingSession.mockReturnValue(true);
-
             const manager = new CommunicationManager(space, {
                 orchestrator,
                 lifecycleManager,
@@ -1127,12 +1123,9 @@ describe("CommunicationManager", () => {
             };
             const recordingManager = createRecordingManager();
             recordingManager.mocks.getRecordingSessionIds.mockReturnValue(["orphan-session"]);
-            recordingManager.mocks.hasRecordingSession.mockReturnValue(true);
-            recordingManager.mocks.finishRecordingByWebhook.mockReturnValue({
-                processed: true,
-                recorder,
-                unexpected: true,
-                hasActiveSessions: false,
+            recordingManager.mocks.finishRecordingByWebhook.mockImplementation(() => {
+                recordingManager.onSessionRemoved?.("orphan-session");
+                return { processed: true, recorder, unexpected: true, hasActiveSessions: false };
             });
             const recordingEventNotifier = vi.fn().mockResolvedValue(undefined);
 
@@ -1144,10 +1137,11 @@ describe("CommunicationManager", () => {
                 recordingEventNotifier,
             });
 
+            recordingManager.onSessionAdded?.("orphan-session");
             manager.destroy();
-            expect(findOrphanedRecording("orphan-session")).toBe(manager);
+            expect(findRecording("orphan-session")).toBe(manager);
 
-            await findOrphanedRecording("orphan-session")?.handleLivekitWebhook(
+            await findRecording("orphan-session")?.handleLivekitWebhook(
                 HandleLivekitWebhookRequest.fromPartial({
                     spaceName: "test-space",
                     recordingSessionId: "orphan-session",
@@ -1158,7 +1152,7 @@ describe("CommunicationManager", () => {
             expect(recordingEventNotifier).toHaveBeenCalledWith(
                 expect.objectContaining({ phase: "ended", status: "EGRESS_COMPLETE", egressId: "egress-1" }),
             );
-            expect(findOrphanedRecording("orphan-session")).toBeUndefined();
+            expect(findRecording("orphan-session")).toBeUndefined();
             // A destroyed space has nobody to warn and no state to switch.
             expect(space.dispatchPrivateEvent).not.toHaveBeenCalled();
             expect(orchestrator.mocks.scheduleDelayedTransition).not.toHaveBeenCalled();

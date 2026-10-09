@@ -31,17 +31,18 @@ import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager
 import type { ICommunicationStrategy, IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
 
 /**
- * Recordings whose space was destroyed (everyone left the meeting, the bubble
- * dissolved) before LiveKit reported the end of their egress, which only comes
- * once the file is uploaded. Their manager stays reachable by recording session
- * until then, so that end still reaches the admin (the customer's
+ * The recordings of this back still waiting for LiveKit to report their egress, by session.
+ * A LiveKit webhook finds its recording here rather than through its space: the end of an
+ * egress only comes once the file is uploaded, often after the space was destroyed (everyone
+ * left the meeting, the bubble dissolved) or even recreated under the same name. A destroyed
+ * space's manager stays here until then, so that end still reaches the admin (the customer's
  * recording.completed webhook). The hour bounds an egress that never reports.
  */
-const orphanedRecordings = new Map<string, CommunicationManager>();
+const recordingsBySession = new Map<string, CommunicationManager>();
 const ORPHANED_RECORDING_TTL_MS = 60 * 60 * 1000;
 
-export function findOrphanedRecording(recordingSessionId: string): CommunicationManager | undefined {
-    return orphanedRecordings.get(recordingSessionId);
+export function findRecording(recordingSessionId: string): CommunicationManager | undefined {
+    return recordingsBySession.get(recordingSessionId);
 }
 
 /**
@@ -162,6 +163,10 @@ export class CommunicationManager implements ICommunicationManager {
         this._recordingManager =
             dependencies.recordingManager ??
             new RecordingManager(this.space, this.orchestrator, this.userRegistry, this.lifecycleManager);
+        this._recordingManager.onSessionAdded = (recordingSessionId) =>
+            recordingsBySession.set(recordingSessionId, this);
+        this._recordingManager.onSessionRemoved = (recordingSessionId) =>
+            recordingsBySession.delete(recordingSessionId);
         this.recordingEventNotifier =
             dependencies.recordingEventNotifier ?? ((payload) => adminApi.notifyRecordingEvent(payload));
 
@@ -439,14 +444,6 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
-        if (!this._recordingManager.hasRecordingSession(request.recordingSessionId)) {
-            // Retrying cannot recreate a local recording session that is already gone, so acknowledge as ignored.
-            console.warn(
-                `Received LiveKit webhook for missing recording session ${request.recordingSessionId}. Ignoring.`,
-            );
-            return;
-        }
-
         const currentState = this.lifecycleManager.getCurrentState();
         if (!this.isRecordableState(currentState)) {
             throw new Error("Current state is not recordable");
@@ -486,7 +483,6 @@ export class CommunicationManager implements ICommunicationManager {
                 }
 
                 this.notifyRecordingEnded(request, result.recorder);
-                orphanedRecordings.delete(request.recordingSessionId);
                 if (this.destroyed) {
                     // The space is gone: nobody left to tell, no state to transition.
                     return;
@@ -640,8 +636,7 @@ export class CommunicationManager implements ICommunicationManager {
         this._sessionAnalytics.close();
         this._recordingManager.destroy();
         for (const recordingSessionId of this._recordingManager.getRecordingSessionIds()) {
-            orphanedRecordings.set(recordingSessionId, this);
-            setTimeout(() => orphanedRecordings.delete(recordingSessionId), ORPHANED_RECORDING_TTL_MS).unref();
+            setTimeout(() => recordingsBySession.delete(recordingSessionId), ORPHANED_RECORDING_TTL_MS).unref();
         }
     }
 }
