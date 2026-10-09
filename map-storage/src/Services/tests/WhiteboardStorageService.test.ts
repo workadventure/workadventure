@@ -1,6 +1,10 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { FileSystemInterface } from "../../Upload/FileSystemInterface";
-import { WhiteboardLocation, WhiteboardStorageService } from "../WhiteboardStorageService";
+
+// The real module validates the whole environment on import, which CI does not provide.
+vi.mock("../../Enum/EnvironmentVariable", () => ({ PATH_PREFIX: "", USE_DOMAIN_NAME_IN_PATH: false }));
+
+const { WhiteboardLocation, WhiteboardStorageService } = await import("../WhiteboardStorageService");
 
 // The few calls the service makes, on an in-memory tree.
 function memoryFileSystem(): FileSystemInterface & { files: Map<string, string | Uint8Array> } {
