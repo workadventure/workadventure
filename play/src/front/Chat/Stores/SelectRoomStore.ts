@@ -1,5 +1,6 @@
 import { get, writable } from "svelte/store";
 import type { ChatConversation } from "../Connection/ChatConnection";
+import { getMatrixSecurity } from "../Connection/Matrix/getMatrixSecurity";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { selectedThreadStore } from "./SelectedThreadStore";
 import { roomSidePanelStore } from "./RoomSidePanelStore";
@@ -15,9 +16,8 @@ const createSelectedRoomStore = () => {
             });
             if (currentValue !== value && value && get(value.isEncrypted) && !isOpen && get(chatVisibilityStore)) {
                 isOpen = true;
-                // Loaded on demand: only an encrypted Matrix room gets here, so the Matrix chunk is already there.
-                import("../Connection/Matrix/MatrixSecurity")
-                    .then(({ matrixSecurity }) => matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal())
+                getMatrixSecurity()
+                    .then((matrixSecurity) => matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal())
                     .catch((error) => {
                         console.error(error);
                     })
