@@ -340,6 +340,9 @@ export class GameScene extends DirtyScene {
     // Promise resolved when we receive the first message of the roomConnection (RoomConnectedMessage)
     private connectionAnswerPromiseDeferred: Deferred<void>;
     private roomJoinedPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
+    // Resolved once the server knows the user's Matrix id, or once it is clear there is none to send. Until then,
+    // the server cannot invite the user into a room. The map does not wait for it: it needs the chat connection.
+    public chatIdSentDeferred: Deferred<void>;
     // true is soon as the roomConnection received the "roomJoined" message.
     private hasJoinedRoom: boolean = false;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
@@ -479,6 +482,7 @@ export class GameScene extends DirtyScene {
         this.createPromiseDeferred = new Deferred<void>();
         this.connectionAnswerPromiseDeferred = new Deferred<void>();
         this.roomJoinedPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
+        this.chatIdSentDeferred = new Deferred<void>();
         this.loader = new Loader(this);
         this.superLoad = new SuperLoaderPlugin(this);
     }
@@ -1045,7 +1049,8 @@ export class GameScene extends DirtyScene {
             .catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
-            });
+            })
+            .finally(() => this.chatIdSentDeferred.resolve());
 
         if (this.game.renderer instanceof WebGLRenderer) {
             this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
