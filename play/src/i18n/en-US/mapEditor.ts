@@ -237,6 +237,20 @@ const mapEditor: BaseTranslation = {
             revokeAccess: "Revoke access",
             actionButtonLabel: "Got to personal desk",
         },
+        whiteboard: {
+            label: "Whiteboard",
+            description:
+                "A whiteboard shared by everybody in the area. Everyone sees the drawings live, with each other's cursors.",
+            disabled: "The whiteboard is disabled on this world.",
+            loadError: "The whiteboard could not be loaded.",
+            rightsHint:
+                "Who may draw follows the area's Rights property: its write tags draw, the others only look. Without rights, everybody draws.",
+            clear: "Clear the whiteboard",
+            clearConfirm: "Click again to clear it for everybody",
+            ephemeral: "Ephemeral whiteboard",
+            ephemeralDescription:
+                "Never saved: it empties itself 2 minutes after the last person left. Otherwise it is kept with the map.",
+        },
         excalidraw: {
             label: "Open Excalidraw",
             description: "An open source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",

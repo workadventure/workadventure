@@ -48,6 +48,7 @@ export interface FrontConfigurationInterface {
     GOOGLE_DRIVE_PICKER_APP_ID: string | undefined;
     EXCALIDRAW_ENABLED: boolean;
     EXCALIDRAW_DOMAINS: string[];
+    WHITEBOARD_ENABLED: boolean;
     CARDS_ENABLED: boolean;
     TLDRAW_ENABLED: boolean;
     EMBEDLY_KEY: string | undefined;

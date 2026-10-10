@@ -116,6 +116,7 @@ Environment variables for the Play service (frontend and pusher).
 | `GOOGLE_SLIDES_ENABLED` | No | Enable Google Slides map editor tool. Defaults to false |
 | `ERASER_ENABLED` | No | Enable Eraser.io embedded whiteboard. Defaults to false |
 | `EXCALIDRAW_ENABLED` | No | Enable Excalidraw embedded whiteboard. Defaults to false |
+| `WHITEBOARD_ENABLED` | No | Enable the collaborative whiteboard area property (Excalidraw, hosted by WorkAdventure itself). Defaults to false |
 | `EXCALIDRAW_DOMAINS` | No | Comma-separated list of allowed Excalidraw domains |
 | `EMBEDDED_DOMAINS_WHITELIST` | No | Comma-separated list of domains allowed for embedded iframes |
 | `CARDS_ENABLED` | No | Enable Cards embedded application. Defaults to false |

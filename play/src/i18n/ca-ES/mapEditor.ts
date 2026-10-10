@@ -240,6 +240,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Revocar l'accés",
             actionButtonLabel: "Anar al escriptori personal",
         },
+        whiteboard: {
+            label: "Pissarra",
+            description:
+                "Una pissarra compartida per tothom qui és a la zona. Tothom veu els dibuixos en directe, amb els cursors dels altres.",
+            disabled: "La pissarra està desactivada en aquest món.",
+            loadError: "No s'ha pogut carregar la pissarra.",
+            rightsHint:
+                "Qui pot dibuixar segueix la propietat Drets de la zona: les seves etiquetes d'escriptura dibuixen, els altres només miren. Sense drets, tothom dibuixa.",
+            clear: "Buida la pissarra",
+            clearConfirm: "Torna a fer clic per buidar-la per a tothom",
+            ephemeral: "Pissarra efímera",
+            ephemeralDescription:
+                "No es desa mai: es buida 2 minuts després que hagi marxat l'última persona. Si no, es conserva amb el mapa.",
+        },
         excalidraw: {
             label: "Obrir Excalidraw",
             description: "Un tauler virtual de dibuix a mà. Col·laboratiu i xifrat de punt a punt.",

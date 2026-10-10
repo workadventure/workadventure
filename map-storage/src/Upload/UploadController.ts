@@ -765,6 +765,12 @@ export class UploadController {
                 }
 
                 await this.fileSystem.deleteFiles(virtualPath);
+                if (isWamFile) {
+                    // The whiteboards of the map go with it (see WhiteboardLocation).
+                    await this.fileSystem.deleteFiles(
+                        mapPath("/private/whiteboards" + filePath.replace(/\.wam$/, ""), req),
+                    );
+                }
 
                 await this.mapListService.generateCacheFile(req.hostname);
 

@@ -240,6 +240,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Revocar acceso",
             actionButtonLabel: "Ir al escritorio personal",
         },
+        whiteboard: {
+            label: "Pizarra",
+            description:
+                "Una pizarra compartida por todos los que están en la zona. Todos ven los dibujos en directo, con los cursores de los demás.",
+            disabled: "La pizarra está desactivada en este mundo.",
+            loadError: "No se ha podido cargar la pizarra.",
+            rightsHint:
+                "Quién puede dibujar sigue la propiedad Derechos de la zona: sus etiquetas de escritura dibujan, los demás solo miran. Sin derechos, todos dibujan.",
+            clear: "Vaciar la pizarra",
+            clearConfirm: "Haz clic otra vez para vaciarla para todos",
+            ephemeral: "Pizarra efímera",
+            ephemeralDescription:
+                "Nunca se guarda: se vacía 2 minutos después de que se vaya la última persona. Si no, se conserva con el mapa.",
+        },
         excalidraw: {
             label: "Abrir Excalidraw",
             description:

@@ -242,6 +242,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "소유권 회수",
             actionButtonLabel: "개인 책상으로 이동",
         },
+        whiteboard: {
+            label: "화이트보드",
+            description:
+                "영역에 있는 모든 사람이 함께 쓰는 화이트보드입니다. 다른 사람의 커서와 함께 그림이 실시간으로 보입니다.",
+            disabled: "이 월드에서는 화이트보드가 비활성화되어 있습니다.",
+            loadError: "화이트보드를 불러올 수 없습니다.",
+            rightsHint:
+                "그릴 수 있는 사람은 영역의 권한 속성을 따릅니다. 쓰기 태그가 있는 사람은 그리고, 나머지는 보기만 합니다. 권한이 없으면 모두가 그릴 수 있습니다.",
+            clear: "화이트보드 지우기",
+            clearConfirm: "한 번 더 클릭하면 모두에게서 지워집니다",
+            ephemeral: "임시 화이트보드",
+            ephemeralDescription:
+                "저장되지 않습니다. 마지막 사람이 떠나고 2분 뒤에 비워집니다. 그렇지 않으면 맵과 함께 보관됩니다.",
+        },
         excalidraw: {
             label: "Excalidraw 열기",
             description: "오픈 소스 가상 손그림 스타일 화이트보드. 협업 및 종단 간 암호화를 지원합니다.",

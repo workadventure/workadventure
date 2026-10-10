@@ -85,6 +85,7 @@ export const GOOGLE_SLIDES_ENABLED = false;
 export const ERASER_ENABLED = false;
 export const EXCALIDRAW_ENABLED = false;
 export const EXCALIDRAW_DOMAINS: string[] = [];
+export const WHITEBOARD_ENABLED = false;
 export const EMBEDDED_DOMAINS_WHITELIST: string[] = [];
 export const CARDS_ENABLED = false;
 export const TLDRAW_ENABLED = false;
@@ -158,6 +159,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ERASER_ENABLED,
     EXCALIDRAW_ENABLED,
     EXCALIDRAW_DOMAINS,
+    WHITEBOARD_ENABLED,
     CARDS_ENABLED,
     TLDRAW_ENABLED,
     MINIMUM_DISTANCE: 64,

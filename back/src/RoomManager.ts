@@ -220,6 +220,10 @@ const roomManager = {
                             socketManager.handleEntityMessage(room, message.message.entityMessage);
                             break;
                         }
+                        case "whiteboardClientMessage": {
+                            await room.whiteboardManager.handleMessage(user, message.message.whiteboardClientMessage);
+                            break;
+                        }
                         default: {
                             const _exhaustiveCheck: never = message.message;
                         }

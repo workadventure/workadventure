@@ -102,7 +102,9 @@
         let link = htmlElementInput.value.trim();
         try {
             const url = new URL(link);
-            validateLinkForApplication(url, property.name);
+            validateLinkForApplication(url, property.name, {
+                excalidrawDomains: applicationManager.excalidrawToolDomains,
+            });
             const embedLink = await getEmbedLink(url, {
                 klaxoonId: applicationManager.klaxoonToolClientId,
                 excalidrawDomains: applicationManager.excalidrawToolDomains,

@@ -235,6 +235,18 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "撤銷存取",
             actionButtonLabel: "前往個人辦公桌",
         },
+        whiteboard: {
+            label: "白板",
+            description: "區域內所有人共用的白板。每個人都能即時看到繪圖和其他人的游標。",
+            disabled: "此世界已停用白板。",
+            loadError: "無法載入白板。",
+            rightsHint:
+                "誰能繪圖取決於區域的權限屬性：擁有寫入標籤的人可以繪圖，其他人只能檢視。沒有權限設定時，所有人都能繪圖。",
+            clear: "清空白板",
+            clearConfirm: "再次點擊即可為所有人清空",
+            ephemeral: "臨時白板",
+            ephemeralDescription: "從不儲存：最後一個人離開 2 分鐘後自動清空。否則會隨地圖一起保留。",
+        },
         excalidraw: {
             label: "開啟 Excalidraw",
             description: "一個開源虛擬手繪風格白板。協作且端對端加密。",

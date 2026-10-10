@@ -243,6 +243,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Pśistup wześ",
             actionButtonLabel: "K priwatnemu blidkoju hyś",
         },
+        whiteboard: {
+            label: "Běła tafla",
+            description:
+                "Běła tafla, kótaruž wšykne w tom wobceŕku źěle. Kuždy wiźi kreslanki direktnje, ze kursorami drugich.",
+            disabled: "Běła tafla jo w toś tom swěśe znjemóžnjona.",
+            loadError: "Běła tafla njejo se dała zacytaś.",
+            rightsHint:
+                "Chto smějo kresliś, slědujo kakosći Pšawa wobceŕka: jogo pisańske tagi kreslijo, drugie jano glědaju. Bźez pšawow kreslijo wšykne.",
+            clear: "Tablu wuprozniś",
+            clearConfirm: "Klikniśo hyšći raz, aby ju za wšych wuprozniś",
+            ephemeral: "Nachwilna běła tafla",
+            ephemeralDescription:
+                "Njeskłaźijo se nigda: wuproznijo se 2 minuśe pó tom, až jo slědna wósoba wótešła. Howac wóstanjo z kórtu.",
+        },
         excalidraw: {
             label: "Excalidraw wótcyniś",
             description:

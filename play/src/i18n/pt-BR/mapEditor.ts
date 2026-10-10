@@ -245,6 +245,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Revogar acesso",
             actionButtonLabel: "Ir para mesa pessoal",
         },
+        whiteboard: {
+            label: "Quadro branco",
+            description:
+                "Um quadro branco compartilhado por todos que estão na área. Todos veem os desenhos ao vivo, com os cursores dos outros.",
+            disabled: "O quadro branco está desativado neste mundo.",
+            loadError: "Não foi possível carregar o quadro branco.",
+            rightsHint:
+                "Quem pode desenhar segue a propriedade Direitos da área: suas tags de escrita desenham, os outros só olham. Sem direitos, todos desenham.",
+            clear: "Limpar o quadro",
+            clearConfirm: "Clique de novo para limpá-lo para todos",
+            ephemeral: "Quadro efêmero",
+            ephemeralDescription:
+                "Nunca é salvo: esvazia-se 2 minutos depois que a última pessoa sai. Caso contrário, fica guardado com o mapa.",
+        },
         excalidraw: {
             label: "Abrir Excalidraw",
             description:
