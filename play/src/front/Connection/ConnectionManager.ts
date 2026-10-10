@@ -185,11 +185,10 @@ class ConnectionManager {
             }
         }
 
-        if (matrixLoginToken != undefined) {
-            localUserStore.setMatrixLoginToken(matrixLoginToken);
-            //clean token of url
-            urlParams.delete("matrixLoginToken");
-        }
+        // Kept in memory only, and exchanged right after /me (see GameManager.exchangeMatrixLoginToken).
+        //clean token of url
+        urlParams.delete("matrixLoginToken");
+        localUserStore.removeLegacyMatrixLoginToken();
 
         if (this.connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
@@ -264,7 +263,7 @@ class ConnectionManager {
                 }
             } else {
                 try {
-                    const response = await this.checkAuthUserConnexion(this.authToken);
+                    const response = await this.checkAuthUserConnexion(this.authToken, matrixLoginToken);
                     if (response.status === "error") {
                         /*if (response.type === "retry") {
                             console.warn("Token expired, trying to login anonymously");
@@ -369,7 +368,6 @@ class ConnectionManager {
     }
 
     private anonymousMatrixLogin() {
-        localUserStore.setMatrixLoginToken(null);
         localUserStore.setMatrixUserId(null);
         localUserStore.setMatrixAccessToken(null);
         localUserStore.setMatrixRefreshToken(null);
@@ -545,7 +543,7 @@ class ConnectionManager {
         return this.connexionType;
     }
 
-    private async checkAuthUserConnexion(token: string) {
+    private async checkAuthUserConnexion(token: string, matrixLoginToken: string | null) {
         //set connected store for menu at false
         userIsConnected.set(false);
 
@@ -590,6 +588,9 @@ class ConnectionManager {
             gameManager.setMatrixServerUrl(matrixServerUrl);
         } else {
             gameManager.setMatrixServerUrl(undefined);
+        }
+        if (matrixLoginToken) {
+            gameManager.exchangeMatrixLoginToken(matrixLoginToken);
         }
 
         if (visitCardUrl) {
