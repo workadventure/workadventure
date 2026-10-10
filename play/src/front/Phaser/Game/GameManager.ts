@@ -30,6 +30,7 @@ import { pwaInstallProfileMenuEligibleStore, pwaInstallSceneVisibleStore } from 
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
+import { exchangeMatrixLoginToken } from "../../Chat/Connection/Matrix/MatrixLoginTokenExchange";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
@@ -58,6 +59,7 @@ export class GameManager {
     private matrixServerUrl: string | undefined = undefined;
     private chatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
     private pendingChatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
+    private matrixLoginTokenExchange: Promise<void> | undefined;
     private readonly _chatConnectionStore = writable<ChatConnectionInterface | undefined>(undefined);
     /**
      * The chat connection, once there is one. The map does not wait for it, and for a logged-in user it only
@@ -445,6 +447,27 @@ export class GameManager {
         return this.pendingChatConnectionPromise;
     }
 
+    /**
+     * Spends the Matrix login token this page landed with, as soon as the homeserver is known (right after /me).
+     *
+     * The token lives two minutes, and the chat only opens once the game scene starts, after the Woka and camera
+     * screens - or never, on a room where the chat is disabled. openChatConnection() waits for this, so the two never
+     * race on a single-use token. Exchanging only creates a device: nothing here may ever call /logout.
+     */
+    public exchangeMatrixLoginToken(loginToken: string): void {
+        const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
+        if (!matrixServerUrl) {
+            return;
+        }
+        this.matrixLoginTokenExchange = exchangeMatrixLoginToken(matrixServerUrl, loginToken).catch((e: unknown) => {
+            // The token is gone either way. initMatrixClient() then uses the session this browser already holds,
+            // typically from an earlier login, or fails with MissingMatrixCredentialsError, which shows the
+            // "reconnect" prompt.
+            console.error("Unable to exchange the Matrix login token", e);
+            Sentry.captureException(e);
+        });
+    }
+
     private async openChatConnection(): Promise<ChatConnectionInterface> {
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
 
@@ -472,17 +495,17 @@ export class GameManager {
             Sentry.captureException(e);
             return this.useVoidChatConnection();
         }
-        const [
-            { InvalidLoginTokenError, MatrixClientWrapper, MissingMatrixCredentialsError },
-            { MatrixChatConnection },
-        ] = matrixModules;
+        const [{ MatrixClientWrapper, MissingMatrixCredentialsError }, { MatrixChatConnection }] = matrixModules;
 
-        const matrixClientPromise = new MatrixClientWrapper(matrixServerUrl, localUserStore).initMatrixClient();
+        const matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
+        const matrixClientPromise = Promise.resolve(this.matrixLoginTokenExchange).then(() =>
+            matrixClientWrapper.initMatrixClient(),
+        );
 
         matrixClientPromise.catch((e) => {
-            // Both cases end the same way: only a new OpenID login can mint the Matrix login token this
-            // browser is missing, so show the "reconnect" prompt instead of a bare error banner.
-            if (e instanceof InvalidLoginTokenError || e instanceof MissingMatrixCredentialsError) {
+            // Only a new OpenID login can mint the Matrix login token this browser is missing, so show the
+            // "reconnect" prompt instead of a bare error banner.
+            if (e instanceof MissingMatrixCredentialsError) {
                 loginTokenErrorStore.set(true);
             }
         });
