@@ -154,6 +154,11 @@ export class AreasPropertiesListener {
      * instead of joining/leaving the space.
      */
     private activeMegaphoneZones: Map<string, MegaphoneZoneState> = new Map();
+    /**
+     * The Matrix rooms of the chat areas the player is in. Entering one waits for the server to know the player's
+     * Matrix id: this tells, once it does, whether the player is still in the area.
+     */
+    private enteredMatrixRoomIds = new Set<string>();
 
     constructor(scene: GameScene) {
         this.scene = scene;
@@ -1121,17 +1126,24 @@ export class AreasPropertiesListener {
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
         const isConnected = get(userIsConnected);
-        if (this.scene.connection && property.serverData?.matrixRoomId && isConnected) {
-            this.scene.connection
-                .queryEnterChatRoomArea(property.serverData.matrixRoomId)
+        const matrixRoomId = property.serverData?.matrixRoomId;
+        if (this.scene.connection && matrixRoomId && isConnected) {
+            this.enteredMatrixRoomIds.add(matrixRoomId);
+            // The map does not wait for the chat connection, so the player can be inside the area (they can even
+            // spawn there) before the server knows their Matrix id, which it needs to invite them into the room.
+            this.scene.chatIdSentDeferred.promise
                 .then(() => {
-                    const matrixRoomId = property.serverData?.matrixRoomId;
-                    if (!matrixRoomId) {
-                        throw new Error("Failed to join room : roomId is undefined");
+                    if (!this.enteredMatrixRoomIds.has(matrixRoomId)) {
+                        // The player left the area in the meantime.
+                        return undefined;
                     }
-                    // The player can spawn inside the area: the map does not wait for the chat connection.
-                    return gameManager
-                        .getChatConnection()
+                    const connection = this.scene.connection;
+                    if (!connection) {
+                        throw new Error("Failed to join room : the connection is closed");
+                    }
+                    return connection
+                        .queryEnterChatRoomArea(matrixRoomId)
+                        .then(() => gameManager.getChatConnection())
                         .then((chatConnection) => chatConnection.joinRoom(matrixRoomId));
                 })
                 .then((room: ChatRoom | undefined) => {
@@ -1420,6 +1432,9 @@ export class AreasPropertiesListener {
     }
 
     private handleMatrixRoomAreaOnLeave(property: MatrixRoomPropertyData) {
+        if (property.serverData?.matrixRoomId) {
+            this.enteredMatrixRoomIds.delete(property.serverData.matrixRoomId);
+        }
         if (!get(userIsConnected)) {
             chatVisibilityStore.set(false);
             return;
