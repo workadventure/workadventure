@@ -151,18 +151,23 @@ async function createUser(
         case "Admin1":
         case "Admin2":
             await oidcAdminTagLogin(page);
+            await waitForMatrixLogin(page);
             break;
         case "Member1":
             await oidcMemberTagLogin(page);
+            await waitForMatrixLogin(page);
             break;
         case "UserMatrix":
             await oidcMatrixUserLogin(page);
+            await waitForMatrixLogin(page);
             break;
         case "UserMatrix2":
             await oidcMatrixUserLogin(page, "UserMatrix2");
+            await waitForMatrixLogin(page);
             break;
         case "UserLogin1":
             await oidcLogin(page);
+            await waitForMatrixLogin(page);
             break;
         default:
             break;
@@ -173,6 +178,19 @@ async function createUser(
     // Closing the context closes its pages; closing the page first is the redundant second teardown
     // that Firefox 153 chokes on. See `disposeWithContext`.
     await closeContext(context);
+}
+
+/**
+ * The OpenID login leaves a single-use Matrix login token in the local storage, which the chat swaps for an access
+ * token once Matrix starts. The map does not wait for that, so saving the state as soon as the map shows would hand
+ * every page created from it a spent login token, or credentials that a later login revokes.
+ */
+async function waitForMatrixLogin(page: Page): Promise<void> {
+    await page.waitForFunction(
+        () => localStorage.getItem("matrixLoginToken") === null && localStorage.getItem("matrixAccessToken") !== null,
+        undefined,
+        { timeout: 60_000 },
+    );
 }
 
 export async function getPage(

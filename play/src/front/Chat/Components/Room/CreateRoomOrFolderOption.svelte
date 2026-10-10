@@ -1,6 +1,6 @@
 <script lang="ts">
     import { readable } from "svelte/store";
-    import { EventType } from "matrix-js-sdk";
+    import { EventType } from "matrix-js-sdk/lib/@types/event";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import type { RoomFolder, ChatRoomModeration } from "../../Connection/ChatConnection";

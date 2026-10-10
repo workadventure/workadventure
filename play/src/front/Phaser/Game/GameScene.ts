@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import * as Phaser from "phaser";
 import type { Subscription } from "rxjs";
-import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { Queue } from "queue-typescript";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -211,7 +210,6 @@ import {
 } from "../../Stores/PeerStore";
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
-import { raceTimeout } from "../../Utils/PromiseUtils";
 import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
 import { type Avatar, ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
@@ -342,6 +340,9 @@ export class GameScene extends DirtyScene {
     // Promise resolved when we receive the first message of the roomConnection (RoomConnectedMessage)
     private connectionAnswerPromiseDeferred: Deferred<void>;
     private roomJoinedPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
+    // Resolved once the server knows the user's Matrix id, or once it is clear there is none to send. Until then,
+    // the server cannot invite the user into a room. The map does not wait for it: it needs the chat connection.
+    public chatIdSentDeferred: Deferred<void>;
     // true is soon as the roomConnection received the "roomJoined" message.
     private hasJoinedRoom: boolean = false;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
@@ -481,6 +482,7 @@ export class GameScene extends DirtyScene {
         this.createPromiseDeferred = new Deferred<void>();
         this.connectionAnswerPromiseDeferred = new Deferred<void>();
         this.roomJoinedPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
+        this.chatIdSentDeferred = new Deferred<void>();
         this.loader = new Loader(this);
         this.superLoad = new SuperLoaderPlugin(this);
     }
@@ -964,18 +966,8 @@ export class GameScene extends DirtyScene {
             this.gameMapFrontWrapper.initializedPromise.promise.then(() =>
                 debug("Loading process: Game map initialized"),
             ),
-            // Wait at most 5 seconds for the chat connection to be established
-            // If not, we can still proceed starting the scene without chat fully loaded
-            raceTimeout(gameManager.getChatConnection(), 5_000)
-                .then(() => debug("Loading process: Chat connection ready"))
-                .catch((e) => {
-                    if (e instanceof TimeoutError) {
-                        debug("Loading process: Chat connection timeout. Continuing loading while chat loads.");
-                        return;
-                    } else {
-                        throw e;
-                    }
-                }),
+            // The chat is deliberately not awaited: the map shows right away and the chat catches up once
+            // Matrix is ready (see GameManager.chatConnectionStore).
         ])
             .then((results) => {
                 const settledScriptLoadedResult = results[1];
@@ -1057,7 +1049,8 @@ export class GameScene extends DirtyScene {
             .catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
-            });
+            })
+            .finally(() => this.chatIdSentDeferred.resolve());
 
         if (this.game.renderer instanceof WebGLRenderer) {
             this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {

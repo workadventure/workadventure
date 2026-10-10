@@ -2,6 +2,7 @@ import type { MatrixClient, Room } from "matrix-js-sdk";
 import {
     ClientEvent,
     ConnectionError,
+    HttpApiEvent,
     EventType,
     MatrixError,
     PendingEventOrdering,
@@ -250,6 +251,55 @@ describe("MatrixChatConnection", () => {
 
             await expect(clientPromise).rejects.toThrow();
             expect(startMatrixClientSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("init", () => {
+        it("should not put the chat on error when the profile sync with the Woka fails", async () => {
+            const getProfileInfo = vi.fn().mockRejectedValue(new Error("profile sync failed"));
+            const mockMatrixClient = {
+                isGuest: vi.fn().mockReturnValue(false),
+                getSafeUserId: vi.fn().mockReturnValue("@alice:matrix.example"),
+                getProfileInfo,
+                on: vi.fn(),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                startClient: vi.fn(),
+                isInitialSyncComplete: vi.fn().mockReturnValue(true),
+            } as unknown as MatrixClient;
+
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            expect(getProfileInfo).toHaveBeenCalled();
+            expect(get(matrixChatConnection.connectionStatus)).not.toBe("ON_ERROR");
+        });
+
+        it("should not wait for the initial sync once the session is logged out", async () => {
+            const handlers = new Map<string, (error: MatrixError) => void>();
+            const mockMatrixClient = {
+                isGuest: vi.fn().mockReturnValue(false),
+                getSafeUserId: vi.fn().mockReturnValue("@alice:matrix.example"),
+                getProfileInfo: vi.fn().mockResolvedValue({}),
+                on: vi.fn((event: string, handler: (error: MatrixError) => void) => handlers.set(event, handler)),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                // The homeserver rejects the access token as soon as the client starts: the sync never completes.
+                startClient: vi.fn(() => {
+                    handlers.get(HttpApiEvent.SessionLoggedOut)?.(
+                        new MatrixError({ errcode: "M_UNKNOWN_TOKEN", error: "Invalid access token passed." }, 401),
+                    );
+                }),
+                isInitialSyncComplete: vi.fn().mockReturnValue(false),
+            } as unknown as MatrixClient;
+
+            // Without the early exit, init() would poll for the 30s initial sync timeout, far past this test's.
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            expect(get(matrixChatConnection.connectionStatus)).toBe("ON_ERROR");
         });
     });
 

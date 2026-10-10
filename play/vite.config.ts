@@ -1,5 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import type { Plugin } from "vite";
 import { defineConfig, loadEnv } from "vite";
 import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
@@ -9,6 +10,36 @@ import Icons from "unplugin-icons/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { apiVersionHash } from "../libs/messages/src/JsonMessages/ApiVersion";
+
+// Matrix is only for logged-in users (GameManager loads it with import()): keep the SDK out of the chunks every
+// visitor downloads. A single value import of it anywhere on the startup path would silently bring it all back.
+const matrixStaysLazy: Plugin = {
+    name: "workadventure-matrix-stays-lazy",
+    apply: "build",
+    generateBundle(_options, bundle) {
+        const visited = new Set<string>();
+        const visit = (fileName: string) => {
+            const chunk = bundle[fileName];
+            if (visited.has(fileName) || chunk?.type !== "chunk") {
+                return;
+            }
+            visited.add(fileName);
+            // EventType (lib/@types/event.js, with its NamespacedValue import) is tiny and allowed.
+            const leak = chunk.moduleIds.find((id) =>
+                /\/matrix-js-sdk\/lib\/(?!@types\/|NamespacedValue\.js)/.test(id),
+            );
+            if (leak) {
+                this.error(`${leak} is in the startup chunk ${fileName}: load Matrix code with import().`);
+            }
+            chunk.imports.forEach(visit);
+        };
+        for (const chunk of Object.values(bundle)) {
+            if (chunk.type === "chunk" && chunk.isEntry) {
+                visit(chunk.fileName);
+            }
+        }
+    },
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -57,6 +88,7 @@ export default defineConfig(({ mode }) => {
                     { tag: "meta", attrs: { name: "wa-api-version", content: apiVersionHash }, injectTo: "head" },
                 ],
             },
+            matrixStaysLazy,
             tailwindcss(),
             noiseSuppressionAudioWorkletVitePlugin(),
             nodePolyfills({
