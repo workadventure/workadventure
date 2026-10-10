@@ -104,6 +104,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
     private displayNameMatrixSyncDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     private isClientReady = false;
+    private isSessionLoggedOut = false;
     // Per-user availability store, shared with the rendered ChatUser and kept live by
     // onUserPresenceEvent. Persistent across directRoomsUsers recomputes so the UI subscription survives.
     private readonly userAvailabilityStores = new Map<string, Writable<AvailabilityStatus>>();
@@ -876,6 +877,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
      * the only place a fresh Matrix login token is minted.
      */
     private onSessionLoggedOut(error: MatrixError): void {
+        this.isSessionLoggedOut = true;
         console.error("The Matrix session is no longer valid: ", error);
         Sentry.captureException(error);
         localUserStore.clearMatrixSession();
@@ -940,6 +942,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             const checkSync = () => {
                 if (this.client?.isInitialSyncComplete()) {
                     resolve();
+                } else if (this.isSessionLoggedOut) {
+                    // A dead session never syncs: don't keep the chat (and its button) waiting for the timeout.
+                    reject(new Error("Failed to wait initial sync : the Matrix session is no longer valid"));
                 } else {
                     if (Date.now() - startTime >= timeout) {
                         reject(new Error(`Failed to wait initial sync : timeout ${timeout} ms`));
