@@ -44,6 +44,7 @@ const matrixAccessTokenExpireDate = "matrixAccessTokenExpireDate";
 const matrixRefreshToken = "matrixRefreshToken";
 const matrixDeviceId = "matrixDeviceId";
 const matrixLoginToken = "matrixLoginToken";
+const matrixStoresNeedClearing = "matrixStoresNeedClearing";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
 const pwaInstallPromptShownKey = "workadventure_pwa_install_prompt_shown";
@@ -964,16 +965,25 @@ class LocalUserStore {
         return localStorage.getItem(matrixDeviceId + "_" + userUuid) ?? "";
     }
 
-    setMatrixLoginToken(value: string | null) {
-        if (value !== null) {
-            localStorage.setItem(matrixLoginToken, value);
-        } else {
-            localStorage.removeItem(matrixLoginToken);
-        }
+    /**
+     * Older versions stored the single-use Matrix login token, which is now exchanged as soon as the page lands with
+     * it and kept in memory only. Drops the one they may have left behind.
+     */
+    removeLegacyMatrixLoginToken() {
+        localStorage.removeItem(matrixLoginToken);
     }
 
-    getMatrixLoginToken() {
-        return localStorage.getItem(matrixLoginToken);
+    /** Whether the Matrix stores (IndexedDB) still hold the data of the Matrix user who used this browser before. */
+    getMatrixStoresNeedClearing(): boolean {
+        return localStorage.getItem(matrixStoresNeedClearing) === "true";
+    }
+
+    setMatrixStoresNeedClearing(value: boolean) {
+        if (value) {
+            localStorage.setItem(matrixStoresNeedClearing, "true");
+        } else {
+            localStorage.removeItem(matrixStoresNeedClearing);
+        }
     }
 
     /**
@@ -986,7 +996,6 @@ class LocalUserStore {
      * next login overwrites it with the one the homeserver hands out.
      */
     clearMatrixSession() {
-        this.setMatrixLoginToken(null);
         this.setMatrixUserId(null);
         this.setMatrixAccessToken(null);
         this.setMatrixRefreshToken(null);

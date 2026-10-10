@@ -34,11 +34,11 @@ export interface MatrixLocalUserStore {
 
     getMatrixUserId(): string | null;
 
-    getMatrixLoginToken(): string | null;
+    getMatrixStoresNeedClearing(): boolean;
+
+    setMatrixStoresNeedClearing(value: boolean): void;
 
     setMatrixDeviceId(deviceId: string, userId: string): void;
-
-    setMatrixLoginToken(loginToken: string | null): void;
 
     setMatrixUserId(userId: string): void;
 
@@ -59,8 +59,8 @@ export class InvalidLoginTokenError extends Error {
 }
 
 /**
- * The user is logged in to WorkAdventure but this browser holds no Matrix session at all: no access token
- * and no login token to exchange (storage evicted, session revoked on an earlier visit, ...). Nothing in the
+ * The user is logged in to WorkAdventure but this browser holds no Matrix session at all (storage evicted,
+ * session revoked on an earlier visit, login token refused or not exchanged, ...). Nothing in the
  * current page can recover from that; only a fresh OpenID login mints a new Matrix login token, so the UI
  * must offer the "reconnect" prompt rather than a dead-end error banner.
  */
@@ -90,36 +90,14 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             throw new Error("UserUUID is undefined, this is not supposed to happen.");
         }
 
-        let accessToken: string | null,
-            refreshToken: string | null,
-            matrixUserId: string | null,
-            matrixDeviceId: string | null;
+        // The login token, if the page landed with one, was already exchanged (see exchangeLoginToken()): the
+        // session to restore is the stored one.
         const {
-            deviceId,
-            accessToken: accessTokenFromLocalStorage,
-            refreshToken: refreshTokenFromLocalStorage,
-            matrixLoginToken,
-            matrixUserId: matrixUserIdFromLocalStorage,
+            deviceId: matrixDeviceId,
+            accessToken,
+            refreshToken,
+            matrixUserId,
         } = this.retrieveMatrixConnectionDataFromLocalStorage();
-        accessToken = accessTokenFromLocalStorage;
-        refreshToken = refreshTokenFromLocalStorage;
-        matrixUserId = matrixUserIdFromLocalStorage;
-        matrixDeviceId = deviceId;
-
-        const oldMatrixUserId: string | null = matrixUserIdFromLocalStorage;
-
-        if (matrixLoginToken !== null) {
-            const {
-                accessToken: accessTokenFromLoginToken,
-                refreshToken: refreshTokenFromLoginToken,
-                matrixUserId: userIdFromLoginToken,
-                deviceId,
-            } = await this.retrieveMatrixConnectionDataFromLoginToken(this.baseUrl, matrixLoginToken);
-            accessToken = accessTokenFromLoginToken;
-            refreshToken = refreshTokenFromLoginToken;
-            matrixUserId = userIdFromLoginToken;
-            matrixDeviceId = deviceId;
-        }
 
         if (!accessToken) {
             console.error("Unable to connect to matrix, access token is null");
@@ -169,11 +147,76 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         // Now, let's instantiate the Matrix client.
         this.client = this._createClient(matrixCreateClientOpts);
 
-        if (oldMatrixUserId !== matrixUserId) {
+        if (this.localUserStore.getMatrixStoresNeedClearing()) {
             await clearMatrixStores(this.client);
+            this.localUserStore.setMatrixStoresNeedClearing(false);
         }
 
         return this.client;
+    }
+
+    /**
+     * Swaps the login token Synapse's SSO flow hands the page for a Matrix session, and stores that session.
+     *
+     * The token is single use and lives two minutes, so it is spent as soon as the page lands with it, and it is
+     * never stored: a stored token outlived its two minutes, was shared by every tab and replayed by each of them.
+     *
+     * When the homeserver refuses the token, this throws an InvalidLoginTokenError straight away. When it does not
+     * answer, the token was most likely never spent, so the exchange is retried a few times first.
+     */
+    public async exchangeLoginToken(loginToken: string, retryDelaysMs = [1_000, 3_000, 10_000]): Promise<void> {
+        try {
+            await this.loginWithToken(loginToken);
+        } catch (e) {
+            const [retryDelayMs, ...nextRetryDelaysMs] = retryDelaysMs;
+            if (e instanceof InvalidLoginTokenError || retryDelayMs === undefined) {
+                throw e;
+            }
+            console.warn("Unable to exchange the Matrix login token, retrying", e);
+            await new Promise<void>((resolve) => {
+                setTimeout(resolve, retryDelayMs);
+            });
+            await this.exchangeLoginToken(loginToken, nextRetryDelaysMs);
+        }
+    }
+
+    private async loginWithToken(loginToken: string): Promise<void> {
+        // A hung request would hold the chat back, since it waits for the exchange: give up and retry instead.
+        const client = this._createClient({ baseUrl: this.baseUrl, localTimeoutMs: 10_000 });
+
+        let response;
+        try {
+            // login(type, data) is deprecated in 41.8.0 in favour of loginRequest({ type, ...data }).
+            response = await client.loginRequest({
+                type: "m.login.token",
+                token: loginToken,
+                initial_device_display_name: "WorkAdventure",
+            });
+        } catch (e) {
+            if (e instanceof MatrixError) {
+                // The homeserver answered, so the login token has been spent (an m.login.token is single use)
+                // or was rejected outright. Either way it must never be replayed.
+                console.error("Invalid login token", e);
+                throw new InvalidLoginTokenError("Invalid login token");
+            }
+            // No answer from the homeserver (network failure, CORS, aborted request): the token was most
+            // likely never seen and stays usable.
+            throw e;
+        }
+        const { user_id, access_token, refresh_token, expires_in_ms, device_id } = response;
+
+        // The stores belong to the previous Matrix user: initMatrixClient() must clear them before it connects.
+        // This has to be decided now, before the new user id overwrites the old one, and must survive a reload.
+        if (this.localUserStore.getMatrixUserId() !== user_id) {
+            this.localUserStore.setMatrixStoresNeedClearing(true);
+        }
+        this.localUserStore.setMatrixUserId(user_id);
+        this.localUserStore.setMatrixAccessToken(access_token);
+        this.localUserStore.setMatrixRefreshToken(refresh_token ?? null);
+        this.localUserStore.setMatrixDeviceId(device_id, user_id);
+        if (expires_in_ms !== undefined) {
+            this.localUserStore.setMatrixAccessTokenExpireDate(new Date(Date.now() + expires_in_ms));
+        }
     }
 
     private retrieveMatrixConnectionDataFromLocalStorage(): {
@@ -181,14 +224,12 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         accessToken: string | null;
         refreshToken: string | null;
         matrixUserId: string | null;
-        matrixLoginToken: string | null;
     } {
         const accessToken = this.localUserStore.getMatrixAccessToken();
         const refreshToken = this.localUserStore.getMatrixRefreshToken();
         const matrixUserId = this.localUserStore.getMatrixUserId();
         const deviceId = matrixUserId ? this.localUserStore.getMatrixDeviceId(matrixUserId) : null;
-        const matrixLoginToken = this.localUserStore.getMatrixLoginToken();
-        return { deviceId, accessToken, refreshToken, matrixUserId, matrixLoginToken };
+        return { deviceId, accessToken, refreshToken, matrixUserId };
     }
 
     private matrixWebClientStore(matrixUserId: string) {
@@ -209,71 +250,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         );
 
         return { matrixStore: indexDbStore, matrixCryptoStore: indexDbCryptoStore };
-    }
-
-    private async retrieveMatrixConnectionDataFromLoginToken(
-        matrixServerUrl: string,
-        loginToken: string,
-    ): Promise<{
-        matrixUserId: string;
-        accessToken: string;
-        refreshToken: string | null;
-        deviceId: string;
-    }> {
-        const options: ICreateClientOpts = {
-            baseUrl: matrixServerUrl,
-        };
-
-        const client = this._createClient(options);
-
-        try {
-            // login(type, data) is deprecated in 41.8.0 in favour of loginRequest({ type, ...data }).
-            const { user_id, access_token, refresh_token, expires_in_ms, device_id } = await client.loginRequest({
-                type: "m.login.token",
-                token: loginToken,
-                initial_device_display_name: "WorkAdventure",
-            });
-
-            this.localUserStore.setMatrixUserId(user_id);
-            this.localUserStore.setMatrixAccessToken(access_token);
-            this.localUserStore.setMatrixRefreshToken(refresh_token ?? null);
-            this.localUserStore.setMatrixDeviceId(device_id, user_id);
-            if (expires_in_ms !== undefined) {
-                const expireDate = new Date();
-                // Add response.expires_in milliseconds to the current date.
-                expireDate.setMilliseconds(expireDate.getMilliseconds() + expires_in_ms);
-                this.localUserStore.setMatrixAccessTokenExpireDate(expireDate);
-            }
-
-            //Login token has been used, remove it from local storage
-            this.localUserStore.setMatrixLoginToken(null);
-
-            // Note: we ignore the device ID returned by the server. We use the one we generated.
-            // This will be required in the future when we switch to a Native OpenID Matrix client.
-            return {
-                matrixUserId: user_id,
-                accessToken: access_token,
-                refreshToken: refresh_token ?? null,
-                deviceId: device_id,
-            };
-        } catch (e) {
-            if (e instanceof MatrixError) {
-                // The homeserver answered, so the login token has been spent (an m.login.token is single use)
-                // or was rejected outright. Either way it must never be replayed: the branch that exchanges it
-                // runs before the stored access token is even looked at, so keeping a dead token here would
-                // make every later initMatrixClient() fail on it - locking the user out of the chat for good,
-                // even though perfectly valid credentials are sitting in local storage.
-                this.localUserStore.setMatrixLoginToken(null);
-                console.error("Invalid login token", e);
-                throw new InvalidLoginTokenError("Invalid login token");
-            }
-
-            // No answer from the homeserver (network failure, CORS, aborted request): the token was most
-            // likely never seen and stays usable, so keep it for the next attempt and report what really
-            // happened instead of blaming the token.
-            console.error("Unable to exchange the Matrix login token", e);
-            throw e;
-        }
     }
 
     private async getSecretStorageKey({
