@@ -1,8 +1,8 @@
-// Loaded on demand (see WhiteboardCowebsiteComponent.svelte): React and Excalidraw only reach the
+// Loaded on demand (see WhiteboardStore.ts): React and Excalidraw only reach the
 // browser when somebody opens a whiteboard.
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
-import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
+import { Excalidraw, MainMenu, exportToSvg, hashElementsVersion } from "@excalidraw/excalidraw";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 // eslint-disable-next-line import/no-unresolved -- only exported under the "development"/"production" conditions, which Vite resolves
 import "@excalidraw/excalidraw/index.css";
@@ -28,6 +28,8 @@ export interface WhiteboardMountOptions {
 
 export interface MountedWhiteboard {
     destroy(): void;
+    /** A picture of the board, for its tile among the cameras; undefined while the board is empty. */
+    preview(): Promise<SVGSVGElement | undefined>;
 }
 
 export function mountWhiteboard(target: HTMLElement, options: WhiteboardMountOptions): MountedWhiteboard {
@@ -47,7 +49,9 @@ export function mountWhiteboard(target: HTMLElement, options: WhiteboardMountOpt
         options.filesUrl,
     );
 
+    let excalidrawApi: ExcalidrawImperativeAPI | undefined;
     const onApi = (api: ExcalidrawImperativeAPI) => {
+        excalidrawApi = api;
         session.attach(api);
         if (import.meta.env.DEV) {
             // Lets the end-to-end bots read the scene, which is drawn on a canvas.
@@ -95,10 +99,36 @@ export function mountWhiteboard(target: HTMLElement, options: WhiteboardMountOpt
     };
     render();
 
+    // Only redrawn when the scene changed since the last picture.
+    let previewVersion: number | undefined;
+    let previewPicture: SVGSVGElement | undefined;
+    const preview = async (): Promise<SVGSVGElement | undefined> => {
+        if (!excalidrawApi) {
+            return undefined;
+        }
+        const elements = excalidrawApi.getSceneElements();
+        const version = hashElementsVersion(elements);
+        if (version !== previewVersion) {
+            previewVersion = version;
+            previewPicture =
+                elements.length === 0
+                    ? undefined
+                    : await exportToSvg({
+                          elements,
+                          appState: { ...excalidrawApi.getAppState(), exportBackground: true },
+                          files: excalidrawApi.getFiles(),
+                          // Drawn in the page, which already holds Excalidraw's fonts.
+                          skipInliningFonts: true,
+                      });
+        }
+        return previewPicture;
+    };
+
     return {
         destroy: () => {
             session.destroy();
             root.unmount();
         },
+        preview,
     };
 }
