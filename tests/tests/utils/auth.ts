@@ -181,16 +181,13 @@ async function createUser(
 }
 
 /**
- * The OpenID login leaves a single-use Matrix login token in the local storage, which the chat swaps for an access
- * token once Matrix starts. The map does not wait for that, so saving the state as soon as the map shows would hand
- * every page created from it a spent login token, or credentials that a later login revokes.
+ * The OpenID login hands the page a single-use Matrix login token, which it swaps for an access token right after
+ * /me. The map does not wait for that, so saving the state as soon as the map shows could miss the Matrix session.
  */
 async function waitForMatrixLogin(page: Page): Promise<void> {
-    await page.waitForFunction(
-        () => localStorage.getItem("matrixLoginToken") === null && localStorage.getItem("matrixAccessToken") !== null,
-        undefined,
-        { timeout: 60_000 },
-    );
+    await page.waitForFunction(() => localStorage.getItem("matrixAccessToken") !== null, undefined, {
+        timeout: 60_000,
+    });
 }
 
 export async function getPage(
