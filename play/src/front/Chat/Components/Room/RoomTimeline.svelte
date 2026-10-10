@@ -19,7 +19,6 @@
         roomTimelineFocusStore,
         type RoomTimelineFocusRequest,
     } from "../../Stores/RoomSidePanelStore";
-    import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import LL from "../../../../i18n/i18n-svelte";
@@ -280,8 +279,12 @@
 
         try {
             await room.ensureTimelineInitialized();
-            if (get(room.isEncrypted) && get(matrixSecurity.isEncryptionRequiredAndNotSet)) {
-                return;
+            if (get(room.isEncrypted)) {
+                // Loaded on demand, like everything Matrix: an encrypted room means the Matrix chunk is already there.
+                const { matrixSecurity } = await import("../../Connection/Matrix/MatrixSecurity");
+                if (get(matrixSecurity.isEncryptionRequiredAndNotSet)) {
+                    return;
+                }
             }
 
             await fillViewport(MAX_INITIAL_FILL_ROUNDS);

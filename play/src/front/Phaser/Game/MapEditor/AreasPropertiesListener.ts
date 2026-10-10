@@ -1125,10 +1125,14 @@ export class AreasPropertiesListener {
             this.scene.connection
                 .queryEnterChatRoomArea(property.serverData.matrixRoomId)
                 .then(() => {
-                    if (!property.serverData?.matrixRoomId) {
+                    const matrixRoomId = property.serverData?.matrixRoomId;
+                    if (!matrixRoomId) {
                         throw new Error("Failed to join room : roomId is undefined");
                     }
-                    return gameManager.chatConnection.joinRoom(property.serverData.matrixRoomId);
+                    // The player can spawn inside the area: the map does not wait for the chat connection.
+                    return gameManager
+                        .getChatConnection()
+                        .then((chatConnection) => chatConnection.joinRoom(matrixRoomId));
                 })
                 .then((room: ChatRoom | undefined) => {
                     if (!room) return;
@@ -1430,9 +1434,13 @@ export class AreasPropertiesListener {
         }
         chatZoneLiveStore.set(false);
 
-        get(gameManager.chatConnection.rooms)
-            .find((room) => room.id === property.serverData?.matrixRoomId)
-            ?.leaveRoom()
+        gameManager
+            .getChatConnection()
+            .then((chatConnection) =>
+                get(chatConnection.rooms)
+                    .find((room) => room.id === property.serverData?.matrixRoomId)
+                    ?.leaveRoom(),
+            )
             .catch((error) => console.error(error));
 
         if (this.scene.connection && property.serverData?.matrixRoomId) {

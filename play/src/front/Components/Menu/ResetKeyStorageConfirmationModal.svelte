@@ -2,7 +2,6 @@
     import Popup from "../Modal/Popup.svelte";
     import Button from "../UI/Button.svelte";
     import LL from "../../../i18n/i18n-svelte";
-    import { matrixSecurity } from "../../Chat/Connection/Matrix/MatrixSecurity";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -31,9 +30,11 @@
             class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
             onclick={() => {
                 modals.close();
-                matrixSecurity.setupNewKeyStorage().catch(() => {
-                    console.error("Failed to setup new key storage");
-                });
+                import("../../Chat/Connection/Matrix/MatrixSecurity")
+                    .then(({ matrixSecurity }) => matrixSecurity.setupNewKeyStorage())
+                    .catch(() => {
+                        console.error("Failed to setup new key storage");
+                    });
             }}
         >
             {$LL.menu.chat.resetKeyStorageConfirmationModal.continue()}

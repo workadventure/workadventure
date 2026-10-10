@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { derived } from "svelte/store";
     import { navChat } from "../../../Chat/Stores/ChatStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import MessageCircleIcon from "../../Icons/MessageCircleIcon.svelte";
@@ -43,15 +44,29 @@
             console.error("Could not get chat", e);
         });
 
-    // Create derived stores that subscribe to all unreadNotificationCount stores for real-time updates
-    const nbUnreadRoomsMessages = gameManager.chatConnection.nbUnreadRoomsMessages;
-    const nbUnreadDirectRoomsMessages = gameManager.chatConnection.nbUnreadDirectRoomsMessages;
-    const nbUnreadInvitationsMessages = gameManager.chatConnection.nbUnreadInvitationsMessages;
+    // The action bar shows with the map, which does not wait for the chat connection: until it exists, it has no
+    // unread message. Once it does, follow its unread counters in real time.
+    const nbUnreadChatMessages = derived(
+        gameManager.chatConnectionStore,
+        (chatConnection, set) => {
+            if (!chatConnection) {
+                set(0);
+                return;
+            }
+            return derived(
+                [
+                    chatConnection.nbUnreadRoomsMessages,
+                    chatConnection.nbUnreadDirectRoomsMessages,
+                    chatConnection.nbUnreadInvitationsMessages,
+                ],
+                ([rooms, directRooms, invitations]) => rooms + directRooms + invitations,
+            ).subscribe(set);
+        },
+        0,
+    );
 
     // Calculate total unread count and format it (max 99+)
-    let totalUnreadCount = $derived(
-        $nbUnreadRoomsMessages + $nbUnreadDirectRoomsMessages + $nbUnreadInvitationsMessages + $unreadMessagesCount,
-    );
+    let totalUnreadCount = $derived($nbUnreadChatMessages + $unreadMessagesCount);
     let displayCount = $derived(totalUnreadCount > 99 ? "99" : totalUnreadCount.toString());
 </script>
 

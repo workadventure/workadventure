@@ -1,5 +1,5 @@
-import type { Unsubscriber } from "svelte/store";
-import { get } from "svelte/store";
+import type { Readable, Unsubscriber } from "svelte/store";
+import { get, readonly, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import * as Phaser from "phaser";
 import { Deferred } from "@workadventure/shared-utils";
@@ -30,12 +30,6 @@ import { pwaInstallProfileMenuEligibleStore, pwaInstallSceneVisibleStore } from 
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
-import {
-    InvalidLoginTokenError,
-    MatrixClientWrapper,
-    MissingMatrixCredentialsError,
-} from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
@@ -64,8 +58,14 @@ export class GameManager {
     private matrixServerUrl: string | undefined = undefined;
     private chatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
     private pendingChatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
-    private matrixClientWrapper: MatrixClientWrapper | undefined;
-    private _chatConnection: ChatConnectionInterface | undefined;
+    private readonly _chatConnectionStore = writable<ChatConnectionInterface | undefined>(undefined);
+    /**
+     * The chat connection, once there is one. The map does not wait for it, and for a logged-in user it only
+     * exists once the Matrix code is downloaded: any UI mounted with the map must go through this store.
+     */
+    public readonly chatConnectionStore: Readable<ChatConnectionInterface | undefined> = readonly(
+        this._chatConnectionStore,
+    );
     private chatVisibilitySubscription: Unsubscriber | undefined;
 
     constructor() {
@@ -454,15 +454,30 @@ export class GameManager {
         // is still stored locally, so every later room with the chat enabled restored that dead token and got
         // nothing but M_UNKNOWN_TOKEN. Not opening the session at all leaves nothing to tear down.
         if (!matrixServerUrl || !get(userIsConnected) || !(await this.isChatEnabledOnCurrentRoom())) {
-            // No matrix connection? Let's fill the gap with a "void" object
-            this._chatConnection = new VoidChatConnection();
-            isMatrixChatEnabledStore.set(false);
-            return this._chatConnection;
+            return this.useVoidChatConnection();
         }
 
-        this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
+        // matrix-js-sdk is a large chunk: only the users who actually get a Matrix chat download it. Anonymous
+        // users never do, so it stays out of the bundle everybody loads on startup.
+        let matrixModules;
+        try {
+            matrixModules = await Promise.all([
+                import("../../Chat/Connection/Matrix/MatrixClientWrapper"),
+                import("../../Chat/Connection/Matrix/MatrixChatConnection"),
+            ]);
+        } catch (e) {
+            // A network error, or a chunk removed by a newer deployment. The world works without the chat, and
+            // a void connection is not memoised, so the next call tries again.
+            console.error("Could not load the Matrix chat", e);
+            Sentry.captureException(e);
+            return this.useVoidChatConnection();
+        }
+        const [
+            { InvalidLoginTokenError, MatrixClientWrapper, MissingMatrixCredentialsError },
+            { MatrixChatConnection },
+        ] = matrixModules;
 
-        const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
+        const matrixClientPromise = new MatrixClientWrapper(matrixServerUrl, localUserStore).initMatrixClient();
 
         matrixClientPromise.catch((e) => {
             // Both cases end the same way: only a new OpenID login can mint the Matrix login token this
@@ -473,18 +488,32 @@ export class GameManager {
         });
 
         const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
-        this._chatConnection = matrixChatConnection;
+        this._chatConnectionStore.set(matrixChatConnection);
 
         this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
         isMatrixChatEnabledStore.set(true);
 
         return this.chatConnectionPromise;
     }
+
+    private useVoidChatConnection(): ChatConnectionInterface {
+        // No matrix connection? Let's fill the gap with a "void" object
+        const voidChatConnection = new VoidChatConnection();
+        this._chatConnectionStore.set(voidChatConnection);
+        isMatrixChatEnabledStore.set(false);
+        return voidChatConnection;
+    }
+
+    /**
+     * Throws until the connection exists, which the map does not wait for: code that can run as soon as the map
+     * shows uses getChatConnection() or chatConnectionStore instead.
+     */
     get chatConnection(): ChatConnectionInterface {
-        if (!this._chatConnection) {
+        const chatConnection = get(this._chatConnectionStore);
+        if (!chatConnection) {
             throw new Error("_chatConnection not yet initialized");
         }
-        return this._chatConnection;
+        return chatConnection;
     }
 
     /**
@@ -492,13 +521,14 @@ export class GameManager {
      * Currently, this logs out from the Matrix client.
      */
     public async logout(): Promise<void> {
-        if (!this._chatConnection) {
+        const chatConnection = get(this._chatConnectionStore);
+        if (!chatConnection) {
             return;
         }
 
         try {
-            this._chatConnection.clearListener();
-            await this._chatConnection.destroy();
+            chatConnection.clearListener();
+            await chatConnection.destroy();
         } catch (e) {
             // destroy() ends up calling POST /logout, which fails with a 401 when the Matrix session is
             // already dead - exactly when the local cleanup below matters most. It must therefore run in
@@ -512,7 +542,7 @@ export class GameManager {
                 this.chatVisibilitySubscription();
             }
             this.clearChatDataFromLocalStorage();
-            this._chatConnection = undefined;
+            this._chatConnectionStore.set(undefined);
             this.chatConnectionPromise = undefined;
             this.pendingChatConnectionPromise = undefined;
         }

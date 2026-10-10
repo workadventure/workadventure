@@ -1,6 +1,6 @@
 <script lang="ts">
     import { defaultColor } from "@workadventure/shared-utils";
-    import { EventType } from "matrix-js-sdk";
+    import { EventType } from "matrix-js-sdk/lib/@types/event";
     import LL from "../../../../i18n/i18n-svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import type { ChatRoomMember, ChatRoomMembership, ChatRoomModeration } from "../../Connection/ChatConnection";
