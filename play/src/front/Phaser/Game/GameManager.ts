@@ -30,7 +30,6 @@ import { pwaInstallProfileMenuEligibleStore, pwaInstallSceneVisibleStore } from 
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
-import { exchangeMatrixLoginToken } from "../../Chat/Connection/Matrix/MatrixLoginTokenExchange";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
@@ -459,13 +458,18 @@ export class GameManager {
         if (!matrixServerUrl) {
             return;
         }
-        this.matrixLoginTokenExchange = exchangeMatrixLoginToken(matrixServerUrl, loginToken).catch((e: unknown) => {
-            // The token is gone either way. initMatrixClient() then uses the session this browser already holds,
-            // typically from an earlier login, or fails with MissingMatrixCredentialsError, which shows the
-            // "reconnect" prompt.
-            console.error("Unable to exchange the Matrix login token", e);
-            Sentry.captureException(e);
-        });
+        // A login token means a logged-in user, whose chat loads Matrix anyway: this only starts the download sooner.
+        this.matrixLoginTokenExchange = import("../../Chat/Connection/Matrix/MatrixClientWrapper")
+            .then(({ MatrixClientWrapper }) =>
+                new MatrixClientWrapper(matrixServerUrl, localUserStore).exchangeLoginToken(loginToken),
+            )
+            .catch((e: unknown) => {
+                // The token is gone either way. initMatrixClient() then uses the session this browser already
+                // holds, typically from an earlier login, or fails with MissingMatrixCredentialsError, which shows
+                // the "reconnect" prompt.
+                console.error("Unable to exchange the Matrix login token", e);
+                Sentry.captureException(e);
+            });
     }
 
     private async openChatConnection(): Promise<ChatConnectionInterface> {
