@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ICreateClientOpts } from "matrix-js-sdk";
+import { MatrixError } from "matrix-js-sdk";
 import type { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import type { MatrixClientWrapperInterface, MatrixLocalUserStore } from "../MatrixClientWrapper";
-import { MatrixClientWrapper, MissingMatrixCredentialsError } from "../MatrixClientWrapper";
+import { InvalidLoginTokenError, MatrixClientWrapper, MissingMatrixCredentialsError } from "../MatrixClientWrapper";
 import { matrixSecurity } from "../MatrixSecurity";
 import { modals } from "@wa-modals";
 
@@ -35,26 +36,31 @@ describe("MatrixClientWrapper", () => {
         vi.clearAllMocks();
         matrixSecurity.shouldDisplayModal = false;
     });
+    const basicMockClient = {
+        clearStores: vi.fn(),
+        getUser: vi.fn().mockReturnValue({
+            displayName: null,
+        }),
+        setDisplayName: vi.fn(),
+    };
+
+    const basicLocalUserStoreMock: MatrixLocalUserStore = {
+        getLocalUser: vi.fn().mockReturnValue(null),
+        getMatrixDeviceId: vi.fn().mockReturnValue(null),
+        getMatrixAccessToken: vi.fn().mockReturnValue(null),
+        getMatrixRefreshToken: vi.fn().mockReturnValue(null),
+        getMatrixUserId: vi.fn().mockReturnValue(null),
+        getMatrixStoresNeedClearing: vi.fn().mockReturnValue(false),
+        setMatrixStoresNeedClearing: vi.fn(),
+        setMatrixDeviceId: vi.fn(),
+        setMatrixUserId: vi.fn(),
+        setMatrixAccessToken: vi.fn(),
+        setMatrixRefreshToken: vi.fn(),
+        setMatrixAccessTokenExpireDate: vi.fn(),
+        getName: vi.fn().mockReturnValue(null),
+    };
+
     describe("initMatrixClient", () => {
-        const basicMockClient = {
-            clearStores: vi.fn(),
-            getUser: vi.fn().mockReturnValue({
-                displayName: null,
-            }),
-            setDisplayName: vi.fn(),
-        };
-
-        const basicLocalUserStoreMock: MatrixLocalUserStore = {
-            getLocalUser: vi.fn().mockReturnValue(null),
-            getMatrixDeviceId: vi.fn().mockReturnValue(null),
-            getMatrixAccessToken: vi.fn().mockReturnValue(null),
-            getMatrixRefreshToken: vi.fn().mockReturnValue(null),
-            getMatrixUserId: vi.fn().mockReturnValue(null),
-            getMatrixStoresNeedClearing: vi.fn().mockReturnValue(false),
-            setMatrixStoresNeedClearing: vi.fn(),
-            getName: vi.fn().mockReturnValue(null),
-        };
-
         it("should throw a error when localUserStore uuid is undefined or null", async () => {
             const createClient = vi.fn().mockReturnValue(basicMockClient);
 
@@ -320,6 +326,100 @@ describe("MatrixClientWrapper", () => {
 
             await expect(firstRequest).resolves.toEqual([secretStorageKeyId, secretStorageKey]);
             await expect(secondRequest).resolves.toEqual([secretStorageKeyId, secretStorageKey]);
+        });
+    });
+
+    describe("exchangeLoginToken", () => {
+        /* eslint-disable @typescript-eslint/unbound-method */
+        const loginResponse = {
+            user_id: "@alice:example.org",
+            access_token: "accessToken",
+            refresh_token: "refreshToken",
+            expires_in_ms: 60_000,
+            device_id: "DEVICE",
+        };
+
+        it("should store the session the homeserver returns, and flag the stores of the previous user", async () => {
+            const loginRequest = vi.fn().mockResolvedValue(loginResponse);
+            const createClient = vi.fn().mockReturnValue({ loginRequest });
+            const localUserStoreMock: MatrixLocalUserStore = {
+                ...basicLocalUserStoreMock,
+                getMatrixUserId: vi.fn().mockReturnValue("@previous:example.org"),
+            };
+
+            await new MatrixClientWrapper("testUrl", localUserStoreMock, createClient).exchangeLoginToken("LoginToken");
+
+            expect(loginRequest).toHaveBeenCalledWith({
+                type: "m.login.token",
+                token: "LoginToken",
+                initial_device_display_name: "WorkAdventure",
+            });
+            expect(localUserStoreMock.setMatrixUserId).toHaveBeenCalledWith("@alice:example.org");
+            expect(localUserStoreMock.setMatrixAccessToken).toHaveBeenCalledWith("accessToken");
+            expect(localUserStoreMock.setMatrixRefreshToken).toHaveBeenCalledWith("refreshToken");
+            expect(localUserStoreMock.setMatrixDeviceId).toHaveBeenCalledWith("DEVICE", "@alice:example.org");
+            expect(localUserStoreMock.setMatrixAccessTokenExpireDate).toHaveBeenCalledOnce();
+            // Another Matrix user used this browser before: the chat must clear the stores before it connects.
+            expect(localUserStoreMock.setMatrixStoresNeedClearing).toHaveBeenCalledWith(true);
+        });
+
+        it("should keep the stores when the same Matrix user logs in again", async () => {
+            const createClient = vi.fn().mockReturnValue({ loginRequest: vi.fn().mockResolvedValue(loginResponse) });
+            const localUserStoreMock: MatrixLocalUserStore = {
+                ...basicLocalUserStoreMock,
+                getMatrixUserId: vi.fn().mockReturnValue("@alice:example.org"),
+            };
+
+            await new MatrixClientWrapper("testUrl", localUserStoreMock, createClient).exchangeLoginToken("LoginToken");
+
+            expect(localUserStoreMock.setMatrixStoresNeedClearing).not.toHaveBeenCalled();
+        });
+
+        it("should give up at once when the homeserver refuses the token", async () => {
+            const loginRequest = vi
+                .fn()
+                .mockRejectedValue(new MatrixError({ errcode: "M_FORBIDDEN", error: "Invalid login token" }, 403));
+            const createClient = vi.fn().mockReturnValue({ loginRequest });
+
+            await expect(
+                new MatrixClientWrapper("testUrl", basicLocalUserStoreMock, createClient).exchangeLoginToken(
+                    "LoginToken",
+                    [0, 0],
+                ),
+            ).rejects.toBeInstanceOf(InvalidLoginTokenError);
+
+            expect(loginRequest).toHaveBeenCalledOnce();
+            expect(basicLocalUserStoreMock.setMatrixAccessToken).not.toHaveBeenCalled();
+        });
+
+        it("should retry when the homeserver does not answer", async () => {
+            const loginRequest = vi
+                .fn()
+                .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+                .mockResolvedValueOnce(loginResponse);
+            const createClient = vi.fn().mockReturnValue({ loginRequest });
+
+            await new MatrixClientWrapper("testUrl", basicLocalUserStoreMock, createClient).exchangeLoginToken(
+                "LoginToken",
+                [0, 0],
+            );
+
+            expect(loginRequest).toHaveBeenCalledTimes(2);
+            expect(basicLocalUserStoreMock.setMatrixAccessToken).toHaveBeenCalledWith("accessToken");
+        });
+
+        it("should fail with the last error once the retries are spent", async () => {
+            const loginRequest = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
+            const createClient = vi.fn().mockReturnValue({ loginRequest });
+
+            await expect(
+                new MatrixClientWrapper("testUrl", basicLocalUserStoreMock, createClient).exchangeLoginToken(
+                    "LoginToken",
+                    [0, 0],
+                ),
+            ).rejects.toThrow("Failed to fetch");
+
+            expect(loginRequest).toHaveBeenCalledTimes(3);
         });
     });
 });
