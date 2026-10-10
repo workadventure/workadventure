@@ -47,7 +47,8 @@
     let streamableEntries = $derived($streamablesStore);
     let activeStreamableEntry = $derived(streamableEntries.find((entry) => !entry.isPending));
     let streamable = $derived(activeStreamableEntry?.streamable ?? $streamableStore);
-    // A component (a whiteboard) fills the box with its own toolbars: our overlays move out of their way.
+    // A component (a whiteboard) fills the box with its own toolbars: our overlays move out of their way, to the
+    // bottom centre, which Excalidraw leaves free at every size.
     let isComponentMedia = $derived(streamable?.media.type === "component");
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
@@ -509,8 +510,9 @@
                                     class:top-0={!isComponentMedia}
                                     class:right-0={!isComponentMedia}
                                     class:left-0={!isComponentMedia}
-                                    class:top-2={isComponentMedia}
-                                    class:left-2={isComponentMedia}
+                                    class:bottom-2={isComponentMedia}
+                                    class:inset-x-0={isComponentMedia}
+                                    class:mx-auto={isComponentMedia}
                                     class:z-10={isComponentMedia}
                                     class:!opacity-60={isComponentMedia}
                                 >

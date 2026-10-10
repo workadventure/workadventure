@@ -12,11 +12,17 @@ The whiteboard property attaches a collaborative whiteboard to an area. Everybod
 
 The whiteboard is [Excalidraw](https://excalidraw.com), drawn by WorkAdventure itself: there is no external website and no extra service to install. Drawings go through the WorkAdventure server only.
 
-The board shows up like a screen share: in the middle of the screen, above the cameras. It stays there while you walk around the area. Use its button in the top left corner to put it fullscreen (the cameras move to a strip on the side) or to shrink it to a tile among the cameras; click the tile to bring it back.
+The board shows up like a screen share, and at the same size: in the middle of the screen, above the cameras, with the map still visible around it. It stays there while you walk around the area.
+
+![](../../images/editor/whiteboard/whiteboard-1.png)
+
+The buttons at the bottom of the board put it fullscreen (the cameras move to a strip on the side) or shrink it to a tile among the cameras.
 
 ![](../../images/editor/whiteboard/whiteboard-2.png)
 
-![](../../images/editor/whiteboard/whiteboard-1.png)
+Shrunk, the tile shows a live picture of the board and its name: you see what the others draw without opening it. Click the tile to bring the board back.
+
+![](../../images/editor/whiteboard/whiteboard-4.png)
 
 ## Add a whiteboard to an area
 
