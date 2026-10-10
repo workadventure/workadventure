@@ -7,6 +7,7 @@
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import { blocker } from "../../Utils/screenBlocker";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
     import ScriptingVideo from "./VideoTags/ScriptingVideo.svelte";
@@ -158,7 +159,11 @@
             class="group/centered-video absolute inset-0 flex justify-center overflow-hidden"
             class:items-center={verticalAlign === "center"}
         >
-            <div class="relative" style="width: {boxWidth}px; height: {boxHeight}px;">
+            <div
+                {@attach media.aspectRatio ? blocker : undefined}
+                class="relative"
+                style="width: {boxWidth}px; height: {boxHeight}px;"
+            >
                 {#if media.component}
                     {@const MediaComponent = media.component}
                     <MediaComponent {...media.props} width={boxWidth} height={boxHeight} />
