@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { EventType } from "matrix-js-sdk";
+    import { EventType } from "matrix-js-sdk/lib/@types/event";
     import { onMount } from "svelte";
     import { get, readable } from "svelte/store";
     import { defaultColor } from "@workadventure/shared-utils";
