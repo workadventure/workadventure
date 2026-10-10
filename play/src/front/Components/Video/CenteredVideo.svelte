@@ -7,6 +7,7 @@
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { observeElementSize } from "./PictureInPicture/childWindow";
+    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
     import ScriptingVideo from "./VideoTags/ScriptingVideo.svelte";
@@ -164,17 +165,23 @@
     class:ease-out={$activePictureInPictureStore}
 >
     {#if media?.type === "component"}
-        <div class="group/centered-video absolute inset-0 flex justify-center items-center overflow-hidden">
-            {#if media.component}
-                {@const MediaComponent = media.component}
-                <MediaComponent
-                    {...media.props}
-                    width={containerWidth ?? 320}
-                    height={containerHeight ?? (containerWidth ?? 320) * (9 / 16)}
-                />
-            {/if}
-            <!-- The box's own overlays (name, fullscreen menu) go over the component too. -->
-            {@render children?.()}
+        {@const ratio = $highlightFullScreen ? undefined : media.aspectRatio}
+        {@const fullWidth = containerWidth ?? 320}
+        {@const fullHeight = containerHeight ?? fullWidth * (9 / 16)}
+        {@const boxWidth = ratio ? Math.min(fullWidth, fullHeight * ratio) : fullWidth}
+        {@const boxHeight = ratio ? boxWidth / ratio : fullHeight}
+        <div
+            class="group/centered-video absolute inset-0 flex justify-center overflow-hidden"
+            class:items-center={verticalAlign === "center"}
+        >
+            <div class="relative" style="width: {boxWidth}px; height: {boxHeight}px;">
+                {#if media.component}
+                    {@const MediaComponent = media.component}
+                    <MediaComponent {...media.props} width={boxWidth} height={boxHeight} />
+                {/if}
+                <!-- The box's own overlays (name, fullscreen menu) go over the component too. -->
+                {@render children?.(true)}
+            </div>
         </div>
     {:else}
         <div

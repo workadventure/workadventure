@@ -102,6 +102,11 @@
             $highlightedEmbedScreen,
         ),
     );
+    // Alone with a whiteboard, nothing else is on stage and the board would span the whole window: keep the
+    // map visible around it.
+    let narrowHighlight = $derived(
+        $streamableCollectionStore.size === 1 && $highlightedEmbedScreen?.uniqueId.startsWith("whiteboard-") === true,
+    );
     let pipHighlightLayoutEnabled = $derived(
         inPictureInPicture && $activePictureInPictureStore && pictureInPictureHighlightedScreen != undefined,
     );
@@ -169,7 +174,10 @@
                     !pipHighlightLayoutEnabled}
                 class:mb-8={!inPictureInPicture || pictureInPictureHighlightedScreen == undefined}
                 class:mb-0={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
+                class:w-full={narrowHighlight}
+                class:mx-auto={narrowHighlight}
                 style={pipHighlightContainerStyle}
+                style:max-width={narrowHighlight ? "75%" : undefined}
                 bind:this={highlightScreen}
             >
                 {#key pictureInPictureHighlightedScreen.uniqueId}

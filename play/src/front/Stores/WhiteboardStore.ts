@@ -54,7 +54,9 @@ function createWhiteboardStore() {
                 media: {
                     type: "component",
                     component: WhiteboardTile,
-                    props: { host, title: options.title },
+                    props: { host, title: options.title, preview: () => board.mounted?.preview() },
+                    // The size of a screen share on the stage: the map stays visible around it.
+                    aspectRatio: 16 / 9,
                     isBlocked: writable(false),
                 },
                 volumeStore: undefined,

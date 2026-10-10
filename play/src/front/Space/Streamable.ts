@@ -38,6 +38,8 @@ export interface ComponentStreamable {
     component: WorkAdventureComponent;
     // Given to the component, beside its width and height.
     props?: Record<string, unknown>;
+    // Kept like a video's (a screen share's) outside fullscreen; undefined fills the box.
+    aspectRatio?: number;
     readonly isBlocked: Readable<boolean>;
 }
 
