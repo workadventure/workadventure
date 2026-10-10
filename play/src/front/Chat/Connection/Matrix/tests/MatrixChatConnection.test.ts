@@ -253,6 +253,29 @@ describe("MatrixChatConnection", () => {
         });
     });
 
+    describe("init", () => {
+        it("should not put the chat on error when the profile sync with the Woka fails", async () => {
+            const getProfileInfo = vi.fn().mockRejectedValue(new Error("profile sync failed"));
+            const mockMatrixClient = {
+                isGuest: vi.fn().mockReturnValue(false),
+                getSafeUserId: vi.fn().mockReturnValue("@alice:matrix.example"),
+                getProfileInfo,
+                on: vi.fn(),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                startClient: vi.fn(),
+                isInitialSyncComplete: vi.fn().mockReturnValue(true),
+            } as unknown as MatrixClient;
+
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            expect(getProfileInfo).toHaveBeenCalled();
+            expect(get(matrixChatConnection.connectionStatus)).not.toBe("ON_ERROR");
+        });
+    });
+
     describe("startMatrixClient", () => {
         it.each([
             [ClientEvent.Sync],
