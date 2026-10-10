@@ -585,7 +585,10 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 });
             }
             this.rebuildSpaceHierarchy();
-            await this.syncMatrixGlobalProfileFromLocalWokaAndName(false);
+            // Best effort, like the later syncs below: a failed avatar upload (or crypto.subtle, which hashes the
+            // Woka, missing on a non-secure origin) is already logged and reported, and must not take the whole
+            // chat down with it. Whether the Woka is there yet when the init gets here is only a matter of timing.
+            await this.syncMatrixGlobalProfileFromLocalWokaAndName(false).catch(() => undefined);
             this.attachWokaAvatarMatrixSync();
             this.attachDisplayNameMatrixSync();
         } catch (error) {
