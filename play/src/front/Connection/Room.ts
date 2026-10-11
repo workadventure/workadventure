@@ -16,6 +16,7 @@ import {
 } from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { getMapStorageRootUrl } from "../Utils/MapStorageUrl";
 import { axiosWithRetry } from "./AxiosUtils";
 import { localUserStore } from "./LocalUserStore";
 export class MapDetail {
@@ -309,11 +310,7 @@ export class Room {
         if (!this._wamUrl) {
             return undefined;
         }
-        let mapStoragePath = PUBLIC_MAP_STORAGE_PREFIX ?? "";
-        if (!mapStoragePath.endsWith("/")) {
-            mapStoragePath += "/";
-        }
-        return new URL(mapStoragePath, this._wamUrl);
+        return getMapStorageRootUrl(this._wamUrl, PUBLIC_MAP_STORAGE_PREFIX);
     }
 
     get authenticationMandatory(): boolean {
