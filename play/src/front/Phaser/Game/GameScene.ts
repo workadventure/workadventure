@@ -23,8 +23,6 @@ import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import {
     type AreaData,
-    ENTITIES_FOLDER_PATH_NO_PREFIX,
-    ENTITY_COLLECTION_FILE,
     EntityPermissions,
     type EntityPrefabType,
     GameMap,
@@ -210,6 +208,7 @@ import {
 } from "../../Stores/PeerStore";
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
+import { getCustomEntityCollectionUrl } from "../../Utils/MapStorageUrl";
 import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
 import { type Avatar, ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
@@ -656,8 +655,10 @@ export class GameScene extends DirtyScene {
     }
 
     public getCustomEntityCollectionUrl() {
-        const mapStoragePath = `${PUBLIC_MAP_STORAGE_PREFIX}${ENTITIES_FOLDER_PATH_NO_PREFIX}/${ENTITY_COLLECTION_FILE}`;
-        return new URL(mapStoragePath, this.wamUrlFile).toString();
+        if (this.wamUrlFile === undefined) {
+            throw new Error("Cannot resolve the custom entity collection URL: the map has no WAM file.");
+        }
+        return getCustomEntityCollectionUrl(this.wamUrlFile, PUBLIC_MAP_STORAGE_PREFIX);
     }
 
     //hook initialisation
