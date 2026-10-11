@@ -14,11 +14,13 @@
     import { duplicateUserConnectedStore } from "../Stores/DuplicateUserConnectedStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import { loaderVisibleStore } from "../Stores/LoaderStore";
+    import { currentRoomStore } from "../Stores/CurrentRoomStore";
     import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
     import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
     import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
     import { draggingFile } from "../Stores/FileUploadStore";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
+    import { pickRoomImages, warmUpImageWhenIdle } from "../Utils/ImagePreload";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
@@ -32,6 +34,7 @@
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
+    import errorGif from "./UI/images/error.gif";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import Calendar from "./Calendar/Calendar.svelte";
     import TodoList from "./TodoList/TodoList.svelte";
@@ -47,11 +50,33 @@
     }
 
     let { game }: Props = $props();
+
+    // The room, and so whether it is branded, is only known once the connection is initialized, after this component
+    // is mounted: until then there is nothing to preload.
+    let roomImages = $derived(
+        $currentRoomStore
+            ? pickRoomImages($currentRoomStore, {
+                  loadingLogo: defaultLoader,
+                  backgroundSceneImage: bgMap,
+                  errorSceneLogo: errorGif,
+              })
+            : undefined,
+    );
+
+    // Have the error image ready for when the connection drops, but off the critical path of the boot.
+    $effect(() => {
+        if (!roomImages) {
+            return undefined;
+        }
+        return warmUpImageWhenIdle(roomImages.errorSceneLogo);
+    });
 </script>
 
-<!-- Preload image loader TODO HUGO : Better way ? -->
-<link rel="preload" as="image" href={bgMap} />
-<link rel="preload" as="image" href={defaultLoader} />
+{#if roomImages}
+    <!-- Preload the images the loader will show, not the defaults a branded room replaces -->
+    <link rel="preload" as="image" href={roomImages.backgroundSceneImage} />
+    <link rel="preload" as="image" href={roomImages.loadingLogo} />
+{/if}
 
 {#if $loaderVisibleStore}
     <div class="bg-contrast">

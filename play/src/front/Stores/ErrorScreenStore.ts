@@ -9,16 +9,11 @@ import {
 import { isAxiosError } from "axios";
 
 import logoImg from "../Components/images/logo-min-white.png";
-import errorGif from "../Components/UI/images/error.gif";
 import { ApiError } from "./Errors/ApiError";
 
 const errorLogo = new Image();
 errorLogo.src = logoImg;
 export const errorLogoStore = readable<HTMLImageElement>(errorLogo);
-
-const errorImage = new Image();
-errorImage.src = errorGif;
-export const errorImageStore = readable<HTMLImageElement>(errorImage);
 
 /**
  * A store that contains one error of type WAError to be displayed.
