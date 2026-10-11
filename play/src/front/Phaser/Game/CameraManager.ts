@@ -97,6 +97,7 @@ export class CameraManager extends EventEmitter {
 
     // Target follow offset for the camera, expressed in game pixels.
     private targetFollowOffset: { x: number; y: number } | undefined;
+    private mapEditorOpened = false;
 
     constructor(
         private scene: GameScene,
@@ -120,19 +121,8 @@ export class CameraManager extends EventEmitter {
 
         // Subscribe to map editor mode store to change camera bounds when the map editor is opened or closed
         this.unsubscribeMapEditorModeStore = mapEditorModeStore.subscribe((isOpened) => {
-            // Define new bounds for camera if the map editor is opened
-            if (isOpened) {
-                //this.camera.setBounds(0, 0, this.mapSize.width * 2, this.mapSize.height);
-                this.camera.setBounds(
-                    -this.mapSize.width,
-                    -this.mapSize.height,
-                    this.mapSize.width * 3,
-                    this.mapSize.height * 3,
-                );
-            } else {
-                // We set the bounds back after a call to start following the player
-                this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
-            }
+            this.mapEditorOpened = isOpened;
+            this.updateBounds();
         });
 
         // Set zoom out to the maximum possible value
@@ -383,6 +373,7 @@ export class CameraManager extends EventEmitter {
 
     public doUpdateCameraOffset(instant = false): void {
         const targetFollowOffset = this.updateTargetFollowOffset();
+        this.updateBounds();
 
         if (instant) {
             if (!this.cameraOffsetCurrentTween) {
@@ -453,6 +444,26 @@ export class CameraManager extends EventEmitter {
 
     private restoreZoom(duration = 0): void {
         this.animateToZoomLevel(this.waScaleManager.getSaveZoom(), duration);
+    }
+
+    /**
+     * The map editor lets the camera go far around the map. Otherwise the camera stays on the map, widened by the
+     * follow offset: at the edge of the map, the player still reaches the free part of the screen (under the
+     * cameras or a whiteboard), with the void around the map showing, instead of staying hidden behind them.
+     */
+    private updateBounds(): void {
+        if (this.mapEditorOpened) {
+            this.camera.setBounds(
+                -this.mapSize.width,
+                -this.mapSize.height,
+                this.mapSize.width * 3,
+                this.mapSize.height * 3,
+            );
+            return;
+        }
+        const x = Math.abs(this.targetFollowOffset?.x ?? 0);
+        const y = Math.abs(this.targetFollowOffset?.y ?? 0);
+        this.camera.setBounds(-x, -y, this.mapSize.width + 2 * x, this.mapSize.height + 2 * y);
     }
 
     private initCamera() {
