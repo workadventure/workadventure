@@ -55,4 +55,6 @@ service MapStorage {
   rpc handleEditMapCommandWithKeyMessage(EditMapCommandWithKeyMessage) returns (EditMapCommandMessage); // Apply one map-editor command to a WAM map, under a per-map lock, and answer the command as stored
   rpc handleUpdateMapToNewestMessage(UpdateMapToNewestWithKeyMessage) returns (EditMapCommandsArrayMessage); // Answer the commands a client is missing, so it can catch its copy of the map up with the stored one
   rpc handleClearAfterUpload(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty); // Drop a WAM map from memory after it was re-uploaded, so the next read reloads it from storage
+  rpc loadWhiteboard(WhiteboardStorageKey) returns (WhiteboardStorageScene); // The stored elements of an area's whiteboard (an empty list when it was never saved)
+  rpc saveWhiteboard(WhiteboardStorageSaveRequest) returns (google.protobuf.Empty); // Store an area's whiteboard as a .excalidraw file, and drop the images it no longer uses
 }

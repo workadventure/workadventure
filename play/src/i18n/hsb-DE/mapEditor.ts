@@ -242,6 +242,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Přistup wzeć",
             actionButtonLabel: "K priwatnemu blidkej hić",
         },
+        whiteboard: {
+            label: "Běła tafla",
+            description:
+                "Běła tafla, kotruž wšitcy we wobłuku dźěla. Kóždy widźi rysowanki direktnje, z kursorami druhich.",
+            disabled: "Běła tafla je w tutym swěće znjemóžnjena.",
+            loadError: "Běła tafla njeda so začitać.",
+            rightsHint:
+                "Štó smě rysować, slěduje kajkosći Prawa wobłuka: jeho pisanske tagi rysuja, druzy jenož hladaja. Bjez prawow rysuja wšitcy.",
+            clear: "Taflu wuprózdnić",
+            clearConfirm: "Klikńće hišće raz, zo byšće ju za wšěch wuprózdnił",
+            ephemeral: "Nachwilna běła tafla",
+            ephemeralDescription:
+                "Ženje so njeskładuje: wuprózdni so 2 mjeńšinje po tym, zo je posledni čłowjek wotešoł. Hewak wostanje z kartu.",
+        },
         excalidraw: {
             label: "Excalidraw wočinić",
             description:

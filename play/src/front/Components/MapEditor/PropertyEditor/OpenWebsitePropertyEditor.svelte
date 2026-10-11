@@ -220,7 +220,10 @@
                 const url = new URL(property.link);
 
                 // Vérify that the link matches with properties
-                if (property.application != "website") validateLinkForApplication(url, property.application);
+                if (property.application != "website")
+                    validateLinkForApplication(url, property.application, {
+                        excalidrawDomains: applicationManager.excalidrawToolDomains,
+                    });
 
                 const embedLink = await getEmbedLink(url, {
                     klaxoonId: applicationManager.klaxoonToolClientId,

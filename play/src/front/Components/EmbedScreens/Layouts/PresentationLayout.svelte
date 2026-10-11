@@ -7,7 +7,8 @@
     import { inExternalServiceStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
-    import { isOnOneLine, playerMovedInTheLast10Seconds } from "../../../Stores/VideoLayoutStore";
+    import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
+    import { highlightCollapsedStore } from "../../../Stores/HighlightCollapsedStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
     import type { CamerasContainerMode } from "../../Video/VideoBoxLayout";
@@ -81,6 +82,11 @@
     }
 
     let oneLineMaxHeight = $derived(containerHeight * 0.2);
+    // Alone with a whiteboard, nothing else is on stage and the board would span the whole window: keep the
+    // map visible around it.
+    let narrowHighlight = $derived(
+        $streamableCollectionStore.size === 1 && $highlightedEmbedScreen?.uniqueId.startsWith("whiteboard-") === true,
+    );
     let pipHighlightLayoutEnabled = $derived(
         inPictureInPicture && $activePictureInPictureStore && $highlightedEmbedScreen != undefined,
     );
@@ -133,7 +139,7 @@
             </div>
         {/if}
 
-        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !$playerMovedInTheLast10Seconds}
+        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !$highlightCollapsedStore}
             <div
                 id="highlighted-media"
                 class="md:mb-0"
@@ -143,7 +149,10 @@
                     !pipHighlightLayoutEnabled}
                 class:mb-8={!inPictureInPicture || $highlightedEmbedScreen == undefined}
                 class:mb-0={inPictureInPicture && $highlightedEmbedScreen != undefined}
+                class:w-full={narrowHighlight}
+                class:mx-auto={narrowHighlight}
                 style={pipHighlightContainerStyle}
+                style:max-width={narrowHighlight ? "75%" : undefined}
                 bind:this={highlightScreen}
             >
                 {#key $highlightedEmbedScreen.uniqueId}

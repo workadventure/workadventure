@@ -18,6 +18,8 @@ import type {
     EmbeddableWebsiteAnswer,
     EmoteEventMessage as EmoteEventMessageTsProto,
     EntityMessage as EntityMessageTsProto,
+    WhiteboardClientMessage,
+    WhiteboardServerMessage,
     BanUserMessage,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
@@ -223,6 +225,8 @@ export class RoomConnection implements RoomConnection {
     public readonly areaPropertyVariableMessageStream = this._areaPropertyVariableMessageStream.asObservable();
     private readonly _entityMessageStream = new Subject<EntityMessageTsProto>();
     public readonly entityMessageStream = this._entityMessageStream.asObservable();
+    private readonly _whiteboardMessageStream = new Subject<WhiteboardServerMessage>();
+    public readonly whiteboardMessageStream = this._whiteboardMessageStream.asObservable();
     private readonly _editMapCommandMessageStream = new Subject<EditMapCommandMessage>();
     public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
@@ -438,6 +442,10 @@ export class RoomConnection implements RoomConnection {
                                 }
                                 case "entityMessage": {
                                     this._entityMessageStream.next(subMessage.entityMessage);
+                                    break;
+                                }
+                                case "whiteboardServerMessage": {
+                                    this._whiteboardMessageStream.next(subMessage.whiteboardServerMessage);
                                     break;
                                 }
                                 case "pingMessage": {
@@ -1110,6 +1118,15 @@ export class RoomConnection implements RoomConnection {
                     key,
                     value: JSON.stringify(value),
                 },
+            },
+        });
+    }
+
+    emitWhiteboardMessage(message: WhiteboardClientMessage): void {
+        this.send({
+            message: {
+                $case: "whiteboardClientMessage",
+                whiteboardClientMessage: message,
             },
         });
     }
@@ -2262,6 +2279,7 @@ export class RoomConnection implements RoomConnection {
         this._variableMessageStream.complete();
         this._areaPropertyVariableMessageStream.complete();
         this._entityMessageStream.complete();
+        this._whiteboardMessageStream.complete();
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
         this._sendUserMessageStream.complete();

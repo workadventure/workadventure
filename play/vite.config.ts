@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { defineConfig, loadEnv } from "vite";
@@ -56,6 +57,20 @@ export default defineConfig(({ mode }) => {
                 transformIndexHtml: () => [
                     { tag: "meta", attrs: { name: "wa-api-version", content: apiVersionHash }, injectTo: "head" },
                 ],
+            },
+            {
+                // The whiteboard tells Excalidraw to load its fonts from "excalidraw-assets/" next to the bundle
+                // (see src/front/Whiteboard/WhiteboardApp.ts) instead of from esm.sh.
+                name: "workadventure-excalidraw-fonts",
+                apply: "build",
+                writeBundle(options: { dir?: string }) {
+                    const excalidrawDist = path.dirname(fileURLToPath(import.meta.resolve("@excalidraw/excalidraw")));
+                    fs.cpSync(
+                        path.join(excalidrawDist, "fonts"),
+                        path.join(options.dir ?? "dist/public", "excalidraw-assets", "fonts"),
+                        { recursive: true },
+                    );
+                },
             },
             tailwindcss(),
             noiseSuppressionAudioWorkletVitePlugin(),

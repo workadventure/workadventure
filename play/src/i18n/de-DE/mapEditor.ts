@@ -245,6 +245,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "Zugriff widerrufen",
             actionButtonLabel: "Zum persönlichen Schreibtisch gehen",
         },
+        whiteboard: {
+            label: "Whiteboard",
+            description:
+                "Ein Whiteboard für alle im Bereich. Alle sehen die Zeichnungen live, mit den Mauszeigern der anderen.",
+            disabled: "Das Whiteboard ist in dieser Welt deaktiviert.",
+            loadError: "Das Whiteboard konnte nicht geladen werden.",
+            rightsHint:
+                "Wer zeichnen darf, folgt der Rechte-Eigenschaft des Bereichs: Schreib-Tags zeichnen, die anderen schauen nur zu. Ohne Rechte zeichnen alle.",
+            clear: "Whiteboard leeren",
+            clearConfirm: "Erneut klicken, um es für alle zu leeren",
+            ephemeral: "Flüchtiges Whiteboard",
+            ephemeralDescription:
+                "Wird nie gespeichert: Es leert sich 2 Minuten, nachdem die letzte Person gegangen ist. Sonst bleibt es mit der Karte erhalten.",
+        },
         excalidraw: {
             label: "Excalidraw öffnen",
             description:
