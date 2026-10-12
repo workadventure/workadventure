@@ -91,6 +91,11 @@ export function resetTabStrip(): void {
     unsubscribeTabs?.();
     unsubscribeTabs = undefined;
     stripReady = false;
+    // The page of a WebContentsView outlives its window unless closed: left open, it could keep the
+    // app from quitting (seen with two worlds open).
+    if (stripView && !stripView.webContents.isDestroyed()) {
+        stripView.webContents.close();
+    }
     stripView = undefined;
     shell = undefined;
 }
