@@ -156,11 +156,18 @@ export class MatrixChatMessage implements ChatMessage {
             };
         }
 
+        // mxcUrlToHttp() returns "" when there is no mxc URL, which the UI would take for a URL to display.
+        const toHttpUrl = (mxcUrl: string | undefined) =>
+            mxcUrl ? (this.room.client.mxcUrlToHttp(mxcUrl) ?? undefined) : undefined;
+        // An encrypted attachment's URL serves the ciphertext: it only gets a URL (a blob: one) once decrypted, in
+        // resolveImageMedia() or resolveAttachmentMedia(). Until then, nothing may link to it or display it.
+        const plainUrl = content.file === undefined ? toHttpUrl(content.url) : undefined;
+
         if (this.type === "image") {
             return {
                 body: content.body,
-                url: this.room.client.mxcUrlToHttp(content.url ?? content.file?.url) ?? undefined,
-                thumbnailUrl: this.room.client.mxcUrlToHttp(content.info?.thumbnail_url) ?? undefined,
+                url: plainUrl,
+                thumbnailUrl: toHttpUrl(content.info?.thumbnail_url),
                 mediaState: content.file !== undefined ? "loading" : "ready",
             };
         }
@@ -168,7 +175,7 @@ export class MatrixChatMessage implements ChatMessage {
         if (this.type === "file" || this.type === "audio" || this.type === "video") {
             return {
                 body: content.body,
-                url: this.room.client.mxcUrlToHttp(content.url ?? content.file?.url) ?? undefined,
+                url: plainUrl,
                 mediaState: content.file !== undefined ? "loading" : "ready",
             };
         }

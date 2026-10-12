@@ -37,7 +37,7 @@
 </script>
 
 <div class="flex flex-row gap-1 items-center">
-    {#if message.type !== "text"}
+    {#if message.type !== "text" && $content.url}
         <a
             href={$content.url}
             download={$content.body}
