@@ -45,6 +45,7 @@ const matrixRefreshToken = "matrixRefreshToken";
 const matrixDeviceId = "matrixDeviceId";
 const matrixLoginToken = "matrixLoginToken";
 const matrixStoresNeedClearing = "matrixStoresNeedClearing";
+const matrixSessionOwner = "matrixSessionOwner";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
 const pwaInstallPromptShownKey = "workadventure_pwa_install_prompt_shown";
@@ -965,6 +966,19 @@ class LocalUserStore {
         return localStorage.getItem(matrixDeviceId + "_" + userUuid) ?? "";
     }
 
+    /** The uuid of the WorkAdventure user who opened the stored Matrix session. */
+    getMatrixSessionOwner(): string | null {
+        return localStorage.getItem(matrixSessionOwner);
+    }
+
+    setMatrixSessionOwner(userUuid: string | null) {
+        if (userUuid !== null) {
+            localStorage.setItem(matrixSessionOwner, userUuid);
+        } else {
+            localStorage.removeItem(matrixSessionOwner);
+        }
+    }
+
     /**
      * Older versions stored the single-use Matrix login token, which is now exchanged as soon as the page lands with
      * it and kept in memory only. Drops the one they may have left behind.
@@ -996,6 +1010,7 @@ class LocalUserStore {
      * next login overwrites it with the one the homeserver hands out.
      */
     clearMatrixSession() {
+        this.setMatrixSessionOwner(null);
         this.setMatrixUserId(null);
         this.setMatrixAccessToken(null);
         this.setMatrixRefreshToken(null);
