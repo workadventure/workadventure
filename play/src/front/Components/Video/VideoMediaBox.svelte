@@ -18,7 +18,7 @@
     import { rawLocalVideoTrackStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
-    import { pictureInPictureLayoutStore } from "../../Stores/PeerStore";
+    import { activePictureInPictureStore, pictureInPictureLayoutStore } from "../../Stores/PeerStore";
     import { blocker } from "../../Utils/screenBlocker";
     import { findHandPosition, raisedHandsOrderStore } from "../../Stores/RaisedHandsStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
