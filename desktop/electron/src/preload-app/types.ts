@@ -77,7 +77,8 @@ export type DesktopPipCommand =
 
 export type WorkAdventureDesktopPipApi = {
     readonly supported: true;
-    open: () => Promise<boolean>;
+    /** `userRequested`: the user asked for the meeting video, which reopens a companion they closed. */
+    open: (options?: { userRequested?: boolean }) => Promise<boolean>;
     close: () => Promise<void>;
     sendOffer: (sdp: DesktopPipSdp) => void;
     sendIce: (candidate: RTCIceCandidateInit) => void;

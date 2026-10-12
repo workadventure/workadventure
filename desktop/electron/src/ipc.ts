@@ -7,7 +7,12 @@ import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustSe
 import settings from "./settings";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { notePresenceReport, setRendererPresence } from "./presence";
-import { closeCompanionPip, dismissCompanion, onMainWindowHidden, openCompanionForPip } from "./companion-controller";
+import {
+    closeCompanionPip,
+    dismissCompanion,
+    onPageVisibilityChange,
+    openCompanionForPip,
+} from "./companion-controller";
 import {
     getControllingWorldContents,
     getDesktopWindowState,
@@ -269,11 +274,12 @@ export default () => {
         });
     });
 
-    // The world page went hidden: the window was fully covered or minimized (the browser engine
-    // tracks occlusion on macOS and Windows). Only the visible tab counts, background tabs are hidden.
-    ipcMain.on("app:page-hidden", (event) => {
+    // The world page went hidden (the window was fully covered or minimized: the browser engine
+    // tracks occlusion on macOS and Windows) or showed again. Only the active tab counts, background
+    // tabs are hidden.
+    ipcMain.on("app:page-visibility", (event, hidden: unknown) => {
         if (isFromActiveRenderer(event)) {
-            onMainWindowHidden();
+            onPageVisibilityChange(hidden === true);
         }
     });
 
@@ -537,7 +543,7 @@ export default () => {
         }
     }
 
-    ipcMain.handle("app:pip:open", async (event) => {
+    ipcMain.handle("app:pip:open", async (event, options: unknown) => {
         if (!isFromMainRenderer(event)) {
             ElectronLog.warn("Rejected PiP open from non-main renderer");
             return false;
@@ -546,7 +552,10 @@ export default () => {
         // companion is open and its renderer is ready (openCompanionForPip awaits hud-ready) before
         // the WA renderer starts sending its SDP offer — otherwise the first offer lands in a deaf
         // renderer and tracks only start mirroring on the next store change (someone joining/leaving).
-        await openCompanionForPip();
+        const userRequested = Boolean(
+            options && typeof options === "object" && (options as { userRequested?: unknown }).userRequested === true
+        );
+        await openCompanionForPip(userRequested);
         // The window closes asynchronously, possibly after a tab switch: tell the world that opened the
         // PiP, not whichever tab is active by then.
         pipOwner = event.sender;

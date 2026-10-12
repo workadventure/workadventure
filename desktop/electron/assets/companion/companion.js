@@ -101,6 +101,7 @@
         hdrShare: byId("c-hdr-share"),
         hdrPip: byId("c-hdr-pip"),
         expand: byId("c-expand"),
+        close: byId("c-close"),
         statusBtn: byId("c-status-btn"),
         selfDot: byId("c-self-dot"),
         selfName: byId("c-self-name"),
@@ -726,6 +727,9 @@
     // ── Header actions ──────────────────────────────────────────────────────
     els.expand.addEventListener("click", function () {
         send({ type: "focus-main" });
+    });
+    els.close.addEventListener("click", function () {
+        send({ type: "close" });
     });
     els.hdrMic.addEventListener("click", function () {
         send({ type: "toggle-mic" });

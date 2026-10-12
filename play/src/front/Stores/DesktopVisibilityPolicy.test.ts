@@ -10,8 +10,8 @@ describe("isUserAwayFromApp", () => {
         expect(isUserAwayFromApp(false, undefined)).toBe(true);
     });
 
-    it("returns true when the desktop window is not focused", () => {
-        expect(isUserAwayFromApp(true, { focused: false, visible: true, minimized: false })).toBe(true);
+    it("returns false when the desktop window only lost the focus (it keeps showing)", () => {
+        expect(isUserAwayFromApp(true, { focused: false, visible: true, minimized: false })).toBe(false);
     });
 
     it("returns true when the desktop window is minimized", () => {
