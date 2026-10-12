@@ -74,7 +74,12 @@ async function handleRequest(request: ProximityFileStorageRequest): Promise<void
                     closeFile(key);
                 }
             }
-            await root.removeEntry(request.session, { recursive: true });
+            // The directory only exists once a file has been received.
+            await root.removeEntry(request.session, { recursive: true }).catch((error: unknown) => {
+                if (!(error instanceof DOMException && error.name === "NotFoundError")) {
+                    throw error;
+                }
+            });
             return;
         }
         case "purge": {
