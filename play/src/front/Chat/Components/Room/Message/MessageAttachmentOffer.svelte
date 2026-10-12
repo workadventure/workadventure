@@ -25,12 +25,14 @@
         <div class="flex gap-1 mt-1">
             <button
                 class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0"
+                data-testid="acceptAttachmentButton"
                 onclick={() => message?.downloadAttachment?.()}
             >
                 {$LL.chat.accept()}
             </button>
             <button
                 class="border border-solid border-danger text-danger hover:bg-danger-400/10 rounded text-xs py-1 px-2 m-0"
+                data-testid="declineAttachmentButton"
                 onclick={() => message?.refuseAttachment?.()}
             >
                 {$LL.chat.decline()}
