@@ -394,8 +394,6 @@ button {
     position: absolute;
     inset: 0;
     display: none;
-    grid-template-columns: 1fr;
-    grid-auto-rows: 1fr;
     gap: 3px;
     padding: 3px;
 }
@@ -425,6 +423,14 @@ button {
     object-fit: cover;
     display: block;
     background: #000;
+}
+/* The large screen share is shown whole, never cropped. */
+.tile.is-highlighted .video-layer video {
+    object-fit: contain;
+}
+/* A screen share has no microphone to show as muted. */
+.tile.is-highlighted .mic-off-badge {
+    display: none;
 }
 /* Self tile mirrors the camera + gets an accent ring (active-speaker style). */
 .tile.is-self .video-layer video {
