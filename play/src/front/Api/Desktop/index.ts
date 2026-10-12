@@ -14,7 +14,6 @@ import { isInActiveConversationStore } from "../../Stores/StreamableCollectionSt
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { LL } from "../../../i18n/i18n-svelte";
 import { requestedScreenSharingState, screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
-import { activePictureInPictureStore, askPictureInPictureActivatingStore } from "../../Stores/PeerStore";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
@@ -513,7 +512,6 @@ class DesktopApi {
             screenSharing: false,
             canScreenShare: false,
             inMeeting: false,
-            pipOpen: false,
             status: "online",
             statusLocked: false,
         };
@@ -637,10 +635,9 @@ class DesktopApi {
                 requestedScreenSharingState,
                 requestedStatusStore,
                 availabilityStatusStore,
-                activePictureInPictureStore,
                 screenSharingAvailableStore,
             ],
-            ([$inMeeting, $mic, $cam, $share, $requested, $availability, $pipOpen, $canShare]): CompanionMedia => ({
+            ([$inMeeting, $mic, $cam, $share, $requested, $availability, $canShare]): CompanionMedia => ({
                 micEnabled: Boolean($mic),
                 cameraEnabled: Boolean($cam),
                 screenSharing: Boolean($share),
@@ -649,7 +646,6 @@ class DesktopApi {
                 // itself would not: sharing needs a bubble/live-stream, not just being in a world.
                 canScreenShare: Boolean($canShare),
                 inMeeting: Boolean($inMeeting),
-                pipOpen: Boolean($pipOpen),
                 status: requestedStatusToKey($requested),
                 statusLocked: STATUS_LOCKED_SET.has($availability),
             }),
@@ -878,17 +874,6 @@ class DesktopApi {
                         requestedScreenSharingState.disableScreenSharing();
                     } else {
                         requestedScreenSharingState.enableScreenSharing();
-                    }
-                    break;
-                case "toggle-pip":
-                    // Open / close the proven native meeting-video window (PiP).
-                    if (get(activePictureInPictureStore)) {
-                        window.WAD?.pip?.close().catch(() => {
-                            /* best-effort */
-                        });
-                        askPictureInPictureActivatingStore.set(false);
-                    } else {
-                        askPictureInPictureActivatingStore.set(true);
                     }
                     break;
                 case "set-status":

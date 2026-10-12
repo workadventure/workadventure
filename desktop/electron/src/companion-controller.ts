@@ -15,8 +15,8 @@ import { canHideWindowsFromCapture } from "./platform-capture-policy";
 /**
  * Drives the unified Companion — the People / Chat / Meeting / Controls window. It never steals
  * focus and (screen sharing aside) is the single floating surface. Closing it (its close button,
- * the window's own close, the tray/shortcut toggle) dismisses it until the meeting ends. Screen
- * sharing hides it in favour of the content-protected presenter HUD.
+ * the window's own close, the tray/shortcut toggle) dismisses it until the user comes back to WA,
+ * or the meeting ends. Screen sharing hides it in favour of the content-protected presenter HUD.
  *
  * It does NOT simply appear whenever WA is backgrounded — that made it noise. Two deliberate
  * triggers arm a one-shot latch (see companion-visibility-policy): a bubble forming around the
@@ -48,7 +48,8 @@ let autoOpenLatch = false;
 let lastPresence = { inWorld: false, inMeeting: false };
 // The world page is hidden: WA fully covered (tracked on macOS and Windows) or minimized.
 let pageHidden = false;
-// Closed by the user: stays closed until the meeting ends (see dismissalAfterPresenceChange).
+// Closed by the user: stays closed until they come back to WA, or the meeting ends (see
+// dismissalAfterPresenceChange). Leaving WA again then reopens it, a deliberate move.
 let dismissed = false;
 // Companion windows closed by this controller, as opposed to by the user (window close shortcut).
 const closedByController = new WeakSet<BrowserWindow>();
@@ -213,6 +214,7 @@ export function updateCompanion(): void {
     if (isMainWindowFocused()) {
         override = "auto";
         autoOpenLatch = false;
+        dismissed = false;
     }
 
     const want = wantOpen();
@@ -251,8 +253,8 @@ export function toggleCompanion(): void {
 }
 
 /**
- * Dismiss from the panel's own close button: the panel stays closed until the meeting ends instead
- * of re-opening on the next trigger.
+ * Dismiss from the panel's own close button: the panel stays closed while the user is away, until
+ * they come back to WA or the meeting ends, instead of re-opening on the next trigger.
  */
 export function dismissCompanion(): void {
     dismiss();
