@@ -116,8 +116,10 @@ const test = base.extend<{ worlds: Worlds; launch: (options?: LaunchOptions) => 
                 }
             }
             // app.quit() can hang on macOS (seen in CI with two worlds open): don't let it take the worker down.
+            // The process is read before closing: Playwright drops its handle once the app is closed.
+            const child = app.process();
             await Promise.race([app.close(), new Promise((resolve) => setTimeout(resolve, 10_000))]).catch(() => {});
-            app.process().kill();
+            child.kill();
         }
     },
 });
