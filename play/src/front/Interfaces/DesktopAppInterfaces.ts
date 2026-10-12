@@ -40,6 +40,8 @@ export type DesktopPipTile = {
     volume?: number;
     /** True when the participant has a visit card (enables the "visit card" tile-menu action). */
     hasVisitCard?: boolean;
+    /** The screen share shown large, like in the browser's picture-in-picture: the first remote one. */
+    highlighted?: boolean;
 };
 
 /** A proximity-chat message mirrored into the floating desktop window. */

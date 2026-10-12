@@ -291,6 +291,7 @@
         this.container.classList.toggle("is-self", meta.isSelf === true);
         this.container.classList.toggle("is-muted", meta.hasAudio === false);
         this.container.classList.toggle("is-speaking", meta.speaking === true);
+        this.container.classList.toggle("is-highlighted", meta.highlighted === true);
         // Track presence wins over the meta hint (avoids a black flicker before pc.ontrack lands).
         this.container.classList.toggle("has-video", this.trackId !== null);
     };
@@ -346,12 +347,107 @@
             els.videos.insertBefore(selfTiles[i], els.videos.firstChild);
         }
     }
+
+    // ── Video layout: the browser picture-in-picture's rules (play: pictureInPictureGridLayout.ts and
+    //    the picture-in-picture branch of PresentationLayout.svelte). Keep them in step. ──
+    var PIP_MAX_TILES = 8;
+    var Q4 = [[1, 2, 1, 2], [2, 3, 1, 2], [1, 2, 2, 3], [2, 3, 2, 3]];
+    // By tile count: [columns, rows, tiles] for a landscape area, then for a portrait one. A tile is
+    // [columnStart, columnEnd, rowStart, rowEnd] in grid lines (end excluded).
+    var PIP_GRIDS = [
+        null,
+        [[1, 1, [[1, 2, 1, 2]]], [1, 1, [[1, 2, 1, 2]]]],
+        [[2, 1, [[1, 2, 1, 2], [2, 3, 1, 2]]], [1, 2, [[1, 2, 1, 2], [1, 2, 2, 3]]]],
+        [
+            [2, 2, [[1, 2, 1, 3], [2, 3, 1, 2], [2, 3, 2, 3]]],
+            [2, 2, [[1, 2, 1, 2], [2, 3, 1, 2], [1, 3, 2, 3]]],
+        ],
+        [[2, 2, Q4], [2, 2, Q4]],
+        [
+            [6, 2, [[1, 3, 1, 2], [3, 5, 1, 2], [5, 7, 1, 2], [1, 4, 2, 3], [4, 7, 2, 3]]],
+            [2, 3, [[1, 2, 1, 2], [2, 3, 1, 2], [1, 3, 2, 3], [1, 2, 3, 4], [2, 3, 3, 4]]],
+        ],
+        [
+            [3, 2, [[1, 2, 1, 2], [2, 3, 1, 2], [3, 4, 1, 2], [1, 2, 2, 3], [2, 3, 2, 3], [3, 4, 2, 3]]],
+            [2, 3, [[1, 2, 1, 2], [2, 3, 1, 2], [1, 2, 2, 3], [2, 3, 2, 3], [1, 2, 3, 4], [2, 3, 3, 4]]],
+        ],
+        [
+            [12, 2, [[1, 4, 1, 2], [4, 7, 1, 2], [7, 10, 1, 2], [10, 13, 1, 2], [1, 5, 2, 3], [5, 9, 2, 3], [9, 13, 2, 3]]],
+            [2, 4, [[1, 2, 1, 2], [1, 2, 3, 4], [1, 2, 4, 5], [1, 3, 2, 3], [2, 3, 1, 2], [2, 3, 3, 4], [2, 3, 4, 5]]],
+        ],
+        [
+            [4, 2, [[1, 2, 1, 2], [2, 3, 1, 2], [3, 4, 1, 2], [4, 5, 1, 2], [1, 2, 2, 3], [2, 3, 2, 3], [3, 4, 2, 3], [4, 5, 2, 3]]],
+            [2, 4, [[1, 2, 1, 2], [2, 3, 1, 2], [1, 2, 2, 3], [2, 3, 2, 3], [1, 2, 3, 4], [2, 3, 3, 4], [1, 2, 4, 5], [2, 3, 4, 5]]],
+        ],
+    ];
+    function pipGrid(count, width, height) {
+        var n = Math.min(PIP_MAX_TILES, count);
+        var line = [];
+        var i;
+        if (width > height * 3) {
+            for (i = 0; i < n; i++) line.push([i + 1, i + 2, 1, 2]);
+            return [n, 1, line];
+        }
+        if (height > width * 2) {
+            for (i = 0; i < n; i++) line.push([1, 2, i + 1, i + 2]);
+            return [1, n, line];
+        }
+        if (n === 0) return [1, 1, []];
+        return PIP_GRIDS[n][height > width ? 1 : 0];
+    }
+    function tracks(n) {
+        return "repeat(" + Math.max(1, n) + ", minmax(0, 1fr))";
+    }
+    // One grid for every tile, so that a <video> never moves in the DOM. A remote screen share takes
+    // 80%, the cameras 20%: a column on the right of a landscape panel, a row above in a portrait one.
     function updateVideoLayout() {
         var count = tiles.size;
         els.videoEmpty.style.display = count === 0 ? "" : "none";
         els.videos.style.display = count === 0 ? "none" : "grid";
-        var cols = count <= 1 ? 1 : count <= 4 ? 2 : 3;
-        els.videos.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+        var width = els.videos.clientWidth;
+        var height = els.videos.clientHeight;
+        var stage = null;
+        var cameras = [];
+        Array.prototype.forEach.call(els.videos.children, function (el) {
+            if (!stage && el.classList.contains("is-highlighted")) stage = el;
+            else cameras.push(el);
+        });
+        var landscape = width > height;
+        var withStage = stage !== null && cameras.length > 0;
+        var grid = withStage
+            ? landscape
+                ? pipGrid(cameras.length, width * 0.2, height)
+                : pipGrid(cameras.length, width, height * 0.2)
+            : pipGrid(cameras.length, width, height);
+        var columnOffset = withStage && landscape ? 1 : 0;
+        if (!withStage) {
+            els.videos.style.gridTemplateColumns = tracks(grid[0]);
+            els.videos.style.gridTemplateRows = tracks(grid[1]);
+        } else if (landscape) {
+            els.videos.style.gridTemplateColumns = "minmax(0, " + 4 * grid[0] + "fr) " + tracks(grid[0]);
+            els.videos.style.gridTemplateRows = tracks(grid[1]);
+        } else {
+            els.videos.style.gridTemplateColumns = tracks(grid[0]);
+            els.videos.style.gridTemplateRows = tracks(grid[1]) + " minmax(0, " + 4 * grid[1] + "fr)";
+        }
+        if (stage) {
+            stage.style.display = "";
+            stage.style.gridColumn = !withStage ? "1 / -1" : landscape ? "1 / 2" : "1 / -1";
+            stage.style.gridRow = !withStage ? "1 / -1" : landscape ? "1 / -1" : grid[1] + 1 + " / " + (grid[1] + 2);
+        }
+        cameras.forEach(function (el, index) {
+            var place = grid[2][index];
+            // Beyond 8 tiles, like the browser's picture-in-picture.
+            el.style.display = place ? "" : "none";
+            if (!place) return;
+            el.style.gridColumn = place[0] + columnOffset + " / " + (place[1] + columnOffset);
+            el.style.gridRow = place[2] + " / " + place[3];
+        });
+    }
+    if (typeof ResizeObserver === "function") {
+        new ResizeObserver(function () {
+            updateVideoLayout();
+        }).observe(els.videos);
     }
 
     function ensurePeerConnection() {

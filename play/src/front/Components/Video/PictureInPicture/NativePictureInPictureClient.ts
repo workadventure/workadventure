@@ -120,6 +120,8 @@ type TileSource = {
      * cam off we flip to placeholder immediately instead of waiting for the track to end.
      */
     hasVideo: boolean;
+    /** Another participant's screen share: the first one is shown large, like in the browser's picture-in-picture. */
+    remoteScreenShare: boolean;
 };
 
 /**
@@ -567,6 +569,8 @@ export class NativePictureInPictureClient {
             name: get(streamable.name) || (isSelf ? "You" : ""),
             trackIds: new Set(),
             hasVideo: get(streamable.hasVideo) === true,
+            // The user's own previews have no space user.
+            remoteScreenShare: streamable.videoType === "screenSharing" && streamable.spaceUserId !== undefined,
         };
         this.tileSources.set(boxId, source);
 
@@ -892,7 +896,10 @@ export class NativePictureInPictureClient {
             }
         }
         const tiles: DesktopPipTile[] = [];
+        let highlightGiven = false;
         for (const source of this.tileSources.values()) {
+            const highlighted: boolean = source.remoteScreenShare && !highlightGiven;
+            highlightGiven ||= highlighted;
             const hasAudio = this.hasAudioByBoxId.get(source.boxId) === true;
             // Per-tile menu inputs (remote boxes only; the self box isn't in the collection).
             const box = boxes.get(source.boxId);
@@ -927,6 +934,7 @@ export class NativePictureInPictureClient {
                     speaking,
                     volume,
                     hasVisitCard,
+                    highlighted,
                 });
                 continue;
             }
@@ -945,6 +953,7 @@ export class NativePictureInPictureClient {
                 speaking,
                 volume,
                 hasVisitCard,
+                highlighted,
             });
         }
         const state: DesktopPipState = {
