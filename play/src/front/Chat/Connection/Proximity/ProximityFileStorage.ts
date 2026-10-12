@@ -149,6 +149,17 @@ export class ProximityFileStorage {
                     pending?.resolve();
                 }
             };
+            // A worker that cannot load (e.g. served cross-origin in dev, where `?worker&inline` is not inlined)
+            // only reports it here: fail every pending request so callers fall back instead of waiting forever.
+            this.worker.onerror = (event: ErrorEvent) => {
+                const error = new Error(`Proximity file storage worker failed: ${event.message}`);
+                for (const pending of this.pendingRequests.values()) {
+                    pending.reject(error);
+                }
+                this.pendingRequests.clear();
+                this.worker?.terminate();
+                this.worker = undefined;
+            };
         }
         const id = this.nextRequestId++;
         return new Promise((resolve, reject) => {
