@@ -24,8 +24,6 @@
  * Decide the panel's visibility. Order matters: each rule below overrides the ones under it.
  *
  * @param {{
- *   screenSharing?: boolean,
- *   meetingBarAvailable?: boolean,
  *   mainWindowInView?: boolean, // WA shows: not minimized, hidden or fully covered
  *   pipActive?: boolean,
  *   invitationPending?: boolean,
@@ -37,11 +35,6 @@
  */
 function shouldShowCompanion(state) {
     const s = state || {};
-    // Screen sharing hides the panel where the content-protected meeting bar carries the controls
-    // instead. Without a meeting bar (Linux cannot keep it out of the capture), the panel stays.
-    if (s.screenSharing && s.meetingBarAvailable !== false) {
-        return false;
-    }
     // WA showing with no active meeting video keeping the panel alive → hide; the app has everything.
     if (s.mainWindowInView && !s.pipActive) {
         return false;
