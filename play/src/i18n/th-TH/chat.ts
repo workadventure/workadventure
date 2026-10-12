@@ -164,6 +164,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
+        file: "ส่งไฟล์: {fileName}",
         in: "ใน",
     },
     see: "ดู",
@@ -279,6 +280,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "ดาวน์โหลด",
         openCoWebsite: "เปิดในเว็บไซต์ฝัง",
         loadingAttachment: "กำลังโหลดไฟล์แนบ...",
+        remainingTime: "เหลืออีก ~{time}",
         attachmentDownloadError: "ไม่สามารถดาวน์โหลดไฟล์แนบนี้ได้",
         attachmentDecryptError: "ไม่สามารถถอดรหัสไฟล์แนบนี้ได้",
         copy: "คัดลอกลิงก์",

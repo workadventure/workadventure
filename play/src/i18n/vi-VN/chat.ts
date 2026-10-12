@@ -164,6 +164,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
+        file: "đã gửi một tệp: {fileName}",
         in: "trong",
     },
     see: "Xem",
@@ -279,6 +280,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "tải xuống",
         openCoWebsite: "Mở trong co-website",
         loadingAttachment: "Đang tải tệp đính kèm...",
+        remainingTime: "còn ~{time}",
         attachmentDownloadError: "Không thể tải tệp đính kèm này.",
         attachmentDecryptError: "Không thể giải mã tệp đính kèm này.",
         copy: "sao chép liên kết",

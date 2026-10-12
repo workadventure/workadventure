@@ -165,6 +165,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
+        file: "enviou um arquivo: {fileName}",
         in: "em",
     },
     see: "Ver",
@@ -280,6 +281,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "baixar",
         openCoWebsite: "Abrir em co-website",
         loadingAttachment: "Carregando anexo...",
+        remainingTime: "restam ~{time}",
         attachmentDownloadError: "Não foi possível baixar este anexo.",
         attachmentDecryptError: "Não foi possível descriptografar este anexo.",
         copy: "copiar o link",

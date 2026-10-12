@@ -166,6 +166,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
+        file: "님이 파일을 보냈습니다: {fileName}",
         in: "에서",
     },
     see: "보기",
@@ -281,6 +282,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "다운로드",
         openCoWebsite: "코웹사이트에서 열기",
         loadingAttachment: "첨부 파일을 불러오는 중...",
+        remainingTime: "약 {time} 남음",
         attachmentDownloadError: "이 첨부 파일을 다운로드할 수 없습니다.",
         attachmentDecryptError: "이 첨부 파일을 복호화할 수 없습니다.",
         copy: "링크 복사",

@@ -162,6 +162,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
+        file: "发送了一个文件：{fileName}",
         in: "在",
     },
     see: "查看",
@@ -277,6 +278,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "下载",
         openCoWebsite: "在协作网站中打开",
         loadingAttachment: "Loading attachment...",
+        remainingTime: "剩余约 {time}",
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "无法解密此附件。",
         copy: "复制链接",

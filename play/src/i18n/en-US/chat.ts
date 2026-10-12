@@ -164,6 +164,7 @@ const chat: BaseTranslation = {
         },
     },
     notification: {
+        file: "sent a file: {fileName}",
         in: "in",
     },
     see: "See",
@@ -279,6 +280,7 @@ const chat: BaseTranslation = {
         download: "download",
         openCoWebsite: "Open in co-website",
         loadingAttachment: "Loading attachment...",
+        remainingTime: "~{time} left",
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "Unable to decrypt this attachment.",
         copy: "copy the link",

@@ -165,6 +165,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
+        file: "heeft een bestand gestuurd: {fileName}",
         in: "in",
     },
     see: "Zien",
@@ -280,6 +281,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "download",
         openCoWebsite: "Openen in co-website",
         loadingAttachment: "Bijlage laden...",
+        remainingTime: "nog ~{time}",
         attachmentDownloadError: "Kan deze bijlage niet downloaden.",
         attachmentDecryptError: "Kan deze bijlage niet ontsleutelen.",
         copy: "kopieer de link",

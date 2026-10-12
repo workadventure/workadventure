@@ -1,15 +1,17 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
     import LL from "../../../../../i18n/i18n-svelte";
-    import type { ChatMessageContent } from "../../../Connection/ChatConnection";
+    import type { ChatMessage, ChatMessageContent } from "../../../Connection/ChatConnection";
     import ChatImagePreviewModal from "../../ChatImagePreviewModal.svelte";
+    import MessageAttachmentOffer from "./MessageAttachmentOffer.svelte";
     import { modals } from "@wa-modals";
 
     interface Props {
         content: Readable<ChatMessageContent>;
+        message?: ChatMessage;
     }
 
-    let { content }: Props = $props();
+    let { content, message = undefined }: Props = $props();
 
     let previewUrl = $derived($content.url ?? $content.thumbnailUrl);
     let displayUrl = $derived($content.thumbnailUrl ?? $content.url);
@@ -74,13 +76,12 @@
         >
             <img class="w-full object-cover max-h-52 rounded" src={displayUrl} alt={$content.body} draggable="false" />
         </div>
-    {:else if $content.mediaState === "loading"}
-        <div class="text-xs text-white/80 px-2 py-1">{$LL.chat.imagePreview.loading()}</div>
     {:else}
-        <div class="text-xs text-white/80 px-2 py-1">
-            {$content.mediaErrorKind === "decrypt"
-                ? $LL.chat.file.attachmentDecryptError()
-                : $LL.chat.imagePreview.loadError()}
-        </div>
+        <MessageAttachmentOffer
+            {content}
+            {message}
+            loadingLabel={$LL.chat.imagePreview.loading()}
+            errorLabel={$LL.chat.imagePreview.loadError()}
+        />
     {/if}
 </div>

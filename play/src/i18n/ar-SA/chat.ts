@@ -163,6 +163,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     notification: {
+        file: "أرسل ملفًا: {fileName}",
         in: "في",
     },
     see: "رؤية",
@@ -278,6 +279,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         download: "تنزيل",
         openCoWebsite: "فتح في الموقع المشترك",
         loadingAttachment: "Loading attachment...",
+        remainingTime: "متبقٍ ~{time}",
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "تعذر فك تشفير هذا المرفق.",
         copy: "نسخ الرابط",
