@@ -340,8 +340,8 @@ export class GameScene extends DirtyScene {
     // Promise resolved when we receive the first message of the roomConnection (RoomConnectedMessage)
     private connectionAnswerPromiseDeferred: Deferred<void>;
     private roomJoinedPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
-    // Resolved once the server knows the user's Matrix id, or once it is clear there is none to send. Until then,
-    // the server cannot invite the user into a room. The map does not wait for it: it needs the chat connection.
+    // Resolved once the chat connection is ready (the Matrix initial sync included) and the user's Matrix id, if any,
+    // was sent to the server. Until then, the server cannot invite the user into a room. The map does not wait for it.
     public chatIdSentDeferred: Deferred<void>;
     // true is soon as the roomConnection received the "roomJoined" message.
     private hasJoinedRoom: boolean = false;
