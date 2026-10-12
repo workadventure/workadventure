@@ -115,7 +115,9 @@ const test = base.extend<{ worlds: Worlds; launch: (options?: LaunchOptions) => 
                     }
                 }
             }
-            await app.close().catch(() => {});
+            // app.quit() can hang on macOS (seen in CI with two worlds open): don't let it take the worker down.
+            await Promise.race([app.close(), new Promise((resolve) => setTimeout(resolve, 10_000))]).catch(() => {});
+            app.process().kill();
         }
     },
 });
