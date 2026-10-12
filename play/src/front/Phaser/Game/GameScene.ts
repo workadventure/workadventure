@@ -3463,6 +3463,10 @@ ${escapedMessage}
                 for (const eventTile of eventTiles) {
                     this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
+                // Tiles changed by a script must repaint even when nothing else moves (the render loop
+                // skips frames until a scene is dirty; without this, script-driven tile changes only
+                // became visible on the next local player input).
+                this.markDirty();
             }),
         );
         iframeListener.registerAnswerer("enablePlayersTracking", (enablePlayersTrackingEvent, source) => {
