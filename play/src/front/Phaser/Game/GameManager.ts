@@ -465,8 +465,8 @@ export class GameManager {
             )
             .catch((e: unknown) => {
                 // The token is gone either way. initMatrixClient() then uses the session this browser already
-                // holds, typically from an earlier login, or fails with MissingMatrixCredentialsError, which shows
-                // the "reconnect" prompt.
+                // holds, if this user opened it (exchangeLoginToken() drops another user's), or fails with
+                // MissingMatrixCredentialsError, which shows the "reconnect" prompt.
                 console.error("Unable to exchange the Matrix login token", e);
                 Sentry.captureException(e);
             });
