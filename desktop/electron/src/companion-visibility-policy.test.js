@@ -2,9 +2,9 @@ import { expect, test } from "vitest";
 import {
     shouldShowCompanion,
     latchAfterPresenceChange,
-    latchAfterMainWindowBlur,
+    latchAfterLeavingApp,
+    dismissalAfterPresenceChange,
     leftWorld,
-    staysInViewAfterBlur,
 } from "./companion-visibility-policy";
 
 const away = { inWorld: true, mainWindowInView: false };
@@ -31,7 +31,7 @@ test("screen sharing keeps the panel where no meeting bar replaces it (Linux)", 
     expect(shouldShowCompanion({ ...away, screenSharing: true, meetingBarAvailable: false, autoOpenLatch: true })).toBe(true);
 });
 
-test("focusing WA hides the panel unless the meeting video is running", () => {
+test("WA showing hides the panel unless the meeting video is running", () => {
     expect(shouldShowCompanion({ inWorld: true, mainWindowInView: true, autoOpenLatch: true })).toBe(false);
     expect(shouldShowCompanion({ inWorld: true, mainWindowInView: true, pipActive: true })).toBe(true);
 });
@@ -69,17 +69,29 @@ test("leaving the world disarms the latch", () => {
     expect(latchAfterPresenceChange(true, { inWorld: true, inMeeting: true }, { inWorld: false, inMeeting: false })).toBe(false);
 });
 
-// ── Trigger 2: switching away during a meeting ───────────────────────────────────────────────
-test("blurring the app during a meeting arms the latch", () => {
-    expect(latchAfterMainWindowBlur(false, { inWorld: true, inMeeting: true })).toBe(true);
+// ── Trigger 2: leaving the app during a meeting ──────────────────────────────────────────────
+test("leaving the app during a meeting arms the latch", () => {
+    expect(latchAfterLeavingApp(false, { inWorld: true, inMeeting: true })).toBe(true);
 });
 
-test("blurring the app while alone in a world does NOT arm the latch", () => {
-    expect(latchAfterMainWindowBlur(false, { inWorld: true, inMeeting: false })).toBe(false);
+test("leaving the app while alone in a world does NOT arm the latch", () => {
+    expect(latchAfterLeavingApp(false, { inWorld: true, inMeeting: false })).toBe(false);
 });
 
-test("blurring outside a world does NOT arm the latch", () => {
-    expect(latchAfterMainWindowBlur(false, { inWorld: false, inMeeting: true })).toBe(false);
+test("leaving outside a world does NOT arm the latch", () => {
+    expect(latchAfterLeavingApp(false, { inWorld: false, inMeeting: true })).toBe(false);
+});
+
+// ── Dismissal ────────────────────────────────────────────────────────────────────────────────
+test("a dismissal holds for the rest of the meeting", () => {
+    const meeting = { inWorld: true, inMeeting: true };
+    expect(dismissalAfterPresenceChange(true, meeting, meeting)).toBe(true);
+});
+
+test("a dismissal ends with the meeting, with the next one, or when leaving the world", () => {
+    expect(dismissalAfterPresenceChange(true, { inWorld: true, inMeeting: true }, { inWorld: true, inMeeting: false })).toBe(false);
+    expect(dismissalAfterPresenceChange(true, { inWorld: true, inMeeting: false }, { inWorld: true, inMeeting: true })).toBe(false);
+    expect(dismissalAfterPresenceChange(true, { inWorld: true, inMeeting: true }, { inWorld: false, inMeeting: true })).toBe(false);
 });
 
 // ── World change ─────────────────────────────────────────────────────────────────────────────
@@ -93,19 +105,7 @@ test("does not fire when already outside, or while staying inside", () => {
     expect(leftWorld({ inWorld: false }, { inWorld: true })).toBe(false);
 });
 
-// ── Leaving WA vs moving to another screen ───────────────────────────────────────────────────
-test("WA stays in view when the user moves to another screen", () => {
-    expect(staysInViewAfterBlur({ knowsWindowPositions: true, pointerDisplayId: 2, windowDisplayId: 1 })).toBe(true);
-});
-
-test("losing focus on WA's own screen leaves it", () => {
-    expect(staysInViewAfterBlur({ knowsWindowPositions: true, pointerDisplayId: 1, windowDisplayId: 1 })).toBe(false);
-});
-
-test("losing focus leaves WA where window positions are unknown (Wayland)", () => {
-    expect(staysInViewAfterBlur({ knowsWindowPositions: false, pointerDisplayId: 2, windowDisplayId: 1 })).toBe(false);
-});
-
-test("WA still in view on another screen keeps the panel closed, even with the latch armed", () => {
+// ── WA keeps showing ─────────────────────────────────────────────────────────────────────────
+test("WA still showing (on another screen, or only unfocused) keeps the panel closed, even with the latch armed", () => {
     expect(shouldShowCompanion({ inWorld: true, mainWindowInView: true, autoOpenLatch: true })).toBe(false);
 });

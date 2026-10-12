@@ -378,7 +378,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 currentStream = undefined;
                 requestedScreenSharingState.disableScreenSharing();
                 const error = asError(e);
-                if (isScreenSharingPickerCancelled(error)) {
+                if (isScreenSharingPickerCancelled(error, Boolean(window.WAD?.desktop))) {
                     // Not an error: nothing is shared, and no "Cannot start screen sharing" message.
                     set({
                         type: "success",

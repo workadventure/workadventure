@@ -6,12 +6,16 @@
  * The panel used to appear on *every* alt-tab away from a world, which made it noise. It now only
  * auto-opens on two deliberate triggers, both of which set a one-shot "latch":
  *   1. a bubble forms around the user (someone joined them), or
- *   2. the user is already in a meeting and leaves the app: focus goes to another window on WA's
- *      screen, or WA gets minimized or fully covered. Moving to another screen while WA keeps
- *      showing is not leaving.
+ *   2. the user is already in a meeting and WA stops showing: minimized, hidden, or fully covered
+ *      (tracked on macOS and Windows only). Losing the focus is not leaving: WA keeps showing while
+ *      the user works on another screen, or drags its window.
  * Anything else — walking around a world alone, tabbing out of an empty world — leaves the latch
  * down and the panel closed. Returning to the app, leaving the meeting, or leaving the world drops
  * the latch again, so each away-session needs a fresh trigger.
+ *
+ * Closing the panel (its close button, the window's own close, the tray) dismisses it until the
+ * user comes back to WA (the controller lifts it on focus) or the meeting ends: neither trigger
+ * brings it back meanwhile.
  *
  * Pure functions (no Electron dependency) so the rules can be unit-tested with `node --test`.
  */
@@ -22,7 +26,7 @@
  * @param {{
  *   screenSharing?: boolean,
  *   meetingBarAvailable?: boolean,
- *   mainWindowInView?: boolean,
+ *   mainWindowInView?: boolean, // WA shows: not minimized, hidden or fully covered
  *   pipActive?: boolean,
  *   invitationPending?: boolean,
  *   inWorld?: boolean,
@@ -38,8 +42,7 @@ function shouldShowCompanion(state) {
     if (s.screenSharing && s.meetingBarAvailable !== false) {
         return false;
     }
-    // WA in view (focused, or still showing on another screen) with no active meeting video keeping
-    // it alive → hide; the app has everything.
+    // WA showing with no active meeting video keeping the panel alive → hide; the app has everything.
     if (s.mainWindowInView && !s.pipActive) {
         return false;
     }
@@ -47,8 +50,8 @@ function shouldShowCompanion(state) {
     if (s.invitationPending) {
         return true;
     }
-    // A manual dismissal (close button / tray) wins over the keep-open and the auto-show: closing
-    // the companion during a meeting tears down its embedded video, which is the intent.
+    // A dismissal (close button, window close, tray) wins over the keep-open and the auto-show:
+    // closing the companion during a meeting tears down its embedded video, which is the intent.
     if (s.override === "force-closed") {
         return false;
     }
@@ -95,14 +98,14 @@ function latchAfterPresenceChange(latch, previous, next) {
 }
 
 /**
- * Fold a main-window blur into the latch: switching to another window *while in a meeting* is the
- * second trigger. Blurring outside a meeting must not arm it — that is the noise we removed.
+ * Fold WA ceasing to show into the latch: leaving the app *while in a meeting* is the second
+ * trigger. Leaving outside a meeting must not arm it — that is the noise we removed.
  *
  * @param {boolean} latch
  * @param {{inWorld?: boolean, inMeeting?: boolean}} presence
  * @returns {boolean}
  */
-function latchAfterMainWindowBlur(latch, presence) {
+function latchAfterLeavingApp(latch, presence) {
     const p = presence || {};
     if (p.inWorld && p.inMeeting) {
         return true;
@@ -111,16 +114,21 @@ function latchAfterMainWindowBlur(latch, presence) {
 }
 
 /**
- * Whether WA stays in view once it lost focus: the pointer went to another screen, so the user
- * moved there and WA keeps showing on its own. Where window positions are unknown (Wayland),
- * losing focus counts as leaving.
+ * A meeting that starts or ends, or leaving the world, lifts a dismissal (coming back to WA does
+ * too, see the controller).
  *
- * @param {{knowsWindowPositions?: boolean, pointerDisplayId?: number, windowDisplayId?: number}} blur
+ * @param {boolean} dismissed
+ * @param {{inWorld?: boolean, inMeeting?: boolean}} previous
+ * @param {{inWorld?: boolean, inMeeting?: boolean}} next
  * @returns {boolean}
  */
-function staysInViewAfterBlur(blur) {
-    const b = blur || {};
-    return Boolean(b.knowsWindowPositions) && b.pointerDisplayId !== b.windowDisplayId;
+function dismissalAfterPresenceChange(dismissed, previous, next) {
+    const before = previous || {};
+    const after = next || {};
+    if (!after.inWorld || Boolean(before.inMeeting) !== Boolean(after.inMeeting)) {
+        return false;
+    }
+    return Boolean(dismissed);
 }
 
 /**
@@ -139,7 +147,7 @@ function leftWorld(previous, next) {
 module.exports = {
     shouldShowCompanion,
     latchAfterPresenceChange,
-    latchAfterMainWindowBlur,
-    staysInViewAfterBlur,
+    latchAfterLeavingApp,
+    dismissalAfterPresenceChange,
     leftWorld,
 };

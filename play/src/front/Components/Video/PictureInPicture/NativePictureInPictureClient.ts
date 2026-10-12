@@ -194,7 +194,8 @@ export class NativePictureInPictureClient {
         return this.active;
     }
 
-    async start(onClosed?: () => void): Promise<boolean> {
+    /** `userRequested`: the user asked for it, unlike the automatic opening when they leave the app. */
+    async start(onClosed?: () => void, userRequested = false): Promise<boolean> {
         const pip = getDesktopPipApi();
         if (!pip) {
             return false;
@@ -210,7 +211,7 @@ export class NativePictureInPictureClient {
             // pip.open() blocks in main process until the PiP renderer signals `app:pip:ready`,
             // so by the time we wire tracks below the renderer is guaranteed to have subscribed
             // to onOffer/onIce/onState.
-            opened = await pip.open();
+            opened = await pip.open({ userRequested });
         } catch (error) {
             debug("pip.open() failed", error);
             this.active = false;

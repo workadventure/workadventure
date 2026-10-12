@@ -99,8 +99,8 @@
         hdrMic: byId("c-hdr-mic"),
         hdrCam: byId("c-hdr-cam"),
         hdrShare: byId("c-hdr-share"),
-        hdrPip: byId("c-hdr-pip"),
         expand: byId("c-expand"),
+        close: byId("c-close"),
         statusBtn: byId("c-status-btn"),
         selfDot: byId("c-self-dot"),
         selfName: byId("c-self-name"),
@@ -730,6 +730,9 @@
     els.expand.addEventListener("click", function () {
         send({ type: "focus-main" });
     });
+    els.close.addEventListener("click", function () {
+        send({ type: "close" });
+    });
     els.hdrMic.addEventListener("click", function () {
         send({ type: "toggle-mic" });
     });
@@ -739,10 +742,6 @@
     els.hdrShare.addEventListener("click", function () {
         if (els.hdrShare.disabled) return;
         send({ type: "toggle-screenshare" });
-    });
-    els.hdrPip.addEventListener("click", function () {
-        if (els.hdrPip.disabled) return;
-        send({ type: "toggle-pip" });
     });
     els.annotationsAllow.addEventListener("click", function () {
         send({ type: "annotation-toggle-others" });
@@ -1145,15 +1144,6 @@
               ? t("companion.shareScreenNeedsMeeting", "Join a meeting to share your screen")
               : t("companion.shareScreen", "Share your screen");
         els.hdrShare.setAttribute("aria-label", els.hdrShare.title);
-        // Picture-in-picture: single icon; active turns it secondary-blue. Only meaningful in a meeting.
-        els.hdrPip.classList.toggle("is-active", media.pipOpen === true);
-        els.hdrPip.disabled = !media.inMeeting;
-        els.hdrPip.title = media.pipOpen
-            ? t("companion.closePip", "Close picture-in-picture")
-            : els.hdrPip.disabled
-              ? t("companion.pipNeedsMeeting", "Join a meeting to open picture-in-picture")
-              : t("companion.pip", "Picture-in-picture");
-        els.hdrPip.setAttribute("aria-label", els.hdrPip.title);
 
         // Annotations of the user's own share: only sent where no meeting bar floats over it (Linux).
         var annotating = typeof media.othersMayAnnotate === "boolean";

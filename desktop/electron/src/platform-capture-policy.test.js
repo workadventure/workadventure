@@ -2,7 +2,6 @@ import { expect, test } from "vitest";
 import {
     canHideWindowsFromCapture,
     canOpenAnnotationOverlay,
-    knowsWindowPositions,
     usesSystemScreenSharePicker,
 } from "./platform-capture-policy";
 
@@ -24,10 +23,4 @@ test("the annotation overlay is for the user sharing their screen, where it stay
     expect(canOpenAnnotationOverlay("win32", true)).toBe(true);
     expect(canOpenAnnotationOverlay("darwin", false)).toBe(false);
     expect(canOpenAnnotationOverlay("linux", true)).toBe(false);
-});
-
-test("window positions are unknown under Wayland only", () => {
-    expect(knowsWindowPositions("linux", { XDG_SESSION_TYPE: "wayland" })).toBe(false);
-    expect(knowsWindowPositions("linux", { XDG_SESSION_TYPE: "x11" })).toBe(true);
-    expect(knowsWindowPositions("darwin", {})).toBe(true);
 });

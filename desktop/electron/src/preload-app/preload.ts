@@ -22,7 +22,7 @@ function subscribe(channel: string, callback: (...args: unknown[]) => void): () 
 
 const pipApi: WorkAdventureDesktopPipApi = {
     supported: true,
-    open: () => ipcRenderer.invoke("app:pip:open"),
+    open: (options) => ipcRenderer.invoke("app:pip:open", options),
     close: () => ipcRenderer.invoke("app:pip:close"),
     sendOffer: (sdp) => ipcRenderer.send("app:pip:offer-from-main", sdp),
     sendIce: (candidate) => ipcRenderer.send("app:pip:ice-from-main-renderer", candidate),
@@ -57,12 +57,9 @@ const companionApi: WorkAdventureDesktopCompanionApi = {
         subscribe("app:companion:command-to-main", (command) => callback(command as CompanionCommand)),
 };
 
-// Lets the companion open when the window gets fully covered, even on another screen than the
-// one the user moved to (see onMainWindowHidden).
+// Lets the companion open when the window gets fully covered or minimized (see onPageVisibilityChange).
 document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-        ipcRenderer.send("app:page-hidden");
-    }
+    ipcRenderer.send("app:page-visibility", document.visibilityState === "hidden");
 });
 
 const api: WorkAdventureDesktopApi = {
