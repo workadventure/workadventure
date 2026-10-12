@@ -176,20 +176,12 @@ Note that anonymous players don't have any TTL limit because their data is store
         .describe(
             "Record every microphone of every bubble and meeting area automatically, one audio file per microphone, without user action. Only read when no admin API answers per world (the admin's /api/livekit/credentials carries an autoRecording flag). Recorded spaces always use LiveKit. Needs AUTO_RECORDING_S3_BUCKET. Defaults to false",
         ),
-    AUTO_RECORDING_S3_ENDPOINT: z
-        .string()
-        .url()
-        .or(z.literal(""))
-        .optional()
-        .transform(emptyStringToUndefined)
-        .describe("The S3 endpoint the automatic recordings are written to."),
-    AUTO_RECORDING_S3_ACCESS_KEY: z.string().optional().describe("The S3 access key for automatic recordings."),
-    AUTO_RECORDING_S3_SECRET_KEY: z.string().optional().describe("The S3 secret key for automatic recordings."),
-    AUTO_RECORDING_S3_REGION: z.string().optional().describe("The S3 region for automatic recordings."),
     AUTO_RECORDING_S3_BUCKET: z
         .string()
         .optional()
-        .describe("The S3 bucket for automatic recordings. Without it, automatic recording is off."),
+        .describe(
+            "The S3 bucket for automatic recordings, reached with the LiveKit recording settings (LIVEKIT_RECORDING_S3_ENDPOINT, keys and region). Without it, automatic recording is off.",
+        ),
     AUTO_RECORDING_SPEAKER_SECRET: z
         .string()
         .optional()
