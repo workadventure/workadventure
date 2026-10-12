@@ -280,6 +280,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         openCoWebsite: "فتح في الموقع المشترك",
         loadingAttachment: "Loading attachment...",
         remainingTime: "متبقٍ ~{time}",
+        recipient: {
+            waiting: "لم يُقبل بعد",
+            sending: "جارٍ الإرسال",
+            received: "تم الاستلام",
+            declined: "مرفوض",
+            failed: "لم يُسلَّم",
+        },
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "تعذر فك تشفير هذا المرفق.",
         copy: "نسخ الرابط",

@@ -282,6 +282,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         openCoWebsite: "共同ウェブサイトで開く",
         loadingAttachment: "Loading attachment...",
         remainingTime: "残り約{time}",
+        recipient: {
+            waiting: "未承諾",
+            sending: "送信中",
+            received: "受信済み",
+            declined: "辞退",
+            failed: "未配信",
+        },
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "この添付ファイルを復号できません。",
         copy: "リンクをコピーする",

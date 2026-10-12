@@ -6,7 +6,11 @@ import { setLocale } from "../../../../../i18n/i18n-svelte";
 import { chatVisibilityStore } from "../../../../Stores/ChatStore";
 import { chatNotificationStore } from "../../../../Stores/ProximityNotificationStore";
 import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
-import type { IncomingProximityFileTransferOffer, ProximityFileTransferUpdate } from "../ProximityFileTransferService";
+import type {
+    IncomingProximityFileTransferOffer,
+    OutgoingProximityFileTransferUpdate,
+    ProximityFileTransferUpdate,
+} from "../ProximityFileTransferService";
 import type { SpaceUserExtended } from "../../../../Space/SpaceInterface";
 import { formatProximityFileTransferRemainingTime } from "../ProximityFileTransferEta";
 import { ProximityChatRoom } from "../ProximityChatRoom";
@@ -269,6 +273,51 @@ describe("ProximityChatRoom file transfers", () => {
             url: "blob:transfer-1",
             mediaState: "ready",
         });
+        vi.unstubAllGlobals();
+    });
+
+    it("should show the sender one row per recipient, keeping received and declined as final", async () => {
+        vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-1") });
+        const room = createRoom();
+        const user = (spaceUserId: string, name: string) =>
+            [spaceUserId, { spaceUserId, uuid: spaceUserId, name } as SpaceUserExtended] as const;
+        Reflect.set(room, "users", new Map([user("bob", "Bob"), user("eve", "Eve"), user("joe", "Joe")]));
+        const file = new File(["hello"], "hello.txt", { type: "text/plain" });
+        Reflect.set(room, "fileTransferService", {
+            createOutgoingOffers: () => [{ transferId: "transfer-1", file, recipients: ["bob", "eve", "joe"] }],
+        });
+        const apply = (
+            recipientSpaceUserId: string,
+            state: OutgoingProximityFileTransferUpdate["state"],
+            progress = 0,
+        ) =>
+            Reflect.get(room, "applyOutgoingFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                recipientSpaceUserId,
+                state,
+                progress,
+            } satisfies OutgoingProximityFileTransferUpdate);
+
+        await room.sendFiles(createFileList(file));
+        const [message] = get(room.messages);
+        expect(get(message.attachmentRecipients!).map(({ name, state }) => [name, state])).toEqual([
+            ["Bob", "waiting"],
+            ["Eve", "waiting"],
+            ["Joe", "waiting"],
+        ]);
+
+        apply("bob", "sending", 0.5);
+        apply("bob", "received", 1);
+        apply("eve", "declined");
+        apply("joe", "sending", 0.25);
+        // We leave the bubble: whoever has not got the file by now will not get it.
+        Reflect.get(room, "failUnfinishedOutgoingRecipients").call(room);
+
+        expect(get(message.attachmentRecipients!).map(({ name, state }) => [name, state])).toEqual([
+            ["Bob", "received"],
+            ["Eve", "declined"],
+            ["Joe", "failed"],
+        ]);
         vi.unstubAllGlobals();
     });
 

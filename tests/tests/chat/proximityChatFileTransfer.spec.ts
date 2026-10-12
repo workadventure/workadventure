@@ -56,9 +56,16 @@ test.describe("Proximity chat file transfer @nomobile @nowebkit", () => {
         await fileChooser.setFiles({ name: fileName, mimeType: "application/octet-stream", buffer: content });
         await alice.getByTestId("sendMessageButton").click();
         await expect(alice.getByRole("link", { name: fileName })).toBeVisible();
+        const recipientRow = (name: string) => alice.getByTestId("attachmentRecipient").filter({ hasText: name });
+        await expect(recipientRow("Bob")).toContainText("Not accepted yet");
+        await expect(recipientRow("Charlie")).toContainText("Not accepted yet");
 
         // Then Bob and Charlie are both offered the file, and each gets it byte for byte once accepted.
         expect((await acceptAndDownload(bob, fileName)).equals(content)).toBe(true);
         expect((await acceptAndDownload(charlie, fileName)).equals(content)).toBe(true);
+
+        // And Alice sees that both have it, so she knows she can leave the bubble.
+        await expect(recipientRow("Bob")).toContainText("Received");
+        await expect(recipientRow("Charlie")).toContainText("Received");
     });
 });

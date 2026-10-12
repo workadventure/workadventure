@@ -283,6 +283,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         openCoWebsite: "코웹사이트에서 열기",
         loadingAttachment: "첨부 파일을 불러오는 중...",
         remainingTime: "약 {time} 남음",
+        recipient: {
+            waiting: "아직 수락하지 않음",
+            sending: "전송 중",
+            received: "받음",
+            declined: "거절됨",
+            failed: "전달되지 않음",
+        },
         attachmentDownloadError: "이 첨부 파일을 다운로드할 수 없습니다.",
         attachmentDecryptError: "이 첨부 파일을 복호화할 수 없습니다.",
         copy: "링크 복사",

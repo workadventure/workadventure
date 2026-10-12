@@ -16,6 +16,7 @@ import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
     AnyKindOfUser,
+    ChatAttachmentRecipient,
     ChatConversation,
     ChatMessage,
     ChatMessageContent,
@@ -72,6 +73,7 @@ import {
     getMessageTypeFromMimeType,
     ProximityFileTransferService,
     type IncomingProximityFileTransferOffer,
+    type OutgoingProximityFileTransferUpdate,
     type ProximityFileTransferUpdate,
 } from "./ProximityFileTransferService";
 import { estimateProximityFileTransferRemainingSeconds } from "./ProximityFileTransferEta";
@@ -96,6 +98,7 @@ export class ProximityChatMessage implements ChatMessage {
         public type: ChatMessageType,
         public downloadAttachment?: () => Promise<void>,
         public refuseAttachment?: () => void,
+        public attachmentRecipients?: Readable<ChatAttachmentRecipient[]>,
     ) {}
 
     remove(): void {
@@ -255,6 +258,8 @@ export class ProximityChatRoom implements ChatRoom {
         string,
         { message: ProximityChatMessage; content: Writable<ChatMessageContent>; downloadStartedAt?: number }
     >();
+    // For each file we sent, how each recipient's copy is doing.
+    private outgoingFileTransfers = new Map<string, Writable<ChatAttachmentRecipient[]>>();
     private fileTransferObjectUrls = new Set<string>();
     private screenWakeRelease: undefined | (() => Promise<void>);
 
@@ -483,14 +488,26 @@ export class ProximityChatRoom implements ChatRoom {
 
         const recipients = Array.from(this.users?.values() ?? [])
             .filter((user) => user.spaceUserId !== this._spaceUserId)
-            .filter((user) => !blackListManager.isBlackListed(user.uuid))
-            .map((user) => user.spaceUserId);
+            .filter((user) => !blackListManager.isBlackListed(user.uuid));
 
         const spaceUser = this.users?.get(this._spaceUserId);
         const chatUser = spaceUser ? mapExtendedSpaceUserToChatUser(spaceUser) : this.unknownUser;
-        for (const offer of this.fileTransferService.createOutgoingOffers(Array.from(files), recipients)) {
+        const offers = this.fileTransferService.createOutgoingOffers(
+            Array.from(files),
+            recipients.map((user) => user.spaceUserId),
+        );
+        for (const offer of offers) {
             const objectUrl = URL.createObjectURL(offer.file);
             this.fileTransferObjectUrls.add(objectUrl);
+            const attachmentRecipients = writable<ChatAttachmentRecipient[]>(
+                recipients.map((user) => ({
+                    spaceUserId: user.spaceUserId,
+                    name: user.name,
+                    state: "waiting",
+                    progress: 0,
+                })),
+            );
+            this.outgoingFileTransfers.set(offer.transferId, attachmentRecipients);
             const message = new ProximityChatMessage(
                 offer.transferId,
                 chatUser,
@@ -498,6 +515,9 @@ export class ProximityChatRoom implements ChatRoom {
                 new Date(),
                 true,
                 getMessageTypeFromMimeType(offer.file.type),
+                undefined,
+                undefined,
+                attachmentRecipients,
             );
             this.messages.push(message);
             this.lastMessageTimestamp = message.date.getTime();
@@ -810,6 +830,11 @@ export class ProximityChatRoom implements ChatRoom {
         this.fileTransferSubscriptions.add(
             this.fileTransferService.transferUpdates.subscribe((update) => this.applyFileTransferUpdate(update)),
         );
+        this.fileTransferSubscriptions.add(
+            this.fileTransferService.outgoingUpdates.subscribe((update) =>
+                this.applyOutgoingFileTransferUpdate(update),
+            ),
+        );
     }
 
     private addIncomingFileOffer(offer: IncomingProximityFileTransferOffer): void {
@@ -930,6 +955,7 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private refuseIncomingFileOffer(transferId: string): void {
+        this.fileTransferService?.decline(transferId);
         this.fileTransfers.get(transferId)?.content.update((currentContent) => {
             if (currentContent.url !== undefined) {
                 return currentContent;
@@ -943,6 +969,39 @@ export class ProximityChatRoom implements ChatRoom {
                 mediaErrorKind: undefined,
             };
         });
+    }
+
+    private applyOutgoingFileTransferUpdate(update: OutgoingProximityFileTransferUpdate): void {
+        this.updateOutgoingRecipients(update.transferId, (recipient) =>
+            recipient.spaceUserId === update.recipientSpaceUserId
+                ? { ...recipient, state: update.state, progress: update.progress }
+                : recipient,
+        );
+    }
+
+    private updateOutgoingRecipients(
+        transferId: string,
+        change: (recipient: ChatAttachmentRecipient) => ChatAttachmentRecipient,
+    ): void {
+        // Received and declined are final: a later failure (the recipient leaving afterwards) must not undo them.
+        this.outgoingFileTransfers
+            .get(transferId)
+            ?.update((recipients) =>
+                recipients.map((recipient) =>
+                    recipient.state === "received" || recipient.state === "declined" ? recipient : change(recipient),
+                ),
+            );
+    }
+
+    /** Recipients who will not get our files any more: the one who left, or all of them when we leave. */
+    private failUnfinishedOutgoingRecipients(spaceUserId?: string): void {
+        for (const transferId of this.outgoingFileTransfers.keys()) {
+            this.updateOutgoingRecipients(transferId, (recipient) =>
+                spaceUserId === undefined || recipient.spaceUserId === spaceUserId
+                    ? { ...recipient, state: "failed" }
+                    : recipient,
+            );
+        }
     }
 
     private isBlackListedSpaceUser(spaceUserId: string): boolean {
@@ -1333,6 +1392,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceWatcherUserLeftObserver = this._space.observeUserLeft.subscribe((spaceUser) => {
             if (isMeetingRoomChat) return;
             this.markFileOffersFromSenderUnavailable(spaceUser.spaceUserId);
+            this.failUnfinishedOutgoingRecipients(spaceUser.spaceUserId);
             this.addOutcomingUser(spaceUser);
         });
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
@@ -1387,6 +1447,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.observeUserLeftSubscription = this._space.observeUserLeft.subscribe((spaceUser) => {
             this.markFileOffersFromSenderUnavailable(spaceUser.spaceUserId);
+            this.failUnfinishedOutgoingRecipients(spaceUser.spaceUserId);
             const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
             // Only announce the departure of users we did announce (one still waiting for zone data is unknown to
             // scripts), and forget them so they are announced again if they come back.
@@ -1840,6 +1901,8 @@ export class ProximityChatRoom implements ChatRoom {
         this.fileTransferService?.destroy();
         this.fileTransferService = undefined;
         this.fileTransfers.clear();
+        this.failUnfinishedOutgoingRecipients();
+        this.outgoingFileTransfers.clear();
         for (const objectUrl of this.fileTransferObjectUrls) {
             URL.revokeObjectURL(objectUrl);
         }

@@ -282,6 +282,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         openCoWebsite: "Abrir em co-website",
         loadingAttachment: "Carregando anexo...",
         remainingTime: "restam ~{time}",
+        recipient: {
+            waiting: "Ainda não aceito",
+            sending: "Enviando",
+            received: "Recebido",
+            declined: "Recusado",
+            failed: "Não entregue",
+        },
         attachmentDownloadError: "Não foi possível baixar este anexo.",
         attachmentDecryptError: "Não foi possível descriptografar este anexo.",
         copy: "copiar o link",

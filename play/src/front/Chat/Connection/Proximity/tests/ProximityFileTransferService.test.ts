@@ -6,6 +6,7 @@ import {
     PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE,
     PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER,
     ProximityFileTransferService,
+    type OutgoingProximityFileTransferUpdate,
     type ProximityFileTransferSpace,
     type ProximityFileTransferUpdate,
     validateProximityFiles,
@@ -57,15 +58,26 @@ function offerEvent(transferId: string, size: number, sender = "sender", mimeTyp
 type PrivateService = {
     handleDataChannelMessage(session: unknown, data: unknown): Promise<void>;
     sendOutgoingTransfer(session: unknown, transferId: string): Promise<void>;
+    closePeerSession(remoteSpaceUserId: string): void;
 };
 
+/** The parts of a peer session the transfer code reads. */
+function fakeSession(remoteSpaceUserId: string, dataChannel?: unknown) {
+    return { remoteSpaceUserId, dataChannel, awaitingReceipt: new Set<string>() };
+}
+
 function createService(localSpaceUserId: string) {
-    const incomingOffers = new Subject<ReturnType<typeof offerEvent>>();
+    const privateEvents = new Map<string, Subject<unknown>>();
+    const privateEvent = (key: string): Subject<unknown> => {
+        const subject = privateEvents.get(key) ?? new Subject<unknown>();
+        privateEvents.set(key, subject);
+        return subject;
+    };
+    const incomingOffers = privateEvent("proximityFileTransferOffer") as Subject<ReturnType<typeof offerEvent>>;
     const emitPrivateMessage = vi.fn();
     const space = {
         emitPrivateMessage,
-        observePrivateEvent: (key: string) =>
-            (key === "proximityFileTransferOffer" ? incomingOffers : new Subject()) as never,
+        observePrivateEvent: (key: string) => privateEvent(key) as never,
     } as ProximityFileTransferSpace;
     const service = new ProximityFileTransferService({
         localSpaceUserId,
@@ -75,16 +87,20 @@ function createService(localSpaceUserId: string) {
     });
     const updates: ProximityFileTransferUpdate[] = [];
     const updatesSubscription = service.transferUpdates.subscribe((update) => updates.push(update));
+    const outgoingUpdates: OutgoingProximityFileTransferUpdate[] = [];
+    updatesSubscription.add(service.outgoingUpdates.subscribe((update) => outgoingUpdates.push(update)));
     const privateService = service as unknown as PrivateService;
     // Messages arrive on the data channel opened with the peer named `from`.
     const handleDataChannelMessage = (data: unknown, from = "sender") =>
-        privateService.handleDataChannelMessage({ remoteSpaceUserId: from }, data);
+        privateService.handleDataChannelMessage(fakeSession(from), data);
     return {
         service,
         privateService,
+        privateEvent,
         incomingOffers,
         emitPrivateMessage,
         updates,
+        outgoingUpdates,
         updatesSubscription,
         handleDataChannelMessage,
     };
@@ -125,7 +141,7 @@ describe("ProximityFileTransferService", () => {
         vi.unstubAllGlobals();
     });
 
-    it("should stream a file from a sender to a receiver", async () => {
+    it("should stream a file to a receiver, who confirms receipt to the sender", async () => {
         const createObjectURL = vi.fn().mockReturnValue("blob:received");
         vi.stubGlobal("URL", { createObjectURL });
         const sender = createService("sender");
@@ -134,15 +150,25 @@ describe("ProximityFileTransferService", () => {
         const [offer] = sender.service.createOutgoingOffers([file], ["recipient"]);
         receiver.incomingOffers.next(offerEvent(offer.transferId, file.size, "sender", file.type));
         const wire: unknown[] = [];
-        const dataChannel = { bufferedAmount: 0, send: (data: unknown) => wire.push(data) };
+        const senderSession = fakeSession("recipient", {
+            bufferedAmount: 0,
+            readyState: "open",
+            send: (data: unknown) => wire.push(data),
+        });
+        const receipts: unknown[] = [];
+        const receiverSession = fakeSession("sender", {
+            readyState: "open",
+            send: (data: unknown) => receipts.push(data),
+        });
 
-        await sender.privateService.sendOutgoingTransfer(
-            { remoteSpaceUserId: "recipient", dataChannel },
-            offer.transferId,
-        );
+        await sender.privateService.sendOutgoingTransfer(senderSession, offer.transferId);
         for (const message of wire) {
             // eslint-disable-next-line no-await-in-loop -- the data channel delivers in order
-            await receiver.handleDataChannelMessage(message);
+            await receiver.privateService.handleDataChannelMessage(receiverSession, message);
+        }
+        for (const receipt of receipts) {
+            // eslint-disable-next-line no-await-in-loop -- the data channel delivers in order
+            await sender.privateService.handleDataChannelMessage(senderSession, receipt);
         }
 
         expect(receiver.updates.at(-1)).toEqual({
@@ -154,6 +180,11 @@ describe("ProximityFileTransferService", () => {
         const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
         expect(await blob.text()).toBe("hello");
         expect(blob.type).toBe("application/octet-stream");
+        expect(sender.outgoingUpdates.map(({ state, progress }) => [state, progress])).toEqual([
+            ["sending", 0],
+            ["sending", 1],
+            ["received", 1],
+        ]);
     });
 
     it("should type the received blob from the allowlisted offer mime type", async () => {
@@ -189,13 +220,10 @@ describe("ProximityFileTransferService", () => {
     });
 
     it("should stop sending when the data channel closes while waiting for it to drain", async () => {
-        const { service, privateService } = createService("sender");
+        const { service, privateService, outgoingUpdates } = createService("sender");
         const [offer] = service.createOutgoingOffers([sendableFile(new Uint8Array(200_000), "big.bin")], ["recipient"]);
         const dataChannel = new StuckDataChannel();
-        const sending = privateService.sendOutgoingTransfer(
-            { remoteSpaceUserId: "recipient", dataChannel },
-            offer.transferId,
-        );
+        const sending = privateService.sendOutgoingTransfer(fakeSession("recipient", dataChannel), offer.transferId);
         // The start message, then the first chunk before waiting for the channel to drain.
         await vi.waitFor(() => expect(dataChannel.send).toHaveBeenCalledTimes(2));
 
@@ -203,6 +231,55 @@ describe("ProximityFileTransferService", () => {
 
         await sending;
         expect(dataChannel.send).toHaveBeenCalledTimes(2);
+        expect(outgoingUpdates.at(-1)).toMatchObject({ recipientSpaceUserId: "recipient", state: "failed" });
+    });
+
+    it("should report a sent file as failed when the connection closes before the recipient confirms it", async () => {
+        const { service, privateService, outgoingUpdates } = createService("sender");
+        const [offer] = service.createOutgoingOffers([sendableFile(HELLO, "hello.txt")], ["recipient"]);
+        const session = {
+            ...fakeSession("recipient", { bufferedAmount: 0, readyState: "open", send: vi.fn(), close: vi.fn() }),
+            peerConnection: { close: vi.fn() },
+        };
+        (Reflect.get(service, "peerSessions") as Map<string, unknown>).set("recipient", session);
+        await privateService.sendOutgoingTransfer(session, offer.transferId);
+
+        privateService.closePeerSession("recipient");
+
+        expect(outgoingUpdates.at(-1)).toEqual({
+            transferId: offer.transferId,
+            recipientSpaceUserId: "recipient",
+            state: "failed",
+            progress: 0,
+        });
+    });
+
+    it("should tell the sender, and only the sender, when a recipient declines", () => {
+        const receiver = createService("recipient");
+        receiver.incomingOffers.next(offerEvent("transfer-1", 5, "sender"));
+
+        receiver.service.decline("transfer-1");
+
+        expect(receiver.emitPrivateMessage).toHaveBeenCalledWith(
+            { $case: "proximityFileTransferDecline", proximityFileTransferDecline: { transferId: "transfer-1" } },
+            "sender",
+        );
+
+        const sender = createService("sender");
+        const [offer] = sender.service.createOutgoingOffers([new File(["hello"], "hello.txt")], ["recipient"]);
+        const declineFrom = (spaceUserId: string) =>
+            sender.privateEvent("proximityFileTransferDecline").next({
+                $case: "proximityFileTransferDecline",
+                proximityFileTransferDecline: { transferId: offer.transferId },
+                sender: { spaceUserId },
+            });
+
+        declineFrom("stranger");
+        declineFrom("recipient");
+
+        expect(sender.outgoingUpdates).toEqual([
+            { transferId: offer.transferId, recipientSpaceUserId: "recipient", state: "declined", progress: 0 },
+        ]);
     });
 
     it("should ignore an offer re-emitted by another peer with a known transfer id", () => {

@@ -1477,6 +1477,7 @@ message PrivateSpaceEvent {
     RecordingUnexpectedlyStoppedPrivateMessage recordingUnexpectedlyStoppedMessage = 23;
     ProximityFileTransferOfferMessage proximityFileTransferOffer = 24;
     ProximityFileTransferSignalMessage proximityFileTransferSignal = 25;
+    ProximityFileTransferDeclineMessage proximityFileTransferDecline = 26;
   }
 }
 
@@ -1525,6 +1526,10 @@ message ProximityFileTransferOfferMessage {
   uint64 size = 4;
   repeated CharacterTextureMessage characterTextures = 6;
   optional string name = 7;
+}
+
+message ProximityFileTransferDeclineMessage {
+  string transferId = 1;
 }
 
 message ProximityFileTransferSignalMessage {

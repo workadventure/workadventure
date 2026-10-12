@@ -70,6 +70,14 @@ export type ProximityFileTransferOffer = {
     recipients: string[];
 };
 
+/** How one recipient's copy of an outgoing file is doing. */
+export type OutgoingProximityFileTransferUpdate = {
+    transferId: string;
+    recipientSpaceUserId: string;
+    state: "sending" | "received" | "declined" | "failed";
+    progress: number;
+};
+
 type ProximityFileTransferSignalPayload =
     | {
           type: "description";
@@ -99,11 +107,13 @@ type PeerSession = {
     openPromise: Promise<RTCDataChannel>;
     resolveOpen: (dataChannel: RTCDataChannel) => void;
     rejectOpen: (error: Error) => void;
-    // Inbound messages are processed one at a time so the key always lands before the start
-    // message that needs it; outbound transfers to the same peer are sent one after the other.
+    // Inbound messages are processed one at a time, so a transfer's start, chunks and completion are
+    // handled in order; outbound transfers to the same peer are sent one after the other.
     inboundQueue: Promise<void>;
     outboundQueue: Promise<void>;
     negotiationTimeout: ReturnType<typeof setTimeout>;
+    // Outgoing transfers fully sent to this peer but not acknowledged yet: they fail if the session closes.
+    awaitingReceipt: Set<string>;
     signalTransferId: string;
     canEmitCandidates: boolean;
     pendingCandidates: RTCIceCandidateInit[];
@@ -126,6 +136,8 @@ export class ProximityFileTransferService {
     public readonly incomingOffers: Observable<IncomingProximityFileTransferOffer> = this.incomingOfferSubject;
     private readonly transferUpdateSubject = new Subject<ProximityFileTransferUpdate>();
     public readonly transferUpdates: Observable<ProximityFileTransferUpdate> = this.transferUpdateSubject;
+    private readonly outgoingUpdateSubject = new Subject<OutgoingProximityFileTransferUpdate>();
+    public readonly outgoingUpdates: Observable<OutgoingProximityFileTransferUpdate> = this.outgoingUpdateSubject;
 
     constructor(private readonly options: ProximityFileTransferServiceOptions) {
         this.subscriptions.add(
@@ -169,6 +181,16 @@ export class ProximityFileTransferService {
                 if (update.state === "ready") {
                     this.incomingTransfers.delete(update.transferId);
                 }
+            }),
+        );
+        this.subscriptions.add(
+            this.options.space.observePrivateEvent("proximityFileTransferDecline").subscribe((event) => {
+                this.emitOutgoingUpdate(
+                    event.proximityFileTransferDecline.transferId,
+                    event.sender.spaceUserId,
+                    "declined",
+                    0,
+                );
             }),
         );
         this.subscriptions.add(
@@ -225,10 +247,25 @@ export class ProximityFileTransferService {
         this.sendControlMessage(dataChannel, { type: "proximity_file_request", transferId });
     }
 
+    /** Tells the sender this offer is declined, so they do not wait for it. */
+    decline(transferId: string): void {
+        const offer = this.incomingTransfers.get(transferId);
+        if (!offer) {
+            return;
+        }
+        // A declined offer no longer counts against the sender's pending-offer cap either.
+        this.incomingTransfers.delete(transferId);
+        this.options.space.emitPrivateMessage(
+            { $case: "proximityFileTransferDecline", proximityFileTransferDecline: { transferId } },
+            offer.senderSpaceUserId,
+        );
+    }
+
     destroy(): void {
         this.subscriptions.unsubscribe();
         this.incomingOfferSubject.complete();
         this.transferUpdateSubject.complete();
+        this.outgoingUpdateSubject.complete();
         this.outgoingTransfers.clear();
         this.incomingTransfers.clear();
         this.receivingTransfers.clear();
@@ -281,6 +318,7 @@ export class ProximityFileTransferService {
             rejectOpen,
             inboundQueue: Promise.resolve(),
             outboundQueue: Promise.resolve(),
+            awaitingReceipt: new Set(),
             signalTransferId: "",
             canEmitCandidates: false,
             pendingCandidates: [],
@@ -406,7 +444,13 @@ export class ProximityFileTransferService {
                 }
                 case "proximity_file_complete": {
                     if (this.receivingTransferFrom(session, message.transferId)) {
-                        await this.completeReceivingTransfer(message.transferId);
+                        await this.completeReceivingTransfer(session, message.transferId);
+                    }
+                    break;
+                }
+                case "proximity_file_received": {
+                    if (session.awaitingReceipt.delete(message.transferId)) {
+                        this.emitOutgoingUpdate(message.transferId, session.remoteSpaceUserId, "received", 1);
                     }
                     break;
                 }
@@ -469,11 +513,15 @@ export class ProximityFileTransferService {
                     reason: "unavailable",
                 });
             }
+            this.emitOutgoingUpdate(transferId, session.remoteSpaceUserId, "failed", 0);
             return;
         }
 
         this.sendControlMessage(dataChannel, { type: "proximity_file_start", transferId });
+        this.emitOutgoingUpdate(transferId, session.remoteSpaceUserId, "sending", 0);
 
+        const size = transfer.file.size;
+        let sentBytes = 0;
         try {
             // The stream reads ahead from disk, and pausing write() on backpressure pauses the reads too. Its
             // chunks have browser-chosen sizes (Chromium goes up to several hundred KB), so they are re-split
@@ -482,11 +530,15 @@ export class ProximityFileTransferService {
                 new WritableStream<Uint8Array>({
                     write: async (chunk) => {
                         for (let offset = 0; offset < chunk.byteLength; offset += PROXIMITY_FILE_TRANSFER_CHUNK_SIZE) {
-                            dataChannel.send(
-                                encodeProximityFileChunkFrame(
-                                    transferId,
-                                    chunk.subarray(offset, offset + PROXIMITY_FILE_TRANSFER_CHUNK_SIZE),
-                                ),
+                            const frame = chunk.subarray(offset, offset + PROXIMITY_FILE_TRANSFER_CHUNK_SIZE);
+                            dataChannel.send(encodeProximityFileChunkFrame(transferId, frame));
+                            sentBytes += frame.byteLength;
+                            // Count what has left our buffer, not what was merely queued in it.
+                            this.emitOutgoingUpdate(
+                                transferId,
+                                session.remoteSpaceUserId,
+                                "sending",
+                                Math.max(0, sentBytes - dataChannel.bufferedAmount) / Math.max(size, 1),
                             );
                             // eslint-disable-next-line no-await-in-loop -- chunks must be sent in order
                             await this.waitForBackpressure(dataChannel);
@@ -504,13 +556,15 @@ export class ProximityFileTransferService {
                     reason: "unavailable",
                 });
             }
+            this.emitOutgoingUpdate(transferId, session.remoteSpaceUserId, "failed", 0);
             return;
         }
 
+        session.awaitingReceipt.add(transferId);
         this.sendControlMessage(dataChannel, { type: "proximity_file_complete", transferId });
     }
 
-    private async completeReceivingTransfer(transferId: string): Promise<void> {
+    private async completeReceivingTransfer(session: PeerSession, transferId: string): Promise<void> {
         const receivingTransfer = this.receivingTransfers.get(transferId);
         if (!receivingTransfer) {
             return;
@@ -527,6 +581,9 @@ export class ProximityFileTransferService {
             return;
         }
         this.receivingTransfers.delete(transferId);
+        if (session.dataChannel?.readyState === "open") {
+            this.sendControlMessage(session.dataChannel, { type: "proximity_file_received", transferId });
+        }
         this.transferUpdateSubject.next({
             transferId,
             state: "ready",
@@ -616,6 +673,20 @@ export class ProximityFileTransferService {
         clearTimeout(session.negotiationTimeout);
         session.dataChannel?.close();
         session.peerConnection.close();
+        for (const transferId of session.awaitingReceipt) {
+            this.emitOutgoingUpdate(transferId, remoteSpaceUserId, "failed", 0);
+        }
+    }
+
+    private emitOutgoingUpdate(
+        transferId: string,
+        recipientSpaceUserId: string,
+        state: OutgoingProximityFileTransferUpdate["state"],
+        progress: number,
+    ): void {
+        if (this.outgoingTransfers.get(transferId)?.recipients.includes(recipientSpaceUserId)) {
+            this.outgoingUpdateSubject.next({ transferId, recipientSpaceUserId, state, progress });
+        }
     }
 
     /** The incoming offer for `transferId`, only if it was made by the peer on the other end of `session`. */

@@ -24,6 +24,7 @@
     import MessageFile from "./Message/MessageFile.svelte";
     import MessageAudioFile from "./Message/MessageAudioFile.svelte";
     import MessageVideoFile from "./Message/MessageVideoFile.svelte";
+    import MessageAttachmentRecipients from "./Message/MessageAttachmentRecipients.svelte";
     import MessageEdition from "./MessageEdition.svelte";
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
@@ -207,6 +208,9 @@
 
                     {@const MessageComponent = messageType[type]}
                     <MessageComponent {content} {message} />
+                    {#if message.attachmentRecipients}
+                        <MessageAttachmentRecipients recipients={message.attachmentRecipients} />
+                    {/if}
 
                     {#if $reactionsWithUsers.length > 0}
                         <MessageReactions

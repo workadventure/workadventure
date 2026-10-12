@@ -249,6 +249,8 @@ export interface ChatMessage {
     edit: (newContent: string) => Promise<void>;
     downloadAttachment?: () => Promise<void>;
     refuseAttachment?: () => void;
+    // For a file sent peer to peer, how each recipient's copy is doing.
+    attachmentRecipients?: Readable<ChatAttachmentRecipient[]>;
     isDeleted: Readable<boolean>;
     isModified: Readable<boolean>;
     canEdit: Readable<boolean>;
@@ -425,6 +427,13 @@ export type ChatTimelineItem =
       };
 
 export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
+export type ChatAttachmentRecipient = {
+    spaceUserId: string;
+    name: string;
+    state: "waiting" | "sending" | "received" | "declined" | "failed";
+    progress: number;
+};
+
 export type ChatMessageContent = {
     /**
      * The body can contain HTML. It will be run against DOMPurify before being outputted to the user.

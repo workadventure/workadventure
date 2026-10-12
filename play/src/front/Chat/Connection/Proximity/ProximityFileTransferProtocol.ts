@@ -19,6 +19,11 @@ export const ProximityFileTransferControlMessage = z.union([
         type: z.literal("proximity_file_complete"),
         transferId: z.string(),
     }),
+    // Sent back by the recipient once the file is stored and checked.
+    z.object({
+        type: z.literal("proximity_file_received"),
+        transferId: z.string(),
+    }),
     z.object({
         type: z.literal("proximity_file_error"),
         transferId: z.string(),

@@ -281,6 +281,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         openCoWebsite: "Obrir en co-website",
         loadingAttachment: "S'està carregant el fitxer adjunt...",
         remainingTime: "queden ~{time}",
+        recipient: {
+            waiting: "Encara no acceptat",
+            sending: "S'està enviant",
+            received: "Rebut",
+            declined: "Rebutjat",
+            failed: "No lliurat",
+        },
         attachmentDownloadError: "No s'ha pogut descarregar aquest fitxer adjunt.",
         attachmentDecryptError: "No s'ha pogut desxifrar aquest fitxer adjunt.",
         copy: "copiar l'enllaç",
