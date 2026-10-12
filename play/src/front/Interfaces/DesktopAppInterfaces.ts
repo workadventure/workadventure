@@ -284,6 +284,11 @@ export type CompanionMedia = {
     inMeeting: boolean;
     status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
     statusLocked: boolean;
+    /**
+     * While the local user shares their screen with no meeting bar over it (Linux): whether the others may annotate
+     * the share. The companion then offers that setting and "clear all". Absent otherwise.
+     */
+    othersMayAnnotate?: boolean;
 };
 
 export type CompanionInvitation = {
@@ -360,7 +365,9 @@ export type CompanionCommand =
     | { type: "decline-invitation" }
     | { type: "join-meeting"; eventId: string }
     | { type: "open-agenda" }
-    | { type: "open-tasks" };
+    | { type: "open-tasks" }
+    | { type: "annotation-toggle-others" }
+    | { type: "annotation-clear" };
 
 /** Drives the companion quick-access panel (People / Chat / Controls / Mentions). */
 export type WorkAdventureDesktopCompanionApi = {

@@ -109,4 +109,61 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
             "0",
         );
     });
+
+    test("A viewer never stays stuck in drawing mode", async ({ browser }) => {
+        await using alice = await getPage(
+            browser,
+            "Alice",
+            publicTestMapUrl("tests/E2E/empty.json", "screenAnnotationExit"),
+        );
+        await Map.teleportToPosition(alice, 160, 160);
+
+        await using bob = await getPage(
+            browser,
+            "Bob",
+            publicTestMapUrl("tests/E2E/empty.json", "screenAnnotationExit"),
+        );
+        await Map.teleportToPosition(bob, 160, 160);
+
+        await expect(alice.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 30_000 });
+
+        await alice.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(alice, "screenShareButton", "active");
+        await expect(bob.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 30_000 });
+        // See the first test: the action bar tooltip would swallow the click.
+        await alice.mouse.move(300, 300);
+        await alice.getByTestId("screenshare-annotate-button").click();
+        await alice.getByTestId("annotation-allow-toggle").click();
+
+        // Bob draws: the canvas takes his clicks.
+        const bobCanvas = bob.locator("#highlighted-media").getByTestId("annotation-canvas");
+        await bob.getByTestId("annotation-toggle").click({ timeout: 15_000 });
+        await expect(bobCanvas).toHaveCSS("pointer-events", "auto");
+        await drawStroke(bob, bobCanvas);
+        await expect(bobCanvas).toHaveAttribute("data-element-count", "1");
+
+        // Alice stops letting the others draw: Bob is out of drawing mode, the page takes his clicks again...
+        await alice.getByTestId("annotation-allow-toggle").click();
+        await expect(bob.getByTestId("annotation-toggle")).toHaveCount(0, { timeout: 15_000 });
+        await expect(bobCanvas).toHaveCSS("pointer-events", "none");
+
+        // ...and stays out of it when she lets them draw again.
+        await alice.getByTestId("annotation-allow-toggle").click();
+        await expect(bob.getByTestId("annotation-toggle")).toBeVisible({ timeout: 15_000 });
+        await expect(bobCanvas).toHaveCSS("pointer-events", "none");
+
+        // Escape leaves drawing mode.
+        await bob.getByTestId("annotation-toggle").click();
+        await expect(bobCanvas).toHaveCSS("pointer-events", "auto");
+        await bob.keyboard.press("Escape");
+        await expect(bobCanvas).toHaveCSS("pointer-events", "none");
+
+        // Alice stops sharing while Bob draws: the shared screen, its canvas and its toolbar go away.
+        await bob.getByTestId("annotation-toggle").click();
+        await expect(bobCanvas).toHaveCSS("pointer-events", "auto");
+        await alice.getByTestId("screenShareButton").click();
+        await expect(bob.locator("#highlighted-media").getByText("Alice")).toHaveCount(0, { timeout: 15_000 });
+        await expect(bob.getByTestId("annotation-canvas")).toHaveCount(0);
+        await expect(bob.getByTestId("annotation-toolbar")).toHaveCount(0);
+    });
 });

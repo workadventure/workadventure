@@ -5,7 +5,7 @@
         ANNOTATION_COLORS,
         currentAnnotationColorStore,
         currentAnnotationToolStore,
-        localAnnotationActiveStore,
+        localAnnotationTargetStore,
         screenAnnotationEnabledStore,
         type AnnotationTool,
     } from "../../Stores/ScreenAnnotationStore";
@@ -31,7 +31,7 @@
 
     let { targetUserId, isPresenter }: Props = $props();
 
-    let active = $derived($localAnnotationActiveStore);
+    let active = $derived($localAnnotationTargetStore === targetUserId);
     let currentTool = $derived($currentAnnotationToolStore);
     let currentColor = $derived($currentAnnotationColorStore);
     let othersAllowed = $derived($screenAnnotationEnabledStore.get(targetUserId) ?? false);
@@ -46,7 +46,7 @@
     ]);
 
     function toggleActive(): void {
-        localAnnotationActiveStore.set(!active);
+        localAnnotationTargetStore.set(active ? undefined : targetUserId);
     }
 
     function selectTool(toolId: AnnotationTool): void {
@@ -64,11 +64,11 @@
     }
 
     function clearAll(): void {
-        screenAnnotationManager.clearAll(targetUserId);
+        screenAnnotationManager.clearAll();
     }
 
     function toggleOthersAllowed(): void {
-        screenAnnotationManager.setAnnotationEnabled(targetUserId, !othersAllowed);
+        screenAnnotationManager.setOthersAllowed(!othersAllowed);
     }
 </script>
 
@@ -86,6 +86,7 @@
     >
         {#if active}
             <IconX font-size="18" />
+            <span class="ms-1 text-sm whitespace-nowrap">{$LL.screenAnnotation.stopAnnotating()}</span>
         {:else}
             <IconPencil font-size="18" />
         {/if}

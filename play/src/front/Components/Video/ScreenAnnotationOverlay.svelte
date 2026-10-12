@@ -6,7 +6,7 @@
         currentAnnotationColorStore,
         currentAnnotationToolStore,
         currentAnnotationWidthStore,
-        localAnnotationActiveStore,
+        localAnnotationTargetStore,
         screenAnnotationElementsStore,
         screenAnnotationLocallyHiddenStore,
     } from "../../Stores/ScreenAnnotationStore";
@@ -33,7 +33,7 @@
     let tool = $derived($currentAnnotationToolStore);
     let color = $derived($currentAnnotationColorStore);
     let width = $derived($currentAnnotationWidthStore);
-    let inputEnabled = $derived($localAnnotationActiveStore && canDraw);
+    let inputEnabled = $derived($localAnnotationTargetStore === targetUserId && canDraw);
 
     let draft: ScreenAnnotationElement | undefined = $state();
     let drawing = false;
@@ -129,7 +129,7 @@
         const now = Date.now();
         if (now - lastEmit > EMIT_INTERVAL_MS) {
             lastEmit = now;
-            screenAnnotationManager.emitUpsertElement(targetUserId, draft);
+            screenAnnotationManager.emitDraft(targetUserId, draft);
         }
     }
 
@@ -181,6 +181,37 @@
         render();
     });
 
+    // Drawing mode ended mid-stroke (Escape, the presenter stopped letting the others draw...): the stroke is
+    // given up, and the others drop what they saw of it.
+    $effect(() => {
+        if (!inputEnabled) {
+            dropDraft();
+            textInput = undefined;
+        }
+    });
+
+    function dropDraft(): void {
+        if (draft) {
+            screenAnnotationManager.dropDraft(targetUserId, draft.id);
+        }
+        draft = undefined;
+        drawing = false;
+    }
+
+    $effect(() => {
+        if (!inputEnabled) {
+            return;
+        }
+        // Escape leaves drawing mode (the text input handles its own Escape first).
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                localAnnotationTargetStore.set(undefined);
+            }
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    });
+
     $effect(() => {
         // Focus the floating text input as soon as it appears.
         if (textInput) {
@@ -197,14 +228,10 @@
     });
 
     onDestroy(() => {
-        // If a stroke is still in progress when the overlay unmounts (e.g. the screen is
-        // un-highlighted mid-drag), tell peers to drop the partial element we may already have
-        // broadcast, since no final commit will follow.
-        if (draft) {
-            screenAnnotationManager.removeElement(targetUserId, draft.id);
-        }
+        // A stroke still in progress when the overlay unmounts (e.g. the screen is un-highlighted
+        // mid-drag) is never finished: the others drop what they saw of it.
+        dropDraft();
         textInput = undefined;
-        draft = undefined;
     });
 </script>
 
@@ -237,6 +264,7 @@
             if (e.key === "Enter") {
                 commitText();
             } else if (e.key === "Escape") {
+                e.stopPropagation();
                 textInput = undefined;
             }
         }}

@@ -15,11 +15,7 @@ import {
     usedMicrophoneDeviceIdStore,
 } from "../../Stores/MediaStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import {
-    activeScreenShareSourceStore,
-    requestedScreenSharingState,
-    startScreenShareWithSource,
-} from "../../Stores/ScreenSharingStore";
+import { requestedScreenSharingState, startScreenShareWithSource } from "../../Stores/ScreenSharingStore";
 import {
     currentAnnotationColorStore,
     currentAnnotationToolStore,
@@ -60,15 +56,6 @@ class PresenterHudBridge {
         }
 
         this.onCommandUnsub = api.onCommand((command) => this.handleCommand(command));
-
-        // Share ended: leave drawing mode.
-        this.subscriptions.push(
-            activeScreenShareSourceStore.subscribe((source) => {
-                if (!source) {
-                    localAnnotationActiveStore.set(false);
-                }
-            }),
-        );
 
         this.subscriptions.push(
             localAnnotationActiveStore.subscribe((active) => {
@@ -183,7 +170,7 @@ class PresenterHudBridge {
                 });
                 break;
             case "annotation-toggle":
-                localAnnotationActiveStore.set(!get(localAnnotationActiveStore));
+                screenAnnotationManager.toggleDrawingOnMyShare();
                 break;
             case "annotation-set-tool":
                 if (isAnnotationTool(command.tool)) {
@@ -207,21 +194,16 @@ class PresenterHudBridge {
                 }
                 break;
             }
-            case "annotation-clear": {
-                const target = screenAnnotationManager.localUserId;
-                if (target) {
-                    screenAnnotationManager.clearAll(target);
-                }
+            case "annotation-clear":
+                screenAnnotationManager.clearAll();
                 break;
-            }
             case "annotation-toggle-local-hide":
                 screenAnnotationLocallyHiddenStore.set(!get(screenAnnotationLocallyHiddenStore));
                 break;
             case "annotation-toggle-others": {
                 const target = screenAnnotationManager.localUserId;
                 if (target) {
-                    const enabled = get(screenAnnotationEnabledStore).get(target) === true;
-                    screenAnnotationManager.setAnnotationEnabled(target, !enabled);
+                    screenAnnotationManager.setOthersAllowed(get(screenAnnotationEnabledStore).get(target) !== true);
                 }
                 break;
             }

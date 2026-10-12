@@ -18,4 +18,13 @@ function canHideWindowsFromCapture(platform) {
     return platform === "darwin" || platform === "win32";
 }
 
-module.exports = { usesSystemScreenSharePicker, canHideWindowsFromCapture };
+/**
+ * The annotation overlay is a window over the whole shared screen that takes the clicks in drawing mode: it is for
+ * the user sharing that screen only, while they share. Its strokes stay out of the capture (the viewers draw them
+ * from the space state), which only macOS and Windows can do.
+ */
+function canOpenAnnotationOverlay(platform, screenSharing) {
+    return canHideWindowsFromCapture(platform) && screenSharing === true;
+}
+
+module.exports = { usesSystemScreenSharePicker, canHideWindowsFromCapture, canOpenAnnotationOverlay };

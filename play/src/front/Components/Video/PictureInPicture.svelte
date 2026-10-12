@@ -328,7 +328,7 @@
                         });
                     },
                     annotationToggle: () => {
-                        localAnnotationActiveStore.set(!get(localAnnotationActiveStore));
+                        screenAnnotationManager.toggleDrawingOnMyShare();
                     },
                     annotationSetTool: (tool) => {
                         if (isAnnotationTool(tool)) {
@@ -345,10 +345,7 @@
                         }
                     },
                     annotationClear: () => {
-                        const target = screenAnnotationManager.localUserId;
-                        if (target) {
-                            screenAnnotationManager.clearAll(target);
-                        }
+                        screenAnnotationManager.clearAll();
                     },
                     // TODO(presenter-bar): wire chat + reactions. Provide the `chatMessages` dep
                     // (mirror of the proximity ProximityChatRoom messages) and the `sendChat` /
