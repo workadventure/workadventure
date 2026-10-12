@@ -1525,7 +1525,6 @@ message ProximityFileTransferOfferMessage {
   uint64 size = 4;
   repeated CharacterTextureMessage characterTextures = 6;
   optional string name = 7;
-  string sha256 = 8;
 }
 
 message ProximityFileTransferSignalMessage {

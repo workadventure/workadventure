@@ -475,7 +475,6 @@ export class ProximityChatRoom implements ChatRoom {
             return Promise.reject(new Error("Proximity file transfer service is not initialized"));
         }
 
-        const fileArray = Array.from(files);
         const recipients = Array.from(this.users?.values() ?? [])
             .filter((user) => user.spaceUserId !== this._spaceUserId)
             .filter((user) => !blackListManager.isBlackListed(user.uuid))
@@ -483,42 +482,20 @@ export class ProximityChatRoom implements ChatRoom {
 
         const spaceUser = this.users?.get(this._spaceUserId);
         const chatUser = spaceUser ? mapExtendedSpaceUserToChatUser(spaceUser) : this.unknownUser;
-        const pendingMessages = fileArray.map((file) => {
-            const content = writable<ChatMessageContent>({
-                body: file.name,
-                url: undefined,
-                mediaState: "loading",
-                mediaProgress: 0,
-            });
-            const message = new ProximityChatMessage(
-                uuidv4(),
-                chatUser,
-                content,
-                new Date(),
-                true,
-                getMessageTypeFromMimeType(file.type),
-            );
-            this.messages.push(message);
-            return { file, message, content };
-        });
-
-        const offers = await this.fileTransferService.createOutgoingOffers(fileArray, recipients);
-
-        // createOutgoingOffers preserves the input order, so offers[i] belongs to pendingMessages[i].
-        pendingMessages.forEach(({ message, content }, index) => {
-            const offer = offers[index];
+        for (const offer of this.fileTransferService.createOutgoingOffers(Array.from(files), recipients)) {
             const objectUrl = URL.createObjectURL(offer.file);
             this.fileTransferObjectUrls.add(objectUrl);
-            content.set({
-                body: offer.file.name,
-                url: objectUrl,
-                mediaState: "ready",
-                mediaProgress: 1,
-                mediaEstimatedRemainingSeconds: undefined,
-            });
-            message.id = offer.transferId;
+            const message = new ProximityChatMessage(
+                offer.transferId,
+                chatUser,
+                writable<ChatMessageContent>({ body: offer.file.name, url: objectUrl, mediaState: "ready" }),
+                new Date(),
+                true,
+                getMessageTypeFromMimeType(offer.file.type),
+            );
+            this.messages.push(message);
             this.lastMessageTimestamp = message.date.getTime();
-        });
+        }
     }
 
     private createPoll(options: ChatPollCreateOptions): Promise<void> {

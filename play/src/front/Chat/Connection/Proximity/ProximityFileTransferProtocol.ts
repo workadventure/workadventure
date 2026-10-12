@@ -14,13 +14,6 @@ export const ProximityFileTransferControlMessage = z.union([
     z.object({
         type: z.literal("proximity_file_start"),
         transferId: z.string(),
-        size: z.number().nonnegative(),
-    }),
-    z.object({
-        type: z.literal("proximity_file_key"),
-        transferId: z.string(),
-        rawKey: z.string(),
-        iv: z.string(),
     }),
     z.object({
         type: z.literal("proximity_file_complete"),

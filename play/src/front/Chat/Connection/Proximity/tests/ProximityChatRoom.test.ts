@@ -62,7 +62,6 @@ function createOffer(): IncomingProximityFileTransferOffer {
         size: 5,
         characterTextures: [],
         name: "Sender",
-        sha256: "digest",
         senderSpaceUserId: "sender",
     };
 }
@@ -252,34 +251,23 @@ describe("ProximityChatRoom file transfers", () => {
         });
     });
 
-    it("should show a local preparing state while outgoing files are secured before offer emission", async () => {
+    it("should show sent files right away under their transfer id", async () => {
         vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-1") });
         const room = createRoom();
-        let resolveOffers!: (value: unknown[]) => void;
-        const offersPromise = new Promise<unknown[]>((resolve) => {
-            resolveOffers = resolve;
-        });
-        Reflect.set(room, "fileTransferService", {
-            createOutgoingOffers: () => offersPromise,
-        });
         const file = new File(["hello"], "hello.txt", { type: "text/plain" });
+        Reflect.set(room, "fileTransferService", {
+            createOutgoingOffers: () => [{ transferId: "transfer-1", file, recipients: [] }],
+        });
 
-        const sendPromise = room.sendFiles(createFileList(file));
+        await room.sendFiles(createFileList(file));
 
         const [message] = get(room.messages);
+        expect(message.id).toBe("transfer-1");
         expect(get(message.content)).toMatchObject({
             body: "hello.txt",
-            mediaState: "loading",
-            mediaProgress: 0,
+            url: "blob:transfer-1",
+            mediaState: "ready",
         });
-        resolveOffers([
-            {
-                transferId: "transfer-1",
-                file,
-                recipients: [],
-            },
-        ]);
-        await sendPromise;
         vi.unstubAllGlobals();
     });
 });

@@ -20,19 +20,14 @@ describe("Proximity file transfer binary framing", () => {
 });
 
 describe("Proximity file transfer control messages", () => {
-    it("should decode encryption key messages", () => {
-        const message = {
-            type: "proximity_file_key",
-            transferId: "transfer-1",
-            rawKey: "key",
-            iv: "iv",
-        };
+    it("should decode error messages", () => {
+        const message = { type: "proximity_file_error", transferId: "transfer-1", reason: "unavailable" };
 
         expect(decodeProximityFileControlMessage(JSON.stringify(message))).toEqual(message);
     });
 
-    it("should reject key messages without a stream header", () => {
-        const message = { type: "proximity_file_key", transferId: "transfer-1", rawKey: "key" };
+    it("should reject error messages without a reason", () => {
+        const message = { type: "proximity_file_error", transferId: "transfer-1" };
 
         expect(() => decodeProximityFileControlMessage(JSON.stringify(message))).toThrow();
     });
