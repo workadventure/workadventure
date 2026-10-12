@@ -599,18 +599,28 @@ function configureSession() {
     // system portal asked here (one dialog) is the picker. Elsewhere the in-app picker is used.
     if (usesSystemScreenSharePicker(process.platform, process.env)) {
         session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+            // null refuses the share: getDisplayMedia() rejects with an AbortError. An empty object made
+            // Electron throw, which surfaced as an unhandled error dialog.
+            const refuse = () => {
+                try {
+                    callback(null);
+                } catch (error) {
+                    ElectronLog.warn("Could not refuse the screen share request", error);
+                }
+            };
             const frame = request.frame;
             if (!frame || frame.parent !== null || !isAllowedNavigationUrl(frame.url, getDesktopConfig())) {
                 ElectronLog.warn(`Rejected screen share request from disallowed frame "${frame?.url ?? ""}".`);
-                callback({});
+                refuse();
                 return;
             }
             desktopCapturer
                 .getSources({ types: ["screen", "window"] })
-                .then((sources) => callback(sources[0] ? { video: sources[0] } : {}))
+                .then((sources) => (sources[0] ? callback({ video: sources[0] }) : refuse()))
                 .catch((error) => {
-                    ElectronLog.error("Screen share portal failed", error);
-                    callback({});
+                    // Also what closing the system dialog without choosing gives.
+                    ElectronLog.info("Screen share dialog closed or failed", error);
+                    refuse();
                 });
         });
     }
