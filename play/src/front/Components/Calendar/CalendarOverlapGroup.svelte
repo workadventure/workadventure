@@ -48,7 +48,7 @@
         {/each}
         {#if inProgressCount > 0}
             <!-- Now, against the bars: shows which of the meetings are running. -->
-            <div class="absolute -bottom-1 -top-1 w-0.5 bg-danger-600" style="left: {percent(now)}%"></div>
+            <div class="absolute -bottom-1 -top-1 w-0.5 bg-danger-600/60" style="left: {percent(now)}%"></div>
         {/if}
     </div>
 

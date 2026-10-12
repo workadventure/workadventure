@@ -13,7 +13,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
     import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
-    import { buildAgenda, formatDayName, meetingsInProgress, nextMeeting, overlapsWith, startOfDay } from "./agenda";
+    import { buildAgenda, formatDayName, meetingsInProgress, nextMeeting, overlapsWith } from "./agenda";
     import CalendarNextMeeting from "./CalendarNextMeeting.svelte";
     import CalendarMeetingsInProgress from "./CalendarMeetingsInProgress.svelte";
     import CalendarEventRow from "./CalendarEventRow.svelte";
@@ -29,7 +29,6 @@
     let days = $derived(buildAgenda($calendarEventsStore.values(), now));
     let next = $derived(nextMeeting($calendarEventsStore.values(), now));
     let inProgress = $derived(meetingsInProgress($calendarEventsStore.values(), now));
-    let today = $derived(startOfDay(now).getTime());
 
     let sections: HTMLElement[] = $state([]);
 
@@ -42,16 +41,6 @@
         window.location.href = "/login";
     }
 </script>
-
-{#snippet nowLine()}
-    <div class="flex items-center gap-2 py-0.5 text-sm font-bold text-danger-600">
-        <span class="h-2 w-2 rounded-full bg-danger-600"></span>
-        <span
-            >{now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })} · {$LL.externalModule.calendar.now()}</span
-        >
-        <span class="h-0.5 flex-1 bg-danger-600/60"></span>
-    </div>
-{/snippet}
 
 <div class="calendar p-1 @md/actions:p-2 max-h-screen select-text flex">
     <div
@@ -136,19 +125,12 @@
                             {/each}
                         </div>
 
-                        <!-- Finished meetings are not listed: what follows the line is in progress or to come. -->
-                        {#if day.date.getTime() === today}
-                            {@render nowLine()}
-                        {/if}
+                        <!-- Finished meetings are not listed: the ones in progress show how far along they are. -->
                         {#each day.items as item (item.kind === "overlap" ? `overlap-${item.events[0].id}` : item.event.id)}
                             {#if item.kind === "overlap"}
                                 <CalendarOverlapGroup start={item.start} end={item.end} events={item.events} {now} />
                             {:else}
-                                <CalendarEventRow
-                                    event={item.event}
-                                    long={item.kind === "long"}
-                                    inProgress={item.event.start <= now}
-                                />
+                                <CalendarEventRow event={item.event} long={item.kind === "long"} {now} />
                             {/if}
                         {/each}
                     </section>

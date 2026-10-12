@@ -119,7 +119,6 @@ const externalModule: BaseTranslation = {
         goThere: "Ir até lá",
         overlapping: "{count} reuniões se sobrepõem",
         meetingCount: "{count} {{reunião|reuniões}}",
-        now: "Agora",
         noMeetings: "Nenhuma reunião nos próximos 7 dias",
         days: "Dias",
         meetingsInProgress: "{count} reuniões em andamento",

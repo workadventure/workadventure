@@ -9,17 +9,26 @@
         event: CalendarEventInterface;
         /** A long event, running alongside the meetings rather than competing with them. */
         long?: boolean;
-        inProgress?: boolean;
+        now: Date;
     }
 
-    let { event, long = false, inProgress = false }: Props = $props();
+    let { event, long = false, now }: Props = $props();
+
+    let inProgress = $derived(event.start <= now && now < event.end);
+    // How much of the meeting has run: in a list, a card's size says nothing of time, so the bar shows it.
+    let elapsedPercent = $derived(
+        ((now.getTime() - event.start.getTime()) / (event.end.getTime() - event.start.getTime())) * 100,
+    );
 </script>
 
 <div
-    class="grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-md border p-2.5 {long
+    class="relative grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2.5 overflow-hidden rounded-md border p-2.5 {long
         ? 'border-dashed'
         : 'border-solid bg-white/5'} {inProgress ? 'border-danger-600/60' : 'border-white/10'}"
 >
+    {#if inProgress}
+        <div class="absolute bottom-0 left-0 h-0.5 bg-danger-600/60" style="width: {elapsedPercent}%"></div>
+    {/if}
     <div class="flex flex-col tabular-nums leading-tight">
         <span class="text-sm font-bold">{formatTime(event.start)}</span>
         <span class="text-xs text-contrast-200">{formatTime(event.end)}</span>

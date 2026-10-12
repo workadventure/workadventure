@@ -122,7 +122,6 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         goThere: "Ga erheen",
         overlapping: "{count} vergaderingen overlappen",
         meetingCount: "{count} {{vergadering|vergaderingen}}",
-        now: "Nu",
         noMeetings: "Geen vergaderingen in de komende 7 dagen",
         days: "Dagen",
         meetingsInProgress: "{count} vergaderingen bezig",
