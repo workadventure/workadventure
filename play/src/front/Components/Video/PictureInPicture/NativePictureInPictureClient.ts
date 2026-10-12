@@ -553,7 +553,12 @@ export class NativePictureInPictureClient {
 
     private reconcileStreamables(collection: Map<string, VideoBox>): void {
         const seenIds = new Set<string>();
+        // The collection also holds the user's own camera, which the companion shows as its self tile.
+        const selfBox = get(this.deps.selfBox);
         for (const [id, videoBox] of collection) {
+            if (videoBox === selfBox) {
+                continue;
+            }
             seenIds.add(id);
             if (this.videoBoxUnsubscribers.has(id)) {
                 continue;
@@ -581,11 +586,6 @@ export class NativePictureInPictureClient {
     private attachStreamable(boxId: string, streamable: Streamable | undefined, isSelf: boolean): void {
         this.detachStreamable(boxId);
         if (!streamable) {
-            return;
-        }
-        // Remote peers: only follow streamables explicitly opted in via displayInPictureInPictureMode.
-        // The local self camera is always included (even though its own Streamable has the flag off).
-        if (!isSelf && !streamable.displayInPictureInPictureMode) {
             return;
         }
         if (streamable.media.type !== "webrtc" && streamable.media.type !== "livekit") {
