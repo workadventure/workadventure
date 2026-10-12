@@ -1,4 +1,4 @@
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadLocale } from "../../../../../i18n/i18n-util.sync";
@@ -7,6 +7,7 @@ import { chatVisibilityStore } from "../../../../Stores/ChatStore";
 import { chatNotificationStore } from "../../../../Stores/ProximityNotificationStore";
 import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 import type { IncomingProximityFileTransferOffer, ProximityFileTransferUpdate } from "../ProximityFileTransferService";
+import type { SpaceUserExtended } from "../../../../Space/SpaceInterface";
 import { formatProximityFileTransferRemainingTime } from "../ProximityFileTransferEta";
 import { ProximityChatRoom } from "../ProximityChatRoom";
 
@@ -269,6 +270,23 @@ describe("ProximityChatRoom file transfers", () => {
             mediaState: "ready",
         });
         vi.unstubAllGlobals();
+    });
+
+    it("should refuse to send files once the chat has more users than the limit (10 in tests)", async () => {
+        const room = createRoom();
+        const createOutgoingOffers = vi.fn();
+        Reflect.set(room, "fileTransferService", { createOutgoingOffers });
+        const usersOf = (count: number) =>
+            new Map(Array.from({ length: count }, (_, i) => [`user-${i}`, {} as SpaceUserExtended]));
+        const users = writable(usersOf(10));
+        room.spaceUsersStore.forward(users);
+        expect(get(room.canSendFiles)).toBe(true);
+
+        users.set(usersOf(11));
+
+        expect(get(room.canSendFiles)).toBe(false);
+        await expect(room.sendFiles(createFileList(new File(["hello"], "hello.txt")))).rejects.toThrow();
+        expect(createOutgoingOffers).not.toHaveBeenCalled();
     });
 });
 

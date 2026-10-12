@@ -641,6 +641,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "إرفاق ملف",
         description: "تحميل ومشاركة ملف",
         featureComingSoon: "قريبًا!",
+        tooManyUsers: "مشاركة الملفات متاحة فقط مع {max} أشخاص أو أقل",
     },
     loginTokenError: "حدث خطأ. يرجى إعادة الاتصال", // An error occurred. Please try to reconnect
     reconnect: "إعادة الاتصال", // Reconnect

@@ -56,6 +56,7 @@ import { statusChanger } from "../../../Components/ActionBar/AvailabilityStatus/
 import type { GameScene } from "../../../Phaser/Game/GameScene";
 import { faviconManager } from "../../../WebRtc/FaviconManager";
 import { screenWakeLock } from "../../../Utils/ScreenWakeLock";
+import { PROXIMITY_FILE_TRANSFER_MAX_USERS } from "../../../Enum/EnvironmentVariable";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerManager";
 import { BubbleNotification as BasicNotification } from "../../../Notification/BubbleNotification";
@@ -208,6 +209,8 @@ export class ProximityChatRoom implements ChatRoom {
     intentionallyClosed = writable(false);
     hasUserMessages = writable(false);
     readonly joinedMemberCount = derived(this.spaceUsersStore, (users) => users.size);
+    // Files travel peer to peer: the sender uploads a copy to every recipient, which does not scale to a crowd.
+    readonly canSendFiles = derived(this.joinedMemberCount, (count) => count <= PROXIMITY_FILE_TRANSFER_MAX_USERS);
     /** Participants currently in the same meeting/space (reactive list from space users). */
     private _currentMeetingParticipantsStore = writable<MeetingParticipant[]>([]);
     public readonly currentMeetingParticipantsStore: Readable<MeetingParticipant[]> =
@@ -473,6 +476,9 @@ export class ProximityChatRoom implements ChatRoom {
     async sendFiles(files: FileList): Promise<void> {
         if (!this.fileTransferService) {
             return Promise.reject(new Error("Proximity file transfer service is not initialized"));
+        }
+        if (!get(this.canSendFiles)) {
+            return Promise.reject(new Error("Too many users in the proximity chat to send files"));
         }
 
         const recipients = Array.from(this.users?.values() ?? [])

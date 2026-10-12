@@ -643,6 +643,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Anexo de arquivo",
         description: "Enviar e compartilhar um arquivo",
         featureComingSoon: "Em breve!",
+        tooManyUsers: "O compartilhamento de arquivos só está disponível com até {max} pessoas",
     },
     loginTokenError: "Ocorreu um erro. Por favor, tente reconectar",
     reconnect: "Reconectar",

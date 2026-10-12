@@ -642,6 +642,7 @@ const chat: BaseTranslation = {
         title: "File attachment",
         description: "Upload and share a file",
         featureComingSoon: "Coming soon!",
+        tooManyUsers: "File sharing is only available with {max} people or fewer",
     },
     loginTokenError: "An error occurred. Please try to reconnect",
     reconnect: "Reconnect",

@@ -645,6 +645,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Pièce jointe",
         description: "Téléchargez un fichier pour le partager",
         featureComingSoon: "Fonctionnalité à venir !",
+        tooManyUsers: "Le partage de fichiers n'est possible qu'à {max} personnes maximum",
     },
     loginTokenError: "Une erreur est survenue. Veuillez réessayer de vous reconnecter",
     reconnect: "Se reconnecter",

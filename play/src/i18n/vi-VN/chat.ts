@@ -642,6 +642,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Tệp đính kèm",
         description: "Tải lên và chia sẻ một tệp",
         featureComingSoon: "Sắp ra mắt!",
+        tooManyUsers: "Chỉ có thể chia sẻ tệp khi có tối đa {max} người",
     },
     loginTokenError: "Đã xảy ra lỗi. Vui lòng thử kết nối lại",
     reconnect: "Kết nối lại",

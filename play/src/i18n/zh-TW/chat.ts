@@ -638,6 +638,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "檔案附件",
         description: "上傳並分享檔案",
         featureComingSoon: "即將推出！",
+        tooManyUsers: "僅在 {max} 人以下時可以分享檔案",
     },
     loginTokenError: "發生錯誤。請嘗試重新連線",
     reconnect: "重新連線",

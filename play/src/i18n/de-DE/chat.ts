@@ -649,6 +649,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Dateianhang",
         description: "Laden Sie eine Datei hoch, um sie zu teilen",
         featureComingSoon: "Funktion kommt bald!",
+        tooManyUsers: "Dateien können nur mit höchstens {max} Personen geteilt werden",
     },
     loginTokenError: "Ein Fehler ist aufgetreten. Bitte versuchen Sie, sich erneut anzumelden",
     reconnect: "Erneut verbinden",

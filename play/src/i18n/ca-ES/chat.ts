@@ -642,6 +642,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Adjunt de fitxer",
         description: "Puja i comparteix un fitxer",
         featureComingSoon: "Properament!",
+        tooManyUsers: "Compartir fitxers només està disponible amb {max} persones com a màxim",
     },
     loginTokenError: "S'ha produït un error. Si us plau, intenteu tornar-vos a connectar",
     reconnect: "Tornar a connectar",

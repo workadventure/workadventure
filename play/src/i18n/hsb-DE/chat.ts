@@ -643,6 +643,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Datajowy přiwěšk",
         description: "Nakładować dataju, zo by ju dźělił",
         featureComingSoon: "Funkcija přichodna!",
+        tooManyUsers: "Dźělenje datajow je jenož z maksimalnje {max} wosobami móžne",
     },
     loginTokenError: "Zmylka je nastała. Prošu wopytaj, so hišće raz přizjewić",
     reconnect: "Hišće raz zwězać",

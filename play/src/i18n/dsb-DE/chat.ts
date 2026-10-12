@@ -644,6 +644,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Datajowy zbytny zapis",
         description: "Nagraś dataju, aby ju źělił",
         featureComingSoon: "Funkcija pśiducy!",
+        tooManyUsers: "Źělenje datajow jo jano z maksimalnje {max} wósobami móžne",
     },
     loginTokenError: "Zmólka jo nastała. Pšosym wopytaj, se znowa pśizjawiś",
     reconnect: "Znowa zwězaś",

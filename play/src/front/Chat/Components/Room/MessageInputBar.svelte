@@ -27,6 +27,7 @@
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
+    import { PROXIMITY_FILE_TRANSFER_MAX_USERS } from "../../../Enum/EnvironmentVariable";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { DEFAULT_PROXIMITY_SPACE_NAME } from "../../Connection/Proximity/ProximityChatRoomManager";
@@ -91,6 +92,7 @@
     const isDefaultProximityRoom = room instanceof ProximityChatRoom && room.spaceName === DEFAULT_PROXIMITY_SPACE_NAME;
     const proximityChatDisabled = room instanceof ProximityChatRoom ? room.isChatDisabled : inactiveProximityState;
     const proximityRoomJoined = room instanceof ProximityChatRoom ? room.isJoined : inactiveProximityState;
+    const proximityFilesAllowed = room instanceof ProximityChatRoom ? room.canSendFiles : readable(true);
     const cannotCreatePoll = readable(false);
     const canSendMessages = room.canSendMessages ?? readable(true);
 
@@ -113,9 +115,14 @@
             isProximityRoomJoined: $proximityRoomJoined,
         }) || !$canSendMessages,
     );
-    // Proximity files travel peer to peer, so there is nobody to send them to before the space is joined.
+    // Proximity files travel peer to peer, so there is nobody to send them to before the space is joined,
+    // and too many recipients to upload to in a crowded one.
+    let tooManyUsersForFiles = $derived(!$proximityFilesAllowed);
     let canAttachFiles = $derived(
-        fileAttachementEnabled && $canSendMessages && (!isProximityChatRoom || $proximityRoomJoined),
+        fileAttachementEnabled &&
+            $canSendMessages &&
+            (!isProximityChatRoom || $proximityRoomJoined) &&
+            !tooManyUsersForFiles,
     );
     const canOpenQuestions = canOpenQuestionsPanel(room);
     let replyMessageId: string | null = null;
@@ -193,9 +200,12 @@
                 filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
             } catch (error) {
                 console.error(error);
-                warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
-                    closable: true,
-                });
+                warningMessageStore.addWarningMessage(
+                    tooManyUsersForFiles
+                        ? $LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS })
+                        : $LL.chat.failedToSendAttachments(),
+                    { closable: true },
+                );
             } finally {
                 // A second send cannot start while this guarded upload is in progress.
                 // eslint-disable-next-line require-atomic-updates
@@ -293,6 +303,13 @@
     }
 
     export function handleFiles(filesToAdd: FileList) {
+        if (tooManyUsersForFiles) {
+            warningMessageStore.addWarningMessage(
+                $LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS }),
+                { closable: true },
+            );
+            return;
+        }
         if (!canAttachFiles) {
             return;
         }
@@ -772,9 +789,13 @@
                 <IconPaperclip font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
                 <p class={applicationDescriptionClass}>
-                    {fileAttachementEnabled
-                        ? $LL.chat.fileAttachment.description()
-                        : $LL.chat.fileAttachment.featureComingSoon()}
+                    {#if !fileAttachementEnabled}
+                        {$LL.chat.fileAttachment.featureComingSoon()}
+                    {:else if tooManyUsersForFiles}
+                        {$LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS })}
+                    {:else}
+                        {$LL.chat.fileAttachment.description()}
+                    {/if}
                 </p>
             </button>
 
