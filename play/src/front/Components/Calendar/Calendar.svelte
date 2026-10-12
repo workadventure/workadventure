@@ -13,8 +13,9 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
     import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
-    import { buildAgenda, formatDayName, nextMeeting, overlapsWith, startOfDay } from "./agenda";
+    import { buildAgenda, formatDayName, meetingsInProgress, nextMeeting, overlapsWith, startOfDay } from "./agenda";
     import CalendarNextMeeting from "./CalendarNextMeeting.svelte";
+    import CalendarMeetingsInProgress from "./CalendarMeetingsInProgress.svelte";
     import CalendarEventRow from "./CalendarEventRow.svelte";
     import CalendarOverlapGroup from "./CalendarOverlapGroup.svelte";
 
@@ -27,6 +28,7 @@
 
     let days = $derived(buildAgenda($calendarEventsStore.values(), now));
     let next = $derived(nextMeeting($calendarEventsStore.values(), now));
+    let inProgress = $derived(meetingsInProgress($calendarEventsStore.values(), now));
     let today = $derived(startOfDay(now).getTime());
 
     let sections: HTMLElement[] = $state([]);
@@ -86,7 +88,10 @@
             </div>
         {/if}
 
-        {#if next}
+        {#if inProgress.length > 1}
+            <!-- We cannot tell which one the user is in: offer them all rather than pick one. -->
+            <CalendarMeetingsInProgress events={inProgress} />
+        {:else if next}
             <CalendarNextMeeting event={next} overlaps={overlapsWith(next, $calendarEventsStore.values())} {now} />
         {/if}
 

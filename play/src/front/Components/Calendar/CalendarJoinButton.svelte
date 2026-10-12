@@ -9,10 +9,12 @@
         event: CalendarEventInterface;
         /** The next meeting's full-width button rather than a row's compact one. */
         prominent?: boolean;
+        /** A compact button that still spells out "Join", not just a camera icon. */
+        labelled?: boolean;
         class?: string;
     }
 
-    let { event, prominent = false, class: className = "" }: Props = $props();
+    let { event, prominent = false, labelled = false, class: className = "" }: Props = $props();
 
     let meeting = $derived(event.resource?.onlineMeeting);
 
@@ -47,6 +49,20 @@
             {onclick}
         >
             {#snippet icon()}<IconVideo class="h-5 w-5" />{/snippet}
+            {$LL.externalModule.calendar.join()}
+        </Button>
+    {:else if labelled}
+        <Button
+            href={meeting.joinUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="light"
+            appearance="border"
+            size="sm"
+            class={className}
+            {onclick}
+        >
+            {#snippet icon()}<IconVideo class="h-4 w-4" />{/snippet}
             {$LL.externalModule.calendar.join()}
         </Button>
     {:else}

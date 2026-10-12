@@ -122,6 +122,8 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         now: "Něnto",
         noMeetings: "Žedne ześělenja w pśiducych 7 dnjach",
         days: "Dny",
+        meetingsInProgress: "Běžece ześělenja: {count}",
+        inProgressCount: "Běžy: {count}",
     },
     todoList: {
         title: "Tuchylu cyniś",

@@ -120,6 +120,8 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         now: "Bây giờ",
         noMeetings: "Không có cuộc họp nào trong 7 ngày tới",
         days: "Ngày",
+        meetingsInProgress: "{count} cuộc họp đang diễn ra",
+        inProgressCount: "{count} đang diễn ra",
     },
     todoList: {
         title: "Việc cần làm",

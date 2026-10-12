@@ -122,6 +122,8 @@ const externalModule: BaseTranslation = {
         now: "Agora",
         noMeetings: "Nenhuma reunião nos próximos 7 dias",
         days: "Dias",
+        meetingsInProgress: "{count} reuniões em andamento",
+        inProgressCount: "{count} em andamento",
     },
     todoList: {
         title: "A fazer",

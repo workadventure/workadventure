@@ -123,6 +123,8 @@ const externalModule: BaseTranslation = {
         now: "Now",
         noMeetings: "No meetings in the next 7 days",
         days: "Days",
+        meetingsInProgress: "{count:number} meetings in progress",
+        inProgressCount: "{count:number} in progress",
     },
     todoList: {
         title: "To Do",

@@ -86,6 +86,13 @@ export function nextMeeting(events: Iterable<CalendarEventInterface>, now: Date)
     return [...events].filter((event) => !event.allDay && !isLong(event) && event.end > now).sort(byStart)[0];
 }
 
+/** The meetings running right now, long and all-day events aside. */
+export function meetingsInProgress(events: Iterable<CalendarEventInterface>, now: Date): CalendarEventInterface[] {
+    return [...events]
+        .filter((event) => !event.allDay && !isLong(event) && event.start <= now && now < event.end)
+        .sort(byStart);
+}
+
 /** The other meetings happening during this one. */
 export function overlapsWith(
     meeting: CalendarEventInterface,

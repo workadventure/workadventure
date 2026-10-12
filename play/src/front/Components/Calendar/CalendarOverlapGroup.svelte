@@ -20,6 +20,7 @@
 
     let span = $derived(end.getTime() - start.getTime());
     const percent = (date: Date) => ((date.getTime() - start.getTime()) / span) * 100;
+    let inProgressCount = $derived(events.filter((event) => event.start <= now && now < event.end).length);
 </script>
 
 <div class="flex flex-col gap-2 rounded-md border border-solid border-warning/50 bg-warning/5 p-2.5">
@@ -28,6 +29,11 @@
         <span class="font-bold text-warning">
             {$LL.externalModule.calendar.overlapping({ count: events.length })}
         </span>
+        {#if inProgressCount > 0}
+            <span class="font-bold text-danger-600">
+                · {$LL.externalModule.calendar.inProgressCount({ count: inProgressCount })}
+            </span>
+        {/if}
         <span class="ms-auto tabular-nums text-contrast-200">{formatTime(start)} – {formatTime(end)}</span>
     </div>
 
@@ -40,6 +46,10 @@
                     percent(event.start)}%"
             ></div>
         {/each}
+        {#if inProgressCount > 0}
+            <!-- Now, against the bars: shows which of the meetings are running. -->
+            <div class="absolute -bottom-1 -top-1 w-0.5 bg-danger-600" style="left: {percent(now)}%"></div>
+        {/if}
     </div>
 
     <ul class="m-0 flex list-none flex-col p-0">
@@ -53,11 +63,6 @@
                 <span class="flex min-w-0 items-center gap-1.5">
                     <span class="h-2 w-2 shrink-0 rounded-full {COLORS[index % COLORS.length]}"></span>
                     <span class="truncate text-sm">{event.title}</span>
-                    {#if event.start <= now}
-                        <span class="shrink-0 text-xs font-bold text-danger-600">
-                            {$LL.externalModule.calendar.inProgress()}
-                        </span>
-                    {/if}
                 </span>
                 <CalendarJoinButton {event} />
             </li>
