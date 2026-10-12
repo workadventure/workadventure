@@ -99,7 +99,6 @@
         hdrMic: byId("c-hdr-mic"),
         hdrCam: byId("c-hdr-cam"),
         hdrShare: byId("c-hdr-share"),
-        hdrPip: byId("c-hdr-pip"),
         expand: byId("c-expand"),
         close: byId("c-close"),
         statusBtn: byId("c-status-btn"),
@@ -741,10 +740,6 @@
         if (els.hdrShare.disabled) return;
         send({ type: "toggle-screenshare" });
     });
-    els.hdrPip.addEventListener("click", function () {
-        if (els.hdrPip.disabled) return;
-        send({ type: "toggle-pip" });
-    });
 
     // ── Status dropdown ─────────────────────────────────────────────────────
     function openStatusMenu(open) {
@@ -1140,15 +1135,6 @@
               ? t("companion.shareScreenNeedsMeeting", "Join a meeting to share your screen")
               : t("companion.shareScreen", "Share your screen");
         els.hdrShare.setAttribute("aria-label", els.hdrShare.title);
-        // Picture-in-picture: single icon; active turns it secondary-blue. Only meaningful in a meeting.
-        els.hdrPip.classList.toggle("is-active", media.pipOpen === true);
-        els.hdrPip.disabled = !media.inMeeting;
-        els.hdrPip.title = media.pipOpen
-            ? t("companion.closePip", "Close picture-in-picture")
-            : els.hdrPip.disabled
-              ? t("companion.pipNeedsMeeting", "Join a meeting to open picture-in-picture")
-              : t("companion.pip", "Picture-in-picture");
-        els.hdrPip.setAttribute("aria-label", els.hdrPip.title);
 
         // Self status dot + status dropdown current/locked.
         els.selfDot.dataset.status = normStatus(media.status);

@@ -32,7 +32,8 @@ export type CompanionPresenceEdge = {
  * the latch again, so each away-session needs a fresh trigger.
  *
  * Closing the panel (its close button, the window's own close, the tray) dismisses it until the
- * meeting ends: neither trigger brings it back meanwhile.
+ * user comes back to WA (the controller lifts it on focus) or the meeting ends: neither trigger
+ * brings it back meanwhile.
  *
  * Pure functions (no Electron dependency) so the rules can be unit-tested.
  */
@@ -119,8 +120,8 @@ export function latchAfterLeavingApp(latch: boolean, presence: CompanionPresence
 }
 
 /**
- * A dismissal holds until the meeting ends: a meeting that starts or ends, or leaving the world,
- * lifts it.
+ * A meeting that starts or ends, or leaving the world, lifts a dismissal (coming back to WA does
+ * too, see the controller).
  */
 export function dismissalAfterPresenceChange(
     dismissed: boolean,
