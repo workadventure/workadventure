@@ -27,7 +27,7 @@ const alreadyNotified = new Set<string>();
 export function dueReminders(
     events: Iterable<CalendarEventInterface>,
     alreadyNotified: ReadonlySet<string>,
-    now: Date
+    now: Date,
 ): CalendarEventInterface[] {
     return [...events].filter((event) => {
         if (event.allDay === true || alreadyNotified.has(event.id)) {
@@ -53,7 +53,7 @@ export function startCalendarReminders(): () => void {
             notificationPlayingStore.playNotification(
                 get(LL).externalModule.calendar.meetingStartingSoon({ title: event.title }),
                 undefined,
-                `calendar-reminder-${event.id}`
+                `calendar-reminder-${event.id}`,
             );
         }
         // The agenda holds the join link: put it in front of the user rather than let him hunt for it.
