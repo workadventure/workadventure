@@ -107,6 +107,9 @@
         statusMenu: byId("c-status-menu"),
         statusLocked: byId("c-status-locked"),
         invitation: byId("c-invitation"),
+        annotations: byId("c-annotations"),
+        annotationsAllow: byId("c-annotations-allow"),
+        annotationsClear: byId("c-annotations-clear"),
         invitationText: byId("c-invitation-text"),
         inviteAccept: byId("c-invite-accept"),
         inviteDecline: byId("c-invite-decline"),
@@ -741,6 +744,12 @@
         if (els.hdrPip.disabled) return;
         send({ type: "toggle-pip" });
     });
+    els.annotationsAllow.addEventListener("click", function () {
+        send({ type: "annotation-toggle-others" });
+    });
+    els.annotationsClear.addEventListener("click", function () {
+        send({ type: "annotation-clear" });
+    });
 
     // ── Status dropdown ─────────────────────────────────────────────────────
     function openStatusMenu(open) {
@@ -1145,6 +1154,13 @@
               ? t("companion.pipNeedsMeeting", "Join a meeting to open picture-in-picture")
               : t("companion.pip", "Picture-in-picture");
         els.hdrPip.setAttribute("aria-label", els.hdrPip.title);
+
+        // Annotations of the user's own share: only sent where no meeting bar floats over it (Linux).
+        var annotating = typeof media.othersMayAnnotate === "boolean";
+        els.annotations.hidden = !annotating;
+        els.annotationsAllow.setAttribute("aria-pressed", media.othersMayAnnotate === true ? "true" : "false");
+        els.annotationsAllow.classList.toggle("inv-accept", media.othersMayAnnotate === true);
+        els.annotationsAllow.classList.toggle("inv-decline", media.othersMayAnnotate !== true);
 
         // Self status dot + status dropdown current/locked.
         els.selfDot.dataset.status = normStatus(media.status);

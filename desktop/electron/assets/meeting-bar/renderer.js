@@ -89,6 +89,7 @@
     var anRedo = byId("an-redo");
     var anEye = byId("an-eye");
     var anOthers = byId("an-others");
+    var anClear = byId("an-clear");
 
     var pickerOpen = false;
     var menuOpen = false;
@@ -195,6 +196,9 @@
     });
     anEye.addEventListener("click", function () {
         api.sendCommand({ type: "annotation-toggle-local-hide" });
+    });
+    anClear.addEventListener("click", function () {
+        api.sendCommand({ type: "annotation-clear" });
     });
     anOthers.addEventListener("click", function () {
         api.sendCommand({ type: "annotation-toggle-others" });

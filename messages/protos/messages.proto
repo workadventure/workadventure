@@ -949,7 +949,8 @@ message RemoveSpaceUserQuery {
 
 /*********** SPACE STATE *************/
 
-// The typed, server-owned state of a space (raised hands, floor holders, recording, proximity polls and Q&A).
+// The typed, server-owned state of a space (raised hands, floor holders, recording, proximity polls and Q&A,
+// screen-share annotations).
 // Clients never write it: they send a SpaceStateQuery, the back applies it to its SpaceState and broadcasts the
 // change as a JSON Patch (SpaceStatePatchMessage). The shape of the state lives in @workadventure/shared-utils.
 message SpaceStateQuery {
@@ -969,7 +970,30 @@ message SpaceStateQuery {
     AnswerQuestionQuery answerQuestion = 13;
     DeleteQuestionQuery deleteQuestion = 14;
     SetSpaceKindQuery setKind = 15;
+    SetScreenAnnotationOthersAllowedQuery setScreenAnnotationOthersAllowed = 16;
+    UpsertScreenAnnotationQuery upsertScreenAnnotation = 17;
+    RemoveScreenAnnotationQuery removeScreenAnnotation = 18;
+    ClearScreenAnnotationsQuery clearScreenAnnotations = 19;
   }
+}
+
+// The user sharing their screen lets the other members annotate it, or stops letting them.
+message SetScreenAnnotationOthersAllowedQuery {
+  bool allowed = 1;
+}
+// Adds a finished element to a shared screen, or replaces one of the sender's own elements (same id).
+message UpsertScreenAnnotationQuery {
+  // spaceUserId of the user sharing the screen.
+  string targetUserId = 1;
+  ScreenAnnotationElement element = 2;
+}
+// Removes an element: one of the sender's own, or any of them for the user sharing the screen.
+message RemoveScreenAnnotationQuery {
+  string targetUserId = 1;
+  string elementId = 2;
+}
+// The user sharing their screen removes every element drawn on it.
+message ClearScreenAnnotationsQuery {
 }
 
 // Declares what the space is (see spaceKindSchema). Sent by every client joining a space it knows the kind of.
@@ -1408,20 +1432,18 @@ message ScreenAnnotationElement {
   optional string text = 7;
 }
 
-// A public event broadcast to every member of a space to annotate a shared screen.
+// A public event broadcast to every member of a space while an element is being drawn on a shared screen.
+// Finished elements and the "others may annotate" setting are in the space state (screen-share annotations).
 message ScreenAnnotationEvent {
   // spaceUserId of the screen-sharing user this annotation applies to.
   string targetUserId = 1;
   oneof operation {
-    // Add or update (by id) a drawable element.
-    ScreenAnnotationElement upsertElement = 2;
-    // Remove a single element by id (undo / eraser).
-    string removeElementId = 3;
-    // Clear every element on the targeted screen share.
-    bool clearAll = 4;
-    // The presenter enables (true) or disables (false) annotation for other users.
-    bool annotationEnabled = 5;
+    // The element being drawn, re-sent as it grows (same id). The finished one replaces it in the state.
+    ScreenAnnotationElement draft = 2;
+    // The author gave up the element being drawn (its id): it never reaches the state.
+    string dropDraftId = 3;
   }
+  reserved 4, 5;
 }
 
 // A public event broadcast to every member of a space: an ephemeral presenter cursor effect

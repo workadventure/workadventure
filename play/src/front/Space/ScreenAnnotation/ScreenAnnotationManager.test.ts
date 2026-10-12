@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import type { Writable } from "svelte/store";
 import { Subject } from "rxjs";
 import type { ScreenAnnotationElement, ScreenAnnotationEvent } from "@workadventure/messages";
+import type { SpaceState } from "@workadventure/shared-utils";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { Streamable } from "../Streamable";
 import {
+    localAnnotationTargetStore,
     screenAnnotationElementsStore,
     screenAnnotationEnabledStore,
-    setAnnotationEnabled,
 } from "../../Stores/ScreenAnnotationStore";
 
 const sharing = vi.hoisted(() => ({
@@ -28,12 +29,19 @@ const PRESENTER = "presenter";
 const ME = "me";
 
 const events = new Subject<{ sender: string; screenAnnotation: ScreenAnnotationEvent }>();
-const userJoined = new Subject<void>();
+const userLeft = new Subject<{ spaceUserId: string }>();
 const emitPublicMessage = vi.fn();
+const annotations = writable<SpaceState["annotations"]>({});
+const stateManager = {
+    observe: () => annotations,
+    upsertScreenAnnotation: vi.fn(() => Promise.resolve()),
+    clearScreenAnnotations: vi.fn(() => Promise.resolve()),
+};
 const space = {
     mySpaceUserId: ME,
+    state: stateManager,
     observePublicEvent: () => events,
-    observeUserJoined: userJoined,
+    observeUserLeft: userLeft,
     onLeaveSpace: new Subject<void>(),
     emitPublicMessage,
 } as unknown as SpaceInterface;
@@ -42,96 +50,117 @@ function element(id: string, authorUserId: string): ScreenAnnotationElement {
     return { id, authorUserId, tool: "pen", color: "#fff", width: 0.01, points: [{ x: 0, y: 0 }] };
 }
 
-function send(sender: string, targetUserId: string, operation: ScreenAnnotationEvent["operation"]) {
-    events.next({ sender, screenAnnotation: { targetUserId, operation } });
+function setState(othersAllowed: boolean, ...elements: ScreenAnnotationElement[]) {
+    annotations.set({
+        [PRESENTER]: {
+            othersAllowed,
+            elements: Object.fromEntries(elements.map((e) => [e.id, { ...e, tool: "pen" as const, at: 0 }])),
+        },
+    });
 }
 
-function elementIds(target: string) {
+function sendDraft(sender: string, draft: ScreenAnnotationElement) {
+    events.next({ sender, screenAnnotation: { targetUserId: PRESENTER, operation: { $case: "draft", draft } } });
+}
+
+function elementIds(target = PRESENTER) {
     return (get(screenAnnotationElementsStore).get(target) ?? []).map((e) => e.id);
 }
 
-describe("ScreenAnnotationManager remote events", () => {
+describe("ScreenAnnotationManager", () => {
     beforeEach(() => {
         sharing.source.set(undefined);
         sharing.state.set(false);
+        annotations.set({});
         emitPublicMessage.mockClear();
+        stateManager.clearScreenAnnotations.mockClear();
         screenAnnotationManager.bindToSpace(space, new Subject<Streamable>());
     });
 
-    it("lets only the presenter turn annotation on or off", () => {
-        send("viewer", PRESENTER, { $case: "annotationEnabled", annotationEnabled: true });
-        expect(get(screenAnnotationEnabledStore).get(PRESENTER)).toBeUndefined();
-
-        send(PRESENTER, PRESENTER, { $case: "annotationEnabled", annotationEnabled: true });
+    it("publishes the finished elements and the setting of the state", () => {
+        setState(true, element("a", PRESENTER), element("b", "viewer"));
+        expect(elementIds()).toEqual(["a", "b"]);
         expect(get(screenAnnotationEnabledStore).get(PRESENTER)).toBe(true);
     });
 
-    it("lets only the presenter clear their screen", () => {
-        send(PRESENTER, PRESENTER, { $case: "upsertElement", upsertElement: element("a", PRESENTER) });
-        send("viewer", PRESENTER, { $case: "clearAll", clearAll: true });
-        expect(elementIds(PRESENTER)).toEqual(["a"]);
+    it("shows a draft only while its sender may draw, until it is finished", () => {
+        sendDraft("viewer", element("v", "viewer"));
+        expect(elementIds()).toEqual([]);
+
+        setState(true);
+        sendDraft("viewer", element("v", "viewer"));
+        expect(elementIds()).toEqual(["v"]);
+        expect(get(screenAnnotationElementsStore).get(PRESENTER)?.[0].authorUserId).toBe("viewer");
+
+        // Finished: the state element replaces the draft, which does not come back once erased.
+        setState(true, element("v", "viewer"));
+        expect(elementIds()).toEqual(["v"]);
+        setState(true);
+        expect(elementIds()).toEqual([]);
     });
 
-    it("drops an element whose author is not its sender", () => {
-        send("viewer", PRESENTER, { $case: "upsertElement", upsertElement: element("forged", PRESENTER) });
-        expect(elementIds(PRESENTER)).toEqual([]);
-    });
-
-    it("drops strokes from viewers while the presenter has not allowed annotation", () => {
-        send("viewer", PRESENTER, { $case: "upsertElement", upsertElement: element("v0", "viewer") });
-        expect(elementIds(PRESENTER)).toEqual([]);
-    });
-
-    it("re-announces the setting to newcomers while sharing with annotation allowed", () => {
-        userJoined.next();
-        expect(emitPublicMessage).not.toHaveBeenCalled();
-
-        sharing.state.set(true);
-        setAnnotationEnabled(ME, true);
-        userJoined.next();
-        expect(emitPublicMessage).toHaveBeenCalledWith({
-            $case: "screenAnnotation",
-            screenAnnotation: { targetUserId: ME, operation: { $case: "annotationEnabled", annotationEnabled: true } },
+    it("drops a draft given up by its author, or too large to render safely", () => {
+        setState(true);
+        sendDraft("viewer", element("v", "viewer"));
+        events.next({
+            sender: "viewer",
+            screenAnnotation: { targetUserId: PRESENTER, operation: { $case: "dropDraftId", dropDraftId: "v" } },
         });
+        expect(elementIds()).toEqual([]);
+
+        sendDraft("viewer", { ...element("w", "viewer"), width: 10 });
+        expect(elementIds()).toEqual([]);
     });
 
-    it("drops strokes from viewers once the presenter turned annotation off", () => {
-        send(PRESENTER, PRESENTER, { $case: "annotationEnabled", annotationEnabled: false });
-        send("viewer", PRESENTER, { $case: "upsertElement", upsertElement: element("v", "viewer") });
-        expect(elementIds(PRESENTER)).toEqual([]);
+    it("drops the draft of a user who leaves", () => {
+        setState(true);
+        sendDraft("viewer", element("v", "viewer"));
+        userLeft.next({ spaceUserId: "viewer" });
+        expect(elementIds()).toEqual([]);
     });
 
-    it("on my own share, accepts viewer strokes only while I allow them", () => {
-        send("viewer", ME, { $case: "upsertElement", upsertElement: element("v1", "viewer") });
-        expect(elementIds(ME)).toEqual([]);
-
-        setAnnotationEnabled(ME, true);
-        send("viewer", ME, { $case: "upsertElement", upsertElement: element("v2", "viewer") });
-        expect(elementIds(ME)).toEqual(["v2"]);
+    it("takes a viewer out of drawing mode when the presenter stops letting them draw, for good", () => {
+        setState(true);
+        localAnnotationTargetStore.set(PRESENTER);
+        setState(false);
+        expect(get(localAnnotationTargetStore)).toBeUndefined();
+        setState(true);
+        expect(get(localAnnotationTargetStore)).toBeUndefined();
     });
 
-    it("drops elements too large to render safely", () => {
-        const huge = { ...element("w", PRESENTER), width: 10 };
-        send(PRESENTER, PRESENTER, { $case: "upsertElement", upsertElement: huge });
-        const long = { ...element("p", PRESENTER), points: Array.from({ length: 6000 }, () => ({ x: 0, y: 0 })) };
-        send(PRESENTER, PRESENTER, { $case: "upsertElement", upsertElement: long });
-        expect(elementIds(PRESENTER)).toEqual([]);
+    it("takes a viewer out of drawing mode when the share stops", () => {
+        setState(true);
+        localAnnotationTargetStore.set(PRESENTER);
+        annotations.set({});
+        expect(get(localAnnotationTargetStore)).toBeUndefined();
+    });
+
+    it("takes the presenter out of drawing mode when they stop sharing", () => {
+        sharing.state.set(true);
+        screenAnnotationManager.toggleDrawingOnMyShare();
+        expect(get(localAnnotationTargetStore)).toBe(ME);
+        sharing.state.set(false);
+        expect(get(localAnnotationTargetStore)).toBeUndefined();
     });
 
     it("clears my annotations for everyone when I switch to another screen", () => {
         sharing.state.set(true);
         sharing.source.set({ id: "screen:1" });
-        screenAnnotationManager.upsertElement(ME, element("mine", ME));
-        emitPublicMessage.mockClear();
-
         sharing.source.set({ id: "screen:1" });
-        expect(elementIds(ME)).toEqual(["mine"]);
+        expect(stateManager.clearScreenAnnotations).not.toHaveBeenCalled();
 
         sharing.source.set({ id: "screen:2" });
-        expect(elementIds(ME)).toEqual([]);
-        expect(emitPublicMessage).toHaveBeenCalledWith({
-            $case: "screenAnnotation",
-            screenAnnotation: { targetUserId: ME, operation: { $case: "clearAll", clearAll: true } },
-        });
+        expect(stateManager.clearScreenAnnotations).toHaveBeenCalledOnce();
+    });
+
+    it("drops the draft of a refused element", async () => {
+        stateManager.upsertScreenAnnotation.mockReturnValueOnce(Promise.reject(new Error("refused")));
+        screenAnnotationManager.upsertElement(PRESENTER, element("mine", ME));
+        await vi.waitFor(() =>
+            expect(emitPublicMessage).toHaveBeenCalledWith({
+                $case: "screenAnnotation",
+                screenAnnotation: { targetUserId: PRESENTER, operation: { $case: "dropDraftId", dropDraftId: "mine" } },
+            }),
+        );
     });
 });

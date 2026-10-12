@@ -47,6 +47,8 @@ import type {
     CompanionUser,
     WorkAdventureDesktopApi,
 } from "../../Interfaces/DesktopAppInterfaces";
+import { screenAnnotationEnabledStore } from "../../Stores/ScreenAnnotationStore";
+import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
 import { startDesktopStringsBridge } from "./DesktopStringsBridge";
 
 type TrayAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
@@ -639,8 +641,19 @@ class DesktopApi {
                 availabilityStatusStore,
                 activePictureInPictureStore,
                 screenSharingAvailableStore,
+                screenAnnotationEnabledStore,
             ],
-            ([$inMeeting, $mic, $cam, $share, $requested, $availability, $pipOpen, $canShare]): CompanionMedia => ({
+            ([
+                $inMeeting,
+                $mic,
+                $cam,
+                $share,
+                $requested,
+                $availability,
+                $pipOpen,
+                $canShare,
+                $annotationEnabled,
+            ]): CompanionMedia => ({
                 micEnabled: Boolean($mic),
                 cameraEnabled: Boolean($cam),
                 screenSharing: Boolean($share),
@@ -652,6 +665,11 @@ class DesktopApi {
                 pipOpen: Boolean($pipOpen),
                 status: requestedStatusToKey($requested),
                 statusLocked: STATUS_LOCKED_SET.has($availability),
+                // On macOS and Windows, the meeting bar over the shared screen offers these.
+                othersMayAnnotate:
+                    $share && !window.WAD?.presenterHud
+                        ? $annotationEnabled.get(screenAnnotationManager.localUserId ?? "") === true
+                        : undefined,
             }),
         );
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
@@ -879,6 +897,16 @@ class DesktopApi {
                     } else {
                         requestedScreenSharingState.enableScreenSharing();
                     }
+                    break;
+                case "annotation-toggle-others": {
+                    const me = screenAnnotationManager.localUserId;
+                    if (me && get(requestedScreenSharingState)) {
+                        screenAnnotationManager.setOthersAllowed(get(screenAnnotationEnabledStore).get(me) !== true);
+                    }
+                    break;
+                }
+                case "annotation-clear":
+                    screenAnnotationManager.clearAll();
                     break;
                 case "toggle-pip":
                     // Open / close the proven native meeting-video window (PiP).

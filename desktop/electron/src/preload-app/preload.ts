@@ -140,7 +140,8 @@ const api: WorkAdventureDesktopApi = {
         openAdminSignup: () => ipcRenderer.invoke("app:navigation:openAdminSignup"),
         getStrings: () => ipcRenderer.sendSync("app:i18n:landing") as DesktopNativeStrings | null,
     },
-    screenOverlay: screenOverlayApi,
+    // The overlay keeps its strokes out of the shared image, which only macOS and Windows can do.
+    screenOverlay: canHideWindowsFromCapture(process.platform) ? screenOverlayApi : undefined,
     // The meeting bar floats over the shared screen: only where it can be kept out of the capture.
     presenterHud: canHideWindowsFromCapture(process.platform) ? presenterHudApi : undefined,
     companion: companionApi,
