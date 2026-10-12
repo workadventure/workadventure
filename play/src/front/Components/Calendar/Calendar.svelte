@@ -16,6 +16,13 @@
     import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
     import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
 
+    // Providers fill the store in their own order (Google returns events unsorted), so sort here for all of them.
+    let sortedEvents = $derived(
+        [...$calendarEventsStore.entries()].sort(
+            ([, a], [, b]) => a.start.getTime() - b.start.getTime() || a.end.getTime() - b.end.getTime(),
+        ),
+    );
+
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
     }
@@ -115,7 +122,7 @@
                     </div>
                 {/if}
                 {#if $calendarEventsStore.size > 0}
-                    {#each [...$calendarEventsStore.entries()] as [eventId, event] (eventId)}
+                    {#each sortedEvents as [eventId, event] (eventId)}
                         <div class="flex flex-col justify-center">
                             <div class="flex flex-row justify-start w-full">
                                 <span class="text-xs">{formatHour(event.start)}</span>
