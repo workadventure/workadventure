@@ -37,6 +37,20 @@ const hsb: NativeStrings = {
     "landing.loadFailure": "Tutón swět njeda so začitać. Snano je offline abo URL je wopak.",
     "landing.loadTimeout": "Začitanje tutoho swěta traje předołho. Snano je offline abo waš zwisk je přetorhnjeny.",
 
+    "landing.screenPermissionTitle": "Dźělenje wobrazowki dowolić",
+    "landing.screenPermissionBody":
+        "macOS prosy před prěnim dźělenjom wo dowolnosć, waš wobraz nahrawać, a startuje potom WorkAdventure znowa. Dajće ju nětko město srjedź rozmołwy.",
+    "landing.screenPermissionAllow": "Dowolić",
+    "landing.screenPermissionLater": "Pozdźišo",
+    "landing.screenPermissionNext":
+        "Zmóžńće WorkAdventure w systemowych nastajenjach (Systemeinstellungen): macOS potom nowy start poskići.",
+    "screenPermission.title": "WorkAdventure njesmě waš wobraz nahrawać",
+    "screenPermission.detail":
+        "Zmóžńće WorkAdventure pod Systemeinstellungen › Datenschutz & Sicherheit › Bildschirmaufnahme a startujće jón potom znowa: macOS tutu dowolnosć hakle při starće nałožowanja wužiwa.",
+    "screenPermission.openSettings": "Systemowe nastajenja wočinić",
+    "screenPermission.restart": "WorkAdventure znowa startować",
+    "screenPermission.cancel": "Přetorhnyć",
+
     "tabs.newWorld": "Nowy swět",
     "tabs.world": "Swět",
     "tabs.closeTab": "Rajtark začinić",

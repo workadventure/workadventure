@@ -520,6 +520,39 @@
                 cursor: wait;
             }
 
+            /* macOS only: the screen recording permission, asked here so that the restart it requires
+               happens before any conversation rather than at the first share. */
+            .permission {
+                align-self: center;
+                width: min(720px, 100%);
+                padding: 14px 16px;
+                border: 1px solid rgb(91 95 240 / 55%);
+                border-radius: var(--radius);
+                background: var(--card);
+            }
+
+            .permission[hidden] {
+                display: none;
+            }
+
+            .permission-title {
+                margin: 0 0 4px;
+                font-weight: 600;
+            }
+
+            .permission-body {
+                margin: 0 0 12px;
+                color: var(--text-muted);
+                font-size: var(--text-xs);
+                line-height: var(--text-xs-line);
+            }
+
+            .permission-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
             /* Self-hosted server unknown to the portal: the user confirms before the app trusts it. */
             .trust {
                 margin-top: 8px;
@@ -636,6 +669,29 @@
                         reopen automatically next time.
                     </p>
                 </div>
+
+                <section class="permission" id="screen-permission" aria-labelledby="screen-permission-title" hidden>
+                    <p class="permission-title" id="screen-permission-title" data-i18n="landing.screenPermissionTitle">
+                        Allow screen sharing
+                    </p>
+                    <p class="permission-body" id="screen-permission-body" data-i18n="landing.screenPermissionBody">
+                        macOS asks for the permission to record your screen before your first share, then restarts
+                        WorkAdventure. Give it now rather than during a conversation.
+                    </p>
+                    <div class="permission-actions">
+                        <button class="btn" type="button" id="screen-permission-allow" data-i18n="landing.screenPermissionAllow">
+                            Allow
+                        </button>
+                        <button
+                            class="btn btn-secondary"
+                            type="button"
+                            id="screen-permission-later"
+                            data-i18n="landing.screenPermissionLater"
+                        >
+                            Later
+                        </button>
+                    </div>
+                </section>
 
                 <!-- Pinned and recent worlds share one row (the star marks the pinned ones), so the
                      page keeps a single scanning line instead of two near-identical sections. -->
