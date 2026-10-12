@@ -5,12 +5,12 @@ import type { SetMicrophoneTrackQuery, SpaceUser } from "@workadventure/messages
 import { S3Upload } from "livekit-server-sdk";
 import {
     AUTO_RECORDING_ENABLED,
-    AUTO_RECORDING_S3_ACCESS_KEY,
     AUTO_RECORDING_S3_BUCKET,
-    AUTO_RECORDING_S3_ENDPOINT,
-    AUTO_RECORDING_S3_REGION,
-    AUTO_RECORDING_S3_SECRET_KEY,
     AUTO_RECORDING_SPEAKER_SECRET,
+    LIVEKIT_RECORDING_S3_ACCESS_KEY,
+    LIVEKIT_RECORDING_S3_ENDPOINT,
+    LIVEKIT_RECORDING_S3_REGION,
+    LIVEKIT_RECORDING_S3_SECRET_KEY,
 } from "../Enum/EnvironmentVariable";
 import { adminApi } from "../Services/AdminApi";
 import { getCapability } from "../Services/Capabilities";
@@ -64,12 +64,13 @@ export function isWorldAutoRecorded(world: string, spaceName: string, playUri: s
     return entry.enabled;
 }
 
+/** The S3 of the LiveKit recordings, in a bucket of its own. */
 const bucketUpload = (): S3Upload =>
     new S3Upload({
-        endpoint: AUTO_RECORDING_S3_ENDPOINT,
-        accessKey: AUTO_RECORDING_S3_ACCESS_KEY,
-        secret: AUTO_RECORDING_S3_SECRET_KEY,
-        region: AUTO_RECORDING_S3_REGION,
+        endpoint: LIVEKIT_RECORDING_S3_ENDPOINT,
+        accessKey: LIVEKIT_RECORDING_S3_ACCESS_KEY,
+        secret: LIVEKIT_RECORDING_S3_SECRET_KEY,
+        region: LIVEKIT_RECORDING_S3_REGION,
         bucket: AUTO_RECORDING_S3_BUCKET,
         forcePathStyle: true,
     });
@@ -79,12 +80,12 @@ export type ManifestWriter = (key: string, manifest: object) => Promise<void>;
 let s3Client: S3Client | undefined;
 const writeManifestToBucket: ManifestWriter = async (key, manifest) => {
     s3Client ??= new S3Client({
-        endpoint: AUTO_RECORDING_S3_ENDPOINT,
-        region: AUTO_RECORDING_S3_REGION || "us-east-1",
+        endpoint: LIVEKIT_RECORDING_S3_ENDPOINT,
+        region: LIVEKIT_RECORDING_S3_REGION || "us-east-1",
         forcePathStyle: true,
         credentials:
-            AUTO_RECORDING_S3_ACCESS_KEY && AUTO_RECORDING_S3_SECRET_KEY
-                ? { accessKeyId: AUTO_RECORDING_S3_ACCESS_KEY, secretAccessKey: AUTO_RECORDING_S3_SECRET_KEY }
+            LIVEKIT_RECORDING_S3_ACCESS_KEY && LIVEKIT_RECORDING_S3_SECRET_KEY
+                ? { accessKeyId: LIVEKIT_RECORDING_S3_ACCESS_KEY, secretAccessKey: LIVEKIT_RECORDING_S3_SECRET_KEY }
                 : undefined,
     });
     await s3Client.send(
