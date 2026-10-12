@@ -28,13 +28,6 @@
     let days = $derived(buildAgenda($calendarEventsStore.values(), now));
     let next = $derived(nextMeeting($calendarEventsStore.values(), now));
     let today = $derived(startOfDay(now).getTime());
-    // Where the now line goes in today's list: before the first item still to start.
-    let nowIndex = $derived.by(() => {
-        const items = days[0]?.date.getTime() === today ? days[0].items : undefined;
-        if (!items) return undefined;
-        const index = items.findIndex((item) => item.start > now);
-        return index === -1 ? items.length : index;
-    });
 
     let sections: HTMLElement[] = $state([]);
 
@@ -138,19 +131,21 @@
                             {/each}
                         </div>
 
-                        {#each day.items as item, index (item.kind === "overlap" ? `overlap-${item.events[0].id}` : item.event.id)}
-                            {#if dayIndex === 0 && index === nowIndex}
-                                {@render nowLine()}
-                            {/if}
-                            {#if item.kind === "overlap"}
-                                <CalendarOverlapGroup start={item.start} end={item.end} events={item.events} />
-                            {:else}
-                                <CalendarEventRow event={item.event} long={item.kind === "long"} />
-                            {/if}
-                        {/each}
-                        {#if dayIndex === 0 && nowIndex === day.items.length}
+                        <!-- Finished meetings are not listed: what follows the line is in progress or to come. -->
+                        {#if day.date.getTime() === today}
                             {@render nowLine()}
                         {/if}
+                        {#each day.items as item (item.kind === "overlap" ? `overlap-${item.events[0].id}` : item.event.id)}
+                            {#if item.kind === "overlap"}
+                                <CalendarOverlapGroup start={item.start} end={item.end} events={item.events} {now} />
+                            {:else}
+                                <CalendarEventRow
+                                    event={item.event}
+                                    long={item.kind === "long"}
+                                    inProgress={item.event.start <= now}
+                                />
+                            {/if}
+                        {/each}
                     </section>
                 {/each}
             </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { CalendarEventInterface } from "@workadventure/shared-utils";
+    import LL from "../../../i18n/i18n-svelte";
     import { formatDuration, formatTime } from "./agenda";
     import CalendarJoinButton from "./CalendarJoinButton.svelte";
     import { IconStack2 } from "@wa-icons";
@@ -8,15 +9,16 @@
         event: CalendarEventInterface;
         /** A long event, running alongside the meetings rather than competing with them. */
         long?: boolean;
+        inProgress?: boolean;
     }
 
-    let { event, long = false }: Props = $props();
+    let { event, long = false, inProgress = false }: Props = $props();
 </script>
 
 <div
-    class="grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-md border border-white/10 p-2.5 {long
+    class="grid grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-md border p-2.5 {long
         ? 'border-dashed'
-        : 'border-solid bg-white/5'}"
+        : 'border-solid bg-white/5'} {inProgress ? 'border-danger-600/60' : 'border-white/10'}"
 >
     <div class="flex flex-col tabular-nums leading-tight">
         <span class="text-sm font-bold">{formatTime(event.start)}</span>
@@ -30,6 +32,9 @@
             <span class="truncate">{event.title}</span>
         </span>
         <span class="text-xs text-contrast-200">
+            {#if inProgress}
+                <span class="font-bold text-danger-600">{$LL.externalModule.calendar.inProgress()}</span>&nbsp;·
+            {/if}
             {formatDuration(event)}{#if event.resource?.onlineMeeting?.isWorkAdventure}&nbsp;· WorkAdventure{/if}
         </span>
     </div>

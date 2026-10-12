@@ -9,9 +9,10 @@
         start: Date;
         end: Date;
         events: CalendarEventInterface[];
+        now: Date;
     }
 
-    let { start, end, events }: Props = $props();
+    let { start, end, events, now }: Props = $props();
 
     // Ties each meeting's line to its bar on the timeline. Static class names, for Tailwind's scanner.
     const COLORS = ["bg-secondary-300", "bg-success-400", "bg-warning-400", "bg-danger-400", "bg-contrast-200"];
@@ -52,6 +53,11 @@
                 <span class="flex min-w-0 items-center gap-1.5">
                     <span class="h-2 w-2 shrink-0 rounded-full {COLORS[index % COLORS.length]}"></span>
                     <span class="truncate text-sm">{event.title}</span>
+                    {#if event.start <= now}
+                        <span class="shrink-0 text-xs font-bold text-danger-600">
+                            {$LL.externalModule.calendar.inProgress()}
+                        </span>
+                    {/if}
                 </span>
                 <CalendarJoinButton {event} />
             </li>

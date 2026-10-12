@@ -35,13 +35,15 @@ export function startOfDay(date: Date): Date {
 /**
  * Lays the events out day by day, in chronological order whatever order the provider filled them in.
  * Within a day, all-day and long events are set apart, and meetings that overlap are grouped into runs.
- * An event that started before today and is still running belongs to today.
+ * An event that started before today and is still running belongs to today. Finished events are dropped:
+ * there is nothing left to do with them, and the providers stop sending them at their next refresh anyway.
  */
 export function buildAgenda(events: Iterable<CalendarEventInterface>, now: Date): AgendaDay[] {
     const today = startOfDay(now).getTime();
     // Sorted input, so the days are inserted in chronological order.
     const eventsByDay = new Map<number, CalendarEventInterface[]>();
     for (const event of [...events].sort(byStart)) {
+        if (event.end <= now) continue;
         const day = Math.max(startOfDay(event.start).getTime(), today);
         const dayEvents = eventsByDay.get(day);
         if (dayEvents) dayEvents.push(event);
