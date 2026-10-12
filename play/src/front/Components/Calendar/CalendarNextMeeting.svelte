@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { CalendarEventInterface } from "@workadventure/shared-utils";
-    import Chip from "../UI/Chip.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { formatDayName, formatTime, formatTimeUntil, startOfDay } from "./agenda";
     import { REMINDER_LEAD_MS } from "./CalendarReminder";
@@ -26,11 +25,11 @@
     class="flex flex-col gap-2 rounded-lg bg-contrast-600 p-3"
 >
     <div class="flex items-center gap-2">
-        <Chip variant="secondary" size="xs">
+        <span class="text-sm text-contrast-200">
             {started
                 ? $LL.externalModule.calendar.inProgress()
                 : `${$LL.externalModule.calendar.nextMeeting()} · ${formatTimeUntil(event.start, now)}`}
-        </Chip>
+        </span>
         {#if reminder > now}
             <span class="ms-auto flex items-center gap-1 text-xs text-contrast-200">
                 <IconBell class="h-3.5 w-3.5" aria-hidden="true" />

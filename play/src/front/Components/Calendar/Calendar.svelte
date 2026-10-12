@@ -118,9 +118,7 @@
             <div class="-mx-1 min-h-0 overflow-y-auto px-1">
                 {#each days as day, dayIndex (day.date.getTime())}
                     <section bind:this={sections[dayIndex]} class="flex flex-col gap-2 pb-3">
-                        <div
-                            class="sticky top-0 z-10 flex flex-col gap-1.5 border-0 border-b border-solid border-white/10 bg-contrast py-2"
-                        >
+                        <div class="flex flex-col gap-1.5 border-0 border-b border-solid border-white/10 py-2">
                             <div class="flex items-baseline justify-between gap-2">
                                 <h4 class="m-0 font-title text-lg font-medium normal-case">
                                     {formatDayName(day.date, now)}
