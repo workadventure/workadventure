@@ -10,13 +10,14 @@ import {
     leftWorld,
     shouldShowCompanion,
 } from "./companion-visibility-policy";
-import { canHideWindowsFromCapture } from "./platform-capture-policy";
+import { shouldProtectWindowFromCapture } from "./content-protection";
 
 /**
  * Drives the unified Companion — the People / Chat / Meeting / Controls window. It never steals
  * focus and (screen sharing aside) is the single floating surface. Closing it (its close button,
  * the window's own close, the tray/shortcut toggle) dismisses it until the user comes back to WA,
- * or the meeting ends. Screen sharing hides it in favour of the content-protected presenter HUD.
+ * or the meeting ends. It stays during the user's own screen share, next to the meeting bar, kept
+ * out of the capture meanwhile (see protectFromCaptureWhileSharing).
  *
  * It does NOT simply appear whenever WA is backgrounded — that made it noise. Two deliberate
  * triggers arm a one-shot latch (see companion-visibility-policy): a bubble forming around the
@@ -71,9 +72,6 @@ function isMainWindowShowing(): boolean {
 function wantOpen(): boolean {
     const p = getPresenceSnapshot();
     return shouldShowCompanion({
-        screenSharing: p.screenSharing,
-        // The meeting bar replaces the panel while sharing, where it can be kept out of the capture.
-        meetingBarAvailable: canHideWindowsFromCapture(process.platform),
         mainWindowInView: isMainWindowShowing(),
         pipActive,
         invitationPending: p.invitationPending,
@@ -81,6 +79,22 @@ function wantOpen(): boolean {
         autoOpenLatch,
         override: dismissed ? "force-closed" : override,
     });
+}
+
+/**
+ * The viewers of the user's screen share must not see the companion (their own faces, the chat):
+ * it is kept out of the capture while the user shares, where the system allows it (macOS, Windows).
+ */
+function protectFromCaptureWhileSharing(): void {
+    const companion = getHudWindow("companion");
+    if (!companion) {
+        return;
+    }
+    try {
+        companion.setContentProtection(getPresenceSnapshot().screenSharing && shouldProtectWindowFromCapture());
+    } catch (error) {
+        ElectronLog.warn("Companion setContentProtection failed", error);
+    }
 }
 
 function closeCompanionWindow(): void {
@@ -131,6 +145,7 @@ function performOpen(): void {
         .then(() => {
             opening = false;
             watchUserClose();
+            protectFromCaptureWhileSharing();
             // Conditions may have changed while we opened (refocus / share started / manual close).
             if (!wantOpen()) {
                 closeCompanionWindow();
@@ -210,6 +225,7 @@ export function onMainWindowFocus(): void {
 }
 
 export function updateCompanion(): void {
+    protectFromCaptureWhileSharing();
     // Returning to the app ends the away-session, so any manual dismissal / open reverts to auto.
     if (isMainWindowFocused()) {
         override = "auto";
@@ -292,6 +308,7 @@ export async function openCompanionForPip(userRequested: boolean): Promise<void>
         const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
         await openHudWindow("companion", display.id);
         watchUserClose();
+        protectFromCaptureWhileSharing();
     }
 }
 

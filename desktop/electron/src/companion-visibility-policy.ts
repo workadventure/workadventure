@@ -1,9 +1,6 @@
 export type CompanionOverride = "auto" | "force-open" | "force-closed";
 
 export type CompanionVisibilityState = {
-    screenSharing?: boolean;
-    /** False where no content-protected meeting bar can replace the panel during a share (Linux). */
-    meetingBarAvailable?: boolean;
     /** WA shows: not minimized, hidden or fully covered. */
     mainWindowInView?: boolean;
     pipActive?: boolean;
@@ -43,11 +40,6 @@ export type CompanionPresenceEdge = {
  */
 export function shouldShowCompanion(state: CompanionVisibilityState): boolean {
     const s = state || {};
-    // Screen sharing hides the panel where the content-protected meeting bar carries the controls
-    // instead. Without a meeting bar (Linux cannot keep it out of the capture), the panel stays.
-    if (s.screenSharing && s.meetingBarAvailable !== false) {
-        return false;
-    }
     // WA showing with no active meeting video keeping the panel alive → hide; the app has everything.
     if (s.mainWindowInView && !s.pipActive) {
         return false;
