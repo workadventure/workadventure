@@ -214,5 +214,23 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorMoving: "ไม่สามารถไปยังโต๊ะส่วนตัวของคุณได้",
         errorUnclaiming: "ไม่สามารถยกเลิกการจองโต๊ะส่วนตัวของคุณได้",
     },
+    desktop: {
+        section: "แอปเดสก์ท็อป",
+        changeWorld: "เปลี่ยนโลก",
+        title: "เปิดโลกอื่น",
+        description: "วาง URL แบบเต็มของโลก WorkAdventure ที่คุณต้องการเปิด",
+        urlLabel: "URL ของโลก",
+        urlPlaceholder: "https://play.workadventu.re/@/...",
+        urlRequired: "กรุณาใส่ URL ของโลก",
+        unavailable: "การไปยังโลกอื่นใช้ได้เฉพาะในแอปเดสก์ท็อปเท่านั้น",
+        openFailed: "ไม่สามารถเปิดโลกนี้ได้",
+        openAction: "เปิดโลก",
+        opening: "กำลังเปิด...",
+        createTitle: "ต้องการโลกใหม่ใช่ไหม?",
+        createDescription: "สร้างและตั้งค่าพื้นที่ใหม่จากคอนโซลผู้ดูแลระบบ WorkAdventure",
+        createAction: "สร้างโลกของฉัน",
+        openingSignup: "กำลังเปิดหน้าสมัคร...",
+        signupFailed: "ไม่สามารถเปิดหน้าสมัครได้",
+    },
 };
 export default actionbar;
