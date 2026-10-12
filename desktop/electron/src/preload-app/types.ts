@@ -469,4 +469,16 @@ export type WorkAdventureDesktopApi = {
     screenOverlay?: WorkAdventureDesktopOverlayApi;
     presenterHud?: WorkAdventureDesktopHudApi;
     companion?: WorkAdventureDesktopCompanionApi;
+    screenPermission?: WorkAdventureDesktopScreenPermissionApi;
 };
+
+/** The macOS screen recording permission a share needs ("not-needed" on the other systems). */
+export type DesktopScreenPermission = "granted" | "missing" | "not-needed";
+
+export interface WorkAdventureDesktopScreenPermissionApi {
+    get: () => Promise<DesktopScreenPermission>;
+    /** Lists the app in System Settings (macOS's prompt the first time) and opens the Screen Recording pane. */
+    request: () => Promise<DesktopScreenPermission>;
+    /** Before a share: true when it can go on, else a native dialog explains and offers the settings or a restart. */
+    ensure: () => Promise<boolean>;
+}

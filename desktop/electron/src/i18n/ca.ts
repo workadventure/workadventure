@@ -39,6 +39,19 @@ const ca: NativeStrings = {
     "landing.loadTimeout":
         "Aquest món triga massa a carregar-se. Pot ser que estigui fora de línia o que la teva connexió no funcioni.",
 
+    "landing.screenPermissionTitle": "Permet compartir la pantalla",
+    "landing.screenPermissionBody":
+        "El macOS demana permís per gravar la teva pantalla abans de compartir-la per primera vegada i després reinicia WorkAdventure. Dona'l ara en lloc d'en plena conversa.",
+    "landing.screenPermissionAllow": "Permet",
+    "landing.screenPermissionLater": "Més tard",
+    "landing.screenPermissionNext": "Activa WorkAdventure a Configuració del Sistema: el macOS t'oferirà reiniciar-lo.",
+    "screenPermission.title": "WorkAdventure no té permís per gravar la teva pantalla",
+    "screenPermission.detail":
+        "Activa WorkAdventure a Configuració del Sistema › Privadesa i seguretat › Gravació de pantalla i després reinicia'l: el macOS només aplica aquest permís quan s'obre l'app.",
+    "screenPermission.openSettings": "Obre Configuració del Sistema",
+    "screenPermission.restart": "Reinicia WorkAdventure",
+    "screenPermission.cancel": "Cancel·la",
+
     "tabs.newWorld": "Món nou",
     "tabs.world": "Món",
     "tabs.closeTab": "Tanca la pestanya",

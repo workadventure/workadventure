@@ -40,6 +40,20 @@ const de: NativeStrings = {
     "landing.loadTimeout":
         "Das Laden dieser Welt dauert zu lange. Sie ist möglicherweise offline oder Ihre Verbindung ist unterbrochen.",
 
+    "landing.screenPermissionTitle": "Bildschirmfreigabe erlauben",
+    "landing.screenPermissionBody":
+        "macOS fragt vor der ersten Freigabe nach der Erlaubnis, Ihren Bildschirm aufzunehmen, und startet WorkAdventure danach neu. Erteilen Sie sie jetzt statt mitten in einem Gespräch.",
+    "landing.screenPermissionAllow": "Erlauben",
+    "landing.screenPermissionLater": "Später",
+    "landing.screenPermissionNext":
+        "Aktivieren Sie WorkAdventure in den Systemeinstellungen: macOS bietet danach einen Neustart an.",
+    "screenPermission.title": "WorkAdventure darf Ihren Bildschirm nicht aufnehmen",
+    "screenPermission.detail":
+        "Aktivieren Sie WorkAdventure unter Systemeinstellungen › Datenschutz & Sicherheit › Bildschirmaufnahme und starten Sie es dann neu: macOS übernimmt diese Erlaubnis erst beim Start der App.",
+    "screenPermission.openSettings": "Systemeinstellungen öffnen",
+    "screenPermission.restart": "WorkAdventure neu starten",
+    "screenPermission.cancel": "Abbrechen",
+
     "tabs.newWorld": "Neue Welt",
     "tabs.world": "Welt",
     "tabs.closeTab": "Tab schließen",

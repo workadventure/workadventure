@@ -144,6 +144,11 @@ const api: WorkAdventureDesktopApi = {
     // The meeting bar floats over the shared screen: only where it can be kept out of the capture.
     presenterHud: canHideWindowsFromCapture(process.platform) ? presenterHudApi : undefined,
     companion: companionApi,
+    screenPermission: {
+        get: () => ipcRenderer.invoke("app:screen-permission:get"),
+        request: () => ipcRenderer.invoke("app:screen-permission:request"),
+        ensure: () => ipcRenderer.invoke("app:screen-permission:ensure"),
+    },
 };
 
 contextBridge.exposeInMainWorld("WAD", api);

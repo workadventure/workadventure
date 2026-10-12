@@ -392,4 +392,11 @@ export type WorkAdventureDesktopApi = {
     screenOverlay?: WorkAdventureDesktopOverlayApi;
     presenterHud?: WorkAdventureDesktopHudApi;
     companion?: WorkAdventureDesktopCompanionApi;
+    /** macOS screen recording permission ("not-needed" elsewhere). Absent on older desktop shells. */
+    screenPermission?: {
+        get: () => Promise<"granted" | "missing" | "not-needed">;
+        request: () => Promise<"granted" | "missing" | "not-needed">;
+        /** Before a share: true when it can go on, else the shell explained and offered the settings or a restart. */
+        ensure: () => Promise<boolean>;
+    };
 };

@@ -186,6 +186,18 @@ export function isScreenSharingSupported(): boolean {
     );
 }
 
+/**
+ * macOS gives an app without the screen recording permission a black or no capture: the desktop shell
+ * checks it first and explains how to grant it (older shells do not, the share then goes on).
+ */
+async function ensureDesktopScreenPermission(): Promise<boolean> {
+    const allowed = (await window.WAD?.screenPermission?.ensure()) ?? true;
+    if (!allowed) {
+        pipPreselectedScreenSource.set(undefined);
+    }
+    return allowed;
+}
+
 async function getDesktopCapturerSources() {
     let source: DesktopCapturerSource | null;
     const preselected = get(pipPreselectedScreenSource);
@@ -268,7 +280,9 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
         });
 
         if (captureMethod === "desktop") {
-            currentStreamPromise = getDesktopCapturerSources();
+            currentStreamPromise = ensureDesktopScreenPermission().then((allowed) =>
+                allowed ? getDesktopCapturerSources() : undefined,
+            );
         } else if (captureMethod === "display-media") {
             // Build constraints according to MDN specification
             // video can be boolean or MediaTrackConstraints, default is true
