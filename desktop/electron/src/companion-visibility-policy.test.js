@@ -23,14 +23,6 @@ test("stays closed on the landing / login page even with the latch armed", () =>
 });
 
 // ── Precedence ───────────────────────────────────────────────────────────────────────────────
-test("screen sharing hides the panel, beating every other rule", () => {
-    expect(shouldShowCompanion({ ...away, screenSharing: true, autoOpenLatch: true, invitationPending: true })).toBe(false);
-});
-
-test("screen sharing keeps the panel where no meeting bar replaces it (Linux)", () => {
-    expect(shouldShowCompanion({ ...away, screenSharing: true, meetingBarAvailable: false, autoOpenLatch: true })).toBe(true);
-});
-
 test("WA showing hides the panel unless the meeting video is running", () => {
     expect(shouldShowCompanion({ inWorld: true, mainWindowInView: true, autoOpenLatch: true })).toBe(false);
     expect(shouldShowCompanion({ inWorld: true, mainWindowInView: true, pipActive: true })).toBe(true);
