@@ -37,6 +37,20 @@ const ja: NativeStrings = {
     "landing.loadTimeout":
         "このワールドの読み込みに時間がかかりすぎています。オフラインか、接続が切れている可能性があります。",
 
+    "landing.screenPermissionTitle": "画面共有を許可",
+    "landing.screenPermissionBody":
+        "macOS は最初の画面共有の前に画面収録の許可を求め、その後 WorkAdventure を再起動します。会話中ではなく、今のうちに許可してください。",
+    "landing.screenPermissionAllow": "許可",
+    "landing.screenPermissionLater": "後で",
+    "landing.screenPermissionNext":
+        "システム設定で WorkAdventure をオンにしてください。その後 macOS が再起動を提案します。",
+    "screenPermission.title": "WorkAdventure には画面を収録する権限がありません",
+    "screenPermission.detail":
+        "システム設定 › プライバシーとセキュリティ › 画面収録 で WorkAdventure をオンにしてから再起動してください。macOS はアプリの起動時にのみこの権限を適用します。",
+    "screenPermission.openSettings": "システム設定を開く",
+    "screenPermission.restart": "WorkAdventure を再起動",
+    "screenPermission.cancel": "キャンセル",
+
     "tabs.newWorld": "新しいワールド",
     "tabs.world": "ワールド",
     "tabs.closeTab": "タブを閉じる",

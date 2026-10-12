@@ -38,6 +38,20 @@ const nl: NativeStrings = {
     "landing.loadTimeout":
         "Het laden van deze wereld duurt te lang. Mogelijk is ze offline of is je verbinding verbroken.",
 
+    "landing.screenPermissionTitle": "Scherm delen toestaan",
+    "landing.screenPermissionBody":
+        "macOS vraagt toestemming om je scherm op te nemen voordat je het de eerste keer deelt, en start WorkAdventure daarna opnieuw. Geef die nu in plaats van midden in een gesprek.",
+    "landing.screenPermissionAllow": "Toestaan",
+    "landing.screenPermissionLater": "Later",
+    "landing.screenPermissionNext":
+        "Schakel WorkAdventure in bij Systeeminstellingen: macOS biedt daarna aan het opnieuw te starten.",
+    "screenPermission.title": "WorkAdventure mag je scherm niet opnemen",
+    "screenPermission.detail":
+        "Schakel WorkAdventure in bij Systeeminstellingen › Privacy en beveiliging › Schermopname en start het daarna opnieuw: macOS past deze toestemming pas toe bij het starten van de app.",
+    "screenPermission.openSettings": "Systeeminstellingen openen",
+    "screenPermission.restart": "WorkAdventure opnieuw starten",
+    "screenPermission.cancel": "Annuleren",
+
     "tabs.newWorld": "Nieuwe wereld",
     "tabs.world": "Wereld",
     "tabs.closeTab": "Tabblad sluiten",

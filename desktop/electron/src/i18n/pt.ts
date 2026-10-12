@@ -37,6 +37,20 @@ const pt: NativeStrings = {
     "landing.loadTimeout":
         "Este mundo está demorando demais para carregar. Ele pode estar offline ou sua conexão pode estar fora do ar.",
 
+    "landing.screenPermissionTitle": "Permitir compartilhar a tela",
+    "landing.screenPermissionBody":
+        "O macOS pede permissão para gravar sua tela antes do primeiro compartilhamento e depois reinicia o WorkAdventure. Conceda agora em vez de no meio de uma conversa.",
+    "landing.screenPermissionAllow": "Permitir",
+    "landing.screenPermissionLater": "Mais tarde",
+    "landing.screenPermissionNext":
+        "Ative o WorkAdventure nos Ajustes do Sistema: o macOS oferecerá reiniciá-lo em seguida.",
+    "screenPermission.title": "O WorkAdventure não tem permissão para gravar sua tela",
+    "screenPermission.detail":
+        "Ative o WorkAdventure em Ajustes do Sistema › Privacidade e Segurança › Gravação de Tela e reinicie-o: o macOS só aplica essa permissão quando o app é aberto.",
+    "screenPermission.openSettings": "Abrir Ajustes do Sistema",
+    "screenPermission.restart": "Reiniciar o WorkAdventure",
+    "screenPermission.cancel": "Cancelar",
+
     "tabs.newWorld": "Novo mundo",
     "tabs.world": "Mundo",
     "tabs.closeTab": "Fechar aba",

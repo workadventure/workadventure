@@ -37,6 +37,20 @@ const dsb: NativeStrings = {
     "landing.loadFailure": "Toś ten swět njedajo se zacytaś. Snaź jo offline abo URL jo wopak.",
     "landing.loadTimeout": "Zacytowanje toś togo swěta trajo pśedłujko. Snaź jo offline abo Waš zwisk jo pśetergnjony.",
 
+    "landing.screenPermissionTitle": "Źělenje wobrazowki dowóliś",
+    "landing.screenPermissionBody":
+        "macOS pšosy pśed prědnym źělenim wó dowólnosć, Wašu wobrazowku nagrawaś, a startujo pótom WorkAdventure znowego. Dajśo ju něnto město w srjejźi rozgrona.",
+    "landing.screenPermissionAllow": "Dowóliś",
+    "landing.screenPermissionLater": "Pózdźej",
+    "landing.screenPermissionNext":
+        "Zmóžniśo WorkAdventure w systemowych nastajenjach (Systemeinstellungen): macOS pótom nowy start pórucyjo.",
+    "screenPermission.title": "WorkAdventure njesmějo Wašu wobrazowku nagrawaś",
+    "screenPermission.detail":
+        "Zmóžniśo WorkAdventure pód Systemeinstellungen › Datenschutz & Sicherheit › Bildschirmaufnahme a startujśo jen pótom znowego: macOS toś tu dowólnosć akle pśi starśe nałoženja wužywa.",
+    "screenPermission.openSettings": "Systemowe nastajenja wócyniś",
+    "screenPermission.restart": "WorkAdventure znowego startowaś",
+    "screenPermission.cancel": "Pśetergnuś",
+
     "tabs.newWorld": "Nowy swět",
     "tabs.world": "Swět",
     "tabs.closeTab": "Rejtarik zacyniś",

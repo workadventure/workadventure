@@ -36,6 +36,19 @@ const ko: NativeStrings = {
     "landing.loadFailure": "이 월드를 불러올 수 없습니다. 오프라인이거나 URL이 잘못되었을 수 있습니다.",
     "landing.loadTimeout": "이 월드를 불러오는 데 시간이 너무 오래 걸립니다. 오프라인이거나 연결이 끊겼을 수 있습니다.",
 
+    "landing.screenPermissionTitle": "화면 공유 허용",
+    "landing.screenPermissionBody":
+        "macOS는 처음 화면을 공유하기 전에 화면 기록 권한을 요청한 뒤 WorkAdventure를 다시 시작합니다. 대화 중이 아니라 지금 허용해 두세요.",
+    "landing.screenPermissionAllow": "허용",
+    "landing.screenPermissionLater": "나중에",
+    "landing.screenPermissionNext": "시스템 설정에서 WorkAdventure를 켜세요. 그러면 macOS가 다시 시작을 제안합니다.",
+    "screenPermission.title": "WorkAdventure에 화면 기록 권한이 없습니다",
+    "screenPermission.detail":
+        "시스템 설정 › 개인정보 보호 및 보안 › 화면 기록에서 WorkAdventure를 켠 다음 다시 시작하세요. macOS는 앱이 시작될 때만 이 권한을 적용합니다.",
+    "screenPermission.openSettings": "시스템 설정 열기",
+    "screenPermission.restart": "WorkAdventure 다시 시작",
+    "screenPermission.cancel": "취소",
+
     "tabs.newWorld": "새 월드",
     "tabs.world": "월드",
     "tabs.closeTab": "탭 닫기",

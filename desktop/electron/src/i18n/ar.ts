@@ -34,6 +34,19 @@ const ar: NativeStrings = {
     "landing.loadFailure": "تعذّر تحميل هذا العالم. قد يكون غير متصل، أو قد يكون الرابط خاطئًا.",
     "landing.loadTimeout": "يستغرق تحميل هذا العالم وقتًا طويلًا. قد يكون غير متصل، أو قد يكون اتصالك منقطعًا.",
 
+    "landing.screenPermissionTitle": "السماح بمشاركة الشاشة",
+    "landing.screenPermissionBody":
+        "يطلب macOS إذنًا بتسجيل شاشتك قبل أول مشاركة، ثم يعيد تشغيل WorkAdventure. امنحه الآن بدلًا من منحه في منتصف محادثة.",
+    "landing.screenPermissionAllow": "سماح",
+    "landing.screenPermissionLater": "لاحقًا",
+    "landing.screenPermissionNext": "فعّل WorkAdventure في إعدادات النظام، وسيعرض macOS بعدها إعادة تشغيله.",
+    "screenPermission.title": "لا يملك WorkAdventure إذنًا بتسجيل شاشتك",
+    "screenPermission.detail":
+        "فعّل WorkAdventure في إعدادات النظام › الخصوصية والأمن › تسجيل الشاشة، ثم أعد تشغيله: لا يطبّق macOS هذا الإذن إلا عند بدء تشغيل التطبيق.",
+    "screenPermission.openSettings": "فتح إعدادات النظام",
+    "screenPermission.restart": "إعادة تشغيل WorkAdventure",
+    "screenPermission.cancel": "إلغاء",
+
     "tabs.newWorld": "عالم جديد",
     "tabs.world": "عالم",
     "tabs.closeTab": "إغلاق علامة التبويب",

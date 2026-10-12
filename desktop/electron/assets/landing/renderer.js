@@ -350,6 +350,61 @@
             });
     });
 
+    // macOS screen recording permission: asked once here, before a share needs it (macOS restarts the
+    // app to apply it). "Later" hides it for good; the share itself still explains how to grant it.
+    var permissionApi = window.WAD && window.WAD.screenPermission;
+    var permissionPanel = document.getElementById("screen-permission");
+    var permissionBody = document.getElementById("screen-permission-body");
+    var permissionAllow = document.getElementById("screen-permission-allow");
+    var permissionLater = document.getElementById("screen-permission-later");
+    var PERMISSION_DISMISSED_KEY = "screenPermissionDismissed";
+    function permissionDismissed() {
+        try {
+            return window.localStorage.getItem(PERMISSION_DISMISSED_KEY) === "1";
+        } catch (err) {
+            return false;
+        }
+    }
+    if (permissionApi && !permissionDismissed()) {
+        permissionApi
+            .get()
+            .then(function (state) {
+                permissionPanel.hidden = state !== "missing";
+            })
+            .catch(function (err) {
+                console.warn("landing.screenPermission.get rejected", err);
+            });
+    }
+    permissionAllow.addEventListener("click", function () {
+        permissionAllow.setAttribute("disabled", "disabled");
+        permissionApi
+            .request()
+            .then(function (state) {
+                if (state === "missing") {
+                    permissionBody.textContent = t(
+                        "landing.screenPermissionNext",
+                        "Turn WorkAdventure on in System Settings: macOS will then offer to restart it."
+                    );
+                } else {
+                    permissionPanel.hidden = true;
+                }
+            })
+            .catch(function (err) {
+                console.warn("landing.screenPermission.request rejected", err);
+            })
+            .finally(function () {
+                permissionAllow.removeAttribute("disabled");
+            });
+    });
+    permissionLater.addEventListener("click", function () {
+        try {
+            window.localStorage.setItem(PERMISSION_DISMISSED_KEY, "1");
+        } catch (err) {
+            // Private storage unavailable: it simply shows again next time.
+        }
+        permissionPanel.hidden = true;
+    });
+
     refreshWorlds();
 
     // Autofocus the URL field so the user can just paste and hit Enter.

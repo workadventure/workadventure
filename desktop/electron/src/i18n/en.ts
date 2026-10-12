@@ -37,6 +37,19 @@ const en = {
     "landing.loadFailure": "This world could not be loaded. It may be offline, or the URL may be wrong.",
     "landing.loadTimeout": "This world is taking too long to load. It may be offline, or your connection may be down.",
 
+    "landing.screenPermissionTitle": "Allow screen sharing",
+    "landing.screenPermissionBody":
+        "macOS asks for the permission to record your screen before your first share, then restarts WorkAdventure. Give it now rather than during a conversation.",
+    "landing.screenPermissionAllow": "Allow",
+    "landing.screenPermissionLater": "Later",
+    "landing.screenPermissionNext": "Turn WorkAdventure on in System Settings: macOS will then offer to restart it.",
+    "screenPermission.title": "WorkAdventure is not allowed to record your screen",
+    "screenPermission.detail":
+        "Turn WorkAdventure on in System Settings › Privacy & Security › Screen Recording, then restart it: macOS only applies this permission when the app starts.",
+    "screenPermission.openSettings": "Open System Settings",
+    "screenPermission.restart": "Restart WorkAdventure",
+    "screenPermission.cancel": "Cancel",
+
     "tabs.newWorld": "New world",
     "tabs.world": "World",
     "tabs.closeTab": "Close tab",

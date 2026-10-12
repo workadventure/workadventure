@@ -32,6 +32,19 @@ const zhTW: NativeStrings = {
     "landing.loadFailure": "無法載入此世界。它可能已離線，或網址有誤。",
     "landing.loadTimeout": "此世界載入時間過長。它可能已離線，或你的網路連線已中斷。",
 
+    "landing.screenPermissionTitle": "允許分享螢幕",
+    "landing.screenPermissionBody":
+        "第一次分享螢幕前，macOS 會要求錄製螢幕的權限，然後重新啟動 WorkAdventure。請現在授予，而不是在對話中途。",
+    "landing.screenPermissionAllow": "允許",
+    "landing.screenPermissionLater": "稍後",
+    "landing.screenPermissionNext": "請在「系統設定」中開啟 WorkAdventure，之後 macOS 會提示重新啟動。",
+    "screenPermission.title": "WorkAdventure 沒有錄製螢幕的權限",
+    "screenPermission.detail":
+        "請在「系統設定 › 隱私權與安全性 › 螢幕錄製」中開啟 WorkAdventure，然後重新啟動：macOS 只會在 App 啟動時套用此權限。",
+    "screenPermission.openSettings": "打開系統設定",
+    "screenPermission.restart": "重新啟動 WorkAdventure",
+    "screenPermission.cancel": "取消",
+
     "tabs.newWorld": "新世界",
     "tabs.world": "世界",
     "tabs.closeTab": "關閉分頁",

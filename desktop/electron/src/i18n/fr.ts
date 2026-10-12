@@ -38,6 +38,20 @@ const fr: NativeStrings = {
     "landing.loadTimeout":
         "Ce monde met trop de temps à charger. Il est peut-être hors ligne, ou votre connexion est interrompue.",
 
+    "landing.screenPermissionTitle": "Autoriser le partage d'écran",
+    "landing.screenPermissionBody":
+        "macOS demande l'autorisation d'enregistrer votre écran avant le premier partage, puis redémarre WorkAdventure. Donnez-la maintenant plutôt qu'en pleine conversation.",
+    "landing.screenPermissionAllow": "Autoriser",
+    "landing.screenPermissionLater": "Plus tard",
+    "landing.screenPermissionNext":
+        "Activez WorkAdventure dans les Réglages Système : macOS proposera ensuite de le redémarrer.",
+    "screenPermission.title": "WorkAdventure n'a pas l'autorisation d'enregistrer votre écran",
+    "screenPermission.detail":
+        "Activez WorkAdventure dans Réglages Système › Confidentialité et sécurité › Enregistrement de l'écran, puis redémarrez-le : macOS n'applique cette autorisation qu'au lancement de l'app.",
+    "screenPermission.openSettings": "Ouvrir les Réglages Système",
+    "screenPermission.restart": "Redémarrer WorkAdventure",
+    "screenPermission.cancel": "Annuler",
+
     "tabs.newWorld": "Nouveau monde",
     "tabs.world": "Monde",
     "tabs.closeTab": "Fermer l'onglet",

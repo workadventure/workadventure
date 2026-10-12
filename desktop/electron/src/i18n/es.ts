@@ -39,6 +39,19 @@ const es: NativeStrings = {
     "landing.loadTimeout":
         "Este mundo está tardando demasiado en cargar. Puede que esté desconectado o que tu conexión no funcione.",
 
+    "landing.screenPermissionTitle": "Permitir compartir pantalla",
+    "landing.screenPermissionBody":
+        "macOS pide permiso para grabar tu pantalla antes de compartirla por primera vez y luego reinicia WorkAdventure. Concédelo ahora en lugar de en plena conversación.",
+    "landing.screenPermissionAllow": "Permitir",
+    "landing.screenPermissionLater": "Más tarde",
+    "landing.screenPermissionNext": "Activa WorkAdventure en Ajustes del Sistema: macOS te ofrecerá reiniciarlo.",
+    "screenPermission.title": "WorkAdventure no tiene permiso para grabar tu pantalla",
+    "screenPermission.detail":
+        "Activa WorkAdventure en Ajustes del Sistema › Privacidad y seguridad › Grabación de pantalla y luego reinícialo: macOS solo aplica este permiso al iniciar la app.",
+    "screenPermission.openSettings": "Abrir Ajustes del Sistema",
+    "screenPermission.restart": "Reiniciar WorkAdventure",
+    "screenPermission.cancel": "Cancelar",
+
     "tabs.newWorld": "Nuevo mundo",
     "tabs.world": "Mundo",
     "tabs.closeTab": "Cerrar pestaña",

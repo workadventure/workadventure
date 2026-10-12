@@ -38,6 +38,20 @@ const vi: NativeStrings = {
     "landing.loadTimeout":
         "Thế giới này tải quá lâu. Có thể thế giới đang ngoại tuyến hoặc kết nối của bạn bị gián đoạn.",
 
+    "landing.screenPermissionTitle": "Cho phép chia sẻ màn hình",
+    "landing.screenPermissionBody":
+        "macOS xin quyền ghi màn hình của bạn trước lần chia sẻ đầu tiên, rồi khởi động lại WorkAdventure. Hãy cấp quyền ngay bây giờ thay vì giữa cuộc trò chuyện.",
+    "landing.screenPermissionAllow": "Cho phép",
+    "landing.screenPermissionLater": "Để sau",
+    "landing.screenPermissionNext":
+        "Hãy bật WorkAdventure trong Cài đặt hệ thống: sau đó macOS sẽ đề nghị khởi động lại.",
+    "screenPermission.title": "WorkAdventure không được phép ghi màn hình của bạn",
+    "screenPermission.detail":
+        "Hãy bật WorkAdventure trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Ghi màn hình, rồi khởi động lại: macOS chỉ áp dụng quyền này khi ứng dụng khởi động.",
+    "screenPermission.openSettings": "Mở Cài đặt hệ thống",
+    "screenPermission.restart": "Khởi động lại WorkAdventure",
+    "screenPermission.cancel": "Hủy",
+
     "tabs.newWorld": "Thế giới mới",
     "tabs.world": "Thế giới",
     "tabs.closeTab": "Đóng tab",
