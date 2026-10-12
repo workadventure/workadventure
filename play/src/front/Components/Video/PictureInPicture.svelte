@@ -474,7 +474,7 @@
                 .start(() => {
                     askPictureInPictureActivatingStore.set(false);
                     activePictureInPictureStore.set(false);
-                })
+                }, $askPictureInPictureActivatingStore)
                 .then((started) => {
                     if (started) {
                         activePictureInPictureStore.set(true);

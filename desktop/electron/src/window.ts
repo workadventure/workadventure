@@ -30,13 +30,7 @@ import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-policy";
 import { usesSystemScreenSharePicker } from "./platform-capture-policy";
 import { rememberWorldUrl } from "./world-history";
-import {
-    onMainWindowBlur,
-    onMainWindowFocus,
-    onMainWindowHidden,
-    stopCompanion,
-    updateCompanion,
-} from "./companion-controller";
+import { onMainWindowFocus, onMainWindowHidden, stopCompanion, updateCompanion } from "./companion-controller";
 import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetPresence } from "./presence";
 import {
     activateTab,
@@ -776,7 +770,7 @@ export async function createWindow(initialUrl?: string) {
             forgetHudState();
             // Presence is a single global describing the controlling tab, and only that renderer is
             // allowed to push it. Left alone it would still describe the tab we just left, so a
-            // later blur would re-arm the companion for a meeting the new tab isn't in — and the
+            // later minimize would re-arm the companion for a meeting the new tab isn't in — and the
             // panel would come back showing the previous world's People list. Clear it, then ask the
             // new tab for its own state: it pushes only on change, so without the request it would
             // stay blank until something there happened to move.
@@ -821,11 +815,10 @@ export async function createWindow(initialUrl?: string) {
     // close PiP defensively here: doing so would wipe manually-opened PiP whenever the user
     // clicks back onto the main app, AND the destroy-in-flight also races with the utility
     // window's loadFile, spraying ERR_FAILED logs and occasionally taking the whole app down.
-    // Any of these can change whether the main window is in view, which feeds the companion panel's
-    // visibility. Focus, blur and hiding are split out because they are edges, not just state:
-    // leaving WA *during a meeting* is one of the two triggers that arm the companion's auto-show
-    // (a blur towards another screen where WA keeps showing does not count, hiding it does), and
-    // focusing ends the away-session.
+    // Any of these can change whether the main window shows, which feeds the companion panel's
+    // visibility. Focus and hiding are split out because they are edges, not just state: WA ceasing
+    // to show *during a meeting* is one of the two triggers that arm the companion's auto-show, and
+    // focusing ends the away-session. Losing the focus alone is not leaving: WA keeps showing.
     const onWindowStateEvent = () => {
         emitDesktopWindowStateChange();
         updateCompanion();
@@ -840,7 +833,6 @@ export async function createWindow(initialUrl?: string) {
     });
     mainWindow.on("blur", () => {
         emitDesktopWindowStateChange();
-        onMainWindowBlur();
     });
     mainWindow.on("show", onWindowStateEvent);
     mainWindow.on("hide", onWindowHidden);

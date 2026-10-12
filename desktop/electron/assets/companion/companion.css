@@ -91,6 +91,22 @@ button {
     gap: 6px;
 }
 
+/* At the default width (340px) the name next to the status dot does not fit with the close button:
+   the dot alone says the status, the menu still opens on it. */
+@media (max-width: 400px) {
+    .header {
+        gap: 4px;
+        padding: 8px 6px;
+    }
+    .hdr-end {
+        gap: 2px;
+    }
+    .status-btn .self-name,
+    .status-btn .chev {
+        display: none;
+    }
+}
+
 /* Media controls pill — the app's ActionBar style, ported from the PiP toolbar. */
 /* No container at rest (matches the mockup): the media buttons float as plain icons and only pick up
    a background when toggled (is-active blue / is-forbidden red) or hovered. */
