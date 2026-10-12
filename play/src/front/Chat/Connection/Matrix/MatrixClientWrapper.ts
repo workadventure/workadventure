@@ -38,6 +38,12 @@ export interface MatrixLocalUserStore {
 
     setMatrixStoresNeedClearing(value: boolean): void;
 
+    getMatrixSessionOwner(): string | null;
+
+    setMatrixSessionOwner(userUuid: string | null): void;
+
+    clearMatrixSession(): void;
+
     setMatrixDeviceId(deviceId: string, userId: string): void;
 
     setMatrixUserId(userId: string): void;
@@ -170,6 +176,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         } catch (e) {
             const [retryDelayMs, ...nextRetryDelaysMs] = retryDelaysMs;
             if (e instanceof InvalidLoginTokenError || retryDelayMs === undefined) {
+                this.dropSessionOfAnotherUser();
                 throw e;
             }
             console.warn("Unable to exchange the Matrix login token, retrying", e);
@@ -177,6 +184,18 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 setTimeout(resolve, retryDelayMs);
             });
             await this.exchangeLoginToken(loginToken, nextRetryDelaysMs);
+        }
+    }
+
+    /**
+     * Once the exchange gives up, the chat falls back on the session this browser already holds. On a shared browser,
+     * that can be the session of the previous WorkAdventure user (their token expired, and the next user logged in
+     * without a logout clearing it): keep it only if the current user opened it.
+     */
+    private dropSessionOfAnotherUser(): void {
+        const owner = this.localUserStore.getMatrixSessionOwner();
+        if (!owner || owner !== this.localUserStore.getLocalUser()?.uuid) {
+            this.localUserStore.clearMatrixSession();
         }
     }
 
@@ -214,6 +233,8 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         this.localUserStore.setMatrixAccessToken(access_token);
         this.localUserStore.setMatrixRefreshToken(refresh_token ?? null);
         this.localUserStore.setMatrixDeviceId(device_id, user_id);
+        // Not the Matrix user id: Synapse picks that one, and the browser has no other id to compare it with.
+        this.localUserStore.setMatrixSessionOwner(this.localUserStore.getLocalUser()?.uuid ?? null);
         if (expires_in_ms !== undefined) {
             this.localUserStore.setMatrixAccessTokenExpireDate(new Date(Date.now() + expires_in_ms));
         }

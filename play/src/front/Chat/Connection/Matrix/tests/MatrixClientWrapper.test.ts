@@ -52,6 +52,9 @@ describe("MatrixClientWrapper", () => {
         getMatrixUserId: vi.fn().mockReturnValue(null),
         getMatrixStoresNeedClearing: vi.fn().mockReturnValue(false),
         setMatrixStoresNeedClearing: vi.fn(),
+        getMatrixSessionOwner: vi.fn().mockReturnValue(null),
+        setMatrixSessionOwner: vi.fn(),
+        clearMatrixSession: vi.fn(),
         setMatrixDeviceId: vi.fn(),
         setMatrixUserId: vi.fn(),
         setMatrixAccessToken: vi.fn(),
@@ -420,6 +423,65 @@ describe("MatrixClientWrapper", () => {
             ).rejects.toThrow("Failed to fetch");
 
             expect(loginRequest).toHaveBeenCalledTimes(3);
+        });
+
+        it("should record which WorkAdventure user opened the session", async () => {
+            const createClient = vi.fn().mockReturnValue({ loginRequest: vi.fn().mockResolvedValue(loginResponse) });
+            const localUserStoreMock: MatrixLocalUserStore = {
+                ...basicLocalUserStoreMock,
+                getLocalUser: vi.fn().mockReturnValue({ uuid: "bob" }),
+                setMatrixSessionOwner: vi.fn(),
+            };
+
+            await new MatrixClientWrapper("testUrl", localUserStoreMock, createClient).exchangeLoginToken("LoginToken");
+
+            expect(localUserStoreMock.setMatrixSessionOwner).toHaveBeenCalledWith("bob");
+        });
+
+        it.each([
+            ["another WorkAdventure user", "alice"],
+            ["an unknown user (stored by an older version)", null],
+        ])("should drop the stored session of %s once the exchange gives up", async (_, owner) => {
+            const loginRequest = vi
+                .fn()
+                .mockRejectedValue(new MatrixError({ errcode: "M_FORBIDDEN", error: "Invalid login token" }, 403));
+            const localUserStoreMock: MatrixLocalUserStore = {
+                ...basicLocalUserStoreMock,
+                getLocalUser: vi.fn().mockReturnValue({ uuid: "bob" }),
+                getMatrixSessionOwner: vi.fn().mockReturnValue(owner),
+                clearMatrixSession: vi.fn(),
+            };
+
+            await expect(
+                new MatrixClientWrapper(
+                    "testUrl",
+                    localUserStoreMock,
+                    vi.fn().mockReturnValue({ loginRequest }),
+                ).exchangeLoginToken("LoginToken", []),
+            ).rejects.toBeInstanceOf(InvalidLoginTokenError);
+
+            // Otherwise the chat would fall back on it, and show bob the rooms and messages of its owner.
+            expect(localUserStoreMock.clearMatrixSession).toHaveBeenCalledOnce();
+        });
+
+        it("should keep the stored session of the same user once the exchange gives up", async () => {
+            const loginRequest = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
+            const localUserStoreMock: MatrixLocalUserStore = {
+                ...basicLocalUserStoreMock,
+                getLocalUser: vi.fn().mockReturnValue({ uuid: "bob" }),
+                getMatrixSessionOwner: vi.fn().mockReturnValue("bob"),
+                clearMatrixSession: vi.fn(),
+            };
+
+            await expect(
+                new MatrixClientWrapper(
+                    "testUrl",
+                    localUserStoreMock,
+                    vi.fn().mockReturnValue({ loginRequest }),
+                ).exchangeLoginToken("LoginToken", []),
+            ).rejects.toThrow("Failed to fetch");
+
+            expect(localUserStoreMock.clearMatrixSession).not.toHaveBeenCalled();
         });
     });
 });
