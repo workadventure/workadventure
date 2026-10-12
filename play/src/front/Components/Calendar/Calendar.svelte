@@ -74,7 +74,7 @@
                         <span>/</span>
                         <img draggable="false" src={calendarPng} class="w-8" alt={$LL.menu.icon.open.calendar()} />
                     {/if}
-                    <h3 class="m-0 text-xl leading-none">{$LL.externalModule.calendar.title()}</h3>
+                    <h3 class="m-0 text-lg normal-case leading-none">{$LL.externalModule.calendar.title()}</h3>
                     <span class="rounded-sm bg-white px-1 py-0.5 text-xxs font-bold text-secondary">Beta</span>
                 </div>
                 <span class="text-sm text-contrast-200">
@@ -122,7 +122,7 @@
                             class="sticky top-0 z-10 flex flex-col gap-1.5 border-0 border-b border-solid border-white/10 bg-contrast py-2"
                         >
                             <div class="flex items-baseline justify-between gap-2">
-                                <h4 class="m-0 font-title text-lg font-medium">
+                                <h4 class="m-0 font-title text-lg font-medium normal-case">
                                     {formatDayName(day.date, now)}
                                     <span class="font-main text-sm font-normal text-contrast-200">
                                         {day.date.toLocaleDateString(undefined, { day: "numeric", month: "long" })}
