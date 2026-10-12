@@ -82,8 +82,22 @@ jobs:
         run: yarn electron-builder --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # electron-builder skips signing on pull requests, the ad hoc one too (mac.identity "-"): the
+          # artifact was then unsigned, and macOS cannot attach the screen recording, camera or
+          # microphone permissions to an unsigned app. The ad hoc signature uses no secret. Revisit
+          # once a Developer ID certificate is configured: it must not reach pull request builds.
+          CSC_FOR_PULL_REQUEST: ${{ startsWith(matrix.os, 'macos') }}
         working-directory: "desktop/electron"
         if: ${{ github.event_name != 'release' }}
+
+      # An unsigned macOS app cannot keep its screen recording, camera or microphone permissions.
+      - name: "Check the macOS signature"
+        if: ${{ github.event_name != 'release' && startsWith(matrix.os, 'macos') }}
+        run: |
+          app=$(find build -maxdepth 2 -name WorkAdventure.app | head -n 1)
+          codesign --verify --deep --strict "$app"
+          codesign -dv "$app" 2>&1 | grep -E "Identifier|Signature"
+        working-directory: "desktop/electron"
 
       - name: "Build & release app"
         run: yarn electron-builder --publish always
