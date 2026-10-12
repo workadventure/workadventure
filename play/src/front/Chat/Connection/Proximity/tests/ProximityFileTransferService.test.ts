@@ -14,6 +14,31 @@ import { encodeProximityFileChunkFrame } from "../ProximityFileTransferProtocol"
 
 const HELLO = new TextEncoder().encode("hello");
 
+/** A File the sender can read: jsdom's File has no stream(), so it serves its content as a single chunk. */
+function sendableFile(content: Uint8Array<ArrayBuffer>, name: string, type = "text/plain"): File {
+    return Object.assign(new File([content], name, { type }), {
+        stream: () =>
+            new ReadableStream<Uint8Array<ArrayBuffer>>({
+                start(controller) {
+                    controller.enqueue(content);
+                    controller.close();
+                },
+            }),
+    });
+}
+
+/** A data channel whose buffer never drains. */
+class StuckDataChannel extends EventTarget {
+    bufferedAmount = 1024 * 1024;
+    readyState: RTCDataChannelState = "open";
+    send = vi.fn();
+
+    close(): void {
+        this.readyState = "closed";
+        this.dispatchEvent(new Event("close"));
+    }
+}
+
 function offerEvent(transferId: string, size: number, sender = "sender", mimeType = "text/plain") {
     return {
         $case: "proximityFileTransferOffer" as const,
@@ -105,7 +130,7 @@ describe("ProximityFileTransferService", () => {
         vi.stubGlobal("URL", { createObjectURL });
         const sender = createService("sender");
         const receiver = createService("recipient");
-        const file = new File(["hello"], "hello.txt", { type: "text/plain" });
+        const file = sendableFile(HELLO, "hello.txt");
         const [offer] = sender.service.createOutgoingOffers([file], ["recipient"]);
         receiver.incomingOffers.next(offerEvent(offer.transferId, file.size, "sender", file.type));
         const wire: unknown[] = [];
@@ -161,6 +186,23 @@ describe("ProximityFileTransferService", () => {
 
         expect(updates.at(-1)).toMatchObject({ transferId: "transfer-1", state: "ready" });
         expect(await (createObjectURL.mock.calls[0]?.[0] as Blob).text()).toBe("hello");
+    });
+
+    it("should stop sending when the data channel closes while waiting for it to drain", async () => {
+        const { service, privateService } = createService("sender");
+        const [offer] = service.createOutgoingOffers([sendableFile(new Uint8Array(200_000), "big.bin")], ["recipient"]);
+        const dataChannel = new StuckDataChannel();
+        const sending = privateService.sendOutgoingTransfer(
+            { remoteSpaceUserId: "recipient", dataChannel },
+            offer.transferId,
+        );
+        // The start message, then the first chunk before waiting for the channel to drain.
+        await vi.waitFor(() => expect(dataChannel.send).toHaveBeenCalledTimes(2));
+
+        dataChannel.close();
+
+        await sending;
+        expect(dataChannel.send).toHaveBeenCalledTimes(2);
     });
 
     it("should ignore an offer re-emitted by another peer with a known transfer id", () => {

@@ -474,19 +474,36 @@ export class ProximityFileTransferService {
 
         this.sendControlMessage(dataChannel, { type: "proximity_file_start", transferId });
 
-        const file = transfer.file;
         try {
-            for (let offset = 0; offset < file.size; offset += PROXIMITY_FILE_TRANSFER_CHUNK_SIZE) {
-                // eslint-disable-next-line no-await-in-loop -- chunks must be read and sent in order
-                const chunk = await file.slice(offset, offset + PROXIMITY_FILE_TRANSFER_CHUNK_SIZE).arrayBuffer();
-                dataChannel.send(encodeProximityFileChunkFrame(transferId, new Uint8Array(chunk)));
-                // eslint-disable-next-line no-await-in-loop -- chunks must be sent in order
-                await this.waitForBackpressure(dataChannel);
-            }
+            // The stream reads ahead from disk, and pausing write() on backpressure pauses the reads too. Its
+            // chunks have browser-chosen sizes (Chromium goes up to several hundred KB), so they are re-split
+            // to stay under the data channel's maximum message size.
+            await transfer.file.stream().pipeTo(
+                new WritableStream<Uint8Array>({
+                    write: async (chunk) => {
+                        for (let offset = 0; offset < chunk.byteLength; offset += PROXIMITY_FILE_TRANSFER_CHUNK_SIZE) {
+                            dataChannel.send(
+                                encodeProximityFileChunkFrame(
+                                    transferId,
+                                    chunk.subarray(offset, offset + PROXIMITY_FILE_TRANSFER_CHUNK_SIZE),
+                                ),
+                            );
+                            // eslint-disable-next-line no-await-in-loop -- chunks must be sent in order
+                            await this.waitForBackpressure(dataChannel);
+                        }
+                    },
+                }),
+            );
         } catch (error) {
-            // Typically the file changed or vanished on disk since the offer was made.
+            // The file changed or vanished on disk since the offer was made, or the recipient left.
             console.error("Error while sending proximity file transfer", error);
-            this.sendControlMessage(dataChannel, { type: "proximity_file_error", transferId, reason: "unavailable" });
+            if (dataChannel.readyState === "open") {
+                this.sendControlMessage(dataChannel, {
+                    type: "proximity_file_error",
+                    transferId,
+                    reason: "unavailable",
+                });
+            }
             return;
         }
 
@@ -537,8 +554,22 @@ export class ProximityFileTransferService {
             return Promise.resolve();
         }
 
-        return new Promise((resolve) => {
-            dataChannel.addEventListener("bufferedamountlow", () => resolve(), { once: true });
+        // A channel that closes never drains: stop waiting then, or the transfer would hang forever.
+        return new Promise((resolve, reject) => {
+            const onDrained = () => {
+                stopListening();
+                resolve();
+            };
+            const onClosed = () => {
+                stopListening();
+                reject(new Error("Proximity file transfer data channel closed"));
+            };
+            const stopListening = () => {
+                dataChannel.removeEventListener("bufferedamountlow", onDrained);
+                dataChannel.removeEventListener("close", onClosed);
+            };
+            dataChannel.addEventListener("bufferedamountlow", onDrained);
+            dataChannel.addEventListener("close", onClosed);
         });
     }
 
