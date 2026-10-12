@@ -17,8 +17,3 @@ export function usesSystemScreenSharePicker(platform: string, env: Env): boolean
 export function canHideWindowsFromCapture(platform: string): boolean {
     return platform === "darwin" || platform === "win32";
 }
-
-/** Under Wayland an app knows neither where its windows are nor where the pointer is. */
-export function knowsWindowPositions(platform: string, env: Env): boolean {
-    return !usesSystemScreenSharePicker(platform, env);
-}
