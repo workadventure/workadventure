@@ -10,7 +10,7 @@ import {
     currentAnnotationColorStore,
     currentAnnotationToolStore,
     currentAnnotationWidthStore,
-    localAnnotationActiveStore,
+    localAnnotationTargetStore,
     screenAnnotationElementsStore,
     screenAnnotationLocallyHiddenStore,
 } from "../../Stores/ScreenAnnotationStore";
@@ -44,9 +44,16 @@ function toOverlayElement(element: ScreenAnnotationElement): DesktopOverlayEleme
     };
 }
 
+/** Whether the local user draws on their own screen share: the only case the native overlay is for. */
+function drawingOnMyShare(): boolean {
+    const me = screenAnnotationManager.localUserId;
+    return me !== undefined && get(localAnnotationTargetStore) === me && get(requestedScreenSharingState);
+}
+
 /**
  * Bridges the transparent Electron annotation overlay to the WorkAdventure annotation system:
- * - opens the overlay when the presenter turns drawing on, keeps it open while sharing;
+ * - opens the overlay when the presenter turns drawing on, keeps it open while sharing (a viewer
+ *   draws on the shared image in the app, never through this full-display window);
  * - mirrors the presenter's annotation elements + tool state onto the overlay;
  * - routes strokes drawn ON the overlay back through {@link ScreenAnnotationManager} so they sync to
  *   every viewer via the normal Space events (and appear baked into the shared screen).
@@ -76,8 +83,8 @@ class ScreenOverlayBridge {
         // Turning annotation on opens the overlay and enters draw mode; turning it off leaves the
         // overlay up (still displaying/baking existing strokes) but click-through.
         this.subscriptions.push(
-            localAnnotationActiveStore.subscribe((active) => {
-                if (active) {
+            localAnnotationTargetStore.subscribe(() => {
+                if (drawingOnMyShare()) {
                     this.ensureOpen()
                         .then(() => getScreenOverlayApi()?.setDrawMode(true))
                         .catch(() => {});
@@ -92,7 +99,7 @@ class ScreenOverlayBridge {
         // Stays click-through (no draw mode): the presenter is driving the shared app, not drawing.
         this.subscriptions.push(
             presenterToolStore.subscribe((tool) => {
-                if (tool !== "none") {
+                if (tool !== "none" && get(requestedScreenSharingState)) {
                     this.ensureOpen().catch(() => {});
                 }
             }),
@@ -105,10 +112,10 @@ class ScreenOverlayBridge {
                     return;
                 }
                 this.close();
-                if (get(localAnnotationActiveStore) || get(presenterToolStore) !== "none") {
+                if (drawingOnMyShare() || get(presenterToolStore) !== "none") {
                     this.ensureOpen()
                         .then(() => {
-                            if (get(localAnnotationActiveStore)) {
+                            if (drawingOnMyShare()) {
                                 getScreenOverlayApi()?.setDrawMode(true);
                             }
                         })
@@ -178,7 +185,7 @@ class ScreenOverlayBridge {
             return;
         }
         this.onDrawUnsub = api.onDraw((op) => this.handleDraw(op));
-        this.onExitUnsub = api.onExit(() => localAnnotationActiveStore.set(false));
+        this.onExitUnsub = api.onExit(() => localAnnotationTargetStore.set(undefined));
         this.pushElements();
         this.pushTool();
     }
@@ -238,7 +245,7 @@ class ScreenOverlayBridge {
             return;
         }
         if (op.type === "clear") {
-            screenAnnotationManager.clearAll(target);
+            screenAnnotationManager.clearAll();
             return;
         }
         const overlayId = op.element.id;
@@ -260,7 +267,7 @@ class ScreenOverlayBridge {
             screenAnnotationManager.upsertElement(target, element);
             this.overlayIdToReal.delete(overlayId);
         } else {
-            screenAnnotationManager.emitUpsertElement(target, element);
+            screenAnnotationManager.emitDraft(target, element);
         }
     }
 }

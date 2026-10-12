@@ -23,7 +23,7 @@
     import { findHandPosition, raisedHandsOrderStore } from "../../Stores/RaisedHandsStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
-    import { localAnnotationActiveStore, screenAnnotationEnabledStore } from "../../Stores/ScreenAnnotationStore";
+    import { localAnnotationTargetStore, screenAnnotationEnabledStore } from "../../Stores/ScreenAnnotationStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import RaisedHandBadge from "./RaisedHandBadge.svelte";
     import UserName from "./UserName.svelte";
@@ -336,9 +336,9 @@
     }
 
     // Enlarge the shared screen and enter drawing mode in a single click.
-    function startAnnotating() {
+    function startAnnotating(targetUserId: string) {
         highlightPeer();
-        localAnnotationActiveStore.set(true);
+        localAnnotationTargetStore.set(targetUserId);
     }
 
     onMount(() => {
@@ -452,121 +452,131 @@
                             }, 200);
                         }}
                     >
-                        {#if !streamableEntry.isPending && activeUserName}
-                            <UserName
-                                name={name ?? "unknown"}
-                                picture={pictureStore}
-                                isPlayingAudio={showVoiceIndicator ?? false}
-                                {isHandRaised}
-                                isCameraDisabled={(!(videoEnabled ?? false) && !miniMode) ||
-                                    effectiveStatus !== "connected"}
-                                isBlocked={$isBlockedStore ?? false}
-                                position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
-                                    ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
-                                    : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
-                                grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
-                            >
-                                <RaisedHandBadge spaceUserId={raisedHandSpaceUserId} spaceName={raisedHandSpaceName} />
-                                {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
+                        {#snippet children(videoDisplayed: boolean)}
+                            {#if !streamableEntry.isPending && activeUserName}
+                                <UserName
+                                    name={name ?? "unknown"}
+                                    picture={pictureStore}
+                                    isPlayingAudio={showVoiceIndicator ?? false}
+                                    {isHandRaised}
+                                    isCameraDisabled={(!(videoEnabled ?? false) && !miniMode) ||
+                                        effectiveStatus !== "connected"}
+                                    isBlocked={$isBlockedStore ?? false}
+                                    position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
+                                        ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                                        : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
+                                    grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
+                                >
+                                    <RaisedHandBadge
+                                        spaceUserId={raisedHandSpaceUserId}
+                                        spaceName={raisedHandSpaceName}
+                                    />
+                                    {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
+                                        <div
+                                            class="flex items-center justify-center picture-in-picture:hidden"
+                                            bind:this={userMenuButton}
+                                        >
+                                            <UpDownChevron enabled={showUserSubMenu} onclick={toggleUserMenu} />
+                                        </div>
+                                    {/if}
+                                </UserName>
+
+                                {#if effectiveStatus === "connected" && !$isBlockedStore}
                                     <div
-                                        class="flex items-center justify-center picture-in-picture:hidden"
-                                        bind:this={userMenuButton}
+                                        class="z-[251] absolute p-2 right-1 white"
+                                        class:top-1={videoEnabled}
+                                        class:top-0={!videoEnabled}
+                                        class:text-white={$pictureInPictureLayoutStore}
+                                        class:opacity-20={$pictureInPictureLayoutStore}
                                     >
-                                        <UpDownChevron enabled={showUserSubMenu} onclick={toggleUserMenu} />
+                                        {#if $hasAudioStore && !remoteMicrophoneMuted && !audioStateMismatch}
+                                            <SoundMeterWidget
+                                                volume={volumeMeter}
+                                                cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                                                barColor="white"
+                                            />
+                                        {:else if streamable?.videoType === "video"}
+                                            <IconMicrophoneOff
+                                                aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                                data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                                class="{showAudioStateMismatch
+                                                    ? 'text-red-500 '
+                                                    : ''}[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
+                                            />
+                                        {/if}
                                     </div>
                                 {/if}
-                            </UserName>
+                                {#if webRtcStats}
+                                    <WebRtcStats {webRtcStats} />
+                                {/if}
+                                {#if encoderStats}
+                                    <EncoderStatsBox {encoderStats} />
+                                {/if}
 
-                            {#if effectiveStatus === "connected" && !$isBlockedStore}
-                                <div
-                                    class="z-[251] absolute p-2 right-1 white"
-                                    class:top-1={videoEnabled}
-                                    class:top-0={!videoEnabled}
-                                    class:text-white={$pictureInPictureLayoutStore}
-                                    class:opacity-20={$pictureInPictureLayoutStore}
-                                >
-                                    {#if $hasAudioStore && !remoteMicrophoneMuted && !audioStateMismatch}
-                                        <SoundMeterWidget
-                                            volume={volumeMeter}
-                                            cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                                            barColor="white"
-                                        />
-                                    {:else if streamable?.videoType === "video"}
-                                        <IconMicrophoneOff
-                                            aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
-                                            data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
-                                            class="{showAudioStateMismatch
-                                                ? 'text-red-500 '
-                                                : ''}[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
+                                <!-- The menu to go fullscreen -->
+                                {#if !inCameraContainer && videoEnabled}
+                                    <div
+                                        class="absolute m-auto top-0 right-0 left-0 z-[256] h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                                    >
+                                        <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
+                                            {#if !fullScreen && !$highlightFullScreen}
+                                                <button
+                                                    class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
+                                                    onclick={removeHighlight}
+                                                >
+                                                    <IconArrowsMinimize font-size="20" class="text-white" />
+                                                </button>
+                                            {/if}
+                                            {#if fullScreen}
+                                                <button
+                                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                                    onclick={exitFullScreen}
+                                                >
+                                                    <IconArrowsMinimize font-size="20" class="text-white" />
+                                                </button>
+                                            {:else}
+                                                <button
+                                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                                    onclick={setFullScreen}
+                                                    data-testid="highlight-enter-fullscreen-button"
+                                                >
+                                                    <IconArrowsMaximize font-size="20" class="text-white" />
+                                                </button>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                {/if}
+                            {/if}
+
+                            <!-- Annotation layer: on the image of the enlarged shared screen only (not in the camera grid,
+                             nor over a placeholder while the image is missing) -->
+                            {#if streamableEntry.streamable.videoType === "screenSharing" && !inCameraContainer && videoDisplayed}
+                                {@const annotationTargetUserId = isLocalUser
+                                    ? screenAnnotationManager.localUserId
+                                    : streamableEntry.streamable.spaceUserId}
+                                {#if annotationTargetUserId}
+                                    {@const canDraw =
+                                        isLocalUser ||
+                                        ($screenAnnotationEnabledStore.get(annotationTargetUserId) ?? false)}
+                                    {@const effectStream =
+                                        streamableEntry.streamable.media.type === "webrtc" ||
+                                        streamableEntry.streamable.media.type === "livekit"
+                                            ? streamableEntry.streamable.media.streamStore
+                                            : undefined}
+                                    <ScreenAnnotationOverlay targetUserId={annotationTargetUserId} {canDraw} />
+                                    <PresenterEffectsOverlay
+                                        targetUserId={annotationTargetUserId}
+                                        stream={effectStream}
+                                    />
+                                    {#if canDraw}
+                                        <ScreenAnnotationToolbar
+                                            targetUserId={annotationTargetUserId}
+                                            isPresenter={isLocalUser}
                                         />
                                     {/if}
-                                </div>
-                            {/if}
-                            {#if webRtcStats}
-                                <WebRtcStats {webRtcStats} />
-                            {/if}
-                            {#if encoderStats}
-                                <EncoderStatsBox {encoderStats} />
-                            {/if}
-
-                            <!-- The menu to go fullscreen -->
-                            {#if !inCameraContainer && videoEnabled}
-                                <div
-                                    class="absolute m-auto top-0 right-0 left-0 z-[256] h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
-                                >
-                                    <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
-                                        {#if !fullScreen && !$highlightFullScreen}
-                                            <button
-                                                class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                                                onclick={removeHighlight}
-                                            >
-                                                <IconArrowsMinimize font-size="20" class="text-white" />
-                                            </button>
-                                        {/if}
-                                        {#if fullScreen}
-                                            <button
-                                                class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                                                onclick={exitFullScreen}
-                                            >
-                                                <IconArrowsMinimize font-size="20" class="text-white" />
-                                            </button>
-                                        {:else}
-                                            <button
-                                                class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                                                onclick={setFullScreen}
-                                                data-testid="highlight-enter-fullscreen-button"
-                                            >
-                                                <IconArrowsMaximize font-size="20" class="text-white" />
-                                            </button>
-                                        {/if}
-                                    </div>
-                                </div>
-                            {/if}
-                        {/if}
-
-                        <!-- Annotation layer: shown on the enlarged shared screen (not in the camera grid) -->
-                        {#if streamableEntry.streamable.videoType === "screenSharing" && !inCameraContainer && videoEnabled}
-                            {@const annotationTargetUserId = isLocalUser
-                                ? screenAnnotationManager.localUserId
-                                : streamableEntry.streamable.spaceUserId}
-                            {#if annotationTargetUserId}
-                                {@const canDraw =
-                                    isLocalUser || ($screenAnnotationEnabledStore.get(annotationTargetUserId) ?? false)}
-                                {@const effectStream =
-                                    streamableEntry.streamable.media.type === "webrtc" ||
-                                    streamableEntry.streamable.media.type === "livekit"
-                                        ? streamableEntry.streamable.media.streamStore
-                                        : undefined}
-                                <ScreenAnnotationOverlay targetUserId={annotationTargetUserId} {canDraw} />
-                                <PresenterEffectsOverlay targetUserId={annotationTargetUserId} stream={effectStream} />
-                                {#if canDraw}
-                                    <ScreenAnnotationToolbar
-                                        targetUserId={annotationTargetUserId}
-                                        isPresenter={isLocalUser}
-                                    />
                                 {/if}
                             {/if}
-                        {/if}
+                        {/snippet}
                     </CenteredVideo>
                 </div>
             {/each}
@@ -596,7 +606,11 @@
                     data-testid="screenshare-annotate-button"
                     title={$LL.screenAnnotation.startAnnotating()}
                     aria-label={$LL.screenAnnotation.startAnnotating()}
-                    onclick={startAnnotating}
+                    onclick={() => {
+                        if (annotationTargetUserId) {
+                            startAnnotating(annotationTargetUserId);
+                        }
+                    }}
                 >
                     <IconPencil font-size="20" class="text-white" />
                 </button>

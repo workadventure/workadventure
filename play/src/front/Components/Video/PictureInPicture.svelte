@@ -32,6 +32,7 @@
         currentAnnotationColorStore,
         currentAnnotationToolStore,
         localAnnotationActiveStore,
+        localAnnotationTargetStore,
         isAnnotationTool,
     } from "../../Stores/ScreenAnnotationStore";
     import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
@@ -348,7 +349,7 @@
                         });
                     },
                     annotationToggle: () => {
-                        localAnnotationActiveStore.set(!get(localAnnotationActiveStore));
+                        screenAnnotationManager.toggleDrawingOnMyShare();
                     },
                     annotationSetTool: (tool) => {
                         if (isAnnotationTool(tool)) {
@@ -365,10 +366,7 @@
                         }
                     },
                     annotationClear: () => {
-                        const target = screenAnnotationManager.localUserId;
-                        if (target) {
-                            screenAnnotationManager.clearAll(target);
-                        }
+                        screenAnnotationManager.clearAll();
                     },
                     // TODO(presenter-bar): wire chat + reactions. Provide the `chatMessages` dep
                     // (mirror of the proximity ProximityChatRoom messages) and the `sendChat` /
@@ -420,14 +418,12 @@
 
         // Tear down every presenter-facing surface (annotation drawing + screen share) whose
         // audience just vanished. Cascades through the existing bridges:
-        //   localAnnotationActiveStore=false → PresenterHudBridge closes annotation bar,
+        //   localAnnotationTargetStore=undefined → PresenterHudBridge closes annotation bar,
         //     ScreenOverlayBridge drops draw mode.
         //   requestedScreenSharingState=false → ScreenOverlayBridge closes the overlay,
         //     activeScreenShareSourceStore clears → PresenterHudBridge closes meeting bar.
         function closePresenterSurfaces(): void {
-            if (get(localAnnotationActiveStore)) {
-                localAnnotationActiveStore.set(false);
-            }
+            localAnnotationTargetStore.set(undefined);
             if (get(requestedScreenSharingState)) {
                 requestedScreenSharingState.disableScreenSharing();
             }

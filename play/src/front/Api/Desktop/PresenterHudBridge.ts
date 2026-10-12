@@ -79,9 +79,8 @@ class PresenterHudBridge {
                     }
                 } else {
                     this.lastSourceId = undefined;
-                    // Share ended: drop the whole HUD, and leave drawing mode.
+                    // Share ended: drop the whole HUD (the annotation manager ends the drawing mode).
                     this.closeMeetingBar();
-                    localAnnotationActiveStore.set(false);
                 }
             }),
         );
@@ -235,7 +234,7 @@ class PresenterHudBridge {
                 });
                 break;
             case "annotation-toggle":
-                localAnnotationActiveStore.set(!get(localAnnotationActiveStore));
+                screenAnnotationManager.toggleDrawingOnMyShare();
                 break;
             case "annotation-set-tool":
                 if (isAnnotationTool(command.tool)) {
@@ -259,21 +258,16 @@ class PresenterHudBridge {
                 }
                 break;
             }
-            case "annotation-clear": {
-                const target = screenAnnotationManager.localUserId;
-                if (target) {
-                    screenAnnotationManager.clearAll(target);
-                }
+            case "annotation-clear":
+                screenAnnotationManager.clearAll();
                 break;
-            }
             case "annotation-toggle-local-hide":
                 screenAnnotationLocallyHiddenStore.set(!get(screenAnnotationLocallyHiddenStore));
                 break;
             case "annotation-toggle-others": {
                 const target = screenAnnotationManager.localUserId;
                 if (target) {
-                    const enabled = get(screenAnnotationEnabledStore).get(target) === true;
-                    screenAnnotationManager.setAnnotationEnabled(target, !enabled);
+                    screenAnnotationManager.setOthersAllowed(get(screenAnnotationEnabledStore).get(target) !== true);
                 }
                 break;
             }

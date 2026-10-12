@@ -1,44 +1,45 @@
 import { get } from "svelte/store";
 import type { Observable } from "rxjs";
 import type { ScreenAnnotationElement, ScreenAnnotationEvent } from "@workadventure/messages";
+import type { SpaceState } from "@workadventure/shared-utils";
+import { screenAnnotationElementSchema } from "@workadventure/shared-utils";
 import { activeScreenShareSourceStore, requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import type { Streamable } from "../Streamable";
 import {
-    clearAnnotations,
-    removeAnnotationElement,
+    localAnnotationTargetStore,
     resetAllAnnotations,
     screenAnnotationElementsStore,
     screenAnnotationEnabledStore,
-    setAnnotationEnabled,
-    upsertAnnotationElement,
 } from "../../Stores/ScreenAnnotationStore";
 import type { SpaceInterface } from "../SpaceInterface";
 
-type AnnotationOperation = NonNullable<ScreenAnnotationEvent["operation"]>;
+type DraftOperation = NonNullable<ScreenAnnotationEvent["operation"]>;
 
 /** A reversible local-user action for the undo / redo history: a drawn stroke, or an erased one. */
 type UndoOp = { kind: "add" | "remove"; element: ScreenAnnotationElement };
 
 /**
- * Singleton in charge of synchronizing screen-sharing annotations across the members of a
- * proximity space.
+ * Singleton in charge of the screen-sharing annotations of the bound video space.
  *
- * It is bound to the active proximity space (see `bindScreenAnnotationEventsToSpace`, wired
- * in {@link SpacePeerManager}). Incoming public events update the local
- * {@link ScreenAnnotationStore}; local user actions update the store AND broadcast a public
- * event to the rest of the space.
+ * Finished elements and the presenter's "others may annotate" setting live in the space state: the back checks
+ * every change, keeps them for whoever joins later, and drops them when the share stops or the presenter leaves.
+ * Only the element being drawn travels as a public event (a draft), so the others see it grow.
  *
- * Annotations of a screen share are automatically dropped when that screen share stops
- * (remote: `screenSharingPeerRemoved`; local: `requestedScreenSharingState` going false).
+ * What the components read is published to {@link screenAnnotationElementsStore} and
+ * {@link screenAnnotationEnabledStore}. The manager also takes the local user out of drawing mode as soon as the
+ * screen they draw on can no longer be drawn on.
  */
 class ScreenAnnotationManager {
     private space: SpaceInterface | undefined;
     // Normalized teardown callbacks (rxjs Subscriptions and Svelte store unsubscribers).
     private unsubscribers: (() => void)[] = [];
     private elementCounter = 0;
+    private annotations: SpaceState["annotations"] = {};
+    // Per target, the element each other member is drawing (keyed by author: one draft each at most).
+    private drafts = new Map<string, Map<string, ScreenAnnotationElement>>();
     // Per-target undo / redo history of the LOCAL user's reversible actions (draw a stroke / erase
     // one). undo reverses the last op, redo re-applies it; a fresh action clears the redo side.
-    // `replaying` suppresses recording while an undo/redo mutates the store.
+    // `replaying` suppresses recording while an undo/redo is applied.
     private undoStacks = new Map<string, UndoOp[]>();
     private redoStacks = new Map<string, UndoOp[]>();
     private replaying = false;
@@ -50,57 +51,69 @@ class ScreenAnnotationManager {
         this.unbind();
         this.space = space;
 
+        this.unsubscribers.push(
+            space.state.observe("annotations").subscribe((annotations) => {
+                this.annotations = annotations;
+                // A finished element replaces its draft.
+                for (const [target, drafts] of this.drafts) {
+                    for (const [author, draft] of drafts) {
+                        if (annotations[target]?.elements[draft.id]) {
+                            drafts.delete(author);
+                        }
+                    }
+                }
+                this.publish();
+            }),
+        );
+
         const publicEventSubscription = space.observePublicEvent("screenAnnotation").subscribe((event) => {
-            // Our own events are already applied locally before being sent.
-            if (event.sender === space.mySpaceUserId) {
-                return;
+            if (event.sender !== space.mySpaceUserId) {
+                this.applyRemoteDraft(event.sender, event.screenAnnotation);
             }
-            this.applyRemote(event.sender, event.screenAnnotation);
         });
         this.unsubscribers.push(() => publicEventSubscription.unsubscribe());
 
-        // Backstop: drop a remote screen share's annotations if its media track disappears without
-        // a clearAll (e.g. an ungraceful presenter disconnect).
+        // A draft whose author or presenter went away never gets finished.
         const screenSharingRemovedSubscription = screenSharingPeerRemoved.subscribe((streamable) => {
-            if (streamable.spaceUserId) {
-                clearAnnotations(streamable.spaceUserId);
-                this.clearHistory(streamable.spaceUserId);
+            if (streamable.spaceUserId && this.drafts.delete(streamable.spaceUserId)) {
+                this.publish();
             }
         });
         this.unsubscribers.push(() => screenSharingRemovedSubscription.unsubscribe());
-
-        // When we stop sharing our screen, authoritatively clear its annotations for everyone
-        // through the same public-event channel (a viewer's screenSharingPeerRemoved below is
-        // only a backstop for ungraceful disconnects and can race the annotation channel).
-        let wasSharing = get(requestedScreenSharingState);
-        const screenSharingStateUnsubscriber = requestedScreenSharingState.subscribe((isSharing) => {
-            if (wasSharing && !isSharing && this.space) {
-                this.clearAll(space.mySpaceUserId);
+        const userLeftSubscription = space.observeUserLeft.subscribe((user) => {
+            let changed = this.drafts.delete(user.spaceUserId);
+            for (const drafts of this.drafts.values()) {
+                changed = drafts.delete(user.spaceUserId) || changed;
             }
-            wasSharing = isSharing;
+            if (changed) {
+                this.publish();
+            }
         });
-        this.unsubscribers.push(screenSharingStateUnsubscriber);
+        this.unsubscribers.push(() => userLeftSubscription.unsubscribe());
 
-        // The "allow others to annotate" setting is an event, not state: whoever joins after it was
-        // sent would never learn it. While sharing with annotation allowed, re-announce it on each join.
+        // The back drops what was drawn on our share when it stops; our history of it goes too.
+        this.unsubscribers.push(
+            requestedScreenSharingState.subscribe((isSharing) => {
+                if (!isSharing) {
+                    this.clearHistory(space.mySpaceUserId);
+                }
+                this.exitDrawingModeIfNotDrawable();
+            }),
+        );
+
         // Another screen picked during the share: strokes were placed on the previous screen's
         // content, so they are cleared for everyone (the share and its tools stay up).
         let sharedSourceId = get(activeScreenShareSourceStore)?.id;
-        const sourceUnsubscriber = activeScreenShareSourceStore.subscribe((source) => {
-            if (source && sharedSourceId && source.id !== sharedSourceId && this.space) {
-                this.clearAll(space.mySpaceUserId);
-            }
-            sharedSourceId = source?.id;
-        });
-        this.unsubscribers.push(sourceUnsubscriber);
+        this.unsubscribers.push(
+            activeScreenShareSourceStore.subscribe((source) => {
+                if (source && sharedSourceId && source.id !== sharedSourceId) {
+                    this.clearAll();
+                }
+                sharedSourceId = source?.id;
+            }),
+        );
 
-        const userJoinedSubscription = space.observeUserJoined.subscribe(() => {
-            const me = space.mySpaceUserId;
-            if (get(requestedScreenSharingState) && get(screenAnnotationEnabledStore).get(me) === true) {
-                this.emit(me, { $case: "annotationEnabled", annotationEnabled: true });
-            }
-        });
-        this.unsubscribers.push(() => userJoinedSubscription.unsubscribe());
+        this.unsubscribers.push(localAnnotationTargetStore.subscribe(() => this.exitDrawingModeIfNotDrawable()));
 
         const leaveSpaceSubscription = space.onLeaveSpace.subscribe(() => {
             this.unbind();
@@ -112,6 +125,8 @@ class ScreenAnnotationManager {
         this.unsubscribers.forEach((unsubscribe) => unsubscribe());
         this.unsubscribers = [];
         this.space = undefined;
+        this.annotations = {};
+        this.drafts.clear();
         this.undoStacks.clear();
         this.redoStacks.clear();
         resetAllAnnotations();
@@ -127,92 +142,137 @@ class ScreenAnnotationManager {
         return `${this.space?.mySpaceUserId ?? "local"}-${Date.now()}-${this.elementCounter}`;
     }
 
-    /**
-     * Apply an event from another member of the space. Space events are relayed as sent, so the
-     * sender's rights are checked here: only the presenter (the target) can enable annotation or
-     * clear their screen, and others may draw or erase only while the presenter allows it.
-     */
-    private applyRemote(sender: string, event: ScreenAnnotationEvent): void {
+    /** The presenter's own drawing mode (meeting bar, picture-in-picture): on their share, or off. */
+    public toggleDrawingOnMyShare(): void {
+        const me = this.localUserId;
+        const drawing = get(localAnnotationTargetStore) !== undefined;
+        localAnnotationTargetStore.set(!drawing && me && this.canDraw(me) ? me : undefined);
+    }
+
+    /** Whether the local user may draw on the screen shared by `targetUserId`. */
+    public canDraw(targetUserId: string): boolean {
+        if (targetUserId === this.localUserId) {
+            return get(requestedScreenSharingState);
+        }
+        return this.annotations[targetUserId]?.othersAllowed === true;
+    }
+
+    /** Space events are relayed as sent: a draft only shows if its sender may draw on that screen. */
+    private applyRemoteDraft(sender: string, event: ScreenAnnotationEvent): void {
         const target = event.targetUserId;
         const operation = event.operation;
+        const drafts = this.drafts.get(target);
         switch (operation?.$case) {
-            case "upsertElement":
-                if (
-                    operation.upsertElement.authorUserId === sender &&
-                    this.canAnnotate(sender, target) &&
-                    isReasonableElement(target, operation.upsertElement)
-                ) {
-                    upsertAnnotationElement(target, operation.upsertElement);
+            case "draft": {
+                const allowed = sender === target || this.annotations[target]?.othersAllowed === true;
+                const valid = screenAnnotationElementSchema.safeParse({
+                    ...operation.draft,
+                    authorUserId: sender,
+                    at: 0,
+                }).success;
+                if (!allowed || !valid || this.annotations[target]?.elements[operation.draft.id]) {
+                    return;
                 }
+                const next = drafts ?? new Map<string, ScreenAnnotationElement>();
+                next.set(sender, { ...operation.draft, authorUserId: sender });
+                this.drafts.set(target, next);
                 break;
-            case "removeElementId":
-                if (this.canAnnotate(sender, target)) {
-                    removeAnnotationElement(target, operation.removeElementId);
+            }
+            case "dropDraftId":
+                if (drafts?.get(sender)?.id !== operation.dropDraftId) {
+                    return;
                 }
-                break;
-            case "clearAll":
-                if (sender === target) {
-                    clearAnnotations(target);
-                    this.clearHistory(target);
-                }
-                break;
-            case "annotationEnabled":
-                if (sender === target) {
-                    setAnnotationEnabled(target, operation.annotationEnabled);
-                }
+                drafts.delete(sender);
                 break;
             default:
-                break;
+                return;
+        }
+        this.publish();
+    }
+
+    private publish(): void {
+        const elements = new Map<string, ScreenAnnotationElement[]>();
+        const enabled = new Map<string, boolean>();
+        for (const [target, annotations] of Object.entries(this.annotations)) {
+            elements.set(target, Object.values(annotations.elements));
+            enabled.set(target, annotations.othersAllowed);
+        }
+        for (const [target, drafts] of this.drafts) {
+            if (drafts.size > 0) {
+                elements.set(target, [...(elements.get(target) ?? []), ...drafts.values()]);
+            }
+        }
+        screenAnnotationElementsStore.set(elements);
+        screenAnnotationEnabledStore.set(enabled);
+        this.exitDrawingModeIfNotDrawable();
+    }
+
+    /**
+     * Drawing mode ends when the screen drawn on can no longer be drawn on: the share stopped, the presenter left,
+     * or stopped letting the others draw. Nobody is put back in drawing mode when it can be drawn on again.
+     */
+    private exitDrawingModeIfNotDrawable(): void {
+        const target = get(localAnnotationTargetStore);
+        if (target !== undefined && !this.canDraw(target)) {
+            localAnnotationTargetStore.set(undefined);
         }
     }
 
-    private canAnnotate(sender: string, target: string): boolean {
-        if (sender === target) {
-            return true;
-        }
-        // The presenter re-announces the setting to everyone who joins (see bindToSpace), so a missing
-        // value means "not allowed" everywhere.
-        return get(screenAnnotationEnabledStore).get(target) === true;
-    }
-
-    private emit(targetUserId: string, operation: AnnotationOperation): void {
+    private emitDraftOperation(targetUserId: string, operation: DraftOperation): void {
         this.space?.emitPublicMessage({
             $case: "screenAnnotation",
             screenAnnotation: { targetUserId, operation },
         });
     }
 
+    /** Commits a finished element (or a new version of one of ours). */
     public upsertElement(targetUserId: string, element: ScreenAnnotationElement): void {
         this.recordLocalOp(targetUserId, { kind: "add", element });
-        upsertAnnotationElement(targetUserId, element);
-        this.emit(targetUserId, { $case: "upsertElement", upsertElement: element });
+        this.space?.state.upsertScreenAnnotation(targetUserId, element).catch((error) => {
+            // Its draft would otherwise stay on the others' screens.
+            console.warn("Annotation refused", error);
+            this.dropDraft(targetUserId, element.id);
+        });
     }
 
     /**
-     * Broadcast an element WITHOUT updating the local store. Used while a stroke is being
-     * drawn: the local store is updated on every pointer move (smooth feedback) but the
-     * network emit is throttled to avoid flooding the space.
+     * Shows the element being drawn to the others. Throttled by the caller: the local rendering of
+     * the stroke is the caller's own, and only the finished element is committed.
      */
-    public emitUpsertElement(targetUserId: string, element: ScreenAnnotationElement): void {
-        this.emit(targetUserId, { $case: "upsertElement", upsertElement: element });
+    public emitDraft(targetUserId: string, element: ScreenAnnotationElement): void {
+        this.emitDraftOperation(targetUserId, { $case: "draft", draft: element });
+    }
+
+    /** The element being drawn is given up: the others drop it. */
+    public dropDraft(targetUserId: string, elementId: string): void {
+        this.emitDraftOperation(targetUserId, { $case: "dropDraftId", dropDraftId: elementId });
     }
 
     public removeElement(targetUserId: string, elementId: string): void {
-        // Capture the element BEFORE it leaves the store so an eraser removal can be undone (i.e.
-        // re-added). Transient drafts that were only broadcast (never stored) aren't found here, so
-        // dropping them doesn't pollute the undo history.
-        const element = (get(screenAnnotationElementsStore).get(targetUserId) ?? []).find((e) => e.id === elementId);
-        if (element) {
-            this.recordLocalOp(targetUserId, { kind: "remove", element });
+        // Captured before it leaves the state, so that erasing can be undone (re-added).
+        const element = this.annotations[targetUserId]?.elements[elementId];
+        if (!element) {
+            return;
         }
-        removeAnnotationElement(targetUserId, elementId);
-        this.emit(targetUserId, { $case: "removeElementId", removeElementId: elementId });
+        this.recordLocalOp(targetUserId, { kind: "remove", element });
+        this.space?.state.removeScreenAnnotation(targetUserId, elementId).catch((error) => {
+            console.warn("Annotation removal refused", error);
+        });
     }
 
-    public clearAll(targetUserId: string): void {
-        this.clearHistory(targetUserId);
-        clearAnnotations(targetUserId);
-        this.emit(targetUserId, { $case: "clearAll", clearAll: true });
+    /** The presenter erases everything drawn on their share. */
+    public clearAll(): void {
+        const me = this.localUserId;
+        if (!me) {
+            return;
+        }
+        this.clearHistory(me);
+        this.space?.state.clearScreenAnnotations().catch(() => {}); // reported by the state manager
+    }
+
+    /** The presenter lets the others draw on their share, or stops letting them. */
+    public setOthersAllowed(allowed: boolean): void {
+        this.space?.state.setScreenAnnotationOthersAllowed(allowed).catch(() => {}); // reported by the state manager
     }
 
     /** Drop the local undo/redo history for a share whose annotations are being cleared or dropped. */
@@ -221,15 +281,9 @@ class ScreenAnnotationManager {
         this.redoStacks.delete(targetUserId);
     }
 
-    public setAnnotationEnabled(targetUserId: string, enabled: boolean): void {
-        setAnnotationEnabled(targetUserId, enabled);
-        this.emit(targetUserId, { $case: "annotationEnabled", annotationEnabled: enabled });
-    }
-
     /**
-     * Record a local user action on the undo history and drop the redo history. Successive updates
-     * of the same in-progress stroke collapse into one entry. No-op while replaying an undo/redo,
-     * for remote elements, or before the local user id is known.
+     * Record a local user action on the undo history and drop the redo history. No-op while
+     * replaying an undo/redo, for remote elements, or before the local user id is known.
      */
     private recordLocalOp(targetUserId: string, op: UndoOp): void {
         if (this.replaying || !this.localUserId) {
@@ -242,13 +296,8 @@ class ScreenAnnotationManager {
             return;
         }
         const stack = this.undoStacks.get(targetUserId) ?? [];
-        const top = stack[stack.length - 1];
-        if (op.kind === "add" && top && top.kind === "add" && top.element.id === op.element.id) {
-            top.element = op.element; // same stroke being drawn — keep a single undo entry
-        } else {
-            stack.push(op);
-            this.undoStacks.set(targetUserId, stack);
-        }
+        stack.push(op);
+        this.undoStacks.set(targetUserId, stack);
     }
 
     /** Apply an op in the undo (reverse=true) or redo (reverse=false) direction, without recording it. */
@@ -278,7 +327,7 @@ class ScreenAnnotationManager {
         if (!op) {
             return;
         }
-        // Move to the redo stack BEFORE mutating the store: the store change synchronously re-pushes
+        // Move to the redo stack BEFORE changing the state: the change synchronously re-pushes
         // the HUD state, so canRedo must already be true by then.
         this.pushOp(this.redoStacks, targetUserId, op);
         this.replayOp(targetUserId, op, true);
@@ -304,24 +353,3 @@ class ScreenAnnotationManager {
 }
 
 export const screenAnnotationManager = new ScreenAnnotationManager();
-
-// Bounds on what another member can make every viewer render (and the presenter's overlay draw).
-const DRAWABLE_TOOLS = new Set(["pen", "line", "arrow", "rect", "text"]);
-const MAX_WIDTH = 0.05;
-const MAX_POINTS = 5000;
-const MAX_TEXT_LENGTH = 500;
-const MAX_ELEMENTS_PER_SCREEN = 500;
-
-function isReasonableElement(target: string, element: ScreenAnnotationElement): boolean {
-    if (!DRAWABLE_TOOLS.has(element.tool) || !(element.width > 0 && element.width <= MAX_WIDTH)) {
-        return false;
-    }
-    if (element.points.length > MAX_POINTS || (element.text?.length ?? 0) > MAX_TEXT_LENGTH) {
-        return false;
-    }
-    if (!element.points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y))) {
-        return false;
-    }
-    const elements = get(screenAnnotationElementsStore).get(target) ?? [];
-    return elements.length < MAX_ELEMENTS_PER_SCREEN || elements.some((existing) => existing.id === element.id);
-}

@@ -6,7 +6,7 @@ import { pathToFileURL } from "url";
 import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustServer } from "./origin-verification";
 import settings from "./settings";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
-import { notePresenceReport, setRendererPresence } from "./presence";
+import { getPresenceSnapshot, notePresenceReport, onPresenceChange, setRendererPresence } from "./presence";
 import { closeCompanionPip, dismissCompanion, onMainWindowHidden, openCompanionForPip } from "./companion-controller";
 import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
 import {
@@ -23,6 +23,7 @@ import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle, s
 import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
 import { isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import { isPipWindowOpen, sendToPip } from "./pip-window";
+import { canOpenAnnotationOverlay } from "./platform-capture-policy";
 import {
     awaitOverlayReady,
     closeOverlayWindow,
@@ -685,6 +686,10 @@ export default () => {
             ElectronLog.warn("Rejected overlay open from non-main renderer");
             return false;
         }
+        if (!canOpenAnnotationOverlay(process.platform, getPresenceSnapshot().screenSharing)) {
+            ElectronLog.warn("Rejected overlay open: not sharing a screen, or no way to keep it out of the capture");
+            return false;
+        }
         const options = (opts && typeof opts === "object" ? opts : {}) as { displayId?: unknown; sourceId?: unknown };
         let displayId = typeof options.displayId === "number" ? options.displayId : undefined;
         // Cover the screen that is actually being shared (not the primary display).
@@ -715,6 +720,12 @@ export default () => {
     ipcMain.handle("app:overlay:close", (event) => {
         if (!isFromMainRenderer(event)) return;
         closeOverlayWindow();
+    });
+    // The overlay never outlives the share it covers, whatever the renderer does.
+    onPresenceChange(() => {
+        if (!getPresenceSnapshot().screenSharing) {
+            closeOverlayWindow();
+        }
     });
 
     // Main renderer → overlay renderer
