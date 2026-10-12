@@ -205,8 +205,8 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         newWindow.on("move", scheduleSaveBounds);
     }
     // The meeting bar must stay out of the *shared* screen — viewers must not see the presenter's
-    // own controls. The companion is a normal utility panel, so it is
-    // never protected (it would otherwise be impossible to screenshot). Protection is also lifted in
+    // own controls. The companion is a normal utility panel, only protected while the user shares
+    // (companion-controller), so it can be screenshot otherwise. Protection is also lifted in
     // development / with WA_ALLOW_WINDOW_CAPTURE=1 so the bars can be captured (see content-protection).
     if (kind !== "companion" && shouldProtectWindowFromCapture()) {
         try {
