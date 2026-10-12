@@ -35,6 +35,19 @@ const th: NativeStrings = {
     "landing.loadFailure": "ไม่สามารถโหลดโลกนี้ได้ โลกอาจออฟไลน์อยู่ หรือ URL อาจไม่ถูกต้อง",
     "landing.loadTimeout": "โลกนี้ใช้เวลาโหลดนานเกินไป โลกอาจออฟไลน์อยู่ หรือการเชื่อมต่อของคุณอาจขัดข้อง",
 
+    "landing.screenPermissionTitle": "อนุญาตการแชร์หน้าจอ",
+    "landing.screenPermissionBody":
+        "macOS จะขอสิทธิ์บันทึกหน้าจอก่อนการแชร์ครั้งแรก แล้วรีสตาร์ท WorkAdventure ให้สิทธิ์ตอนนี้ดีกว่าในระหว่างการสนทนา",
+    "landing.screenPermissionAllow": "อนุญาต",
+    "landing.screenPermissionLater": "ภายหลัง",
+    "landing.screenPermissionNext": "เปิด WorkAdventure ในการตั้งค่าระบบ จากนั้น macOS จะเสนอให้รีสตาร์ท",
+    "screenPermission.title": "WorkAdventure ไม่ได้รับอนุญาตให้บันทึกหน้าจอของคุณ",
+    "screenPermission.detail":
+        "เปิด WorkAdventure ใน การตั้งค่าระบบ › ความเป็นส่วนตัวและความปลอดภัย › การบันทึกหน้าจอ แล้วรีสตาร์ท: macOS จะใช้สิทธิ์นี้เมื่อแอปเริ่มทำงานเท่านั้น",
+    "screenPermission.openSettings": "เปิดการตั้งค่าระบบ",
+    "screenPermission.restart": "รีสตาร์ท WorkAdventure",
+    "screenPermission.cancel": "ยกเลิก",
+
     "tabs.newWorld": "โลกใหม่",
     "tabs.world": "โลก",
     "tabs.closeTab": "ปิดแท็บ",

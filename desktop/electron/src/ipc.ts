@@ -38,6 +38,7 @@ import { nativeStrings, t } from "./i18n";
 import { sanitizeStringTable } from "./native-locale-policy";
 import { getPinnedWorlds, getRecentWorlds, isWorldPinned, toggleWorldPin } from "./world-history";
 import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens } from "./screen-identify";
+import { ensureScreenPermission, requestScreenPermission, screenPermission } from "./screen-permission";
 
 const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection";
 // Compared on pathname only — the actual sender URL may carry a `?error=…` query when we bounce
@@ -493,6 +494,19 @@ export default () => {
             return { ok: false, error: t("landing.signupFailed") };
         }
     });
+
+    // ---- Screen recording permission (macOS) ----
+    // Asked from the Landing at first launch, so that the restart macOS requires happens before any
+    // conversation, and checked before each share.
+    ipcMain.handle("app:screen-permission:get", (event) =>
+        isFromActiveRenderer(event) ? screenPermission() : "not-needed"
+    );
+    ipcMain.handle("app:screen-permission:request", (event) =>
+        isFromNativeLanding(event) ? requestScreenPermission() : screenPermission()
+    );
+    ipcMain.handle("app:screen-permission:ensure", (event) =>
+        isFromActiveRenderer(event) ? ensureScreenPermission() : false
+    );
 
     // ---- Picture-in-Picture (native utility window) ----
     // The PiP utility window is a frameless, always-on-top BrowserWindow that mirrors video tracks
