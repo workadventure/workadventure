@@ -13,11 +13,11 @@ import {
     PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import type { NextFunction, Response } from "express";
-import mime from "mime";
 import type * as unzipper from "unzipper";
 import pLimit from "p-limit";
 import type ZipStream from "zip-stream";
 import { MapListService } from "../Services/MapListService";
+import { mime } from "../Services/Mime";
 import { s3UploadConcurrencyLimit } from "../Services/S3Client";
 import { FileNotFoundError } from "./FileNotFoundError";
 import type { FileSystemInterface } from "./FileSystemInterface";
@@ -291,8 +291,9 @@ export class S3FileSystem implements FileSystemInterface {
                     return;
                 }
 
-                // Set the content type and content length headers
-                res.set("Content-Type", result.ContentType);
+                // Set the content type and content length headers. The type comes from the extension first: maps
+                // uploaded before `.tmj`/`.wam` were known are stored in S3 as application/octet-stream.
+                res.set("Content-Type", mime.getType(virtualPath) ?? result.ContentType);
 
                 if (result.ContentLength) {
                     res.set("Content-Length", result.ContentLength.toString());
@@ -304,6 +305,15 @@ export class S3FileSystem implements FileSystemInterface {
 
                 if (result.Expires) {
                     res.set("Expires", result.Expires.toString());
+                }
+
+                // The browser already holds this version (its If-None-Match matches the ETag, including the weak
+                // ETag a CDN hands out once it compressed the file): answer 304 instead of sending the file again.
+                if (res.req.fresh) {
+                    // Aborting releases the S3 socket without reading the body (see above).
+                    controller.abort();
+                    res.status(304).end();
+                    return;
                 }
 
                 // TODO assess this idea: REDIRECT TO THE BUCKET PUBLIC URL FOR MOST FILES EXCEPT .html files

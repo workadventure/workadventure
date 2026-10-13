@@ -1,6 +1,7 @@
-import { PassThrough } from "stream";
+import type { AddressInfo } from "net";
+import { PassThrough, Readable } from "stream";
 import { GetObjectCommand, ListObjectsV2Command, type S3 } from "@aws-sdk/client-s3";
-import type { Response } from "express";
+import express, { type Response } from "express";
 import type ZipStream from "zip-stream";
 import { describe, expect, it, vi } from "vitest";
 import { MapListService } from "../../Services/MapListService";
@@ -23,7 +24,10 @@ describe("S3FileSystem", () => {
                 return Promise.resolve({ Body: body });
             });
             const fileSystem = new S3FileSystem({ getObject } as unknown as S3, "bucket");
-            const response = Object.assign(new PassThrough(), { set: vi.fn() }) as unknown as Response;
+            const response = Object.assign(new PassThrough(), {
+                set: vi.fn(),
+                req: { fresh: false },
+            }) as unknown as Response;
             const next = vi.fn();
 
             fileSystem.serveStaticFile("map/file.png", response, next);
@@ -74,6 +78,57 @@ describe("S3FileSystem", () => {
             expect(getObject).not.toHaveBeenCalled();
             expect(next).not.toHaveBeenCalled();
             expect(set).not.toHaveBeenCalled();
+        });
+        /** Serves `path` from a real Express app (its `req.fresh` decides the 304) backed by `getObject`. */
+        async function fetchFromS3FileSystem(
+            getObject: S3["getObject"],
+            path: string,
+            headers: Record<string, string> = {},
+        ) {
+            const fileSystem = new S3FileSystem({ getObject } as unknown as S3, "bucket");
+            const app = express();
+            app.use((req, res, next) => fileSystem.serveStaticFile(req.path.slice(1), res, next));
+            const server = app.listen(0);
+            try {
+                const { port } = server.address() as AddressInfo;
+                const response = await fetch(`http://127.0.0.1:${port}/${path}`, { headers });
+                return { status: response.status, contentType: response.headers.get("Content-Type") };
+            } finally {
+                server.close();
+            }
+        }
+
+        it("serves map files as JSON even when S3 stored them as application/octet-stream", async () => {
+            const getObject = vi.fn().mockResolvedValue({
+                Body: Readable.from(["{}"]),
+                ContentType: "application/octet-stream",
+                ETag: '"abc"',
+            });
+
+            const { status, contentType } = await fetchFromS3FileSystem(getObject, "map/office.tmj");
+
+            // application/octet-stream is not compressed by CDNs; application/json is.
+            expect(status).toBe(200);
+            expect(contentType).toBe("application/json; charset=utf-8");
+        });
+
+        it("answers 304 without reading the body when the browser has the same version", async () => {
+            let signal: AbortSignal | undefined;
+            const getObject = vi.fn((_input: unknown, opts?: { abortSignal?: AbortSignal }) => {
+                signal = opts?.abortSignal;
+                return Promise.resolve({ Body: new PassThrough(), ETag: '"abc"' });
+            });
+
+            // A CDN that compressed the file hands out a weak ETag: it must still match. (Cache-Control is what a
+            // browser sends when revalidating; without it, fetch() would add "no-cache", which forbids a 304.)
+            const { status } = await fetchFromS3FileSystem(getObject as unknown as S3["getObject"], "map/office.tmj", {
+                "If-None-Match": 'W/"abc"',
+                "Cache-Control": "max-age=0",
+            });
+
+            expect(status).toBe(304);
+            // The S3 body is never read: the request is aborted to release its socket.
+            expect(signal?.aborted).toBe(true);
         });
     });
 
