@@ -24,10 +24,11 @@ export interface CalendarEventInterface {
 }
 
 /**
- * How far ahead the agenda looks. A calendar panel that stops at midnight is empty every evening,
- * and hides the 9am meeting the user needs to see before logging off.
+ * How far ahead the agenda looks: a week, so the user can see the days ahead and not only the next meeting.
+ * A panel that stopped at midnight was empty every evening, and hid the 9am meeting the user needed to see
+ * before logging off.
  */
-export const CALENDAR_WINDOW_MS = 24 * 60 * 60 * 1000;
+export const CALENDAR_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * The time window the agenda displays: from now to CALENDAR_WINDOW_MS later.

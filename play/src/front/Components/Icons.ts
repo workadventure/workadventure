@@ -150,3 +150,6 @@ export { default as IconNetworkOff } from "~icons/tabler/network-off";
 export { default as IconLayoutGrid } from "~icons/tabler/layout-grid";
 export { default as IconList } from "~icons/tabler/list";
 export { default as IconPhoto } from "~icons/tabler/photo";
+export { default as IconVideo } from "~icons/tabler/video";
+export { default as IconBell } from "~icons/tabler/bell";
+export { default as IconStack2 } from "~icons/tabler/stack-2";
