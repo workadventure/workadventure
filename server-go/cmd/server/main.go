@@ -9,10 +9,13 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
+	"runtime/debug"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -48,8 +51,10 @@ func run() error {
 	if cfg.AdminAPIURL != "" {
 		return errors.New("ADMIN_API_URL is set, but this server only supports the OSS mode (LocalAdmin) so far")
 	}
-	// Go follows the container's CPU limit (cgroup) for GOMAXPROCS since 1.25: log it so a deployment can check.
-	slog.Info("starting", "version", version, "apiVersion", apiVersion, "GOMAXPROCS", runtime.GOMAXPROCS(0), "NumCPU", runtime.NumCPU())
+	// Go follows the container's CPU limit (cgroup) for GOMAXPROCS since 1.25 (with a floor of 2), but not its
+	// memory limit: give that one to the garbage collector ourselves. Both are logged so a deployment can check.
+	slog.Info("starting", "version", version, "apiVersion", apiVersion, "GOMAXPROCS", runtime.GOMAXPROCS(0),
+		"NumCPU", runtime.NumCPU(), "GOMEMLIMIT", setMemoryLimit())
 
 	adm, err := admin.NewLocal(cfg)
 	if err != nil {
@@ -79,8 +84,11 @@ func run() error {
 		servers = append(servers, &http.Server{Addr: ":" + strconv.Itoa(cfg.WSPort), Handler: handler})
 	}
 	if cfg.PrometheusPort != 0 {
+		// The dedicated metrics port is internal: it also serves the Go profiler.
 		mux := http.NewServeMux()
 		mux.Handle("GET /metrics", metrics.Handler(true, cfg.PrometheusToken))
+		mux.HandleFunc("/debug/pprof/", pprof.Index)
+		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 		servers = append(servers, &http.Server{Addr: ":" + strconv.Itoa(cfg.PrometheusPort), Handler: mux})
 	}
 	errs := make(chan error, len(servers))
@@ -112,4 +120,18 @@ func logLevel() slog.Level {
 		return slog.LevelDebug
 	}
 	return slog.LevelInfo
+}
+
+// setMemoryLimit sets the soft memory limit of the garbage collector to 90% of the container's limit (cgroup v2),
+// unless GOMEMLIMIT is set. Without it, the heap may outgrow the container before a collection runs and the
+// kernel kills the process. It returns the limit in bytes (math.MaxInt64: none).
+func setMemoryLimit() int64 {
+	if os.Getenv("GOMEMLIMIT") == "" {
+		if b, err := os.ReadFile("/sys/fs/cgroup/memory.max"); err == nil {
+			if n, err := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64); err == nil { // "max": no limit
+				debug.SetMemoryLimit(n / 10 * 9)
+			}
+		}
+	}
+	return debug.SetMemoryLimit(-1)
 }

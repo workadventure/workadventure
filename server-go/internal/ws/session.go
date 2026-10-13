@@ -213,7 +213,7 @@ func (s *Session) emit(build func(nonce uint32) []byte) {
 	s.nonce++
 	frame := build(s.nonce)
 	s.mu.Lock()
-	s.store.add(s.nonce, frame, time.Now())
+	frame = s.store.add(s.nonce, frame, time.Now()) // write the stored copy: the built one is garbage at once
 	conn := s.cur
 	s.mu.Unlock()
 	if conn != nil {
