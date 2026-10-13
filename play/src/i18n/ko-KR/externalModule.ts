@@ -130,7 +130,25 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
     },
     todoList: {
         title: "할 일",
-        sentence: "휴식을 취하세요 🙏 커피나 차 한 잔 어떠세요? ☕",
+        forToday: "오늘 할 일",
+        overdueCount: "{count}개 지연",
+        todayCount: "{count}개 오늘",
+        nextSevenDays: "다음 7일",
+        later: "나중에",
+        noDueDate: "마감일 없음",
+        taskCount: "작업 {count}개",
+        completedCount: "{count}개 완료",
+        inProgress: "진행 중",
+        allLists: "전체",
+        lists: "목록",
+        noTasks: "할 일이 없습니다",
+        hasNote: "메모 있음",
+        recurrence: {
+            daily: "매일",
+            weekly: "매주",
+            monthly: "매월",
+            yearly: "매년",
+        },
     },
 };
 

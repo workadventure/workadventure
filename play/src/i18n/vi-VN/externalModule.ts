@@ -129,7 +129,25 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
     },
     todoList: {
         title: "Việc cần làm",
-        sentence: "Nghỉ một chút đi 🙏 làm tách cà phê hay trà nhé? ☕",
+        forToday: "Cho hôm nay",
+        overdueCount: "{count} quá hạn",
+        todayCount: "{count} hôm nay",
+        nextSevenDays: "7 ngày tới",
+        later: "Sau này",
+        noDueDate: "Không có hạn",
+        taskCount: "{count} việc",
+        completedCount: "{count} đã xong",
+        inProgress: "Đang làm",
+        allLists: "Tất cả",
+        lists: "Danh sách",
+        noTasks: "Không có việc gì",
+        hasNote: "Có ghi chú",
+        recurrence: {
+            daily: "Hằng ngày",
+            weekly: "Hằng tuần",
+            monthly: "Hằng tháng",
+            yearly: "Hằng năm",
+        },
     },
 };
 

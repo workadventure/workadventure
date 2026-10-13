@@ -132,7 +132,25 @@ const externalModule: BaseTranslation = {
     },
     todoList: {
         title: "To Do",
-        sentence: "Take a break 🙏 maybe have a coffee or tea? ☕",
+        forToday: "For today",
+        overdueCount: "{count:number} overdue",
+        todayCount: "{count:number} today",
+        nextSevenDays: "Next 7 days",
+        later: "Later",
+        noDueDate: "No due date",
+        taskCount: "{count:number} task{{s}}",
+        completedCount: "{count:number} completed",
+        inProgress: "In progress",
+        allLists: "All",
+        lists: "Lists",
+        noTasks: "Nothing to do",
+        hasNote: "Has a note",
+        recurrence: {
+            daily: "Every day",
+            weekly: "Every week",
+            monthly: "Every month",
+            yearly: "Every year",
+        },
     },
 };
 

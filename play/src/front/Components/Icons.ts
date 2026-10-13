@@ -67,6 +67,8 @@ export { default as IconInbox } from "~icons/tabler/mailbox";
 export { default as IconApps } from "~icons/tabler/apps";
 export { default as IconAppWindow } from "~icons/tabler/app-window";
 export { default as IconRefresh } from "~icons/tabler/refresh";
+export { default as IconRepeat } from "~icons/tabler/repeat";
+export { default as IconNotes } from "~icons/tabler/notes";
 export { default as IconCalendar } from "~icons/tabler/calendar";
 export { default as IconTeams } from "~icons/tabler/brand-teams";
 export { default as IconMusic } from "~icons/tabler/music";

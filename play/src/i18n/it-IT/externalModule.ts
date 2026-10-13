@@ -132,7 +132,25 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
     },
     todoList: {
         title: "Da fare",
-        sentence: "Fai una pausa 🙏 magari un caffè o un tè? ☕",
+        forToday: "Per oggi",
+        overdueCount: "{count} in ritardo",
+        todayCount: "{count} per oggi",
+        nextSevenDays: "Prossimi 7 giorni",
+        later: "Più tardi",
+        noDueDate: "Senza scadenza",
+        taskCount: "{count} attività",
+        completedCount: "{count} {{completata|completate}}",
+        inProgress: "In corso",
+        allLists: "Tutte",
+        lists: "Elenchi",
+        noTasks: "Niente da fare",
+        hasNote: "Con una nota",
+        recurrence: {
+            daily: "Ogni giorno",
+            weekly: "Ogni settimana",
+            monthly: "Ogni mese",
+            yearly: "Ogni anno",
+        },
     },
 };
 

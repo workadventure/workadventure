@@ -131,7 +131,25 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
     },
     todoList: {
         title: "Tuchylu cyniś",
-        sentence: "Mějśo pauzu 🙏 snaź kafe abo tšoj? ☕",
+        forToday: "Za źinsa",
+        overdueCount: "Zakašnjone: {count}",
+        todayCount: "Źinsa: {count}",
+        nextSevenDays: "Pśiducych 7 dnjow",
+        later: "Pózdźej",
+        noDueDate: "Bźez termina",
+        taskCount: "Nadawki: {count}",
+        completedCount: "Dokóńcone: {count}",
+        inProgress: "Wobźěłujo se",
+        allLists: "Wšykne",
+        lists: "Lisćiny",
+        noTasks: "Nic njejo cyniś",
+        hasNote: "Z noticu",
+        recurrence: {
+            daily: "Kuždy źeń",
+            weekly: "Kuždy tyźeń",
+            monthly: "Kuždy mjasec",
+            yearly: "Kužde lěto",
+        },
     },
 };
 
