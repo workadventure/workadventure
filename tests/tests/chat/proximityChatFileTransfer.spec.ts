@@ -68,4 +68,53 @@ test.describe("Proximity chat file transfer @nomobile @nowebkit", () => {
         await expect(recipientRow("Bob")).toContainText("Received");
         await expect(recipientRow("Charlie")).toContainText("Received");
     });
+
+    test("should hold back files picked before the chat grew past the user limit", async ({ browser }) => {
+        // Given Alice's limit is lowered to 2 people (the front reads it from window.env),
+        // so that a third person is enough to go over it.
+        const mapUrl = publicTestMapUrl("tests/E2E/empty.json", "proximity_file_transfer_limit");
+        await using alice = await getPage(browser, "Alice", mapUrl, {
+            pageCreatedHook: (page) =>
+                page.addInitScript(() => {
+                    let env: unknown;
+                    Object.defineProperty(window, "env", {
+                        configurable: true,
+                        get: () => env,
+                        set: (value: object) => {
+                            env = { ...value, PROXIMITY_FILE_TRANSFER_MAX_USERS: 2 };
+                        },
+                    });
+                }),
+        });
+        await Map.teleportToPosition(alice, 160, 160);
+        await using bob = await getPage(browser, "Bob", mapUrl);
+        await Map.teleportToPosition(bob, 160, 160);
+        await expectInBubbleWith(alice, ["Bob"]);
+        await ChatUtils.openProximityRoom(alice);
+
+        // And Alice picks a file while the two of them are alone.
+        const fileChooserPromise = alice.waitForEvent("filechooser");
+        await alice.getByTestId("addApplicationButton").click();
+        await alice.getByTestId("fileAttachmentButton").click();
+        const fileChooser = await fileChooserPromise;
+        await fileChooser.setFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("hello") });
+        await expect(alice.getByTestId("fileError")).toHaveCount(0);
+        await expect(alice.getByTestId("sendMessageButton")).toBeEnabled();
+
+        // When Charlie joins before she sends it.
+        await using charlie = await getPage(browser, "Charlie", mapUrl);
+        await Map.teleportToPosition(charlie, 160, 160);
+
+        // Then the preview says why the file cannot go, and sending is blocked.
+        await expect(alice.getByTestId("fileError")).toHaveText(
+            "File sharing is only available with 2 people or fewer",
+            { timeout: 60_000 },
+        );
+        await expect(alice.getByTestId("sendMessageButton")).toBeDisabled();
+
+        // And once Charlie walks away, the file can be sent again.
+        await Map.teleportToPosition(charlie, 400, 400);
+        await expect(alice.getByTestId("fileError")).toHaveCount(0, { timeout: 60_000 });
+        await expect(alice.getByTestId("sendMessageButton")).toBeEnabled();
+    });
 });

@@ -141,7 +141,11 @@
     let tooLargeFileIds = $derived(
         new Set(files.filter(({ file }) => fileValidation.tooLargeFiles.includes(file)).map(({ id }) => id)),
     );
-    let fileErrors = $derived([
+    let fileErrors: { title: string; hint?: string }[] = $derived([
+        // The chat can grow past the limit after the files were picked.
+        ...(tooManyUsersForFiles
+            ? [{ title: $LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS }) }]
+            : []),
         ...(fileValidation.tooLargeFiles.length > 0
             ? [
                   {
@@ -244,12 +248,7 @@
                 filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
             } catch (error) {
                 console.error(error);
-                warningMessageStore.addWarningMessage(
-                    tooManyUsersForFiles
-                        ? $LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS })
-                        : $LL.chat.failedToSendAttachments(),
-                    { closable: true },
-                );
+                warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), { closable: true });
             } finally {
                 // A second send cannot start while this guarded upload is in progress.
                 // eslint-disable-next-line require-atomic-updates
@@ -652,7 +651,9 @@
                     <IconAlertTriangle class="mt-0.5 shrink-0 text-danger-200" font-size={16} />
                     <div class="leading-snug">
                         <div class="font-bold">{fileError.title}</div>
-                        <div class="text-white/85">{fileError.hint}</div>
+                        {#if fileError.hint}
+                            <div class="text-white/85">{fileError.hint}</div>
+                        {/if}
                     </div>
                 </div>
             {/each}
