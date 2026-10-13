@@ -155,7 +155,15 @@
             </AvatarBox>
         {/if}
 
-        <div class="flex flex-col justify-end max-w-full {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
+        <!-- Without a header, the avatar is left out: keep its column so the bubble lines up with the one above.
+             Our own messages never show an avatar, so they have no column to keep. -->
+        <div
+            class="flex flex-col justify-end max-w-full {replyDepth === 0 &&
+            !showHeader &&
+            (!isMyMessage || isQuotedMessage)
+                ? 'ml-12'
+                : ''}"
+        >
             {#if replyDepth <= 0 && showHeader}
                 <div
                     class="w-full h-fit text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
