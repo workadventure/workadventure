@@ -283,7 +283,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingAttachment: "Pśiłožk se zacytujo...",
         remainingTime: "hyšći ~{time}",
         recipient: {
-            waiting: "Hyšći njeakceptěrowane",
+            waiting: "Caka",
+            summary: "Dostane: {received} z {total}",
+            pending: "Hyšći njeakceptěrowane: {pending}",
             sending: "Sćelo se",
             received: "Dostane",
             declined: "Wótpokazane",

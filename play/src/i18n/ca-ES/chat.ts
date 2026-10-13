@@ -282,7 +282,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingAttachment: "S'està carregant el fitxer adjunt...",
         remainingTime: "queden ~{time}",
         recipient: {
-            waiting: "Encara no acceptat",
+            waiting: "En espera",
+            summary: "Rebut per {received} de {total}",
+            pending: "{pending} encara no {{ha|han}} acceptat",
             sending: "S'està enviant",
             received: "Rebut",
             declined: "Rebutjat",

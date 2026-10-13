@@ -430,6 +430,8 @@ export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | 
 export type ChatAttachmentRecipient = {
     spaceUserId: string;
     name: string;
+    pictureStore: PictureStore | undefined;
+    color: string | undefined;
     state: "waiting" | "sending" | "received" | "declined" | "failed";
     progress: number;
 };

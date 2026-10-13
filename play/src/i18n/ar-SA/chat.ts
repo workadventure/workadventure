@@ -281,7 +281,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingAttachment: "Loading attachment...",
         remainingTime: "متبقٍ ~{time}",
         recipient: {
-            waiting: "لم يُقبل بعد",
+            waiting: "في الانتظار",
+            summary: "استلمه {received} من {total}",
+            pending: "بانتظار القبول: {pending}",
             sending: "جارٍ الإرسال",
             received: "تم الاستلام",
             declined: "مرفوض",

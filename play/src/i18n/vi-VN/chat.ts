@@ -282,7 +282,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingAttachment: "Đang tải tệp đính kèm...",
         remainingTime: "còn ~{time}",
         recipient: {
-            waiting: "Chưa chấp nhận",
+            waiting: "Đang chờ",
+            summary: "{received}/{total} người đã nhận",
+            pending: "Còn {pending} người chưa chấp nhận",
             sending: "Đang gửi",
             received: "Đã nhận",
             declined: "Đã từ chối",

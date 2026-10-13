@@ -280,7 +280,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingAttachment: "正在載入附件...",
         remainingTime: "剩餘約 {time}",
         recipient: {
-            waiting: "尚未接受",
+            waiting: "等待中",
+            summary: "{total} 人中 {received} 人已接收",
+            pending: "還有 {pending} 人未接受",
             sending: "傳送中",
             received: "已接收",
             declined: "已拒絕",

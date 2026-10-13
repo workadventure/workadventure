@@ -283,7 +283,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingAttachment: "Bijlage laden...",
         remainingTime: "nog ~{time}",
         recipient: {
-            waiting: "Nog niet geaccepteerd",
+            waiting: "Wacht",
+            summary: "Ontvangen door {received} van {total}",
+            pending: "{pending} {{moet|moeten}} nog accepteren",
             sending: "Bezig met verzenden",
             received: "Ontvangen",
             declined: "Geweigerd",

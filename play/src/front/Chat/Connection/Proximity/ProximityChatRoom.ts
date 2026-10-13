@@ -503,6 +503,8 @@ export class ProximityChatRoom implements ChatRoom {
                 recipients.map((user) => ({
                     spaceUserId: user.spaceUserId,
                     name: user.name,
+                    pictureStore: user.pictureStore,
+                    color: user.color,
                     state: "waiting",
                     progress: 0,
                 })),

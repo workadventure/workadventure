@@ -284,7 +284,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingAttachment: "첨부 파일을 불러오는 중...",
         remainingTime: "약 {time} 남음",
         recipient: {
-            waiting: "아직 수락하지 않음",
+            waiting: "대기 중",
+            summary: "{total}명 중 {received}명 수신",
+            pending: "{pending}명이 아직 수락하지 않음",
             sending: "전송 중",
             received: "받음",
             declined: "거절됨",

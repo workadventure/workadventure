@@ -282,7 +282,9 @@ const chat: BaseTranslation = {
         loadingAttachment: "Loading attachment...",
         remainingTime: "~{time} left",
         recipient: {
-            waiting: "Not accepted yet",
+            waiting: "Waiting",
+            summary: "Received by {received} of {total}",
+            pending: "{pending} still {{has|have}} to accept",
             sending: "Sending",
             received: "Received",
             declined: "Declined",
