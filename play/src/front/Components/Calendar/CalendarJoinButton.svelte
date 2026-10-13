@@ -2,6 +2,7 @@
     import type { CalendarEventInterface } from "@workadventure/shared-utils";
     import Button from "../UI/Button.svelte";
     import LL from "../../../i18n/i18n-svelte";
+    import { scriptUtils } from "../../Api/ScriptUtils";
     import { IconDoorIn, IconVideo } from "@wa-icons";
 
     interface Props {
@@ -18,6 +19,12 @@
     let { event, prominent = false, labelled = false, class: className = "", onjoin }: Props = $props();
 
     let meeting = $derived(event.resource?.onlineMeeting);
+
+    // The way a website set to open in a new tab opens (map areas, chat links, WA.nav.openTab).
+    function join() {
+        if (meeting?.joinUrl) scriptUtils.openTab(meeting.joinUrl);
+        onjoin?.();
+    }
 </script>
 
 {#if meeting?.joinUrl}
@@ -35,43 +42,24 @@
             {$LL.externalModule.calendar.goThere()}
         </Button>
     {:else if prominent}
-        <Button
-            href={meeting.joinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="secondary"
-            class={className}
-            onclick={onjoin}
-        >
+        <Button variant="secondary" class={className} onclick={join}>
             {#snippet icon()}<IconVideo class="h-5 w-5" />{/snippet}
             {$LL.externalModule.calendar.join()}
         </Button>
     {:else if labelled}
-        <Button
-            href={meeting.joinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="light"
-            appearance="border"
-            size="sm"
-            class={className}
-            onclick={onjoin}
-        >
+        <Button variant="light" appearance="border" size="sm" class={className} onclick={join}>
             {#snippet icon()}<IconVideo class="h-4 w-4" />{/snippet}
             {$LL.externalModule.calendar.join()}
         </Button>
     {:else}
         <Button
-            href={meeting.joinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
             variant="light"
             appearance="ghost"
             size="sm"
             square
             aria-label={`${$LL.externalModule.calendar.join()} · ${event.title}`}
             class={className}
-            onclick={onjoin}
+            onclick={join}
         >
             {#snippet icon()}<IconVideo class="h-4 w-4" />{/snippet}
         </Button>
