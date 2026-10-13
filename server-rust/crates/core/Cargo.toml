@@ -1,0 +1,12 @@
+[package]
+name = "wa-core"
+description = "WorkAdventure business core: rooms, positions, zones, bubbles, spaces. No transport, no protobuf, no I/O."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true
