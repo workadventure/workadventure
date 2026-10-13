@@ -13,8 +13,9 @@ export function openMeeting(event: CalendarEventInterface): boolean {
 
     let opened = false;
     for (const extensionModule of get(extensionModuleStore).values()) {
-        if (!extensionModule?.openPopupMeeting) continue;
-        extensionModule.openPopupMeeting(
+        // A module that has openPopupMeeting may still not handle this meeting (the Teams module, for a Google Meet
+        // link or outside a Teams area): only its answer says whether the link must be cancelled.
+        const handled = extensionModule?.openPopupMeeting?.(
             event.title,
             joinUrl,
             event.id,
@@ -22,7 +23,7 @@ export function openMeeting(event: CalendarEventInterface): boolean {
             event.end,
             event.resource?.onlineMeeting?.passcode,
         );
-        opened = true;
+        if (handled === true) opened = true;
     }
     return opened;
 }

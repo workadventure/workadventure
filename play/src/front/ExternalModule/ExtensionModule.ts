@@ -60,6 +60,10 @@ export interface ExtensionModule {
     destroy: () => void;
     areaMapEditor?: () => { [key: string]: ExtensionModuleAreaProperty } | undefined;
     components?: () => WorkAdventureComponent[];
+    /**
+     * Opens the meeting the module's own way. Returns true only when it did: anything else lets the agenda follow
+     * the meeting's link, so a module must never swallow a meeting it cannot open (another provider's link, say).
+     */
     openPopupMeeting?: (
         subject: string,
         joinWebUrl: string,
@@ -67,7 +71,7 @@ export interface ExtensionModule {
         startDateTime: Date,
         endDateTime: Date,
         passcode?: string,
-    ) => void;
+    ) => boolean | void;
     calendarSynchronised: boolean;
     todoListSynchronized: boolean;
 }
