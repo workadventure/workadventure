@@ -3,6 +3,8 @@
     import Button from "../UI/Button.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { scriptUtils } from "../../Api/ScriptUtils";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { urlManager } from "../../Url/UrlManager";
     import { IconDoorIn, IconVideo } from "@wa-icons";
 
     interface Props {
@@ -25,18 +27,35 @@
         if (meeting?.joinUrl) scriptUtils.openTab(meeting.joinUrl);
         onjoin?.();
     }
+
+    // A meeting in this WorkAdventure: walk to its area, or travel to its map, without reloading the page.
+    function goThere(clickEvent: MouseEvent) {
+        onjoin?.();
+        if (!meeting?.joinUrl) return;
+        const url = new URL(meeting.joinUrl);
+        // Another WorkAdventure, or a link the module could not resolve (the admin's redirect): follow it.
+        if (url.origin !== window.location.origin) return;
+        clickEvent.preventDefault();
+        const scene = gameManager.getCurrentGameScene();
+        if (url.pathname === window.location.pathname) {
+            urlManager.pushStartLayerNameToUrl(url.hash);
+            scene.tryMovePlayerWithMoveToParameter();
+        } else {
+            scene.onMapExit(url).catch((e) => console.error(e));
+        }
+    }
 </script>
 
 {#if meeting?.joinUrl}
     {#if meeting.isWorkAdventure}
-        <!-- The meeting takes place in a room of this world: follow the link in place, not in a new tab. -->
+        <!-- The meeting takes place in a room of this WorkAdventure: go there in place, not in a new tab. -->
         <Button
             href={meeting.joinUrl}
             variant={prominent ? "secondary" : "light"}
             appearance={prominent ? "filled" : "border"}
             size={prominent ? undefined : "sm"}
             class={className}
-            onclick={onjoin}
+            onclick={goThere}
         >
             {#snippet icon()}<IconDoorIn class="h-4 w-4" />{/snippet}
             {$LL.externalModule.calendar.goThere()}

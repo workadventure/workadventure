@@ -3943,8 +3943,10 @@ ${escapedMessage}
      * - if not, to the WAM area with the given name
      * - if not found, to the Tiled area with the given name
      * - if not found, to the Tiled layer with the given name
+     *
+     * Also called without a reload, by the agenda's "Go there" for a meeting in the current map.
      */
-    private tryMovePlayerWithMoveToParameter(): void {
+    public tryMovePlayerWithMoveToParameter(): void {
         const moveToParam = urlManager.getHashParameter("moveTo");
         if (moveToParam) {
             try {
