@@ -2,7 +2,7 @@
     import { onDestroy, onMount } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import logoImg from "../images/logo.svg";
-    import bgMap from "../images/map-exemple.png";
+    import bgMap from "../images/map-exemple.webp";
     import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";
     import pwaDefaultBackground from "../images/pwa-background-image.jpg";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -18,8 +18,8 @@
     import Button from "../UI/Button.svelte";
     import { IconApps, IconAppWindow, IconHistory } from "@wa-icons";
 
-    let logo = $state(logoImg);
-    let sceneBg = $state(bgMap);
+    const logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
+    const sceneBg = gameManager.currentStartedRoom.backgroundSceneImage ?? bgMap;
 
     let neverShowAgain = $state(false);
     let unsubscribePwa: (() => void) | undefined;
@@ -27,19 +27,6 @@
     onMount(() => {
         unsubscribePwa = initPwaInstallUiListeners();
         analyticsClient.trackAdminEvent("pwa.install_prompt_shown", { isIos: detectIos() });
-
-        gameManager.currentStartedRoomPromise
-            .then((room) => {
-                if (room.loginSceneLogo) {
-                    logo = room.loginSceneLogo;
-                }
-                if (room.backgroundSceneImage) {
-                    sceneBg = room.backgroundSceneImage;
-                }
-            })
-            .catch((e) => {
-                console.error("Error while loading current room for PWA install screen", e);
-            });
     });
 
     onDestroy(() => {

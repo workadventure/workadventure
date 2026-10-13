@@ -28,8 +28,6 @@
     import MapDeletedPrompt from "./MapDeletedPrompt.svelte";
     import LoaderScene from "./Loader/LoaderScene.svelte";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
-    import bgMap from "./images/map-exemple.png";
-    import defaultLoader from "./images/Workadventure.gif";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
     import MainModal from "./Modal/MainModal.svelte";
@@ -44,10 +42,6 @@
 
     let { game }: Props = $props();
 </script>
-
-<!-- Preload image loader TODO HUGO : Better way ? -->
-<link rel="preload" as="image" href={bgMap} />
-<link rel="preload" as="image" href={defaultLoader} />
 
 {#if $loaderVisibleStore}
     <div class="bg-contrast">
