@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -37,6 +36,8 @@ var (
 	version  = flag.String("version", "dev", "apiVersionHash of the server")
 )
 
+const histogramMax = 60_000
+
 // A bot walks back and forth on a 64-pixel segment: its x tells which of its last 64 moves another bot sees.
 const track = 64
 
@@ -51,15 +52,16 @@ type bot struct {
 }
 
 type stats struct {
-	measuring  atomic.Bool
-	moves      atomic.Int64
-	frames     atomic.Int64
-	subs       atomic.Int64
-	userMoves  atomic.Int64
-	errors     atomic.Int64
-	joined     atomic.Int64
-	latMu      sync.Mutex
-	latencies  []time.Duration
+	measuring atomic.Bool
+	moves     atomic.Int64
+	frames    atomic.Int64
+	subs      atomic.Int64
+	userMoves atomic.Int64
+	errors    atomic.Int64
+	joined    atomic.Int64
+	// Latency histogram in milliseconds (the last bucket holds everything above). Fixed size: storing millions of
+	// samples made the generator's own garbage collection show up in the latencies it measures.
+	latency    [histogramMax + 1]atomic.Int64
 	byRoomMu   sync.RWMutex
 	byRoomUser map[[2]int32]*bot
 }
@@ -93,12 +95,18 @@ func main() {
 	cancel()
 	wg.Wait()
 
-	slices.Sort(st.latencies)
+	var total int64
+	for i := range st.latency {
+		total += st.latency[i].Load()
+	}
 	q := func(p float64) float64 {
-		if len(st.latencies) == 0 {
-			return 0
+		rank, seen := int64(p*float64(total-1)), int64(0) // 0-based rank of the sample
+		for ms := range st.latency {
+			if seen += st.latency[ms].Load(); seen > rank {
+				return float64(ms)
+			}
 		}
-		return float64(st.latencies[int(p*float64(len(st.latencies)-1))].Microseconds()) / 1000
+		return 0
 	}
 	out, _ := json.Marshal(map[string]any{
 		"bots": *rooms * *users, "joined": st.joined.Load(), "rooms": *rooms, "errors": st.errors.Load(),
@@ -109,7 +117,7 @@ func main() {
 		"latency_ms_p50":    q(0.50),
 		"latency_ms_p99":    q(0.99),
 		"latency_ms_max":    q(1),
-		"latency_samples":   len(st.latencies),
+		"latency_samples":   total,
 	})
 	fmt.Println(string(out))
 }
@@ -222,7 +230,6 @@ func (b *bot) read(ctx context.Context, st *stats, joined chan struct{}) error {
 			continue
 		}
 		st.subs.Add(int64(len(batch.Payload)))
-		var lat []time.Duration
 		for _, s := range batch.Payload {
 			mv := s.GetUserMovedMessage()
 			if mv == nil {
@@ -240,13 +247,8 @@ func (b *bot) read(ctx context.Context, st *stats, joined chan struct{}) error {
 				continue
 			}
 			if sent := sender.sentAt[i].Load(); sent != 0 {
-				lat = append(lat, now.Sub(time.Unix(0, sent)))
+				st.latency[min(now.Sub(time.Unix(0, sent)).Milliseconds(), histogramMax)].Add(1)
 			}
-		}
-		if len(lat) > 0 {
-			st.latMu.Lock()
-			st.latencies = append(st.latencies, lat...)
-			st.latMu.Unlock()
 		}
 	}
 }
