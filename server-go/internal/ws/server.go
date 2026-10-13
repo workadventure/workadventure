@@ -26,12 +26,13 @@ type Server struct {
 	auth       *auth.Manager
 	admin      admin.Admin
 	rooms      *registry.Refs[string, *core.Room]
+	spaces     *registry.Refs[core.SpaceKey, *core.Space]
 	retained   *registry.Map[string, *Session] // by connectionId, for transport resumes
 	apiVersion string
 }
 
-func NewServer(cfg *config.Config, a *auth.Manager, adm admin.Admin, rooms *registry.Refs[string, *core.Room], apiVersion string) *Server {
-	return &Server{cfg: cfg, auth: a, admin: adm, rooms: rooms, retained: registry.New[string, *Session](), apiVersion: apiVersion}
+func NewServer(cfg *config.Config, a *auth.Manager, adm admin.Admin, rooms *registry.Refs[string, *core.Room], spaces *registry.Refs[core.SpaceKey, *core.Space], apiVersion string) *Server {
+	return &Server{cfg: cfg, auth: a, admin: adm, rooms: rooms, spaces: spaces, retained: registry.New[string, *Session](), apiVersion: apiVersion}
 }
 
 func acceptOptions(protocol string) *websocket.AcceptOptions {
@@ -114,7 +115,7 @@ func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	s := newSession(srv, sessionInfo{
 		token: token, roomID: q.Get("roomId"), connectionID: q.Get("connectionId"), tabID: q.Get("tabId"),
-		userUUID: member.UserUUID, ipAddress: clientIP(r), isLogged: tok.AccessToken != "", member: member, chatID: q.Get("chatID"),
+		userUUID: member.UserUUID, ipAddress: clientIP(r), isLogged: tok.AccessToken != "", member: member, chatID: q.Get("chatID"), roomName: q.Get("roomName"),
 	})
 	if id := s.info.connectionID; id != "" {
 		srv.retained.Compute(id, func(*Session, bool) (*Session, bool) { return s, true })

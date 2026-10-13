@@ -84,6 +84,27 @@ func (r *Room) LockGroup(ctx context.Context, p Peer, lock bool) error {
 	})
 }
 
+// AskPosition asks where another player is, by uuid (and room id, for a player connected twice). The answer is
+// MoveToPosition, or LocatePosition if locate is true. Nothing comes back if the player is not in the room.
+func (r *Room) AskPosition(ctx context.Context, p Peer, uuid string, userID *int32, locate bool) error {
+	return r.a.Post(ctx, func() {
+		target := r.s.firstByUUID[uuid]
+		if target == nil {
+			return
+		}
+		if userID != nil {
+			if byID := r.s.users[*userID]; byID != nil {
+				target = byID
+			}
+		}
+		if locate {
+			p.Send(NewMsg(LocatePosition{Position: target.pos, UserID: target.id, UUID: target.uuid}, false))
+		} else {
+			p.Send(NewMsg(MoveToPosition{Position: target.pos}, false))
+		}
+	})
+}
+
 // Stats is a consistent snapshot of a room, for metrics and tests.
 type Stats struct {
 	Users, Groups, Zones int
@@ -106,33 +127,35 @@ func (r *Room) Stats(ctx context.Context) (Stats, error) {
 
 // state is owned by the room's goroutine: no lock.
 type state struct {
-	url        string
-	cfg        Config
-	users      map[int32]*user
-	byPeer     map[Peer]*user
-	countUUID  map[string]int
-	byTab      map[string]*user
-	groups     map[int32]*group
-	userIndex  *spatialIndex[*user]
-	groupIndex *spatialIndex[*group]
-	zones      map[zoneKey]*zone
-	nextUserID int32
+	url         string
+	cfg         Config
+	users       map[int32]*user
+	byPeer      map[Peer]*user
+	countUUID   map[string]int
+	firstByUUID map[string]*user // the first connection of each uuid still in the room (getUserByUuid)
+	byTab       map[string]*user
+	groups      map[int32]*group
+	userIndex   *spatialIndex[*user]
+	groupIndex  *spatialIndex[*group]
+	zones       map[zoneKey]*zone
+	nextUserID  int32
 }
 
 func newState(url string, cfg Config) *state {
 	cell := float64(max(cfg.MinimumDistance, cfg.GroupRadius, 1))
 	return &state{
-		url:        url,
-		cfg:        cfg,
-		users:      map[int32]*user{},
-		byPeer:     map[Peer]*user{},
-		countUUID:  map[string]int{},
-		byTab:      map[string]*user{},
-		groups:     map[int32]*group{},
-		userIndex:  newSpatialIndex[*user](cell),
-		groupIndex: newSpatialIndex[*group](cell),
-		zones:      map[zoneKey]*zone{},
-		nextUserID: 1,
+		url:         url,
+		cfg:         cfg,
+		users:       map[int32]*user{},
+		byPeer:      map[Peer]*user{},
+		countUUID:   map[string]int{},
+		firstByUUID: map[string]*user{},
+		byTab:       map[string]*user{},
+		groups:      map[int32]*group{},
+		userIndex:   newSpatialIndex[*user](cell),
+		groupIndex:  newSpatialIndex[*group](cell),
+		zones:       map[zoneKey]*zone{},
+		nextUserID:  1,
 	}
 }
 
@@ -193,6 +216,9 @@ func (s *state) join(p Peer, req JoinRequest) {
 	s.users[u.id] = u
 	s.byPeer[p] = u
 	s.countUUID[u.uuid]++
+	if s.firstByUUID[u.uuid] == nil {
+		s.firstByUUID[u.uuid] = u
+	}
 	if u.tabID != "" {
 		s.byTab[tabKey] = u
 	}
@@ -213,6 +239,15 @@ func (s *state) leave(u *user) {
 	delete(s.byPeer, u.peer)
 	if s.countUUID[u.uuid]--; s.countUUID[u.uuid] <= 0 {
 		delete(s.countUUID, u.uuid)
+	}
+	if s.firstByUUID[u.uuid] == u {
+		delete(s.firstByUUID, u.uuid)
+		for _, other := range s.users {
+			if other.uuid == u.uuid {
+				s.firstByUUID[u.uuid] = other
+				break
+			}
+		}
 	}
 	if u.tabID != "" && s.byTab[u.uuid+"_"+u.tabID] == u {
 		delete(s.byTab, u.uuid+"_"+u.tabID)

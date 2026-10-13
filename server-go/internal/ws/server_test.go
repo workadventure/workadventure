@@ -41,7 +41,8 @@ func newHarness(t *testing.T) *harness {
 		return core.NewRoom(url, core.Config{MinimumDistance: 64, GroupRadius: 48, MaxPerGroup: 4})
 	},
 		func(r *core.Room) { r.Stop() })
-	h.srv = NewServer(cfg, h.auth, adm, h.rooms, "test-version")
+	spaces := registry.NewRefs(core.NewSpace, func(sp *core.Space) { sp.Stop() })
+	h.srv = NewServer(cfg, h.auth, adm, h.rooms, spaces, "test-version")
 	h.http = httptest.NewServer(h.srv)
 	t.Cleanup(h.http.Close)
 	return h
@@ -61,6 +62,12 @@ type client struct {
 func (h *harness) dial(name, connectionID string, extra url.Values) *client {
 	h.t.Helper()
 	token, _ := h.auth.Create(auth.Token{Identifier: name})
+	return h.dialWithToken(token, name, connectionID, extra)
+}
+
+// dialWithToken is dial with a given token: a resume must present the token of the session it resumes.
+func (h *harness) dialWithToken(token, name, connectionID string, extra url.Values) *client {
+	h.t.Helper()
 	q := url.Values{"roomId": {roomURL}, "version": {"test-version"}, "chatID": {""}, "roomName": {"r"}, "cameraState": {"false"},
 		"microphoneState": {"false"}, "tabId": {"tab-" + name}, "characterTextureIds": {"male1"}, "connectionId": {connectionID}}
 	for k, v := range extra {
@@ -191,7 +198,7 @@ func TestResumeReplaysMissedFramesAndDropsDuplicates(t *testing.T) {
 	bob.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
 	time.Sleep(3 * batchDelay) // let the batch announcing Bob to Alice be sent into the void
 
-	resumed := h.dial("alice", "c-alice", url.Values{"lastReceivedNonce": {strconv.Itoa(int(alice.lastReceived))}})
+	resumed := h.dialWithToken(alice.token, "alice", "c-alice", url.Values{"lastReceivedNonce": {strconv.Itoa(int(alice.lastReceived))}})
 	resumed.lastReceived = alice.lastReceived
 	resumed.nonce = alice.nonce
 	// The front resends what it is not sure we received: the server must drop it (nonce already seen).
@@ -248,4 +255,46 @@ func mustRoom(t *testing.T, h *harness) *core.Room {
 		t.Fatal("no room")
 	}
 	return r
+}
+
+func (c *client) query(id int32, q *pb.QueryMessage) {
+	q.Id = id
+	c.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_QueryMessage{QueryMessage: q}})
+}
+
+func TestBubbleSpaceAnswersThenStartsWebRTC(t *testing.T) {
+	h := newHarness(t)
+	alice := h.dial("alice", "c-alice", nil)
+	alice.send(join(100, 100))
+	var bubble string
+	alice.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
+	bob := h.dial("bob", "c-bob", nil)
+	bob.send(join(110, 100))
+	bob.waitFor("the bubble space", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+		bubble = d.GetJoinSpaceRequestMessage().GetSpaceName()
+		return bubble != ""
+	})
+	alice.waitFor("the bubble space", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetJoinSpaceRequestMessage() != nil })
+
+	props := []string{"cameraState", "microphoneState", "screenSharingState"}
+	for i, c := range []*client{alice, bob} {
+		c.query(int32(10+i), &pb.QueryMessage{Query: &pb.QueryMessage_JoinSpaceQuery{JoinSpaceQuery: &pb.JoinSpaceQuery{SpaceName: bubble, PropertiesToSync: props}}})
+		c.waitFor("the join answer", func(d *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+			if s.GetPrivateEvent() != nil {
+				t.Fatal("a space message arrived before the join answer")
+			}
+			return strings.HasSuffix(d.GetAnswerMessage().GetJoinSpaceAnswer().GetSpaceUserId(), "_"+strconv.Itoa(int(c.userID)))
+		})
+		c.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_AddSpaceFilterMessage{AddSpaceFilterMessage: &pb.AddSpaceFilterMessage{
+			SpaceFilterMessage: &pb.SpaceFilterMessage{SpaceName: bubble}}}})
+	}
+	bob.waitFor("both members", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		return len(s.GetInitSpaceUsersMessage().GetUsers()) == 2
+	})
+	// Who initiates depends on which of the two filters the space processed last: either is fine.
+	alice.waitFor("the WebRTC start", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		start := s.GetPrivateEvent().GetSpaceEvent().GetWebRtcStartMessage()
+		return start != nil && start.GetUserId() == strings.Replace(start.GetUserId(), "_"+strconv.Itoa(int(alice.userID)), "", 1) &&
+			s.GetPrivateEvent().GetSpaceName() == bubble
+	})
 }

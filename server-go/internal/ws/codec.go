@@ -65,6 +65,9 @@ func subMessage(ev any) *pb.SubMessage {
 	case ping:
 		return &pb.SubMessage{Message: &pb.SubMessage_PingMessage{PingMessage: &pb.PingMessage{}}}
 	}
+	if sub := spaceSubMessage(ev); sub != nil {
+		return sub
+	}
 	panic(fmt.Sprintf("ws: no SubMessage for %T", ev))
 }
 
@@ -76,6 +79,11 @@ func serverMessage(ev any) *pb.ServerToClientMessage {
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_LeaveSpaceRequestMessage{LeaveSpaceRequestMessage: &pb.LeaveSpaceRequestMessage{SpaceName: e.SpaceName}}}
 	case core.DuplicateUserConnected:
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_DuplicateUserConnectedMessage{DuplicateUserConnectedMessage: &pb.DuplicateUserConnectedMessage{}}}
+	case core.MoveToPosition:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_MoveToPositionMessage{MoveToPositionMessage: &pb.MoveToPositionMessage{Position: position(e.Position)}}}
+	case core.LocatePosition:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_LocatePositionMessage{LocatePositionMessage: &pb.LocatePositionMessage{
+			Position: position(e.Position), UserId: e.UserID, UserUuid: e.UUID}}}
 	case *pb.ServerToClientMessage: // built by the adapter itself (connection, answers, errors)
 		return e
 	}
