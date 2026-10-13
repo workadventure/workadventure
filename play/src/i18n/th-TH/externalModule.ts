@@ -128,7 +128,25 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
     },
     todoList: {
         title: "สิ่งที่ต้องทำ",
-        sentence: "พักสักหน่อย 🙏 ดื่มกาแฟหรือชาสักแก้วไหม? ☕",
+        forToday: "สำหรับวันนี้",
+        overdueCount: "เลยกำหนด {count} รายการ",
+        todayCount: "วันนี้ {count} รายการ",
+        nextSevenDays: "7 วันข้างหน้า",
+        later: "ภายหลัง",
+        noDueDate: "ไม่มีกำหนดส่ง",
+        taskCount: "{count} งาน",
+        completedCount: "เสร็จแล้ว {count} รายการ",
+        inProgress: "กำลังดำเนินการ",
+        allLists: "ทั้งหมด",
+        lists: "รายการ",
+        noTasks: "ไม่มีอะไรต้องทำ",
+        hasNote: "มีบันทึก",
+        recurrence: {
+            daily: "ทุกวัน",
+            weekly: "ทุกสัปดาห์",
+            monthly: "ทุกเดือน",
+            yearly: "ทุกปี",
+        },
     },
 };
 

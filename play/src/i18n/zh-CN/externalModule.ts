@@ -127,7 +127,25 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
     },
     todoList: {
         title: "待办事项",
-        sentence: "休息一下 🙏 也许来杯咖啡或茶？ ☕",
+        forToday: "今日待办",
+        overdueCount: "{count} 项逾期",
+        todayCount: "{count} 项今天",
+        nextSevenDays: "未来 7 天",
+        later: "稍后",
+        noDueDate: "无截止日期",
+        taskCount: "{count} 项任务",
+        completedCount: "{count} 项已完成",
+        inProgress: "进行中",
+        allLists: "全部",
+        lists: "列表",
+        noTasks: "没有待办事项",
+        hasNote: "有备注",
+        recurrence: {
+            daily: "每天",
+            weekly: "每周",
+            monthly: "每月",
+            yearly: "每年",
+        },
     },
 };
 

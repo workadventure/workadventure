@@ -131,7 +131,25 @@ const externalModule: BaseTranslation = {
     },
     todoList: {
         title: "A fazer",
-        sentence: "Faça uma pausa 🙏 talvez um café ou chá? ☕",
+        forToday: "Para hoje",
+        overdueCount: "{count} atrasada{{s}}",
+        todayCount: "{count} para hoje",
+        nextSevenDays: "Próximos 7 dias",
+        later: "Mais tarde",
+        noDueDate: "Sem prazo",
+        taskCount: "{count} tarefa{{s}}",
+        completedCount: "{count} concluída{{s}}",
+        inProgress: "Em andamento",
+        allLists: "Todas",
+        lists: "Listas",
+        noTasks: "Nada a fazer",
+        hasNote: "Com uma nota",
+        recurrence: {
+            daily: "Todo dia",
+            weekly: "Toda semana",
+            monthly: "Todo mês",
+            yearly: "Todo ano",
+        },
     },
 };
 
