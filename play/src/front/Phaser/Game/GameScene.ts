@@ -3936,50 +3936,57 @@ ${escapedMessage}
     }
 
     /**
-     * Analyze the #moveTo parameter in the URL.
-     * This function will try to move the player
+     * Analyze the #moveTo parameter in the URL and walk the player there (see walkToMoveTarget).
+     */
+    private tryMovePlayerWithMoveToParameter(): void {
+        const moveToParam = urlManager.getHashParameter("moveTo");
+        if (moveToParam && this.walkToMoveTarget(moveToParam)) {
+            urlManager.clearHashParameter();
+        }
+    }
+
+    /**
+     * Walk the player to a #moveTo target:
      *
      * - to the X,Y coordinates if this is X,Y coordinates
      * - if not, to the WAM area with the given name
      * - if not found, to the Tiled area with the given name
      * - if not found, to the Tiled layer with the given name
      *
-     * Also called without a reload, by the agenda's "Go there" for a meeting in the current map.
+     * Returns false when the target cannot be found. Also used by the agenda's "Go there", for a meeting in the
+     * current map, without going through the URL.
      */
-    public tryMovePlayerWithMoveToParameter(): void {
-        const moveToParam = urlManager.getHashParameter("moveTo");
-        if (moveToParam) {
-            try {
-                let endPos: { x: number; y: number };
-                const posFromParam = StringUtils.parsePointFromParam(moveToParam);
-                if (posFromParam) {
-                    endPos = posFromParam;
+    public walkToMoveTarget(target: string): boolean {
+        try {
+            let endPos: { x: number; y: number };
+            const posFromParam = StringUtils.parsePointFromParam(target);
+            if (posFromParam) {
+                endPos = posFromParam;
+            } else {
+                // First, try by id
+                let areaData = this.gameMapFrontWrapper.getAreas()?.get(target);
+                if (!areaData) {
+                    areaData = this.gameMapFrontWrapper.getAreaByName(target);
+                }
+                if (areaData) {
+                    endPos = MathUtils.randomPositionFromRect(areaData);
                 } else {
-                    // First, try by id
-                    let areaData = this.gameMapFrontWrapper.getAreas()?.get(moveToParam);
-                    if (!areaData) {
-                        areaData = this.gameMapFrontWrapper.getAreaByName(moveToParam);
-                    }
-                    if (areaData) {
-                        endPos = MathUtils.randomPositionFromRect(areaData);
+                    const destinationObject = this.gameMapFrontWrapper.getObjectWithName(target);
+                    if (destinationObject) {
+                        endPos = destinationObject;
                     } else {
-                        const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
-                        if (destinationObject) {
-                            endPos = destinationObject;
-                        } else {
-                            endPos = this.pathfindingManager.mapTileUnitToPixels(
-                                this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam),
-                            );
-                        }
+                        endPos = this.pathfindingManager.mapTileUnitToPixels(
+                            this.gameMapFrontWrapper.getRandomPositionFromLayer(target),
+                        );
                     }
                 }
-
-                this.moveTo(endPos, false, WOKA_SPEED * 2.5).catch((e) => console.warn(e));
-
-                urlManager.clearHashParameter();
-            } catch (err) {
-                console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
             }
+
+            this.moveTo(endPos, false, WOKA_SPEED * 2.5).catch((e) => console.warn(e));
+            return true;
+        } catch (err) {
+            console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
+            return false;
         }
     }
 

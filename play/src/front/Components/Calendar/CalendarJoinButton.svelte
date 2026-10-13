@@ -5,7 +5,6 @@
     import { scriptUtils } from "../../Api/ScriptUtils";
     import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { urlManager } from "../../Url/UrlManager";
     import { IconDoorIn, IconVideo } from "@wa-icons";
 
     interface Props {
@@ -39,13 +38,10 @@
         clickEvent.preventDefault();
         const scene = gameManager.getCurrentGameScene();
         if (url.pathname === window.location.pathname) {
-            if (url.hash) {
-                urlManager.pushStartLayerNameToUrl(url.hash);
-                scene.tryMovePlayerWithMoveToParameter();
-            } else {
-                // Already in the meeting's map, which has no area to walk to: just get the agenda out of the way.
-                isCalendarVisibleStore.set(false);
-            }
+            const target = new URLSearchParams(url.hash.slice(1)).get("moveTo");
+            if (target) scene.walkToMoveTarget(target);
+            // Already in the meeting's map, which has no area to walk to: just get the agenda out of the way.
+            else isCalendarVisibleStore.set(false);
         } else {
             scene.onMapExit(url).catch((e) => console.error(e));
         }
