@@ -22,6 +22,7 @@ use wa_core::room::UserId;
 use wa_core::user::Texture;
 use wa_proto::messages as pb;
 
+use crate::budget::Budget;
 use crate::metrics::METRICS;
 use crate::outbox::{CloseReason, Frame, Limits, Outbox};
 use crate::resume::{ResumeLimits, ResumeStore};
@@ -81,6 +82,14 @@ pub struct Session {
     inbox: mpsc::Sender<pb::ClientToServerMessage>,
     ended: watch::Sender<bool>,
     retention: Duration,
+    resume_budget: Arc<Budget>,
+}
+
+/// The memory budgets shared by all sessions.
+#[derive(Clone)]
+pub struct Budgets {
+    pub outboxes: Arc<Budget>,
+    pub resume: Arc<Budget>,
 }
 
 pub struct SessionParts {
@@ -92,14 +101,14 @@ pub struct SessionParts {
 impl Session {
     /// Creates a session on its first transport and starts its writer and reader. The caller starts the
     /// logic task with the returned parts.
-    pub fn start(info: SessionInfo, socket: WebSocket, retention: Duration) -> SessionParts {
+    pub fn start(info: SessionInfo, socket: WebSocket, retention: Duration, budgets: &Budgets) -> SessionParts {
         let (sink, stream) = socket.split();
         let (writer_tx, writer_rx) = mpsc::channel(4);
         let (inbox_tx, inbox_rx) = mpsc::channel(INBOX_CAPACITY);
         let (ended_tx, ended_rx) = watch::channel(false);
         let session = Arc::new(Session {
             info,
-            outbox: Outbox::new(Limits::default()),
+            outbox: Outbox::new(Limits::default(), budgets.outboxes.clone()),
             user_id: OnceLock::new(),
             last_client_nonce: AtomicU32::new(0),
             generation: AtomicU64::new(0),
@@ -107,6 +116,7 @@ impl Session {
             inbox: inbox_tx,
             ended: ended_tx,
             retention,
+            resume_budget: budgets.resume.clone(),
         });
         METRICS.nb_sockets.inc();
         tokio::spawn(writer(session.clone(), sink, writer_rx));
@@ -207,11 +217,14 @@ async fn send_frame(sink: &mut Option<WsSink>, frame: Bytes) {
 async fn writer(session: Arc<Session>, first: WsSink, mut commands: mpsc::Receiver<WriterCmd>) {
     let mut sink = Some(first);
     let mut nonce: u32 = 0;
-    let mut store = ResumeStore::new(ResumeLimits {
-        retention: session.retention,
-        max_frames: 2000,
-        max_bytes: 4 * 1024 * 1024,
-    });
+    let mut store = ResumeStore::new(
+        ResumeLimits {
+            retention: session.retention,
+            max_frames: 2000,
+            max_bytes: 4 * 1024 * 1024,
+        },
+        session.resume_budget.clone(),
+    );
     let mut ws_ping = tokio::time::interval_at(Instant::now() + WS_PING_EVERY, WS_PING_EVERY);
     let mut app_ping = tokio::time::interval_at(Instant::now() + APP_PING_EVERY, APP_PING_EVERY);
     let mut subs: Vec<Bytes> = Vec::new();

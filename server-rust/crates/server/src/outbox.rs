@@ -6,16 +6,27 @@
 //! Backpressure policy, in this order:
 //! 1. a position update replaces the not-yet-sent one of the same user (it is superseded anyway);
 //! 2. when the queue is still over its frame or byte budget, the consumer is too slow: the outbox closes, every
-//!    later push is refused, and the writer ends the session.
+//!    later push is refused, and the writer ends the session;
+//! 3. when all the outboxes together hold more than the shared budget, a consumer that is lagging (more than
+//!    LAGGING_BYTES queued) is closed too. A consumer that keeps up is never closed for that.
+//!
+//! The first frame of an empty queue is always accepted, whatever its size: a large broadcast (an uploaded
+//! entity carries the file) must not close every session of the room.
 //!
 //! A replaced move only ever jumps over moves of *other* users, which commute: any other frame is a barrier
 //! that stops coalescing, so a move can never overtake the join or leave of the same user.
 
 use std::collections::{HashMap, VecDeque};
+use std::sync::Arc;
 
 use bytes::Bytes;
 use parking_lot::Mutex;
 use tokio::sync::Notify;
+
+use crate::budget::Budget;
+
+/// Above this, a queue is behind (a 100 ms batch is a few kB).
+pub const LAGGING_BYTES: usize = 64 * 1024;
 
 /// A frame waiting to be written.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -53,7 +64,7 @@ impl Default for Limits {
     fn default() -> Self {
         Self {
             max_frames: 4096,
-            max_bytes: 8 * 1024 * 1024,
+            max_bytes: 2 * 1024 * 1024,
         }
     }
 }
@@ -77,6 +88,7 @@ pub struct Outbox {
     state: Mutex<State>,
     notify: Notify,
     limits: Limits,
+    budget: Arc<Budget>,
 }
 
 /// What the writer took out of the outbox.
@@ -86,11 +98,12 @@ pub struct Drained {
 }
 
 impl Outbox {
-    pub fn new(limits: Limits) -> Self {
+    pub fn new(limits: Limits, budget: Arc<Budget>) -> Self {
         Self {
             state: Mutex::new(State::default()),
             notify: Notify::new(),
             limits,
+            budget,
         }
     }
 
@@ -125,6 +138,8 @@ impl Outbox {
             let new_len = bytes.len();
             *slot = Frame::Sub(bytes);
             st.bytes = st.bytes - old_len + new_len;
+            self.budget.sub(old_len);
+            self.budget.add(new_len);
             return Ok(());
         }
         let wake = st.frames.is_empty();
@@ -139,29 +154,34 @@ impl Outbox {
     }
 
     fn append(&self, st: &mut State, frame: Frame) -> Result<(), Closed> {
-        if st.frames.len() >= self.limits.max_frames || st.bytes + frame.len() > self.limits.max_bytes {
-            Self::close_locked(st, CloseReason::SlowConsumer);
+        let len = frame.len();
+        let over_own = st.frames.len() >= self.limits.max_frames || st.bytes + len > self.limits.max_bytes;
+        let over_shared = st.bytes > LAGGING_BYTES && self.budget.would_exceed(len);
+        if !st.frames.is_empty() && (over_own || over_shared) {
+            self.close_locked(st, CloseReason::SlowConsumer);
             self.notify.notify_one();
             return Err(Closed);
         }
-        st.bytes += frame.len();
+        st.bytes += len;
+        self.budget.add(len);
         st.frames.push_back(frame);
         Ok(())
     }
 
-    fn close_locked(st: &mut State, reason: CloseReason) {
+    fn close_locked(&self, st: &mut State, reason: CloseReason) {
         if st.closed.is_none() {
             st.closed = Some(reason);
         }
         // Whatever is queued will never be written: free it now.
         st.head_seq += st.frames.len() as u64;
         st.frames = VecDeque::new();
+        self.budget.sub(st.bytes);
         st.bytes = 0;
         st.moves = HashMap::new();
     }
 
     pub fn close(&self, reason: CloseReason) {
-        Self::close_locked(&mut self.state.lock(), reason);
+        self.close_locked(&mut self.state.lock(), reason);
         self.notify.notify_one();
     }
 
@@ -183,6 +203,7 @@ impl Outbox {
     pub fn drain(&self) -> Drained {
         let mut st = self.state.lock();
         st.head_seq += st.frames.len() as u64;
+        self.budget.sub(st.bytes);
         st.bytes = 0;
         st.moves.clear();
         st.has_direct = false;
@@ -205,9 +226,13 @@ mod tests {
         Bytes::from_static(s.as_bytes())
     }
 
+    fn outbox(limits: Limits) -> Outbox {
+        Outbox::new(limits, Arc::new(Budget::new(usize::MAX)))
+    }
+
     #[test]
     fn a_newer_move_replaces_the_queued_one_in_place() {
-        let o = Outbox::new(Limits::default());
+        let o = outbox(Limits::default());
         o.push_move(1, b("u1@a")).unwrap();
         o.push_move(2, b("u2@a")).unwrap();
         o.push_move(1, b("u1@b")).unwrap();
@@ -217,7 +242,7 @@ mod tests {
 
     #[test]
     fn a_move_never_jumps_over_another_frame() {
-        let o = Outbox::new(Limits::default());
+        let o = outbox(Limits::default());
         o.push_move(1, b("u1@a")).unwrap();
         o.push(Frame::Sub(b("u1 left"))).unwrap();
         o.push_move(1, b("u1@b")).unwrap();
@@ -230,7 +255,7 @@ mod tests {
 
     #[test]
     fn coalescing_restarts_after_a_drain() {
-        let o = Outbox::new(Limits::default());
+        let o = outbox(Limits::default());
         o.push_move(1, b("u1@a")).unwrap();
         assert_eq!(o.drain().frames.len(), 1);
         o.push_move(1, b("u1@b")).unwrap();
@@ -240,7 +265,7 @@ mod tests {
 
     #[test]
     fn a_slow_consumer_is_closed_and_its_queue_freed() {
-        let o = Outbox::new(Limits {
+        let o = outbox(Limits {
             max_frames: 3,
             max_bytes: 1 << 20,
         });
@@ -259,7 +284,7 @@ mod tests {
 
     #[test]
     fn coalesced_moves_do_not_count_against_the_budget() {
-        let o = Outbox::new(Limits {
+        let o = outbox(Limits {
             max_frames: 2,
             max_bytes: 1 << 20,
         });
@@ -272,13 +297,34 @@ mod tests {
     }
 
     #[test]
-    fn the_byte_budget_is_enforced() {
-        let o = Outbox::new(Limits {
+    fn the_byte_budget_is_enforced_but_one_big_frame_fits() {
+        let o = outbox(Limits {
             max_frames: 100,
             max_bytes: 10,
         });
-        o.push(Frame::Sub(Bytes::from(vec![0; 8]))).unwrap();
+        o.push(Frame::Direct(Bytes::from(vec![0; 50]))).unwrap();
         assert_eq!(o.push(Frame::Sub(Bytes::from(vec![0; 8]))), Err(Closed));
         assert!(o.is_closed());
+    }
+
+    #[test]
+    fn the_shared_budget_closes_lagging_consumers_only() {
+        let budget = Arc::new(Budget::new(LAGGING_BYTES * 2));
+        let limits = Limits {
+            max_frames: 1 << 20,
+            max_bytes: 1 << 30,
+        };
+        let lagging = Outbox::new(limits, budget.clone());
+        let fresh = Outbox::new(limits, budget.clone());
+        let chunk = || Frame::Sub(Bytes::from(vec![0; 1024]));
+        while lagging.push(chunk()).is_ok() {}
+        assert!(lagging.is_closed());
+        assert_eq!(budget.used(), 0, "a closed outbox gives its bytes back");
+        // The budget was full, yet a consumer that keeps up can always get the next frames.
+        for _ in 0..10 {
+            fresh.push(chunk()).unwrap();
+            fresh.drain();
+        }
+        assert!(!fresh.is_closed());
     }
 }

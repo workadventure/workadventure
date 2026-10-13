@@ -375,6 +375,20 @@ async fn me(State(state): State<AppState>, RawQuery(q): RawQuery) -> Response {
         "matrixUserId": claims.matrix_user_id,
         "matrixServerUrl": state.config.raw.get("MATRIX_PUBLIC_URI"),
     });
+    // A token from an OpenID login is only good while the provider still accepts its access token.
+    if let Some(access_token) = &claims.access_token {
+        let Some(info) = crate::oidc::check_access_token(&state, access_token).await else {
+            return (StatusCode::UNAUTHORIZED, "Invalid token").into_response();
+        };
+        if let Some(url) = info.get("matrix_url").filter(|u| u.is_string()) {
+            body["matrixServerUrl"] = url.clone();
+        }
+        if let (Some(b), Some(i)) = (body.as_object_mut(), info.as_object()) {
+            for (k, v) in i {
+                b.insert(k.clone(), v.clone());
+            }
+        }
+    }
     body.as_object_mut().expect("object").retain(|k, v| !v.is_null() || k == "visitCardUrl");
     axum::Json(body).into_response()
 }

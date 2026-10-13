@@ -180,7 +180,7 @@ pub async fn ws_room(
     }
     match prepare(&state, query.as_deref(), &token, &headers) {
         Upgrade::Fresh(info) => ws.on_upgrade(move |socket| async move {
-            let parts = Session::start(*info, socket, state.config.client_disconnection_retention);
+            let parts = Session::start(*info, socket, state.config.client_disconnection_retention, &state.budgets);
             logic::run(parts, state).await;
         }),
         Upgrade::Resume(session, last) => ws.on_upgrade(move |socket| async move {
