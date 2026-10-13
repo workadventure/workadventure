@@ -650,6 +650,8 @@ const chat: BaseTranslation = {
     fileAttachment: {
         title: "File attachment",
         description: "Upload and share a file",
+        proximityTitle: "Direct file transfer",
+        proximityDescription: "Only people here now receive it",
         featureComingSoon: "Coming soon!",
         tooManyUsers: "File sharing is only available with {max} people or fewer",
     },

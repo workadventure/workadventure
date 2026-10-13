@@ -650,6 +650,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Adjunt de fitxer",
         description: "Puja i comparteix un fitxer",
+        proximityTitle: "Transferència directa de fitxer",
+        proximityDescription: "Només el reben les persones presents ara",
         featureComingSoon: "Properament!",
         tooManyUsers: "Compartir fitxers només està disponible amb {max} persones com a màxim",
     },

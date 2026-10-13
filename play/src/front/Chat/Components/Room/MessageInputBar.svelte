@@ -787,12 +787,16 @@
                 disabled={!canAttachFiles}
             >
                 <IconPaperclip font-size={32} />
-                <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
+                <h2 class={applicationTitleClass}>
+                    {isProximityChatRoom ? $LL.chat.fileAttachment.proximityTitle() : $LL.chat.fileAttachment.title()}
+                </h2>
                 <p class={applicationDescriptionClass}>
                     {#if !fileAttachementEnabled}
                         {$LL.chat.fileAttachment.featureComingSoon()}
                     {:else if tooManyUsersForFiles}
                         {$LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS })}
+                    {:else if isProximityChatRoom}
+                        {$LL.chat.fileAttachment.proximityDescription()}
                     {:else}
                         {$LL.chat.fileAttachment.description()}
                     {/if}

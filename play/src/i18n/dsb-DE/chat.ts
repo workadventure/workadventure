@@ -652,6 +652,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Datajowy zbytny zapis",
         description: "Nagraś dataju, aby ju źělił",
+        proximityTitle: "Direktne pśenjasenje dataje",
+        proximityDescription: "Jano wósoby, kótarež su něnto how, ju dostanu",
         featureComingSoon: "Funkcija pśiducy!",
         tooManyUsers: "Źělenje datajow jo jano z maksimalnje {max} wósobami móžne",
     },

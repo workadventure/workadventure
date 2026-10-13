@@ -651,6 +651,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Datajowy přiwěšk",
         description: "Nakładować dataju, zo by ju dźělił",
+        proximityTitle: "Direktne přenjesenje dataje",
+        proximityDescription: "Jenož wosoby, kotrež su nětko tu, ju dóstanu",
         featureComingSoon: "Funkcija přichodna!",
         tooManyUsers: "Dźělenje datajow je jenož z maksimalnje {max} wosobami móžne",
     },

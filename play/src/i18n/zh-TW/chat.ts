@@ -646,6 +646,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "檔案附件",
         description: "上傳並分享檔案",
+        proximityTitle: "直接傳送檔案",
+        proximityDescription: "只有此刻在場的人能收到",
         featureComingSoon: "即將推出！",
         tooManyUsers: "僅在 {max} 人以下時可以分享檔案",
     },

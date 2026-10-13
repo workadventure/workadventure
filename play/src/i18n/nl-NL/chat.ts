@@ -652,6 +652,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Bestandsbijlage",
         description: "Upload een bestand om het te delen",
+        proximityTitle: "Directe bestandsoverdracht",
+        proximityDescription: "Alleen wie nu hier is ontvangt het",
         featureComingSoon: "Functie komt binnenkort!",
         tooManyUsers: "Bestanden delen kan alleen met maximaal {max} personen",
     },
