@@ -1,38 +1,78 @@
 //! Adapters and runtime around `wa-core`: HTTP and WebSocket transport, protobuf encoding, actors.
+#![recursion_limit = "256"]
 
 pub mod config;
+pub mod front;
 pub mod http;
+pub mod jwt;
+pub mod local_admin;
+pub mod logic;
 pub mod metrics;
+pub mod mustache;
 pub mod outbox;
 pub mod registry;
 pub mod resume;
+pub mod room_actor;
+pub mod session;
+pub mod space_actor;
+pub mod wire;
+pub mod ws;
 
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 
 use axum::Router;
+use axum::routing::get;
+use dashmap::DashMap;
+use wa_core::RoomConfig;
 
 use crate::config::Config;
+use crate::front::FrontAssets;
+use crate::registry::ActorRegistry;
+use crate::room_actor::RoomCmd;
+use crate::session::Session;
+use crate::space_actor::SpaceCmd;
 
 #[derive(Clone)]
 pub struct AppState {
     pub config: Arc<Config>,
-    ready: Arc<AtomicBool>,
+    pub room_config: RoomConfig,
+    pub rooms: Arc<ActorRegistry<RoomCmd>>,
+    pub spaces: Arc<ActorRegistry<SpaceCmd>>,
+    /// Sessions a client may resume, by connection id.
+    pub sessions: Arc<DashMap<String, Arc<Session>>>,
+    pub front: Arc<FrontAssets>,
+    pub page_script: Arc<str>,
+    pub http: reqwest::Client,
 }
 
 impl AppState {
     pub fn new(config: Config) -> Self {
+        session::set_idle_timer(config.socket_idle_timer);
         Self {
+            room_config: RoomConfig {
+                minimum_distance: config.minimum_distance,
+                group_radius: config.group_radius,
+                max_per_group: config.max_per_group,
+            },
+            rooms: Arc::new(ActorRegistry::new()),
+            spaces: Arc::new(ActorRegistry::new()),
+            sessions: Arc::new(DashMap::new()),
+            front: Arc::new(FrontAssets::new(&config)),
+            page_script: front::script(&config),
+            http: reqwest::Client::new(),
             config: Arc::new(config),
-            ready: Arc::new(AtomicBool::new(true)),
         }
     }
 
+    /// Ready once the page can be served (when a front container is configured).
     pub fn is_ready(&self) -> bool {
-        self.ready.load(Ordering::Relaxed)
+        self.config.assets_internal_url.is_none() || self.front.is_ready()
     }
 }
 
 pub fn router(state: AppState) -> Router {
-    http::routes().with_state(state)
+    http::routes()
+        .merge(front::routes())
+        .route("/ws/room", get(ws::ws_room))
+        .with_state(state)
 }

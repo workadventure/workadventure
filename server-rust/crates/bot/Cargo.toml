@@ -1,0 +1,23 @@
+[package]
+name = "wa-bot"
+description = "Headless WorkAdventure clients, for tests and load measurements."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "wa-load"
+path = "src/main.rs"
+
+[dependencies]
+wa-proto.workspace = true
+form_urlencoded = "1"
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+prost.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tokio-tungstenite = "0.29"
+
+[lints]
+workspace = true

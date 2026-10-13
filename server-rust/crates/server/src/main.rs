@@ -49,6 +49,7 @@ fn main() {
 
 async fn serve(config: Config) {
     let state = AppState::new(config);
+    tokio::spawn(wa_server::front::poll_template(state.clone()));
     let addr = SocketAddr::from(([0, 0, 0, 0], state.config.http_port));
     let listener = tokio::net::TcpListener::bind(addr).await.expect("bind HTTP port");
     tracing::info!(%addr, "HTTP and WebSocket server listening");
