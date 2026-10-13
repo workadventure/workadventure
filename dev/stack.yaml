@@ -1,0 +1,190 @@
+# One WorkAdventure server stack on the socle (dev/socle.yaml). Start it with `dev/dev stack up <name>`.
+#
+# Labels are a list: compose interpolates ${STACK} in values only, not in mapping keys.
+# Every container joins the socle's network, where the service names (back, redis...) of all stacks coexist: inside a
+# stack, services address each other by container name (wa-<name>-back-1), never by service name.
+#
+# Variants (compose profiles):
+# - ts: the current pusher, back, map-storage and uploader, from the published images of WA_TAG. The pusher serves the
+#   compiled front of the socle's "front" container (ASSETS_URL), as in production.
+# - server: the candidate monolith, built from SERVER_DIR (see "Contract of the server variant" in dev/README.md).
+name: wa-${STACK:?run it through dev/dev}
+
+# Environment of the four TS services, merged. The server variant receives all of it: this is its configuration.
+x-env: &env
+  SECRET_KEY: yourSecretKey2020
+  NODE_ENV: production
+  # Public URLs, used by the browser and by the containers alike (through the socle's Traefik).
+  PUSHER_URL: http://play.${STACK}.workadventure.localhost${SOCLE_URL_PORT:-}
+  PLAY_URL: http://play.${STACK}.workadventure.localhost${SOCLE_URL_PORT:-}
+  FRONT_URL: http://play.${STACK}.workadventure.localhost${SOCLE_URL_PORT:-}
+  ALLOWED_CORS_ORIGIN: http://play.${STACK}.workadventure.localhost${SOCLE_URL_PORT:-}
+  PUBLIC_MAP_STORAGE_URL: http://map-storage.${STACK}.workadventure.localhost${SOCLE_URL_PORT:-}
+  UPLOADER_URL: http://uploader.${STACK}.workadventure.localhost${SOCLE_URL_PORT:-}
+  START_ROOM_URL: /_/global/maps.workadventure.localhost${SOCLE_URL_PORT:-}/starter/map.json
+  # The compiled front (socle).
+  ASSETS_URL: http://front.workadventure.localhost${SOCLE_URL_PORT:-}
+  ASSETS_INTERNAL_URL: http://front
+  ICON_URL: http://icon.workadventure.localhost${SOCLE_URL_PORT:-}
+  # Internal addresses, between the TS services of this stack.
+  API_URL: wa-${STACK}-back-1:50051
+  MAP_STORAGE_URL: wa-${STACK}-map-storage-1:50053
+  INTERNAL_MAP_STORAGE_URL: http://wa-${STACK}-map-storage-1:3000
+  REDIS_HOST: wa-${STACK}-redis-1
+  # Only the uploader reads it: the back and the pusher use DB 0, hence one Redis per stack.
+  REDIS_DB_NUMBER: "1"
+  # OpenID Connect (socle's mock; it accepts any http://*.workadventure.localhost redirect URL).
+  OPENID_CLIENT_ID: authorization-code-client-id
+  OPENID_CLIENT_SECRET: authorization-code-client-secret
+  OPENID_CLIENT_ISSUER: http://oidc.workadventure.localhost${SOCLE_URL_PORT:-}
+  OPENID_SCOPE: profile openid email tags-scope
+  OPENID_PROMPT: login
+  # Matrix (socle's Synapse, shared by every stack).
+  MATRIX_API_URI: http://synapse:8008/
+  MATRIX_PUBLIC_URI: http://matrix.workadventure.localhost${SOCLE_URL_PORT:-}
+  MATRIX_DOMAIN: matrix.workadventure.localhost
+  MATRIX_ADMIN_USER: admin
+  MATRIX_ADMIN_PASSWORD: MySecretPassword
+  ENABLE_CHAT: "true"
+  ENABLE_CHAT_UPLOAD: "true"
+  ENABLE_CHAT_ONLINE_LIST: "true"
+  ENABLE_CHAT_DISCONNECTED_LIST: "true"
+  # LiveKit (socle's, shared). LIVEKIT_HOST is also the URL given to the browser (http -> ws).
+  LIVEKIT_HOST: http://livekit.workadventure.localhost${SOCLE_URL_PORT:-}
+  LIVEKIT_API_KEY: devkey
+  LIVEKIT_API_SECRET: "12345678901234567890123456789012"
+  MAX_USERS_FOR_WEBRTC: "3"
+  LIVEKIT_SWITCH_ON_CPU_LIMITATION: "true"
+  # Map storage: tests upload maps with basic auth (john.doe:password@map-storage...).
+  MAP_STORAGE_API_TOKEN: FFVSGBSGBSGFB23SFGBSFG4BS
+  STORAGE_DIRECTORY: /maps
+  ENABLE_BASIC_AUTHENTICATION: "true"
+  AUTHENTICATION_USER: john.doe
+  AUTHENTICATION_PASSWORD: password
+  ENABLE_BEARER_AUTHENTICATION: "true"
+  AUTHENTICATION_TOKEN: "123"
+  PATH_PREFIX: ""
+  # Room API (gRPC, h2c through Traefik on room-api.<stack>...).
+  ROOM_API_PORT: "50051"
+  ROOM_API_SECRET_KEY: MYAWESOMEKEY
+  # Game settings, as in .env.template and the CI end-to-end setup.
+  ADMIN_API_TOKEN: "123"
+  ENABLE_MAP_EDITOR: "true"
+  MAP_EDITOR_ALLOW_ALL_USERS: "true"
+  STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
+  PLAYER_VARIABLES_MAX_TTL: "-1"
+  MINIMUM_DISTANCE: "64"
+  GROUP_RADIUS: "48"
+  MAX_PER_GROUP: "100"
+  MAX_USERNAME_LENGTH: "10"
+  MAX_DISPLAYED_VIDEOS: "6"
+  JITSI_URL: meet.jit.si
+  STUN_SERVER: stun:stun.l.google.com:19302
+  ENABLE_OPENAPI_ENDPOINT: "true"
+  ENABLE_TUTORIAL: "false"
+  WOKA_SPEED: "27"
+  UPLOAD_MAX_FILESIZE: "10485760"
+
+services:
+  redis:
+    image: redis:6
+
+  play:
+    profiles: [ts]
+    image: ghcr.io/workadventure/play:${WA_TAG}
+    environment: *env
+    labels:
+      - "wa.stack=true"
+      - "traefik.http.routers.wa-${STACK}-play.rule=Host(`play.${STACK}.workadventure.localhost`)"
+      - "traefik.http.routers.wa-${STACK}-play.service=wa-${STACK}-play"
+      - "traefik.http.services.wa-${STACK}-play.loadbalancer.server.port=3000"
+      - "traefik.http.routers.wa-${STACK}-play-ws.rule=Host(`play.${STACK}.workadventure.localhost`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.wa-${STACK}-play-ws.service=wa-${STACK}-play-ws"
+      - "traefik.http.services.wa-${STACK}-play-ws.loadbalancer.server.port=3001"
+      - "traefik.http.routers.wa-${STACK}-room-api.rule=Host(`room-api.${STACK}.workadventure.localhost`)"
+      - "traefik.http.routers.wa-${STACK}-room-api.service=wa-${STACK}-room-api"
+      - "traefik.http.services.wa-${STACK}-room-api.loadbalancer.server.port=50051"
+      - "traefik.http.services.wa-${STACK}-room-api.loadbalancer.server.scheme=h2c"
+    depends_on: [back]
+
+  back:
+    profiles: [ts]
+    image: ghcr.io/workadventure/back:${WA_TAG}
+    environment: *env
+    depends_on: [redis, map-storage]
+
+  map-storage:
+    profiles: [ts]
+    image: ghcr.io/workadventure/map-storage:${WA_TAG}
+    # The maps volume is created root-owned; the image runs as "node".
+    user: root
+    environment: *env
+    volumes:
+      - maps:/maps
+    labels:
+      - "wa.stack=true"
+      - "traefik.http.routers.wa-${STACK}-map-storage.rule=Host(`map-storage.${STACK}.workadventure.localhost`)"
+      - "traefik.http.routers.wa-${STACK}-map-storage.service=wa-${STACK}-map-storage"
+      - "traefik.http.services.wa-${STACK}-map-storage.loadbalancer.server.port=3000"
+
+  uploader:
+    profiles: [ts]
+    image: ghcr.io/workadventure/uploader:${WA_TAG}
+    environment: *env
+    depends_on: [redis]
+    labels:
+      - "wa.stack=true"
+      - "traefik.http.routers.wa-${STACK}-uploader.rule=Host(`uploader.${STACK}.workadventure.localhost`)"
+      - "traefik.http.routers.wa-${STACK}-uploader.service=wa-${STACK}-uploader"
+      - "traefik.http.services.wa-${STACK}-uploader.loadbalancer.server.port=8080"
+
+  # The candidate monolith. Its folder is bind-mounted for hot reload; dev/dev loads <SERVER_DIR>/dev.env.
+  server:
+    profiles: [server]
+    image: wa-${STACK}-server
+    build:
+      context: ../${SERVER_DIR:-dev/placeholder}
+      dockerfile: ${SERVER_DOCKERFILE:-Dockerfile}
+      target: ${SERVER_TARGET:-dev}
+    working_dir: /usr/src/app/${SERVER_DIR:-dev/placeholder}
+    command: ["sh", "-c", "${SERVER_COMMAND:-}"]
+    environment:
+      <<: *env
+      SERVER_HTTP_PORT: ${SERVER_HTTP_PORT:-3000}
+      SERVER_WS_PORT: ${SERVER_WS_PORT:-3001}
+      SERVER_ROOM_API_PORT: ${SERVER_ROOM_API_PORT:-50051}
+      SERVER_MAP_STORAGE_PORT: ${SERVER_MAP_STORAGE_PORT:-3002}
+      SERVER_UPLOADER_PORT: ${SERVER_UPLOADER_PORT:-3003}
+    volumes:
+      - ..:/usr/src/app
+      - maps:/maps
+      # Build caches (CARGO_TARGET_DIR, GOCACHE...) outside the bind mount, which is slow on macOS.
+      - server-cache:/cache
+    depends_on: [redis]
+    labels:
+      - "wa.stack=true"
+      - "traefik.http.routers.wa-${STACK}-play.rule=Host(`play.${STACK}.workadventure.localhost`)"
+      - "traefik.http.routers.wa-${STACK}-play.service=wa-${STACK}-play"
+      - "traefik.http.services.wa-${STACK}-play.loadbalancer.server.port=${SERVER_HTTP_PORT:-3000}"
+      - "traefik.http.routers.wa-${STACK}-play-ws.rule=Host(`play.${STACK}.workadventure.localhost`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.wa-${STACK}-play-ws.service=wa-${STACK}-play-ws"
+      - "traefik.http.services.wa-${STACK}-play-ws.loadbalancer.server.port=${SERVER_WS_PORT:-3001}"
+      - "traefik.http.routers.wa-${STACK}-room-api.rule=Host(`room-api.${STACK}.workadventure.localhost`)"
+      - "traefik.http.routers.wa-${STACK}-room-api.service=wa-${STACK}-room-api"
+      - "traefik.http.services.wa-${STACK}-room-api.loadbalancer.server.port=${SERVER_ROOM_API_PORT:-50051}"
+      - "traefik.http.services.wa-${STACK}-room-api.loadbalancer.server.scheme=h2c"
+      - "traefik.http.routers.wa-${STACK}-map-storage.rule=Host(`map-storage.${STACK}.workadventure.localhost`)"
+      - "traefik.http.routers.wa-${STACK}-map-storage.service=wa-${STACK}-map-storage"
+      - "traefik.http.services.wa-${STACK}-map-storage.loadbalancer.server.port=${SERVER_MAP_STORAGE_PORT:-3002}"
+      - "traefik.http.routers.wa-${STACK}-uploader.rule=Host(`uploader.${STACK}.workadventure.localhost`)"
+      - "traefik.http.routers.wa-${STACK}-uploader.service=wa-${STACK}-uploader"
+      - "traefik.http.services.wa-${STACK}-uploader.loadbalancer.server.port=${SERVER_UPLOADER_PORT:-3003}"
+
+volumes:
+  maps:
+  server-cache:
+
+networks:
+  default:
+    name: wa-socle
+    external: true

@@ -1,0 +1,123 @@
+# The shared base: everything that does not depend on the server being tested. Start it once with `dev/dev socle up`.
+# Stacks (dev/stack.yaml) join its "wa-socle" network and are routed by its Traefik, the only container that
+# publishes host ports. Variables are exported by dev/dev (see dev/README.md); SOCLE_URL_PORT is ":<port>", or empty
+# on port 80.
+name: wa-socle
+
+services:
+  traefik:
+    image: traefik:v3.6.1
+    command:
+      - --api.insecure=true
+      # Inside the network, Traefik listens on the published port too: containers reach the public URLs (OIDC issuer,
+      # LiveKit, maps) through the aliases below, with the same port as the browser.
+      - --entryPoints.web.address=:${SOCLE_HTTP_PORT:-80}
+      - --entryPoints.web.asDefault=true
+      - --entryPoints.livekit-tcp.address=:${SOCLE_LIVEKIT_TCP_PORT:-7881}
+      - --entryPoints.livekit-udp.address=:${SOCLE_LIVEKIT_UDP_PORT:-7882}/udp
+      # Socle routes: a file, so the socle containers carry no "traefik.*" label another Traefik could pick up.
+      - --providers.file.filename=/etc/traefik/socle-routes.yaml
+      # Stack routes: labels of the containers marked wa.stack=true only. Stacks do not set traefik.enable, so the
+      # Traefik of the regular docker-compose.yaml (exposedbydefault=false) ignores them, and this one ignores its
+      # containers.
+      - --providers.docker.exposedbydefault=true
+      - --providers.docker.constraints=Label(`wa.stack`,`true`)
+      - --providers.docker.network=wa-socle
+    ports:
+      - "${SOCLE_HTTP_PORT:-80}:${SOCLE_HTTP_PORT:-80}"
+      - "${SOCLE_LIVEKIT_TCP_PORT:-7881}:${SOCLE_LIVEKIT_TCP_PORT:-7881}"
+      - "${SOCLE_LIVEKIT_UDP_PORT:-7882}:${SOCLE_LIVEKIT_UDP_PORT:-7882}/udp"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./socle-routes.yaml:/etc/traefik/socle-routes.yaml:ro
+    environment:
+      SOCLE_LIVEKIT_TCP_PORT: ${SOCLE_LIVEKIT_TCP_PORT:-7881}
+      SOCLE_LIVEKIT_UDP_PORT: ${SOCLE_LIVEKIT_UDP_PORT:-7882}
+    networks:
+      default:
+        aliases:
+          - front.workadventure.localhost
+          - maps.workadventure.localhost
+          - oidc.workadventure.localhost
+          - matrix.workadventure.localhost
+          - livekit.workadventure.localhost
+
+  # The compiled front, served like in production (play/Dockerfile, target "front"). The build output is copied from
+  # the published play image of the same commit instead of being rebuilt: a Vite build needs more memory than the
+  # Docker VM can spare next to running stacks.
+  front:
+    image: wa-socle-front:${WA_TAG}
+    build:
+      context: .
+      args:
+        PLAY_IMAGE: ghcr.io/workadventure/play:${WA_TAG}
+      dockerfile_inline: |
+        ARG PLAY_IMAGE
+        FROM $${PLAY_IMAGE} AS play
+        FROM nginx:1.30-alpine3.24
+        COPY --from=play /usr/src/play/dist/public /usr/share/nginx/html
+    volumes:
+      - ../play/nginx-front.conf:/etc/nginx/conf.d/default.conf:ro
+
+  # The test maps (maps.workadventure.localhost/tests/...), from the published image of the same commit.
+  maps:
+    image: ghcr.io/workadventure/maps:${WA_TAG}
+
+  # Favicons of the co-websites (ICON_URL, required by the pusher).
+  icon:
+    image: matthiasluedtke/iconserver:v3.21.0
+
+  oidc-server-mock:
+    extends:
+      file: ../docker-compose.yaml
+      service: oidc-server-mock
+    labels:
+      # The inherited labels would declare a second "oidc" router in the Traefik of the regular stack.
+      traefik.enable: "false"
+
+  synapse:
+    # Same version and template as docker-compose.yaml; the data lives in a volume instead of the repo's synapse/.
+    image: matrixdotorg/synapse:v1.140.0
+    entrypoint: /synapse-start.sh
+    volumes:
+      - ./synapse-start.sh:/synapse-start.sh:ro
+      - ../synapse:/repo-synapse:ro
+      - synapse-data:/data
+    environment:
+      SOCLE_URL_PORT: ${SOCLE_URL_PORT:-}
+      SYNAPSE_SERVER_NAME: matrix.workadventure.localhost
+      SYNAPSE_REPORT_STATS: "no"
+      MATRIX_ADMIN_USER: admin
+      MATRIX_ADMIN_PASSWORD: MySecretPassword
+      # The SECRET_KEY of every stack: the pusher signs the Matrix JWT login with it.
+      JWT_SECRET: yourSecretKey2020
+    depends_on:
+      - oidc-server-mock
+
+  livekit:
+    image: livekit/livekit-server:v1.10.1
+    environment:
+      # Single node, no Redis. The browser reaches the media ports through Traefik on 127.0.0.1, so that is the
+      # address LiveKit advertises, with the host's port numbers.
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: ${SOCLE_LIVEKIT_TCP_PORT:-7881}
+          udp_port: ${SOCLE_LIVEKIT_UDP_PORT:-7882}
+          use_external_ip: false
+          node_ip: 127.0.0.1
+        keys:
+          devkey: 12345678901234567890123456789012
+        logging:
+          level: info
+
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    profiles: [tools]
+
+volumes:
+  synapse-data:
+
+networks:
+  default:
+    name: wa-socle

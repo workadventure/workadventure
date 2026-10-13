@@ -1,0 +1,32 @@
+# Traefik routes of the socle services (file provider; the stacks are routed by their container labels).
+# Go template: the LiveKit media ports come from the Traefik container's environment.
+http:
+  routers:
+    dashboard: { rule: "Host(`traefik.workadventure.localhost`)", service: api@internal }
+    front: { rule: "Host(`front.workadventure.localhost`)", service: front }
+    maps: { rule: "Host(`maps.workadventure.localhost`)", service: maps }
+    icon: { rule: "Host(`icon.workadventure.localhost`)", service: icon }
+    oidc: { rule: "Host(`oidc.workadventure.localhost`)", service: oidc }
+    matrix: { rule: "Host(`matrix.workadventure.localhost`)", service: matrix }
+    livekit: { rule: "Host(`livekit.workadventure.localhost`)", service: livekit }
+    redisinsight: { rule: "Host(`redis.workadventure.localhost`)", service: redisinsight }
+  services:
+    front: { loadBalancer: { servers: [{ url: "http://front" }] } }
+    maps: { loadBalancer: { servers: [{ url: "http://maps" }] } }
+    icon: { loadBalancer: { servers: [{ url: "http://icon:8080" }] } }
+    oidc: { loadBalancer: { servers: [{ url: "http://oidc-server-mock" }] } }
+    matrix: { loadBalancer: { servers: [{ url: "http://synapse:8008" }] } }
+    livekit: { loadBalancer: { servers: [{ url: "http://livekit:7880" }] } }
+    redisinsight: { loadBalancer: { servers: [{ url: "http://redisinsight:5540" }] } }
+
+tcp:
+  routers:
+    livekit-tcp: { entryPoints: [livekit-tcp], rule: "HostSNI(`*`)", service: livekit-tcp }
+  services:
+    livekit-tcp: { loadBalancer: { servers: [{ address: 'livekit:{{ env "SOCLE_LIVEKIT_TCP_PORT" }}' }] } }
+
+udp:
+  routers:
+    livekit-udp: { entryPoints: [livekit-udp], service: livekit-udp }
+  services:
+    livekit-udp: { loadBalancer: { servers: [{ address: 'livekit:{{ env "SOCLE_LIVEKIT_UDP_PORT" }}' }] } }
