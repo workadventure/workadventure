@@ -85,7 +85,7 @@
         {/if}
 
         {#if days.length > 0}
-            <nav aria-label={$LL.externalModule.calendar.days()} class="flex shrink-0 gap-1.5 overflow-x-auto pb-1">
+            <nav aria-label={$LL.externalModule.calendar.days()} class="flex shrink-0 flex-wrap gap-1.5">
                 {#each days as day, index (day.date.getTime())}
                     <Button
                         variant="light"
