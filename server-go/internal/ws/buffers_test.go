@@ -57,3 +57,24 @@ func TestResumeStore(t *testing.T) {
 		t.Fatal("expired frames cannot be replayed, but a client that has everything can resume")
 	}
 }
+
+func TestResumeStoreFreesChunksAndKeepsFramesIntact(t *testing.T) {
+	now := time.Unix(0, 0)
+	r := &resumeStore{maxBytes: 64 << 10, retention: time.Hour}
+	frame := make([]byte, 1000)
+	for n := uint32(1); n <= 1000; n++ {
+		frame[0] = byte(n)
+		r.add(n, frame, now)
+	}
+	if r.bytes > r.maxBytes || len(r.chunks) > r.maxBytes/chunkSize+2 {
+		t.Fatalf("store grew to %d bytes in %d chunks", r.bytes, len(r.chunks))
+	}
+	for i, f := range r.after(990) {
+		if f[0] != byte(991+i) || len(f) != 1000 {
+			t.Fatalf("frame %d corrupted", 991+i)
+		}
+	}
+	if len(r.frames) > 2*r.len()+1 {
+		t.Fatalf("the frame index is not reused: %d slots for %d frames", len(r.frames), r.len())
+	}
+}
