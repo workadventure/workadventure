@@ -27,18 +27,13 @@ const PROXIMITY_FILE_TRANSFER_CHUNK_SIZE = 64 * 1024;
 const PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD = 256 * 1024;
 const PROXIMITY_FILE_TRANSFER_NEGOTIATION_TIMEOUT = 15_000;
 
-export type ProximityFileValidationResult = { ok: true } | { ok: false; reason: "too-many-files" | "file-too-large" };
+export type ProximityFileValidationResult = { tooManyFiles: boolean; tooLargeFiles: File[] };
 
 export function validateProximityFiles(files: File[]): ProximityFileValidationResult {
-    if (files.length > PROXIMITY_FILE_TRANSFER_MAX_FILES) {
-        return { ok: false, reason: "too-many-files" };
-    }
-
-    if (files.some((file) => file.size > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE)) {
-        return { ok: false, reason: "file-too-large" };
-    }
-
-    return { ok: true };
+    return {
+        tooManyFiles: files.length > PROXIMITY_FILE_TRANSFER_MAX_FILES,
+        tooLargeFiles: files.filter((file) => file.size > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE),
+    };
 }
 
 export type IncomingProximityFileTransferOffer = ProximityFileTransferOfferMessage & {
@@ -204,13 +199,16 @@ export class ProximityFileTransferService {
 
     createOutgoingOffers(files: File[], recipients: string[]): ProximityFileTransferOffer[] {
         const validation = validateProximityFiles(files);
-        if (!validation.ok) {
-            throw new Error(validation.reason);
+        if (validation.tooManyFiles) {
+            throw new Error("too-many-files");
+        }
+        if (validation.tooLargeFiles.length > 0) {
+            throw new Error("file-too-large");
         }
 
         const recipientIds = recipients.filter((spaceUserId) => spaceUserId !== this.options.localSpaceUserId);
-        // The file itself stays on disk (a File is not loaded in memory); it is read and sent slice
-        // by slice each time a recipient requests it.
+        // The file itself stays on disk (a File is not loaded in memory); it is streamed each time a
+        // recipient requests it.
         const offers = files.map((file) => ({ transferId: uuidv4(), file, recipients: recipientIds }));
 
         for (const offer of offers) {

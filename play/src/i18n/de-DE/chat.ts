@@ -295,7 +295,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         attachmentDownloadError: "Dieser Anhang konnte nicht heruntergeladen werden.",
         attachmentDecryptError: "Dieser Anhang konnte nicht entschlüsselt werden.",
         copy: "Link kopieren",
-        tooBig: "{fileName} ist zu groß {maxFileSize}.",
+        tooBig: "{{count:Datei zu groß zum Senden|?? Dateien zu groß zum Senden}}",
+        tooBigHint: "Das Limit liegt bei {max} pro Datei. Entfernen Sie sie, um zu senden.",
+        tooMany: "Zu viele Dateien",
+        tooManyHint: "Sie können bis zu {max} Dateien auf einmal senden. Entfernen Sie einige, um zu senden.",
         notLogged: "Sie müssen angemeldet sein, um eine Datei hochzuladen.",
     },
     needRefresh:

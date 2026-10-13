@@ -123,7 +123,15 @@ describe("validateProximityFiles", () => {
             new File(["d"], "d.txt"),
         ];
 
-        expect(validateProximityFiles(files)).toEqual({ ok: false, reason: "too-many-files" });
+        expect(validateProximityFiles(files)).toEqual({ tooManyFiles: true, tooLargeFiles: [] });
+    });
+
+    it("should name every file above the size cap", () => {
+        const small = new File(["a"], "small.txt");
+        const big = new File(["b"], "big.bin");
+        Object.defineProperty(big, "size", { value: PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE + 1 });
+
+        expect(validateProximityFiles([small, big])).toEqual({ tooManyFiles: false, tooLargeFiles: [big] });
     });
 });
 

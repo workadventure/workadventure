@@ -30,6 +30,11 @@
     import { PROXIMITY_FILE_TRANSFER_MAX_USERS } from "../../../Enum/EnvironmentVariable";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
+    import {
+        PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE,
+        PROXIMITY_FILE_TRANSFER_MAX_FILES,
+        validateProximityFiles,
+    } from "../../Connection/Proximity/ProximityFileTransferService";
     import { DEFAULT_PROXIMITY_SPACE_NAME } from "../../Connection/Proximity/ProximityChatRoomManager";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -52,7 +57,16 @@
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import { IconHelpCircle, IconList, IconLoader, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import {
+        IconAlertTriangle,
+        IconHelpCircle,
+        IconList,
+        IconLoader,
+        IconMoodSmile,
+        IconPaperclip,
+        IconSend,
+        IconX,
+    } from "@wa-icons";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -118,6 +132,36 @@
     // Proximity files travel peer to peer, so there is nobody to send them to before the space is joined,
     // and too many recipients to upload to in a crowded one.
     let tooManyUsersForFiles = $derived(!$proximityFilesAllowed);
+    // Proximity files have fixed caps: say so as soon as a file lands in the preview, not on send.
+    let fileValidation = $derived(
+        isProximityChatRoom
+            ? validateProximityFiles(files.map(({ file }) => file))
+            : { tooManyFiles: false, tooLargeFiles: [] },
+    );
+    let tooLargeFileIds = $derived(
+        new Set(files.filter(({ file }) => fileValidation.tooLargeFiles.includes(file)).map(({ id }) => id)),
+    );
+    let fileErrors = $derived([
+        ...(fileValidation.tooLargeFiles.length > 0
+            ? [
+                  {
+                      title: $LL.chat.file.tooBig({ count: fileValidation.tooLargeFiles.length }),
+                      hint: $LL.chat.file.tooBigHint({
+                          count: fileValidation.tooLargeFiles.length,
+                          max: formatBytes(PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE),
+                      }),
+                  },
+              ]
+            : []),
+        ...(fileValidation.tooManyFiles
+            ? [
+                  {
+                      title: $LL.chat.file.tooMany(),
+                      hint: $LL.chat.file.tooManyHint({ max: PROXIMITY_FILE_TRANSFER_MAX_FILES }),
+                  },
+              ]
+            : []),
+    ]);
     let canAttachFiles = $derived(
         fileAttachementEnabled &&
             $canSendMessages &&
@@ -175,7 +219,7 @@
     async function sendMessage(messageToSend: string) {
         // The files are only removed from the preview once uploaded: a second Enter or click during the
         // upload would send them again.
-        if (!$canSendMessages || sendingFiles) {
+        if (!$canSendMessages || sendingFiles || fileErrors.length > 0) {
             return;
         }
         if (applicationProperty && applicationProperty.link.length !== 0) {
@@ -352,7 +396,7 @@
         if (bytes === 0) return "0 Bytes";
         const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
         const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
+        return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + " " + sizes[i];
     }
 
     function focusin(event: FocusEvent) {
@@ -556,44 +600,60 @@
 
 {#if files.length > 0}
     <div class="w-full min-w-0 p-1">
-        <div
-            class="flex flex-row flex-nowrap gap-2 w-full min-w-[200px] overflow-x-auto no-scroll-bar rounded-lg p-2 bg-contrast/80"
-        >
-            {#each filesPreview as preview (preview.id)}
-                <div
-                    class="relative shrink-0 content-center {preview.type.includes('image')
-                        ? 'w-20'
-                        : 'w-28'} h-20 rounded-md backdrop-opacity-10 bg-white p-0.5"
-                >
-                    <button
-                        class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-0.5 -start-2 -top-2"
-                        onclick={() => deleteFile(preview.id)}
+        <div class="rounded-lg bg-contrast/80">
+            <div class="flex flex-row flex-nowrap gap-2 w-full min-w-[200px] overflow-x-auto no-scroll-bar p-2">
+                {#each filesPreview as preview (preview.id)}
+                    <div
+                        class="relative shrink-0 content-center {preview.type.includes('image')
+                            ? 'w-20'
+                            : 'w-28'} h-20 rounded-md backdrop-opacity-10 p-0.5 {tooLargeFileIds.has(preview.id)
+                            ? 'bg-danger'
+                            : 'bg-white'}"
+                        data-testid="filePreview"
                     >
-                        <IconX font-size="12" />
-                    </button>
-                    {#if preview.type.includes("image") && preview.url !== undefined}
-                        <img
-                            draggable="false"
-                            class="w-full h-full object-cover rounded-[10px]"
-                            src={preview.url}
-                            alt={preview.name}
-                        />
-                    {:else}
-                        <div
-                            title={preview.name}
-                            class="flex flex-col items-start overflow-hidden text-ellipsis justify-between p-0.5 bg-contrast/90 h-full w-full text-xs rounded-[10px]"
+                        <button
+                            class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-0.5 -start-2 -top-2"
+                            onclick={() => deleteFile(preview.id)}
                         >
-                            <span class="line-clamp-2 indent-3 text-xs">
-                                {preview.name}
-                            </span>
-                            <div class="flex items-center gap-1 rounded-[6px] bg-white/10 p-0.5 text-xxs m-0.5">
-                                {#if preview.type.includes("image") && preview.url === undefined}
-                                    <IconLoader class="animate-spin shrink-0" font-size={12} />
-                                {/if}
-                                <span>{formatBytes(preview.size)}</span>
+                            <IconX font-size="12" />
+                        </button>
+                        {#if preview.type.includes("image") && preview.url !== undefined}
+                            <img
+                                draggable="false"
+                                class="w-full h-full object-cover rounded-[10px]"
+                                src={preview.url}
+                                alt={preview.name}
+                            />
+                        {:else}
+                            <div
+                                title={preview.name}
+                                class="flex flex-col items-start overflow-hidden text-ellipsis justify-between p-0.5 bg-contrast/90 h-full w-full text-xs rounded-[10px]"
+                            >
+                                <span class="line-clamp-2 indent-3 text-xs">
+                                    {preview.name}
+                                </span>
+                                <div class="flex items-center gap-1 rounded-[6px] bg-white/10 p-0.5 text-xxs m-0.5">
+                                    {#if preview.type.includes("image") && preview.url === undefined}
+                                        <IconLoader class="animate-spin shrink-0" font-size={12} />
+                                    {/if}
+                                    <span>{formatBytes(preview.size)}</span>
+                                </div>
                             </div>
-                        </div>
-                    {/if}
+                        {/if}
+                    </div>
+                {/each}
+            </div>
+            {#each fileErrors as fileError (fileError.title)}
+                <div
+                    class="mx-2 mb-2 flex items-start gap-2 rounded-lg border border-solid border-danger bg-danger/15 px-2.5 py-1.5 text-sm text-white"
+                    role="alert"
+                    data-testid="fileError"
+                >
+                    <IconAlertTriangle class="mt-0.5 shrink-0 text-danger-200" font-size={16} />
+                    <div class="leading-snug">
+                        <div class="font-bold">{fileError.title}</div>
+                        <div class="text-white/85">{fileError.hint}</div>
+                    </div>
                 </div>
             {/each}
         </div>
@@ -920,7 +980,8 @@
                 shouldDisableSendButton({
                     applicationPropertyInProcessing,
                     isMessageInputDisabled: messageInputDisabled,
-                })}
+                }) ||
+                fileErrors.length > 0}
             onclick={() => sendMessage(message).catch((error) => console.error(error))}
         >
             <IconSend />
