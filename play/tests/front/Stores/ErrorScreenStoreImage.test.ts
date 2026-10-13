@@ -29,9 +29,9 @@ describe("importing ErrorScreenStore", () => {
         vi.unstubAllGlobals();
     });
 
-    it("does not download the default error image, which most visitors never see", async () => {
+    it("does not download images before an error screen needs them", async () => {
         await import("../../../src/front/Stores/ErrorScreenStore");
 
-        expect(requestedImages.filter((url) => url.endsWith("error.gif"))).toEqual([]);
+        expect(requestedImages).toEqual([]);
     });
 });
