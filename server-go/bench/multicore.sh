@@ -26,7 +26,7 @@ avg() { grep "^$1 " "$OUT/cpu" | tr -d '%' | awk '{ s += $2; n++ } END { if (n) 
 
 for cpus in "${CPUS[@]}"; do
 	docker rm -f $SERVER >/dev/null 2>&1 || true
-	docker run -d --name $SERVER --network $NET --cpus "$cpus" -m 1g -v "$OUT:/app:ro" \
+	docker run -d --name $SERVER --network $NET --cpus "$cpus" -m "${SERVER_MEM:-1g}" -v "$OUT:/app:ro" \
 		-e SECRET_KEY=bench busybox:1.37 /app/wa-server >/dev/null
 	for _ in $(seq 50); do docker exec $SERVER wget -qO- localhost:3000/ping >/dev/null 2>&1 && break; sleep 0.2; done
 	gomaxprocs=$(docker logs $SERVER 2>&1 | sed -n 's/.*GOMAXPROCS=\([0-9]*\).*/\1/p')
