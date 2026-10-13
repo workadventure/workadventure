@@ -78,6 +78,7 @@
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import Calendar from "./Calendar/Calendar.svelte";
+    import CalendarReminders from "./Calendar/CalendarReminders.svelte";
     import TodoList from "./TodoList/TodoList.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     import MeetingInvitationPopup from "./MeetingInvitation/MeetingInvitationPopup.svelte";
@@ -333,10 +334,12 @@
     {/if}
 
     <!-- Rendered here rather than beside #main-layout: its notifications and toasts must show above these
-         panels, and they cannot leave its stacking context (z-10). The calendar reminder opens the agenda and
-         announces the meeting at the same time, in the same corner. -->
+         panels, and they cannot leave its stacking context (z-10). The reminder cards sit in the agenda's corner;
+         opening the agenda settles them, so the two never overlap. -->
     {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
         <Calendar />
+    {:else if $calendarIsActivatedStore}
+        <CalendarReminders />
     {/if}
     {#if $todoListIsActivatedStore && $isTodoListVisibleStore}
         <TodoList />
