@@ -2,7 +2,7 @@
     import type { CalendarEventInterface } from "@workadventure/shared-utils";
     import Button from "../UI/Button.svelte";
     import LL from "../../../i18n/i18n-svelte";
-    import { openMeeting } from "./openMeeting";
+    import { scriptUtils } from "../../Api/ScriptUtils";
     import { IconDoorIn, IconVideo } from "@wa-icons";
 
     interface Props {
@@ -12,7 +12,7 @@
         /** A compact button that still spells out "Join", not just a camera icon. */
         labelled?: boolean;
         class?: string;
-        /** Called when the user joins, whichever way the meeting opens. */
+        /** Called when the user joins. */
         onjoin?: () => void;
     }
 
@@ -20,12 +20,10 @@
 
     let meeting = $derived(event.resource?.onlineMeeting);
 
-    function onclick(clickEvent: MouseEvent) {
+    // The way a website set to open in a new tab opens (map areas, chat links, WA.nav.openTab).
+    function join() {
+        if (meeting?.joinUrl) scriptUtils.openTab(meeting.joinUrl);
         onjoin?.();
-        if (openMeeting(event)) {
-            clickEvent.preventDefault();
-            clickEvent.stopPropagation();
-        }
     }
 </script>
 
@@ -38,49 +36,30 @@
             appearance={prominent ? "filled" : "border"}
             size={prominent ? undefined : "sm"}
             class={className}
-            onclick={() => onjoin?.()}
+            onclick={onjoin}
         >
             {#snippet icon()}<IconDoorIn class="h-4 w-4" />{/snippet}
             {$LL.externalModule.calendar.goThere()}
         </Button>
     {:else if prominent}
-        <Button
-            href={meeting.joinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="secondary"
-            class={className}
-            {onclick}
-        >
+        <Button variant="secondary" class={className} onclick={join}>
             {#snippet icon()}<IconVideo class="h-5 w-5" />{/snippet}
             {$LL.externalModule.calendar.join()}
         </Button>
     {:else if labelled}
-        <Button
-            href={meeting.joinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="light"
-            appearance="border"
-            size="sm"
-            class={className}
-            {onclick}
-        >
+        <Button variant="light" appearance="border" size="sm" class={className} onclick={join}>
             {#snippet icon()}<IconVideo class="h-4 w-4" />{/snippet}
             {$LL.externalModule.calendar.join()}
         </Button>
     {:else}
         <Button
-            href={meeting.joinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
             variant="light"
             appearance="ghost"
             size="sm"
             square
             aria-label={`${$LL.externalModule.calendar.join()} · ${event.title}`}
             class={className}
-            {onclick}
+            onclick={join}
         >
             {#snippet icon()}<IconVideo class="h-4 w-4" />{/snippet}
         </Button>

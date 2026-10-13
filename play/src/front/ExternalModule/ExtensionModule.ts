@@ -60,14 +60,6 @@ export interface ExtensionModule {
     destroy: () => void;
     areaMapEditor?: () => { [key: string]: ExtensionModuleAreaProperty } | undefined;
     components?: () => WorkAdventureComponent[];
-    openPopupMeeting?: (
-        subject: string,
-        joinWebUrl: string,
-        meetingId: string,
-        startDateTime: Date,
-        endDateTime: Date,
-        passcode?: string,
-    ) => void;
     calendarSynchronised: boolean;
     todoListSynchronized: boolean;
 }
