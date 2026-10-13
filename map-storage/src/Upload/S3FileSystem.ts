@@ -11,6 +11,7 @@ import {
     ListObjectsV2Command,
     NoSuchKey,
     PutObjectCommand,
+    S3ServiceException,
 } from "@aws-sdk/client-s3";
 import type { NextFunction, Response } from "express";
 import type * as unzipper from "unzipper";
@@ -284,7 +285,16 @@ export class S3FileSystem implements FileSystemInterface {
         res.on("close", onClose);
 
         this.s3
-            .getObject({ Bucket: this.bucketName, Key: virtualPath }, { abortSignal: controller.signal })
+            .getObject(
+                {
+                    Bucket: this.bucketName,
+                    Key: virtualPath,
+                    // When the browser already holds this version, S3 answers 304 and the file is not even read.
+                    // S3 compares ETags strictly: drop the "W/" a CDN adds to the ETag once it compressed the file.
+                    IfNoneMatch: res.req.get("If-None-Match")?.replaceAll("W/", ""),
+                },
+                { abortSignal: controller.signal },
+            )
             .then((result) => {
                 if (res.destroyed) {
                     controller.abort(new ClientDisconnectedError());
@@ -307,8 +317,8 @@ export class S3FileSystem implements FileSystemInterface {
                     res.set("Expires", result.Expires.toString());
                 }
 
-                // The browser already holds this version (its If-None-Match matches the ETag, including the weak
-                // ETag a CDN hands out once it compressed the file): answer 304 instead of sending the file again.
+                // Fallback for S3 servers that ignored IfNoneMatch (or a list of ETags, on MinIO): the browser already
+                // holds this version, answer 304 instead of sending the file again.
                 if (res.req.fresh) {
                     // Aborting releases the S3 socket without reading the body (see above).
                     controller.abort();
@@ -343,6 +353,11 @@ export class S3FileSystem implements FileSystemInterface {
                 if (isClientDisconnectedAbort(err)) {
                     // The client went away before/while we were fetching; the request was aborted and
                     // its socket released. Nothing to respond to.
+                    return;
+                }
+                // S3 matched the IfNoneMatch above (the SDK has no dedicated error class for it).
+                if (err instanceof S3ServiceException && err.$metadata.httpStatusCode === 304) {
+                    res.status(304).end();
                     return;
                 }
                 if (err instanceof Error && err.constructor.name === "NoSuchKey") {
