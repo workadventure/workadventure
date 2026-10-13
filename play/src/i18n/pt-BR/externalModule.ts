@@ -108,6 +108,9 @@ const externalModule: BaseTranslation = {
     calendar: {
         title: "Suas reuniões hoje",
         joinMeeting: "Clique aqui para participar da reunião",
+        joinMeetingInWorkAdventure: "Clique aqui para participar da reunião no WorkAdventure",
+        allDay: "Dia inteiro",
+        meetingStartingSoon: "“{title}” está prestes a começar",
     },
     todoList: {
         title: "A fazer",

@@ -106,6 +106,9 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
     calendar: {
         title: "اجتماعاتك اليوم",
         joinMeeting: "انقر هنا للانضمام إلى الاجتماع",
+        joinMeetingInWorkAdventure: "انقر هنا للانضمام إلى الاجتماع في WorkAdventure",
+        allDay: "طوال اليوم",
+        meetingStartingSoon: "«{title}» على وشك أن يبدأ",
     },
     todoList: {
         title: "المهام",
