@@ -21,6 +21,10 @@ pub struct Config {
     // --- WebSocket ---
     pub socket_idle_timer: Duration,
     pub client_disconnection_retention: Duration,
+    /// SERVER_OUTBOX_BUDGET_MB: what all the outbound queues may hold together (new, default 256).
+    pub outbox_budget: usize,
+    /// SERVER_RESUME_BUDGET_MB: what all the resume buffers may hold together (new, default 256).
+    pub resume_budget: usize,
 
     // --- Proximity (back) ---
     pub minimum_distance: f64,
@@ -108,6 +112,8 @@ impl Config {
             client_disconnection_retention: Duration::from_millis(
                 env.number("CLIENT_DISCONNECTION_RETENTION_MS", 30_000),
             ),
+            outbox_budget: env.number::<usize>("SERVER_OUTBOX_BUDGET_MB", 256) * 1024 * 1024,
+            resume_budget: env.number::<usize>("SERVER_RESUME_BUDGET_MB", 256) * 1024 * 1024,
             minimum_distance: env.number("MINIMUM_DISTANCE", 64.0),
             group_radius: env.number("GROUP_RADIUS", 48.0),
             max_per_group: env.number("MAX_PER_GROUP", 4),

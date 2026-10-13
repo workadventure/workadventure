@@ -16,11 +16,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
 use futures_util::StreamExt;
-use prost::Message as _;
+use prost::encoding::decode_varint;
 use tokio::sync::Semaphore;
 use tokio_tungstenite::tungstenite::Message;
-use wa_bot::{Bot, Options, Sub, Top};
-use wa_proto::messages as pb;
+use wa_bot::{Bot, Options};
 
 const LANE: i32 = 800;
 const ORIGIN: i32 = 100;
@@ -72,6 +71,69 @@ struct Stats {
     moves_sent: AtomicU64,
     subs_received: AtomicU64,
     moves_received: AtomicU64,
+}
+
+/// Walks the protobuf fields of `buf` without allocating: `f(field, bytes, 0)` for a length-delimited field,
+/// `f(field, &[], value)` for a varint.
+fn fields(mut buf: &[u8], mut f: impl FnMut(u32, &[u8], u64)) -> Option<()> {
+    while !buf.is_empty() {
+        let key = decode_varint(&mut buf).ok()?;
+        let (field, wire) = ((key >> 3) as u32, key & 7);
+        match wire {
+            0 => {
+                let v = decode_varint(&mut buf).ok()?;
+                f(field, &[], v);
+            }
+            2 => {
+                let len = decode_varint(&mut buf).ok()? as usize;
+                let (body, rest) = (buf.get(..len)?, buf.get(len..)?);
+                f(field, body, 0);
+                buf = rest;
+            }
+            5 => buf = buf.get(4..)?,
+            1 => buf = buf.get(8..)?,
+            _ => return None,
+        }
+    }
+    Some(())
+}
+
+/// Calls `f(kind, body)` for each SubMessage of a batch frame (kind 1 = userMovedMessage).
+fn for_each_sub(frame: &[u8], mut f: impl FnMut(u32, &[u8])) {
+    // PusherToFrontWebSocketMessage.message (2) -> ServerToClientMessage.batchMessage (1) -> payload (2).
+    let _ = fields(frame, |field, envelope, _| {
+        if field != 2 {
+            return;
+        }
+        let _ = fields(envelope, |field, batch, _| {
+            if field != 1 {
+                return;
+            }
+            let _ = fields(batch, |field, sub, _| {
+                if field != 2 {
+                    return;
+                }
+                let _ = fields(sub, |kind, body, _| f(kind, body));
+            });
+        });
+    });
+}
+
+/// (userId, position.x) of a UserMovedMessage.
+fn user_moved(body: &[u8]) -> Option<(i32, i32)> {
+    let (mut user, mut x) = (0i32, 0i32);
+    fields(body, |field, bytes, v| match field {
+        1 => user = v as i32,
+        2 => {
+            let _ = fields(bytes, |f, _, v| {
+                if f == 1 {
+                    x = v as i32;
+                }
+            });
+        }
+        _ => {}
+    })?;
+    Some((user, x))
 }
 
 async fn server_cpu_seconds(server: &str, token: Option<&str>) -> Option<f64> {
@@ -152,7 +214,9 @@ async fn main() {
         // Writer: walk.
         tasks.push(tokio::spawn(async move {
             let offset = (u as i32 * 97) % LANE;
-            let mut tick = tokio::time::interval(move_every);
+            // Players do not move in step: spread the bots over the period.
+            let phase = Duration::from_micros(((r * 104_729 + u * 7_919) as u64 * 1_000) % move_every.as_micros().max(1) as u64);
+            let mut tick = tokio::time::interval_at(tokio::time::Instant::now() + phase, move_every);
             let mut seq: i32 = 0;
             while Instant::now() < end {
                 tick.tick().await;
@@ -174,20 +238,21 @@ async fn main() {
             let mut seen: u64 = 0;
             while let Ok(Some(Ok(frame))) = tokio::time::timeout_at(end.into(), stream.next()).await {
                 let Message::Binary(bytes) = frame else { continue };
-                let Ok(env) = pb::PusherToFrontWebSocketMessage::decode(bytes) else { continue };
-                let Some(Top::BatchMessage(batch)) = env.message.and_then(|m| m.message) else { continue };
                 let now = t0.elapsed().as_micros() as u64;
-                stats_r.subs_received.fetch_add(batch.payload.len() as u64, Ordering::Relaxed);
-                for sub in batch.payload {
-                    let Some(Sub::UserMovedMessage(m)) = sub.message else { continue };
-                    let Some(p) = m.position else { continue };
-                    stats_r.moves_received.fetch_add(1, Ordering::Relaxed);
-                    let lane_x = p.x - ORIGIN;
-                    let Some(ring) = room.rings.get(m.user_id as usize) else { continue };
-                    let Some(sent) = usize::try_from(lane_x).ok().and_then(|i| ring.0.get(i)) else { continue };
+                let mut subs = 0u64;
+                let mut moves = 0u64;
+                for_each_sub(&bytes, |kind, body| {
+                    subs += 1;
+                    if kind != 1 {
+                        return;
+                    }
+                    moves += 1;
+                    let Some((user_id, x)) = user_moved(body) else { return };
+                    let Some(ring) = room.rings.get(user_id as usize) else { return };
+                    let Some(sent) = usize::try_from(x - ORIGIN).ok().and_then(|i| ring.0.get(i)) else { return };
                     let sent = sent.load(Ordering::Relaxed);
                     if sent == 0 || sent > now {
-                        continue;
+                        return;
                     }
                     seen += 1;
                     // Keep a bounded, evenly spread sample.
@@ -197,7 +262,9 @@ async fn main() {
                         let i = (seen as usize * 7919) % MAX_SAMPLES_PER_BOT;
                         samples[i] = (now - sent) as u32;
                     }
-                }
+                });
+                stats_r.subs_received.fetch_add(subs, Ordering::Relaxed);
+                stats_r.moves_received.fetch_add(moves, Ordering::Relaxed);
             }
             samples
         }));
@@ -229,4 +296,37 @@ async fn main() {
         all.len(),
         cpu
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use prost::Message as _;
+    use wa_proto::messages as pb;
+
+    #[test]
+    fn the_light_parser_reads_moves_like_prost() {
+        let moved = |id, x| pb::SubMessage {
+            message: Some(pb::sub_message::Message::UserMovedMessage(pb::UserMovedMessage {
+                user_id: id,
+                position: Some(wa_bot::position(x, 7, true)),
+            })),
+        };
+        let left = pb::SubMessage {
+            message: Some(pb::sub_message::Message::UserLeftMessage(pb::UserLeftMessage { user_id: 3 })),
+        };
+        let frame = pb::PusherToFrontWebSocketMessage {
+            nonce: 9,
+            message: Some(pb::ServerToClientMessage {
+                message: Some(pb::server_to_client_message::Message::BatchMessage(pb::BatchMessage {
+                    event: String::new(),
+                    payload: vec![moved(5, 123), left, moved(6, 900)],
+                })),
+            }),
+        }
+        .encode_to_vec();
+        let mut seen = Vec::new();
+        for_each_sub(&frame, |kind, body| seen.push((kind, user_moved(body).filter(|_| kind == 1))));
+        assert_eq!(seen, vec![(1, Some((5, 123))), (5, None), (1, Some((6, 900)))]);
+    }
 }

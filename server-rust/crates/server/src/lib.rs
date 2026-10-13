@@ -1,6 +1,7 @@
 //! Adapters and runtime around `wa-core`: HTTP and WebSocket transport, protobuf encoding, actors.
 #![recursion_limit = "256"]
 
+pub mod budget;
 pub mod config;
 pub mod front;
 pub mod http;
@@ -9,6 +10,7 @@ pub mod local_admin;
 pub mod logic;
 pub mod metrics;
 pub mod mustache;
+pub mod oidc;
 pub mod outbox;
 pub mod registry;
 pub mod resume;
@@ -43,6 +45,10 @@ pub struct AppState {
     pub front: Arc<FrontAssets>,
     pub page_script: Arc<str>,
     pub http: reqwest::Client,
+    pub oidc: Option<Arc<oidc::OidcConfig>>,
+    /// The provider's endpoints, discovered on first use.
+    pub oidc_provider: Arc<parking_lot::Mutex<Option<oidc::Provider>>>,
+    pub budgets: session::Budgets,
 }
 
 impl AppState {
@@ -60,6 +66,12 @@ impl AppState {
             front: Arc::new(FrontAssets::new(&config)),
             page_script: front::script(&config),
             http: reqwest::Client::new(),
+            oidc: oidc::OidcConfig::from(&config).map(Arc::new),
+            oidc_provider: Arc::new(parking_lot::Mutex::new(None)),
+            budgets: session::Budgets {
+                outboxes: Arc::new(budget::Budget::new(config.outbox_budget)),
+                resume: Arc::new(budget::Budget::new(config.resume_budget)),
+            },
             config: Arc::new(config),
         }
     }
@@ -73,6 +85,7 @@ impl AppState {
 pub fn router(state: AppState) -> Router {
     http::routes()
         .merge(front::routes())
+        .merge(oidc::routes())
         .route("/ws/room", get(ws::ws_room))
         .with_state(state)
 }
