@@ -3,6 +3,9 @@ module github.com/workadventure/workadventure/server-go
 go 1.27
 
 require (
+	github.com/cbroglie/mustache v1.4.2
+	github.com/coder/websocket v1.8.15
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/prometheus/client_golang v1.25.0
 	google.golang.org/protobuf v1.36.12
 )
