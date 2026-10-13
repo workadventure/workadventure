@@ -337,6 +337,16 @@ fn a_new_connection_from_the_same_tab_replaces_the_old_one() {
 }
 
 #[test]
+fn a_player_is_found_by_uuid_and_by_connection() {
+    let mut room = room();
+    let mut log = Log::default();
+    let a = join(&mut room, &mut log, "alice", at(10, 20));
+    assert_eq!(room.find("alice", None).map(|u| u.id), Some(a));
+    assert_eq!(room.find("alice", Some(999)).map(|u| u.position.y), Some(20), "unknown id: any connection");
+    assert!(room.find("bob", None).is_none());
+}
+
+#[test]
 fn hundreds_of_players_in_one_room_stay_consistent() {
     let mut room = room();
     let mut log = Log::default();

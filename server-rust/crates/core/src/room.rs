@@ -178,6 +178,13 @@ impl Room {
         self.groups.get(&id)
     }
 
+    /// A player by uuid; `id` picks one connection when the same user is connected twice (askPositionMessage).
+    pub fn find(&self, uuid: &str, id: Option<UserId>) -> Option<&User> {
+        let ids = self.users_by_uuid.get(uuid)?;
+        let id = id.filter(|i| ids.contains(i)).or_else(|| ids.iter().min().copied())?;
+        self.users.get(&id)
+    }
+
     pub fn user_count(&self) -> usize {
         self.users.len()
     }
