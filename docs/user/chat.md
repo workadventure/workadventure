@@ -29,6 +29,9 @@ When a user moves in a conversation bubble, they cannot see the chat messages th
 
 Messages in the Proximity Chat are **not stored**. If you refresh the page, the proximity chat room will be empty.
 
+Files sent in the Proximity Chat are not stored either: they go directly from your browser to the people in the bubble.
+See [Sharing files](file-sharing.md).
+
 ## "Matrix" chat rooms
 
 Matrix chat rooms take their name from the Matrix protocol, which is used to provide chat features in WorkAdventure.
@@ -83,6 +86,11 @@ In order to open a chat with another user in your WorkAdventure world, you need 
 If you are creating a private room, you will also need to invite users.
 
 Invited users will receive a notification in the chat room list and they can accept or decline the invitation.
+
+## Sharing files
+
+You can send files in any chat room, and in the proximity chat. In chat rooms, files stay in the room history. In the
+proximity chat, they go directly to the people around you and are not stored. See [Sharing files](file-sharing.md).
 
 ## User list
 
