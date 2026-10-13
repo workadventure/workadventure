@@ -62,6 +62,7 @@ import type { PictureStore } from "../../../Stores/PictureStore";
 import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerManager";
 import { BubbleNotification as BasicNotification } from "../../../Notification/BubbleNotification";
 import { iceServersManager } from "../../../WebRtc/IceServersManager";
+import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { DEFAULT_PROXIMITY_SPACE_NAME, type ProximityChatRoomKind } from "./ProximityChatRoomManager";
 import { ProximityChatQuestion } from "./ProximityChatQuestion";
 import { canCreateProximityContent } from "./ProximityCreationPermissions";
@@ -256,7 +257,12 @@ export class ProximityChatRoom implements ChatRoom {
     private fileTransferService: ProximityFileTransferService | undefined;
     private fileTransfers = new Map<
         string,
-        { message: ProximityChatMessage; content: Writable<ChatMessageContent>; downloadStartedAt?: number }
+        {
+            message: ProximityChatMessage;
+            content: Writable<ChatMessageContent>;
+            sizeBytes: number;
+            downloadStartedAt?: number;
+        }
     >();
     // For each file we sent, how each recipient's copy is doing.
     private outgoingFileTransfers = new Map<string, Writable<ChatAttachmentRecipient[]>>();
@@ -497,6 +503,10 @@ export class ProximityChatRoom implements ChatRoom {
             recipients.map((user) => user.spaceUserId),
         );
         for (const offer of offers) {
+            analyticsClient.trackAdminEvent("chat.proximity_file.sent", {
+                sizeBytes: offer.file.size,
+                recipientCount: recipients.length,
+            });
             const objectUrl = URL.createObjectURL(offer.file);
             this.fileTransferObjectUrls.add(objectUrl);
             const attachmentRecipients = writable<ChatAttachmentRecipient[]>(
@@ -882,7 +892,7 @@ export class ProximityChatRoom implements ChatRoom {
             () => this.refuseIncomingFileOffer(offer.transferId),
         );
 
-        this.fileTransfers.set(offer.transferId, { message, content });
+        this.fileTransfers.set(offer.transferId, { message, content, sizeBytes: offer.size });
         this.messages.push(message);
         this.lastMessageTimestamp = message.date.getTime();
         this.notifyNewMessage(message);
@@ -912,6 +922,7 @@ export class ProximityChatRoom implements ChatRoom {
         const { content } = transfer;
 
         if (update.state === "ready") {
+            analyticsClient.trackAdminEvent("chat.proximity_file.received", { sizeBytes: transfer.sizeBytes });
             transfer.downloadStartedAt = undefined;
             this.fileTransferObjectUrls.add(update.url);
             content.update((currentContent) => ({

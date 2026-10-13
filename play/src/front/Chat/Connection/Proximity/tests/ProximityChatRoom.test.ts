@@ -14,6 +14,7 @@ import type {
 import type { SpaceUserExtended } from "../../../../Space/SpaceInterface";
 import { formatProximityFileTransferRemainingTime } from "../ProximityFileTransferEta";
 import { ProximityChatRoom } from "../ProximityChatRoom";
+import { analyticsClient } from "../../../../Administration/AnalyticsClient";
 
 vi.mock("../../../../Phaser/Game/GameManager", () => ({
     gameManager: {
@@ -254,6 +255,37 @@ describe("ProximityChatRoom file transfers", () => {
             mediaState: "refused",
             mediaProgress: 0,
         });
+    });
+
+    it("should report the size of sent and fully received files to analytics", async () => {
+        const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent").mockImplementation(() => {});
+        vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-2") });
+        const room = createRoom();
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+        Reflect.get(room, "applyFileTransferUpdate").call(room, {
+            transferId: "transfer-1",
+            state: "downloading",
+            progress: 0.5,
+        } satisfies ProximityFileTransferUpdate);
+        expect(trackAdminEvent).not.toHaveBeenCalled();
+
+        Reflect.get(room, "applyFileTransferUpdate").call(room, {
+            transferId: "transfer-1",
+            state: "ready",
+            progress: 1,
+            url: "blob:received-file",
+        } satisfies ProximityFileTransferUpdate);
+        expect(trackAdminEvent).toHaveBeenCalledWith("chat.proximity_file.received", { sizeBytes: 5 });
+
+        const file = new File(["hello world"], "hello.txt", { type: "text/plain" });
+        Reflect.set(room, "fileTransferService", {
+            createOutgoingOffers: () => [{ transferId: "transfer-2", file, recipients: [] }],
+        });
+        await room.sendFiles(createFileList(file));
+        expect(trackAdminEvent).toHaveBeenCalledWith("chat.proximity_file.sent", { sizeBytes: 11, recipientCount: 0 });
+
+        trackAdminEvent.mockRestore();
+        vi.unstubAllGlobals();
     });
 
     it("should show sent files right away under their transfer id", async () => {

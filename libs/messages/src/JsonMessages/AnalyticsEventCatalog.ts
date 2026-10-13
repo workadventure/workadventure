@@ -1085,6 +1085,29 @@ export const ANALYTICS_EVENTS = {
     description: "The user sent a chat message. Content is never collected.",
   }),
 
+  "chat.proximity_file.sent": event({
+    properties: z.object({
+      sizeBytes: z.number().int().nonnegative().describe("Size of the file."),
+      recipientCount: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "How many people in the proximity chat were offered the file. Each one who accepts gets a full copy from the sender's browser.",
+        ),
+    }),
+    description:
+      "The user sent a file in the proximity chat, peer to peer. One event per file, so a send of several files reports several. The file name and content are never collected.",
+  }),
+
+  "chat.proximity_file.received": event({
+    properties: z.object({
+      sizeBytes: z.number().int().nonnegative().describe("Size of the file."),
+    }),
+    description:
+      "The user accepted a file sent in the proximity chat and received all of it. Declined or interrupted transfers are not reported.",
+  }),
+
   "invite.sent": event({
     properties: z.object({
       inviteType: z
