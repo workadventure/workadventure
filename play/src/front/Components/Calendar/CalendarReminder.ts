@@ -1,74 +1,75 @@
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import type { CalendarEventInterface } from "@workadventure/shared-utils";
 import { calendarEventsStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
-import { isTodoListVisibleStore } from "../../Stores/TodoListStore";
-import { notificationPlayingStore } from "../../Stores/NotificationStore";
-import LL from "../../../i18n/i18n-svelte";
+import { byStart, isLong } from "./agenda";
 
-/** How long before it starts a meeting is announced. */
-export const REMINDER_LEAD_MS = 2 * 60 * 1000;
+/** How long before it starts a meeting gets its reminder. */
+export const REMINDER_LEAD_MS = 5 * 60 * 1000;
+
+/** How long after its start the reminder stays: long enough for whoever arrives late to still join. */
+export const REMINDER_LINGER_MS = 10 * 60 * 1000;
+
+const MAX_REMINDERS = 3;
 
 const CHECK_INTERVAL_MS = 30 * 1000;
 
 /**
- * Which meetings have already been announced. Module scope on purpose: MainLayout, the only caller of
- * startCalendarReminders(), is destroyed and remounted on every room-to-room transition, and a set
- * living inside the call would announce the same meeting again at every door the user walks through.
+ * Reminders the user settled: closed, acted on, or seen in the agenda. Module scope on purpose: MainLayout, the
+ * only caller of startCalendarReminders(), is destroyed and remounted on every room-to-room transition, and a set
+ * living inside the call would bring every settled reminder back at each door the user walks through.
  */
-const alreadyNotified = new Set<string>();
+const dismissed = new Set<string>();
+
+/** The reminder cards on screen, earliest meeting first. */
+export const calendarRemindersStore = writable<CalendarEventInterface[]>([]);
 
 /**
- * The events that are about to start and have not been announced yet.
- *
- * An event that already started is not "about to start": we would be shouting about a meeting the
- * user is either already in, or has knowingly skipped. A tab suspended across the whole lead window
- * therefore misses its reminder, which is the right trade-off.
+ * The meetings that deserve a reminder now: from REMINDER_LEAD_MS before their start to REMINDER_LINGER_MS after
+ * it (or their end, if sooner). All-day and long events never do: they would hold the corner all day.
  */
 export function dueReminders(
     events: Iterable<CalendarEventInterface>,
-    alreadyNotified: ReadonlySet<string>,
+    dismissed: ReadonlySet<string>,
     now: Date,
 ): CalendarEventInterface[] {
-    return [...events].filter((event) => {
-        if (event.allDay === true || alreadyNotified.has(event.id)) {
-            return false;
-        }
-        const msUntilStart = event.start.getTime() - now.getTime();
-        return msUntilStart > 0 && msUntilStart <= REMINDER_LEAD_MS;
-    });
+    const time = now.getTime();
+    return [...events]
+        .filter(
+            (event) =>
+                !event.allDay &&
+                !isLong(event) &&
+                !dismissed.has(event.id) &&
+                event.start.getTime() - REMINDER_LEAD_MS <= time &&
+                time < event.start.getTime() + REMINDER_LINGER_MS &&
+                time < event.end.getTime(),
+        )
+        .sort(byStart)
+        .slice(0, MAX_REMINDERS);
+}
+
+export function dismissReminder(event: CalendarEventInterface): void {
+    dismissed.add(event.id);
+    calendarRemindersStore.update((reminders) => reminders.filter((reminder) => reminder.id !== event.id));
 }
 
 /**
- * Announce meetings shortly before they start, whatever the calendar provider that filled the store.
- * Returns the function stopping the reminders.
+ * Keep the reminder cards in step with the calendar, whatever provider fills it. Returns the function stopping them.
  */
 export function startCalendarReminders(): () => void {
-    const check = () => {
-        const due = dueReminders(get(calendarEventsStore).values(), alreadyNotified, new Date());
-        if (due.length === 0) {
-            return;
-        }
-        for (const event of due) {
-            alreadyNotified.add(event.id);
-            notificationPlayingStore.playNotification(
-                get(LL).externalModule.calendar.meetingStartingSoon({ title: event.title }),
-                undefined,
-                `calendar-reminder-${event.id}`,
-            );
-        }
-        // The agenda holds the join link: put it in front of the user rather than let him hunt for it.
-        // The to-do list shares the agenda's corner of the screen, so opening one closes the other,
-        // as every other opener of these panels does.
-        isCalendarVisibleStore.set(true);
-        isTodoListVisibleStore.set(false);
-    };
+    const check = () =>
+        calendarRemindersStore.set(dueReminders(get(calendarEventsStore).values(), dismissed, new Date()));
 
     const interval = setInterval(check, CHECK_INTERVAL_MS);
-    // A refresh can bring in a meeting that is already inside the lead window.
-    const unsubscribe = calendarEventsStore.subscribe(check);
+    // A refresh can bring a meeting into the window, or take a cancelled or moved one out of it.
+    const unsubscribeEvents = calendarEventsStore.subscribe(check);
+    // The agenda shows the same meetings with the same buttons: once it is open, the reminders have done their job.
+    const unsubscribeAgenda = isCalendarVisibleStore.subscribe((visible) => {
+        if (visible) get(calendarRemindersStore).forEach(dismissReminder);
+    });
 
     return () => {
         clearInterval(interval);
-        unsubscribe();
+        unsubscribeEvents();
+        unsubscribeAgenda();
     };
 }

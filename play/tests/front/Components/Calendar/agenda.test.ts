@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
     buildAgenda,
+    meetingPlace,
     meetingsInProgress,
     nextMeeting,
     overlapsWith,
@@ -127,6 +128,24 @@ describe("meetingsInProgress", () => {
             NOW,
         );
         expect(ids(running)).toEqual(["a", "b"]);
+    });
+});
+
+describe("meetingPlace", () => {
+    const at = (joinUrl?: string, isWorkAdventure?: boolean) =>
+        meetingPlace(event("m", "18:00", "18:30", { resource: { onlineMeeting: { joinUrl, isWorkAdventure } } }));
+
+    it("names the place the way people do", () => {
+        expect(at("https://play.example/@/a/b", true)).toBe("WorkAdventure");
+        expect(at("https://meet.google.com/abc-defg-hij")).toBe("Google Meet");
+        expect(at("https://teams.microsoft.com/l/meetup-join/x")).toBe("Microsoft Teams");
+        expect(at("https://us02web.zoom.us/j/1")).toBe("Zoom");
+        expect(at("https://www.example.org/room")).toBe("example.org");
+    });
+
+    it("has nothing to say without a link", () => {
+        expect(at(undefined)).toBeUndefined();
+        expect(at("not a url")).toBeUndefined();
     });
 });
 

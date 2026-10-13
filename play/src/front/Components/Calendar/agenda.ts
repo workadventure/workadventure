@@ -21,10 +21,10 @@ export interface AgendaDay {
     count: number;
 }
 
-const byStart = (a: CalendarEventInterface, b: CalendarEventInterface) =>
+export const byStart = (a: CalendarEventInterface, b: CalendarEventInterface) =>
     a.start.getTime() - b.start.getTime() || a.end.getTime() - b.end.getTime();
 
-const isLong = (event: CalendarEventInterface) => event.end.getTime() - event.start.getTime() >= LONG_EVENT_MS;
+export const isLong = (event: CalendarEventInterface) => event.end.getTime() - event.start.getTime() >= LONG_EVENT_MS;
 
 export function startOfDay(date: Date): Date {
     const day = new Date(date);
@@ -134,6 +134,29 @@ export function formatTimeUntil(date: Date, now: Date): string {
     if (minutes < 60) return format.format(minutes, "minute");
     if (minutes < 24 * 60) return format.format(Math.round(minutes / 60), "hour");
     return format.format(Math.round(minutes / (24 * 60)), "day");
+}
+
+/** "4 min ago"… short: it shares a line with the meeting's place. */
+export function formatTimeAgo(date: Date, now: Date): string {
+    const minutes = Math.max(1, Math.round((now.getTime() - date.getTime()) / 60_000));
+    return new Intl.RelativeTimeFormat(undefined, { numeric: "auto", style: "short" }).format(-minutes, "minute");
+}
+
+/** Where the meeting happens, the way people name it: WorkAdventure, Google Meet, Microsoft Teams… or the link's host. */
+export function meetingPlace(event: CalendarEventInterface): string | undefined {
+    const meeting = event.resource?.onlineMeeting;
+    if (!meeting?.joinUrl) return undefined;
+    if (meeting.isWorkAdventure) return "WorkAdventure";
+    let host: string;
+    try {
+        host = new URL(meeting.joinUrl).hostname;
+    } catch {
+        return undefined;
+    }
+    if (host === "meet.google.com") return "Google Meet";
+    if (host.endsWith("teams.microsoft.com") || host.endsWith("teams.live.com")) return "Microsoft Teams";
+    if (host === "zoom.us" || host.endsWith(".zoom.us")) return "Zoom";
+    return host.replace(/^www\./, "");
 }
 
 /** "30 min", "1 h 15". */

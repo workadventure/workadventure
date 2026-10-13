@@ -12,13 +12,16 @@
         /** A compact button that still spells out "Join", not just a camera icon. */
         labelled?: boolean;
         class?: string;
+        /** Called when the user joins, whichever way the meeting opens. */
+        onjoin?: () => void;
     }
 
-    let { event, prominent = false, labelled = false, class: className = "" }: Props = $props();
+    let { event, prominent = false, labelled = false, class: className = "", onjoin }: Props = $props();
 
     let meeting = $derived(event.resource?.onlineMeeting);
 
     function onclick(clickEvent: MouseEvent) {
+        onjoin?.();
         if (openMeeting(event)) {
             clickEvent.preventDefault();
             clickEvent.stopPropagation();
@@ -35,6 +38,7 @@
             appearance={prominent ? "filled" : "border"}
             size={prominent ? undefined : "sm"}
             class={className}
+            onclick={() => onjoin?.()}
         >
             {#snippet icon()}<IconDoorIn class="h-4 w-4" />{/snippet}
             {$LL.externalModule.calendar.goThere()}
