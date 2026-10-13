@@ -1256,7 +1256,7 @@ export class SocketManager {
             return;
         }
         group.lock(message.lock);
-        room.emitLockGroupEvent(user, group.getId());
+        room.emitLockGroupEvent(group);
     }
 
     handleUpdateMapToNewestMessage(room: GameRoom, user: User, message: UpdateMapToNewestWithKeyMessage) {

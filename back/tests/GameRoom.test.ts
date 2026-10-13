@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
     AvailabilityStatus,
     JoinRoomMessage,
+    LockGroupPromptMessage,
     PositionMessage_Direction,
     RoomJoinedMessage,
     SetPlayerDetailsMessage,
@@ -12,10 +13,11 @@ import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import type { ConnectCallback, DisconnectCallback } from "../src/Model/GameRoom";
 import { GameRoom } from "../src/Model/GameRoom";
 import { Point } from "../src/Model/Websocket/MessageUserPosition";
-import type { Group } from "../src/Model/Group";
+import { Group } from "../src/Model/Group";
 import type { User, UserSocket } from "../src/Model/User";
-import type { VariableSocket } from "../src/RoomManager";
-import type { EmoteCallback } from "../src/Model/Zone";
+import type { RoomSocket, VariableSocket } from "../src/RoomManager";
+import { socketManager } from "../src/Services/SocketManager";
+import type { EmoteCallback, ZonePosition } from "../src/Model/Zone";
 
 function createMockUser(userId: number): User {
     return {
@@ -267,6 +269,52 @@ describe("GameRoom", () => {
             world.updatePosition(user3, new Point(400, 100));
             expect(user3.group).toBe(user1.group);
         });
+    });
+
+    it("should not leave a deleted locked group in the zone of the user who locked it", async () => {
+        // What a pusher listening to every zone knows: the groups each zone announced and has not deleted since.
+        const groupsByZone = new Map<string, Set<number>>();
+        const groupsIn = (zone: ZonePosition): Set<number> => {
+            const key = `${zone.x},${zone.y}`;
+            const groups = groupsByZone.get(key) ?? new Set<number>();
+            groupsByZone.set(key, groups);
+            return groups;
+        };
+        const announce = (thing: unknown, zone: ZonePosition): void => {
+            if (thing instanceof Group) groupsIn(zone).add(thing.getId());
+        };
+        const world = await GameRoom.create(
+            ROOM_URL,
+            () => {},
+            () => {},
+            160,
+            160,
+            announce,
+            announce,
+            (thing, zone) => {
+                if (thing instanceof Group) groupsIn(zone).delete(thing.getId());
+            },
+            emote,
+            (zone, groupId) => groupsIn(zone).add(groupId),
+            () => {},
+            () => {},
+        );
+        world.addZoneListener({} as RoomSocket, 0, 0);
+        world.addZoneListener({} as RoomSocket, 1, 0);
+
+        // Zones are 320px wide: user1 stands in zone (0,0) while the centre of the group, (350, 100), is in zone (1,0).
+        const user1 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("1", 300, 100));
+        await world.join(createMockUserSocket().socket, createJoinRoomMessage("2", 400, 100));
+        const group = user1.group;
+        if (!group) throw new Error("user1 and user2 should share a group");
+
+        socketManager.handleLockGroupPromptMessage(world, user1, LockGroupPromptMessage.fromPartial({ lock: true }));
+        // The group moves onto user2, in zone (1,0), and is deleted there.
+        world.leave(user1);
+
+        for (const groups of groupsByZone.values()) {
+            expect(groups.has(group.getId())).toBe(false);
+        }
     });
 
     it("should disconnect user1 and user2", async () => {

@@ -1000,8 +1000,8 @@ export class GameRoom implements BrothersFinder {
         this.positionNotifier.emitEmoteEvent(user, emoteEventMessage);
     }
 
-    public emitLockGroupEvent(user: User, groupId: number) {
-        this.positionNotifier.emitLockGroupEvent(user, groupId);
+    public emitLockGroupEvent(group: Group) {
+        this.positionNotifier.emitLockGroupEvent(group);
     }
 
     public addRoomListener(socket: RoomSocket) {
