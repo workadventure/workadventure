@@ -2,7 +2,6 @@
     import type { CalendarEventInterface } from "@workadventure/shared-utils";
     import Button from "../UI/Button.svelte";
     import LL from "../../../i18n/i18n-svelte";
-    import { openMeeting } from "./openMeeting";
     import { IconDoorIn, IconVideo } from "@wa-icons";
 
     interface Props {
@@ -12,21 +11,13 @@
         /** A compact button that still spells out "Join", not just a camera icon. */
         labelled?: boolean;
         class?: string;
-        /** Called when the user joins, whichever way the meeting opens. */
+        /** Called when the user joins. */
         onjoin?: () => void;
     }
 
     let { event, prominent = false, labelled = false, class: className = "", onjoin }: Props = $props();
 
     let meeting = $derived(event.resource?.onlineMeeting);
-
-    function onclick(clickEvent: MouseEvent) {
-        onjoin?.();
-        if (openMeeting(event)) {
-            clickEvent.preventDefault();
-            clickEvent.stopPropagation();
-        }
-    }
 </script>
 
 {#if meeting?.joinUrl}
@@ -38,7 +29,7 @@
             appearance={prominent ? "filled" : "border"}
             size={prominent ? undefined : "sm"}
             class={className}
-            onclick={() => onjoin?.()}
+            onclick={onjoin}
         >
             {#snippet icon()}<IconDoorIn class="h-4 w-4" />{/snippet}
             {$LL.externalModule.calendar.goThere()}
@@ -50,7 +41,7 @@
             rel="noopener noreferrer"
             variant="secondary"
             class={className}
-            {onclick}
+            onclick={onjoin}
         >
             {#snippet icon()}<IconVideo class="h-5 w-5" />{/snippet}
             {$LL.externalModule.calendar.join()}
@@ -64,7 +55,7 @@
             appearance="border"
             size="sm"
             class={className}
-            {onclick}
+            onclick={onjoin}
         >
             {#snippet icon()}<IconVideo class="h-4 w-4" />{/snippet}
             {$LL.externalModule.calendar.join()}
@@ -80,7 +71,7 @@
             square
             aria-label={`${$LL.externalModule.calendar.join()} · ${event.title}`}
             class={className}
-            {onclick}
+            onclick={onjoin}
         >
             {#snippet icon()}<IconVideo class="h-4 w-4" />{/snippet}
         </Button>
