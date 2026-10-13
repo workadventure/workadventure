@@ -3,6 +3,7 @@
     import Button from "../UI/Button.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { scriptUtils } from "../../Api/ScriptUtils";
+    import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { urlManager } from "../../Url/UrlManager";
     import { IconDoorIn, IconVideo } from "@wa-icons";
@@ -38,8 +39,13 @@
         clickEvent.preventDefault();
         const scene = gameManager.getCurrentGameScene();
         if (url.pathname === window.location.pathname) {
-            urlManager.pushStartLayerNameToUrl(url.hash);
-            scene.tryMovePlayerWithMoveToParameter();
+            if (url.hash) {
+                urlManager.pushStartLayerNameToUrl(url.hash);
+                scene.tryMovePlayerWithMoveToParameter();
+            } else {
+                // Already in the meeting's map, which has no area to walk to: just get the agenda out of the way.
+                isCalendarVisibleStore.set(false);
+            }
         } else {
             scene.onMapExit(url).catch((e) => console.error(e));
         }
