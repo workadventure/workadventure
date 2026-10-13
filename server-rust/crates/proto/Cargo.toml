@@ -1,0 +1,16 @@
+[package]
+name = "wa-proto"
+description = "Protobuf types generated from messages/protos (the frozen front <-> server contract)."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bytes.workspace = true
+prost.workspace = true
+prost-types = "0.14"
+
+[build-dependencies]
+prost-build.workspace = true
+protox.workspace = true
