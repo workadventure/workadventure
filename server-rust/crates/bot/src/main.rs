@@ -136,7 +136,16 @@ fn user_moved(body: &[u8]) -> Option<(i32, i32)> {
     Some((user, x))
 }
 
-async fn server_cpu_seconds(server: &str, token: Option<&str>) -> Option<f64> {
+/// This process's CPU time (Linux), to show whether the load generator itself was the bottleneck.
+fn own_cpu_seconds() -> Option<f64> {
+    let stat = std::fs::read_to_string("/proc/self/stat").ok()?;
+    let fields: Vec<&str> = stat.rsplit_once(')')?.1.split_whitespace().collect();
+    let ticks: f64 = fields.get(11)?.parse::<f64>().ok()? + fields.get(12)?.parse::<f64>().ok()?;
+    Some(ticks / 100.0)
+}
+
+/// `metric value` from the server's /metrics.
+async fn server_metrics(server: &str, token: Option<&str>) -> Option<String> {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     let host = server.trim_start_matches("http://").trim_end_matches('/');
     let mut s = tokio::net::TcpStream::connect(host).await.ok()?;
@@ -146,8 +155,13 @@ async fn server_cpu_seconds(server: &str, token: Option<&str>) -> Option<f64> {
         .ok()?;
     let mut body = String::new();
     s.read_to_string(&mut body).await.ok()?;
-    body.lines()
-        .find(|l| l.starts_with("process_cpu_seconds_total "))
+    Some(body)
+}
+
+fn metric(body: &Option<String>, name: &str) -> Option<f64> {
+    body.as_ref()?
+        .lines()
+        .find(|l| l.starts_with(name) && l[name.len()..].starts_with(' '))
         .and_then(|l| l.split_whitespace().nth(1)?.parse().ok())
 }
 
@@ -202,7 +216,8 @@ async fn main() {
         .collect();
     eprintln!("{} bots connected in {:.1}s", bots.len(), connected_after.as_secs_f64());
 
-    let cpu_before = server_cpu_seconds(&a.server, a.metrics_token.as_deref()).await;
+    let before = server_metrics(&a.server, a.metrics_token.as_deref()).await;
+    let own_before = own_cpu_seconds();
     let t0 = Instant::now();
     let end = t0 + a.duration;
     let mut tasks = Vec::new();
@@ -274,15 +289,25 @@ async fn main() {
         all.extend(t.await.unwrap_or_default());
     }
     let elapsed = t0.elapsed().as_secs_f64();
-    let cpu_after = server_cpu_seconds(&a.server, a.metrics_token.as_deref()).await;
+    let after = server_metrics(&a.server, a.metrics_token.as_deref()).await;
+    let own_after = own_cpu_seconds();
     all.sort_unstable();
     let pct = |p: f64| all.get(((all.len() as f64 * p) as usize).min(all.len().saturating_sub(1))).map_or(0.0, |v| f64::from(*v) / 1000.0);
-    let cpu = match (cpu_before, cpu_after) {
+    let rate = |b: Option<f64>, a: Option<f64>| match (b, a) {
         (Some(b), Some(a)) => format!("{:.2}", (a - b) / elapsed),
         _ => "null".into(),
     };
+    let cpu = rate(metric(&before, "process_cpu_seconds_total"), metric(&after, "process_cpu_seconds_total"));
+    let load_cpu = rate(own_before, own_after);
+    let slow = match (
+        metric(&before, "workadventure_server_slow_consumers_total"),
+        metric(&after, "workadventure_server_slow_consumers_total"),
+    ) {
+        (Some(b), Some(a)) => format!("{}", a - b),
+        _ => "null".into(),
+    };
     println!(
-        "{{\"rooms\":{},\"users_per_room\":{},\"seconds\":{:.1},\"moves_sent_per_s\":{:.0},\"subs_received_per_s\":{:.0},\"moves_received_per_s\":{:.0},\"latency_ms\":{{\"p50\":{:.1},\"p90\":{:.1},\"p99\":{:.1},\"max\":{:.1}}},\"samples\":{},\"server_cpu_cores\":{}}}",
+        "{{\"rooms\":{},\"users_per_room\":{},\"seconds\":{:.1},\"moves_sent_per_s\":{:.0},\"subs_received_per_s\":{:.0},\"moves_received_per_s\":{:.0},\"latency_ms\":{{\"p50\":{:.1},\"p90\":{:.1},\"p99\":{:.1},\"max\":{:.1}}},\"samples\":{},\"server_cpu_cores\":{},\"slow_consumers_closed\":{},\"load_generator_cpu_cores\":{}}}",
         a.rooms,
         a.users,
         elapsed,
@@ -294,7 +319,9 @@ async fn main() {
         pct(0.99),
         pct(1.0),
         all.len(),
-        cpu
+        cpu,
+        slow,
+        load_cpu
     );
 }
 
