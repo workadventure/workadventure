@@ -85,7 +85,7 @@
         {/if}
 
         {#if days.length > 0}
-            <nav aria-label={$LL.externalModule.calendar.days()} class="flex shrink-0 flex-wrap gap-1.5">
+            <nav aria-label={$LL.externalModule.calendar.days()} class="days flex shrink-0 gap-1.5 overflow-x-auto">
                 {#each days as day, index (day.date.getTime())}
                     <Button
                         variant="light"
@@ -158,6 +158,15 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+
+        /* A week of day chips scrolls sideways, without a scrollbar: the chip cut at the edge shows there is more. */
+        .days {
+            scrollbar-width: none;
+
+            &::-webkit-scrollbar {
+                display: none;
+            }
         }
     }
 </style>
