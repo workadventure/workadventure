@@ -4,13 +4,19 @@ package admin
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha1"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/url"
 	"path"
 	"regexp"
 	"slices"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/config"
 )
@@ -69,6 +75,7 @@ type Admin interface {
 	MapDetails(ctx context.Context, playURI string) (map[string]any, error)
 	WokaList() json.RawMessage
 	CompanionList() json.RawMessage
+	IceServers(userID int32) []IceServer
 }
 
 //go:embed data/woka.json
@@ -292,4 +299,37 @@ func DefaultMetaTags() map[string]any {
 		"themeColor":    "#1B2A41",
 		"cardImage":     "https://workadventu.re/images/general/logo-og.png",
 	}
+}
+
+// IceServer is a STUN or TURN server given to the browser for WebRTC.
+type IceServer struct {
+	URLs                 []string
+	Username, Credential string
+}
+
+// IceServers is IceServersService.generateIceServers: STUN_SERVER, then TURN_SERVER with either static
+// credentials or, with TURN_STATIC_AUTH_SECRET, 24-hour credentials in the coturn "REST API" format.
+func (l *Local) IceServers(userID int32) []IceServer {
+	split := func(v string) []string {
+		parts := strings.Split(v, ",")
+		for i := range parts {
+			parts[i] = strings.TrimSpace(parts[i])
+		}
+		return parts
+	}
+	var servers []IceServer
+	if l.cfg.StunServer != "" {
+		servers = append(servers, IceServer{URLs: split(l.cfg.StunServer)})
+	}
+	if l.cfg.TurnServer != "" {
+		user, password := l.cfg.TurnUser, l.cfg.TurnPassword
+		if secret := l.cfg.TurnStaticAuthSecret; secret != "" {
+			user = strconv.FormatInt(time.Now().Unix()+24*3600, 10) + ":" + strconv.Itoa(int(userID))
+			mac := hmac.New(sha1.New, []byte(secret))
+			mac.Write([]byte(user))
+			password = base64.StdEncoding.EncodeToString(mac.Sum(nil))
+		}
+		servers = append(servers, IceServer{URLs: split(l.cfg.TurnServer), Username: user, Credential: password})
+	}
+	return servers
 }

@@ -62,12 +62,17 @@ func run() error {
 		func(r *core.Room) { r.Stop(); metrics.Rooms.Dec() },
 	)
 
+	spaces := registry.NewRefs(
+		func(k core.SpaceKey) *core.Space { metrics.Spaces.Inc(); return core.NewSpace(k) },
+		func(s *core.Space) { s.Stop(); metrics.Spaces.Dec() },
+	)
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	front := httpapi.NewFrontAssets(cfg.AssetsInternalURL, cfg.AssetsURL, apiVersion)
 	go front.Poll(ctx)
-	handler := httpapi.New(cfg, tokens, adm, front, ws.NewServer(cfg, tokens, adm, rooms, apiVersion), version)
+	handler := httpapi.New(cfg, tokens, adm, front, ws.NewServer(cfg, tokens, adm, rooms, spaces, apiVersion), version)
 
 	servers := []*http.Server{{Addr: ":" + strconv.Itoa(cfg.HTTPPort), Handler: handler}}
 	if cfg.WSPort != cfg.HTTPPort {

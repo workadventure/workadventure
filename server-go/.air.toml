@@ -3,10 +3,9 @@ root = "."
 tmp_dir = "/tmp/air"
 
 [build]
-  # API_VERSION lets a dev stack match a front served by Vite ("dev"); by default, the hash of the protocol.
+  # API_VERSION lets a stack match a front served by Vite ("dev"); by default, the hash of the protocol.
   cmd = "go build -ldflags \"-X main.apiVersion=${API_VERSION:-$(./api-version.sh)}\" -o /tmp/air/server ./cmd/server"
   entrypoint = ["/tmp/air/server"]
   include_ext = ["go"]
-  exclude_dir = ["tmp"]
   exclude_regex = ["_test\\.go$"]
   delay = 200

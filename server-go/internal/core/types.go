@@ -164,6 +164,14 @@ type (
 	}
 	LeaveSpaceRequest      struct{ SpaceName string }
 	DuplicateUserConnected struct{}
+	// MoveToPosition answers AskPosition (MOVE): walk to where the other player is.
+	MoveToPosition struct{ Position Position }
+	// LocatePosition answers AskPosition (LOCATE): show where the other player is.
+	LocatePosition struct {
+		Position Position
+		UserID   int32
+		UUID     string
+	}
 )
 
 // Msg is one event on its way to one or many clients. Adapters encode it once, on the first connection that

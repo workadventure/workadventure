@@ -71,6 +71,11 @@ type Config struct {
 	RecordingConfigured              bool
 	AllowedCORSOrigin                string
 	MatrixPublicURI                  string
+	StunServer                       string
+	TurnServer                       string
+	TurnUser                         string
+	TurnPassword                     string
+	TurnStaticAuthSecret             string
 	ServerName                       string
 	ServerMotd                       string
 	ServerIcon                       string
@@ -217,6 +222,11 @@ func parse(get func(string) string) (*Config, error) {
 		NodeEnv:                          r.str("NODE_ENV"),
 		AllowedCORSOrigin:                r.str("ALLOWED_CORS_ORIGIN"),
 		MatrixPublicURI:                  r.str("MATRIX_PUBLIC_URI"),
+		StunServer:                       r.str("STUN_SERVER"),
+		TurnServer:                       r.str("TURN_SERVER"),
+		TurnUser:                         r.str("TURN_USER"),
+		TurnPassword:                     r.str("TURN_PASSWORD"),
+		TurnStaticAuthSecret:             r.str("TURN_STATIC_AUTH_SECRET"),
 	}
 	c.ServerIcon = firstNonEmpty(r.str("SERVER_ICON"), c.PusherURL+"/static/images/favicons/icon-512x512.png")
 	policies := []string{"user_input", "allow_override_opid", "force_opid"}

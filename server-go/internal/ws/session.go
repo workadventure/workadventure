@@ -5,7 +5,9 @@ package ws
 import (
 	"context"
 	"log/slog"
+	"runtime/debug"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/coder/websocket"
@@ -44,7 +46,7 @@ type sessionInfo struct {
 	userUUID, ipAddress                string
 	isLogged                           bool
 	member                             admin.MemberData
-	chatID                             string
+	chatID, roomName                   string
 }
 
 // Session is a logical connection. It survives a transport drop for CLIENT_DISCONNECTION_RETENTION_MS: if the
@@ -70,11 +72,18 @@ type Session struct {
 	retention    *time.Timer
 	joined       bool
 
+	userID atomic.Int32 // id in the room, once RoomJoined is on its way
+
+	// guarded by mu
+	name   string                  // from JoinRoomFrontMessage
+	status core.AvailabilityStatus // latest availability status
+	spaces map[string]*core.Space  // by the name the front uses
+
 	readers sync.WaitGroup // readers post to the room: they must be done before the room is released
 }
 
 func newSession(srv *Server, info sessionInfo) *Session {
-	s := &Session{srv: srv, info: info}
+	s := &Session{srv: srv, info: info, spaces: map[string]*core.Space{}}
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	s.store = resumeStore{maxBytes: resumeMaxBytes, retention: srv.cfg.ClientDisconnectRetention}
 	s.out = newOutbox(outboxLimit, func() { go s.destroy(statusSessionDestroyed, "Too slow to receive messages") })
@@ -99,10 +108,17 @@ func (s *Session) start(conn *websocket.Conn) {
 }
 
 // Send and Kick implement core.Peer. They never block.
-func (s *Session) Send(m *core.Msg)   { s.out.push(m) }
+func (s *Session) Send(m *core.Msg) {
+	if j, ok := m.Event.(core.RoomJoined); ok {
+		s.userID.Store(j.UserID)
+	}
+	s.out.push(m)
+}
+
 func (s *Session) Kick(reason string) { go s.destroy(statusSessionDestroyed, "Back lost: "+reason) }
 
 func (s *Session) writeLoop() {
+	defer s.recoverPanic()
 	timer := time.NewTimer(batchDelay)
 	timer.Stop()
 	armed := false
@@ -217,6 +233,7 @@ func (s *Session) write(conn *websocket.Conn, frame []byte) error {
 
 func (s *Session) read(conn *websocket.Conn) {
 	defer s.readers.Done()
+	defer s.recoverPanic()
 	conn.SetReadLimit(maxMessageSize)
 	for {
 		_, data, err := conn.Read(s.ctx)
@@ -238,6 +255,14 @@ func (s *Session) read(conn *websocket.Conn) {
 		if !duplicate {
 			s.handle(frame.Message)
 		}
+	}
+}
+
+// recoverPanic ends the session instead of the whole process when handling one client goes wrong.
+func (s *Session) recoverPanic() {
+	if r := recover(); r != nil {
+		slog.Error("panic in a session", "user", s.info.userUUID, "panic", r, "stack", string(debug.Stack()))
+		go s.destroy(websocket.StatusInternalError, "Internal error")
 	}
 }
 
@@ -345,6 +370,7 @@ func (s *Session) destroy(code websocket.StatusCode, reason string) {
 	s.cancel()
 	s.readers.Wait()
 
+	s.leaveAllSpaces()
 	s.mu.Lock()
 	joined := s.joined
 	s.mu.Unlock()
@@ -367,6 +393,7 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		s.mu.Lock()
 		first := !s.joined
 		s.joined = true
+		s.name, s.status = j.GetName(), core.AvailabilityStatus(j.GetAvailabilityStatus())
 		s.mu.Unlock()
 		if first {
 			metrics.ClientJoined(s.info.roomID)
@@ -395,18 +422,67 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 	case *pb.ClientToServerMessage_ViewportMessage:
 		_ = s.room.SetViewport(ctx, s, toViewport(msg.ViewportMessage))
 	case *pb.ClientToServerMessage_SetPlayerDetailsMessage:
-		_ = s.room.SetPlayerDetails(ctx, s, toPlayerDetails(msg.SetPlayerDetailsMessage))
+		d := toPlayerDetails(msg.SetPlayerDetailsMessage)
+		if d.AvailabilityStatus != core.StatusUnchanged {
+			s.mu.Lock()
+			s.status = d.AvailabilityStatus
+			s.mu.Unlock()
+		}
+		_ = s.room.SetPlayerDetails(ctx, s, d)
+		s.updateSpacesWithPlayerDetails(d)
+	case *pb.ClientToServerMessage_AskPositionMessage:
+		a := msg.AskPositionMessage
+		_ = s.room.AskPosition(ctx, s, a.GetUserIdentifier(), a.UserId, a.GetAskType() == pb.AskPositionMessage_LOCATE)
 	case *pb.ClientToServerMessage_LockGroupPromptMessage:
 		_ = s.room.LockGroup(ctx, s, msg.LockGroupPromptMessage.GetLock())
 	case *pb.ClientToServerMessage_PingMessage:
 		// The pong of the application-level ping: liveness is checked by the transport pings.
 	case *pb.ClientToServerMessage_QueryMessage:
-		s.answerError(msg.QueryMessage.GetId(), "Query not supported by this server yet")
+		s.query(msg.QueryMessage)
 	default:
+		if s.handleSpaceMessage(m) {
+			return
+		}
 		if f := m.ProtoReflect().WhichOneof(m.ProtoReflect().Descriptor().Oneofs().Get(0)); f != nil {
 			slog.Debug("message not handled yet", "type", f.Name())
 		}
 	}
+}
+
+func (s *Session) query(q *pb.QueryMessage) {
+	switch query := q.Query.(type) {
+	case *pb.QueryMessage_JoinSpaceQuery:
+		s.joinSpace(q.GetId(), query.JoinSpaceQuery)
+	case *pb.QueryMessage_LeaveSpaceQuery:
+		s.leaveSpace(q.GetId(), query.LeaveSpaceQuery.GetSpaceName())
+	case *pb.QueryMessage_SpaceStateQuery:
+		s.spaceStateQuery(q.GetId(), query.SpaceStateQuery)
+	case *pb.QueryMessage_ChatMembersQuery:
+		// No admin: nobody to list (LocalAdmin.getWorldChatMembers).
+		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_ChatMembersAnswer{ChatMembersAnswer: &pb.ChatMembersAnswer{}}})
+	case *pb.QueryMessage_IceServersQuery:
+		var servers []*pb.IceServer
+		for _, ice := range s.srv.admin.IceServers(s.userID.Load()) {
+			server := &pb.IceServer{Urls: ice.URLs}
+			if ice.Username != "" || ice.Credential != "" {
+				server.Username, server.Credential, server.CredentialType = &ice.Username, &ice.Credential, proto.String("password")
+			}
+			servers = append(servers, server)
+		}
+		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_IceServersAnswer{IceServersAnswer: &pb.IceServersAnswer{IceServers: servers}}})
+	default:
+		name := "unknown"
+		if f := q.ProtoReflect().WhichOneof(q.ProtoReflect().Descriptor().Oneofs().ByName("query")); f != nil {
+			name = string(f.Name())
+		}
+		slog.Info("query not supported yet", "query", name)
+		s.answerError(q.GetId(), "Query not supported by this server yet: "+name)
+	}
+}
+
+func (s *Session) answer(id int32, a *pb.AnswerMessage) {
+	a.Id = id
+	s.out.push(core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_AnswerMessage{AnswerMessage: a}}, false))
 }
 
 func (s *Session) answerError(id int32, message string) {
