@@ -345,6 +345,10 @@ class DesktopApi {
         // store WITHOUT persisting (no localUserStore.setRequestedStatus) so auto-away never
         // survives a restart, and only from the neutral (null) state so a manual DND/busy/brb is
         // left untouched.
+        //
+        // Never during a meeting: someone following it without touching the keyboard or the mouse
+        // (a presentation, the companion's video) is not away, and BACK_IN_A_MOMENT would cut their
+        // camera and microphone.
         if (window.WAD.onSystemIdle) {
             let autoAwayActive = false;
             window.WAD.onSystemIdle((idle) => {
@@ -353,6 +357,7 @@ class DesktopApi {
                     if (autoAwayActive) return;
                     if (get(requestedStatusStore) !== null) return;
                     if (!get(focusStore)) return;
+                    if (get(isInActiveConversationStore)) return;
                     requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
                     autoAwayActive = true;
                 } else {
