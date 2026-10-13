@@ -10,7 +10,7 @@ Global settings for the chat are available in the admin panel. See the [admin do
 
 The chat system can be accessed by clicking on the chat icon in the action bar.
 
-![Chat icon](./images/chat-button.png)
+![Chat icon](../images/chat-button.png)
 
 2 types of chat rooms are available in WorkAdventure:
 
@@ -42,11 +42,11 @@ Matrix chat rooms are **persistent chat rooms**.
 
 Anyone logged can create a chat room. 
 
-![](images/create-room-button.png)
+![](../images/create-room-button.png)
 
 A click on the "+" icon next to the "Rooms" section will prompt a form to create a new chat room.
 
-![](images/create-room-popup.png)
+![](../images/create-room-popup.png)
 
 **Room visibility** can be set to "Public" or "Private". Public rooms are visible to **everyone**, while private rooms are 
 only visible to users that have been invited to the room.
@@ -95,7 +95,7 @@ proximity chat, they go directly to the people around you and are not stored. Se
 ## User list
 
 The user list shows everyone in your world, grouped by map, and lets you walk up to them, locate them or send them a
-message. See [Finding people: the user list](user-list.md).
+message. See [Finding people: the user list](../user-list.md).
 
 ## Meeting invitations
 WorkAdventure allows users to invite other users to join their meeting directly from the chat interface.

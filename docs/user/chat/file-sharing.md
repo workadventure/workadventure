@@ -19,7 +19,7 @@ You can send files in the chat: documents, images, videos or audio. How the file
 2. Click **File attachment** in a chat room, or **Direct file transfer** in the proximity chat.
 3. Choose one or more files.
 
-![The Direct file transfer button in the proximity chat](images/file-sharing-menu.png)
+![The Direct file transfer button in the proximity chat](../images/file-sharing-menu.png)
 
 You can also drag files onto the conversation, or paste them into the message box.
 
@@ -55,7 +55,7 @@ get it: send it again if they need it. People you have blocked do not receive yo
 The file appears in the chat with an **Accept** and a **Decline** button. Nothing is downloaded until you click
 **Accept**. The chat then shows the progress and the estimated time left.
 
-![A file offered in the proximity chat, with Accept and Decline buttons](images/file-sharing-offer.png)
+![A file offered in the proximity chat, with Accept and Decline buttons](../images/file-sharing-offer.png)
 
 Once the file is received, images, videos and audio files are displayed directly in the conversation. Other files come
 with a download link.
@@ -68,7 +68,7 @@ Save the file before you leave the bubble or meeting room. Once you leave, the f
 
 Under the file you sent, each person appears with their avatar and a status:
 
-![The sender sees that Bob received the file, Charlie declined it and Eve has not accepted it yet](images/file-sharing-status.png)
+![The sender sees that Bob received the file, Charlie declined it and Eve has not accepted it yet](../images/file-sharing-status.png)
 
 - **Waiting** (yellow clock): they have not accepted the file yet.
 - A ring that fills up around their avatar, with a percentage: the file is being sent to them.
