@@ -38,8 +38,10 @@ var (
 
 const histogramMax = 60_000
 
-// A bot walks back and forth on a 64-pixel segment: its x tells which of its last 64 moves another bot sees.
-const track = 64
+// A bot walks back and forth on a 256-pixel segment: its x tells which of its last 256 moves another bot sees.
+// A move seen more than 256 moves late (25 s at 10 moves/s) cannot be told from a recent one: it is counted in the
+// last bucket of the histogram.
+const track = 256
 
 type bot struct {
 	room    int
@@ -247,7 +249,11 @@ func (b *bot) read(ctx context.Context, st *stats, joined chan struct{}) error {
 				continue
 			}
 			if sent := sender.sentAt[i].Load(); sent != 0 {
-				st.latency[min(now.Sub(time.Unix(0, sent)).Milliseconds(), histogramMax)].Add(1)
+				ms := now.Sub(time.Unix(0, sent)).Milliseconds()
+				if ms < 0 { // the slot was reused by a newer move: this one is at least one lap late
+					ms = histogramMax
+				}
+				st.latency[min(ms, histogramMax)].Add(1)
 			}
 		}
 	}
