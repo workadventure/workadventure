@@ -79,9 +79,13 @@ func run() error {
 	go front.Poll(ctx)
 	handler := httpapi.New(cfg, tokens, adm, front, ws.NewServer(cfg, tokens, adm, rooms, spaces, apiVersion), version)
 
-	servers := []*http.Server{{Addr: ":" + strconv.Itoa(cfg.HTTPPort), Handler: handler}}
+	// ReadHeaderTimeout: a client that never finishes its headers must not hold a connection forever.
+	newServer := func(port int, h http.Handler) *http.Server {
+		return &http.Server{Addr: ":" + strconv.Itoa(port), Handler: h, ReadHeaderTimeout: 10 * time.Second}
+	}
+	servers := []*http.Server{newServer(cfg.HTTPPort, handler)}
 	if cfg.WSPort != cfg.HTTPPort {
-		servers = append(servers, &http.Server{Addr: ":" + strconv.Itoa(cfg.WSPort), Handler: handler})
+		servers = append(servers, newServer(cfg.WSPort, handler))
 	}
 	if cfg.PrometheusPort != 0 {
 		// The dedicated metrics port is internal: it also serves the Go profiler.
@@ -89,7 +93,7 @@ func run() error {
 		mux.Handle("GET /metrics", metrics.Handler(true, cfg.PrometheusToken))
 		mux.HandleFunc("/debug/pprof/", pprof.Index)
 		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		servers = append(servers, &http.Server{Addr: ":" + strconv.Itoa(cfg.PrometheusPort), Handler: mux})
+		servers = append(servers, newServer(cfg.PrometheusPort, mux))
 	}
 	errs := make(chan error, len(servers))
 	for _, s := range servers {
