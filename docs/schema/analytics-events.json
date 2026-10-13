@@ -2372,6 +2372,24 @@
           "type": "integer",
           "minimum": 0,
           "description": "Size of the file."
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "From the first byte received to the last. Leaves out the time the recipient took to accept and the connection setup, so sizeBytes / durationMs is the transfer speed."
+        },
+        "relay": {
+          "type": "boolean",
+          "description": "Whether the transfer went through a TURN relay. Absent when the browser did not report the connection path."
+        },
+        "relayProtocol": {
+          "type": "string",
+          "enum": [
+            "udp",
+            "tcp",
+            "tls"
+          ],
+          "description": "Transport to the TURN relay, only when relayed. TCP and TLS relays are much slower than UDP."
         }
       },
       "additionalProperties": true,

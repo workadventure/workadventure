@@ -922,7 +922,12 @@ export class ProximityChatRoom implements ChatRoom {
         const { content } = transfer;
 
         if (update.state === "ready") {
-            analyticsClient.trackAdminEvent("chat.proximity_file.received", { sizeBytes: transfer.sizeBytes });
+            analyticsClient.trackAdminEvent("chat.proximity_file.received", {
+                sizeBytes: transfer.sizeBytes,
+                durationMs: update.durationMs,
+                relay: update.route?.relay,
+                relayProtocol: update.route?.relay ? update.route.protocol : undefined,
+            });
             transfer.downloadStartedAt = undefined;
             this.fileTransferObjectUrls.add(update.url);
             content.update((currentContent) => ({

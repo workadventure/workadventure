@@ -1103,6 +1103,25 @@ export const ANALYTICS_EVENTS = {
   "chat.proximity_file.received": event({
     properties: z.object({
       sizeBytes: z.number().int().nonnegative().describe("Size of the file."),
+      durationMs: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "From the first byte received to the last. Leaves out the time the recipient took to accept and the connection setup, so sizeBytes / durationMs is the transfer speed.",
+        ),
+      relay: z
+        .boolean()
+        .optional()
+        .describe(
+          "Whether the transfer went through a TURN relay. Absent when the browser did not report the connection path.",
+        ),
+      relayProtocol: z
+        .enum(["udp", "tcp", "tls"])
+        .optional()
+        .describe(
+          "Transport to the TURN relay, only when relayed. TCP and TLS relays are much slower than UDP.",
+        ),
     }),
     description:
       "The user accepted a file sent in the proximity chat and received all of it. Declined or interrupted transfers are not reported.",

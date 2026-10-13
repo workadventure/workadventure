@@ -4,6 +4,7 @@ import { Subject, Subscription } from "rxjs";
 import { v4 as uuidv4 } from "uuid";
 import type { SpaceInterface } from "../../../Space/SpaceInterface";
 import { sanitizeInlineMimeType } from "../../../Utils/InlineMimeType";
+import { getSelectedIceRoute, type SelectedIceRoute } from "../../../WebRtc/SelectedIceRoute";
 import { ProximityFileStorage, type ProximityFileSink } from "./ProximityFileStorage";
 import {
     decodeProximityFileChunkFrame,
@@ -51,6 +52,10 @@ export type ProximityFileTransferUpdate =
           state: "ready";
           progress: 1;
           url: string;
+          /** From the first byte to the last, so the recipient's decision and the connection setup are left out. */
+          durationMs: number;
+          /** Undefined when the browser does not report the connection path. */
+          route: SelectedIceRoute | undefined;
       }
     | {
           transferId: string;
@@ -118,6 +123,7 @@ type ReceivingTransfer = {
     offer: IncomingProximityFileTransferOffer;
     receivedBytes: number;
     sink: ProximityFileSink;
+    startedAt: number;
 };
 
 export class ProximityFileTransferService {
@@ -432,6 +438,7 @@ export class ProximityFileTransferService {
                         offer,
                         receivedBytes: 0,
                         sink: await this.storage.createSink(message.transferId),
+                        startedAt: performance.now(),
                     });
                     this.transferUpdateSubject.next({
                         transferId: message.transferId,
@@ -579,6 +586,14 @@ export class ProximityFileTransferService {
             return;
         }
         this.receivingTransfers.delete(transferId);
+        const durationMs = Math.round(performance.now() - receivingTransfer.startedAt);
+        // Read before the receipt: once the sender has it, it may close the connection.
+        let route: SelectedIceRoute | undefined;
+        try {
+            route = getSelectedIceRoute(await session.peerConnection.getStats());
+        } catch (error) {
+            console.warn("Unable to read how a proximity file transfer travelled", error);
+        }
         if (session.dataChannel?.readyState === "open") {
             this.sendControlMessage(session.dataChannel, { type: "proximity_file_received", transferId });
         }
@@ -587,6 +602,8 @@ export class ProximityFileTransferService {
             state: "ready",
             progress: 1,
             url: URL.createObjectURL(blob),
+            durationMs,
+            route,
         });
     }
 

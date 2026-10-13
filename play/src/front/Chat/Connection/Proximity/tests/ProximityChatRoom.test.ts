@@ -146,6 +146,8 @@ describe("ProximityChatRoom file transfers", () => {
             state: "ready",
             progress: 1,
             url: "blob:received-file",
+            durationMs: 1000,
+            route: undefined,
         };
         const unavailableUpdate: ProximityFileTransferUpdate = {
             transferId: "transfer-1",
@@ -257,7 +259,7 @@ describe("ProximityChatRoom file transfers", () => {
         });
     });
 
-    it("should report the size of sent and fully received files to analytics", async () => {
+    it("should report sent and fully received files to analytics, with how the transfer went", async () => {
         const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent").mockImplementation(() => {});
         vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-2") });
         const room = createRoom();
@@ -274,8 +276,15 @@ describe("ProximityChatRoom file transfers", () => {
             state: "ready",
             progress: 1,
             url: "blob:received-file",
+            durationMs: 1200,
+            route: { relay: true, protocol: "tcp" },
         } satisfies ProximityFileTransferUpdate);
-        expect(trackAdminEvent).toHaveBeenCalledWith("chat.proximity_file.received", { sizeBytes: 5 });
+        expect(trackAdminEvent).toHaveBeenCalledWith("chat.proximity_file.received", {
+            sizeBytes: 5,
+            durationMs: 1200,
+            relay: true,
+            relayProtocol: "tcp",
+        });
 
         const file = new File(["hello world"], "hello.txt", { type: "text/plain" });
         Reflect.set(room, "fileTransferService", {

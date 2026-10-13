@@ -62,8 +62,23 @@ type PrivateService = {
 };
 
 /** The parts of a peer session the transfer code reads. */
-function fakeSession(remoteSpaceUserId: string, dataChannel?: unknown) {
-    return { remoteSpaceUserId, dataChannel, awaitingReceipt: new Set<string>() };
+function fakeSession(remoteSpaceUserId: string, dataChannel?: unknown, stats = new Map<string, unknown>()) {
+    return {
+        remoteSpaceUserId,
+        dataChannel,
+        awaitingReceipt: new Set<string>(),
+        peerConnection: { getStats: () => Promise.resolve(stats) },
+    };
+}
+
+/** What a browser reports for a connection relayed by a TURN server over UDP. */
+function relayedStats() {
+    return new Map<string, unknown>([
+        ["T1", { id: "T1", type: "transport", selectedCandidatePairId: "P1" }],
+        ["P1", { id: "P1", type: "candidate-pair", localCandidateId: "L1", remoteCandidateId: "R1" }],
+        ["L1", { id: "L1", type: "local-candidate", candidateType: "relay", protocol: "udp", relayProtocol: "udp" }],
+        ["R1", { id: "R1", type: "remote-candidate", candidateType: "srflx", protocol: "udp" }],
+    ]);
 }
 
 function createService(localSpaceUserId: string) {
@@ -164,10 +179,14 @@ describe("ProximityFileTransferService", () => {
             send: (data: unknown) => wire.push(data),
         });
         const receipts: unknown[] = [];
-        const receiverSession = fakeSession("sender", {
-            readyState: "open",
-            send: (data: unknown) => receipts.push(data),
-        });
+        const receiverSession = fakeSession(
+            "sender",
+            {
+                readyState: "open",
+                send: (data: unknown) => receipts.push(data),
+            },
+            relayedStats(),
+        );
 
         await sender.privateService.sendOutgoingTransfer(senderSession, offer.transferId);
         for (const message of wire) {
@@ -184,6 +203,8 @@ describe("ProximityFileTransferService", () => {
             state: "ready",
             progress: 1,
             url: "blob:received",
+            durationMs: expect.any(Number),
+            route: { relay: true, protocol: "udp" },
         });
         const blob = createObjectURL.mock.calls[0]?.[0] as Blob;
         expect(await blob.text()).toBe("hello");

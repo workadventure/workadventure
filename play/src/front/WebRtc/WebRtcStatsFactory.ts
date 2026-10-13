@@ -8,6 +8,7 @@ import type {
 } from "../Components/Video/WebRtcStats";
 import type { RemotePeer } from "./RemotePeer";
 import { FpsVariabilityTracker } from "./FpsVariabilityTracker";
+import { getSelectedIceRoute } from "./SelectedIceRoute";
 
 const WEBRTC_STATS_DISPLAY_INTERVAL_MS = 1_000;
 
@@ -235,10 +236,6 @@ function buildWebRtcStatsFromReport(
     let codecID = "";
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const codecs = new Map<string, any>();
-    const transports = new Map<string, any>();
-    const candidatePairs = new Map<string, any>();
-    const localCandidates = new Map<string, any>();
-    const remoteCandidates = new Map<string, any>();
     let bytesReceived = 0;
     let framesDecoded = 0;
     let timestamp = 0;
@@ -276,41 +273,19 @@ function buildWebRtcStatsFromReport(
             };
         } else if (v.type === "codec") {
             codecs.set(v.id, v);
-        } else if (v.type === "transport") {
-            transports.set(v.id, v);
-        } else if (v.type === "candidate-pair") {
-            candidatePairs.set(v.id, v);
-        } else if (v.type === "local-candidate") {
-            localCandidates.set(v.id, v);
-        } else if (v.type === "remote-candidate") {
-            remoteCandidates.set(v.id, v);
         }
     });
     // Enrich receiverStats with TURN routing information when possible
-    if (receiverStats) {
-        const selectedPair = findSelectedCandidatePair(transports, candidatePairs);
-        if (selectedPair) {
-            if (isCounter(selectedPair.currentRoundTripTime)) {
-                receiverStats.roundTripTimeMs = selectedPair.currentRoundTripTime * 1000;
-            }
-            const local = localCandidates.get(selectedPair.localCandidateId);
-            const remote = remoteCandidates.get(selectedPair.remoteCandidateId);
-            const isRelay = (local && local.candidateType === "relay") || (remote && remote.candidateType === "relay");
-            let proto: string | undefined =
-                (local && (local.relayProtocol || local.protocol)) || (remote && remote.protocol) || undefined;
-            proto = proto?.toLowerCase();
-            receiverStats.relay = !!isRelay;
-            if (proto === "udp" || proto === "tcp" || proto === "tls") {
-                receiverStats.relayProtocol = proto;
-                if (receiverStats.relay && options.includeRelayDetails) {
-                    if (proto === "tcp") {
-                        receiverStats.source = `${options.source} (via TURN/TCP)`;
-                    } else if (proto === "tls") {
-                        receiverStats.source = `${options.source} (via TURN/TLS)`;
-                    } else {
-                        receiverStats.source = `${options.source} (via TURN/UDP)`;
-                    }
-                }
+    const route = receiverStats ? getSelectedIceRoute(stats) : undefined;
+    if (receiverStats && route) {
+        if (route.roundTripTimeMs !== undefined) {
+            receiverStats.roundTripTimeMs = route.roundTripTimeMs;
+        }
+        receiverStats.relay = route.relay;
+        if (route.protocol) {
+            receiverStats.relayProtocol = route.protocol;
+            if (route.relay && options.includeRelayDetails) {
+                receiverStats.source = `${options.source} (via TURN/${route.protocol.toUpperCase()})`;
             }
         }
     }
