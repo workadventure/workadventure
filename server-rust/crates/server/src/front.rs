@@ -400,6 +400,45 @@ async fn companion_list(State(state): State<AppState>, headers: HeaderMap, RawQu
     data_list(&state, &headers, q.as_deref(), local_admin::COMPANIONS_JSON).await
 }
 
+/// The host name of an absolute URL, without user info or port.
+fn host_of(url: &str) -> Option<&str> {
+    let (scheme, rest) = url.split_once("://")?;
+    if scheme.is_empty() || !scheme.chars().all(|c| c.is_ascii_alphanumeric() || "+-.".contains(c)) {
+        return None;
+    }
+    let authority = rest.split(['/', '?', '#']).next()?;
+    let host = authority.rsplit_once('@').map_or(authority, |(_, h)| h);
+    let host = if host.starts_with('[') { host.split_inclusive(']').next()? } else { host.split(':').next()? };
+    (!host.is_empty()).then_some(host)
+}
+
+/// `GET /local-script?script=<url>`: the page that runs a map script served from a *.localhost host (an
+/// iframe needs a real origin for it, see IframeListener).
+async fn local_script(RawQuery(q): RawQuery) -> Response {
+    let pairs = query_pairs(q.as_deref());
+    let Some((script, host)) = query_get(&pairs, "script").and_then(|s| Some((s, host_of(s)?))) else {
+        return (StatusCode::BAD_REQUEST, "Invalid query parameters").into_response();
+    };
+    let host = host.to_ascii_lowercase();
+    if host != "localhost" && !host.ends_with(".localhost") {
+        return (
+            StatusCode::BAD_REQUEST,
+            "Script URL must be from localhost or *.localhost domain for security reasons",
+        )
+            .into_response();
+    }
+    let escaped = script
+        .replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;");
+    let html = format!(
+        "<!DOCTYPE html>\n<html>\n  <head>\n    <script src=\"/iframe_api.js\"></script>\n    <script type=\"module\" src=\"{escaped}\"></script>\n  </head>\n  <body>\n  </body>\n</html>"
+    );
+    ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], html).into_response()
+}
+
 /// Static files of the front container (AssetsProxy).
 async fn proxy(State(state): State<AppState>, request: Request) -> Response {
     if request.method() != Method::GET && request.method() != Method::HEAD {
@@ -447,7 +486,8 @@ pub fn routes() -> Router<AppState> {
         .route("/anonymLogin", post(anonym_login))
         .route("/me", get(me))
         .route("/woka/list", get(woka_list))
-        .route("/companion/list", get(companion_list));
+        .route("/companion/list", get(companion_list))
+        .route("/local-script", get(local_script));
     for prefix in ["/assets", "/static", "/resources", "/collections"] {
         router = router.route(&format!("{prefix}/{{*rest}}"), any(proxy));
     }
@@ -482,6 +522,13 @@ mod tests {
         assert!(out.contains(r#"src="./static/x.png""#), "static stays relative");
         assert!(out.contains(r#"src="http://front/@vite/client""#));
         assert_eq!(api_version_of(r#"<meta name="wa-api-version" content="ab12cd34">"#), Some("ab12cd34"));
+    }
+
+    #[test]
+    fn local_scripts_are_only_for_localhost() {
+        assert_eq!(host_of("http://maps.workadventure.localhost:8880/a.js"), Some("maps.workadventure.localhost"));
+        assert_eq!(host_of("http://u:p@localhost/a.js"), Some("localhost"));
+        assert_eq!(host_of("not a url"), None);
     }
 
     #[test]

@@ -8,7 +8,7 @@ use std::time::Duration;
 #[derive(Debug, Clone)]
 pub struct Config {
     // --- HTTP ---
-    /// PUSHER_HTTP_PORT: the single HTTP/WebSocket port.
+    /// SERVER_HTTP_PORT or PUSHER_HTTP_PORT: the single HTTP/WebSocket port.
     pub http_port: u16,
     /// PROMETHEUS_PORT: a separate port for /metrics, or 0 to serve it on the main port.
     pub prometheus_port: u16,
@@ -90,7 +90,11 @@ impl Env {
 
 impl Config {
     pub fn load(mut env: Env) -> Result<Self, Vec<String>> {
-        let http_port = env.number("PUSHER_HTTP_PORT", 3000);
+        // SERVER_HTTP_PORT is the socle's name for it (dev/stack.yaml).
+        let http_port = match env.str("SERVER_HTTP_PORT") {
+            Some(_) => env.number("SERVER_HTTP_PORT", 3000),
+            None => env.number("PUSHER_HTTP_PORT", 3000),
+        };
         let prometheus_port = env.number("PROMETHEUS_PORT", 0);
         let pusher_url = env.str("PUSHER_URL").unwrap_or_default();
         let assets_url = env.str("ASSETS_URL").map(|u| u.trim_end_matches('/').to_owned());
