@@ -278,6 +278,16 @@ impl Logic {
                     .await;
                 }
             }
+            M::AskPositionMessage(ask) => {
+                let Some(user) = user else { return };
+                self.to_room(RoomCmd::AskPosition {
+                    user,
+                    target_uuid: ask.user_identifier,
+                    target_id: ask.user_id,
+                    locate: ask.ask_type == pb::ask_position_message::AskType::Locate as i32,
+                })
+                .await;
+            }
             // Any client frame is a pong.
             M::PingMessage(_) => {}
             // J2 and later: emotes, variables, follow, lock, map editor, moderation, chat, analytics...

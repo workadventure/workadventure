@@ -36,6 +36,13 @@ pub enum RoomCmd {
         user: UserId,
         change: DetailsChange,
     },
+    /// Where is that player? (askPositionMessage: walk to them, or locate them.)
+    AskPosition {
+        user: UserId,
+        target_uuid: String,
+        target_id: Option<UserId>,
+        locate: bool,
+    },
     /// By session: the room resolves the user itself, so a leave sent right after a join (FIFO) is never lost.
     Leave {
         session: Arc<Session>,
@@ -200,6 +207,27 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 room.set_viewport(user, viewport, &mut Fanout::new(&mut sessions));
             }
             RoomCmd::Details { user, change } => room.update_details(user, change, &mut Fanout::new(&mut sessions)),
+            RoomCmd::AskPosition {
+                user,
+                target_uuid,
+                target_id,
+                locate,
+            } => {
+                use pb::server_to_client_message::Message as Top;
+                let (Some(target), Some(session)) = (room.find(&target_uuid, target_id), sessions.get(&user)) else {
+                    continue;
+                };
+                let position = Some(wire::position_to(&target.position));
+                session.push(wire::direct(if locate {
+                    Top::LocatePositionMessage(pb::LocatePositionMessage {
+                        position,
+                        user_id: target.id,
+                        user_uuid: target.profile.uuid.clone(),
+                    })
+                } else {
+                    Top::MoveToPositionMessage(pb::MoveToPositionMessage { position })
+                }));
+            }
         }
         // Group metrics, from the counters of the core.
         let created = room.groups_created();
