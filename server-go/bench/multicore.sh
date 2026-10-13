@@ -35,7 +35,7 @@ for cpus in "${CPUS[@]}"; do
 	  while [ "$(date +%s)" -lt $end ]; do docker stats --no-stream --format '{{.Name}} {{.CPUPerc}}' $SERVER $BOT; done ) > "$OUT/cpu" 2>/dev/null &
 	sampler=$!
 	result=$(docker run --rm --name $BOT --network $NET --cpus "$BOT_CPUS" -m 1g -v "$OUT:/app:ro" busybox:1.37 \
-		/app/loadbot -http http://$SERVER:3000 -rooms "$ROOMS" -users "$USERS" -rate "$RATE" -warmup "$WARMUP" -duration "$DURATION")
+		/app/loadbot -http http://$SERVER:3000 -rooms "$ROOMS" -users "$USERS" -rate "$RATE" -side "${SIDE:-1600}" -warmup "$WARMUP" -duration "$DURATION")
 	wait $sampler || true
 	mem=$(docker stats --no-stream --format '{{.MemUsage}}' $SERVER | cut -d/ -f1 | tr -d ' ')
 	echo "${result%\}},\"cpus\":$cpus,\"gomaxprocs\":${gomaxprocs:-0},\"server_cpu_percent\":$(avg $SERVER),\"loadbot_cpu_percent\":$(avg $BOT),\"server_mem\":\"$mem\"}"

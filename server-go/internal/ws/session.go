@@ -31,6 +31,7 @@ const (
 	// transportPingInterval keeps the connection alive across proxies (PusherWebSocket.KEEP_ALIVE_INTERVAL_MS).
 	transportPingInterval = 25 * time.Second
 	writeTimeout          = 10 * time.Second
+	closeGrace            = time.Second
 	maxMessageSize        = 16 << 20
 
 	// statusSessionDestroyed tells the front the logical session is gone: no resume, reconnect from scratch
@@ -64,13 +65,17 @@ type Session struct {
 	wmu   sync.Mutex // serializes writes to the transport: the writer goroutine, and a resume's replay
 	nonce uint32     // guarded by wmu
 
-	mu           sync.Mutex
-	cur          *websocket.Conn // nil while the client is away
-	store        resumeStore
-	destroyed    bool
-	lastReceived uint32
-	retention    *time.Timer
-	joined       bool
+	// hmu serializes the handling of client messages: after a resume, the reader of the replaced transport may
+	// still be handling a message while the new one starts.
+	hmu          sync.Mutex
+	lastReceived uint32 // guarded by hmu
+
+	mu        sync.Mutex
+	cur       *websocket.Conn // nil while the client is away
+	store     resumeStore
+	destroyed bool
+	retention *time.Timer
+	joined    bool
 
 	userID atomic.Int32 // id in the room, once RoomJoined is on its way
 
@@ -246,15 +251,12 @@ func (s *Session) read(conn *websocket.Conn) {
 			go conn.Close(websocket.StatusUnsupportedData, "Invalid message format")
 			continue
 		}
-		s.mu.Lock()
-		duplicate := frame.Nonce <= s.lastReceived // a resumed client sends again what it is not sure we got
-		if !duplicate {
+		s.hmu.Lock()
+		if frame.Nonce > s.lastReceived { // a resumed client sends again what it is not sure we got
 			s.lastReceived = frame.Nonce
-		}
-		s.mu.Unlock()
-		if !duplicate {
 			s.handle(frame.Message)
 		}
+		s.hmu.Unlock()
 	}
 }
 
@@ -324,15 +326,17 @@ func (s *Session) resume(conn *websocket.Conn, last uint32) {
 	s.wmu.Lock()
 	defer s.wmu.Unlock()
 	s.mu.Lock()
-	if s.destroyed || !s.store.canResumeAfter(last, time.Now()) {
+	// A retention timer that already fired means destroy is on its way.
+	expired := s.retention != nil && !s.retention.Stop()
+	if s.destroyed || expired || !s.store.canResumeAfter(last, time.Now()) {
 		s.mu.Unlock()
-		_ = conn.Close(websocket.StatusPolicyViolation, "Cannot replace socket: server is missing messages to replay")
+		go conn.Close(websocket.StatusPolicyViolation, "Cannot replace socket: server is missing messages to replay")
 		return
 	}
+	s.retention = nil
 	replay := s.store.after(last)
-	if s.retention != nil {
-		s.retention.Stop()
-		s.retention = nil
+	if prev := s.cur; prev != nil && prev != old {
+		go prev.CloseNow() // a concurrent resume won the race in between: this one replaces it
 	}
 	s.cur = conn
 	s.readers.Add(1)
@@ -365,7 +369,14 @@ func (s *Session) destroy(code websocket.StatusCode, reason string) {
 
 	s.out.close()
 	if conn != nil {
-		_ = conn.Close(code, reason) // waits at most 5 s for the client's close frame
+		// Give the close frame a moment, not the whole handshake: until the readers stop, the player is still in
+		// the room and its spaces, visible to everybody.
+		closed := make(chan struct{})
+		go func() { _ = conn.Close(code, reason); close(closed) }()
+		select {
+		case <-closed:
+		case <-time.After(closeGrace):
+		}
 	}
 	s.cancel()
 	s.readers.Wait()

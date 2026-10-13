@@ -298,3 +298,20 @@ func TestBubbleSpaceAnswersThenStartsWebRTC(t *testing.T) {
 			s.GetPrivateEvent().GetSpaceName() == bubble
 	})
 }
+
+func TestOneClientCannotCreateSpacesWithoutLimit(t *testing.T) {
+	h := newHarness(t)
+	alice := h.dial("alice", "c-alice", nil)
+	alice.send(join(100, 100))
+	alice.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
+	for i := 0; i <= maxSpacesPerSession; i++ {
+		alice.query(int32(i+1), &pb.QueryMessage{Query: &pb.QueryMessage_JoinSpaceQuery{JoinSpaceQuery: &pb.JoinSpaceQuery{SpaceName: "s" + strconv.Itoa(i)}}})
+	}
+	alice.waitFor("the refusal", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+		a := d.GetAnswerMessage()
+		return a.GetId() == maxSpacesPerSession+1 && a.GetError().GetMessage() == "Too many spaces joined"
+	})
+	if n := h.srv.spaces.Len(); n != maxSpacesPerSession {
+		t.Fatalf("%d spaces alive", n)
+	}
+}

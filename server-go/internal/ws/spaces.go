@@ -32,15 +32,30 @@ func (s *Session) joinedSpace(local string) *core.Space {
 	return s.spaces[local]
 }
 
+// Each space is an actor: one client must not be able to create them without limit. The front joins a handful.
+const (
+	maxSpacesPerSession = 100
+	maxSpaceNameLength  = 4096
+)
+
 func (s *Session) joinSpace(id int32, q *pb.JoinSpaceQuery) {
 	if s.userID.Load() == 0 {
 		s.answerError(id, "Cannot join a space before joining the room")
 		return
 	}
 	local := q.GetSpaceName()
+	if len(local) > maxSpaceNameLength {
+		s.answerError(id, "Space name too long")
+		return
+	}
 	s.mu.Lock()
 	_, already := s.spaces[local]
+	full := len(s.spaces) >= maxSpacesPerSession
 	s.mu.Unlock()
+	if full && !already {
+		s.answerError(id, "Too many spaces joined")
+		return
+	}
 	if already {
 		s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_JoinSpaceAnswer{JoinSpaceAnswer: &pb.JoinSpaceAnswer{SpaceUserId: s.spaceUserID()}}})
 		return
