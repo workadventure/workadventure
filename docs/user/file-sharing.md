@@ -11,7 +11,7 @@ You can send files in the chat: documents, images, videos or audio. How the file
 | Who receives the file   | The members of the room                               | The people in your bubble or meeting room right now |
 | People who arrive later | Can see it, depending on the room's history settings  | Don't get it                                       |
 | Stored on a server      | Yes, in the room history                              | No, it goes straight from your browser to theirs   |
-| Limits                  | File size set by the chat server                      | 10 people, 100 MB per file, 3 files at a time      |
+| Limits                  | File size set by the chat server                      | 10 people, 1 GB per file, 3 files at a time        |
 
 ## Sending a file
 
@@ -87,5 +87,5 @@ received it, the people still waiting will not get it.
 
 - Direct file transfer is available when there are **10 people or fewer** in the bubble or meeting room, you included.
   Above that, the button is greyed out.
-- Each file can be up to **100 MB**.
+- Each file can be up to **1 GB**.
 - You can send up to **3 files at a time**.

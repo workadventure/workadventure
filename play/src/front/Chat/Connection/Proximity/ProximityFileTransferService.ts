@@ -16,9 +16,9 @@ import {
 // application-level encryption or hash would protect against anything DTLS does not already cover.
 
 export const PROXIMITY_FILE_TRANSFER_MAX_FILES = 3;
-// Maximum allowed size for a proximity file transfer: 100 MB. Bounds what a peer can make us
+// Maximum allowed size for a proximity file transfer: 1 GB. Bounds what a peer can make us
 // write to disk, and how long a transfer over a TURN relay takes.
-export const PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE = 100 * 1024 * 1024;
+export const PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE = 1024 * 1024 * 1024;
 // Upper bound on undownloaded offers a single peer may have pending at once. Offers are
 // remote-controlled (each surfaces a chat message + notification), so this throttles a peer
 // from flooding the recipient with offers and growing the incomingTransfers map unbounded.
