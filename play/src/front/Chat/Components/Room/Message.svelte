@@ -216,8 +216,8 @@
 
                     {@const MessageComponent = messageType[type]}
                     <MessageComponent {content} {message} />
-                    {#if message.attachmentRecipients}
-                        <MessageAttachmentRecipients recipients={message.attachmentRecipients} />
+                    {#if message.attachment?.delivery}
+                        <MessageAttachmentRecipients recipients={message.attachment.delivery} />
                     {/if}
 
                     {#if $reactionsWithUsers.length > 0}

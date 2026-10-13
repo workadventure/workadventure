@@ -12,6 +12,7 @@ import type {
     ProximityFileTransferUpdate,
 } from "../ProximityFileTransferService";
 import type { SpaceUserExtended } from "../../../../Space/SpaceInterface";
+import type { ChatMessage } from "../../ChatConnection";
 import { formatProximityFileTransferRemainingTime } from "../ProximityFileTransferEta";
 import { ProximityChatRoom } from "../ProximityChatRoom";
 import { analyticsClient } from "../../../../Administration/AnalyticsClient";
@@ -58,6 +59,11 @@ function createRoom() {
         [],
         vi.fn(),
     );
+}
+
+function remainingSeconds(message: ChatMessage): number | undefined {
+    const status = get(message.attachment!.status);
+    return status.state === "loading" ? status.remainingSeconds : undefined;
 }
 
 function createOffer(): IncomingProximityFileTransferOffer {
@@ -160,11 +166,8 @@ describe("ProximityChatRoom file transfers", () => {
         Reflect.get(room, "applyFileTransferUpdate").call(room, unavailableUpdate);
 
         const [message] = get(room.messages);
-        expect(get(message.content)).toMatchObject({
-            url: "blob:received-file",
-            mediaState: "ready",
-            mediaProgress: 1,
-        });
+        expect(get(message.content).url).toBe("blob:received-file");
+        expect(get(message.attachment!.status)).toEqual({ state: "ready" });
     });
 
     it("should estimate remaining time only after download progress is stable enough", () => {
@@ -186,7 +189,7 @@ describe("ProximityChatRoom file transfers", () => {
             } satisfies ProximityFileTransferUpdate);
 
             const [message] = get(room.messages);
-            expect(get(message.content).mediaEstimatedRemainingSeconds).toBeUndefined();
+            expect(remainingSeconds(message)).toBeUndefined();
 
             vi.setSystemTime(new Date("2024-01-01T00:00:02.000Z"));
             Reflect.get(room, "applyFileTransferUpdate").call(room, {
@@ -194,7 +197,7 @@ describe("ProximityChatRoom file transfers", () => {
                 state: "downloading",
                 progress: 0.04,
             } satisfies ProximityFileTransferUpdate);
-            expect(get(message.content).mediaEstimatedRemainingSeconds).toBeUndefined();
+            expect(remainingSeconds(message)).toBeUndefined();
 
             Reflect.get(room, "applyFileTransferUpdate").call(room, {
                 transferId: "transfer-1",
@@ -202,11 +205,7 @@ describe("ProximityChatRoom file transfers", () => {
                 progress: 0.5,
             } satisfies ProximityFileTransferUpdate);
 
-            expect(get(message.content)).toMatchObject({
-                mediaState: "loading",
-                mediaProgress: 0.5,
-                mediaEstimatedRemainingSeconds: 2,
-            });
+            expect(get(message.attachment!.status)).toEqual({ state: "loading", progress: 0.5, remainingSeconds: 2 });
         } finally {
             vi.useRealTimers();
         }
@@ -231,7 +230,7 @@ describe("ProximityChatRoom file transfers", () => {
             } satisfies ProximityFileTransferUpdate);
 
             const [message] = get(room.messages);
-            expect(get(message.content).mediaEstimatedRemainingSeconds).toBe(2);
+            expect(remainingSeconds(message)).toBe(2);
 
             Reflect.get(room, "applyFileTransferUpdate").call(room, {
                 transferId: "transfer-1",
@@ -240,23 +239,37 @@ describe("ProximityChatRoom file transfers", () => {
                 error: "unavailable",
             } satisfies ProximityFileTransferUpdate);
 
-            expect(get(message.content).mediaEstimatedRemainingSeconds).toBeUndefined();
+            expect(get(message.attachment!.status)).toEqual({ state: "error", error: "download" });
         } finally {
             vi.useRealTimers();
         }
     });
 
-    it("should mark an incoming file transfer request as refused locally", () => {
+    it("should ask for consent, then follow the download once accepted", () => {
+        const room = createRoom();
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+        const [message] = get(room.messages);
+        const consent = message.attachment!.consent!;
+        expect(get(consent.decision)).toBe("pending");
+
+        Reflect.get(room, "applyFileTransferUpdate").call(room, {
+            transferId: "transfer-1",
+            state: "connecting",
+            progress: 0,
+        } satisfies ProximityFileTransferUpdate);
+
+        expect(get(consent.decision)).toBe("accepted");
+        expect(get(message.attachment!.status)).toMatchObject({ state: "loading", progress: 0 });
+    });
+
+    it("should mark an incoming file transfer request as declined locally", () => {
         const room = createRoom();
         Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
         const [message] = get(room.messages);
 
-        Reflect.get(message, "refuseAttachment")?.();
+        message.attachment?.consent?.decline();
 
-        expect(get(message.content)).toMatchObject({
-            mediaState: "refused",
-            mediaProgress: 0,
-        });
+        expect(get(message.attachment!.consent!.decision)).toBe("declined");
     });
 
     it("should report sent and fully received files to analytics, with how the transfer went", async () => {
@@ -309,11 +322,9 @@ describe("ProximityChatRoom file transfers", () => {
 
         const [message] = get(room.messages);
         expect(message.id).toBe("transfer-1");
-        expect(get(message.content)).toMatchObject({
-            body: "hello.txt",
-            url: "blob:transfer-1",
-            mediaState: "ready",
-        });
+        expect(get(message.content)).toMatchObject({ body: "hello.txt", url: "blob:transfer-1" });
+        expect(get(message.attachment!.status)).toEqual({ state: "ready" });
+        expect(message.attachment!.consent).toBeUndefined();
         vi.unstubAllGlobals();
     });
 
@@ -341,7 +352,7 @@ describe("ProximityChatRoom file transfers", () => {
 
         await room.sendFiles(createFileList(file));
         const [message] = get(room.messages);
-        expect(get(message.attachmentRecipients!).map(({ name, state }) => [name, state])).toEqual([
+        expect(get(message.attachment!.delivery!).map(({ name, state }) => [name, state])).toEqual([
             ["Bob", "waiting"],
             ["Eve", "waiting"],
             ["Joe", "waiting"],
@@ -354,7 +365,7 @@ describe("ProximityChatRoom file transfers", () => {
         // We leave the bubble: whoever has not got the file by now will not get it.
         Reflect.get(room, "failUnfinishedOutgoingRecipients").call(room);
 
-        expect(get(message.attachmentRecipients!).map(({ name, state }) => [name, state])).toEqual([
+        expect(get(message.attachment!.delivery!).map(({ name, state }) => [name, state])).toEqual([
             ["Bob", "received"],
             ["Eve", "declined"],
             ["Joe", "failed"],

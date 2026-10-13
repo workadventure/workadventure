@@ -5,7 +5,9 @@ import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { MapStore } from "@workadventure/store-utils";
 import type {
+    ChatAttachmentStatus,
     ChatMessage,
+    ChatMessageAttachment,
     ChatMessageContent,
     ChatMessageType,
     ChatThread,
@@ -37,6 +39,8 @@ export class MatrixChatMessage implements ChatMessage {
     readonly canDelete: Writable<boolean>;
     threadSummary = writable<ChatThreadSummary | null>(null);
     openThread: (() => Promise<ChatThread | undefined>) | undefined;
+    readonly attachment: ChatMessageAttachment | undefined;
+    private readonly attachmentStatus = writable<ChatAttachmentStatus>({ state: "ready" });
     private imageMediaCleanup: () => void = () => undefined;
     private imageMediaAbortController: AbortController | undefined;
     private attachmentMediaCleanup: () => void = () => undefined;
@@ -62,6 +66,7 @@ export class MatrixChatMessage implements ChatMessage {
     ) {
         this.id = event.getId() ?? uuidv4();
         this.type = this.mapMatrixMessageTypeToChatMessage();
+        this.attachment = this.type === "text" ? undefined : { status: this.attachmentStatus };
         this.date = event.getDate();
         this.sender = this.getSender();
         this.isMyMessage = this.room.client.getUserId() === event.getSender();
@@ -140,7 +145,6 @@ export class MatrixChatMessage implements ChatMessage {
                 body: content.body,
                 url: this.room.client.mxcUrlToHttp(content.url ?? content.file?.url) ?? undefined,
                 thumbnailUrl: this.room.client.mxcUrlToHttp(content.info?.thumbnail_url) ?? undefined,
-                mediaState: content.file !== undefined ? "loading" : "ready",
             };
         }
 
@@ -148,7 +152,6 @@ export class MatrixChatMessage implements ChatMessage {
             return {
                 body: content.body,
                 url: this.room.client.mxcUrlToHttp(content.url ?? content.file?.url) ?? undefined,
-                mediaState: content.file !== undefined ? "loading" : "ready",
             };
         }
 
@@ -169,7 +172,7 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     private async resolveImageMedia(signal: AbortSignal): Promise<void> {
-        this.content.update((content) => ({ ...content, mediaState: "loading", mediaErrorKind: undefined }));
+        this.attachmentStatus.set({ state: "loading" });
 
         try {
             const media = await resolveImageMediaFromEvent(this.event, this.room.client, signal);
@@ -183,18 +186,13 @@ export class MatrixChatMessage implements ChatMessage {
                 ...content,
                 url: media.sourceUrl,
                 thumbnailUrl: media.thumbnailUrl ?? media.sourceUrl,
-                mediaErrorKind: media.error,
-                mediaState: media.error ? "error" : "ready",
             }));
+            this.attachmentStatus.set(media.error ? { state: "error", error: media.error } : { state: "ready" });
         } catch (error) {
             if (error instanceof DOMException && error.name === "AbortError") {
                 return;
             }
-            this.content.update((content) => ({
-                ...content,
-                mediaState: "error",
-                mediaErrorKind: "download",
-            }));
+            this.attachmentStatus.set({ state: "error", error: "download" });
         }
     }
 
@@ -216,7 +214,7 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     private async resolveAttachmentMedia(signal: AbortSignal): Promise<void> {
-        this.content.update((content) => ({ ...content, mediaState: "loading", mediaErrorKind: undefined }));
+        this.attachmentStatus.set({ state: "loading" });
 
         try {
             const media = await resolveAttachmentMediaFromEvent(this.event, this.room.client, signal);
@@ -226,21 +224,13 @@ export class MatrixChatMessage implements ChatMessage {
             }
 
             this.attachmentMediaCleanup = media.cleanup;
-            this.content.update((content) => ({
-                ...content,
-                url: media.sourceUrl,
-                mediaErrorKind: media.error,
-                mediaState: media.error ? "error" : "ready",
-            }));
+            this.content.update((content) => ({ ...content, url: media.sourceUrl }));
+            this.attachmentStatus.set(media.error ? { state: "error", error: media.error } : { state: "ready" });
         } catch (error) {
             if (error instanceof DOMException && error.name === "AbortError") {
                 return;
             }
-            this.content.update((content) => ({
-                ...content,
-                mediaState: "error",
-                mediaErrorKind: "download",
-            }));
+            this.attachmentStatus.set({ state: "error", error: "download" });
         }
     }
 
