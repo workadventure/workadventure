@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+# A shared socle and one light stack per server, side by side. See dev/README.md.
+set -euo pipefail
+
+DEV_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO=$(dirname "$DEV_DIR")
+# Local overrides (SOCLE_HTTP_PORT=8880...), not committed.
+if [ -f "$DEV_DIR/.env" ]; then set -a; . "$DEV_DIR/.env"; set +a; fi
+
+# The commit both candidates start from. Its images are published on ghcr.io: nothing heavy is built locally.
+export WA_TAG=${WA_TAG:-master-6f4d02319eddbf46a51cb99ffd38e2d75273593c}
+export SOCLE_HTTP_PORT=${SOCLE_HTTP_PORT:-80}
+export SOCLE_LIVEKIT_TCP_PORT=${SOCLE_LIVEKIT_TCP_PORT:-7881}
+export SOCLE_LIVEKIT_UDP_PORT=${SOCLE_LIVEKIT_UDP_PORT:-7882}
+# Public URLs carry the port, except on 80 (browsers drop it, and the OIDC issuer must match exactly).
+if [ "$SOCLE_HTTP_PORT" = 80 ]; then export SOCLE_URL_PORT=""; else export SOCLE_URL_PORT=":$SOCLE_HTTP_PORT"; fi
+
+usage() {
+    cat >&2 <<USAGE
+Usage:
+  dev/dev socle up [--profile tools] | down
+  dev/dev stack up <name> [--variant ts|server] [--server-dir <dir>] [compose up options]
+  dev/dev stack down <name> [compose down options, e.g. -v to drop its maps]
+  dev/dev status
+  dev/dev env <name>      Playwright variables for a stack: eval "\$(dev/dev env ts)"
+USAGE
+    exit 1
+}
+
+# --env-file: the OIDC mock "extends" docker-compose.yaml, whose variables come from .env.template.
+socle() { docker compose --env-file "$REPO/.env.template" -f "$DEV_DIR/socle.yaml" "$@"; }
+stack() { STACK=$1 docker compose -f "$DEV_DIR/stack.yaml" "${@:2}"; }
+
+# Memory used by the running containers of a compose project.
+memory() {
+    local ids
+    ids=$(docker ps -q --filter "label=com.docker.compose.project=$1")
+    [ -n "$ids" ] || { echo "0 MiB"; return; }
+    # shellcheck disable=SC2086
+    docker stats --no-stream --format '{{.MemUsage}}' $ids | awk '{
+        v = $1; u = v; gsub(/[0-9.]/, "", u); v += 0
+        s += (u == "GiB") ? v * 1024 : (u == "KiB") ? v / 1024 : (u == "B") ? 0 : v
+    } END { printf "%.0f MiB\n", s }'
+}
+
+case "${1:-} ${2:-}" in
+"socle up")
+    socle "${@:3}" up -d --build --wait
+    echo "Socle up: http://traefik.workadventure.localhost$SOCLE_URL_PORT"
+    ;;
+"socle down")
+    socle --profile tools down "${@:3}"
+    ;;
+"stack up")
+    name=${3:-}
+    [[ "$name" =~ ^[a-z0-9][a-z0-9-]*$ && "$name" != socle ]] || usage
+    docker network inspect wa-socle >/dev/null 2>&1 || { echo "The socle is not running: dev/dev socle up" >&2; exit 1; }
+    shift 3
+    variant=ts
+    export SERVER_DIR="server-$name"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+        --variant) variant=$2; shift 2 ;;
+        --server-dir) SERVER_DIR=$2; shift 2 ;;
+        *) break ;;
+        esac
+    done
+    if [ "$variant" = server ]; then
+        [ -f "$REPO/$SERVER_DIR/dev.env" ] || { echo "Missing $SERVER_DIR/dev.env (see dev/README.md)" >&2; exit 1; }
+        set -a; . "$REPO/$SERVER_DIR/dev.env"; set +a
+        [ -n "${SERVER_COMMAND:-}" ] || { echo "$SERVER_DIR/dev.env must set SERVER_COMMAND" >&2; exit 1; }
+    fi
+    [[ "$variant" =~ ^(ts|server)$ ]] || usage
+    stack "$name" --profile "$variant" up -d --build --wait --remove-orphans "$@"
+    url="http://play.$name.workadventure.localhost$SOCLE_URL_PORT"
+    # Traefik routes a container once it is healthy, a moment after compose returns.
+    for _ in $(seq 60); do curl -sf -o /dev/null "$url/ping" && break; sleep 1; done
+    echo "Stack $name ($variant): $url/"
+    ;;
+"stack down")
+    [ -n "${3:-}" ] || usage
+    stack "$3" --profile ts --profile server down "${@:4}"
+    ;;
+"status "*)
+    printf "%-14s %-12s %-10s %s\n" PROJECT STATUS MEMORY URL
+    for project in $(docker compose ls -a -q | grep '^wa-' || true); do
+        if [ "$project" = wa-socle ]; then url="http://traefik.workadventure.localhost$SOCLE_URL_PORT"
+        else url="http://play.${project#wa-}.workadventure.localhost$SOCLE_URL_PORT/"; fi
+        status=$(docker compose ls -a --filter "name=^$project\$" --format json | sed -E 's/.*"Status":"([^"]*)".*/\1/')
+        printf "%-14s %-12s %-10s %s\n" "$project" "$status" "$(memory "$project")" "$url"
+    done
+    ;;
+"env "*)
+    name=${2:-}
+    [ -n "$name" ] || usage
+    cat <<ENV
+export PLAY_URL=http://play.$name.workadventure.localhost$SOCLE_URL_PORT
+export MAP_STORAGE_ENDPOINT=map-storage.$name.workadventure.localhost$SOCLE_URL_PORT
+export MAPS_DOMAIN=maps.workadventure.localhost$SOCLE_URL_PORT
+export MATRIX_PUBLIC_URI=http://matrix.workadventure.localhost$SOCLE_URL_PORT
+export MATRIX_DOMAIN=matrix.workadventure.localhost
+ENV
+    ;;
+*)
+    usage
+    ;;
+esac
