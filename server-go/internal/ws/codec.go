@@ -44,6 +44,10 @@ func subMessage(ev any) *pb.SubMessage {
 	switch e := ev.(type) {
 	case core.MapEdit:
 		return e.Event.(*pb.SubMessage)
+	case *pb.SubMessage: // built by the adapter itself (scripting events)
+		return e
+	case core.VariableChanged:
+		return &pb.SubMessage{Message: &pb.SubMessage_VariableMessage{VariableMessage: &pb.VariableMessage{Name: e.Name, Value: e.Value}}}
 	case core.AreaVariableChanged:
 		v := e.Variable
 		return &pb.SubMessage{Message: &pb.SubMessage_AreaPropertyVariableMessage{AreaPropertyVariableMessage: &pb.AreaPropertyVariableMessage{
@@ -93,6 +97,27 @@ func serverMessage(ev any) *pb.ServerToClientMessage {
 	case core.MapReplaced:
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RefreshRoomMessage{RefreshRoomMessage: &pb.RefreshRoomMessage{
 			RoomId: e.RoomURL, TimeToRefresh: proto.Int32(30)}}}
+	case core.RoomError:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_ErrorMessage{ErrorMessage: &pb.ErrorMessage{Message: e.Message}}}
+	case core.InvitationReceived:
+		id := e.SenderID
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_MeetingInvitationRequestReceivedMessage{MeetingInvitationRequestReceivedMessage: &pb.MeetingInvitationRequestReceivedMessage{
+			SenderUserUuid: e.SenderUUID, SenderPlayUri: e.PlayURI, SenderName: e.SenderName, SenderUserId: &id}}}
+	case core.InvitationAnswered:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_MeetingInvitationResponseReceivedMessage{MeetingInvitationResponseReceivedMessage: &pb.MeetingInvitationResponseReceivedMessage{
+			Accepted: e.Accepted, ResponderName: e.ResponderName}}}
+	case core.InvitationTooHigh:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_MeetingInvitationRequestTooHighMessage{MeetingInvitationRequestTooHighMessage: &pb.MeetingInvitationRequestTooHighMessage{}}}
+	case core.InvitationClosed:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_MeetingInvitationRequestClosedMessage{MeetingInvitationRequestClosedMessage: &pb.MeetingInvitationRequestClosedMessage{}}}
+	case core.Ejected:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_BanUserMessage{BanUserMessage: &pb.BanUserMessage{Type: e.Type, Message: e.Message}}}
+	case core.FollowRequested:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_FollowRequestMessage{FollowRequestMessage: &pb.FollowRequestMessage{Leader: e.Leader, ForceFollow: e.Force}}}
+	case core.FollowConfirmed:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_FollowConfirmationMessage{FollowConfirmationMessage: &pb.FollowConfirmationMessage{Leader: e.Leader, Follower: e.Follower}}}
+	case core.FollowAborted:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_FollowAbortMessage{FollowAbortMessage: &pb.FollowAbortMessage{Leader: e.Leader, Follower: e.Follower}}}
 	case core.MapDeleted:
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_DeleteMapMessage{DeleteMapMessage: &pb.DeleteMapMessage{}}}
 	case *pb.ServerToClientMessage: // built by the adapter itself (connection, answers, errors)

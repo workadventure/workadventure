@@ -113,6 +113,8 @@ type JoinRequest struct {
 	Tags         []string
 	IsLogged     bool
 	IPAddress    string
+	// PlayerVariables are its stored variables, read before the join.
+	PlayerVariables []StoredVariable
 }
 
 // UserView is an immutable snapshot of a player, as seen by the players around.
@@ -135,8 +137,10 @@ type UserView struct {
 type (
 	// RoomJoined confirms the join and gives the player their id in the room.
 	RoomJoined struct {
-		UserID    int32
-		Variables []AreaVariable // the area variables when the player joined
+		UserID          int32
+		Variables       []AreaVariable // the area variables when the player joined
+		RoomVariables   []Variable     // the room variables it may read
+		PlayerVariables []Variable     // its own stored variables
 	}
 	UserJoined struct{ User UserView }
 	UserMoved  struct {

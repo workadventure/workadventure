@@ -2,6 +2,8 @@ package core
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/actor"
 )
@@ -20,9 +22,10 @@ const inboxSize = 1024
 // Room is a map instance (GameRoom in the back, PusherRoom in the pusher). It is an actor: its state lives on one
 // goroutine and every method below only posts a closure to it. Different rooms run in parallel.
 type Room struct {
-	URL string
-	a   *actor.Actor
-	s   *state
+	URL      string
+	a        *actor.Actor
+	s        *state
+	varsOnce sync.Once
 }
 
 func NewRoom(url string, cfg Config) *Room {
@@ -168,6 +171,10 @@ type state struct {
 	areas       []Area
 	counts      map[string]int       // players in each counted area
 	vars        map[[3]string]string // area variables: area, property, key
+
+	invitations map[string][]invitation // meeting invitations sent, by sender uuid
+	roomVars    *RoomVariables          // nil until InitVariables
+	varsAt      time.Time               // when the map's declarations were read
 }
 
 func newState(url string, cfg Config) *state {
@@ -182,6 +189,7 @@ func newState(url string, cfg Config) *state {
 		byTab:       map[string]*user{},
 		groups:      map[int32]*group{},
 		listeners:   map[Peer]struct{}{},
+		invitations: map[string][]invitation{},
 		counts:      map[string]int{},
 		vars:        map[[3]string]string{},
 		userIndex:   newSpatialIndex[*user](cell),
@@ -209,6 +217,9 @@ type user struct {
 	zone         *zone
 	listened     map[zoneKey]*zone
 	areas        []string // the counted areas it is in
+	tags         []string
+	following    *user
+	followers    map[*user]struct{}
 }
 
 func (u *user) view() UserView {
@@ -244,7 +255,18 @@ func (s *state) join(p Peer, req JoinRequest) {
 		companion: req.Companion, visitCardURL: req.VisitCardURL, chatID: req.ChatID, status: req.Status,
 		pos: req.Position, listened: map[zoneKey]*zone{},
 	}
-	p.Send(NewMsg(RoomJoined{UserID: u.id, Variables: s.variables()}, false))
+	u.tags = req.Tags
+	stored := make([]Variable, 0, len(req.PlayerVariables))
+	for _, v := range req.PlayerVariables {
+		stored = append(stored, Variable{Name: v.Name, Value: v.Value})
+		if v.Public {
+			if u.vars == nil {
+				u.vars = map[string]string{}
+			}
+			u.vars[v.Name] = v.Value
+		}
+	}
+	p.Send(NewMsg(RoomJoined{UserID: u.id, Variables: s.variables(), RoomVariables: s.readableVariables(req.Tags), PlayerVariables: stored}, false))
 
 	s.users[u.id] = u
 	s.byPeer[p] = u
@@ -266,6 +288,7 @@ func (s *state) join(p Peer, req JoinRequest) {
 }
 
 func (s *state) leave(u *user) {
+	s.stopFollowing(u)
 	if u.group != nil {
 		s.leaveGroup(u)
 	}
@@ -331,7 +354,7 @@ func (s *state) setPlayerDetails(u *user, d PlayerDetails) {
 		u.chatID = &id
 	}
 	if v := d.SetVariable; v != nil {
-		// ponytail: public variables only live in memory; Redis persistence, TTL and WORLD scope come with J3.
+		// Stored by the adapter for logged players (persist); the room keeps the public ones for the others.
 		vars := make(map[string]string, len(u.vars)+1)
 		for k, val := range u.vars {
 			vars[k] = val
@@ -349,6 +372,26 @@ func (s *state) setPlayerDetails(u *user, d PlayerDetails) {
 			u.say = &say
 		} else {
 			u.say = nil
+		}
+	}
+
+	// A persistent variable follows the player: its other tabs in the room get it as their own.
+	if v := d.SetVariable; v != nil && v.Persist {
+		for _, b := range s.users { // ponytail: a scan of the room; an index by uuid if it ever shows in profiles
+			if b == u || b.uuid != u.uuid {
+				continue
+			}
+			vars := make(map[string]string, len(b.vars)+1)
+			for k, val := range b.vars {
+				vars[k] = val
+			}
+			if v.Public {
+				vars[v.Name] = v.Value
+			} else {
+				delete(vars, v.Name)
+			}
+			b.vars = vars
+			b.peer.Send(NewMsg(PlayerDetailsUpdated{UserID: b.id, Details: d}, true))
 		}
 	}
 

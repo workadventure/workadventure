@@ -6,6 +6,7 @@ import (
 	"context"
 	"log/slog"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -119,7 +120,12 @@ func (s *Session) Send(m *core.Msg) {
 	s.out.push(m)
 }
 
-func (s *Session) Kick(reason string) { go s.destroy(statusSessionDestroyed, "Back lost: "+reason) }
+// Kick ends the session once what was queued before it is delivered: the message saying why (map deleted, kicked)
+// must reach the front before the close, which the front does not recover from.
+func (s *Session) Kick(reason string) { s.out.push(core.NewMsg(closeAfter{reason}, false)) }
+
+// closeAfter is queued by Kick.
+type closeAfter struct{ reason string }
 
 func (s *Session) writeLoop() {
 	defer s.recoverPanic()
@@ -175,6 +181,10 @@ func (s *Session) writeLoop() {
 			}
 			// A direct message never overtakes what was batched before it.
 			flush()
+			if c, ok := m.Event.(closeAfter); ok {
+				go s.destroy(statusSessionDestroyed, "Back lost: "+c.reason)
+				return
+			}
 			payload := s.encodeDirect(m)
 			s.emit(func(n uint32) []byte { return directFrame(n, payload) })
 		}
@@ -199,6 +209,13 @@ func (s *Session) roomJoined(j core.RoomJoined) *pb.ServerToClientMessage {
 	for i, v := range j.Variables {
 		vars[i] = &pb.AreaPropertyVariableMessage{AreaId: v.AreaID, PropertyId: v.PropertyID, Key: v.Key, Value: v.Value}
 	}
+	variables := func(list []core.Variable) []*pb.VariableMessage {
+		out := make([]*pb.VariableMessage, len(list))
+		for i, v := range list {
+			out[i] = &pb.VariableMessage{Name: v.Name, Value: v.Value}
+		}
+		return out
+	}
 	mb := s.info.member
 	apps := make([]*pb.ApplicationMessage, len(mb.Applications))
 	for i, a := range mb.Applications {
@@ -212,7 +229,7 @@ func (s *Session) roomJoined(j core.RoomJoined) *pb.ServerToClientMessage {
 	return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RoomJoinedMessage{RoomJoinedMessage: &pb.RoomJoinedMessage{
 		CurrentUserId: userID, UserRoomToken: mb.UserRoomToken, CharacterTextures: characterTextures(coreTextures(mb.CharacterTextures)),
 		CompanionTexture: companion, CanEdit: mb.CanEdit, ActivatedInviteUser: mb.ActivatedInviteUser, Applications: apps,
-		AreaPropertyVariable: vars,
+		AreaPropertyVariable: vars, Variable: variables(j.RoomVariables), PlayerVariable: variables(j.PlayerVariables),
 	}}}
 }
 
@@ -433,12 +450,16 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		if s.info.member.VisitCardURL != nil {
 			visitCard = *s.info.member.VisitCardURL
 		}
+		// The variables are read here, on this reader, before the join is posted: the join sees them.
+		s.room.InitVariables(ctx, func() core.RoomVariables { return s.srv.roomVariables(s.info.roomID) })
 		_ = s.room.Join(ctx, s, core.JoinRequest{
 			UUID: s.info.userUUID, TabID: s.info.tabID, Name: j.GetName(), Textures: coreTextures(s.info.member.CharacterTextures),
 			Companion: companion, VisitCardURL: visitCard, ChatID: chatID, Status: core.AvailabilityStatus(j.GetAvailabilityStatus()),
 			Position: toPosition(j.GetPositionMessage()), Viewport: toViewport(j.GetViewportMessage()),
-			Tags: s.info.member.Tags, IsLogged: s.info.isLogged, IPAddress: s.info.ipAddress,
+			Tags: s.info.member.Tags, IsLogged: s.info.isLogged, IPAddress: s.info.ipAddress, PlayerVariables: s.storedPlayerVariables(),
 		})
+	case *pb.ClientToServerMessage_VariableMessage:
+		s.setVariable(ctx, core.Variable{Name: msg.VariableMessage.GetName(), Value: msg.VariableMessage.GetValue()})
 	case *pb.ClientToServerMessage_UserMovesMessage:
 		vp := toViewport(msg.UserMovesMessage.GetViewport())
 		_ = s.room.Move(ctx, s, toPosition(msg.UserMovesMessage.GetPosition()), &vp)
@@ -450,6 +471,9 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 			s.mu.Lock()
 			s.status = d.AvailabilityStatus
 			s.mu.Unlock()
+		}
+		if d.SetVariable != nil {
+			s.storePlayerVariable(d.SetVariable)
 		}
 		_ = s.room.SetPlayerDetails(ctx, s, d)
 		s.updateSpacesWithPlayerDetails(d)
@@ -464,6 +488,24 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		s.query(msg.QueryMessage)
 	case *pb.ClientToServerMessage_EditMapCommandMessage:
 		s.editMap(ctx, msg.EditMapCommandMessage)
+	case *pb.ClientToServerMessage_BanPlayerMessage:
+		b := msg.BanPlayerMessage
+		if !s.isAdmin() {
+			return // like the pusher, silently
+		}
+		// Without an admin API a ban cannot be recorded (LocalAdmin refuses it): the pusher kicks instead.
+		_ = s.room.Eject(ctx, b.GetBanUserUuid(), "kicked", strings.TrimSpace(b.GetReason()))
+	case *pb.ClientToServerMessage_MeetingInvitationRequestMessage:
+		_ = s.room.InviteToMeeting(ctx, s, msg.MeetingInvitationRequestMessage.GetReceiverUserUuid(), s.isAdmin())
+	case *pb.ClientToServerMessage_MeetingInvitationResponseMessage:
+		r := msg.MeetingInvitationResponseMessage
+		_ = s.room.AnswerMeetingInvitation(ctx, s, r.GetAccept(), r.GetRequestSenderUserUuid())
+	case *pb.ClientToServerMessage_FollowRequestMessage:
+		_ = s.room.FollowRequest(ctx, s, msg.FollowRequestMessage.GetForceFollow())
+	case *pb.ClientToServerMessage_FollowConfirmationMessage:
+		_ = s.room.FollowConfirm(ctx, s, msg.FollowConfirmationMessage.GetLeader())
+	case *pb.ClientToServerMessage_FollowAbortMessage:
+		_ = s.room.FollowAbort(ctx, s, msg.FollowAbortMessage.GetLeader(), msg.FollowAbortMessage.GetFollower())
 	case *pb.ClientToServerMessage_SetAreaPropertyVariableMessage:
 		v := msg.SetAreaPropertyVariableMessage
 		_ = s.room.SetAreaVariable(ctx, s, core.AreaVariable{AreaID: v.GetAreaId(), PropertyID: v.GetPropertyId(), Key: v.GetKey(), Value: v.GetValue()},
@@ -493,6 +535,8 @@ func (s *Session) query(q *pb.QueryMessage) {
 		s.mapStorageJwt(q.GetId())
 	case *pb.QueryMessage_EmbeddableWebsiteQuery:
 		s.embeddableWebsite(q.GetId(), query.EmbeddableWebsiteQuery.GetUrl())
+	case *pb.QueryMessage_SendEventQuery:
+		s.sendEvent(q.GetId(), query.SendEventQuery)
 	case *pb.QueryMessage_RoomsFromSameWorldQuery:
 		s.roomsFromSameWorld(q.GetId())
 	case *pb.QueryMessage_RoomTagsQuery:
