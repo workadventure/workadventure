@@ -454,4 +454,7 @@ l'attente de la référence TS. Le code de la phase (routes HTTP, commandes, dro
   (`:19` « carte mise à jour », `:85` « carte supprimée », `:185` adresse d'upload) passent ici : pour `:185`,
   l'adresse annoncée garde le port de l'en-tête `Host`, que le `req.hostname` d'Express perd.
 
-- Non-régression cumulée (union J1, J2, scripting_spaces) : en cours au moment du commit, résultat à ajouter.
+- Non-régression cumulée (union J1 41, J2 23, scripting_spaces 6) : **68 réussis, 2 sautés, aucun échec** (même
+  `userlist` « Send Message », qui échoue en TS).
+- Banc : l'image `--target prod` se construit avec rustls et aws-lc-rs (58 s pour l'étape de build ; l'image
+  `rust:1.93-bookworm` a ce qu'il faut) et démarre avec ses trois variables (`/ping` 200). `crates/bot` inchangé.
