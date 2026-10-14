@@ -424,6 +424,49 @@ describe("AnalyticsEventsQueue", () => {
         });
     });
 
+    it("keeps the playback counters of inbound samples, all of them or none", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+        const playback = {
+            windowSeconds: 5.2,
+            framesDecoded: 150,
+            framesDropped: 1,
+            freezeCount: 2,
+            freezeSeconds: 0.9,
+            pauseCount: 0,
+            pauseSeconds: 0,
+            interFrameDelaySumSeconds: 5.1,
+            interFrameDelaySquaredSumSeconds: 0.2,
+            decodeSeconds: 0.3,
+        };
+
+        queue.enqueueVideoQualityReport(
+            {
+                samples: [
+                    videoQualitySample(playback),
+                    // A counter the browser does not expose stays null, without hiding the others
+                    videoQualitySample({ ...playback, freezeCount: undefined, freezeSeconds: Number.NaN }),
+                    // A counter is worthless without a plausible window
+                    videoQualitySample({ ...playback, windowSeconds: 3_600 }),
+                    // Our own encoder has no playback
+                    videoQualitySample({
+                        ...playback,
+                        direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND,
+                    }),
+                ],
+            },
+            socketData(),
+        );
+        await queue.flush();
+
+        const events = (post.mock.calls[0][1] as AnalyticsEventsBatch).events;
+        expect(events[0].properties).toMatchObject(playback);
+        expect(events[1].properties).toMatchObject({ framesDecoded: 150, freezeCount: null, freezeSeconds: null });
+        expect(events[2].properties).toMatchObject({ windowSeconds: null, framesDecoded: null, decodeSeconds: null });
+        expect(events[3].properties).toMatchObject({ windowSeconds: null, framesDecoded: null, decodeSeconds: null });
+    });
+
     it("drops video quality samples for a space the socket has not joined", async () => {
         const post = vi.fn().mockResolvedValue(undefined);
         const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));

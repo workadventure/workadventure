@@ -60,6 +60,48 @@ describe("subscribeToVideoQualityAnalytics", () => {
             ],
         });
     });
+
+    it("reports what the browser counted between two samples", () => {
+        window.capabilities = {
+            "api/analytics/events-batch": "v1",
+        };
+        vi.useFakeTimers();
+        try {
+            const sendReport = vi.fn();
+            const playback = {
+                statsId: "IT01V1",
+                timestampMs: 1_000,
+                framesDecoded: 100,
+                freezeCount: 0,
+                totalFreezesDuration: 0,
+            };
+            const store = writable<WebRtcStats>({ ...stats, playback });
+            subscribeToVideoQualityAnalytics(store, context, sendReport);
+
+            vi.advanceTimersByTime(5_000);
+            store.set({
+                ...stats,
+                playback: {
+                    ...playback,
+                    timestampMs: 6_000,
+                    framesDecoded: 220,
+                    freezeCount: 1,
+                    totalFreezesDuration: 0.5,
+                },
+            });
+
+            // The first sample has no previous one to diff against
+            expect(sendReport.mock.calls[0][0].samples[0].windowSeconds).toBeUndefined();
+            expect(sendReport.mock.calls[1][0].samples[0]).toMatchObject({
+                windowSeconds: 5,
+                framesDecoded: 120,
+                freezeCount: 1,
+                freezeSeconds: 0.5,
+            });
+        } finally {
+            vi.useRealTimers();
+        }
+    });
 });
 
 describe("subscribeToOutboundVideoQualityAnalytics", () => {

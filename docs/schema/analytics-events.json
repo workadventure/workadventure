@@ -3589,6 +3589,92 @@
           ],
           "description": "Outbound only: encoder the browser picked, e.g. \"libaom\", \"libvpx\", \"ExternalEncoder\"."
         },
+        "windowSeconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Inbound only: time covered by the playback counters below, i.e. since this stream's previous sample. Null when the window is not measurable (first sample, counters restarted, right after a deliberate pause), which nulls every counter below. Divide summed counters by summed windows, never average per-sample ratios."
+        },
+        "framesDecoded": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Inbound only: frames decoded during the window. 0 while video was expected means the stream stalled; a stall that never resumes shows only here, since the browser counts freezes and pauses when the next frame arrives."
+        },
+        "framesDropped": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Inbound only: frames the receiver dropped during the window (before decoding, or too late to display)."
+        },
+        "freezeCount": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Inbound only: freezes during the window, as the browser defines them: a gap between two rendered frames of max(3 × the average frame duration, average + 150 ms), up to 5 s. Counted when the next frame is rendered. Null when the browser does not report it."
+        },
+        "freezeSeconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Inbound only: total duration of those freezes, in seconds."
+        },
+        "pauseCount": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Inbound only: gaps longer than 5 s between two rendered frames (never counted as freezes). Pauses we caused are excluded: no sample is sent while we pause a stream on purpose, nor right after."
+        },
+        "pauseSeconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Inbound only: total duration of those pauses. Counted when the video resumes, so it can exceed windowSeconds."
+        },
+        "interFrameDelaySumSeconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Inbound only: sum of the delays between consecutive rendered frames during the window. With the squared sum and framesDecoded, gives the per-frame delay variance: Σd²/n − (Σd/n)²."
+        },
+        "interFrameDelaySquaredSumSeconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Inbound only: sum of the squared delays between consecutive rendered frames during the window."
+        },
+        "decodeSeconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Inbound only: time spent decoding during the window. Divided by framesDecoded: the receiver's decode cost per frame, which depends on codec and resolution."
+        },
         "sampleSeq": {
           "type": [
             "number",

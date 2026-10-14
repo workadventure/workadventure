@@ -1,6 +1,11 @@
 import { Track, type LocalVideoTrack, type RemoteTrack } from "livekit-client";
 import { derived, readable, type Readable } from "svelte/store";
-import type { WebRtcQualityLimitationReason, WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcStats";
+import type {
+    VideoPlaybackCounters,
+    WebRtcQualityLimitationReason,
+    WebRtcSenderStats,
+    WebRtcStats,
+} from "../Components/Video/WebRtcStats";
 import type { RemotePeer } from "./RemotePeer";
 import { FpsVariabilityTracker } from "./FpsVariabilityTracker";
 
@@ -68,8 +73,9 @@ export function createLivekitWebRtcStats(
             return trackWithMedia.mediaStreamTrack?.id;
         },
         includeRelayDetails: false,
-        // The SFU pauses the track when we do not display it (adaptiveStream); the target frame rate is unknown
-        getExpectedFps: () => (track?.streamState === Track.StreamState.Paused ? 0 : undefined),
+        // The SFU pauses the track when we do not display it (adaptiveStream), and a muted camera keeps its track but
+        // sends nothing: both are deliberate. Otherwise the target frame rate is unknown.
+        getExpectedFps: () => (track?.streamState === Track.StreamState.Paused || track?.isMuted ? 0 : undefined),
         measureFpsVariability: videoType === "video",
     });
 }
@@ -234,7 +240,14 @@ function buildWebRtcStatsFromReport(
         const matchesMedia = isVideo || !videoTrackId;
         if (isInboundRtp && matchesTrack && matchesMedia) {
             codecID = v.codecId;
-            const timeDiffSeconds = prev.timestampPrev > 0 ? (v.timestamp - prev.timestampPrev) / 1000 : 0;
+            bytesReceived = v.bytesReceived ?? 0;
+            framesDecoded = v.framesDecoded ?? 0;
+            timestamp = v.timestamp ?? 0;
+            // The first report has no previous one to compute rates from: reporting it would read as 0 fps
+            if (prev.timestampPrev <= 0) {
+                return;
+            }
+            const timeDiffSeconds = (v.timestamp - prev.timestampPrev) / 1000;
             const bandwidth =
                 timeDiffSeconds > 0 && v.bytesReceived !== undefined
                     ? (v.bytesReceived - prev.bytesReceivedPrev) / timeDiffSeconds
@@ -250,10 +263,8 @@ function buildWebRtcStatsFromReport(
                 bandwidth: bandwidth,
                 fps: fps,
                 source: options.source,
+                playback: toPlaybackCounters(v),
             };
-            bytesReceived = v.bytesReceived ?? 0;
-            framesDecoded = v.framesDecoded ?? 0;
-            timestamp = v.timestamp ?? 0;
         } else if (v.type === "codec") {
             codecs.set(v.id, v);
         } else if (v.type === "transport") {
@@ -314,6 +325,30 @@ function buildWebRtcStatsFromReport(
         framesDecoded,
         timestamp,
     };
+}
+
+function toPlaybackCounters(inboundRtp: any): VideoPlaybackCounters | undefined {
+    if (typeof inboundRtp.id !== "string" || !isCounter(inboundRtp.timestamp) || !isCounter(inboundRtp.framesDecoded)) {
+        return undefined;
+    }
+    const optional = (value: unknown): number | undefined => (isCounter(value) ? value : undefined);
+    return {
+        statsId: inboundRtp.id,
+        timestampMs: inboundRtp.timestamp,
+        framesDecoded: inboundRtp.framesDecoded,
+        framesDropped: optional(inboundRtp.framesDropped),
+        freezeCount: optional(inboundRtp.freezeCount),
+        totalFreezesDuration: optional(inboundRtp.totalFreezesDuration),
+        pauseCount: optional(inboundRtp.pauseCount),
+        totalPausesDuration: optional(inboundRtp.totalPausesDuration),
+        totalInterFrameDelay: optional(inboundRtp.totalInterFrameDelay),
+        totalSquaredInterFrameDelay: optional(inboundRtp.totalSquaredInterFrameDelay),
+        totalDecodeTime: optional(inboundRtp.totalDecodeTime),
+    };
+}
+
+function isCounter(value: unknown): value is number {
+    return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
 export type SenderLayerPrev = {

@@ -281,10 +281,41 @@ export class AnalyticsEventsQueue extends SharedAnalyticsEventsQueue {
                 qualityLimitationReason:
                     direction === "outbound" ? toLimitationReason(sample.qualityLimitationReason) : null,
                 encoderImplementation: direction === "outbound" ? (sample.encoderImplementation ?? null) : null,
+                ...toPlaybackProperties(sample, direction),
                 sampleSeq: sample.sampleSeq ?? null,
             },
         };
     }
+}
+
+// A sample normally covers ~5 s; a throttled background tab can stretch it, a bogus client could claim anything.
+const MAX_PLAYBACK_WINDOW_SECONDS = 300;
+
+/**
+ * Inbound only: what the browser counted during the sample window. A counter is worthless without its window (it
+ * cannot become a rate), so an implausible window drops them all.
+ */
+function toPlaybackProperties(sample: VideoQualitySampleMessage, direction: "inbound" | "outbound") {
+    const windowSeconds = direction === "inbound" ? sample.windowSeconds : undefined;
+    const measurable =
+        windowSeconds !== undefined &&
+        Number.isFinite(windowSeconds) &&
+        windowSeconds > 0 &&
+        windowSeconds <= MAX_PLAYBACK_WINDOW_SECONDS;
+    const counter = (value: number | undefined): number | null =>
+        measurable && value !== undefined && Number.isFinite(value) && value >= 0 ? value : null;
+    return {
+        windowSeconds: measurable ? windowSeconds : null,
+        framesDecoded: counter(sample.framesDecoded),
+        framesDropped: counter(sample.framesDropped),
+        freezeCount: counter(sample.freezeCount),
+        freezeSeconds: counter(sample.freezeSeconds),
+        pauseCount: counter(sample.pauseCount),
+        pauseSeconds: counter(sample.pauseSeconds),
+        interFrameDelaySumSeconds: counter(sample.interFrameDelaySumSeconds),
+        interFrameDelaySquaredSumSeconds: counter(sample.interFrameDelaySquaredSumSeconds),
+        decodeSeconds: counter(sample.decodeSeconds),
+    };
 }
 
 function isRequiredString(value: string | undefined): value is string {
