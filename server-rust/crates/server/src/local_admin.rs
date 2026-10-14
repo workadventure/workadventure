@@ -178,6 +178,38 @@ pub fn map_details(config: &Config, play_uri: &str) -> Value {
     Value::Object(details)
 }
 
+/// The third-party applications the editor offers (LocalAdmin.fetchMemberDataByUuid), from the *_ENABLED
+/// variables, in the same order.
+pub fn applications(config: &Config) -> Vec<pb::ApplicationMessage> {
+    let on = |k: &str| matches!(config.raw.get(k).map(String::as_str), Some("true" | "1"));
+    [
+        ("KLAXOON_ENABLED", "Klaxoon", "https://klaxoon.com", Some("https://static.klaxoon.com/favicon.ico"), "Klaxoon (Brainstorming, Quiz, Survey)"),
+        ("YOUTUBE_ENABLED", "Youtube", "https://youtube.com", Some("https://www.youtube.com/favicon.ico"), "Youtube (Video sharing)"),
+        ("GOOGLE_DRIVE_ENABLED", "Google Drive", "https://drive.google.com", None, "Google Drive (Docs, Sheets, Slides)"),
+        ("GOOGLE_DOCS_ENABLED", "Google Docs", "https://docs.google.com", None, "Google Docs (Word Processor)"),
+        ("GOOGLE_SHEETS_ENABLED", "Google Sheets", "https://sheets.google.com", None, "Google Sheets (Spreadsheet)"),
+        ("GOOGLE_SLIDES_ENABLED", "Google Slides", "https://slides.google.com", None, "Google Slides (Presentation)"),
+        ("ERASER_ENABLED", "Eraser", "https://workadventu.re", None, "Eraser (White board)"),
+        ("EXCALIDRAW_ENABLED", "Excalidraw", "https://excalidraw.com", None, "Excalidraw (White board)"),
+        ("CARDS_ENABLED", "Cards", "https://workadventu.re", None, "Cards (learning tool)"),
+        ("TLDRAW_ENABLED", "tldraw", "https://tldraw.com", None, "tldraw (White board)"),
+    ]
+    .into_iter()
+    .filter(|(flag, ..)| on(flag))
+    .map(|(_, name, doc, image, description)| pb::ApplicationMessage {
+        name: name.into(),
+        doc: Some(doc.into()),
+        image: image.map(Into::into),
+        description: Some(description.into()),
+        enabled: Some(true),
+        default: Some(true),
+        force_new_tab: Some(false),
+        allow_api: Some(false),
+        ..<pb::ApplicationMessage as Default>::default()
+    })
+    .collect()
+}
+
 /// IceServersService + WebRTCCredentialsService (coturn `use-auth-secret`).
 pub fn ice_servers(config: &Config, user_id: i32) -> Vec<pb::IceServer> {
     let env = |k: &str| config.raw.get(k).filter(|v| !v.is_empty()).cloned();

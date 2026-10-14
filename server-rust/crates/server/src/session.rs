@@ -61,6 +61,8 @@ pub struct SessionInfo {
     pub connection_id: Option<String>,
     /// The last map edit in the WAM file the client loaded (lastCommandId).
     pub last_command_id: Option<String>,
+    /// Third-party applications offered to this user (roomJoinedMessage.applications).
+    pub applications: Vec<wa_proto::messages::ApplicationMessage>,
 }
 
 enum WriterCmd {
@@ -156,6 +158,11 @@ impl Session {
     /// Ends the session from the server side: the client is told to start over.
     pub fn end(&self) {
         self.outbox.close(CloseReason::Ended);
+    }
+
+    /// Ends the session once the frames already queued are sent.
+    pub fn end_after_queued(&self) {
+        self.outbox.close_after_queued(CloseReason::Ended);
     }
 
     pub fn is_ended(&self) -> bool {

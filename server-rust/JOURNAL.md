@@ -384,3 +384,74 @@ construit par rien dans `dev/` (fait à la main comme la CI, URLs des collection
 
 **Lignes de code :** ~1 170 lignes écrites à la main (WAM et commandes 225 + 121 de tests, map-storage 294,
 branchements et tests de bout en bout ~530).
+
+---
+
+## Jalon 5 — J3a : éditeur de carte et map-storage complets (2026-10-14)
+
+**Durée murale :** ~1 h 50 (démarrage à 19 h 32, résultat final vers 21 h 20), dont ~8 min de lecture du contrat
+par deux sous-agents en parallèle, ~35 min de passages Playwright (trois passages complets de 72 tests) et
+l'attente de la référence TS. Le code de la phase (routes HTTP, commandes, droits, variables de zone) : ~45 min.
+
+**Itérations avant le vert :** ~10.
+- Compilation : 2 erreurs (le nom `default` d'un champ proto masque `Default::default()`, un `Result` de zip 9),
+  4 remarques clippy (dont un `Err` trop gros : la réponse de refus devient un `Option`). Tests verts du premier
+  coup, sauf un test de bout en bout qui utilisait la suppression de zone comme commande « non supportée ».
+- Playwright, premier passage avec l'ancienne configuration du socle (tous éditeurs) : 52 réussis sur 71 joués.
+  Écarts trouvés et corrigés : déverrouillage d'une zone déplacée, liste des cartes du monde
+  (`roomsFromSameWorldQuery`), `+` gardé dans le chemin d'une WAM, `deleteMapMessage` jeté par la fermeture de
+  session (la file était vidée avant d'être écrite).
+- Deuxième passage, configuration corrigée du socle : 61 réussis. Écart restant : la carte en mémoire et ses
+  commandes récentes mouraient avec la salle ; un utilisateur arrivant juste après le dernier parti lisait un
+  fichier pas encore sauvé. Désormais la carte vit hors de la salle (verrou par carte, la salle suivante attend
+  que la précédente la rende), comme dans MapsManager.
+- Troisième passage, comptes de test corrects : 70 réussis.
+
+**Corrections humaines :** aucune.
+
+**Aide extérieure :**
+- De la session socle : la référence TS (provisoire 44/72, puis 60/72, puis 67/72), la correction de
+  l'environnement des stacks (droits d'édition par étiquettes OIDC, applications tierces activées, `dev/dev assets`).
+- Deux faits relevés par Go (liste des cartes du monde pour start_exit ; message direct à faire partir avant la
+  fermeture 4000) : reçus après que je les avais trouvés et codés au premier passage, sans effet sur le code.
+- Lecture de `lang-go` : rien.
+- Dans l'autre sens : le préchauffage des comptes (`dev/warm-auth.mjs`) enregistrait Member1 anonyme ; trouvé ici
+  en décodant son jeton, signalé au socle, qui l'a corrigé pour les trois serveurs (7 tests de la référence TS
+  étaient faussés).
+
+**Ce qui est en place :**
+- **map-storage complet pour les specs** : `PUT` (multipart ou corps brut, WAM validée), `PATCH` d'une WAM en
+  JSON Patch (RFC 6902, appliqué ici, même module que le diff), `DELETE` (fichier, dossier, racine vidée),
+  `POST /move` et `/copy` (409 si la destination existe), `GET /download` (zip), `GET /upload-endpoint`,
+  `GET /maps` (avec le nombre de zones et d'entités cherchables), en-têtes de cache (`immutable` pour les noms
+  hachés, ETag), validation des uploads (carte Tiled en `.json`, image de tileset absente, WAM invalide), fichiers
+  privés à jeton (`mapStorageJwtQuery`, JWT HS256, droits de lecture de la zone).
+- **Commandes de l'éditeur** : suppression de zone, entités (création, modification, suppression), entités
+  personnalisées (images et `entities.json`, propriétaire), fichiers des propriétés `openFile` (et leur
+  suppression quand le lien disparaît), métadonnées de la carte.
+- **Droits, comme map-storage** : un non-éditeur ne peut que revendiquer ou rendre un bureau personnel, et poser,
+  déplacer ou supprimer une entité là où il a le droit d'écrire. Écart volontaire : map-storage laisse n'importe qui
+  supprimer n'importe quelle entité, et diffuse comme valides une création ou une modification refusées ; ici
+  elles sont refusées à l'émetteur.
+- **Validation de la carte après chaque commande** : structure de la WAM (types des champs que serveur et front
+  lisent) ; une commande qui la casse est refusée et ne change rien (map-storage, lui, garde la modification en
+  mémoire). Les schémas des propriétés ne sont pas encore vérifiés un à un.
+- **Variables de zone** : verrou (`lockableAreaPropertyData`, étiquettes autorisées, déverrouillé quand la zone se
+  vide, y compris quand elle est déplacée) et jauge de places (`maxUsersReached`), dans `roomJoinedMessage`.
+- **Sites intégrables** (`embeddableWebsiteQuery`) : liste blanche, puis `HEAD`/`GET` à 5 s et lecture de
+  `X-Frame-Options` et `frame-ancestors`, hors de la boucle des messages du client. reqwest gagne TLS (rustls).
+- **Applications tierces** (`roomJoinedMessage.applications`) depuis les variables `*_ENABLED`, comme LocalAdmin.
+
+**Vérification :**
+- `./verify.sh` vert : 83 tests (+7).
+- Playwright, stack `rust`, Chromium, vrais fichiers, comptes corrects :
+
+| spec | Rust | référence TS |
+|---|---|---|
+| J3a, 72 tests | **70 réussis, 1 sauté (Klaxoon), 1 échec** | 67 réussis, 1 sauté, 4 échecs |
+
+- Le seul échec (`open_website:29`) échoue aussi en TS. Les trois tests de `map_storage_upload` qui échouent en TS
+  (`:19` « carte mise à jour », `:85` « carte supprimée », `:185` adresse d'upload) passent ici : pour `:185`,
+  l'adresse annoncée garde le port de l'en-tête `Host`, que le `req.hostname` d'Express perd.
+
+- Non-régression cumulée (union J1, J2, scripting_spaces) : en cours au moment du commit, résultat à ajouter.

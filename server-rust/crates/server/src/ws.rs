@@ -160,6 +160,7 @@ fn prepare(state: &AppState, query: Option<&str>, token: &str, headers: &HeaderM
         tab_id: get("tabId").unwrap_or_default(),
         connection_id,
         last_command_id: get("lastCommandId").filter(|c| !c.is_empty()),
+        applications: local_admin::applications(&state.config),
     }))
 }
 
