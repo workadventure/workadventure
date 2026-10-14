@@ -823,6 +823,39 @@
       }
     },
     {
+      "title": "media.livekit.connected",
+      "properties": {
+        "eventName": {
+          "const": "media.livekit.connected"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.livekit.connected"
+        }
+      }
+    },
+    {
+      "title": "media.livekit.disconnected",
+      "properties": {
+        "eventName": {
+          "const": "media.livekit.disconnected"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.livekit.disconnected"
+        }
+      }
+    },
+    {
+      "title": "media.livekit.reconnected",
+      "properties": {
+        "eventName": {
+          "const": "media.livekit.reconnected"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.livekit.reconnected"
+        }
+      }
+    },
+    {
       "title": "media.livekit_switch.requested",
       "properties": {
         "eventName": {
@@ -2013,6 +2046,9 @@
               "media.codec.degraded",
               "media.connection_retry",
               "media.device_error",
+              "media.livekit.connected",
+              "media.livekit.disconnected",
+              "media.livekit.reconnected",
               "media.livekit_switch.requested",
               "media.microphone.dwell",
               "media.microphone.toggled",
@@ -3195,6 +3231,136 @@
       "title": "media.device_error",
       "description": "A camera or microphone failed. Counted as an experience issue."
     },
+    "media.livekit.connected": {
+      "type": "object",
+      "properties": {
+        "livekitServerUrl": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "LiveKit server of the room."
+        },
+        "livekitRegion": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 255
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Region of the LiveKit server the client was connected to (serverInfo.region): set by LiveKit Cloud, usually null on a self-hosted server."
+        },
+        "connectMs": {
+          "type": "number",
+          "minimum": 0,
+          "description": "From the start of room.connect() to the room being connected, signalling and media."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.livekit.connected",
+      "description": "This client joined a LiveKit room: the denominator of media.livekit.disconnected, and where LiveKit routed it."
+    },
+    "media.livekit.disconnected": {
+      "type": "object",
+      "properties": {
+        "livekitServerUrl": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "LiveKit server of the room."
+        },
+        "livekitRegion": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 255
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Region of the LiveKit server the client was connected to (serverInfo.region): set by LiveKit Cloud, usually null on a self-hosted server."
+        },
+        "disconnectReason": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "livekit-client DisconnectReason name: SIGNAL_CLOSE, CONNECTION_TIMEOUT, STATE_MISMATCH, JOIN_FAILURE, DUPLICATE_IDENTITY, PARTICIPANT_REMOVED, MEDIA_FAILURE... UNKNOWN when it gave none (it gave up reconnecting)."
+        },
+        "connectedSeconds": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How long the room had been connected. Null when it never connected: the LiveKit server could not be reached or refused the join."
+        },
+        "whileReconnecting": {
+          "type": "boolean",
+          "description": "livekit-client was trying to reconnect when it gave up."
+        },
+        "restart": {
+          "type": "boolean",
+          "description": "Whether WorkAdventure asks the back for a new invitation. It does not when another connection took this one's place or the back removed it."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.livekit.disconnected",
+      "description": "This client lost its LiveKit room for a reason it did not choose: not its own leave, nor the back closing the room. The media stop until a new invitation arrives."
+    },
+    "media.livekit.reconnected": {
+      "type": "object",
+      "properties": {
+        "livekitServerUrl": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "LiveKit server of the room."
+        },
+        "livekitRegion": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 255
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Region of the LiveKit server the client was connected to (serverInfo.region): set by LiveKit Cloud, usually null on a self-hosted server."
+        },
+        "previousLivekitRegion": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 255
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Region before the reconnection. A different one means LiveKit moved the client to another region."
+        },
+        "reconnectKind": {
+          "type": "string",
+          "enum": [
+            "resume",
+            "full"
+          ],
+          "description": "resume: only the signalling connection came back. full: the media connections were rebuilt too, possibly on another server."
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0,
+          "description": "How long the room was reconnecting."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.livekit.reconnected",
+      "description": "livekit-client lost its connection to the LiveKit server and recovered it by itself: the user saw the media stall, not a disconnection."
+    },
     "media.livekit_switch.requested": {
       "type": "object",
       "properties": {
@@ -3542,6 +3708,18 @@
             "null"
           ],
           "description": "LiveKit server that carried the stream, when applicable."
+        },
+        "livekitRegion": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 255
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Region of the LiveKit server the client was connected to: set by LiveKit Cloud, null on P2P streams and usually on a self-hosted server."
         },
         "fps": {
           "type": "number",

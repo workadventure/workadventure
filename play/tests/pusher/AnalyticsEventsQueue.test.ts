@@ -397,10 +397,13 @@ describe("AnalyticsEventsQueue", () => {
                         remoteSpaceUserId: "",
                         qualityLimitationReason: VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_CPU,
                         encoderImplementation: "libaom",
+                        livekitRegion: "ojohannesburg1a",
                     }),
                     videoQualitySample({
                         qualityLimitationReason: VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_CPU,
                         encoderImplementation: "libaom",
+                        // A self-hosted LiveKit server names no region
+                        livekitRegion: "",
                     }),
                 ],
             },
@@ -414,6 +417,7 @@ describe("AnalyticsEventsQueue", () => {
             remoteSpaceUserId: null,
             qualityLimitationReason: "cpu",
             encoderImplementation: "libaom",
+            livekitRegion: "ojohannesburg1a",
         });
         // An inbound sample measures a stream someone else encodes, so the browser
         // reports nothing about our encoder: a client claiming otherwise is ignored.
@@ -421,6 +425,7 @@ describe("AnalyticsEventsQueue", () => {
             direction: "inbound",
             qualityLimitationReason: null,
             encoderImplementation: null,
+            livekitRegion: null,
         });
     });
 

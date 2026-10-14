@@ -337,6 +337,7 @@ describe("AnalyticsEventCatalog", () => {
                 relay: true,
                 relayProtocol: "udp",
                 livekitServerUrl: null,
+                livekitRegion: null,
                 fps: 24.5,
                 fpsStdDev: 3.5,
                 jitter: 0.07,
@@ -395,6 +396,7 @@ describe("AnalyticsEventCatalog", () => {
                 relay: null,
                 relayProtocol: null,
                 livekitServerUrl: "wss://livekit.test",
+                livekitRegion: "ojohannesburg1a",
                 fps: 28,
                 fpsStdDev: null,
                 // The sender receives nothing, so it has no jitter to report.

@@ -55,6 +55,21 @@ export /**
  * outgrows WebRTC switches to LiveKit mid-way, so one field naming "the" provider would
  * be wrong for exactly the meetings that cost server capacity.
  */
+/** What every media.livekit.* connection event says about where the client was connected. */
+const livekitConnectionProperties = {
+  livekitServerUrl: z
+    .string()
+    .max(2048)
+    .describe("LiveKit server of the room."),
+  livekitRegion: z
+    .string()
+    .max(255)
+    .nullable()
+    .describe(
+      "Region of the LiveKit server the client was connected to (serverInfo.region): set by LiveKit Cloud, usually null on a self-hosted server.",
+    ),
+};
+
 const transportSecondsProperties = {
   webrtcSeconds: z
     .number()
@@ -705,6 +720,13 @@ export const ANALYTICS_EVENTS = {
         .string()
         .nullable()
         .describe("LiveKit server that carried the stream, when applicable."),
+      livekitRegion: z
+        .string()
+        .max(255)
+        .nullable()
+        .describe(
+          "Region of the LiveKit server the client was connected to: set by LiveKit Cloud, null on P2P streams and usually on a self-hosted server.",
+        ),
       fps: z
         .number()
         .describe("Frames per second observed over the sample window."),
@@ -1273,6 +1295,73 @@ export const ANALYTICS_EVENTS = {
     }),
     description:
       "This client's encoder could not keep up with its codec and left it for a cheaper one. Read against media.video_quality.sample, whose qualityLimitationReason is what this decision is made on: the sample says the machine is struggling, this says what was given up about it. Once per codec per session — nothing goes back up before a reload.",
+  }),
+
+  "media.livekit.connected": event({
+    properties: z.object({
+      ...livekitConnectionProperties,
+      connectMs: z
+        .number()
+        .nonnegative()
+        .describe(
+          "From the start of room.connect() to the room being connected, signalling and media.",
+        ),
+    }),
+    description:
+      "This client joined a LiveKit room: the denominator of media.livekit.disconnected, and where LiveKit routed it.",
+  }),
+
+  "media.livekit.reconnected": event({
+    properties: z.object({
+      ...livekitConnectionProperties,
+      previousLivekitRegion: z
+        .string()
+        .max(255)
+        .nullable()
+        .describe(
+          "Region before the reconnection. A different one means LiveKit moved the client to another region.",
+        ),
+      reconnectKind: z
+        .enum(["resume", "full"])
+        .describe(
+          "resume: only the signalling connection came back. full: the media connections were rebuilt too, possibly on another server.",
+        ),
+      durationMs: z
+        .number()
+        .nonnegative()
+        .describe("How long the room was reconnecting."),
+    }),
+    description:
+      "livekit-client lost its connection to the LiveKit server and recovered it by itself: the user saw the media stall, not a disconnection.",
+  }),
+
+  "media.livekit.disconnected": event({
+    properties: z.object({
+      ...livekitConnectionProperties,
+      disconnectReason: z
+        .string()
+        .max(64)
+        .describe(
+          "livekit-client DisconnectReason name: SIGNAL_CLOSE, CONNECTION_TIMEOUT, STATE_MISMATCH, JOIN_FAILURE, DUPLICATE_IDENTITY, PARTICIPANT_REMOVED, MEDIA_FAILURE... UNKNOWN when it gave none (it gave up reconnecting).",
+        ),
+      connectedSeconds: z
+        .number()
+        .nonnegative()
+        .nullable()
+        .describe(
+          "How long the room had been connected. Null when it never connected: the LiveKit server could not be reached or refused the join.",
+        ),
+      whileReconnecting: z
+        .boolean()
+        .describe("livekit-client was trying to reconnect when it gave up."),
+      restart: z
+        .boolean()
+        .describe(
+          "Whether WorkAdventure asks the back for a new invitation. It does not when another connection took this one's place or the back removed it.",
+        ),
+    }),
+    description:
+      "This client lost its LiveKit room for a reason it did not choose: not its own leave, nor the back closing the room. The media stop until a new invitation arrives.",
   }),
 
   "media.livekit_switch.requested": event({

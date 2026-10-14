@@ -90,6 +90,7 @@ export class LiveKitParticipant {
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
         private abortSignal: AbortSignal,
+        private getLivekitRegion: () => string | undefined = () => undefined,
         private defaultVolume: number = get(volumeProximityDiscussionStore),
     ) {
         incrementLivekitConnectionsCount();
@@ -619,6 +620,7 @@ export class LiveKitParticipant {
                 remoteUserUuid: this._spaceUser.uuid,
                 spaceName: this.space.getName(),
                 livekitServerUrl: this.livekitServerUrl,
+                getLivekitRegion: this.getLivekitRegion,
             },
             (message) => this.space.emitVideoQualityReport(message),
         );

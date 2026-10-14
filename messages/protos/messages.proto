@@ -234,6 +234,9 @@ message VideoQualitySampleMessage {
   optional double uploadLossRatio = 43;
   // Outbound streams only: the browser's estimate of the bandwidth it can send, in bits per second.
   optional double availableOutgoingBitrate = 44;
+  // LiveKit streams only: region of the LiveKit server the client is connected to (serverInfo.region). Set by
+  // LiveKit Cloud, usually empty on a self-hosted server.
+  optional string livekitRegion = 45;
 }
 
 message VideoQualityReportMessage {
