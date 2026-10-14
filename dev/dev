@@ -99,7 +99,14 @@ export MAP_STORAGE_ENDPOINT=map-storage.$name.workadventure.localhost$SOCLE_URL_
 export MAPS_DOMAIN=maps.workadventure.localhost$SOCLE_URL_PORT
 export MATRIX_PUBLIC_URI=http://matrix.workadventure.localhost$SOCLE_URL_PORT
 export MATRIX_DOMAIN=matrix.workadventure.localhost
+export DEV_STACK=$name
 ENV
+    # Specs that reboot the back or the pusher restart this stack's containers instead (tests/tests/utils/containers.ts).
+    if docker inspect "wa-$name-server-1" >/dev/null 2>&1; then
+        echo "export DEV_REBOOT_BACK='docker restart wa-$name-server-1' DEV_REBOOT_PLAY='docker restart wa-$name-server-1'"
+    else
+        echo "export DEV_REBOOT_BACK='docker restart wa-$name-back-1' DEV_REBOOT_PLAY='docker restart wa-$name-play-1'"
+    fi
     ;;
 *)
     usage
