@@ -194,3 +194,97 @@ grosse pour trancher.
 - Pour la grille de comparaison : faire tourner Go et Rust avec le même `bench/cpus.sh` (`wa-load` ne parle
   que le protocole gelé, il charge n'importe quel candidat) sur une machine Linux dédiée d'au moins 8 cœurs,
   générateur sur une autre machine.
+
+---
+
+## Jalon 3 — J2 phase 1 : l'état des spaces (2026-10-14)
+
+**Durée murale :** ~45 min (stack relancée à 13 h 35, specs et journal à 14 h 20), dont ~10 min de lecture du
+back (`Space.updateState`, `RaiseHandManager`, `ProximityPollManager`, `ProximityQAManager`) et du pusher
+(diffusion des patchs, `LiveStreamingNotificationStrategy`), et ~10 min de specs Playwright.
+
+**Itérations avant le vert :** ~5.
+- Génération des types : 3 essais (`tsx` ne tourne pas sur l'hôte car le `node_modules` contient l'esbuild
+  Linux, d'où un conteneur `node:22-slim` ; puis des définitions nommées pour avoir `ProximityPoll` plutôt que
+  `SpaceStatePollsValue`).
+- Compilation : 1 erreur (`&Value != Value`), 1 remarque clippy. Le code généré a compilé du premier coup sous
+  `clippy -D warnings`.
+- Tests du cœur : 7 verts au premier passage après correction de deux attentes du test lui-même (un décompte
+  de patchs, et l'utilisateur qui monte sur scène reçoit « add » pour lui-même, pas « update »).
+- Playwright : un passage pour constater que les specs de main levée passent toutes par map-storage (voir
+  plus bas), un pour les copies locales.
+
+**Corrections humaines :** aucune.
+
+**Génération des types depuis zod (étape 4 du plan) :**
+- zod → JSON Schema avec `zod-to-json-schema` (déjà dans le `node_modules` du dépôt), en nommant chaque
+  sous-schéma exporté (`tools/space-state-schema.ts`) ; JSON Schema → Rust avec `cargo-typify` 0.8.0
+  (`--no-builder`, `PartialEq` dérivé, `BTreeMap` pour les records).
+- Une commande : `tools/gen-space-state.sh` (node dans un conteneur, monté au même chemin pour que le lien
+  `node_modules` d'un worktree reste valide). Le résultat est commité :
+  `crates/core/src/space_state/generated.rs` (1 092 lignes, en-tête `@generated`) avec le schéma
+  intermédiaire `tools/space-state.schema.json`. **Le build n'a besoin ni de node ni de `libs/`.**
+- Ce que ça apporte : chaque chaîne bornée par le schéma (question ≤ 340, réponse ≤ 240, corps ≤ 500, ids ≤ 100,
+  `kind` dans l'énumération...) est un type qu'on ne peut pas construire hors bornes ; les limites ne sont
+  écrites nulle part à la main. Ce que typify ne borne pas, écrit à la main : la taille des tableaux
+  (2 à 20 réponses) et `maxSelections ≤ 20`.
+- Écart connu : typify compte les longueurs en caractères, zod en unités UTF-16. Un texte fait d'emoji peut
+  être jusqu'à deux fois plus long que sur le serveur TypeScript (le front borne les champs de la même façon
+  que zod, donc l'écart ne se voit qu'avec un client modifié).
+- `wa-core` dépend maintenant de `serde` (dérivations seulement) : la forme JSON de l'état est son contrat avec
+  le front. Le cœur n'importe toujours ni transport, ni protobuf, ni `serde_json`.
+
+**Ce qui est en place :**
+- État typé par space, modifié par une seule fonction : copie, application de la requête, comparaison, puis
+  diffusion de la différence en JSON Patch à **tous les membres** du space (qu'ils regardent ou non), comme le
+  pusher. Une requête refusée laisse l'état intact et n'envoie rien. Le patch part avant la réponse, dans la
+  même file : quand le client reçoit la réponse, sa copie est déjà à jour (vérifié de bout en bout).
+- Le diff suit l'algorithme de `fast-json-patch.compare` (suppressions de la fin vers le début pour garder des
+  index valides, puis ajouts ; échappement `~0`/`~1` des clés, utile pour les ids `room/url_userId`).
+- Main levée (file ordonnée), baisser la main d'un autre, donner/reprendre la parole, avec les droits du back
+  (admin ; dans un space de proximité tout le monde ; dans une diffusion les orateurs, pas un invité promu) ;
+  nettoyage quand un membre part et quand un détenteur de la parole quitte la scène.
+- Sondages (création, vote, retrait du vote, clôture une seule fois, suppression par le créateur) et
+  questions (poser, voter pour celle d'un autre, marquer répondue par un modérateur, supprimer), ids UUID v4
+  et horodatage côté serveur, attribution au « voter id » (uuid, sinon spaceUserId).
+- `setKind` validé par l'énumération générée.
+- Enregistrement : refusé avec le message du pusher (« You are not allowed to record ») : `canRecord` exige un
+  enregistrement configuré, ce que ce serveur n'a pas encore.
+- **Visibilité par observateur dans un space avec retour** (`LIVE_STREAMING_USERS_WITH_FEEDBACK`) : un orateur
+  voit la scène et la salle, un auditeur ne voit que les orateurs. Chaque changement est traduit, pour chaque
+  observateur, en arrivée, mise à jour ou départ ; celui qui monte sur scène reçoit en plus l'auditoire qu'il
+  voit désormais. Diffusion encodée une fois par catégorie (trois envois au plus), pas une fois par
+  observateur.
+
+**Vérification :**
+- `./verify.sh` vert : 67 tests (+10) : 7 tests du cœur sur l'état et la visibilité, 2 tests du diff
+  (dont l'égalité avec la sortie de `fast-json-patch` sur un décalage de file), 1 test de bout en bout par
+  WebSocket (le patch arrive avant la réponse, chez les deux membres ; une requête refusée renvoie une erreur
+  et aucun patch).
+- Playwright, stack `rust`, Chromium :
+
+| spec | résultat |
+|---|---|
+| `scripting_spaces.spec.ts` | 6/6 |
+| `spaces.spec.ts` | 0/1 : le seul test est `@docker @slow` (dumps du back puis redémarrage du conteneur `back`), sans équivalent dans un serveur unique |
+| `raise-hand.spec.ts`, `raise-hand-megaphone.spec.ts`, `chat/proximityChatPoll.spec.ts` | non jouables tels quels : chaque test commence par `resetWamMaps` (upload vers map-storage) et charge une carte WAM ; c'est la phase 2 |
+| copie locale non commitée de `raise-hand` « bulle », sans `resetWamMaps`, carte `tests/E2E/empty.json` | 1/1 |
+| copie locale non commitée de `proximityChatPoll` (sondage ouvert, sondage fermé, questions/votes/répondue), même adaptation | 3/3 |
+
+- Non-régression sur l'union des specs J1 (41 tests dans ces 10 fichiers sur cette base) :
+  **35 passés, 4 échecs, 2 ignorés.** Les 4 échecs chargent une carte WAM, donc passent par map-storage :
+  `error_pages` « not found WAM », `reconnect` « WAM ... pusher is down », et les deux `userlist`
+  « Send Message » (`Map.url("empty")` est une WAM ; le premier échoue aussi sur la référence TS, pour une
+  raison Matrix). Relancés isolément : mêmes échecs, même cause. Aucune régression due à J2.
+
+**Lignes de code :** ~950 lignes écrites à la main (état et règles 321, `Space` +76, acteur de space +41, diff 125, tests du cœur
+275, test de bout en bout 65, outils 42) ; 1 092 lignes générées, non comptées.
+
+**Temps de compilation (hôte, `cargo build` sans les tests) :** à froid 27,0 s ; un fichier de `wa-core`
+touché 3,3 s ; un fichier de `wa-server` 2,0 s. (Pas la même commande que les chiffres J1, qui incluaient les
+tests : ne pas comparer ligne à ligne.)
+
+**`wa-load` :** inchangé (`crates/bot` non modifié).
+
+**Pas encore là :** map-storage (phase 2, en attente du feu vert), LiveKit et donc l'enregistrement, la bascule
+du mégaphone en LiveKit, analytics du `kind`.

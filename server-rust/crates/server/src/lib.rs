@@ -3,6 +3,7 @@
 
 pub mod budget;
 pub mod config;
+pub mod json_patch;
 pub mod front;
 pub mod http;
 pub mod jwt;

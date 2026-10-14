@@ -3,6 +3,7 @@
 pub mod geometry;
 pub mod room;
 pub mod space;
+pub mod space_state;
 pub mod spatial;
 pub mod user;
 

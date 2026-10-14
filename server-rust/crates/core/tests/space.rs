@@ -1,0 +1,275 @@
+//! Space state rules (raise hand, floor, polls, questions) and who sees whom in a space with feedback.
+
+use wa_core::space::{FilterType, Space, SpaceEvent, SpaceSink, SpaceUser};
+use wa_core::space_state::{SpaceState, StateQuery};
+
+#[derive(Default)]
+struct Rec {
+    /// (recipients, event) in order.
+    events: Vec<(Vec<String>, String)>,
+    /// The last state patched.
+    state: Option<SpaceState>,
+}
+
+impl SpaceSink for Rec {
+    fn emit(&mut self, to: &[&str], event: SpaceEvent<'_>) {
+        let mut to: Vec<String> = to.iter().map(|s| s.to_string()).collect();
+        to.sort();
+        let what = match event {
+            SpaceEvent::UserAdded(u) => format!("add {}", u.space_user_id),
+            SpaceEvent::UserUpdated(u, _) => format!("update {}", u.space_user_id),
+            SpaceEvent::UserRemoved(id) => format!("remove {id}"),
+            SpaceEvent::InitUsers(users, _) => {
+                let ids: Vec<&str> = users.iter().map(|u| u.space_user_id.as_str()).collect();
+                format!("init {}", ids.join(","))
+            }
+            SpaceEvent::StatePatch { after, .. } => {
+                self.state = Some(after.clone());
+                "patch".to_owned()
+            }
+            other => format!("{other:?}").split(['(', ' ']).next().unwrap_or_default().to_owned(),
+        };
+        self.events.push((to, what));
+    }
+}
+
+impl Rec {
+    fn take(&mut self) -> Vec<(Vec<String>, String)> {
+        std::mem::take(&mut self.events)
+    }
+}
+
+fn user(id: &str) -> SpaceUser {
+    SpaceUser {
+        space_user_id: id.into(),
+        name: format!("name of {id}"),
+        uuid: format!("uuid-{id}"),
+        ..SpaceUser::default()
+    }
+}
+
+fn space(filter: FilterType) -> Space {
+    Space::new("s".into(), filter, vec![], "i".into())
+}
+
+fn query(space: &mut Space, sink: &mut Rec, sender: &str, q: StateQuery) -> Result<(), String> {
+    let mut n = 0;
+    space.state_query(
+        sender,
+        q,
+        1_000,
+        &mut || {
+            n += 1;
+            format!("id{n}")
+        },
+        sink,
+    )
+}
+
+fn to(ids: &[&str]) -> Vec<String> {
+    ids.iter().map(|s| s.to_string()).collect()
+}
+
+#[test]
+fn the_hand_queue_keeps_its_order_and_forgets_who_leaves() {
+    let mut s = space(FilterType::AllUsers);
+    let mut r = Rec::default();
+    for id in ["a", "b", "c"] {
+        s.join(FilterType::AllUsers, user(id), &mut r).unwrap();
+    }
+    for id in ["b", "a", "b"] {
+        query(&mut s, &mut r, id, StateQuery::RaiseHand(true)).unwrap();
+    }
+    let hands: Vec<&str> = s.state().raised_hands.iter().map(|e| e.space_user_id.as_str()).collect();
+    assert_eq!(hands, ["b", "a"]);
+    // Raising twice changed nothing, so it sent nothing; every member got the two real changes.
+    let patches: Vec<_> = r.take().into_iter().filter(|(_, e)| e == "patch").collect();
+    assert_eq!(patches, vec![(to(&["a", "b", "c"]), "patch".to_owned()); 2]);
+
+    s.leave("b", &mut r);
+    assert_eq!(r.take().last().unwrap(), &(to(&["a", "c"]), "patch".to_owned()));
+    assert_eq!(s.state().raised_hands.len(), 1);
+}
+
+#[test]
+fn only_speakers_and_admins_manage_the_floor_of_a_broadcast() {
+    let f = FilterType::LiveStreamingUsers;
+    let mut s = space(f);
+    let mut r = Rec::default();
+    let mut speaker = user("speaker");
+    speaker.megaphone_state = true;
+    let mut admin = user("admin");
+    admin.tags = vec!["admin".into()];
+    for u in [speaker, admin, user("guest"), user("other")] {
+        s.join(f, u, &mut r).unwrap();
+    }
+    query(&mut s, &mut r, "guest", StateQuery::RaiseHand(true)).unwrap();
+    let refused = query(&mut s, &mut r, "other", StateQuery::LowerHand("guest".into()));
+    assert_eq!(refused.unwrap_err(), "Only a speaker or an admin can manage the floor");
+
+    query(&mut s, &mut r, "speaker", StateQuery::GiveFloor("guest".into())).unwrap();
+    assert!(s.state().raised_hands.is_empty());
+    assert_eq!(s.state().floor_holders[0].space_user_id.as_str(), "guest");
+    assert_eq!(s.state().floor_holders[0].name, "name of guest");
+
+    // On stage, the promoted guest still cannot hand the floor around, but may give it back.
+    let mut on_air = user("guest");
+    on_air.megaphone_state = true;
+    s.update_from_client("guest", &on_air, &["megaphoneState".into()], &mut r);
+    assert!(query(&mut s, &mut r, "guest", StateQuery::GiveFloor("other".into())).is_err());
+    assert!(query(&mut s, &mut r, "admin", StateQuery::GiveFloor("nobody".into())).is_err());
+
+    // Leaving the stage ends the floor.
+    s.update_from_client("guest", &user("guest"), &["megaphoneState".into()], &mut r);
+    assert!(s.state().floor_holders.is_empty());
+}
+
+#[test]
+fn in_a_proximity_space_anyone_moderates_and_nobody_holds_the_floor() {
+    let mut s = space(FilterType::AllUsers);
+    let mut r = Rec::default();
+    s.join(FilterType::AllUsers, user("a"), &mut r).unwrap();
+    s.join(FilterType::AllUsers, user("b"), &mut r).unwrap();
+    query(&mut s, &mut r, "b", StateQuery::RaiseHand(true)).unwrap();
+    query(&mut s, &mut r, "a", StateQuery::GiveFloor("b".into())).unwrap();
+    assert!(s.state().raised_hands.is_empty() && s.state().floor_holders.is_empty());
+}
+
+#[test]
+fn polls_belong_to_their_creator_and_close_once() {
+    let mut s = space(FilterType::AllUsers);
+    let mut r = Rec::default();
+    s.join(FilterType::AllUsers, user("a"), &mut r).unwrap();
+    s.join(FilterType::AllUsers, user("b"), &mut r).unwrap();
+    let poll = |max| StateQuery::CreatePoll {
+        question: "Lunch?".into(),
+        kind: "open".into(),
+        answers: vec!["yes".into(), "no".into()],
+        max_selections: max,
+    };
+    assert!(query(&mut s, &mut r, "a", poll(3)).is_err());
+    assert!(query(&mut s, &mut r, "a", poll(0)).is_err());
+    r.take();
+    query(&mut s, &mut r, "a", poll(1)).unwrap();
+    let p = s.state().polls.values().next().unwrap().clone();
+    assert_eq!(p.sender_id.as_str(), "uuid-a");
+    let (id, yes) = (p.id.to_string(), p.answers[0].id.to_string());
+
+    let vote = |ids: Vec<String>| StateQuery::VotePoll {
+        poll_id: id.clone(),
+        answer_ids: ids,
+    };
+    assert!(query(&mut s, &mut r, "b", vote(vec!["nope".into()])).is_err());
+    assert!(query(&mut s, &mut r, "b", vote(vec![yes.clone(), yes.clone()])).is_err());
+    query(&mut s, &mut r, "b", vote(vec![yes.clone()])).unwrap();
+    assert_eq!(s.state().polls[&id].votes["uuid-b"].answer_ids[0].as_str(), yes);
+    query(&mut s, &mut r, "b", vote(vec![])).unwrap();
+    assert!(s.state().polls[&id].votes.is_empty());
+
+    let close = |who: &str, s: &mut Space, r: &mut Rec| {
+        let q = StateQuery::ClosePoll {
+            poll_id: id.clone(),
+            closing_message: Some("thanks".into()),
+        };
+        query(s, r, who, q)
+    };
+    assert_eq!(close("b", &mut s, &mut r).unwrap_err(), "Only poll creators can close a poll");
+    close("a", &mut s, &mut r).unwrap();
+    let closed_at = s.state().polls[&id].end.clone();
+    close("a", &mut s, &mut r).unwrap();
+    assert_eq!(s.state().polls[&id].end, closed_at);
+    assert_eq!(query(&mut s, &mut r, "b", vote(vec![yes])).unwrap_err(), "This poll is closed");
+
+    assert!(query(&mut s, &mut r, "b", StateQuery::DeletePoll(id.clone())).is_err());
+    query(&mut s, &mut r, "a", StateQuery::DeletePoll(id)).unwrap();
+    assert!(s.state().polls.is_empty());
+    // Refused and idle queries sent nothing: create, vote, unvote, close, delete.
+    assert_eq!(r.take().len(), 5);
+}
+
+#[test]
+fn questions_are_upvoted_by_others_and_answered_by_moderators() {
+    let mut s = space(FilterType::AllUsers);
+    let mut r = Rec::default();
+    let mut admin = user("admin");
+    admin.tags = vec!["admin".into()];
+    for u in [user("a"), user("b"), admin] {
+        s.join(FilterType::AllUsers, u, &mut r).unwrap();
+    }
+    assert!(query(&mut s, &mut r, "a", StateQuery::AskQuestion(String::new())).is_err());
+    assert!(query(&mut s, &mut r, "a", StateQuery::AskQuestion("x".repeat(501))).is_err());
+    query(&mut s, &mut r, "a", StateQuery::AskQuestion("Why?".into())).unwrap();
+    let id = s.state().questions.keys().next().unwrap().clone();
+    let upvote = |up| StateQuery::UpvoteQuestion {
+        question_id: id.clone(),
+        upvoted: up,
+    };
+    assert!(query(&mut s, &mut r, "a", upvote(true)).is_err());
+    query(&mut s, &mut r, "b", upvote(true)).unwrap();
+    assert_eq!(s.state().questions[&id].upvotes["uuid-b"], 1_000);
+
+    assert!(query(&mut s, &mut r, "b", StateQuery::AnswerQuestion(id.clone())).is_err());
+    query(&mut s, &mut r, "admin", StateQuery::AnswerQuestion(id.clone())).unwrap();
+    assert_eq!(s.state().questions[&id].answer.as_ref().unwrap().moderator_id.as_str(), "uuid-admin");
+    assert!(query(&mut s, &mut r, "b", upvote(false)).is_err());
+
+    assert!(query(&mut s, &mut r, "b", StateQuery::DeleteQuestion(id.clone())).is_err());
+    query(&mut s, &mut r, "admin", StateQuery::DeleteQuestion(id)).unwrap();
+    assert!(s.state().questions.is_empty());
+}
+
+#[test]
+fn the_kind_is_checked_against_the_schema() {
+    let mut s = space(FilterType::AllUsers);
+    let mut r = Rec::default();
+    s.join(FilterType::AllUsers, user("a"), &mut r).unwrap();
+    assert!(query(&mut s, &mut r, "a", StateQuery::SetKind("party".into())).is_err());
+    query(&mut s, &mut r, "a", StateQuery::SetKind("area".into())).unwrap();
+    assert_eq!(s.state().kind.map(|k| k.to_string()).as_deref(), Some("area"));
+    assert!(query(&mut s, &mut r, "ghost", StateQuery::RaiseHand(true)).is_err());
+}
+
+#[test]
+fn with_feedback_the_audience_only_sees_the_speakers() {
+    let f = FilterType::LiveStreamingUsersWithFeedback;
+    let mut s = space(f);
+    let mut r = Rec::default();
+    let mut speaker = user("s");
+    speaker.megaphone_state = true;
+    let mut l1 = user("l1");
+    l1.attendees_state = true;
+    let mut l2 = user("l2");
+    l2.attendees_state = true;
+    for u in [speaker, l1, l2.clone(), user("off")] {
+        s.join(f, u, &mut r).unwrap();
+    }
+    for id in ["s", "l1", "l2", "off"] {
+        s.watch(id, &mut r);
+    }
+    let inits: Vec<_> = r.take().into_iter().filter(|(_, e)| e.starts_with("init")).collect();
+    assert_eq!(
+        inits,
+        vec![
+            (to(&["s"]), "init s,l1,l2".to_owned()),
+            (to(&["l1"]), "init s".to_owned()),
+            (to(&["l2"]), "init s".to_owned()),
+            (to(&["off"]), "init s".to_owned()),
+        ]
+    );
+
+    // l2 goes on stage: everyone now sees it (itself included), and it now sees the audience.
+    l2.megaphone_state = true;
+    s.update_from_client("l2", &l2, &["megaphoneState".into()], &mut r);
+    assert_eq!(
+        r.take(),
+        vec![
+            (to(&["s"]), "update l2".to_owned()),
+            (to(&["l1", "l2", "off"]), "add l2".to_owned()),
+            (to(&["l2"]), "add l1".to_owned()),
+        ]
+    );
+
+    // A listener leaving is only news to the speakers.
+    s.leave("l1", &mut r);
+    assert_eq!(r.take(), vec![(to(&["l2", "s"]), "remove l1".to_owned())]);
+}
