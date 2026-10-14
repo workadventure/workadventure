@@ -88,14 +88,46 @@ describe("VideoPlaybackWindow", () => {
         window.observe(0, 140_000);
         window.observe(20, 141_000);
 
-        // No baseline survived the pause: the first window after it only sets one
+        // No baseline is taken within 10 s of the pause
         expect(window.take(counters({ timestampMs: 52_000 }), 142_000)).toBeUndefined();
         // The first frame comes back late, and the browser counts the 40 s gap as a pause then
         const paused = { pauseCount: 1, totalPausesDuration: 40 };
         expect(window.take(counters({ ...paused, timestampMs: 57_000, framesDecoded: 400 }), 147_000)).toBe(undefined);
+        // The first sample past the period only sets the baseline
+        expect(window.take(counters({ ...paused, timestampMs: 62_000, framesDecoded: 550 }), 152_000)).toBe(undefined);
 
-        const deltas = window.take(counters({ ...paused, timestampMs: 62_000, framesDecoded: 550 }), 152_000);
+        const deltas = window.take(counters({ ...paused, timestampMs: 67_000, framesDecoded: 700 }), 157_000);
         expect(deltas).toMatchObject({ windowSeconds: 5, framesDecoded: 150, pauseCount: 0, pauseSeconds: 0 });
+    });
+
+    // The pause was last seen at t=0, and the first frame only comes back at t=9: a baseline taken at t=7 would put
+    // the whole deliberate gap in the window ending at t=12, past the 10 s.
+    it.each([
+        ["every 5 s", [2_000, 7_000, 12_000]],
+        ["throttled", [2_000, 12_000]],
+    ])("never reports a deliberate pause counted late in the period that follows it, sampled %s", (_, times) => {
+        const window = new VideoPlaybackWindow();
+        window.observe(0, 0);
+        const countersAt = (t: number) =>
+            counters(
+                t < 9_000
+                    ? { timestampMs: t, framesDecoded: 300 }
+                    : {
+                          timestampMs: t,
+                          framesDecoded: 300 + (t - 9_000) * 0.03,
+                          pauseCount: 1,
+                          totalPausesDuration: 40,
+                      },
+            );
+
+        for (const t of times) {
+            expect(window.take(countersAt(t), t)).toBeUndefined();
+        }
+        expect(window.take(countersAt(17_000), 17_000)).toMatchObject({
+            windowSeconds: 5,
+            pauseCount: 0,
+            pauseSeconds: 0,
+        });
     });
 
     it("reports a stall the browser has not counted yet as a window without frames", () => {
