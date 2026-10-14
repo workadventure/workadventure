@@ -26,6 +26,7 @@ type Config struct {
 	SecretKey        string
 	AdminAPIURL      string
 	DisableAnonymous bool
+	OpenID           OpenID
 
 	SocketIdleTimer           time.Duration
 	ClientDisconnectRetention time.Duration
@@ -85,6 +86,14 @@ type Config struct {
 	// play/src/pusher/enums/EnvironmentVariable.ts. Unset optional values are left out, like JSON.stringify
 	// drops undefined.
 	FrontEnv map[string]any
+}
+
+// OpenID is the OpenID Connect client (OPENID_* variables, or the deprecated OPID_* ones). Login is enabled when
+// ClientID is set.
+type OpenID struct {
+	ClientID, ClientSecret, Issuer        string
+	Scope, Prompt                         string
+	UsernameClaim, LocaleClaim, TagsClaim string
 }
 
 // Load reads the configuration from the process environment.
@@ -227,6 +236,24 @@ func parse(get func(string) string) (*Config, error) {
 		TurnUser:                         r.str("TURN_USER"),
 		TurnPassword:                     r.str("TURN_PASSWORD"),
 		TurnStaticAuthSecret:             r.str("TURN_STATIC_AUTH_SECRET"),
+	}
+	opid := func(name, def string) string { return firstNonEmpty(r.str("OPENID_"+name), r.str("OPID_"+name), def) }
+	c.OpenID = OpenID{
+		ClientID: opid("CLIENT_ID", ""), ClientSecret: opid("CLIENT_SECRET", ""), Issuer: opid("CLIENT_ISSUER", ""),
+		Scope: opid("SCOPE", "openid email profile "), UsernameClaim: opid("USERNAME_CLAIM", "username"),
+		LocaleClaim: opid("LOCALE_CLAIM", "locale"), TagsClaim: opid("TAGS_CLAIM", "tags"),
+	}
+	deprecated := false
+	for _, name := range []string{"CLIENT_ID", "CLIENT_SECRET", "CLIENT_ISSUER", "PROFILE_SCREEN_PROVIDER", "SCOPE", "PROMPT",
+		"USERNAME_CLAIM", "LOCALE_CLAIM", "WOKA_NAME_POLICY", "TAGS_CLAIM"} {
+		deprecated = deprecated || r.str("OPID_"+name) != ""
+	}
+	c.OpenID.Prompt = opid("PROMPT", "")
+	if c.OpenID.Prompt == "" && deprecated {
+		c.OpenID.Prompt = "login"
+	}
+	if c.OpenID.ClientID != "" && c.PusherURL == "" {
+		r.errs = append(r.errs, "PUSHER_URL: required with OPENID_CLIENT_ID")
 	}
 	c.ServerIcon = firstNonEmpty(r.str("SERVER_ICON"), c.PusherURL+"/static/images/favicons/icon-512x512.png")
 	policies := []string{"user_input", "allow_override_opid", "force_opid"}
