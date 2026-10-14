@@ -2,6 +2,8 @@ package ws
 
 import (
 	"context"
+	"encoding/json"
+	"log/slog"
 	"slices"
 	"strconv"
 	"unicode/utf16"
@@ -204,6 +206,17 @@ func (s *Session) handleSpaceMessage(m *pb.ClientToServerMessage) bool {
 		}
 		payload, _ := proto.Marshal(ev)
 		_ = space.PrivateEvent(s.ctx, s.spaceUserID(), e.GetReceiverUserId(), payload, s.notPartOf(e.GetSpaceName()))
+	case *pb.ClientToServerMessage_UpdateSpaceMetadataMessage:
+		u := msg.UpdateSpaceMetadataMessage
+		// A JSON object, like the z.record of the pusher; anything else is dropped.
+		var delta map[string]json.RawMessage
+		if json.Unmarshal([]byte(u.GetMetadata()), &delta) != nil || delta == nil {
+			slog.Warn("invalid space metadata", "space", u.GetSpaceName())
+			return true
+		}
+		if space := s.joinedSpace(u.GetSpaceName()); space != nil {
+			_ = space.SetMetadata(s.ctx, s.spaceUserID(), delta)
+		}
 	case *pb.ClientToServerMessage_BackEvent:
 		e := msg.BackEvent
 		restart := e.GetBackEvent().GetMeetingConnectionRestartMessage()
@@ -219,22 +232,62 @@ func (s *Session) handleSpaceMessage(m *pb.ClientToServerMessage) bool {
 	return true
 }
 
-// spaceStateQuery answers SetSpaceKindQuery. ponytail: raised hands, floor, recording, polls and questions come
-// with J2.
+// spaceStateQuery runs a SpaceStateQuery (raised hands, floor, polls, questions, kind).
 func (s *Session) spaceStateQuery(id int32, q *pb.SpaceStateQueryFrontToPusher) {
 	space := s.joinedSpace(q.GetSpaceName())
-	setKind := q.GetQuery().GetSetKind()
-	if space == nil || setKind == nil {
-		s.answerError(id, "Space state query not supported by this server yet")
+	if space == nil {
+		s.answerError(id, "Space "+q.GetSpaceName()+" not found")
 		return
 	}
-	_ = space.SetKind(s.ctx, s.spaceUserID(), setKind.GetKind(), func(err error) {
+	query := stateQuery(q.GetQuery())
+	if query == nil {
+		s.answerError(id, "SpaceStateQuery has no query")
+		return
+	}
+	_ = space.Query(s.ctx, s.spaceUserID(), query, func(err error) {
 		if err != nil {
 			s.answerError(id, err.Error())
 			return
 		}
 		s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_SpaceStateAnswer{SpaceStateAnswer: &pb.SpaceStateAnswer{}}})
 	})
+}
+
+func stateQuery(q *pb.SpaceStateQuery) any {
+	switch v := q.GetQuery().(type) {
+	case *pb.SpaceStateQuery_SetKind:
+		return core.SetKind{Kind: v.SetKind.GetKind()}
+	case *pb.SpaceStateQuery_RaiseHand:
+		return core.RaiseHand{Raised: v.RaiseHand.GetRaised()}
+	case *pb.SpaceStateQuery_LowerHand:
+		return core.LowerHand{Target: v.LowerHand.GetTargetSpaceUserId()}
+	case *pb.SpaceStateQuery_GiveFloor:
+		return core.GiveFloor{Target: v.GiveFloor.GetTargetSpaceUserId()}
+	case *pb.SpaceStateQuery_RevokeFloor:
+		return core.RevokeFloor{Target: v.RevokeFloor.GetTargetSpaceUserId()}
+	case *pb.SpaceStateQuery_StartRecording:
+		return core.StartRecording{}
+	case *pb.SpaceStateQuery_StopRecording:
+		return core.StopRecording{}
+	case *pb.SpaceStateQuery_CreatePoll:
+		c := v.CreatePoll
+		return core.CreatePoll{Question: c.GetQuestion(), Kind: c.GetKind(), Answers: c.GetAnswers(), MaxSelections: c.GetMaxSelections()}
+	case *pb.SpaceStateQuery_VotePoll:
+		return core.VotePoll{PollID: v.VotePoll.GetPollId(), AnswerIDs: v.VotePoll.GetAnswerIds()}
+	case *pb.SpaceStateQuery_ClosePoll:
+		return core.ClosePoll{PollID: v.ClosePoll.GetPollId(), ClosingMessage: v.ClosePoll.ClosingMessage}
+	case *pb.SpaceStateQuery_DeletePoll:
+		return core.DeletePoll{PollID: v.DeletePoll.GetPollId()}
+	case *pb.SpaceStateQuery_AskQuestion:
+		return core.AskQuestion{Body: v.AskQuestion.GetBody()}
+	case *pb.SpaceStateQuery_UpvoteQuestion:
+		return core.UpvoteQuestion{QuestionID: v.UpvoteQuestion.GetQuestionId(), Upvoted: v.UpvoteQuestion.GetUpvoted()}
+	case *pb.SpaceStateQuery_AnswerQuestion:
+		return core.AnswerQuestion{QuestionID: v.AnswerQuestion.GetQuestionId()}
+	case *pb.SpaceStateQuery_DeleteQuestion:
+		return core.DeleteQuestion{QuestionID: v.DeleteQuestion.GetQuestionId()}
+	}
+	return nil
 }
 
 // updateSpacesWithPlayerDetails mirrors a SetPlayerDetailsMessage in every space of the session.
@@ -323,7 +376,9 @@ func spaceSubMessage(ev any) *pb.SubMessage {
 		for i, u := range e.Users {
 			users[i] = spaceUser(u)
 		}
-		return &pb.SubMessage{Message: &pb.SubMessage_InitSpaceUsersMessage{InitSpaceUsersMessage: &pb.InitSpaceUsersMessage{SpaceName: e.Space, Users: users, Metadata: "{}"}}}
+		return &pb.SubMessage{Message: &pb.SubMessage_InitSpaceUsersMessage{InitSpaceUsersMessage: &pb.InitSpaceUsersMessage{SpaceName: e.Space, Users: users, Metadata: e.Metadata}}}
+	case core.SpaceMetadataUpdated:
+		return &pb.SubMessage{Message: &pb.SubMessage_UpdateSpaceMetadataMessage{UpdateSpaceMetadataMessage: &pb.UpdateSpaceMetadataMessage{SpaceName: e.Space, Metadata: e.Metadata}}}
 	case core.SpaceStatePatch:
 		return &pb.SubMessage{Message: &pb.SubMessage_SpaceStatePatchMessage{SpaceStatePatchMessage: &pb.SpaceStatePatchMessage{SpaceName: e.Space, Patch: e.Patch}}}
 	case core.SpacePublicEvent:

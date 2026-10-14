@@ -3,16 +3,16 @@ package core
 import (
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
 
 	"github.com/workadventure/workadventure/server-go/internal/actor"
+	"github.com/workadventure/workadventure/server-go/internal/spacestate"
 )
 
 // FilterType decides which members of a space a watcher sees. Same numbering as the FilterType protobuf enum.
-// ponytail: only ALL_USERS is implemented (bubbles, "allWorldUser"); the live-streaming filters come with the
-// megaphone (J2).
 type FilterType int32
 
 const (
@@ -80,10 +80,13 @@ type (
 	}
 	SpaceUserRemoved struct{ Space, UserID string }
 	SpaceUsersInit   struct {
-		Space string
-		Users []SpaceUser
+		Space    string
+		Users    []SpaceUser
+		Metadata string // JSON object
 	}
 	SpaceStatePatch struct{ Space, Patch string }
+	// SpaceMetadataUpdated carries the keys that changed, as a JSON object.
+	SpaceMetadataUpdated struct{ Space, Metadata string }
 	// SpacePublicEvent relays a client's event (chat message, typing...) to the other members. Payload is the
 	// event as the client encoded it: the core does not read it.
 	SpacePublicEvent struct {
@@ -108,9 +111,6 @@ type (
 	RelayedEvent     struct{ Payload []byte }
 )
 
-// initialState is the empty SpaceState (libs/shared-utils/src/SpaceState); kind is set by the front.
-const initialState = `{"raisedHands":[],"floorHolders":[],"recording":{"recording":false,"recorder":null,"status":"idle"},"polls":{},"questions":{}%s}`
-
 // SpaceKey identifies a space: its world (the origin of the room URL, without an admin) and the name the front
 // gives it. Events carry the name only.
 type SpaceKey struct{ World, Local string }
@@ -126,6 +126,7 @@ type Space struct {
 func NewSpace(k SpaceKey) *Space {
 	return &Space{Key: k, a: actor.Start("space "+k.World+"."+k.Local, inboxSize), s: &spaceState{
 		local: k.Local, members: map[string]*spaceMember{}, conns: map[[2]string]string{},
+		state: spacestate.Empty(), metadata: map[string]json.RawMessage{},
 	}}
 }
 
@@ -140,7 +141,8 @@ type spaceState struct {
 	members   map[string]*spaceMember
 	order     []string             // join order
 	conns     map[[2]string]string // WebRTC connections, (sender, receiver) -> connection id
-	kind      string
+	state     spacestate.SpaceState
+	metadata  map[string]json.RawMessage // free key/values of the scripting API
 }
 
 type spaceMember struct {
@@ -205,21 +207,9 @@ func (sp *Space) RestartConnection(ctx context.Context, senderID, receiverID str
 	return sp.a.Post(ctx, func() { sp.s.restart(senderID, receiverID, connectionID) })
 }
 
-// SetKind records what the space is for ("bubble"...), tells the members, then replies (SetSpaceKindQuery).
-func (sp *Space) SetKind(ctx context.Context, userID, kind string, reply func(error)) error {
-	return sp.a.Post(ctx, func() {
-		if sp.s.members[userID] == nil {
-			reply(fmt.Errorf("user %s is not part of space %s", userID, sp.Key.Local))
-			return
-		}
-		op := "add"
-		if sp.s.kind != "" {
-			op = "replace"
-		}
-		sp.s.kind = kind
-		sp.s.toMembers(func(*spaceMember) bool { return true }, NewMsg(SpaceStatePatch{Space: sp.s.local, Patch: fmt.Sprintf(`[{"op":%q,"path":"/kind","value":%q}]`, op, kind)}, true))
-		reply(nil)
-	})
+// SetMetadata merges keys into the metadata of the space and sends them to every member, the sender included.
+func (sp *Space) SetMetadata(ctx context.Context, userID string, delta map[string]json.RawMessage) error {
+	return sp.a.Post(ctx, func() { sp.s.setMetadata(userID, delta) })
 }
 
 func (s *spaceState) toMembers(match func(*spaceMember) bool, m *Msg) {
@@ -247,16 +237,13 @@ func (s *spaceState) join(p Peer, j SpaceJoin, reply func(error)) {
 		})
 	}
 	m := &spaceMember{peer: p, user: j.User}
-	s.toMembers(func(o *spaceMember) bool { return o.watching }, NewMsg(SpaceUserAdded{Space: s.local, User: m.user}, true))
+	s.toMembers(func(o *spaceMember) bool { return o.watching && s.visible(&o.user, &m.user) }, NewMsg(SpaceUserAdded{Space: s.local, User: m.user}, true))
 	s.members[id] = m
 	s.order = append(s.order, id)
 
 	reply(nil)
-	kind := ""
-	if s.kind != "" {
-		kind = fmt.Sprintf(`,"kind":%q`, s.kind)
-	}
-	p.Send(NewMsg(SpaceStatePatch{Space: s.local, Patch: `[{"op":"replace","path":"","value":` + fmt.Sprintf(initialState, kind) + `}]`}, true))
+	state, _ := json.Marshal(s.state)
+	p.Send(NewMsg(SpaceStatePatch{Space: s.local, Patch: `[{"op":"replace","path":"","value":` + string(state) + `}]`}, true))
 	if s.media {
 		// Without LiveKit (J2), a bubble always meets through WebRTC.
 		p.Send(NewMsg(SpacePrivateEvent{Space: s.local, ReceiverID: id, Sender: m.user, Event: SwitchStrategy{Strategy: "WEBRTC"}}, true))
@@ -276,23 +263,85 @@ func (s *spaceState) watch(id string, notMember func()) {
 	}
 	users := make([]SpaceUser, 0, len(s.order))
 	for _, o := range s.order {
-		users = append(users, s.members[o].user)
+		if u := &s.members[o].user; s.visible(&m.user, u) {
+			users = append(users, *u)
+		}
 	}
-	m.peer.Send(NewMsg(SpaceUsersInit{Space: s.local, Users: users}, true))
+	metadata, _ := json.Marshal(s.metadata)
+	m.peer.Send(NewMsg(SpaceUsersInit{Space: s.local, Users: users, Metadata: string(metadata)}, true))
 	m.watching = true
+	s.connect(id, s.inFilterMember)
+}
+
+// Roles of the LIVE_STREAMING_USERS_WITH_FEEDBACK filter: speakers broadcast, listeners show they follow.
+type role int
+
+const (
+	roleNone role = iota
+	roleListener
+	roleSpeaker
+)
+
+func roleOf(u *SpaceUser) role {
+	switch {
+	case u.Megaphone:
+		return roleSpeaker
+	case u.AttendeesState:
+		return roleListener
+	}
+	return roleNone
+}
+
+// inFilter is the filter of the back: who takes part in the media of the space.
+func (s *spaceState) inFilter(u *SpaceUser) bool {
+	switch s.filter {
+	case FilterLiveStreamingUsers:
+		return u.Megaphone
+	case FilterLiveStreamingUsersWithFeedback:
+		return u.Megaphone || u.AttendeesState
+	}
+	return true
+}
+
+// visible says whether observer sees target in its user list. With feedback (LiveStreamingNotificationStrategy):
+// speakers see speakers and listeners, everybody else sees speakers only.
+func (s *spaceState) visible(observer, target *SpaceUser) bool {
+	if s.filter != FilterLiveStreamingUsersWithFeedback {
+		return s.inFilter(target)
+	}
+	t := roleOf(target)
+	return t == roleSpeaker || (t == roleListener && roleOf(observer) == roleSpeaker)
+}
+
+// WebRTC connections follow the events of WebRTCCommunicationStrategy: a watcher meets the members in the filter
+// (watch); a watcher entering the filter meets the other watchers; leaving the filter drops the watchers outside
+// it; unwatching or leaving drops everything.
+
+// connect establishes a connection from id to each other member that matches and has none with it yet.
+func (s *spaceState) connect(id string, match func(*spaceMember) bool) {
 	if !s.media {
 		return
 	}
-	// WebRTCCommunicationStrategy.addUserToNotify: a watcher meets every other member it has no connection with.
 	for _, o := range s.order {
-		if o == id {
-			continue
-		}
-		if _, ok := s.conns[[2]string{id, o}]; !ok {
+		if _, ok := s.conns[[2]string{id, o}]; o != id && !ok && match(s.members[o]) {
 			s.establish(id, o)
 		}
 	}
 }
+
+// drop closes the connections between id and each other member that matches.
+func (s *spaceState) drop(id string, match func(*spaceMember) bool) {
+	for _, o := range s.order {
+		if o != id && match(s.members[o]) {
+			s.disconnect(id, o)
+			s.disconnect(o, id)
+		}
+	}
+}
+
+func (s *spaceState) inFilterMember(m *spaceMember) bool { return s.inFilter(&m.user) }
+func watching(m *spaceMember) bool                       { return m.watching }
+func anyMember(*spaceMember) bool                        { return true }
 
 func (s *spaceState) restart(senderID, receiverID string, connectionID *string) {
 	sender, receiver := s.members[senderID], s.members[receiverID]
@@ -325,14 +374,7 @@ func (s *spaceState) unwatch(id string) {
 		return
 	}
 	m.watching = false
-	if s.media {
-		for _, o := range s.order {
-			if o != id {
-				s.disconnect(id, o)
-				s.disconnect(o, id)
-			}
-		}
-	}
+	s.drop(id, s.inFilterMember)
 }
 
 // disconnect tells receiver to drop its WebRTC connection with sender, if there is one.
@@ -350,18 +392,20 @@ func (s *spaceState) disconnect(sender, receiver string) {
 }
 
 func (s *spaceState) leave(id string) {
-	if s.members[id] == nil {
+	m := s.members[id]
+	if m == nil {
 		return
 	}
-	s.unwatch(id)
+	s.drop(id, anyMember)
 	delete(s.members, id)
 	s.order = slices.DeleteFunc(s.order, func(o string) bool { return o == id })
-	for key := range s.conns {
-		if key[0] == id || key[1] == id {
-			delete(s.conns, key)
-		}
-	}
-	s.toMembers(func(o *spaceMember) bool { return o.watching }, NewMsg(SpaceUserRemoved{Space: s.local, UserID: id}, true))
+	s.toMembers(func(o *spaceMember) bool { return o.watching && s.visible(&o.user, &m.user) }, NewMsg(SpaceUserRemoved{Space: s.local, UserID: id}, true))
+	// RaiseHandManager: no ghost in the queue nor among the floor holders.
+	_ = s.updateState(func(st *spacestate.SpaceState) error {
+		st.RaisedHands = removeHand(st.RaisedHands, id)
+		st.FloorHolders = removeFloorHolder(st.FloorHolders, id)
+		return nil
+	})
 }
 
 // update merges the masked fields of from into the member and tells the watchers. onlyChanged drops the fields
@@ -388,10 +432,74 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 	if len(kept) == 0 {
 		return
 	}
+	old := m.user
 	for _, path := range kept {
 		m.user.apply(from, path)
 	}
-	s.toMembers(func(o *spaceMember) bool { return o.watching }, NewMsg(SpaceUserUpdated{Space: s.local, User: m.user, Mask: kept}, true))
+	// Each watcher sees the user appear, change or disappear, depending on what it could see before and after.
+	// The user's own view counts the change of its own role.
+	added, removed := NewMsg(SpaceUserAdded{Space: s.local, User: m.user}, true), NewMsg(SpaceUserRemoved{Space: s.local, UserID: id}, true)
+	updated := NewMsg(SpaceUserUpdated{Space: s.local, User: m.user, Mask: kept}, true)
+	for _, o := range s.order {
+		w := s.members[o]
+		if !w.watching {
+			continue
+		}
+		before, after := &w.user, &w.user
+		if o == id {
+			before = &old
+		}
+		was, is := s.visible(before, &old), s.visible(after, &m.user)
+		switch {
+		case !was && is:
+			w.peer.Send(added)
+		case was && !is:
+			w.peer.Send(removed)
+		case was && is:
+			w.peer.Send(updated)
+		}
+	}
+	if m.watching && s.filter == FilterLiveStreamingUsersWithFeedback && roleOf(&old) != roleOf(&m.user) {
+		for _, o := range s.order {
+			u := &s.members[o].user
+			if o == id {
+				continue
+			}
+			switch was, is := s.visible(&old, u), s.visible(&m.user, u); {
+			case !was && is:
+				m.peer.Send(NewMsg(SpaceUserAdded{Space: s.local, User: *u}, true))
+			case was && !is:
+				m.peer.Send(NewMsg(SpaceUserRemoved{Space: s.local, UserID: o}, true))
+			}
+		}
+	}
+	switch was, is := s.inFilter(&old), s.inFilter(&m.user); {
+	case !was && is && m.watching:
+		s.connect(id, watching)
+	case was && !is:
+		if !m.watching {
+			s.drop(id, anyMember)
+		}
+		s.drop(id, func(o *spaceMember) bool { return o.watching && !s.inFilter(&o.user) })
+	}
+	if old.Megaphone && !m.user.Megaphone {
+		// A floor holder who stops streaming no longer holds the floor.
+		_ = s.updateState(func(st *spacestate.SpaceState) error {
+			st.FloorHolders = removeFloorHolder(st.FloorHolders, id)
+			return nil
+		})
+	}
+}
+
+func (s *spaceState) setMetadata(senderID string, delta map[string]json.RawMessage) {
+	if s.members[senderID] == nil || len(delta) == 0 {
+		return
+	}
+	for k, v := range delta {
+		s.metadata[k] = v
+	}
+	b, _ := json.Marshal(delta)
+	s.toMembers(func(*spaceMember) bool { return true }, NewMsg(SpaceMetadataUpdated{Space: s.local, Metadata: string(b)}, true))
 }
 
 func (s *spaceState) publicEvent(senderID string, payload []byte, notMember func()) {
