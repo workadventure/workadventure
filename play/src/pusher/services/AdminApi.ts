@@ -11,6 +11,7 @@ import {
     isErrorApiErrorData,
     isMapDetailsData,
     isRoomRedirect,
+    NewsData,
     WokaDetail,
 } from "@workadventure/messages";
 import { z } from "zod";
@@ -102,6 +103,9 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
     }),
     analyticsEventsEnabled: extendApi(z.boolean().optional(), {
         description: "True if admin analytics events can be sent for this world.",
+    }),
+    news: extendApi(z.array(NewsData).optional(), {
+        description: "News items to display to the user once they enter the room.",
     }),
 });
 
@@ -453,6 +457,58 @@ class AdminApi implements AdminInterface {
                 details: message,
             };
         }
+    }
+
+    async bulkReadNews(playUri: string, userIdentifier: string, accessToken: string | undefined): Promise<void> {
+        /**
+         * @openapi
+         * /api/news/bulk-read:
+         *   post:
+         *     tags: ["AdminAPI"]
+         *     description: Mark news as read
+         *     security:
+         *      - Bearer: []
+         *     produces:
+         *      - "application/json"
+         *     parameters:
+         *      - name: "playUri"
+         *        in: "body"
+         *        description: "The full URL of WorkAdventure"
+         *        type: "string"
+         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSlug/roomSlug"
+         *      - name: "userIdentifier"
+         *        in: "body"
+         *        description: "The identifier of the current user \n It can be undefined or an uuid or an email"
+         *        type: "string"
+         *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *      - name: "accessToken"
+         *        in: "body"
+         *        description: "The OpenID access token (if the user is logged)"
+         *        type: "string"
+         *        example: "1234567890"
+         *     responses:
+         *       204:
+         *         description: News marked as read
+         *       401:
+         *         description: Error while retrieving the data because you are not authorized
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiRedirectData'
+         *       404:
+         *         description: Error while retrieving the data
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         */
+        await axios.post(
+            ADMIN_API_URL + "/api/news/bulk-read",
+            {
+                playUri,
+                userIdentifier,
+                accessToken,
+            },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            },
+        );
     }
 
     async fetchWellKnownChallenge(host: string): Promise<string> {
