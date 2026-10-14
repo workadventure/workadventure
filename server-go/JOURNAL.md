@@ -339,3 +339,21 @@ Lignes ajoutées : 765 de production, 208 de tests. Le schéma JSON généré et
 - La validation des cartes envoyées.
 - `RefreshRoomMessage` après un envoi, si des joueurs sont dans la salle.
 - Les commandes reçues entre le `GET` de la carte et la connexion d'un client : aucune n'est rejouée, `editMapCommandsArrayMessage` reste vide.
+
+## Aide extérieure (J2)
+
+Règle décidée par Yannis le 14/10 : ce qui touche au contrat gelé passe par la session socle et va aux deux candidats ; l'implémentation ne circule pas. Chaque aide reçue est notée ici.
+
+**Reçu de la session socle (côté contrat).**
+- L'énoncé de J2 et ses ajustements : `spaces.spec.ts` retiré, union J1 comptée sur 41 tests.
+- La référence TS de l'union J1 : 38 réussis, avec 2 échecs connus. Elle a servi à classer les échecs.
+- `dev/warm-auth.mjs` et l'explication du micro coupé par `createUser` sur une stack rapide : un piège du banc.
+- La référence TS du test `map_editor_megaphone_speaker_zone` « see attendees… screen share » (vert 2 fois sur 2), et le symptôme de Rust sur ce test. Reçus vers 16 h 20, après la correction (`5ff19f653`, 15 h 56) : ils n'ont servi qu'à confirmer que c'était un vrai manque.
+
+**Lu chez le candidat Rust, avant la règle (déclaré ici par souci d'équité).**
+- En phase 1, l'agent de recherche sur OpenID a lu le commit `d63ae2504` de `lang-rust` (`oidc.rs`) et son `JOURNAL.md`, pour relever ses choix.
+- Le serveur Go a fait des choix proches : pas de vérification de l'id_token, verifier en clair dans un cookie. Le code Go est écrit à partir du pusher TS.
+- L'agent de recherche sur zod a vérifié que Rust ne générait rien depuis zod (`space_actor.rs`).
+- Rien d'autre n'a été lu chez Rust, à ma connaissance, ni en J1 ni en J2 phase 2.
+
+**Donné.** Le comportement du front trouvé en phase 2 (`SimplePeer` ferme la connexion WebRTC sur `observeUserLeft` sans prévenir le serveur), transmis à Rust par la session socle, sans le code.
