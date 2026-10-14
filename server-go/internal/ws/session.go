@@ -39,7 +39,7 @@ const (
 	statusSessionDestroyed websocket.StatusCode = 4000
 )
 
-var pingEntry = core.NewMsg(ping{}, true).Bytes(encodeShared)
+var pingMsg = core.NewMsg(ping{}, true)
 
 // sessionInfo is what the upgrade learnt about the client. It never changes afterwards.
 type sessionInfo struct {
@@ -129,19 +129,24 @@ func (s *Session) writeLoop() {
 	armed := false
 	appPing := time.NewTicker(appPingInterval)
 	defer appPing.Stop()
-	var pending [][]byte
+	var pending moveQueue // the batch being filled: positions are merged in it (moveQueue)
+	var entries [][]byte
 	var items []*core.Msg
 	flush := func() {
 		if armed {
 			timer.Stop()
 			armed = false
 		}
-		if len(pending) == 0 {
+		if len(pending.items) == 0 {
 			return
 		}
-		s.emit(func(n uint32) []byte { return batchFrame(n, pending) })
-		clear(pending)
-		pending = pending[:0]
+		for _, m := range pending.items {
+			entries = append(entries, m.Bytes(encodeShared))
+		}
+		s.emit(func(n uint32) []byte { return batchFrame(n, entries) })
+		clear(entries)
+		entries = entries[:0]
+		pending.reset()
 	}
 	for {
 		select {
@@ -152,7 +157,7 @@ func (s *Session) writeLoop() {
 			flush()
 			continue
 		case <-appPing.C:
-			pending = append(pending, pingEntry)
+			pending.push(pingMsg)
 			flush()
 			continue
 		case <-s.out.wake:
@@ -160,7 +165,9 @@ func (s *Session) writeLoop() {
 		items = s.out.take(items)
 		for _, m := range items {
 			if m.Batched {
-				pending = append(pending, m.Bytes(encodeShared))
+				if pending.push(m) {
+					metrics.CoalescedPositions.Inc()
+				}
 				if !armed {
 					timer.Reset(batchDelay)
 					armed = true
