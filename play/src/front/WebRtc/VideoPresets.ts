@@ -19,8 +19,9 @@ export type VideoCodec = "av1" | "vp9" | "h264" | "vp8";
  * profile. P2P negotiates Baseline, which Chrome encodes in hardware from 360p up: there H.264 is the floor, and VP8
  * is left out. LiveKit only takes Constrained Baseline, which Chrome never encodes in hardware on macOS, nor by
  * default on Windows: that is OpenH264, run by libwebrtc on a single thread for every simulcast layer. So on LiveKit
- * a software H.264 is judged like the other codecs (the probe asks for Constrained Baseline), and the floor is VP8:
- * software everywhere too, but multithreaded.
+ * the floor is VP8, software everywhere too but multithreaded, for the same bandwidth, and H.264 above it is only
+ * kept where the browser reports a hardware encoder (the probe asks for Constrained Baseline) or says nothing.
+ * Viewers lose their hardware decoder for it, which costs them little: they rarely receive more than one H.264 stream.
  *
  * A codec that could not keep up during this session (demotedCodecStore) is out, with every codec above it. The floor
  * stays: P2P keeps H.264, which only LiveKit demotes.
@@ -46,9 +47,9 @@ export function preferredVideoCodecs(
             return true;
         }
         const performance = codecPerformance(direction, codec, pixels);
-        if (codec === "h264" && (!performance || performance.powerEfficient)) {
-            // Hardware, or nothing known: kept, as it always was
-            return true;
+        if (codec === "h264") {
+            // Above the floor, so on LiveKit: hardware, or nothing known (kept, as it always was), else VP8
+            return !performance || performance.powerEfficient;
         }
         if (!performance) {
             // No verdict (probe pending, or a browser without the API): a desktop tries, a phone does not
