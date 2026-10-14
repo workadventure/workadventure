@@ -377,13 +377,12 @@ async fn map_edits_reach_the_room_and_the_file_and_an_upload_resets_them() {
         name: String::new(),
         properties: vec![],
     };
-    alice.send(edit("cmd-1", E::CreateAreaMessage(area))).await.unwrap();
+    alice.send(edit("cmd-1", E::CreateAreaMessage(area.clone()))).await.unwrap();
     for inbox in [&mut ia, &mut ib] {
         inbox.expect(WAIT, |m| edit_echo(m).filter(|c| c.id == "cmd-1").map(|_| ())).await.unwrap();
     }
-    // A command this server does not apply yet: an error, to the sender only.
-    let delete = E::DeleteAreaMessage(pb::DeleteAreaMessage { id: "area-1".into() });
-    alice.send(edit("cmd-2", delete)).await.unwrap();
+    // A refused command (the area exists): an error, to the sender only.
+    alice.send(edit("cmd-2", E::CreateAreaMessage(area))).await.unwrap();
     let error = ia
         .expect(WAIT, |m| {
             edit_echo(m).filter(|c| c.id == "cmd-2").and_then(|c| match c.edit_map_message.as_ref()?.message.as_ref()? {
@@ -393,7 +392,8 @@ async fn map_edits_reach_the_room_and_the_file_and_an_upload_resets_them() {
         })
         .await
         .unwrap();
-    assert!(error.contains("not supported"), "{error}");
+    assert!(error.contains("Could not execute CreateArea"), "{error}");
+    assert!(ib.seen().iter().all(|m| edit_echo(m).is_none_or(|c| c.id != "cmd-2")));
 
     // The file is saved, migrated, with the area; served with CORS, a missing one is a 404.
     let http = reqwest::Client::new();

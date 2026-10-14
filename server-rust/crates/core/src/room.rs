@@ -170,6 +170,15 @@ impl Room {
         &self.url
     }
 
+    /// Where everybody is.
+    pub fn positions(&self) -> impl Iterator<Item = (f64, f64)> + '_ {
+        self.users.values().map(User::xy)
+    }
+
+    pub fn position_of(&self, id: UserId) -> Option<(f64, f64)> {
+        self.users.get(&id).map(User::xy)
+    }
+
     pub fn user(&self, id: UserId) -> Option<&User> {
         self.users.get(&id)
     }

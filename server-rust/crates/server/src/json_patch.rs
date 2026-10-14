@@ -1,5 +1,6 @@
-//! RFC 6902 patches between two JSON documents, the way fast-json-patch's `compare` builds them (what the
-//! TypeScript back sends): removals walk the old keys backwards so array indexes stay valid, additions follow.
+//! RFC 6902 patches: between two JSON documents, the way fast-json-patch's `compare` builds them (what the
+//! TypeScript back sends: removals walk the old keys backwards so array indexes stay valid, additions follow),
+//! and applied to a document (map-storage's `PATCH` of a WAM file).
 
 use serde_json::{Value, json};
 
@@ -65,27 +66,94 @@ fn generate(old: &Value, new: &Value, path: &mut String, ops: &mut Vec<Value>) {
     }
 }
 
+fn unescape(token: &str) -> String {
+    token.replace("~1", "/").replace("~0", "~")
+}
+
+/// The parent of `path` and the last token, unescaped.
+fn split(path: &str) -> Result<(&str, String), String> {
+    let (parent, last) = path.rsplit_once('/').ok_or_else(|| format!("Invalid path {path:?}"))?;
+    Ok((parent, unescape(last)))
+}
+
+fn index(token: &str, len: usize, insert: bool) -> Result<usize, String> {
+    let i = if insert && token == "-" { len } else { token.parse().map_err(|_| format!("Invalid array index {token:?}"))? };
+    if i > len || (!insert && i == len) {
+        return Err(format!("Array index {i} out of bounds"));
+    }
+    Ok(i)
+}
+
+fn remove(doc: &mut Value, path: &str) -> Result<Value, String> {
+    let (parent, last) = split(path)?;
+    match doc.pointer_mut(parent) {
+        Some(Value::Object(m)) => m.remove(&last).ok_or_else(|| format!("No value at {path}")),
+        Some(Value::Array(a)) => {
+            let i = index(&last, a.len(), false)?;
+            Ok(a.remove(i))
+        }
+        _ => Err(format!("No container at {parent:?}")),
+    }
+}
+
+fn add(doc: &mut Value, path: &str, value: Value) -> Result<(), String> {
+    if path.is_empty() {
+        *doc = value;
+        return Ok(());
+    }
+    let (parent, last) = split(path)?;
+    match doc.pointer_mut(parent) {
+        Some(Value::Object(m)) => {
+            m.insert(last, value);
+            Ok(())
+        }
+        Some(Value::Array(a)) => {
+            let i = index(&last, a.len(), true)?;
+            a.insert(i, value);
+            Ok(())
+        }
+        _ => Err(format!("No container at {parent:?}")),
+    }
+}
+
+/// Applies the operations in order: add, remove, replace, move, copy, test.
+pub fn apply(doc: &mut Value, ops: &[Value]) -> Result<(), String> {
+    for op in ops {
+        let path = op["path"].as_str().ok_or("Operation without a path")?;
+        let from = || op["from"].as_str().ok_or_else(|| "Operation without a from".to_owned());
+        let value = || op.get("value").cloned().ok_or_else(|| "Operation without a value".to_owned());
+        match op["op"].as_str() {
+            Some("add") => add(doc, path, value()?)?,
+            Some("remove") => {
+                remove(doc, path)?;
+            }
+            Some("replace") => {
+                let target = doc.pointer_mut(path).ok_or_else(|| format!("No value at {path}"))?;
+                *target = value()?;
+            }
+            Some("move") => {
+                let moved = remove(doc, from()?)?;
+                add(doc, path, moved)?;
+            }
+            Some("copy") => {
+                let copied = doc.pointer(from()?).cloned().ok_or_else(|| format!("No value at {path}"))?;
+                add(doc, path, copied)?;
+            }
+            Some("test") => {
+                if doc.pointer(path) != Some(&value()?) {
+                    return Err(format!("Test failed at {path}"));
+                }
+            }
+            other => return Err(format!("Unknown operation {other:?}")),
+        }
+    }
+    Ok(())
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    /// Applies add/remove/replace, enough to check that a diff takes `a` to `b`.
-    fn apply(doc: &mut Value, ops: &[Value]) {
-        for op in ops {
-            let path = op["path"].as_str().unwrap();
-            let (parent, last) = path.rsplit_once('/').unwrap();
-            let last = last.replace("~1", "/").replace("~0", "~");
-            let target = doc.pointer_mut(parent).unwrap();
-            match (op["op"].as_str().unwrap(), target) {
-                ("add", Value::Array(a)) => a.insert(last.parse().unwrap(), op["value"].clone()),
-                ("remove", Value::Array(a)) => drop(a.remove(last.parse().unwrap())),
-                ("replace", Value::Array(a)) => a[last.parse::<usize>().unwrap()] = op["value"].clone(),
-                ("add" | "replace", Value::Object(m)) => drop(m.insert(last, op["value"].clone())),
-                ("remove", Value::Object(m)) => drop(m.remove(&last)),
-                other => panic!("{other:?}"),
-            }
-        }
-    }
 
     #[test]
     fn a_diff_takes_the_old_document_to_the_new_one() {
@@ -99,9 +167,30 @@ mod tests {
         for (a, b) in cases {
             let ops = diff(&a, &b);
             let mut doc = a.clone();
-            apply(&mut doc, &ops);
+            apply(&mut doc, &ops).unwrap();
             assert_eq!(doc, b, "{ops:?}");
         }
+    }
+
+    #[test]
+    fn a_patch_applies_in_order() {
+        let mut doc = json!({"mapUrl": "a", "areas": [{"id": "x"}], "m": {}});
+        let ops = [
+            json!({"op": "replace", "path": "/mapUrl", "value": "b"}),
+            json!({"op": "add", "path": "/areas/-", "value": {"id": "y"}}),
+            json!({"op": "remove", "path": "/areas/0"}),
+            json!({"op": "copy", "from": "/mapUrl", "path": "/m/a~1b"}),
+            json!({"op": "test", "path": "/m/a~1b", "value": "b"}),
+        ];
+        apply(&mut doc, &ops).unwrap();
+        assert_eq!(doc, json!({"mapUrl": "b", "areas": [{"id": "y"}], "m": {"a/b": "b"}}));
+        assert!(apply(&mut doc, &[json!({"op": "remove", "path": "/nope"})]).is_err());
+        assert!(apply(&mut doc, &[json!({"op": "test", "path": "/mapUrl", "value": "c"})]).is_err());
+        // The diff and the patch agree.
+        let (a, b) = (json!({"x": [1, 2, 3], "y": {"z": 1}}), json!({"x": [3], "w": true}));
+        let mut c = a.clone();
+        apply(&mut c, &diff(&a, &b)).unwrap();
+        assert_eq!(c, b);
     }
 
     #[test]

@@ -65,16 +65,34 @@ pub fn create(secret: &str, claims: Claims) -> String {
 }
 
 fn create_at(secret: &str, claims: Claims, now: u64) -> String {
-    let header = URL_SAFE_NO_PAD.encode(br#"{"alg":"HS256"}"#);
-    let payload = serde_json::to_vec(&Payload {
+    // Serialized from the struct, not a Value: the field order is the pusher's, byte for byte.
+    let payload = Payload {
         claims,
         exp: now + VALIDITY_SECS,
-    })
-    .expect("claims serialize");
+    };
+    sign_raw(secret, &serde_json::to_vec(&payload).expect("claims serialize"))
+}
+
+/// Any payload, which carries its own `exp` (seconds).
+pub fn sign(secret: &str, payload: &serde_json::Value) -> String {
+    sign_raw(secret, payload.to_string().as_bytes())
+}
+
+fn sign_raw(secret: &str, payload: &[u8]) -> String {
+    let header = URL_SAFE_NO_PAD.encode(br#"{"alg":"HS256"}"#);
     let signing_input = format!("{header}.{}", URL_SAFE_NO_PAD.encode(payload));
     let mut m = mac(secret);
     m.update(signing_input.as_bytes());
     format!("{signing_input}.{}", URL_SAFE_NO_PAD.encode(m.finalize().into_bytes()))
+}
+
+/// The payload of a token signed with `secret` and not expired.
+pub fn open(secret: &str, token: &str) -> Result<serde_json::Value, InvalidToken> {
+    open_at(secret, token, now())
+}
+
+pub fn now_secs() -> u64 {
+    now()
 }
 
 /// Any failure (signature, expiry, shape) is the same error, like the pusher's "Token is invalid".
@@ -83,6 +101,12 @@ pub fn verify(secret: &str, token: &str) -> Result<Claims, InvalidToken> {
 }
 
 fn verify_at(secret: &str, token: &str, now: u64) -> Result<Claims, InvalidToken> {
+    serde_json::from_value::<Payload>(open_at(secret, token, now)?)
+        .map(|p| p.claims)
+        .map_err(|_| InvalidToken)
+}
+
+fn open_at(secret: &str, token: &str, now: u64) -> Result<serde_json::Value, InvalidToken> {
     let (signing_input, signature) = token.rsplit_once('.').ok_or(InvalidToken)?;
     let (header, payload) = signing_input.split_once('.').ok_or(InvalidToken)?;
     let decode = |part: &str| URL_SAFE_NO_PAD.decode(part).map_err(|_| InvalidToken);
@@ -93,11 +117,11 @@ fn verify_at(secret: &str, token: &str, now: u64) -> Result<Claims, InvalidToken
     let mut m = mac(secret);
     m.update(signing_input.as_bytes());
     m.verify_slice(&decode(signature)?).map_err(|_| InvalidToken)?;
-    let payload: Payload = serde_json::from_slice(&decode(payload)?).map_err(|_| InvalidToken)?;
-    if payload.exp <= now {
+    let payload: serde_json::Value = serde_json::from_slice(&decode(payload)?).map_err(|_| InvalidToken)?;
+    if payload["exp"].as_u64().is_none_or(|exp| exp <= now) {
         return Err(InvalidToken);
     }
-    Ok(payload.claims)
+    Ok(payload)
 }
 
 #[cfg(test)]

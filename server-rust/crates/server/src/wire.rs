@@ -280,7 +280,7 @@ pub fn json_from(v: &prost_types::Value) -> serde_json::Value {
     }
 }
 
-/// The editor commands the server applies (J2: areas and WAM settings); None for the others.
+/// The editor commands that change the WAM; None for those that change files (uploads, custom entities).
 pub fn edit_from(m: &pb::edit_map_message::Message) -> Option<wa_core::wam::Edit> {
     use pb::edit_map_message::Message as M;
     use serde_json::{Map, Value};
@@ -318,6 +318,49 @@ pub fn edit_from(m: &pb::edit_map_message::Message) -> Option<wa_core::wam::Edit
                 fields,
                 properties: (a.modify_properties == Some(true)).then(|| a.properties.iter().map(json_from).collect()),
             }
+        }
+        M::DeleteAreaMessage(a) => Edit::DeleteArea(a.id.clone()),
+        M::CreateEntityMessage(e) => {
+            let mut entity = Map::new();
+            entity.insert("prefabRef".into(), serde_json::json!({"id": e.prefab_id, "collectionName": e.collection_name}));
+            entity.insert("x".into(), e.x.into());
+            entity.insert("y".into(), e.y.into());
+            entity.insert("properties".into(), properties(&e.properties));
+            if let Some(name) = &e.name {
+                entity.insert("name".into(), name.clone().into());
+            }
+            Edit::CreateEntity {
+                id: e.id.clone(),
+                entity,
+                width: f64::from(e.width),
+                height: f64::from(e.height),
+            }
+        }
+        M::ModifyEntityMessage(e) => {
+            let mut fields = Map::new();
+            fields.insert("x".into(), e.x.into());
+            fields.insert("y".into(), e.y.into());
+            if let Some(name) = &e.name {
+                fields.insert("name".into(), name.clone().into());
+            }
+            Edit::ModifyEntity {
+                id: e.id.clone(),
+                fields,
+                properties: (e.modify_properties == Some(true)).then(|| e.properties.iter().map(json_from).collect()),
+                width: f64::from(e.width),
+                height: f64::from(e.height),
+            }
+        }
+        M::DeleteEntityMessage(e) => Edit::DeleteEntity(e.id.clone()),
+        M::DeleteCustomEntityMessage(e) => Edit::DeleteCustomEntity(e.id.clone()),
+        M::ModifiyWamMetadataMessage(m) => {
+            let mut fields = Map::new();
+            fields.insert("name".into(), m.name.clone().into());
+            for (k, v) in [("description", &m.description), ("thumbnail", &m.thumbnail), ("copyright", &m.copyright)] {
+                fields.insert(k.into(), v.clone().map_or(Value::Null, Value::String));
+            }
+            let tags = m.tags.as_deref().filter(|t| !t.is_empty()).map(|t| t.split(',').map(str::to_owned).collect());
+            Edit::Metadata { fields, tags: tags.unwrap_or_default() }
         }
         M::UpdateWamSettingsMessage(s) => {
             use pb::update_wam_settings_message::Message as S;

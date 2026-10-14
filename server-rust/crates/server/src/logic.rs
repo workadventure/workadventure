@@ -152,6 +152,9 @@ impl Logic {
                 .await;
             }
             M::EditMapCommandMessage(command) => self.to_room(RoomCmd::Edit { session, command }).await,
+            M::SetAreaPropertyVariableMessage(variable) => {
+                self.to_room(RoomCmd::SetAreaVariable { session, variable }).await;
+            }
             M::UserMovesMessage(moves) => {
                 let (Some(user), Some(position)) = (user, moves.position) else { return };
                 self.to_room(RoomCmd::Move {
@@ -375,12 +378,52 @@ impl Logic {
             Q::SearchTagsQuery(_) => A::SearchTagsAnswer(pb::SearchTagsAnswer::default()),
             Q::ChatMembersQuery(_) => A::ChatMembersAnswer(pb::ChatMembersAnswer::default()),
             Q::GetRecordingsQuery(_) => A::GetRecordingsAnswer(pb::GetRecordingsAnswer::default()),
-            Q::EmbeddableWebsiteQuery(q) => A::EmbeddableWebsiteAnswer(pb::EmbeddableWebsiteAnswer {
-                url: q.url,
-                state: true,
-                embeddable: true,
-                message: None,
-            }),
+            // Asking the site takes up to 5 s: not on this session's message loop.
+            Q::EmbeddableWebsiteQuery(q) => {
+                let (http, config) = (self.app.http.clone(), self.app.config.clone());
+                tokio::spawn(async move {
+                    let whitelist = config.raw.get("EMBEDDED_DOMAINS_WHITELIST").cloned().unwrap_or_default();
+                    let answer = crate::embed::check(&http, q.url, &whitelist, &config.front_url).await;
+                    session.push(wire::answer(id, A::EmbeddableWebsiteAnswer(answer)));
+                });
+                return;
+            }
+            // LocalAdmin.getUrlRoomsFromSameWorld: the maps of the map-storage, for a map-storage room.
+            Q::RoomsFromSameWorldQuery(_) => {
+                if crate::local_admin::wam_path(&self.parts_session.info.room_id).is_none() {
+                    session.push(wire::answer_error(id, "No admin backoffice set!"));
+                    return;
+                }
+                let base = self.app.config.raw.get("PUBLIC_MAP_STORAGE_URL").cloned().unwrap_or_default();
+                let base = base.trim_end_matches('/');
+                let text = |v: &serde_json::Value| v.as_str().map(str::to_owned);
+                let rooms = self.app.storage.wam_list().await.into_iter().map(|(path, entry)| {
+                    let m = &entry["metadata"];
+                    pb::RoomShortDescription {
+                        name: text(&m["name"]).unwrap_or_else(|| path.clone()),
+                        room_url: format!("/~/{path}"),
+                        wam_url: Some(format!("{base}/{path}")),
+                        description: text(&m["description"]),
+                        copyright: text(&m["copyright"]),
+                        thumbnail: text(&m["thumbnail"]),
+                        areas_searchable: m["areasSearchable"].as_i64().map(|n| n as i32),
+                        entities_searchable: m["entitiesSearchable"].as_i64().map(|n| n as i32),
+                    }
+                });
+                A::RoomsFromSameWorldAnswer(pb::RoomsFromSameWorldAnswer {
+                    room_descriptions: rooms.collect(),
+                })
+            }
+            // The token map-storage asks for a private file (pusher handleMapStorageJwtQuery): valid 1 h.
+            Q::MapStorageJwtQuery(_) => {
+                let info = &self.parts_session.info;
+                let base = self.app.config.raw.get("PUBLIC_MAP_STORAGE_URL").cloned().unwrap_or_default();
+                let wam_url = crate::local_admin::wam_path(&info.room_id).map_or_else(String::new, |rest| format!("{base}/{rest}"));
+                let claims = serde_json::json!({"wamUrl": wam_url, "tags": info.tags, "exp": crate::jwt::now_secs() + 3600});
+                A::MapStorageJwtAnswer(pb::MapStorageJwtAnswer {
+                    jwt: crate::jwt::sign(&self.app.config.secret_key, &claims),
+                })
+            }
             Q::GetMemberQuery(_) => {
                 session.push(wire::answer_error(id, "User not found, probably left"));
                 return;

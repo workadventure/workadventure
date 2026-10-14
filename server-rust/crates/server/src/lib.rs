@@ -3,6 +3,8 @@
 
 pub mod budget;
 pub mod config;
+pub mod custom_entities;
+pub mod embed;
 pub mod json_patch;
 pub mod front;
 pub mod http;

@@ -1,5 +1,6 @@
 //! The business core. It imports no transport, no Redis and no protobuf types: adapters translate.
 
+pub mod areas;
 pub mod geometry;
 pub mod room;
 pub mod space;

@@ -185,6 +185,16 @@ impl Outbox {
         self.notify.notify_one();
     }
 
+    /// Closes once what is already queued is written: a last word before the close (deleteMapMessage).
+    pub fn close_after_queued(&self, reason: CloseReason) {
+        let mut st = self.state.lock();
+        if st.closed.is_none() {
+            st.closed = Some(reason);
+        }
+        drop(st);
+        self.notify.notify_one();
+    }
+
     pub fn is_closed(&self) -> bool {
         self.state.lock().closed.is_some()
     }
