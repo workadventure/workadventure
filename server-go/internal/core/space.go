@@ -377,6 +377,17 @@ func (s *spaceState) unwatch(id string) {
 	s.drop(id, s.inFilterMember)
 }
 
+// closedBy records that closer's front closed its peer with other: a front does so when a user leaves its list
+// (SimplePeer, observeUserLeft), which a change of role does in a live-streaming space. other is told, and the
+// connection can be established again once both still want it.
+func (s *spaceState) closedBy(closer, other string) {
+	if _, ok := s.conns[[2]string{closer, other}]; !ok {
+		return
+	}
+	delete(s.conns, [2]string{other, closer})
+	s.disconnect(closer, other)
+}
+
 // disconnect tells receiver to drop its WebRTC connection with sender, if there is one.
 func (s *spaceState) disconnect(sender, receiver string) {
 	key := [2]string{sender, receiver}
@@ -440,6 +451,7 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 	// The user's own view counts the change of its own role.
 	added, removed := NewMsg(SpaceUserAdded{Space: s.local, User: m.user}, true), NewMsg(SpaceUserRemoved{Space: s.local, UserID: id}, true)
 	updated := NewMsg(SpaceUserUpdated{Space: s.local, User: m.user, Mask: kept}, true)
+	var relisted []string // members whose view of id (or id's view of them) changed
 	for _, o := range s.order {
 		w := s.members[o]
 		if !w.watching {
@@ -453,8 +465,11 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 		switch {
 		case !was && is:
 			w.peer.Send(added)
+			relisted = append(relisted, o)
 		case was && !is:
 			w.peer.Send(removed)
+			s.closedBy(o, id)
+			relisted = append(relisted, o)
 		case was && is:
 			w.peer.Send(updated)
 		}
@@ -468,8 +483,11 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 			switch was, is := s.visible(&old, u), s.visible(&m.user, u); {
 			case !was && is:
 				m.peer.Send(NewMsg(SpaceUserAdded{Space: s.local, User: *u}, true))
+				relisted = append(relisted, o)
 			case was && !is:
 				m.peer.Send(NewMsg(SpaceUserRemoved{Space: s.local, UserID: o}, true))
+				s.closedBy(id, o)
+				relisted = append(relisted, o)
 			}
 		}
 	}
@@ -481,6 +499,13 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 			s.drop(id, anyMember)
 		}
 		s.drop(id, func(o *spaceMember) bool { return o.watching && !s.inFilter(&o.user) })
+	}
+	for _, o := range relisted {
+		if om := s.members[o]; o != id && s.media && ((s.inFilter(&m.user) && om.watching) || (s.inFilter(&om.user) && m.watching)) {
+			if _, ok := s.conns[[2]string{id, o}]; !ok {
+				s.establish(id, o)
+			}
+		}
 	}
 	if old.Megaphone && !m.user.Megaphone {
 		// A floor holder who stops streaming no longer holds the floor.
