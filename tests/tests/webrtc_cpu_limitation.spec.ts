@@ -121,6 +121,10 @@ test.describe("CPU-limited encoders @nomobile", () => {
         await expect.poll(() => boxText(alice), { timeout: 2 * WINDOW_MS }).toMatch(/Codec:\s*H264/i);
         await expect.poll(() => boxText(alice), { timeout: 30_000 }).toMatch(/Source:\s*Livekit/);
         console.log("Alice republished her camera in H.264 on LiveKit");
+
+        // LiveKit's H.264 is Constrained Baseline, OpenH264 in Chromium on Linux: one more window, and VP8
+        await expect.poll(() => boxText(alice), { timeout: 2 * WINDOW_MS }).toMatch(/Codec:\s*VP8/i);
+        console.log("Alice left OpenH264 for VP8 on LiveKit");
     });
 
     test("without a back that acts on the flag, the member renegotiates a cheaper codec with both peers", async ({
