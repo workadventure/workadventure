@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,26 +12,67 @@ func moved(id, x int32) *core.Msg {
 	return core.NewMsg(core.UserMoved{UserID: id, Position: core.Position{X: x}}, true)
 }
 
-func TestOutboxDropsSupersededMovesThenClosesTheSlowConsumer(t *testing.T) {
+func xs(items []*core.Msg) []any {
+	out := make([]any, len(items))
+	for i, m := range items {
+		switch e := m.Event.(type) {
+		case core.UserMoved:
+			out[i] = [2]int32{e.UserID, e.Position.X}
+		default:
+			out[i] = e
+		}
+	}
+	return out
+}
+
+func TestPositionsMergeUntilABarrierOfTheSamePlayer(t *testing.T) {
+	var q moveQueue
+	q.push(moved(1, 1))
+	q.push(moved(2, 1))
+	if !q.push(moved(1, 2)) {
+		t.Fatal("a newer position of player 1 must replace the queued one")
+	}
+	q.push(core.NewMsg(core.UserLeft{UserID: 3}, true)) // another player: no barrier for player 1
+	q.push(moved(1, 3))
+	q.push(core.NewMsg(core.PlayerDetailsUpdated{UserID: 1}, true)) // barrier for player 1
+	q.push(moved(1, 4))
+	q.push(core.NewMsg(core.UserLeft{UserID: 1}, true))
+	q.push(core.NewMsg(core.UserJoined{User: core.UserView{ID: 1}}, true))
+	q.push(moved(1, 5))
+	q.push(core.NewMsg(core.JoinSpaceRequest{}, false)) // a direct message ends a batch: barrier for everybody
+	q.push(moved(2, 2))
+	q.push(moved(1, 6))
+
+	want := []any{
+		[2]int32{1, 3}, [2]int32{2, 1}, core.UserLeft{UserID: 3}, core.PlayerDetailsUpdated{UserID: 1},
+		[2]int32{1, 4}, core.UserLeft{UserID: 1}, core.UserJoined{User: core.UserView{ID: 1}}, [2]int32{1, 5},
+		core.JoinSpaceRequest{}, [2]int32{2, 2}, [2]int32{1, 6},
+	}
+	if got := xs(q.items); fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("got  %v\nwant %v", got, want)
+	}
+}
+
+func TestOutboxMergesPositionsThenClosesTheSlowConsumer(t *testing.T) {
 	overflowed := false
-	o := newOutbox(4, func() { overflowed = true })
+	o := newOutbox(3, func() { overflowed = true })
 	o.push(moved(1, 1))
 	o.push(core.NewMsg(core.UserLeft{UserID: 9}, true))
-	o.push(moved(1, 2))
 	o.push(moved(2, 1))
-	o.push(moved(1, 3)) // full: the move of player 1 superseded by x=2 goes, then x=3 is queued
-	got := o.take(nil)
-	if len(got) != 4 || got[0].Event.(core.UserLeft).UserID != 9 || got[1].Event.(core.UserMoved).Position.X != 2 || got[3].Event.(core.UserMoved).Position.X != 3 {
-		t.Fatalf("unexpected queue %v", got)
+	for x := int32(2); x < 100; x++ {
+		o.push(moved(1, x)) // a full queue still takes the newest position of a queued player
 	}
 	if overflowed {
-		t.Fatal("compaction was enough")
+		t.Fatal("merged positions take no room")
 	}
-	for i := int32(0); i < 5; i++ {
+	if got := xs(o.take(nil)); fmt.Sprint(got) != fmt.Sprint([]any{[2]int32{1, 99}, core.UserLeft{UserID: 9}, [2]int32{2, 1}}) {
+		t.Fatalf("unexpected queue %v", got)
+	}
+	for i := int32(0); i < 4; i++ {
 		o.push(core.NewMsg(core.UserLeft{UserID: i}, true))
 	}
 	if !overflowed {
-		t.Fatal("a queue that stays full must close the consumer")
+		t.Fatal("a queue full of messages that cannot merge must close the consumer")
 	}
 	o.push(moved(1, 1))
 	if len(o.take(nil)) != 0 {

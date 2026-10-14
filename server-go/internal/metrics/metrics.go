@@ -18,9 +18,9 @@ var (
 
 	clientsPerRoom = promauto.NewGaugeVec(prometheus.GaugeOpts{Name: "workadventure_nb_clients_per_room", Help: "Number of clients per room"}, []string{"room"})
 
-	// Backpressure (new: the TS services had no bounded queue to report on).
-	DroppedPositions = promauto.NewCounter(prometheus.CounterOpts{Name: "workadventure_dropped_position_updates_total", Help: "Position updates dropped because a newer one for the same player was queued for a slow client"})
-	SlowConsumers    = promauto.NewCounter(prometheus.CounterOpts{Name: "workadventure_slow_consumers_closed_total", Help: "Connections closed because their outbound queue stayed full"})
+	// Position merging and backpressure (new: the TS services had neither).
+	CoalescedPositions = promauto.NewCounter(prometheus.CounterOpts{Name: "workadventure_coalesced_position_updates_total", Help: "Position updates replaced by a newer one of the same player before being sent"})
+	SlowConsumers      = promauto.NewCounter(prometheus.CounterOpts{Name: "workadventure_slow_consumers_closed_total", Help: "Connections closed because their outbound queue stayed full"})
 )
 
 var (

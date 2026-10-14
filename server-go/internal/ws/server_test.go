@@ -315,3 +315,34 @@ func TestOneClientCannotCreateSpacesWithoutLimit(t *testing.T) {
 		t.Fatalf("%d spaces alive", n)
 	}
 }
+
+// Within one batch window, a client receives only the last position of each player.
+func TestABatchCarriesOnlyTheLastPositionOfEachPlayer(t *testing.T) {
+	h := newHarness(t)
+	alice := h.dial("alice", "c-alice", nil)
+	alice.send(join(100, 100))
+	alice.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
+	bob := h.dial("bob", "c-bob", nil)
+	bob.send(join(500, 500))
+	alice.waitFor("bob", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		return s.GetUserJoinedMessage().GetUserUuid() == "bob"
+	})
+	time.Sleep(2 * batchDelay) // start from an empty batch
+
+	for _, x := range []int32{510, 520, 530} {
+		bob.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_UserMovesMessage{UserMovesMessage: &pb.UserMovesMessage{
+			Position: &pb.PositionMessage{X: x, Y: 500, Moving: true}, Viewport: &pb.ViewportMessage{Left: 0, Top: 0, Right: 1000, Bottom: 1000},
+		}}})
+	}
+	var seen []int32
+	alice.waitFor("bob's last position", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		if mv := s.GetUserMovedMessage(); mv != nil {
+			seen = append(seen, mv.GetPosition().GetX())
+			return mv.GetPosition().GetX() == 530
+		}
+		return false
+	})
+	if len(seen) != 1 {
+		t.Fatalf("the three moves fell in one batch window, alice should see only the last one: %v", seen)
+	}
+}

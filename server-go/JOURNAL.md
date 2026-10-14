@@ -159,3 +159,19 @@ Par extrapolation linéaire, l'acteur saturerait vers 19 000 dépl./s dans une s
 
 Le mode « suivre », les variables de joueur persistées (Redis), les emotes (le TS valide les emojis avec `\p{Extended_Pictographic}`, absent de l'expression régulière de Go), LiveKit, le mégaphone et le reste des spaces.
 OpenID (`/login-screen`, `/openid-callback`), l'admin HTTP, la Room API, map-storage, l'uploader, et les balises meta lues dans la carte pour les robots.
+
+## Après J1 — règles communes du 14/10 (2026-10-14)
+
+Les deux changements décidés après la relecture de J1 sont faits ; ils ont pris ≈ 25 min, sans correction humaine.
+
+- **Fusion des positions dans le lot (règle commune, obligatoire).** Un seul type, `moveQueue` (`internal/ws/outbox.go`), sert au lot de l'écrivain (fenêtre de 100 ms) et à la file d'envoi.
+  - Une nouvelle position d'un joueur prend la place de la précédente encore en file. Elle ne saute donc que des messages d'autres joueurs, qui commutent avec elle.
+  - Barrières : l'arrivée, le départ et les détails du même joueur ; un message direct, qui clôt le lot, vaut barrière pour tous.
+  - Écart avec le candidat Rust : chez Rust, tout autre message est une barrière pour tous les joueurs. Ici, la barrière est par joueur, comme l'écrit la règle.
+- **Contre-pression.** La file fusionne au fil de l'eau avec les mêmes barrières. Quand elle est pleine de messages qui ne fusionnent pas, le client lent est fermé (code 4000).
+  `dropSupersededMoves` disparaît : elle ne déplaçait aucun message, mais elle ignorait les barrières.
+- **Métrique renommée** : `workadventure_dropped_position_updates_total` devient `workadventure_coalesced_position_updates_total`, qui compte toutes les positions fusionnées.
+- **Vérification.**
+  - `./verify.sh` vert, avec trois tests en plus : barrières de `moveQueue`, file pleine, et un test bout-en-bout (trois déplacements dans la même fenêtre, une seule position reçue).
+  - Playwright (`meeting`, `say_bubbles`, `reconnect` 18, `userlist` 14) : 8 verts et 2 échecs au premier passage, juste après la relance de la stack `go` qu'une autre session avait arrêtée. Les 2 tests échoués passent 2 fois sur 2 en isolation.
+- **Mesures.** Les chiffres de J1 ont été pris avant la fusion : le nombre de messages livrés baisse désormais mécaniquement. Le banc commun (`dev/bench/` de `dev-socle`) fera foi. `cmd/loadbot` est inchangé.
