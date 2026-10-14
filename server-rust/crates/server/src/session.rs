@@ -59,6 +59,8 @@ pub struct SessionInfo {
     pub room_name: Option<String>,
     pub tab_id: String,
     pub connection_id: Option<String>,
+    /// The last map edit in the WAM file the client loaded (lastCommandId).
+    pub last_command_id: Option<String>,
 }
 
 enum WriterCmd {

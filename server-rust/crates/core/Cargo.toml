@@ -9,6 +9,8 @@ publish.workspace = true
 [dependencies]
 # Derives only, for the generated space state types (their JSON form is the state's contract with the front).
 serde.workspace = true
+# The WAM file stays JSON (wam.rs): the editor's fields this server does not know survive its edits.
+serde_json.workspace = true
 
 [lints]
 workspace = true

@@ -51,6 +51,11 @@ impl<C> ActorRegistry<C> {
         self.map.remove_if(key, |_, w| w.upgrade().is_none());
     }
 
+    /// Every actor alive now. The handles are collected first: no shard lock outlives this call.
+    pub fn live(&self) -> Vec<mpsc::Sender<C>> {
+        self.map.iter().filter_map(|e| e.value().upgrade()).collect()
+    }
+
     pub fn count(&self) -> usize {
         self.map.len()
     }

@@ -8,8 +8,11 @@ use std::sync::Arc;
 use wa_core::geometry::{Position, Viewport};
 use wa_core::room::{Clock, Event, JoinRequest, Room, RoomConfig, Sink, UserId};
 use wa_core::user::DetailsChange;
+use wa_core::wam::{History, Wam};
 use wa_proto::messages as pb;
 
+use crate::local_admin;
+use crate::map_storage::Storage;
 use crate::metrics::{METRICS, dec_room_gauge};
 use crate::outbox::Frame;
 use crate::registry::ActorRegistry;
@@ -19,6 +22,10 @@ use crate::wire;
 pub const MAILBOX: usize = 1024;
 
 pub enum RoomCmd {
+    /// The connection is up: roomConnectedMessage, with the map edits the client's copy of the WAM misses.
+    Connect {
+        session: Arc<Session>,
+    },
     Join {
         session: Arc<Session>,
         request: JoinRequest,
@@ -47,6 +54,13 @@ pub enum RoomCmd {
     Leave {
         session: Arc<Session>,
     },
+    /// editMapCommandMessage.
+    Edit {
+        session: Arc<Session>,
+        command: pb::EditMapCommandMessage,
+    },
+    /// An upload replaced the map files.
+    MapsUploaded,
 }
 
 pub type RoomHandle = tokio::sync::mpsc::Sender<RoomCmd>;
@@ -60,13 +74,68 @@ impl Clock for SystemClock {
     }
 }
 
-pub fn get_or_spawn(registry: &Arc<ActorRegistry<RoomCmd>>, url: &str, config: RoomConfig) -> RoomHandle {
+pub fn get_or_spawn(
+    registry: &Arc<ActorRegistry<RoomCmd>>,
+    url: &str,
+    config: RoomConfig,
+    storage: &Arc<Storage>,
+) -> RoomHandle {
     registry.get_or_spawn(url, || {
         let (tx, rx) = tokio::sync::mpsc::channel(MAILBOX);
         let room = Room::new(url, config, Box::new(SystemClock));
-        tokio::spawn(run(room, rx, registry.clone()));
+        tokio::spawn(run(room, rx, registry.clone(), storage.clone()));
         tx
     })
+}
+
+/// The WAM file of a map-storage room (back's WamManager + map-storage's MapsManager): edits apply here, in the
+/// room's order, and a task of its own writes the newest version to disk.
+struct MapFile {
+    rel: String,
+    wam: Option<Wam>,
+    /// The storage generation the file was read at.
+    generation: u64,
+    history: History<pb::EditMapCommandMessage>,
+    saves: tokio::sync::watch::Sender<Option<(u64, Vec<u8>)>>,
+}
+
+impl MapFile {
+    async fn open(storage: Arc<Storage>, rel: String) -> Self {
+        let (saves, mut pending) = tokio::sync::watch::channel(None::<(u64, Vec<u8>)>);
+        let (store, path) = (storage.clone(), rel.clone());
+        // Writes the newest version only; ends after the last one once the room is gone.
+        tokio::spawn(async move {
+            while pending.changed().await.is_ok() {
+                let Some((generation, bytes)) = pending.borrow_and_update().clone() else { continue };
+                store.save(&path, generation, &bytes).await;
+            }
+        });
+        let mut map = Self {
+            rel,
+            wam: None,
+            generation: 0,
+            history: History::default(),
+            saves,
+        };
+        map.load(&storage).await;
+        map
+    }
+
+    async fn load(&mut self, storage: &Storage) {
+        self.generation = storage.generation();
+        self.wam = storage.read(&self.rel).await.and_then(|b| Wam::parse(&b));
+        self.history.clear();
+    }
+
+    fn apply(&mut self, command: &pb::EditMapCommandMessage, can_edit: bool) -> Result<(), String> {
+        let wam = self.wam.as_mut().ok_or("This map cannot be edited")?;
+        let message = command.edit_map_message.as_ref().and_then(|m| m.message.as_ref());
+        let edit = message.and_then(wire::edit_from).ok_or("This map edit is not supported by this server yet")?;
+        wam.apply(&command.id, edit, can_edit)?;
+        self.history.push(SystemClock.now_ms(), command.id.clone(), command.clone());
+        self.saves.send_replace(Some((self.generation, wam.to_json())));
+        Ok(())
+    }
 }
 
 /// Encodes each event once, then hands the bytes to every recipient.
@@ -78,6 +147,12 @@ struct Fanout<'a> {
 impl<'a> Fanout<'a> {
     fn new(sessions: &'a mut HashMap<UserId, Arc<Session>>) -> Self {
         Self { sessions, joining: None }
+    }
+
+    fn each_all(&self, frame: &Frame) {
+        for s in self.sessions.values() {
+            s.push(frame.clone());
+        }
     }
 
     fn each(&self, to: &[UserId], frame: &Frame) {
@@ -152,15 +227,71 @@ impl Sink for Fanout<'_> {
     }
 }
 
-async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, registry: Arc<ActorRegistry<RoomCmd>>) {
+async fn run(
+    mut room: Room,
+    mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>,
+    registry: Arc<ActorRegistry<RoomCmd>>,
+    storage: Arc<Storage>,
+) {
     let url = room.url().to_owned();
     METRICS.nb_rooms.inc();
+    // Like GameRoom.create, the WAM is read before anybody joins.
+    let mut map = match local_admin::wam_path(&url) {
+        Some(rel) => Some(MapFile::open(storage.clone(), rel).await),
+        None => None,
+    };
     let mut sessions: HashMap<UserId, Arc<Session>> = HashMap::new();
     let mut groups_seen = 0u64;
     let mut group_gauge = 0i64;
 
     while let Some(cmd) = mailbox.recv().await {
+        use pb::server_to_client_message::Message as Top;
         match cmd {
+            RoomCmd::Connect { session } => {
+                let commands = map.as_ref().map_or_else(Vec::new, |m| {
+                    let latest = m.wam.as_ref().and_then(Wam::last_command_id);
+                    m.history
+                        .after(session.info.last_command_id.as_deref(), latest)
+                        .into_iter()
+                        .cloned()
+                        .collect()
+                });
+                session.push(wire::direct(Top::RoomConnectedMessage(pb::RoomConnectedMessage {
+                    edit_map_commands_array_message: Some(pb::EditMapCommandsArrayMessage {
+                        edit_map_commands: commands,
+                    }),
+                    tag: session.info.tags.clone(),
+                })));
+            }
+            RoomCmd::Edit { session, command } => {
+                use pb::sub_message::Message as Sub;
+                let result = match &mut map {
+                    Some(m) => m.apply(&command, session.info.can_edit),
+                    None => Err("This map cannot be edited".to_owned()),
+                };
+                match result {
+                    // Everyone gets it, the sender included: its pending command is acknowledged by the id.
+                    Ok(()) => Fanout::new(&mut sessions).each_all(&wire::sub(Sub::EditMapCommandMessage(command))),
+                    Err(reason) => session.push(wire::sub(Sub::EditMapCommandMessage(pb::EditMapCommandMessage {
+                        id: command.id,
+                        edit_map_message: Some(pb::EditMapMessage {
+                            message: Some(pb::edit_map_message::Message::ErrorCommandMessage(
+                                pb::ErrorCommandMessage { reason },
+                            )),
+                        }),
+                    }))),
+                }
+            }
+            RoomCmd::MapsUploaded => {
+                let Some(m) = &mut map else { continue };
+                m.load(&storage).await;
+                let frame = wire::direct(Top::RefreshRoomMessage(pb::RefreshRoomMessage {
+                    room_id: url.clone(),
+                    version_number: 0,
+                    time_to_refresh: Some(30),
+                }));
+                Fanout::new(&mut sessions).each_all(&frame);
+            }
             RoomCmd::Join { session, request } => {
                 if session.is_ended() {
                     continue;
@@ -213,7 +344,6 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 target_id,
                 locate,
             } => {
-                use pb::server_to_client_message::Message as Top;
                 let (Some(target), Some(session)) = (room.find(&target_uuid, target_id), sessions.get(&user)) else {
                     continue;
                 };

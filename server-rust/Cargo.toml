@@ -12,7 +12,7 @@ publish = false
 wa-proto = { path = "crates/proto" }
 wa-core = { path = "crates/core" }
 
-axum = { version = "0.8.9", features = ["ws"] }
+axum = { version = "0.8.9", features = ["ws", "multipart"] }
 bytes = "1"
 dashmap = "6.1"
 parking_lot = "0.12"

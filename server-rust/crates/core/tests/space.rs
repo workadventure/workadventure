@@ -257,14 +257,15 @@ fn with_feedback_the_audience_only_sees_the_speakers() {
         ]
     );
 
-    // l2 goes on stage: everyone now sees it (itself included), and it now sees the audience.
+    // l2 goes on stage: everyone now sees it, and it now sees the audience. About itself it gets an update: like
+    // the pusher, the change is judged with the watcher's role as it is now.
     l2.megaphone_state = true;
     s.update_from_client("l2", &l2, &["megaphoneState".into()], &mut r);
     assert_eq!(
         r.take(),
         vec![
-            (to(&["s"]), "update l2".to_owned()),
-            (to(&["l1", "l2", "off"]), "add l2".to_owned()),
+            (to(&["l2", "s"]), "update l2".to_owned()),
+            (to(&["l1", "off"]), "add l2".to_owned()),
             (to(&["l2"]), "add l1".to_owned()),
         ]
     );
@@ -272,4 +273,88 @@ fn with_feedback_the_audience_only_sees_the_speakers() {
     // A listener leaving is only news to the speakers.
     s.leave("l1", &mut r);
     assert_eq!(r.take(), vec![(to(&["l2", "s"]), "remove l1".to_owned())]);
+}
+
+#[test]
+fn the_audience_is_connected_to_a_speaker_only_while_on_stage() {
+    let f = FilterType::LiveStreamingUsers;
+    let mut s = Space::new("s".into(), f, vec!["cameraState".into(), "screenSharingState".into()], "i".into());
+    let mut r = Rec::default();
+    let mut speaker = user("a");
+    speaker.megaphone_state = true;
+    let mut other_speaker = user("c");
+    other_speaker.megaphone_state = true;
+    for u in [speaker.clone(), other_speaker, user("d")] {
+        s.join(f, u, &mut r).unwrap();
+    }
+    for id in ["a", "c", "d"] {
+        s.watch(id, &mut r);
+    }
+    let p2p = |r: &mut Rec| -> Vec<(Vec<String>, String)> {
+        r.take().into_iter().filter(|(_, e)| e.starts_with("WebRtc")).collect()
+    };
+    // Every watcher is linked to each speaker: a-c, d-a, d-c, each announced to both ends.
+    assert_eq!(p2p(&mut r).len(), 6);
+
+    // a leaves the stage: its link to the listener closes, the one to the other speaker stays.
+    speaker.megaphone_state = false;
+    s.update_from_client("a", &speaker, &["megaphoneState".into()], &mut r);
+    assert_eq!(
+        p2p(&mut r),
+        vec![(to(&["d"]), "WebRtcDisconnect".to_owned()), (to(&["a"]), "WebRtcDisconnect".to_owned())]
+    );
+    // Back on stage: a new link to the listener, and the one the other speaker dropped (a had left its list)
+    // is restarted.
+    speaker.megaphone_state = true;
+    s.update_from_client("a", &speaker, &["megaphoneState".into()], &mut r);
+    assert_eq!(
+        p2p(&mut r),
+        vec![
+            (to(&["a"]), "WebRtcDisconnect".to_owned()),
+            (to(&["c"]), "WebRtcDisconnect".to_owned()),
+            (to(&["a"]), "WebRtcStart".to_owned()),
+            (to(&["c"]), "WebRtcStart".to_owned()),
+            (to(&["a"]), "WebRtcStart".to_owned()),
+            (to(&["d"]), "WebRtcStart".to_owned()),
+        ]
+    );
+}
+
+#[test]
+fn a_member_back_in_a_list_gets_a_new_link_since_the_front_closed_the_old_one() {
+    let f = FilterType::LiveStreamingUsersWithFeedback;
+    let mut s = Space::new("s".into(), f, vec!["cameraState".into(), "screenSharingState".into()], "i".into());
+    let mut r = Rec::default();
+    let mut a = user("a");
+    a.megaphone_state = true;
+    a.attendees_state = true;
+    let mut bob = user("bob");
+    bob.attendees_state = true;
+    for u in [a.clone(), bob] {
+        s.join(f, u, &mut r).unwrap();
+    }
+    s.watch("a", &mut r);
+    s.watch("bob", &mut r);
+    r.take();
+
+    // a leaves the stage but stays in the audience: bob no longer lists it and its front drops the link,
+    // so nothing is sent about the connection...
+    a.megaphone_state = false;
+    s.update_from_client("a", &a, &["megaphoneState".into()], &mut r);
+    let events = r.take();
+    assert!(events.iter().any(|(to, e)| e == "remove a" && to.contains(&"bob".to_owned())), "{events:?}");
+    assert!(!events.iter().any(|(_, e)| e.starts_with("WebRtc")), "{events:?}");
+    // ...and back on stage, the link is restarted on both sides, once.
+    a.megaphone_state = true;
+    s.update_from_client("a", &a, &["megaphoneState".into()], &mut r);
+    let p2p: Vec<_> = r.take().into_iter().filter(|(_, e)| e.starts_with("WebRtc")).collect();
+    assert_eq!(
+        p2p,
+        vec![
+            (to(&["a"]), "WebRtcDisconnect".to_owned()),
+            (to(&["bob"]), "WebRtcDisconnect".to_owned()),
+            (to(&["a"]), "WebRtcStart".to_owned()),
+            (to(&["bob"]), "WebRtcStart".to_owned()),
+        ]
+    );
 }

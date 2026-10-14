@@ -77,6 +77,13 @@ fn path_of(url: &str) -> &str {
     path.split(['?', '#']).next().unwrap_or("/")
 }
 
+/// The map-storage path of a room's WAM file (`/~/maps/a.wam` -> `maps/a.wam`), for a map-storage room.
+pub fn wam_path(room_url: &str) -> Option<String> {
+    let path = path_of(room_url);
+    let rest = &path[path.find("/~/")? + 3..];
+    rest.ends_with(".wam").then(|| rest.to_owned())
+}
+
 pub fn can_edit(config: &Config, room_url: &str, identifier: &str, tags: &[String]) -> bool {
     let editable_map = path_of(room_url).contains("/~/");
     let env = |k: &str| config.raw.get(k).map(String::as_str).unwrap_or("");
