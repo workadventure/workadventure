@@ -286,5 +286,101 @@ tests : ne pas comparer ligne à ligne.)
 
 **`wa-load` :** inchangé (`crates/bot` non modifié).
 
-**Pas encore là :** map-storage (phase 2, en attente du feu vert), LiveKit et donc l'enregistrement, la bascule
-du mégaphone en LiveKit, analytics du `kind`.
+**Pas encore là :** LiveKit et donc l'enregistrement, la bascule du mégaphone en LiveKit, analytics du `kind`.
+
+---
+
+## Jalon 4 — J2 phase 2 : map-storage minimum (2026-10-14)
+
+**Durée murale :** ~2 h 30 (feu vert vers 15 h 20, specs finales vers 18 h), dont ~10 min de lecture du contrat par
+deux sous-agents en parallèle (API HTTP de map-storage ; circuit d'une commande d'édition), ~25 min d'attente de la
+référence TS et deux interruptions de Yannis. Le code de base (stockage, upload, éditions, rattrapage) : ~40 min.
+
+**Itérations avant le vert :** ~9.
+- Compilation : 1 erreur (`ZipFile::name` rend un `Result` dans zip 9), 2 remarques clippy. Tests du cœur et de bout
+  en bout verts du premier coup.
+- Playwright sur les vrais fichiers, premier passage : `proximityChatPoll` 3/3, `raise-hand` 4/4,
+  `raise-hand-megaphone` 7/7, `map_editor_megaphone_speaker_zone` 8/9.
+- Le 9e (« outside users see screen share only when sharer is speaker ») : 4 tours. (1) Les liens P2P suivent
+  désormais les rôles comme `WebRTCCommunicationStrategy` du back (un observateur est relié à chaque membre qui
+  publie) : utile, pas suffisant. (2) Trace temporaire des événements du space : les messages de liste envoyés à Bob
+  étaient les mêmes que ceux du pusher. (3) Un écart trouvé sur les messages qu'un membre reçoit à propos de
+  lui-même (rôle jugé avec l'ancien rôle au lieu du nouveau) : corrigé, pas suffisant. (4) Aide extérieure (plus
+  bas) : le front ferme seul la liaison quand un membre sort de sa liste ; le serveur la redémarre au retour → 2/2.
+- Un faux échec en route : Alice arrivait non connectée. `tests/.auth` est partagé entre stacks et la référence TS
+  venait d'être jouée ; refaire `warm-auth` sur la stack `rust` règle le problème.
+
+**Corrections humaines :** aucune sur le code. Yannis a validé l'aide extérieure ci-dessous.
+
+**Aide extérieure (règle du 14/10) :**
+- 17 h environ, de la session socle : la référence TS du test ci-dessus (il passe 2/2 sur la stack `ts`).
+- Ensuite, de la session socle, validé par Yannis : le comportement du front `SimplePeer` (abonnement à
+  `observeUserLeft`, `closeConnection` sans message au serveur). Rien sur le code de Go.
+- Lecture de `lang-go` depuis le 13/10 : aucune lecture de code, de branche ni de journal. Une seule commande a
+  touché son worktree, le 13/10 pendant J1 : `ls lang-go/tests | grep node_modules`, pour voir comment ses specs
+  trouvaient `node_modules` (sortie vide). L'index de mémoire partagé, chargé d'office dans chaque session, contient
+  une ligne d'état sur le candidat Go et les chiffres du banc commun du 14/10 ; aucun fichier de mémoire de Go
+  ouvert.
+
+**Ce qui est en place :**
+- **Second listener** sur `SERVER_MAP_STORAGE_PORT` (3002 par défaut, comme le socle le route), `STORAGE_DIRECTORY`
+  (défaut `./public`, comme map-storage). Le banc démarre toujours avec ses trois variables.
+- **Fichiers** : `GET` de n'importe quel fichier stocké (décodage d'URL avec `+`, types MIME, `max-age=5` pour les
+  WAM), 404 pour un fichier absent (jamais de 5xx, sinon le front réessaie sans fin), 400 sur `..`, CORS
+  `*` et preflight comme `cors()`, `nosniff`, `/ping`.
+- **`POST /upload`** : authentification basic ou bearer selon `ENABLE_*_AUTHENTICATION` (401 avec
+  `WWW-Authenticate` sinon), multipart `file` + `directory`, décompression hors du runtime (`spawn_blocking`), même
+  règle de nettoyage que map-storage (tout part sauf une WAM dont la carte revient sans elle), WAM créée pour chaque
+  `.tmj` qui n'en a pas (métadonnées tirées des propriétés de la carte). Les salles concernées relisent leur WAM et
+  envoient `refreshRoomMessage`.
+- **La WAM d'une salle** vit dans son acteur (lue avant toute entrée, comme `GameRoom.create`), migrée en 2.1.0
+  comme map-storage la charge. Les éditions s'appliquent dans l'ordre de la salle et repartent vers tous, émetteur
+  compris, sous le même id ; un refus va au seul émetteur en `errorCommandMessage`. Une tâche par salle écrit la
+  dernière version sur disque (écriture atomique) ; une génération empêche une sauvegarde d'avant un upload
+  d'écraser les nouveaux fichiers.
+- **Commandes appliquées** : création et modification de zone (fusion des propriétés, `serverData` conservé),
+  réglages WAM du mégaphone et de l'enregistrement. Les autres (suppression, entités, métadonnées, fichiers)
+  répondent « not supported by this server yet » : hors périmètre J2.
+- **Rattrapage** : les commandes des 30 dernières secondes partent dans `roomConnectedMessage` pour un client dont
+  la WAM est en retard (`lastCommandId`). Ce message part maintenant dès la connexion, salle et WAM chargées : le
+  front l'attend avant d'envoyer son entrée.
+- **Spaces** : les liaisons P2P suivent les rôles (un observateur est relié à chaque membre qui publie : tout le
+  monde en proximité, les orateurs en diffusion, l'auditoire aussi avec retour) ; une liaison qu'un front a lâchée
+  en retirant un membre de sa liste est redémarrée quand le membre y revient (disconnect aux deux bouts, puis
+  nouvelle connexion).
+- La WAM reste du JSON (`serde_json::Value`) : les champs que ce serveur ne connaît pas survivent à ses éditions.
+  `wa-core` dépend donc aussi de `serde_json` (ce que la note de J2 phase 1 excluait).
+
+**Limites connues :** pas de validation complète de la WAM après une commande (`WAMFileFormat.parse` de
+map-storage), ni du schéma `MegaphoneSettings` (seulement « objet ou rien ») ; pas de `GET /maps`, `/private/files`,
+`PUT`/`PATCH`/`DELETE`, `/move`, `/copy`, `/download` (J3) ; une seule salle par WAM ; `assets.zip` des specs n'est
+construit par rien dans `dev/` (fait à la main comme la CI, URLs des collections réécrites vers la stack).
+
+**Vérification :**
+- `./verify.sh` vert : 76 tests (+9) : 6 sur la WAM (migrations, zones, réglages, droits, WAM fraîche,
+  rattrapage), 2 sur les liaisons P2P et les rôles, 1 de bout en bout (édition reçue par tous, refus à l'émetteur
+  seul, fichier sauvé et servi avec CORS, 404, upload refusé sans identifiants puis accepté, salle rafraîchie,
+  WAM conservée selon la règle).
+- Playwright, stack `rust`, Chromium, sur les vrais fichiers de spec (pas de copie locale), code final :
+
+| spec | résultat |
+|---|---|
+| `raise-hand.spec.ts` | 4/4 |
+| `raise-hand-megaphone.spec.ts` | 7/7 |
+| `map_editor/map_editor_megaphone_speaker_zone.spec.ts` | 9/9 |
+| `chat/proximityChatPoll.spec.ts` | 3/3 |
+| **Total J2** | **23/23** |
+| Union J1 (41 tests) | 37 passés, 2 échecs, 2 ignorés |
+
+- Les 2 échecs de l'union J1 : `userlist` « Send Message » (Matrix, échoue aussi sur la référence TS) et `meeting`
+  « enter and exit meeting quickly » (entrées-sorties de bulle à 100 ms près ; relancé seul : 3/3). Soit 38 passés
+  de fait, comme la référence TS, et les 4 échecs WAM de la phase 1 réglés (dont `reconnect` « WAM », qui échoue
+  sur la référence TS).
+- `assets.zip` construit comme en CI : `map-storage/tests/assets` copié, `http://play.workadventure.localhost`
+  réécrit en `http://play.rust.workadventure.localhost:8880` dans les WAM, puis `zip -r`.
+- Banc : image `--target prod` construite avec les mêmes contextes (`protos`, `pusherdata`), démarrage avec
+  seulement `SECRET_KEY`, `CLIENT_DISCONNECTION_RETENTION_MS` et `RUST_LOG` → `/ping` 200, map-storage sur 3002 avec
+  `./public`. Aucun nouveau dossier du dépôt nécessaire. `crates/bot` inchangé (`wa-load` identique).
+
+**Lignes de code :** ~1 170 lignes écrites à la main (WAM et commandes 225 + 121 de tests, map-storage 294,
+branchements et tests de bout en bout ~530).

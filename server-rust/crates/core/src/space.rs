@@ -125,6 +125,8 @@ pub struct Space {
     state: SpaceState,
     /// Peer-to-peer connections, stored both ways: (a, b) -> connection id. None for a non-media space.
     connections: Option<HashMap<(SpaceUserId, SpaceUserId), String>>,
+    /// (watcher, member) links the watcher's front dropped when the member left its list (see follow_lists).
+    dropped: HashSet<(SpaceUserId, SpaceUserId)>,
     /// Prefix of the connection ids, unique per space instance.
     id_prefix: String,
     next_connection: u64,
@@ -145,6 +147,7 @@ impl Space {
             metadata: BTreeMap::new(),
             state: space_state::empty(),
             connections: media.then(HashMap::new),
+            dropped: HashSet::new(),
             id_prefix,
             next_connection: 0,
         }
@@ -228,19 +231,12 @@ impl Space {
         let me = self.member(id).expect("checked above");
         let users: Vec<&SpaceUser> = self.members.iter().filter(|u| self.sees(me, u)).collect();
         emit(sink, &[id], SpaceEvent::InitUsers(users, &self.metadata));
-        if self.connections.is_some() {
-            let others: Vec<SpaceUserId> =
-                self.member_ids().filter(|m| *m != id).map(str::to_owned).collect();
-            for other in others {
-                if !self.connected(id, &other) {
-                    self.establish(id, &other, sink);
-                }
-            }
-        }
+        self.reconcile(id, sink);
         true
     }
 
     pub fn unwatch(&mut self, id: &str, sink: &mut impl SpaceSink) {
+        self.dropped.retain(|(a, b)| a != id && b != id);
         if self.watchers.remove(id) {
             self.disconnect_all(id, sink);
         }
@@ -249,6 +245,7 @@ impl Space {
     /// Always succeeds: leaving a space one is not in is not an error for the front.
     pub fn leave(&mut self, id: &str, sink: &mut impl SpaceSink) {
         self.watchers.remove(id);
+        self.dropped.retain(|(a, b)| a != id && b != id);
         // Watching or not, its peers are told before it disappears from the members.
         self.disconnect_all(id, sink);
         let Some(pos) = self.members.iter().position(|m| m.space_user_id == id) else { return };
@@ -267,7 +264,11 @@ impl Space {
         if applied.is_empty() {
             return;
         }
-        self.notify_updated(&before, &applied, sink);
+        let changes = self.notify_updated(&before, &applied, sink);
+        self.follow_lists(changes, sink);
+        if self.member(id).is_some_and(|after| self.active(after) != self.active(&before)) {
+            self.reconcile(id, sink);
+        }
         if before.megaphone_state && !from.megaphone_state && applied.iter().any(|p| p == "megaphoneState") {
             self.update_state(sink, |s| space_state::stopped_streaming(s, id));
         }
@@ -302,19 +303,27 @@ impl Space {
             paths.push("showVoiceIndicator".to_owned());
         }
         if !paths.is_empty() {
-            self.notify_updated(&before, &paths, sink);
+            let changes = self.notify_updated(&before, &paths, sink);
+            self.follow_lists(changes, sink);
         }
     }
 
     /// Tells each watcher what the change of `before` means for its user list: an update, an arrival or a
-    /// departure. A watcher whose own role changed also gains or loses the users it now sees or no longer sees.
-    fn notify_updated(&self, before: &SpaceUser, paths: &[String], sink: &mut impl SpaceSink) {
+    /// departure, judged with the watcher's role as it is now (the user itself included, as the pusher does).
+    /// A watcher whose own role changed also gains or loses the users it now sees or no longer sees.
+    /// Returns who started or stopped seeing whom: (watcher, member, sees now).
+    fn notify_updated(
+        &self,
+        before: &SpaceUser,
+        paths: &[String],
+        sink: &mut impl SpaceSink,
+    ) -> Vec<(SpaceUserId, SpaceUserId, bool)> {
         let id = before.space_user_id.as_str();
         let user = self.member(id).expect("checked by the caller");
         let (mut updated, mut added, mut removed) = (Vec::new(), Vec::new(), Vec::new());
+        let mut seen = Vec::new();
         for w in self.members.iter().filter(|m| self.watchers.contains(&m.space_user_id)) {
-            let observer_before = if w.space_user_id == id { before } else { w };
-            match (self.sees(observer_before, before), self.sees(w, user)) {
+            match (self.sees(w, before), self.sees(w, user)) {
                 (true, true) => updated.push(w.space_user_id.as_str()),
                 (false, true) => added.push(w.space_user_id.as_str()),
                 (true, false) => removed.push(w.space_user_id.as_str()),
@@ -324,13 +333,50 @@ impl Space {
         emit(sink, &updated, SpaceEvent::UserUpdated(user, paths));
         emit(sink, &added, SpaceEvent::UserAdded(user));
         emit(sink, &removed, SpaceEvent::UserRemoved(id));
+        seen.extend(added.iter().map(|w| (w.to_string(), id.to_owned(), true)));
+        seen.extend(removed.iter().map(|w| (w.to_string(), id.to_owned(), false)));
         if self.filter == FilterType::LiveStreamingUsersWithFeedback && self.watchers.contains(id) {
-            for other in self.members.iter().filter(|m| m.space_user_id != id) {
+            for other in &self.members {
+                let o = other.space_user_id.as_str();
                 match (self.sees(before, other), self.sees(user, other)) {
                     (false, true) => emit(sink, &[id], SpaceEvent::UserAdded(other)),
-                    (true, false) => emit(sink, &[id], SpaceEvent::UserRemoved(&other.space_user_id)),
-                    _ => {}
+                    (true, false) => emit(sink, &[id], SpaceEvent::UserRemoved(o)),
+                    _ => continue,
                 }
+                seen.push((id.to_owned(), o.to_owned(), self.sees(user, other)));
+            }
+        }
+        seen
+    }
+
+    /// A front closes its connection to a member that leaves its list, without a word to the server
+    /// (SimplePeer, observeUserLeft). When the member comes back into that list, the link is restarted: a
+    /// disconnect to both ends (the other end may still hold its side, and a front ignores a start for a peer it
+    /// has), then a new connection if one is wanted.
+    fn follow_lists(&mut self, changes: Vec<(SpaceUserId, SpaceUserId, bool)>, sink: &mut impl SpaceSink) {
+        if self.connections.is_none() {
+            return;
+        }
+        for (watcher, member, sees) in changes {
+            if watcher == member {
+                continue;
+            }
+            if !sees {
+                self.dropped.insert((watcher, member));
+                continue;
+            }
+            if !self.dropped.remove(&(watcher.clone(), member.clone())) {
+                continue;
+            }
+            self.dropped.remove(&(member.clone(), watcher.clone()));
+            self.disconnect(&watcher, &member, sink);
+            self.disconnect(&member, &watcher, sink);
+            let wanted = match (self.member(&watcher), self.member(&member)) {
+                (Some(w), Some(m)) => self.wants_connection(w, m),
+                _ => false,
+            };
+            if wanted {
+                self.establish(&watcher, &member, sink);
             }
         }
     }
@@ -421,6 +467,43 @@ impl Space {
     }
 
     // ---------------------------------------------------------------- peer-to-peer
+
+    /// Who publishes (the back's filterOneUser): everyone in a proximity space, the speakers in a broadcast, and
+    /// the audience too with feedback.
+    fn active(&self, u: &SpaceUser) -> bool {
+        match self.filter {
+            FilterType::AllUsers => true,
+            FilterType::LiveStreamingUsers => u.megaphone_state,
+            FilterType::LiveStreamingUsersWithFeedback => u.megaphone_state || u.attendees_state,
+        }
+    }
+
+    /// WebRTCCommunicationStrategy: a watcher is connected to every member that publishes.
+    fn wants_connection(&self, a: &SpaceUser, b: &SpaceUser) -> bool {
+        (self.watchers.contains(&a.space_user_id) && self.active(b))
+            || (self.watchers.contains(&b.space_user_id) && self.active(a))
+    }
+
+    /// Opens and closes `id`'s connections after it started watching or changed role: a speaker who leaves the
+    /// stage is disconnected from the audience, and connected again when back on it.
+    fn reconcile(&mut self, id: &str, sink: &mut impl SpaceSink) {
+        let Some(me) = self.member(id).filter(|_| self.connections.is_some()) else { return };
+        let plan: Vec<(SpaceUserId, bool)> = self
+            .members
+            .iter()
+            .filter(|m| m.space_user_id != id)
+            .map(|m| (m.space_user_id.clone(), self.wants_connection(me, m)))
+            .collect();
+        for (other, want) in plan {
+            let have = self.connected(id, &other) || self.connected(&other, id);
+            if want && !have {
+                self.establish(id, &other, sink);
+            } else if !want && have {
+                self.disconnect(id, &other, sink);
+                self.disconnect(&other, id, sink);
+            }
+        }
+    }
 
     fn connected(&self, a: &str, b: &str) -> bool {
         self.connections

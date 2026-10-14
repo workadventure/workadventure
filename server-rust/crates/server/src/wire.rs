@@ -265,6 +265,77 @@ pub fn color_of(name: &str) -> String {
     color
 }
 
+/// google.protobuf.Value as JSON. Whole numbers come out as integers, as JSON.stringify writes them.
+pub fn json_from(v: &prost_types::Value) -> serde_json::Value {
+    use prost_types::value::Kind;
+    use serde_json::Value as J;
+    match &v.kind {
+        None | Some(Kind::NullValue(_)) => J::Null,
+        Some(Kind::BoolValue(b)) => J::Bool(*b),
+        Some(Kind::StringValue(s)) => J::String(s.clone()),
+        Some(Kind::NumberValue(n)) if n.fract() == 0.0 && n.abs() < 9e15 => J::from(*n as i64),
+        Some(Kind::NumberValue(n)) => serde_json::Number::from_f64(*n).map_or(J::Null, J::Number),
+        Some(Kind::ListValue(l)) => J::Array(l.values.iter().map(json_from).collect()),
+        Some(Kind::StructValue(s)) => J::Object(s.fields.iter().map(|(k, v)| (k.clone(), json_from(v))).collect()),
+    }
+}
+
+/// The editor commands the server applies (J2: areas and WAM settings); None for the others.
+pub fn edit_from(m: &pb::edit_map_message::Message) -> Option<wa_core::wam::Edit> {
+    use pb::edit_map_message::Message as M;
+    use serde_json::{Map, Value};
+    use wa_core::wam::Edit;
+    let properties = |p: &[prost_types::Value]| Value::Array(p.iter().map(json_from).collect());
+    Some(match m {
+        M::CreateAreaMessage(a) => {
+            let mut area = Map::new();
+            area.insert("id".into(), a.id.clone().into());
+            area.insert("x".into(), a.x.into());
+            area.insert("y".into(), a.y.into());
+            area.insert("width".into(), a.width.into());
+            area.insert("height".into(), a.height.into());
+            area.insert("name".into(), a.name.clone().into());
+            area.insert("properties".into(), properties(&a.properties));
+            Edit::CreateArea(area)
+        }
+        M::ModifyAreaMessage(a) => {
+            let mut fields = Map::new();
+            if let Some(v) = &a.name {
+                fields.insert("name".into(), v.clone().into());
+            }
+            for (k, v) in [("x", a.x), ("y", a.y)] {
+                if let Some(v) = v {
+                    fields.insert(k.into(), v.into());
+                }
+            }
+            for (k, v) in [("width", a.width), ("height", a.height)] {
+                if let Some(v) = v {
+                    fields.insert(k.into(), v.into());
+                }
+            }
+            Edit::ModifyArea {
+                id: a.id.clone(),
+                fields,
+                properties: (a.modify_properties == Some(true)).then(|| a.properties.iter().map(json_from).collect()),
+            }
+        }
+        M::UpdateWamSettingsMessage(s) => {
+            use pb::update_wam_settings_message::Message as S;
+            match s.message.as_ref()? {
+                S::UpdateMegaphoneSettingMessage(m) => Edit::Settings {
+                    key: "megaphone",
+                    value: m.settings.as_ref().map(json_from),
+                },
+                S::UpdateRecordingSettingMessage(m) => Edit::Settings {
+                    key: "recording",
+                    value: m.settings.as_ref().map(json_from),
+                },
+            }
+        }
+        _ => return None,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

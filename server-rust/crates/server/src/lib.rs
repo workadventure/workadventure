@@ -9,6 +9,7 @@ pub mod http;
 pub mod jwt;
 pub mod local_admin;
 pub mod logic;
+pub mod map_storage;
 pub mod metrics;
 pub mod mustache;
 pub mod oidc;
@@ -50,6 +51,7 @@ pub struct AppState {
     /// The provider's endpoints, discovered on first use.
     pub oidc_provider: Arc<parking_lot::Mutex<Option<oidc::Provider>>>,
     pub budgets: session::Budgets,
+    pub storage: Arc<map_storage::Storage>,
 }
 
 impl AppState {
@@ -73,6 +75,7 @@ impl AppState {
                 outboxes: Arc::new(budget::Budget::new(config.outbox_budget)),
                 resume: Arc::new(budget::Budget::new(config.resume_budget)),
             },
+            storage: Arc::new(map_storage::Storage::new(&config.storage_directory)),
             config: Arc::new(config),
         }
     }

@@ -25,6 +25,7 @@ struct Logic {
     parts_session: std::sync::Arc<crate::session::Session>,
     app: AppState,
     room: Option<RoomHandle>,
+    joined: bool,
     name: String,
     availability: Availability,
     chat_id: Option<String>,
@@ -42,17 +43,15 @@ pub async fn run(parts: SessionParts, app: AppState) {
     if let Some(cid) = &session.info.connection_id {
         app.sessions.insert(cid.clone(), session.clone());
     }
-    session.push(wire::direct(pb::server_to_client_message::Message::RoomConnectedMessage(
-        pb::RoomConnectedMessage {
-            edit_map_commands_array_message: Some(pb::EditMapCommandsArrayMessage::default()),
-            tag: session.info.tags.clone(),
-        },
-    )));
+    // Like the back on connect: the room (and its map) exists from now on, and says it is ready.
+    let room = room_actor::get_or_spawn(&app.rooms, &session.info.room_id, app.room_config, &app.storage);
+    let _ = room.send(RoomCmd::Connect { session: session.clone() }).await;
     let mut logic = Logic {
         chat_id: session.info.chat_id.clone(),
         parts_session: session.clone(),
         app: app.clone(),
-        room: None,
+        room: Some(room),
+        joined: false,
         name: String::new(),
         availability: Availability::ONLINE,
         spaces: HashMap::new(),
@@ -118,7 +117,7 @@ impl Logic {
         let Some(message) = message.message else { return };
         match message {
             M::JoinRoomFrontMessage(join) => {
-                if self.room.is_some() {
+                if self.joined {
                     return;
                 }
                 let (Some(position), Some(viewport)) = (join.position_message, join.viewport_message) else {
@@ -128,7 +127,6 @@ impl Logic {
                 self.name = join.name;
                 self.availability = Availability(join.availability_status);
                 let info = &session.info;
-                let room = room_actor::get_or_spawn(&self.app.rooms, &info.room_id, self.app.room_config);
                 let request = JoinRequest {
                     profile: Profile {
                         uuid: info.user_uuid.clone(),
@@ -146,14 +144,14 @@ impl Logic {
                     availability: self.availability,
                     viewport: wire::viewport_from(&viewport),
                 };
-                let _ = room
-                    .send(RoomCmd::Join {
-                        session: session.clone(),
-                        request,
-                    })
-                    .await;
-                self.room = Some(room);
+                self.joined = true;
+                self.to_room(RoomCmd::Join {
+                    session: session.clone(),
+                    request,
+                })
+                .await;
             }
+            M::EditMapCommandMessage(command) => self.to_room(RoomCmd::Edit { session, command }).await,
             M::UserMovesMessage(moves) => {
                 let (Some(user), Some(position)) = (user, moves.position) else { return };
                 self.to_room(RoomCmd::Move {

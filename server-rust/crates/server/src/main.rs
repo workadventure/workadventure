@@ -61,6 +61,12 @@ async fn serve(config: Config) {
         tokio::spawn(async move { axum::serve(listener, app).await });
     }
 
+    let addr = SocketAddr::from(([0, 0, 0, 0], state.config.map_storage_port));
+    let maps = tokio::net::TcpListener::bind(addr).await.expect("bind SERVER_MAP_STORAGE_PORT");
+    tracing::info!(%addr, dir = %state.config.storage_directory, "map-storage listening");
+    let app = wa_server::map_storage::router(state.clone());
+    tokio::spawn(async move { axum::serve(maps, app).await });
+
     axum::serve(listener, router(state).into_make_service_with_connect_info::<SocketAddr>())
         .with_graceful_shutdown(shutdown_signal())
         .await

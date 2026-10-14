@@ -13,17 +13,23 @@ const MEDIA: [&str; 3] = ["cameraState", "microphoneState", "screenSharingState"
 const WAIT: Duration = Duration::from_secs(5);
 
 async fn start() -> String {
-    let config = Config::load(Env::new(
-        [("SECRET_KEY", "test")]
-            .iter()
-            .map(|(k, v)| (k.to_string(), v.to_string()))
-            .collect(),
-    ))
-    .unwrap();
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let addr = listener.local_addr().unwrap();
-    tokio::spawn(async move { axum::serve(listener, router(AppState::new(config))).await });
-    format!("http://{addr}")
+    start_with(&[("SECRET_KEY", "test")]).await.0
+}
+
+/// The server and its map-storage listener.
+async fn start_with(vars: &[(&str, &str)]) -> (String, String) {
+    let config = Config::load(Env::new(vars.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap();
+    let state = AppState::new(config);
+    let play = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let maps = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let urls = (
+        format!("http://{}", play.local_addr().unwrap()),
+        format!("http://{}", maps.local_addr().unwrap()),
+    );
+    let map_storage = wa_server::map_storage::router(state.clone());
+    tokio::spawn(async move { axum::serve(play, router(state)).await });
+    tokio::spawn(async move { axum::serve(maps, map_storage).await });
+    urls
 }
 
 async fn bot(server: &str, room: &str, name: &str, x: i32, y: i32) -> (Bot, Inbox) {
@@ -313,4 +319,120 @@ async fn a_state_change_reaches_every_member_before_the_answer() {
         other => panic!("{other:?}"),
     }
     assert!(ib.seen().iter().all(|m| state_patch(m).is_none()));
+}
+
+fn edit(id: &str, message: pb::edit_map_message::Message) -> pb::client_to_server_message::Message {
+    pb::client_to_server_message::Message::EditMapCommandMessage(pb::EditMapCommandMessage {
+        id: id.into(),
+        edit_map_message: Some(pb::EditMapMessage { message: Some(message) }),
+    })
+}
+
+fn edit_echo(m: &Incoming) -> Option<&pb::EditMapCommandMessage> {
+    match m {
+        Incoming::Sub(Sub::EditMapCommandMessage(c)) => Some(c),
+        _ => None,
+    }
+}
+
+fn zip_of(files: &[(&str, &str)]) -> Vec<u8> {
+    use std::io::Write;
+    let mut zip = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+    for (name, content) in files {
+        zip.start_file(*name, zip::write::SimpleFileOptions::default()).unwrap();
+        zip.write_all(content.as_bytes()).unwrap();
+    }
+    zip.finish().unwrap().into_inner()
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn map_edits_reach_the_room_and_the_file_and_an_upload_resets_them() {
+    use pb::edit_map_message::Message as E;
+    let dir = std::env::temp_dir().join(format!("wa-rust-maps-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("maps")).unwrap();
+    let wam = r#"{"version":"1.0.0","mapUrl":"./t.tmj","areas":[],"entities":{},"entityCollections":[]}"#;
+    std::fs::write(dir.join("maps/t.wam"), wam).unwrap();
+    std::fs::write(dir.join("maps/old.png"), "x").unwrap();
+    let (server, maps) = start_with(&[
+        ("SECRET_KEY", "test"),
+        ("STORAGE_DIRECTORY", dir.to_str().unwrap()),
+        ("ENABLE_MAP_EDITOR", "true"),
+        ("ENABLE_BASIC_AUTHENTICATION", "true"),
+        ("AUTHENTICATION_USER", "john"),
+        ("AUTHENTICATION_PASSWORD", "pw"),
+    ])
+    .await;
+    let room = "http://play.test/~/maps/t.wam";
+    let (mut alice, mut ia) = bot(&server, room, "Alice", 100, 100).await;
+    let (_bob, mut ib) = bot(&server, room, "Bob", 3000, 3000).await;
+
+    // A created area comes back to everyone, the sender included, under its id.
+    let area = pb::CreateAreaMessage {
+        id: "area-1".into(),
+        x: 32,
+        y: 64,
+        width: 96,
+        height: 64,
+        name: String::new(),
+        properties: vec![],
+    };
+    alice.send(edit("cmd-1", E::CreateAreaMessage(area))).await.unwrap();
+    for inbox in [&mut ia, &mut ib] {
+        inbox.expect(WAIT, |m| edit_echo(m).filter(|c| c.id == "cmd-1").map(|_| ())).await.unwrap();
+    }
+    // A command this server does not apply yet: an error, to the sender only.
+    let delete = E::DeleteAreaMessage(pb::DeleteAreaMessage { id: "area-1".into() });
+    alice.send(edit("cmd-2", delete)).await.unwrap();
+    let error = ia
+        .expect(WAIT, |m| {
+            edit_echo(m).filter(|c| c.id == "cmd-2").and_then(|c| match c.edit_map_message.as_ref()?.message.as_ref()? {
+                E::ErrorCommandMessage(e) => Some(e.reason.clone()),
+                _ => None,
+            })
+        })
+        .await
+        .unwrap();
+    assert!(error.contains("not supported"), "{error}");
+
+    // The file is saved, migrated, with the area; served with CORS, a missing one is a 404.
+    let http = reqwest::Client::new();
+    let mut saved = serde_json::Value::Null;
+    for _ in 0..50 {
+        let r = http.get(format!("{maps}/maps/t.wam")).send().await.unwrap();
+        assert_eq!(r.headers()["access-control-allow-origin"], "*");
+        saved = r.json().await.unwrap();
+        if saved["lastCommandId"] == "cmd-1" {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    assert_eq!(saved["version"], "2.1.0");
+    assert_eq!(saved["areas"][0]["id"], "area-1");
+    assert_eq!(saved["areas"][0]["visible"], true);
+    let missing = http.get(format!("{maps}/maps/nope.wam")).send().await.unwrap();
+    assert_eq!(missing.status(), 404);
+
+    // Upload: refused without credentials; with them, the directory is replaced and the room told to reload.
+    let zip = zip_of(&[("maps/t.tmj", r#"{"properties":[{"name":"mapName","type":"string","value":"T"}]}"#), ("maps/u.wam", wam)]);
+    let mut body = b"--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.zip\"\r\n\r\n".to_vec();
+    body.extend_from_slice(&zip);
+    body.extend_from_slice(b"\r\n--XyZ--\r\n");
+    let post = |auth: bool| {
+        let request = http
+            .post(format!("{maps}/upload"))
+            .header("content-type", "multipart/form-data; boundary=XyZ")
+            .body(body.clone());
+        if auth { request.basic_auth("john", Some("pw")) } else { request }
+    };
+    assert_eq!(post(false).send().await.unwrap().status(), 401);
+    let uploaded = post(true).send().await.unwrap();
+    assert_eq!(uploaded.status(), 200, "{:?}", uploaded.text().await);
+    ia.expect(WAIT, |m| matches!(m, Incoming::Top(Top::RefreshRoomMessage(_))).then_some(())).await.unwrap();
+    assert!(!dir.join("maps/old.png").exists());
+    assert!(dir.join("maps/u.wam").exists());
+    // t.wam came without its map's new WAM: its edits survive the reset.
+    let kept: serde_json::Value = serde_json::from_slice(&std::fs::read(dir.join("maps/t.wam")).unwrap()).unwrap();
+    assert_eq!(kept["areas"][0]["id"], "area-1");
+    let _ = std::fs::remove_dir_all(&dir);
 }

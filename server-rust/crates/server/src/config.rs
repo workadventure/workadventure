@@ -31,6 +31,12 @@ pub struct Config {
     pub group_radius: f64,
     pub max_per_group: usize,
 
+    // --- map-storage ---
+    /// SERVER_MAP_STORAGE_PORT: the socle sends the map-storage host there.
+    pub map_storage_port: u16,
+    /// STORAGE_DIRECTORY: where the maps live.
+    pub storage_directory: String,
+
     // --- Front ---
     pub front_url: String,
     pub pusher_url: String,
@@ -117,6 +123,8 @@ impl Config {
             minimum_distance: env.number("MINIMUM_DISTANCE", 64.0),
             group_radius: env.number("GROUP_RADIUS", 48.0),
             max_per_group: env.number("MAX_PER_GROUP", 4),
+            map_storage_port: env.number("SERVER_MAP_STORAGE_PORT", 3002),
+            storage_directory: env.str("STORAGE_DIRECTORY").unwrap_or_else(|| "./public".into()),
             front_url: env.str("FRONT_URL").unwrap_or_default(),
             assets_internal_url: env
                 .str("ASSETS_INTERNAL_URL")
