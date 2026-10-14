@@ -22,6 +22,9 @@ type Config struct {
 	// serves everything on both ports, so the existing reverse-proxy rules keep working.
 	HTTPPort int
 	WSPort   int
+	// MapStoragePort answers for the map-storage host (SERVER_MAP_STORAGE_PORT of the server variant; map-storage
+	// itself always listened on 3000). 0: not served.
+	MapStoragePort int
 
 	SecretKey        string
 	AdminAPIURL      string
@@ -191,6 +194,7 @@ func parse(get func(string) string) (*Config, error) {
 	c := &Config{
 		HTTPPort:                  r.integer("PUSHER_HTTP_PORT", 3000),
 		WSPort:                    r.integer("PUSHER_WS_PORT", 3001),
+		MapStoragePort:            r.integer("SERVER_MAP_STORAGE_PORT", 0),
 		SecretKey:                 r.str("SECRET_KEY"),
 		AdminAPIURL:               r.str("ADMIN_API_URL"),
 		DisableAnonymous:          r.boolean("DISABLE_ANONYMOUS", false),

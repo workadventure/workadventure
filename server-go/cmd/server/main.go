@@ -87,6 +87,11 @@ func run() error {
 	if cfg.WSPort != cfg.HTTPPort {
 		servers = append(servers, newServer(cfg.WSPort, handler))
 	}
+	// ponytail: no map is stored yet, so the map-storage host answers 404 (with CORS, so that the front shows its
+	// error page). Its routes come with map-storage.
+	if cfg.MapStoragePort != 0 && cfg.MapStoragePort != cfg.HTTPPort && cfg.MapStoragePort != cfg.WSPort {
+		servers = append(servers, newServer(cfg.MapStoragePort, handler))
+	}
 	if cfg.PrometheusPort != 0 {
 		// The dedicated metrics port is internal: it also serves the Go profiler.
 		mux := http.NewServeMux()
