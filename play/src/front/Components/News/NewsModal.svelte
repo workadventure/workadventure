@@ -3,19 +3,18 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { newsStore } from "../../Stores/NewsStore";
 
-    let currentIndex = 0;
-    let isSubmitting = false;
+    let selectedIndex = $state(0);
+    let isSubmitting = $state(false);
 
-    $: news = $newsStore;
-    $: currentNews = news[currentIndex];
-    $: hasMultipleNews = news.length > 1;
-    $: hasPreviousNews = hasMultipleNews && currentIndex > 0;
-    $: isLastNews = currentIndex >= news.length - 1;
-    $: hasNextNews = hasMultipleNews && !isLastNews;
-    $: iframeUrl = currentNews ? getIframeUrl(currentNews) : undefined;
-    $: if (currentIndex >= news.length) {
-        currentIndex = 0;
-    }
+    let news = $derived($newsStore);
+    // Back to the first news when the list shrinks under the selection.
+    let currentIndex = $derived(selectedIndex < news.length ? selectedIndex : 0);
+    let currentNews = $derived(news[currentIndex]);
+    let hasMultipleNews = $derived(news.length > 1);
+    let hasPreviousNews = $derived(hasMultipleNews && currentIndex > 0);
+    let isLastNews = $derived(currentIndex >= news.length - 1);
+    let hasNextNews = $derived(hasMultipleNews && !isLastNews);
+    let iframeUrl = $derived(currentNews ? getIframeUrl(currentNews) : undefined);
 
     function getIframeUrl(news: NewsData): string | undefined {
         const rawUrl = news.iframeUrl;
@@ -54,14 +53,14 @@
         if (!hasPreviousNews) {
             return;
         }
-        currentIndex -= 1;
+        selectedIndex = currentIndex - 1;
     }
 
     function next() {
         if (!hasNextNews) {
             return;
         }
-        currentIndex += 1;
+        selectedIndex = currentIndex + 1;
     }
 </script>
 
@@ -105,7 +104,7 @@
                         type="button"
                         class="btn btn-light btn-ghost"
                         disabled={isSubmitting}
-                        on:click={markAsReadAndClose}
+                        onclick={markAsReadAndClose}
                     >
                         {$LL.news.skip()}
                     </button>
@@ -114,13 +113,13 @@
                             type="button"
                             class="btn btn-light btn-ghost"
                             disabled={!hasPreviousNews || isSubmitting}
-                            on:click={previous}
+                            onclick={previous}
                         >
                             {$LL.news.previous()}
                         </button>
                     {/if}
                     {#if hasNextNews}
-                        <button type="button" class="btn btn-secondary" disabled={isSubmitting} on:click={next}>
+                        <button type="button" class="btn btn-secondary" disabled={isSubmitting} onclick={next}>
                             {$LL.news.next()}
                         </button>
                     {:else}
@@ -128,7 +127,7 @@
                             type="button"
                             class="btn btn-secondary"
                             disabled={isSubmitting}
-                            on:click={markAsReadAndClose}
+                            onclick={markAsReadAndClose}
                         >
                             {$LL.news.finish()}
                         </button>
