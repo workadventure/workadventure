@@ -78,15 +78,15 @@ describe("preferredVideoCodecs", () => {
         expect(preferredVideoCodecs("video", "high", "decode", 1280 * 720, "P2P")).toEqual(["vp9", "h264"]);
     });
 
-    it("judges a software H.264 like the others on LiveKit, VP8 below it", () => {
-        // A Mac whose history says neither VP9 nor OpenH264 keeps up at 720p
-        vi.mocked(codecPerformance).mockReturnValue(verdict(false));
-        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "Livekit")).toEqual(["vp8"]);
-        // P2P negotiates Baseline, hardware there: H.264 stays the floor whatever the verdict
-        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "P2P")).toEqual(["h264"]);
-
+    it("skips a software H.264 on LiveKit for VP8, smooth or not", () => {
+        // Chrome on a Mac: Constrained Baseline is OpenH264, whatever its history says
         vi.mocked(codecPerformance).mockImplementation((_direction, codec) => verdict(codec === "h264"));
-        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "Livekit")).toEqual(["h264", "vp8"]);
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "Livekit")).toEqual(["vp8"]);
+        vi.mocked(codecPerformance).mockReturnValue(verdict(true));
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "Livekit")).toEqual(["vp9", "vp8"]);
+        // P2P negotiates Baseline, hardware there: H.264 stays the floor whatever the verdict
+        vi.mocked(codecPerformance).mockReturnValue(verdict(false));
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "P2P")).toEqual(["h264"]);
 
         // A hardware H.264, or no verdict at all, is kept as before, on a phone too
         vi.mocked(codecPerformance).mockImplementation((_direction, codec) =>
