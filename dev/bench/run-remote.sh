@@ -5,13 +5,13 @@
 #   dev/bench/run-remote.sh <server host> <generator host> [scenario...]
 #
 # A host is user@address (SSH), or "local": this machine's Docker plays both, for a dry run whose figures are not
-# comparable. Scenarios: fixed capacity bigroom realistic storm (all by default).
+# comparable. Scenarios: fixed capacity bigroom crowd realistic storm (all by default).
 # Environment: GO_REF (default lang-go), RUST_REF (lang-rust), WA_TAG (TS images), QUICK=1 (tiny loads, one pass),
 # PIN (1: one core per CPU, pinned; default 1 remote, 0 local), SERVERS (default "go rust ts"), LABEL (results folder suffix).
 set -euo pipefail
 
 SERVER=${1:?server host}; GEN=${2:?generator host}; shift 2
-SCENARIOS=${*:-fixed capacity bigroom realistic storm}
+SCENARIOS=${*:-fixed capacity bigroom crowd realistic storm}
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=$(git -C "$HERE" rev-parse --show-toplevel)
 GO_REF=${GO_REF:-lang-go}
@@ -160,10 +160,11 @@ held() { python3 "$HERE/summarize.py" held "$OUT/results.jsonl"; } # the last ru
 
 # Load levels. A room of 10 walkers at 5 moves/s = 50 moves/s (+ 10 % of turns).
 if [ "$QUICK" = 1 ]; then
-	CORES_C="1"; CORES_TS="2"; FIX="-rooms 4 -users 5"; FIXW="--rooms 4 --users 5"; STEP=2; KMAX=2; BIG="30"
+	CORES_C="1"; CORES_TS="2"; FIX="-rooms 4 -users 5"; FIXW="--rooms 4 --users 5"; STEP=2; KMAX=2; BIG="30"; CROWD="60 120"
 	REAL="-rooms 4 -users 10 -burst 1s,2s -pause 1s,3s"; STORM="-rooms 2 -users 10"; STORM_AT=3
 else
 	CORES_C="1 2 4 8"; CORES_TS="2 4 8"; FIX="-rooms 100 -users 10"; FIXW="--rooms 100 --users 10"; STEP=100; KMAX=20; BIG="300 500 1000"
+	CROWD="2000 5000 10000"
 	REAL="-rooms 100 -users 20"; STORM="-rooms 100 -users 20"; STORM_AT=20
 fi
 SERVERS=${SERVERS:-go rust ts} # e.g. SERVERS=ts to measure the reference alone
@@ -178,6 +179,12 @@ TS_MAP="-room-base http://bench -map wa-bench-srv-maps/tests/E2E/empty.json?room
 wl_map() { [ "$1" != ts ] || echo "--room-url http://bench/_/global/wa-bench-srv-maps/tests/E2E/empty.json?room={r}"; }
 map_args() { [ "$1" != ts ] || echo "$TS_MAP"; }
 picked() { [ "$QUICK" = 1 ] || case "$1 $2" in "go 1" | "go 4" | "rust 1" | "rust 4" | "ts 2" | "ts 4") true ;; *) false ;; esac; }
+crowd_picked() { [ "$QUICK" = 1 ] || case "$1 $2" in "go 4" | "go 8" | "rust 4" | "rust 8" | "ts 8") true ;; *) false ;; esac; }
+# A crowd: each bot watches about 2 Mpx (a 1 280×720 viewport rounded up to 320 px zones), so a square of side
+# sqrt(N × 2 Mpx / 100) keeps about 100 players in view whatever N (an estimate: delivered/s tells the real figure).
+crowd_side() { awk -v n="$1" 'BEGIN { printf "%d", sqrt(n * 2000000 / 100) }'; }
+CROWD_WARMUP=${CROWD_WARMUP:-$([ "$QUICK" = 1 ] && echo "$WARMUP" || echo 90)} # 10 000 connections over half of it
+CROWD_IDLE=${CROWD_IDLE:-0.8} # 20 % walk in bursts, so about 3 % are moving at any time
 
 for scenario in $SCENARIOS; do
 	log "== $scenario"
@@ -215,6 +222,17 @@ for scenario in $SCENARIOS; do
 			for size in $BIG; do
 				start "$kind" "$n" || continue
 				for p in $(seq $PASSES); do measure bigroom "$kind" "$n" loadbot "$p" -rooms 1 -users "$size" -side 600 $(map_args "$kind"); done
+			done
+		done < <(configs) ;;
+	crowd) # one room of 2 000, 5 000 then 10 000 players, about 100 in view each, 20 % walking in bursts
+		while read -r kind n; do
+			crowd_picked "$kind" "$n" && fits "$kind" "$n" || continue
+			for size in $CROWD; do
+				start "$kind" "$n" || continue
+				for p in $(seq $PASSES); do
+					WARMUP=$CROWD_WARMUP measure crowd "$kind" "$n" loadbot "$p" -rooms 1 -users "$size" -side "$(crowd_side "$size")" \
+						-profile realistic -idle "$CROWD_IDLE" $(map_args "$kind")
+				done
 			done
 		done < <(configs) ;;
 	realistic) # 90 % idle, the others walk in bursts

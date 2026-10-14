@@ -95,7 +95,7 @@ def table(rows, keys, columns):
     for r in rows:
         groups[tuple(r.get(k) for k in keys)].append(r)
     lines = ["| " + " | ".join(keys + [c for c, _ in columns]) + " |", "|" + "---|" * (len(keys) + len(columns))]
-    for key in sorted(groups, key=lambda k: tuple(str(x) for x in k)):
+    for key in sorted(groups, key=lambda k: tuple((0, x, "") if isinstance(x, (int, float)) else (1, 0, str(x)) for x in k)):
         runs = groups[key]
         lines.append("| " + " | ".join([str(k) for k in key] + [f(runs) for _, f in columns]) + " |")
     return "\n".join(lines)
@@ -119,7 +119,7 @@ def summary(results):
     base = [("bots", col("bots")), ("moves/s", col("moves_per_s")), ("delivered/s", col("delivered_per_s")),
             ("p50 ms", col("p50_ms")), ("p99 ms", col("p99_ms")), ("freshness p99 ms", col("fresh_p99_ms")),
             ("server CPU %", col("server_cpu_pct")), ("server MiB", col("server_mem_mib")), ("held", held)]
-    for scenario in ("fixed", "capacity", "bigroom", "realistic", "storm"):
+    for scenario in ("fixed", "capacity", "bigroom", "crowd", "realistic", "storm"):
         runs = [r for r in rows if r["scenario"] == scenario]
         if not runs:
             continue
@@ -144,8 +144,9 @@ def summary(results):
                 ("lost", col("storm_lost")), ("return p99 ms", col("storm_return_ms_p99")),
                 ("peak MiB", col("server_mem_mib")), ("server CPU %", col("server_cpu_pct"))]))
         else:
-            keys = ["server", "cpus", "generator"] + (["bots"] if scenario == "bigroom" else [])
-            print(table(runs, keys, [c for c in base if not (scenario == "bigroom" and c[0] == "bots")]))
+            by_size = scenario in ("bigroom", "crowd")
+            keys = ["server", "cpus", "generator"] + (["bots"] if by_size else [])
+            print(table(runs, keys, [c for c in base if not (by_size and c[0] == "bots")]))
 
 
 if __name__ == "__main__":
