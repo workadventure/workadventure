@@ -8,6 +8,10 @@ import { play_url } from "./urls";
  * Execute Docker compose, passing the correct host directory
  */
 export function dockerCompose(command: string) {
+    if (process.env.DEV_STACK) {
+        // dev/ socle: docker-compose.yaml is the regular stack, not the one under test.
+        throw new Error(`docker compose ${command}: not available against the dev/ stack ${process.env.DEV_STACK}`);
+    }
     let param = "";
     const overrideDockerCompose = process.env.OVERRIDE_DOCKER_COMPOSE;
 
@@ -52,24 +56,55 @@ export async function startContainer(container: Dockerode.ContainerInfo): Promis
     await docker.getContainer(container.Id).start();
 }
 
+/**
+ * dev/ socle (`eval "$(dev/dev env <stack>)"`): restart the stack's own containers. The socle's Traefik serves
+ * every stack, so it is touched only when DEV_TRAEFIK names it, with no other stack under test.
+ */
+function devTraefik(action: "stop" | "start" | "restart"): boolean {
+    if (!process.env.DEV_STACK) {
+        return false;
+    }
+    if (!process.env.DEV_TRAEFIK) {
+        throw new Error(
+            "The socle's Traefik serves every stack: set DEV_TRAEFIK only when no other stack is under test",
+        );
+    }
+    execSync(`docker ${action} ${process.env.DEV_TRAEFIK}`);
+    return true;
+}
+
 export async function rebootBack(): Promise<void> {
+    if (process.env.DEV_REBOOT_BACK) {
+        execSync(process.env.DEV_REBOOT_BACK);
+        return;
+    }
     dockerCompose("up --force-recreate -d back");
 }
 
 export function rebootTraefik(): void {
-    dockerCompose("up --force-recreate -d reverse-proxy");
+    if (!devTraefik("restart")) {
+        dockerCompose("up --force-recreate -d reverse-proxy");
+    }
 }
 
 export function stopTraefik(): void {
-    dockerCompose("stop reverse-proxy");
+    if (!devTraefik("stop")) {
+        dockerCompose("stop reverse-proxy");
+    }
 }
 
 export function startTraefik(): void {
-    dockerCompose("start reverse-proxy");
+    if (!devTraefik("start")) {
+        dockerCompose("start reverse-proxy");
+    }
 }
 
 export async function rebootPlay(request: APIRequestContext): Promise<void> {
-    dockerCompose("up --force-recreate -d play");
+    if (process.env.DEV_REBOOT_PLAY) {
+        execSync(process.env.DEV_REBOOT_PLAY);
+    } else {
+        dockerCompose("up --force-recreate -d play");
+    }
     let response: APIResponse;
     do {
         // wait for 1 second
