@@ -40,6 +40,7 @@ func (r *Room) Join(ctx context.Context, p Peer, req JoinRequest) error {
 
 func (r *Room) Leave(ctx context.Context, p Peer) error {
 	return r.a.Post(ctx, func() {
+		delete(r.s.listeners, p)
 		if u := r.s.byPeer[p]; u != nil {
 			r.s.leave(u)
 		}
@@ -109,19 +110,20 @@ func (r *Room) AskPosition(ctx context.Context, p Peer, uuid string, userID *int
 type MapEdit struct{ Event any }
 
 // EditMap applies an edit of the room's map on the room's goroutine, so that edits are applied and announced one
-// at a time, in order, to every player: the editor too, which waits for its own edit to come back. apply returns
-// what to announce, or a refusal for the editor alone. ponytail: apply writes the map file from the room's
-// goroutine; edits are rare and a write takes about a millisecond. Hand it to the worker pool if maps grow large.
-func (r *Room) EditMap(ctx context.Context, p Peer, apply func() (announce, refusal any)) error {
+// at a time, in order, to every connection: the editor too, which waits for its own edit to come back. apply
+// returns what to announce and the areas of the edited map, or a refusal for the editor alone. ponytail: apply
+// writes the map file from the room's goroutine; edits are rare and a write takes about a millisecond. Hand it to
+// the worker pool if maps grow large.
+func (r *Room) EditMap(ctx context.Context, p Peer, apply func() (announce, refusal any, areas []Area)) error {
 	return r.a.Post(ctx, func() {
-		announce, refusal := apply()
+		announce, refusal, areas := apply()
 		if refusal != nil {
 			p.Send(NewMsg(MapEdit{Event: refusal}, true))
 			return
 		}
-		m := NewMsg(MapEdit{Event: announce}, true)
-		for _, u := range r.s.users {
-			u.peer.Send(m)
+		r.s.toListeners(NewMsg(MapEdit{Event: announce}, true))
+		if areas != nil {
+			r.s.setAreas(areas)
 		}
 	})
 }
@@ -160,6 +162,12 @@ type state struct {
 	groupIndex  *spatialIndex[*group]
 	zones       map[zoneKey]*zone
 	nextUserID  int32
+
+	listeners   map[Peer]struct{} // every connection, joined or not yet: they get the edits of the map
+	areasLoaded bool
+	areas       []Area
+	counts      map[string]int       // players in each counted area
+	vars        map[[3]string]string // area variables: area, property, key
 }
 
 func newState(url string, cfg Config) *state {
@@ -173,6 +181,9 @@ func newState(url string, cfg Config) *state {
 		firstByUUID: map[string]*user{},
 		byTab:       map[string]*user{},
 		groups:      map[int32]*group{},
+		listeners:   map[Peer]struct{}{},
+		counts:      map[string]int{},
+		vars:        map[[3]string]string{},
 		userIndex:   newSpatialIndex[*user](cell),
 		groupIndex:  newSpatialIndex[*group](cell),
 		zones:       map[zoneKey]*zone{},
@@ -197,6 +208,7 @@ type user struct {
 	group        *group
 	zone         *zone
 	listened     map[zoneKey]*zone
+	areas        []string // the counted areas it is in
 }
 
 func (u *user) view() UserView {
@@ -232,7 +244,7 @@ func (s *state) join(p Peer, req JoinRequest) {
 		companion: req.Companion, visitCardURL: req.VisitCardURL, chatID: req.ChatID, status: req.Status,
 		pos: req.Position, listened: map[zoneKey]*zone{},
 	}
-	p.Send(NewMsg(RoomJoined{UserID: u.id}, false))
+	p.Send(NewMsg(RoomJoined{UserID: u.id, Variables: s.variables()}, false))
 
 	s.users[u.id] = u
 	s.byPeer[p] = u
@@ -250,6 +262,7 @@ func (s *state) join(p Peer, req JoinRequest) {
 		p.Send(NewMsg(DuplicateUserConnected{}, false))
 	}
 	s.setViewport(u, req.Viewport)
+	s.track(u)
 }
 
 func (s *state) leave(u *user) {
@@ -282,6 +295,7 @@ func (s *state) leave(u *user) {
 		s.gcZone(l)
 	}
 	u.listened = nil
+	s.untrack(u)
 }
 
 func (s *state) move(u *user, pos Position) {
@@ -297,6 +311,7 @@ func (s *state) move(u *user, pos Position) {
 		s.userMovesInZone(u)
 	}
 	s.updateUserGroup(u)
+	s.track(u)
 }
 
 func (s *state) setPlayerDetails(u *user, d PlayerDetails) {

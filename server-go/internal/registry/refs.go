@@ -54,3 +54,6 @@ func (r *Refs[K, V]) Get(k K) (V, bool) {
 }
 
 func (r *Refs[K, V]) Len() int { return r.m.Len() }
+
+// Keys lists the live keys (not a snapshot).
+func (r *Refs[K, V]) Keys() []K { return r.m.Keys() }

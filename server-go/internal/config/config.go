@@ -30,8 +30,9 @@ type Config struct {
 
 	// Map storage (map-storage's variables)
 	StorageDirectory string
-	MapStorageAuth   mapstorage.Auth
-	CacheControl     string
+	MapStorage       mapstorage.Options
+
+	EmbeddedDomainsWhitelist []string
 
 	SecretKey        string
 	AdminAPIURL      string
@@ -199,15 +200,22 @@ func firstNonEmpty(values ...string) string {
 func parse(get func(string) string) (*Config, error) {
 	r := &reader{get: get}
 	c := &Config{
-		HTTPPort:         r.integer("PUSHER_HTTP_PORT", 3000),
-		WSPort:           r.integer("PUSHER_WS_PORT", 3001),
-		MapStoragePort:   r.integer("SERVER_MAP_STORAGE_PORT", 0),
-		StorageDirectory: firstNonEmpty(r.str("STORAGE_DIRECTORY"), "./public"),
-		MapStorageAuth: mapstorage.Auth{
-			Basic: r.boolean("ENABLE_BASIC_AUTHENTICATION", false), User: r.str("AUTHENTICATION_USER"), Password: r.str("AUTHENTICATION_PASSWORD"),
-			Bearer: r.boolean("ENABLE_BEARER_AUTHENTICATION", false), Token: r.str("AUTHENTICATION_TOKEN"),
+		HTTPPort:                 r.integer("PUSHER_HTTP_PORT", 3000),
+		WSPort:                   r.integer("PUSHER_WS_PORT", 3001),
+		MapStoragePort:           r.integer("SERVER_MAP_STORAGE_PORT", 0),
+		StorageDirectory:         firstNonEmpty(r.str("STORAGE_DIRECTORY"), "./public"),
+		EmbeddedDomainsWhitelist: list(r.str("EMBEDDED_DOMAINS_WHITELIST")),
+		MapStorage: mapstorage.Options{
+			Auth: mapstorage.Auth{
+				Basic: r.boolean("ENABLE_BASIC_AUTHENTICATION", false), User: r.str("AUTHENTICATION_USER"), Password: r.str("AUTHENTICATION_PASSWORD"),
+				Bearer: r.boolean("ENABLE_BEARER_AUTHENTICATION", false), Token: r.str("AUTHENTICATION_TOKEN"),
+			},
+			CacheControl:      firstNonEmpty(r.str("CACHE_CONTROL"), "public, s-max-age=10"),
+			MaxUncompressed:   int64(r.integer("MAX_UNCOMPRESSED_SIZE", 1<<30)),
+			DirectUploadURL:   r.str("DIRECT_UPLOAD_URL"),
+			EntityCollections: list(r.str("ENTITY_COLLECTION_URLS")),
+			SecretKey:         r.str("SECRET_KEY"),
 		},
-		CacheControl:              firstNonEmpty(r.str("CACHE_CONTROL"), "public, s-max-age=10"),
 		SecretKey:                 r.str("SECRET_KEY"),
 		AdminAPIURL:               r.str("ADMIN_API_URL"),
 		DisableAnonymous:          r.boolean("DISABLE_ANONYMOUS", false),

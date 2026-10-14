@@ -134,7 +134,10 @@ type UserView struct {
 // Events sent to clients. They are immutable once created, because one event is shared by every recipient.
 type (
 	// RoomJoined confirms the join and gives the player their id in the room.
-	RoomJoined struct{ UserID int32 }
+	RoomJoined struct {
+		UserID    int32
+		Variables []AreaVariable // the area variables when the player joined
+	}
 	UserJoined struct{ User UserView }
 	UserMoved  struct {
 		UserID   int32

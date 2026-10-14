@@ -1,0 +1,456 @@
+package mapstorage
+
+import (
+	"archive/zip"
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"io/fs"
+	"log/slog"
+	"net/http"
+	"os"
+	"path"
+	"path/filepath"
+	"slices"
+	"strings"
+
+	"github.com/workadventure/workadventure/server-go/internal/wam"
+)
+
+func jsonEncode(w io.Writer, v any) error {
+	enc := json.NewEncoder(w)
+	enc.SetEscapeHTML(false)
+	return enc.Encode(v)
+}
+
+// hidden says whether a path has a segment starting with "." (macOS metadata, .git...): map-storage drops them.
+func hidden(name string) bool {
+	return slices.ContainsFunc(strings.FieldsFunc(name, func(r rune) bool { return r == '/' || r == '\\' }), func(seg string) bool {
+		return strings.HasPrefix(seg, ".")
+	})
+}
+
+// walk lists the regular files under dir, as slash-separated paths relative to it.
+func walk(dir string) []string {
+	var files []string
+	_ = filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
+		if err == nil && d.Type().IsRegular() {
+			rel, _ := filepath.Rel(dir, p)
+			files = append(files, filepath.ToSlash(rel))
+		}
+		return nil
+	})
+	return files
+}
+
+// upload replaces a directory with the content of a zip (POST /upload of map-storage).
+func (s *Store) upload(w http.ResponseWriter, r *http.Request, o Options) {
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		http.Error(w, "No file was uploaded.", http.StatusBadRequest)
+		return
+	}
+	defer r.MultipartForm.RemoveAll()
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "No file was uploaded.", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+	directory := strings.Trim(r.FormValue("directory"), "/")
+	if strings.Contains(directory, "..") {
+		http.Error(w, "Invalid directory", http.StatusBadRequest)
+		return
+	}
+	archive, err := zip.NewReader(file, header.Size)
+	if err != nil {
+		http.Error(w, "Invalid zip file", http.StatusBadRequest)
+		return
+	}
+	contents := map[string][]byte{}
+	var names []string
+	var total uint64
+	for _, e := range archive.File {
+		if e.FileInfo().IsDir() || hidden(e.Name) {
+			continue
+		}
+		if strings.Contains(e.Name, "..") {
+			http.Error(w, "Invalid path in the zip file: "+e.Name, http.StatusBadRequest)
+			return
+		}
+		if total += e.UncompressedSize64; total > uint64(o.MaxUncompressed) {
+			http.Error(w, fmt.Sprintf("File too large. Unzipped files should be less than %d bytes.", o.MaxUncompressed), http.StatusRequestEntityTooLarge)
+			return
+		}
+		data, err := unzip(e)
+		if err != nil {
+			http.Error(w, "Invalid zip file: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		contents[e.Name] = data
+		names = append(names, e.Name)
+	}
+	errs := map[string]report{}
+	for _, name := range names {
+		exists := func(p string) bool { _, ok := contents[path.Join(path.Dir(name), p)]; return ok }
+		if rep := validateFile(name, contents[name], exists); rep != nil {
+			errs[name] = rep
+		}
+	}
+	if len(errs) > 0 {
+		writeJSON(w, http.StatusBadRequest, errs)
+		return
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	root, err := s.folder(directory)
+	if err != nil {
+		http.Error(w, "Invalid directory", http.StatusBadRequest)
+		return
+	}
+	maps := slices.DeleteFunc(slices.Clone(names), func(n string) bool { return !strings.Contains(n, ".wam") && !strings.Contains(n, ".tmj") })
+	// deleteFilesExceptWAM: a .wam stays when the zip brings its .tmj without it (the map is replaced, its edits
+	// are kept).
+	for _, f := range walk(root) {
+		if strings.Contains(f, ".wam") && slices.Contains(maps, strings.Replace(f, ".wam", ".tmj", 1)) && !slices.Contains(maps, f) {
+			continue
+		}
+		_ = os.Remove(filepath.Join(root, filepath.FromSlash(f)))
+	}
+	for _, name := range names {
+		if err := writeFile(filepath.Join(root, filepath.FromSlash(path.Clean("/"+name))), contents[name]); err != nil {
+			slog.Error("map upload", "file", name, "error", err)
+			http.Error(w, "Cannot store "+name, http.StatusInternalServerError)
+			return
+		}
+	}
+	for _, name := range names {
+		if path.Ext(name) != ".tmj" || slices.ContainsFunc(names, func(n string) bool { return path.Ext(n) == ".wam" && baseName(n) == baseName(name) }) {
+			continue
+		}
+		wamFile := filepath.Join(root, filepath.FromSlash(path.Clean("/"+strings.Replace(name, ".tmj", ".wam", 1))))
+		if _, err := os.Stat(wamFile); err == nil {
+			continue
+		}
+		if err := writeFile(wamFile, wam.Generated(name, contents[name], o.EntityCollections)); err != nil {
+			slog.Error("map upload", "file", wamFile, "error", err)
+		}
+	}
+	s.forget(directory)
+	for _, name := range names {
+		if path.Ext(name) == ".wam" {
+			s.changed(path.Join(directory, name), false)
+		}
+	}
+	_, _ = io.WriteString(w, "File successfully uploaded.")
+}
+
+// baseName is path.parse(p).name: the file name without its extension (directories are ignored, like map-storage).
+func baseName(p string) string { return strings.TrimSuffix(path.Base(p), path.Ext(p)) }
+
+func unzip(e *zip.File) ([]byte, error) {
+	in, err := e.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer in.Close()
+	data, err := io.ReadAll(io.LimitReader(in, int64(e.UncompressedSize64)+1))
+	if err != nil {
+		return nil, err
+	}
+	if uint64(len(data)) > e.UncompressedSize64 {
+		return nil, fmt.Errorf("%s is bigger than announced", e.Name)
+	}
+	return data, nil
+}
+
+// put stores one file (PUT /<path>).
+func (s *Store) put(w http.ResponseWriter, r *http.Request, o Options) {
+	key, err := keyOf(r, false)
+	if err != nil || key == "" || strings.HasSuffix(key, "/") {
+		http.Error(w, "Invalid path", http.StatusBadRequest)
+		return
+	}
+	var data []byte
+	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/") {
+		file, _, ferr := r.FormFile("file")
+		if ferr != nil {
+			writeJSON(w, http.StatusBadRequest, report{"request": {{Type: "error", Message: "No file was uploaded"}}})
+			return
+		}
+		defer file.Close()
+		data, err = io.ReadAll(io.LimitReader(file, o.MaxUncompressed+1))
+	} else {
+		data, err = io.ReadAll(io.LimitReader(r.Body, o.MaxUncompressed+1))
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if int64(len(data)) > o.MaxUncompressed {
+		http.Error(w, fmt.Sprintf("File too large. Files should be less than %d bytes.", o.MaxUncompressed), http.StatusRequestEntityTooLarge)
+		return
+	}
+	// ponytail: a .tmj is checked without its images (map-storage cannot load them from a relative URL either).
+	if rep := validateFile(key, data, nil); rep != nil {
+		writeJSON(w, http.StatusBadRequest, rep)
+		return
+	}
+	f, err := s.file(key)
+	if err != nil {
+		http.Error(w, "Invalid path", http.StatusBadRequest)
+		return
+	}
+	s.mu.Lock()
+	err = writeFile(f, data)
+	if path.Ext(key) == ".wam" {
+		s.forget(key)
+	}
+	s.mu.Unlock()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if path.Ext(key) == ".wam" {
+		s.changed(key, false)
+	}
+	_, _ = io.WriteString(w, "File successfully uploaded.")
+}
+
+// patch applies a JSON Patch to a WAM file (PATCH /<path>.wam).
+func (s *Store) patch(w http.ResponseWriter, r *http.Request) {
+	key, err := keyOf(r, false)
+	if err != nil {
+		http.Error(w, "Invalid path", http.StatusBadRequest)
+		return
+	}
+	if path.Ext(key) != ".wam" {
+		http.NotFound(w, r)
+		return
+	}
+	var ops any
+	dec := json.NewDecoder(r.Body)
+	dec.UseNumber()
+	if dec.Decode(&ops) != nil {
+		ops = nil
+	}
+	list, isList := ops.([]any)
+	if !isList {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"patch": "Invalid patch: expected a JSON-Patch document (an array of operations)"})
+		return
+	}
+	var invalid report
+	err = s.Edit(key, func(file []byte) ([]byte, error) {
+		doc, err := wam.Parse(file)
+		if err != nil {
+			return nil, err
+		}
+		wam.Migrate(doc)
+		for _, k := range []string{"vendor", "metadata"} {
+			if _, ok := doc[k]; !ok {
+				doc[k] = map[string]any{}
+			}
+		}
+		patched, err := wam.Patch(doc, list)
+		if err != nil {
+			return nil, patchError{err}
+		}
+		out, isDoc := patched.(map[string]any)
+		if !isDoc {
+			return nil, patchError{errors.New("the patched document is not an object")}
+		}
+		if err := wam.Validate(out); err != nil {
+			invalid = report{"map": {{Type: "error", Message: "Invalid WAM file format.", Details: err.Error()}}}
+			return nil, err
+		}
+		return json.Marshal(out)
+	})
+	var pe patchError
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		http.NotFound(w, r)
+	case errors.As(err, &pe):
+		writeJSON(w, http.StatusBadRequest, map[string]string{"patch": pe.Error()})
+	case invalid != nil:
+		writeJSON(w, http.StatusBadRequest, invalid)
+	case err != nil:
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	default:
+		s.mu.Lock()
+		s.forget(key)
+		s.mu.Unlock()
+		s.changed(key, false)
+		writeJSON(w, http.StatusOK, map[string]bool{"success": true})
+	}
+}
+
+type patchError struct{ error }
+
+// remove deletes a file or a directory (DELETE /<path>); the root is emptied.
+func (s *Store) remove(w http.ResponseWriter, r *http.Request) {
+	key, err := keyOf(r, false)
+	if err != nil {
+		http.Error(w, "Invalid path", http.StatusBadRequest)
+		return
+	}
+	key = strings.Trim(key, "/")
+	target, err := s.folder(key)
+	if err != nil {
+		http.Error(w, "Invalid path", http.StatusBadRequest)
+		return
+	}
+	s.mu.Lock()
+	if key == "" || key == "." {
+		err = emptyDir(target)
+	} else {
+		err = os.RemoveAll(target)
+	}
+	s.forget(key)
+	s.mu.Unlock()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if path.Ext(key) == ".wam" {
+		s.changed(key, true)
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// emptyDir empties a directory but keeps it: the storage root is often a mount point.
+func emptyDir(dir string) error {
+	entries, err := os.ReadDir(dir)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	for _, e := range entries {
+		if err := os.RemoveAll(filepath.Join(dir, e.Name())); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// list answers GET /maps: every valid WAM file, by path.
+func (s *Store) list(w http.ResponseWriter, _ *http.Request) {
+	maps := map[string]any{}
+	for _, f := range walk(s.dir) {
+		if path.Ext(f) != ".wam" {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(s.dir, filepath.FromSlash(f)))
+		if err != nil {
+			continue
+		}
+		doc, err := wam.Parse(data)
+		if err != nil {
+			continue
+		}
+		wam.Migrate(doc)
+		if wam.Validate(doc) != nil {
+			continue
+		}
+		entry := map[string]any{"mapUrl": doc["mapUrl"]}
+		for _, k := range []string{"metadata", "vendor"} {
+			if v, ok := doc[k]; ok {
+				entry[k] = v
+			}
+		}
+		maps[f] = entry
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"version": "go-1", "maps": maps})
+}
+
+// download zips a directory (GET /download?directory=).
+func (s *Store) download(w http.ResponseWriter, r *http.Request) {
+	directory := r.URL.Query().Get("directory")
+	if strings.Contains(directory, "..") {
+		http.Error(w, "Invalid directory", http.StatusBadRequest)
+		return
+	}
+	root, err := s.folder(directory)
+	if err != nil {
+		http.Error(w, "Invalid directory", http.StatusBadRequest)
+		return
+	}
+	name := path.Base(path.Clean("/" + directory))
+	if name == "/" || name == "." {
+		name = "map"
+	}
+	var buf bytes.Buffer
+	z := zip.NewWriter(&buf)
+	s.mu.Lock()
+	for _, f := range walk(root) {
+		if f == "__cache.json" || hidden(f) {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(f)))
+		if err != nil {
+			continue
+		}
+		if out, err := z.Create(f); err == nil {
+			_, _ = out.Write(data)
+		}
+	}
+	s.mu.Unlock()
+	if err := z.Close(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", `attachment; filename="`+name+`.zip"`)
+	_, _ = w.Write(buf.Bytes())
+}
+
+// moveOrCopy moves or copies a directory (POST /move, POST /copy).
+func (s *Store) moveOrCopy(w http.ResponseWriter, r *http.Request, move bool) {
+	var req struct {
+		Source      *string `json:"source"`
+		Destination *string `json:"destination"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Source == nil || req.Destination == nil {
+		http.Error(w, "Invalid request : source and destination are required", http.StatusBadRequest)
+		return
+	}
+	if strings.Contains(*req.Source, "..") || strings.Contains(*req.Destination, "..") {
+		http.Error(w, "Invalid directory", http.StatusBadRequest)
+		return
+	}
+	from, err1 := s.folder(strings.Trim(*req.Source, "/"))
+	to, err2 := s.folder(strings.Trim(*req.Destination, "/"))
+	if err1 != nil || err2 != nil {
+		http.Error(w, "Invalid directory", http.StatusBadRequest)
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, err := os.Stat(to); err == nil {
+		http.Error(w, "Destination already exist!", http.StatusConflict)
+		return
+	}
+	if err := os.MkdirAll(filepath.Dir(to), 0o755); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if move {
+		if err := os.Rename(from, to); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		s.forget(strings.Trim(*req.Source, "/"))
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, "OK")
+		return
+	}
+	if err := os.CopyFS(to, os.DirFS(from)); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	_, _ = io.WriteString(w, "Created")
+}

@@ -36,11 +36,12 @@ func TestEditsOfTheMapEditor(t *testing.T) {
 
 	livekit := map[string]any{"id": "p1", "type": "livekitRoomProperty", "roomName": "", "livekitRoomAdminTag": "",
 		"livekitRoomConfig": map[string]any{"startWithAudioMuted": false, "startWithVideoMuted": false, "disableChat": false, "raiseHandEnabled": false}}
-	file, area, err := Edit(file, "c3", ModifyArea{ID: "a1", X: i64(0), Properties: []any{livekit, map[string]any{"id": "s1", "type": "start"},
+	file, res, err := Edit(file, "c3", ModifyArea{ID: "a1", X: i64(0), Properties: []any{livekit, map[string]any{"id": "s1", "type": "start"},
 		map[string]any{"id": "s2", "type": "start"}}, ModifyProperties: true})
 	if err != nil {
 		t.Fatal(err)
 	}
+	area := res.Area
 	if props := area["properties"].([]any); len(props) != 2 || area["x"] != int64(0) || area["width"] == nil {
 		t.Fatalf("modify merges the fields and keeps one start: %v", area)
 	}
@@ -65,9 +66,50 @@ func TestEditsOfTheMapEditor(t *testing.T) {
 
 func TestMigrationAddsTheLock(t *testing.T) {
 	doc := map[string]any{"version": "2.0.0", "areas": []any{map[string]any{"properties": []any{map[string]any{"id": "sp", "type": "speakerMegaphone"}}}}}
-	migrate(doc)
+	Migrate(doc)
 	b, _ := json.Marshal(doc)
 	if !strings.Contains(string(b), `{"id":"sp-lock","type":"lockableAreaPropertyData"}`) || doc["version"] != "2.1.0" {
 		t.Fatalf("%s", b)
+	}
+}
+
+func TestEntitiesClaimsAndFiles(t *testing.T) {
+	file, _ := os.ReadFile("../../../map-storage/tests/assets/maps/empty.wam")
+	personal := map[string]any{"id": "pp", "type": "personalAreaPropertyData", "accessClaimMode": "dynamic", "allowedTags": []any{}, "ownerId": nil}
+	rights := map[string]any{"id": "rr", "type": "restrictedRightsPropertyData", "writeTags": []any{"member"}, "readTags": []any{}}
+	file, _, _ = Edit(file, "1", CreateArea{ID: "desk", X: 0, Y: 0, Width: 100, Height: 100, Properties: []any{personal}})
+	file, _, _ = Edit(file, "2", CreateArea{ID: "room", X: 200, Y: 0, Width: 100, Height: 100, Properties: []any{rights}})
+
+	claimed := map[string]any{"id": "pp", "type": "personalAreaPropertyData", "accessClaimMode": "dynamic", "allowedTags": []any{}, "ownerId": "me"}
+	m, ok := Claim(file, ModifyArea{ID: "desk", Properties: []any{claimed}, ModifyProperties: true}, "me")
+	if !ok {
+		t.Fatal("a free personal area can be claimed")
+	}
+	file, _, _ = Edit(file, "3", m)
+	if _, ok := Claim(file, ModifyArea{ID: "desk", Properties: []any{claimed}, ModifyProperties: true}, "other"); ok {
+		t.Fatal("not someone else's")
+	}
+	if _, ok := Claim(file, ModifyArea{ID: "room", Properties: []any{rights}, ModifyProperties: true}, "me"); ok {
+		t.Fatal("not an ordinary area")
+	}
+	if !CanEditAt(file, 50, 50, nil, "me") || !CanEditAt(file, 250, 50, []string{"member"}, "x") || CanEditAt(file, 250, 50, nil, "x") || CanEditAt(file, 500, 500, []string{"member"}, "me") {
+		t.Fatal("entity rights: own desk, write tags, nothing outside")
+	}
+
+	pdf := map[string]any{"id": "f1", "type": "openFile", "name": "doc.pdf", "link": "http://ms/private/files/doc-f1.pdf"}
+	file, _, err := Edit(file, "4", CreateEntity{ID: "e1", PrefabID: "p", CollectionName: "custom entities", X: 10, Y: 10, Properties: []any{pdf}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := Edit(file, "5", CreateEntity{ID: "e1", PrefabID: "p"}); err == nil {
+		t.Fatal("entity ids are unique")
+	}
+	file, res, _ := Edit(file, "6", ModifyEntity{ID: "e1", X: 20, Y: 20})
+	if len(res.Removed) != 0 {
+		t.Fatal("moving keeps the file")
+	}
+	_, res, _ = Edit(file, "7", DeleteEntitiesOf{PrefabID: "p"})
+	if len(res.Removed) != 1 || res.Removed[0] != "private/files/doc-f1.pdf" || len(res.Doc["entities"].(map[string]any)) != 0 {
+		t.Fatalf("deleting a custom entity removes its copies and their files: %+v", res.Removed)
 	}
 }

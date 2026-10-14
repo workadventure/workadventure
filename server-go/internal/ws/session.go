@@ -48,6 +48,7 @@ type sessionInfo struct {
 	isLogged                           bool
 	member                             admin.MemberData
 	chatID, roomName                   string
+	lastCommandID                      string // the last map edit the client's copy of the map has
 }
 
 // Session is a logical connection. It survives a transport drop for CLIENT_DISCONNECTION_RETENTION_MS: if the
@@ -99,10 +100,8 @@ func newSession(srv *Server, info sessionInfo) *Session {
 
 // start sends the first message and attaches the first transport.
 func (s *Session) start(conn *websocket.Conn) {
-	// The back answered ConnectToRoomMessage with this; the front waits for it before joining.
-	s.out.push(core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RoomConnectedMessage{
-		RoomConnectedMessage: &pb.RoomConnectedMessage{EditMapCommandsArrayMessage: &pb.EditMapCommandsArrayMessage{}, Tag: s.info.member.Tags},
-	}}, false))
+	// The back answered ConnectToRoomMessage with RoomConnectedMessage; the front waits for it before joining.
+	s.connectToRoom()
 	s.mu.Lock()
 	s.cur = conn
 	s.readers.Add(1)
@@ -185,7 +184,7 @@ func (s *Session) writeLoop() {
 
 func (s *Session) encodeDirect(m *core.Msg) []byte {
 	if j, ok := m.Event.(core.RoomJoined); ok {
-		b, err := proto.Marshal(s.roomJoined(j.UserID))
+		b, err := proto.Marshal(s.roomJoined(j))
 		if err != nil {
 			panic(err)
 		}
@@ -194,7 +193,12 @@ func (s *Session) encodeDirect(m *core.Msg) []byte {
 	return m.Bytes(encodeShared)
 }
 
-func (s *Session) roomJoined(userID int32) *pb.ServerToClientMessage {
+func (s *Session) roomJoined(j core.RoomJoined) *pb.ServerToClientMessage {
+	userID := j.UserID
+	vars := make([]*pb.AreaPropertyVariableMessage, len(j.Variables))
+	for i, v := range j.Variables {
+		vars[i] = &pb.AreaPropertyVariableMessage{AreaId: v.AreaID, PropertyId: v.PropertyID, Key: v.Key, Value: v.Value}
+	}
 	mb := s.info.member
 	apps := make([]*pb.ApplicationMessage, len(mb.Applications))
 	for i, a := range mb.Applications {
@@ -208,6 +212,7 @@ func (s *Session) roomJoined(userID int32) *pb.ServerToClientMessage {
 	return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RoomJoinedMessage{RoomJoinedMessage: &pb.RoomJoinedMessage{
 		CurrentUserId: userID, UserRoomToken: mb.UserRoomToken, CharacterTextures: characterTextures(coreTextures(mb.CharacterTextures)),
 		CompanionTexture: companion, CanEdit: mb.CanEdit, ActivatedInviteUser: mb.ActivatedInviteUser, Applications: apps,
+		AreaPropertyVariable: vars,
 	}}}
 }
 
@@ -459,6 +464,10 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		s.query(msg.QueryMessage)
 	case *pb.ClientToServerMessage_EditMapCommandMessage:
 		s.editMap(ctx, msg.EditMapCommandMessage)
+	case *pb.ClientToServerMessage_SetAreaPropertyVariableMessage:
+		v := msg.SetAreaPropertyVariableMessage
+		_ = s.room.SetAreaVariable(ctx, s, core.AreaVariable{AreaID: v.GetAreaId(), PropertyID: v.GetPropertyId(), Key: v.GetKey(), Value: v.GetValue()},
+			s.info.member.Tags)
 	default:
 		if s.handleSpaceMessage(m) {
 			return
@@ -480,6 +489,10 @@ func (s *Session) query(q *pb.QueryMessage) {
 	case *pb.QueryMessage_ChatMembersQuery:
 		// No admin: nobody to list (LocalAdmin.getWorldChatMembers).
 		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_ChatMembersAnswer{ChatMembersAnswer: &pb.ChatMembersAnswer{}}})
+	case *pb.QueryMessage_MapStorageJwtQuery:
+		s.mapStorageJwt(q.GetId())
+	case *pb.QueryMessage_EmbeddableWebsiteQuery:
+		s.embeddableWebsite(q.GetId(), query.EmbeddableWebsiteQuery.GetUrl())
 	case *pb.QueryMessage_RoomTagsQuery:
 		// No admin: no tag to suggest (LocalAdmin.getTagsList fails, the pusher answers an empty list).
 		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomTagsAnswer{RoomTagsAnswer: &pb.RoomTagsAnswer{}}})

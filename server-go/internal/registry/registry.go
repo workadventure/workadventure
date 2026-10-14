@@ -63,6 +63,20 @@ func (r *Map[K, V]) Delete(k K) {
 	s.mu.Unlock()
 }
 
+// Keys lists the keys, one shard at a time (not a snapshot).
+func (r *Map[K, V]) Keys() []K {
+	var keys []K
+	for i := range r.shards {
+		s := &r.shards[i]
+		s.mu.Lock()
+		for k := range s.m {
+			keys = append(keys, k)
+		}
+		s.mu.Unlock()
+	}
+	return keys
+}
+
 // Len counts the entries, one shard at a time (not a snapshot).
 func (r *Map[K, V]) Len() int {
 	n := 0
