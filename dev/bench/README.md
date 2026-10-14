@@ -4,7 +4,7 @@ The same generators against the three servers, the server on one machine and the
 the end of each milestone, from J2 on (decided on 2026-10-14; rules in the plan's "Règles communes" section).
 
 ```bash
-dev/bench/run-remote.sh ubuntu@<server> ubuntu@<generator>             # everything, ~6 to 8 h
+dev/bench/run-remote.sh ubuntu@<server> ubuntu@<generator>             # everything, ~8 to 10 h (crowd adds about 2 h)
 dev/bench/run-remote.sh ubuntu@<server> ubuntu@<generator> fixed storm # some scenarios only
 QUICK=1 dev/bench/run-remote.sh local local                            # dry run on this machine, ~30 min
 ```
@@ -43,6 +43,7 @@ Results land in `results/<date>-aws/`: `results.jsonl` (one line per run), one C
 | `fixed` | 100 rooms × 10 walkers (≈ 5 500 moves/s) | all levels | both | 3 |
 | `capacity` | +100 rooms per step until p99 > 250 ms or a bot is lost | all levels | `loadbot` ramp, `wa-load` at the edge | ramp 1 (30 s), edge 3 |
 | `bigroom` | 1 room of 300, 500 then 1 000 walkers | Go/Rust 1 and 4, TS 2 and 4 | `loadbot` | 3 |
+| `crowd` | 1 room of 2 000, 5 000 then 10 000 players, spread so that each sees about 100 others (estimate); 80 % idle, the others walk 3–10 s every 30–60 s; 90 s warm-up to connect everybody | Go/Rust 4 and 8, TS 8 | `loadbot` | 3 |
 | `realistic` | 100 rooms × 20, 90 % idle, the others walk 3–10 s every 30–60 s | Go/Rust 1 and 4, TS 2 and 4 | `loadbot` | 3 |
 | `storm` | 100 rooms × 20; every connection cut 20 s in, back after 5 s (resume) or 35 s (beyond the 30 s retention) | Go/Rust 4, TS 4 | `loadbot` | 3 |
 
