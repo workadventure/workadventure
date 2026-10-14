@@ -41,6 +41,7 @@
     import { draftMessageService } from "../../Services/DraftMessageService";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import { formatFileSize } from "../../../Utils/FileSize";
     import PollCreateDialog from "../PollCreateDialog.svelte";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import youtubeSvg from "../../../Components/images/applications/icon_youtube.svg";
@@ -152,7 +153,7 @@
                       title: $LL.chat.file.tooBig({ count: fileValidation.tooLargeFiles.length }),
                       hint: $LL.chat.file.tooBigHint({
                           count: fileValidation.tooLargeFiles.length,
-                          max: formatBytes(PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE),
+                          max: formatFileSize(PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE),
                       }),
                   },
               ]
@@ -389,13 +390,6 @@
     function deleteFile(id: string) {
         files = files.filter((file) => file.id !== id);
         filesPreview = filesPreview.filter((filePreview) => filePreview.id !== id);
-    }
-
-    function formatBytes(bytes: number) {
-        if (bytes === 0) return "0 Bytes";
-        const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + " " + sizes[i];
     }
 
     function focusin(event: FocusEvent) {
@@ -635,7 +629,7 @@
                                     {#if preview.type.includes("image") && preview.url === undefined}
                                         <IconLoader class="animate-spin shrink-0" font-size={12} />
                                     {/if}
-                                    <span>{formatBytes(preview.size)}</span>
+                                    <span>{formatFileSize(preview.size)}</span>
                                 </div>
                             </div>
                         {/if}

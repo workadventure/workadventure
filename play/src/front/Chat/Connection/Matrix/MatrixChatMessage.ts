@@ -66,7 +66,11 @@ export class MatrixChatMessage implements ChatMessage {
     ) {
         this.id = event.getId() ?? uuidv4();
         this.type = this.mapMatrixMessageTypeToChatMessage();
-        this.attachment = this.type === "text" ? undefined : { status: this.attachmentStatus };
+        const size: unknown = event.getOriginalContent().info?.size;
+        this.attachment =
+            this.type === "text"
+                ? undefined
+                : { status: this.attachmentStatus, size: typeof size === "number" ? size : undefined };
         this.date = event.getDate();
         this.sender = this.getSender();
         this.isMyMessage = this.room.client.getUserId() === event.getSender();

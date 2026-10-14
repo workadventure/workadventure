@@ -281,6 +281,8 @@ const chat: BaseTranslation = {
         openCoWebsite: "Open in co-website",
         loadingAttachment: "Loading attachment...",
         remainingTime: "~{time} left",
+        acceptToDownload: "Accept to download",
+        saveFile: "Save file",
         recipient: {
             waiting: "Waiting",
             summary: "Received by {received} of {total}",

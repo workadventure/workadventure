@@ -282,6 +282,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         openCoWebsite: "Abrir em co-website",
         loadingAttachment: "Carregando anexo...",
         remainingTime: "restam ~{time}",
+        acceptToDownload: "Aceite para baixar",
+        saveFile: "Salvar arquivo",
         recipient: {
             waiting: "Aguardando",
             summary: "Recebido por {received} de {total}",

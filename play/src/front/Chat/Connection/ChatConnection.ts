@@ -433,6 +433,8 @@ export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | 
 export interface ChatMessageAttachment {
     /** Whether the file is at hand. Once it is "ready", the message content's URL points to it. */
     readonly status: Readable<ChatAttachmentStatus>;
+    /** In bytes, when the source says. */
+    readonly size?: number;
     /** Present when the recipient decides whether to get the file at all, before anything is downloaded. */
     readonly consent?: ChatAttachmentConsent;
     /** Present on the sender's copy of a file delivered to each recipient separately: how each copy is doing. */

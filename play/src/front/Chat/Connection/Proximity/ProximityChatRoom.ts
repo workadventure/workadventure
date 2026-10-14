@@ -529,7 +529,11 @@ export class ProximityChatRoom implements ChatRoom {
                 new Date(),
                 true,
                 getMessageTypeFromMimeType(offer.file.type),
-                { status: readable<ChatAttachmentStatus>({ state: "ready" }), delivery: attachmentRecipients },
+                {
+                    status: readable<ChatAttachmentStatus>({ state: "ready" }),
+                    size: offer.file.size,
+                    delivery: attachmentRecipients,
+                },
             );
             this.messages.push(message);
             this.lastMessageTimestamp = message.date.getTime();
@@ -887,6 +891,7 @@ export class ProximityChatRoom implements ChatRoom {
             getMessageTypeFromMimeType(offer.mimeType),
             {
                 status,
+                size: offer.size,
                 consent: {
                     decision,
                     accept: () => this.fileTransferService?.download(offer.transferId) ?? Promise.resolve(),
