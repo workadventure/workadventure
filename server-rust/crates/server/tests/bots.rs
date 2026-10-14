@@ -249,3 +249,68 @@ async fn hundreds_of_players_in_one_room() {
         h.await.unwrap();
     }
 }
+
+fn answer_to(id: i32) -> impl FnMut(&Incoming) -> Option<pb::answer_message::Answer> {
+    move |m| match m {
+        Incoming::Top(Top::AnswerMessage(a)) if a.id == id => a.answer.clone(),
+        _ => None,
+    }
+}
+
+fn state_patch(m: &Incoming) -> Option<serde_json::Value> {
+    match m {
+        Incoming::Sub(Sub::SpaceStatePatchMessage(p)) => serde_json::from_str(&p.patch).ok(),
+        _ => None,
+    }
+}
+
+fn state_query(space: &str, q: pb::space_state_query::Query) -> pb::query_message::Query {
+    pb::query_message::Query::SpaceStateQuery(pb::SpaceStateQueryFrontToPusher {
+        space_name: space.into(),
+        query: Some(pb::SpaceStateQuery { query: Some(q) }),
+    })
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_state_change_reaches_every_member_before_the_answer() {
+    use pb::answer_message::Answer;
+    use pb::space_state_query::Query as Q;
+    let server = start().await;
+    let room = "http://play.test/_/global/maps.test/state.json";
+    let (mut alice, mut ia) = bot(&server, room, "Alice", 100, 100).await;
+    let (mut bob, mut ib) = bot(&server, room, "Bob", 3000, 3000).await;
+    for (b, inbox) in [(&mut alice, &mut ia), (&mut bob, &mut ib)] {
+        let q = b.join_space("hall", &[]).await.unwrap();
+        inbox.expect(WAIT, answer_to(q)).await.unwrap();
+        // Then the whole state, as one root replace.
+        let init = inbox.expect(WAIT, state_patch).await.unwrap();
+        assert_eq!(init[0]["path"], "");
+        assert_eq!(init[0]["value"]["recording"]["status"], "idle");
+    }
+    ia.clear();
+
+    let q = alice.query(state_query("hall", Q::RaiseHand(pb::RaiseHandQuery { raised: true }))).await.unwrap();
+    assert!(matches!(ia.expect(WAIT, answer_to(q)).await.unwrap(), Answer::SpaceStateAnswer(_)));
+    let patch = ia.seen().iter().find_map(state_patch).expect("the patch came before the answer");
+    assert_eq!(patch[0]["op"], "add");
+    assert_eq!(patch[0]["path"], "/raisedHands/0");
+    assert_eq!(patch[0]["value"]["spaceUserId"], alice.space_user_id());
+    let seen_by_bob = ib
+        .expect(WAIT, |m| state_patch(m).filter(|p| p[0]["path"] == "/raisedHands/0"))
+        .await
+        .unwrap();
+    assert_eq!(seen_by_bob, patch);
+
+    // A refused query: an error, and nothing changes.
+    ib.clear();
+    let vote = Q::VotePoll(pb::VotePollQuery {
+        poll_id: "nope".into(),
+        answer_ids: vec![],
+    });
+    let q = bob.query(state_query("hall", vote)).await.unwrap();
+    match ib.expect(WAIT, answer_to(q)).await.unwrap() {
+        Answer::Error(e) => assert!(e.message.contains("Poll nope does not exist in this space"), "{}", e.message),
+        other => panic!("{other:?}"),
+    }
+    assert!(ib.seen().iter().all(|m| state_patch(m).is_none()));
+}

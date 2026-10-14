@@ -6,6 +6,7 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+use crate::space_state::{self, Ctx, SpaceState, StateQuery};
 use crate::user::{Availability, Texture};
 
 pub type SpaceUserId = String;
@@ -82,11 +83,15 @@ pub enum SpaceEvent<'a> {
     UserAdded(&'a SpaceUser),
     UserUpdated(&'a SpaceUser, &'a [String]),
     UserRemoved(&'a str),
-    /// Every visible member, to a new watcher.
+    /// Every member the new watcher sees.
     InitUsers(Vec<&'a SpaceUser>, &'a BTreeMap<String, String>),
-    /// The whole state, as a root replace.
-    StateReplace(Option<&'a str>),
-    KindChanged(&'a str),
+    /// The whole state, to a new member.
+    StateReplace(&'a SpaceState),
+    /// The state changed: the adapter sends the difference.
+    StatePatch {
+        before: &'a SpaceState,
+        after: &'a SpaceState,
+    },
     /// A delta of metadata, values as raw JSON.
     Metadata(&'a [(String, String)]),
     /// Use peer-to-peer for this space.
@@ -117,7 +122,7 @@ pub struct Space {
     members: Vec<SpaceUser>,
     watchers: HashSet<SpaceUserId>,
     metadata: BTreeMap<String, String>,
-    kind: Option<String>,
+    state: SpaceState,
     /// Peer-to-peer connections, stored both ways: (a, b) -> connection id. None for a non-media space.
     connections: Option<HashMap<(SpaceUserId, SpaceUserId), String>>,
     /// Prefix of the connection ids, unique per space instance.
@@ -138,7 +143,7 @@ impl Space {
             members: Vec::new(),
             watchers: HashSet::new(),
             metadata: BTreeMap::new(),
-            kind: None,
+            state: space_state::empty(),
             connections: media.then(HashMap::new),
             id_prefix,
             next_connection: 0,
@@ -165,20 +170,29 @@ impl Space {
         self.members.iter().map(|m| m.space_user_id.as_str())
     }
 
-    pub fn kind(&self) -> Option<&str> {
-        self.kind.as_deref()
+    pub fn state(&self) -> &SpaceState {
+        &self.state
     }
 
-    fn visible(&self, u: &SpaceUser) -> bool {
+    /// Whether `observer` gets `target` in its user list. With feedback, speakers see everyone on stage or in
+    /// the audience, the audience only sees the speakers (LiveStreamingNotificationStrategy).
+    fn sees(&self, observer: &SpaceUser, target: &SpaceUser) -> bool {
         match self.filter {
             FilterType::AllUsers => true,
-            FilterType::LiveStreamingUsers => u.megaphone_state,
-            FilterType::LiveStreamingUsersWithFeedback => u.megaphone_state || u.attendees_state,
+            FilterType::LiveStreamingUsers => target.megaphone_state,
+            FilterType::LiveStreamingUsersWithFeedback => {
+                target.megaphone_state || (observer.megaphone_state && target.attendees_state)
+            }
         }
     }
 
-    fn watcher_list(&self) -> Vec<&str> {
-        self.watchers.iter().map(String::as_str).collect()
+    /// The watchers that see `target`, as observers are now.
+    fn watchers_seeing(&self, target: &SpaceUser) -> Vec<&str> {
+        self.members
+            .iter()
+            .filter(|m| self.watchers.contains(&m.space_user_id) && self.sees(m, target))
+            .map(|m| m.space_user_id.as_str())
+            .collect()
     }
 
     pub fn join(&mut self, filter: FilterType, user: SpaceUser, sink: &mut impl SpaceSink) -> Result<(), JoinError> {
@@ -190,16 +204,14 @@ impl Space {
         }
         self.members.push(user);
         let user = self.members.last().expect("just pushed");
-        if self.visible(user) {
-            emit(sink, &self.watcher_list(), SpaceEvent::UserAdded(user));
-        }
+        emit(sink, &self.watchers_seeing(user), SpaceEvent::UserAdded(user));
         Ok(())
     }
 
     /// What a joiner gets once its join was answered: the state, then the communication strategy.
     pub fn after_join(&self, id: &str, sink: &mut impl SpaceSink) {
         let Some(user) = self.member(id) else { return };
-        emit(sink, &[id], SpaceEvent::StateReplace(self.kind()));
+        emit(sink, &[id], SpaceEvent::StateReplace(&self.state));
         if self.connections.is_some() && !self.watchers.contains(id) {
             emit(sink, &[id], SpaceEvent::SwitchToWebRtc(user));
         }
@@ -213,7 +225,8 @@ impl Space {
         if !self.watchers.insert(id.to_owned()) {
             return true;
         }
-        let users: Vec<&SpaceUser> = self.members.iter().filter(|u| self.visible(u)).collect();
+        let me = self.member(id).expect("checked above");
+        let users: Vec<&SpaceUser> = self.members.iter().filter(|u| self.sees(me, u)).collect();
         emit(sink, &[id], SpaceEvent::InitUsers(users, &self.metadata));
         if self.connections.is_some() {
             let others: Vec<SpaceUserId> =
@@ -240,21 +253,23 @@ impl Space {
         self.disconnect_all(id, sink);
         let Some(pos) = self.members.iter().position(|m| m.space_user_id == id) else { return };
         let user = self.members.remove(pos);
-        if self.visible(&user) {
-            emit(sink, &self.watcher_list(), SpaceEvent::UserRemoved(id));
-        }
+        emit(sink, &self.watchers_seeing(&user), SpaceEvent::UserRemoved(id));
         if let Some(c) = &mut self.connections {
             c.retain(|(a, b), _| a != id && b != id);
         }
+        self.update_state(sink, |s| space_state::forget(s, id));
     }
 
     /// A client-side update (updateSpaceUserMessage). Fields outside CLIENT_UPDATABLE are ignored.
     pub fn update_from_client(&mut self, id: &str, from: &SpaceUser, paths: &[String], sink: &mut impl SpaceSink) {
-        let Some(user) = self.member(id) else { return };
-        let was_visible = self.visible(user);
+        let Some(before) = self.member(id).cloned() else { return };
         let applied = self.member_mut(id).expect("checked above").apply_client_update(from, paths);
-        if !applied.is_empty() {
-            self.notify_updated(id, was_visible, &applied, sink);
+        if applied.is_empty() {
+            return;
+        }
+        self.notify_updated(&before, &applied, sink);
+        if before.megaphone_state && !from.megaphone_state && applied.iter().any(|p| p == "megaphoneState") {
+            self.update_state(sink, |s| space_state::stopped_streaming(s, id));
         }
     }
 
@@ -267,7 +282,8 @@ impl Space {
         show_voice_indicator: Option<bool>,
         sink: &mut impl SpaceSink,
     ) {
-        let Some(user) = self.member_mut(id) else { return };
+        let Some(before) = self.member(id).cloned() else { return };
+        let user = self.member_mut(id).expect("checked above");
         let mut paths = Vec::new();
         if availability != Availability::UNCHANGED && availability != user.availability {
             user.availability = availability;
@@ -286,19 +302,36 @@ impl Space {
             paths.push("showVoiceIndicator".to_owned());
         }
         if !paths.is_empty() {
-            let visible = self.member(id).is_some_and(|u| self.visible(u));
-            self.notify_updated(id, visible, &paths, sink);
+            self.notify_updated(&before, &paths, sink);
         }
     }
 
-    fn notify_updated(&self, id: &str, was_visible: bool, paths: &[String], sink: &mut impl SpaceSink) {
+    /// Tells each watcher what the change of `before` means for its user list: an update, an arrival or a
+    /// departure. A watcher whose own role changed also gains or loses the users it now sees or no longer sees.
+    fn notify_updated(&self, before: &SpaceUser, paths: &[String], sink: &mut impl SpaceSink) {
+        let id = before.space_user_id.as_str();
         let user = self.member(id).expect("checked by the caller");
-        let to = self.watcher_list();
-        match (was_visible, self.visible(user)) {
-            (true, true) => emit(sink, &to, SpaceEvent::UserUpdated(user, paths)),
-            (false, true) => emit(sink, &to, SpaceEvent::UserAdded(user)),
-            (true, false) => emit(sink, &to, SpaceEvent::UserRemoved(id)),
-            (false, false) => {}
+        let (mut updated, mut added, mut removed) = (Vec::new(), Vec::new(), Vec::new());
+        for w in self.members.iter().filter(|m| self.watchers.contains(&m.space_user_id)) {
+            let observer_before = if w.space_user_id == id { before } else { w };
+            match (self.sees(observer_before, before), self.sees(w, user)) {
+                (true, true) => updated.push(w.space_user_id.as_str()),
+                (false, true) => added.push(w.space_user_id.as_str()),
+                (true, false) => removed.push(w.space_user_id.as_str()),
+                (false, false) => {}
+            }
+        }
+        emit(sink, &updated, SpaceEvent::UserUpdated(user, paths));
+        emit(sink, &added, SpaceEvent::UserAdded(user));
+        emit(sink, &removed, SpaceEvent::UserRemoved(id));
+        if self.filter == FilterType::LiveStreamingUsersWithFeedback && self.watchers.contains(id) {
+            for other in self.members.iter().filter(|m| m.space_user_id != id) {
+                match (self.sees(before, other), self.sees(user, other)) {
+                    (false, true) => emit(sink, &[id], SpaceEvent::UserAdded(other)),
+                    (true, false) => emit(sink, &[id], SpaceEvent::UserRemoved(&other.space_user_id)),
+                    _ => {}
+                }
+            }
         }
     }
 
@@ -313,13 +346,56 @@ impl Space {
         emit(sink, &to, SpaceEvent::Metadata(&delta));
     }
 
-    pub fn set_kind(&mut self, kind: &str, sink: &mut impl SpaceSink) {
-        if self.kind.as_deref() == Some(kind) {
+    /// A SpaceStateQuery from a member. `new_id` makes the ids of polls, answers and questions.
+    pub fn state_query(
+        &mut self,
+        sender: &str,
+        query: StateQuery,
+        now: i64,
+        new_id: &mut dyn FnMut() -> String,
+        sink: &mut impl SpaceSink,
+    ) -> Result<(), String> {
+        let Some(user) = self.member(sender) else {
+            return Err(format!("Could not find user {sender} in space {}", self.local_name));
+        };
+        let mut next = self.state.clone();
+        space_state::apply(
+            &mut next,
+            &mut Ctx {
+                sender: user,
+                filter: self.filter,
+                members: &self.members,
+                now,
+                new_id,
+            },
+            query,
+        )?;
+        self.set_state(next, sink);
+        Ok(())
+    }
+
+    /// The only way the state changes: every member, watching or not, gets the difference.
+    // ponytail: a whole copy per change, like the TypeScript server; patch ops built by each rule if polls grow big.
+    fn update_state(&mut self, sink: &mut impl SpaceSink, change: impl FnOnce(&mut SpaceState)) {
+        let mut next = self.state.clone();
+        change(&mut next);
+        self.set_state(next, sink);
+    }
+
+    fn set_state(&mut self, next: SpaceState, sink: &mut impl SpaceSink) {
+        if next == self.state {
             return;
         }
-        self.kind = Some(kind.to_owned());
+        let before = std::mem::replace(&mut self.state, next);
         let to: Vec<&str> = self.member_ids().collect();
-        emit(sink, &to, SpaceEvent::KindChanged(kind));
+        emit(
+            sink,
+            &to,
+            SpaceEvent::StatePatch {
+                before: &before,
+                after: &self.state,
+            },
+        );
     }
 
     /// meetingConnectionRestartMessage: the requester becomes the initiator of a new connection.

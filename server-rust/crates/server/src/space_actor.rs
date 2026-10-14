@@ -5,9 +5,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use wa_core::space::{FilterType, JoinError, Space, SpaceEvent, SpaceSink, SpaceUser};
+use wa_core::space_state::StateQuery;
 use wa_core::user::Availability;
 use wa_proto::messages as pb;
 
+use crate::json_patch;
 use crate::metrics::METRICS;
 use crate::outbox::Frame;
 use crate::registry::ActorRegistry;
@@ -82,19 +84,47 @@ pub fn get_or_spawn(registry: &Arc<ActorRegistry<SpaceCmd>>, key: &str, local_na
     })
 }
 
-/// `emptySpaceState()` of shared-utils, plus the kind once set.
-pub fn state_json(kind: Option<&str>) -> String {
-    let mut state = serde_json::json!({
-        "raisedHands": [],
-        "floorHolders": [],
-        "recording": {"recording": false, "recorder": null, "status": "idle"},
-        "polls": {},
-        "questions": {},
-    });
-    if let Some(kind) = kind {
-        state["kind"] = kind.into();
-    }
-    state.to_string()
+/// The protobuf query, in core terms. Recording needs a configured recorder, which this server does not have:
+/// the pusher refuses it before the back (canRecord).
+fn state_query(query: Option<pb::space_state_query::Query>) -> Result<StateQuery, &'static str> {
+    use pb::space_state_query::Query as Q;
+    Ok(match query.ok_or("SpaceStateQuery has no query")? {
+        Q::RaiseHand(q) => StateQuery::RaiseHand(q.raised),
+        Q::LowerHand(q) => StateQuery::LowerHand(q.target_space_user_id),
+        Q::GiveFloor(q) => StateQuery::GiveFloor(q.target_space_user_id),
+        Q::RevokeFloor(q) => StateQuery::RevokeFloor(q.target_space_user_id),
+        Q::StartRecording(_) | Q::StopRecording(_) => return Err("You are not allowed to record"),
+        Q::CreatePoll(q) => StateQuery::CreatePoll {
+            question: q.question,
+            kind: q.kind,
+            answers: q.answers,
+            max_selections: q.max_selections,
+        },
+        Q::VotePoll(q) => StateQuery::VotePoll {
+            poll_id: q.poll_id,
+            answer_ids: q.answer_ids,
+        },
+        Q::ClosePoll(q) => StateQuery::ClosePoll {
+            poll_id: q.poll_id,
+            closing_message: q.closing_message,
+        },
+        Q::DeletePoll(q) => StateQuery::DeletePoll(q.poll_id),
+        Q::AskQuestion(q) => StateQuery::AskQuestion(q.body),
+        Q::UpvoteQuestion(q) => StateQuery::UpvoteQuestion {
+            question_id: q.question_id,
+            upvoted: q.upvoted,
+        },
+        Q::AnswerQuestion(q) => StateQuery::AnswerQuestion(q.question_id),
+        Q::DeleteQuestion(q) => StateQuery::DeleteQuestion(q.question_id),
+        Q::SetKind(q) => StateQuery::SetKind(q.kind),
+    })
+}
+
+fn state_patch(name: String, patch: String) -> Frame {
+    wire::sub(pb::sub_message::Message::SpaceStatePatchMessage(pb::SpaceStatePatchMessage {
+        space_name: name,
+        patch,
+    }))
 }
 
 fn metadata_json(entries: impl Iterator<Item = (String, String)>) -> String {
@@ -160,20 +190,19 @@ impl SpaceSink for Out<'_> {
                     state: String::new(),
                 }))
             }
-            SpaceEvent::StateReplace(kind) => {
-                wire::sub(Sub::SpaceStatePatchMessage(pb::SpaceStatePatchMessage {
-                    space_name: name,
-                    patch: format!(r#"[{{"op":"replace","path":"","value":{}}}]"#, state_json(kind)),
-                }))
-            }
-            SpaceEvent::KindChanged(kind) => {
-                wire::sub(Sub::SpaceStatePatchMessage(pb::SpaceStatePatchMessage {
-                    space_name: name,
-                    patch: format!(
-                        r#"[{{"op":"add","path":"/kind","value":{}}}]"#,
-                        serde_json::Value::String(kind.to_owned())
-                    ),
-                }))
+            SpaceEvent::StateReplace(state) => state_patch(
+                name,
+                serde_json::json!([{"op": "replace", "path": "", "value": state}]).to_string(),
+            ),
+            SpaceEvent::StatePatch { before, after } => {
+                let (Ok(before), Ok(after)) = (serde_json::to_value(before), serde_json::to_value(after)) else {
+                    return;
+                };
+                let patch = json_patch::diff(&before, &after);
+                if patch.is_empty() {
+                    return;
+                }
+                state_patch(name, serde_json::Value::Array(patch).to_string())
             }
             SpaceEvent::Metadata(delta) => {
                 wire::sub(Sub::UpdateSpaceMetadataMessage(pb::UpdateSpaceMetadataMessage {
@@ -373,26 +402,30 @@ async fn run(
                 query_id,
                 query,
             } => {
-                if !space.is_member(&id) {
-                    session.push(wire::answer_error(query_id, "You are not part of this space"));
-                    continue;
-                }
-                if let Some(pb::space_state_query::Query::SetKind(k)) = query {
-                    if !matches!(k.kind.as_str(), "bubble" | "area" | "megaphone" | "speaker_zone") {
-                        session.push(wire::answer_error(query_id, "Invalid space kind"));
-                        continue;
-                    }
-                    space.set_kind(
-                        &k.kind,
+                let result = state_query(query).map_err(str::to_owned).and_then(|q| {
+                    let now = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .map_or(0, |d| d.as_millis() as i64);
+                    space.state_query(
+                        &id,
+                        q,
+                        now,
+                        &mut || uuid::Uuid::new_v4().to_string(),
                         &mut Out {
                             name: &local_name,
                             sessions: &sessions,
                         },
-                    );
-                }
-                // Raise hand, floor, recording, polls and questions come with the space state (J2): until
-                // then they are acknowledged without effect.
-                session.push(wire::answer(query_id, Answer::SpaceStateAnswer(pb::SpaceStateAnswer {})));
+                    )
+                });
+                // The patch was queued first, on the same queue: the sender's copy is up to date with the answer.
+                session.push(match result {
+                    Ok(()) => wire::answer(query_id, Answer::SpaceStateAnswer(pb::SpaceStateAnswer {})),
+                    // What the front gets from the pusher when the back refuses.
+                    Err(e) => wire::answer_error(
+                        query_id,
+                        format!("Error received from the back: Error while handling query : {e}}}"),
+                    ),
+                });
             }
             SpaceCmd::Public { id, mut event } => {
                 use pb::space_event::Event as E;
@@ -481,10 +514,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_initial_state_matches_the_front_schema() {
-        let v: serde_json::Value = serde_json::from_str(&state_json(Some("bubble"))).unwrap();
-        assert_eq!(v["recording"]["status"], "idle");
-        assert_eq!(v["kind"], "bubble");
+    fn the_initial_state_matches_empty_space_state() {
+        let v = serde_json::to_value(wa_core::space_state::empty()).unwrap();
+        assert_eq!(
+            v,
+            serde_json::json!({
+                "raisedHands": [],
+                "floorHolders": [],
+                "recording": {"recording": false, "recorder": null, "status": "idle"},
+                "polls": {},
+                "questions": {},
+            })
+        );
         assert_eq!(metadata_json([("a".to_owned(), "1".to_owned())].into_iter()), r#"{"a":1}"#);
         assert_eq!(metadata_json(std::iter::empty()), "{}");
     }
