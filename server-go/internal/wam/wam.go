@@ -11,7 +11,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path"
 	"slices"
+	"strings"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
@@ -19,7 +21,7 @@ import (
 //go:embed wam.schema.json
 var schemaJSON []byte
 
-var areaSchema, megaphoneSchema = func() (*jsonschema.Schema, *jsonschema.Schema) {
+var fileSchema, areaSchema, entitySchema, megaphoneSchema, recordingSchema = func() (f, a, e, m, r *jsonschema.Schema) {
 	doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(schemaJSON))
 	if err != nil {
 		panic(err)
@@ -29,8 +31,25 @@ var areaSchema, megaphoneSchema = func() (*jsonschema.Schema, *jsonschema.Schema
 		panic(err)
 	}
 	const root = "wam.json#/definitions/WAMFileFormat/properties"
-	return c.MustCompile(root + "/areas/items"), c.MustCompile(root + "/settings/properties/megaphone")
+	return c.MustCompile("wam.json"), c.MustCompile(root + "/areas/items"), c.MustCompile(root + "/entities/additionalProperties"),
+		c.MustCompile(root + "/settings/properties/megaphone"), c.MustCompile(root + "/settings/properties/recording")
 }()
+
+// Parse decodes a WAM file. Numbers stay json.Number: what is not changed is written back as it was.
+func Parse(file []byte) (map[string]any, error) {
+	v, err := jsonschema.UnmarshalJSON(bytes.NewReader(file))
+	if err != nil {
+		return nil, err
+	}
+	doc, ok := v.(map[string]any)
+	if !ok {
+		return nil, errors.New("the WAM file is not an object")
+	}
+	return doc, nil
+}
+
+// Validate checks a whole file, as decoded by Parse and migrated, against the schema.
+func Validate(doc map[string]any) error { return fileSchema.Validate(doc) }
 
 // Commands the server applies (EditMapMessage). Values are JSON as decoded: map[string]any, []any, float64, string,
 // bool, nil.
@@ -49,59 +68,82 @@ type (
 		ModifyProperties    bool
 	}
 	DeleteArea   struct{ ID string }
-	SetMegaphone struct{ Settings any } // nil removes the megaphone settings
+	CreateEntity struct {
+		ID, PrefabID, CollectionName string
+		X, Y                         int64
+		Name                         *string
+		Properties                   []any
+	}
+	// ModifyEntity moves an entity; its name when set, its properties only when ModifyProperties.
+	ModifyEntity struct {
+		ID               string
+		X, Y             int64
+		Name             *string
+		Properties       []any
+		ModifyProperties bool
+	}
+	DeleteEntity struct{ ID string }
+	// DeleteEntitiesOf removes the copies of a custom entity that was deleted.
+	DeleteEntitiesOf struct{ PrefabID string }
+	SetMegaphone     struct{ Settings any } // nil removes the megaphone settings
+	SetRecording     struct{ Settings any } // nil removes the recording settings
+	SetMetadata      struct {
+		Name                                    string
+		Description, Copyright, Thumbnail, Tags *string
+	}
 )
 
-// Edit applies a command to a WAM file and returns the new file. For ModifyArea, it also returns the area as it
-// now is: that is what the editors are told.
-func Edit(file []byte, commandID string, cmd any) ([]byte, map[string]any, error) {
-	v, err := jsonschema.UnmarshalJSON(bytes.NewReader(file)) // numbers stay json.Number: they round-trip as written
+// Result is what an edit did besides the new file.
+type Result struct {
+	Doc     map[string]any // the edited document
+	Area    map[string]any // ModifyArea: the area as it now is, which is what the editors are told
+	Removed []string       // private files no property links to anymore
+}
+
+// Edit applies a command to a WAM file and returns the new file.
+func Edit(file []byte, commandID string, cmd any) ([]byte, Result, error) {
+	doc, err := Parse(file)
 	if err != nil {
-		return nil, nil, err
+		return nil, Result{}, err
 	}
-	doc, ok := v.(map[string]any)
-	if !ok {
-		return nil, nil, errors.New("the WAM file is not an object")
-	}
-	migrate(doc)
-	area, err := apply(doc, cmd)
+	Migrate(doc)
+	r, err := apply(doc, cmd)
 	if err != nil {
-		return nil, nil, err
+		return nil, Result{}, err
 	}
 	doc["lastCommandId"] = commandID
 	out, err := json.Marshal(doc)
-	return out, area, err
+	r.Doc = doc
+	return out, r, err
 }
 
-func apply(doc map[string]any, cmd any) (map[string]any, error) {
+func apply(doc map[string]any, cmd any) (Result, error) {
 	areas, _ := doc["areas"].([]any)
+	entities, _ := doc["entities"].(map[string]any)
+	if entities == nil {
+		entities = map[string]any{}
+		doc["entities"] = entities
+	}
 	find := func(id string) int {
 		return slices.IndexFunc(areas, func(a any) bool { m, _ := a.(map[string]any); return m["id"] == id })
 	}
 	switch c := cmd.(type) {
 	case CreateArea:
 		if find(c.ID) >= 0 {
-			return nil, fmt.Errorf("Could not execute CreateArea Command: area %s already exists", c.ID)
+			return Result{}, fmt.Errorf("Could not execute CreateArea Command: area %s already exists", c.ID)
 		}
-		props := c.Properties
-		if props == nil {
-			props = []any{}
-		}
-		area := map[string]any{"id": c.ID, "name": c.Name, "x": c.X, "y": c.Y, "width": c.Width, "height": c.Height, "visible": true, "properties": props}
+		area := map[string]any{"id": c.ID, "name": c.Name, "x": c.X, "y": c.Y, "width": c.Width, "height": c.Height, "visible": true, "properties": orEmpty(c.Properties)}
 		if err := validate(areaSchema, area); err != nil {
-			return nil, err
+			return Result{}, err
 		}
 		doc["areas"] = append(areas, area)
-		return nil, nil
+		return Result{}, nil
 	case ModifyArea:
 		i := find(c.ID)
 		if i < 0 {
-			return nil, fmt.Errorf("Could not execute UpdateArea Command: area %s not found", c.ID)
+			return Result{}, fmt.Errorf("Could not execute UpdateArea Command: area %s not found", c.ID)
 		}
-		area := map[string]any{}
-		for k, v := range areas[i].(map[string]any) {
-			area[k] = v
-		}
+		area := clone(areas[i])
 		if c.Name != nil {
 			area["name"] = *c.Name
 		}
@@ -110,37 +152,178 @@ func apply(doc map[string]any, cmd any) (map[string]any, error) {
 				area[k] = *v
 			}
 		}
+		var removed []string
 		if c.ModifyProperties {
 			old, _ := area["properties"].([]any)
-			area["properties"] = keepServerData(dedupe(c.Properties), old)
+			props := keepServerData(dedupe(c.Properties), old)
+			removed = filesRemoved(old, props)
+			area["properties"] = props
 		}
 		if err := validate(areaSchema, area); err != nil {
-			return nil, err
+			return Result{}, err
 		}
 		areas[i] = area
-		return area, nil
+		return Result{Area: area, Removed: removed}, nil
 	case DeleteArea:
-		if i := find(c.ID); i >= 0 {
-			doc["areas"] = slices.Delete(areas, i, i+1)
+		i := find(c.ID)
+		if i < 0 {
+			return Result{}, nil
 		}
-		return nil, nil
-	case SetMegaphone:
-		settings, _ := doc["settings"].(map[string]any)
-		if settings == nil {
-			settings = map[string]any{}
+		props, _ := areas[i].(map[string]any)["properties"].([]any)
+		doc["areas"] = slices.Delete(areas, i, i+1)
+		return Result{Removed: filesRemoved(props, nil)}, nil
+	case CreateEntity:
+		if _, ok := entities[c.ID]; ok {
+			return Result{}, fmt.Errorf("Could not execute CreateEntity Command: entity %s already exists", c.ID)
 		}
-		if c.Settings == nil {
-			delete(settings, "megaphone")
-		} else {
-			if err := validate(megaphoneSchema, c.Settings); err != nil {
-				return nil, err
+		entity := map[string]any{"prefabRef": map[string]any{"id": c.PrefabID, "collectionName": c.CollectionName}, "x": c.X, "y": c.Y,
+			"properties": orEmpty(c.Properties)}
+		if c.Name != nil {
+			entity["name"] = *c.Name
+		}
+		if err := validate(entitySchema, entity); err != nil {
+			return Result{}, err
+		}
+		entities[c.ID] = entity
+		return Result{}, nil
+	case ModifyEntity:
+		if entities[c.ID] == nil {
+			return Result{}, fmt.Errorf("Could not execute UpdateEntity Command: entity %s not found", c.ID)
+		}
+		entity := clone(entities[c.ID])
+		entity["x"], entity["y"] = c.X, c.Y
+		if c.Name != nil {
+			entity["name"] = *c.Name
+		}
+		var removed []string
+		if c.ModifyProperties {
+			old, _ := entity["properties"].([]any)
+			props := orEmpty(c.Properties)
+			removed = filesRemoved(old, props)
+			entity["properties"] = props
+		}
+		if err := validate(entitySchema, entity); err != nil {
+			return Result{}, err
+		}
+		entities[c.ID] = entity
+		return Result{Removed: removed}, nil
+	case DeleteEntity:
+		var removed []string
+		if e, ok := entities[c.ID].(map[string]any); ok {
+			props, _ := e["properties"].([]any)
+			removed = filesRemoved(props, nil)
+			delete(entities, c.ID)
+		}
+		return Result{Removed: removed}, nil
+	case DeleteEntitiesOf:
+		var removed []string
+		for id, e := range entities {
+			m, _ := e.(map[string]any)
+			if ref, _ := m["prefabRef"].(map[string]any); ref["id"] == c.PrefabID {
+				props, _ := m["properties"].([]any)
+				removed = append(removed, filesRemoved(props, nil)...)
+				delete(entities, id)
 			}
-			settings["megaphone"] = c.Settings
 		}
-		doc["settings"] = settings
-		return nil, nil
+		return Result{Removed: removed}, nil
+	case SetMegaphone:
+		return Result{}, setSetting(doc, "megaphone", c.Settings, megaphoneSchema)
+	case SetRecording:
+		return Result{}, setSetting(doc, "recording", c.Settings, recordingSchema)
+	case SetMetadata:
+		metadata, _ := doc["metadata"].(map[string]any)
+		if metadata == nil {
+			metadata = map[string]any{}
+		}
+		metadata["name"] = c.Name
+		for k, v := range map[string]*string{"description": c.Description, "copyright": c.Copyright, "thumbnail": c.Thumbnail} {
+			if v != nil {
+				metadata[k] = *v
+			} else {
+				delete(metadata, k)
+			}
+		}
+		doc["metadata"] = metadata
+		vendor, _ := doc["vendor"].(map[string]any)
+		if vendor == nil {
+			vendor = map[string]any{}
+		}
+		tags := []any{}
+		if c.Tags != nil && *c.Tags != "" {
+			for _, t := range strings.Split(*c.Tags, ",") {
+				tags = append(tags, t)
+			}
+		}
+		vendor["tags"] = tags
+		doc["vendor"] = vendor
+		return Result{}, validate(fileSchema, doc)
 	}
-	return nil, fmt.Errorf("unsupported map edit %T", cmd)
+	return Result{}, fmt.Errorf("unsupported map edit %T", cmd)
+}
+
+func setSetting(doc map[string]any, key string, value any, s *jsonschema.Schema) error {
+	settings, _ := doc["settings"].(map[string]any)
+	if settings == nil {
+		settings = map[string]any{}
+	}
+	if value == nil {
+		delete(settings, key)
+	} else {
+		if err := validate(s, value); err != nil {
+			return err
+		}
+		settings[key] = value
+	}
+	doc["settings"] = settings
+	return nil
+}
+
+func orEmpty(props []any) []any {
+	if props == nil {
+		return []any{}
+	}
+	return props
+}
+
+func clone(v any) map[string]any {
+	out := map[string]any{}
+	m, _ := v.(map[string]any)
+	for k, x := range m {
+		out[k] = x
+	}
+	return out
+}
+
+// PrivateFile is where a file uploaded for an openFile property is stored (CustomFileService).
+func PrivateFile(name, propertyID string) string {
+	base := path.Base(name)
+	ext := path.Ext(base)
+	return "private/files/" + strings.TrimSuffix(base, ext) + "-" + propertyID + ext
+}
+
+// filesRemoved lists the private files of the openFile properties of old that next drops, or empties (FileModule).
+func filesRemoved(old, next []any) []string {
+	var out []string
+	for _, o := range old {
+		op, _ := o.(map[string]any)
+		name, _ := op["name"].(string)
+		if op["type"] != "openFile" || name == "" {
+			continue
+		}
+		i := slices.IndexFunc(next, func(n any) bool { m, _ := n.(map[string]any); return m["id"] == op["id"] })
+		if i >= 0 {
+			np, _ := next[i].(map[string]any)
+			newName, _ := np["name"].(string)
+			newLink, _ := np["link"].(string)
+			oldLink, _ := op["link"].(string)
+			if !(oldLink != "" && newName == "" && newLink == "") {
+				continue
+			}
+		}
+		id, _ := op["id"].(string)
+		out = append(out, PrivateFile(name, id))
+	}
+	return out
 }
 
 // validate checks a value built from protobuf Values (float64, int64...) the way the schema sees JSON.
@@ -194,8 +377,8 @@ func keepServerData(props, old []any) []any {
 	return props
 }
 
-// migrate brings a WAM file to the latest version, like wamFileMigration (WamFileMigration.ts) on load.
-func migrate(doc map[string]any) {
+// Migrate brings a WAM file to the latest version, like wamFileMigration (WamFileMigration.ts) on load.
+func Migrate(doc map[string]any) {
 	areas, _ := doc["areas"].([]any)
 	props := func(a any) []any { m, _ := a.(map[string]any); p, _ := m["properties"].([]any); return p }
 	if v, _ := doc["version"].(string); v == "" || v == "1.0.0" {

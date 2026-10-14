@@ -118,6 +118,7 @@ func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s := newSession(srv, sessionInfo{
 		token: token, roomID: q.Get("roomId"), connectionID: q.Get("connectionId"), tabID: q.Get("tabId"),
 		userUUID: member.UserUUID, ipAddress: clientIP(r), isLogged: tok.AccessToken != "", member: member, chatID: q.Get("chatID"), roomName: q.Get("roomName"),
+		lastCommandID: q.Get("lastCommandId"),
 	})
 	if id := s.info.connectionID; id != "" {
 		srv.retained.Compute(id, func(*Session, bool) (*Session, bool) { return s, true })

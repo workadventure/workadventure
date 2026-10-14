@@ -44,6 +44,10 @@ func subMessage(ev any) *pb.SubMessage {
 	switch e := ev.(type) {
 	case core.MapEdit:
 		return e.Event.(*pb.SubMessage)
+	case core.AreaVariableChanged:
+		v := e.Variable
+		return &pb.SubMessage{Message: &pb.SubMessage_AreaPropertyVariableMessage{AreaPropertyVariableMessage: &pb.AreaPropertyVariableMessage{
+			AreaId: v.AreaID, PropertyId: v.PropertyID, Key: v.Key, Value: v.Value}}}
 	case core.UserJoined:
 		return &pb.SubMessage{Message: &pb.SubMessage_UserJoinedMessage{UserJoinedMessage: userJoined(e.User)}}
 	case core.UserMoved:
@@ -86,6 +90,11 @@ func serverMessage(ev any) *pb.ServerToClientMessage {
 	case core.LocatePosition:
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_LocatePositionMessage{LocatePositionMessage: &pb.LocatePositionMessage{
 			Position: position(e.Position), UserId: e.UserID, UserUuid: e.UUID}}}
+	case core.MapReplaced:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RefreshRoomMessage{RefreshRoomMessage: &pb.RefreshRoomMessage{
+			RoomId: e.RoomURL, TimeToRefresh: proto.Int32(30)}}}
+	case core.MapDeleted:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_DeleteMapMessage{DeleteMapMessage: &pb.DeleteMapMessage{}}}
 	case *pb.ServerToClientMessage: // built by the adapter itself (connection, answers, errors)
 		return e
 	}

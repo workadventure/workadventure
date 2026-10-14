@@ -79,7 +79,9 @@ func run() error {
 	front := httpapi.NewFrontAssets(cfg.AssetsInternalURL, cfg.AssetsURL, apiVersion)
 	go front.Poll(ctx)
 	maps := mapstorage.New(cfg.StorageDirectory)
-	handler := httpapi.New(cfg, tokens, adm, front, ws.NewServer(cfg, tokens, adm, rooms, spaces, maps, apiVersion), version)
+	wsServer := ws.NewServer(cfg, tokens, adm, rooms, spaces, maps, apiVersion)
+	maps.Changed = wsServer.MapChanged
+	handler := httpapi.New(cfg, tokens, adm, front, wsServer, version)
 
 	// ReadHeaderTimeout: a client that never finishes its headers must not hold a connection forever.
 	newServer := func(port int, h http.Handler) *http.Server {
@@ -90,7 +92,7 @@ func run() error {
 		servers = append(servers, newServer(cfg.WSPort, handler))
 	}
 	if cfg.MapStoragePort != 0 && cfg.MapStoragePort != cfg.HTTPPort && cfg.MapStoragePort != cfg.WSPort {
-		servers = append(servers, newServer(cfg.MapStoragePort, maps.Handler(cfg.MapStorageAuth, cfg.CacheControl)))
+		servers = append(servers, newServer(cfg.MapStoragePort, maps.Handler(cfg.MapStorage)))
 	}
 	if cfg.PrometheusPort != 0 {
 		// The dedicated metrics port is internal: it also serves the Go profiler.
