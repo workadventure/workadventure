@@ -23,6 +23,7 @@ Usage:
   dev/dev stack down <name> [compose down options, e.g. -v to drop its maps]
   dev/dev status
   dev/dev env <name>      Playwright variables for a stack: eval "\$(dev/dev env ts)"
+  dev/dev assets <name>   map-storage/tests/assets.zip for that stack (resetWamMaps uploads it)
 USAGE
     exit 1
 }
@@ -100,6 +101,8 @@ export MAPS_DOMAIN=maps.workadventure.localhost$SOCLE_URL_PORT
 export MATRIX_PUBLIC_URI=http://matrix.workadventure.localhost$SOCLE_URL_PORT
 export MATRIX_DOMAIN=matrix.workadventure.localhost
 export DEV_STACK=$name
+# No Klaxoon client id locally: its specs skip, as on forks.
+export NO_KLAXOON_SECRET=true
 ENV
     # Specs that reboot the back or the pusher restart this stack's containers instead (tests/tests/utils/containers.ts).
     if docker inspect "wa-$name-server-1" >/dev/null 2>&1; then
@@ -107,6 +110,21 @@ ENV
     else
         echo "export DEV_REBOOT_BACK='docker restart wa-$name-back-1' DEV_REBOOT_PLAY='docker restart wa-$name-play-1'"
     fi
+    ;;
+"assets "*)
+    name=${2:-}
+    [ -n "$name" ] || usage
+    # The test WAMs load their entity collections from http://play.workadventure.localhost, the regular stack:
+    # point them at this stack instead, as the CI does for its own host.
+    tmp=$(mktemp -d)
+    cp -R "$REPO/map-storage/tests/assets/." "$tmp/"
+    grep -rlF "http://play.workadventure.localhost/" "$tmp" | while read -r f; do
+        sed -i.bak "s#http://play.workadventure.localhost/#http://play.$name.workadventure.localhost$SOCLE_URL_PORT/#g" "$f" && rm "$f.bak"
+    done
+    rm -f "$REPO/map-storage/tests/assets.zip"
+    (cd "$tmp" && zip -qr "$REPO/map-storage/tests/assets.zip" .)
+    rm -rf "$tmp"
+    echo "map-storage/tests/assets.zip: collections from play.$name.workadventure.localhost$SOCLE_URL_PORT"
     ;;
 *)
     usage
