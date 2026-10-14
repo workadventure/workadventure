@@ -40,11 +40,15 @@ func TestLiveStreamingShowsOnlyStreamers(t *testing.T) {
 	if !has(alice.take(), func(u SpaceUserUpdated) bool { return u.User.ID == "bob" && u.Mask[0] == "cameraState" }) {
 		t.Fatal("a visible streamer is updated")
 	}
+	bob.take()
 	_ = sp.UpdateUser(ctx, "bob", megaphone(false), []string{"megaphoneState"})
 	syncSpace(t, sp)
-	if ev := alice.take(); !has(ev, func(r SpaceUserRemoved) bool { return r.UserID == "bob" }) ||
-		!has(ev, func(p SpacePrivateEvent) bool { _, ok := p.Event.(WebRTCDisconnect); return ok }) {
-		t.Fatalf("a streamer who stops disappears and hangs up: %#v", ev)
+	// Alice's front closes its peer when Bob leaves its list; Bob is told.
+	if ev := alice.take(); !has(ev, func(r SpaceUserRemoved) bool { return r.UserID == "bob" }) {
+		t.Fatalf("a streamer who stops disappears: %#v", ev)
+	}
+	if !has(bob.take(), func(p SpacePrivateEvent) bool { e, ok := p.Event.(WebRTCDisconnect); return ok && e.UserID == "alice" }) {
+		t.Fatal("and hangs up")
 	}
 }
 
@@ -217,5 +221,44 @@ func TestPollsAndQuestions(t *testing.T) {
 	}
 	if query(t, sp, "stranger", RaiseHand{Raised: true}) == nil {
 		t.Fatal("a stranger cannot query")
+	}
+}
+
+// A listener's front closes its peer with a speaker who goes back to listening (the speaker leaves its list): the
+// server must forget that connection and open a new one when the speaker comes back.
+func TestASpeakerBackOnStageGetsANewConnection(t *testing.T) {
+	sp := NewSpace(SpaceKey{"http://play.test", "auditorium"})
+	defer sp.Stop()
+	a, c, d := &recorder{}, &recorder{}, &recorder{}
+	for id, p := range map[string]*recorder{"a": a, "c": c, "d": d} {
+		joinFiltered(t, sp, p, SpaceUser{ID: id}, FilterLiveStreamingUsersWithFeedback)
+		_ = sp.Watch(ctx, id, nil)
+	}
+	listener := SpaceUser{AttendeesState: true}
+	_ = sp.UpdateUser(ctx, "c", megaphone(true), []string{"megaphoneState"})
+	_ = sp.UpdateUser(ctx, "a", listener, []string{"attendeesState"})
+	_ = sp.UpdateUser(ctx, "d", listener, []string{"attendeesState"})
+	_ = sp.UpdateUser(ctx, "a", SpaceUser{Megaphone: true, AttendeesState: true}, []string{"megaphoneState"})
+	syncSpace(t, sp)
+	d.take()
+	a.take()
+
+	_ = sp.UpdateUser(ctx, "a", listener, []string{"megaphoneState"})
+	syncSpace(t, sp)
+	// Both are still in the filter: the connection d's front just closed is opened again.
+	if ev := d.take(); !has(ev, func(r SpaceUserRemoved) bool { return r.UserID == "a" }) ||
+		!has(ev, func(p SpacePrivateEvent) bool { e, ok := p.Event.(WebRTCStart); return ok && e.UserID == "a" }) {
+		t.Fatalf("d no longer lists a, and gets a new connection with it: %#v", ev)
+	}
+	ev := a.take()
+	if !has(ev, func(p SpacePrivateEvent) bool { e, ok := p.Event.(WebRTCDisconnect); return ok && e.UserID == "d" }) ||
+		!has(ev, func(p SpacePrivateEvent) bool { e, ok := p.Event.(WebRTCStart); return ok && e.UserID == "d" }) {
+		t.Fatalf("a drops the old connection with d and starts the new one: %#v", ev)
+	}
+
+	_ = sp.UpdateUser(ctx, "a", SpaceUser{Megaphone: true, AttendeesState: true}, []string{"megaphoneState"})
+	syncSpace(t, sp)
+	if ev := d.take(); !has(ev, func(x SpaceUserAdded) bool { return x.User.ID == "a" }) {
+		t.Fatalf("d lists a again, over the live connection: %#v", ev)
 	}
 }
