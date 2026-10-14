@@ -356,6 +356,12 @@ describe("AnalyticsEventCatalog", () => {
                 interFrameDelaySumSeconds: 5.1,
                 interFrameDelaySquaredSumSeconds: 0.2,
                 decodeSeconds: 0.3,
+                // Our own capture and encoder: nothing to report about a stream we receive.
+                captureFps: null,
+                captureTargetFps: null,
+                encodeMsPerFrame: null,
+                cpuLimitedRatio: null,
+                bandwidthLimitedRatio: null,
                 sampleSeq: 1,
             },
         });
@@ -404,6 +410,11 @@ describe("AnalyticsEventCatalog", () => {
                 interFrameDelaySumSeconds: null,
                 interFrameDelaySquaredSumSeconds: null,
                 decodeSeconds: null,
+                captureFps: 24,
+                captureTargetFps: 30,
+                encodeMsPerFrame: 12.5,
+                cpuLimitedRatio: 0.4,
+                bandwidthLimitedRatio: 0,
                 sampleSeq: 1,
             },
         });

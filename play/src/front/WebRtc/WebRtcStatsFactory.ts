@@ -44,7 +44,12 @@ export function createPeerWebRtcStats(remotePeer: RemotePeer): PeerWebRtcStats {
             getExpectedFps: () => remotePeer.expectedFps,
             measureFpsVariability: remotePeer.videoType === "video",
         }),
-        sender: createSenderStatsStore(reportStore, "P2P"),
+        sender: createSenderStatsStore(reportStore, "P2P", () =>
+            (remotePeer._pc as RTCPeerConnection | undefined)
+                ?.getSenders()
+                .find((sender) => sender.track?.kind === "video")
+                ?.track?.getSettings(),
+        ),
     };
 }
 
@@ -87,7 +92,7 @@ export function createLivekitSenderStats(track: LocalVideoTrack): Readable<WebRt
     const reportStore = createStatsReportStore(() => track.getRTCStatsReport(), {
         onError: (e) => console.error("getRTCStatsReport error for local livekit track", e),
     });
-    return createSenderStatsStore(reportStore, "Livekit");
+    return createSenderStatsStore(reportStore, "Livekit", () => track.mediaStreamTrack?.getSettings());
 }
 
 type StatsReportStoreOptions = {
@@ -189,6 +194,8 @@ function createReceiverStatsStore(
 function createSenderStatsStore(
     reportStore: Readable<RTCStatsReport | undefined>,
     source: string,
+    // Settings of the video track being sent: the stats do not say what rate the capture is configured at
+    getCaptureSettings: () => MediaTrackSettings | undefined,
 ): Readable<WebRtcSenderStats | undefined> {
     const prev = new Map<string, SenderLayerPrev>();
 
@@ -199,7 +206,9 @@ function createSenderStatsStore(
                 set(undefined);
                 return;
             }
-            set(buildWebRtcSenderStatsFromReport($report, prev, source));
+            const stats = buildWebRtcSenderStatsFromReport($report, prev, source);
+            const captureTargetFps = getCaptureSettings()?.frameRate;
+            set(stats && isCounter(captureTargetFps) && captureTargetFps > 0 ? { ...stats, captureTargetFps } : stats);
         },
         undefined,
     );
@@ -355,12 +364,18 @@ export type SenderLayerPrev = {
     bytesSent: number;
     framesEncoded: number;
     timestamp: number;
+    totalEncodeTime?: number;
+    cpuLimitedSeconds?: number;
+    bandwidthLimitedSeconds?: number;
+    // Captured frames, on the entry of the media source (RTCVideoSourceStats) the layers encode
+    frames?: number;
 };
 
 /**
  * Builds the sender-side statistics from a stats report containing our outbound video RTP stream(s).
  * With simulcast or SVC there is one outbound-rtp entry per layer: the frame size, fps and limitation reason come
- * from the largest layer, the bandwidth is the sum of all layers.
+ * from the largest layer, the bandwidth and the encoding time are the sum of all layers. The capture rate comes from
+ * the media source the layers encode.
  *
  * Returns undefined when the report has no outbound video stream or when no previous sample allows computing rates.
  * `prev` is updated in place with the counters of this report.
@@ -372,9 +387,12 @@ export function buildWebRtcSenderStatsFromReport(
 ): WebRtcSenderStats | undefined {
     const layers: any[] = [];
     const codecs = new Map<string, any>();
+    const mediaSources = new Map<string, any>();
     stats.forEach((v: any) => {
         if (v.type === "outbound-rtp" && (v.kind === "video" || v.mediaType === "video")) {
             layers.push(v);
+        } else if (v.type === "media-source" && v.kind === "video") {
+            mediaSources.set(v.id, v);
         } else if (v.type === "codec") {
             codecs.set(v.id, v);
         }
@@ -394,6 +412,9 @@ export function buildWebRtcSenderStatsFromReport(
     const timeDiffSeconds = topPrev ? (topLayer.timestamp - topPrev.timestamp) / 1000 : 0;
 
     let bytesSentDelta = 0;
+    // Only the layers that report their encoding time on both sides count, frames and time alike
+    let encodeSecondsDelta = 0;
+    let timedFramesDelta = 0;
     // `active` is false on the layers the sender switched off (dynacast, a P2P peer hiding our tile)
     const reportsActive = layers.every((layer) => typeof layer.active === "boolean");
     let activeLayers = 0;
@@ -402,6 +423,10 @@ export function buildWebRtcSenderStatsFromReport(
         const layerPrev = prev.get(layer.id);
         if (layerPrev) {
             bytesSentDelta += (layer.bytesSent ?? 0) - layerPrev.bytesSent;
+            if (isCounter(layer.totalEncodeTime) && layerPrev.totalEncodeTime !== undefined) {
+                encodeSecondsDelta += layer.totalEncodeTime - layerPrev.totalEncodeTime;
+                timedFramesDelta += (layer.framesEncoded ?? 0) - layerPrev.framesEncoded;
+            }
         }
         if (layer.active === true) {
             activeLayers++;
@@ -415,10 +440,31 @@ export function buildWebRtcSenderStatsFromReport(
             bytesSent: layer.bytesSent ?? 0,
             framesEncoded: layer.framesEncoded ?? 0,
             timestamp: layer.timestamp ?? 0,
+            totalEncodeTime: isCounter(layer.totalEncodeTime) ? layer.totalEncodeTime : undefined,
+            cpuLimitedSeconds: limitationSeconds(layer.qualityLimitationDurations, "cpu"),
+            bandwidthLimitedSeconds: limitationSeconds(layer.qualityLimitationDurations, "bandwidth"),
         });
     }
+
+    // The capture the layers encode: its rate does not depend on what the encoder keeps
+    const mediaSource = mediaSources.get(topLayer.mediaSourceId) ?? mediaSources.values().next().value;
+    const sourcePrev = mediaSource ? prev.get(mediaSource.id) : undefined;
+    let captureFps: number | undefined;
+    if (mediaSource && isCounter(mediaSource.frames)) {
+        const sourceSeconds = sourcePrev ? ((mediaSource.timestamp ?? 0) - sourcePrev.timestamp) / 1000 : 0;
+        if (sourcePrev?.frames !== undefined && sourceSeconds > 0) {
+            captureFps = Math.max(0, mediaSource.frames - sourcePrev.frames) / sourceSeconds;
+        }
+        prev.set(mediaSource.id, {
+            bytesSent: 0,
+            framesEncoded: 0,
+            timestamp: mediaSource.timestamp ?? 0,
+            frames: mediaSource.frames,
+        });
+    }
+
     for (const id of Array.from(prev.keys())) {
-        if (!layers.some((layer) => layer.id === id)) {
+        if (!layers.some((layer) => layer.id === id) && id !== mediaSource?.id) {
             prev.delete(id);
         }
     }
@@ -439,7 +485,44 @@ export function buildWebRtcSenderStatsFromReport(
         qualityLimitationReason: toQualityLimitationReason(topLayer.qualityLimitationReason),
         encoderImplementation:
             typeof topLayer.encoderImplementation === "string" ? topLayer.encoderImplementation : undefined,
+        captureFps,
+        encodeMsPerFrame:
+            timedFramesDelta > 0 ? (Math.max(0, encodeSecondsDelta) / timedFramesDelta) * 1000 : undefined,
+        cpuLimitedRatio: limitationRatio(
+            topLayer.qualityLimitationDurations,
+            topPrev.cpuLimitedSeconds,
+            "cpu",
+            timeDiffSeconds,
+        ),
+        bandwidthLimitedRatio: limitationRatio(
+            topLayer.qualityLimitationDurations,
+            topPrev.bandwidthLimitedSeconds,
+            "bandwidth",
+            timeDiffSeconds,
+        ),
     };
+}
+
+// RTCOutboundRtpStreamStats.qualityLimitationDurations: seconds spent in each limitation state
+function limitationSeconds(durations: unknown, reason: "cpu" | "bandwidth"): number | undefined {
+    if (typeof durations !== "object" || durations === null) {
+        return undefined;
+    }
+    const seconds = (durations as Record<string, unknown>)[reason];
+    return isCounter(seconds) ? seconds : undefined;
+}
+
+function limitationRatio(
+    durations: unknown,
+    previousSeconds: number | undefined,
+    reason: "cpu" | "bandwidth",
+    elapsedSeconds: number,
+): number | undefined {
+    const seconds = limitationSeconds(durations, reason);
+    if (seconds === undefined || previousSeconds === undefined || elapsedSeconds <= 0) {
+        return undefined;
+    }
+    return Math.min(1, Math.max(0, (seconds - previousSeconds) / elapsedSeconds));
 }
 
 function toQualityLimitationReason(reason: unknown): WebRtcQualityLimitationReason {

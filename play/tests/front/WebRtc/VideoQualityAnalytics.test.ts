@@ -114,6 +114,11 @@ describe("subscribeToOutboundVideoQualityAnalytics", () => {
         mimeType: "video/AV1",
         qualityLimitationReason: "cpu",
         encoderImplementation: "libaom",
+        captureFps: 24,
+        captureTargetFps: 30,
+        encodeMsPerFrame: 12.5,
+        cpuLimitedRatio: 0.4,
+        bandwidthLimitedRatio: 0,
     };
 
     it("emits outbound samples carrying the encoder health", () => {
@@ -143,6 +148,11 @@ describe("subscribeToOutboundVideoQualityAnalytics", () => {
                     mimeType: "video/AV1",
                     qualityLimitationReason: VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_CPU,
                     encoderImplementation: "libaom",
+                    captureFps: 24,
+                    captureTargetFps: 30,
+                    encodeMsPerFrame: 12.5,
+                    cpuLimitedRatio: 0.4,
+                    bandwidthLimitedRatio: 0,
                 }),
             ],
         });

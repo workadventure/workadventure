@@ -798,6 +798,36 @@ export const ANALYTICS_EVENTS = {
         .describe(
           "Inbound only: time spent decoding during the window. Divided by framesDecoded: the receiver's decode cost per frame, which depends on codec and resolution.",
         ),
+      captureFps: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only, over the last second like fps: frames per second the camera or screen capture delivered to the encoder (RTCVideoSourceStats). Against captureTargetFps, tells a camera that starves the encoder (dim light, overloaded machine) from an encoder dropping frames. A screen capture only delivers frames when the content changes.",
+        ),
+      captureTargetFps: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only: frame rate the capture is configured at (MediaTrackSettings.frameRate).",
+        ),
+      encodeMsPerFrame: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only, over the last second: encoding time per encoded frame, all simulcast/SVC layers together, in milliseconds.",
+        ),
+      cpuLimitedRatio: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only, over the last second: share of the time (0 to 1) the browser degraded the stream for lack of CPU (qualityLimitationDurations), where qualityLimitationReason is only a snapshot.",
+        ),
+      bandwidthLimitedRatio: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only, over the last second: share of the time (0 to 1) the browser degraded the stream for lack of bandwidth.",
+        ),
       sampleSeq: z
         .number()
         .nullable()

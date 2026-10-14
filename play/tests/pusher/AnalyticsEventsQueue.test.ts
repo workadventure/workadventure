@@ -467,6 +467,41 @@ describe("AnalyticsEventsQueue", () => {
         expect(events[3].properties).toMatchObject({ windowSeconds: null, framesDecoded: null, decodeSeconds: null });
     });
 
+    it("keeps the capture and encoder load of outbound samples only, dropping implausible values", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+        const encoderLoad = {
+            captureFps: 24,
+            captureTargetFps: 30,
+            encodeMsPerFrame: 12.5,
+            cpuLimitedRatio: 0.4,
+            bandwidthLimitedRatio: 0,
+        };
+        const outbound = {
+            direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND,
+            remoteSpaceUserId: "",
+        };
+
+        queue.enqueueVideoQualityReport(
+            {
+                samples: [
+                    videoQualitySample({ ...outbound, ...encoderLoad }),
+                    videoQualitySample({ ...outbound, ...encoderLoad, cpuLimitedRatio: 1.5, captureFps: Number.NaN }),
+                    // A stream we receive tells nothing about our encoder
+                    videoQualitySample(encoderLoad),
+                ],
+            },
+            socketData(),
+        );
+        await queue.flush();
+
+        const events = (post.mock.calls[0][1] as AnalyticsEventsBatch).events;
+        expect(events[0].properties).toMatchObject(encoderLoad);
+        expect(events[1].properties).toMatchObject({ captureFps: null, cpuLimitedRatio: null, encodeMsPerFrame: 12.5 });
+        expect(events[2].properties).toMatchObject({ captureFps: null, encodeMsPerFrame: null, cpuLimitedRatio: null });
+    });
+
     it("drops video quality samples for a space the socket has not joined", async () => {
         const post = vi.fn().mockResolvedValue(undefined);
         const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
