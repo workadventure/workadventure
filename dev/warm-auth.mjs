@@ -9,6 +9,17 @@ const playUrl = process.env.PLAY_URL;
 const mapsDomain = process.env.MAPS_DOMAIN;
 if (!playUrl || !mapsDomain) throw new Error('Run eval "$(dev/dev env <stack>)" first');
 
+// The OIDC account createUser logs each name in with (tests/tests/utils/auth.ts and oidc.ts), then Matrix SSO.
+// Other names stay anonymous, as in createUser.
+const oidcAccount = {
+    Admin1: "User1",
+    Admin2: "User1",
+    Member1: "User2",
+    UserMatrix: "UserMatrix",
+    UserMatrix2: "UserMatrix2",
+    UserLogin1: "User1",
+};
+
 const browser = await chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] });
 for (const name of process.argv.slice(2)) {
     const context = await browser.newContext({
@@ -28,10 +39,10 @@ for (const name of process.argv.slice(2)) {
     await page.waitForTimeout(1000);
     await page.click("text=Save");
     await page.getByTestId("microphone-button").waitFor();
-    // Admin1/Admin2 log in through OIDC (User1, tag "admin") and then Matrix SSO, like createUser.
-    if (name.startsWith("Admin")) {
+    const account = oidcAccount[name];
+    if (account) {
         await page.getByRole("button", { name: "Login" }).click();
-        await page.fill("#Input_Username", "User1");
+        await page.fill("#Input_Username", account);
         await page.fill("#Input_Password", "pwd");
         await page.click('button:has-text("Login")');
         await page.locator("#main-layout").waitFor({ timeout: 90_000 });
