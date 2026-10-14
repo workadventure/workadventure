@@ -493,6 +493,8 @@ func (s *Session) query(q *pb.QueryMessage) {
 		s.mapStorageJwt(q.GetId())
 	case *pb.QueryMessage_EmbeddableWebsiteQuery:
 		s.embeddableWebsite(q.GetId(), query.EmbeddableWebsiteQuery.GetUrl())
+	case *pb.QueryMessage_RoomsFromSameWorldQuery:
+		s.roomsFromSameWorld(q.GetId())
 	case *pb.QueryMessage_RoomTagsQuery:
 		// No admin: no tag to suggest (LocalAdmin.getTagsList fails, the pusher answers an empty list).
 		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomTagsAnswer{RoomTagsAnswer: &pb.RoomTagsAnswer{}}})
