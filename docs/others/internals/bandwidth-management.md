@@ -51,9 +51,9 @@ further here.
 
 ## Codec Selection
 
-`preferredVideoCodecs(category, quality, direction, pixels)` returns the codecs we are willing to encode (or, for
-the P2P receive preference, decode) with at a given frame size, best first. The transport keeps the first one the
-browser can use.
+`preferredVideoCodecs(category, quality, direction, pixels, transport)` returns the codecs we are willing to encode
+(or, for the P2P receive preference, decode) with at a given frame size, best first. The transport keeps the first
+one the browser can use.
 
 It starts from a static order and filters it with what the browser knows about this machine:
 
@@ -62,7 +62,9 @@ It starts from a static order and filters it with what the browser knows about t
 | Quality recommended or high | VP9, H.264 | AV1, VP9, H.264 |
 | Quality low | VP9, H.264 | VP9, H.264 |
 
-Then, for every codec except H.264, which always stays:
+LiveKit appends VP8. The last codec of the list is the floor and always stays: H.264 in P2P, VP8 on LiveKit (see
+"H.264 is not hardware on LiveKit" below). H.264 above the floor stays too when the browser reports it as hardware or
+says nothing. Then, for every other codec:
 
 - **Desktop**: the codec is kept unless the browser remembers it as *not smooth* at that frame size (see below). With
   no verdict, it is kept.
@@ -71,7 +73,7 @@ Then, for every codec except H.264, which always stays:
 - A codec dropped for smoothness gets **one retry per week**, so a single bad session cannot demote it forever.
 
 So a Pixel with a hardware VP9 encoder keeps VP9; a phone without one encodes H.264; a weak laptop that struggled with
-VP9 at 720p last week gets H.264.
+VP9 at 720p last week gets H.264, and on LiveKit gets VP8 if it struggled with OpenH264 too.
 
 ### What the browser knows: `CodecPerformance.ts`
 
@@ -83,7 +85,8 @@ cached and read synchronously afterwards; until they arrive, the lists behave as
 In Chromium (verified in the source):
 
 - `powerEfficient` is true when a hardware encoder or decoder exists for the codec. There is no small-size heuristic
-  on the WebRTC path.
+  on the WebRTC path. The probe gives H.264 no `profile-level-id`, which libwebrtc reads as Constrained Baseline:
+  LiveKit's profile, not P2P's.
 - `smooth` comes from the browser's WebRTC performance history: per codec, frame size bucket, hardware flag and
   direction, the 99th percentile of the processing time per frame measured in real sessions on this profile, on any
   site. A stream is smooth when that percentile stays under the frame duration. The history is only written while a
@@ -114,13 +117,26 @@ Why these choices:
   some machines.
 - **H.264 as the fallback**: it is the only codec with a hardware encoder nearly everywhere (VideoToolbox on macOS,
   MediaFoundation on Windows, MediaCodec on Android). macOS in particular has no hardware encoder for VP8, VP9 or AV1,
-  so H.264 is the only rung that actually frees the CPU there. It costs bandwidth: WebRTC negotiates constrained
-  baseline H.264, which is VP8-class, so about 40 % more than VP9 for the same quality, which is why it is not the
-  default on desktop.
+  so in P2P H.264 is the only rung that actually frees the CPU there. It costs bandwidth: H.264 as WebRTC encodes it
+  is VP8-class, so about 40 % more than VP9 for the same quality, which is why it is not the default on desktop.
+- **H.264 is not hardware on LiveKit**: a default LiveKit server registers H.264 as Constrained Baseline (`42e01f`),
+  then High, and that is what gets negotiated. Chrome's hardware encoder factory only advertises Constrained Baseline
+  on Android, ChromeOS and Linux; on
+  Windows it is behind `kPlatformH264CbpEncoding`, off by default, and on macOS it is never there
+  (`IsH264ConstrainedBaselineProfileAvailableForAcceleratedEncoder()`). The format then has no hardware candidate,
+  and every simulcast layer is OpenH264, at every resolution. P2P is different: Chrome lists Baseline (`42001f`)
+  first, which VideoToolbox does encode. libwebrtc runs OpenH264 on a single thread for all the layers
+  (multithreading is behind a field trial), so it hits the overuse detector while other cores idle. So on LiveKit a
+  software H.264 goes through the same smooth check as VP9 (the Constrained Baseline probe reads OpenH264's own
+  history), and VP8 sits below it: software everywhere too, but 2 or 3 threads from 720p up. H.264 still comes
+  before VP8 when it is smooth: viewers decode it in hardware.
 - **VP8 is never preferred**: it is mandatory in WebRTC, so every browser negotiates it anyway, and it is software
-  everywhere. It remains the floor when H.264 is missing (a Firefox whose OpenH264 download is blocked by policy,
-  Chromium builds without proprietary codecs). LiveKit rewrites an unsupported codec to VP8 on its own, and in P2P
-  the browser's remaining codecs are appended after our list.
+  everywhere. It is LiveKit's floor, and the codec LiveKit rewrites an unsupported one to. P2P leaves it out of the
+  negotiation: H.264 is always there.
+- **Below 360p, Chrome uses software anyway**: `RTCVideoEncoder` hands H.264, VP8 and VP9 frames under 360p (AV1:
+  270p) to the software encoder (`kForceSoftwareForRtcLowResolutions`, on by default on desktop). A small P2P tile, or
+  the lowest simulcast layer, is software whatever the codec. `describeEncoder()` calls a simulcast adapter that mixes
+  both hardware.
 
 This choice is made once per session, from what the browser remembers of past ones. What happens when the encoder
 cannot keep up with it *during* a stream is in "When the encoder cannot keep up" below.
@@ -174,7 +190,9 @@ are tolerated, a lone spike is ignored.
   samples after a stream starts are ignored: keyframes and rate-control ramp-up look like overload.
 - The window starts over when the stream stops, the transport changes (P2P ↔ LiveKit) or the codec changes.
 - One decision per full window, then a full window of cooldown.
-- Never for H.264 (nothing below it), never for a hardware encoder (a cheaper codec gains it nothing).
+- Never for VP8 (nothing below it), never for a hardware encoder (a cheaper codec gains it nothing). H.264 only on
+  LiveKit, and only when every encoder is named software (OpenH264): elsewhere it is hardware until named otherwise
+  (Safari names nothing), and in P2P it is the floor, where the relief is the move to LiveKit.
 - The camera holds back while a screen share is being sent: the screen share is the heavy encoder and goes first;
   demoting the camera in the meantime would mark the wrong codec.
 
@@ -196,8 +214,10 @@ the next window falls through to the codec.
 
 **Then the codec.** Otherwise the decision **demotes** the codec for the rest of the session: `demotedCodecStore`
 in `CodecPerformance.ts` records it per category, and `preferredVideoCodecs()` leaves it out together with every
-codec above it (screen share AV1 → VP9 → H.264, camera VP9 → H.264). Nothing is persisted, the browser's own smooth
-history is the memory across sessions, and nothing goes back up before the page is reloaded. The publishers
+codec above it (screen share AV1 → VP9 → H.264, camera VP9 → H.264, then → VP8 on LiveKit only: P2P ignores a
+demoted H.264, its floor, so a LiveKit demotion does not take hardware Baseline away from the next bubble). Nothing
+is persisted, the browser's own smooth history is the memory across sessions, and nothing goes back up before the
+page is reloaded. The publishers
 subscribe to the store:
 
 - **LiveKit**: the codec of a publication is fixed at `publishTrack()`, so `LiveKitRoom` unpublishes and publishes
