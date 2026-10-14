@@ -27,8 +27,8 @@ export interface VideoPlaybackWindowDeltas {
  * Turns the cumulative playback counters of a received stream into per-sample deltas.
  *
  * The first counters only set a baseline, and so does a new stats object or a counter going down (the browser
- * restarted them). While we pause the stream on purpose there is no baseline, and the windows that follow the pause
- * report nothing: the gap we caused would otherwise read as a long stall.
+ * restarted them). While we pause the stream on purpose there is no baseline, and none is taken until 10 seconds
+ * after the pause: the gap we caused would otherwise read as a long stall.
  */
 export class VideoPlaybackWindow {
     private baseline: VideoPlaybackCounters | undefined;
@@ -48,12 +48,15 @@ export class VideoPlaybackWindow {
      * Called when a sample is sent: returns what happened since the previous one, and starts the next window.
      */
     public take(counters: VideoPlaybackCounters | undefined, now: number): VideoPlaybackWindowDeltas | undefined {
+        // Neither end of a window may fall in that period: a window starting in it would still hold the first frame
+        // coming back, when the browser counts the whole gap
+        if (now - this.deliberatePauseSeenAt < AFTER_DELIBERATE_PAUSE_MS) {
+            this.baseline = undefined;
+            return undefined;
+        }
         const baseline = this.baseline;
         this.baseline = counters;
         if (!counters || !baseline || counters.statsId !== baseline.statsId) {
-            return undefined;
-        }
-        if (now - this.deliberatePauseSeenAt < AFTER_DELIBERATE_PAUSE_MS) {
             return undefined;
         }
 
