@@ -55,7 +55,9 @@ test.describe("Proximity chat file transfer @nomobile @nowebkit", () => {
         const fileChooser = await fileChooserPromise;
         await fileChooser.setFiles({ name: fileName, mimeType: "application/octet-stream", buffer: content });
         await alice.getByTestId("sendMessageButton").click();
-        await expect(alice.getByRole("link", { name: fileName })).toBeVisible();
+        await expect(alice.getByText(fileName, { exact: true })).toBeVisible();
+        // Alice already has the file: she is not offered to save it.
+        await expect(alice.getByText("Save file")).toHaveCount(0);
         const recipientRow = (name: string) => alice.getByTestId("attachmentRecipient").filter({ hasText: name });
         await expect(recipientRow("Bob")).toContainText("Waiting");
         await expect(recipientRow("Charlie")).toContainText("Waiting");

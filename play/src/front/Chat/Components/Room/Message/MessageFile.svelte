@@ -13,13 +13,16 @@
 
     let { content, message = undefined }: Props = $props();
     let size = $derived(message?.attachment?.size);
+    // Our own files are already ours: no point offering to save them.
+    let canSave = $derived(!message?.isMyMessage);
 </script>
 
 {#if $content.url !== undefined}
-    <a
-        href={$content.url}
-        download={$content.body}
-        class="block min-w-[200px] max-w-full overflow-hidden rounded-md bg-white/5 text-white hover:text-white hover:no-underline"
+    <svelte:element
+        this={canSave ? "a" : "div"}
+        href={canSave ? $content.url : undefined}
+        download={canSave ? $content.body : undefined}
+        class="block min-w-[200px] max-w-full overflow-hidden rounded-t-[inherit] bg-white/5 last:rounded-b-[inherit] text-white hover:text-white hover:no-underline"
     >
         <div class="px-2.5 py-2">
             <div class="flex items-center gap-1 text-sm font-bold">
@@ -30,13 +33,15 @@
                 <div class="text-xs text-white/70">{formatFileSize(size)}</div>
             {/if}
         </div>
-        <div
-            class="flex items-center justify-center gap-1 border-0 border-t border-solid border-white/10 py-2 text-xs font-bold hover:bg-white/10"
-        >
-            <IconFileDownload font-size={14} />
-            {$LL.chat.file.saveFile()}
-        </div>
-    </a>
+        {#if canSave}
+            <div
+                class="flex items-center justify-center gap-1 border-0 border-t border-solid border-white/10 py-2 text-xs font-bold hover:bg-white/10"
+            >
+                <IconFileDownload font-size={14} />
+                {$LL.chat.file.saveFile()}
+            </div>
+        {/if}
+    </svelte:element>
 {:else}
     <MessageAttachmentOffer {content} {message} />
 {/if}

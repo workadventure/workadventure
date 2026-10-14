@@ -64,7 +64,9 @@
     }
 </script>
 
-<div class="min-w-[200px] max-w-full overflow-hidden rounded-md bg-white/5 text-white">
+<div
+    class="min-w-[200px] max-w-full overflow-hidden rounded-t-[inherit] bg-white/5 last:rounded-b-[inherit] text-white"
+>
     <div class="flex items-center justify-between gap-2 px-2.5 py-2">
         <div class="min-w-0">
             <div class="flex items-center gap-1 text-sm font-bold">
