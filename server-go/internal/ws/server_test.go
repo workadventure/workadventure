@@ -2,6 +2,7 @@ package ws
 
 import (
 	"context"
+	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	"net/http/httptest"
 	"net/url"
 	"strconv"
@@ -42,7 +43,7 @@ func newHarness(t *testing.T) *harness {
 	},
 		func(r *core.Room) { r.Stop() })
 	spaces := registry.NewRefs(core.NewSpace, func(sp *core.Space) { sp.Stop() })
-	h.srv = NewServer(cfg, h.auth, adm, h.rooms, spaces, "test-version")
+	h.srv = NewServer(cfg, h.auth, adm, h.rooms, spaces, mapstorage.New(t.TempDir()), "test-version")
 	h.http = httptest.NewServer(h.srv)
 	t.Cleanup(h.http.Close)
 	return h

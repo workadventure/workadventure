@@ -8,6 +8,8 @@
 package config
 
 import (
+	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
+
 	"fmt"
 	"net/url"
 	"os"
@@ -25,6 +27,11 @@ type Config struct {
 	// MapStoragePort answers for the map-storage host (SERVER_MAP_STORAGE_PORT of the server variant; map-storage
 	// itself always listened on 3000). 0: not served.
 	MapStoragePort int
+
+	// Map storage (map-storage's variables)
+	StorageDirectory string
+	MapStorageAuth   mapstorage.Auth
+	CacheControl     string
 
 	SecretKey        string
 	AdminAPIURL      string
@@ -192,9 +199,15 @@ func firstNonEmpty(values ...string) string {
 func parse(get func(string) string) (*Config, error) {
 	r := &reader{get: get}
 	c := &Config{
-		HTTPPort:                  r.integer("PUSHER_HTTP_PORT", 3000),
-		WSPort:                    r.integer("PUSHER_WS_PORT", 3001),
-		MapStoragePort:            r.integer("SERVER_MAP_STORAGE_PORT", 0),
+		HTTPPort:         r.integer("PUSHER_HTTP_PORT", 3000),
+		WSPort:           r.integer("PUSHER_WS_PORT", 3001),
+		MapStoragePort:   r.integer("SERVER_MAP_STORAGE_PORT", 0),
+		StorageDirectory: firstNonEmpty(r.str("STORAGE_DIRECTORY"), "./public"),
+		MapStorageAuth: mapstorage.Auth{
+			Basic: r.boolean("ENABLE_BASIC_AUTHENTICATION", false), User: r.str("AUTHENTICATION_USER"), Password: r.str("AUTHENTICATION_PASSWORD"),
+			Bearer: r.boolean("ENABLE_BEARER_AUTHENTICATION", false), Token: r.str("AUTHENTICATION_TOKEN"),
+		},
+		CacheControl:              firstNonEmpty(r.str("CACHE_CONTROL"), "public, s-max-age=10"),
 		SecretKey:                 r.str("SECRET_KEY"),
 		AdminAPIURL:               r.str("ADMIN_API_URL"),
 		DisableAnonymous:          r.boolean("DISABLE_ANONYMOUS", false),

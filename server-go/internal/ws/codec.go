@@ -42,6 +42,8 @@ func encodeShared(m *core.Msg) []byte {
 
 func subMessage(ev any) *pb.SubMessage {
 	switch e := ev.(type) {
+	case core.MapEdit:
+		return e.Event.(*pb.SubMessage)
 	case core.UserJoined:
 		return &pb.SubMessage{Message: &pb.SubMessage_UserJoinedMessage{UserJoinedMessage: userJoined(e.User)}}
 	case core.UserMoved:

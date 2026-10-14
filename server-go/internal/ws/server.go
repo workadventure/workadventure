@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"fmt"
+	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -28,11 +29,12 @@ type Server struct {
 	rooms      *registry.Refs[string, *core.Room]
 	spaces     *registry.Refs[core.SpaceKey, *core.Space]
 	retained   *registry.Map[string, *Session] // by connectionId, for transport resumes
+	maps       *mapstorage.Store
 	apiVersion string
 }
 
-func NewServer(cfg *config.Config, a *auth.Manager, adm admin.Admin, rooms *registry.Refs[string, *core.Room], spaces *registry.Refs[core.SpaceKey, *core.Space], apiVersion string) *Server {
-	return &Server{cfg: cfg, auth: a, admin: adm, rooms: rooms, spaces: spaces, retained: registry.New[string, *Session](), apiVersion: apiVersion}
+func NewServer(cfg *config.Config, a *auth.Manager, adm admin.Admin, rooms *registry.Refs[string, *core.Room], spaces *registry.Refs[core.SpaceKey, *core.Space], maps *mapstorage.Store, apiVersion string) *Server {
+	return &Server{cfg: cfg, auth: a, admin: adm, rooms: rooms, spaces: spaces, retained: registry.New[string, *Session](), maps: maps, apiVersion: apiVersion}
 }
 
 func acceptOptions(protocol string) *websocket.AcceptOptions {
