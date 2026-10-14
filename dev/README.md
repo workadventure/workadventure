@@ -60,6 +60,9 @@ npx playwright test tests/meeting.spec.ts --project=chromium
 off (`bg-danger`). It saves `tests/.auth/<name>.json` the way `createUser` does, which then reuses it for an hour.
 Specs that reboot containers (`@docker`) do not apply.
 
+Specs that call `resetWamMaps` (map editor, raise hand, megaphone) upload `map-storage/tests/assets.zip`, which git
+ignores. Build it once: `(cd map-storage/tests/assets && zip -qr ../assets.zip *)`.
+
 Checked on `ts` and on `ts2` running in parallel: `meeting.spec.ts` (two users in a bubble), `oidc.spec.ts`, and
 `livekit.spec.ts` "4 cameras".
 
