@@ -338,7 +338,12 @@ func emptyDir(dir string) error {
 
 // list answers GET /maps: every valid WAM file, by path.
 func (s *Store) list(w http.ResponseWriter, _ *http.Request) {
-	maps := map[string]any{}
+	writeJSON(w, http.StatusOK, map[string]any{"version": "go-1", "maps": s.Maps()})
+}
+
+// Maps lists the valid WAM files by path, with their mapUrl, metadata and vendor.
+func (s *Store) Maps() map[string]map[string]any {
+	maps := map[string]map[string]any{}
 	for _, f := range walk(s.dir) {
 		if path.Ext(f) != ".wam" {
 			continue
@@ -363,7 +368,7 @@ func (s *Store) list(w http.ResponseWriter, _ *http.Request) {
 		}
 		maps[f] = entry
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"version": "go-1", "maps": maps})
+	return maps
 }
 
 // download zips a directory (GET /download?directory=).

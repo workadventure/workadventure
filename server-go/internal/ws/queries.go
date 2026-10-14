@@ -117,3 +117,30 @@ func hostMatches(src, host string) bool {
 	}
 	return strings.EqualFold(src, host)
 }
+
+// roomsFromSameWorld answers RoomsFromSameWorldQuery: the maps stored next to this one (LocalAdmin lists
+// map-storage's /maps). The exit editor offers them.
+func (s *Session) roomsFromSameWorld(id int32) {
+	if mapKey(s.info.roomID) == "" {
+		s.answerError(id, "No admin backoffice set!")
+		return
+	}
+	base := strings.TrimRight(s.srv.cfg.PublicMapStorageURL, "/") + "/"
+	var rooms []*pb.RoomShortDescription
+	for p, m := range s.srv.maps.Maps() {
+		meta, _ := m["metadata"].(map[string]any)
+		str := func(k string) *string {
+			if v, ok := meta[k].(string); ok {
+				return &v
+			}
+			return nil
+		}
+		name := p
+		if n := str("name"); n != nil {
+			name = *n
+		}
+		rooms = append(rooms, &pb.RoomShortDescription{Name: name, RoomUrl: "/~/" + p, WamUrl: proto.String(base + p),
+			Description: str("description"), Copyright: str("copyright"), Thumbnail: str("thumbnail")})
+	}
+	s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomsFromSameWorldAnswer{RoomsFromSameWorldAnswer: &pb.RoomsFromSameWorldAnswer{RoomDescriptions: rooms}}})
+}
