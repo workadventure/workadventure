@@ -262,3 +262,26 @@ func TestASpeakerBackOnStageGetsANewConnection(t *testing.T) {
 		t.Fatalf("d lists a again, over the live connection: %#v", ev)
 	}
 }
+
+// The pusher judges what a member hears about itself with its current role: a listener who becomes a speaker gets
+// an update of itself (which its front ignores, it never listed itself), not an arrival.
+func TestARoleChangeIsJudgedWithTheCurrentRole(t *testing.T) {
+	sp := NewSpace(SpaceKey{"http://play.test", "podium"})
+	defer sp.Stop()
+	a := &recorder{}
+	joinFiltered(t, sp, a, SpaceUser{ID: "a"}, FilterLiveStreamingUsersWithFeedback)
+	_ = sp.Watch(ctx, "a", nil)
+	_ = sp.UpdateUser(ctx, "a", SpaceUser{AttendeesState: true}, []string{"attendeesState"})
+	syncSpace(t, sp)
+	a.take()
+	_ = sp.UpdateUser(ctx, "a", SpaceUser{AttendeesState: true, Megaphone: true}, []string{"megaphoneState"})
+	syncSpace(t, sp)
+	if ev := a.take(); has(ev, any_[SpaceUserAdded]) || !has(ev, func(u SpaceUserUpdated) bool { return u.User.ID == "a" }) {
+		t.Fatalf("an update of itself, not an arrival: %#v", ev)
+	}
+	_ = sp.UpdateUser(ctx, "a", SpaceUser{AttendeesState: true}, []string{"megaphoneState"})
+	syncSpace(t, sp)
+	if !has(a.take(), func(r SpaceUserRemoved) bool { return r.UserID == "a" }) {
+		t.Fatal("back to listening, it no longer sees itself")
+	}
+}

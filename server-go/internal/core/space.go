@@ -447,8 +447,8 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 	for _, path := range kept {
 		m.user.apply(from, path)
 	}
-	// Each watcher sees the user appear, change or disappear, depending on what it could see before and after.
-	// The user's own view counts the change of its own role.
+	// Each watcher sees the user appear, change or disappear, depending on what it could see before and after,
+	// judged with the watcher's current role, the user's own view included (LiveStreamingNotificationStrategy).
 	added, removed := NewMsg(SpaceUserAdded{Space: s.local, User: m.user}, true), NewMsg(SpaceUserRemoved{Space: s.local, UserID: id}, true)
 	updated := NewMsg(SpaceUserUpdated{Space: s.local, User: m.user, Mask: kept}, true)
 	var relisted []string // members whose view of id (or id's view of them) changed
@@ -457,11 +457,7 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 		if !w.watching {
 			continue
 		}
-		before, after := &w.user, &w.user
-		if o == id {
-			before = &old
-		}
-		was, is := s.visible(before, &old), s.visible(after, &m.user)
+		was, is := s.visible(&w.user, &old), s.visible(&w.user, &m.user)
 		switch {
 		case !was && is:
 			w.peer.Send(added)
