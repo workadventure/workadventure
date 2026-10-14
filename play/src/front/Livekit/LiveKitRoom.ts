@@ -380,6 +380,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 userProvidedTrack: true,
             });
 
+            // Same as the camera: livekit-client mutes a microphone track that ended (headset unplugged, Bluetooth
+            // or audio driver switch), and replaceTrack() keeps the new one disabled while muted. The room then hears
+            // nothing while the space still says the microphone is on (PLAY-439). We never mute it ourselves.
+            if (this.localMicrophoneTrack.isMuted) {
+                await this.localMicrophoneTrack.unmute();
+            }
+
             if (this.localMicrophoneTrack.isUpstreamPaused) {
                 await this.localMicrophoneTrack.resumeUpstream();
             }

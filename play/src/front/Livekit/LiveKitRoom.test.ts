@@ -273,6 +273,27 @@ describe("LiveKitRoom", () => {
         expect(unmute).toHaveBeenCalledOnce();
     });
 
+    it("should unmute the microphone livekit-client muted when its track ended, once a new microphone replaces it", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+        await room["handleMicrophoneTrack"](createMicrophoneStream());
+        const microphoneTrack = room["localMicrophoneTrack"];
+        if (!microphoneTrack) {
+            throw new Error("The microphone was not published");
+        }
+        // The headset was unplugged: livekit-client muted the publication, the room hears nothing (PLAY-439)
+        Object.assign(microphoneTrack, { isMuted: true });
+        const unmute = vi.spyOn(microphoneTrack, "unmute");
+
+        await room["handleMicrophoneTrack"](createMicrophoneStream("new-microphone-track"));
+
+        expect(unmute).toHaveBeenCalledOnce();
+    });
+
     it("should defer a scripting stream while the room is not connected and publish it once reconnected", async () => {
         const room = createLiveKitRoom({
             screenSharingLocalStreamStore: writable(undefined),
@@ -513,6 +534,14 @@ function createCameraStream(id = "camera-track"): LocalStreamStoreValue {
     return {
         type: "success",
         stream: { getVideoTracks: () => [track], getAudioTracks: () => [] } as unknown as MediaStream,
+    };
+}
+
+function createMicrophoneStream(id = "microphone-track"): LocalStreamStoreValue {
+    const track = { id, kind: "audio" } as unknown as MediaStreamTrack;
+    return {
+        type: "success",
+        stream: { getVideoTracks: () => [], getAudioTracks: () => [track] } as unknown as MediaStream,
     };
 }
 
