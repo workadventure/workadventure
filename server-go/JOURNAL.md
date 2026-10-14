@@ -175,3 +175,82 @@ Les deux changements décidés après la relecture de J1 sont faits ; ils ont pr
   - `./verify.sh` vert, avec trois tests en plus : barrières de `moveQueue`, file pleine, et un test bout-en-bout (trois déplacements dans la même fenêtre, une seule position reçue).
   - Playwright (`meeting`, `say_bubbles`, `reconnect` 18, `userlist` 14) : 8 verts et 2 échecs au premier passage, juste après la relance de la stack `go` qu'une autre session avait arrêtée. Les 2 tests échoués passent 2 fois sur 2 en isolation.
 - **Mesures.** Les chiffres de J1 ont été pris avant la fusion : le nombre de messages livrés baisse désormais mécaniquement. Le banc commun (`dev/bench/` de `dev-socle`) fera foi. `cmd/loadbot` est inchangé.
+
+## J2, phase 1 — OpenID et spaces (2026-10-14)
+
+Phase 1 faite en ≈ 45 min d'horloge (13 h 30 → 14 h 15), sans correction humaine. La phase 2 (le minimum de map-storage pour les specs de main levée et de mégaphone) attend l'accord de Yannis.
+
+Lignes ajoutées : 1 176 de production, 370 de tests, 336 générées.
+
+**OpenID** (`internal/httpapi/oidc.go`).
+- Routes : `/login-screen`, `/openid-callback`, `/matrix-callback` et `/logout`. `/me` vérifie désormais le jeton d'accès auprès du fournisseur ; les claims de userinfo écrasent les données du membre, comme en TS.
+- Aucune dépendance ajoutée : discovery, PKCE S256, échange du code et userinfo sont écrits avec `net/http`.
+- Écarts assumés, tous marqués `ponytail:` dans le code :
+  - l'id_token n'est pas vérifié (pas de JWKS) : l'identité vient de userinfo, appelé avec le jeton d'accès obtenu directement du fournisseur ;
+  - le code verifier est en clair dans un cookie HttpOnly (le pusher le chiffre avec `SECRET_KEY`) ;
+  - le paramètre `redirect` de `/logout` est retiré, car c'est une redirection ouverte que le front n'utilise pas. `/logout-callback` part avec lui.
+- `oidc.spec.ts` est vert au premier passage (2/2).
+
+**Spaces** (`internal/core/space.go`, `space_state.go`).
+- **Filtres.**
+  - `LIVE_STREAMING_USERS` ne montre que les membres qui diffusent.
+  - `LIVE_STREAMING_USERS_WITH_FEEDBACK` dépend de qui regarde : les orateurs voient orateurs et auditeurs, les autres ne voient que les orateurs.
+  - Quand un membre change, chaque observateur reçoit un ajout, un retrait ou une mise à jour selon ce qu'il voyait avant et après. L'observateur qui change de rôle voit aussi les autres apparaître ou disparaître.
+- **WebRTC.** Les connexions suivent les événements de `WebRTCCommunicationStrategy` à l'identique :
+  - un membre qui se met à regarder rencontre les membres du filtre ;
+  - un membre qui entre dans le filtre en regardant rencontre les autres observateurs ;
+  - sortir du filtre coupe les connexions avec les observateurs hors filtre ;
+  - arrêter de regarder, ou partir, coupe tout.
+
+  Une première version calculait l'état voulu à partir d'une règle ; elle gardait des connexions après un désabonnement, contrairement au TS. Le test de J1 l'a attrapée.
+- **Métadonnées.** Fusion clé par clé ; le changement est envoyé à tous les membres, l'expéditeur compris. Celui qui se met à regarder reçoit l'ensemble.
+- **Requêtes SpaceState.**
+  - Main levée, abaisser la main d'un autre, donner et reprendre la parole, avec les droits de `RaiseHandManager` (admin ; tout le monde dans un space ALL_USERS ; sinon un orateur qui n'est pas un invité promu).
+  - Sondages et questions, avec les règles de `ProximityPollManager` et `ProximityQAManager`.
+  - `kind`, validé contre l'énumération.
+  - Le départ d'un membre lui retire sa main et la parole ; arrêter de diffuser retire la parole.
+  - L'enregistrement est refusé : il demande l'egress LiveKit.
+- **Patchs.** Chaque changement passe par `updateState`, comme en TS : on modifie une copie (clonée par JSON), on la valide, puis on envoie la différence à tous les membres, avant la réponse. La différence est un `replace` par clé de premier niveau modifiée : un vote remplace tous les sondages. C'est noté `ponytail:` ; `wI2L/jsondiff` donnerait des patchs plus fins si les états grossissent.
+
+**Types générés depuis zod** (`internal/spacestate`).
+- `emit.mts` (≈ 100 lignes) parcourt les `_def` zod v3 de `spaceStateSchema`. Il émet les structs Go et une méthode `Validate()` qui refuse ce que zod refuse :
+  - longueurs comptées en unités UTF-16, comme `.length` en JS ;
+  - `null` refusé pour un tableau ou un objet requis ;
+  - énumérations et bornes.
+- L'émetteur échoue sur toute construction zod qu'il ne connaît pas (union, transform, default) : le schéma ne peut pas évoluer en silence.
+- Commande : `go generate ./internal/spacestate`, qui lance `gen.sh`. Le code généré est commité, comme `internal/pb`. Contrôle de dérive : régénérer puis vérifier que `git diff` est vide.
+- Pourquoi `Validate()` : le front parse chaque état après chaque patch et fige sa copie au premier échec. Le serveur n'envoie donc jamais un état que le front refuserait. Les limites du schéma (longueur d'une question, nombre de réponses…) servent aussi de validation des entrées.
+- Alternatives écartées :
+  - `zod-to-json-schema` puis `go-jsonschema` : la validation compte les longueurs en points de code, accepte `null` et ne s'exécute qu'au décodage JSON ;
+  - quicktype : noms de types ambigus, aucune validation ;
+  - `z.toJSONSchema` de zod v4 : il plante sur ce schéma v3.
+- Piège : `npx tsx` plante dans le dépôt, dont les `node_modules` sont installés pour Linux. `gen.sh` lance tsx depuis un dossier temporaire.
+
+**Port map-storage.** La stack envoie l'hôte `map-storage.go.*` sur `SERVER_MAP_STORAGE_PORT`, où le serveur n'écoutait pas. Traefik répondait 502 sans en-tête CORS, et le front restait bloqué au lieu d'afficher son erreur (`error_pages` « not found WAM »). Le serveur y répond maintenant avec son propre routeur : 404 pour toutes les cartes, en attendant map-storage. Sans cette variable, comme sur le banc, rien ne change.
+
+**Vérification.**
+- `./verify.sh` : vert, avec 5 tests du cœur en plus (filtres, métadonnées, main levée et parole, sondages et questions) et 3 tests OpenID contre un faux fournisseur.
+- `scripting_spaces.spec.ts` : 6/6 au premier passage. Le test « should reconnect… backend is restarted » poste sur `api.workadventure.localhost` (port 80), hors de la stack `go` : il passe sans rien exercer chez nous.
+- `spaces.spec.ts` n'a pas été lancé, pour deux raisons :
+  - il recrée un conteneur `back` par `docker compose` depuis la racine du dépôt, ce qui démarrerait un back TS hors du socle ;
+  - il vérifie le nettoyage entre pusher et back, qui n'existent plus ici.
+- Copies hors dépôt, non commitées, sur la carte publique `empty.json` au lieu de la carte WAM :
+  - test 1 de `raise-hand.spec.ts` (main levée dans une bulle) : vert ;
+  - les 3 tests de `chat/proximityChatPoll.spec.ts` (sondages, résultats masqués, questions et votes, avec Admin1 et Member1 en OIDC) : verts.
+
+  Les patchs du serveur passent donc le parse zod du vrai front.
+- **Non-régression J1** : 37 réussis, 2 échecs connus, 2 ignorés, sur 41 tests. Le 42e, `meeting.spec.ts:241`, est commenté dans la spec.
+  - Les 2 échecs sont ceux de la référence TS : `reconnect` « WAM », qui demande une carte servie par map-storage, et `userlist` « Send Message », qui passe par Matrix.
+  - `error_pages` « not found WAM » a échoué au premier passage, puis passe après la correction du port map-storage.
+
+**Difficultés.**
+- La règle WebRTC « par état », décrite plus haut.
+- `go generate` remplace lui-même les `$VAR` d'une directive avant que `sh` ne la voie : la commande est dans `gen.sh`.
+- `rebootBack` des specs Playwright lance `docker compose` sur le dépôt : à ne pas lancer dans l'environnement partagé.
+
+**Reste.**
+- Phase 2, à confirmer : servir et enregistrer les WAM, l'envoi de cartes de `resetWamMaps`, les commandes d'édition des zones et des réglages de salle.
+- Hors J2 :
+  - l'enregistrement (egress LiveKit) ;
+  - `SpaceDestroyedMessage` et la route de debug `close-space-connection` : dans un seul processus, un space ne disparaît pas sous ses membres ;
+  - le dossier BDD `features/` de l'étape 4, pas commencé.
