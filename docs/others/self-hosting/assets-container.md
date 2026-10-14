@@ -33,7 +33,7 @@ directly to the front container in your reverse proxy or ingress, on every domai
 | Path | Match | Target |
 | --- | --- | --- |
 | `/assets/`, `/static/`, `/resources/`, `/collections/` | Prefix | front |
-| `/iframe_api.js`, `/iframe_api.js.map`, `/service-worker-prod.js`, `/notification-service-worker.js` | Exact | front |
+| `/iframe_api.js`, `/iframe_api.js.map`, `/service-worker-prod.js` | Exact | front |
 
 The Helm chart adds these rules to the play Ingress when `front.enabled=true`. With Traefik rules instead of an Ingress,
 give the rule an explicit low priority: Traefik's default priority is the length of the rule, so a long path rule
