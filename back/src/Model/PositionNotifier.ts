@@ -162,8 +162,8 @@ export class PositionNotifier {
     }
 
     public *getAllUsersInSquareAroundZone(zone: Zone): Generator<User> {
-        const zoneDescriptor = this.getZoneDescriptorFromCoordinates(zone.x, zone.y);
-        for (const d of getNearbyDescriptorsMatrix(zoneDescriptor)) {
+        // A zone's x/y are already its indices, not pixel coordinates.
+        for (const d of getNearbyDescriptorsMatrix({ i: zone.x, j: zone.y })) {
             const zone = this.getZone(d.i, d.j);
             for (const thing of zone.getThings()) {
                 if (thing instanceof User) {

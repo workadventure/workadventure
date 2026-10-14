@@ -269,6 +269,21 @@ describe("GameRoom", () => {
             world.updatePosition(user3, new Point(400, 100));
             expect(user3.group).toBe(user1.group);
         });
+
+        it("should pull the user in far from the top-left corner of the map", async () => {
+            // The same scene, shifted into zone (3,3): the group must search the zones around its own, not around (0,0).
+            const world = await createWorld();
+            const user1 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("1", 1100, 1100));
+            const user2 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("2", 1200, 1100));
+            const user3 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("3", 1400, 1100));
+            const group = user1.group;
+            expect(group).toBeDefined();
+            expect(user3.group).toBeUndefined();
+
+            world.updatePosition(user2, new Point(1390, 1100));
+
+            expect(user3.group).toBe(group);
+        });
     });
 
     it("should not leave a deleted locked group in the zone of the user who locked it", async () => {
