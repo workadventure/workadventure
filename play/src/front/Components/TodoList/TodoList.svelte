@@ -11,6 +11,7 @@
     import Badge from "../UI/Badge.svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { blocker } from "../../Utils/screenBlocker";
     import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
     import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
     import { startOfDay } from "../Calendar/agenda";
@@ -70,6 +71,7 @@
         class="sidebar p-3 max-h-full bg-contrast/80 rounded-lg backdrop-blur mobile:w-64 w-96"
         in:fly={{ x: 100, duration: 250, delay: 200 }}
         out:fly={{ x: 100, duration: 200 }}
+        {@attach blocker}
     >
         <header class="flex items-start justify-between gap-2">
             <div class="flex min-w-0 flex-col gap-1">
