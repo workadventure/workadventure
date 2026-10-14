@@ -34,8 +34,15 @@ type Config struct {
 
 	EmbeddedDomainsWhitelist []string
 
+	// Variables
+	RedisHost, RedisPassword   string
+	RedisPort                  int
+	StoreVariablesForLocalMaps bool
+	PlayerVariablesMaxTTL      int64 // seconds; -1: no maximum
+
 	SecretKey        string
 	AdminAPIURL      string
+	AdminAPIToken    string // ADMIN_API_TOKEN: the administration routes (POST /global/event)
 	DisableAnonymous bool
 	OpenID           OpenID
 
@@ -200,11 +207,15 @@ func firstNonEmpty(values ...string) string {
 func parse(get func(string) string) (*Config, error) {
 	r := &reader{get: get}
 	c := &Config{
-		HTTPPort:                 r.integer("PUSHER_HTTP_PORT", 3000),
-		WSPort:                   r.integer("PUSHER_WS_PORT", 3001),
-		MapStoragePort:           r.integer("SERVER_MAP_STORAGE_PORT", 0),
-		StorageDirectory:         firstNonEmpty(r.str("STORAGE_DIRECTORY"), "./public"),
-		EmbeddedDomainsWhitelist: list(r.str("EMBEDDED_DOMAINS_WHITELIST")),
+		HTTPPort:                   r.integer("PUSHER_HTTP_PORT", 3000),
+		WSPort:                     r.integer("PUSHER_WS_PORT", 3001),
+		MapStoragePort:             r.integer("SERVER_MAP_STORAGE_PORT", 0),
+		StorageDirectory:           firstNonEmpty(r.str("STORAGE_DIRECTORY"), "./public"),
+		EmbeddedDomainsWhitelist:   list(r.str("EMBEDDED_DOMAINS_WHITELIST")),
+		RedisHost:                  r.str("REDIS_HOST"),
+		RedisPassword:              r.str("REDIS_PASSWORD"),
+		RedisPort:                  r.integer("REDIS_PORT", 6379),
+		StoreVariablesForLocalMaps: r.boolean("STORE_VARIABLES_FOR_LOCAL_MAPS", false),
 		MapStorage: mapstorage.Options{
 			Auth: mapstorage.Auth{
 				Basic: r.boolean("ENABLE_BASIC_AUTHENTICATION", false), User: r.str("AUTHENTICATION_USER"), Password: r.str("AUTHENTICATION_PASSWORD"),
@@ -218,6 +229,7 @@ func parse(get func(string) string) (*Config, error) {
 		},
 		SecretKey:                 r.str("SECRET_KEY"),
 		AdminAPIURL:               r.str("ADMIN_API_URL"),
+		AdminAPIToken:             r.str("ADMIN_API_TOKEN"),
 		DisableAnonymous:          r.boolean("DISABLE_ANONYMOUS", false),
 		SocketIdleTimer:           time.Duration(r.integer("SOCKET_IDLE_TIMER", 120)) * time.Second,
 		ClientDisconnectRetention: time.Duration(r.integer("CLIENT_DISCONNECTION_RETENTION_MS", 30_000)) * time.Millisecond,
@@ -279,6 +291,14 @@ func parse(get func(string) string) (*Config, error) {
 	}
 	if c.OpenID.ClientID != "" && c.PusherURL == "" {
 		r.errs = append(r.errs, "PUSHER_URL: required with OPENID_CLIENT_ID")
+	}
+	c.PlayerVariablesMaxTTL = -1
+	if v := r.str("PLAYER_VARIABLES_MAX_TTL"); v != "" {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			r.errs = append(r.errs, "PLAYER_VARIABLES_MAX_TTL: expected an integer")
+		}
+		c.PlayerVariablesMaxTTL = n
 	}
 	c.ServerIcon = firstNonEmpty(r.str("SERVER_ICON"), c.PusherURL+"/static/images/favicons/icon-512x512.png")
 	policies := []string{"user_input", "allow_override_opid", "force_opid"}
@@ -350,7 +370,7 @@ func frontEnv(r *reader, c *Config) map[string]any {
 		"ENABLE_REPORT_ISSUES_MENU":         r.boolean("ENABLE_REPORT_ISSUES_MENU", false),
 		"REPORT_ISSUES_URL":                 r.opt("REPORT_ISSUES_URL"),
 		"CLIENT_DISCONNECTION_RETENTION_MS": int(c.ClientDisconnectRetention / time.Millisecond),
-		"SENTRY_DSN_FRONT":                  r.opt("SENTRY_DSN_FRONT"),
+		"SENTRY_DSN_FRONT":                  sentryDSN(r),
 		"SENTRY_DSN_PUSHER":                 r.opt("SENTRY_DSN_PUSHER"),
 		"SENTRY_ENVIRONMENT":                r.opt("SENTRY_ENVIRONMENT"),
 		"SENTRY_RELEASE":                    r.opt("SENTRY_RELEASE"),
@@ -403,4 +423,13 @@ func nilIfEmpty(s string) any {
 		return nil
 	}
 	return s
+}
+
+// sentryDSN is SENTRY_DSN_FRONT as the pusher gives it: set but empty is "", which the front tells apart from unset
+// (the issue report button).
+func sentryDSN(r *reader) any {
+	if v, set := os.LookupEnv("SENTRY_DSN_FRONT"); set {
+		return v
+	}
+	return r.opt("SENTRY_DSN_FRONT")
 }

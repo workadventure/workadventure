@@ -3,6 +3,7 @@
 package httpapi
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -26,6 +27,12 @@ type API struct {
 	front   *FrontAssets
 	version string
 	oidc    *openID // nil without OpenID
+	maps    mapReader
+}
+
+// mapReader reads the Tiled map a room plays (the WebSocket server does, for the room variables).
+type mapReader interface {
+	TiledMap(ctx context.Context, roomURL string) ([]byte, error)
 }
 
 // New returns the whole HTTP handler. ws handles /ws/room.
@@ -47,6 +54,14 @@ func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAsset
 	}
 
 	mux.HandleFunc("POST /anonymLogin", api.anonymLogin)
+	if admin, ok := ws.(interface {
+		GlobalEvent(http.ResponseWriter, *http.Request)
+		Rooms(http.ResponseWriter, *http.Request)
+	}); ok {
+		mux.HandleFunc("POST /global/event", admin.GlobalEvent)
+		mux.HandleFunc("GET /rooms", admin.Rooms)
+	}
+	api.maps, _ = ws.(mapReader)
 	api.registerOpenID(mux)
 	mux.HandleFunc("GET /me", api.me)
 	mux.HandleFunc("GET /map", api.mapDetails)
@@ -286,8 +301,9 @@ func (api *API) displayFront(w http.ResponseWriter, r *http.Request) {
 		text(w, http.StatusServiceUnavailable, "WorkAdventure is starting, please retry in a few seconds.")
 		return
 	}
-	// ponytail: no access_key autologin (needs the admin) and no meta tags read from the map for bots yet.
+	// ponytail: no access_key autologin (needs the admin).
 	meta := admin.DefaultMetaTags()
+	api.mapMetaTags(r, meta)
 	capabilities, _ := json.Marshal(map[string]string{"api/woka/list": "v1", "api/companion/list": "v1"})
 	env, _ := json.Marshal(api.cfg.FrontEnv)
 	data := map[string]any{

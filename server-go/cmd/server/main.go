@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
+	"github.com/workadventure/workadventure/server-go/internal/store"
 	"log/slog"
 	"net"
 	"net/http"
@@ -79,7 +80,13 @@ func run() error {
 	front := httpapi.NewFrontAssets(cfg.AssetsInternalURL, cfg.AssetsURL, apiVersion)
 	go front.Poll(ctx)
 	maps := mapstorage.New(cfg.StorageDirectory)
-	wsServer := ws.NewServer(cfg, tokens, adm, rooms, spaces, maps, apiVersion)
+	var vars store.Hash = store.NewMemory()
+	if cfg.RedisHost != "" {
+		vars = store.NewRedis(net.JoinHostPort(cfg.RedisHost, strconv.Itoa(cfg.RedisPort)), cfg.RedisPassword)
+	} else {
+		slog.Warn("REDIS_HOST is not set: variables are kept in memory, a restart loses them")
+	}
+	wsServer := ws.NewServer(cfg, tokens, adm, rooms, spaces, maps, vars, apiVersion)
 	maps.Changed = wsServer.MapChanged
 	handler := httpapi.New(cfg, tokens, adm, front, wsServer, version)
 

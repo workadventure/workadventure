@@ -13,8 +13,8 @@ var nextGroupID atomic.Int32
 // Every member of a bubble is asked to join the bubble's space with these properties synced.
 var proximityPropertiesToSync = []string{"cameraState", "microphoneState", "screenSharingState"}
 
-// group is a proximity bubble (Group in the back).
-// ponytail: no follow mode yet (leader, followers, outOfBounds), it comes with the follow messages.
+// group is a proximity bubble (Group in the back). ponytail: the bubble is not rebuilt around a leader and its
+// followers (outOfBounds of the back): following is the front's business, the server keeps who follows whom.
 type group struct {
 	id        int32
 	users     []*user
