@@ -90,7 +90,7 @@
                         title={$LL.news.label()}
                         data-testid="news-iframe"
                         sandbox="allow-downloads allow-forms allow-popups allow-same-origin allow-scripts"
-                    />
+                    ></iframe>
                 {/if}
             </div>
 

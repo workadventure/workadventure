@@ -507,7 +507,7 @@ class AdminApi implements AdminInterface {
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
+            },
         );
     }
 
