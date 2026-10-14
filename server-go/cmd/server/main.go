@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	"log/slog"
 	"net"
 	"net/http"
@@ -77,7 +78,8 @@ func run() error {
 
 	front := httpapi.NewFrontAssets(cfg.AssetsInternalURL, cfg.AssetsURL, apiVersion)
 	go front.Poll(ctx)
-	handler := httpapi.New(cfg, tokens, adm, front, ws.NewServer(cfg, tokens, adm, rooms, spaces, apiVersion), version)
+	maps := mapstorage.New(cfg.StorageDirectory)
+	handler := httpapi.New(cfg, tokens, adm, front, ws.NewServer(cfg, tokens, adm, rooms, spaces, maps, apiVersion), version)
 
 	// ReadHeaderTimeout: a client that never finishes its headers must not hold a connection forever.
 	newServer := func(port int, h http.Handler) *http.Server {
@@ -87,10 +89,8 @@ func run() error {
 	if cfg.WSPort != cfg.HTTPPort {
 		servers = append(servers, newServer(cfg.WSPort, handler))
 	}
-	// ponytail: no map is stored yet, so the map-storage host answers 404 (with CORS, so that the front shows its
-	// error page). Its routes come with map-storage.
 	if cfg.MapStoragePort != 0 && cfg.MapStoragePort != cfg.HTTPPort && cfg.MapStoragePort != cfg.WSPort {
-		servers = append(servers, newServer(cfg.MapStoragePort, handler))
+		servers = append(servers, newServer(cfg.MapStoragePort, maps.Handler(cfg.MapStorageAuth, cfg.CacheControl)))
 	}
 	if cfg.PrometheusPort != 0 {
 		// The dedicated metrics port is internal: it also serves the Go profiler.

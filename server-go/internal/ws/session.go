@@ -457,6 +457,8 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		// The pong of the application-level ping: liveness is checked by the transport pings.
 	case *pb.ClientToServerMessage_QueryMessage:
 		s.query(msg.QueryMessage)
+	case *pb.ClientToServerMessage_EditMapCommandMessage:
+		s.editMap(ctx, msg.EditMapCommandMessage)
 	default:
 		if s.handleSpaceMessage(m) {
 			return
@@ -478,6 +480,9 @@ func (s *Session) query(q *pb.QueryMessage) {
 	case *pb.QueryMessage_ChatMembersQuery:
 		// No admin: nobody to list (LocalAdmin.getWorldChatMembers).
 		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_ChatMembersAnswer{ChatMembersAnswer: &pb.ChatMembersAnswer{}}})
+	case *pb.QueryMessage_RoomTagsQuery:
+		// No admin: no tag to suggest (LocalAdmin.getTagsList fails, the pusher answers an empty list).
+		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomTagsAnswer{RoomTagsAnswer: &pb.RoomTagsAnswer{}}})
 	case *pb.QueryMessage_IceServersQuery:
 		var servers []*pb.IceServer
 		for _, ice := range s.srv.admin.IceServers(s.userID.Load()) {

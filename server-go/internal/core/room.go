@@ -105,6 +105,27 @@ func (r *Room) AskPosition(ctx context.Context, p Peer, uuid string, userID *int
 	})
 }
 
+// MapEdit is a change of the room's map, or its refusal, as the adapter encoded it: the core orders and routes it.
+type MapEdit struct{ Event any }
+
+// EditMap applies an edit of the room's map on the room's goroutine, so that edits are applied and announced one
+// at a time, in order, to every player: the editor too, which waits for its own edit to come back. apply returns
+// what to announce, or a refusal for the editor alone. ponytail: apply writes the map file from the room's
+// goroutine; edits are rare and a write takes about a millisecond. Hand it to the worker pool if maps grow large.
+func (r *Room) EditMap(ctx context.Context, p Peer, apply func() (announce, refusal any)) error {
+	return r.a.Post(ctx, func() {
+		announce, refusal := apply()
+		if refusal != nil {
+			p.Send(NewMsg(MapEdit{Event: refusal}, true))
+			return
+		}
+		m := NewMsg(MapEdit{Event: announce}, true)
+		for _, u := range r.s.users {
+			u.peer.Send(m)
+		}
+	})
+}
+
 // Stats is a consistent snapshot of a room, for metrics and tests.
 type Stats struct {
 	Users, Groups, Zones int
