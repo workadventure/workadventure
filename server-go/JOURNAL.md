@@ -357,3 +357,45 @@ Règle décidée par Yannis le 14/10 : ce qui touche au contrat gelé passe par 
 - Rien d'autre n'a été lu chez Rust, à ma connaissance, ni en J1 ni en J2 phase 2.
 
 **Donné.** Le comportement du front trouvé en phase 2 (`SimplePeer` ferme la connexion WebRTC sur `observeUserLeft` sans prévenir le serveur), transmis à Rust par la session socle, sans le code.
+
+## J3a — éditeur de carte et map-storage complets (2026-10-14)
+
+≈ 1 h d'horloge, de l'énoncé (19 h 30) au code vert (20 h 27), aide de quatre agents de recherche en parallèle. Aucune correction humaine.
+
+Lignes ajoutées : ≈ 2 300 de production, ≈ 300 de tests.
+
+**Contenu.**
+- **map-storage complet** : `PUT`, `PATCH` (JSON Patch), `DELETE`, `/maps`, `/download`, `/move`, `/copy`, `/upload-endpoint`.
+  - L'envoi valide les cartes (contrôles de `MapValidator`, schéma WAM) et génère un `.wam` pour un `.tmj` arrivé seul.
+  - Il garde le `.wam` d'une carte dont seul le `.tmj` est remplacé.
+  - Les fichiers servis ont un ETag et un `Cache-Control` immuable pour les noms hachés.
+  - `/private/files` est protégé par un JWT.
+- **Carte remplacée ou supprimée** : les joueurs de la salle reçoivent `refreshRoomMessage`, ou `deleteMapMessage` puis la fermeture.
+- **Éditions** : entités, entités personnalisées (`assets/entities/entities.json`), fichiers des propriétés `openFile`, métadonnées, réglages d'enregistrement. Le fichier privé d'une propriété retirée est supprimé.
+- **Droits des non-éditeurs** :
+  - une entité dans une zone dont ils ont les droits d'écriture, ou dans leur zone personnelle ;
+  - leurs propres entités personnalisées ;
+  - revendiquer ou rendre une zone personnelle : seul le propriétaire et le nom sont pris dans le message.
+- **Variables de zone** : verrou et nombre maximal de joueurs. Le serveur compte les joueurs par zone et déverrouille une zone vide, y compris quand elle est déplacée.
+- **Rattrapage** des éditions manquées : `lastCommandId`, 30 s, effacé à l'envoi d'une carte. Toute connexion reçoit les éditions avant même de rejoindre la salle.
+- **Requêtes** : `embeddableWebsiteQuery`, `mapStorageJwtQuery`, `roomsFromSameWorldQuery` (l'éditeur de sortie liste les cartes).
+
+**Vérification** (vrais fichiers, `dev/dev assets go`, configuration du socle `4f960bba9`).
+- Specs J3a : 68 réussis, 3 échecs, 1 sauté (Klaxoon), sur 72. Référence TS : 60.
+  - Les 3 échecs échouent aussi en TS : `open_website:29`, `map_storage_upload:85`, `personal_area_claim:20`.
+  - 8 des 11 échecs stables de TS passent ici : `area_rights` `:133`, `:193`, `:261`, `:330`, `custom_entity_rights:34`, `map_storage_upload` `:19` et `:185`, `personal_desk_spawn_on_connect:20`.
+- Un premier passage, à 67, a révélé `roomsFromSameWorldQuery`, qui manquait à `start_exit:40`.
+- Non-régression cumulée (union J1, J2 et `scripting_spaces`) : 67 réussis, 1 échec, 2 ignorés, sur 70.
+  - L'échec est `oidc:42`, qui navigue pendant un `evaluate`. Rejoué seul, il passe 2 fois sur 2.
+  - `reconnect` « WAM » et `userlist` « Send Message » passent maintenant.
+
+**Écarts marqués `ponytail:`.**
+- Pas de `WAM_TEMPLATE_URL`, de `USE_DOMAIN_NAME_IN_PATH`, ni de requête `DELETE` vers le `resourceUrl` d'une propriété.
+- Les éditions écrivent le fichier depuis l'acteur de la salle.
+- Comme dans map-storage, tout joueur de la salle peut supprimer une entité.
+
+**Trouvé pour J3b.** `Kick` jetait les messages encore en file : `deleteMapMessage` pouvait se perdre avant la fermeture. Corrigé en J3b ; c'est peut-être la cause de `map_storage_upload:85`.
+
+**Aide extérieure.**
+- Le point 2 relevé par Rust et transmis par la session socle : sur un changement de rôle, le pusher juge avec le rôle actuel de l'observateur. Il a été aligné en `9b60ea7bb`.
+- La correction de la configuration du socle (`MAP_EDITOR_ALLOW_ALL_USERS=false`, applications tierces, `dev/dev assets <stack>`) et la référence TS avec son tri.
