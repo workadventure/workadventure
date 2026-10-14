@@ -25,11 +25,12 @@ type API struct {
 	admin   admin.Admin
 	front   *FrontAssets
 	version string
+	oidc    *openID // nil without OpenID
 }
 
 // New returns the whole HTTP handler. ws handles /ws/room.
 func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAssets, ws http.Handler, version string) http.Handler {
-	api := &API{cfg: cfg, auth: a, admin: adm, front: front, version: version}
+	api := &API{cfg: cfg, auth: a, admin: adm, front: front, version: version, oidc: newOpenID(cfg)}
 	mux := http.NewServeMux()
 
 	mux.Handle("/ws/room", ws)
@@ -46,6 +47,7 @@ func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAsset
 	}
 
 	mux.HandleFunc("POST /anonymLogin", api.anonymLogin)
+	api.registerOpenID(mux)
 	mux.HandleFunc("GET /me", api.me)
 	mux.HandleFunc("GET /map", api.mapDetails)
 	mux.HandleFunc("GET /woka/list", api.authenticatedList(adm.WokaList))
@@ -156,13 +158,12 @@ func (api *API) me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tok, err := api.auth.Verify(q.Get("token"))
-	if err != nil || tok.AccessToken != "" {
-		// ponytail: an OpenID access token is checked against the provider in the TS pusher; OpenID comes later.
+	if err != nil || (tok.AccessToken != "" && api.oidc == nil) {
 		http.Error(w, "Invalid token", http.StatusUnauthorized)
 		return
 	}
 	member, err := api.admin.MemberData(r.Context(), admin.MemberQuery{
-		Identifier: tok.Identifier, PlayURI: q.Get("playUri"), IPAddress: clientIP(r), Locale: r.Header.Get("Accept-Language"),
+		Identifier: tok.Identifier, AccessToken: tok.AccessToken, PlayURI: q.Get("playUri"), IPAddress: clientIP(r), Locale: r.Header.Get("Accept-Language"),
 		CharacterTextureIDs: q["localStorageCharacterTextureIds[]"], CompanionTextureID: q.Get("localStorageCompanionTextureId"),
 		Tags: tok.Tags, ChatID: q.Get("chatID"),
 	})
@@ -177,6 +178,21 @@ func (api *API) me(w http.ResponseWriter, r *http.Request) {
 	resp["authToken"] = q.Get("token")
 	for k, v := range map[string]string{"username": tok.Username, "locale": tok.Locale, "matrixUserId": tok.MatrixUserID, "matrixServerUrl": api.cfg.MatrixPublicURI} {
 		if v != "" {
+			resp[k] = v
+		}
+	}
+	if tok.AccessToken != "" {
+		// A logged user: the provider must still accept the access token. Its claims override the member data.
+		claims, err := api.oidc.userinfo(r.Context(), tok.AccessToken, nil)
+		if err != nil {
+			slog.Warn("Error while checking token auth", "error", err)
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+		if m := claimString(claims, "matrix_url"); m != "" {
+			resp["matrixServerUrl"] = m
+		}
+		for k, v := range claims {
 			resp[k] = v
 		}
 	}
