@@ -1678,6 +1678,11 @@ export class GameScene extends DirtyScene {
      * @returns The calculated viewport or null if invalid
      */
     private calculateViewport(margin = 300): ViewportInterface | null {
+        if (!this.scene.scene.renderer) {
+            // The camera's worldView is empty without a renderer: sending it would replace the viewport of the
+            // joinRoom message with a 300 px square at the map origin.
+            return this.CurrentPlayer === undefined ? null : this.getHeadlessViewport();
+        }
         const camera = this.cameras.main;
         if (!camera) {
             return null;
@@ -4326,20 +4331,26 @@ ${escapedMessage}
         iframeListener.hasPlayerMoved(event);
     }
 
+    /**
+     * In the very special case where we have no renderer (bots run Phaser headless), the camera never follows the
+     * Woka: its worldView stays empty at the map origin. We set the viewport to something very large around the Woka
+     * to make sure it sees everything around (useful for bots, even if so far, it is a trick).
+     * The Woka's position, not lastMoveEventSent: that one is a placeholder at (-1000, -1000) until the first move,
+     * and a bot that never moves would only ever see the top-left corner of the map.
+     */
+    private getHeadlessViewport(): ViewportInterface {
+        const { x, y } = this.CurrentPlayer;
+        return {
+            left: x - 3_000,
+            top: y - 3_000,
+            right: x + 3_000,
+            bottom: y + 3_000,
+        };
+    }
+
     private getViewport(forceRecomputeCamera = false): ViewportInterface {
         if (!this.scene.scene.renderer) {
-            const x = this.lastMoveEventSent?.x ?? this.CurrentPlayer.x;
-            const y = this.lastMoveEventSent?.y ?? this.CurrentPlayer.y;
-
-            // In the very special case where we have no renderer, the viewport will not move along the Woka.
-            // We need to adjust it manually. We set it to something very large to make sure the Woka sees
-            // everything around (useful for bots, even if so far, it is a trick)
-            return {
-                left: x - 3_000,
-                top: y - 3_000,
-                right: x + 3_000,
-                bottom: y + 3_000,
-            };
+            return this.getHeadlessViewport();
         }
 
         const camera = this.cameras.main;
