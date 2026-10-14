@@ -254,3 +254,88 @@ Lignes ajoutées : 1 176 de production, 370 de tests, 336 générées.
   - l'enregistrement (egress LiveKit) ;
   - `SpaceDestroyedMessage` et la route de debug `close-space-connection` : dans un seul processus, un space ne disparaît pas sous ses membres ;
   - le dossier BDD `features/` de l'étape 4, pas commencé.
+
+## J2, phase 2 — le minimum de map-storage (2026-10-14)
+
+≈ 1 h 20 d'horloge du feu vert au code vert (14 h 35 → 15 h 56). Il faut compter ≈ 40 min de plus pour la passe complète et l'analyse du test resté ouvert. Aucune correction humaine.
+
+Lignes ajoutées : 765 de production, 208 de tests. Le schéma JSON généré et `go.sum` ne sont pas comptés.
+
+**Stockage des cartes** (`internal/mapstorage`).
+- Le serveur répond sur l'hôte map-storage (`SERVER_MAP_STORAGE_PORT`).
+- `POST /upload` :
+  - authentification Basic ou Bearer, comme map-storage ;
+  - le zip remplace le dossier : fichiers cachés écartés, `..` refusé, 1 Gio décompressé au plus ;
+  - la racine est vidée, pas supprimée, car c'est souvent un point de montage. La première version tentait de supprimer `/maps` et échouait (`unlinkat //maps: device or resource busy`).
+- `GET` des fichiers :
+  - `.wam` : `application/json` et `max-age=5` ;
+  - `.tmj` et `.json` : `application/json` ;
+  - les autres d'après leur extension ;
+  - CORS ouvert, `nosniff`.
+- `/ping` et `/health/live`.
+- Dossier `STORAGE_DIRECTORY`, par défaut `./public` comme map-storage : le banc démarre sans rien de plus.
+- Écarts marqués `ponytail:` :
+  - pas de validation des cartes envoyées ;
+  - pas de `.wam` généré pour un `.tmj` qui arrive seul ;
+  - un seul verrou pour tous les envois et toutes les éditions.
+
+**Éditions de carte** (`internal/wam`, `ws/mapedit.go`).
+- Commandes appliquées : créer, modifier et supprimer une zone ; régler le mégaphone. Les autres reçoivent une `errorCommandMessage`, et le front annule ce qu'il avait appliqué d'avance.
+- Le circuit :
+  - l'édition passe par l'acteur de la salle, qui applique les commandes une à une, dans l'ordre ;
+  - chaque commande lit le fichier, le migre (1.0.0 → 2.1.0, `WamFileMigration.ts` porté), applique la commande, marque `lastCommandId` et réécrit le fichier ;
+  - l'écho part ensuite à tous les joueurs, l'éditeur compris, avec le même id : son front y retrouve la commande appliquée d'avance ;
+  - un refus ne va qu'à l'éditeur ;
+  - il faut `canEdit`.
+- Pas de copie de la carte en mémoire ni d'écriture différée : un envoi n'a donc rien à invalider, et `GET` sert toujours la dernière version. Écrire depuis l'acteur coûte de l'ordre de la milliseconde ; c'est noté `ponytail:`, à passer au pool de workers si les cartes grossissent.
+- **Validation par le schéma généré depuis zod.**
+  - `schema.mts` exporte `WAMFileFormat` avec zod-to-json-schema ; `go generate ./internal/wam` produit `wam.schema.json`, qui est commité.
+  - Le serveur valide avec `santhosh-tekuri/jsonschema/v6`, seule dépendance ajoutée.
+  - Le mode `removeAdditionalStrategy: "strict"` accepte les clés inconnues comme zod : 0 désaccord sur 53 cas, contre 7 avec l'export par défaut, qui rejette des fichiers réels du dépôt.
+  - Seuls la zone touchée ou les réglages du mégaphone sont validés (≈ 34 µs), pas le fichier entier (≈ 50 ms pour un gros fichier).
+- Le reste du fichier repasse tel quel : les nombres restent des `json.Number`. Une `Value` protobuf sans type (le `undefined` de ts-proto) est retirée de l'objet, comme en TS, au lieu de devenir `null`, que le schéma refuse.
+- `roomTagsQuery` reçoit une liste vide, comme le pusher sans admin. Le panneau du mégaphone en a besoin pour le champ « Rights ».
+
+**WebRTC : une connexion fermée par un front.**
+- Le symptôme : `map_editor_megaphone_speaker_zone` « see attendees… screen share » échouait au second « Start » du mégaphone, à chaque essai. La session socle l'a confirmé : il passe en TS, et Rust échoue au même endroit.
+- La cause : un front ferme sa connexion avec un membre qui sort de sa liste (`SimplePeer`, `observeUserLeft`). C'est le cas d'un orateur qui redevient auditeur, vu par un auditeur. Le serveur croyait la connexion encore ouverte et ne la proposait plus.
+- La correction :
+  - quand un observateur retire un membre de sa liste, le serveur oublie leur connexion et prévient l'autre côté ;
+  - il la rouvre aussitôt si les règles de `WebRTCCommunicationStrategy` la veulent encore ;
+  - un test du cœur rejoue la scène ;
+  - le test Playwright passe 2 fois sur 2.
+
+**Vérification** (vrais fichiers de spec, sans copie).
+- `./verify.sh` : vert.
+- Specs J2 : 28 réussis sur 29.
+
+  | Spec | Résultat |
+  |---|---|
+  | `raise-hand` | 4/4, au premier passage |
+  | `raise-hand-megaphone` | 7/7 (3/7 au premier passage, faute de `roomTagsQuery`) |
+  | `map_editor/map_editor_megaphone_speaker_zone` | 9/9 (8/9 avant la correction WebRTC), dont le test à 5 participants, passé en WebRTC |
+  | `chat/proximityChatPoll` | 3/3, au premier passage |
+  | `scripting_spaces` | 5/6 |
+
+- Union J1 : 38 réussis, 1 échec, 2 ignorés, sur 41 tests.
+  - L'échec, `AvailabilityStatus:11`, vient du login : Alice avait plus d'une heure, `createUser` l'a recréée et la course connue a laissé son micro coupé. Le test passe aussitôt, rejoué seul.
+  - Les deux échecs connus de la référence passent maintenant : `reconnect` « WAM », car la carte est stockée, et `userlist` « Send Message ».
+- `map-storage/tests/assets.zip` (le zip de `resetWamMaps`) est ignoré par git. Il se construit comme en CI : `cd map-storage/tests/assets && zip -r ../assets.zip *`.
+- `warm-auth.mjs` est lancé avant les specs. `createUser` recrée tout compte de plus d'une heure, et sur une stack locale rapide il garde le micro coupé.
+
+**Test ouvert : `scripting_spaces.spec.ts:401`** (« should reconnect to a space when backend is restarted »).
+- Il passait en phase 1. Depuis que les comptes ont été réchauffés par `warm-auth`, il échoue à chaque essai : 4 fois.
+- Analyse :
+  - l'API iframe du front (`Api/Iframe/Spaces/Space.ts`, cas `onUpdateUser`) appelle `_userJoinedSubscriber.next()` à chaque mise à jour d'un membre ;
+  - Bob diffuse avec un micro allumé, et son front envoie des `SetPlayerDetails` `showVoiceIndicator` ;
+  - le serveur les relaie au space, comme le pusher TS (`Space.applyAndGetUpdatedFieldsForUserFromSetPlayerDetails`) ;
+  - le compteur d'Alice prend donc chaque mise à jour pour une arrivée : 3, 4 ou 5 au lieu de 0.
+- Des traces côté serveur montrent une seule arrivée et un seul départ de Bob, plus ces mises à jour. Une copie du test sans ces mises à jour voit exactement +Bob puis −Bob.
+- Je n'explique pas encore pourquoi il passait en phase 1. Les comptes avaient déjà dû passer le contrôle du micro au login.
+- La référence TS sera jouée plus tard, dans les mêmes conditions, par la session socle.
+
+**Reste, hors J2.**
+- Le reste de map-storage et de l'éditeur : entités, fichiers, métadonnées, autres réglages, liste des cartes, webhooks.
+- La validation des cartes envoyées.
+- `RefreshRoomMessage` après un envoi, si des joueurs sont dans la salle.
+- Les commandes reçues entre le `GET` de la carte et la connexion d'un client : aucune n'est rejouée, `editMapCommandsArrayMessage` reste vide.
