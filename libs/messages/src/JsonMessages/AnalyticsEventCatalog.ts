@@ -1507,7 +1507,9 @@ export const ANALYTICS_EVENTS = {
         .number()
         .int()
         .nonnegative()
-        .describe("Remote audio streams received at the end of the window."),
+        .describe(
+          "Remote microphones whose audio the window counts: only the time each one was on counts.",
+        ),
       concealedRatio: z
         .number()
         .min(0)
@@ -1520,6 +1522,22 @@ export const ANALYTICS_EVENTS = {
         .int()
         .nonnegative()
         .describe("How many separate concealment episodes the window had."),
+      deceleratedRatio: z
+        .number()
+        .min(0)
+        .max(1)
+        .optional()
+        .describe(
+          "Share of the received audio the jitter buffer added by slowing the voice down, to wait for late packets (insertedSamplesForDeceleration). Missing when the browser does not report it, or from older clients.",
+        ),
+      acceleratedRatio: z
+        .number()
+        .min(0)
+        .max(1)
+        .optional()
+        .describe(
+          "Share of the received audio the jitter buffer dropped by speeding the voice up, to catch up after a burst (removedSamplesForAcceleration). Missing when the browser does not report it, or from older clients.",
+        ),
       packetLossRatio: z
         .number()
         .min(0)
@@ -1540,7 +1558,7 @@ export const ANALYTICS_EVENTS = {
         ),
     }),
     description:
-      "How the voices this client received survived the network over the last minute, aggregated over every remote microphone of one transport. No event for a window in which no audio was received. The counterpart of media.noise_suppression.*: those tell whether the sender's audio was clean, this tells whether it arrived intact.",
+      "How the voices this client received survived the network over the last minute, aggregated over every remote microphone of one transport. Only the time a microphone was on counts: muted time (and the fade-out of each mute) would otherwise read as invented audio. No event for a window in which no audio was received. The counterpart of media.noise_suppression.*: those tell whether the sender's audio was clean, this tells whether it arrived intact.",
   }),
 
   "media.noise_suppression.failed": event({
