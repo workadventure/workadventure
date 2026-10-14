@@ -58,7 +58,11 @@ npx playwright test tests/meeting.spec.ts --project=chromium
 `warm-auth.mjs` works around a race in the test helper: `createUser` clicks "Save" on the camera screen before
 `getUserMedia` resolves, so `EnableCameraScene.submit()` saves no device and users arrive with camera and microphone
 off (`bg-danger`). It saves `tests/.auth/<name>.json` the way `createUser` does, which then reuses it for an hour.
-Specs that reboot containers (`@docker`) do not apply.
+Specs that reboot the back or the pusher (`variables`) restart the stack's own containers instead: `dev/dev env`
+exports `DEV_REBOOT_BACK` and `DEV_REBOOT_PLAY` (the candidate's `server` for both). `docker-compose.yaml` is never
+touched. The socle's Traefik serves every stack: the helpers that stop it refuse unless `DEV_TRAEFIK=wa-socle-traefik-1`
+is set, which only makes sense when no other stack is under test. `spaces.spec.ts` checks the TS back itself and does
+not apply.
 
 Specs that call `resetWamMaps` (map editor, raise hand, megaphone) upload `map-storage/tests/assets.zip`, which git
 ignores. Build it once: `(cd map-storage/tests/assets && zip -qr ../assets.zip *)`.
