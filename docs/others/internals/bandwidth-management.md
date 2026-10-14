@@ -63,8 +63,8 @@ It starts from a static order and filters it with what the browser knows about t
 | Quality low | VP9, H.264 | VP9, H.264 |
 
 LiveKit appends VP8. The last codec of the list is the floor and always stays: H.264 in P2P, VP8 on LiveKit (see
-"H.264 is not hardware on LiveKit" below). H.264 above the floor stays too when the browser reports it as hardware or
-says nothing. Then, for every other codec:
+"H.264 is not hardware on LiveKit" below). On LiveKit, H.264 above the floor stays only when the browser reports it as
+hardware or says nothing, whatever its history. Then, for every other codec:
 
 - **Desktop**: the codec is kept unless the browser remembers it as *not smooth* at that frame size (see below). With
   no verdict, it is kept.
@@ -73,7 +73,7 @@ says nothing. Then, for every other codec:
 - A codec dropped for smoothness gets **one retry per week**, so a single bad session cannot demote it forever.
 
 So a Pixel with a hardware VP9 encoder keeps VP9; a phone without one encodes H.264; a weak laptop that struggled with
-VP9 at 720p last week gets H.264, and on LiveKit gets VP8 if it struggled with OpenH264 too.
+VP9 at 720p last week gets H.264 in P2P, and on LiveKit gets VP8 unless its H.264 is hardware.
 
 ### What the browser knows: `CodecPerformance.ts`
 
@@ -126,10 +126,13 @@ Why these choices:
   (`IsH264ConstrainedBaselineProfileAvailableForAcceleratedEncoder()`). The format then has no hardware candidate,
   and every simulcast layer is OpenH264, at every resolution. P2P is different: Chrome lists Baseline (`42001f`)
   first, which VideoToolbox does encode. libwebrtc runs OpenH264 on a single thread for all the layers
-  (multithreading is behind a field trial), so it hits the overuse detector while other cores idle. So on LiveKit a
-  software H.264 goes through the same smooth check as VP9 (the Constrained Baseline probe reads OpenH264's own
-  history), and VP8 sits below it: software everywhere too, but 2 or 3 threads from 720p up. H.264 still comes
-  before VP8 when it is smooth: viewers decode it in hardware.
+  (multithreading is behind a field trial), so it hits the overuse detector while other cores idle. In production
+  (7 days, frames ≥ 540p), OpenH264 was CPU-limited in 2.6 % of LiveKit camera samples and 14 % of screen share
+  samples, against 0.5 % at most for libvpx and libaom. So on LiveKit a software H.264 (the Constrained Baseline
+  probe says `powerEfficient: false`) is skipped for VP8: software everywhere too, but 2 or 3 threads from 720p up,
+  for the same bandwidth budget. Viewers decode it in software instead of in hardware, a small cost: a LiveKit
+  viewer received at most one H.264 stream at the 90th percentile, at about 200p. Phones and Safari report a
+  hardware H.264 and keep it.
 - **VP8 is never preferred**: it is mandatory in WebRTC, so every browser negotiates it anyway, and it is software
   everywhere. It is LiveKit's floor, and the codec LiveKit rewrites an unsupported one to. P2P leaves it out of the
   negotiation: H.264 is always there.
@@ -241,7 +244,8 @@ AV1), enable the video quality stats overlay: the tile reports `Limited by: cpu`
 changes. The end-to-end test `tests/webrtc_cpu_limitation.spec.ts` (opt-in, `RUN_CPU_LIMITATION_E2E=1`, a few
 minutes) drives the whole chain on a deployment by making one page report every outbound video stream as
 CPU-limited: three users in a bubble, the flag, the switch to LiveKit, the bubble staying there when a member
-leaves, then the camera republished in H.264; with `CPU_LIMITATION_EXPECT=demote` it checks the codec
+leaves, then the camera republished in VP8 (Chromium on Linux has no hardware H.264 for LiveKit); with
+`CPU_LIMITATION_EXPECT=demote` it checks the codec
 renegotiation with both peers instead.
 
 ## Bitrate Budget
