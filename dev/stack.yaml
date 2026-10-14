@@ -70,7 +70,9 @@ x-env: &env
   # Game settings, as in .env.template and the CI end-to-end setup.
   ADMIN_API_TOKEN: "123"
   ENABLE_MAP_EDITOR: "true"
-  MAP_EDITOR_ALLOW_ALL_USERS: "true"
+  # As in docker-compose.e2e.yml: editing rights come from the OIDC tags (admin), not from a blanket allow.
+  MAP_EDITOR_ALLOW_ALL_USERS: "false"
+  MAP_EDITOR_ALLOWED_USERS: ""
   STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
   PLAYER_VARIABLES_MAX_TTL: "-1"
   MINIMUM_DISTANCE: "64"
@@ -84,6 +86,28 @@ x-env: &env
   ENABLE_TUTORIAL: "false"
   WOKA_SPEED: "27"
   UPLOAD_MAX_FILESIZE: "10485760"
+  # Feature flags of .env.template that docker-compose.yaml passes on, with the CI's changes (Klaxoon on).
+  CLIENT_DISCONNECTION_RETENTION_MS: "30000"
+  BBB_URL: https://test-install.blindsidenetworks.com/bigbluebutton/
+  BBB_SECRET: 8cd8ef52e8e101574e400365b55e11a6
+  JITSI_PRIVATE_MODE: "false"
+  KLAXOON_ENABLED: "true"
+  GOOGLE_DOCS_ENABLED: "true"
+  GOOGLE_DRIVE_ENABLED: "true"
+  GOOGLE_SHEETS_ENABLED: "true"
+  GOOGLE_SLIDES_ENABLED: "true"
+  CARDS_ENABLED: "true"
+  ERASER_ENABLED: "true"
+  EXCALIDRAW_ENABLED: "true"
+  TLDRAW_ENABLED: "true"
+  YOUTUBE_ENABLED: "true"
+  ENABLE_REPORT_ISSUES_MENU: "false"
+  DEFAULT_CAMERA_PRIVACY_SETTINGS: "false"
+  DEFAULT_MICROPHONE_PRIVACY_SETTINGS: "true"
+  PROVIDE_DEFAULT_WOKA_NAME: "no"
+  PROVIDE_DEFAULT_WOKA_TEXTURE: "no"
+  SKIP_CAMERA_PAGE: "false"
+  BYPASS_PWA: "false"
 
 services:
   redis:

@@ -65,7 +65,12 @@ is set, which only makes sense when no other stack is under test. `spaces.spec.t
 not apply.
 
 Specs that call `resetWamMaps` (map editor, raise hand, megaphone) upload `map-storage/tests/assets.zip`, which git
-ignores. Build it once: `(cd map-storage/tests/assets && zip -qr ../assets.zip *)`.
+ignores. Build it for the stack under test with `dev/dev assets <name>`: the test WAMs load their entity collections
+from `http://play.workadventure.localhost`, the regular stack, and the command points them at that stack instead.
+
+The stacks' environment follows `.env.template` and the CI's end-to-end setup (`docker-compose.e2e.yml`, and the
+`sed` lines of the workflow): map editing rights come from the OIDC tags, and the third-party apps are on.
+`dev/dev env` also sets `NO_KLAXOON_SECRET=true`: without a Klaxoon client id, those specs skip, as on forks.
 
 Checked on `ts` and on `ts2` running in parallel: `meeting.spec.ts` (two users in a bubble), `oidc.spec.ts`, and
 `livekit.spec.ts` "4 cameras".
