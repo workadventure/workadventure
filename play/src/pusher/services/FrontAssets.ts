@@ -165,7 +165,7 @@ export class RemoteFrontAssets implements FrontAssets {
         // container directly; this proxy is the fallback when they don't.
         const proxy = assetsProxy(this.internalUrl);
         app.use(["/assets", "/static", "/resources", "/collections"], proxy);
-        app.get(["/iframe_api.js", "/iframe_api.js.map", "/service-worker-prod.js"], proxy);
+        app.get(["/iframe_api.js", "/iframe_api.js.map", "/service-worker-dev.js", "/service-worker-prod.js"], proxy);
     }
 
     public async refresh(): Promise<void> {
