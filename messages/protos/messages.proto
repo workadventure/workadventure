@@ -221,6 +221,19 @@ message VideoQualitySampleMessage {
   optional double encodeMsPerFrame = 36;
   optional double cpuLimitedRatio = 37;
   optional double bandwidthLimitedRatio = 38;
+  // Inbound streams only, over windowSeconds like the playback counters: packets received and lost (a packet counted
+  // as lost then received late is taken back, never below 0).
+  optional uint32 packetsReceived = 39;
+  optional uint32 packetsLost = 40;
+  // Inbound streams only: round-trip time of the connection the stream arrives on (selected ICE candidate pair), when
+  // the sample was taken.
+  optional double roundTripTimeMs = 41;
+  // Outbound streams only, from the latest receiver report of the other end about the largest layer: round-trip time,
+  // and the share of the packets lost on the way (0 to 1).
+  optional double uploadRoundTripTimeMs = 42;
+  optional double uploadLossRatio = 43;
+  // Outbound streams only: the browser's estimate of the bandwidth it can send, in bits per second.
+  optional double availableOutgoingBitrate = 44;
 }
 
 message VideoQualityReportMessage {

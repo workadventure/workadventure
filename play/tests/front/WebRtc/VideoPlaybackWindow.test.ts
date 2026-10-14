@@ -98,6 +98,22 @@ describe("VideoPlaybackWindow", () => {
         expect(deltas).toMatchObject({ windowSeconds: 5, framesDecoded: 150, pauseCount: 0, pauseSeconds: 0 });
     });
 
+    it("counts the packets received and lost, a late packet taken back never restarting the window", () => {
+        const window = new VideoPlaybackWindow();
+        window.take(counters({ packetsReceived: 1000, packetsLost: 10 }), 100_000);
+
+        expect(
+            window.take(counters({ timestampMs: 15_000, packetsReceived: 1400, packetsLost: 14 }), 105_000),
+        ).toMatchObject({ packetsReceived: 400, packetsLost: 4 });
+        // A packet counted as lost arrived late: the lost count goes down, the window stays measurable
+        expect(
+            window.take(
+                counters({ timestampMs: 20_000, framesDecoded: 450, packetsReceived: 1800, packetsLost: 13 }),
+                110_000,
+            ),
+        ).toMatchObject({ windowSeconds: 5, framesDecoded: 150, packetsReceived: 400, packetsLost: 0 });
+    });
+
     it("reports a stall the browser has not counted yet as a window without frames", () => {
         const window = new VideoPlaybackWindow();
         window.take(counters(), 100_000);

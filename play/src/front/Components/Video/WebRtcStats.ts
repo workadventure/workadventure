@@ -18,6 +18,9 @@ export interface WebRtcStats {
     relayProtocol?: "udp" | "tcp" | "tls";
     // Cumulative playback counters of the inbound RTP stream: the analytics report their difference between samples
     playback?: VideoPlaybackCounters;
+    // Round-trip time of the connection the stream arrives on (selected ICE candidate pair), in milliseconds: to the
+    // peer (or the TURN relay) in P2P, to the SFU with LiveKit
+    roundTripTimeMs?: number;
 }
 
 /**
@@ -40,6 +43,9 @@ export interface VideoPlaybackCounters {
     totalInterFrameDelay?: number;
     totalSquaredInterFrameDelay?: number;
     totalDecodeTime?: number;
+    packetsReceived?: number;
+    // Can go down when a packet counted as lost arrives late: never a reason to restart the window
+    packetsLost?: number;
 }
 
 // RTCOutboundRtpStreamStats.qualityLimitationReason
@@ -76,4 +82,10 @@ export interface WebRtcSenderStats {
     // (RTCOutboundRtpStreamStats.qualityLimitationDurations), where qualityLimitationReason is only a snapshot
     cpuLimitedRatio?: number;
     bandwidthLimitedRatio?: number;
+    // From the receiver reports of the other end (RTCRemoteInboundRtpStreamStats) of the largest layer: round-trip
+    // time in milliseconds, and the share of the packets lost on the way (0 to 1)
+    uploadRoundTripTimeMs?: number;
+    uploadLossRatio?: number;
+    // The browser's estimate of the bandwidth available to send (selected candidate pair), in bits per second
+    availableOutgoingBitrate?: number;
 }

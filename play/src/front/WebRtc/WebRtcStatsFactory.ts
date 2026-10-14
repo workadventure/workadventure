@@ -288,22 +288,11 @@ function buildWebRtcStatsFromReport(
     });
     // Enrich receiverStats with TURN routing information when possible
     if (receiverStats) {
-        let selectedPair: any | undefined;
-        for (const t of transports.values()) {
-            if (t.selectedCandidatePairId && candidatePairs.has(t.selectedCandidatePairId)) {
-                selectedPair = candidatePairs.get(t.selectedCandidatePairId);
-                break;
-            }
-        }
-        if (!selectedPair) {
-            for (const p of candidatePairs.values()) {
-                if (p.selected === true || (p.nominated === true && p.state === "succeeded")) {
-                    selectedPair = p;
-                    break;
-                }
-            }
-        }
+        const selectedPair = findSelectedCandidatePair(transports, candidatePairs);
         if (selectedPair) {
+            if (isCounter(selectedPair.currentRoundTripTime)) {
+                receiverStats.roundTripTimeMs = selectedPair.currentRoundTripTime * 1000;
+            }
             const local = localCandidates.get(selectedPair.localCandidateId);
             const remote = remoteCandidates.get(selectedPair.remoteCandidateId);
             const isRelay = (local && local.candidateType === "relay") || (remote && remote.candidateType === "relay");
@@ -353,7 +342,26 @@ function toPlaybackCounters(inboundRtp: any): VideoPlaybackCounters | undefined 
         totalInterFrameDelay: optional(inboundRtp.totalInterFrameDelay),
         totalSquaredInterFrameDelay: optional(inboundRtp.totalSquaredInterFrameDelay),
         totalDecodeTime: optional(inboundRtp.totalDecodeTime),
+        packetsReceived: optional(inboundRtp.packetsReceived),
+        packetsLost: optional(inboundRtp.packetsLost),
     };
+}
+
+/**
+ * The ICE candidate pair the connection uses, from a stats report's transport and candidate-pair entries.
+ */
+function findSelectedCandidatePair(transports: Map<string, any>, candidatePairs: Map<string, any>): any | undefined {
+    for (const transport of transports.values()) {
+        if (transport.selectedCandidatePairId && candidatePairs.has(transport.selectedCandidatePairId)) {
+            return candidatePairs.get(transport.selectedCandidatePairId);
+        }
+    }
+    for (const pair of candidatePairs.values()) {
+        if (pair.selected === true || (pair.nominated === true && pair.state === "succeeded")) {
+            return pair;
+        }
+    }
+    return undefined;
 }
 
 function isCounter(value: unknown): value is number {
@@ -388,15 +396,26 @@ export function buildWebRtcSenderStatsFromReport(
     const layers: any[] = [];
     const codecs = new Map<string, any>();
     const mediaSources = new Map<string, any>();
+    // The receiver reports of the other end, by the outbound-rtp entry they are about
+    const remoteInbound = new Map<string, any>();
+    const transports = new Map<string, any>();
+    const candidatePairs = new Map<string, any>();
     stats.forEach((v: any) => {
         if (v.type === "outbound-rtp" && (v.kind === "video" || v.mediaType === "video")) {
             layers.push(v);
         } else if (v.type === "media-source" && v.kind === "video") {
             mediaSources.set(v.id, v);
+        } else if (v.type === "remote-inbound-rtp" && v.kind === "video") {
+            remoteInbound.set(v.localId, v);
+        } else if (v.type === "transport") {
+            transports.set(v.id, v);
+        } else if (v.type === "candidate-pair") {
+            candidatePairs.set(v.id, v);
         } else if (v.type === "codec") {
             codecs.set(v.id, v);
         }
     });
+    const selectedPair = findSelectedCandidatePair(transports, candidatePairs);
     /* eslint-enable @typescript-eslint/no-explicit-any */
     if (layers.length === 0) {
         prev.clear();
@@ -500,6 +519,24 @@ export function buildWebRtcSenderStatsFromReport(
             "bandwidth",
             timeDiffSeconds,
         ),
+        ...uploadNetwork(remoteInbound.get(topLayer.id), selectedPair),
+    };
+}
+
+/**
+ * What the network does to what we send: the latest receiver report of the other end about the largest layer, and
+ * the bandwidth the browser estimates it can send.
+ */
+function uploadNetwork(
+    remoteInbound: { roundTripTime?: unknown; fractionLost?: unknown } | undefined,
+    selectedPair: { availableOutgoingBitrate?: unknown } | undefined,
+): Pick<WebRtcSenderStats, "uploadRoundTripTimeMs" | "uploadLossRatio" | "availableOutgoingBitrate"> {
+    return {
+        uploadRoundTripTimeMs: isCounter(remoteInbound?.roundTripTime) ? remoteInbound.roundTripTime * 1000 : undefined,
+        uploadLossRatio: isCounter(remoteInbound?.fractionLost) ? Math.min(1, remoteInbound.fractionLost) : undefined,
+        availableOutgoingBitrate: isCounter(selectedPair?.availableOutgoingBitrate)
+            ? selectedPair.availableOutgoingBitrate
+            : undefined,
     };
 }
 

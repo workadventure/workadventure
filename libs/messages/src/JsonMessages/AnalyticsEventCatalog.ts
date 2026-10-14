@@ -828,6 +828,44 @@ export const ANALYTICS_EVENTS = {
         .describe(
           "Outbound only, over the last second: share of the time (0 to 1) the browser degraded the stream for lack of bandwidth.",
         ),
+      packetsReceived: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Inbound only, over windowSeconds like the playback counters: RTP packets of the video received.",
+        ),
+      packetsLost: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Inbound only, over windowSeconds: RTP packets of the video lost on the way to us. Loss share = Σ packetsLost / Σ (packetsLost + packetsReceived). A packet counted as lost then received late is taken back, never below 0.",
+        ),
+      roundTripTimeMs: z
+        .number()
+        .nullable()
+        .describe(
+          "Inbound only: round-trip time of the connection the stream arrives on (selected ICE candidate pair) when the sample was taken: to the peer or its TURN relay in P2P, to the SFU otherwise.",
+        ),
+      uploadRoundTripTimeMs: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only: round-trip time to the other end (peer or SFU), from its latest receiver report about the largest layer.",
+        ),
+      uploadLossRatio: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only: share of the packets (0 to 1) the other end reported lost in its latest receiver report about the largest layer.",
+        ),
+      availableOutgoingBitrate: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only: the browser's estimate of the bandwidth it can send on this connection, in bits per second.",
+        ),
       sampleSeq: z
         .number()
         .nullable()
