@@ -283,6 +283,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         remainingTime: "เหลืออีก ~{time}",
         acceptToDownload: "ยอมรับเพื่อดาวน์โหลด",
         saveFile: "บันทึกไฟล์",
+        unavailable: "ไม่พร้อมใช้งานแล้ว",
         recipient: {
             waiting: "รอ",
             summary: "ได้รับแล้ว {received} จาก {total} คน",

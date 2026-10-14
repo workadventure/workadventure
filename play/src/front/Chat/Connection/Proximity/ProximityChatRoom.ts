@@ -948,7 +948,7 @@ export class ProximityChatRoom implements ChatRoom {
             transfer.downloadStartedAt = undefined;
             // A file already received stays usable whatever happens to the connection afterwards.
             if (get(content).url === undefined) {
-                status.set({ state: "error", error: "download" });
+                status.set({ state: "error", error: update.error === "unavailable" ? "unavailable" : "download" });
             }
             return;
         }
@@ -1899,6 +1899,14 @@ export class ProximityChatRoom implements ChatRoom {
         this.fileTransferSubscriptions.unsubscribe();
         this.fileTransferService?.destroy();
         this.fileTransferService = undefined;
+        // Leaving ends every transfer and frees the files received: say so on each card, instead of
+        // leaving an Accept button, a progress bar or a save link that no longer lead anywhere.
+        for (const { content, status, decision } of this.fileTransfers.values()) {
+            if (get(decision) !== "declined") {
+                content.update((currentContent) => ({ ...currentContent, url: undefined }));
+                status.set({ state: "error", error: "unavailable" });
+            }
+        }
         this.fileTransfers.clear();
         this.failUnfinishedOutgoingRecipients();
         this.outgoingFileTransfers.clear();

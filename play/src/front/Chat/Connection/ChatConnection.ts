@@ -444,7 +444,8 @@ export interface ChatMessageAttachment {
 export type ChatAttachmentStatus =
     | { state: "ready" }
     | { state: "loading"; progress?: number; remainingSeconds?: number }
-    | { state: "error"; error: "download" | "decrypt" };
+    // "unavailable": the file cannot be had any more, for the sender or the recipient left the discussion.
+    | { state: "error"; error: "download" | "decrypt" | "unavailable" };
 
 export interface ChatAttachmentConsent {
     readonly decision: Readable<"pending" | "accepted" | "declined">;

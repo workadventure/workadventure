@@ -283,6 +283,7 @@ const chat: BaseTranslation = {
         remainingTime: "~{time} left",
         acceptToDownload: "Accept to download",
         saveFile: "Save file",
+        unavailable: "No longer available",
         recipient: {
             waiting: "Waiting",
             summary: "Received by {received} of {total}",

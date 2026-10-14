@@ -57,9 +57,13 @@
                     : label;
             }
             default:
-                return currentStatus.state === "error" && currentStatus.error === "decrypt"
-                    ? $LL.chat.file.attachmentDecryptError()
-                    : (errorLabel ?? $LL.chat.file.attachmentDownloadError());
+                if (currentStatus.state === "error" && currentStatus.error === "decrypt") {
+                    return $LL.chat.file.attachmentDecryptError();
+                }
+                if (currentStatus.state === "error" && currentStatus.error === "unavailable") {
+                    return $LL.chat.file.unavailable();
+                }
+                return errorLabel ?? $LL.chat.file.attachmentDownloadError();
         }
     }
 </script>

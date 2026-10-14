@@ -239,7 +239,7 @@ describe("ProximityChatRoom file transfers", () => {
                 error: "unavailable",
             } satisfies ProximityFileTransferUpdate);
 
-            expect(get(message.attachment!.status)).toEqual({ state: "error", error: "download" });
+            expect(get(message.attachment!.status)).toEqual({ state: "error", error: "unavailable" });
         } finally {
             vi.useRealTimers();
         }
@@ -260,6 +260,35 @@ describe("ProximityChatRoom file transfers", () => {
 
         expect(get(consent.decision)).toBe("accepted");
         expect(get(message.attachment!.status)).toMatchObject({ state: "loading", progress: 0 });
+    });
+
+    it("should mark every incoming file unavailable when we leave, except the declined ones", () => {
+        const room = createRoom();
+        for (const transferId of ["offered", "downloading", "received", "declined"]) {
+            Reflect.get(room, "addIncomingFileOffer").call(room, { ...createOffer(), transferId });
+        }
+        const apply = (update: ProximityFileTransferUpdate) =>
+            Reflect.get(room, "applyFileTransferUpdate").call(room, update);
+        apply({ transferId: "downloading", state: "downloading", progress: 0.5 });
+        apply({
+            transferId: "received",
+            state: "ready",
+            progress: 1,
+            url: "blob:received",
+            durationMs: 10,
+            route: undefined,
+        });
+        const messages = new Map(get(room.messages).map((message) => [message.id, message]));
+        messages.get("declined")!.attachment!.consent!.decline();
+
+        Reflect.get(room, "cleanupFileTransferService").call(room);
+
+        for (const id of ["offered", "downloading", "received"]) {
+            const message = messages.get(id)!;
+            expect(get(message.attachment!.status), id).toEqual({ state: "error", error: "unavailable" });
+            expect(get(message.content).url, id).toBeUndefined();
+        }
+        expect(get(messages.get("declined")!.attachment!.consent!.decision)).toBe("declined");
     });
 
     it("should mark an incoming file transfer request as declined locally", () => {
