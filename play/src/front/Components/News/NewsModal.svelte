@@ -2,6 +2,8 @@
     import type { NewsData } from "@workadventure/messages";
     import { LL } from "../../../i18n/i18n-svelte";
     import { newsStore } from "../../Stores/NewsStore";
+    import Button from "../UI/Button.svelte";
+    import { IconX } from "@wa-icons";
 
     let selectedIndex = $state(0);
     let isSubmitting = $state(false);
@@ -66,71 +68,73 @@
 
 {#if currentNews}
     <div
-        class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4 backdrop-blur-lg"
+        class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-2 backdrop-blur-md sm:p-6"
         role="dialog"
         aria-modal="true"
         aria-labelledby="news-title"
     >
-        <section class="flex h-[90dvh] w-full max-w-5xl flex-col rounded-2xl bg-contrast shadow-2xl">
-            <header class="border-b border-white/10 px-6 py-4">
-                <p class="text-sm font-semibold uppercase tracking-wide text-white/60">
-                    {$LL.news.label()}
-                </p>
-                <h2 id="news-title" class="mt-1 text-2xl font-bold text-white">
-                    {$LL.news.title()}
+        <section
+            class="flex h-full max-h-[760px] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-contrast shadow-2xl"
+        >
+            <header class="flex items-center gap-3 border-b border-white/10 py-3 pe-3 ps-6">
+                <h2 id="news-title" class="m-0 min-w-0 flex-1 text-xl font-bold text-white">
+                    {currentNews.title || $LL.news.label()}
                 </h2>
+                <Button
+                    variant="light"
+                    appearance="ghost"
+                    square
+                    disabled={isSubmitting}
+                    aria-label={$LL.news.skip()}
+                    title={$LL.news.skip()}
+                    dataTestId="news-skip"
+                    onclick={markAsReadAndClose}
+                >
+                    {#snippet icon()}
+                        <IconX />
+                    {/snippet}
+                </Button>
             </header>
 
-            <div class="min-h-0 flex-1 overflow-hidden px-6 py-5 text-white">
+            <div class="min-h-0 flex-1">
                 {#if iframeUrl}
                     <iframe
-                        class="h-full min-h-0 w-full border-none"
+                        class="block h-full w-full border-none"
                         src={iframeUrl}
                         title={$LL.news.label()}
                         data-testid="news-iframe"
-                        sandbox="allow-downloads allow-forms allow-popups allow-same-origin allow-scripts"
+                        sandbox="allow-popups allow-popups-to-escape-sandbox"
                     ></iframe>
                 {/if}
             </div>
 
-            <footer class="flex flex-col gap-3 border-t border-white/10 px-6 py-4 sm:flex-row sm:items-center">
+            <footer class="flex items-center gap-2 border-t border-white/10 py-3 pe-3 ps-6">
                 {#if hasMultipleNews}
-                    <p class="text-sm text-white/60">
-                        {currentIndex + 1} / {news.length}
-                    </p>
+                    <div class="flex items-center gap-1.5">
+                        {#each news as item, index (item.id)}
+                            <span
+                                class="h-1.5 rounded-full transition-all {index === currentIndex
+                                    ? 'w-4 bg-white'
+                                    : 'w-1.5 bg-white/30'}"
+                            ></span>
+                        {/each}
+                        <span class="sr-only">{currentIndex + 1} / {news.length}</span>
+                    </div>
                 {/if}
-                <div class="flex flex-1 justify-end gap-3">
-                    <button
-                        type="button"
-                        class="btn btn-light btn-ghost"
-                        disabled={isSubmitting}
-                        onclick={markAsReadAndClose}
-                    >
-                        {$LL.news.skip()}
-                    </button>
-                    {#if hasMultipleNews}
-                        <button
-                            type="button"
-                            class="btn btn-light btn-ghost"
-                            disabled={!hasPreviousNews || isSubmitting}
-                            onclick={previous}
-                        >
+                <div class="ms-auto flex items-center gap-2">
+                    {#if hasPreviousNews}
+                        <Button variant="light" appearance="ghost" disabled={isSubmitting} onclick={previous}>
                             {$LL.news.previous()}
-                        </button>
+                        </Button>
                     {/if}
                     {#if hasNextNews}
-                        <button type="button" class="btn btn-secondary" disabled={isSubmitting} onclick={next}>
+                        <Button variant="secondary" disabled={isSubmitting} onclick={next}>
                             {$LL.news.next()}
-                        </button>
+                        </Button>
                     {:else}
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            disabled={isSubmitting}
-                            onclick={markAsReadAndClose}
-                        >
+                        <Button variant="secondary" disabled={isSubmitting} onclick={markAsReadAndClose}>
                             {$LL.news.finish()}
-                        </button>
+                        </Button>
                     {/if}
                 </div>
             </footer>

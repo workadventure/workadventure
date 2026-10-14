@@ -15,7 +15,13 @@ vi.mock("../../../src/i18n/i18n-svelte", async () => {
     const label = () => "label";
     return {
         LL: readable({
-            news: { label, title: label, skip: label, previous: () => "Previous", next: () => "Next", finish: label },
+            news: {
+                label: () => "What's new",
+                skip: label,
+                previous: () => "Previous",
+                next: () => "Next",
+                finish: label,
+            },
         }),
     };
 });
@@ -62,6 +68,19 @@ describe("NewsModal", () => {
         flushSync();
 
         expect(iframeSrc()).toBe("https://c.test/");
+    });
+
+    it("shows the title set in the admin, or a generic one", () => {
+        news.set([
+            { id: 1, title: "October update", iframeUrl: "https://a.test/" },
+            { id: 2, title: null, iframeUrl: "https://b.test/" },
+        ]);
+        component = mount(NewsModal, { target, intro: false });
+
+        expect(target.querySelector("#news-title")?.textContent?.trim()).toBe("October update");
+        click("Next");
+        flushSync();
+        expect(target.querySelector("#news-title")?.textContent?.trim()).toBe("What's new");
     });
 
     it("refuses a non-http iframe url", () => {
