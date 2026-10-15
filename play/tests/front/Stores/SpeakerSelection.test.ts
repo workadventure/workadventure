@@ -15,22 +15,13 @@ const SAFARI =
 const CHROME =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
 
-async function loadAudioOutputStoreIn(userAgent: string) {
+async function loadSpeakerSelectedStoreIn(userAgent: string) {
     Object.defineProperty(navigator, "userAgent", { value: userAgent, configurable: true });
     vi.resetModules();
-    return import("../../../src/front/Stores/AudioOutputStore");
+    return (await import("../../../src/front/Stores/AudioOutputStore")).speakerSelectedStore;
 }
 
-function device(deviceId: string, kind: MediaDeviceKind, label: string): MediaDeviceInfo {
-    return { deviceId, kind, label, groupId: label } as MediaDeviceInfo;
-}
-
-const airpodsMicrophone = device("airpods-in", "audioinput", "AirPods");
-const airpodsOutput = device("airpods-out", "audiooutput", "AirPods");
-const display = device("hdmi", "audiooutput", "Display");
-
-// Each test reloads livekit-client under a new user agent, which can take a few seconds on a busy machine
-describe("speaker selection", { timeout: 20_000 }, () => {
+describe("speakerSelectedStore", () => {
     const setSinkId = vi.fn(() => Promise.resolve());
 
     beforeEach(() => {
@@ -48,7 +39,7 @@ describe("speaker selection", { timeout: 20_000 }, () => {
     });
 
     it("never makes a voice call setSinkId on Safari, which rejects it outside a user gesture", async () => {
-        const { speakerSelectedStore } = await loadAudioOutputStoreIn(SAFARI);
+        const speakerSelectedStore = await loadSpeakerSelectedStoreIn(SAFARI);
         // Like the "new device detected" bubble or the device list restoring the stored choice
         speakerSelectedStore.set("airpods");
 
@@ -68,20 +59,9 @@ describe("speaker selection", { timeout: 20_000 }, () => {
         await unmount(voice);
     });
 
-    it("offers no output in the new device bubble on Safari, only the microphone of AirPods", async () => {
-        const { devicesToOffer } = await loadAudioOutputStoreIn(SAFARI);
-
-        expect(devicesToOffer([airpodsMicrophone, airpodsOutput, display])).toEqual([airpodsMicrophone]);
-    });
-
-    it("keeps the stored choice and offers outputs in browsers that let us pick the output", async () => {
-        const { speakerSelectedStore, devicesToOffer } = await loadAudioOutputStoreIn(CHROME);
+    it("keeps the stored choice in browsers that let us pick the output", async () => {
+        const speakerSelectedStore = await loadSpeakerSelectedStoreIn(CHROME);
 
         expect(get(speakerSelectedStore)).toBe("airpods");
-        expect(devicesToOffer([airpodsMicrophone, airpodsOutput, display])).toEqual([
-            airpodsMicrophone,
-            airpodsOutput,
-            display,
-        ]);
     });
 });

@@ -101,8 +101,6 @@ vi.mock("livekit-client", async (importOriginal) => {
         // Codec support is probed through RTCRtpSender, which jsdom does not have
         supportsAV1: () => false,
         supportsVP9: () => true,
-        // jsdom's user agent reads as Safari
-        getBrowser: () => ({ name: "Chrome", version: "141.0.0.0", os: "Linux" }),
         // As on Safari, where switching the audio output throws
         supportsAudioOutputSelection: () => false,
     };
