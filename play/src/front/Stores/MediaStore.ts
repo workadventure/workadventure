@@ -58,7 +58,7 @@ import {
     type LocalTrackStoreValue,
 } from "./LocalStreamTypes";
 import { NoiseSuppressionController } from "./NoiseSuppressionController";
-import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
+import { buildMicrophoneAudioConstraints, isVoiceIsolationSupported } from "./MicrophoneSettings";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
 
@@ -950,11 +950,11 @@ async function runRawStreamUpdate(
                 usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
             }
             if (currentStream.getAudioTracks().length > 0) {
-                const audioTrackSettings = currentStream.getAudioTracks()[0]?.getSettings();
+                const audioTrack = currentStream.getAudioTracks()[0];
+                const audioTrackSettings = audioTrack?.getSettings();
                 usedMicrophoneDeviceIdStore.set(audioTrackSettings?.deviceId);
                 voiceIsolationSupportedStore.setSupported(
-                    navigator.mediaDevices?.getSupportedConstraints().voiceIsolation === true &&
-                        audioTrackSettings?.voiceIsolation !== undefined,
+                    isVoiceIsolationSupported(audioTrackSettings, audioTrack?.getCapabilities?.()),
                 );
             } else {
                 voiceIsolationSupportedStore.setSupported(false);
