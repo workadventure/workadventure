@@ -55,6 +55,11 @@
             debug("Output device set to ", deviceId);
             return true;
         } catch (e) {
+            // Not applied: the next request for this device must call setSinkId() again, not report success.
+            // Unless a newer request already replaced it.
+            if (lastRequestedDeviceId === deviceId) {
+                lastRequestedDeviceId = undefined;
+            }
             if (destroyed) {
                 return false;
             }
