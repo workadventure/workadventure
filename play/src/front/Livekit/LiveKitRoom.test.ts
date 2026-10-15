@@ -97,6 +97,8 @@ vi.mock("livekit-client", async (importOriginal) => {
         // Codec support is probed through RTCRtpSender, which jsdom does not have
         supportsAV1: () => false,
         supportsVP9: () => true,
+        // As on Safari, where switching the audio output throws
+        supportsAudioOutputSelection: () => false,
     };
 });
 
@@ -431,6 +433,20 @@ describe("LiveKitRoom", () => {
         });
     });
 
+    it("should not ask livekit-client to switch the audio output where it cannot", () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+            speakerDeviceIdStore: writable("airpods"),
+        });
+        const switchActiveDevice = vi.fn().mockRejectedValue(new Error("cannot switch audio output"));
+        room["room"] = { switchActiveDevice } as never;
+
+        room["synchronizeMediaState"]();
+
+        expect(switchActiveDevice).not.toHaveBeenCalled();
+    });
+
     it("should not forward screen share updates when the space forbids screen share publication", () => {
         const shouldPublishScreenShareStore = writable(false);
         const screenShareStream = createScreenShareStream();
@@ -585,9 +601,11 @@ function createLiveKitRoom({
     shouldPublishScreenShareStore,
     livekitRoomCounter = { increment: vi.fn(), decrement: vi.fn() },
     emitBackEvent = vi.fn(),
+    speakerDeviceIdStore = writable(undefined),
 }: {
     screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
     shouldPublishScreenShareStore: Readable<boolean>;
+    speakerDeviceIdStore?: Readable<string | undefined>;
     livekitRoomCounter?: { increment: () => void; decrement: () => void };
     emitBackEvent?: SpaceInterface["emitBackEvent"];
 }): LiveKitRoom {
@@ -599,7 +617,7 @@ function createLiveKitRoom({
         writable(new Set<string>()),
         new AbortController().signal,
         screenSharingLocalStreamStore,
-        writable(undefined),
+        speakerDeviceIdStore,
         livekitRoomCounter,
         writable({ type: "success", stream: undefined }),
     );
