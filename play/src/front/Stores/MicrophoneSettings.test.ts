@@ -1,6 +1,29 @@
 import { describe, expect, it } from "vitest";
 
-import { buildMicrophoneAudioConstraints, getEffectiveNoiseSuppressionProvider } from "./MicrophoneSettings";
+import {
+    buildMicrophoneAudioConstraints,
+    getEffectiveNoiseSuppressionProvider,
+    isVoiceIsolationSupported,
+} from "./MicrophoneSettings";
+
+describe("isVoiceIsolationSupported", () => {
+    it("rejects a track that only reports voice isolation as off (desktop Chrome without the denoiser)", () => {
+        expect(isVoiceIsolationSupported({ voiceIsolation: false }, { voiceIsolation: [false] })).toBe(false);
+    });
+
+    it("rejects a browser that does not know voice isolation", () => {
+        expect(isVoiceIsolationSupported({}, undefined)).toBe(false);
+        expect(isVoiceIsolationSupported(undefined, undefined)).toBe(false);
+    });
+
+    it("accepts a track that has voice isolation on", () => {
+        expect(isVoiceIsolationSupported({ voiceIsolation: true }, { voiceIsolation: [false] })).toBe(true);
+    });
+
+    it("accepts a track that can turn voice isolation on (ChromeOS)", () => {
+        expect(isVoiceIsolationSupported({ voiceIsolation: false }, { voiceIsolation: [true, false] })).toBe(true);
+    });
+});
 
 describe("getEffectiveNoiseSuppressionProvider", () => {
     it("keeps WorkAdventure as the default provider", () => {
