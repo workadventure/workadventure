@@ -40,6 +40,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Žadyn zwuk z wašeho mikrofona namakany. Móže problem być; spytajće mikrofon w nastajenjach změnić.",
         advancedNoiseReduction: "Rozšěrjene potłóčowanje šuma",
+        loudEnvironmentWarning: "Na wašim mikrofonje je so trajny pozadkowy šum zwěsćił.",
+        enableNoiseSuppression: "Potłóčowanje šuma zmóžnić",
         noiseSuppressionInitializing: "Swójske potłóčowanje šuma so inicializuje...",
         noiseSuppressionUnsupported: "Tutón wobhladowak njemóže swójske potłóčowanje šuma wuwjesć.",
         noiseSuppressionError:

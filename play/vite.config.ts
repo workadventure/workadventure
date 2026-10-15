@@ -137,7 +137,8 @@ export default defineConfig(({ mode }) => {
             },
         },
         optimizeDeps: {
-            exclude: ["svelte-modals"],
+            include: ["@ricky0123/vad-web"],
+            exclude: ["svelte-modals", "@workadventure/noise-suppression/background-noise"],
             esbuildOptions: {
                 define: {
                     global: "globalThis",
