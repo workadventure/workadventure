@@ -7,6 +7,8 @@ export type CompanionVisibilityState = {
     invitationPending?: boolean;
     inWorld?: boolean;
     autoOpenLatch?: boolean;
+    /** False when the companion has nowhere to open by itself (see displayForAutoOpenDuringShare). */
+    autoOpenAllowed?: boolean;
     override?: CompanionOverride;
 };
 
@@ -61,8 +63,8 @@ export function shouldShowCompanion(state: CompanionVisibilityState): boolean {
     if (s.override === "force-open") {
         return true;
     }
-    // Auto-show only inside a world, and only once a trigger has armed the latch.
-    return Boolean(s.inWorld && s.autoOpenLatch);
+    // Auto-show only inside a world, once a trigger has armed the latch, and where it may land.
+    return Boolean(s.inWorld && s.autoOpenLatch && s.autoOpenAllowed !== false);
 }
 
 /**
@@ -126,6 +128,30 @@ export function dismissalAfterPresenceChange(
         return false;
     }
     return Boolean(dismissed);
+}
+
+/**
+ * Where the companion may open by itself during the user's own screen share: on another screen than
+ * the shared one, the one the user looks at if possible. With a single screen, or when the shared
+ * screen is unknown (a window is shared, or the system share dialog chose it), nowhere: it would
+ * land over what the user presents. Opening it by hand is not concerned.
+ *
+ * @param displayIds every screen
+ * @param preferredDisplayId the screen under the pointer
+ */
+export function displayForAutoOpenDuringShare(
+    displayIds: number[],
+    sharedDisplayId: number | undefined,
+    preferredDisplayId: number
+): number | undefined {
+    if (sharedDisplayId === undefined) {
+        return undefined;
+    }
+    const others = (displayIds || []).filter((id) => id !== sharedDisplayId);
+    if (others.length === 0) {
+        return undefined;
+    }
+    return others.includes(preferredDisplayId) ? preferredDisplayId : others[0];
 }
 
 /**

@@ -5,12 +5,14 @@ import { getPresenceSnapshot, onPresenceChange } from "./presence";
 import { getWindow } from "./window";
 import {
     dismissalAfterPresenceChange,
+    displayForAutoOpenDuringShare,
     latchAfterLeavingApp,
     latchAfterPresenceChange,
     leftWorld,
     shouldShowCompanion,
 } from "./companion-visibility-policy";
 import { shouldProtectWindowFromCapture } from "./content-protection";
+import { isIdentifyingScreens } from "./screen-identify";
 
 /**
  * Drives the unified Companion — the People / Chat / Meeting / Controls window. It never steals
@@ -49,6 +51,8 @@ let autoOpenLatch = false;
 let lastPresence = { inWorld: false, inMeeting: false };
 // The world page is hidden: WA fully covered (tracked on macOS and Windows) or minimized.
 let pageHidden = false;
+// The screen in the user's own screen share, when known (a whole screen is shared).
+let sharedScreenDisplayId: number | undefined;
 // Closed by the user: stays closed until they come back to WA, or the meeting ends (see
 // dismissalAfterPresenceChange). Leaving WA again then reopens it, a deliberate move.
 let dismissed = false;
@@ -69,9 +73,39 @@ function isMainWindowShowing(): boolean {
     );
 }
 
+function cursorDisplayId(): number {
+    return screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).id;
+}
+
+/**
+ * The screen the companion opens on by itself: the one the user looks at. During their own share,
+ * only another screen than the shared one, and none with a single screen (see
+ * displayForAutoOpenDuringShare). "Identify screens" covers every screen: nothing opens meanwhile.
+ */
+function autoOpenDisplayId(): number | undefined {
+    if (isIdentifyingScreens()) {
+        return undefined;
+    }
+    if (!getPresenceSnapshot().screenSharing) {
+        return cursorDisplayId();
+    }
+    return displayForAutoOpenDuringShare(
+        screen.getAllDisplays().map((display) => display.id),
+        sharedScreenDisplayId,
+        cursorDisplayId()
+    );
+}
+
+/** The world tells which screen the user shares (undefined: none, a window, or unknown). */
+export function setSharedScreenDisplay(displayId: number | undefined): void {
+    sharedScreenDisplayId = displayId;
+    updateCompanion();
+}
+
 function wantOpen(): boolean {
     const p = getPresenceSnapshot();
     return shouldShowCompanion({
+        autoOpenAllowed: autoOpenDisplayId() !== undefined,
         mainWindowInView: isMainWindowShowing(),
         pipActive,
         invitationPending: p.invitationPending,
@@ -139,9 +173,10 @@ function performOpen(): void {
         return;
     }
     opening = true;
-    // Open on the display the user is actually looking at (cursor), not necessarily WA's.
-    const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
-    openHudWindow("companion", display.id)
+    // Open on the display the user is actually looking at (cursor), not necessarily WA's; when it
+    // opens by itself during the user's share, not on the shared screen.
+    const automatic = override !== "force-open" && !getPresenceSnapshot().invitationPending;
+    openHudWindow("companion", (automatic ? autoOpenDisplayId() : undefined) ?? cursorDisplayId())
         .then(() => {
             opening = false;
             watchUserClose();
@@ -202,7 +237,7 @@ export function onMainWindowHidden(): void {
  * showed again. A page hidden in a focused window is a tab switch inside WA, not leaving it.
  */
 export function onPageVisibilityChange(hidden: boolean): void {
-    if (hidden && isMainWindowFocused()) {
+    if (hidden && (isMainWindowFocused() || isIdentifyingScreens())) {
         return;
     }
     pageHidden = hidden;
@@ -301,12 +336,17 @@ export async function openCompanionForPip(userRequested: boolean): Promise<void>
     if (dismissed && !userRequested) {
         return;
     }
+    // Opening by itself needs a place to land (not over the user's own share): an open companion
+    // takes the video wherever it is.
+    const displayId = userRequested ? cursorDisplayId() : autoOpenDisplayId();
+    if (displayId === undefined && !isHudWindowOpen("companion")) {
+        return;
+    }
     dismissed = false;
     pipActive = true;
     cancelPendingOpen();
     if (!isHudWindowOpen("companion")) {
-        const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
-        await openHudWindow("companion", display.id);
+        await openHudWindow("companion", displayId);
         watchUserClose();
         protectFromCaptureWhileSharing();
     }
