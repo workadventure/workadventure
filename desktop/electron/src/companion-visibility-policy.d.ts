@@ -7,6 +7,8 @@ export type CompanionVisibilityState = {
     invitationPending?: boolean;
     inWorld?: boolean;
     autoOpenLatch?: boolean;
+    /** False when the companion has nowhere to open by itself (see displayForAutoOpenDuringShare). */
+    autoOpenAllowed?: boolean;
     override?: CompanionOverride;
 };
 
@@ -27,4 +29,9 @@ export function dismissalAfterPresenceChange(
     previous: CompanionPresenceEdge,
     next: CompanionPresenceEdge
 ): boolean;
+export function displayForAutoOpenDuringShare(
+    displayIds: number[],
+    sharedDisplayId: number | undefined,
+    preferredDisplayId: number
+): number | undefined;
 export function leftWorld(previous: CompanionPresenceEdge, next: CompanionPresenceEdge): boolean;

@@ -13,7 +13,11 @@ import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { LL } from "../../../i18n/i18n-svelte";
-import { requestedScreenSharingState, screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
+import {
+    activeScreenShareSourceStore,
+    requestedScreenSharingState,
+    screenSharingAvailableStore,
+} from "../../Stores/ScreenSharingStore";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
@@ -386,6 +390,15 @@ class DesktopApi {
 
         // Push live presence (meeting + mic/camera) to main so the tray shows a status dot and
         // reflects the mic/camera state in its quick-action checkmarks.
+        // The screen the user shares, so that the companion never opens by itself over it.
+        if (window.WAD.setScreenShareSource) {
+            const setScreenShareSource = window.WAD.setScreenShareSource;
+            //eslint-disable-next-line svelte/no-ignored-unsubscribe
+            activeScreenShareSourceStore.subscribe((source) => {
+                setScreenShareSource(source ? { sourceId: source.id, displayId: source.display_id } : null);
+            });
+        }
+
         if (window.WAD.setPresence) {
             const setPresence = window.WAD.setPresence;
             // The screens shown before the world, which wait for the user: the shell must not mistake

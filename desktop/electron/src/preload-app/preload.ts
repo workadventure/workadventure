@@ -60,6 +60,7 @@ const api: WorkAdventureDesktopApi = {
     setKeepAwake: (enabled) => ipcRenderer.send("app:setKeepAwake", Boolean(enabled)),
     setUnreadCount: (count) => ipcRenderer.send("app:setUnreadCount", Number(count) || 0),
     setPresence: (presence) => ipcRenderer.send("app:setPresence", presence),
+    setScreenShareSource: (source) => ipcRenderer.send("app:screen-share-source", source),
     onSetStatus: (callback) =>
         subscribe("app:on-set-status", (status) => {
             if (

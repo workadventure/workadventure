@@ -29,6 +29,7 @@
  *   invitationPending?: boolean,
  *   inWorld?: boolean,
  *   autoOpenLatch?: boolean,
+ *   autoOpenAllowed?: boolean, // false: nowhere to open by itself (see displayForAutoOpenDuringShare)
  *   override?: "auto" | "force-open" | "force-closed",
  * }} state
  * @returns {boolean}
@@ -56,8 +57,8 @@ function shouldShowCompanion(state) {
     if (s.override === "force-open") {
         return true;
     }
-    // Auto-show only inside a world, and only once a trigger has armed the latch.
-    return Boolean(s.inWorld && s.autoOpenLatch);
+    // Auto-show only inside a world, once a trigger has armed the latch, and where it may land.
+    return Boolean(s.inWorld && s.autoOpenLatch && s.autoOpenAllowed !== false);
 }
 
 /**
@@ -125,6 +126,28 @@ function dismissalAfterPresenceChange(dismissed, previous, next) {
 }
 
 /**
+ * Where the companion may open by itself during the user's own screen share: on another screen than
+ * the shared one, the one the user looks at if possible. With a single screen, or when the shared
+ * screen is unknown (a window is shared, or the system share dialog chose it), nowhere: it would
+ * land over what the user presents. Opening it by hand is not concerned.
+ *
+ * @param {number[]} displayIds every screen
+ * @param {number | undefined} sharedDisplayId
+ * @param {number} preferredDisplayId the screen under the pointer
+ * @returns {number | undefined}
+ */
+function displayForAutoOpenDuringShare(displayIds, sharedDisplayId, preferredDisplayId) {
+    if (sharedDisplayId === undefined) {
+        return undefined;
+    }
+    const others = (displayIds || []).filter((id) => id !== sharedDisplayId);
+    if (others.length === 0) {
+        return undefined;
+    }
+    return others.includes(preferredDisplayId) ? preferredDisplayId : others[0];
+}
+
+/**
  * True when presence just crossed from inside a world to outside it — the moment the panel should
  * close and every latch reset. Callers debounce this: `inWorld` also dips false during a same-world
  * scene reload (a portal hop), and tearing the panel down there would kill a live meeting video.
@@ -142,5 +165,6 @@ module.exports = {
     latchAfterPresenceChange,
     latchAfterLeavingApp,
     dismissalAfterPresenceChange,
+    displayForAutoOpenDuringShare,
     leftWorld,
 };

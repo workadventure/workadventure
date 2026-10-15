@@ -4,6 +4,7 @@ import {
     latchAfterPresenceChange,
     latchAfterLeavingApp,
     dismissalAfterPresenceChange,
+    displayForAutoOpenDuringShare,
     leftWorld,
 } from "./companion-visibility-policy";
 
@@ -72,6 +73,21 @@ test("leaving the app while alone in a world does NOT arm the latch", () => {
 
 test("leaving outside a world does NOT arm the latch", () => {
     expect(latchAfterLeavingApp(false, { inWorld: false, inMeeting: true })).toBe(false);
+});
+
+// ── During the user's own screen share ──────────────────────────────────────────────────────
+test("the auto-show waits for a place to land", () => {
+    expect(shouldShowCompanion({ ...away, autoOpenLatch: true, autoOpenAllowed: false })).toBe(false);
+    expect(shouldShowCompanion({ ...away, override: "force-open", autoOpenAllowed: false })).toBe(true);
+});
+
+test("during a share, it opens by itself only on another screen than the shared one", () => {
+    // A single screen, or a shared screen unknown (a window is shared): nowhere.
+    expect(displayForAutoOpenDuringShare([1], 1, 1)).toBeUndefined();
+    expect(displayForAutoOpenDuringShare([1, 2], undefined, 1)).toBeUndefined();
+    // The screen under the pointer when it is not the shared one, another one otherwise.
+    expect(displayForAutoOpenDuringShare([1, 2, 3], 1, 3)).toBe(3);
+    expect(displayForAutoOpenDuringShare([1, 2, 3], 1, 1)).toBe(2);
 });
 
 // ── Dismissal ────────────────────────────────────────────────────────────────────────────────
