@@ -39,6 +39,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         activate: "啟用您的麥克風",
         noSoundWarning: "未偵測到麥克風聲音。可能有問題 — 請嘗試在設定中更換麥克風。",
         advancedNoiseReduction: "進階降噪",
+        loudEnvironmentWarning: "偵測到麥克風中存在持續的背景噪音。",
+        enableNoiseSuppression: "啟用噪音抑制",
         noiseSuppressionInitializing: "正在初始化自訂噪音抑制...",
         noiseSuppressionUnsupported: "此瀏覽器無法執行自訂噪音抑制。",
         noiseSuppressionError: "自訂噪音抑制失敗。正在回復到瀏覽器原生噪音抑制。",

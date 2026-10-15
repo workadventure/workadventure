@@ -122,9 +122,11 @@ import {
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
+import LoudEnvironmentToast from "../../Components/Toasts/LoudEnvironmentToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { toastStore } from "../../Stores/ToastStoreSingleton";
 import { audioInterruptedStore } from "../../Stores/AudioInterruptedStore";
+import { loudEnvironmentWarningStore } from "../../Stores/LoudEnvironmentWarningStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
@@ -2860,6 +2862,17 @@ export class GameScene extends DirtyScene {
                     toastStore.addToast(NoMicrophoneSoundToast, {}, NO_MICROPHONE_SOUND_TOAST_ID);
                 } else {
                     toastStore.removeToast(NO_MICROPHONE_SOUND_TOAST_ID);
+                }
+            }),
+        );
+
+        const LOUD_ENVIRONMENT_TOAST_ID = "loud-environment-toast";
+        this.unsubscribers.push(
+            loudEnvironmentWarningStore.subscribe((show) => {
+                if (show) {
+                    toastStore.addToast(LoudEnvironmentToast, {}, LOUD_ENVIRONMENT_TOAST_ID);
+                } else {
+                    toastStore.removeToast(LOUD_ENVIRONMENT_TOAST_ID);
                 }
             }),
         );

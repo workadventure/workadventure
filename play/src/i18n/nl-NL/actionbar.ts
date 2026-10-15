@@ -40,6 +40,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Geen geluid gedetecteerd van je microfoon. Er kan een probleem zijn; probeer je microfoon te wijzigen in de instellingen.",
         advancedNoiseReduction: "Geavanceerde ruisreductie",
+        loudEnvironmentWarning: "Er is aanhoudend achtergrondgeluid op je microfoon gedetecteerd.",
+        enableNoiseSuppression: "Ruisonderdrukking inschakelen",
         noiseSuppressionInitializing: "Aangepaste ruisonderdrukking initialiseren...",
         noiseSuppressionUnsupported: "Deze browser kan aangepaste ruisonderdrukking niet uitvoeren.",
         noiseSuppressionError:
