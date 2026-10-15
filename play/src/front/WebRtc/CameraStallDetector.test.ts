@@ -117,6 +117,29 @@ describe("CameraStallDetector", () => {
         expect(run(new CameraStallDetector(), samples(30, stats(silent)))).toEqual([]);
     });
 
+    it("judges the camera by what it delivers, not by what the encoder outputs", () => {
+        const encoderSilent = { ...encoder(0), captureFps: 30 };
+        expect(run(new CameraStallDetector(), samples(30, stats(encoderSilent)))).toEqual([]);
+        const sourceFrozen = { ...encoder(0), captureFps: 0 };
+        expect(run(new CameraStallDetector(), samples(WARMUP_SAMPLES + STALL_SAMPLES, stats(sourceFrozen)))).toEqual([
+            [WARMUP_SAMPLES + STALL_SAMPLES - 1, "restart"],
+        ]);
+    });
+
+    it("gives up once, then waits for a frame or for the camera to go off", () => {
+        const detector = new CameraStallDetector();
+        // Turning the camera off waits behind a getUserMedia that never answers: the stalled camera stays on for hours
+        expect(run(detector, frozen(600)).map(([, action]) => action)).toEqual(["restart", "give_up"]);
+        // The camera delivers again ("Try again" worked): judged again
+        expect(run(detector, [...live(1), ...frozen(STALL_SAMPLES)], 600)).toEqual([[600 + STALL_SAMPLES, "restart"]]);
+
+        const turnedOff = new CameraStallDetector();
+        run(turnedOff, frozen(60));
+        expect(run(turnedOff, [undefined, ...frozen(WARMUP_SAMPLES + STALL_SAMPLES)], 60)).toEqual([
+            [60 + WARMUP_SAMPLES + STALL_SAMPLES, "restart"],
+        ]);
+    });
+
     it("ignores the limitation reason: a LiveKit sender reports bandwidth for minutes, frozen or not", () => {
         const frozenAndLimited = { ...encoder(0), qualityLimitationReason: "bandwidth" as const };
         expect(

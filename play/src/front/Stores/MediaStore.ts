@@ -12,6 +12,7 @@ import { openTimedEventPerMeeting } from "../Administration/CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { createHeldIntervalTracker } from "../Administration/HeldIntervalTracker";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
+import { getUserMediaUnlessStuck } from "../WebRtc/GetUserMediaUnlessStuck";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
@@ -921,7 +922,7 @@ async function runRawStreamUpdate(
         }
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia(newConstraints);
+            const stream = await getUserMediaUnlessStuck(newConstraints);
             if (generation !== rawStreamGeneration) {
                 // A newer update is queued/running: discard this stale stream so devices are released immediately.
                 // The returned constraints are ignored by caller for stale generations.

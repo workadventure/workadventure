@@ -13,15 +13,22 @@ import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderSt
  * frame, every tile mounted afterwards (someone arriving, coming back from a break) shows "No video stream
  * received", and the user sees a black preview.
  *
- * The encoders tell: with a layer to send, a camera has frames to encode all the time. None for 3 seconds means the
+ * The senders tell: with a layer to send, a camera hands them frames all the time. None for 3 seconds means the
  * source delivers nothing. We first ask for the camera again, what the user would do by turning it off and on. If
  * the new one never delivers a frame, or the camera keeps freezing, it is turned off, so that the others get the
  * avatar instead of a red tile, and the user is told why. Switching to another camera is left to the user: the
  * other one may be the camera of a closed laptop, or point elsewhere.
  *
+ * What counts is what the source hands the sender (RTCVideoSourceStats), not what the encoder outputs: the question
+ * is whether the camera delivers, and restarting a camera that does stops it for nothing, or for good when the new
+ * getUserMedia does not answer. Browsers that do not report the source fall back to the encoder.
+ *
+ * Once it gave up, it waits for a frame or for the camera to go off before judging again. Turning the camera off
+ * waits behind the restart's getUserMedia, which a camera the system holds back can leave pending: the detector
+ * would otherwise restart and give up again every 16 seconds, for hours.
+ *
  * The limitation reason is no help: it stays set while the adaptation is in force, a LiveKit sender reports
- * "bandwidth" for minutes on end, and a frozen camera never moves it. A network that holds every frame back for 3
- * seconds costs a restart at worst: the camera only goes off when the new one sends nothing at all.
+ * "bandwidth" for minutes on end, and a frozen camera never moves it.
  *
  * Firefox does not report which layers are active: it never gets here.
  */
@@ -47,6 +54,7 @@ export class CameraStallDetector {
     private restartTimes: number[] = [];
     // Whether the camera delivered a frame since the last restart: a new camera that never does is not worth another
     private deliveredSinceRestart = true;
+    private gaveUp = false;
 
     /**
      * Feeds one reading of the aggregated camera encoder stats. Returns the action to take when it is time.
@@ -57,6 +65,7 @@ export class CameraStallDetector {
             this.stalledSamples = 0;
             this.warmup = WARMUP_SAMPLES;
             this.deliveredSinceRestart = true;
+            this.gaveUp = false;
             return undefined;
         }
         if (now - this.lastSampleTime < SAMPLE_INTERVAL_MS) {
@@ -75,9 +84,13 @@ export class CameraStallDetector {
             this.stalledSamples = 0;
             return undefined;
         }
-        if (expected.some((encoder) => (encoder.activeFps ?? 0) > 0)) {
+        if (expected.some((encoder) => (encoder.captureFps ?? encoder.activeFps ?? 0) > 0)) {
             this.stalledSamples = 0;
             this.deliveredSinceRestart = true;
+            this.gaveUp = false;
+            return undefined;
+        }
+        if (this.gaveUp) {
             return undefined;
         }
         this.stalledSamples++;
@@ -88,8 +101,7 @@ export class CameraStallDetector {
         this.restartTimes = this.restartTimes.filter((time) => now - time < RESTART_WINDOW_MS);
         if (!this.deliveredSinceRestart || this.restartTimes.length >= MAX_RESTARTS) {
             this.restartTimes = [];
-            this.deliveredSinceRestart = true;
-            this.warmup = WARMUP_SAMPLES;
+            this.gaveUp = true;
             return "give_up";
         }
         this.restartTimes.push(now);
