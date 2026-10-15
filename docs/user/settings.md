@@ -83,7 +83,7 @@ This choice only applies to screen sharing, not to your camera.
 
 ![The microphone settings, with advanced noise reduction turned on](images/settings-microphone.png)
 
-- **Enable advanced noise reduction** (off by default) removes background noise (keyboard, fan, street…) from your microphone. When it is on, choose the **Noise suppression mode**:
+- **Enable advanced noise reduction** (on by default) removes background noise (keyboard, fan, street…) from your microphone. When it is on, choose the **Noise suppression mode**:
   - **WorkAdventure noise suppression** (recommended): the noise is removed by WorkAdventure, in your browser.
   - **Voice isolation**: the noise is removed by your browser and your operating system. This choice only appears when they support it.
 - **Automatic gain control** (on by default) automatically adjusts the volume of your microphone.
