@@ -269,6 +269,7 @@ export class AnalyticsEventsQueue extends SharedAnalyticsEventsQueue {
                 relay: sample.relay ?? null,
                 relayProtocol: toRelayProtocol(sample.relayProtocol),
                 livekitServerUrl: sample.livekitServerUrl ?? null,
+                livekitRegion: sample.livekitRegion || null,
                 fps: sample.fps,
                 fpsStdDev: Number.isFinite(sample.fpsStdDev) ? (sample.fpsStdDev ?? null) : null,
                 jitter: sample.jitter,

@@ -23,6 +23,8 @@ export type VideoQualityAnalyticsContext = {
     spaceName: string;
     connectionId?: string;
     livekitServerUrl?: string;
+    // Read at each sample: LiveKit can move the client to another region when it reconnects
+    getLivekitRegion?: () => string | undefined;
 };
 
 const sessionId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -115,6 +117,7 @@ type BaseSample = Pick<
     | "streamCategory"
     | "transportType"
     | "livekitServerUrl"
+    | "livekitRegion"
 >;
 
 function subscribeToSamples<T>(
@@ -159,6 +162,7 @@ function subscribeToSamples<T>(
             streamCategory: toStreamCategory(context.streamCategory),
             transportType: toTransportType(context.transportType),
             livekitServerUrl: context.livekitServerUrl,
+            livekitRegion: context.getLivekitRegion?.(),
         });
         if (!sample) {
             return;

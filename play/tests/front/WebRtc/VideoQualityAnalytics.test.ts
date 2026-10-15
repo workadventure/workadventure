@@ -134,7 +134,13 @@ describe("subscribeToOutboundVideoQualityAnalytics", () => {
 
         subscribeToOutboundVideoQualityAnalytics(
             writable(senderStats),
-            { ...context, transportType: "Livekit", remoteSpaceUserId: "", livekitServerUrl: "wss://livekit.test" },
+            {
+                ...context,
+                transportType: "Livekit",
+                remoteSpaceUserId: "",
+                livekitServerUrl: "wss://livekit.test",
+                getLivekitRegion: () => "ojohannesburg1a",
+            },
             sendReport,
         );
 
@@ -145,6 +151,7 @@ describe("subscribeToOutboundVideoQualityAnalytics", () => {
                     transportType: VideoQualityTransportType.VIDEO_QUALITY_TRANSPORT_TYPE_LIVEKIT,
                     remoteSpaceUserId: "",
                     livekitServerUrl: "wss://livekit.test",
+                    livekitRegion: "ojohannesburg1a",
                     fps: 28,
                     jitter: 0,
                     bandwidthBytesPerSecond: 300000,
