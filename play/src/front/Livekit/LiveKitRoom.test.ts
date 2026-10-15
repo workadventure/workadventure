@@ -88,6 +88,7 @@ vi.mock("livekit-client", async (importOriginal) => {
         public resumeUpstream = vi.fn().mockResolvedValue(undefined);
         public pauseUpstream = vi.fn().mockResolvedValue(undefined);
         public replaceTrack = vi.fn().mockResolvedValue(undefined);
+        public simulcastCodecs = new Map();
         constructor(public mediaStreamTrack: MediaStreamTrack) {}
     }
     return {
@@ -298,6 +299,72 @@ describe("LiveKitRoom", () => {
         await room["handleCameraTrack"](createCameraStream("new-camera-track"));
 
         expect(unmute).toHaveBeenCalledOnce();
+    });
+
+    // The subscribers that cannot decode VP9 get the VP8 backup codec, which livekit-client sends from its own clone
+    // of the camera track. Seen in production: they never got the camera back after it was turned off and on.
+    it("should send the new camera to the subscribers of the backup codec after a camera off/on", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+        await room["handleCameraTrack"](createCameraStream());
+        const cameraTrack = room["localCameraTrack"];
+        if (!cameraTrack) {
+            throw new Error("The camera was not published");
+        }
+        // A subscriber that cannot decode VP9 joined: livekit-client publishes VP8 from a clone of the camera
+        const stopOldBackupTrack = vi.fn();
+        const oldBackupTrack = Object.assign(createCameraTrack("camera-track-clone"), { stop: stopOldBackupTrack });
+        const backupSender = { replaceTrack: vi.fn().mockResolvedValue(undefined) };
+        cameraTrack.simulcastCodecs.set("vp8", {
+            codec: "vp8",
+            mediaStreamTrack: oldBackupTrack,
+            sender: backupSender as unknown as RTCRtpSender,
+        });
+
+        await room["handleCameraTrack"](undefined);
+        // A clone left running keeps the camera on
+        expect(stopOldBackupTrack).toHaveBeenCalled();
+
+        await room["handleCameraTrack"](createCameraStream("new-camera-track"));
+
+        const backupTrack = cameraTrack.simulcastCodecs.get("vp8")?.mediaStreamTrack;
+        expect(backupTrack?.id).toBe("new-camera-track-clone");
+        expect(backupSender.replaceTrack).toHaveBeenLastCalledWith(backupTrack);
+    });
+
+    it("should clone the camera again for the backup codec when the space streams video again", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+        const cameraStream = createCameraStream();
+        await room["handleCameraTrack"](cameraStream);
+        const cameraTrack = room["localCameraTrack"];
+        if (!cameraTrack) {
+            throw new Error("The camera was not published");
+        }
+        const oldBackupTrack = createCameraTrack("camera-track-clone");
+        const backupSender = { replaceTrack: vi.fn().mockResolvedValue(undefined) };
+        cameraTrack.simulcastCodecs.set("vp8", {
+            codec: "vp8",
+            mediaStreamTrack: oldBackupTrack,
+            sender: backupSender as unknown as RTCRtpSender,
+        });
+
+        // The space stops streaming video, the camera stays on
+        await room["handleCameraTrack"](undefined);
+        Object.assign(cameraTrack, { isUpstreamPaused: true });
+        await room["handleCameraTrack"](cameraStream);
+
+        const backupTrack = cameraTrack.simulcastCodecs.get("vp8")?.mediaStreamTrack;
+        expect(backupTrack).not.toBe(oldBackupTrack);
+        expect(backupSender.replaceTrack).toHaveBeenLastCalledWith(backupTrack);
     });
 
     it("should defer a scripting stream while the room is not connected and publish it once reconnected", async () => {
@@ -575,15 +642,21 @@ function createSpace(
 }
 
 function createCameraStream(id = "camera-track"): LocalStreamStoreValue {
-    const track = {
-        id,
-        kind: "video",
-        getSettings: () => ({ width: 1280, height: 720 }),
-    } as unknown as MediaStreamTrack;
+    const track = createCameraTrack(id);
     return {
         type: "success",
         stream: { getVideoTracks: () => [track], getAudioTracks: () => [] } as unknown as MediaStream,
     };
+}
+
+function createCameraTrack(id: string): MediaStreamTrack {
+    return {
+        id,
+        kind: "video",
+        getSettings: () => ({ width: 1280, height: 720 }),
+        clone: vi.fn(() => createCameraTrack(`${id}-clone`)),
+        stop: vi.fn(),
+    } as unknown as MediaStreamTrack;
 }
 
 function createStreamableSubjects(): StreamableSubjects {
