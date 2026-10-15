@@ -170,18 +170,24 @@
         // send files
         if (files && files.length > 0) {
             if (!(room instanceof ProximityChatRoom)) {
-                const idsToSend = files.map((f) => f.id);
-                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
-                    fileListAcc.items.add(currentFile.file);
-                    return fileListAcc;
-                }, new DataTransfer()).files;
+                // One upload per file: a file that fails stays in the preview, the others leave it.
+                const filesToSend = files;
+                const results = await Promise.allSettled(
+                    filesToSend.map(({ file }) => {
+                        const fileList = new DataTransfer();
+                        fileList.items.add(file);
+                        return room.sendFiles(fileList.files);
+                    }),
+                );
+                const sentIds = filesToSend
+                    .filter((_, index) => results[index].status === "fulfilled")
+                    .map(({ id }) => id);
+                files = files.filter((f) => !sentIds.includes(f.id));
+                filesPreview = filesPreview.filter((p) => !sentIds.includes(p.id));
 
-                try {
-                    await room.sendFiles(fileList);
-                    files = files.filter((f) => !idsToSend.includes(f.id));
-                    filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
-                } catch (error) {
-                    console.error(error);
+                const failure = results.find((result) => result.status === "rejected");
+                if (failure) {
+                    console.error(failure.reason);
                     warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
                         closable: true,
                     });
@@ -747,9 +753,11 @@
                 <IconPaperclip font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
                 <p class={applicationDescriptionClass}>
-                    {fileAttachementEnabled && !isProximityChatRoom
-                        ? $LL.chat.fileAttachment.description()
-                        : $LL.chat.fileAttachment.featureComingSoon()}
+                    {!fileAttachementEnabled
+                        ? $LL.chat.disabledByAdmin()
+                        : isProximityChatRoom || !$canSendMessages
+                          ? $LL.chat.disabled()
+                          : $LL.chat.fileAttachment.description()}
                 </p>
             </button>
 

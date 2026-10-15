@@ -17,7 +17,8 @@
 
     async function editMessage(newContent: string) {
         try {
-            await message.edit(newContent);
+            // Like the message bar: the input is HTML, and its <br> are the line breaks typed with Shift + Enter.
+            await message.edit(newContent.replace(/<br>/g, "\n"));
             selectedChatMessageToEdit.set(null);
         } catch (error) {
             console.error(error);
@@ -27,6 +28,13 @@
             }, 2000);
         }
     }
+
+    function onKeyDown(event: KeyboardEvent) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            editMessage(inputValue).catch((error) => console.error(error));
+        }
+    }
 </script>
 
 <div>
@@ -34,6 +42,7 @@
         bind:message={inputValue}
         bind:messageInput
         dataTestid="editMessageInput"
+        onkeydown={onKeyDown}
         inputClass=" p-1  !m-0 px-2 max-h-36 overflow-auto w-full h-full rounded-md !leading-6 block !text-sm !text-white !bg-white/20 placeholder:text-sm  !text-black border  resize-none  shadow-none focus:ring-0"
         dataText={$LL.chat.enter()}
     />
@@ -47,14 +56,14 @@
             data-testid="cancelMessageEditionButton"
             onclick={() => selectedChatMessageToEdit.set(null)}
         >
-            {$LL.chat.createRoom.buttons.cancel()}
+            {$LL.chat.messageEdition.cancel()}
         </button>
         <button
             class="bg-white hover:bg-white/80 text-secondary py-0.5 text-sm px-3 w-full text-center items-center justify-center rounded"
             data-testid="saveMessageEditionButton"
             onclick={() => editMessage(inputValue)}
         >
-            {$LL.chat.createRoom.buttons.edit()}
+            {$LL.chat.messageEdition.save()}
         </button>
     </div>
 </div>

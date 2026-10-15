@@ -18,7 +18,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "Pśijaśela / pśijaśelku pśidaś",
     },
     loader: "Lodujo se...",
-    typing: "pišo...",
     users: "wužywarje",
     chat: "Chat",
     userList: {
@@ -117,7 +116,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "Napiš powěsć...",
-        typing: " pišo...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -174,26 +172,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "Slědk pósłaś",
     delete: "Wulašowaś",
     messageDeleted: "Powěsć wulašowana",
-    emoji: {
-        icon: "Emojis",
-        search: "Emoje pytaś...",
-        categories: {
-            recents: "Gano wužyte",
-            smileys: "Smileys & emocije",
-            people: "Cłowjeki & śěło",
-            animals: "Zwěrjeta & natura",
-            food: "Jěź & piśe",
-            activities: "Aktiwity",
-            travel: "Drogowanje & městnosći",
-            objects: "Objekty",
-            symbols: "Symbole",
-            flags: "Fony",
-            custom: "Wót wužywarja wustajone",
-        },
-        notFound: "Žedne emojije njejsu se namakali",
-    },
-    said: "jo gronił:",
-    reply: "Wótegroniś",
     replyTo: "Wótegroniś na",
     thread: {
         panelTitle: "Wše nitki",
@@ -210,9 +188,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "Zachopk toś teje konwersacije njejo k dispoziciji. Móžoš hyšći cytaś a wótegroniś.",
         openError: "Toś tu nitku njedajo se wócyniś.",
     },
-    react: "Reagěrowaś",
-    copy: "Kopěrowaś",
-    copied: "Kopěrowane!",
     poll: {
         title: "Wótběg",
         submitError: "Waš wótběg njedajo se pósłaś. Prošu wopytajśo hyšći raz.",
@@ -276,15 +251,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "Wšě pšašanja pokazaś",
     },
     file: {
-        fileContentNoEmbed: "Wopśimjeśe njedajo se woglědaś. Musyśo jo ześěgnuś dołoj",
-        download: "Ześěgnuś",
-        openCoWebsite: "Na co-webboku wótcyniś",
         loadingAttachment: "Pśiłožk se zacytujo...",
         attachmentDownloadError: "Toś ten pśiłožk njedajo se ześěgnuś.",
         attachmentDecryptError: "Toś ten pśiłožk njedajo se dešifrěrowaś.",
-        copy: "Link kopěrowaś",
-        tooBig: "Dataja {fileName} jo pśewjelika {maxFileSize}.",
-        notLogged: "Wy musyśo zalogowane byś, aby dataju górjej lodowali.",
     },
     needRefresh: "Cas Wašogo zwězanja jo se dokóńcował. Aktualizěrujśo bok, aby se naspjet z chatom zwězali.",
     refresh: "Aktualizěrowaś",
@@ -296,6 +265,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "Wy sćo tu powěsć wulašowali",
     messageEdited: "Změnjony",
     messageEditedError: "Njejo móžno, powěsć změniś. Wopytajśo znowa.",
+    messageEdition: {
+        save: "Składowaś",
+        cancel: "Pśetergnuś",
+    },
     waiting: "Cakajucy",
     nothingToDisplay: "Nic za pokazanje",
     showMore: "Pokazaś {number} wěcej",
@@ -328,7 +301,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "Jano cłonki (wót jich pśepšosynki)",
         },
         buttons: {
-            edit: "Wobźěłaś",
             create: "Napóraś",
             cancel: "Pśetergnuś",
         },
@@ -641,7 +613,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Datajowy zbytny zapis",
         description: "Nagraś dataju, aby ju źělił",
-        featureComingSoon: "Funkcija pśiducy!",
     },
     loginTokenError: "Zmólka jo nastała. Pšosym wopytaj, se znowa pśizjawiś",
     reconnect: "Znowa zwězaś",

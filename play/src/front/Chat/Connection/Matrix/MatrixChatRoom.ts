@@ -83,7 +83,7 @@ import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { waitForGameSceneStore } from "../../../Stores/GameSceneStore";
 import { ProximityChatRoom } from "../Proximity/ProximityChatRoom";
-import { MatrixChatMessage } from "./MatrixChatMessage";
+import { getTextMessageContent, MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatLightPoll } from "./MatrixChatLightPoll";
 import { MatrixChatPoll } from "./MatrixChatPoll";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
@@ -95,6 +95,7 @@ import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
 import { getThreadSummary, shouldDisplayEventInRoomTimeline } from "./MatrixThreadUtils";
 import { buildRoomPowerLevelsContent, getRoomPermissionsState } from "./MatrixRoomPowerLevels";
+import { uploadAttachment } from "./MatrixMediaResolver";
 
 type EventId = string;
 
@@ -1777,7 +1778,7 @@ export class MatrixChatRoom
     }
 
     private getMessageContent(message: string): RoomMessageEventContent {
-        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+        const content = getTextMessageContent(message);
         this.applyReplyContentIfReplyTo(content);
         return content;
     }
@@ -2032,40 +2033,28 @@ export class MatrixChatRoom
     }
 
     async sendFiles(files: FileList) {
-        try {
-            await Promise.allSettled(Array.from(files).map((file) => this.sendFile(file)));
-        } catch (error) {
-            console.error(error);
-        }
+        await Promise.all(Array.from(files).map((file) => this.sendFile(file)));
     }
 
     private async sendFile(file: File) {
-        try {
-            const uploadResponse = await this.matrixRoom.client.uploadContent(file);
-            const content: Omit<MediaEventContent, "info"> & {
-                info: Partial<MediaEventInfo>;
-                formatted_body?: string;
-                "m.new_content"?: never;
-                "m.relates_to"?: never;
-            } = {
-                body: file.name,
-                formatted_body: file.name,
-                info: {
-                    size: file.size,
-                    mimetype: file.type,
-                },
-                msgtype: this.getMessageTypeFromFile(file),
-                url: uploadResponse.content_uri,
+        const content: Omit<MediaEventContent, "info"> & {
+            info: Partial<MediaEventInfo>;
+            formatted_body?: string;
+            "m.new_content"?: never;
+            "m.relates_to"?: never;
+        } = {
+            body: file.name,
+            formatted_body: file.name,
+            info: {
+                size: file.size,
+                mimetype: file.type,
+            },
+            msgtype: this.getMessageTypeFromFile(file),
+            ...(await uploadAttachment(this.matrixRoom.client, file, this.matrixRoom.hasEncryptionStateEvent())),
+        };
+        this.applyReplyContentIfReplyTo(content);
 
-                // set more specifically later
-            };
-            this.applyReplyContentIfReplyTo(content);
-
-            return this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, content);
-        } catch (error) {
-            console.error(error);
-            return;
-        }
+        return this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, content);
     }
 
     private getMessageTypeFromFile(file: File) {

@@ -35,7 +35,7 @@ Hover over a message to show its actions, from left to right:
 - **Reply**: your message is sent with the original message quoted inside it. A **Reply to** banner shows the message you answer; click ✕ to cancel.
 - **Thread** (**Open thread**): starts or opens a side conversation on this message (see [Threads](#threads)).
 - **React**: adds an emoji under the message. Click an emoji under a message to add yours or take it back.
-- **Edit**: only on your own text messages. Change the text, then click **Edit** (**Enter** does not save). The message then shows "(Modified)".
+- **Edit**: only on your own text messages. Change the text, then press **Enter** or click **Save** (**Shift + Enter** starts a new line). The message then shows "(Modified)".
 - **Delete**: on your own messages, and on other people's messages if you moderate the room, depending on the room's permissions. There is no confirmation: the message is replaced by "Message deleted". See [Moderating chat rooms](chat-moderation.md#deleting-messages).
 
 On an image or a file, a download button comes first.
@@ -58,9 +58,11 @@ In a chat room, you can share files in three ways:
 - drag and drop files onto the conversation,
 - paste files into the message box.
 
-The files appear above the message box: remove one with its ✕, then send. Images are shown in the conversation: click one to see it in large; the arrow button at the top opens it in a new tab. Audio and video files play in the conversation. Other files show as a line to download.
+The files appear above the message box: remove one with its ✕, then send. If a file cannot be sent, a warning says so and the file stays above the message box, so you can try again. Images are shown in the conversation: click one to see it in large; the arrow button at the top opens it in a new tab. Audio and video files play in the conversation. Other files show as a line to download.
 
-You cannot share files in the proximity chat. Your administrator can also turn file sharing off: **File attachment** is then greyed out.
+In an end-to-end encrypted room, the files are encrypted too.
+
+You cannot share files in the proximity chat. Your administrator can also turn file sharing off: **File attachment** is then greyed out, with "This feature is disabled by the administrator."
 
 ## Sharing apps
 

@@ -132,7 +132,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     chat: {
         matrixIDLabel: "معرّف Matrix الخاص بك",
-        settings: "الإعدادات",
         resetKeyStorageUpButtonLabel: "إعادة تعيين مخزن المفاتيح",
         resetKeyStorageConfirmationModal: {
             title: "تأكيد إعادة تعيين مخزن المفاتيح",

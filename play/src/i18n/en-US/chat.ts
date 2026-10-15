@@ -16,7 +16,6 @@ const chat: BaseTranslation = {
         addFriend: "Add friend",
     },
     loader: "Loading...",
-    typing: "is typing...",
     users: "Users",
     chat: "Chat",
     userList: {
@@ -115,7 +114,6 @@ const chat: BaseTranslation = {
     },
     form: {
         placeholder: "Enter your message...",
-        typing: " typing...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -173,26 +171,6 @@ const chat: BaseTranslation = {
     sendBack: "Send back",
     delete: "Delete",
     messageDeleted: "Message deleted",
-    emoji: {
-        icon: "Icon to open or close emoji selected popup",
-        search: "Search emojis...",
-        categories: {
-            recents: "Recent Emojis",
-            smileys: "Smileys & Emotion",
-            people: "People & Body",
-            animals: "Animals & Nature",
-            food: "Food & Drink",
-            activities: "Activities",
-            travel: "Travel & Places",
-            objects: "Objects",
-            symbols: "Symbols",
-            flags: "Flags",
-            custom: "Custom",
-        },
-        notFound: "No emojis found",
-    },
-    said: "said :",
-    reply: "Reply",
     replyTo: "Reply to",
     thread: {
         panelTitle: "All threads",
@@ -209,9 +187,6 @@ const chat: BaseTranslation = {
         rootUnavailable: "The beginning of this conversation isn't available. You can still read and reply.",
         openError: "Unable to open this thread.",
     },
-    react: "React",
-    copy: "Copy",
-    copied: "Copied!",
     poll: {
         title: "Poll",
         submitError: "Unable to submit your vote. Try again.",
@@ -275,15 +250,9 @@ const chat: BaseTranslation = {
         viewAll: "See all questions",
     },
     file: {
-        fileContentNoEmbed: "Content unavailable for viewing. Please download it",
-        download: "download",
-        openCoWebsite: "Open in co-website",
         loadingAttachment: "Loading attachment...",
         attachmentDownloadError: "Unable to download this attachment.",
         attachmentDecryptError: "Unable to decrypt this attachment.",
-        copy: "copy the link",
-        tooBig: "{fileName} is too big {maxFileSize}.",
-        notLogged: "You need to be logged in to upload a file.",
     },
     needRefresh: "Your connection has expired, you need to refresh the page to reconnect to the chat.",
     refresh: "Refresh",
@@ -295,6 +264,10 @@ const chat: BaseTranslation = {
     messageDeletedByYou: "You deleted this message",
     messageEdited: "Modified",
     messageEditedError: "Unable to edit message. Try again.",
+    messageEdition: {
+        save: "Save",
+        cancel: "Cancel",
+    },
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
     showMore: "Show {number} more",
@@ -327,7 +300,6 @@ const chat: BaseTranslation = {
             invited: "Messages sent after being invited are visible",
         },
         buttons: {
-            edit: "Edit",
             create: "Create",
             cancel: "Cancel",
         },
@@ -639,7 +611,6 @@ const chat: BaseTranslation = {
     fileAttachment: {
         title: "File attachment",
         description: "Upload and share a file",
-        featureComingSoon: "Coming soon!",
     },
     loginTokenError: "An error occurred. Please try to reconnect",
     reconnect: "Reconnect",

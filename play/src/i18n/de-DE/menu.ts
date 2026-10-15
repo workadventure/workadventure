@@ -153,7 +153,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     chat: {
         matrixIDLabel: "Deine Matrix-ID",
-        settings: "Einstellungen",
         resetKeyStorageUpButtonLabel: "Schlüsselspeicher zurücksetzen",
         resetKeyStorageConfirmationModal: {
             title: "Bestätigung zurücksetzen des Schlüsselspeichers",

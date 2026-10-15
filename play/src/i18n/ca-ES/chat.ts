@@ -18,7 +18,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "Afegir amic",
     },
     loader: "Carregant...",
-    typing: "està escrivint...",
     users: "Usuaris",
     chat: "Xat",
     userList: {
@@ -116,7 +115,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "Escriu el teu missatge...",
-        typing: " està escrivint...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -173,26 +171,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "Reenviar",
     delete: "Eliminar",
     messageDeleted: "Missatge eliminat",
-    emoji: {
-        icon: "Icona per obrir o tancar la finestra emergent d'emoji seleccionat",
-        search: "Cercar emojis...",
-        categories: {
-            recents: "Emojis recents",
-            smileys: "Cares somrients i emocions",
-            people: "Persones i cos",
-            animals: "Animals i natura",
-            food: "Menjar i begudes",
-            activities: "Activitats",
-            travel: "Viatges i llocs",
-            objects: "Objectes",
-            symbols: "Símbols",
-            flags: "Banderes",
-            custom: "Personalitzat",
-        },
-        notFound: "No s'han trobat emojis",
-    },
-    said: "ha dit:",
-    reply: "Respondre",
     replyTo: "Respondre a",
     thread: {
         panelTitle: "Tots els fils",
@@ -209,9 +187,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         rootUnavailable: "L'inici d'aquesta conversa no està disponible. Encara podeu llegir i respondre.",
         openError: "No s'ha pogut obrir aquest fil.",
     },
-    react: "Reaccionar",
-    copy: "Copiar",
-    copied: "Copiat!",
     poll: {
         title: "Enquesta",
         submitError: "No s'ha pogut enviar el vot. Torneu-ho a provar.",
@@ -275,15 +250,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "Mostra totes les preguntes",
     },
     file: {
-        fileContentNoEmbed: "El contingut no està disponible per visualitzar. Si us plau, descarregueu-lo",
-        download: "descarregar",
-        openCoWebsite: "Obrir en co-website",
         loadingAttachment: "S'està carregant el fitxer adjunt...",
         attachmentDownloadError: "No s'ha pogut descarregar aquest fitxer adjunt.",
         attachmentDecryptError: "No s'ha pogut desxifrar aquest fitxer adjunt.",
-        copy: "copiar l'enllaç",
-        tooBig: "{fileName} és massa gran {maxFileSize}.",
-        notLogged: "Necessiteu iniciar sessió per pujar un fitxer.",
     },
     needRefresh: "La vostra connexió ha expirat, necessiteu actualitzar la pàgina per tornar-vos a connectar al xat.",
     refresh: "Actualitzar",
@@ -295,6 +264,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "Heu eliminat aquest missatge",
     messageEdited: "Modificat",
     messageEditedError: "No s'ha pogut editar el missatge. Torneu-ho a provar.",
+    messageEdition: {
+        save: "Desa",
+        cancel: "Cancel·lar",
+    },
     waiting: "Esperant",
     nothingToDisplay: "Res a mostrar",
     showMore: "Mostrar {number} més",
@@ -327,7 +300,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "Els missatges enviats després de ser convidat són visibles",
         },
         buttons: {
-            edit: "Editar",
             create: "Crear",
             cancel: "Cancel·lar",
         },
@@ -639,7 +611,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Adjunt de fitxer",
         description: "Puja i comparteix un fitxer",
-        featureComingSoon: "Properament!",
     },
     loginTokenError: "S'ha produït un error. Si us plau, intenteu tornar-vos a connectar",
     reconnect: "Tornar a connectar",

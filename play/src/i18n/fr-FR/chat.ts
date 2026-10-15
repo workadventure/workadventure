@@ -18,7 +18,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "Ajouter un ami",
     },
     loader: "Chargement...",
-    typing: "est en train d'écrire...",
     users: "Utilisateurs",
     chat: "Chat",
     userList: {
@@ -117,7 +116,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     form: {
         placeholder: "Écrire votre message...",
-        typing: " écrit...",
         application: {
             klaxoon: {
                 title: "Klaxoon",
@@ -174,26 +172,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     sendBack: "Renvoyer",
     delete: "Supprimer",
     messageDeleted: "Message supprimé",
-    emoji: {
-        icon: "Emojis",
-        search: "Chercher un emoji...",
-        categories: {
-            recents: "Emojis récents",
-            smileys: "Smileys & emotions",
-            people: "Personne & corps",
-            animals: "Animaux & nature",
-            food: "Nourriture & boissons",
-            activities: "Activités",
-            travel: "Voyage & endroits",
-            objects: "Objets",
-            symbols: "Symboles",
-            flags: "Drapeaux",
-            custom: "Personnalisés",
-        },
-        notFound: "Aucun emoji trouvé",
-    },
-    said: "a dit :",
-    reply: "Répondre",
     replyTo: "Répondre à",
     thread: {
         panelTitle: "Tous les fils",
@@ -211,9 +189,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             "Le début de cette conversation n'est pas disponible. Vous pouvez quand même lire et répondre.",
         openError: "Impossible d'ouvrir ce fil.",
     },
-    react: "Réagir",
-    copy: "Copier",
-    copied: "Copié !",
     poll: {
         title: "Sondage",
         submitError: "Impossible d'enregistrer votre vote. Veuillez réessayer.",
@@ -277,15 +252,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         viewAll: "Voir toutes les questions",
     },
     file: {
-        fileContentNoEmbed: "Le contenu n'est pas lisible dans le navigateur. Vous pouvez télécharger le document",
-        download: "Téléchargement",
-        openCoWebsite: "Ouvrir en co-website",
         loadingAttachment: "Chargement de la pièce jointe...",
         attachmentDownloadError: "Impossible de télécharger cette pièce jointe.",
         attachmentDecryptError: "Impossible de déchiffrer cette pièce jointe.",
-        copy: "Copier le lien",
-        tooBig: "{fileName} est trop volumineux {maxFileSize}.",
-        notLogged: "Vous devez être connecté pour télécharger un fichier.",
     },
     needRefresh: "Votre connexion a expiré, vous devez actualiser la page pour vous reconnecter au chat.",
     refresh: "Rafraîchir",
@@ -297,6 +266,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     messageDeletedByYou: "Vous avez supprimé ce message",
     messageEdited: "Modifié",
     messageEditedError: "Impossible de modifier le message. Veuillez réessayer.",
+    messageEdition: {
+        save: "Enregistrer",
+        cancel: "Annuler",
+    },
     waiting: "En attente",
     nothingToDisplay: "Rien à afficher",
     showMore: "En afficher {number} de plus",
@@ -329,7 +302,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             invited: "Seulement les membres (depuis leur invitation)",
         },
         buttons: {
-            edit: "Éditer",
             create: "Créer",
             cancel: "Annuler",
         },
@@ -642,7 +614,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     fileAttachment: {
         title: "Pièce jointe",
         description: "Téléchargez un fichier pour le partager",
-        featureComingSoon: "Fonctionnalité à venir !",
     },
     loginTokenError: "Une erreur est survenue. Veuillez réessayer de vous reconnecter",
     reconnect: "Se reconnecter",
