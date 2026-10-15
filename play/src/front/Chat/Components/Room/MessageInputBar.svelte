@@ -69,6 +69,7 @@
     let messageBarRef: HTMLDivElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
     let files: { id: string; file: File }[] = $state([]);
+    let sendingFiles = $state(false);
     let filesPreview: { id: string; size: number; name: string; type: string; url: FileReader["result"] }[] = $state(
         [],
     );
@@ -157,7 +158,9 @@
     }
 
     async function sendMessage(messageToSend: string) {
-        if (!$canSendMessages) {
+        // The files are only removed from the preview once uploaded: a second Enter or click during the
+        // upload would send them again.
+        if (!$canSendMessages || sendingFiles) {
             return;
         }
         if (applicationProperty && applicationProperty.link.length !== 0) {
@@ -176,6 +179,7 @@
                     return fileListAcc;
                 }, new DataTransfer()).files;
 
+                sendingFiles = true;
                 try {
                     await room.sendFiles(fileList);
                     files = files.filter((f) => !idsToSend.includes(f.id));
@@ -185,6 +189,10 @@
                     warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
                         closable: true,
                     });
+                } finally {
+                    // A second send cannot start while this guarded upload is in progress.
+                    // eslint-disable-next-line require-atomic-updates
+                    sendingFiles = false;
                 }
             }
         }
@@ -867,10 +875,11 @@
         <button
             data-testid="sendMessageButton"
             class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-md"
-            disabled={shouldDisableSendButton({
-                applicationPropertyInProcessing,
-                isMessageInputDisabled: messageInputDisabled,
-            })}
+            disabled={sendingFiles ||
+                shouldDisableSendButton({
+                    applicationPropertyInProcessing,
+                    isMessageInputDisabled: messageInputDisabled,
+                })}
             onclick={() => sendMessage(message).catch((error) => console.error(error))}
         >
             <IconSend />
