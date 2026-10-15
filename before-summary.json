@@ -1,0 +1,57 @@
+{
+  "label": "before",
+  "url": "https://play.workadventu.re/_/camera-ba-1792077723/workadventure.github.io/map-starter-kit/office.tmj",
+  "stallWarnings": [
+    "  34.3s The camera has delivered no frame for 3 seconds: asking for it again",
+    "  43.3s The camera still delivers no frame after a restart: turning it off",
+    "  52.3s The camera has delivered no frame for 3 seconds: asking for it again",
+    "  63.3s The camera still delivers no frame after a restart: turning it off",
+    "  70.3s The camera has delivered no frame for 3 seconds: asking for it again",
+    "  82.3s The camera still delivers no frame after a restart: turning it off",
+    "  91.3s The camera has delivered no frame for 3 seconds: asking for it again"
+  ],
+  "timeline": [
+    {
+      "t": 1,
+      "aliceButton": "on",
+      "aliceToast": false,
+      "bobSeesUnavailable": false,
+      "bobSeesRed": false,
+      "gum": {
+        "calls": 4,
+        "hung": 0
+      }
+    },
+    {
+      "t": 15,
+      "aliceButton": "off (red)",
+      "aliceToast": true,
+      "bobSeesUnavailable": false,
+      "bobSeesRed": false,
+      "gum": {
+        "calls": 5,
+        "hung": 1
+      }
+    }
+  ],
+  "afterWatch": {
+    "aliceButton": "off (red)",
+    "aliceToast": true,
+    "bobSeesUnavailable": false,
+    "bobSeesRed": false,
+    "gum": {
+      "calls": 5,
+      "hung": 1
+    }
+  },
+  "afterRetry": {
+    "aliceButton": "on",
+    "aliceToast": false,
+    "bobSeesUnavailable": false,
+    "bobSeesRed": false,
+    "gum": {
+      "calls": 5,
+      "hung": 1
+    }
+  }
+}
