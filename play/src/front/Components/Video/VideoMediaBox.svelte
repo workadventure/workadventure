@@ -15,12 +15,7 @@
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
-    import {
-        cameraUnavailableStore,
-        rawLocalVideoTrackStore,
-        requestedCameraState,
-        requestedMicrophoneState,
-    } from "../../Stores/MediaStore";
+    import { rawLocalVideoTrackStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
@@ -98,9 +93,9 @@
 
     // Check if this is the local user's video box
     let isLocalUser = $derived(videoBox.uniqueId === "-1" || extendedSpaceUser?.spaceUserId === "local");
+    // Told to the others only: our own tile keeps showing what the camera gives (the button warns us)
     let cameraUnavailable = $derived(
-        streamable?.videoType === "video" &&
-            (isLocalUser ? $cameraUnavailableStore : ($remoteCameraUnavailableStore ?? false)),
+        streamable?.videoType === "video" && !isLocalUser && ($remoteCameraUnavailableStore ?? false),
     );
     // The local tile's space user is a placeholder ("local"): its raised hand is queued under our real spaceUserId.
     let raisedHandSpaceUserId = $derived(

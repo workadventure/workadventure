@@ -117,7 +117,8 @@ test.describe("Camera held back @nomobile @nowebkit @nofirefox", () => {
         const cameraButton = alice.getByTestId("camera-button");
         await expect(cameraButton).toHaveClass(/bg-warning/, { timeout: 30_000 });
         await expect(alice.getByTestId("camera-no-image-retry")).toBeVisible();
-        await expect(alice.locator("#cameras-container").getByTestId("camera-unavailable")).toBeVisible();
+        // Her own tile keeps showing what her camera gives: the mention is for the others
+        await expect(alice.locator("#cameras-container").getByTestId("camera-unavailable")).toBeHidden();
         // Bob sees her avatar marked unavailable, not a red tile
         await expect(bob.locator("#cameras-container").getByTestId("camera-unavailable")).toBeVisible({
             timeout: 30_000,
