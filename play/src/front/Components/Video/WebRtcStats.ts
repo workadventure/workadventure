@@ -16,6 +16,30 @@ export interface WebRtcStats {
     relay?: boolean;
     // Protocol used with TURN when relayed (browser-dependent)
     relayProtocol?: "udp" | "tcp" | "tls";
+    // Cumulative playback counters of the inbound RTP stream: the analytics report their difference between samples
+    playback?: VideoPlaybackCounters;
+}
+
+/**
+ * Cumulative counters of an RTCInboundRtpStreamStats, as the browser reports them. A counter the browser does not
+ * expose is undefined (not 0), so that "not measured" never reads as "no freeze".
+ */
+export interface VideoPlaybackCounters {
+    // The stats object the counters belong to: a new one (renegotiation) restarts every counter from 0
+    statsId: string;
+    // RTCStats.timestamp, in milliseconds
+    timestampMs: number;
+    framesDecoded: number;
+    framesDropped?: number;
+    // Gaps between two rendered frames longer than max(3 x the average frame duration, average + 150 ms), up to 5 s
+    freezeCount?: number;
+    totalFreezesDuration?: number;
+    // Gaps longer than 5 s (never counted as freezes)
+    pauseCount?: number;
+    totalPausesDuration?: number;
+    totalInterFrameDelay?: number;
+    totalSquaredInterFrameDelay?: number;
+    totalDecodeTime?: number;
 }
 
 // RTCOutboundRtpStreamStats.qualityLimitationReason

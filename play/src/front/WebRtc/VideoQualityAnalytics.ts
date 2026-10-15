@@ -9,6 +9,7 @@ import {
 } from "@workadventure/messages";
 import type { WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcStats";
 import { hasCapability } from "../Connection/Capabilities";
+import { VideoPlaybackWindow } from "./VideoPlaybackWindow";
 
 const VIDEO_ANALYTICS_SEND_INTERVAL_MS = 5_000;
 
@@ -34,25 +35,33 @@ export function subscribeToVideoQualityAnalytics(
     context: VideoQualityAnalyticsContext,
     sendReport: (message: VideoQualityReportMessage) => void,
 ): Unsubscriber {
-    return subscribeToSamples(statsStore, context, sendReport, (stats, base) => {
-        // A stream the sender paused on purpose (we do not display it) says nothing about the connection
-        if (stats.expectedFps === 0 || !isValidStats(stats)) {
-            return undefined;
-        }
-        return {
-            ...base,
-            direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_INBOUND,
-            relay: stats.relay,
-            relayProtocol: toRelayProtocol(stats.relayProtocol),
-            fps: stats.fps,
-            fpsStdDev: stats.fpsStdDev,
-            jitter: stats.jitter,
-            bandwidthBytesPerSecond: stats.bandwidth,
-            frameWidth: toUInt32(stats.frameWidth),
-            frameHeight: toUInt32(stats.frameHeight),
-            mimeType: stats.mimeType,
-        };
-    });
+    const playback = new VideoPlaybackWindow();
+    return subscribeToSamples(
+        statsStore,
+        context,
+        sendReport,
+        (stats, base) => {
+            // A stream the sender paused on purpose (we do not display it) says nothing about the connection
+            if (stats.expectedFps === 0 || !isValidStats(stats)) {
+                return undefined;
+            }
+            return {
+                ...base,
+                direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_INBOUND,
+                relay: stats.relay,
+                relayProtocol: toRelayProtocol(stats.relayProtocol),
+                fps: stats.fps,
+                fpsStdDev: stats.fpsStdDev,
+                jitter: stats.jitter,
+                bandwidthBytesPerSecond: stats.bandwidth,
+                frameWidth: toUInt32(stats.frameWidth),
+                frameHeight: toUInt32(stats.frameHeight),
+                mimeType: stats.mimeType,
+                ...playback.take(stats.playback, base.clientEventTimeMs),
+            };
+        },
+        (stats, now) => playback.observe(stats.expectedFps, now),
+    );
 }
 
 /**
@@ -104,6 +113,8 @@ function subscribeToSamples<T>(
     context: VideoQualityAnalyticsContext,
     sendReport: (message: VideoQualityReportMessage) => void,
     buildSample: (stats: T, base: BaseSample) => VideoQualitySampleMessage | undefined,
+    // Sees every stats report, including the ones between two samples
+    onStats?: (stats: T, now: number) => void,
 ): Unsubscriber {
     // Video quality samples ride the generic analytics pipeline: the pusher turns each
     // one into a `media.video_quality.sample` event. Gating on the retired
@@ -122,6 +133,7 @@ function subscribeToSamples<T>(
         }
 
         const now = Date.now();
+        onStats?.(stats, now);
         if (now - lastSentAt < VIDEO_ANALYTICS_SEND_INTERVAL_MS) {
             return;
         }

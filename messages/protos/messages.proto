@@ -196,6 +196,22 @@ message VideoQualitySampleMessage {
   optional VideoQualityLimitationReason qualityLimitationReason = 22;
   // Outbound streams only: encoder implementation reported by the browser (e.g. "libaom", "libvpx", "ExternalEncoder").
   optional string encoderImplementation = 23;
+  // Inbound streams only: what the browser counted since the previous sample of this stream (the difference of the
+  // cumulative RTCInboundRtpStreamStats counters), over windowSeconds. Absent when the window is not measurable (first
+  // sample, counters restarted, right after a deliberate pause); each counter is also absent when the browser does
+  // not expose it.
+  optional double windowSeconds = 24;
+  optional uint32 framesDecoded = 25;
+  optional uint32 framesDropped = 26;
+  // Gaps between two rendered frames longer than max(3 x the average frame duration, average + 150 ms), up to 5 s
+  optional uint32 freezeCount = 27;
+  optional double freezeSeconds = 28;
+  // Gaps longer than 5 s, never counted as freezes
+  optional uint32 pauseCount = 29;
+  optional double pauseSeconds = 30;
+  optional double interFrameDelaySumSeconds = 31;
+  optional double interFrameDelaySquaredSumSeconds = 32;
+  optional double decodeSeconds = 33;
 }
 
 message VideoQualityReportMessage {
