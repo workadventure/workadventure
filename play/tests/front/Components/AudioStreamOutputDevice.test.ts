@@ -23,8 +23,8 @@ describe("AudioStream output device", () => {
         vi.restoreAllMocks();
     });
 
-    // Sentry PLAY-2C2: a device that setSinkId() rejected (NotFoundError for a stale stored id) stayed recorded
-    // as applied, so requesting it again returned success without ever calling setSinkId().
+    // A device that setSinkId() rejected (NotFoundError for a stale stored id) stayed recorded as applied, so
+    // requesting it again returned success without ever calling setSinkId().
     it("calls setSinkId() again for a device whose previous attempt failed", async () => {
         setSinkId
             .mockRejectedValueOnce(new DOMException("Requested device not found", "NotFoundError"))
