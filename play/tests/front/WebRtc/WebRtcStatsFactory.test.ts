@@ -115,6 +115,68 @@ describe("buildWebRtcSenderStatsFromReport", () => {
         expect(unknown?.activeFps).toBeUndefined();
     });
 
+    it("reads the capture rate, the encoding time of all layers and the time spent limited", () => {
+        const prev = new Map<string, SenderLayerPrev>();
+        const read = (
+            timestamp: number,
+            frames: number,
+            low: Record<string, unknown>,
+            high: Record<string, unknown>,
+        ): ReturnType<typeof buildWebRtcSenderStatsFromReport> =>
+            buildWebRtcSenderStatsFromReport(
+                report([
+                    { id: "camera", type: "media-source", kind: "video", timestamp, frames },
+                    layer("low", { timestamp, bytesSent: 0, frameWidth: 640, frameHeight: 360, ...low }),
+                    layer("high", {
+                        timestamp,
+                        bytesSent: 0,
+                        frameWidth: 1280,
+                        frameHeight: 720,
+                        mediaSourceId: "camera",
+                        ...high,
+                    }),
+                ]),
+                prev,
+                "Livekit",
+            );
+
+        read(
+            1000,
+            100,
+            { framesEncoded: 100, totalEncodeTime: 0.5 },
+            { framesEncoded: 100, totalEncodeTime: 1.0, qualityLimitationDurations: { cpu: 3, bandwidth: 10 } },
+        );
+        const stats = read(
+            2000,
+            124,
+            { framesEncoded: 124, totalEncodeTime: 0.62 },
+            { framesEncoded: 124, totalEncodeTime: 1.36, qualityLimitationDurations: { cpu: 3.25, bandwidth: 10 } },
+        );
+
+        // A camera configured for 30 fps, delivering 24
+        expect(stats?.captureFps).toBe(24);
+        // (0.12 + 0.36) s for 48 frames
+        expect(stats?.encodeMsPerFrame).toBeCloseTo(10);
+        expect(stats?.cpuLimitedRatio).toBeCloseTo(0.25);
+        expect(stats?.bandwidthLimitedRatio).toBe(0);
+        // The media source survives between reports, not only the layers
+        expect(prev.has("camera")).toBe(true);
+    });
+
+    it("leaves what the browser does not report undefined", () => {
+        const prev = new Map<string, SenderLayerPrev>();
+        buildWebRtcSenderStatsFromReport(report([layer("a", { timestamp: 1000, framesEncoded: 0 })]), prev, "P2P");
+        const stats = buildWebRtcSenderStatsFromReport(
+            report([layer("a", { timestamp: 2000, framesEncoded: 30 })]),
+            prev,
+            "P2P",
+        );
+
+        expect(stats?.captureFps).toBeUndefined();
+        expect(stats?.encodeMsPerFrame).toBeUndefined();
+        expect(stats?.cpuLimitedRatio).toBeUndefined();
+    });
+
     it("maps unknown limitation reasons to none and forgets removed layers", () => {
         const prev = new Map<string, SenderLayerPrev>();
         buildWebRtcSenderStatsFromReport(

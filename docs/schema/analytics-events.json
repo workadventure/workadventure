@@ -3675,6 +3675,41 @@
           ],
           "description": "Inbound only: time spent decoding during the window. Divided by framesDecoded: the receiver's decode cost per frame, which depends on codec and resolution."
         },
+        "captureFps": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Outbound only, over the last second like fps: frames per second the camera or screen capture delivered to the encoder (RTCVideoSourceStats). Against captureTargetFps, tells a camera that starves the encoder (dim light, overloaded machine) from an encoder dropping frames. A screen capture only delivers frames when the content changes."
+        },
+        "captureTargetFps": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Outbound only: frame rate the capture is configured at (MediaTrackSettings.frameRate)."
+        },
+        "encodeMsPerFrame": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Outbound only, over the last second: encoding time per encoded frame, all simulcast/SVC layers together, in milliseconds."
+        },
+        "cpuLimitedRatio": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Outbound only, over the last second: share of the time (0 to 1) the browser degraded the stream for lack of CPU (qualityLimitationDurations), where qualityLimitationReason is only a snapshot."
+        },
+        "bandwidthLimitedRatio": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Outbound only, over the last second: share of the time (0 to 1) the browser degraded the stream for lack of bandwidth."
+        },
         "sampleSeq": {
           "type": [
             "number",

@@ -66,4 +66,14 @@ export interface WebRtcSenderStats {
     qualityLimitationReason: WebRtcQualityLimitationReason;
     // Encoder reported by the browser, e.g. "libaom" / "libvpx" (software) or "ExternalEncoder" (hardware)
     encoderImplementation?: string;
+    // Frames per second the capture actually delivered (RTCVideoSourceStats), and the rate the camera / screen capture
+    // is configured at (MediaTrackSettings.frameRate): a camera below its configured rate starves the encoder.
+    captureFps?: number;
+    captureTargetFps?: number;
+    // Encoding time per encoded frame, all layers, in milliseconds
+    encodeMsPerFrame?: number;
+    // Share of the time (0 to 1) the encoder degraded the stream for lack of CPU / of bandwidth
+    // (RTCOutboundRtpStreamStats.qualityLimitationDurations), where qualityLimitationReason is only a snapshot
+    cpuLimitedRatio?: number;
+    bandwidthLimitedRatio?: number;
 }

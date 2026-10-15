@@ -212,6 +212,15 @@ message VideoQualitySampleMessage {
   optional double interFrameDelaySumSeconds = 31;
   optional double interFrameDelaySquaredSumSeconds = 32;
   optional double decodeSeconds = 33;
+  // Outbound streams only, over the last second like fps: frames per second the capture delivered
+  // (RTCVideoSourceStats.frames), and the rate it is configured at (MediaTrackSettings.frameRate).
+  optional double captureFps = 34;
+  optional double captureTargetFps = 35;
+  // Outbound streams only, over the last second: encoding time per encoded frame (all layers), and the share of the
+  // time (0 to 1) the encoder degraded the stream for lack of CPU / of bandwidth (qualityLimitationDurations).
+  optional double encodeMsPerFrame = 36;
+  optional double cpuLimitedRatio = 37;
+  optional double bandwidthLimitedRatio = 38;
 }
 
 message VideoQualityReportMessage {

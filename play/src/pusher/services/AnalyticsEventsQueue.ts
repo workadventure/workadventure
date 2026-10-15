@@ -282,10 +282,29 @@ export class AnalyticsEventsQueue extends SharedAnalyticsEventsQueue {
                     direction === "outbound" ? toLimitationReason(sample.qualityLimitationReason) : null,
                 encoderImplementation: direction === "outbound" ? (sample.encoderImplementation ?? null) : null,
                 ...toPlaybackProperties(sample, direction),
+                ...toEncoderLoadProperties(sample, direction),
                 sampleSeq: sample.sampleSeq ?? null,
             },
         };
     }
+}
+
+/**
+ * Outbound only: how the capture and the encoder of our own stream kept up. A value outside what a browser can
+ * report is dropped on its own, the others stay.
+ */
+function toEncoderLoadProperties(sample: VideoQualitySampleMessage, direction: "inbound" | "outbound") {
+    const within = (value: number | undefined, max: number): number | null =>
+        direction === "outbound" && value !== undefined && Number.isFinite(value) && value >= 0 && value <= max
+            ? value
+            : null;
+    return {
+        captureFps: within(sample.captureFps, 240),
+        captureTargetFps: within(sample.captureTargetFps, 240),
+        encodeMsPerFrame: within(sample.encodeMsPerFrame, 10_000),
+        cpuLimitedRatio: within(sample.cpuLimitedRatio, 1),
+        bandwidthLimitedRatio: within(sample.bandwidthLimitedRatio, 1),
+    };
 }
 
 // A sample normally covers ~5 s; a throttled background tab can stretch it, a bogus client could claim anything.

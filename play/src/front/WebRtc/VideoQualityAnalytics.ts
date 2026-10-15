@@ -89,6 +89,11 @@ export function subscribeToOutboundVideoQualityAnalytics(
             mimeType: stats.mimeType,
             qualityLimitationReason: toLimitationReason(stats.qualityLimitationReason),
             encoderImplementation: stats.encoderImplementation,
+            captureFps: stats.captureFps,
+            captureTargetFps: stats.captureTargetFps,
+            encodeMsPerFrame: stats.encodeMsPerFrame,
+            cpuLimitedRatio: stats.cpuLimitedRatio,
+            bandwidthLimitedRatio: stats.bandwidthLimitedRatio,
         };
     });
 }
