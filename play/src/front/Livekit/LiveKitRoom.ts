@@ -11,6 +11,7 @@ import {
     VideoPresets,
     DisconnectReason,
     ConnectionState,
+    supportsAudioOutputSelection,
     supportsAV1,
     supportsVP9,
 } from "livekit-client";
@@ -493,7 +494,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         this.unsubscribers.push(
             this.speakerDeviceIdStore.subscribe((deviceId) => {
-                if (!deviceId) return;
+                // livekit-client throws on Safari. Nothing is lost: our own <audio> elements (AudioStream.svelte)
+                // play LiveKit voices and follow the selection.
+                if (!deviceId || !supportsAudioOutputSelection()) return;
 
                 this.room?.switchActiveDevice("audiooutput", deviceId).catch((err) => {
                     console.error("An error occurred while switching active device", err);
