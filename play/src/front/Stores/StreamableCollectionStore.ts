@@ -17,6 +17,7 @@ import { myCameraStore } from "./MyMediaStore";
 import {
     availabilityStatusStore,
     cameraEnergySavingStore,
+    cameraUnavailableStore,
     inLivekitStore,
     isListenerStore,
     isSpeakerStore,
@@ -65,13 +66,18 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
             },
         },
         volumeStore: localVolumeStore,
-        hasVideo: derived([mediaStreamConstraintsStore, mutedLocalStream], ([mediaStreamConstraintsStore, stream]) => {
-            return (
-                mediaStreamConstraintsStore.video !== false &&
-                stream !== undefined &&
-                stream.getVideoTracks().length > 0
-            );
-        }),
+        // An unavailable camera shows the avatar and "Camera unavailable" here too, like the others see it
+        hasVideo: derived(
+            [mediaStreamConstraintsStore, mutedLocalStream, cameraUnavailableStore],
+            ([mediaStreamConstraintsStore, stream, cameraUnavailable]) => {
+                return (
+                    mediaStreamConstraintsStore.video !== false &&
+                    !cameraUnavailable &&
+                    stream !== undefined &&
+                    stream.getVideoTracks().length > 0
+                );
+            },
+        ),
         hasAudio: requestedMicrophoneState,
         statusStore: writable("connected" as const),
         name: writable($LL.camera.my.nameTag()),

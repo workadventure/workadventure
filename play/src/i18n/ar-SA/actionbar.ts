@@ -30,7 +30,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "الكاميرا معطلة",
         activate: "قم بتنشيط الكاميرا",
-        noImageWarning: "توقفت الكاميرا عن إرسال الصور. ربما يستخدمها تطبيق آخر.",
+        noImageWarning: "توقفت الكاميرا عن إرسال الصور: يرى الآخرون صورتك الرمزية مع عبارة «الكاميرا غير متاحة».",
         retry: "إعادة المحاولة",
         changeCamera: "تغيير الكاميرا",
     },
@@ -149,6 +149,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "الكاميرا معطلة",
             desc: 'الكاميرا معطلة لأن حالتك هي "{status}".',
+        },
+        camUnavailable: {
+            title: "الكاميرا غير متاحة",
+            desc: "توقفت الكاميرا عن إرسال الصور: يرى الآخرون صورتك الرمزية. أعد المحاولة من الرسالة، أو أوقف الكاميرا ثم شغّلها مجددًا.",
         },
         share: {
             title: "مشاركة الشاشة",

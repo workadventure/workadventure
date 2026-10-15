@@ -1,36 +1,35 @@
-import { writable, type Writable } from "svelte/store";
+import { get, writable, type Writable } from "svelte/store";
 import { describe, expect, it, vi } from "vitest";
 import type { WebRtcSenderStats } from "../Components/Video/WebRtcStats";
-import { effectiveCameraStateStore } from "../Stores/MediaStore";
+import { cameraUnavailableStore, effectiveCameraStateStore } from "../Stores/MediaStore";
 import { registerLocalEncoderStats, type LocalEncoderStats } from "./LocalEncoderStats";
 import {
+    CAMERA_NO_IMAGE_TOAST_ID,
     CameraStallDetector,
-    MAX_RESTARTS,
-    RESTART_GRACE_SAMPLES,
     STALL_SAMPLES,
     WARMUP_SAMPLES,
     startCameraStallDetector,
 } from "./CameraStallDetector";
 
 const mocks = vi.hoisted(() => ({
-    restartCamera: vi.fn(),
-    disableWebcam: vi.fn(),
     addToast: vi.fn(),
     removeToast: vi.fn(),
+    trackAdminEvent: vi.fn(),
 }));
 vi.mock("../Stores/MediaStore", async () => {
     const { writable } = await import("svelte/store");
     return {
         effectiveCameraStateStore: writable(false),
-        requestedCameraState: { disableWebcam: mocks.disableWebcam },
-        restartCamera: mocks.restartCamera,
+        cameraUnavailableStore: writable(false),
     };
 });
 vi.mock("../Stores/ToastStoreSingleton", () => ({
     toastStore: { addToast: mocks.addToast, removeToast: mocks.removeToast },
 }));
 vi.mock("../Components/Toasts/CameraNoImageToast.svelte", () => ({ default: {} }));
-vi.mock("../Administration/AnalyticsClient", () => ({ analyticsClient: { trackAdminEvent: vi.fn() } }));
+vi.mock("../Administration/AnalyticsClient", () => ({
+    analyticsClient: { trackAdminEvent: mocks.trackAdminEvent },
+}));
 
 function encoder(activeFps: number | undefined, activeLayers: number | undefined = 1): WebRtcSenderStats {
     return {
@@ -53,110 +52,62 @@ function stats(...encoders: WebRtcSenderStats[]): LocalEncoderStats {
 const samples = (count: number, sample: LocalEncoderStats) => Array<LocalEncoderStats>(count).fill(sample);
 const frozen = (count: number) => samples(count, stats(encoder(0)));
 const live = (count: number) => samples(count, stats(encoder(30)));
+// The second the camera is first found stalled
+const STALLED_AT = WARMUP_SAMPLES + STALL_SAMPLES - 1;
 
-// Feeds one sample a second, from `startSecond`, and returns the decisions with the second they were taken at
-function run(
-    detector: CameraStallDetector,
-    samples: (LocalEncoderStats | undefined)[],
-    startSecond = 0,
-): [number, string][] {
-    const decisions: [number, string][] = [];
-    samples.forEach((sample, index) => {
-        const second = startSecond + index;
-        const action = detector.sample(sample, second * 1000);
-        if (action) {
-            decisions.push([second, action]);
-        }
-    });
-    return decisions;
+// Feeds one sample a second and returns the second the detector first says the camera delivers nothing
+function firstStall(detector: CameraStallDetector, samples: (LocalEncoderStats | undefined)[]): number | undefined {
+    const second = samples.findIndex((sample, index) => detector.sample(sample, index * 1000));
+    return second === -1 ? undefined : second;
 }
 
 describe("CameraStallDetector", () => {
-    it("asks for the camera again after 3 seconds without a frame, once the encoders are warm", () => {
-        expect(run(new CameraStallDetector(), frozen(WARMUP_SAMPLES + STALL_SAMPLES + 2))).toEqual([
-            [WARMUP_SAMPLES + STALL_SAMPLES - 1, "restart"],
-        ]);
+    it("finds a camera that delivered nothing for 3 seconds, once the encoders are warm", () => {
+        expect(firstStall(new CameraStallDetector(), frozen(30))).toBe(STALLED_AT);
     });
 
-    it("turns the camera off when the new one delivers nothing either", () => {
-        const restartAt = WARMUP_SAMPLES + STALL_SAMPLES - 1;
-        expect(
-            run(new CameraStallDetector(), frozen(WARMUP_SAMPLES + 2 * STALL_SAMPLES + RESTART_GRACE_SAMPLES)),
-        ).toEqual([
-            [restartAt, "restart"],
-            [restartAt + RESTART_GRACE_SAMPLES + STALL_SAMPLES, "give_up"],
-        ]);
-    });
-
-    it("restarts a camera that came back each time it freezes, until it froze too often", () => {
-        const detector = new CameraStallDetector();
-        // Each episode: frozen until the detector acts, then the new camera works for a while
-        const actions: string[] = [];
-        let second = 0;
-        for (let episode = 0; episode <= MAX_RESTARTS; episode++) {
-            const episodeSamples = [...frozen(RESTART_GRACE_SAMPLES + STALL_SAMPLES), ...live(20)];
-            actions.push(...run(detector, episodeSamples, second).map(([, action]) => action));
-            second += episodeSamples.length;
-        }
-        expect(actions).toEqual([...Array<string>(MAX_RESTARTS).fill("restart"), "give_up"]);
+    it("starts counting again at each frame", () => {
+        const blinking = Array.from({ length: 10 }, () => [...frozen(STALL_SAMPLES - 1), ...live(1)]).flat();
+        expect(firstStall(new CameraStallDetector(), [...frozen(WARMUP_SAMPLES), ...blinking])).toBeUndefined();
     });
 
     it("waits for the encoders that have a layer to send, and ignores the others", () => {
         // Dynacast switched every layer off, nobody watching: nothing is expected
-        expect(run(new CameraStallDetector(), samples(30, stats(encoder(0, 0))))).toEqual([]);
+        expect(firstStall(new CameraStallDetector(), samples(30, stats(encoder(0, 0))))).toBeUndefined();
         // P2P: a peer hiding our tile switched its encoder off, another one still receives frames
-        expect(run(new CameraStallDetector(), samples(30, stats(encoder(0, 0), encoder(30))))).toEqual([]);
+        expect(firstStall(new CameraStallDetector(), samples(30, stats(encoder(0, 0), encoder(30))))).toBeUndefined();
         // Every encoder that has something to send gets nothing
-        expect(
-            run(new CameraStallDetector(), samples(WARMUP_SAMPLES + STALL_SAMPLES, stats(encoder(0, 0), encoder(0)))),
-        ).toEqual([[WARMUP_SAMPLES + STALL_SAMPLES - 1, "restart"]]);
+        expect(firstStall(new CameraStallDetector(), samples(30, stats(encoder(0, 0), encoder(0))))).toBe(STALLED_AT);
     });
 
     it("does not judge a browser that does not report the active layers", () => {
         const silent = { ...encoder(0), activeLayers: undefined, activeFps: undefined };
-        expect(run(new CameraStallDetector(), samples(30, stats(silent)))).toEqual([]);
+        expect(firstStall(new CameraStallDetector(), samples(30, stats(silent)))).toBeUndefined();
     });
 
     it("judges the camera by what it delivers, not by what the encoder outputs", () => {
         const encoderSilent = { ...encoder(0), captureFps: 30 };
-        expect(run(new CameraStallDetector(), samples(30, stats(encoderSilent)))).toEqual([]);
+        expect(firstStall(new CameraStallDetector(), samples(30, stats(encoderSilent)))).toBeUndefined();
         const sourceFrozen = { ...encoder(0), captureFps: 0 };
-        expect(run(new CameraStallDetector(), samples(WARMUP_SAMPLES + STALL_SAMPLES, stats(sourceFrozen)))).toEqual([
-            [WARMUP_SAMPLES + STALL_SAMPLES - 1, "restart"],
-        ]);
-    });
-
-    it("gives up once, then waits for a frame or for the camera to go off", () => {
-        const detector = new CameraStallDetector();
-        // Turning the camera off waits behind a getUserMedia that never answers: the stalled camera stays on for hours
-        expect(run(detector, frozen(600)).map(([, action]) => action)).toEqual(["restart", "give_up"]);
-        // The camera delivers again ("Try again" worked): judged again
-        expect(run(detector, [...live(1), ...frozen(STALL_SAMPLES)], 600)).toEqual([[600 + STALL_SAMPLES, "restart"]]);
-
-        const turnedOff = new CameraStallDetector();
-        run(turnedOff, frozen(60));
-        expect(run(turnedOff, [undefined, ...frozen(WARMUP_SAMPLES + STALL_SAMPLES)], 60)).toEqual([
-            [60 + WARMUP_SAMPLES + STALL_SAMPLES, "restart"],
-        ]);
+        expect(firstStall(new CameraStallDetector(), samples(30, stats(sourceFrozen)))).toBe(STALLED_AT);
     });
 
     it("ignores the limitation reason: a LiveKit sender reports bandwidth for minutes, frozen or not", () => {
         const frozenAndLimited = { ...encoder(0), qualityLimitationReason: "bandwidth" as const };
-        expect(
-            run(new CameraStallDetector(), samples(WARMUP_SAMPLES + STALL_SAMPLES, stats(frozenAndLimited))),
-        ).toEqual([[WARMUP_SAMPLES + STALL_SAMPLES - 1, "restart"]]);
+        expect(firstStall(new CameraStallDetector(), samples(30, stats(frozenAndLimited)))).toBe(STALLED_AT);
     });
 
     it("starts over when the camera stops being encoded", () => {
-        const interrupted = [...frozen(WARMUP_SAMPLES + STALL_SAMPLES - 1), undefined, ...frozen(WARMUP_SAMPLES)];
-        expect(run(new CameraStallDetector(), interrupted)).toEqual([]);
+        const interrupted = [...frozen(STALLED_AT), undefined, ...frozen(WARMUP_SAMPLES)];
+        expect(firstStall(new CameraStallDetector(), interrupted)).toBeUndefined();
     });
 });
 
 describe("startCameraStallDetector", () => {
-    it("leaves alone a camera the user turned off, and restarts a camera that is on and frozen", () => {
+    it("marks a frozen camera unavailable without touching it, and warns for as long as it is", () => {
         vi.useFakeTimers();
         const cameraOn = effectiveCameraStateStore as unknown as Writable<boolean>;
+        const unavailable = cameraUnavailableStore;
         const encoderStats = writable<WebRtcSenderStats | undefined>(undefined);
         const unregister = registerLocalEncoderStats("video", encoderStats);
         startCameraStallDetector();
@@ -170,12 +121,26 @@ describe("startCameraStallDetector", () => {
         // Turned off by the user: the senders stay, with an active layer and nothing to encode
         cameraOn.set(false);
         feed(20);
-        expect(mocks.restartCamera).not.toHaveBeenCalled();
+        expect(get(unavailable)).toBe(false);
         expect(mocks.addToast).not.toHaveBeenCalled();
 
+        // On and frozen: unavailable once, however long it lasts
         cameraOn.set(true);
-        feed(WARMUP_SAMPLES + STALL_SAMPLES);
-        expect(mocks.restartCamera).toHaveBeenCalledOnce();
+        feed(60);
+        expect(get(unavailable)).toBe(true);
+        expect(mocks.trackAdminEvent).toHaveBeenCalledOnce();
+        expect(mocks.trackAdminEvent).toHaveBeenCalledWith("media.device_error", { kind: "camera", reason: "stalled" });
+        expect(mocks.addToast).toHaveBeenCalledWith(expect.anything(), {}, CAMERA_NO_IMAGE_TOAST_ID);
+
+        // A new camera, or the user turning it off, lifts it: so does the warning
+        mocks.removeToast.mockClear();
+        unavailable.set(false);
+        expect(mocks.removeToast).toHaveBeenCalledWith(CAMERA_NO_IMAGE_TOAST_ID);
+
+        // Marked by someone else (a getUserMedia that did not answer): warned all the same
+        mocks.addToast.mockClear();
+        unavailable.set(true);
+        expect(mocks.addToast).toHaveBeenCalledWith(expect.anything(), {}, CAMERA_NO_IMAGE_TOAST_ID);
 
         unregister();
         vi.useRealTimers();

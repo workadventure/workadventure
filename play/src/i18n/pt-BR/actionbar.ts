@@ -34,7 +34,8 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Sua câmera está desabilitada",
         activate: "Ativar sua câmera",
-        noImageWarning: "Sua câmera parou de enviar imagens. Outro aplicativo pode estar usando a câmera.",
+        noImageWarning:
+            "Sua câmera parou de enviar imagens: os outros veem seu avatar com a indicação “Câmera indisponível”.",
         retry: "Tentar novamente",
         changeCamera: "Trocar de câmera",
     },
@@ -155,6 +156,10 @@ const actionbar: BaseTranslation = {
         camDisabledByStatus: {
             title: "Câmera desabilitada",
             desc: 'Sua câmera está desabilitada porque você está no status "{status}".',
+        },
+        camUnavailable: {
+            title: "Câmera indisponível",
+            desc: "Sua câmera parou de enviar imagens: os outros veem seu avatar. Tente novamente pela mensagem ou desligue e ligue a câmera de novo.",
         },
         share: {
             title: "Compartilhar sua tela",

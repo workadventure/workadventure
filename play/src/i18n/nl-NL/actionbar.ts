@@ -30,7 +30,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Je camera is uitgeschakeld",
         activate: "Activeer je camera",
-        noImageWarning: "Je camera stuurt geen beeld meer. Misschien gebruikt een andere toepassing hem.",
+        noImageWarning:
+            "Je camera stuurt geen beeld meer: de anderen zien je avatar met de melding ‘Camera niet beschikbaar’.",
         retry: "Opnieuw proberen",
         changeCamera: "Andere camera kiezen",
     },
@@ -151,6 +152,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Camera uitgeschakeld",
             desc: 'Je camera is uitgeschakeld omdat je in de status "{status}" bent.',
+        },
+        camUnavailable: {
+            title: "Camera niet beschikbaar",
+            desc: "Je camera stuurt geen beeld meer: de anderen zien je avatar. Probeer het opnieuw via de melding, of zet je camera uit en weer aan.",
         },
         share: {
             title: "Je scherm delen",

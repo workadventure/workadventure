@@ -1,12 +1,12 @@
-import { derived } from "svelte/store";
+import { derived, get } from "svelte/store";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import CameraNoImageToast from "../Components/Toasts/CameraNoImageToast.svelte";
-import { effectiveCameraStateStore, requestedCameraState, restartCamera } from "../Stores/MediaStore";
+import { cameraUnavailableStore, effectiveCameraStateStore } from "../Stores/MediaStore";
 import { toastStore } from "../Stores/ToastStoreSingleton";
 import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderStats";
 
 /**
- * Reacts to a camera that stops delivering frames while it is on.
+ * Spots a camera that stops delivering frames while it is on.
  *
  * A frozen camera (taken by another application, a laptop waking up, a USB hiccup) stays "live", and Chrome does
  * not even mark the track muted: neither LiveKit nor the peers know. The people already watching keep the last
@@ -14,18 +14,13 @@ import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderSt
  * received", and the user sees a black preview.
  *
  * The senders tell: with a layer to send, a camera hands them frames all the time. None for 3 seconds means the
- * source delivers nothing. We first ask for the camera again, what the user would do by turning it off and on. If
- * the new one never delivers a frame, or the camera keeps freezing, it is turned off, so that the others get the
- * avatar instead of a red tile, and the user is told why. Switching to another camera is left to the user: the
- * other one may be the camera of a closed laptop, or point elsewhere.
+ * source delivers nothing. What counts is what the source hands the sender (RTCVideoSourceStats), not what the encoder
+ * outputs; browsers that do not report the source fall back to the encoder.
  *
- * What counts is what the source hands the sender (RTCVideoSourceStats), not what the encoder outputs: the question
- * is whether the camera delivers, and restarting a camera that does stops it for nothing, or for good when the new
- * getUserMedia does not answer. Browsers that do not report the source fall back to the encoder.
- *
- * Once it gave up, it waits for a frame or for the camera to go off before judging again. Turning the camera off
- * waits behind the restart's getUserMedia, which a camera the system holds back can leave pending: the detector
- * would otherwise restart and give up again every 16 seconds, for hours.
+ * The camera is then marked unavailable (cameraUnavailableStore): it stops being sent, so the others get the avatar
+ * with "Camera unavailable", and the user is told. Nothing is turned off or asked again behind the user's back:
+ * asking for the camera again stops the current one first, and a getUserMedia that does not answer (a locked session,
+ * a camera the system holds back) leaves no camera at all, for hours, with nobody there to notice. The user retries.
  *
  * The limitation reason is no help: it stays set while the adaptation is in force, a LiveKit sender reports
  * "bandwidth" for minutes on end, and a frozen camera never moves it.
@@ -33,81 +28,51 @@ import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderSt
  * Firefox does not report which layers are active: it never gets here.
  */
 
-export type CameraStallAction = "restart" | "give_up";
-
 // No frame for 3 seconds: back before a tile mounted meanwhile shows "No video stream received" (5 seconds).
 // Not less: one sample a second.
 export const STALL_SAMPLES = 3;
 // Encoders starting deliver nothing for a moment
 export const WARMUP_SAMPLES = 3;
-// Room for getUserMedia to hand over the new camera
-export const RESTART_GRACE_SAMPLES = 5;
-// A camera that keeps freezing is not coming back for good
-export const MAX_RESTARTS = 3;
-export const RESTART_WINDOW_MS = 10 * 60_000;
 const SAMPLE_INTERVAL_MS = 1000;
 
 export class CameraStallDetector {
     private stalledSamples = 0;
     private warmup = WARMUP_SAMPLES;
     private lastSampleTime = -Infinity;
-    private restartTimes: number[] = [];
-    // Whether the camera delivered a frame since the last restart: a new camera that never does is not worth another
-    private deliveredSinceRestart = true;
-    private gaveUp = false;
 
     /**
-     * Feeds one reading of the aggregated camera encoder stats. Returns the action to take when it is time.
+     * Feeds one reading of the aggregated camera encoder stats. Returns true while the camera has delivered nothing for
+     * STALL_SAMPLES seconds.
      */
-    public sample(stats: LocalEncoderStats | undefined, now: number = Date.now()): CameraStallAction | undefined {
+    public sample(stats: LocalEncoderStats | undefined, now: number = Date.now()): boolean {
         if (!stats) {
             // Camera off, or nobody to send it to: start over
             this.stalledSamples = 0;
             this.warmup = WARMUP_SAMPLES;
-            this.deliveredSinceRestart = true;
-            this.gaveUp = false;
-            return undefined;
+            return false;
         }
         if (now - this.lastSampleTime < SAMPLE_INTERVAL_MS) {
             // Several encoders tick separately: one sample a second whatever their number
-            return undefined;
+            return false;
         }
         this.lastSampleTime = now;
         if (this.warmup > 0) {
             this.warmup--;
-            return undefined;
+            return false;
         }
         // Only an encoder with a layer to send is expected to encode: dynacast switches the layers nobody watches
         // off, and a P2P peer hiding our tile switches its encoder off.
         const expected = stats.encoders.filter((encoder) => (encoder.activeLayers ?? 0) > 0);
         if (expected.length === 0 || stats.encoders.some((encoder) => encoder.activeLayers === undefined)) {
             this.stalledSamples = 0;
-            return undefined;
+            return false;
         }
         if (expected.some((encoder) => (encoder.captureFps ?? encoder.activeFps ?? 0) > 0)) {
             this.stalledSamples = 0;
-            this.deliveredSinceRestart = true;
-            this.gaveUp = false;
-            return undefined;
-        }
-        if (this.gaveUp) {
-            return undefined;
+            return false;
         }
         this.stalledSamples++;
-        if (this.stalledSamples < STALL_SAMPLES) {
-            return undefined;
-        }
-        this.stalledSamples = 0;
-        this.restartTimes = this.restartTimes.filter((time) => now - time < RESTART_WINDOW_MS);
-        if (!this.deliveredSinceRestart || this.restartTimes.length >= MAX_RESTARTS) {
-            this.restartTimes = [];
-            this.gaveUp = true;
-            return "give_up";
-        }
-        this.restartTimes.push(now);
-        this.deliveredSinceRestart = false;
-        this.warmup = RESTART_GRACE_SAMPLES;
-        return "restart";
+        return this.stalledSamples >= STALL_SAMPLES;
     }
 }
 
@@ -118,6 +83,9 @@ export const CAMERA_NO_IMAGE_TOAST_ID = "camera-no-image";
  *
  * Only while the camera is on: a camera the user turned off leaves its senders in place, with an active layer and
  * nothing to encode, which must not read as a frozen camera.
+ *
+ * Also shows the warning whenever the camera is unavailable, whoever marked it (here, or a getUserMedia that did not
+ * answer).
  */
 export function startCameraStallDetector(): void {
     const detector = new CameraStallDetector();
@@ -127,24 +95,19 @@ export function startCameraStallDetector(): void {
     );
     // Module singletons: never unsubscribed
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
-    effectiveCameraStateStore.subscribe((cameraOn) => {
-        if (cameraOn) {
-            // Back on, whichever way: the warning is moot
+    cameraUnavailableStore.subscribe((unavailable) => {
+        if (unavailable) {
+            toastStore.addToast(CameraNoImageToast, {}, CAMERA_NO_IMAGE_TOAST_ID);
+        } else {
             toastStore.removeToast(CAMERA_NO_IMAGE_TOAST_ID);
         }
     });
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
     cameraStatsStore.subscribe((stats) => {
-        const action = detector.sample(stats);
-        if (action === "restart") {
-            console.warn("The camera has delivered no frame for 3 seconds: asking for it again");
+        if (detector.sample(stats) && !get(cameraUnavailableStore)) {
+            console.warn("The camera has delivered no frame for 3 seconds: it is unavailable");
             analyticsClient.trackAdminEvent("media.device_error", { kind: "camera", reason: "stalled" });
-            restartCamera();
-        } else if (action === "give_up") {
-            console.warn("The camera still delivers no frame after a restart: turning it off");
-            analyticsClient.trackAdminEvent("media.device_error", { kind: "camera", reason: "stalled_after_restart" });
-            requestedCameraState.disableWebcam();
-            toastStore.addToast(CameraNoImageToast, {}, CAMERA_NO_IMAGE_TOAST_ID);
+            cameraUnavailableStore.set(true);
         }
     });
 }

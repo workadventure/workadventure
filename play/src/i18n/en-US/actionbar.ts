@@ -30,7 +30,7 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
-        noImageWarning: "Your camera stopped sending images. Another application may be using it.",
+        noImageWarning: "Your camera stopped sending images: the others see your avatar, marked “Camera unavailable”.",
         retry: "Try again",
         changeCamera: "Change camera",
     },
@@ -150,6 +150,10 @@ const actionbar: BaseTranslation = {
         camDisabledByStatus: {
             title: "Camera disabled",
             desc: 'Your camera is disabled because you are in "{status}" status.',
+        },
+        camUnavailable: {
+            title: "Camera unavailable",
+            desc: "Your camera stopped sending images: the others see your avatar. Try again from the message, or turn your camera off and on.",
         },
         share: {
             title: "Share your screen",

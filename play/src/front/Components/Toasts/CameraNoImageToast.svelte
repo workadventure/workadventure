@@ -1,7 +1,7 @@
 <script lang="ts">
     import { LL } from "../../../i18n/i18n-svelte";
     import { mediaSettingsOpenStore } from "../../Stores/MenuStore";
-    import { requestedCameraState } from "../../Stores/MediaStore";
+    import { requestedCameraState, restartCamera } from "../../Stores/MediaStore";
     import { toastStore } from "../../Stores/ToastStoreSingleton";
     import Button from "../UI/Button.svelte";
     import ToastContainer from "./ToastContainer.svelte";
@@ -13,8 +13,9 @@
     let { toastUuid }: Props = $props();
 
     function retry(): void {
-        requestedCameraState.enableWebcam();
-        closeToast();
+        // The camera is still wanted on: ask for it again. The toast goes once a new camera comes, and stays if it
+        // does not.
+        restartCamera();
     }
 
     function changeCamera(): void {

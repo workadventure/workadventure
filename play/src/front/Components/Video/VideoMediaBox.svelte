@@ -15,7 +15,12 @@
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
-    import { rawLocalVideoTrackStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+    import {
+        cameraUnavailableStore,
+        rawLocalVideoTrackStore,
+        requestedCameraState,
+        requestedMicrophoneState,
+    } from "../../Stores/MediaStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
@@ -55,6 +60,7 @@
     let extendedSpaceUser = $derived(videoBox.spaceUser);
     let megaphoneState = $derived(extendedSpaceUser?.reactiveUser.megaphoneState);
     let microphoneStateStore = $derived(extendedSpaceUser?.reactiveUser.microphoneState);
+    let remoteCameraUnavailableStore = $derived(extendedSpaceUser?.reactiveUser.cameraUnavailable);
 
     let pictureStore = $derived(extendedSpaceUser?.pictureStore);
 
@@ -92,6 +98,10 @@
 
     // Check if this is the local user's video box
     let isLocalUser = $derived(videoBox.uniqueId === "-1" || extendedSpaceUser?.spaceUserId === "local");
+    let cameraUnavailable = $derived(
+        streamable?.videoType === "video" &&
+            (isLocalUser ? $cameraUnavailableStore : ($remoteCameraUnavailableStore ?? false)),
+    );
     // The local tile's space user is a placeholder ("local"): its raised hand is queued under our real spaceUserId.
     let raisedHandSpaceUserId = $derived(
         isLocalUser ? (gameManager.getCurrentGameScene().connection?.getSpaceUserId() ?? "") : videoBox.uniqueId,
@@ -450,6 +460,7 @@
                                 isCameraDisabled={(!(videoEnabled ?? false) && !miniMode) ||
                                     effectiveStatus !== "connected"}
                                 isBlocked={$isBlockedStore ?? false}
+                                {cameraUnavailable}
                                 position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
                                     ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                                     : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}

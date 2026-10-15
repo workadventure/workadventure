@@ -31,7 +31,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "La tua fotocamera è disabilitata",
         activate: "Attiva la tua fotocamera",
         noImageWarning:
-            "La tua fotocamera ha smesso di inviare immagini. Potrebbe essere in uso da un'altra applicazione.",
+            "La tua fotocamera ha smesso di inviare immagini: gli altri vedono il tuo avatar con la dicitura «Fotocamera non disponibile».",
         retry: "Riprova",
         changeCamera: "Cambia fotocamera",
     },
@@ -152,6 +152,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Fotocamera disabilitata",
             desc: 'La tua fotocamera è disabilitata perché sei nello stato "{status}".',
+        },
+        camUnavailable: {
+            title: "Fotocamera non disponibile",
+            desc: "La tua fotocamera ha smesso di inviare immagini: gli altri vedono il tuo avatar. Riprova dal messaggio, oppure spegni e riaccendi la fotocamera.",
         },
         share: {
             title: "Condividi il tuo schermo",

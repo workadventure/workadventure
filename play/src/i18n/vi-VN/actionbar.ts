@@ -30,7 +30,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Camera của bạn đang tắt",
         activate: "Bật camera của bạn",
-        noImageWarning: "Camera của bạn đã ngừng gửi hình ảnh. Có thể một ứng dụng khác đang sử dụng camera.",
+        noImageWarning:
+            "Camera của bạn đã ngừng gửi hình ảnh: người khác sẽ thấy ảnh đại diện của bạn kèm dòng chữ “Camera không khả dụng”.",
         retry: "Thử lại",
         changeCamera: "Đổi camera",
     },
@@ -150,6 +151,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Camera đã tắt",
             desc: 'Camera của bạn bị tắt vì bạn đang ở trạng thái "{status}".',
+        },
+        camUnavailable: {
+            title: "Camera không khả dụng",
+            desc: "Camera của bạn đã ngừng gửi hình ảnh: người khác sẽ thấy ảnh đại diện của bạn. Hãy thử lại từ thông báo, hoặc tắt rồi bật lại camera.",
         },
         share: {
             title: "Chia sẻ màn hình của bạn",

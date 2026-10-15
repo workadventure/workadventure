@@ -32,7 +32,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Votre caméra est désactivée",
         activate: "Activer votre caméra",
-        noImageWarning: "Votre caméra n'envoie plus d'image. Une autre application l'utilise peut-être.",
+        noImageWarning:
+            "Votre caméra n'envoie plus d'image : les autres voient votre avatar, avec la mention « Caméra indisponible ».",
         retry: "Réessayer",
         changeCamera: "Changer de caméra",
     },
@@ -149,6 +150,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Caméra désactivée",
             desc: "Votre caméra est désactivée car votre statut est « {status} ».",
+        },
+        camUnavailable: {
+            title: "Caméra indisponible",
+            desc: "Votre caméra n'envoie plus d'image : les autres voient votre avatar. Réessayez depuis le message, ou coupez puis rallumez votre caméra.",
         },
         share: {
             title: "Partager votre écran",

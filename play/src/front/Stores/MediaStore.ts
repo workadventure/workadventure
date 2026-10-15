@@ -3,6 +3,7 @@ import { derived, get, readable, writable } from "svelte/store";
 import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import * as Sentry from "@sentry/svelte";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
@@ -81,6 +82,15 @@ export const cameraAccessIssueStore = writable<MediaAccessIssue | null>(null);
 export const microphoneAccessIssueStore = writable<MediaAccessIssue | null>(null);
 
 /**
+ * The camera the user wants on delivers no image (see CameraStallDetector), or getUserMedia never handed it over.
+ *
+ * Nothing is turned off behind the user's back: the video stops being sent, the others see the avatar with "Camera
+ * unavailable" rather than a red tile or a camera turned off on purpose, and the user is told (CameraNoImageToast).
+ * Lifted by a new camera (a retry, another device) or by the user turning the camera off.
+ */
+export const cameraUnavailableStore = writable(false);
+
+/**
  * A store that contains the camera state requested by the user (on or off).
  */
 function createRequestedCameraState() {
@@ -95,6 +105,7 @@ function createRequestedCameraState() {
         disableWebcam: () => {
             set(false);
             localUserStore.setRequestedCameraState(false);
+            cameraUnavailableStore.set(false);
         },
     };
 }
@@ -946,6 +957,10 @@ async function runRawStreamUpdate(
                 type: "success",
                 stream: currentStream,
             });
+            if (stream.getVideoTracks().length > 0) {
+                // A new camera: whatever made the previous one unavailable is behind
+                cameraUnavailableStore.set(false);
+            }
             batchGetUserMediaStore.startBatch();
             if (currentStream.getVideoTracks().length > 0) {
                 usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
@@ -977,6 +992,14 @@ async function runRawStreamUpdate(
                 requestedCameraDeviceIdStore.set(undefined);
                 requestedMicrophoneDeviceIdStore.set(undefined);
                 batchGetUserMediaStore.commitChanges();
+            } else if (mustRequestNewVideo && e instanceof TimeoutError) {
+                // The camera the user wants is held back: say so rather than turn it off (see cameraUnavailableStore)
+                console.warn("getUserMedia did not answer: the camera is unavailable", newConstraints);
+                emitCurrentStreamOrError(setIfCurrent, e);
+                cameraUnavailableStore.set(true);
+                if (mustRequestNewAudio) {
+                    requestedMicrophoneState.disableMicrophone();
+                }
             } else if (mustRequestNewVideo) {
                 console.info(
                     "Error. Unable to get microphone and/or camera access. Trying audio only.",
@@ -1033,7 +1056,7 @@ function retryGetUserMedia(retryVideo: boolean, retryAudio: boolean) {
 }
 
 /**
- * Asks for the camera again: the current one stopped delivering frames (see CameraStallDetector).
+ * Asks for the camera again: the user retries a camera that became unavailable (see cameraUnavailableStore).
  */
 export function restartCamera(): void {
     retryGetUserMedia(true, false);
@@ -1327,6 +1350,22 @@ export const effectiveCameraStateStore = derived(
         $backgroundProcessedLocalVideoTrackStore.track !== undefined,
 );
 
+export type CameraStatus = "on" | "off" | "unavailable";
+
+/**
+ * What the others are told about our camera: "unavailable" when the camera the user wants delivers nothing (see
+ * cameraUnavailableStore), whether or not a dead track is still around.
+ */
+export const cameraStatusStore = derived(
+    [cameraUnavailableStore, effectiveCameraStateStore],
+    ([$cameraUnavailable, $cameraOn]): CameraStatus => {
+        if ($cameraUnavailable) {
+            return "unavailable";
+        }
+        return $cameraOn ? "on" : "off";
+    },
+);
+
 export const localStreamStore = derived<
     [
         typeof audioProcessedLocalAudioTrackStore,
@@ -1345,15 +1384,21 @@ export const localStreamStore = derived<
 );
 
 /**
- * When (unavailable status + in background settings), we expose the local stream without video tracks
- * so that LiveKit/WebRTC do not publish camera; preview in BackgroundSettingsPanel still uses localStreamStore.
+ * When (unavailable status + in background settings), or when the camera is unavailable (cameraUnavailableStore), we
+ * expose the local stream without video tracks so that LiveKit/WebRTC do not publish camera: the others see the
+ * avatar. The preview in BackgroundSettingsPanel still uses localStreamStore.
  */
 export const localStreamStoreForPublishing = derived<
-    [typeof localStreamStore, typeof availabilityStatusStore, typeof inBackgroundSettingsStore],
+    [
+        typeof localStreamStore,
+        typeof availabilityStatusStore,
+        typeof inBackgroundSettingsStore,
+        typeof cameraUnavailableStore,
+    ],
     LocalStreamStoreValue
 >(
-    [localStreamStore, availabilityStatusStore, inBackgroundSettingsStore],
-    ([$localStreamStore, $availabilityStatusStore, $inBackgroundSettingsStore], set) => {
+    [localStreamStore, availabilityStatusStore, inBackgroundSettingsStore, cameraUnavailableStore],
+    ([$localStreamStore, $availabilityStatusStore, $inBackgroundSettingsStore, $cameraUnavailableStore], set) => {
         const isUnavailableStatus =
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
@@ -1361,7 +1406,8 @@ export const localStreamStoreForPublishing = derived<
             $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
             $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
             $availabilityStatusStore === AvailabilityStatus.BUSY;
-        const shouldMaskVideoForPublishing = isUnavailableStatus && $inBackgroundSettingsStore;
+        const shouldMaskVideoForPublishing =
+            (isUnavailableStatus && $inBackgroundSettingsStore) || $cameraUnavailableStore;
 
         if (
             shouldMaskVideoForPublishing &&

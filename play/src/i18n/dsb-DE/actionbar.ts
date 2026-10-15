@@ -30,7 +30,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Waša kamera jo deaktiwěrowana",
         activate: "Wašu kameru aktiwěrowaś",
-        noImageWarning: "Waša kamera wěcej žedne wobraze njesćelo. Snaź ju druga aplikacija wužywa.",
+        noImageWarning:
+            "Waša kamera wěcej žedne wobraze njesćelo: druge wiźe Wašu awataru z pokazką „Kamera njestoj k dispoziciji“.",
         retry: "Hyšći raz wopytaś",
         changeCamera: "Kameru změniś",
     },
@@ -151,6 +152,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Kamara deaktiwěrowana",
             desc: 'Waša kamera jo deaktiwěrowana, dokulaž sćo w statusu "{status}".',
+        },
+        camUnavailable: {
+            title: "Kamera njestoj k dispoziciji",
+            desc: "Waša kamera wěcej žedne wobraze njesćelo: druge wiźe Wašu awataru. Wopytajśo to w powěsći znowego abo wušaltujśo a zašaltujśo kameru znowego.",
         },
         share: {
             title: "Wašu wobrazowku źěliś",

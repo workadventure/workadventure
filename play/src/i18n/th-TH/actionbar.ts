@@ -31,7 +31,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "กล้องของคุณถูกปิดอยู่",
         activate: "เปิดกล้องของคุณ",
-        noImageWarning: "กล้องของคุณหยุดส่งภาพแล้ว แอปอื่นอาจกำลังใช้งานกล้องอยู่",
+        noImageWarning: "กล้องของคุณหยุดส่งภาพแล้ว ผู้อื่นจะเห็นอวาตาร์ของคุณพร้อมข้อความ “กล้องไม่พร้อมใช้งาน”",
         retry: "ลองอีกครั้ง",
         changeCamera: "เปลี่ยนกล้อง",
     },
@@ -150,6 +150,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "กล้องถูกปิดใช้งาน",
             desc: 'กล้องของคุณถูกปิดเพราะคุณอยู่ในสถานะ "{status}"',
+        },
+        camUnavailable: {
+            title: "กล้องไม่พร้อมใช้งาน",
+            desc: "กล้องของคุณหยุดส่งภาพแล้ว ผู้อื่นจะเห็นอวาตาร์ของคุณ ลองอีกครั้งจากข้อความแจ้งเตือน หรือปิดแล้วเปิดกล้องใหม่",
         },
         share: {
             title: "แชร์หน้าจอของคุณ",

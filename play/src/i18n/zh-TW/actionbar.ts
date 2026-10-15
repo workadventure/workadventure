@@ -30,7 +30,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "您的攝影機已停用",
         activate: "啟用您的攝影機",
-        noImageWarning: "您的攝影機已停止傳送畫面。可能有其他應用程式正在使用它。",
+        noImageWarning: "您的攝影機已停止傳送畫面：其他人看到的是您的頭像，並顯示「攝影機無法使用」。",
         retry: "重試",
         changeCamera: "更換攝影機",
     },
@@ -149,6 +149,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "攝影機已停用",
             desc: "您的攝影機已停用，因為您處於「{status}」狀態。",
+        },
+        camUnavailable: {
+            title: "攝影機無法使用",
+            desc: "您的攝影機已停止傳送畫面：其他人看到的是您的頭像。請在提示訊息中重試，或關閉後重新開啟攝影機。",
         },
         share: {
             title: "分享您的螢幕",

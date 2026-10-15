@@ -3,6 +3,7 @@ import type { BaseTranslation } from "../i18n-types";
 const video: BaseTranslation = {
     connection_issue: "Network connectivity issue",
     no_video_stream_received: "No video stream received.",
+    camera_unavailable: "Camera unavailable",
     user_is_muted: "{name} is muted.",
     reduce: "Reduce",
     connecting: "Connecting...",

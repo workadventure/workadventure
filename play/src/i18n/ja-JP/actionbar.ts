@@ -30,7 +30,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "カメラが無効になっています",
         activate: "カメラを有効にする",
-        noImageWarning: "カメラから映像が送信されなくなりました。別のアプリが使用している可能性があります。",
+        noImageWarning:
+            "カメラから映像が送信されなくなりました。ほかの参加者には「カメラを利用できません」と表示されたアバターが見えています。",
         retry: "再試行",
         changeCamera: "カメラを変更",
     },
@@ -150,6 +151,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "カメラが無効になっています",
             desc: 'ステータスが"{status}"のため、カメラが無効になっています。',
+        },
+        camUnavailable: {
+            title: "カメラを利用できません",
+            desc: "カメラから映像が送信されなくなりました。ほかの参加者にはアバターが表示されています。メッセージから再試行するか、カメラをオフにしてからもう一度オンにしてください。",
         },
         share: {
             title: "画面を共有",

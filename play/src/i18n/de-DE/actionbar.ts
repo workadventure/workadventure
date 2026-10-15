@@ -31,7 +31,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Ihre Kamera ist deaktiviert",
         activate: "Kamera aktivieren",
         noImageWarning:
-            "Ihre Kamera sendet keine Bilder mehr. Möglicherweise wird sie von einer anderen Anwendung verwendet.",
+            "Ihre Kamera sendet keine Bilder mehr: Die anderen sehen Ihren Avatar mit dem Hinweis „Kamera nicht verfügbar“.",
         retry: "Erneut versuchen",
         changeCamera: "Kamera wechseln",
     },
@@ -153,6 +153,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Kamera deaktiviert",
             desc: 'Ihre Kamera ist deaktiviert, weil Sie sich im Status "{status}" befinden.',
+        },
+        camUnavailable: {
+            title: "Kamera nicht verfügbar",
+            desc: "Ihre Kamera sendet keine Bilder mehr: Die anderen sehen Ihren Avatar. Versuchen Sie es über die Meldung erneut oder schalten Sie Ihre Kamera aus und wieder ein.",
         },
         share: {
             title: "Ihren Bildschirm teilen",

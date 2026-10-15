@@ -31,7 +31,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "카메라가 비활성화되어 있습니다",
         activate: "카메라 활성화",
-        noImageWarning: "카메라에서 영상이 전송되지 않습니다. 다른 애플리케이션이 사용 중일 수 있습니다.",
+        noImageWarning:
+            "카메라에서 영상이 전송되지 않습니다. 다른 사람들에게는 '카메라를 사용할 수 없음' 표시와 함께 아바타가 보입니다.",
         retry: "다시 시도",
         changeCamera: "카메라 변경",
     },
@@ -151,6 +152,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "카메라 비활성화됨",
             desc: '현재 상태가 "{status}"이기 때문에 카메라가 비활성화되어 있습니다.',
+        },
+        camUnavailable: {
+            title: "카메라를 사용할 수 없음",
+            desc: "카메라에서 영상이 전송되지 않습니다. 다른 사람들에게는 아바타가 보입니다. 메시지에서 다시 시도하거나 카메라를 껐다가 다시 켜 주세요.",
         },
         share: {
             title: "화면 공유",

@@ -30,7 +30,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "您的摄像头已禁用",
         activate: "激活您的摄像头",
-        noImageWarning: "您的摄像头已停止发送画面。可能有其他应用正在使用它。",
+        noImageWarning: "您的摄像头已停止发送画面：其他人看到的是您的头像，并显示“摄像头不可用”。",
         retry: "重试",
         changeCamera: "更换摄像头",
     },
@@ -149,6 +149,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "摄像头已禁用",
             desc: '您的摄像头已禁用，因为您处于"{status}"状态。',
+        },
+        camUnavailable: {
+            title: "摄像头不可用",
+            desc: "您的摄像头已停止发送画面：其他人看到的是您的头像。请在提示消息中重试，或关闭后重新打开摄像头。",
         },
         share: {
             title: "共享您的屏幕",
