@@ -3,6 +3,7 @@ import { writable } from "svelte/store";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BackgroundNoiseDetectorHandle } from "@workadventure/noise-suppression/background-noise";
 import {
+    LOUD_ENVIRONMENT_DETECTION_BUDGET_MS,
     LoudEnvironmentDetectionController,
     type LoudEnvironmentDetectorDependencies,
     type LoudEnvironmentInput,
@@ -96,7 +97,7 @@ describe("LoudEnvironmentDetectionController", () => {
         controller.destroy();
     });
 
-    it("latches the warning and disposes the detector after one event per track session", async () => {
+    it("shows the warning once, then stops detecting for good", async () => {
         const handle = createHandle();
         dependencies.createDetector = vi.fn(() => Promise.resolve(handle));
         const controller = new LoudEnvironmentDetectionController(
@@ -122,10 +123,41 @@ describe("LoudEnvironmentDetectionController", () => {
         input.update((value) => ({ ...value, silent: false }));
         expect(dependencies.createDetector).toHaveBeenCalledTimes(1);
 
+        // A new microphone session (an unmute) hides the warning and does not detect again.
         input.update((value) => ({ ...value, track: createTrack("other") }));
-        await vi.waitFor(() => expect(dependencies.createDetector).toHaveBeenCalledTimes(2));
         expect(warnings.at(-1)).toBe(false);
+        expect(dependencies.createDetector).toHaveBeenCalledTimes(1);
         controller.destroy();
+    });
+
+    it("stops when its time budget is spent, until the next microphone session", async () => {
+        vi.useFakeTimers();
+        try {
+            const handle = createHandle();
+            dependencies.createDetector = vi.fn(() => Promise.resolve(handle));
+            const controller = new LoudEnvironmentDetectionController(input, vi.fn(), dependencies);
+
+            input.set({
+                track: createTrack(),
+                microphoneRequested: true,
+                silent: false,
+                noiseSuppressionEnabled: false,
+                requestedDeviceId: undefined,
+            });
+            await vi.waitFor(() => expect(dependencies.observeDetector).toHaveBeenCalledTimes(1));
+            vi.advanceTimersByTime(LOUD_ENVIRONMENT_DETECTION_BUDGET_MS);
+            expect(handle.dispose).toHaveBeenCalledTimes(1);
+
+            input.update((value) => ({ ...value, silent: true }));
+            input.update((value) => ({ ...value, silent: false }));
+            expect(dependencies.createDetector).toHaveBeenCalledTimes(1);
+
+            input.update((value) => ({ ...value, track: createTrack("other") }));
+            expect(dependencies.createDetector).toHaveBeenCalledTimes(2);
+            controller.destroy();
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it("disposes on suppression and requested device changes", async () => {

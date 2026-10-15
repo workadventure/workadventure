@@ -22,13 +22,19 @@ export interface LoudEnvironmentDetectorDependencies {
     reportError(error: unknown): void;
 }
 
+// Detection time each microphone session gets: the warning is a hint at the start, not a permanent monitor.
+export const LOUD_ENVIRONMENT_DETECTION_BUDGET_MS = 5 * 60 * 1000;
+
 export class LoudEnvironmentDetectionController {
     private detector: BackgroundNoiseDetectorHandle | undefined;
     private stopObserving: Unsubscriber | undefined;
     private currentTrack: MediaStreamTrack | undefined;
     private currentRequestedDeviceId: string | undefined;
     private initializationFailed = false;
-    private warningLatched = false;
+    // Never reset: once shown (then ignored or acted on), the warning does not come back at the next unmute.
+    private warningShown = false;
+    private budgetTimer: ReturnType<typeof setTimeout> | undefined;
+    private budgetSpent = false;
     private starting = false;
     private generation = 0;
     private readonly unsubscribeInput: Unsubscriber;
@@ -67,12 +73,16 @@ export class LoudEnvironmentDetectionController {
             track?.readyState === "live" &&
             requestedDeviceIsCurrent;
 
-        if (!shouldDetect || this.warningLatched || this.initializationFailed) {
+        if (!shouldDetect || this.warningShown || this.initializationFailed || this.budgetSpent) {
             this.stopDetector();
             return;
         }
 
         if (this.detector === undefined && !this.starting) {
+            this.budgetTimer ??= setTimeout(() => {
+                this.budgetSpent = true;
+                this.stopDetector();
+            }, LOUD_ENVIRONMENT_DETECTION_BUDGET_MS);
             this.startDetector(track).catch((error: unknown) => {
                 console.error("Unexpected loud environment detection error", error);
             });
@@ -105,7 +115,7 @@ export class LoudEnvironmentDetectionController {
                 if (message.type !== "background-noise-detected" || generation !== this.generation) {
                     return;
                 }
-                this.warningLatched = true;
+                this.warningShown = true;
                 this.setWarning(true);
                 this.stopDetector();
             });
@@ -140,8 +150,10 @@ export class LoudEnvironmentDetectionController {
         this.stopDetector();
         this.currentTrack?.removeEventListener("ended", this.handleTrackEnded);
         this.currentTrack = undefined;
+        clearTimeout(this.budgetTimer);
+        this.budgetTimer = undefined;
+        this.budgetSpent = false;
         this.initializationFailed = false;
-        this.warningLatched = false;
         this.setWarning(false);
     }
 }
