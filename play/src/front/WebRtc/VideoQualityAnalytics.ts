@@ -57,6 +57,7 @@ export function subscribeToVideoQualityAnalytics(
                 frameWidth: toUInt32(stats.frameWidth),
                 frameHeight: toUInt32(stats.frameHeight),
                 mimeType: stats.mimeType,
+                roundTripTimeMs: stats.roundTripTimeMs,
                 ...playback.take(stats.playback, base.clientEventTimeMs),
             };
         },
@@ -94,6 +95,9 @@ export function subscribeToOutboundVideoQualityAnalytics(
             encodeMsPerFrame: stats.encodeMsPerFrame,
             cpuLimitedRatio: stats.cpuLimitedRatio,
             bandwidthLimitedRatio: stats.bandwidthLimitedRatio,
+            uploadRoundTripTimeMs: stats.uploadRoundTripTimeMs,
+            uploadLossRatio: stats.uploadLossRatio,
+            availableOutgoingBitrate: stats.availableOutgoingBitrate,
         };
     });
 }

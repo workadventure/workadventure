@@ -19,6 +19,8 @@ export interface VideoPlaybackWindowDeltas {
     interFrameDelaySumSeconds?: number;
     interFrameDelaySquaredSumSeconds?: number;
     decodeSeconds?: number;
+    packetsReceived?: number;
+    packetsLost?: number;
 }
 
 /**
@@ -72,12 +74,19 @@ export class VideoPlaybackWindow {
                 baseline.totalSquaredInterFrameDelay,
             ),
             decodeSeconds: delta(counters.totalDecodeTime, baseline.totalDecodeTime),
+            packetsReceived: delta(counters.packetsReceived, baseline.packetsReceived),
         };
         // A counter going down means the browser restarted them: this window is not measurable
         if (windowSeconds <= 0 || Object.values(deltas).some((value) => value !== undefined && value < 0)) {
             return undefined;
         }
-        return { windowSeconds, ...deltas };
+        const packetsLost = delta(counters.packetsLost, baseline.packetsLost);
+        // Except the lost packets: one counted as lost that arrives late is taken back
+        return {
+            windowSeconds,
+            ...deltas,
+            packetsLost: packetsLost === undefined ? undefined : Math.max(0, packetsLost),
+        };
     }
 }
 

@@ -502,6 +502,56 @@ describe("AnalyticsEventsQueue", () => {
         expect(events[2].properties).toMatchObject({ captureFps: null, encodeMsPerFrame: null, cpuLimitedRatio: null });
     });
 
+    it("keeps the network of each direction where it belongs", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+        const network = {
+            windowSeconds: 5,
+            packetsReceived: 400,
+            packetsLost: 4,
+            roundTripTimeMs: 120,
+            uploadRoundTripTimeMs: 180,
+            uploadLossRatio: 0.04,
+            availableOutgoingBitrate: 1_200_000,
+        };
+
+        queue.enqueueVideoQualityReport(
+            {
+                samples: [
+                    videoQualitySample(network),
+                    videoQualitySample({
+                        ...network,
+                        direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND,
+                        remoteSpaceUserId: "",
+                    }),
+                    // Packets are counted over the window: without one, they mean nothing
+                    videoQualitySample({ ...network, windowSeconds: undefined, roundTripTimeMs: 90_000 }),
+                ],
+            },
+            socketData(),
+        );
+        await queue.flush();
+
+        const events = (post.mock.calls[0][1] as AnalyticsEventsBatch).events;
+        expect(events[0].properties).toMatchObject({
+            packetsReceived: 400,
+            packetsLost: 4,
+            roundTripTimeMs: 120,
+            uploadRoundTripTimeMs: null,
+            uploadLossRatio: null,
+            availableOutgoingBitrate: null,
+        });
+        expect(events[1].properties).toMatchObject({
+            packetsReceived: null,
+            roundTripTimeMs: null,
+            uploadRoundTripTimeMs: 180,
+            uploadLossRatio: 0.04,
+            availableOutgoingBitrate: 1_200_000,
+        });
+        expect(events[2].properties).toMatchObject({ packetsReceived: null, packetsLost: null, roundTripTimeMs: null });
+    });
+
     it("drops video quality samples for a space the socket has not joined", async () => {
         const post = vi.fn().mockResolvedValue(undefined);
         const queue = new AnalyticsEventsQueue(baseConfig, post, () => new Date("2026-04-24T12:00:06.000Z"));
