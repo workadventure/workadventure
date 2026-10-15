@@ -14,25 +14,26 @@ import {
 import { noiseSuppressionEnabledStore } from "./NoiseSuppressionStore";
 import { LoudEnvironmentDetectionController } from "./LoudEnvironmentDetectionController";
 
-const loudEnvironmentInputStore = derived(
-    [
-        rawLocalAudioTrackStore,
-        requestedMicrophoneState,
-        silentStore,
-        noiseSuppressionEnabledStore,
-        requestedMicrophoneDeviceIdStore,
-    ],
-    ([$rawTrack, $microphoneRequested, $silent, $noiseSuppressionEnabled, $requestedDeviceId]) => ({
-        track: $rawTrack.type === "success" ? $rawTrack.track : undefined,
-        microphoneRequested: $microphoneRequested,
-        silent: $silent,
-        noiseSuppressionEnabled: $noiseSuppressionEnabled,
-        requestedDeviceId: $requestedDeviceId,
-    }),
-);
-
 export const loudEnvironmentWarningStore = readable(false, (set) => {
-    const controller = new LoudEnvironmentDetectionController(loudEnvironmentInputStore, set, {
+    // Built at the first subscription, not when the module loads: GameScene imports this module while MediaStore can
+    // still be loading (import cycle), and its stores are then undefined.
+    const input = derived(
+        [
+            rawLocalAudioTrackStore,
+            requestedMicrophoneState,
+            silentStore,
+            noiseSuppressionEnabledStore,
+            requestedMicrophoneDeviceIdStore,
+        ],
+        ([$rawTrack, $microphoneRequested, $silent, $noiseSuppressionEnabled, $requestedDeviceId]) => ({
+            track: $rawTrack.type === "success" ? $rawTrack.track : undefined,
+            microphoneRequested: $microphoneRequested,
+            silent: $silent,
+            noiseSuppressionEnabled: $noiseSuppressionEnabled,
+            requestedDeviceId: $requestedDeviceId,
+        }),
+    );
+    const controller = new LoudEnvironmentDetectionController(input, set, {
         // Only URLs are bundled: the worklet and RNNoise (about 110 kB) load when detection starts.
         createDetector: createBackgroundNoiseDetector,
         getAudioContext: () => audioContextManager.getContext(BACKGROUND_NOISE_SAMPLE_RATE),
