@@ -4,7 +4,7 @@ The desktop app is an Electron shell in `./electron/`. It does not bundle a fron
 `WebContentsView` loading a remote WorkAdventure world (Play/Admin), restricted to an allow-list of
 origins. The shell adds what a browser tab cannot do: login in the system browser through a loopback
 callback, `workadventure://join` deep links, native Picture-in-Picture / companion panel, the
-presenter meeting bar, global mute/camera shortcuts and a tray.
+screen-annotation overlay, the presenter meeting bar, global mute/camera shortcuts and a tray.
 
 ## Development
 
