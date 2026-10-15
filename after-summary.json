@@ -1,8 +1,8 @@
 {
-  "label": "after",
-  "url": "https://play-feat-camera-unavailable-state.test.workadventu.re/_/camera-ba-1792078173/workadventure.github.io/map-starter-kit/office.tmj",
+  "label": "after4",
+  "url": "https://play-feat-camera-unavailable-state.test.workadventu.re/_/camera-ba-1792079833/workadventure.github.io/map-starter-kit/office.tmj",
   "stallWarnings": [
-    "  31.6s The camera has delivered no frame for 3 seconds: it is unavailable"
+    "  33.1s The camera has delivered no frame for 3 seconds: it is unavailable"
   ],
   "timeline": [
     {
@@ -17,18 +17,7 @@
       }
     },
     {
-      "t": 3,
-      "aliceButton": "warning",
-      "aliceToast": true,
-      "bobSeesUnavailable": false,
-      "bobSeesRed": false,
-      "gum": {
-        "calls": 4,
-        "hung": 0
-      }
-    },
-    {
-      "t": 4,
+      "t": 5,
       "aliceButton": "warning",
       "aliceToast": true,
       "bobSeesUnavailable": true,

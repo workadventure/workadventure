@@ -78,7 +78,8 @@ async function enter(page, name) {
         await page.waitForTimeout(1000);
     }
     await page.waitForTimeout(2000);
-    for (const id of ["camera-button", "microphone-button"]) {
+    // The camera only: a fake microphone that stays silent brings the "no sound" toast over the tiles
+    for (const id of ["camera-button"]) {
         const button = page.getByTestId(id);
         if ((await button.getAttribute("class"))?.includes("bg-danger")) await button.click({ force: true });
     }
