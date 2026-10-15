@@ -12,6 +12,7 @@ import {
     dismissCompanion,
     onPageVisibilityChange,
     openCompanionForPip,
+    setSharedScreenDisplay,
 } from "./companion-controller";
 import {
     getControllingWorldContents,
@@ -631,6 +632,14 @@ export default () => {
         }
         return displayId;
     }
+
+    // The screen the user shares, so that the companion never opens by itself over it.
+    ipcMain.on("app:screen-share-source", (event, source: unknown) => {
+        if (!isFromMainRenderer(event)) return;
+        resolveHudDisplayId(source)
+            .then((displayId) => setSharedScreenDisplay(displayId))
+            .catch((error) => ElectronLog.debug("Unable to resolve the shared screen", error));
+    });
 
     ipcMain.handle("app:hud:open-meeting-bar", async (event, opts: unknown) => {
         if (!isFromMainRenderer(event)) {

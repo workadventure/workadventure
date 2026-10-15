@@ -81,6 +81,11 @@ export function handleScreenIdentifyCancel(): void {
     settle(null);
 }
 
+/** Its windows cover every screen, the world's included: that is not the user leaving it. */
+export function isIdentifyingScreens(): boolean {
+    return windows.length > 0;
+}
+
 export function closeScreenIdentify(): void {
     settle(null);
 }

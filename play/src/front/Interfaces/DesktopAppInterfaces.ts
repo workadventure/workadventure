@@ -273,6 +273,8 @@ export type WorkAdventureDesktopApi = {
         requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
         statusLocked?: boolean;
     }) => void;
+    /** The screen the user shares (null: none), so that the companion never opens by itself over it. */
+    setScreenShareSource?: (source: { sourceId: string; displayId?: number } | null) => void;
     /**
      * Main asks this renderer to re-send its presence. The shell keeps one global presence for the
      * active tab and clears it on a tab switch, so a world that only pushes on change needs this to
