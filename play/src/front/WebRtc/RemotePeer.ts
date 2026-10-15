@@ -730,8 +730,10 @@ export class RemotePeer extends Peer implements Streamable {
         );
         // The microphone rides the "video" connection; a screen share's audio is not a voice
         if (this.type === "video") {
-            this.unregisterAudioQualitySource = registerAudioQualitySource("P2P", async () =>
-                this.destroyed ? undefined : (this._pc as RTCPeerConnection | undefined)?.getStats(null),
+            this.unregisterAudioQualitySource = registerAudioQualitySource(
+                "P2P",
+                async () => (this.destroyed ? undefined : (this._pc as RTCPeerConnection | undefined)?.getStats(null)),
+                this.space.getSpaceUserBySpaceUserId(this._spaceUserId)?.reactiveUser.microphoneState,
             );
         }
     }

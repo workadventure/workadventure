@@ -135,7 +135,11 @@ export class LiveKitParticipant {
         );
         // The microphone only: a scripting audio track is not a voice
         this.analyticsStatsUnsubscribers.push(
-            registerAudioQualitySource("SFU", async () => this._microphonePublication?.track?.getRTCStatsReport()),
+            registerAudioQualitySource(
+                "SFU",
+                async () => this._microphonePublication?.track?.getRTCStatsReport(),
+                this._spaceUser.reactiveUser.microphoneState,
+            ),
         );
     }
 
