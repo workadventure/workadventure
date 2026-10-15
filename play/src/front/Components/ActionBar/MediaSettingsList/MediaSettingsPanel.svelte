@@ -18,6 +18,7 @@
         mediaStreamConstraintsStore,
     } from "../../../Stores/MediaStore";
     import { cameraPermissionStateStore, microphonePermissionStateStore } from "../../../Stores/MediaStatusStore";
+    import { speakerSelectionSupported } from "../../../Stores/AudioOutputStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { noiseSuppressionEnabledStore, noiseSuppressionStateStore } from "../../../Stores/NoiseSuppressionStore";
@@ -285,38 +286,41 @@
         {/if}
     </div>
 
-    <SectionDivider />
+    <!-- Hidden on Safari and iOS, where the output always follows the system -->
+    {#if speakerSelectionSupported}
+        <SectionDivider />
 
-    <!-- Speaker Section -->
-    <div class="flex flex-col gap-1">
-        <SectionTitle>
-            <div class="flex items-center gap-1">
-                <IconHeadphones font-size="14" />
-                {$LL.actionbar.subtitle.speaker()}
-            </div>
-        </SectionTitle>
-        {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
-            {#each $speakerListStore as speaker, index (index)}
-                <DeviceListItem
-                    label={speaker.label}
-                    isSelected={$speakerSelectedStore === speaker.deviceId}
-                    onclick={() => {
-                        analyticsClient.trackAdminEvent("settings.speaker.selected");
-                        selectSpeaker(speaker.deviceId);
-                    }}
-                />
-            {/each}
-        {:else if $speakerListStore !== undefined}
-            <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
-                <div class="text-sm italic text-center">
-                    {#if $speakerListStore.length === 0}
-                        <p class="text-sm p-0 m-0">{$LL.actionbar.speaker.noDevices()}</p>
-                        <span class="text-xs text-white/55">{$LL.actionbar.speaker.noDevicesDesc()}</span>
-                    {:else}
-                        {$LL.actionbar.speaker.disabled()}
-                    {/if}
+        <!-- Speaker Section -->
+        <div class="flex flex-col gap-1">
+            <SectionTitle>
+                <div class="flex items-center gap-1">
+                    <IconHeadphones font-size="14" />
+                    {$LL.actionbar.subtitle.speaker()}
                 </div>
-            </div>
-        {/if}
-    </div>
+            </SectionTitle>
+            {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
+                {#each $speakerListStore as speaker, index (index)}
+                    <DeviceListItem
+                        label={speaker.label}
+                        isSelected={$speakerSelectedStore === speaker.deviceId}
+                        onclick={() => {
+                            analyticsClient.trackAdminEvent("settings.speaker.selected");
+                            selectSpeaker(speaker.deviceId);
+                        }}
+                    />
+                {/each}
+            {:else if $speakerListStore !== undefined}
+                <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
+                    <div class="text-sm italic text-center">
+                        {#if $speakerListStore.length === 0}
+                            <p class="text-sm p-0 m-0">{$LL.actionbar.speaker.noDevices()}</p>
+                            <span class="text-xs text-white/55">{$LL.actionbar.speaker.noDevicesDesc()}</span>
+                        {:else}
+                            {$LL.actionbar.speaker.disabled()}
+                        {/if}
+                    </div>
+                </div>
+            {/if}
+        </div>
+    {/if}
 </div>
