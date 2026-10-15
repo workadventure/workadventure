@@ -1,4 +1,4 @@
-import { derived, get } from "svelte/store";
+import { derived } from "svelte/store";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import CameraNoImageToast from "../Components/Toasts/CameraNoImageToast.svelte";
 import { cameraUnavailableStore, effectiveCameraStateStore } from "../Stores/MediaStore";
@@ -82,7 +82,8 @@ export const CAMERA_NO_IMAGE_TOAST_ID = "camera-no-image";
  * Fed by the stats of the local camera feedback tile, like CpuLimitationDetector: no getStats() call of its own.
  *
  * Only while the camera is on: a camera the user turned off leaves its senders in place, with an active layer and
- * nothing to encode, which must not read as a frozen camera.
+ * nothing to encode, which must not read as a frozen camera. Nor while it is already unavailable: the senders can
+ * keep reporting nothing, and the camera that replaces it is judged from scratch.
  *
  * Also shows the warning whenever the camera is unavailable, whoever marked it (here, or a getUserMedia that did not
  * answer).
@@ -90,8 +91,8 @@ export const CAMERA_NO_IMAGE_TOAST_ID = "camera-no-image";
 export function startCameraStallDetector(): void {
     const detector = new CameraStallDetector();
     const cameraStatsStore = derived(
-        [localEncoderStatsStore.video, effectiveCameraStateStore],
-        ([$stats, $cameraOn]) => ($cameraOn ? $stats : undefined),
+        [localEncoderStatsStore.video, effectiveCameraStateStore, cameraUnavailableStore],
+        ([$stats, $cameraOn, $cameraUnavailable]) => ($cameraOn && !$cameraUnavailable ? $stats : undefined),
     );
     // Module singletons: never unsubscribed
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
@@ -104,7 +105,7 @@ export function startCameraStallDetector(): void {
     });
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
     cameraStatsStore.subscribe((stats) => {
-        if (detector.sample(stats) && !get(cameraUnavailableStore)) {
+        if (detector.sample(stats)) {
             console.warn("The camera has delivered no frame for 3 seconds: it is unavailable");
             analyticsClient.trackAdminEvent("media.device_error", { kind: "camera", reason: "stalled" });
             cameraUnavailableStore.set(true);

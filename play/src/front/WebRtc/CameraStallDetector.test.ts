@@ -136,8 +136,15 @@ describe("startCameraStallDetector", () => {
         mocks.removeToast.mockClear();
         unavailable.set(false);
         expect(mocks.removeToast).toHaveBeenCalledWith(CAMERA_NO_IMAGE_TOAST_ID);
+        // The new camera is judged from scratch, even if the senders reported nothing meanwhile
+        feed(WARMUP_SAMPLES);
+        expect(get(unavailable)).toBe(false);
+        feed(STALL_SAMPLES);
+        expect(get(unavailable)).toBe(true);
+        expect(mocks.trackAdminEvent).toHaveBeenCalledTimes(2);
 
         // Marked by someone else (a getUserMedia that did not answer): warned all the same
+        unavailable.set(false);
         mocks.addToast.mockClear();
         unavailable.set(true);
         expect(mocks.addToast).toHaveBeenCalledWith(expect.anything(), {}, CAMERA_NO_IMAGE_TOAST_ID);
