@@ -48,6 +48,16 @@ spec:
           image: "{{ .Values.play.image.repository }}:{{ .Values.play.image.tag | default .Values.appVersion }}"
           imagePullPolicy: {{ .Values.play.image.pullPolicy }}
           envFrom:
+            {{- if .Values.server.enabled }}
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-back
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-back
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-mapstorage
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-mapstorage
+            {{- end }}
             - configMapRef:
                 name: {{ include "workadventure.fullname" . }}-env-play
             - secretRef:

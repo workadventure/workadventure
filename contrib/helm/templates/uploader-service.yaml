@@ -9,9 +9,9 @@ spec:
   type: {{ .Values.uploader.service.type }}
   ports:
     - port: {{ .Values.uploader.service.port }}
-      targetPort: http
+      targetPort: {{ if .Values.server.enabled }}{{ .Values.server.uploaderPort }}{{ else }}http{{ end }}
       protocol: TCP
       name: http
   selector:
     {{- include "workadventure.selectorLabels" . | nindent 4 }}
-    role: uploader
+    role: {{ if .Values.server.enabled }}play{{ else }}uploader{{ end }}
