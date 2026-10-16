@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
-import type { LocalParticipant, Participant, RemoteParticipant, TrackPublishOptions } from "livekit-client";
+import type {
+    LocalParticipant,
+    LocalTrackPublication,
+    Participant,
+    RemoteParticipant,
+    TrackPublishOptions,
+} from "livekit-client";
 import {
     BackupCodecPolicy,
     LocalAudioTrack,
@@ -101,6 +107,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private readonly boundHandleSignalReconnecting = () => this.handleReconnecting("resume");
     private readonly boundHandleReconnecting = () => this.handleReconnecting("full");
     private readonly boundHandleAudioPlaybackStatusChanged = this.handleAudioPlaybackStatusChanged.bind(this);
+    private readonly boundHandleLocalTrackPublished = this.handleLocalTrackPublished.bind(this);
 
     constructor(
         private serverUrl: string,
@@ -333,10 +340,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             if (this.localCameraTrack.isMuted) {
                 await this.localCameraTrack.unmute();
             }
+        }
 
-            if (this.localCameraTrack.isUpstreamPaused && !videoTrack.muted) {
-                await this.localCameraTrack.resumeUpstream();
-            }
+        // publishTrack() announces the camera on and replaceTrack() always resumes its upstream, while livekit-client
+        // only pauses it on a "mute" event, which a camera that is already muted when it reaches us (it came back
+        // without delivering a frame) never fires. livekit-client resumes it on "unmute".
+        if (videoTrack.muted) {
+            await this.localCameraTrack.pauseUpstream();
         }
     }
 
@@ -760,6 +770,33 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.SignalReconnecting, this.boundHandleSignalReconnecting);
         this.room.on(RoomEvent.Reconnecting, this.boundHandleReconnecting);
         this.room.on(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+        this.room.on(RoomEvent.LocalTrackPublished, this.boundHandleLocalTrackPublished);
+    }
+
+    /**
+     * A full reconnection publishes our tracks again (republishAllTracks), with their real MediaStreamTrack and
+     * announced on, but livekit-client keeps the paused flag of the tracks we paused, so pauseUpstream() does nothing:
+     * the room would get a camera or microphone that is turned off, or the live microphone of a podium attendee.
+     * Resuming then pausing takes the track off the new sender and announces it muted again.
+     */
+    private handleLocalTrackPublished(publication: LocalTrackPublication) {
+        const track = publication.track;
+        if (!track?.isUpstreamPaused) {
+            return;
+        }
+        this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
+            .then(async () => {
+                // An update queued before this one may have resumed it
+                if (!track.isUpstreamPaused) {
+                    return;
+                }
+                await track.resumeUpstream();
+                await track.pauseUpstream();
+            })
+            .catch((err) => {
+                console.error("An error occurred while pausing a republished track again", err);
+                Sentry.captureException(err);
+            });
     }
 
     private handleAudioPlaybackStatusChanged() {
@@ -1063,6 +1100,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.SignalReconnecting, this.boundHandleSignalReconnecting);
             this.room?.off(RoomEvent.Reconnecting, this.boundHandleReconnecting);
             this.room?.off(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+            this.room?.off(RoomEvent.LocalTrackPublished, this.boundHandleLocalTrackPublished);
             this.unregisterAudioPlaybackRetry?.();
             this.unregisterAudioPlaybackRetry = undefined;
             this.cameraAnalyticsUnsubscribe?.();
