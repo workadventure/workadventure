@@ -60,9 +60,15 @@ func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAsset
 	if admin, ok := ws.(interface {
 		GlobalEvent(http.ResponseWriter, *http.Request)
 		Rooms(http.ResponseWriter, *http.Request)
+		RoomRefresh(http.ResponseWriter, *http.Request)
+		AdminMessage(http.ResponseWriter, *http.Request)
+		ExternalModuleEvent(http.ResponseWriter, *http.Request)
 	}); ok {
 		mux.HandleFunc("POST /global/event", admin.GlobalEvent)
 		mux.HandleFunc("GET /rooms", admin.Rooms)
+		mux.HandleFunc("POST /room/refresh", admin.RoomRefresh)
+		mux.HandleFunc("POST /message", admin.AdminMessage)
+		mux.HandleFunc("POST /external-module/event", admin.ExternalModuleEvent)
 	}
 	api.maps, _ = ws.(mapReader)
 	api.registerOpenID(mux)

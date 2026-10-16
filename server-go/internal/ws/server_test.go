@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	"github.com/workadventure/workadventure/server-go/internal/store"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strconv"
@@ -371,4 +372,39 @@ func TestAnAbortedJoinLeavesTheSpace(t *testing.T) {
 	// Alice walked out of the area before her front got the answer: it aborts the query instead of leaving.
 	alice.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_AbortQueryMessage{AbortQueryMessage: &pb.AbortQueryMessage{Id: 7}}})
 	bob.waitFor("alice out of the space", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool { return s.GetRemoveSpaceUserMessage() != nil })
+}
+
+func TestTheAdminTalksToThePlayersOfARoom(t *testing.T) {
+	h := newHarness(t)
+	h.srv.cfg.AdminAPIToken = "admin-token"
+	alice := h.dial("alice", "c-alice", nil)
+	alice.send(join(100, 100))
+	alice.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
+	post := func(handler func(http.ResponseWriter, *http.Request), body string) int {
+		r := httptest.NewRequest("POST", "/", strings.NewReader(body))
+		r.Header.Set("Authorization", "admin-token")
+		w := httptest.NewRecorder()
+		handler(w, r)
+		return w.Code
+	}
+	if post(h.srv.AdminMessage, `{"text":"Closing in 5 minutes","type":"message","targets":["`+roomURL+`","http://nobody.test/r"]}`) != 200 {
+		t.Fatal("message")
+	}
+	alice.waitFor("the admin's text", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+		return d.GetSendUserMessage().GetMessage() == "Closing in 5 minutes"
+	})
+	post(h.srv.AdminMessage, `{"text":"","type":"capacity","targets":["`+roomURL+`"]}`)
+	alice.waitFor("the world-full warning", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetWorldFullWarningMessage() != nil })
+	post(h.srv.ExternalModuleEvent, `{"data":{"roomId":"`+roomURL+`","moduleId":"calendar","recipientUuid":"alice","message":{"event":"x"}}}`)
+	alice.waitFor("the module's message", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+		return d.GetExternalModuleMessage().GetModuleId() == "calendar"
+	})
+	post(h.srv.RoomRefresh, `{"roomId":"`+roomURL+`"}`)
+	alice.waitFor("the refresh", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRefreshRoomMessage() != nil })
+	r := httptest.NewRequest("POST", "/", strings.NewReader(`{}`))
+	w := httptest.NewRecorder()
+	h.srv.RoomRefresh(w, r)
+	if w.Code != http.StatusUnauthorized {
+		t.Fatal("the admin token is required")
+	}
 }
