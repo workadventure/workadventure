@@ -214,3 +214,27 @@ func TestPrivateFilesNeedAToken(t *testing.T) {
 		}
 	}
 }
+
+func TestAMapUploadedAloneStartsFromTheWAMTemplate(t *testing.T) {
+	template := `{"version":"2.0.0","mapUrl":"x","areas":[{"id":"hall","name":"Hall","x":0,"y":0,"width":10,"height":10,"visible":true,"properties":[]}],` +
+		`"entities":{},"entityCollections":[{"url":"https://collections.test/a.json","type":"file"}],"metadata":{"name":"Template","copyright":"Ours"}}`
+	tpl := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte(template)) }))
+	defer tpl.Close()
+	hs := newHarness(t)
+	hs.h = hs.s.Handler(Options{Auth: Auth{Basic: true, User: "john.doe", Password: "password"}, MaxUncompressed: 1 << 20, WAMTemplateURL: tpl.URL,
+		EntityCollections: []string{"https://ignored.test/c.json"}})
+	if w := hs.do("POST", "/upload", zipOf(t, map[string]string{"dir/map.tmj": tiled, "assets/t.png": "png"}), "zip"); w.Code != 200 {
+		t.Fatalf("upload: %d %s", w.Code, w.Body)
+	}
+	var doc struct {
+		MapURL   string            `json:"mapUrl"`
+		Areas    []map[string]any  `json:"areas"`
+		Metadata map[string]string `json:"metadata"`
+		Coll     []map[string]any  `json:"entityCollections"`
+	}
+	_ = json.Unmarshal(hs.do("GET", "/dir/map.wam", nil, "").Body.Bytes(), &doc)
+	if doc.MapURL != "./map.tmj" || len(doc.Areas) != 1 || doc.Metadata["name"] != "Office" || doc.Metadata["copyright"] != "" ||
+		len(doc.Coll) != 1 || doc.Coll[0]["url"] != "https://collections.test/a.json" {
+		t.Fatalf("the template, with the map's URL and its own name; its copyright goes with the template's: %+v", doc)
+	}
+}

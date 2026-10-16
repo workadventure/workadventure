@@ -30,6 +30,7 @@ type Options struct {
 	MaxUncompressed   int64    // MAX_UNCOMPRESSED_SIZE
 	DirectUploadURL   string   // DIRECT_UPLOAD_URL
 	EntityCollections []string // ENTITY_COLLECTION_URLS, written into generated WAM files
+	WAMTemplateURL    string   // WAM_TEMPLATE_URL: the WAM file a Tiled map uploaded alone starts from
 	SecretKey         string   // signs the tokens of /private/files
 }
 

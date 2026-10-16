@@ -3,6 +3,7 @@ package mapstorage
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/wam"
 )
@@ -103,6 +105,14 @@ func (s *Store) upload(w http.ResponseWriter, r *http.Request, o Options) {
 		return
 	}
 
+	var template []byte
+	if o.WAMTemplateURL != "" && slices.ContainsFunc(names, func(n string) bool { return path.Ext(n) == ".tmj" }) {
+		if template, err = fetch(r.Context(), o.WAMTemplateURL); err != nil {
+			slog.Error("map upload: WAM_TEMPLATE_URL", "error", err)
+			http.Error(w, "Cannot read the WAM template", http.StatusInternalServerError)
+			return
+		}
+	}
 	s.tree.Lock()
 	defer s.tree.Unlock()
 	root, err := s.folder(directory)
@@ -134,7 +144,11 @@ func (s *Store) upload(w http.ResponseWriter, r *http.Request, o Options) {
 		if _, err := os.Stat(wamFile); err == nil {
 			continue
 		}
-		if err := writeFile(wamFile, wam.Generated(name, contents[name], o.EntityCollections)); err != nil {
+		generated, err := wam.Generated(name, contents[name], o.EntityCollections, template)
+		if err == nil {
+			err = writeFile(wamFile, generated)
+		}
+		if err != nil {
 			slog.Error("map upload", "file", wamFile, "error", err)
 		}
 	}
@@ -456,4 +470,23 @@ func (s *Store) moveOrCopy(w http.ResponseWriter, r *http.Request, move bool) {
 	}
 	w.WriteHeader(http.StatusCreated)
 	_, _ = io.WriteString(w, "Created")
+}
+
+// fetch reads a small document over HTTP (the WAM template), within 10 s.
+func fetch(ctx context.Context, url string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode/100 != 2 {
+		return nil, fmt.Errorf("GET %s: %s", url, resp.Status)
+	}
+	return io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 }
