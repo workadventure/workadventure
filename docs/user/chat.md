@@ -17,6 +17,8 @@ The chat system can be accessed by clicking on the chat icon in the action bar.
 - **The Proximity chat room**
 - **The "Matrix" chat rooms**
 
+To learn how to write, reply, react, edit, share files and start threads, see [Writing messages](chat-messages.md).
+
 ## Proximity chat room
 
 This chat room comes with special rules.
