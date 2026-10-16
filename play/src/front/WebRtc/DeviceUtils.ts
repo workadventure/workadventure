@@ -14,7 +14,10 @@ export enum NavigatorType {
     safari,
 }
 
-export function getNavigatorType(): NavigatorType {
+/**
+ * undefined on embedded or uncommon browsers whose user agent names none of the three.
+ */
+export function getNavigatorType(): NavigatorType | undefined {
     if (window.navigator.userAgent.includes("Firefox")) {
         return NavigatorType.firefox;
     } else if (window.navigator.userAgent.includes("Chrome")) {
@@ -22,7 +25,7 @@ export function getNavigatorType(): NavigatorType {
     } else if (window.navigator.userAgent.includes("Safari")) {
         return NavigatorType.safari;
     }
-    throw new Error("Couldn't detect navigator type");
+    return undefined;
 }
 export function isAndroid(): boolean {
     return window.navigator.userAgent.includes("Android");
