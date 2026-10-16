@@ -600,7 +600,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public cleanupSocket(client: PusherWebSocket): void {
-        if (client.isDisconnecting()) {
+        if (!client.markCleanedUp()) {
             // Cleanup already called
             return;
         }
