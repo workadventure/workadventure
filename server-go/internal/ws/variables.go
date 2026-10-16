@@ -9,7 +9,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -18,8 +17,6 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/store"
 	"github.com/workadventure/workadventure/server-go/internal/wam"
 )
-
-var publicMapPath = regexp.MustCompile(`^/_/[^/]+/(.+)$`)
 
 var mapClient = &http.Client{Timeout: 10 * time.Second}
 
@@ -32,8 +29,9 @@ func (srv *Server) TiledMap(ctx context.Context, roomURL string) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	var mapURL string
-	if key := mapKey(roomURL); key != "" {
+	rm := srv.roomMap(roomURL)
+	mapURL := rm.mapURL
+	if key := rm.key; key != "" {
 		file, err := srv.maps.Read(key)
 		if err != nil {
 			return nil, err
@@ -43,8 +41,7 @@ func (srv *Server) TiledMap(ctx context.Context, roomURL string) ([]byte, error)
 			return nil, err
 		}
 		rel, _ := doc["mapUrl"].(string)
-		base := strings.TrimRight(srv.cfg.PublicMapStorageURL, "/") + "/"
-		u, err := url.Parse(base + key)
+		u, err := url.Parse(rm.wamURL)
 		if err != nil {
 			return nil, err
 		}
@@ -52,14 +49,14 @@ func (srv *Server) TiledMap(ctx context.Context, roomURL string) ([]byte, error)
 		if err != nil {
 			return nil, err
 		}
-		if inStore, ok := strings.CutPrefix(ref.String(), base); ok {
-			return srv.maps.Read(inStore)
+		if ref.Host == u.Host { // next to the WAM file: in the store too
+			if inStore := srv.storageKey(ref.String()); inStore != "" {
+				return srv.maps.Read(inStore)
+			}
 		}
 		mapURL = ref.String()
-	} else if m := publicMapPath.FindStringSubmatch(room.Path); m != nil {
-		mapURL = room.Scheme + "://" + m[1]
-	} else {
-		return nil, fmt.Errorf("no map for %s", roomURL)
+	} else if mapURL == "" {
+		return nil, fmt.Errorf("no map for %s", room)
 	}
 	u, err := url.Parse(mapURL)
 	if err != nil {

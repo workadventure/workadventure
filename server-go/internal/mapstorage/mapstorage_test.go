@@ -238,3 +238,58 @@ func TestAMapUploadedAloneStartsFromTheWAMTemplate(t *testing.T) {
 		t.Fatalf("the template, with the map's URL and its own name; its copyright goes with the template's: %+v", doc)
 	}
 }
+
+func TestPrivateFilesBehindAPathPrefix(t *testing.T) {
+	hs := newHarness(t)
+	hs.h = hs.s.Handler(Options{Auth: Auth{Basic: true, User: "john.doe", Password: "password"}, SecretKey: "secret", PathPrefix: "/map-storage/"})
+	doc := `{"version":"2.1.0","mapUrl":"./m.tmj","entityCollections":[],"entities":{},"areas":[{"id":"a","name":"","x":0,"y":0,"width":1,"height":1,` +
+		`"visible":true,"properties":[{"id":"p","type":"openFile","link":"http://play/map-storage/private/files/doc-p.pdf"}]}]}`
+	_ = os.MkdirAll(filepath.Join(hs.dir, "maps"), 0o755)
+	_ = os.WriteFile(filepath.Join(hs.dir, "maps/m.wam"), []byte(doc), 0o644)
+	_ = os.MkdirAll(filepath.Join(hs.dir, "private/files"), 0o755)
+	_ = os.WriteFile(filepath.Join(hs.dir, "private/files/doc-p.pdf"), []byte("pdf"), 0o644)
+	token, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"wamUrl": "http://play/map-storage/maps/m.wam",
+		"exp": time.Now().Add(time.Hour).Unix()}).SignedString([]byte("secret"))
+	// The proxy stripped /map-storage; the map's URL and the file's link keep it.
+	if w := hs.do("GET", "/private/files/doc-p.pdf?token="+token, nil, ""); w.Code != 200 {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+}
+
+func TestTwoWorldsWithTheSamePathsNeverShareAMap(t *testing.T) {
+	hs := newHarness(t)
+	hs.h = hs.s.Handler(Options{Auth: Auth{Basic: true, User: "john.doe", Password: "password"}, UseDomainNameInPath: true, MaxUncompressed: 1 << 20})
+	put := func(host, body string) {
+		r := httptest.NewRequest("PUT", "/maps/office.wam", strings.NewReader(body))
+		r.Host = host
+		r.SetBasicAuth("john.doe", "password")
+		w := httptest.NewRecorder()
+		hs.h.ServeHTTP(w, r)
+		if w.Code != 200 && w.Code != 201 {
+			t.Fatalf("PUT on %s: %d %s", host, w.Code, w.Body)
+		}
+	}
+	get := func(path string, header map[string]string) *httptest.ResponseRecorder {
+		r := httptest.NewRequest("GET", path, nil)
+		for k, v := range header {
+			r.Header.Set(k, v)
+		}
+		w := httptest.NewRecorder()
+		hs.h.ServeHTTP(w, r)
+		return w
+	}
+	put("acme.ms.test", strings.Replace(wamFile, `"areas":[]`, `"areas":[],"vendor":{"by":"acme"}`, 1))
+	put("globex.ms.test:443", wamFile)
+	if w := get("/maps/office.wam", map[string]string{"X-Forwarded-Host": "acme.ms.test"}); !strings.Contains(w.Body.String(), "acme") {
+		t.Fatalf("acme's map: %s", w.Body)
+	}
+	if w := get("/maps/office.wam", map[string]string{"X-Forwarded-Host": "globex.ms.test"}); strings.Contains(w.Body.String(), "acme") || w.Code != 200 {
+		t.Fatalf("globex has its own map at the same path: %d %s", w.Code, w.Body)
+	}
+	if w := get("/maps", map[string]string{"X-Forwarded-Host": "initech.ms.test"}); strings.Contains(w.Body.String(), "office") {
+		t.Fatalf("a third world lists none of them: %s", w.Body)
+	}
+	if _, err := os.Stat(filepath.Join(hs.dir, "acme.ms.test", "maps", "office.wam")); err != nil {
+		t.Fatal("each world in its folder, as map-storage stores them:", err)
+	}
+}

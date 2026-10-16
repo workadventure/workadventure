@@ -35,10 +35,7 @@ type memMaps struct {
 
 func newMaps(t *testing.T) *memMaps {
 	t.Helper()
-	empty, err := os.ReadFile("../../../map-storage/tests/assets/maps/empty.wam")
-	if err != nil {
-		t.Fatal(err)
-	}
+	empty := []byte(`{"version":"2.1.0","mapUrl":"./office.tmj","areas":[],"entities":{},"entityCollections":[]}`)
 	return &memMaps{files: map[string][]byte{office: empty, garden: empty}, slow: map[string]chan struct{}{}, writing: make(chan string, 16)}
 }
 

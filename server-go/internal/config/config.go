@@ -9,6 +9,7 @@ package config
 
 import (
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
+	"github.com/workadventure/workadventure/server-go/internal/uploader"
 
 	"fmt"
 	"net/url"
@@ -25,7 +26,7 @@ type Config struct {
 	HTTPPort int
 	WSPort   int
 	// MapStoragePort answers for the map-storage host (SERVER_MAP_STORAGE_PORT of the server variant; map-storage
-	// itself always listened on 3000). 0: not served.
+	// itself always listened on 3000; the chart's server mode points the map-storage Service at 3002). 0: not served.
 	MapStoragePort int
 	// The Room API (gRPC): ROOM_API_PORT of the pusher (SERVER_ROOM_API_PORT when set), served when there is a
 	// ROOM_API_SECRET_KEY, on ROOM_API_BIND_HOST (all addresses by default).
@@ -33,6 +34,10 @@ type Config struct {
 	LiveKitHost, LiveKitAPIKey, LiveKitAPISecret string
 	MaxUsersForWebRTC                            int
 	LiveKitSwitchOnCPULimitation                 bool
+
+	// The uploader (SERVER_UPLOADER_PORT; the chart's server mode points the uploader Service at 3003).
+	UploaderPort int
+	Uploader     uploader.Options
 
 	RoomAPIPort      int
 	RoomAPISecretKey string
@@ -50,11 +55,13 @@ type Config struct {
 	StoreVariablesForLocalMaps bool
 	PlayerVariablesMaxTTL      int64 // seconds; -1: no maximum
 
-	SecretKey        string
-	AdminAPIURL      string
-	AdminAPIToken    string // ADMIN_API_TOKEN: the administration routes (POST /global/event)
-	DisableAnonymous bool
-	OpenID           OpenID
+	SecretKey          string
+	AdminAPIURL        string
+	AdminURL           string        // ADMIN_URL: the admin's public URL (ICE servers, chat ids, OAuth refresh)
+	AdminAPIRetryDelay time.Duration // ADMIN_API_RETRY_DELAY: between two tries of /api/capabilities at start
+	AdminAPIToken      string        // ADMIN_API_TOKEN: the administration routes (POST /global/event)
+	DisableAnonymous   bool
+	OpenID             OpenID
 
 	SocketIdleTimer           time.Duration
 	ClientDisconnectRetention time.Duration
@@ -219,9 +226,10 @@ func parse(get func(string) string) (*Config, error) {
 	c := &Config{
 		HTTPPort:                     r.integer("PUSHER_HTTP_PORT", 3000),
 		WSPort:                       r.integer("PUSHER_WS_PORT", 3001),
-		MapStoragePort:               r.integer("SERVER_MAP_STORAGE_PORT", 0),
+		MapStoragePort:               r.integer("SERVER_MAP_STORAGE_PORT", 3002),
 		RoomAPIPort:                  r.integer("SERVER_ROOM_API_PORT", r.integer("ROOM_API_PORT", 50051)),
 		RoomAPISecretKey:             r.str("ROOM_API_SECRET_KEY"),
+		UploaderPort:                 r.integer("SERVER_UPLOADER_PORT", 3003),
 		LiveKitHost:                  r.str("LIVEKIT_HOST"),
 		LiveKitAPIKey:                r.str("LIVEKIT_API_KEY"),
 		LiveKitAPISecret:             r.str("LIVEKIT_API_SECRET"),
@@ -239,15 +247,19 @@ func parse(get func(string) string) (*Config, error) {
 				Basic: r.boolean("ENABLE_BASIC_AUTHENTICATION", false), User: r.str("AUTHENTICATION_USER"), Password: r.str("AUTHENTICATION_PASSWORD"),
 				Bearer: r.boolean("ENABLE_BEARER_AUTHENTICATION", false), Token: r.str("AUTHENTICATION_TOKEN"),
 			},
-			CacheControl:      firstNonEmpty(r.str("CACHE_CONTROL"), "public, s-max-age=10"),
-			MaxUncompressed:   int64(r.integer("MAX_UNCOMPRESSED_SIZE", 1<<30)),
-			DirectUploadURL:   r.str("DIRECT_UPLOAD_URL"),
-			EntityCollections: list(r.str("ENTITY_COLLECTION_URLS")),
-			WAMTemplateURL:    r.str("WAM_TEMPLATE_URL"),
-			SecretKey:         r.str("SECRET_KEY"),
+			CacheControl:        firstNonEmpty(r.str("CACHE_CONTROL"), "public, s-max-age=10"),
+			MaxUncompressed:     int64(r.integer("MAX_UNCOMPRESSED_SIZE", 1<<30)),
+			DirectUploadURL:     r.str("DIRECT_UPLOAD_URL"),
+			EntityCollections:   list(r.str("ENTITY_COLLECTION_URLS")),
+			WAMTemplateURL:      r.str("WAM_TEMPLATE_URL"),
+			PathPrefix:          r.str("PATH_PREFIX"),
+			UseDomainNameInPath: r.boolean("USE_DOMAIN_NAME_IN_PATH", false),
+			SecretKey:           r.str("SECRET_KEY"),
 		},
 		SecretKey:                 r.str("SECRET_KEY"),
 		AdminAPIURL:               r.str("ADMIN_API_URL"),
+		AdminURL:                  r.str("ADMIN_URL"),
+		AdminAPIRetryDelay:        time.Duration(r.integer("ADMIN_API_RETRY_DELAY", 500)) * time.Millisecond,
 		AdminAPIToken:             r.str("ADMIN_API_TOKEN"),
 		DisableAnonymous:          r.boolean("DISABLE_ANONYMOUS", false),
 		SocketIdleTimer:           time.Duration(r.integer("SOCKET_IDLE_TIMER", 120)) * time.Second,
@@ -326,6 +338,8 @@ func parse(get func(string) string) (*Config, error) {
 		r.oneOf("OPID_WOKA_NAME_POLICY", policies...),
 		"user_input",
 	)
+	c.Uploader = uploader.Options{PublicURL: r.str("UPLOADER_URL"), AllowedOrigin: firstNonEmpty(r.str("ALLOWED_CORS_ORIGIN"), r.str("PLAY_URL"), "*"),
+		EnableUpload: c.EnableChatUpload, MaxFileSize: int64(r.integer("UPLOAD_MAX_FILESIZE", 0))}
 	c.RecordingConfigured = r.str("LIVEKIT_RECORDING_S3_ENDPOINT") != "" && r.str("LIVEKIT_RECORDING_S3_BUCKET") != "" &&
 		r.str("LIVEKIT_RECORDING_S3_ACCESS_KEY") != "" && r.str("LIVEKIT_RECORDING_S3_SECRET_KEY") != "" &&
 		r.str("LIVEKIT_RECORDING_S3_REGION") != ""

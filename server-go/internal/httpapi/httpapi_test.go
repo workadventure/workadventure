@@ -106,3 +106,52 @@ func TestLocalScriptOnlyServesLocalhostScripts(t *testing.T) {
 		t.Fatalf("remote script accepted: %d", w.Code)
 	}
 }
+
+func TestProbesTellLivenessReadinessAndTheProtocol(t *testing.T) {
+	h, assets := newAPI(t)
+	if w := get(h, "GET", "/ping", nil, nil); w.Code != 200 || w.Body.String() != "pong" {
+		t.Fatalf("liveness: %d %s", w.Code, w.Body)
+	}
+	if w := get(h, "GET", "/ready", nil, nil); w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("not ready before the front's template is loaded: %d", w.Code)
+	}
+	if err := assets.refresh(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if w := get(h, "GET", "/ready", nil, nil); w.Code != 200 {
+		t.Fatalf("ready: %d", w.Code)
+	}
+	if w := get(h, "GET", "/api-version", nil, nil); w.Body.String() != "v1" {
+		t.Fatalf("the protocol hash, for the SaaS pipeline: %s", w.Body)
+	}
+}
+
+// saas is an admin that refuses everybody and describes maps with their Jitsi secrets.
+type saas struct{ *admin.Local }
+
+func (saas) MemberData(context.Context, admin.MemberQuery) (admin.MemberData, error) {
+	return admin.MemberData{}, &admin.Refusal{Data: map[string]any{"status": "error", "type": "error", "code": "BANNED"}}
+}
+
+func (saas) MapDetails(context.Context, admin.MapQuery) (map[string]any, error) {
+	return map[string]any{"group": "g", "wamUrl": "https://w.test/a.wam", "thirdParty": map[string]any{"jitsi": map[string]any{"secret": "s"}}}, nil
+}
+
+func TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes(t *testing.T) {
+	cfg := &config.Config{StartRoomURL: "/_/global/start.json", OpidWokaNamePolicy: "user_input", FrontEnv: map[string]any{}}
+	local, _ := admin.NewLocal(cfg)
+	tokens := auth.New("secret")
+	h := New(cfg, tokens, saas{local}, NewFrontAssets("", "", "v1"), http.NotFoundHandler(), "1.0.0")
+	token, _ := tokens.Create(auth.Token{Identifier: "a@b.c"})
+	w := get(h, "GET", "/me?token="+token+"&playUri=https://w.test/@/o/w/r", nil, nil)
+	if w.Code != 200 || !strings.Contains(w.Body.String(), `"code":"BANNED"`) {
+		t.Fatalf("/me answers the admin's error as is: %d %s", w.Code, w.Body)
+	}
+	w = get(h, "GET", "/map?playUri=https://w.test/@/o/w/r&authToken="+token, nil, nil)
+	if w.Code != 200 || strings.Contains(w.Body.String(), "thirdParty") || !strings.Contains(w.Body.String(), "wamUrl") {
+		t.Fatalf("/map never hands out the Jitsi and BBB secrets: %s", w.Body)
+	}
+	if w := get(h, "GET", "/map?playUri=https://w.test/r&authToken=forged", nil, nil); w.Code != 401 {
+		t.Fatalf("an invalid token is refused before the admin is asked: %d", w.Code)
+	}
+}

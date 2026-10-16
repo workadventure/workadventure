@@ -46,15 +46,15 @@ func TestMemberTextures(t *testing.T) {
 
 func TestMapDetails(t *testing.T) {
 	l := local(t)
-	d, _ := l.MapDetails(context.Background(), "http://play.test/_/global/maps.test/tests/E2E/empty.json")
+	d, _ := l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/_/global/maps.test/tests/E2E/empty.json"})
 	if d["mapUrl"] != "http://maps.test/tests/E2E/empty.json" {
 		t.Fatalf("got %v", d)
 	}
-	d, _ = l.MapDetails(context.Background(), "http://play.test/")
+	d, _ = l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/"})
 	if d["redirectUrl"] != "http://play.test/_/global/maps.workadventu.re/starter/map.json" {
 		t.Fatalf("got %v", d)
 	}
-	d, _ = l.MapDetails(context.Background(), "http://play.test/nope")
+	d, _ = l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/nope"})
 	if d["code"] != "UNSUPPORTED_URL_FORMAT" {
 		t.Fatalf("got %v", d)
 	}
@@ -63,7 +63,7 @@ func TestMapDetails(t *testing.T) {
 func TestNoRecordingIsOfferedWhileThisServerCannotRecord(t *testing.T) {
 	l := local(t)
 	l.cfg.RecordingConfigured = true // S3 is set, but there is no egress yet
-	d, _ := l.MapDetails(context.Background(), "http://play.test/_/global/maps.test/tests/E2E/empty.json")
+	d, _ := l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/_/global/maps.test/tests/E2E/empty.json"})
 	m, _ := l.MemberData(context.Background(), MemberQuery{Identifier: "u", PlayURI: "http://play.test/_/global/maps.test/a.json", AccessToken: "t"})
 	if d["recording"].(map[string]any)["buttonState"] != "hidden" || m.CanRecord {
 		t.Fatalf("a button the server would always refuse: %v, canRecord %v", d["recording"], m.CanRecord)

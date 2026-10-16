@@ -15,7 +15,7 @@ import (
 
 // mapStorageJwt answers MapStorageJwtQuery: a token for /private/files of this map (SocketManager).
 func (s *Session) mapStorageJwt(id int32) {
-	key := mapKey(s.info.roomID)
+	key := s.srv.mapKey(s.info.roomID)
 	if key == "" {
 		s.answerError(id, "This room has no map")
 		return
@@ -121,7 +121,20 @@ func hostMatches(src, host string) bool {
 // roomsFromSameWorld answers RoomsFromSameWorldQuery: the maps stored next to this one (LocalAdmin lists
 // map-storage's /maps). The exit editor offers them.
 func (s *Session) roomsFromSameWorld(id int32) {
-	if mapKey(s.info.roomID) == "" {
+	if list, ok, err := s.srv.admin.SameWorld(s.ctx, s.info.roomID, s.info.member.Tags, false); ok {
+		if err != nil {
+			s.answerError(id, err.Error())
+			return
+		}
+		rooms := make([]*pb.RoomShortDescription, 0, len(list))
+		for _, r := range list {
+			rooms = append(rooms, &pb.RoomShortDescription{Name: r.Name, RoomUrl: r.RoomURL, WamUrl: r.WamURL, Description: r.Description,
+				Copyright: r.Copyright, Thumbnail: r.Thumbnail})
+		}
+		s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomsFromSameWorldAnswer{RoomsFromSameWorldAnswer: &pb.RoomsFromSameWorldAnswer{RoomDescriptions: rooms}}})
+		return
+	}
+	if s.srv.mapKey(s.info.roomID) == "" {
 		s.answerError(id, "No admin backoffice set!")
 		return
 	}

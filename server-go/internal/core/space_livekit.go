@@ -134,6 +134,7 @@ func (s *spaceState) switchTo(target string) {
 	s.cancelBack()
 	old := s.strategy
 	s.strategy = target
+	slog.Info("space switches", "space", s.roomName, "from", old, "to", target, "members", len(s.members))
 	for _, id := range s.order {
 		if m := s.members[id]; s.takesPart(m) {
 			m.peer.Send(NewMsg(SpacePrivateEvent{Space: s.local, ReceiverID: id, Sender: m.user, Event: SwitchStrategy{Strategy: target}}, true))
@@ -217,6 +218,7 @@ func (s *spaceState) lkSync() {
 					return
 				}
 				s.lk.room = lkReady
+				slog.Info("LiveKit room ready", "room", room)
 				s.lkSync()
 			})
 		})
@@ -248,6 +250,7 @@ func (s *spaceState) lkInvite(m *spaceMember) {
 		return
 	}
 	s.lk.invited[m.user.ID] = true
+	slog.Debug("LiveKit invitation", "room", s.roomName, "member", m.user.ID)
 	m.peer.Send(NewMsg(SpacePrivateEvent{Space: s.local, ReceiverID: m.user.ID, Sender: m.user,
 		Event: LiveKitInvitation{Token: token, ServerURL: s.mediaCfg.LiveKit.URL()}}, true))
 }

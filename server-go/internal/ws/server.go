@@ -2,6 +2,7 @@ package ws
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/workadventure/workadventure/server-go/internal/mapedit"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
@@ -11,6 +12,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/coder/websocket"
 	"google.golang.org/protobuf/proto"
@@ -33,6 +35,7 @@ type Server struct {
 	retained   *registry.Map[string, *Session] // by connectionId, for transport resumes
 	maps       *mapstorage.Store
 	edits      *mapedit.Queue // the map editor's commands, one map at a time, off the rooms
+	roomMaps   sync.Map       // room URL -> roomMap
 	vars       store.Hash     // room and player variables
 	varWriter  *store.Writer  // writes to vars, in order, off the rooms
 	apiVersion string
@@ -101,6 +104,11 @@ func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		IPAddress: clientIP(r), CharacterTextureIDs: q["characterTextureIds"], CompanionTextureID: q.Get("companionTextureId"),
 		Locale: r.Header.Get("Accept-Language"), Tags: tok.Tags, ChatID: q.Get("chatID"),
 	})
+	var refused *admin.Refusal
+	if errors.As(err, &refused) {
+		srv.reject(w, r, token, errorScreenOf(refused.Data))
+		return
+	}
 	if err != nil {
 		slog.Info("access not granted", "user", tok.Identifier, "room", q.Get("roomId"), "error", err)
 		srv.reject(w, r, token, internalError("User cannot access this world"))

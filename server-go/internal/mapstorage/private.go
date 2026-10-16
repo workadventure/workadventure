@@ -35,13 +35,20 @@ func (s *Store) privateFile(w http.ResponseWriter, r *http.Request, secret strin
 		http.Error(w, "Invalid token", http.StatusBadRequest)
 		return
 	}
-	file, err := s.Read(strings.TrimPrefix(u.Path, "/"))
+	// Behind a path prefix (PATH_PREFIX, /map-storage on a single domain), the proxy strips it from the request
+	// but the URLs of the map and of its files keep it.
+	prefix := strings.TrimRight(s.pathPrefix, "/")
+	key := strings.TrimPrefix(strings.TrimPrefix(u.Path, prefix), "/")
+	if s.useDomain {
+		key = strings.ToLower(u.Hostname()) + "/" + key // the map's world is the host of its URL
+	}
+	file, err := s.Read(key)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 	doc, err := wam.Parse(file)
-	if err != nil || !allowsFile(doc, r.URL.Path, claims.Tags) {
+	if err != nil || !allowsFile(doc, prefix+r.URL.Path, claims.Tags) {
 		http.NotFound(w, r)
 		return
 	}
