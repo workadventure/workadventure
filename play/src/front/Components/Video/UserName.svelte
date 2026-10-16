@@ -3,7 +3,7 @@
     import Woka from "../Woka/Woka.svelte";
     import type { PictureStore } from "../../Stores/PictureStore";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { IconCameraExclamation } from "@wa-icons";
+    import CamOnIcon from "../Icons/CamOnIcon.svelte";
 
     /**
      * A component that displays the Woka, the user's name and optionally a dropdown menu
@@ -60,7 +60,7 @@
                         class="flex items-center gap-1 text-xs font-normal opacity-80 select-none"
                         data-testid="camera-unavailable"
                     >
-                        <IconCameraExclamation font-size="14" />
+                        <CamOnIcon exclamation height="h-3.5" width="w-3.5" strokeColor="stroke-current" hover="" />
                         <span>{$LL.video.camera_unavailable()}</span>
                     </div>
                 {/if}

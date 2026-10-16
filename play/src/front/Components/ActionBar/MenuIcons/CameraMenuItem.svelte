@@ -20,7 +20,6 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
     import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
-    import { IconCameraExclamation } from "@wa-icons";
 
     const disabledByStatusStore = derived(
         [availabilityStatusStore, silentStore],
@@ -136,7 +135,7 @@
     onmouseleave={() => mouseIsHoveringCameraButton.set(false)}
 >
     {#if $cameraButtonStateStore === "warning"}
-        <IconCameraExclamation font-size="20" />
+        <CamOnIcon exclamation hover="" />
     {:else if $requestedCameraState && !$silentStore && $cameraListStore && $cameraListStore.length > 0}
         <CamOnIcon />
     {:else}
