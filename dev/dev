@@ -18,7 +18,7 @@ if [ "$SOCLE_HTTP_PORT" = 80 ]; then export SOCLE_URL_PORT=""; else export SOCLE
 usage() {
     cat >&2 <<USAGE
 Usage:
-  dev/dev socle up [--profile tools] | down
+  dev/dev socle up [--profile tools] [--profile recording] | down
   dev/dev stack up <name> [--variant ts|server] [--server-dir <dir>] [compose up options]
   dev/dev stack down <name> [compose down options, e.g. -v to drop its maps]
   dev/dev status
@@ -50,7 +50,7 @@ case "${1:-} ${2:-}" in
     echo "Socle up: http://traefik.workadventure.localhost$SOCLE_URL_PORT"
     ;;
 "socle down")
-    socle --profile tools down "${@:3}"
+    socle --profile tools --profile recording down "${@:3}"
     ;;
 "stack up")
     name=${3:-}
