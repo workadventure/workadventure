@@ -69,12 +69,17 @@ func (c *Client) Token(room string, u core.SpaceUser) (string, error) {
 
 // twirp calls a method of the RoomService.
 func (c *Client) twirp(ctx context.Context, method string, grant video, body, out any) error {
+	return c.call(ctx, "livekit.RoomService/"+method, grant, body, out)
+}
+
+// call calls a Twirp method ("service/method") with a token of the given grant.
+func (c *Client) call(ctx context.Context, method string, grant video, body, out any) error {
 	token, err := c.sign("", "", "", grant)
 	if err != nil {
 		return err
 	}
 	b, _ := json.Marshal(body)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.host+"/twirp/livekit.RoomService/"+method, bytes.NewReader(b))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.host+"/twirp/"+method, bytes.NewReader(b))
 	if err != nil {
 		return err
 	}

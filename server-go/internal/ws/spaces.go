@@ -246,6 +246,13 @@ func (s *Session) spaceStateQuery(id int32, q *pb.SpaceStateQueryFrontToPusher) 
 		s.answerError(id, "SpaceStateQuery has no query")
 		return
 	}
+	switch query.(type) {
+	case core.StartRecording, core.StopRecording:
+		if !s.info.member.CanRecord {
+			s.answerError(id, "You are not allowed to record")
+			return
+		}
+	}
 	_ = space.Query(s.ctx, s.spaceUserID(), query, func(err error) {
 		if err != nil {
 			s.answerError(id, err.Error())

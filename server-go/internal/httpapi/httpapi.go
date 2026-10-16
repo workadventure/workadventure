@@ -74,6 +74,9 @@ func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAsset
 	mux.HandleFunc("OPTIONS /companion/list", func(w http.ResponseWriter, _ *http.Request) { text(w, http.StatusOK, "") })
 	mux.HandleFunc("GET /local-script", localScript)
 	mux.HandleFunc("GET /server.json", api.serverJSON)
+	if cfg.EnableOpenAPIEndpoint {
+		api.swaggerRoutes(mux)
+	}
 	mux.HandleFunc("GET /manifest.json", api.manifest)
 
 	for _, p := range []string{"/_/", "/@/", "/~/"} {

@@ -24,6 +24,7 @@ type LiveKit interface {
 // Media is how the spaces meet.
 type Media struct {
 	LiveKit           LiveKit // nil: WebRTC only
+	Egress            Egress  // nil: no recording
 	MaxUsersForWebRTC int     // MAX_USERS_FOR_WEBRTC
 	SwitchOnCPULimit  bool    // LIVEKIT_SWITCH_ON_CPU_LIMITATION
 	BackToWebRTCAfter time.Duration
@@ -76,7 +77,7 @@ func (s *spaceState) wantsLiveKit() bool {
 
 // mayGoBack: small enough again, and no member with a limited CPU (a bubble moved for one goes back only once it left).
 func (s *spaceState) mayGoBack() bool {
-	if len(s.members) > s.mediaCfg.MaxUsersForWebRTC {
+	if len(s.members) > s.mediaCfg.MaxUsersForWebRTC || s.rec != nil { // a recording stays on LiveKit
 		return false
 	}
 	for _, m := range s.members {
@@ -193,6 +194,7 @@ func (s *spaceState) lkSync() {
 		}
 	}
 	if !streaming {
+		s.stopByServer() // nobody to record any more
 		for _, id := range s.order {
 			if s.lk.invited[id] {
 				m := s.members[id]
@@ -220,6 +222,7 @@ func (s *spaceState) lkSync() {
 				s.lk.room = lkReady
 				slog.Info("LiveKit room ready", "room", room)
 				s.lkSync()
+				s.recordWhenReady()
 			})
 		})
 		return
