@@ -41,6 +41,7 @@ services:
           - oidc.workadventure.localhost
           - matrix.workadventure.localhost
           - livekit.workadventure.localhost
+          - cdn-livekit.workadventure.localhost
 
   # The compiled front, served like in production (play/Dockerfile, target "front"). The build output is copied from
   # the published play image of the same commit instead of being rebuilt: a Vite build needs more memory than the
@@ -62,6 +63,10 @@ services:
   # The test maps (maps.workadventure.localhost/tests/...), from the published image of the same commit.
   maps:
     image: ghcr.io/workadventure/maps:${WA_TAG}
+    environment:
+      # The test pages (e.g. Variables/shared_variables.php) load iframe_api.js from FRONT_URL; the socle's front
+      # serves it for every stack.
+      FRONT_URL: http://front.workadventure.localhost${SOCLE_URL_PORT:-}
 
   # Favicons of the co-websites (ICON_URL, required by the pusher).
   icon:
@@ -101,6 +106,9 @@ services:
       # address LiveKit advertises, with the host's port numbers.
       LIVEKIT_CONFIG: |
         port: 7880
+        # Redis carries the requests to the egress (recording profile).
+        redis:
+          address: livekit-redis:6379
         rtc:
           tcp_port: ${SOCLE_LIVEKIT_TCP_PORT:-7881}
           udp_port: ${SOCLE_LIVEKIT_UDP_PORT:-7882}
@@ -110,6 +118,73 @@ services:
           devkey: 12345678901234567890123456789012
         logging:
           level: info
+    depends_on:
+      - livekit-redis
+
+  livekit-redis:
+    image: redis:7.4-alpine
+
+  # Recording (LiveKit egress + S3), as in docker-compose.livekit.yaml: dev/dev socle up --profile recording.
+  # The egress runs a headless Chrome per recording; leave the profile off when the recording specs are not run.
+  egress:
+    image: livekit/egress:v1.12.0
+    profiles: [recording]
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    environment:
+      DISABLE_CUDA: "true"
+      DISABLE_NVENC: "true"
+      EGRESS_CONFIG_BODY: |
+        api_key: devkey
+        api_secret: "12345678901234567890123456789012"
+        ws_url: ws://livekit:7880
+        insecure: true
+        template_port: 7980
+        health_port: 8081
+        redis:
+          address: livekit-redis:6379
+    depends_on:
+      - livekit
+      - livekit-redis
+
+  # LiveKit advertises 127.0.0.1 (where the host's browsers reach Traefik); in the egress's network namespace that
+  # address is the egress itself, so its headless Chrome gets no media ("Start signal not received"). Relay those
+  # ports to Traefik from inside that namespace.
+  egress-relay:
+    image: alpine/socat:1.8.0.3
+    profiles: [recording]
+    network_mode: service:egress
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        socat UDP-LISTEN:${SOCLE_LIVEKIT_UDP_PORT:-7882},bind=127.0.0.1,fork,reuseaddr UDP:traefik:${SOCLE_LIVEKIT_UDP_PORT:-7882} &
+        exec socat TCP-LISTEN:${SOCLE_LIVEKIT_TCP_PORT:-7881},bind=127.0.0.1,fork,reuseaddr TCP:traefik:${SOCLE_LIVEKIT_TCP_PORT:-7881}
+
+  rustfs-livekit:
+    image: rustfs/rustfs:1.0.0-alpha.83
+    profiles: [recording]
+    command: ["/data"]
+    environment:
+      RUSTFS_ACCESS_KEY: rustfs-access-key
+      RUSTFS_SECRET_KEY: rustfs-secret-access-key
+
+  rustfs-livekit-init:
+    image: amazon/aws-cli:2.31.1
+    profiles: [recording]
+    depends_on:
+      - rustfs-livekit
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        until aws --endpoint-url http://rustfs-livekit:9000 s3api list-buckets >/dev/null 2>&1; do sleep 1; done
+        aws --endpoint-url http://rustfs-livekit:9000 s3api head-bucket --bucket livekit-recording >/dev/null 2>&1 \
+          || aws --endpoint-url http://rustfs-livekit:9000 s3api create-bucket --bucket livekit-recording \
+               --create-bucket-configuration LocationConstraint=eu-west-1
+    environment:
+      AWS_ACCESS_KEY_ID: rustfs-access-key
+      AWS_SECRET_ACCESS_KEY: rustfs-secret-access-key
+      AWS_DEFAULT_REGION: eu-west-1
 
   redisinsight:
     image: redislabs/redisinsight:latest
