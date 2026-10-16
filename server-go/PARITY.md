@@ -23,10 +23,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 1. **Client de l'admin distante absent.** Concerne `/api/capabilities`, `/api/room/access` (et ses variantes `ErrorApiData`), `/api/map` côté pusher et back, ban, report, tags, sameWorld, membres, refresh OAuth, analytics. Attend le contrat `dev/contracts/admin-api.md` de la session socle.
 2. **LiveKit absent.** Pas de bascule au-delà de `MAX_USERS_FOR_WEBRTC`, pas d'invitation, pas de jeton : grandes bulles, mégaphone et partage d'écran à plusieurs passent en P2P complet. L'enregistrement en dépend.
-3. **Durabilité des variables plus faible que le TS** :
-   - une écriture faite pendant une coupure de Redis est perdue en silence ;
-   - la file jette au-delà de 4 096 et n'est pas vidée à l'arrêt ;
-   - une room démarrée pendant une coupure peut écraser les valeurs persistées.
+3. **Durabilité des variables** : les écritures ne se perdent plus pendant une coupure (corrigé le 17/10). Reste qu'une room démarrée pendant une coupure garde les valeurs par défaut (`varsOnce`).
 4. **Isolation des tenants** :
    - clé de stockage sans le domaine (`USE_DOMAIN_NAME_IN_PATH`) ;
    - clé de space faite de l'origine et non du `world` de l'admin ;
@@ -132,7 +129,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
-| `canRecord` et `recording.buttonState` | LocalAdmin.ts:69-75,236,342 | **réponse factice** | `admin/admin.go:180,244-270` | annoncé dès que les variables S3 sont là, alors que l'enregistrement est toujours refusé | `RecordingConfigured=false` tant que l'egress manque |
+| `canRecord` et `recording.buttonState` | LocalAdmin.ts:69-75,236,342 | validé (masqué) | `admin_test.go` : `TestNoRecordingIsOfferedWhileThisServerCannotRecord` | bouton masqué tant que ce serveur n'enregistre pas (`recordingSupported`) | à ouvrir avec l'egress |
 | start/stop, sessions, arrêts automatiques, webhook egress | RecordingManager.ts, LivekitWebhookController.ts | absent | `core/space_state.go:228` (`ErrNoRecording`) | — | après LiveKit ; le socle a maintenant l'egress (`--profile recording`) |
 | Liste, vignettes, URL signées, suppression S3 | RecordingService.ts | absent | « Query not supported » | — | client S3 SigV4 |
 | Réglages d'enregistrement du WAM | MSS:391 | implémenté non vérifié | `wam/wam.go:89` | pas de test de `SetRecording` | test |
@@ -152,7 +149,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 |---|---|---|---|---|---|
 | Variables de room : hash Redis à la clé de l'URL, `""` donne HDEL | RedisVariablesRepository.ts:15-30 | implémenté non vérifié (format) ; validé (règles) | `core/roomvars_test.go:8`, `store/store_test.go` | pas de test du format Redis réel | test contre le faux Redis |
 | Variables de joueur `pr_<uuid>_\|@\|_<room>` avec `"<expiry>:<0\|1>:<json>"` | PlayerVariables.ts:29-95 | implémenté non vérifié | `ws/variables.go:196-247` | portée monde `pw_` absente ; pas d'EXPIRE sur la clé | test aller-retour ; `pw_` avec `group` |
-| Écriture pendant une coupure Redis | node-redis : file hors ligne rejouée ; `variables.spec.ts:113-148` | partiel | `store/store.go:62-103` : un essai, puis perte journalisée ; la file jette au-delà de 4 096 | **perte silencieuse**, contredit « storage works » | réessayer dans l'ordre, ne jamais jeter, vider à l'arrêt |
+| Écriture pendant une coupure Redis | node-redis : file hors ligne rejouée ; `variables.spec.ts:113-148` | validé (cœur) | `store_test.go` : `TestAVariableWrittenWhileRedisIsDownIsStoredWhenItComesBack`, `TestFlushTellsHowManyWritesAreLost` | dernière valeur par champ, réessai sans fin, vidage à l'arrêt (10 s) ; « storage works » à jouer par le socle | — |
 | Room démarrée pendant une coupure Redis | TS attend | partiel | `core/roomvars.go:44-49` (`varsOnce`) | garde les valeurs par défaut et peut écraser les valeurs persistées | recharger ou refuser l'écriture persistante |
 | Variables de zone, état des spaces | en mémoire (TS aussi) | validé | `core/roommap_test.go` | ne survivent pas à un redémarrage, comme en TS | — |
 | Éditions de carte | MapsManager.ts : écho avant écriture, sauvegarde toutes les 15 s | validé | écriture avant l'écho, par fichier temporaire puis rename (`mapstorage.go`) | plus durable que le TS | — |
@@ -162,7 +159,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
-| `/metrics` (501 sans jeton ni port, 401) | PrometheusController.ts | implémenté non vérifié | `metrics/metrics.go:48-72` | **`/debug/pprof` sans jeton** sur le port des métriques | protéger |
+| `/metrics` (501 sans jeton ni port, 401) et pprof | PrometheusController.ts | validé | `metrics_test.go` (2 tests) | pprof derrière le même jeton | — |
 | `nb_sockets`, `nb_clients_per_room`, `nb_rooms`, `nb_spaces` | GaugeManager.ts | implémenté non vérifié | `metrics.go` | une série au lieu de deux jobs (pusher, back) | revoir les tableaux de bord |
 | `nb_publishers_per_space`, `nb_watchers_per_world` | back GaugeManager.ts:38-69 | absent | — | bug TS (`world` contre `name`) | définir la sémantique |
 | `nodejs_*` | collectDefaultMetrics | remplacé par `go_*` | — | alertes à revoir | — |

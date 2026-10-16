@@ -3,7 +3,9 @@ package store
 import (
 	"bufio"
 	"context"
+	"errors"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -67,11 +69,62 @@ func TestMemoryAndWriter(t *testing.T) {
 	w.Set("room", "a", `"1"`, 0)
 	w.Set("room", "b", `"2"`, 0)
 	w.Set("room", "a", "", 0)
-	done := make(chan struct{})
-	w.enqueue(func(context.Context) error { close(done); return nil })
-	<-done
+	if err := w.Flush(context.Background()); err != nil {
+		t.Fatal(err)
+	}
 	if got := Load(m, "room"); len(got) != 1 || got["b"] != `"2"` {
 		t.Fatalf("%v", got)
+	}
+}
+
+// flaky is a Hash that fails while down is set.
+type flaky struct {
+	*Memory
+	mu   sync.Mutex
+	down bool
+}
+
+func (f *flaky) HSet(ctx context.Context, key, field, value string) error {
+	f.mu.Lock()
+	down := f.down
+	f.mu.Unlock()
+	if down {
+		return errors.New("connection refused")
+	}
+	return f.Memory.HSet(ctx, key, field, value)
+}
+
+func TestAVariableWrittenWhileRedisIsDownIsStoredWhenItComesBack(t *testing.T) {
+	redis := &flaky{Memory: NewMemory(), down: true}
+	w := NewWriter(redis)
+	for i := range 10_000 { // far more writes than any queue would hold: only the last value of a field is kept
+		w.Set("room", "score", strconv.Itoa(i), 0)
+	}
+	w.Set("room", "door", `"open"`, 0)
+	time.Sleep(300 * time.Millisecond)
+	if n := w.Pending(); n != 2 {
+		t.Fatalf("two fields wait for Redis, whatever the number of writes: %d", n)
+	}
+	redis.mu.Lock()
+	redis.down = false
+	redis.mu.Unlock()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := w.Flush(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if got := Load(redis, "room"); got["score"] != "9999" || got["door"] != `"open"` {
+		t.Fatalf("the last values are stored, none is lost: %v", got)
+	}
+}
+
+func TestFlushTellsHowManyWritesAreLost(t *testing.T) {
+	w := NewWriter(&flaky{Memory: NewMemory(), down: true})
+	w.Set("room", "a", "1", 0)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	if err := w.Flush(ctx); err == nil {
+		t.Fatal("Redis never came back: the write is reported lost")
 	}
 }
 

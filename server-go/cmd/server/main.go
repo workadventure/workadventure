@@ -130,6 +130,9 @@ func run() error {
 	for _, s := range servers {
 		_ = s.Shutdown(shutdownCtx)
 	}
+	if err := wsServer.FlushVariables(shutdownCtx); err != nil {
+		slog.Error("variables lost on shutdown", "error", err)
+	}
 	return nil
 }
 
