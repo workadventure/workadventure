@@ -75,4 +75,45 @@ test.describe("Meeting invitation @nomobile @nowebkit", () => {
             alice.locator(".toast-container").filter({ hasText: "You have sent too many meeting invitations" }),
         ).toBeVisible({ timeout: 10_000 });
     });
+
+    test("Invite a user on another map, accepted, they come to the sender", async ({ browser }) => {
+        // Without an admin, every map of the same play server is in the same world: both users see each other
+        // in the user list, under different maps.
+        await using mallory = await getPage(
+            browser,
+            "Mallory",
+            publicTestMapUrl("tests/E2E/empty.json", "meeting_map_a"),
+        );
+        await Map.teleportToPosition(mallory, 160, 160);
+        await using john = await getPage(browser, "John", publicTestMapUrl("tests/E2E/empty.json", "meeting_map_b"));
+
+        await chatUtils.UL_inviteOnOtherMap(mallory, "John");
+        await chatUtils.UL_acceptInvitation(john);
+
+        await expect(
+            mallory.locator(".toast-container").filter({ hasText: "Your invitation was accepted by John" }),
+        ).toBeVisible({ timeout: 10_000 });
+        // John is taken to Mallory's map and walks to her
+        await expect(john).toHaveURL(/meeting_map_a/, { timeout: 30_000 });
+        await expect(john.locator("#cameras-container").getByText("Mallory").first()).toBeVisible({
+            timeout: 30_000,
+        });
+    });
+
+    test("Invite a user on another map, declined, verify notification", async ({ browser }) => {
+        await using mallory = await getPage(
+            browser,
+            "Mallory",
+            publicTestMapUrl("tests/E2E/empty.json", "meeting_map_c"),
+        );
+        await using john = await getPage(browser, "John", publicTestMapUrl("tests/E2E/empty.json", "meeting_map_d"));
+
+        await chatUtils.UL_inviteOnOtherMap(mallory, "John");
+        await chatUtils.UL_declineInvitation(john);
+
+        await expect(
+            mallory.locator(".toast-container").filter({ hasText: "Your invitation was declined by John" }),
+        ).toBeVisible({ timeout: 10_000 });
+        await expect(john).toHaveURL(/meeting_map_d/);
+    });
 });
