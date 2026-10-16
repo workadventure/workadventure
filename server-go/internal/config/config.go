@@ -225,6 +225,7 @@ func parse(get func(string) string) (*Config, error) {
 			MaxUncompressed:   int64(r.integer("MAX_UNCOMPRESSED_SIZE", 1<<30)),
 			DirectUploadURL:   r.str("DIRECT_UPLOAD_URL"),
 			EntityCollections: list(r.str("ENTITY_COLLECTION_URLS")),
+			WAMTemplateURL:    r.str("WAM_TEMPLATE_URL"),
 			SecretKey:         r.str("SECRET_KEY"),
 		},
 		SecretKey:                 r.str("SECRET_KEY"),
