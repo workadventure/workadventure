@@ -164,7 +164,8 @@ type state struct {
 	zones       map[zoneKey]*zone
 	nextUserID  int32
 
-	listeners   map[Peer]struct{} // every connection, joined or not yet: they get the edits of the map
+	listeners   map[Peer]struct{}     // every connection, joined or not yet: they get the edits of the map
+	watchers    map[*watcher]struct{} // Room API listeners (roomapi.go)
 	areasLoaded bool
 	areas       []Area
 	counts      map[string]int       // players in each counted area
@@ -187,6 +188,7 @@ func newState(url string, cfg Config) *state {
 		byTab:       map[string]*user{},
 		groups:      map[int32]*group{},
 		listeners:   map[Peer]struct{}{},
+		watchers:    map[*watcher]struct{}{},
 		invitations: map[string][]invitation{},
 		counts:      map[string]int{},
 		vars:        map[[3]string]string{},

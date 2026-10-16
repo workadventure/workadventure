@@ -91,6 +91,11 @@ func isLocal(host string) bool {
 	return ip != nil && (ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast())
 }
 
+// RoomVariables is roomVariables, for the Room API.
+func (srv *Server) RoomVariables(roomURL string) core.RoomVariables {
+	return srv.roomVariables(roomURL)
+}
+
 // roomVariables reads the variables a room's map declares, with their stored values. When the map cannot be read,
 // every variable is accepted and none is kept (VariablesManager without a map).
 func (srv *Server) roomVariables(roomURL string) core.RoomVariables {

@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"time"
@@ -73,36 +74,50 @@ func (r *Room) Redeclare(ctx context.Context, v RoomVariables) error {
 }
 
 func (s *state) setRoomVariable(p Peer, v Variable, tags []string, mayRedeclare bool) (stale bool) {
-	u, vars := s.byPeer[p], s.roomVars
-	if u == nil || vars == nil {
+	u := s.byPeer[p]
+	if u == nil {
 		return false
+	}
+	stale, err := s.writeVariable(v, tags, mayRedeclare, false)
+	if err != nil {
+		u.peer.Send(NewMsg(RoomError{Message: err.Error()}, false))
+	}
+	return stale
+}
+
+// writeVariable sets a room variable for a player (with its tags) or for the Room API (byAPI), which may write any
+// variable the map declares, whatever its writableBy. stale asks the caller to read the map again (see SetVariable).
+func (s *state) writeVariable(v Variable, tags []string, mayRedeclare, byAPI bool) (stale bool, err error) {
+	vars := s.roomVars
+	if vars == nil {
+		return false, errors.New("the variables of this room are not loaded")
 	}
 	def, declared := vars.Defs[v.Name]
 	if vars.Defs != nil && !declared {
 		if mayRedeclare && time.Since(s.varsAt) > redeclareAfter {
-			return true
+			return true, nil
 		}
-		u.peer.Send(NewMsg(RoomError{Message: fmt.Sprintf("Trying to set a variable %q that is not defined as a variable in the map", v.Name)}, false))
-		return false
+		return false, fmt.Errorf("Trying to set a variable %q that is not defined as a variable in the map", v.Name)
 	}
-	if def.WritableBy != "" && !slices.Contains(tags, def.WritableBy) {
-		u.peer.Send(NewMsg(RoomError{Message: fmt.Sprintf("Trying to set a variable %q but this variable is not writable by you", v.Name)}, false))
-		return false
+	if !byAPI && def.WritableBy != "" && !slices.Contains(tags, def.WritableBy) {
+		return false, fmt.Errorf("Trying to set a variable %q but this variable is not writable by you", v.Name)
 	}
 	if old, ok := vars.Values[v.Name]; ok && old == v.Value {
-		return false
+		return false, nil
 	}
 	vars.Values[v.Name] = v.Value
 	if declared && def.Persist && vars.Save != nil {
 		vars.Save(v.Name, v.Value)
 	}
-	m := NewMsg(VariableChanged{Name: v.Name, Value: v.Value}, true)
+	changed := VariableChanged{Name: v.Name, Value: v.Value}
+	m := NewMsg(changed, true)
 	for _, o := range s.users {
 		if def.ReadableBy == "" || slices.Contains(o.tags, def.ReadableBy) {
 			o.peer.Send(m)
 		}
 	}
-	return false
+	s.toWatchers(changed)
+	return false, nil
 }
 
 // readableVariables is the snapshot a joining player gets.

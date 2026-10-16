@@ -27,6 +27,11 @@ type Config struct {
 	// MapStoragePort answers for the map-storage host (SERVER_MAP_STORAGE_PORT of the server variant; map-storage
 	// itself always listened on 3000). 0: not served.
 	MapStoragePort int
+	// The Room API (gRPC): ROOM_API_PORT of the pusher (SERVER_ROOM_API_PORT when set), served when there is a
+	// ROOM_API_SECRET_KEY, on ROOM_API_BIND_HOST (all addresses by default).
+	RoomAPIPort      int
+	RoomAPISecretKey string
+	RoomAPIBindHost  string
 
 	// Map storage (map-storage's variables)
 	StorageDirectory string
@@ -210,6 +215,9 @@ func parse(get func(string) string) (*Config, error) {
 		HTTPPort:                   r.integer("PUSHER_HTTP_PORT", 3000),
 		WSPort:                     r.integer("PUSHER_WS_PORT", 3001),
 		MapStoragePort:             r.integer("SERVER_MAP_STORAGE_PORT", 0),
+		RoomAPIPort:                r.integer("SERVER_ROOM_API_PORT", r.integer("ROOM_API_PORT", 50051)),
+		RoomAPISecretKey:           r.str("ROOM_API_SECRET_KEY"),
+		RoomAPIBindHost:            strings.Trim(r.str("ROOM_API_BIND_HOST"), "[]"),
 		StorageDirectory:           firstNonEmpty(r.str("STORAGE_DIRECTORY"), "./public"),
 		EmbeddedDomainsWhitelist:   list(r.str("EMBEDDED_DOMAINS_WHITELIST")),
 		RedisHost:                  r.str("REDIS_HOST"),
