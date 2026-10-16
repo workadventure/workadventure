@@ -359,11 +359,15 @@ func TestAnAbortedJoinLeavesTheSpace(t *testing.T) {
 	bob.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
 	for _, c := range []*client{alice, bob} {
 		c.query(7, &pb.QueryMessage{Query: &pb.QueryMessage_JoinSpaceQuery{JoinSpaceQuery: &pb.JoinSpaceQuery{SpaceName: "meeting"}}})
-		c.waitFor("the join answer", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetAnswerMessage().GetJoinSpaceAnswer() != nil })
+		c.waitFor("the join answer", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+			return d.GetAnswerMessage().GetJoinSpaceAnswer() != nil
+		})
 	}
 	bob.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_AddSpaceFilterMessage{AddSpaceFilterMessage: &pb.AddSpaceFilterMessage{
 		SpaceFilterMessage: &pb.SpaceFilterMessage{SpaceName: "meeting"}}}})
-	bob.waitFor("alice in the space", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool { return len(s.GetInitSpaceUsersMessage().GetUsers()) == 2 })
+	bob.waitFor("alice in the space", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		return len(s.GetInitSpaceUsersMessage().GetUsers()) == 2
+	})
 	// Alice walked out of the area before her front got the answer: it aborts the query instead of leaving.
 	alice.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_AbortQueryMessage{AbortQueryMessage: &pb.AbortQueryMessage{Id: 7}}})
 	bob.waitFor("alice out of the space", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool { return s.GetRemoveSpaceUserMessage() != nil })
