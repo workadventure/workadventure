@@ -985,12 +985,11 @@ async function runRawStreamUpdate(
                 emitCurrentStreamOrError(setIfCurrent, e);
                 const classified = classifyMediaAccessError(e);
                 trackMediaAccessIssue(mustRequestNewAudio ? "camera_microphone" : "camera", classified);
+                // Only the camera: turning it off asks for the microphone alone, which turns the microphone off in
+                // its own turn if it fails too. A camera taken by another application (NotReadableError on Windows)
+                // must not cost the microphone.
                 requestedCameraState.disableWebcam();
                 cameraAccessIssueStore.set(classified);
-                if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
-                    microphoneAccessIssueStore.set(classified);
-                }
             } else if (!constraints.video && !constraints.audio) {
                 console.error("Error. getUserMedia called with no audio and no video.");
                 setIfCurrent({
