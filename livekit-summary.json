@@ -1,0 +1,55 @@
+{
+  "label": "livekit",
+  "url": "https://play-feat-camera-unavailable-state.test.workadventu.re/_/camera-lk-1792140556/workadventure.github.io/map-starter-kit/office.tmj",
+  "stallWarnings": [
+    "  72.5s The camera has delivered no frame for 3 seconds: it is unavailable"
+  ],
+  "timeline": [
+    {
+      "t": 1,
+      "aliceButton": "on",
+      "aliceToast": false,
+      "bobSeesUnavailable": false,
+      "bobSeesRed": false,
+      "gum": {
+        "calls": 3,
+        "hung": 0
+      },
+      "livekit": true
+    },
+    {
+      "t": 5,
+      "aliceButton": "warning",
+      "aliceToast": true,
+      "bobSeesUnavailable": true,
+      "bobSeesRed": false,
+      "gum": {
+        "calls": 3,
+        "hung": 0
+      },
+      "livekit": true
+    }
+  ],
+  "afterWatch": {
+    "aliceButton": "warning",
+    "aliceToast": true,
+    "bobSeesUnavailable": true,
+    "bobSeesRed": false,
+    "gum": {
+      "calls": 3,
+      "hung": 0
+    },
+    "livekit": true
+  },
+  "afterRetry": {
+    "aliceButton": "on",
+    "aliceToast": false,
+    "bobSeesUnavailable": false,
+    "bobSeesRed": false,
+    "gum": {
+      "calls": 4,
+      "hung": 0
+    },
+    "livekit": true
+  }
+}

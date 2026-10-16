@@ -11,6 +11,8 @@ if (!url || !outDir) {
     process.exit(1);
 }
 const LABEL = process.env.LABEL ?? "run";
+// 4 on a test environment (MAX_USERS_FOR_WEBRTC=3) puts the bubble on LiveKit
+const USERS = Number(process.env.USERS ?? 2);
 const WATCH_S = Number(process.env.WATCH_S ?? 60);
 const dir = `${outDir}/${LABEL}`;
 mkdirSync(dir, { recursive: true });
@@ -47,6 +49,15 @@ function installCameraHook() {
         const stop = generator.stop.bind(generator);
         generator.stop = () => { source.stop(); stop(); };
         return new MediaStream([generator, ...stream.getAudioTracks()]);
+    };
+    // LiveKit's signal connection goes to /rtc
+    const NativeWebSocket = window.WebSocket;
+    window.__livekit = false;
+    window.WebSocket = class extends NativeWebSocket {
+        constructor(url, protocols) {
+            super(url, protocols);
+            if (String(url).includes("/rtc")) window.__livekit = true;
+        }
     };
     window.__holdCameraBack = () => { heldBack = true; cameras.forEach((c) => (c.frozen = true)); };
     window.__releaseCamera = () => { heldBack = false; };
@@ -104,9 +115,13 @@ alice.on("console", (msg) => {
     }
 });
 const bob = await join("Bob", false);
+const others = [];
+for (const name of ["Carol", "Dave", "Eve"].slice(0, Math.max(0, USERS - 2))) {
+    others.push(await join(name, false));
+}
 
 const deadline = Date.now() + 90_000;
-while (!(await alice.evaluate(() => window.__sending === true))) {
+while (!(await alice.evaluate((livekit) => window.__sending === true && (!livekit || window.__livekit), USERS >= 4))) {
     if (Date.now() > deadline) {
         console.log(`${stamp()} Alice sends no video: not in a bubble`);
         await browser.close();
@@ -114,6 +129,7 @@ while (!(await alice.evaluate(() => window.__sending === true))) {
     }
     await alice.waitForTimeout(1000);
 }
+console.log(`${stamp()} Alice sends video, transport: ${(await alice.evaluate(() => window.__livekit)) ? "LiveKit" : "P2P"}`);
 await alice.waitForTimeout(10_000);
 await alice.screenshot({ path: `${dir}/0-alice-before-freeze.png` });
 await bob.screenshot({ path: `${dir}/0-bob-before-freeze.png` });
@@ -127,6 +143,7 @@ const state = async () => ({
     bobSeesUnavailable: await bob.getByTestId("camera-unavailable").first().isVisible().catch(() => false),
     bobSeesRed: await bob.getByText("No video stream received.").first().isVisible().catch(() => false),
     gum: await alice.evaluate(() => window.__gum),
+    livekit: await alice.evaluate(() => window.__livekit),
 });
 
 console.log(`${stamp()} --- holding Alice's camera back ---`);
