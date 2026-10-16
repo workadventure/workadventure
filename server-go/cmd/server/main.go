@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/workadventure/workadventure/server-go/internal/livekit"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
@@ -30,6 +29,7 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	"github.com/workadventure/workadventure/server-go/internal/registry"
 	"github.com/workadventure/workadventure/server-go/internal/roomapi"
+	"github.com/workadventure/workadventure/server-go/internal/uploader"
 	"github.com/workadventure/workadventure/server-go/internal/ws"
 )
 
@@ -40,6 +40,9 @@ var (
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
+		os.Exit(healthcheck())
+	}
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -52,17 +55,23 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	if cfg.AdminAPIURL != "" {
-		return errors.New("ADMIN_API_URL is set, but this server only supports the OSS mode (LocalAdmin) so far")
-	}
 	// Go follows the container's CPU limit (cgroup) for GOMAXPROCS since 1.25 (with a floor of 2), but not its
 	// memory limit: give that one to the garbage collector ourselves. Both are logged so a deployment can check.
 	slog.Info("starting", "version", version, "apiVersion", apiVersion, "GOMAXPROCS", runtime.GOMAXPROCS(0),
 		"NumCPU", runtime.NumCPU(), "GOMEMLIMIT", setMemoryLimit())
 
-	adm, err := admin.NewLocal(cfg)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	local, err := admin.NewLocal(cfg)
 	if err != nil {
 		return err
+	}
+	var adm admin.Admin = local
+	if cfg.AdminAPIURL != "" {
+		// SaaS: the server waits for the admin's capabilities before it serves, like the pusher.
+		if adm, err = admin.NewHTTP(ctx, cfg, local); err != nil {
+			return err
+		}
 	}
 	tokens := auth.New(cfg.SecretKey)
 	proximity := core.Config{MinimumDistance: cfg.MinimumDistance, GroupRadius: cfg.GroupRadius, MaxPerGroup: cfg.MaxPerGroup}
@@ -80,9 +89,6 @@ func run() error {
 		func(k core.SpaceKey) *core.Space { metrics.Spaces.Inc(); return core.NewSpaceWithMedia(k, media) },
 		func(s *core.Space) { s.Stop(); metrics.Spaces.Dec() },
 	)
-
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 
 	front := httpapi.NewFrontAssets(cfg.AssetsInternalURL, cfg.AssetsURL, apiVersion)
 	go front.Poll(ctx)
@@ -107,6 +113,9 @@ func run() error {
 	}
 	if cfg.MapStoragePort != 0 && cfg.MapStoragePort != cfg.HTTPPort && cfg.MapStoragePort != cfg.WSPort {
 		servers = append(servers, newServer(cfg.MapStoragePort, maps.Handler(cfg.MapStorage)))
+	}
+	if cfg.UploaderPort != 0 && cfg.UploaderPort != cfg.HTTPPort && cfg.UploaderPort != cfg.WSPort && cfg.UploaderPort != cfg.MapStoragePort {
+		servers = append(servers, newServer(cfg.UploaderPort, uploader.New(cfg.Uploader).Handler()))
 	}
 	if cfg.RoomAPISecretKey != "" {
 		roomAPI := newServer(cfg.RoomAPIPort, roomapi.New(cfg.RoomAPISecretKey, cfg.FrontURL, rooms, wsServer.RoomVariables))
@@ -169,4 +178,24 @@ func setMemoryLimit() int64 {
 		}
 	}
 	return debug.SetMemoryLimit(-1)
+}
+
+// healthcheck is `server healthcheck`, for a compose healthcheck (the image has neither curl nor a shell): 0 when
+// GET /ping answers on PUSHER_HTTP_PORT, 1 otherwise.
+func healthcheck() int {
+	port := os.Getenv("PUSHER_HTTP_PORT")
+	if port == "" {
+		port = "3000"
+	}
+	resp, err := (&http.Client{Timeout: 3 * time.Second}).Get("http://127.0.0.1:" + port + "/ping")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		fmt.Fprintln(os.Stderr, "GET /ping:", resp.Status)
+		return 1
+	}
+	return 0
 }

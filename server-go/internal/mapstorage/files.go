@@ -60,8 +60,8 @@ func (s *Store) upload(w http.ResponseWriter, r *http.Request, o Options) {
 		return
 	}
 	defer file.Close()
-	directory := strings.Trim(r.FormValue("directory"), "/")
-	if strings.Contains(directory, "..") {
+	directory, err := s.scoped(r, strings.Trim(r.FormValue("directory"), "/"))
+	if err != nil || strings.Contains(directory, "..") {
 		http.Error(w, "Invalid directory", http.StatusBadRequest)
 		return
 	}
@@ -182,7 +182,7 @@ func unzip(e *zip.File) ([]byte, error) {
 
 // put stores one file (PUT /<path>).
 func (s *Store) put(w http.ResponseWriter, r *http.Request, o Options) {
-	key, err := keyOf(r, false)
+	key, err := s.keyIn(r, false)
 	if err != nil || key == "" || strings.HasSuffix(key, "/") {
 		http.Error(w, "Invalid path", http.StatusBadRequest)
 		return
@@ -235,7 +235,7 @@ func (s *Store) put(w http.ResponseWriter, r *http.Request, o Options) {
 
 // patch applies a JSON Patch to a WAM file (PATCH /<path>.wam).
 func (s *Store) patch(w http.ResponseWriter, r *http.Request) {
-	key, err := keyOf(r, false)
+	key, err := s.keyIn(r, false)
 	if err != nil {
 		http.Error(w, "Invalid path", http.StatusBadRequest)
 		return
@@ -302,7 +302,7 @@ type patchError struct{ error }
 
 // remove deletes a file or a directory (DELETE /<path>); the root is emptied.
 func (s *Store) remove(w http.ResponseWriter, r *http.Request) {
-	key, err := keyOf(r, false)
+	key, err := s.keyIn(r, false)
 	if err != nil {
 		http.Error(w, "Invalid path", http.StatusBadRequest)
 		return
@@ -349,8 +349,19 @@ func emptyDir(dir string) error {
 }
 
 // list answers GET /maps: every valid WAM file, by path.
-func (s *Store) list(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]any{"version": "go-1", "maps": s.Maps()})
+func (s *Store) list(w http.ResponseWriter, r *http.Request) {
+	maps := s.Maps()
+	if s.useDomain { // only this domain's, by their path in it
+		prefix := requestDomain(r) + "/"
+		mine := map[string]map[string]any{}
+		for k, v := range maps {
+			if rest, ok := strings.CutPrefix(k, prefix); ok {
+				mine[rest] = v
+			}
+		}
+		maps = mine
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"version": "go-1", "maps": maps})
 }
 
 // Maps lists the valid WAM files by path, with their mapUrl, metadata and vendor.
@@ -385,8 +396,8 @@ func (s *Store) Maps() map[string]map[string]any {
 
 // download zips a directory (GET /download?directory=).
 func (s *Store) download(w http.ResponseWriter, r *http.Request) {
-	directory := r.URL.Query().Get("directory")
-	if strings.Contains(directory, "..") {
+	directory, err := s.scoped(r, strings.Trim(r.URL.Query().Get("directory"), "/"))
+	if err != nil || strings.Contains(directory, "..") {
 		http.Error(w, "Invalid directory", http.StatusBadRequest)
 		return
 	}
@@ -438,9 +449,11 @@ func (s *Store) moveOrCopy(w http.ResponseWriter, r *http.Request, move bool) {
 		http.Error(w, "Invalid directory", http.StatusBadRequest)
 		return
 	}
-	from, err1 := s.folder(strings.Trim(*req.Source, "/"))
-	to, err2 := s.folder(strings.Trim(*req.Destination, "/"))
-	if err1 != nil || err2 != nil {
+	source, err1 := s.scoped(r, strings.Trim(*req.Source, "/"))
+	destination, err2 := s.scoped(r, strings.Trim(*req.Destination, "/"))
+	from, err3 := s.folder(source)
+	to, err4 := s.folder(destination)
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
 		http.Error(w, "Invalid directory", http.StatusBadRequest)
 		return
 	}

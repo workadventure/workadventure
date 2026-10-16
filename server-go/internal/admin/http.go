@@ -1,0 +1,290 @@
+package admin
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/workadventure/workadventure/server-go/internal/config"
+)
+
+// HTTP is the SaaS admin (ADMIN_API_URL), asked as the pusher's AdminApi does (dev/contracts/admin-api.md). Local
+// answers what the admin's capabilities leave to the server.
+type HTTP struct {
+	cfg    *config.Config
+	local  *Local
+	caps   map[string]string
+	client *http.Client
+}
+
+// requestTimeout bounds every call to the admin. The TS servers set none (an admin that hangs held /me, the
+// WebSocket and the page until TCP gave up); 10 s keeps a stuck admin from piling requests up.
+const requestTimeout = 10 * time.Second
+
+// NewHTTP reads the admin's capabilities first, trying again every ADMIN_API_RETRY_DELAY until it answers (A1):
+// the server must not serve with capabilities it does not know.
+func NewHTTP(ctx context.Context, cfg *config.Config, local *Local) (*HTTP, error) {
+	a := &HTTP{cfg: cfg, local: local, client: &http.Client{Timeout: requestTimeout}}
+	warned := false
+	for {
+		var caps map[string]any
+		err := a.call(ctx, http.MethodGet, cfg.AdminAPIURL, "/api/capabilities", nil, false, "", nil, &caps)
+		if err == nil {
+			a.caps = map[string]string{}
+			for k, v := range caps {
+				if s, ok := v.(string); ok {
+					a.caps[k] = s
+				}
+			}
+			slog.Info("admin capabilities", "capabilities", a.caps)
+			return a, nil
+		}
+		if !warned {
+			slog.Warn("the admin does not answer /api/capabilities yet, trying again", "error", err)
+			warned = true
+		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(cfg.AdminAPIRetryDelay):
+		}
+	}
+}
+
+func (a *HTTP) Capabilities() map[string]string { return a.caps }
+
+func (a *HTTP) has(capability string) bool { return a.caps[capability] == "v1" }
+
+// call does one request: base + path, the admin token unless anonymous, the query, a JSON body and answer.
+func (a *HTTP) call(ctx context.Context, method, base, path string, query url.Values, withToken bool, locale string, body, out any) error {
+	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
+	defer cancel()
+	target := strings.TrimRight(base, "/") + path
+	if len(query) > 0 {
+		target += "?" + query.Encode()
+	}
+	var reader io.Reader
+	if body != nil {
+		b, err := json.Marshal(body)
+		if err != nil {
+			return err
+		}
+		reader = bytes.NewReader(b)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, target, reader)
+	if err != nil {
+		return err
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if withToken {
+		req.Header.Set("Authorization", a.cfg.AdminAPIToken)
+	}
+	if locale != "" {
+		req.Header.Set("Accept-Language", locale)
+	}
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode/100 != 2 {
+		return fmt.Errorf("%s %s: %s", method, path, resp.Status)
+	}
+	if out == nil || len(bytes.TrimSpace(data)) == 0 {
+		return nil
+	}
+	return json.Unmarshal(data, out)
+}
+
+func orEN(locale string) string {
+	if locale == "" {
+		return "en"
+	}
+	return locale
+}
+
+// isErrorAPI says whether an answer is an ErrorApiData of the given types.
+func isErrorAPI(m map[string]any, types ...string) bool {
+	if m["status"] != "error" {
+		return false
+	}
+	t, _ := m["type"].(string)
+	for _, want := range types {
+		if t == want {
+			return true
+		}
+	}
+	return false
+}
+
+// MemberData is A3 (GET /api/room/access).
+func (a *HTTP) MemberData(ctx context.Context, q MemberQuery) (MemberData, error) {
+	query := url.Values{"userIdentifier": {q.Identifier}, "playUri": {q.PlayURI}, "ipAddress": {q.IPAddress}, "isLogged": {"0"}}
+	for _, id := range q.CharacterTextureIDs {
+		query.Add("characterTextureIds[]", id)
+	}
+	if q.CompanionTextureID != "" {
+		query.Set("companionTextureId", q.CompanionTextureID)
+	}
+	if q.AccessToken != "" {
+		query.Set("accessToken", q.AccessToken)
+		query.Set("isLogged", "1")
+	}
+	if q.ChatID != "" {
+		query.Set("chatID", q.ChatID)
+	}
+	var raw json.RawMessage
+	if err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/room/access", query, true, orEN(q.Locale), nil, &raw); err != nil {
+		return MemberData{}, refusal("ROOM_ACCESS_ERROR", "Connection error", err.Error())
+	}
+	var generic map[string]any
+	if json.Unmarshal(raw, &generic) != nil {
+		return MemberData{}, refusal("ROOM_ACCESS_VALIDATION", "Invalid answer", "The admin answered something that is not JSON")
+	}
+	if isErrorAPI(generic, "error", "retry", "redirect", "unauthorized") {
+		return MemberData{}, &Refusal{Data: generic}
+	}
+	var m struct {
+		MemberData
+		AnalyticsEventsEnabled *bool `json:"analyticsEventsEnabled"`
+	}
+	if generic["status"] != "ok" || json.Unmarshal(raw, &m) != nil || m.UserUUID == "" || m.World == "" {
+		return MemberData{}, refusal("ROOM_ACCESS_VALIDATION", "Invalid answer", "The admin's answer to /api/room/access does not follow the contract")
+	}
+	m.MemberData.AnalyticsEventsEnabled = m.AnalyticsEventsEnabled == nil || *m.AnalyticsEventsEnabled // on unless said otherwise
+	if m.Tags == nil {
+		m.Tags = []string{}
+	}
+	if m.CharacterTextures == nil {
+		m.CharacterTextures = []Texture{}
+	}
+	if m.Applications == nil {
+		m.Applications = []Application{}
+	}
+	return m.MemberData, nil
+}
+
+// MapDetails is A2 (GET /api/map): MapDetailsData, RoomRedirect or ErrorApiErrorData, or a local error.
+func (a *HTTP) MapDetails(ctx context.Context, q MapQuery) (map[string]any, error) {
+	query := url.Values{"playUri": {q.PlayURI}}
+	if q.UserID != "" {
+		query.Set("userId", q.UserID)
+	}
+	if q.AccessToken != "" {
+		query.Set("accessToken", q.AccessToken)
+	}
+	var m map[string]any
+	if err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/map", query, true, orEN(q.Locale), nil, &m); err != nil {
+		return refusal("ROOM_ACCESS_ERROR", "Connection error", err.Error()).Data, nil
+	}
+	_, isRedirect := m["redirectUrl"].(string)
+	_, hasGroup := m["group"]
+	if !isRedirect && !hasGroup && !isErrorAPI(m, "error") {
+		return refusal("MAP_VALIDATION", "Invalid answer", "The admin's answer to /api/map does not follow the contract").Data, nil
+	}
+	return m, nil
+}
+
+// WokaList is A19 with the api/woka/list capability, the local list otherwise.
+func (a *HTTP) WokaList(ctx context.Context, roomURL, uuid string) (json.RawMessage, error) {
+	return a.list(ctx, "api/woka/list", "/api/woka/list", roomURL, uuid, a.local.WokaList)
+}
+
+// CompanionList is A20 with the api/companion/list capability, the local list otherwise.
+func (a *HTTP) CompanionList(ctx context.Context, roomURL, uuid string) (json.RawMessage, error) {
+	return a.list(ctx, "api/companion/list", "/api/companion/list", roomURL, uuid, a.local.CompanionList)
+}
+
+func (a *HTTP) list(ctx context.Context, capability, path, roomURL, uuid string, local func(context.Context, string, string) (json.RawMessage, error)) (json.RawMessage, error) {
+	if !a.has(capability) {
+		return local(ctx, roomURL, uuid)
+	}
+	var raw json.RawMessage
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, path, url.Values{"roomUrl": {roomURL}, "uuid": {uuid}}, true, "", nil, &raw)
+	return raw, err
+}
+
+// IceServers is A18 (on ADMIN_URL) with the api/ice-servers capability, generated here otherwise.
+func (a *HTTP) IceServers(ctx context.Context, roomURL, uuid string, userID int32) ([]IceServer, error) {
+	if !a.has("api/ice-servers") {
+		return a.local.iceServers(userID), nil
+	}
+	if userID == 0 {
+		return nil, errors.New("ICE servers before joining the room")
+	}
+	var list []struct {
+		URLs       []string `json:"urls"`
+		Username   string   `json:"username"`
+		Credential string   `json:"credential"`
+	}
+	if err := a.call(ctx, http.MethodGet, a.cfg.AdminURL, "/api/ice-servers", url.Values{"roomUrl": {roomURL}, "userIdentifier": {uuid}}, true, "", nil, &list); err != nil {
+		return nil, err
+	}
+	out := make([]IceServer, 0, len(list))
+	for _, s := range list {
+		out = append(out, IceServer{URLs: s.URLs, Username: s.Username, Credential: s.Credential})
+	}
+	return out, nil
+}
+
+// VerifyDomain is A21 with the api/domain/verify capability (any 2xx: valid), the host of PUSHER_URL otherwise.
+func (a *HTTP) VerifyDomain(ctx context.Context, playURI string) bool {
+	if !a.has("api/domain/verify") {
+		return a.local.VerifyDomain(ctx, playURI)
+	}
+	return a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/domain/verify", url.Values{"uri": {playURI}}, true, "", nil, nil) == nil
+}
+
+// Report is A5; the answer is ignored.
+func (a *HTTP) Report(ctx context.Context, r Report) error {
+	return a.call(ctx, http.MethodPost, a.cfg.AdminAPIURL, "/api/report", nil, true, "en", map[string]string{"reportedUserUuid": r.ReportedUUID,
+		"reportedUserComment": r.Comment, "reporterUserUuid": r.ReporterUUID, "reportWorldSlug": r.RoomURL}, nil)
+}
+
+// Ban is A7: a 2xx records it, unless its body says status "error".
+func (a *HTTP) Ban(ctx context.Context, b Ban) bool {
+	body := map[string]string{"uuidToBan": b.UUID, "playUri": b.PlayURI, "name": b.Name, "message": b.Message, "byUserUuid": b.ByUUID}
+	if b.IPAddress != "" {
+		body["ipAddress"] = b.IPAddress
+	}
+	var answer map[string]any
+	if err := a.call(ctx, http.MethodPost, a.cfg.AdminAPIURL, "/api/ban", nil, true, "", body, &answer); err != nil {
+		slog.Warn("the admin did not record the ban", "error", err)
+		return false
+	}
+	return answer["status"] != "error"
+}
+
+// RoomTags is A8: any failure is no tag.
+func (a *HTTP) RoomTags(ctx context.Context, roomURL string) []string {
+	var tags []string
+	if err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/room/tags", url.Values{"roomUrl": {roomURL}}, true, "", nil, &tags); err != nil {
+		slog.Warn("room tags of the admin", "error", err)
+	}
+	if tags == nil {
+		tags = []string{}
+	}
+	return tags
+}
+
+// SameWorld is A6; tags is present even empty, joined by commas.
+func (a *HTTP) SameWorld(ctx context.Context, roomURL string, tags []string, bypassTagFilter bool) ([]RoomDescription, bool, error) {
+	q := url.Values{"roomUrl": {roomURL}, "bypassTagFilter": {fmt.Sprint(bypassTagFilter)}, "tags": {strings.Join(tags, ",")}}
+	var rooms []RoomDescription
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/room/sameWorld", q, true, "en", nil, &rooms)
+	return rooms, true, err
+}

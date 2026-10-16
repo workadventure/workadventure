@@ -17,11 +17,11 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 ## Verdict
 
 - **OSS (LocalAdmin)** : J1, J2 et J3a sont validés par Playwright. J3b est codé mais pas encore validé. LiveKit, l'enregistrement et la Room API sont absents.
-- **SaaS** : **remplacement interdit.** Le serveur refuse de démarrer avec `ADMIN_API_URL` (`cmd/server/main.go:53-55`) et il n'a aucun client admin. Le white label n'isole pas encore les cartes par domaine, ni les spaces par monde.
+- **SaaS** : **remplacement interdit.** Le client de l'admin distante couvre A1, A2, A3, A18 à A21 (17/10), sans parcours SaaS joué. Le white label n'isole pas encore les cartes par domaine, ni les spaces par monde.
 
 ## Manques bloquants, par ordre
 
-1. **Client de l'admin distante absent.** Concerne `/api/capabilities`, `/api/room/access` (et ses variantes `ErrorApiData`), `/api/map` côté pusher et back, ban, report, tags, sameWorld, membres, refresh OAuth, analytics. Attend le contrat `dev/contracts/admin-api.md` de la session socle.
+1. **Admin distante** (contrat `dev/contracts/admin-api.md`) : capacités, `/api/map`, `/api/room/access` (avec ses refus), listes Woka et compagnon, ICE, vérification de domaine (17/10, tests contre un faux admin). Restent : la carte d'une salle tirée de `/api/map` (mondes `/@/`, `wamUrl` par domaine), ban, report, tags, sameWorld, membres, refresh OAuth, analytics, routes et socket appelés par l'admin, challenge Cloudflare, `/profile-callback`, `access_key`.
 2. **LiveKit** : la bascule, les jetons et les salles sont codés et testés en unitaire (17/10) ; les specs `livekit` et `map_editor_livekit` restent à jouer. L'enregistrement en dépend et manque encore.
 3. **Durabilité des variables** : les écritures ne se perdent plus pendant une coupure (corrigé le 17/10). Reste qu'une room démarrée pendant une coupure garde les valeurs par défaut (`varsOnce`).
 4. **Isolation des tenants** :
@@ -29,14 +29,21 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
    - clé de space faite de l'origine et non du `world` de l'admin ;
    - `roomsFromSameWorld` qui liste tout map-storage.
 5. **Modération** : le ban n'est ni persistant ni par IP ; `banIpPreview` est absent ; `reportPlayer` et `playGlobalMessage` sont jetés.
-6. **Front servi seulement derrière un conteneur front** : sans `ASSETS_URL`, toutes les pages répondent 503. Or contrib/docker et le chart Helm ne fixent pas `ASSETS_URL` par défaut.
-7. **Image de production** :
-   - `API_VERSION=dev` si la CI ne passe pas de build-arg ;
-   - `STORAGE_DIRECTORY` non inscriptible en nonroot ;
-   - ports map-storage (3002) et uploader (3003), attendus par le chart en mode `server`, non servis par défaut.
-8. **Uploader absent** : fichiers du chat, messages audio.
+6. **Front** : servi depuis `ASSETS_INTERNAL_URL` (un conteneur front nginx est toujours à côté, décision du socle du 17/10) ; pas de mode local.
+7. **Image de production** : `/maps` inscriptible, ports 3000 à 3003 et 50051, `healthcheck`, `API_VERSION` obligatoire (la CI le calcule) ; reste à construire en CI et à déployer par `deploy`.
+8. **Uploader** : en mémoire seulement (pas de S3 ni de Redis).
 9. **Matrix** : provisionnement Synapse, salons des zones (`/roomArea`, `resourceUrl`), entrée et sortie de zone, `updateChatId`.
 10. Jitsi JWT et BBB, emotes, `itemEvent`, `entityMessage`, analytics.
+
+## Admin distante (A1 à A31 de `dev/contracts/admin-api.md`)
+
+| Appel | État | Preuve | Écart | Prochaine action |
+|---|---|---|---|---|
+| A1 capacités : au démarrage, nouvelle tentative toutes les `ADMIN_API_RETRY_DELAY` (404 compris), puis `window.capabilities` | validé (unitaire) | `admin/http_test.go` : `TestTheServerWaitsForTheAdminsCapabilities` | — | parcours SaaS |
+| A3 `/api/room/access` : succès, refus `ErrorApiData` (renvoyé tel quel par `/me`, écran d'erreur au WebSocket), `ROOM_ACCESS_ERROR` / `ROOM_ACCESS_VALIDATION` construits localement | validé (unitaire) | `TestTheAdminLetsAMemberIn`, `TestTheAdminsRefusalReachesTheFrontAsIs`, `TestAnUnreachableOrConfusedAdminIsAnErrorScreenNotACrash`, `httpapi_test.go` | délai de 10 s par appel (le TS n'en avait aucun : écart volontaire) | — |
+| A2 `/api/map` : page, `/map` (sans `thirdParty`), JWT toléré expiré, `MAP_VALIDATION` | partiel | `TestTheAdminDescribesTheMap`, `TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes` | la salle ne tire pas encore sa carte de `/api/map` (côté back) ; pas de redirection, metatags ni couleurs dans la page | carte de salle via A2 |
+| A18 ICE (`ADMIN_URL`), A19 Woka, A20 compagnon, A21 vérification de domaine | validé (unitaire) | `TestCapabilitiesChooseBetweenTheAdminAndTheServer` | — | — |
+| A4 à A17, A22 à A31 | absent | — | voir les manques bloquants | suivant le contrat |
 
 ## Connexion, salle, mouvements
 
@@ -78,7 +85,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | Rattrapage `lastCommandId` | BSM:132-185 | validé | `mapstorage/edit_test.go`, `core/roommap_test.go:55` | — | — |
 | Variables de zone (verrou, maxUsers) | GR:864 | partiel | `core/roommap_test.go` (5 tests) | seule la clé `lock` est acceptée | toute clé autorisée |
 | HTTP map-storage : upload, PUT, PATCH, DELETE, move, copy, download, maps | MS UploadController.ts | validé | `mapstorage_test.go:89-178` ; J3a | `/maps` renvoie une `version` factice (`go-1`) ; corps de PATCH sans limite | vrai hash ; limite |
-| `/private/files` (JWT) | VerifyJwt.ts:33 | partiel | `mapstorage_test.go:192` | `PATH_PREFIX` ignoré, d'où un 404 derrière `/map-storage` | lire `PATH_PREFIX` |
+| `/private/files` (JWT) | VerifyJwt.ts:33 | validé | `mapstorage_test.go` (avec et sans `PATH_PREFIX`) | — | — |
 | `USE_DOMAIN_NAME_IN_PATH` | PathMapper.ts:76 | absent | — | le domaine de la clé vient du `wamUrl` donné par l'admin, ou de l'hôte HTTP ; sans admin, toutes les salles ont l'hôte de `PUBLIC_MAP_STORAGE_URL` | tranche admin |
 | `WAM_TEMPLATE_URL` | UploadController.ts:604 | validé | `mapstorage_test.go` : `TestAMapUploadedAloneStartsFromTheWAMTemplate` | — | — |
 | `resourceUrl` (DELETE), webhooks, validateur d'API key, S3 | MS Services | absent | JOURNAL J3a | SaaS : toute écriture répond 401 | avec le contrat admin et Matrix |
@@ -100,7 +107,11 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
-| `/ping`, `/ready` | PingController.ts:39,58 | implémenté non vérifié | `httpapi.go:44-45` | pas de test ; `/ping-backs` absent | test |
+| `/ping` (liveness), `/ready` (readiness : 503 tant que le gabarit du front manque), `/api-version` (le hash du protocole, pour le pipeline SaaS) | PingController.ts:39,58 | validé | `httpapi_test.go` : `TestProbesTellLivenessReadinessAndTheProtocol` | `/ping-backs` absent (pas de back séparé) | — |
+| Sous-commande `healthcheck` (GET 127.0.0.1:`PUSHER_HTTP_PORT`/ping, code de sortie) pour les `service_healthy` de compose | — (exigence du socle) | implémenté non vérifié | `cmd/server/main.go` | — | essayer en compose |
+| Ports : WS 3001, map-storage 3002 et uploader 3003 actifs par défaut, Room API 50051 si `ROOM_API_SECRET_KEY` | chart `server.enabled` | implémenté non vérifié | `config.go`, `Dockerfile` (EXPOSE) | — | `deploy` OSS |
+| `PATH_PREFIX` de map-storage (fichiers privés derrière `/map-storage`) | VerifyJwt.ts:33 | validé | `mapstorage_test.go` : `TestPrivateFilesBehindAPathPrefix` | — | — |
+| Uploader : messages audio (60 s), fichiers du chat, CORS `ALLOWED_CORS_ORIGIN`/`PLAY_URL`, `ENABLE_CHAT_UPLOAD`, `UPLOAD_MAX_FILESIZE` | uploader/src/Controller/FileController.ts | partiel | `uploader_test.go` (2 tests) | en mémoire (256 Mo au plus), sans S3 ni Redis : perdu au redémarrage ; pas de limite par l'admin (`api/limit/fileSize`) | S3/Redis si la prod sert des fichiers |
 | `/metrics` | PrometheusController.ts | implémenté non vérifié | `metrics.go` | moins de métriques ; `/debug/pprof` sans jeton | protéger pprof |
 | OpenID (login, callback, logout, `/me`) | AuthenticateController.ts | validé | `httpapi/oidc_test.go` ; J2 `oidc` | id_token non vérifié ; code verifier en clair (ponytail) | revue sécurité |
 | `/profile-callback`, `access_key`, challenge Cloudflare, `save-*` | AuthenticateController.ts:470, FrontController.ts | absent | — | SaaS | avec l'admin |

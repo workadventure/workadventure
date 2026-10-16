@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
 	"log/slog"
@@ -49,6 +50,8 @@ func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAsset
 		}
 		text(w, http.StatusOK, "ready")
 	})
+	// The protocol hash this server speaks, for the SaaS pipeline (it checked a file of the TS play pod).
+	mux.HandleFunc("GET /api-version", func(w http.ResponseWriter, _ *http.Request) { text(w, http.StatusOK, front.APIVersion()) })
 	if cfg.PrometheusPort == 0 {
 		mux.Handle("GET /metrics", metrics.Handler(false, cfg.PrometheusToken))
 	}
@@ -182,6 +185,11 @@ func (api *API) me(w http.ResponseWriter, r *http.Request) {
 		CharacterTextureIDs: q["localStorageCharacterTextureIds[]"], CompanionTextureID: q.Get("localStorageCompanionTextureId"),
 		Tags: tok.Tags, ChatID: q.Get("chatID"),
 	})
+	var refused *admin.Refusal
+	if errors.As(err, &refused) {
+		writeJSON(w, refused.Data) // the front shows the admin's error (banned, world full, login needed...)
+		return
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -220,11 +228,22 @@ func (api *API) mapDetails(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Parameter playUri is required", http.StatusBadRequest)
 		return
 	}
-	details, err := api.admin.MapDetails(r.Context(), playURI)
+	q := admin.MapQuery{PlayURI: playURI, Locale: r.Header.Get("Accept-Language")}
+	if raw := r.URL.Query().Get("authToken"); raw != "" {
+		// The pusher reads the user in its own token, even expired; an invalid one is refused.
+		tok, err := api.auth.VerifyIgnoringExpiry(raw)
+		if err != nil {
+			text(w, http.StatusUnauthorized, "The Token is invalid")
+			return
+		}
+		q.UserID, q.AccessToken = tok.Identifier, tok.AccessToken
+	}
+	details, err := api.admin.MapDetails(r.Context(), q)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	delete(details, "thirdParty") // Jitsi and BBB secrets stay on the server
 	_, isMap := details["mapUrl"]
 	_, isWam := details["wamUrl"]
 	if api.cfg.DisableAnonymous && (isMap || isWam) {
@@ -233,23 +252,31 @@ func (api *API) mapDetails(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, details)
 }
 
-func (api *API) authenticatedList(list func() json.RawMessage) http.HandlerFunc {
+func (api *API) authenticatedList(list func(ctx context.Context, roomURL, uuid string) (json.RawMessage, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
 		if token == "" {
 			text(w, http.StatusUnauthorized, "Undefined authorization header")
 			return
 		}
-		if _, err := api.auth.Verify(token); err != nil {
+		tok, err := api.auth.Verify(token)
+		if err != nil {
 			text(w, http.StatusUnauthorized, "Invalid token sent")
 			return
 		}
-		if r.URL.Query().Get("roomUrl") == "" {
+		roomURL := r.URL.Query().Get("roomUrl")
+		if roomURL == "" {
 			text(w, http.StatusBadRequest, "bad roomUrl URL parameter")
 			return
 		}
+		data, err := list(r.Context(), roomURL, tok.Identifier)
+		if err != nil {
+			slog.Error("woka or companion list of the admin", "error", err)
+			text(w, http.StatusInternalServerError, "Error on getting data")
+			return
+		}
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		_, _ = w.Write(list())
+		_, _ = w.Write(data)
 	}
 }
 
@@ -304,7 +331,7 @@ func (api *API) displayFront(w http.ResponseWriter, r *http.Request) {
 	// ponytail: no access_key autologin (needs the admin).
 	meta := admin.DefaultMetaTags()
 	api.mapMetaTags(r, meta)
-	capabilities, _ := json.Marshal(map[string]string{"api/woka/list": "v1", "api/companion/list": "v1"})
+	capabilities, _ := json.Marshal(api.admin.Capabilities())
 	env, _ := json.Marshal(api.cfg.FrontEnv)
 	data := map[string]any{
 		"url":                       fullURL(r),

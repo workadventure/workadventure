@@ -10,6 +10,7 @@ import (
 	"hash/maphash"
 	"io"
 	"mime"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -31,16 +32,22 @@ type Options struct {
 	DirectUploadURL   string   // DIRECT_UPLOAD_URL
 	EntityCollections []string // ENTITY_COLLECTION_URLS, written into generated WAM files
 	WAMTemplateURL    string   // WAM_TEMPLATE_URL: the WAM file a Tiled map uploaded alone starts from
-	SecretKey         string   // signs the tokens of /private/files
+	PathPrefix        string   // PATH_PREFIX: where the proxy serves map-storage (/map-storage on a single domain)
+	// UseDomainNameInPath (USE_DOMAIN_NAME_IN_PATH, the SaaS): each domain has its own folder, so that two worlds
+	// with the same paths never share a map.
+	UseDomainNameInPath bool
+	SecretKey           string // signs the tokens of /private/files
 }
 
 type Store struct {
 	dir string
 	// tree is held for writing by the operations on whole directories (upload, move, copy, delete), and for reading
 	// by those on one file, which also hold that file's lock: edits of different maps never wait for each other.
-	tree  sync.RWMutex
-	files [64]sync.Mutex // the lock of a file is files[hash of its key]
-	seed  maphash.Seed
+	tree       sync.RWMutex
+	files      [64]sync.Mutex // the lock of a file is files[hash of its key]
+	seed       maphash.Seed
+	pathPrefix string // Options.PathPrefix, set by Handler
+	useDomain  bool   // Options.UseDomainNameInPath, set by Handler
 	// recentMu guards recent.
 	recentMu sync.Mutex
 	// Changed is told when a WAM file is replaced (or deleted) from the outside, so that the players of that map
@@ -274,6 +281,7 @@ func (a Auth) wrap(h http.HandlerFunc) http.HandlerFunc {
 
 // Handler serves the map-storage host.
 func (s *Store) Handler(o Options) http.Handler {
+	s.pathPrefix, s.useDomain = o.PathPrefix, o.UseDomainNameInPath
 	if o.MaxUncompressed == 0 {
 		o.MaxUncompressed = 1 << 30
 	}
@@ -338,6 +346,47 @@ func uploadURL(o Options, r *http.Request) string {
 
 // keyOf decodes a request path into a storage key one segment at a time, like decodeStoragePath: an encoded "/"
 // cannot smuggle a separator. plusIsSpace is the static file route, which decodes "+" as a space.
+// requestDomain is the world a request is about (getRequestDomain): X-Map-Storage-Host (the uploader sends a zip
+// to a direct URL for another world), X-Forwarded-Host, then Host; without the port. They are trusted because
+// map-storage's port is only reached through the proxy.
+func requestDomain(r *http.Request) string {
+	d := r.Header.Get("X-Map-Storage-Host")
+	if d == "" {
+		d, _, _ = strings.Cut(r.Header.Get("X-Forwarded-Host"), ",")
+	}
+	if d = strings.TrimSpace(d); d == "" {
+		d = r.Host
+	}
+	if h, _, err := net.SplitHostPort(d); err == nil {
+		d = h
+	}
+	return strings.ToLower(d)
+}
+
+// scoped puts a key in the folder of the request's domain, with USE_DOMAIN_NAME_IN_PATH.
+func (s *Store) scoped(r *http.Request, key string) (string, error) {
+	if !s.useDomain {
+		return key, nil
+	}
+	d := requestDomain(r)
+	if d == "" || strings.Contains(d, "..") || strings.ContainsAny(d, `/\`) {
+		return "", ErrBadPath
+	}
+	if key == "" {
+		return d, nil
+	}
+	return d + "/" + key, nil
+}
+
+// keyIn is keyOf, in the folder of the request's domain.
+func (s *Store) keyIn(r *http.Request, plusIsSpace bool) (string, error) {
+	key, err := keyOf(r, plusIsSpace)
+	if err != nil {
+		return "", err
+	}
+	return s.scoped(r, key)
+}
+
 func keyOf(r *http.Request, plusIsSpace bool) (string, error) {
 	segs := strings.Split(strings.TrimPrefix(r.URL.EscapedPath(), "/"), "/")
 	for i, seg := range segs {
@@ -364,7 +413,7 @@ var (
 
 func (s *Store) serve(w http.ResponseWriter, r *http.Request, cacheControl string) {
 	wam := strings.HasSuffix(r.URL.Path, ".wam")
-	key, err := keyOf(r, !wam)
+	key, err := s.keyIn(r, !wam)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return

@@ -288,3 +288,27 @@ type errorScreenData struct {
 	CanRetryManual                                                      bool
 	TimeToRetry                                                         int32
 }
+
+// errorScreenOf shows an ErrorApiData of the admin as the pusher does (toErrorScreenMessage).
+func errorScreenOf(e map[string]any) *pb.ServerToClientMessage {
+	str := func(k string) string { v, _ := e[k].(string); return v }
+	d := errorScreenData{Type: str("type")}
+	switch d.Type {
+	case "error", "retry", "unauthorized":
+		d.Code, d.Title, d.Subtitle, d.Details, d.Image, d.ImageLogo = str("code"), str("title"), str("subtitle"), str("details"), str("image"), str("imageLogo")
+		if d.Type != "error" {
+			d.ButtonTitle = str("buttonTitle")
+		}
+	}
+	if d.Type == "retry" {
+		d.CanRetryManual, _ = e["canRetryManual"].(bool)
+		if n, ok := e["timeToRetry"].(float64); ok {
+			d.TimeToRetry = int32(n)
+		}
+	}
+	m := errorScreen(d)
+	if d.Type == "redirect" {
+		m.GetErrorScreenMessage().UrlToRedirect = wrapperspb.String(str("urlToRedirect"))
+	}
+	return m
+}

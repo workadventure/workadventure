@@ -4,36 +4,81 @@ import (
 	"context"
 	"errors"
 	"net/url"
-	"regexp"
+	"strings"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/workadventure/workadventure/server-go/internal/admin"
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	"github.com/workadventure/workadventure/server-go/internal/mapedit"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 	"github.com/workadventure/workadventure/server-go/internal/wam"
 )
 
-// wamKey is the map a room plays, as stored: /~/maps/empty.wam plays maps/empty.wam.
-var wamKey = regexp.MustCompile(`^/~/(.+\.wam)$`)
+// roomMap is the map a room plays, as the admin describes it (/api/map; derived from the room URL without an admin).
+type roomMap struct {
+	key    string // the WAM file in the map storage, "" for a room without one
+	wamURL string
+	mapURL string // a Tiled map served elsewhere
+	at     time.Time
+}
 
-// mapKey returns the stored map of a room URL, or "" for a room that plays no WAM file.
-func mapKey(roomURL string) string {
-	u, err := url.Parse(roomURL)
+// roomMapKept is how long the server trusts what the admin said of a room's map.
+const roomMapKept = time.Minute
+
+func (srv *Server) roomMap(roomURL string) roomMap {
+	if v, ok := srv.roomMaps.Load(roomURL); ok {
+		if rm := v.(roomMap); time.Since(rm.at) < roomMapKept {
+			return rm
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	rm := roomMap{at: time.Now()}
+	details, err := srv.admin.MapDetails(ctx, admin.MapQuery{PlayURI: roomURL})
+	if err != nil {
+		return rm
+	}
+	if w, _ := details["wamUrl"].(string); w != "" {
+		rm.key, rm.wamURL = srv.storageKey(w), w
+	}
+	rm.mapURL, _ = details["mapUrl"].(string)
+	srv.roomMaps.Store(roomURL, rm)
+	return rm
+}
+
+// mapKey is the stored WAM file of a room, or "" for a room that plays none.
+func (srv *Server) mapKey(roomURL string) string { return srv.roomMap(roomURL).key }
+
+// storageKey is where a WAM URL is stored (mapPathUsingUrl): its path without PATH_PREFIX (or the path of
+// PUBLIC_MAP_STORAGE_URL), in the folder of its host with USE_DOMAIN_NAME_IN_PATH.
+func (srv *Server) storageKey(wamURL string) string {
+	u, err := url.Parse(wamURL)
 	if err != nil {
 		return ""
 	}
-	if m := wamKey.FindStringSubmatch(u.Path); m != nil {
-		return m[1]
+	p := u.Path
+	if prefix := strings.TrimRight(srv.cfg.MapStorage.PathPrefix, "/"); prefix != "" {
+		p = strings.TrimPrefix(p, prefix)
+	} else if pub, err := url.Parse(srv.cfg.PublicMapStorageURL); err == nil && pub.Host == u.Host {
+		p = strings.TrimPrefix(p, strings.TrimRight(pub.Path, "/"))
 	}
-	return ""
+	p = strings.TrimPrefix(p, "/")
+	if p == "" || strings.Contains(p, "..") {
+		return ""
+	}
+	if srv.cfg.MapStorage.UseDomainNameInPath {
+		return strings.ToLower(u.Hostname()) + "/" + p
+	}
+	return p
 }
 
 // connectToRoom registers the session with its room, which answers RoomConnectedMessage with the edits of the map
 // the client may have missed since its copy (lastCommandId), and from then on sends it every edit.
 func (s *Session) connectToRoom() {
-	key := mapKey(s.info.roomID)
+	key := s.srv.mapKey(s.info.roomID)
 	// ponytail: the room parses its map on its goroutine, once, when its first connection arrives.
 	load := func() []core.Area {
 		if key == "" {
@@ -67,7 +112,7 @@ func (s *Session) connectToRoom() {
 // the command it applied ahead. A refusal goes to the editor alone, with the same id: its front then undoes the
 // command.
 func (s *Session) editMap(m *pb.EditMapCommandMessage) {
-	key, roomURL := mapKey(s.info.roomID), s.info.roomID
+	key, roomURL := s.srv.mapKey(s.info.roomID), s.info.roomID
 	ed := mapedit.Editor{UUID: s.info.userUUID, Tags: s.info.member.Tags, CanEdit: s.info.member.CanEdit}
 	refuse := func(err error) {
 		s.Send(core.NewMsg(core.MapEdit{Event: editMapSubMessage(m.GetId(), &pb.EditMapMessage{Message: &pb.EditMapMessage_ErrorCommandMessage{
@@ -284,7 +329,7 @@ func fromValue(v *structpb.Value) (any, bool) {
 // MapChanged tells the rooms playing a map that its file was replaced or deleted from map-storage's HTTP API.
 func (srv *Server) MapChanged(key string, deleted bool) {
 	for _, roomURL := range srv.rooms.Keys() {
-		if mapKey(roomURL) != key {
+		if srv.mapKey(roomURL) != key {
 			continue
 		}
 		room := srv.rooms.Acquire(roomURL)

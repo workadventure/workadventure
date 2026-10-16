@@ -165,14 +165,6 @@ func isHTTPS(r *http.Request) bool {
 	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 }
 
-// sameHost is LocalVerifyDomainService: a play URI must be on the host of the server, so that the login flow
-// cannot be used to redirect elsewhere.
-func (o *openID) sameHost(playURI string) bool {
-	u, err := url.Parse(playURI)
-	p, err2 := url.Parse(o.pusherURL)
-	return err == nil && err2 == nil && u.Hostname() != "" && u.Hostname() == p.Hostname()
-}
-
 func randomToken(n int) string {
 	b := make([]byte, n)
 	_, _ = rand.Read(b)
@@ -187,7 +179,7 @@ func (api *API) loginScreen(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	o := api.oidc
-	if !o.sameHost(playURI) {
+	if !api.admin.VerifyDomain(r.Context(), playURI) {
 		http.Error(w, "Unauthorized domain in playUri", http.StatusForbidden)
 		return
 	}
@@ -378,7 +370,7 @@ func (api *API) logout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Parameters playUri and token are required", http.StatusBadRequest)
 		return
 	}
-	if !api.oidc.sameHost(playURI) {
+	if !api.admin.VerifyDomain(r.Context(), playURI) {
 		http.Error(w, "Unauthorized domain in playUri", http.StatusForbidden)
 		return
 	}

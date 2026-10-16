@@ -9,6 +9,7 @@ import (
 	_ "embed"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"path"
@@ -57,7 +58,28 @@ type MemberData struct {
 	Applications             []Application `json:"applications"`
 	CanRecord                bool          `json:"canRecord"`
 	AnalyticsEventsEnabled   bool          `json:"analyticsEventsEnabled"`
+	Username                 string        `json:"username,omitempty"`
+	ChatID                   string        `json:"chatID,omitempty"`
 }
+
+// Refusal is the admin's answer that the request may not go on (ErrorApiData: type error, retry, redirect or
+// unauthorized, in an HTTP 200): /me returns it as is, the WebSocket shows it as an error screen.
+type Refusal struct{ Data map[string]any }
+
+func (r *Refusal) Error() string {
+	t, _ := r.Data["type"].(string)
+	code, _ := r.Data["code"].(string)
+	return "refused by the admin: " + t + " " + code
+}
+
+// refusal is an ErrorApiErrorData built here, when the admin cannot be asked (AdminApi.ts never throws on A2 and A3).
+func refusal(code, title, details string) *Refusal {
+	return &Refusal{Data: map[string]any{"status": "error", "type": "error", "code": code, "title": title, "subtitle": "", "details": details,
+		"image": "", "imageLogo": ""}}
+}
+
+// MapQuery is what /map knows (the rendered page and the server ask with the play URI only).
+type MapQuery struct{ PlayURI, UserID, AccessToken, Locale string }
 
 // MemberQuery is what the server knows about a client when it asks the admin for its member data.
 type MemberQuery struct {
@@ -67,15 +89,39 @@ type MemberQuery struct {
 	Tags                                                        []string
 }
 
-// Admin is the port to the administration. ponytail: only the OSS implementation (Local) exists; the HTTP admin
-// API client comes with the SaaS milestone.
+// Admin is the port to the administration: Local without one (OSS), HTTP with ADMIN_API_URL (SaaS).
 type Admin interface {
+	// Capabilities are what the admin offers; the page gets them as window.capabilities.
+	Capabilities() map[string]string
+	// MemberData is /api/room/access. A refusal of the admin is a *Refusal.
 	MemberData(ctx context.Context, q MemberQuery) (MemberData, error)
-	// MapDetails returns the JSON answer of /map: MapDetailsData, RoomRedirect or ErrorApiData.
-	MapDetails(ctx context.Context, playURI string) (map[string]any, error)
-	WokaList() json.RawMessage
-	CompanionList() json.RawMessage
-	IceServers(userID int32) []IceServer
+	// MapDetails is /api/map: MapDetailsData, RoomRedirect or ErrorApiData, thirdParty included (never send it on).
+	MapDetails(ctx context.Context, q MapQuery) (map[string]any, error)
+	WokaList(ctx context.Context, roomURL, uuid string) (json.RawMessage, error)
+	CompanionList(ctx context.Context, roomURL, uuid string) (json.RawMessage, error)
+	IceServers(ctx context.Context, roomURL, uuid string, userID int32) ([]IceServer, error)
+	// VerifyDomain says whether a play URI may be where the login flow sends the browser back.
+	VerifyDomain(ctx context.Context, playURI string) bool
+	// Report is A5: a player reports another one.
+	Report(ctx context.Context, r Report) error
+	// Ban is A7: true when the admin recorded the ban (it then refuses the user in MemberData).
+	Ban(ctx context.Context, b Ban) bool
+	// RoomTags is A8, the tags the map editor suggests.
+	RoomTags(ctx context.Context, roomURL string) []string
+	// SameWorld is A6: the rooms of the world of roomURL. ok is false without an admin: the server lists its maps.
+	SameWorld(ctx context.Context, roomURL string, tags []string, bypassTagFilter bool) (rooms []RoomDescription, ok bool, err error)
+}
+
+type Report struct{ ReportedUUID, Comment, ReporterUUID, RoomURL string }
+
+type Ban struct{ UUID, PlayURI, Name, Message, ByUUID, IPAddress string }
+
+// RoomDescription is a ShortMapDescription.
+type RoomDescription struct {
+	Name                              string  `json:"name"`
+	RoomURL                           string  `json:"roomUrl"`
+	WamURL                            *string `json:"wamUrl"`
+	Description, Copyright, Thumbnail *string
 }
 
 //go:embed data/woka.json
@@ -129,8 +175,31 @@ func NewLocal(cfg *config.Config) (*Local, error) {
 	return l, nil
 }
 
-func (l *Local) WokaList() json.RawMessage      { return wokaJSON }
-func (l *Local) CompanionList() json.RawMessage { return companionsJSON }
+func (l *Local) Capabilities() map[string]string {
+	return map[string]string{"api/woka/list": "v1", "api/companion/list": "v1"}
+}
+func (l *Local) WokaList(context.Context, string, string) (json.RawMessage, error) {
+	return wokaJSON, nil
+}
+func (l *Local) CompanionList(context.Context, string, string) (json.RawMessage, error) {
+	return companionsJSON, nil
+}
+
+func (l *Local) Report(context.Context, Report) error {
+	return errors.New("no admin backoffice to report to")
+}
+func (l *Local) Ban(context.Context, Ban) bool             { return false }
+func (l *Local) RoomTags(context.Context, string) []string { return []string{} }
+func (l *Local) SameWorld(context.Context, string, []string, bool) ([]RoomDescription, bool, error) {
+	return nil, false, nil
+}
+
+// VerifyDomain is LocalVerifyDomainService: the play URI is on the host of the server.
+func (l *Local) VerifyDomain(_ context.Context, playURI string) bool {
+	u, err := url.Parse(playURI)
+	p, err2 := url.Parse(l.cfg.PusherURL)
+	return err == nil && err2 == nil && u.Hostname() != "" && u.Hostname() == p.Hostname()
+}
 
 var editablePath = regexp.MustCompile(`/~/(.+)`)
 
@@ -212,8 +281,8 @@ func (l *Local) applications() []Application {
 
 var publicMapPath = regexp.MustCompile(`/_/[^/]+/(.+)`)
 
-func (l *Local) MapDetails(_ context.Context, playURI string) (map[string]any, error) {
-	roomURL, err := url.Parse(playURI)
+func (l *Local) MapDetails(_ context.Context, q MapQuery) (map[string]any, error) {
+	roomURL, err := url.Parse(q.PlayURI)
 	if err != nil {
 		return nil, err
 	}
@@ -309,7 +378,11 @@ type IceServer struct {
 
 // IceServers is IceServersService.generateIceServers: STUN_SERVER, then TURN_SERVER with either static
 // credentials or, with TURN_STATIC_AUTH_SECRET, 24-hour credentials in the coturn "REST API" format.
-func (l *Local) IceServers(userID int32) []IceServer {
+func (l *Local) IceServers(_ context.Context, _, _ string, userID int32) ([]IceServer, error) {
+	return l.iceServers(userID), nil
+}
+
+func (l *Local) iceServers(userID int32) []IceServer {
 	split := func(v string) []string {
 		parts := strings.Split(v, ",")
 		for i := range parts {

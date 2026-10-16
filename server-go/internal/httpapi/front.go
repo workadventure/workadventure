@@ -23,6 +23,9 @@ type FrontAssets struct {
 	reportedVersion                    string
 }
 
+// APIVersion is the apiVersionHash the front's template must carry.
+func (f *FrontAssets) APIVersion() string { return f.apiVersion }
+
 func NewFrontAssets(internalURL, assetsURL, apiVersion string) *FrontAssets {
 	return &FrontAssets{internalURL: internalURL, assetsURL: assetsURL, apiVersion: apiVersion, client: &http.Client{Timeout: 10 * time.Second}}
 }

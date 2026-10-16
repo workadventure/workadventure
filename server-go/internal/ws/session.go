@@ -493,8 +493,28 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		if !s.isAdmin() {
 			return // like the pusher, silently
 		}
-		// Without an admin API a ban cannot be recorded (LocalAdmin refuses it): the pusher kicks instead.
-		_ = s.room.Eject(ctx, b.GetBanUserUuid(), "kicked", strings.TrimSpace(b.GetReason()))
+		reason := strings.TrimSpace(b.GetReason())
+		kind := "kicked"
+		if !b.GetKick() {
+			message := reason
+			if message == "" {
+				message = "User banned by admin " + s.info.userUUID
+			}
+			// ponytail: banned by account only; byIp needs the IP of a user of the whole world.
+			if s.srv.admin.Ban(ctx, admin.Ban{UUID: b.GetBanUserUuid(), PlayURI: s.info.roomID, Name: b.GetBanUserName(), Message: message, ByUUID: s.info.userUUID}) {
+				kind = "banned"
+			}
+		}
+		// Not recorded (no admin, or it refused): the user is ejected all the same, as a kick.
+		_ = s.room.Eject(ctx, b.GetBanUserUuid(), kind, reason)
+	case *pb.ClientToServerMessage_ReportPlayerMessage:
+		rep := msg.ReportPlayerMessage
+		go func() { // the answer is ignored, an error swallowed (handleReportMessage)
+			if err := s.srv.admin.Report(context.Background(), admin.Report{ReportedUUID: rep.GetReportedUserUuid(), Comment: rep.GetReportComment(),
+				ReporterUUID: s.info.userUUID, RoomURL: s.info.roomID}); err != nil {
+				slog.Info("report not sent", "error", err)
+			}
+		}()
 	case *pb.ClientToServerMessage_MeetingInvitationRequestMessage:
 		_ = s.room.InviteToMeeting(ctx, s, msg.MeetingInvitationRequestMessage.GetReceiverUserUuid(), s.isAdmin())
 	case *pb.ClientToServerMessage_MeetingInvitationResponseMessage:
@@ -540,11 +560,16 @@ func (s *Session) query(q *pb.QueryMessage) {
 	case *pb.QueryMessage_RoomsFromSameWorldQuery:
 		s.roomsFromSameWorld(q.GetId())
 	case *pb.QueryMessage_RoomTagsQuery:
-		// No admin: no tag to suggest (LocalAdmin.getTagsList fails, the pusher answers an empty list).
-		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomTagsAnswer{RoomTagsAnswer: &pb.RoomTagsAnswer{}}})
+		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomTagsAnswer{RoomTagsAnswer: &pb.RoomTagsAnswer{
+			Tags: s.srv.admin.RoomTags(s.ctx, s.info.roomID)}}})
 	case *pb.QueryMessage_IceServersQuery:
 		var servers []*pb.IceServer
-		for _, ice := range s.srv.admin.IceServers(s.userID.Load()) {
+		list, err := s.srv.admin.IceServers(s.ctx, s.info.roomID, s.info.userUUID, s.userID.Load())
+		if err != nil {
+			s.answerError(q.GetId(), err.Error())
+			return
+		}
+		for _, ice := range list {
 			server := &pb.IceServer{Urls: ice.URLs}
 			if ice.Username != "" || ice.Credential != "" {
 				server.Username, server.Credential, server.CredentialType = &ice.Username, &ice.Credential, proto.String("password")

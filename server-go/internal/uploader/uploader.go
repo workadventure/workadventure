@@ -1,0 +1,220 @@
+// Package uploader is the uploader service: the audio messages the front records for a global message, and the
+// files of the old chat. Files are kept in memory. ponytail: no S3 or Redis storage (the uploader's providers),
+// so they are lost on restart and capped at maxBytes in all; the front only uses the audio messages today.
+package uploader
+
+import (
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
+	"io"
+	"mime"
+	"net/http"
+	"path"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+)
+
+// Options are the uploader's settings.
+type Options struct {
+	PublicURL     string // UPLOADER_URL: where the fronts download the files
+	AllowedOrigin string // ALLOWED_CORS_ORIGIN, or PLAY_URL, or *
+	EnableUpload  bool   // ENABLE_CHAT_UPLOAD
+	MaxFileSize   int64  // UPLOAD_MAX_FILESIZE (100 MiB by default)
+}
+
+const (
+	audioTTL = 60 * time.Second
+	maxBytes = 256 << 20
+)
+
+type file struct {
+	data    []byte
+	expires time.Time // zero: kept until evicted
+	added   time.Time
+}
+
+type Uploader struct {
+	o     Options
+	mu    sync.Mutex
+	files map[string]file
+	size  int64
+}
+
+func New(o Options) *Uploader {
+	if o.MaxFileSize <= 0 {
+		o.MaxFileSize = 100 << 20
+	}
+	if o.AllowedOrigin == "" {
+		o.AllowedOrigin = "*"
+	}
+	return &Uploader{o: o, files: map[string]file{}}
+}
+
+func (u *Uploader) Handler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, _ *http.Request) { _, _ = io.WriteString(w, "pong") })
+	mux.HandleFunc("POST /upload-audio-message", u.uploadAudio)
+	mux.HandleFunc("GET /download-audio-message/{id}", func(w http.ResponseWriter, r *http.Request) { u.download(w, r, false) })
+	mux.HandleFunc("POST /upload-file", u.uploadFiles)
+	mux.HandleFunc("GET /upload-file/{id}", func(w http.ResponseWriter, r *http.Request) { u.download(w, r, true) })
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", u.o.AllowedOrigin)
+		if u.o.AllowedOrigin != "*" {
+			w.Header().Add("Vary", "Origin")
+		}
+		if r.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE")
+			if h := r.Header.Get("Access-Control-Request-Headers"); h != "" {
+				w.Header().Set("Access-Control-Allow-Headers", h)
+			}
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, u.o.MaxFileSize+1<<20)
+		mux.ServeHTTP(w, r)
+	})
+}
+
+func newID() string {
+	b := make([]byte, 16)
+	_, _ = rand.Read(b)
+	b[6], b[8] = b[6]&0x0f|0x40, b[8]&0x3f|0x80
+	h := hex.EncodeToString(b)
+	return h[:8] + "-" + h[8:12] + "-" + h[12:16] + "-" + h[16:20] + "-" + h[20:]
+}
+
+// store keeps a file, evicting expired ones, then the oldest, to stay under maxBytes.
+func (u *Uploader) store(id string, data []byte, ttl time.Duration) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	now := time.Now()
+	for k, f := range u.files {
+		if !f.expires.IsZero() && now.After(f.expires) {
+			u.size -= int64(len(f.data))
+			delete(u.files, k)
+		}
+	}
+	for u.size+int64(len(data)) > maxBytes && len(u.files) > 0 {
+		oldest := ""
+		for k, f := range u.files {
+			if oldest == "" || f.added.Before(u.files[oldest].added) {
+				oldest = k
+			}
+		}
+		u.size -= int64(len(u.files[oldest].data))
+		delete(u.files, oldest)
+	}
+	f := file{data: data, added: now}
+	if ttl > 0 {
+		f.expires = now.Add(ttl)
+	}
+	u.files[id] = f
+	u.size += int64(len(data))
+}
+
+func (u *Uploader) get(id string) ([]byte, bool) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	f, ok := u.files[id]
+	if !ok || (!f.expires.IsZero() && time.Now().After(f.expires)) {
+		return nil, false
+	}
+	return f.data, true
+}
+
+func (u *Uploader) uploadAudio(w http.ResponseWriter, r *http.Request) {
+	f, _, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "No files were uploaded.", http.StatusBadRequest)
+		return
+	}
+	defer f.Close()
+	data, err := io.ReadAll(f)
+	if err != nil {
+		http.Error(w, "No files were uploaded.", http.StatusBadRequest)
+		return
+	}
+	id := newID()
+	u.store(id, data, audioTTL)
+	writeJSON(w, http.StatusOK, map[string]string{"id": id, "path": "/download-audio-message/" + id})
+}
+
+func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseMultipartForm(32 << 20); err != nil || r.MultipartForm == nil || len(r.MultipartForm.File) == 0 {
+		http.Error(w, "No files were uploaded.", http.StatusBadRequest)
+		return
+	}
+	defer r.MultipartForm.RemoveAll()
+	if !u.o.EnableUpload {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"message": "disabled"})
+		return
+	}
+	type uploaded struct {
+		Name         string    `json:"name"`
+		ID           string    `json:"id"`
+		Location     string    `json:"location"`
+		Size         int       `json:"size"`
+		LastModified time.Time `json:"lastModified"`
+		Type         string    `json:"type,omitempty"`
+	}
+	var out []uploaded
+	for _, headers := range r.MultipartForm.File {
+		for _, h := range headers {
+			if h.Size > u.o.MaxFileSize {
+				writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"message": "file-too-big", "maxFileSize": strconv.FormatInt(u.o.MaxFileSize, 10)})
+				return
+			}
+			f, err := h.Open()
+			if err != nil {
+				http.Error(w, "Error upload file", http.StatusInternalServerError)
+				return
+			}
+			data, _ := io.ReadAll(f)
+			f.Close()
+			id := newID()
+			if ext := strings.TrimPrefix(path.Ext(h.Filename), "."); ext != "" {
+				id += "." + strings.ToLower(ext)
+			}
+			u.store(id, data, 0)
+			out = append(out, uploaded{Name: h.Filename, ID: id, Location: strings.TrimRight(u.o.PublicURL, "/") + "/upload-file/" + id,
+				Size: len(data), LastModified: time.Now(), Type: h.Header.Get("Content-Type")})
+		}
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// download serves a file as a user uploaded it: never as active content on this origin.
+func (u *Uploader) download(w http.ResponseWriter, r *http.Request, attachment bool) {
+	id := r.PathValue("id")
+	data, ok := u.get(id)
+	if !ok {
+		http.Error(w, "Cannot find file", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; sandbox")
+	w.Header().Set("Content-Type", safeType(id))
+	if attachment {
+		w.Header().Set("Content-Disposition", "attachment")
+	}
+	_, _ = w.Write(data)
+}
+
+// safeType is the type of an image, an audio or a video file; anything else is a binary blob.
+func safeType(name string) string {
+	t := mime.TypeByExtension(path.Ext(name))
+	if base, _, _ := strings.Cut(t, ";"); strings.HasPrefix(base, "image/") && base != "image/svg+xml" ||
+		strings.HasPrefix(base, "audio/") || strings.HasPrefix(base, "video/") {
+		return base
+	}
+	return "application/octet-stream"
+}
+
+func writeJSON(w http.ResponseWriter, code int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	_ = json.NewEncoder(w).Encode(v)
+}

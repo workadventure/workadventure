@@ -38,7 +38,15 @@ func (m *Manager) Create(t Token) (string, error) {
 
 // Verify checks the signature and the expiry. Any failure is ErrInvalid, like the pusher which turns every
 // verification error into JWTInvalid.
-func (m *Manager) Verify(raw string) (Token, error) {
+func (m *Manager) Verify(raw string) (Token, error) { return m.verify(raw) }
+
+// VerifyIgnoringExpiry checks the signature only (decodeJwtToken with ignoreExpiration: /map asks the admin about
+// the user of a token that may have expired).
+func (m *Manager) VerifyIgnoringExpiry(raw string) (Token, error) {
+	return m.verify(raw, jwt.WithoutClaimsValidation())
+}
+
+func (m *Manager) verify(raw string, opts ...jwt.ParserOption) (Token, error) {
 	var c struct {
 		Identifier   string          `json:"identifier"`
 		AccessToken  string          `json:"accessToken"`
@@ -49,7 +57,7 @@ func (m *Manager) Verify(raw string) (Token, error) {
 		jwt.RegisteredClaims
 	}
 	_, err := jwt.ParseWithClaims(raw, &c, func(*jwt.Token) (any, error) { return m.secret, nil },
-		jwt.WithValidMethods([]string{"HS256"}))
+		append(opts, jwt.WithValidMethods([]string{"HS256"}))...)
 	if err != nil || c.Identifier == "" {
 		return Token{}, ErrInvalid
 	}
