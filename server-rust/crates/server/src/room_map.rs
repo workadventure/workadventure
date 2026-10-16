@@ -20,6 +20,11 @@ const UNREACHABLE_MAP: &str = "Your map does not seem accessible from the WorkAd
 pub type Defs = Result<Vec<VariableDef>, &'static str>;
 
 pub async fn variable_defs(app: &AppState, room_url: &str, wam: Option<(&str, &Wam)>) -> Defs {
+    Ok(variables::from_tmj(&tmj(app, room_url, wam).await?))
+}
+
+/// The room's Tiled map: from the storage for a map-storage room (its WAM given), else from its map URL.
+pub async fn tmj(app: &AppState, room_url: &str, wam: Option<(&str, &Wam)>) -> Result<serde_json::Value, &'static str> {
     let map = match wam {
         Some((rel, wam)) => {
             let dir = rel.rsplit_once('/').map_or("", |(d, _)| d);
@@ -35,8 +40,17 @@ pub async fn variable_defs(app: &AppState, room_url: &str, wam: Option<(&str, &W
             fetch(app, url).await.ok_or(UNREACHABLE_MAP)?
         }
     };
-    let map: serde_json::Value = serde_json::from_slice(&map).map_err(|_| UNREACHABLE_MAP)?;
-    Ok(variables::from_tmj(&map))
+    serde_json::from_slice(&map).map_err(|_| UNREACHABLE_MAP)
+}
+
+/// MetaTagsBuilder for a bot (link previews): the map's `mapName` and `mapDescription`.
+pub async fn tmj_of_page(app: &AppState, room_url: &str) -> Option<serde_json::Value> {
+    let rel = local_admin::wam_path(room_url);
+    let wam = match &rel {
+        Some(rel) => Some(Wam::parse(&app.storage.read(rel).await?)?),
+        None => None,
+    };
+    tmj(app, room_url, rel.as_deref().zip(wam.as_ref())).await.ok()
 }
 
 async fn fetch(app: &AppState, url: &str) -> Option<Vec<u8>> {

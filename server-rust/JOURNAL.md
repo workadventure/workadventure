@@ -458,3 +458,87 @@ l'attente de la référence TS. Le code de la phase (routes HTTP, commandes, dro
   `userlist` « Send Message », qui échoue en TS).
 - Banc : l'image `--target prod` se construit avec rustls et aws-lc-rs (58 s pour l'étape de build ; l'image
   `rust:1.93-bookworm` a ce qu'il faut) et démarre avec ses trois variables (`/ping` 200). `crates/bot` inchangé.
+
+## Jalon 6 — Jalon 1 (parité production), tranche 1 : matrice, gel de room, J3b (2026-10-17)
+
+Cadre : « jalon 1 — parité production », relayé par le socle et validé par Yannis le 17/10 ; il remplace les
+anciens J4/J5. Documents lus : `reference-implementation-go-rust.md` §1, §3, §4, §5.1, §5.3 (Rust), §5.4,
+§5.5 et `jalons-et-choix-go-rust.md` (« Parcours de livraison », « Protocole de choix »).
+
+**Durée murale :** ~2 h 40 (état des lieux et inventaires 25 min, gel de room 30 min, J3b 1 h 15, passages
+Playwright en parallèle). Un passage J3a de 72 tests a été perdu : le conteneur de la stack recompile le serveur
+à chaque changement du worktree, et un `cargo add` en cours de passage l'a redémarré (34 « échecs », tous des
+uploads refusés pendant la compilation). Depuis, rien ne touche le worktree pendant un passage.
+
+**Itérations avant le vert :** ~8. Compilation : un `clone` sur un type `Copy`, trois variantes d'énumération
+trop grosses (laissées, quelques instances par carte), un recorder de test à compléter. Tests : deux fixtures
+WAM incomplètes, refusées à juste titre par les nouveaux schémas ; une assertion de test qui relisait un ancien
+message. Playwright : métadonnées des robots ajoutées après le premier passage J3b.
+
+**Corrections humaines :** aucune.
+
+**Aide extérieure :**
+- Relecture extérieure (15/10), reprise dans le rapport Codex (§5.3, P0) : l'acteur de room attendait des I/O
+  de map-storage dans une commande. Corrigé ici ; le rapport ne donnait pas le code.
+- Du socle : la référence TS de J3b (35 réussis, 7 échecs connus, 3 sautés mobile).
+- Inventaires du code TS (routes HTTP, messages WebSocket, admin, white label, LiveKit, enregistrement,
+  persistance, besoins serveur des specs J3b) faits par des sous-agents de cette session, sur le TS seulement.
+- Lecture de `lang-go` : rien. En lisant le §4.1 de la référence, le paragraphe « Points Go » (trois lignes sur le
+  journal Go) a été lu avant les « Points Rust », dans le même bloc ; sans effet sur le code.
+
+**Ce qui est en place :**
+- **`PARITY.md`** : une ligne par fonction (specs, routes, messages, queries, Room API, admin, white label,
+  LiveKit, enregistrement, Matrix, persistance, déploiement), avec état, preuve, écart et prochaine action.
+  Verrou écrit : pas de remplacement de production tant que l'admin SaaS, le white label, LiveKit,
+  l'enregistrement, la persistance Redis et la Room API ne sont pas validés.
+- **Gel de room (P0)** : les I/O d'une commande d'édition (entités personnalisées, fichiers privés, relecture
+  après upload) partent dans une tâche ; les commandes d'édition suivantes attendent leur tour, les déplacements
+  et le reste continuent. Les sauvegardes de WAM portent une révision : une sauvegarde qui finit en retard
+  n'écrase ni une plus récente ni un changement HTTP. Les écritures disque passent par `spawn_blocking`.
+- **Schémas des propriétés WAM** (AreaDataProperty, EntityDataProperty) : map-storage stocke les propriétés
+  sans les vérifier mais relit tout le fichier avec `WAMFileFormat` à chaque chargement ; une propriété acceptée
+  ici et refusée là rendrait la carte illisible par TS après un retour arrière. Elle est donc refusée.
+- **Variables de room** : définies par la carte (TMJ du stockage, ou URL de la carte avec le contrôle de réseau
+  privé du back, 10 s, 50 Mo), droits `readableBy`/`writableBy`, diffusion filtrée, refus → `errorMessage` puis
+  fermeture, relecture de la carte au plus toutes les 10 s pour une variable inconnue. Redis (`HSET <roomUrl>`)
+  hors de l'acteur : dernière valeur par variable, reprise jusqu'à ce que Redis réponde, visible d'une room
+  rechargée entre-temps.
+- **Variables de joueur** : `pr_<uuid>_|@|_<roomUrl>` pour les joueurs connectés, relues au join
+  (`roomJoinedMessage.playerVariable`), publiques dans `userJoined`, onglets du même joueur prévenus. Écart
+  volontaire : `PLAYER_VARIABLES_MAX_TTL` plafonne (le back prend le plus grand des deux).
+- **Événements** (`sendEventQuery`, `POST /global/event`), `GET /rooms`, suivi (`follow*`), verrou de bulle,
+  émotes (emoji seuls), items (état rendu aux arrivants), invitations (5ᵉ refusée en 10 min), kick d'admin
+  (`banUserMessage` puis 4000), méta-balises pour les robots.
+
+**Vérification :**
+- `./verify.sh` vert : **103 tests** (+20). Couverture (`cargo llvm-cov`, installé ce jour) : `wa-core` 78,8 %
+  des lignes (les types générés de SpaceState, 39 %, tirent la moyenne ; `room` 94 %, `variables` 96 %,
+  `wam` 90 %, `space` 73 %), espace de travail 66,3 %.
+- Test de scénario du gel : « la salle continue pendant un upload lent et les éditions gardent leur ordre »
+  échoue sur l'ancien acteur (le déplacement n'arrive pas), passe sur le nouveau. « Une sauvegarde qui finit en
+  retard n'écrase ni une plus récente ni un changement HTTP » : test du stockage.
+- Rattrapage J3a demandé le 15/10 : `wam_rights.rs` (zone restreinte, bureau personnel, entités, suppression de
+  zone et fichiers, entité personnalisée, refus sans effet), `social.rs`, `room.rs` (émote, bulle verrouillée).
+- Playwright, stack `rust`, Chromium :
+
+| lot | Rust | référence TS |
+|---|---|---|
+| J3a (72) après le gel et les schémas | **71 réussis, 1 sauté, 0 échec** | 67 réussis |
+| J3b (39) | **38 réussis, 1 échec** (`metadata` rejouée : 2/2) | 35 réussis, 7 échecs connus |
+| `variables:188` | échec d'environnement | échec connu |
+
+- `open_website:29`, en échec à J3a, passe maintenant (deux passages) ; la cause de l'échec précédent n'a pas
+  été établie. `report_issue:7` : le bouton dépend de `SENTRY_DSN_FRONT`, absent de l'environnement de la stack.
+  `variables:188` : la carte que le test écrit dans `maps/` n'est pas servie par le socle (404). Les deux
+  échouent aussi en TS.
+- Non-régression cumulée (J1, J2, scripting_spaces ; 70 tests) : **66 réussis, 2 sautés, 2 échecs**, aucun
+  imputable au serveur : `camera_order:29` passe 3 fois sur 3 seul (minutage du test) ; `scripting_spaces:401`
+  appelle `http://api.workadventure.localhost/debug/close-space-connection` en dur sur le port 80, une route de
+  débogage du back TS (connexion refusée sur cette machine ; passé au J3a quand le port 80 répondait).
+- Banc : l'image `--target prod` se construit avec Redis et regex (169 s pour l'étape de compilation, dépendances
+  nouvelles) et démarre avec ses trois variables (`/ping` 200). `crates/bot` : un champ public `joined`
+  (le `roomJoinedMessage` reçu) ajouté, rien de changé pour les appelants.
+
+**Écarts ouverts (détail dans `PARITY.md`) :** admin SaaS et white label (contrat attendu du socle), LiveKit,
+enregistrement, Room API, OpenAPI (J3c), Matrix, uploader, variables de monde (`pw_`), suiveur hors rayon,
+Redis non prouvé de bout en bout (`variables:61`).
