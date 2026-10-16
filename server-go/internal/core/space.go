@@ -321,8 +321,17 @@ func (s *spaceState) watch(id string, notMember func()) {
 	metadata, _ := json.Marshal(s.metadata)
 	m.peer.Send(NewMsg(SpaceUsersInit{Space: s.local, Users: users, Metadata: string(metadata)}, true))
 	m.watching = true
+	if s.media && !s.inFilter(&m.user) {
+		// As handleUserToNotifyAdded: a new watcher learns the current strategy, which may have changed since it
+		// joined (a space that grew to LiveKit tells only those taking part).
+		s.tellStrategy(m)
+	}
 	s.connect(id, s.inFilterMember)
 	s.evaluate()
+}
+
+func (s *spaceState) tellStrategy(m *spaceMember) {
+	m.peer.Send(NewMsg(SpacePrivateEvent{Space: s.local, ReceiverID: m.user.ID, Sender: m.user, Event: SwitchStrategy{Strategy: s.strategy}}, true))
 }
 
 // Roles of the LIVE_STREAMING_USERS_WITH_FEEDBACK filter: speakers broadcast, listeners show they follow.
@@ -540,6 +549,9 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 				relisted = append(relisted, o)
 			}
 		}
+	}
+	if !s.inFilter(&old) && s.inFilter(&m.user) && !m.watching && s.media {
+		s.tellStrategy(m) // handleUserAdded: entering the filter, it learns the current strategy
 	}
 	switch was, is := s.inFilter(&old), s.inFilter(&m.user); {
 	case !was && is && m.watching:
