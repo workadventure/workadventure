@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"fmt"
+	"github.com/workadventure/workadventure/server-go/internal/mapedit"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	"github.com/workadventure/workadventure/server-go/internal/store"
 	"log/slog"
@@ -31,13 +32,14 @@ type Server struct {
 	spaces     *registry.Refs[core.SpaceKey, *core.Space]
 	retained   *registry.Map[string, *Session] // by connectionId, for transport resumes
 	maps       *mapstorage.Store
-	vars       store.Hash    // room and player variables
-	varWriter  *store.Writer // writes to vars, in order, off the rooms
+	edits      *mapedit.Queue // the map editor's commands, one map at a time, off the rooms
+	vars       store.Hash     // room and player variables
+	varWriter  *store.Writer  // writes to vars, in order, off the rooms
 	apiVersion string
 }
 
 func NewServer(cfg *config.Config, a *auth.Manager, adm admin.Admin, rooms *registry.Refs[string, *core.Room], spaces *registry.Refs[core.SpaceKey, *core.Space], maps *mapstorage.Store, vars store.Hash, apiVersion string) *Server {
-	return &Server{cfg: cfg, auth: a, admin: adm, rooms: rooms, spaces: spaces, retained: registry.New[string, *Session](), maps: maps,
+	return &Server{cfg: cfg, auth: a, admin: adm, rooms: rooms, spaces: spaces, retained: registry.New[string, *Session](), maps: maps, edits: mapedit.NewQueue(),
 		vars: vars, varWriter: store.NewWriter(vars), apiVersion: apiVersion}
 }
 

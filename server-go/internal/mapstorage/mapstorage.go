@@ -3,9 +3,11 @@
 package mapstorage
 
 import (
+	"bytes"
 	"crypto/subtle"
 	"errors"
 	"fmt"
+	"hash/maphash"
 	"io"
 	"mime"
 	"net/http"
@@ -33,8 +35,13 @@ type Options struct {
 
 type Store struct {
 	dir string
-	// ponytail: one lock for every upload and edit; one per map if edits ever get frequent.
-	mu sync.Mutex
+	// tree is held for writing by the operations on whole directories (upload, move, copy, delete), and for reading
+	// by those on one file, which also hold that file's lock: edits of different maps never wait for each other.
+	tree  sync.RWMutex
+	files [64]sync.Mutex // the lock of a file is files[hash of its key]
+	seed  maphash.Seed
+	// recentMu guards recent.
+	recentMu sync.Mutex
 	// Changed is told when a WAM file is replaced (or deleted) from the outside, so that the players of that map
 	// are told to reload (or leave). Nil: nobody to tell.
 	Changed func(key string, deleted bool)
@@ -47,7 +54,17 @@ type recorded struct {
 	edit any
 }
 
-func New(dir string) *Store { return &Store{dir: dir, recent: map[string][]recorded{}} }
+func New(dir string) *Store {
+	return &Store{dir: dir, seed: maphash.MakeSeed(), recent: map[string][]recorded{}}
+}
+
+// lockFile locks one file for writing it; the returned function unlocks it.
+func (s *Store) lockFile(key string) (unlock func()) {
+	s.tree.RLock()
+	m := &s.files[maphash.String(s.seed, key)%uint64(len(s.files))]
+	m.Lock()
+	return func() { m.Unlock(); s.tree.RUnlock() }
+}
 
 // file maps a storage key ("maps/empty.wam") to its file, refusing anything that would leave the directory.
 func (s *Store) file(key string) (string, error) {
@@ -66,24 +83,52 @@ func (s *Store) folder(key string) (string, error) {
 	return filepath.Join(s.dir, filepath.FromSlash(path.Clean("/"+key))), nil
 }
 
-// Edit replaces the document at key with what change returns, under the store's lock. change gets nil when there
-// is no such document yet.
+// editAttempts bounds how many times an edit is computed again because its document changed meanwhile.
+const editAttempts = 5
+
+// ErrBusy is returned by an edit whose document kept changing while it was computed.
+var ErrBusy = errors.New("the map kept changing while it was being edited")
+
+// Edit replaces the document at key with what change returns; change gets nil when there is no such document yet.
+// change runs on a copy and without any lock, so that a slow edit holds nobody up. Its result is written only if the
+// document is still the version change saw. If it was replaced meanwhile, change runs again on the new version: a
+// write is never lost to an edit computed on an older one.
 func (s *Store) Edit(key string, change func([]byte) ([]byte, error)) error {
 	f, err := s.file(key)
 	if err != nil {
 		return err
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	before, err := os.ReadFile(f)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return err
+	for range editAttempts {
+		before, err := readIfExists(f)
+		if err != nil {
+			return err
+		}
+		after, err := change(before)
+		if err != nil {
+			return err
+		}
+		unlock := s.lockFile(key)
+		now, err := readIfExists(f)
+		if err == nil && (now == nil) == (before == nil) && bytes.Equal(now, before) {
+			err = writeFile(f, after)
+			unlock()
+			return err
+		}
+		unlock()
+		if err != nil {
+			return err
+		}
 	}
-	after, err := change(before)
-	if err != nil {
-		return err
+	return ErrBusy
+}
+
+// readIfExists reads a file; a missing one is nil.
+func readIfExists(f string) ([]byte, error) {
+	data, err := os.ReadFile(f)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
 	}
-	return writeFile(f, after)
+	return data, err
 }
 
 // Put stores a file.
@@ -92,8 +137,7 @@ func (s *Store) Put(key string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	defer s.lockFile(key)()
 	return writeFile(f, data)
 }
 
@@ -103,8 +147,7 @@ func (s *Store) Remove(key string) error {
 	if err != nil {
 		return err
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	defer s.lockFile(key)()
 	if err := os.Remove(f); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
@@ -126,16 +169,16 @@ const editsKept = 30 * time.Second
 
 // Record keeps an applied edit of a map, for Since.
 func (s *Store) Record(key, id string, edit any) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.recentMu.Lock()
+	defer s.recentMu.Unlock()
 	s.recent[key] = append(s.prune(key), recorded{id: id, at: time.Now(), edit: edit})
 }
 
 // Since returns the edits a client missed, given the last edit its copy of the map has (lastCommandId): those
 // after it, or all of them when the client does not know any (getCommandsNewerThan).
 func (s *Store) Since(key, lastID string) []any {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.recentMu.Lock()
+	defer s.recentMu.Unlock()
 	kept := s.prune(key)
 	from := 0
 	for i, r := range kept {
@@ -165,6 +208,8 @@ func (s *Store) prune(key string) []recorded {
 
 // forget drops the recorded edits of the maps under a directory: a client of the new file must not replay them.
 func (s *Store) forget(dir string) {
+	s.recentMu.Lock()
+	defer s.recentMu.Unlock()
 	for key := range s.recent {
 		if dir == "" || key == dir || strings.HasPrefix(key, dir+"/") {
 			delete(s.recent, key)

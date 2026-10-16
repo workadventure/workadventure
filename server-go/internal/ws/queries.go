@@ -144,3 +144,10 @@ func (s *Session) roomsFromSameWorld(id int32) {
 	}
 	s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomsFromSameWorldAnswer{RoomsFromSameWorldAnswer: &pb.RoomsFromSameWorldAnswer{RoomDescriptions: rooms}}})
 }
+
+func orStrings(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
+}

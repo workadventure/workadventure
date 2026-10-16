@@ -67,20 +67,22 @@ type (
 		Properties          []any
 		ModifyProperties    bool
 	}
-	DeleteArea   struct{ ID string }
+	DeleteArea struct{ ID string }
+	// CreateEntity places an entity. Width and Height are its prefab's size, which only the rights check uses: what
+	// counts is where its centre falls.
 	CreateEntity struct {
 		ID, PrefabID, CollectionName string
-		X, Y                         int64
+		X, Y, Width, Height          int64
 		Name                         *string
 		Properties                   []any
 	}
 	// ModifyEntity moves an entity; its name when set, its properties only when ModifyProperties.
 	ModifyEntity struct {
-		ID               string
-		X, Y             int64
-		Name             *string
-		Properties       []any
-		ModifyProperties bool
+		ID                  string
+		X, Y, Width, Height int64
+		Name                *string
+		Properties          []any
+		ModifyProperties    bool
 	}
 	DeleteEntity struct{ ID string }
 	// DeleteEntitiesOf removes the copies of a custom entity that was deleted.
