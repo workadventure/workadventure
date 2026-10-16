@@ -11,6 +11,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Zašaltuj kameru a mikrofon.",
         start: "Witajśo na našej boku za konfiguraciju awdio- a widejogratow! Namakajśo how rědy, aby pólěpšyli swóju online-dožywjenje. Pśiměŕśo nastajenja swójim pśednosam, aby rozwězali eventuelne problemy. Zawěsććo, až waša hardware korektnje zwězana a aktualizěrowana jo. Wuslěźćo a testujśo wšake konfiguracije, aby namakali, což nejlěpje za was funkcioněrujo.",
     },
+    unavailable: {
+        noImage:
+            "Waša kamera wěcej žedne wobraze njesćelo: druge wiźe Wašu awataru z pokazką „Kamera njestoj k dispoziciji“.",
+        inUse: "Waša kamera se wót drugego nałoženja wužywa (Teams, Meet…). Waš mikrofon dalej funkcioněrujo; kamera se wrośi, gaž jo zasej lichy.",
+        retry: "Hyšći raz wopytaś",
+        turnOff: "Kameru wušaltowaś",
+    },
     help: {
         title: "Pśistup ku kamerje a mikrofonoju jo trjebny",
         cameraTitle: "Pśistup ku kamerje jo trjebny",
@@ -40,6 +47,12 @@ const camera: DeepPartial<Translation["camera"]> = {
             noDeviceTitle: "Žedna wužywajobna kamera",
             noDeviceDesc:
                 "Browser namakujo žednu kameru, kótaruž móžośo wužywaś. Wopytajśo drugi browser, pśekontrolěrujśo zwisk kamery, pśekontrolěrujśo konfiguraciju kompjutra (datowy škit, graty) abo startujśo kompjuter znowego, jolic hardware by měł funkcioněrowaś.",
+            inUseTitle: "Kamera se wót drugego nałoženja wužywa",
+            inUseDesc:
+                "Drugie nałoženje (Teams, Meet…) wužywa Wašu kameru. Zacyńśo ju tam: WorkAdventure pominajo ju znowego, gaž se do toś togo rejtarika wrośijośo abo do rozgrona stupijośo.",
+            unavailableTitle: "Kamera njestoj k dispoziciji",
+            unavailableDesc:
+                "Waša kamera wěcej žedne wobraze njesćelo: druge wiźe Wašu awataru. Wopytajśo to w powěsći znowego abo wušaltujśo a zašaltujśo kameru znowego.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",

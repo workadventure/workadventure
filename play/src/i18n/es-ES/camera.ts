@@ -11,6 +11,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Encender la cámara y el micrófono",
         start: "¡Bienvenido a nuestra página de configuración de dispositivos de audio y video! Encuentra aquí las herramientas para mejorar tu experiencia en línea. Ajusta la configuración según tus preferencias para resolver cualquier problema potencial. Asegúrate de que tu hardware esté correctamente conectado y actualizado. Explora y prueba diferentes configuraciones para encontrar la que mejor se adapte a ti.",
     },
+    unavailable: {
+        noImage:
+            "Tu cámara ha dejado de enviar imágenes: los demás ven tu avatar con la indicación «Cámara no disponible».",
+        inUse: "Otra aplicación (Teams, Meet…) está usando tu cámara. Tu micrófono sigue funcionando; tu cámara volverá en cuanto esté libre.",
+        retry: "Volver a intentarlo",
+        turnOff: "Apagar la cámara",
+    },
     help: {
         title: "Se necesita acceso a la cámara/micrófono",
         cameraTitle: "Se necesita acceso a la cámara",
@@ -40,6 +47,12 @@ const camera: DeepPartial<Translation["camera"]> = {
             noDeviceTitle: "Ninguna cámara utilizable",
             noDeviceDesc:
                 "El navegador no detecta ninguna cámara utilizable. Prueba otro navegador, comprueba que la cámara esté conectada, revisa la configuración del equipo (privacidad, dispositivos) o reinicia el equipo si el dispositivo debería funcionar.",
+            inUseTitle: "Cámara usada por otra aplicación",
+            inUseDesc:
+                "Otra aplicación (Teams, Meet…) está usando tu cámara. Ciérrala allí: WorkAdventure la vuelve a pedir cuando regresas a esta pestaña o entras en una conversación.",
+            unavailableTitle: "Cámara no disponible",
+            unavailableDesc:
+                "Tu cámara ha dejado de enviar imágenes: los demás ven tu avatar. Vuelve a intentarlo desde el mensaje, o apaga y vuelve a encender tu cámara.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

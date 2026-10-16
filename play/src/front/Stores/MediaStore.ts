@@ -3,6 +3,7 @@ import { derived, get, readable, writable } from "svelte/store";
 import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import * as Sentry from "@sentry/svelte";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
@@ -12,6 +13,7 @@ import { openTimedEventPerMeeting } from "../Administration/CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { createHeldIntervalTracker } from "../Administration/HeldIntervalTracker";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
+import { getUserMediaUnlessStuck } from "../WebRtc/GetUserMediaUnlessStuck";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
@@ -37,6 +39,7 @@ import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingAudioStore, isLiveStreamingStore } from "./IsStreamingStore";
 import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
+import { visibilityStore } from "./VisibilityStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
 import {
@@ -74,6 +77,21 @@ type MediaDeviceAnalyticsKind = "camera" | "microphone" | "camera_microphone";
 export const cameraAccessIssueStore = writable<MediaAccessIssue | null>(null);
 
 /**
+ * Why the camera the user wants gives no image, while it stays wanted:
+ * - "no_image": it stopped delivering frames, frozen or black (see CameraStallDetector);
+ * - "in_use": another application holds it (getUserMedia fails with NotReadableError, as on Windows with Teams);
+ * - "no_answer": getUserMedia did not answer (a camera the system holds back, a locked session).
+ *
+ * Nothing is turned off behind the user's back. The video is left out of the constraints, so the others get the
+ * avatar with "Camera unavailable" instead of a red tile, and the microphone is asked for alone. The camera is asked
+ * for again (retryCamera) when it may be back: the user returns to the tab, a conversation starts, or "Try again".
+ * Asking for a busy camera fails at once and cannot take it from the application that holds it; a camera that does
+ * not answer is given up after 15 seconds (getUserMediaUnlessStuck). Never asked for again on a timer.
+ */
+export type CameraUnavailableReason = "no_image" | "in_use" | "no_answer";
+export const cameraUnavailableStore = writable<CameraUnavailableReason | undefined>(undefined);
+
+/**
  * Last microphone access failure, or no audioinput reported by the browser.
  * Cleared when the user turns the microphone off manually, when an audio track is obtained, or when a microphone appears.
  */
@@ -94,6 +112,7 @@ function createRequestedCameraState() {
         disableWebcam: () => {
             set(false);
             localUserStore.setRequestedCameraState(false);
+            cameraUnavailableStore.set(undefined);
         },
     };
 }
@@ -538,6 +557,7 @@ export const mediaStreamConstraintsStore = derived(
         batchGetUserMediaStore,
         inBackgroundSettingsStore,
         isLiveStreamingAudioStore,
+        cameraUnavailableStore,
     ],
     (
         [
@@ -556,6 +576,7 @@ export const mediaStreamConstraintsStore = derived(
             $batchGetUserMediaStore,
             $inBackgroundSettingsStore,
             $isLiveStreamingAudioStore,
+            $cameraUnavailableStore,
         ],
         set,
     ) => {
@@ -621,6 +642,10 @@ export const mediaStreamConstraintsStore = derived(
             ) {
                 currentVideoConstraint = false;
             }
+        }
+        // Not even for the background settings preview: an unavailable camera is asked for again by retryCamera only
+        if ($cameraUnavailableStore !== undefined) {
+            currentVideoConstraint = false;
         }
         // Let's make the changes only if the new value is different from the old one.
         if (
@@ -761,6 +786,15 @@ function classifyMediaAccessError(error: unknown): MediaAccessIssue | null {
         return "no_device";
     }
     return null;
+}
+
+/**
+ * The device exists and access is granted, but another application holds it: NotReadableError ("Could not start video
+ * source" on Windows), TrackStartError in older Chrome.
+ */
+function isDeviceInUse(error: unknown): boolean {
+    const name = error instanceof Error ? error.name : "";
+    return name === "NotReadableError" || name === "TrackStartError";
 }
 
 function trackMediaAccessIssue(kind: MediaDeviceAnalyticsKind, issue: MediaAccessIssue | null): void {
@@ -921,7 +955,7 @@ async function runRawStreamUpdate(
         }
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia(newConstraints);
+            const stream = await getUserMediaUnlessStuck(newConstraints);
             if (generation !== rawStreamGeneration) {
                 // A newer update is queued/running: discard this stale stream so devices are released immediately.
                 // The returned constraints are ignored by caller for stale generations.
@@ -976,6 +1010,15 @@ async function runRawStreamUpdate(
                 requestedCameraDeviceIdStore.set(undefined);
                 requestedMicrophoneDeviceIdStore.set(undefined);
                 batchGetUserMediaStore.commitChanges();
+            } else if (mustRequestNewVideo && (e instanceof TimeoutError || isDeviceInUse(e))) {
+                // The camera stays wanted: see cameraUnavailableStore
+                const reason = e instanceof TimeoutError ? "no_answer" : "in_use";
+                console.info(`The camera is unavailable (${reason}): asking for the microphone alone`, e);
+                emitCurrentStreamOrError(setIfCurrent, e);
+                if (reason === "in_use") {
+                    analyticsClient.trackAdminEvent("media.device_error", { kind: "camera", reason });
+                }
+                cameraUnavailableStore.set(reason);
             } else if (mustRequestNewVideo) {
                 console.info(
                     "Error. Unable to get microphone and/or camera access. Trying audio only.",
@@ -1030,6 +1073,32 @@ function retryGetUserMedia(retryVideo: boolean, retryAudio: boolean) {
     }
     userMediaRetryCountStore.update((count) => count + 1);
 }
+
+/**
+ * Asks again for a camera that is unavailable (see cameraUnavailableStore).
+ */
+export function retryCamera(): void {
+    cameraUnavailableStore.set(undefined);
+}
+
+// An unavailable camera may be back when the user returns to the tab (from the application that held it, typically),
+// or when a conversation starts: ask for it again then.
+const cameraRetryMomentStore = derived(
+    [visibilityStore, currentPlayerGroupIdStore, inLivekitStore],
+    ([$visible, $groupId, $inLivekit]) => ({ visible: $visible, inConversation: $groupId !== undefined || $inLivekit }),
+);
+let previousCameraRetryMoment = { visible: true, inConversation: false };
+// Module singleton: never unsubscribed
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+cameraRetryMomentStore.subscribe((moment) => {
+    if (
+        (moment.visible && !previousCameraRetryMoment.visible) ||
+        (moment.inConversation && !previousCameraRetryMoment.inConversation)
+    ) {
+        retryCamera();
+    }
+    previousCameraRetryMoment = moment;
+});
 
 /**
  * A store containing the raw MediaStream object (or undefined if nothing requested, or Error if an error occurred)
@@ -1319,6 +1388,22 @@ export const effectiveCameraStateStore = derived(
         $backgroundProcessedLocalVideoTrackStore.track !== undefined,
 );
 
+export type CameraStatus = "on" | "off" | "unavailable";
+
+/**
+ * What the others are told about our camera: "unavailable" while the camera the user wants gives no image (see
+ * cameraUnavailableStore), told apart from a camera turned off on purpose.
+ */
+export const cameraStatusStore = derived(
+    [cameraUnavailableStore, effectiveCameraStateStore],
+    ([$cameraUnavailable, $cameraOn]): CameraStatus => {
+        if ($cameraUnavailable !== undefined) {
+            return "unavailable";
+        }
+        return $cameraOn ? "on" : "off";
+    },
+);
+
 export const localStreamStore = derived<
     [
         typeof audioProcessedLocalAudioTrackStore,
@@ -1596,8 +1681,14 @@ export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
  * Context for the camera action-bar tooltip when the camera is off: permission denied vs no usable device.
  */
 export const cameraButtonHelpContextStore = derived(
-    [cameraAccessIssueStore, cameraListStore, devicesNotLoaded],
-    ([issue, cameras, notLoaded]) => {
+    [cameraAccessIssueStore, cameraListStore, devicesNotLoaded, cameraUnavailableStore],
+    ([issue, cameras, notLoaded, unavailable]) => {
+        if (unavailable === "in_use") {
+            return "in_use" as const;
+        }
+        if (unavailable !== undefined) {
+            return "unavailable" as const;
+        }
         if (issue === "permission_denied") {
             return "permission" as const;
         }

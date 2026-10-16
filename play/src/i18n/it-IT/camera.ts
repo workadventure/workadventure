@@ -11,6 +11,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Accendi la tua fotocamera e il microfono",
         start: "Benvenuto nella nostra pagina di configurazione dei dispositivi audio e video! Trova qui gli strumenti per migliorare la tua esperienza online. Regola le impostazioni in base alle tue preferenze per risolvere eventuali problemi. Assicurati che il tuo hardware sia correttamente collegato e aggiornato. Esplora e testa diverse configurazioni per trovare quella che funziona meglio per te.",
     },
+    unavailable: {
+        noImage:
+            "La tua fotocamera ha smesso di inviare immagini: gli altri vedono il tuo avatar con la dicitura «Fotocamera non disponibile».",
+        inUse: "Un'altra applicazione (Teams, Meet…) sta usando la tua fotocamera. Il microfono continua a funzionare; la fotocamera tornerà appena sarà libera.",
+        retry: "Riprova",
+        turnOff: "Spegni la fotocamera",
+    },
     help: {
         title: "Accesso a fotocamera / microfono necessario",
         cameraTitle: "Accesso alla fotocamera necessario",
@@ -40,6 +47,12 @@ const camera: DeepPartial<Translation["camera"]> = {
             noDeviceTitle: "Nessuna fotocamera utilizzabile",
             noDeviceDesc:
                 "Il browser non rileva alcuna fotocamera utilizzabile. Prova un altro browser, verifica che la fotocamera sia collegata, controlla le impostazioni del computer (privacy, dispositivi) o riavvia il computer se il dispositivo dovrebbe funzionare.",
+            inUseTitle: "Fotocamera usata da un'altra applicazione",
+            inUseDesc:
+                "Un'altra applicazione (Teams, Meet…) sta usando la tua fotocamera. Chiudila lì: WorkAdventure la richiede quando torni su questa scheda o entri in una conversazione.",
+            unavailableTitle: "Fotocamera non disponibile",
+            unavailableDesc:
+                "La tua fotocamera ha smesso di inviare immagini: gli altri vedono il tuo avatar. Riprova dal messaggio, oppure spegni e riaccendi la fotocamera.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

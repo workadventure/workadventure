@@ -11,6 +11,12 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "开启你的摄像头和麦克风",
         start: "欢迎来到我们的音视频设备配置页面！在这里找到工具来增强您的在线体验。根据您的偏好调整设置以解决任何潜在问题。确保您的硬件已正确连接并保持最新。探索和测试不同的配置，找到最适合您的配置。",
     },
+    unavailable: {
+        noImage: "您的摄像头已停止发送画面：其他人看到的是您的头像，并显示“摄像头不可用”。",
+        inUse: "您的摄像头正被其他应用（Teams、Meet 等）使用。麦克风仍可正常使用；摄像头空闲后会自动恢复。",
+        retry: "重试",
+        turnOff: "关闭摄像头",
+    },
     help: {
         title: "需要摄像头/麦克风权限",
         cameraTitle: "需要摄像头权限",
@@ -39,6 +45,12 @@ const camera: DeepPartial<Translation["camera"]> = {
             noDeviceTitle: "没有可用的摄像头",
             noDeviceDesc:
                 "浏览器未检测到可用的摄像头。请尝试其他浏览器、检查摄像头是否已连接、检查计算机的配置（隐私、设备），或在设备正常时重启电脑。",
+            inUseTitle: "摄像头正被其他应用使用",
+            inUseDesc:
+                "其他应用（Teams、Meet 等）正在使用您的摄像头。请在那边关闭它：当您回到此标签页或加入对话时，WorkAdventure 会重新请求摄像头。",
+            unavailableTitle: "摄像头不可用",
+            unavailableDesc:
+                "您的摄像头已停止发送画面：其他人看到的是您的头像。请在提示消息中重试，或关闭后重新打开摄像头。",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

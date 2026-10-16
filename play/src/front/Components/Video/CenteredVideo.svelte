@@ -66,6 +66,13 @@
         onnoVideo?.();
     }
 
+    $effect(() => {
+        // A warning about a video that went away (camera off or unavailable) must not stay on top of the avatar
+        if (!videoEnabled) {
+            displayNoVideoWarning = false;
+        }
+    });
+
     let containerWidth: number = $state(0);
     let containerHeight: number = $state(0);
     let videoWidth: number = $state(0);

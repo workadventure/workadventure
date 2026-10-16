@@ -11,6 +11,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "카메라와 마이크를 켜세요",
         start: "오디오 및 비디오 장치 설정 페이지에 오신 것을 환영합니다! 여기에서 온라인 경험을 향상시킬 수 있는 도구를 찾을 수 있습니다. 선호에 맞게 설정을 조정해 잠재적인 문제를 해결하세요. 하드웨어가 올바르게 연결되어 있고 최신 상태인지 확인한 뒤, 나에게 가장 잘 맞는 구성을 찾을 때까지 여러 설정을 탐색하고 테스트해 보세요.",
     },
+    unavailable: {
+        noImage:
+            "카메라에서 영상이 전송되지 않습니다. 다른 사람들에게는 '카메라를 사용할 수 없음' 표시와 함께 아바타가 보입니다.",
+        inUse: "다른 애플리케이션(Teams, Meet 등)이 카메라를 사용 중입니다. 마이크는 계속 작동하며, 카메라는 사용 가능해지면 돌아옵니다.",
+        retry: "다시 시도",
+        turnOff: "카메라 끄기",
+    },
     help: {
         title: "카메라 / 마이크 접근 권한이 필요합니다",
         cameraTitle: "카메라 접근 권한이 필요합니다",
@@ -39,6 +46,12 @@ const camera: DeepPartial<Translation["camera"]> = {
             noDeviceTitle: "사용 가능한 카메라 없음",
             noDeviceDesc:
                 "브라우저가 사용할 수 있는 카메라를 찾지 못했습니다. 다른 브라우저를 시도하거나 카메라 연결을 확인하거나, 컴퓨터 설정(개인 정보 보호, 장치)을 확인하거나, 장치가 정상이라면 컴퓨터를 다시 시작해 보세요.",
+            inUseTitle: "다른 애플리케이션이 카메라를 사용 중입니다",
+            inUseDesc:
+                "다른 애플리케이션(Teams, Meet 등)이 카메라를 사용하고 있습니다. 그쪽에서 닫아 주세요. 이 탭으로 돌아오거나 대화에 참여하면 WorkAdventure가 카메라를 다시 요청합니다.",
+            unavailableTitle: "카메라를 사용할 수 없음",
+            unavailableDesc:
+                "카메라에서 영상이 전송되지 않습니다. 다른 사람들에게는 아바타가 보입니다. 메시지에서 다시 시도하거나 카메라를 껐다가 다시 켜 주세요.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

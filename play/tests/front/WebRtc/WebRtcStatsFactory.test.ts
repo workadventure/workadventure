@@ -85,6 +85,7 @@ describe("buildWebRtcSenderStatsFromReport", () => {
             fps: 15,
             qualityLimitationReason: "cpu",
             encoderImplementation: "libaom",
+            hasTrack: false,
         });
     });
 
@@ -113,6 +114,28 @@ describe("buildWebRtcSenderStatsFromReport", () => {
         const unknown = read(4000, { framesEncoded: 30 }, { framesEncoded: 100 });
         expect(unknown?.activeLayers).toBeUndefined();
         expect(unknown?.activeFps).toBeUndefined();
+    });
+
+    it("tells a sender whose track was detached (LiveKit's pauseUpstream) from one that encodes a track", () => {
+        const prev = new Map<string, SenderLayerPrev>();
+        const read = (timestamp: number, attached: boolean) =>
+            buildWebRtcSenderStatsFromReport(
+                report([
+                    layer("a", {
+                        timestamp,
+                        active: true,
+                        framesEncoded: 58,
+                        ...(attached ? { mediaSourceId: "camera" } : {}),
+                    }),
+                    ...(attached ? [{ id: "camera", type: "media-source", kind: "video", timestamp, frames: 58 }] : []),
+                ]),
+                prev,
+                "Livekit",
+            );
+        read(1000, true);
+        expect(read(2000, true)).toMatchObject({ hasTrack: true });
+        // Still an active layer, and no frame: there is no track to encode
+        expect(read(3000, false)).toMatchObject({ hasTrack: false, activeLayers: 1, activeFps: 0 });
     });
 
     it("reads the capture rate, the encoding time of all layers and the time spent limited", () => {
