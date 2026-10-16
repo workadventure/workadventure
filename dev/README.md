@@ -4,7 +4,8 @@ Run the current TypeScript servers and the candidate monoliths (`server-go/`, `s
 the same Playwright suite at each. Additive: `docker-compose.yaml` and the usual dev workflow are untouched.
 
 - **Socle** (`socle.yaml`, project `wa-socle`, started once): Traefik, the compiled front (`front`), the test maps,
-  the OIDC mock, Synapse, LiveKit, the icon server, and redisinsight with `--profile tools`. Network `wa-socle`.
+  the OIDC mock, Synapse, LiveKit (with its Redis), the icon server, redisinsight with `--profile tools`, and the
+  recording chain (LiveKit egress, S3 on rustfs, `cdn-livekit.` host) with `--profile recording`. Network `wa-socle`.
 - **Stack** (`stack.yaml`, project `wa-<name>`, one per server): its own Redis and maps volume, and either
   - `ts`: the pusher, back, map-storage and uploader images published on ghcr.io for `WA_TAG` (no build, no Vite;
     the pusher serves the socle's front through `ASSETS_URL`), or
@@ -68,6 +69,10 @@ Specs that call `resetWamMaps` (map editor, raise hand, megaphone) upload `map-s
 ignores. Build it for the stack under test with `dev/dev assets <name>`: the test WAMs load their entity collections
 from `http://play.workadventure.localhost`, the regular stack, and the command points them at that stack instead.
 
+`room-api.spec.ts` imports the Room API client, generated as in the CI: run `npm ci && npm run ts-proto` once in
+`libs/room-api-clients/room-api-client-js`. `recording.spec.ts` needs `dev/dev socle up --profile recording`; the
+egress starts a headless Chrome per recording, so leave the profile off otherwise.
+
 The stacks' environment follows `.env.template` and the CI's end-to-end setup (`docker-compose.e2e.yml`, and the
 `sed` lines of the workflow): map editing rights come from the OIDC tags, and the third-party apps are on.
 `dev/dev env` also sets `NO_KLAXOON_SECRET=true`: without a Klaxoon client id, those specs skip, as on forks.
@@ -121,7 +126,8 @@ At run time:
 - **LiveKit.** Shared without collision: room names are space names, prefixed by the world, which without an admin
   is the origin of the room URL (`http://play.<name>.workadventure.localhost:<port>.…`). With an admin API, two stacks
   on the same world would share rooms; then give each stack its own LiveKit. No webhook is configured (as in
-  `docker-compose.yaml`): recording/egress is not in the socle. Media reach LiveKit through Traefik's TCP/UDP
+  `docker-compose.yaml`). The egress (profile `recording`) is shared too and writes to the `livekit-recording`
+  bucket, one file per recording. Media reach LiveKit through Traefik's TCP/UDP
   entry points; LiveKit advertises `127.0.0.1` and the same ports as the host.
 - **Synapse.** Shareable. Per stack: `MATRIX_API_URI`, `MATRIX_PUBLIC_URI`, `MATRIX_DOMAIN` and the admin
   credentials; `SECRET_KEY` must equal Synapse's `JWT_SECRET`. Data is not isolated: Matrix users (one per email)
