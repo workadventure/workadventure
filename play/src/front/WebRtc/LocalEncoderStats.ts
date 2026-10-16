@@ -23,22 +23,29 @@ export interface LocalEncoderStats extends WebRtcSenderStats {
 
 export type EncoderType = "software" | "hardware" | "unknown";
 
-const SOFTWARE_ENCODERS = /libaom|libvpx|openh264|libx264|svt/i;
-const HARDWARE_ENCODERS = /external|hardware|videotoolbox|mediafoundation|vaapi|nvenc|qsv|v4l2|mediacodec/i;
+const SOFTWARE_ENCODERS = /libaom|libvpx|openh264|libx264|svt|mediafoundationsoftware|c2\.android\.|omx\.google\./i;
+const HARDWARE_ENCODERS =
+    /external|hardware|videotoolbox|mediafoundationvideoencode|d3d12|vaapi|nvenc|qsv|v4l2|mediacodec|ndkvideoencodeaccelerator\((?!c2\.android\.|omx\.google\.)/i;
 
 /**
  * Chrome names software encoders after their library ("libaom", "libvpx", "OpenH264", possibly wrapped in
- * "SimulcastEncoderAdapter (libvpx, libvpx)") and hardware ones "ExternalEncoder". Firefox reports nothing.
+ * "SimulcastEncoderAdapter (libvpx, libvpx)") and hardware ones after the platform API ("VideoToolbox",
+ * "MediaFoundationVideoEncodeAccelerator (Intel® Quick Sync Video H.264 Encoder MFT)", "D3D12VideoEncodeAccelerator",
+ * "VaapiVideoEncodeAccelerator", "NdkVideoEncodeAccelerator(c2.qti.avc.encoder) input: buffer"), or "ExternalEncoder"
+ * before the first frame. Some of those are software: Windows' "MediaFoundationSoftwareVideoEncoder" and Android's
+ * own "c2.android." / "OMX.google." codecs. Firefox and Safari report nothing.
+ * An adapter mixing both is hardware: its software encoder is a small layer's, since Chrome keeps frames under 360p
+ * off the hardware encoder.
  */
 export function describeEncoder(encoderImplementation: string | undefined): { name: string; type: EncoderType } {
     if (!encoderImplementation) {
         return { name: "-", type: "unknown" };
     }
-    if (SOFTWARE_ENCODERS.test(encoderImplementation)) {
-        return { name: encoderImplementation, type: "software" };
-    }
     if (HARDWARE_ENCODERS.test(encoderImplementation)) {
         return { name: encoderImplementation, type: "hardware" };
+    }
+    if (SOFTWARE_ENCODERS.test(encoderImplementation)) {
+        return { name: encoderImplementation, type: "software" };
     }
     return { name: encoderImplementation, type: "unknown" };
 }

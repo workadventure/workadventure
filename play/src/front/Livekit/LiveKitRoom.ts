@@ -235,8 +235,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      */
     private getVideoCodec(isScreenShare: boolean, track: MediaStreamTrack): VideoCodec {
         const { width = 1280, height = 720 } = track.getSettings();
-        // H.264 is mandatory in WebRTC and always ends the list; the rare browser without it (Firefox with the
-        // OpenH264 download blocked) is rewritten to VP8 by LiveKit, at the same bitrate budget.
+        // VP8 always ends the list. The rare browser without H.264 (Firefox with the OpenH264 download blocked) is
+        // rewritten to VP8 by LiveKit, at the same bitrate budget.
         const supported: Partial<Record<VideoCodec, () => boolean>> = { av1: supportsAV1, vp9: supportsVP9 };
         return (
             preferredVideoCodecs(
@@ -244,7 +244,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 this.getQualitySetting(isScreenShare),
                 "encode",
                 width * height,
-            ).find((codec) => supported[codec]?.() ?? true) ?? "h264"
+                "Livekit",
+            ).find((codec) => supported[codec]?.() ?? true) ?? "vp8"
         );
     }
 
@@ -544,7 +545,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
     /**
      * Same for the camera, except that unpublishCameraTrack() only pauses the publication (see the note there): a
-     * real unpublish, once per session at most, so that the next publication picks the codec anew.
+     * real unpublish, once per demotion (twice per session at most), so that the next publication picks the
+     * codec anew.
      */
     private republishCamera(): void {
         this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue

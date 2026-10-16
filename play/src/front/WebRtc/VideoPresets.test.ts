@@ -34,54 +34,86 @@ describe("preferredVideoCodecs", () => {
     it("leaves out a codec demoted this session, and every codec above it", () => {
         demotedCodecStore.screenSharing.set("vp9");
 
-        expect(preferredVideoCodecs("screenSharing", "recommended", "encode", 1920 * 1080)).toEqual(["h264"]);
-        expect(preferredVideoCodecs("screenSharing", "recommended", "decode", 1920 * 1080)).toEqual(["h264"]);
+        expect(preferredVideoCodecs("screenSharing", "recommended", "encode", 1920 * 1080, "P2P")).toEqual(["h264"]);
+        expect(preferredVideoCodecs("screenSharing", "recommended", "decode", 1920 * 1080, "P2P")).toEqual(["h264"]);
         expect(negotiableVideoCodecs("screenSharing", "recommended")).toEqual(["h264"]);
         // Categories are independent
-        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720)).toEqual(["vp9", "h264"]);
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "P2P")).toEqual(["vp9", "h264"]);
     });
 
     it("keeps AV1 for a screen share unless the quality setting is low, H.264 as the floor, without a verdict", () => {
-        expect(preferredVideoCodecs("screenSharing", "recommended", "encode", 1920 * 1080)).toEqual([
+        expect(preferredVideoCodecs("screenSharing", "recommended", "encode", 1920 * 1080, "P2P")).toEqual([
             "av1",
             "vp9",
             "h264",
         ]);
-        expect(preferredVideoCodecs("screenSharing", "low", "encode", 1920 * 1080)).toEqual(["vp9", "h264"]);
-        expect(preferredVideoCodecs("video", "high", "encode", 1280 * 720)).toEqual(["vp9", "h264"]);
+        expect(preferredVideoCodecs("screenSharing", "low", "encode", 1920 * 1080, "P2P")).toEqual(["vp9", "h264"]);
+        expect(preferredVideoCodecs("video", "high", "encode", 1280 * 720, "P2P")).toEqual(["vp9", "h264"]);
     });
 
     it("drops a codec the browser remembers as not smooth at that size", () => {
         vi.mocked(codecPerformance).mockImplementation((_direction, codec, pixels) =>
             codec === "vp9" ? verdict(pixels <= 640 * 360) : verdict(false),
         );
-        expect(preferredVideoCodecs("screenSharing", "high", "encode", 1920 * 1080)).toEqual(["h264"]);
-        expect(preferredVideoCodecs("video", "high", "encode", 1280 * 720)).toEqual(["h264"]);
-        expect(preferredVideoCodecs("video", "high", "encode", 480 * 270)).toEqual(["vp9", "h264"]);
+        expect(preferredVideoCodecs("screenSharing", "high", "encode", 1920 * 1080, "P2P")).toEqual(["h264"]);
+        expect(preferredVideoCodecs("video", "high", "encode", 1280 * 720, "P2P")).toEqual(["h264"]);
+        expect(preferredVideoCodecs("video", "high", "encode", 480 * 270, "P2P")).toEqual(["vp9", "h264"]);
         expect(codecPerformance).toHaveBeenCalledWith("encode", "vp9", 480 * 270);
     });
 
     it("retries a not smooth codec when the weekly retry is granted", () => {
         vi.mocked(codecPerformance).mockReturnValue(verdict(false));
         vi.mocked(retryGranted).mockReturnValue(true);
-        expect(preferredVideoCodecs("video", "high", "decode", 1280 * 720)).toEqual(["vp9", "h264"]);
+        expect(preferredVideoCodecs("video", "high", "decode", 1280 * 720, "P2P")).toEqual(["vp9", "h264"]);
         expect(retryGranted).toHaveBeenCalledWith("decode", "vp9");
     });
 
     it("never retries an unsupported codec", () => {
         vi.mocked(codecPerformance).mockReturnValue({ supported: false, smooth: false, powerEfficient: false });
         vi.mocked(retryGranted).mockReturnValue(true);
-        expect(preferredVideoCodecs("screenSharing", "high", "encode", 1920 * 1080)).toEqual(["h264"]);
+        expect(preferredVideoCodecs("screenSharing", "high", "encode", 1920 * 1080, "P2P")).toEqual(["h264"]);
     });
 
     it("only gives a phone codecs its hardware handles", () => {
         vi.mocked(isAndroid).mockReturnValue(true);
-        expect(preferredVideoCodecs("video", "high", "encode", 1280 * 720)).toEqual(["h264"]);
+        expect(preferredVideoCodecs("video", "high", "encode", 1280 * 720, "P2P")).toEqual(["h264"]);
         vi.mocked(codecPerformance).mockImplementation((_direction, codec) =>
             codec === "vp9" ? verdict(true, true) : verdict(true, false),
         );
-        expect(preferredVideoCodecs("screenSharing", "high", "encode", 1280 * 720)).toEqual(["vp9", "h264"]);
-        expect(preferredVideoCodecs("video", "high", "decode", 1280 * 720)).toEqual(["vp9", "h264"]);
+        expect(preferredVideoCodecs("screenSharing", "high", "encode", 1280 * 720, "P2P")).toEqual(["vp9", "h264"]);
+        expect(preferredVideoCodecs("video", "high", "decode", 1280 * 720, "P2P")).toEqual(["vp9", "h264"]);
+    });
+
+    it("skips a software H.264 on LiveKit for VP8, smooth or not", () => {
+        // Chrome on a Mac: Constrained Baseline is OpenH264, whatever its history says
+        vi.mocked(codecPerformance).mockImplementation((_direction, codec) => verdict(codec === "h264"));
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "Livekit")).toEqual(["vp8"]);
+        vi.mocked(codecPerformance).mockReturnValue(verdict(true));
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "Livekit")).toEqual(["vp9", "vp8"]);
+        // P2P negotiates Baseline, hardware there: H.264 stays the floor whatever the verdict
+        vi.mocked(codecPerformance).mockReturnValue(verdict(false));
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "P2P")).toEqual(["h264"]);
+
+        // A hardware H.264, or no verdict at all, is kept as before, on a phone too
+        vi.mocked(codecPerformance).mockImplementation((_direction, codec) =>
+            codec === "h264" ? verdict(false, true) : undefined,
+        );
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "Livekit")).toEqual([
+            "vp9",
+            "h264",
+            "vp8",
+        ]);
+        vi.mocked(isIOS).mockReturnValue(true);
+        vi.mocked(codecPerformance).mockReturnValue(undefined);
+        expect(preferredVideoCodecs("video", "high", "encode", 1280 * 720, "Livekit")).toEqual(["h264", "vp8"]);
+    });
+
+    it("leaves a demoted H.264 for VP8 on LiveKit, and keeps it in P2P", () => {
+        demotedCodecStore.video.set("h264");
+
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "Livekit")).toEqual(["vp8"]);
+        expect(preferredVideoCodecs("video", "recommended", "encode", 1280 * 720, "P2P")).toEqual(["h264"]);
+        expect(negotiableVideoCodecs("video", "recommended")).toEqual(["h264"]);
     });
 });
 
@@ -154,6 +186,8 @@ describe("negotiableVideoCodecs", () => {
         vi.mocked(isAndroid).mockReturnValue(false);
         vi.mocked(isIOS).mockReturnValue(false);
         vi.mocked(retryGranted).mockReturnValue(false);
+        demotedCodecStore.video.set(undefined);
+        demotedCodecStore.screenSharing.set(undefined);
     });
 
     it("keeps only what can be encoded, in decode preference order: an iPhone gets H.264 both ways", () => {
@@ -168,7 +202,7 @@ describe("negotiableVideoCodecs", () => {
             }
             return { supported: false, smooth: false, powerEfficient: false };
         });
-        expect(preferredVideoCodecs("video", "high", "decode", 1280 * 720)).toEqual(["vp9", "h264"]);
+        expect(preferredVideoCodecs("video", "high", "decode", 1280 * 720, "P2P")).toEqual(["vp9", "h264"]);
         expect(negotiableVideoCodecs("video", "high")).toEqual(["h264"]);
         vi.mocked(isIOS).mockReturnValue(false);
     });

@@ -515,9 +515,16 @@ describe("codec demotion", () => {
         expect(publishTrack).toHaveBeenCalledTimes(2);
         expect(publishTrack.mock.calls[1][1].videoCodec).toBe("h264");
 
+        // An OpenH264 that cannot keep up either: VP8, the floor on LiveKit
+        demotedCodecStore.video.set("h264");
+        room["republishCamera"]();
+        await room["mediaTrackUpdateQueue"];
+        expect(unpublishTrack).toHaveBeenCalledTimes(2);
+        expect(publishTrack.mock.calls[2][1].videoCodec).toBe("vp8");
+
         // Turning the camera off afterwards pauses the publication, as before
         await room["handleCameraTrack"](undefined);
-        expect(unpublishTrack).toHaveBeenCalledOnce();
+        expect(unpublishTrack).toHaveBeenCalledTimes(2);
         const cameraTrack = room["localCameraTrack"] as unknown as { pauseUpstream: ReturnType<typeof vi.fn> };
         expect(cameraTrack.pauseUpstream.mock.calls).toHaveLength(1);
     });
