@@ -487,7 +487,7 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 	case *pb.ClientToServerMessage_QueryMessage:
 		s.query(msg.QueryMessage)
 	case *pb.ClientToServerMessage_EditMapCommandMessage:
-		s.editMap(ctx, msg.EditMapCommandMessage)
+		s.editMap(msg.EditMapCommandMessage)
 	case *pb.ClientToServerMessage_BanPlayerMessage:
 		b := msg.BanPlayerMessage
 		if !s.isAdmin() {

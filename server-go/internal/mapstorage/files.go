@@ -103,8 +103,8 @@ func (s *Store) upload(w http.ResponseWriter, r *http.Request, o Options) {
 		return
 	}
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.tree.Lock()
+	defer s.tree.Unlock()
 	root, err := s.folder(directory)
 	if err != nil {
 		http.Error(w, "Invalid directory", http.StatusBadRequest)
@@ -203,12 +203,12 @@ func (s *Store) put(w http.ResponseWriter, r *http.Request, o Options) {
 		http.Error(w, "Invalid path", http.StatusBadRequest)
 		return
 	}
-	s.mu.Lock()
+	unlock := s.lockFile(key)
 	err = writeFile(f, data)
+	unlock()
 	if path.Ext(key) == ".wam" {
 		s.forget(key)
 	}
-	s.mu.Unlock()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -278,9 +278,7 @@ func (s *Store) patch(w http.ResponseWriter, r *http.Request) {
 	case err != nil:
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	default:
-		s.mu.Lock()
 		s.forget(key)
-		s.mu.Unlock()
 		s.changed(key, false)
 		writeJSON(w, http.StatusOK, map[string]bool{"success": true})
 	}
@@ -301,14 +299,14 @@ func (s *Store) remove(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid path", http.StatusBadRequest)
 		return
 	}
-	s.mu.Lock()
+	s.tree.Lock()
 	if key == "" || key == "." {
 		err = emptyDir(target)
 	} else {
 		err = os.RemoveAll(target)
 	}
+	s.tree.Unlock()
 	s.forget(key)
-	s.mu.Unlock()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -389,7 +387,7 @@ func (s *Store) download(w http.ResponseWriter, r *http.Request) {
 	}
 	var buf bytes.Buffer
 	z := zip.NewWriter(&buf)
-	s.mu.Lock()
+	s.tree.RLock()
 	for _, f := range walk(root) {
 		if f == "__cache.json" || hidden(f) {
 			continue
@@ -402,7 +400,7 @@ func (s *Store) download(w http.ResponseWriter, r *http.Request) {
 			_, _ = out.Write(data)
 		}
 	}
-	s.mu.Unlock()
+	s.tree.RUnlock()
 	if err := z.Close(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -432,8 +430,8 @@ func (s *Store) moveOrCopy(w http.ResponseWriter, r *http.Request, move bool) {
 		http.Error(w, "Invalid directory", http.StatusBadRequest)
 		return
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.tree.Lock()
+	defer s.tree.Unlock()
 	if _, err := os.Stat(to); err == nil {
 		http.Error(w, "Destination already exist!", http.StatusConflict)
 		return

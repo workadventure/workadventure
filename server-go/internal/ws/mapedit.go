@@ -3,8 +3,6 @@ package ws
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log/slog"
 	"net/url"
 	"regexp"
 
@@ -12,6 +10,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
+	"github.com/workadventure/workadventure/server-go/internal/mapedit"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 	"github.com/workadventure/workadventure/server-go/internal/wam"
 )
@@ -35,6 +34,7 @@ func mapKey(roomURL string) string {
 // the client may have missed since its copy (lastCommandId), and from then on sends it every edit.
 func (s *Session) connectToRoom() {
 	key := mapKey(s.info.roomID)
+	// ponytail: the room parses its map on its goroutine, once, when its first connection arrives.
 	load := func() []core.Area {
 		if key == "" {
 			return nil
@@ -47,7 +47,7 @@ func (s *Session) connectToRoom() {
 		if err != nil {
 			return nil
 		}
-		return roomAreas(doc)
+		return mapedit.RoomAreas(doc)
 	}
 	connected := func() any {
 		var missed []*pb.EditMapCommandMessage
@@ -62,140 +62,123 @@ func (s *Session) connectToRoom() {
 	_ = s.room.Connect(s.ctx, s, load, connected)
 }
 
-// editMap applies a command of the map editor, then every connection to the room gets it, the editor included: the
-// front matches it with the command it applied ahead. A refusal goes to the editor alone, with the same id: its
-// front then undoes the command.
-func (s *Session) editMap(ctx context.Context, m *pb.EditMapCommandMessage) {
-	key := mapKey(s.info.roomID)
-	_ = s.room.EditMap(ctx, s, func() (any, any, []core.Area) {
-		echo, areas, err := s.applyEdit(key, m)
+// editMap queues a command of the map editor behind the other edits of its map (mapedit.Queue): it is stored off
+// the room's goroutine. Then every connection to the room gets it, the editor included: the front matches it with
+// the command it applied ahead. A refusal goes to the editor alone, with the same id: its front then undoes the
+// command.
+func (s *Session) editMap(m *pb.EditMapCommandMessage) {
+	key, roomURL := mapKey(s.info.roomID), s.info.roomID
+	ed := mapedit.Editor{UUID: s.info.userUUID, Tags: s.info.member.Tags, CanEdit: s.info.member.CanEdit}
+	refuse := func(err error) {
+		s.Send(core.NewMsg(core.MapEdit{Event: editMapSubMessage(m.GetId(), &pb.EditMapMessage{Message: &pb.EditMapMessage_ErrorCommandMessage{
+			ErrorCommandMessage: &pb.ErrorCommandMessage{Reason: err.Error()}}})}, true))
+	}
+	cmd, err := command(m.GetEditMapMessage())
+	if err != nil {
+		refuse(err)
+		return
+	}
+	err = s.srv.edits.Run(key, func() {
+		res, err := mapedit.Apply(s.srv.maps, key, ed, m.GetId(), cmd)
 		if err != nil {
-			return nil, editMapSubMessage(m.GetId(), &pb.EditMapMessage{Message: &pb.EditMapMessage_ErrorCommandMessage{
-				ErrorCommandMessage: &pb.ErrorCommandMessage{Reason: err.Error()}}}), nil
+			refuse(err)
+			return
 		}
-		done := &pb.EditMapCommandMessage{Id: m.GetId(), EditMapMessage: echo}
-		s.srv.maps.Record(key, m.GetId(), done)
-		return &pb.SubMessage{Message: &pb.SubMessage_EditMapCommandMessage{EditMapCommandMessage: done}}, nil, areas
+		done := &pb.EditMapCommandMessage{Id: m.GetId(), EditMapMessage: echo(m.GetEditMapMessage(), res, ed)}
+		// The room is held for the announcement: the editor may have left meanwhile.
+		room := s.srv.rooms.Acquire(roomURL)
+		defer s.srv.rooms.Release(roomURL)
+		_ = room.MapEdited(context.Background(), &pb.SubMessage{Message: &pb.SubMessage_EditMapCommandMessage{EditMapCommandMessage: done}},
+			res.Areas, func() { s.srv.maps.Record(key, m.GetId(), done) })
 	})
+	if err != nil {
+		refuse(err)
+	}
 }
 
 func editMapSubMessage(id string, e *pb.EditMapMessage) *pb.SubMessage {
 	return &pb.SubMessage{Message: &pb.SubMessage_EditMapCommandMessage{EditMapCommandMessage: &pb.EditMapCommandMessage{Id: id, EditMapMessage: e}}}
 }
 
-var errNotEditor = errors.New("You are not allowed to edit this map")
-
-// applyEdit applies one command. It returns what to announce, and the areas of the map when they may have changed.
-// Who may do what is map-storage's: map editors anything; the others only entities where they may write, their own
-// custom entities and files, and claiming a personal area (COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT).
-func (s *Session) applyEdit(key string, m *pb.EditMapCommandMessage) (*pb.EditMapMessage, []core.Area, error) {
-	if key == "" {
-		return nil, nil, errors.New("This room has no map to edit")
-	}
-	mb := s.info.member
-	echo := m.GetEditMapMessage()
-	var cmd any
-	switch v := echo.GetMessage().(type) {
+// command turns a message of the map editor into the command it asks for.
+func command(e *pb.EditMapMessage) (any, error) {
+	switch v := e.GetMessage().(type) {
 	case *pb.EditMapMessage_CreateAreaMessage:
 		c := v.CreateAreaMessage
-		cmd = wam.CreateArea{ID: c.GetId(), Name: c.GetName(), X: int64(c.GetX()), Y: int64(c.GetY()), Width: int64(c.GetWidth()),
-			Height: int64(c.GetHeight()), Properties: values(c.GetProperties())}
+		return wam.CreateArea{ID: c.GetId(), Name: c.GetName(), X: int64(c.GetX()), Y: int64(c.GetY()), Width: int64(c.GetWidth()),
+			Height: int64(c.GetHeight()), Properties: values(c.GetProperties())}, nil
 	case *pb.EditMapMessage_ModifyAreaMessage:
 		c := v.ModifyAreaMessage
-		mod := wam.ModifyArea{ID: c.GetId(), Name: c.Name, X: opt64(c.X), Y: opt64(c.Y), Width: optU64(c.Width), Height: optU64(c.Height),
-			Properties: values(c.GetProperties()), ModifyProperties: c.GetModifyProperties()}
-		if !mb.CanEdit {
-			file, err := s.srv.maps.Read(key)
-			claimed, ok := wam.Claim(file, mod, s.info.userUUID)
-			if err != nil || !ok {
-				return nil, nil, fmt.Errorf("User %s is not allowed to edit the map and this modification is not a valid claim or revoke on map %s", s.info.userUUID, key)
-			}
-			mod = claimed
-		}
-		cmd = mod
+		return wam.ModifyArea{ID: c.GetId(), Name: c.Name, X: opt64(c.X), Y: opt64(c.Y), Width: optU64(c.Width), Height: optU64(c.Height),
+			Properties: values(c.GetProperties()), ModifyProperties: c.GetModifyProperties()}, nil
 	case *pb.EditMapMessage_DeleteAreaMessage:
-		cmd = wam.DeleteArea{ID: v.DeleteAreaMessage.GetId()}
+		return wam.DeleteArea{ID: v.DeleteAreaMessage.GetId()}, nil
 	case *pb.EditMapMessage_CreateEntityMessage:
 		c := v.CreateEntityMessage
-		if err := s.mayEditEntityAt(key, c.GetX(), c.GetY(), c.GetWidth(), c.GetHeight()); err != nil {
-			return nil, nil, err
-		}
-		cmd = wam.CreateEntity{ID: c.GetId(), PrefabID: c.GetPrefabId(), CollectionName: c.GetCollectionName(), X: int64(c.GetX()), Y: int64(c.GetY()),
-			Name: c.Name, Properties: values(c.GetProperties())}
+		return wam.CreateEntity{ID: c.GetId(), PrefabID: c.GetPrefabId(), CollectionName: c.GetCollectionName(), X: int64(c.GetX()), Y: int64(c.GetY()),
+			Width: int64(c.GetWidth()), Height: int64(c.GetHeight()), Name: c.Name, Properties: values(c.GetProperties())}, nil
 	case *pb.EditMapMessage_ModifyEntityMessage:
 		c := v.ModifyEntityMessage
-		if err := s.mayEditEntityAt(key, c.GetX(), c.GetY(), c.GetWidth(), c.GetHeight()); err != nil {
-			return nil, nil, err
-		}
-		cmd = wam.ModifyEntity{ID: c.GetId(), X: int64(c.GetX()), Y: int64(c.GetY()), Name: c.Name, Properties: values(c.GetProperties()),
-			ModifyProperties: c.GetModifyProperties()}
+		return wam.ModifyEntity{ID: c.GetId(), X: int64(c.GetX()), Y: int64(c.GetY()), Width: int64(c.GetWidth()), Height: int64(c.GetHeight()),
+			Name: c.Name, Properties: values(c.GetProperties()), ModifyProperties: c.GetModifyProperties()}, nil
 	case *pb.EditMapMessage_DeleteEntityMessage:
-		// ponytail: like map-storage, anyone in the room may delete an entity.
-		cmd = wam.DeleteEntity{ID: v.DeleteEntityMessage.GetId()}
+		return wam.DeleteEntity{ID: v.DeleteEntityMessage.GetId()}, nil
 	case *pb.EditMapMessage_UpdateWAMSettingsMessage:
 		switch w := v.UpdateWAMSettingsMessage.GetMessage().(type) {
 		case *pb.UpdateWAMSettingsMessage_UpdateMegaphoneSettingMessage:
 			settings, _ := fromValue(w.UpdateMegaphoneSettingMessage.GetSettings())
-			cmd = wam.SetMegaphone{Settings: settings}
+			return wam.SetMegaphone{Settings: settings}, nil
 		case *pb.UpdateWAMSettingsMessage_UpdateRecordingSettingMessage:
 			settings, _ := fromValue(w.UpdateRecordingSettingMessage.GetSettings())
-			cmd = wam.SetRecording{Settings: settings}
+			return wam.SetRecording{Settings: settings}, nil
 		}
 	case *pb.EditMapMessage_ModifiyWAMMetadataMessage:
 		c := v.ModifiyWAMMetadataMessage
-		cmd = wam.SetMetadata{Name: c.GetName(), Description: c.Description, Copyright: c.Copyright, Thumbnail: c.Thumbnail, Tags: c.Tags}
+		return wam.SetMetadata{Name: c.GetName(), Description: c.Description, Copyright: c.Copyright, Thumbnail: c.Thumbnail, Tags: c.Tags}, nil
 	case *pb.EditMapMessage_UploadEntityMessage:
-		return s.uploadEntity(v.UploadEntityMessage)
+		c := v.UploadEntityMessage
+		return mapedit.UploadEntity{ID: c.GetId(), Name: c.GetName(), ImagePath: c.GetImagePath(), Direction: c.GetDirection().String(),
+			Color: c.GetColor(), Tags: c.GetTags(), CollisionGrid: grid(c.GetCollisionGrid()), DepthOffset: c.DepthOffset, File: c.GetFile()}, nil
 	case *pb.EditMapMessage_ModifyCustomEntityMessage:
-		return echo, nil, s.modifyCustomEntity(v.ModifyCustomEntityMessage)
+		c := v.ModifyCustomEntityMessage
+		return mapedit.ModifyCustomEntity{ID: c.GetId(), Name: c.GetName(), Tags: c.GetTags(), CollisionGrid: grid(c.GetCollisionGrid()),
+			DepthOffset: c.DepthOffset}, nil
 	case *pb.EditMapMessage_DeleteCustomEntityMessage:
-		id := v.DeleteCustomEntityMessage.GetId()
-		if err := s.deleteCustomEntity(id); err != nil {
-			return nil, nil, err
-		}
-		cmd = wam.DeleteEntitiesOf{PrefabID: id}
+		return mapedit.DeleteCustomEntity{ID: v.DeleteCustomEntityMessage.GetId()}, nil
 	case *pb.EditMapMessage_UploadFileMessage:
-		return s.uploadFile(v.UploadFileMessage)
+		c := v.UploadFileMessage
+		return mapedit.UploadFile{Name: c.GetName(), PropertyID: c.GetPropertyId(), File: c.GetFile()}, nil
 	}
-	if cmd == nil {
-		return nil, nil, errors.New("This command is not supported")
-	}
-	switch cmd.(type) {
-	case wam.CreateArea, wam.DeleteArea, wam.SetMegaphone, wam.SetRecording, wam.SetMetadata:
-		if !mb.CanEdit {
-			return nil, nil, errNotEditor
-		}
-	}
-	var res wam.Result
-	err := s.srv.maps.Edit(key, func(file []byte) ([]byte, error) {
-		out, r, err := wam.Edit(file, m.GetId(), cmd)
-		res = r
-		return out, err
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	for _, f := range res.Removed {
-		if err := s.srv.maps.Remove(f); err != nil {
-			slog.Warn("cannot remove a file no property links to", "file", f, "error", err)
-		}
-	}
-	if res.Area != nil {
-		echo = modifiedArea(res.Area)
-	}
-	return echo, roomAreas(res.Doc), nil
+	return nil, errors.New("This command is not supported")
 }
 
-// mayEditEntityAt checks that a user who may not edit the map places or changes an entity where it may write.
-func (s *Session) mayEditEntityAt(key string, x, y int32, width, height uint32) error {
-	if s.info.member.CanEdit {
+// grid is a collision grid as sent, or nil.
+func grid(g *structpb.Value) any {
+	if g == nil {
 		return nil
 	}
-	file, err := s.srv.maps.Read(key)
-	if err == nil && wam.CanEditAt(file, float64(x)+float64(width)/2, float64(y)+float64(height)/2, s.info.member.Tags, s.info.userUUID) {
-		return nil
+	v, _ := fromValue(g)
+	return v
+}
+
+// echo is what the room is told of an applied command.
+func echo(e *pb.EditMapMessage, res mapedit.Result, ed mapedit.Editor) *pb.EditMapMessage {
+	switch v := e.GetMessage().(type) {
+	case *pb.EditMapMessage_ModifyAreaMessage:
+		if res.Area != nil {
+			return modifiedArea(res.Area)
+		}
+	case *pb.EditMapMessage_UploadEntityMessage:
+		// Everybody learns who owns it; nobody needs the image again.
+		c := proto.Clone(v.UploadEntityMessage).(*pb.UploadEntityMessage)
+		c.File, c.OwnerId = nil, proto.String(ed.UUID)
+		return &pb.EditMapMessage{Message: &pb.EditMapMessage_UploadEntityMessage{UploadEntityMessage: c}}
+	case *pb.EditMapMessage_UploadFileMessage:
+		c := proto.Clone(v.UploadFileMessage).(*pb.UploadFileMessage)
+		c.File = nil
+		return &pb.EditMapMessage{Message: &pb.EditMapMessage_UploadFileMessage{UploadFileMessage: c}}
 	}
-	return fmt.Errorf("User %s is not allowed to edit this entity on map %s", s.info.userUUID, key)
+	return e
 }
 
 func opt64(v *int32) *int64 {
@@ -212,38 +195,6 @@ func optU64(v *uint32) *int64 {
 	}
 	n := int64(*v)
 	return &n
-}
-
-// roomAreas is what the room needs of the map's areas: where they are, and their lock and capacity.
-func roomAreas(doc map[string]any) []core.Area {
-	list, _ := doc["areas"].([]any)
-	areas := make([]core.Area, 0, len(list))
-	for _, a := range list {
-		m, _ := a.(map[string]any)
-		id, _ := m["id"].(string)
-		area := core.Area{ID: id, X: float(m["x"]), Y: float(m["y"]), Width: float(m["width"]), Height: float(m["height"])}
-		props, _ := m["properties"].([]any)
-		for _, p := range props {
-			pm, _ := p.(map[string]any)
-			pid, _ := pm["id"].(string)
-			typ, _ := pm["type"].(string)
-			prop := core.AreaProperty{ID: pid, Type: typ}
-			if tags, ok := pm["allowedTags"].([]any); ok {
-				for _, t := range tags {
-					if str, ok := t.(string); ok {
-						prop.AllowedTags = append(prop.AllowedTags, str)
-					}
-				}
-			}
-			if n, ok := pm["maxUsers"]; ok && n != nil {
-				v := int(float(n))
-				prop.MaxUsers = &v
-			}
-			area.Properties = append(area.Properties, prop)
-		}
-		areas = append(areas, area)
-	}
-	return areas
 }
 
 // float reads a number of a decoded document (json.Number, float64 or int64).

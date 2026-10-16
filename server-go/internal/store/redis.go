@@ -7,64 +7,78 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"sync"
 	"time"
 )
 
-// Redis speaks the few commands the variables need (RESP2) over one connection, dialled again after an error.
-// ponytail: one connection for the whole server; a pool if variables ever get busy.
+// Redis speaks the few commands the variables need (RESP2) over a small pool of connections: the joins of a room
+// read their variables side by side. A connection that fails is closed; the next command dials a new one.
 type Redis struct {
 	addr, password string
-	mu             sync.Mutex
-	conn           net.Conn
-	r              *bufio.Reader
+	slots          chan struct{} // one per connection in use; at most poolSize
+	idle           chan *redisConn
 }
 
-func NewRedis(addr, password string) *Redis { return &Redis{addr: addr, password: password} }
+// poolSize bounds the connections to Redis. The variable writes come one at a time, in order (Writer).
+const poolSize = 8
+
+type redisConn struct {
+	net.Conn
+	r *bufio.Reader
+}
+
+func NewRedis(addr, password string) *Redis {
+	return &Redis{addr: addr, password: password, slots: make(chan struct{}, poolSize), idle: make(chan *redisConn, poolSize)}
+}
 
 func (c *Redis) do(ctx context.Context, args ...string) (any, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.conn == nil {
-		if err := c.dial(ctx); err != nil {
+	select {
+	case c.slots <- struct{}{}:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+	defer func() { <-c.slots }()
+	var conn *redisConn
+	select {
+	case conn = <-c.idle:
+	default:
+		var err error
+		if conn, err = c.dial(ctx); err != nil {
 			return nil, err
 		}
 	}
-	reply, err := c.roundTrip(ctx, args)
-	if err != nil {
-		var redisErr replyError
-		if !errors.As(err, &redisErr) {
-			c.conn.Close()
-			c.conn = nil
-		}
+	reply, err := conn.roundTrip(ctx, args)
+	var redisErr replyError
+	if err != nil && !errors.As(err, &redisErr) {
+		conn.Close()
+		return nil, err
 	}
+	c.idle <- conn // never blocks: there are at most poolSize connections
 	return reply, err
 }
 
-func (c *Redis) dial(ctx context.Context) error {
+func (c *Redis) dial(ctx context.Context) (*redisConn, error) {
 	var d net.Dialer
-	conn, err := d.DialContext(ctx, "tcp", c.addr)
+	nc, err := d.DialContext(ctx, "tcp", c.addr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	c.conn, c.r = conn, bufio.NewReader(conn)
+	conn := &redisConn{Conn: nc, r: bufio.NewReader(nc)}
 	if c.password != "" {
-		if _, err := c.roundTrip(ctx, []string{"AUTH", c.password}); err != nil {
-			c.conn.Close()
-			c.conn = nil
-			return err
+		if _, err := conn.roundTrip(ctx, []string{"AUTH", c.password}); err != nil {
+			conn.Close()
+			return nil, err
 		}
 	}
-	return nil
+	return conn, nil
 }
 
-func (c *Redis) roundTrip(ctx context.Context, args []string) (any, error) {
+func (c *redisConn) roundTrip(ctx context.Context, args []string) (any, error) {
 	deadline := time.Now().Add(2 * time.Second)
 	if d, ok := ctx.Deadline(); ok && d.Before(deadline) {
 		deadline = d
 	}
-	_ = c.conn.SetDeadline(deadline)
-	if _, err := c.conn.Write(command(args)); err != nil {
+	_ = c.SetDeadline(deadline)
+	if _, err := c.Write(command(args)); err != nil {
 		return nil, err
 	}
 	return readReply(c.r)

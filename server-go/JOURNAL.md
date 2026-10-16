@@ -399,3 +399,68 @@ Lignes ajoutées : ≈ 2 300 de production, ≈ 300 de tests.
 **Aide extérieure.**
 - Le point 2 relevé par Rust et transmis par la session socle : sur un changement de rôle, le pusher juge avec le rôle actuel de l'observateur. Il a été aligné en `9b60ea7bb`.
 - La correction de la configuration du socle (`MAP_EDITOR_ALLOW_ALL_USERS=false`, applications tierces, `dev/dev assets <stack>`) et la référence TS avec son tri.
+
+## Jalon 1, tranche 1 — gel de salle et rattrapage des tests J3a (2026-10-17)
+
+Nouveau cadre du 17/10, relayé par la session socle : le jalon 1, « parité production », remplace J4 et J5.
+
+**État des lieux.**
+- HEAD `6f47de779` : J3b (`711a992f2`) plus deux fusions de `dev-socle`. Worktree propre.
+- Le journal n'avait pas de section J3b.
+- Le passage Playwright J3b du 15/10 n'est pas exploitable : 25 réussis, 17 échecs, 3 sautés.
+  - Les 11 échecs hors de la liste TS sont des pages blanches avant l'entrée dans la carte.
+  - Ils durent 15 à 17 minutes, pour un délai de 2 minutes : le Mac s'est mis en veille.
+  - À rejouer sous `caffeinate`. Le 17/10, toutes les stacks sont arrêtées ; j'attends la session socle.
+
+**P0, gel de salle** (relecture extérieure du 15/10, et §5.2 du rapport Codex).
+- **Avant.** L'acteur de la salle lisait et écrivait la carte (`Room.EditMap`), sous le verrou unique de map-storage. Un envoi gardait ce verrou pendant toute son écriture.
+- **Le paquet `internal/mapedit`** sort de la couche WebSocket. Il porte :
+  - qui peut faire quoi ;
+  - les commandes et les entités personnalisées ;
+  - une file par carte : les éditions d'une carte passent une à une, dans l'ordre d'arrivée, sur la goroutine de la carte, jamais sur celle de la salle.
+- **La salle** ne reçoit plus que le résultat (`Room.MapEdited`). Le journal de rattrapage s'écrit dans l'acteur, juste avant l'annonce, pour qu'une connexion n'ait l'édition ni deux fois ni jamais.
+- **Map-storage.**
+  - Chaque fichier a son verrou ; un verrou d'arborescence sert aux envois, déplacements, copies et suppressions de dossier.
+  - L'édition est calculée sur une copie, sans verrou. Elle n'est écrite que si le fichier est encore cette version ; sinon elle est recalculée sur la nouvelle, avec 5 essais au plus, puis `ErrBusy`.
+- **Redis** passe à 8 connexions : les arrivées d'une salle lisent leurs variables en parallèle. Les écritures restent une à une, dans l'ordre (`Writer`).
+- `internal/workpool`, inutilisé, est supprimé.
+- **Limites marquées `ponytail:`.**
+  - Un envoi garde le verrou d'arborescence le temps d'écrire ses fichiers, la validation se faisant avant : pendant ce temps, aucune édition n'est enregistrée. Aucune salle n'attend.
+  - La salle lit et analyse sa carte une fois, sur sa goroutine, à sa première connexion.
+  - Une édition n'est annoncée qu'à la salle de l'éditeur, comme avant.
+
+**Tests de scénario ajoutés** (format : une suite d'événements, puis les messages attendus ; adaptateurs en mémoire, sans réseau).
+- **`mapedit`, 19 tests :**
+  - une salle livre les déplacements pendant qu'on écrit sa carte ;
+  - les éditions d'une carte passent dans l'ordre d'arrivée, et une carte lente ne retient pas les autres ;
+  - droits des zones : un membre meuble là où ses tags écrivent, ou sa zone personnelle ; seuls les éditeurs dessinent des zones et changent les réglages ;
+  - revendication et restitution d'une zone personnelle, une revendication ne prenant que le propriétaire et le nom ;
+  - zones et entités, fichier d'une propriété `openFile` supprimé avec elle ;
+  - entités personnalisées : propriétaire, droits, copies retirées de la carte.
+- **`mapstorage`, 6 tests :**
+  - une édition calculée sur la v10 n'écrase pas la v11 ;
+  - abandon après 5 essais ;
+  - deux cartes ne s'attendent pas ;
+  - rattrapage `lastCommandId`, oublié quand la carte est remplacée.
+- **`core`, 3 tests** de variables de zone : une zone verrouillée qu'on éloigne de tous se déverrouille ; une zone pleine se libère ; seuls les tags autorisés verrouillent.
+- **`store`, 1 test** : les lectures de variables ne s'attendent pas.
+- **Faux succès corrigé** : modifier une entité personnalisée inconnue répondait un succès. C'est maintenant une erreur.
+
+**Compteurs** : `go test ./...` passe de 70 à 99 tests.
+
+| Paquet | Couverture |
+|---|---|
+| `core` | 84,2 % |
+| `mapedit` | 83,5 % |
+| `mapstorage` | 73,9 % |
+| `store` | 76,2 % |
+| `wam` | 53,3 % |
+| `ws` | 46,3 % |
+
+`./verify.sh` est vert.
+
+**Aide extérieure.**
+- La relecture du 15/10 transmise par la session socle : gel de salle, verrou global, connexion Redis unique.
+- Rapport Codex (`reference-implementation-go-rust.md`, §1, §3, §4, §5.1, §5.2 Go, §5.4, §5.5) : le P0 « I/O d'édition dans l'acteur ».
+- En lisant le §4.1, j'ai aussi lu les trois puces « Points Rust » qui suivent les points Go dans le même bloc. Ce sont des constats de haut niveau (schémas de propriétés WAM, écarts sur les droits d'entités, `open_website:29`). Je ne m'en sers pas.
+- Quatre agents d'inventaire, en lecture seule, du TS et du Go, pour `PARITY.md`, avec la consigne de ne rien lire côté Rust.
