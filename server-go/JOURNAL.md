@@ -464,3 +464,54 @@ Nouveau cadre du 17/10, relayé par la session socle : le jalon 1, « parité pr
 - Rapport Codex (`reference-implementation-go-rust.md`, §1, §3, §4, §5.1, §5.2 Go, §5.4, §5.5) : le P0 « I/O d'édition dans l'acteur ».
 - En lisant le §4.1, j'ai aussi lu les trois puces « Points Rust » qui suivent les points Go dans le même bloc. Ce sont des constats de haut niveau (schémas de propriétés WAM, écarts sur les droits d'entités, `open_website:29`). Je ne m'en sers pas.
 - Quatre agents d'inventaire, en lecture seule, du TS et du Go, pour `PARITY.md`, avec la consigne de ne rien lire côté Rust.
+
+## Jalon 1, tranche 2 — matrice, Room API, LiveKit, durabilité des variables (2026-10-17)
+
+**`PARITY.md`** : une matrice d'environ 100 lignes, faite à partir de quatre inventaires en lecture seule. Elle couvre les messages WS, les routes HTTP, les variables d'environnement, l'admin, le white label, Matrix, LiveKit, l'enregistrement, la Room API, la persistance et les métriques.
+
+Verdict : **remplacement SaaS interdit** tant que manquent :
+- le client de l'admin distante (le serveur refuse même de démarrer avec `ADMIN_API_URL`) ;
+- l'isolation des tenants (clé de stockage par domaine, clé de space par `world`).
+
+**Faux semblants corrigés.**
+- Le bouton d'enregistrement s'affichait dès que les variables S3 étaient là, alors que la requête était toujours refusée. Il est masqué tant que ce serveur n'enregistre pas.
+- `/debug/pprof` était servi sans jeton sur le port des métriques. Il passe derrière le même jeton.
+
+**Durabilité des variables** (relevé par l'inventaire de persistance). Une écriture faite pendant une coupure de Redis se perdait après un seul essai, et la file jetait au-delà de 4 096. Désormais :
+- la file ne garde que la dernière valeur de chaque champ : sa taille suit les variables, pas le débit ;
+- elle réessaie avec un délai croissant (5 s au plus) jusqu'au retour de Redis ;
+- elle est vidée à l'arrêt, avec 10 s au plus.
+
+**`WAM_TEMPLATE_URL`.** Un `.tmj` envoyé seul reçoit le gabarit, avec l'URL et les métadonnées de la carte.
+
+**Room API.** gRPC écrit à la main sur HTTP/2 sans TLS, sans dépendance nouvelle.
+- Port : `ROOM_API_PORT`, ou `SERVER_ROOM_API_PORT` quand il est défini. Le serveur n'est lancé que si `ROOM_API_SECRET_KEY` l'est.
+- Clé `X-API-Key` et room sous `FRONT_URL`, avec les messages du TS.
+- `readVariable`, `saveVariable` et `listenVariable`, sans les tags `readableBy`/`writableBy` ; une variable non déclarée est refusée, après relecture de la carte.
+- `broadcastEvent` et `listenToEvent` ; un événement ciblé ne va qu'aux joueurs nommés.
+- Le cœur gagne des « observateurs » de salle qui ne sont pas des joueurs (`core/roomapi.go`).
+- Un écouteur trop lent est coupé au-delà de 256 messages en attente : la salle ne l'attend pas.
+
+**LiveKit.**
+- **Politique du back** : bascule au-delà de `MAX_USERS_FOR_WEBRTC`, ou dès qu'un membre est limité en CPU dans une bulle de 3 ou plus ; retour 20 s après que la condition est retombée, annulé si elle revient ; `switchMessage`, puis `finalizeSwitchMessage` de l'ancienne stratégie 5 s plus tard.
+- **Invitations** pour les membres du filtre et les observateurs. La salle est créée quand quelqu'un diffuse et supprimée quand plus personne ne diffuse.
+- **Écart volontaire** : la salle est aussi supprimée quand on revient en WebRTC. Le TS la laissait orpheline jusqu'au délai de vidage de LiveKit.
+- **Appels** : client Twirp (JSON) et jeton HS256, avec `golang-jwt`, déjà présent. Les appels passent hors de l'acteur, un à la fois par space. Les réponses et les minuteurs reviennent par un `Post` refusé une fois le space arrêté.
+
+**Tests** : 120 tests au total.
+
+| Paquet | Couverture |
+|---|---|
+| `core` | 84,9 % |
+| `mapedit` | 83,5 % |
+| `roomapi` | 82,6 % |
+| `livekit` | 88,6 % |
+| `store` | 82,6 % |
+
+- Tests de scénario du cœur ajoutés : Room API (4), LiveKit (6 : bascule à 5, retour retardé, retour annulé, CPU limité, mégaphone, sans LiveKit).
+- `./verify.sh` est vert.
+- Les specs `livekit`, `room-api` et `swagger_doc` (J3c) restent à jouer sur la stack.
+
+**Aide extérieure.**
+- Inventaires de parité par quatre agents en lecture seule (TS et Go), avec la consigne de ne rien lire côté Rust.
+- Pour LiveKit et l'enregistrement, les rapports de recherche du 14/10.
