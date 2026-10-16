@@ -12,7 +12,7 @@ Un paramètre lu ou un test sans assertion ne vaut pas `validé`. « Spec » = P
 `dev/dev stack up rust --variant server`, comptes préchauffés (`dev/warm-auth.mjs`). « Réf. TS » = même spec sur la
 stack `ts` du socle.
 
-**Dernier passage :** branche `lang-rust`, état de travail sur `db129c02d` (2026-10-17). Inventaires TS du
+**Dernier passage :** branche `lang-rust`, `60f1c4119` + métadonnées des bots (2026-10-17). Inventaires TS du
 17/10 (routes HTTP, messages WebSocket, intégrations), faits par des sous-agents sur le code TS du dépôt.
 
 **Verrou :** remplacement de production interdit tant que les lignes Admin SaaS, white label, LiveKit,
@@ -27,7 +27,8 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 | J1 + J2 : AvailabilityStatus, camera_order, error_pages, meeting, oidc, reconnect, say_bubbles, scripting_moveto, userlist, webrtc_reconnection, raise-hand, raise-hand-megaphone, map_editor_megaphone_speaker_zone, chat/proximityChatPoll, scripting_spaces | connexion, déplacements, bulles, P2P, spaces, état de space, megaphone | `validé` | non-régression J3a : 68 réussis, 2 sautés, 0 échec (`userlist` « Send Message » passe, échoue en TS) | — | rejouer à chaque tranche |
 | Schémas des propriétés WAM (AreaDataProperty, EntityDataProperty) | une propriété acceptée doit passer `WAMFileFormat` au prochain chargement TS | `implémenté non vérifié` | test `properties_follow_the_map_editor_schemas` | — | rejouer J3a |
 | J3a : areas, map_editor_* (12 fichiers hors livekit/megaphone), map_storage_upload, personal_area_claim, personal_desk_spawn_on_connect | éditeur de carte, map-storage | `validé` sauf une ligne | 70/72 (1 sauté Klaxoon), réf. TS 67/72 | `map_editor_open_website:29` échoue (échoue aussi en TS) : cause à établir | rejouer avec la réf. TS, classer (défaut de test / environnement / défaut TS / régression) |
-| J3b : variables, scripting_area, scripting_chat, scripting_enter_leave_layer, scripting_events, scripting_follow, scripting_open_cowebsite, scripting_playermessage, scripting_setStatus, scripting_startVideo, api_players, iframe_script, banner_script, buttonactionbar_script, modal_script, metadata, modules, moderation, report_issue, meeting_invitation | scripting, variables, joueurs distants, modération | `absent` (brouillon des variables de room, non branché) | réf. TS : 35 réussis, 7 échecs connus, 3 sautés mobile | tout le serveur côté variables, événements, suivi, modération, invitations | J3b (étape 2) |
+| J3b : api_players, scripting_area, scripting_chat, scripting_enter_leave_layer, scripting_events, scripting_follow, scripting_open_cowebsite, scripting_playermessage, scripting_setStatus, scripting_startVideo, iframe_script, banner_script, buttonactionbar_script, modal_script, metadata, modules, moderation, report_issue, meeting_invitation | scripting, variables de joueur, événements, suivi, modération, invitations | `validé` sauf une ligne | 39 tests : 38 réussis (`metadata` rejouée après correction : 2/2) ; réf. TS 35 réussis, 7 échecs connus | `report_issue:7` : bouton conditionné à `SENTRY_DSN_FRONT`, absent de l'environnement de la stack (environnement, échoue aussi en TS) | — |
+| variables.spec | variables de room persistantes, carte modifiée | `partiel` | `:188` échoue : la carte que le test écrit dans `maps/` n'est pas servie par le socle (404 sur `variables_tmp.json`), comme en TS ; `:61` est joué par le socle (redémarrages) | Redis non prouvé de bout en bout | demander au socle de jouer `:61` sur la stack rust ; signaler le 404 de `:188` |
 | J3c : livekit, map_editor_livekit, recording, screensharing, room-api, swagger_doc, scripting_audio_stream | LiveKit, enregistrement, Room API, OpenAPI | `absent` | — | voir §5, §6, §7 | J3c |
 | Médias côté front : adaptive_streaming, background_effects, media_devices, instant_unmute, noise_suppression, p2p_mute_keeps_sender, picture_in_picture, video_layout, webrtc_codecs, webrtc_cpu_limitation | P2P et réglages locaux | `implémenté non vérifié` | le relais P2P est validé par J1/J2 ; ces specs n'ont jamais été jouées sur Rust | `webrtc_cpu_limitation` dépend du passage LiveKit sur `cpuLimited` | jouer en lot après J3b |
 | Front seul : browser_not_supported, translate, pwa_install_menu, responsive_actionbar, cowebsite_resize, chat/chatIme | pages et UI | `implémenté non vérifié` | non jouées | `pwa_install_menu` lit `/manifest.json` (absent, §2) | jouer en lot |
@@ -40,7 +41,7 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 |---|---|---|---|---|---|
 | `GET /ping`, `GET /ready` | sondes | `validé` | image prod : `/ping` 200 ; `/ready` 503 jusqu'au gabarit | — | — |
 | `GET /metrics` (+ `PROMETHEUS_PORT`, jeton Bearer) | métriques | `partiel` | test unitaire des noms ; jauges `nb_rooms`, `nb_sockets`, `nb_spaces`, `nb_clients_per_room`, `nb_groups_per_room`, `counter_groups_per_room` | `nb_publishers_per_space`, `nb_watchers_per_world` absentes | ajouter avec J3c |
-| `GET /`, `/login`, `/_/*`, `/@/*`, `/~/*`, `/index.html` | page de jeu, méta-balises | `validé` | specs J1 | `/@/*` sans admin distante répond en local | — |
+| `GET /`, `/login`, `/_/*`, `/@/*`, `/~/*`, `/index.html` | page de jeu, méta-balises (pour un robot : `mapName`, `mapDescription` de la carte) | `validé` | specs J1, `metadata` 2/2 | `/@/*` sans admin distante répond en local ; carte d'un réseau privé lue si `STORE_VARIABLES_FOR_LOCAL_MAPS` (TS : liste d'URL de test codée en dur) | — |
 | `GET /jwt`, `/manifest.json`, `/server.json` | page dépréciée, PWA, infos serveur | `absent` | — | manifest : `pwa_install_menu` | ajouter avec les specs front |
 | `GET /.well-known/cf-custom-hostname-challenge/*` | défi Cloudflare via l'admin | `absent` | — | white label SaaS | avec l'admin distante |
 | Statique local / proxy (`ASSETS_URL` + `ASSETS_INTERNAL_URL`) | assets du front | `validé` (mode proxy) | stacks du socle | mode fichiers locaux non testé | — |
@@ -52,7 +53,8 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 | `POST /save-name`, `/save-textures`, `/save-companion-texture` | sauvegarde via l'admin | `absent` | — | sans admin : TS rejette aussi | admin distante |
 | `GET /local-script` | script localhost | `implémenté non vérifié` | — | — | — |
 | `GET /rooms` | utilisateurs par room (`ADMIN_API_TOKEN`, en-tête `admin-token` ou `Authorization`) | `implémenté non vérifié` | — | une room qui ne répond pas en 1 s est omise, comme un back muet | `variables.spec:192` |
-| `POST /room/refresh`, `POST /message`, `POST /global/event`, `POST /external-module/event` | appels entrants de l'admin | `absent` | — | `/global/event` : J3b | J3b puis admin |
+| `POST /global/event` | événement à toutes les rooms, sans émetteur | `validé` | `scripting_events` | — | — |
+| `POST /room/refresh`, `POST /message`, `POST /external-module/event` | appels entrants de l'admin | `absent` | — | — | admin |
 | `WS /ws/admin/rooms` (`ADMIN_SOCKETS_TOKEN`) | écoute admin | `absent` | — | — | admin distante |
 | `POST /roomArea`, `PATCH`, `DELETE` (`MAP_STORAGE_API_TOKEN`) | salles Matrix des zones | `absent` | — | Matrix | après J3c |
 | `POST /livekit/egress/webhook` | webhook egress | `absent` | — | enregistrement | J3c |
@@ -71,8 +73,12 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 | `editMapCommandMessage`, `setAreaPropertyVariableMessage` | `validé` | specs J3a ; test « la salle continue pendant un upload lent » | — |
 | `queryMessage`, `abortQueryMessage` | `partiel` | voir §4 | — |
 | `variableMessage` | `partiel` | test « room_variables_follow_the_map_rights… » ; `variables.spec:192` à jouer | variables de la carte (TMJ du stockage ou URL de la carte, contrôle réseau privé, 10 s, 50 Mo), droits `readableBy`/`writableBy`, diffusion filtrée, refus → `errorMessage` puis fermeture, relecture de la carte au plus toutes les 10 s ; Redis non vérifié de bout en bout (`variables.spec:61`, joué par le socle) ; Room API absente |
-| `itemEventMessage`, `emotePromptMessage`, `followRequestMessage`, `followConfirmationMessage`, `followAbortMessage`, `lockGroupPromptMessage`, `meetingInvitationRequestMessage`, `meetingInvitationResponseMessage`, `entityMessage` | `absent` (ignorés) | — | J3b |
-| `banPlayerMessage`, `playGlobalMessage`, `reportPlayerMessage` | `absent` | — | J3b (kick local) puis admin (ban, report) |
+| `itemEventMessage`, `emotePromptMessage` (emoji seuls, 32 unités UTF-16), `lockGroupPromptMessage` | `validé` | tests `room.rs` (émote, bulle verrouillée), test de bots « players_reach_each_other… » | — |
+| `followRequestMessage`, `followConfirmationMessage`, `followAbortMessage` | `partiel` | `scripting_follow`, `social.rs`, test de bots | un suiveur sorti du rayon ne reste pas dans la bulle (Group.ts le garde) | à traiter si un parcours le demande |
+| `meetingInvitationRequestMessage`, `meetingInvitationResponseMessage` | `validé` | `meeting_invitation` 3/3, `social.rs` (5ᵉ invitation refusée) | — | — |
+| `setPlayerDetailsMessage.setVariable` | `partiel` | `api_players` 9/9 (TS : 7/9) | portée monde (`pw_…`) ramenée à la room, comme le back sans monde d'admin ; TTL plafonné par `PLAYER_VARIABLES_MAX_TTL` (le back prend le plus grand : écart volontaire) | avec l'admin |
+| `banPlayerMessage` | `partiel` | `moderation` 2/2 | kick local (admins seulement) ; le ban demande l'admin | admin |
+| `entityMessage`, `playGlobalMessage`, `reportPlayerMessage` | `absent` (ignorés) | — | admin / J3c |
 | `updateChatIdMessage`, `leaveChatRoomAreaMessage` | `absent` | — | Matrix / admin |
 | `videoQualityReportMessage`, `analyticsEventReportMessage` | `absent` (ignorés) | — | analytics admin (§8) |
 
@@ -85,7 +91,8 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 | `embeddableWebsiteQuery`, `roomsFromSameWorldQuery`, `mapStorageJwtQuery` | `validé` | specs J3a | `roomsFromSameWorld` depuis l'admin absent |
 | `roomTagsQuery`, `searchTagsQuery`, `chatMembersQuery`, `getRecordingsQuery` | `partiel` : réponse vide | — | vide comme LocalAdmin ; version admin et S3 absentes |
 | `getMemberQuery` | `partiel` : erreur | — | admin |
-| `sendEventQuery`, `jitsiJwtQuery`, `joinBBBMeetingQuery` | `absent` (erreur explicite) | — | `sendEventQuery` : J3b ; Jitsi/BBB : à inventorier en production avant décision |
+| `sendEventQuery` | `validé` | `scripting_events`, test de bots (salle entière émetteur compris, cibles seules) | — |
+| `jitsiJwtQuery`, `joinBBBMeetingQuery` | `absent` (erreur explicite) | — | à inventorier en production avant décision |
 | `searchMemberQuery`, `oauthRefreshTokenQuery`, `enterChatRoomAreaQuery`, `banIpPreviewQuery` | `absent` (erreur explicite) | — | admin / Matrix |
 | `deleteRecordingQuery`, `getSignedUrlQuery`, `getRecordingThumbnailsQuery` | `absent` (erreur explicite) | — | J3c |
 
@@ -114,7 +121,7 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 |---|---|---|---|---|
 | Fichiers de carte et WAM | disque (`STORAGE_DIRECTORY`) ou S3 | `partiel` | disque `validé` ; S3 absent ; écriture versionnée (une sauvegarde en retard n'écrase ni une plus récente ni un changement HTTP : test `a_save_that_finishes_late_never_overwrites…`) | S3 si la production l'utilise |
 | Variables de room `persist` | Redis `HSET <roomUrl>` (`HGETALL` au chargement) | `implémenté non vérifié` | écritures hors de l'acteur, dernière valeur par variable, reprises jusqu'au retour de Redis, visibles d'une room rechargée entre-temps | `variables.spec:61` (socle) |
-| Variables de joueur | Redis `pr_<uuid>_\|@\|_<roomUrl>`, `pw_<uuid>_\|@\|_<worldUrl>` | `absent` | — | J3b |
+| Variables de joueur | Redis `pr_<uuid>_\|@\|_<roomUrl>`, `pw_<uuid>_\|@\|_<worldUrl>` | `partiel` | `pr_` écrit pour les joueurs connectés (valeur `"<expiration>:<0\|1>:<json>"`, `EXPIRE` quand toutes ont une durée), relu au join ; `api_players` « logged users » passe ; `pw_` absent (pas de monde sans admin) | admin |
 | Variables de zone | mémoire | `validé` | — | — |
 | Bans | admin | `absent` | — | admin |
 | Sessions, reprise | mémoire (`CLIENT_DISCONNECTION_RETENTION_MS`) | `validé` | `reconnect.spec`, `webrtc_reconnection.spec` | — |

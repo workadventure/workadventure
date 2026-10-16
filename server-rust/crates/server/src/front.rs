@@ -271,7 +271,21 @@ async fn page(State(state): State<AppState>, request: Request) -> Response {
         )
             .into_response();
     };
-    let meta = default_meta();
+    let mut meta = default_meta();
+    let user_agent = parts.headers.get(header::USER_AGENT).and_then(|v| v.to_str().ok()).unwrap_or_default().to_lowercase();
+    if ["bot", "facebook", "preview"].iter().any(|b| user_agent.contains(b))
+        && let Some(map) = crate::room_map::tmj_of_page(&state, &url).await
+    {
+        let property = |name: &str| {
+            map["properties"].as_array()?.iter().find(|p| p["name"] == name)?["value"].as_str().map(str::to_owned)
+        };
+        if let Some(name) = property("mapName") {
+            meta["title"] = format!("WorkAdventure - {name}").into();
+        }
+        if let Some(description) = property("mapDescription") {
+            meta["description"] = description.into();
+        }
+    }
     let mut ctx = Context::new();
     for key in ["title", "description", "author", "provider", "appName", "shortAppName", "themeColor", "cardImage"] {
         ctx.insert(key, V::Str(meta[key].as_str().unwrap_or_default().to_owned()));
