@@ -30,9 +30,6 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
-        noImageWarning: "Your camera stopped sending images. Another application may be using it.",
-        retry: "Try again",
-        changeCamera: "Change camera",
     },
     microphone: {
         disabled: "Your microphone is disabled",
