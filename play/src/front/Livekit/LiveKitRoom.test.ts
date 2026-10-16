@@ -1,7 +1,8 @@
+import { EventEmitter } from "events";
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ConnectionState, DisconnectReason } from "livekit-client";
+import { ConnectionState, DisconnectReason, RoomEvent } from "livekit-client";
 import type * as LivekitClient from "livekit-client";
 import type { Readable } from "svelte/store";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
@@ -85,9 +86,20 @@ vi.mock("livekit-client", async (importOriginal) => {
         public isUpstreamPaused = false;
         public isMuted = false;
         public unmute = vi.fn().mockResolvedValue(undefined);
-        public resumeUpstream = vi.fn().mockResolvedValue(undefined);
-        public pauseUpstream = vi.fn().mockResolvedValue(undefined);
-        public replaceTrack = vi.fn().mockResolvedValue(undefined);
+        public resumeUpstream = vi.fn(() => {
+            this.isUpstreamPaused = false;
+            return Promise.resolve();
+        });
+        public pauseUpstream = vi.fn(() => {
+            this.isUpstreamPaused = true;
+            return Promise.resolve();
+        });
+        // Like livekit-client, replaceTrack() always resumes the upstream
+        public replaceTrack = vi.fn((mediaStreamTrack: MediaStreamTrack) => {
+            this.mediaStreamTrack = mediaStreamTrack;
+            this.isUpstreamPaused = false;
+            return Promise.resolve();
+        });
         constructor(public mediaStreamTrack: MediaStreamTrack) {}
     }
     return {
@@ -298,6 +310,91 @@ describe("LiveKitRoom", () => {
         await room["handleCameraTrack"](createCameraStream("new-camera-track"));
 
         expect(unmute).toHaveBeenCalledOnce();
+    });
+
+    // livekit-client only pauses the upstream of a camera on a "mute" event, which a camera that is already muted when
+    // it reaches us (it came back without delivering a frame) never fires, and replaceTrack() always resumes it.
+    describe("with a camera that is already muted when it arrives", () => {
+        it("should pause the upstream when the camera is first published", async () => {
+            const room = createLiveKitRoom({
+                screenSharingLocalStreamStore: writable(undefined),
+                shouldPublishScreenShareStore: writable(false),
+            });
+            room["room"] = { state: ConnectionState.Connected } as never;
+            room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+
+            await room["handleCameraTrack"](createCameraStream("camera-track", true));
+
+            expect(room["localCameraTrack"]?.isUpstreamPaused).toBe(true);
+        });
+
+        it("should pause the upstream when the camera replaces the previous one", async () => {
+            const room = createLiveKitRoom({
+                screenSharingLocalStreamStore: writable(undefined),
+                shouldPublishScreenShareStore: writable(false),
+            });
+            room["room"] = { state: ConnectionState.Connected } as never;
+            room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+            await room["handleCameraTrack"](createCameraStream());
+            await room["handleCameraTrack"](undefined);
+
+            await room["handleCameraTrack"](createCameraStream("new-camera-track", true));
+
+            expect(room["localCameraTrack"]?.mediaStreamTrack.id).toBe("new-camera-track");
+            expect(room["localCameraTrack"]?.isUpstreamPaused).toBe(true);
+        });
+    });
+
+    // A full reconnection publishes our tracks again with their real MediaStreamTrack, announced on, but livekit-client
+    // keeps the paused flag of the ones we paused, so pauseUpstream() does nothing: the room would get the camera or
+    // microphone the user turned off, or the live microphone of a podium attendee who left the stage.
+    describe("when livekit-client publishes our tracks again", () => {
+        async function publishLocalTrack(kind: "camera" | "microphone") {
+            const room = createLiveKitRoom({
+                screenSharingLocalStreamStore: writable(undefined),
+                shouldPublishScreenShareStore: writable(false),
+            });
+            const sdkRoom = Object.assign(new EventEmitter(), { state: ConnectionState.Connected });
+            room["room"] = sdkRoom as never;
+            room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+            room["handleRoomEvents"]();
+            if (kind === "camera") {
+                await room["handleCameraTrack"](createCameraStream());
+            } else {
+                await room["handleMicrophoneTrack"](createMicrophoneStream());
+            }
+            const track = kind === "camera" ? room["localCameraTrack"] : room["localMicrophoneTrack"];
+            if (!track) {
+                throw new Error(`The ${kind} was not published`);
+            }
+            return { room, sdkRoom, track };
+        }
+
+        it.each(["camera", "microphone"] as const)("should pause the %s again when it was paused", async (kind) => {
+            const { room, sdkRoom, track } = await publishLocalTrack(kind);
+            // Turned off, or the space no longer lets us speak
+            await (kind === "camera" ? room["handleCameraTrack"](undefined) : room["handleMicrophoneTrack"](undefined));
+
+            sdkRoom.emit(RoomEvent.LocalTrackPublished, { track }, {});
+            await room["mediaTrackUpdateQueue"];
+
+            const resumeUpstream = vi.mocked(track.resumeUpstream);
+            const pauseUpstream = vi.mocked(track.pauseUpstream);
+            expect(resumeUpstream).toHaveBeenCalledOnce();
+            expect(pauseUpstream).toHaveBeenCalledTimes(2);
+            expect(resumeUpstream.mock.invocationCallOrder[0]).toBeLessThan(pauseUpstream.mock.invocationCallOrder[1]);
+            expect(track.isUpstreamPaused).toBe(true);
+        });
+
+        it("should leave a track that was not paused alone", async () => {
+            const { room, sdkRoom, track } = await publishLocalTrack("microphone");
+
+            sdkRoom.emit(RoomEvent.LocalTrackPublished, { track }, {});
+            await room["mediaTrackUpdateQueue"];
+
+            expect(track.pauseUpstream).not.toHaveBeenCalled();
+            expect(track.resumeUpstream).not.toHaveBeenCalled();
+        });
     });
 
     it("should defer a scripting stream while the room is not connected and publish it once reconnected", async () => {
@@ -574,15 +671,24 @@ function createSpace(
     } as unknown as SpaceInterface;
 }
 
-function createCameraStream(id = "camera-track"): LocalStreamStoreValue {
+function createCameraStream(id = "camera-track", muted = false): LocalStreamStoreValue {
     const track = {
         id,
         kind: "video",
+        muted,
         getSettings: () => ({ width: 1280, height: 720 }),
     } as unknown as MediaStreamTrack;
     return {
         type: "success",
         stream: { getVideoTracks: () => [track], getAudioTracks: () => [] } as unknown as MediaStream,
+    };
+}
+
+function createMicrophoneStream(id = "microphone-track"): LocalStreamStoreValue {
+    const track = { id, kind: "audio" } as unknown as MediaStreamTrack;
+    return {
+        type: "success",
+        stream: { getVideoTracks: () => [], getAudioTracks: () => [track] } as unknown as MediaStream,
     };
 }
 
