@@ -11,6 +11,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Bitte schalte deine Kamera und dein Mikrofon ein.",
         start: "Willkommen auf unserer Seite zur Konfiguration von Audio- und Videogeräten! Finden Sie hier die Werkzeuge, um Ihr Online-Erlebnis zu verbessern. Passen Sie die Einstellungen nach Ihren Vorlieben an, um mögliche Probleme zu lösen. Stellen Sie sicher, dass Ihre Hardware ordnungsgemäß angeschlossen und auf dem neuesten Stand ist. Erkunden und testen Sie verschiedene Konfigurationen, um herauszufinden, was am besten für Sie funktioniert.",
     },
+    unavailable: {
+        noImage:
+            "Ihre Kamera sendet keine Bilder mehr: Die anderen sehen Ihren Avatar mit dem Hinweis „Kamera nicht verfügbar“.",
+        inUse: "Ihre Kamera wird von einer anderen Anwendung verwendet (Teams, Meet …). Ihr Mikrofon funktioniert weiterhin; Ihre Kamera kommt zurück, sobald sie frei ist.",
+        retry: "Erneut versuchen",
+        turnOff: "Kamera ausschalten",
+    },
     help: {
         title: "Zugriff auf Kamera / Mikrofon erforderlich",
         cameraTitle: "Zugriff auf Kamera erforderlich",
@@ -40,6 +47,12 @@ const camera: DeepPartial<Translation["camera"]> = {
             noDeviceTitle: "Keine verwendbare Kamera",
             noDeviceDesc:
                 "Der Browser erkennt keine verwendbare Kamera. Versuchen Sie einen anderen Browser, prüfen Sie die Verbindung der Kamera, prüfen Sie die Konfiguration des Computers (Datenschutz, Geräte), oder starten Sie den Computer neu, wenn die Hardware in Ordnung sein sollte.",
+            inUseTitle: "Kamera wird von einer anderen Anwendung verwendet",
+            inUseDesc:
+                "Eine andere Anwendung (Teams, Meet …) verwendet Ihre Kamera. Schließen Sie sie dort: WorkAdventure fordert sie erneut an, sobald Sie zu diesem Tab zurückkehren oder einem Gespräch beitreten.",
+            unavailableTitle: "Kamera nicht verfügbar",
+            unavailableDesc:
+                "Ihre Kamera sendet keine Bilder mehr: Die anderen sehen Ihren Avatar. Versuchen Sie es über die Meldung erneut oder schalten Sie Ihre Kamera aus und wieder ein.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",

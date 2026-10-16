@@ -10,7 +10,8 @@ import { get, writable } from "svelte/store";
 import { cpuLimitedStore } from "../../WebRtc/CpuLimitationDetector";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
-import { effectiveCameraStateStore, effectiveMicrophoneStateStore } from "../../Stores/MediaStore";
+import type { CameraStatus } from "../../Stores/MediaStore";
+import { cameraStatusStore, effectiveMicrophoneStateStore } from "../../Stores/MediaStore";
 import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
 import { givenFloorSpaceStore } from "../../Stores/MegaphoneStore";
 import { recordingStore } from "../../Stores/RecordingStore";
@@ -175,7 +176,7 @@ export class SpacePeerManager {
         private space: SpaceInterface,
         blockedUsersStore: Readable<Set<string>>,
         private microphoneStateStore: Readable<boolean> = effectiveMicrophoneStateStore,
-        private cameraStateStore: Readable<boolean> = effectiveCameraStateStore,
+        private localCameraStatusStore: Readable<CameraStatus> = cameraStatusStore,
         _screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore,
         _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace,
         private _notificationPlayingStore = notificationPlayingStore,
@@ -505,9 +506,10 @@ export class SpacePeerManager {
             }),
         );
         this.unsubscribes.push(
-            this.cameraStateStore.subscribe((state) => {
+            this.localCameraStatusStore.subscribe((status) => {
                 this.space.emitUpdateUser({
-                    cameraState: state,
+                    cameraState: status === "on",
+                    cameraUnavailable: status === "unavailable",
                 });
             }),
         );

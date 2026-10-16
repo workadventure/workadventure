@@ -10,6 +10,12 @@ const camera: BaseTranslation = {
         title: "Ligue sua câmera e microfone",
         start: "Bem-vindo à nossa página de configuração de dispositivos de áudio e vídeo! Encontre aqui as ferramentas para melhorar sua experiência online. Ajuste as configurações às suas preferências para resolver possíveis problemas. Certifique-se de que seu hardware esteja conectado corretamente e atualizado. Explore e teste diferentes configurações para encontrar o que funciona melhor para você.",
     },
+    unavailable: {
+        noImage: "Sua câmera parou de enviar imagens: os outros veem seu avatar com a indicação “Câmera indisponível”.",
+        inUse: "Outro aplicativo (Teams, Meet…) está usando sua câmera. Seu microfone continua funcionando; sua câmera volta assim que ficar livre.",
+        retry: "Tentar novamente",
+        turnOff: "Desligar a câmera",
+    },
     help: {
         title: "Necessário acesso à câmera/microfone",
         cameraTitle: "Necessário acesso à câmera",
@@ -39,6 +45,12 @@ const camera: BaseTranslation = {
             noDeviceTitle: "Nenhuma câmera utilizável",
             noDeviceDesc:
                 "O navegador não detecta nenhuma câmera utilizável. Tente outro navegador, verifique se a câmera está conectada, verifique as configurações do computador (privacidade, dispositivos) ou reinicie o computador se o dispositivo deveria funcionar.",
+            inUseTitle: "Câmera em uso por outro aplicativo",
+            inUseDesc:
+                "Outro aplicativo (Teams, Meet…) está usando sua câmera. Feche-a por lá: o WorkAdventure pede a câmera de novo quando você volta para esta aba ou entra em uma conversa.",
+            unavailableTitle: "Câmera indisponível",
+            unavailableDesc:
+                "Sua câmera parou de enviar imagens: os outros veem seu avatar. Tente novamente pela mensagem ou desligue e ligue a câmera de novo.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

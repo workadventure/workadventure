@@ -2,6 +2,8 @@
     import type { Snippet } from "svelte";
     import Woka from "../Woka/Woka.svelte";
     import type { PictureStore } from "../../Stores/PictureStore";
+    import { LL } from "../../../i18n/i18n-svelte";
+    import { IconCameraExclamation } from "@wa-icons";
 
     /**
      * A component that displays the Woka, the user's name and optionally a dropdown menu
@@ -18,6 +20,8 @@
         position: string;
         grayscale: boolean;
         isBlocked: boolean;
+        // The camera is wanted on but delivers no image: told apart from a camera turned off on purpose
+        cameraUnavailable?: boolean;
         children?: Snippet;
     }
 
@@ -30,6 +34,7 @@
         position = "",
         grayscale = false,
         isBlocked = false,
+        cameraUnavailable = false,
         children,
     }: Props = $props();
 </script>
@@ -50,6 +55,15 @@
                     <span class="select-none">{name}</span>
                     {@render children?.()}
                 </div>
+                {#if cameraUnavailable && !isBlocked}
+                    <div
+                        class="flex items-center gap-1 text-xs font-normal opacity-80 select-none"
+                        data-testid="camera-unavailable"
+                    >
+                        <IconCameraExclamation font-size="14" />
+                        <span>{$LL.video.camera_unavailable()}</span>
+                    </div>
+                {/if}
             </div>
         </div>
     </div>

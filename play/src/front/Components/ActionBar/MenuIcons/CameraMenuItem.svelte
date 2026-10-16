@@ -10,6 +10,7 @@
         availabilityStatusStore,
         cameraButtonHelpContextStore,
         cameraListStore,
+        cameraUnavailableStore,
         mouseIsHoveringCameraButton,
         requestedCameraState,
         silentStore,
@@ -19,6 +20,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
     import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
+    import { IconCameraExclamation } from "@wa-icons";
 
     const disabledByStatusStore = derived(
         [availabilityStatusStore, silentStore],
@@ -31,11 +33,14 @@
             $silentStore,
     );
 
-    const cameraButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
-        [disabledByStatusStore, requestedCameraState, cameraListStore],
-        ([$disabledByStatusStore, $requestedCameraState, $cameraListStore]) => {
+    const cameraButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden" | "warning"> = derived(
+        [disabledByStatusStore, requestedCameraState, cameraListStore, cameraUnavailableStore],
+        ([$disabledByStatusStore, $requestedCameraState, $cameraListStore, $cameraUnavailableStore]) => {
             if ($disabledByStatusStore || ($cameraListStore !== undefined && $cameraListStore.length === 0)) {
                 return "disabled";
+            }
+            if ($requestedCameraState && $cameraUnavailableStore !== undefined) {
+                return "warning";
             }
             return $requestedCameraState ? "normal" : "forbidden";
         },
@@ -86,6 +91,20 @@
                     media: "",
                 };
             }
+            if (ctx === "in_use") {
+                return {
+                    title: $LL.camera.help.tooltip.inUseTitle(),
+                    desc: $LL.camera.help.tooltip.inUseDesc(),
+                    media: "",
+                };
+            }
+            if (ctx === "unavailable") {
+                return {
+                    title: $LL.camera.help.tooltip.unavailableTitle(),
+                    desc: $LL.camera.help.tooltip.unavailableDesc(),
+                    media: "",
+                };
+            }
             return { title: "", desc: "", media: "" };
         },
     );
@@ -116,7 +135,9 @@
     }}
     onmouseleave={() => mouseIsHoveringCameraButton.set(false)}
 >
-    {#if $requestedCameraState && !$silentStore && $cameraListStore && $cameraListStore.length > 0}
+    {#if $cameraButtonStateStore === "warning"}
+        <IconCameraExclamation font-size="20" />
+    {:else if $requestedCameraState && !$silentStore && $cameraListStore && $cameraListStore.length > 0}
         <CamOnIcon />
     {:else}
         <CamOffIcon />

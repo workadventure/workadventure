@@ -11,6 +11,12 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "開啟你的攝影機和麥克風",
         start: "歡迎來到我們的音訊與視訊裝置設定頁面！在這裡找到工具來提升您的線上體驗。依您的偏好調整設定以解決任何潛在問題。請確保您的硬體已正確連接並保持最新。探索並測試不同的設定，找到最適合您的組合。",
     },
+    unavailable: {
+        noImage: "您的攝影機已停止傳送畫面：其他人看到的是您的頭像，並顯示「攝影機無法使用」。",
+        inUse: "您的攝影機正被其他應用程式（Teams、Meet 等）使用。麥克風仍可正常使用；攝影機空出後會自動恢復。",
+        retry: "重試",
+        turnOff: "關閉攝影機",
+    },
     help: {
         title: "需要攝影機/麥克風權限",
         cameraTitle: "需要攝影機權限",
@@ -39,6 +45,12 @@ const camera: DeepPartial<Translation["camera"]> = {
             noDeviceTitle: "沒有可用的攝影機",
             noDeviceDesc:
                 "瀏覽器未偵測到可用的攝影機。請嘗試其他瀏覽器、檢查攝影機是否已連接、檢查電腦的設定（隱私、裝置），或在裝置正常時重新啟動電腦。",
+            inUseTitle: "攝影機正被其他應用程式使用",
+            inUseDesc:
+                "其他應用程式（Teams、Meet 等）正在使用您的攝影機。請在那邊關閉它：當您回到此分頁或加入對話時，WorkAdventure 會重新請求攝影機。",
+            unavailableTitle: "攝影機無法使用",
+            unavailableDesc:
+                "您的攝影機已停止傳送畫面：其他人看到的是您的頭像。請在提示訊息中重試，或關閉後重新開啟攝影機。",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
