@@ -24,6 +24,7 @@ Usage:
   dev/dev status
   dev/dev env <name>      Playwright variables for a stack: eval "\$(dev/dev env ts)"
   dev/dev assets <name>   map-storage/tests/assets.zip for that stack (resetWamMaps uploads it)
+  dev/dev test <name> <playwright args>   Playwright against that stack, one campaign at a time on the machine
 USAGE
     exit 1
 }
@@ -128,6 +129,29 @@ ENV
     (cd "$tmp" && zip -qr "$REPO/map-storage/tests/assets.zip" .)
     rm -rf "$tmp"
     echo "map-storage/tests/assets.zip: collections from play.$name.workadventure.localhost$SOCLE_URL_PORT"
+    ;;
+"test "*)
+    name=${2:-}
+    [ -n "$name" ] || usage
+    # One Playwright campaign at a time: two stacks and two browsers on the same Docker VM fail specs for lack of
+    # memory, and those reruns cost more than waiting. The lock lives in the git dir every worktree shares; a lock
+    # whose process is gone is taken over.
+    lock="$(git -C "$REPO" rev-parse --git-common-dir)/wa-playwright.lock"
+    case "$lock" in /*) ;; *) lock="$REPO/$lock" ;; esac
+    until mkdir "$lock" 2>/dev/null; do
+        holder=$(cat "$lock/owner" 2>/dev/null || true)
+        if [ -n "$holder" ] && ! kill -0 "${holder%% *}" 2>/dev/null; then
+            echo "Stale Playwright slot ($holder): taking it over" >&2; rm -rf "$lock"; continue
+        fi
+        echo "$(date +%H:%M) Playwright slot held by: ${holder:-?}. Waiting..." >&2
+        sleep 30
+    done
+    echo "$$ $name since $(date +%H:%M)" > "$lock/owner"
+    trap 'rm -rf "$lock"' EXIT
+    eval "$("$0" env "$name")"
+    cd "$REPO/tests"
+    # caffeinate: a sleeping Mac turns specs into 15-minute blank pages.
+    caffeinate -i npx playwright test "${@:3}" --workers=1
     ;;
 *)
     usage

@@ -1,0 +1,48 @@
+# Shared by both modes. Domains are https://<service>-rehearsal.localhost (no port: the 443 is port-forwarded).
+appVersion: master-6f4d02319eddbf46a51cb99ffd38e2d75273593c
+domainName: rehearsal.localhost
+# Fixed so that the TS -> Go -> TS upgrades keep the same signing key and map-storage token (browsers stay valid).
+secretKey: rehearsal-secret-key-0123456789
+ingress:
+  className: nginx
+front:
+  # Needed by the Go server (it renders the template of the front); kept on in TS mode so that only the play image changes.
+  enabled: true
+  image:
+    repository: wa-socle-front
+    pullPolicy: Never
+maps:
+  enabled: true
+  image:
+    repository: ghcr.io/workadventure/maps
+back:
+  image:
+    repository: ghcr.io/workadventure/back
+mapstorage:
+  image:
+    repository: ghcr.io/workadventure/map-storage
+  env:
+    AUTHENTICATION_USER: john.doe
+  secretEnv:
+    AUTHENTICATION_PASSWORD: password
+uploader:
+  image:
+    repository: ghcr.io/workadventure/uploader
+play:
+  replicaCount: 1
+  env:
+    START_ROOM_URL: /_/global/maps-rehearsal.localhost/starter/map.json
+  secretEnv:
+    ROOM_API_SECRET_KEY: password
+  ingress:
+    sticky:
+      cookie:
+        sameSite: "None"
+commonSecretEnv:
+  MAP_STORAGE_API_TOKEN: rehearsal-map-storage-token
+commonEnv:
+  ENABLE_MAP_EDITOR: "true"
+  ENABLE_TUTORIAL: "false"
+  # Self-signed certificate of the ingress, and the pods reach the public URLs through it (CoreDNS rewrite):
+  # Node skips the verification (the Go server trusts the certificate through SSL_CERT_FILE, see values-go.yaml).
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
