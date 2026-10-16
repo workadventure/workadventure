@@ -87,6 +87,27 @@ async function join(name, hook) {
     const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: "en-US" });
     const page = await context.newPage();
     if (hook) await page.addInitScript(installCameraHook);
+    // Keeps the peer connections, to measure the audio this page receives
+    await page.addInitScript(() => {
+        const Original = window.RTCPeerConnection;
+        window.__pcs = [];
+        window.RTCPeerConnection = function (...args) {
+            const pc = new Original(...args);
+            window.__pcs.push(pc);
+            return pc;
+        };
+        window.RTCPeerConnection.prototype = Original.prototype;
+        window.__audioBytesIn = async () => {
+            let total = 0;
+            for (const pc of window.__pcs) {
+                if (pc.connectionState === "closed") continue;
+                (await pc.getStats()).forEach((r) => {
+                    if (r.type === "inbound-rtp" && r.kind === "audio") total += r.bytesReceived ?? 0;
+                });
+            }
+            return total;
+        };
+    });
     await enter(page, name);
     console.log(`${stamp()} ${name} is on the map`);
     return page;
@@ -100,15 +121,23 @@ const alice = await join("Alice", true);
 const bob = await join("Bob", false);
 
 const state = async () => ({
-    aliceCamera: await alice.evaluate(() =>
-        (document.querySelector('[data-testid="camera-button"]')?.className ?? "").includes("bg-danger") ? "off" : "on",
-    ),
+    aliceCamera: await alice.evaluate(() => {
+        const c = document.querySelector('[data-testid="camera-button"]')?.className ?? "";
+        return c.includes("bg-warning") ? "unavailable" : c.includes("bg-danger") ? "off" : "on";
+    }),
     aliceMicrophone: await alice.evaluate(() =>
         (document.querySelector('[data-testid="microphone-button"]')?.className ?? "").includes("bg-danger") ? "off" : "on",
     ),
     aliceLiveTracks: await alice.evaluate(() => window.__liveTracks()),
     inBubble: await alice.locator("#cameras-container").getByText("Bob").first().isVisible().catch(() => false),
     bobSeesAlice: await bob.locator("#cameras-container").getByText("Alice").first().isVisible().catch(() => false),
+    bobSeesUnavailable: await bob.getByTestId("camera-unavailable").first().isVisible().catch(() => false),
+    // Audio bytes Bob receives in 3 seconds: Alice is the only one he can hear
+    bobAudioBytesIn3s: await (async () => {
+        const before = await bob.evaluate(() => window.__audioBytesIn()).catch(() => 0);
+        await bob.waitForTimeout(3000);
+        return (await bob.evaluate(() => window.__audioBytesIn()).catch(() => 0)) - before;
+    })(),
     gum: await alice.evaluate(() => window.__gum.map((c) => `${c.video ? "V" : ""}${c.audio ? "A" : ""}:${c.result ?? "pending"}`).join(" ")),
 });
 const steps = [];
