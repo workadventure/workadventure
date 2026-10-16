@@ -36,6 +36,7 @@ type Server struct {
 	maps       *mapstorage.Store
 	edits      *mapedit.Queue // the map editor's commands, one map at a time, off the rooms
 	roomMaps   sync.Map       // room URL -> roomMap
+	sessions   sync.Map       // the open sessions (*Session), for what concerns a whole world
 	vars       store.Hash     // room and player variables
 	varWriter  *store.Writer  // writes to vars, in order, off the rooms
 	apiVersion string
