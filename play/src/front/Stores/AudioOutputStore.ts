@@ -28,6 +28,14 @@ function createSpeakerSelectedStore() {
 }
 
 /**
+ * The new devices worth offering to switch to: outputs only where we choose the output. On Safari, AirPods are still
+ * offered for their microphone, and a display or speaker without a microphone is not offered at all.
+ */
+export function devicesToOffer(devices: MediaDeviceInfo[]): MediaDeviceInfo[] {
+    return speakerSelectionSupported ? devices : devices.filter((device) => device.kind !== "audiooutput");
+}
+
+/**
  * The output voices play on. Always undefined where speaker selection is not supported, so that nothing calls setSinkId.
  *
  * Kept out of MediaStore so that it can be loaded on its own, without MediaStore's import cycles.

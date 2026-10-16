@@ -121,6 +121,7 @@ import {
     requestedMicrophoneState,
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
+import { devicesToOffer } from "../../Stores/AudioOutputStore";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
 import LoudEnvironmentToast from "../../Components/Toasts/LoudEnvironmentToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
@@ -2790,7 +2791,9 @@ export class GameScene extends DirtyScene {
         );
 
         this.unsubscribers.push(
-            lastNewMediaDeviceDetectedStore.subscribe((devices) => {
+            lastNewMediaDeviceDetectedStore.subscribe((newDevices) => {
+                // Filtered first: the click handler below picks devices by label from this same list
+                const devices = devicesToOffer(newDevices);
                 if (devices.length === 0) return;
                 const ignoredNewMediaDeviceIds = localUserStore.getIgnoredNewMediaDeviceIds();
                 // filter device by name tu avoid multiple notification for the same device
