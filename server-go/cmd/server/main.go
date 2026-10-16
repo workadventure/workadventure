@@ -28,6 +28,7 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/httpapi"
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	"github.com/workadventure/workadventure/server-go/internal/registry"
+	"github.com/workadventure/workadventure/server-go/internal/roomapi"
 	"github.com/workadventure/workadventure/server-go/internal/ws"
 )
 
@@ -100,6 +101,13 @@ func run() error {
 	}
 	if cfg.MapStoragePort != 0 && cfg.MapStoragePort != cfg.HTTPPort && cfg.MapStoragePort != cfg.WSPort {
 		servers = append(servers, newServer(cfg.MapStoragePort, maps.Handler(cfg.MapStorage)))
+	}
+	if cfg.RoomAPISecretKey != "" {
+		roomAPI := newServer(cfg.RoomAPIPort, roomapi.New(cfg.RoomAPISecretKey, cfg.FrontURL, rooms, wsServer.RoomVariables))
+		roomAPI.Addr = net.JoinHostPort(cfg.RoomAPIBindHost, strconv.Itoa(cfg.RoomAPIPort))
+		roomAPI.Protocols = new(http.Protocols)
+		roomAPI.Protocols.SetUnencryptedHTTP2(true) // gRPC without TLS (h2c with prior knowledge)
+		servers = append(servers, roomAPI)
 	}
 	if cfg.PrometheusPort != 0 {
 		// The dedicated metrics port also serves the Go profiler, behind the same token as the metrics.

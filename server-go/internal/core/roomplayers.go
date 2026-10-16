@@ -39,6 +39,7 @@ func (r *Room) SendEvent(ctx context.Context, m *Msg, targets []int32) error {
 	return r.a.Post(ctx, func() {
 		if len(targets) == 0 {
 			r.s.toListeners(m)
+			r.s.toWatchers(m.Event)
 			return
 		}
 		for _, id := range targets {

@@ -28,16 +28,15 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
    - clé de stockage sans le domaine (`USE_DOMAIN_NAME_IN_PATH`) ;
    - clé de space faite de l'origine et non du `world` de l'admin ;
    - `roomsFromSameWorld` qui liste tout map-storage.
-5. **Room API gRPC absente** : intégrations externes, écouteurs d'événements et de variables.
-6. **Modération** : le ban n'est ni persistant ni par IP ; `banIpPreview` est absent ; `reportPlayer` et `playGlobalMessage` sont jetés.
-7. **Front servi seulement derrière un conteneur front** : sans `ASSETS_URL`, toutes les pages répondent 503. Or contrib/docker et le chart Helm ne fixent pas `ASSETS_URL` par défaut.
-8. **Image de production** :
+5. **Modération** : le ban n'est ni persistant ni par IP ; `banIpPreview` est absent ; `reportPlayer` et `playGlobalMessage` sont jetés.
+6. **Front servi seulement derrière un conteneur front** : sans `ASSETS_URL`, toutes les pages répondent 503. Or contrib/docker et le chart Helm ne fixent pas `ASSETS_URL` par défaut.
+7. **Image de production** :
    - `API_VERSION=dev` si la CI ne passe pas de build-arg ;
    - `STORAGE_DIRECTORY` non inscriptible en nonroot ;
    - ports map-storage (3002) et uploader (3003), attendus par le chart en mode `server`, non servis par défaut.
-9. **Uploader absent** : fichiers du chat, messages audio.
-10. **Matrix** : provisionnement Synapse, salons des zones (`/roomArea`, `resourceUrl`), entrée et sortie de zone, `updateChatId`.
-11. Jitsi JWT et BBB, emotes, `itemEvent`, `entityMessage`, analytics.
+8. **Uploader absent** : fichiers du chat, messages audio.
+9. **Matrix** : provisionnement Synapse, salons des zones (`/roomArea`, `resourceUrl`), entrée et sortie de zone, `updateChatId`.
+10. Jitsi JWT et BBB, emotes, `itemEvent`, `entityMessage`, analytics.
 
 ## Connexion, salle, mouvements
 
@@ -140,9 +139,9 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
-| Serveur gRPC (`ROOM_API_PORT`, h2c), clé `X-API-Key` | play/src/server.ts:139-150, AuthenticationGuard.ts | absent | `SERVER_ROOM_API_PORT` non lu (`dev/stack.yaml:179`) | clients npm et `room-api.spec.ts` cassés | gRPC écrit à la main sur h2c (plan dans le journal) |
-| readVariable, listenVariable, saveVariable | RoomApiServer.ts:10-96, GameRoom.ts:672-735 | absent | le cœur `core/roomvars.go` est réutilisable | une room sans joueur ne charge pas ses variables | écouteurs non joueurs |
-| broadcastEvent, listenToEvent | RoomManager.ts:711-748 | absent | `Room.SendEvent`, `core/roomplayers_test.go:26` | pas d'écouteurs | idem |
+| Serveur gRPC h2c (`ROOM_API_PORT`, ou `SERVER_ROOM_API_PORT`, servi si `ROOM_API_SECRET_KEY`), clé `X-API-Key`, room sous `FRONT_URL` | play/src/server.ts:139-150, AuthenticationGuard.ts, LocalAuthenticator.ts | validé (unitaire) | `roomapi_test.go` : `TestTheRoomAPIWantsItsKeyAndARoomOfThisServer` | autorisation par l'admin absente (`api/room-api/authorization`) ; `room-api.spec.ts` à jouer | spec J3c ; admin |
+| readVariable, saveVariable (sans `writableBy`, variable non déclarée refusée, relecture de la carte) | RoomApiServer.ts, GameRoom.ts:672-735 | validé (unitaire) | `core/roomapi_test.go` (3 tests), `roomapi_test.go` | — | spec |
+| listenVariable, listenToEvent, broadcastEvent (ciblé : joueurs seulement) | RoomManager.ts:615-748 | validé (unitaire) | `core/roomapi_test.go`, `roomapi_test.go` | un écouteur trop lent est coupé (RESOURCE_EXHAUSTED) au-delà de 256 messages en attente | spec |
 
 ## Persistance
 
