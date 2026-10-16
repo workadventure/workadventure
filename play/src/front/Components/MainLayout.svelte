@@ -45,7 +45,7 @@
     import type { WorkAdventureComponent } from "../../types/component";
     import { LL } from "../../i18n/i18n-svelte";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
-    import { startCalendarReminders } from "./Calendar/CalendarReminder";
+    import { calendarRemindersStore, startCalendarReminders } from "./Calendar/CalendarReminder";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import ActionBarButton from "./ActionBar/ActionBarButton.svelte";
 
@@ -334,12 +334,9 @@
     {/if}
 
     <!-- Rendered here rather than beside #main-layout: its notifications and toasts must show above these
-         panels, and they cannot leave its stacking context (z-10). The reminder cards sit in the agenda's corner;
-         opening the agenda settles them, so the two never overlap. -->
+         panels, and they cannot leave its stacking context (z-10). -->
     {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
         <Calendar />
-    {:else if $calendarIsActivatedStore}
-        <CalendarReminders />
     {/if}
     {#if $todoListIsActivatedStore && $isTodoListVisibleStore}
         <TodoList />
@@ -405,14 +402,19 @@
                 <LimitRoomModal />
             {/if}
 
-            <!-- Toast stack, with the host-side raised-hands dock stacked below it so a toast never covers the
-                 dock's buttons (the dock self-gates on visibleRaisedHandSectionsStore). -->
+            <!-- Toast stack, below the action bar, with the meeting reminders and the host-side raised-hands dock
+                 stacked under it so nothing covers anything else's buttons (the dock self-gates on
+                 visibleRaisedHandSectionsStore). Opening the agenda settles the reminders: it lists the same meetings. -->
             <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
                 {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
                     {@const toast = toastEntry[1]}
                     {@const ToastComponent = toast.component}
                     <ToastComponent {...toast.props} />
                 {/each}
+                <!-- Only with a reminder: an empty block would still push the dock down. -->
+                {#if $calendarIsActivatedStore && !$isCalendarVisibleStore && $calendarRemindersStore.length > 0}
+                    <CalendarReminders />
+                {/if}
                 <RaisedHandsDock />
             </div>
 
