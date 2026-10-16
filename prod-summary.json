@@ -1,0 +1,51 @@
+{
+  "label": "prod3",
+  "url": "https://play.workadventu.re/_/taken-1792158387/workadventure.github.io/map-starter-kit/office.tmj",
+  "steps": [
+    {
+      "step": "1 in the bubble",
+      "aliceCamera": "on",
+      "aliceMicrophone": "on",
+      "aliceLiveTracks": "audio+video",
+      "inBubble": true,
+      "bobSeesAlice": true,
+      "gum": "VA:ok V:ok VA:ok"
+    },
+    {
+      "step": "2 out of the bubble, idle",
+      "aliceCamera": "on",
+      "aliceMicrophone": "on",
+      "aliceLiveTracks": "none",
+      "inBubble": false,
+      "bobSeesAlice": false,
+      "gum": "VA:ok V:ok VA:ok"
+    },
+    {
+      "step": "3 camera taken by another app, back in the bubble",
+      "aliceCamera": "off",
+      "aliceMicrophone": "off",
+      "aliceLiveTracks": "none",
+      "inBubble": true,
+      "bobSeesAlice": true,
+      "gum": "VA:ok V:ok VA:ok VA:NotReadableError A:ok"
+    },
+    {
+      "step": "4 out of the bubble, other app released the camera",
+      "aliceCamera": "off",
+      "aliceMicrophone": "off",
+      "aliceLiveTracks": "none",
+      "inBubble": false,
+      "bobSeesAlice": false,
+      "gum": "VA:ok V:ok VA:ok VA:NotReadableError A:ok"
+    },
+    {
+      "step": "5 back in the bubble",
+      "aliceCamera": "off",
+      "aliceMicrophone": "off",
+      "aliceLiveTracks": "none",
+      "inBubble": true,
+      "bobSeesAlice": true,
+      "gum": "VA:ok V:ok VA:ok VA:NotReadableError A:ok"
+    }
+  ]
+}
