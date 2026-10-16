@@ -17,8 +17,10 @@ import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
     AnyKindOfUser,
     ChatAttachmentRecipient,
+    ChatAttachmentStatus,
     ChatConversation,
     ChatMessage,
+    ChatMessageAttachment,
     ChatMessageContent,
     ChatMessageReaction,
     ChatPollCreateOptions,
@@ -97,9 +99,7 @@ export class ProximityChatMessage implements ChatMessage {
         public date: Date,
         public isMyMessage: boolean,
         public type: ChatMessageType,
-        public downloadAttachment?: () => Promise<void>,
-        public refuseAttachment?: () => void,
-        public attachmentRecipients?: Readable<ChatAttachmentRecipient[]>,
+        public attachment?: ChatMessageAttachment,
     ) {}
 
     remove(): void {
@@ -260,6 +260,8 @@ export class ProximityChatRoom implements ChatRoom {
         {
             message: ProximityChatMessage;
             content: Writable<ChatMessageContent>;
+            status: Writable<ChatAttachmentStatus>;
+            decision: Writable<"pending" | "accepted" | "declined">;
             sizeBytes: number;
             downloadStartedAt?: number;
         }
@@ -523,13 +525,15 @@ export class ProximityChatRoom implements ChatRoom {
             const message = new ProximityChatMessage(
                 offer.transferId,
                 chatUser,
-                writable<ChatMessageContent>({ body: offer.file.name, url: objectUrl, mediaState: "ready" }),
+                writable<ChatMessageContent>({ body: offer.file.name, url: objectUrl }),
                 new Date(),
                 true,
                 getMessageTypeFromMimeType(offer.file.type),
-                undefined,
-                undefined,
-                attachmentRecipients,
+                {
+                    status: readable<ChatAttachmentStatus>({ state: "ready" }),
+                    size: offer.file.size,
+                    delivery: attachmentRecipients,
+                },
             );
             this.messages.push(message);
             this.lastMessageTimestamp = message.date.getTime();
@@ -875,12 +879,9 @@ export class ProximityChatRoom implements ChatRoom {
             chatUser.username = offer.name;
         }
 
-        const content = writable<ChatMessageContent>({
-            body: offer.fileName,
-            url: undefined,
-            mediaState: "pendingDownload",
-            mediaProgress: 0,
-        });
+        const content = writable<ChatMessageContent>({ body: offer.fileName, url: undefined });
+        const status = writable<ChatAttachmentStatus>({ state: "loading", progress: 0 });
+        const decision = writable<"pending" | "accepted" | "declined">("pending");
         const message = new ProximityChatMessage(
             offer.transferId,
             chatUser,
@@ -888,11 +889,18 @@ export class ProximityChatRoom implements ChatRoom {
             new Date(),
             false,
             getMessageTypeFromMimeType(offer.mimeType),
-            () => this.fileTransferService?.download(offer.transferId) ?? Promise.resolve(),
-            () => this.refuseIncomingFileOffer(offer.transferId),
+            {
+                status,
+                size: offer.size,
+                consent: {
+                    decision,
+                    accept: () => this.fileTransferService?.download(offer.transferId) ?? Promise.resolve(),
+                    decline: () => this.refuseIncomingFileOffer(offer.transferId),
+                },
+            },
         );
 
-        this.fileTransfers.set(offer.transferId, { message, content, sizeBytes: offer.size });
+        this.fileTransfers.set(offer.transferId, { message, content, status, decision, sizeBytes: offer.size });
         this.messages.push(message);
         this.lastMessageTimestamp = message.date.getTime();
         this.notifyNewMessage(message);
@@ -919,7 +927,7 @@ export class ProximityChatRoom implements ChatRoom {
         if (!transfer) {
             return;
         }
-        const { content } = transfer;
+        const { content, status, decision } = transfer;
 
         if (update.state === "ready") {
             analyticsClient.trackAdminEvent("chat.proximity_file.received", {
@@ -930,63 +938,41 @@ export class ProximityChatRoom implements ChatRoom {
             });
             transfer.downloadStartedAt = undefined;
             this.fileTransferObjectUrls.add(update.url);
-            content.update((currentContent) => ({
-                ...currentContent,
-                url: update.url,
-                mediaState: "ready",
-                mediaProgress: 1,
-                mediaEstimatedRemainingSeconds: undefined,
-                mediaErrorKind: undefined,
-            }));
+            content.update((currentContent) => ({ ...currentContent, url: update.url }));
+            decision.set("accepted");
+            status.set({ state: "ready" });
             return;
         }
 
         if (update.state === "error") {
             transfer.downloadStartedAt = undefined;
-            content.update((currentContent) => ({
-                ...currentContent,
-                mediaState: currentContent.url !== undefined ? "ready" : "error",
-                mediaProgress: update.progress,
-                mediaEstimatedRemainingSeconds: undefined,
-                mediaErrorKind: currentContent.url !== undefined ? undefined : "download",
-            }));
+            // A file already received stays usable whatever happens to the connection afterwards.
+            if (get(content).url === undefined) {
+                status.set({ state: "error", error: update.error === "unavailable" ? "unavailable" : "download" });
+            }
             return;
         }
 
-        let mediaEstimatedRemainingSeconds: number | undefined;
+        let remainingSeconds: number | undefined;
         if (update.state === "downloading") {
             transfer.downloadStartedAt ??= Date.now();
-            mediaEstimatedRemainingSeconds = estimateProximityFileTransferRemainingSeconds(
+            remainingSeconds = estimateProximityFileTransferRemainingSeconds(
                 update.progress,
                 Date.now() - transfer.downloadStartedAt,
             );
         } else {
             transfer.downloadStartedAt = undefined;
         }
-        content.update((currentContent) => ({
-            ...currentContent,
-            mediaState: update.state === "pending" ? "pendingDownload" : "loading",
-            mediaProgress: update.progress,
-            mediaEstimatedRemainingSeconds,
-            mediaErrorKind: undefined,
-        }));
+        decision.set(update.state === "pending" ? "pending" : "accepted");
+        status.set({ state: "loading", progress: update.progress, remainingSeconds });
     }
 
     private refuseIncomingFileOffer(transferId: string): void {
         this.fileTransferService?.decline(transferId);
-        this.fileTransfers.get(transferId)?.content.update((currentContent) => {
-            if (currentContent.url !== undefined) {
-                return currentContent;
-            }
-
-            return {
-                ...currentContent,
-                mediaState: "refused",
-                mediaProgress: 0,
-                mediaEstimatedRemainingSeconds: undefined,
-                mediaErrorKind: undefined,
-            };
-        });
+        const transfer = this.fileTransfers.get(transferId);
+        if (transfer && get(transfer.content).url === undefined) {
+            transfer.decision.set("declined");
+        }
     }
 
     private applyOutgoingFileTransferUpdate(update: OutgoingProximityFileTransferUpdate): void {
@@ -1032,12 +1018,7 @@ export class ProximityChatRoom implements ChatRoom {
             if (message.sender?.spaceUserId !== spaceUserId || get(message.content).url !== undefined) {
                 continue;
             }
-            this.applyFileTransferUpdate({
-                transferId,
-                state: "error",
-                progress: get(message.content).mediaProgress ?? 0,
-                error: "unavailable",
-            });
+            this.applyFileTransferUpdate({ transferId, state: "error", progress: 0, error: "unavailable" });
         }
     }
 
@@ -1918,6 +1899,14 @@ export class ProximityChatRoom implements ChatRoom {
         this.fileTransferSubscriptions.unsubscribe();
         this.fileTransferService?.destroy();
         this.fileTransferService = undefined;
+        // Leaving ends every transfer and frees the files received: say so on each card, instead of
+        // leaving an Accept button, a progress bar or a save link that no longer lead anywhere.
+        for (const { content, status, decision } of this.fileTransfers.values()) {
+            if (get(decision) !== "declined") {
+                content.update((currentContent) => ({ ...currentContent, url: undefined }));
+                status.set({ state: "error", error: "unavailable" });
+            }
+        }
         this.fileTransfers.clear();
         this.failUnfinishedOutgoingRecipients();
         this.outgoingFileTransfers.clear();

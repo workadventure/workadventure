@@ -282,6 +282,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         openCoWebsite: "Na co-webboku wótcyniś",
         loadingAttachment: "Pśiłožk se zacytujo...",
         remainingTime: "hyšći ~{time}",
+        acceptToDownload: "Akceptěruj, aby ześěgnuł",
+        saveFile: "Dataju składowaś",
+        unavailable: "Wěcej njejo k dispoziciji",
         recipient: {
             waiting: "Caka",
             summary: "Dostane: {received} z {total}",

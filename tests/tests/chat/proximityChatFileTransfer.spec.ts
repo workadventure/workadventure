@@ -55,7 +55,9 @@ test.describe("Proximity chat file transfer @nomobile @nowebkit", () => {
         const fileChooser = await fileChooserPromise;
         await fileChooser.setFiles({ name: fileName, mimeType: "application/octet-stream", buffer: content });
         await alice.getByTestId("sendMessageButton").click();
-        await expect(alice.getByRole("link", { name: fileName })).toBeVisible();
+        await expect(alice.getByText(fileName, { exact: true })).toBeVisible();
+        // Alice already has the file: she is not offered to save it.
+        await expect(alice.getByText("Save file")).toHaveCount(0);
         const recipientRow = (name: string) => alice.getByTestId("attachmentRecipient").filter({ hasText: name });
         await expect(recipientRow("Bob")).toContainText("Waiting");
         await expect(recipientRow("Charlie")).toContainText("Waiting");
@@ -67,6 +69,34 @@ test.describe("Proximity chat file transfer @nomobile @nowebkit", () => {
         // And Alice sees that both have it, so she knows she can leave the bubble.
         await expect(recipientRow("Bob")).toContainText("Received");
         await expect(recipientRow("Charlie")).toContainText("Received");
+    });
+
+    test("should tell a recipient who left the bubble that the file is no longer available", async ({ browser }) => {
+        // Given Bob is offered a file by Alice.
+        const mapUrl = publicTestMapUrl("tests/E2E/empty.json", "proximity_file_transfer_left");
+        await using alice = await getPage(browser, "Alice", mapUrl);
+        await Map.teleportToPosition(alice, 160, 160);
+        await using bob = await getPage(browser, "Bob", mapUrl);
+        await Map.teleportToPosition(bob, 160, 160);
+        await expectInBubbleWith(alice, ["Bob"]);
+        await ChatUtils.openProximityRoom(alice);
+        await ChatUtils.openProximityRoom(bob);
+        const fileChooserPromise = alice.waitForEvent("filechooser");
+        await alice.getByTestId("addApplicationButton").click();
+        await alice.getByTestId("fileAttachmentButton").click();
+        const fileChooser = await fileChooserPromise;
+        await fileChooser.setFiles({ name: "report.pdf", mimeType: "application/pdf", buffer: Buffer.alloc(1000) });
+        await alice.getByTestId("sendMessageButton").click();
+        await expect(bob.getByTestId("acceptAttachmentButton")).toBeVisible({ timeout: 60_000 });
+
+        // When Bob walks away before accepting it, then looks back at the proximity chat.
+        await Map.teleportToPosition(bob, 400, 400);
+        await ChatUtils.openChat(bob);
+        await bob.getByText("Proximity Chat", { exact: true }).click({ timeout: 60_000 });
+
+        // Then the file says it is gone, and there is nothing left to accept.
+        await expect(bob.getByText("No longer available")).toBeVisible({ timeout: 60_000 });
+        await expect(bob.getByTestId("acceptAttachmentButton")).toHaveCount(0);
     });
 
     test("should hold back files picked before the chat grew past the user limit", async ({ browser }) => {
