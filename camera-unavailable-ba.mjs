@@ -61,6 +61,8 @@ function installCameraHook() {
     };
     window.__holdCameraBack = () => { heldBack = true; cameras.forEach((c) => (c.frozen = true)); };
     window.__releaseCamera = () => { heldBack = false; };
+    // FREEZE_ONLY: the camera freezes once, asking for it again gives a working one
+    window.__freezeCamera = () => { cameras.forEach((c) => (c.frozen = true)); };
     const getStats = RTCPeerConnection.prototype.getStats;
     RTCPeerConnection.prototype.getStats = async function (...args) {
         const report = await getStats.apply(this, args);
@@ -147,7 +149,11 @@ const state = async () => ({
 });
 
 console.log(`${stamp()} --- holding Alice's camera back ---`);
-await alice.evaluate(() => window.__holdCameraBack());
+if (process.env.FREEZE_ONLY === "1") {
+    await alice.evaluate(() => window.__freezeCamera());
+} else {
+    await alice.evaluate(() => window.__holdCameraBack());
+}
 const timeline = [];
 let last = "";
 for (let i = 1; i <= WATCH_S; i++) {
