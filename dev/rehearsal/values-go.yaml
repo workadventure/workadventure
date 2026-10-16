@@ -1,0 +1,20 @@
+# Go monolith: one image in the play Deployment; back, map-storage and uploader are not deployed.
+server:
+  enabled: true
+play:
+  image:
+    repository: wa-server-go
+    pullPolicy: Never
+    tag: rehearsal
+  # The Go HTTP clients verify TLS: trust the self-signed certificate of the ingress (secret created by deploy.sh).
+  extraEnvVars:
+    - name: SSL_CERT_FILE
+      value: /etc/rehearsal-tls/tls.crt
+  extraVolumes:
+    - name: rehearsal-tls
+      secret:
+        secretName: rehearsal-tls
+  extraVolumeMounts:
+    - name: rehearsal-tls
+      mountPath: /etc/rehearsal-tls
+      readOnly: true
