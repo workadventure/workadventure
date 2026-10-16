@@ -188,3 +188,6 @@ func validateQuery(q url.Values) string {
 
 // RetainedSessions counts the sessions a client can resume, for tests.
 func (srv *Server) RetainedSessions() int { return srv.retained.Len() }
+
+// FlushVariables waits until the variable writes are stored, for a shutdown.
+func (srv *Server) FlushVariables(ctx context.Context) error { return srv.varWriter.Flush(ctx) }
