@@ -61,6 +61,8 @@ const RESTART_DELAY_WHEN_NEVER_CONNECTED_MS = 5000;
 
 export class LiveKitRoom implements LiveKitRoomInterface {
     private room: Room | undefined;
+    // Keyed by identity, like livekit-client: it keeps the same RemoteParticipant across a full reconnection and
+    // changes its sid in place, so a sid key would no longer find the participant when it leaves
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     // Stores LiveKit participants that connected before their corresponding spaceUser was available
     private pendingParticipants: Map<string, RemoteParticipant> = new Map();
@@ -920,7 +922,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         const id = this.getParticipantId(participant);
 
         // Skip if already registered
-        if (this.participants.has(participant.sid)) {
+        if (this.participants.has(participant.identity)) {
             return;
         }
 
@@ -951,12 +953,12 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        if (this.participants.has(participant.sid)) {
+        if (this.participants.has(participant.identity)) {
             return;
         }
 
         this.participants.set(
-            participant.sid,
+            participant.identity,
             new LiveKitParticipant(
                 participant,
                 spaceUser,
@@ -996,13 +998,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private handleParticipantDisconnected(participant: Participant) {
-        const localParticipant = this.participants.get(participant.sid);
+        const localParticipant = this.participants.get(participant.identity);
 
         if (localParticipant) {
             localParticipant.destroy();
         }
 
-        this.participants.delete(participant.sid);
+        this.participants.delete(participant.identity);
         // Also remove from pending participants if present
         const id = this.getParticipantId(participant);
         this.pendingParticipants.delete(id);
