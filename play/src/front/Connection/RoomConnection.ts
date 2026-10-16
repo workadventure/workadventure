@@ -549,6 +549,7 @@ export class RoomConnection implements RoomConnection {
                         throw new Error("Received multiple roomConnectedMessage, this should never happen");
                     }
                     this.tags = message.roomConnectedMessage.tag;
+                    this.canEdit = message.roomConnectedMessage.canEdit;
                     this._roomConnectedPromise.resolve({
                         connection: this,
                         roomConnectedMessage: message.roomConnectedMessage,
